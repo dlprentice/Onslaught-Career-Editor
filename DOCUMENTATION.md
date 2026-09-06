@@ -1,35 +1,13 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Date: 2026-08-31
+Date: 2026-09-06
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
 shipped bytes. Enforced by [`tools/doc_header_check.py`](tools/doc_header_check.py).
 
 ---
-
-## Why this exists, and why it is a checker rather than a style guide
-
-Two conventions in this repository have already rotted for the same reason: they
-were written down and never gated. So the deliverable here is not the prose — it
-is [`tools/doc_header_check.py`](tools/doc_header_check.py). This document
-explains what that tool enforces and why each rule earned its place.
-
-Nothing below was imported from outside the project. Every field is a pattern
-already in practice here, measured across the 1,046 tracked `*.md` files on
-2026-07-28; the prevalence of each is recorded in
-[What was measured](#what-was-measured) so a reader can tell an established
-convention from a one-off. The standard's job is to make the good documents'
-habits universal, not to replace them.
-
-The one thing it **adds** rather than codifies is the `Evidence:` field. That is
-deliberate and it is the largest measured gap: the MEASURED-versus-INFERRED
-partition that [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) both require
-is practised as an explicit all-caps marker in **28 of 564 untracked `local-lab/`
-notes and in zero tracked documents** — `grep -lw MEASURED` over
-`git ls-files '*.md'` returns nothing at all. The habit exists; it has simply
-never survived promotion.
 
 ## The fields
 
@@ -109,17 +87,6 @@ two different jobs:
 
 - **`Summary:`** when the document makes no claim — an index, a guide, a
   reference table. `quick-reference/cli-parameters.md` already does this.
-
-The best practice of this pattern lives in `local-lab/` as a **"What this
-settles"** block, and it is worth quoting into the standard because the corpus
-has no sharper line of doctrine:
-
-> **Status of the numbers here:** every retail-side value was read by this pass
-> from `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` … Nothing below
-> rests on a prior note alone. Where a prior note agreed, that is corroboration,
-> not the evidence.
->
-> — `local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md`
 
 Say what your verdict rests on, and say explicitly when a prior note is
 corroboration rather than evidence.
@@ -202,10 +169,6 @@ Class is resolved from the path, so nothing has to declare its own type.
 | `FUNCTION-NOTE` | Per-function RE note | `binary-analysis/functions/*.md` | `Source File:` trailer naming its `Binary:`, `Last updated:` |
 | `WAVE-SHARD` | Fullpass wave review shard | `ghidra-fullpass-findings/W*/{primary,adversarial}/*.md` | `Phase:`, `Function count:`, `Reviewed at:` (ISO 8601) |
 
-Three of those class rules are narrower than they could be, each for a measured
-reason. They are stated here rather than buried, because a silently narrowed
-gate is how a check stops covering the thing it was built for.
-
 - **`GOVERNANCE` carries no `Evidence:` and no `Verdict:`.** These documents say
   what is wanted or required. [`GOAL.md`](GOAL.md) is explicitly not superseded
   by measurement; grading it as evidence would be a category error.
@@ -228,25 +191,18 @@ gate is how a check stops covering the thing it was built for.
 
 ## Two body patterns that are required but not gated
 
-Both are stated here because they matter more than any header field. Neither is
-mechanically checkable without producing false failures, and a check that
-punishes a correct document is worse than no check — so they are reviewed by
-humans, not by the tool. That limit is admitted rather than papered over.
+These body rules require review; the header checker cannot establish their truth.
 
-**Supersede in place.** Never silently overwrite a claim. A reader who checks the
-old value and finds it simply gone cannot tell whether it was corrected or lost.
-Quote the old text, date the correction, say what changed — **and say what is
-unchanged.** [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) is the model:
+**Keep current summaries current.** Replace superseded instructions and capability
+claims with the supported state and its evidence owner. Do not accumulate quoted
+old claims, execution diaries or obsolete approvals in an active entry document.
+Git preserves prior tracked wording; dated evidence retains its own provenance.
 
-> **Superseded 2026-07-27 — over-claim withdrawn.** This previously read
-> "Enhanced Copy now writes and reads back **the retail minimum `0.1`**" … The
-> demonstrated capability is unchanged: AppCore writes the value into a safe copy
-> and reads it back. Only the attribution of `0.1` to retail was wrong.
-
-**Scope an amendment.** A correction that does not say what it leaves standing
-voids a whole document by implication. `name-grading-ledger-2026-07-27-demotion2.md`
-amends its predecessor "**in its counts only**", which is what stops the older
-ledger from being read as retracted.
+**Scope evidence corrections.** When correcting a consequential measured finding,
+record what changed, why, and which evidence remains valid in its owning evidence
+record. Preserve frozen receipts. Link to that correction from a current summary
+when needed to prevent the old result being reused; the summary need not repeat
+the old prose. Historical instruction copies never become current policy.
 
 ## Scope
 
@@ -295,9 +251,6 @@ Reachability is a separate diagnostic:
 | `1` | an enforced document violates the standard, or the backlog has gone stale |
 | `2` | **the check could not run** — no git, no backlog file, bad arguments |
 
-Exit 2 abstains rather than passing. Per [`AGENTS.md`](AGENTS.md): "A critic that
-cannot return UNSCORED is not a gate."
-
 ### The ratchet
 
 [`tools/doc_header_backlog.txt`](tools/doc_header_backlog.txt) lists the
@@ -312,7 +265,7 @@ deleted rather than left as a permanent exemption. Never add a line to silence a
 new failure; `--write-backlog` exists for the one-time generation and is not a
 routine command.
 
-## What was measured
+## Historical basis of the standard
 
 Measured 2026-07-28 across 1,046 tracked `*.md` files. This is the evidence the
 standard was derived from, not an assertion about what people ought to do.
@@ -348,25 +301,10 @@ not the class norm, and the five-field wave-shard trailer is complete in **76 of
 | `INDEX` | 31 | 1 | 30 |
 | `GOVERNANCE` | 12 | 1 | 11 |
 
-That is an honest number, not a target that was gamed: **511 documents start in
-the backlog.** Almost nothing was retrofitted in this pass, because retrofitting
-511 documents is a separate judgement that belongs in the main loop and not in
-the pass that writes the gate. The two exceptions are this file and
-[`tools/README.md`](tools/README.md), which were brought up to standard to
-exercise the ratchet in both directions — the gate rejected the backlog until
-`tools/README.md`'s line was deleted from it.
-
-**The 54 documents worth fixing first** are the FINDING-class documents that
-quote a retail address and declare no `Specimen:`. Those are the only entries in
-the backlog whose defect is category 1 — a claim that may be false — rather than
-category 4. List them with:
-
-```bash
-python ./tools/doc_header_check.py --show-backlog
-```
-
-The next-cheapest batch is the 11 `GOVERNANCE` files: three lines each, and they
-are the documents most readers meet first.
+The initial census included 54 findings without a specimen declaration and 11
+governance documents without the required headers. These are historical counts;
+`--show-backlog` selects the actual remaining header work. They are not a queued
+cleanup batch. Prior wording and implementation history remain in Git.
 
 ## Known limits
 

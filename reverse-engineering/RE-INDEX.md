@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-31
+Last updated: 2026-09-06 (natural-Damage summary and retained-evidence routing)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -404,33 +404,23 @@ The exact backup/readback/collateral results are recorded in the
 and the separate
 [34-row new-function live-promotion report](binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md).
 
-**Mission `Damage` native, registry row 69 (2026-08-15):** the
-[`Damage` vertical contract](binary-analysis/functions/IScript.cpp.md) works one
-registry row all the way down. Row 69 sits at `0x0064CE20 + 69*0x40 =
-0x0064DF60` with handler `IScript__Damage @ 0x005348C0`. The wrapper owns no
-damage law: its single indirect call dispatches `vtable +0xA0`, and a pristine
-read of that slot gives `CBattleEngine::Damage @ 0x0040A890` for a
-battle-engine receiver and `CUnit__ApplyDamage @ 0x004F9A90` for the measured
-unit receiver, joining three existing contracts under one receiver-selection
-rule. A shipped-source census supplies the first evidence that shipped authored
-content calls this native at all — six authored call sites across levels 500,
-521, 522, 530, and 720 — while a decode of all 25 hash-pinned Level 100 objects
-shows Level 100 never issues it. Re-querying all 66 level-opening coverage
-indexes finds `0x005348C0` covered at **`level720`**, where `Prison.msl:37`
-fires it with no player action; `CUnit__ApplyDamage` is covered at 18 levels
-including 720, and `CBattleEngine::Damage` at `level731`, `level732`, and
-`level854`. So a natural call is already recorded and can be mined without
-elevation or gameplay. The level-521 index separately proves `hive.msl` is
-attached and live — its uniquely-authored `Teleport` executed — while leaving
-`0x005348C0` uncovered there, so that level's gap is the player collision, not
-script attachment. This is a rebuild and evidence advance only:
-Generation 29 stays frozen, no Ghidra or executable byte changed, and the
-campaign still reports zero rebuild-ready contracts. What has *not* been done is
-mining that recorded call: no value has been read out of the level720 trace yet.
-(An earlier draft of this paragraph ended "no natural call has been observed at
-runtime, and no retained trace can reach one" — refuted by the sweep reported
-three sentences above it, and removed here rather than left standing beside the
-measurement that overturned it.)
+**Mission `Damage` native, registry row 69 (2026-08-15):** the wrapper at
+`0x005348C0` forwards through the receiver's `vtable +0xA0`. The retained
+natural level-720 query measured two gap-free call/return envelopes from
+`Prison.msl:37`, forwarding amount `122.61930847167969`, source equal to the
+receiver, shields enabled and mesh part `-1`. Its building receiver forwards
+to `CUnit__ApplyDamage`; the earlier two-arm interpretation was incomplete.
+The dated finding and receipt identity are in `developer_state.json` →
+`current_mission_damage_slice_20260815` and
+`local-lab/mission-damage-natural-level720-20260815-v1/take1-discovery/`.
+`Level100ActorScriptRuntime.InvokeDamageNative` owns the bounded reconstruction.
+
+Remaining limits: a natural battle-engine call through this wrapper, source
+argument identity beyond self-damage, positive-shield absorption, compiled
+Integer-versus-Float representation for `Damage(100)`, and death/cleanup order.
+The natural call has already been mined; its raw recording was subsequently
+retired, so new queries require new authorized runtime evidence. These dated
+findings do not promote the frozen campaign or establish a general damage law.
 
 **Mission-native corpus coverage census (2026-08-15):** the
 [144-native census](binary-analysis/mission-native-corpus-coverage-2026-08-15.tsv)

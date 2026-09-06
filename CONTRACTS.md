@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active contract-system front door
-Last updated: 2026-08-13
+Last updated: 2026-09-06
 Summary: how Battle Engine Aquila contract evidence is graded, located,
 refuted, promoted, and carried into the rebuild. Current replay authority is
 selected only by `developer_state.json` → `current_re_authority`.
@@ -45,7 +45,7 @@ chain that ordinarily precedes it.
 | --- | --- |
 | Current per-function and per-residual contract accounting | The named immutable campaign generation: `campaign-contracts.tsv` joined with its function, residual, question, adjudication, and supersession ledgers, `campaign.ready.json`, and frozen `_reducer` |
 | Detailed controlled-runtime observation | The hash-bound scenario bundle and its real receipts, manifests, markers, controls, and refuter output under `local-lab/` |
-| Existing-trace call/entry/raw-return observation | Hash-bound `bea-ttd-call-context.v3` JSONL bundles produced by the frozen historical [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1); active bounded long-replay work uses [`tools/Invoke-TtdCallContextV2.ps1`](tools/Invoke-TtdCallContextV2.ps1), while the original bytes remain unchanged for historical Gen10 replay. Pending/active associations clear across conservative global barriers (including ContextSwitch today), raw returns remain visible as orphans, and only same-epoch ordinary returns may link. Raw registers/stack bytes are untyped. A proposed schema-v4 soft-ContextSwitch refinement (map no-op + barrier-kind ledger; Unrecorded/Large/continuity stay hard) requires a new schema id, new `association_policy` string, and fresh replay—not reinterpretation of v3. Design owner: `local-lab/SCHEMA-V4-CALL-CONTEXT-DESIGN-2026-08-04.md` (hypothesis until implemented). |
+| Retained call/entry/raw-return observations | Hash-bound `bea-ttd-call-context.v3` JSONL bundles and their frozen scripts: [`Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1) and [`Invoke-TtdCallContextV2.ps1`](tools/Invoke-TtdCallContextV2.ps1). Conservative global barriers clear associations; raw returns can remain orphans and registers/stack bytes are untyped. These retained outputs cannot replace their deleted raw recordings. |
 | Existing-trace field-write transition | Source-bound `bea.ttd.data-writes.v3` JSONL/receipt/manifest/`READY` bundles produced by [`tools/Invoke-TtdDataWrites.ps1`](tools/Invoke-TtdDataWrites.ps1); a positive contract requires an exact replay window, sequence-sourced ordered Overwrite/Write chain, explicit counts, and zero gaps/breaks, while a zero-write claim is only a bounded no-callback witness |
 | Static address/body evidence | [`reverse-engineering/binary-analysis/`](reverse-engineering/binary-analysis/_index.md), current read-only exports, pristine bytes, and the reviewed Ghidra owner |
 | Source-informed architecture or intent | Pinned source plus [`reverse-engineering/source-code/stuart-source-synthesis.md`](reverse-engineering/source-code/stuart-source-synthesis.md); never retail behavior by itself |
@@ -56,6 +56,13 @@ chain that ordinarily precedes it.
 `developer_state.json` and `RE-INDEX.md` route to evidence; they do not replace
 it. Candidate overlays and agent reports are inputs, not campaign authority,
 until the reducer admits them through a new verified generation.
+
+The 75 raw TTD recordings were permanently retired. Their retained extracts,
+scripts and receipts preserve the recorded findings, but those sessions cannot
+be replayed or queried anew. New runtime questions need a new authorized capture;
+an old replay command is not evidence that its input still exists. The proposed
+schema-v4 refinement in `local-lab/SCHEMA-V4-CALL-CONTEXT-DESIGN-2026-08-04.md`
+remains a hypothesis requiring a new schema and fresh evidence.
 
 ## Current authority routing
 
@@ -96,14 +103,11 @@ all rows remain deliberately opaque.
 
 ## How to inspect one contract
 
-1. Resolve the current campaign from `RE-INDEX.md`; do not guess from the newest
-   directory name.
-2. Replay its frozen verifier:
-
-   ```powershell
-   python -B <campaign>/_reducer/tools/re_campaign.py verify --campaign <campaign>
-   ```
-
+1. Resolve the current campaign from `developer_state.json` →
+   `current_re_authority`; do not guess from a directory name.
+2. When complete-RE verification is needed, run the literal command in
+   `current_re_authority.verify`, including its pinned bootstrap and host route.
+   Do not substitute a direct reducer invocation or derive replacement pins.
 3. Locate the specimen/entity key in `campaign-functions.tsv` or
    `campaign-residuals.tsv` and join its row in `campaign-contracts.tsv`.
 4. Read every open `campaign-questions.tsv` row and applicable adjudication or

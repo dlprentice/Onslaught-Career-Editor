@@ -1,21 +1,22 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-08-31.
+Last updated: 2026-09-06
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
-Onslaught Toolkit accepts focused changes to the WinUI product, shared
-AppCore/CLI behavior, deterministic rebuild, and evidence-backed preservation
-material. Git history is the archive: do not add mirrors, wave bookkeeping,
-generated inventories, handoff files, or replacement process machinery.
+Onslaught has three coequal outcomes: retail reverse engineering, the 1:1 Godot
+rebuild, and a Godot toolkit companion for Linux and Windows. WinUI/AppCore/CLI
+source remains migration material. The development hold in [AGENTS.md](AGENTS.md)
+permits repository preparation; features and companion conversion await David's
+direction. Keep changes focused and use existing records and validation.
 
 ## Start here
 
 1. Read [`AGENTS.md`](AGENTS.md), [`README.MD`](README.MD), and only the owning
    README or evidence files for your change.
-2. Initialize source references with `git submodule update --init --recursive`,
-   then confirm the branch, upstream, dirty state, and submodule pins.
+2. Confirm the branch, upstream, dirty state, and submodule pins. Initialize
+   missing references only when the authorized work needs them.
 3. Preserve unrelated work and keep `references/Onslaught` pinned unless a
    separately authorized source-reference update requires otherwise.
 4. Make the smallest coherent change that fixes a current product, contract,
@@ -32,15 +33,17 @@ npm run test:safety
 
 `npm test`, `npm run dev`, the full AppCore suite, CLI/UI tests, release
 packaging, and the currently admitted controlled Godot runtime run inside the
-isolated Windows VM. Root commands fail fast when a Windows-only lane is
-invoked from Linux.
+Windows host. The evaluation VM is staged but has not been built or activated.
+Root commands fail fast when a Windows-only lane is invoked from Linux; these
+retained-source procedures do not establish a Linux Godot companion workflow.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
 its command list in new documents.
 
 ## Ownership
 
-- WinUI owns navigation, interaction, accessibility, and presentation.
+- The retained WinUI shell owns its existing navigation and presentation.
+  Its Godot successor has been selected but is not implemented.
 - AppCore owns save/options preservation, copied-target safety, patch planning,
   media/catalog parsing, and other shared correctness.
 - The C# CLI adapts AppCore behavior; it should not fork file-format rules.
@@ -128,7 +131,7 @@ native Godot smoke when the corresponding primary workflow, rendering, input,
 launch, or clean-exit path changed. Do not run a root aggregate merely for
 ceremony.
 
-Release preparation is separate from publication. Follow
-[`README.RELEASE.md`](README.RELEASE.md) and
-[`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
-only when release boundaries or candidate inputs changed.
+The retained WinUI artifact's procedure is in
+[`README.RELEASE.md`](README.RELEASE.md); select its checks through
+[`VALIDATION.md`](VALIDATION.md) only when the authorized change affects that
+boundary. No WinUI release or companion migration is queued by this guide.

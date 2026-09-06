@@ -26,6 +26,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 PUBLIC_CORE_MARKDOWN = (
     "README.MD",
+    "GOAL.md",
+    "PROGRAM.md",
+    "PROJECT-INDEX.md",
     "CURRENT_CAPABILITIES.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
@@ -33,9 +36,6 @@ PUBLIC_CORE_MARKDOWN = (
     "VALIDATION.md",
     "lore/_index.md",
     "reverse-engineering/RE-INDEX.md",
-    "roadmap/ROADMAP-INDEX.md",
-    "roadmap/public-roadmap.md",
-    "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
     "rebuild/README.md",
     "rebuild/PROVENANCE.md",
 )

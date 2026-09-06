@@ -18,15 +18,6 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ## Open work
 
-### P3 — Simplify developer state — PARTIAL
-
-Continue moving redundant `_HERMES_SLICE_*` and superseded narrative into existing
-function-note owners under the state's `_maintenance` policy. Earlier batches
-preserved their facts; the remaining state has not been fully reduced.
-Acceptance: retain distinctive evidence and provenance, preserve unrelated values,
-resolve every changed reference, validate JSON, and pass the docs gate. Preserve
-`current_re_authority`, the standing objective, and actual open questions.
-
 ### P6 — Campaign bookkeeping relief — OPEN; NOT IMPLEMENTED
 
 Close already-triaged-out questions with their existing terminal verdicts and
@@ -93,7 +84,8 @@ with a bind/automount at `/home/xsniper80/Projects/game-dev/Onslaught-Career-Edi
 The old ProjectData route stays absent. Current mount and recovery rules belong
 in [AGENTS.md](AGENTS.md) and the existing local data guides.
 
-David's September 6 repository-internal preparation is complete. Further RE,
+David's September 6 repository-internal preparation and independent follow-up audit
+are complete. Further RE,
 rebuild and Godot companion work await his direction. Completed scope:
 
 - [x] Align current guides, implementation maps, platform boundaries and timing prose;
@@ -111,6 +103,16 @@ rebuild and Godot companion work await his direction. Completed scope:
 - [x] Close the bounded lab-root and tool reviews, retaining failed attempts,
   distinct staging trees and all frozen contents. Review findings and their
   reproduced resolutions live under `local-lab/reviews/preparation-20260906/`.
+- [x] Close the independent follow-up findings: refuse unregistered packet replacement
+  and output inside a bind-aliased project; explicitly report the four Windows-only
+  tools suites as skipped on Linux. Retire three superseded tracked roadmap/signoff
+  documents, remove obsolete execution and approval diaries from active state, and
+  correct the current write-safety, native Lore and natural-Damage summaries.
+  Retire seven unused fixed-model review helpers and condense review guidance to
+  its evidence/preservation rules; preserve the generated historical review trees.
+- [x] Retain four more historical validation logs and one obsolete instruction patch
+  under their operational owners: 5 files / 29,048 bytes, every hash and recorded
+  metadata field unchanged. Recheck the earlier 246-file grouping successfully.
 - [x] Correct the three Linux test assertions that expected Windows namespace
   messages. The affected class passes 22/22 without skips or production behavior
   changes; no new broad Core or Windows runtime result is claimed.
@@ -138,6 +140,7 @@ and Windows/Godot runtime acceptance and the P7/P8/P10/P11 feature gaps stay ope
 | P0 — Integration spine | Source/doc integration and branch consolidation landed. Later causal round-ID evidence superseded the geometric Blaster observer; measured tests belong in VALIDATION.md. |
 | P1 — Sealed static-receipt reseat | The campaign cut completed. Select current state through `current_re_authority`; historical receipts do not select a parent. |
 | P2 — Ghidra promotion/integration | The named cohort ceremonies and corrected offline integration completed. Read the Ghidra owner before any further promotion. |
+| P3 — Simplify developer state | Retired 554 superseded top-level fields and unconsumed nested diaries from active loading. `_history` gives exact Git recovery; required compatibility values, current authority, hold, evidence limits and explicit KEEP controls survive. Archived follow-ups are not declared closed. |
 | P4 — Function-triage packets | The exporter produced complete packets in one read-only headless run and served an RE question. Tool usage and focused tests are in tools/README.md. |
 | P5 — Coverage index/query | The receipt-based index and preregistered cross-trace query completed. Raw TTD recordings were subsequently retired; this milestone does not promise raw replay or intact historical paths. |
 | P9 — Ferry sweep split | The expensive sweep is separate from the default Core suite; the explicit command remains in VALIDATION.md. |

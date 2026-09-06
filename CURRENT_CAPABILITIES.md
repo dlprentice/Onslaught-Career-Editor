@@ -16,7 +16,8 @@ retain their stated boundaries. Other rebuild and save/patch claims not
 re-reviewed by this pass retain their prior boundaries.
 Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
-re-measure before relying on one.
+re-measure before relying on one. Superseded correction narratives remain in
+Git and their dated evidence owners; they are not current operating instructions.
 
 The implemented preservation app is the WinUI 3 Windows app; AppCore owns its
 file and copied-target correctness. On September 6 David selected conversion to a
@@ -28,11 +29,6 @@ coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
 The primary navigation is Home, Windowed & Mods, Save Lab, Cheats, Media, Lore,
 Asset Library, Settings, and About.
-
-> **Updated 2026-08-01.** The order previously read Home, Save Lab, Media, Asset
-> Library, Lore, Windowed & Mods, Settings, About — which put the step the Home
-> page calls first in sixth position, behind three browse-only pages. Only the
-> order changed; no page was added or removed by that pass.
 
 ### Shell and appearance
 
@@ -68,14 +64,6 @@ The Lore reader renders documents as native WinUI content parsed from Markdig's
 AST, not in an embedded browser. Text is selectable and exposed to assistive
 technology, headings carry their semantic level, tables render as real tables,
 and the reader follows the app theme.
-
-> **Superseded 2026-08-01 — a defect, not a capability change.** The reader
-> previously hosted a `WebView2`. It displayed **nothing** for any document: the
-> HTML was written correctly, navigation reported success, and a live renderer
-> process held the page, but no pixels reached the WinUI surface and a full
-> window resize did not recover it. The native reader replaced it. `WebView2`
-> remains an indirect dependency of the Windows App SDK; the app no longer
-> references or uses it.
 
 Packaged lore documents have the repository's maintainer header block
 (`Status` / `Last updated` / `Summary`) removed at pack-build time, so a reader
@@ -189,16 +177,10 @@ back `0.1`, **which is AppCore's own lowest preset, not a retail minimum**
 the copied option and live global, not subjective mouse feel or
 physical-controller behavior.
 
-> **Superseded 2026-07-27 — over-claim withdrawn.** This previously read
-> "Enhanced Copy now writes and reads back **the retail minimum `0.1`**". `0.1`
-> is not a retail minimum and not a retail value. Retail's own selectable
-> minimum is **`3.0`** — the slider is `(index + 1) * 3.0f`, giving `3, 6, … 63`
-> — and its compiled default is **`7.0`**. `0.1` is one of AppCore's four
-> presets (`0.1`, `1.5`, `2.25`, `3.0`). The demonstrated capability is
-> unchanged: AppCore writes the value into a safe copy and reads it back. Only
-> the attribution of `0.1` to retail was wrong. This exact line was named as an
-> unactioned over-claim by the project's own adversarial pass
-> (`local-lab/agent-notes-2026-07-27/adverse-settings.md`, F7).
+Retail's selectable sensitivity values are `3..63` in steps of three; its
+compiled default is `7.0`. AppCore's `0.1` remains its own preset. The specimen
+constants and the scope of older sensitivity observations are in
+[rebuild/PROVENANCE.md](rebuild/PROVENANCE.md).
 
 The bounded retail-content go/no-go also passed for one English mission line.
 WinUI can opt a safe copy into a fixed-size replacement of Level 100 text ID
@@ -256,25 +238,15 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 
 - Media reads supported audio/video from a selected local game path. A load
   or playback failure states what happened where the user can see it, without
-  dumping the raw exception. The reason previously went only into a permanently
-  collapsed panel, then later leaked as `Details:` plus the exception text. A
-  search that matches nothing says to try another word or clear the search; it
+  dumping the raw exception. A search that matches nothing says to try another word or clear the search; it
   does not call the empty tree a missed match. The source folder and the
   selected file are named by their last segment, not the full path.
 - Cutscenes are listed by number (`Cutscene 01`..`Cutscene 33`). The game ships
   no titles for them.
 
-> **Withdrawn 2026-08-01 — fabricated content removed.** The catalog carried 33
-> invented story titles ("Tatiana Introduction", "Boss Battle", "Plot Twist", …)
-> and presented them to users as fact. They appear nowhere in the game, the lore
-> library, or the evidence store; they existed only in `MediaCatalogService` and
-> its own test. A regression test now refuses any cutscene label other than the
-> numbered form until a real title is demonstrated. The five retained
-> main-video names each expand an abbreviation the file itself carries
-> (`LT` = Lost Toys, `FE` = front end, `TWIMTBP` = NVIDIA's campaign). The sixth,
-> `UsTheMovie` → "Credits Video", asserts a role rather than expanding a name and
-> is retained only because it is wired into receipt-bound evidence acceptance;
-> it is recorded as unconfirmed.
+  Regression tests require numbered cutscene labels until a real title is
+  demonstrated. The retained `UsTheMovie` → “Credits Video” label remains
+  unconfirmed; its acceptance fixture does not establish that role.
 - Asset Library opens an existing generated catalog and previews supported
   PNG/FBX metadata, linked textures, and bounded wireframes. A search that
   matches nothing says to try another word or clear the search. It has no asset
@@ -393,20 +365,11 @@ the released centered-offset mapping and recentering rate, and feeds Core's
 released walker yaw/pitch response. Other sensitivity settings,
 inversion, and jet mouse response are not yet claimed.
 
-> **Superseded 2026-07-27.** This previously read "At copied Steam sensitivity
-> `1.5`". **`1.5` is not a retail value at all.** Retail's slider law is
-> `g_MouseSensitivity = (index + 1) * 3.0f` with max index `0x14`, so the
-> selectable values are `3, 6, … 63` and **`1.5` is below the floor a player can
-> reach**. The compiled image default, before the slider is ever touched, is
-> `7.0` — itself not reachable from the slider either. All three constants were
-> read from the **pristine** specimen (sha256 `74154bfa…`), not the installed
-> executable: `0x006254f4 = 7.0`, `0x005d8cc0 = 3.0`,
-> `0x005d97c8 = 0.004333333`. The old pointer scalar `13/2000` is exactly
-> `1.5 × 13/3000`; it is now `91/3000 = 7.0 × 13/3000`, so aiming had been
-> 4.67× too slow at equal hand motion (`fed5829b`).
+The compiled default and selectable sensitivity law are specimen-bound in
+[rebuild/PROVENANCE.md](rebuild/PROVENANCE.md).
+
 Core uses the source-declared 10-tick walker-to-jet transition at 20 Hz, but the
-clean opening's flight gate keeps it unavailable until later tutorial
-progression is implemented. The walker, jet, and first-person cockpit now load
+mission script controls when flight becomes available. The walker, jet, and first-person cockpit now load
 directly from their exact released AYA files as 63-, 54-, and 21-part
 hierarchies with 54, 58, and 10 material surfaces. The external jet and cockpit
 advance through their separately timed authored `walktofly` frames after the
@@ -444,25 +407,9 @@ for the Control Tower and Tank Factory: inward motion is removed, while tangent
 motion slides around the tower. Core consumes those two observed envelopes; it
 does not claim general mesh collision.
 
-> **Superseded 2026-07-27, recorded here 2026-07-28 — the pine mesh-quality
-> boundary.** The paragraph above previously read "The 1,481 pine placements use
-> exact released meshes through the **selected high-quality 70-unit** horizontal
-> boundary and exact six-view atlas geometry beyond it." **`70.0` was this
-> workstation's `defaultoptions.bea`, which is persisted run state, not an
-> authored default** — precisely the lab artefact `GOAL.md`'s defaults rule
-> exists to keep out of shipped behaviour. The released out-of-box arm is
-> **Medium, not High**. `0x004DD6B0` dispatches Geometry detail to three arms
-> writing `10.0` / `30.0` / `70.0`, and the image's own static initialisers are
-> uniquely the middle arm: file `0x2321A0` = `00 00 f0 41` = `30.0f`, with
-> `0x231E88` and `0x230E0C` both `1.0f`. Read this pass from
-> `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
-> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
-> 2,506,752 bytes — the **pristine** specimen, not the deliberately patched
-> installed `BEA.exe`. Corrected in code on 2026-07-27 (task #137); the offset
-> table and the proof that `defaultoptions.bea` is run state are in
-> [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md). **Unchanged:** everything
-> else in that sentence — the placement count, the exact meshes inside the
-> boundary, and the six-view atlas geometry beyond it.
+The 30-unit Medium boundary comes from the retail static initializers;
+persisted options can select a different distance. The measured distinction is
+owned by [rebuild/PROVENANCE.md](rebuild/PROVENANCE.md).
 
 Twenty-nine exact released HUD textures — **the count the client loads and
 composes**, not the count the asset materializer retains, which is larger and is
@@ -560,83 +507,23 @@ presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
-**None of the above is a parity claim, and the measured gap is large.** As of
-2026-07-27 the best Level 100 gameplay frame scores **22.55% of pixels
-materially different from retail, mean channel distance 7.6**, against a
-retail reference at t0+25065 ms.
+**Visual parity remains unproven.** The current configured frontend measurements
+belong to `rebuild/tools/frontend-parity-plan.json`, whose provenance names July 31
+and commit `fc07fef6`; reading that configuration is not a fresh runtime comparison.
+The earlier July 27 gameplay/frontend scores and correction history remain in Git
+and their dated capture records. They must not be presented as today's measured gap.
 
-The startup and frontend path is further off. FEP_MAIN's settled window measures
-**15.14%** full-frame, its reveal window **19.49%**, and its **entry frame
-7.53%**. Only the per-region **measured** values are recorded in
-`rebuild/tools/frontend-parity-plan.json`; the regression ceiling is **derived**
-from each by `tools/score_frontend_capture.py` as `min(measured + marginPp, 100)`
-using the plan's single `_measurementProvenance.marginPp` of `2.0`, and is
-deliberately **not stored**. Several regions are tens of percent off retail: at
-the settled window `title-logo` measures 29.48% and `bg-emblem-topright` 19.92%,
-and at the reveal window 31.83% and 22.97%. Those ceilings say "do not get
-worse"; they are not parity numbers, and quoting one as a parity number is a
-misreading. **Five** frontend pages are deliberately ungated and reported
-`UNSCORED`, **for two different reasons**: `FEP_DEVSELECT` and
-`FEP_LEVEL_SELECT` because retail's own two runs disagree (by 5.8–44.2% and
-9.6–62.5% material respectively), so no improvement below that is measurable;
-`FEP_MISSION_BRIEFING`, `FEP_SELECT_CONFIGURATION` and `FEP_LOADING` because
-there is **no second retail run at all** in the no-skipfmv set to form a noise
-floor from.
+`tools/score_frontend_capture.py` derives each regression ceiling as
+`min(measured + marginPp, 100)` and evaluates the worst sample. The selected plan's
+margin is two percentage points. A ceiling is a regression guard, not parity
+acceptance, and a run with no scorable evidence reports `UNSCORED`.
 
-> **Superseded 2026-07-27.** The paragraphs above previously read: "the best
-> Level 100 gameplay frame scores **23.06% of pixels materially different from
-> retail, mean channel distance 7.85**" and "FEP_MAIN's settled window measures
-> **15.14%** full-frame, its reveal window 22.35%, and its **entry frame 71.47%**
-> — retail staggers the page's build-up and **we draw it all on frame 0
-> (tracked)**" and "**Three** frontend pages are deliberately ungated **because
-> retail's own two runs disagree**".
->
-> Four corrections, all landing the same afternoon the original was written:
->
-> 1. **Gameplay full frame is 22.55% / meanD 7.6.** Trajectory 23.47 → 23.99 →
->    23.32 → 22.55.
-> 2. **FEP_MAIN entry is 7.53%, not 71.47%; reveal is 19.49%, not 22.35%.**
->    Settled (15.14%) and `title-logo` (29.48%) are unchanged.
-> 3. **"We draw it all on frame 0" describes a defect that was fixed**, by
->    `8618e773` — the main menu now builds up over the released 50-frame
->    transition recovered from the shipped bytes, which is what produced the
->    entry-frame drop in (2). The sentence is deleted rather than amended,
->    because there is no longer a stagger gap to describe.
-> 4. **It is five ungated pages, not three, and the single stated reason covered
->    only two of them.** This one was wrong when written, not merely stale —
->    `frontend-parity-plan.json`'s `unscored[]` has carried five entries with two
->    distinct `reason` strings throughout.
->
-> **Caveat on (2) — CLOSED 2026-07-28.** It read: "`frontend-parity-plan.json`
-> still stores the pre-`8618e773` `measured` values of 71.47 @entry and 22.35
-> @reveal, because `8618e773` states 'Ceilings are NOT re-derived here.' The JSON
-> and the figures above will therefore disagree until the ceilings are
-> re-derived." They no longer disagree. The plan was re-derived at `432c53f7`
-> from a production capture off a clean worktree; **17 of its 30 stored numbers
-> were stale**, the worst by 99.72 points. The `@entry` ceiling had been 73.47
-> against a real 7.53 — nine times loose, incapable of failing. See
-> `local-lab/PARITY-GATE-REPAIR-2026-07-28.md`.
-
-> **Superseded 2026-07-28 — where the ceilings live.** The paragraph above
-> previously read: "Its regression ceilings are recorded in
-> `rebuild/tools/frontend-parity-plan.json` beside the measured value each was
-> derived from, and several are tens of percent wrong — `title-logo` alone
-> measures 29.48%." **The plan no longer stores ceilings at all.** It holds
-> `measured` per region plus one global `_measurementProvenance.marginPp`, and
-> the ceiling is derived at load time by `tools/score_frontend_capture.py`, whose
-> own docstring is the canonical statement of the reasoning: "The ceiling is
-> derived rather than stored because it was briefly both" — the plan had carried
-> 30 `regressionCeiling` values, every one exactly `measured + 2.0`, and two
-> copies of one fact drift. Verified 2026-07-28 by parsing the plan at HEAD and
-> in the working tree: no `ceiling` key in either, `marginPp` `2.0` in both.
-> **Unchanged:** the four figures themselves, and the fact that several regions
-> are tens of percent off retail.
-
-These numbers move, and they moved several times on 2026-07-27 alone. Treat any
-figure here as the value at the commit that wrote it, and re-measure before
-relying on one — `tools/score_frontend_capture.py` and
-`tools/pair_gameplay_capture.py` are the instruments, and the frontend gate will
-now FAIL on a regression rather than reporting a healthy capture as a pass.
+The selected plan explicitly leaves six pages unscored. Options lacks matching
+reconstruction burst frames; developer and level selection have unstable retail
+comparisons; briefing, configuration selection and loading lack a second retail
+burst for a noise floor. The current reasons stay with the plan. Options ink-mask
+comparison measures text placement only. The main menu's recovered 50-frame
+transition does not settle these gaps.
 
 **The current outcome comes from four distinct deterministic runs; combining
 them would claim a client or human path that does not exist.**
@@ -668,6 +555,10 @@ the abort, completes objective 4, and reaches `Won` at t6855 with 15,868 hull.
 Those endpoint values are direct assertions, not log-only measurements. That evidence is
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs).
 None of these is a human or automated native-Godot end-to-end proof.
+The synthetic driver reads exact actor health, poses and sampled terrain visibility.
+Its quantized commands use the player-input surface, but its perception remains
+omniscient; see `Level100ChainAutopilot.cs`. Human playability and whether the
+reconstructed tutorial is easier than retail remain unmeasured.
 
 **Beat 9's kill count is trajectory-sensitive and these figures are the
 2026-08-13 values.**
@@ -698,60 +589,6 @@ The returning-player terminal tick and hull are pinned by assertions. The cold
 client and unquantised-control endpoint values above are recorded by the tests
 and remain re-measurable; the client/quantised direct equality of tick, complete
 state hash, and pose trace is asserted.
-
-> **Superseded 2026-08-01.** The two paragraphs above previously said the cold
-> runs still ended `Lost` / `WaterLoss` on the flight home at `t17699` with
-> roughly 10,700 of 20,000 hull, and that the client arm destroyed all 22
-> targets with objective 4 `Complete` and the abort poll never firing. The
-> ferry loss was fixed on 2026-07-31 by the hand-off clearance term; the
-> wave-2 counts moved on 2026-08-01 with the vertical datum and the
-> look-response table. Those were the then-current values; the current
-> 2026-08-13 measurements are stated above.
-
-> **Superseded 2026-07-28 — every load-bearing clause of the paragraph these
-> three replaced is now false.** It read: "on a cold career the same sequence ends **`Lost` /
-> `TutorialBroken` at tick 5051**, at full hull 20000/20000, with objective 4
-> never reached. The cause is the career premise rather than the join: a
-> cold-career control with no client involved loses identically. The tutorial
-> lectures shift `Activate Static Targets` by +1338 ticks while the trucks drive
-> their authored routes regardless, so `TargetTruck1.msl`'s `died()` case FALSE
-> posts `Broke Tutorial`. The returning-player run cleared that margin by 36
-> ticks — 1.2 released seconds."
->
-> **It was accurate when written.** `t5051` was the joined client run and
-> `t4978` the no-client control — two different runs, both correctly recorded at
-> the time (`local-lab/agent-notes-2026-07-27/end-to-end-run.md`, lines 14, 18
-> and 43). Three of the changes are **asserted** in
-> `Level100ColdStartTests.cs`: the failure reason is `WaterLoss`, not
-> `TutorialBroken`; objective 4 **is** reached and `Complete`; and the control
-> does **not** lose identically — it reaches `Won`, which inverts the old
-> sentence's conclusion about the career premise. The fourth, that hull is no
-> longer full, is **recorded but not asserted** — it appears in the test's own
-> comment and in its log output, not in a gate.
->
-> **Superseded again 2026-08-13:** the two-halves framing is no longer current.
-> The present cold-client, quantised direct, unquantised direct, and
-> returning-player synthetic runs all reach `Won`; their different input
-> surfaces and career preconditions remain explicit rather than being merged
-> into one claimed playthrough.
-
-> **Superseded 2026-07-27.** This section previously read: "`Won` is likewise not
-> a full clear. The observed route to the level's `Won` state runs through the
-> **released ABORT branch**: the LevelScript's sub-40% hull poll posts `Abort
-> Airborne Drones`, which retires the airborne phase with its own dialogue and
-> score penalty. That is the released script doing what it was written to do, not
-> the tutorial completed on its intended path."
->
-> That was accurate when written and was superseded twice the same day. First by
-> `a923d157`, which cleared beat 9 on the intended path — the unlock was not the
-> mid-beat ground recharge that had been named as the blocker, but the discovery
-> that a stick position is a **rate** demand behind a five-tick lag, not an angle
-> demand. Then by `b9e1ae50`, which joined the frontend and the beat chain for
-> the first time and established the cold-first-career result above.
->
-> This warning is historical. The present deterministic runs all reach `Won`,
-> but none is a human or automated native-Godot end-to-end proof, and their
-> distinct input surfaces must not be collapsed into one run.
 
 The current source tree and release packages do not include retail game assets
 or their conversions, other than two registered screenshots used for the app's
@@ -798,7 +635,7 @@ unchanged.** The single `CONTRACT_ONLY` row above is `C-8c445f1e27de9913`,
 forwarding contract and two focused parity tests pin it. Three separate
 evidence advances back it — a decode of all 25 hash-pinned Level 100 objects
 showing **366 native calls across 40 commands with 69 absent**; a shipped-source
-census finding **six authored call sites in four levels** (`level500`,
+census finding **six authored call sites in five levels** (`level500`,
 `level521`, `level522`, `level530`, `level720`), the first evidence that shipped
 authored content calls this native at all, one of which — `Prison.msl:37` in
 `level720` — is **covered by a retained level-opening trace and has now been
@@ -812,8 +649,10 @@ pristine-specimen read
 proving the wrapper's `+0xA0` slot resolves to `CBattleEngine::Damage
 @ 0x0040A890` for a battle-engine receiver and `CUnit__ApplyDamage
 @ 0x004F9A90` for the measured unit receiver, joining three existing contracts.
-Details in
-[`IScript.cpp.md`](reverse-engineering/binary-analysis/functions/IScript.cpp.md).
+The dated finding and retained receipt identity are in `developer_state.json` →
+`current_mission_damage_slice_20260815`; the current limits are summarized in
+[RE-INDEX.md](reverse-engineering/RE-INDEX.md). The raw recording has since been
+retired, so this result cannot be queried anew.
 **The table above is deliberately not edited.** It records the frozen
 Generation-29 campaign state; successor state is selected through
 `current_re_authority`. The rebuild and campaign layers remain separate.
@@ -978,15 +817,7 @@ factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
 and the shared response callback into `CExplosion::Hit`. This closes the
 conditional tutorial `0.8 + 1.0 = 1.8` same-receiver composition. One
 contrasting gate outcome, the second call's exact mesh part, expanding-radius
-timing, and broader rebuild parity remain open. Generation 20 independently
-joins ten retained internal calls to the two pristine call sites and proves the
-observed source/shield/part carrier without promoting the function's shipped
-name or claiming its entry/return/write envelope. Generation 21 independently
-joins 7,513 strict-`CRound` calls to slot 66 while leaving its writes, branches,
-shared `CMissile` placement, and complete Move behavior open. Generation 22
-independently joins 2,555 strict-`CRound` calls to slot 0 and exactly one selected
-event arm per invocation while leaving arm writes/effects, event 4002, shared
-`CMissile` placement, source spelling, and direct rebuild event routing open.
+timing, and broader rebuild parity remain open.
 The Level 100 reconstruction
 now preserves the two ordered whole-body stores for Target Tank/Drone rather
 than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the

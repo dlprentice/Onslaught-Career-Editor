@@ -10,7 +10,7 @@ assignees: ""
 
 Choose one:
 
-- [ ] WinUI app
+- [ ] Godot toolkit companion / retained toolkit source
 - [ ] AppCore / CLI
 - [ ] RE-informed rebuild
 - [ ] Patch / mod safety
@@ -29,12 +29,13 @@ Describe the smallest useful version.
 
 ## Safety Boundary
 
-The installed game folder and original `BEA.exe` remain read-only. A public
-feature request must not require mutating either one.
+Preserve pristine inputs and unknown save bytes. Any installed-game patching
+workflow must require an informed choice and a verified recovery backup before
+writing. Describe the selected target and how a failed write remains recoverable.
 
 Confirm whether this request needs any of the following:
 
-- proprietary game assets, saves, screenshots, or copied executable bytes
+- proprietary game assets, saves, or copied executable bytes
 - runtime proof, online/multiplayer proof, or rebuild-parity claims
 - public release packaging or signing
 

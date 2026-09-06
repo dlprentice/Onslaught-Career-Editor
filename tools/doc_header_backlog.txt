@@ -25,7 +25,6 @@ rebuild/OnslaughtRebuild.Godot/Assets/Frontend/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/PauseMenu/README.md
-release/readiness/PUBLIC_SIGNOFF_COMMANDS.md
 reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md
 reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md
 reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md
@@ -471,8 +470,6 @@ reverse-engineering/source-code/io/event-system.md
 reverse-engineering/source-code/io/storage-system.md
 reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md
 reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md
-roadmap/ROADMAP-INDEX.md
 roadmap/original-binary-online-multiplayer-feasibility.md
-roadmap/public-roadmap.md
 tests_shared/fixtures/README.md
 tools/d3d9-proxy/README.md

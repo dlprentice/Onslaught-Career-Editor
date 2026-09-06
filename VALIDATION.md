@@ -77,12 +77,27 @@ descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content
 or proof of unrelated runtime behavior.
 
+The dated live-window attempt produced blank captures and established neither
+input delivery nor a walkthrough; PrintWindow success alone is not pixel evidence.
+Its historical correction is recoverable through `developer_state.json` → `_history`.
+
 September 6 repository preparation used the existing focused checks: packet exporter
 **21/21**, probe refuter **46/46**, probe author **43 checks with 17 falsifiable guards**,
 and host-attestor unit tests **13/13**. The exporter tests use fake headless launchers;
 no Ghidra project was opened. The probe author retained the three protected input hashes.
 The attestor's help/diagnostic correction did not rerun full campaign verification.
 Documentation and public-payload gates passed.
+
+The independent follow-up reproduced two unsafe unregistered-packet cases and the
+bind-alias output-admission defect before repair. The completed exporter suite passed
+**24/24** with fake headless launchers. The tool runner passed **4/4** self-tests,
+including Linux skip accounting and simulated Windows dispatch for the four identified
+Windows suites; the full tools aggregate was not rerun. Evidence-register unit tests
+passed **6/6**, the installed-write claim guard passed **14/14** classifier cases and
+its tracked scan, and the docs/public-payload gates passed. State reduction compared
+all protected values with the exact pre-cleanup Git blob; this is not full campaign
+replay or native runtime evidence. The only Core source edit in this follow-up corrects
+a historical replay comment; it changes no executable behavior.
 
 The three Linux namespace-message failures in the August 31 Core receipt were
 reproduced on September 6. The tests now expect Linux's earlier absolute-path refusal

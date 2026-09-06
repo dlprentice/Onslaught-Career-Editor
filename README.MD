@@ -261,4 +261,4 @@ GPL boundary remain authoritative in [`LICENSE`](LICENSE),
 [`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md),
 and [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md).
 Maintainer release checks live in [`README.RELEASE.md`](README.RELEASE.md) and
-[`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
+[`VALIDATION.md`](VALIDATION.md).

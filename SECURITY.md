@@ -1,9 +1,7 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
-pass.
+Last updated: 2026-09-06
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
@@ -15,12 +13,14 @@ the defect.
 
 - Save and options edits start from an existing file, preserve unknown bytes,
   stage a sibling output, replace atomically, and verify committed bytes.
-- The installed game and original `BEA.exe` are read-only. AppCore patches only
-  a verified technical copy or an app-created safe game copy, maintains a
-  verified full-file backup, and stops only a process it launched and identified.
-- AppCore rejects in-place, hardlink, reparse-routed, reserved-device,
-  alternate-stream, network/device, wrong-type, and installed-game-tree output
-  destinations.
+- The pristine measurement specimen is never a write target. AppCore can patch
+  an installed game after its owner explicitly chooses that target and a
+  recovery backup has been verified; otherwise use a verified copy. The guard
+  is `BinaryPatchEngine.AuthorizeInstalledGameWrite`.
+- Each writer must enforce its selected target and reject aliases or unsafe
+  destinations that escape that contract. A copied-output export must not
+  overwrite its input or escape into an installed game tree. Process cleanup
+  stops only a process the workflow launched and identified.
 - Generated catalogs use bundle-relative paths. Catalog readers reject rooted,
   escaping, reparse, hardlink, network, device, and game-tree declarations and
   verify source identities and hashes before reading.

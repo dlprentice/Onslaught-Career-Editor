@@ -117,8 +117,8 @@ safe-copy implementation.
 | `OnslaughtCareerEditor.*.Tests/` | Product, adapter, safety, and native UI verification next to the source solution. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
 | [`references/`](references/) | Pinned external source references and submodules. Preserve their own licences and provenance. |
-| [`release/`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md) | Public-boundary, packaging, notice, and signoff inputs; it does not own deployment automation. |
-| [`roadmap/`](roadmap/ROADMAP-INDEX.md) | Current public roadmap and explicitly bounded feasibility work, not operational state. |
+| [`release/`](README.RELEASE.md) | Retained WinUI packaging, notice and signoff inputs; it does not own deployment automation. |
+| [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility. [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
 
 ## Documentation truth owners
 

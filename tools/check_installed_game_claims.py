@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 """Fail if anything still promises the installed game is never changed.
 
-On 2026-08-01 the app started offering to patch a user's installed game, behind an
-explicit choice and a verified backup. That made a claim the project had repeated for
-months false - and it was repeated in a lot of places.
-
-Two sweeps by memory each fixed the surfaces someone happened to remember and missed the
-rest; the second one's own commit message says an adversarial panel found what the sweep
-did not. This is the third approach: enumerate, and keep enumerating.
+The app can patch an installed game after an explicit choice and a verified
+backup. Scan active product claims for contradictory blanket prohibitions.
 
 What is banned is the ABSOLUTE form - a standing promise about the app or the installed
 game. Describing what a particular flow does is fine and mostly still true: creating a
@@ -55,6 +50,7 @@ BANNED = [
     (r"only ever reads it", "standing promise that the app only reads"),
     (r"Never mutate an installed game", "prohibition the app no longer honours"),
     (r"installed game (?:remains|stays) read-only", "standing promise about the installed game"),
+    (r"installed game(?: folder)? and (?:the )?original .*?(?:are|remain) read-only", "standing promise about installed and original files"),
     (r"No installed-game mutation", "app-wide claim in something that describes one profile"),
     (r"it does not edit that folder", "standing promise about the configured folder"),
     (r"(?:Never|Do not|Don't) patch an installed", "prohibition the app no longer honours"),
@@ -62,9 +58,6 @@ BANNED = [
 
 # Where the banned text is legitimate, and why. A file is only exempt for the reason given.
 ALLOWED = {
-    "GOAL.md": "revision history quotes the superseded constraint to explain what replaced it",
-    "CLAUDE.md": "records what the blanket prohibition used to say",
-    "AGENTS.md": "records what the blanket prohibition used to say",
     "developer_state.json": "pickup state records the history of the change",
     "OnslaughtCareerEditor.UiTests/InstalledGamePatchSurfaceTests.cs":
         "asserts the old absolutes are ABSENT, so it must name them",
@@ -128,8 +121,11 @@ def self_test() -> int:
         ("it does not edit that folder", True),
         ("- Never patch an installed `BEA.exe`.", True),
         ("Do not patch an installed Steam/Program Files BEA.exe in place.", True),
+        ("The installed game and original `BEA.exe` are read-only.", True),
+        ("The installed game folder and original `BEA.exe` remain read-only.", True),
         # These describe one action and stay true.
         ("Creating a safe copy changes nothing outside the safe copy.", False),
+        ("Validation used disposable copies and preserved pristine inputs.", False),
         ("Your installed game is never opened.", False),
         ("The save you started from was not touched.", False),
         ("Your original executable is copied and checked before anything is written.", False),

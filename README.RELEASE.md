@@ -51,7 +51,7 @@ ignored local scratch space; the synthetic fixture is not a retail executable,
 installation, or save.
 
 For source-only release boundary changes, select the affected commands from
-[`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
+[`VALIDATION.md`](VALIDATION.md) and the root `package.json`.
 [`release/readiness/THIRD_PARTY_NOTICES.winui.md`](release/readiness/THIRD_PARTY_NOTICES.winui.md)
 is generated from restored project dependencies and must agree with
 `npm run test:notices`.

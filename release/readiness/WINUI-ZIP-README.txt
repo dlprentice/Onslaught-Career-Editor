@@ -90,10 +90,8 @@ First run
   a source-repository/lab workflow documented at
   https://github.com/dlprentice/Onslaught-Career-Editor/tree/main/reverse-engineering/game-assets;
   this portable app ZIP only loads an existing generated catalog.
-- Lore rendering uses the Microsoft Edge WebView2 Runtime. Current Windows
-  systems usually already have it; if the Lore page cannot initialize on a
-  fresh machine, install or repair WebView2 and keep the extracted files
-  together.
+- Lore uses the app's native document renderer and its bundled offline pack.
+  Keep the extracted files together; WebView2 is not a Lore prerequisite.
 
 Safety notes
 ------------

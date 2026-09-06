@@ -1274,11 +1274,11 @@ public sealed class Level100ActorScriptRuntime
     /// content. Whether the compiler emits Integer or Float for a literal such
     /// as <c>Damage(100)</c> is unmeasured, as are the source argument's
     /// identity, positive-shield absorption, death and cleanup ordering, and
-    /// the natural weapon path. A natural call <i>is</i> already recorded:
-    /// re-querying all 66 level-opening coverage indexes finds
-    /// <c>0x005348C0</c> covered at level 720, where <c>Prison.msl:37</c> fires
-    /// it with no player action, so those questions are answerable by mining an
-    /// existing trace rather than by a new capture.
+    /// the natural weapon path. The August 15 level-720 query measured the
+    /// natural <c>Prison.msl:37</c> call and the building receiver's forwarding
+    /// arm. Its retained result is recorded in RE-INDEX.md and developer_state.json.
+    /// The raw TTD recording was later retired; retained extracts do not permit
+    /// new queries of that session or settle the remaining limits above.
     /// </remarks>
     internal Level100MissionDamageForward InvokeDamageNative(
         int command,

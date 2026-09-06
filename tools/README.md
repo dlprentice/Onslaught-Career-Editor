@@ -4,10 +4,10 @@ Status: active — the reusable support surface, not a product lane
 Last updated: 2026-09-06
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
-`tools/` contains the small reusable support surface for the WinUI product,
-release packaging, guarded asset extraction, format inspection, Ghidra work,
-and controlled copied-runtime research. It is not a product GUI or a historical
-probe archive.
+`tools/` supports retail research, the Godot rebuild, and the retained toolkit
+source through guarded extraction, format inspection, Ghidra instruments and
+focused checks. The Godot companion conversion has not started. Existing WinUI
+packaging helpers remain reference tooling for that retained source.
 
 Root [`package.json`](../package.json) is the command authority. On Omarchy,
 start with:
@@ -23,6 +23,15 @@ forward-slash paths on both hosts. Dated receipts and historical evidence may
 retain the literal Windows commands and drive letters that produced them; a
 tool can also have an explicitly documented Windows evidence dependency.
 
+`npm run test:tools` runs the registered suites supported on the current host.
+The runner explicitly skips four Windows-dependent process/input/debugger suites
+on Linux and reports them separately from passes. A Linux aggregate does not
+establish their Windows behavior; prefer an affected suite for a focused change.
+
+`send_game_window_input.ps1` defaults to `auto`, which may take foreground and
+send global input. Select `-Transport messages` explicitly when input must stay
+limited to the target window. Windows runtime helpers remain Windows-gated.
+
 ## Product and release
 
 - `winui_lore_pack_builder.py` builds the short-path offline pack from the
@@ -32,9 +41,9 @@ tool can also have an explicitly documented Windows evidence dependency.
 - `generate_winui_third_party_notices.py` keeps the tracked notice draft aligned
   with restored project dependencies.
 
-Use [`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](../release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
-for release-specific command selection. These tools do not publish, sign, or
-install anything by themselves.
+Use [`VALIDATION.md`](../VALIDATION.md) and
+[`README.RELEASE.md`](../README.RELEASE.md) for retained-source release checks.
+These tools do not publish, sign, or install anything by themselves.
 
 ## Documentation integrity
 
@@ -45,7 +54,7 @@ install anything by themselves.
   everywhere, plus Evidence and Specimen on findings. It rejects a byte claim
   that names no specimen, and a specimen that cites the deliberately patched
   Steam install. `doc_header_backlog.txt` holds the pre-standard documents and
-  may only shrink; `--self-test` runs 44 cases with no repository present, and
+  may only shrink; `--self-test` exercises the rules without a repository, and
   exit `2` means the check could not run rather than that it found nothing.
 - `re_function_doc_names_check.py` re-resolves every per-function note's name
   assertion against a dated Ghidra name table.
@@ -100,6 +109,11 @@ fidelity.
 A run that can score nothing reports `UNSCORED`, never `PASS`. Reference frames
 are retail-derived and live under ignored local paths, so a fresh clone scores
 nothing and must say so.
+
+Review is optional and question-driven under
+[REVIEW-PROTOCOL.md](../reverse-engineering/REVIEW-PROTOCOL.md). The retired
+`re_per_gen_*` matrix runners and scoreboards remain in Git history; their
+generated lab evidence stays intact and does not queue new reviews.
 
 ## Campaign replay
 
@@ -284,7 +298,10 @@ planning and creates or replaces nothing. A re-run verifies READY, its manifest
 hash and every inherited packet before skipping completed VAs. An extension
 exports only missing VAs and publishes a combined hash map; the specimen,
 program metadata and closure-table hash must agree. Different provenance needs
-a fresh output directory. Orphan packets are not certified by an image field alone.
+a fresh output directory. Unregistered packets cause refusal even when their
+image field matches; preserve them and choose a fresh directory, or explicitly
+use `--force` where no run bookkeeping exists. Output cannot be inside the
+Ghidra project, including through the Projects/Archive B bind alias.
 
 `--force` may replace the requested packets, including foreign-image packets,
 but refuses while run bookkeeping exists. Preserve an incomplete run and select
