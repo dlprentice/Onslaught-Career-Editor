@@ -988,7 +988,10 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
             "MissionScripts, and default physics.dat"
         )
 
-    mesh_paths = sorted(mesh_root.glob("*.msh.aya"), key=lambda item: item.name.casefold())
+    mesh_paths = sorted(
+        mesh_root.glob("*.msh.aya", case_sensitive=False),
+        key=lambda item: item.name.casefold(),
+    )
     parsed = [_mesh_record(path) for path in mesh_paths]
     mesh_records = [record for record, _mesh in parsed]
     membership = _level_mesh_membership(resource_root, parsed)

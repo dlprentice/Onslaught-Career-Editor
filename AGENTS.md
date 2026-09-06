@@ -31,8 +31,8 @@ organization are fine.
 
 ## Ground rules
 
-- Nothing irreversible happens to a user's files without an explicit informed choice and a verified backup made
-  first; `BinaryPatchEngine.AuthorizeInstalledGameWrite` in AppCore is the model. Never manufacture an
+- Game/save writes require an informed user choice and a verified recovery copy before overwriting original
+  data; `BinaryPatchEngine.AuthorizeInstalledGameWrite` in AppCore is the model. Never manufacture an
   "original" from an already modified file, and never destroy career data as a side effect.
 - The pristine specimen (`BEA.exe`, SHA-256 `74154bfa…`) is the byte-measurement baseline: read it, never write
   it. Every byte or address finding names the specimen it was read from, with its hash. The maintainer's
@@ -54,12 +54,17 @@ organization are fine.
   `reverse-engineering/ghidra/` (`db.18634`, never opened for writing), the working project
   `local-lab/ghidra-projects/BEA/BEA.gpr` (Ghidra 12.1.3, `db.18635`, the only writable one), and
   `/srv/archive-a/onslaught-ghidra-cold/` (a dated rsync of both plus Codex's consolidated package; restore a
-  copy, never open it in place). A semantic mutation needs the promotion gate in
-  `reverse-engineering/ghidra/README.md` and David's explicit go; an open Ghidra MCP connection is access, not
-  permission.
-- `local-lab/` and `local-data/` are real directories inside this checkout, ignored by Git, never symlinks, bind
-  mounts, twins or read-only views; `~/ProjectData` is gone and stays gone. Nothing in them is deleted, moved or
-  deduplicated without David's explicit go through `~/Work/storage-migration-2026-08-29/DELETE-QUEUE.md`. A
+  copy, never open it in place). Semantic work remains paused. Once David authorizes a mutation plan, its
+  declared cohort proceeds through the promotion gate in `reverse-engineering/ghidra/README.md` without
+  another permission request for each ordinary gate. An open Ghidra MCP connection is access, not permission
+  to invent a different mutation scope.
+- `local-lab/` and `local-data/` are real writable directories inside this checkout, ignored by Git, not
+  symlinks or separately mounted recovery views. The complete checkout physically resides at
+  `/srv/archive-b/Onslaught-Career-Editor`; the familiar Projects path bind-mounts the same files.
+  `~/ProjectData` is gone and stays gone. Carry out the approved organization plan under `~/AGENTS.md`:
+  exact moves, hash-proven duplicate retirement and routing repairs do not need another batch-number reply.
+  Record targets, evidence and outcomes in `~/Work/storage-migration-2026-08-29/DELETE-QUEUE.md`; preserve
+  unique work and explicit KEEP holds, and ask about uncertain/last-copy loss or genuinely new scope. A
   2026-08-06 cleanup deleted frozen campaign inputs whose identities were pinned in tooling, so before calling
   anything stale, grep the tooling and tests, not only the docs.
 - Never run `git clean` at the repository root (`-x`/`-X` would erase the lab) and never stage the lab with a broad
@@ -72,9 +77,11 @@ organization are fine.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.
-- No hosted CI, release automation, duplicate test suites, matrices, status or handoff files. One branch, `main`,
-  pushed to `dlprentice/Onslaught-Career-Editor`; commit, push and release are standing-authorized, which relaxes
-  none of the rules above.
+- Reuse existing tooling and records; avoid duplicate test frameworks, broad routine matrices and new status
+  or handoff files. Add a focused test when a real behavioral gap needs one. Hosted CI and release automation
+  are not part of the present preparation task. Work on `main`, pushed to
+  `dlprentice/Onslaught-Career-Editor`; normal commits and pushes are authorized. Release preparation remains
+  subject to the actual development hold and the selected platform's validation, not repeated step approvals.
 - Root commands use `python` (3.14) and forward-slash paths; Windows-only scripts fail fast here through
   `tools/require_windows_host.py`. Drive letters in old receipts are history, not routing.
 
@@ -90,8 +97,8 @@ organization are fine.
 | `lore/`, `lore-book/`, `patches/`, `roadmap/`, `release/` | Canonical lore library (`lore/_index.md`), its reading guide, the patch catalog, the public roadmap, release readiness. |
 | `developer_state.json` | 935 KB of resumable state. `current_re_authority` is the only live selector; the dated `_*` keys are history. Awareness, never truth that primary evidence cannot overturn. |
 | Root `*.md` | `README.MD` (product and lanes), `PROJECT-INDEX.md` (code ownership), `VALIDATION.md` (which gate for which change), `DOCUMENTATION.md` (the header standard), `CONTRIBUTING.md`, `SECURITY.md`, `LOCAL_LAB_OVERLAY.md`, `README.RELEASE.md`. A new tracked `.md` needs `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block. |
-| `local-lab/` (ignored, 81 GB) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
-| `local-data/` (ignored, 9.7 GB) | Machine-local data that is not lab evidence: `host-attestations/` (the gen32 attestor's pinned output), `retail-profiles/`, `media/`, `vm-media/`, `windows-vm/`, `windows-profile-2026-08-28/`, and the `_recovered-*` reconciliation packages described by its own `AGENTS.md`. |
+| `local-lab/` (ignored) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
+| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/` (the gen32 attestor's pinned output), `retail-profiles/`, `media/`, `vm-media/`, `windows-vm/`, `windows-profile-2026-08-28/`, and the `_recovered-*` reconciliation packages described by its own `AGENTS.md`. |
 | `.artifacts/` (ignored) | Legacy validation, screenshot and publish output. It can contain unique evidence, so ignored does not mean disposable. Keep existing coupled tool paths; use `local-data/` for new general-purpose outputs and the numbered queue for retirement. |
 
 ## Commands
@@ -117,13 +124,13 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`;
    anything that adds files → `npm run test:safety`; a tool → its own `_tests.py`; Core or Client → the matching
-   `test:rebuild-*`. Do not run `tools/run_tool_tests.py` whole (about 40 suites, some compile executables and
-   spawn PowerShell); run the suite you touched.
+   `test:rebuild-*`. Start with the suite you touched; the full `tools/run_tool_tests.py` is expensive and is
+   appropriate only when the affected scope requires it. Documentation-only edits do not require engine builds.
 2. A new or edited tracked `.md` has the header fields and no volatile generation numbers, and is not added to
    `tools/doc_header_backlog.txt`.
 3. Evidence claims name their specimen, capture or test; anything unproven is written as an open question.
 4. `git status` shows only your change and nothing from `local-lab/` or `local-data/`. Commit on `main` with a
-   plain message and push.
+   plain message and push, then continue the remaining authorized work rather than stopping after a substep.
 
 ## Gotchas learned the hard way
 
@@ -138,8 +145,8 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
   archives). Its `BEA.exe` (`e1436ef7…`) is a safe copy, not the `74154bfa…` specimen. The same copy also lives in
   Archive A at `graveyard/D-backups/Onslaught-Career-Editor-full-copy-20260814-20260814T122949Z/local-lab/`,
   which earlier stages used. The September 5 code/config check found no current hard-wired graveyard
-  selection; use the explicit repo-local command above. Archive A's copy is retained history, not permission
-  to remove it or the rest of `graveyard` without a numbered batch.
+  selection; use the explicit repo-local command above. Archive A's copy is retained history. Reconcile its
+  exact contents under the approved cleanup plan; a matching name alone never justifies retiring the graveyard.
 - `BEA.exe` writes `setuphistory.txt` and `cardid.txt` into its working directory, so launch a copy from its own
   folder; both names are ignored in case a launcher forgets.
 - `tools/doc_header_backlog.txt` may only shrink. Never add a file to it to silence a header failure.

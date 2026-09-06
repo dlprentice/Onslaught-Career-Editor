@@ -76,8 +76,8 @@ QUARANTINED_SUMMARY_OPTIONS_OPEN = {
 
 
 # The two-trace stage-1 pilot of 2026-07-31 (local-lab/TTD-PILOT-2026-07-31.md),
-# recorded verbatim from the receipts it wrote.  Both traces were replayed from
-# the pristine specimen local-lab/safe-copy-bea-pristine/BEA.exe, sha256
+# recorded verbatim from the receipts it wrote. Both traces used the patched
+# safe-copy target local-lab/safe-copy-bea-pristine/BEA.exe, not the pristine specimen; sha256
 # E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4.
 #
 #   G:\bea-ttd\q-pilot-cov-l742-20260731\receipt.json      exit 10, Thread stop
@@ -143,12 +143,8 @@ PILOT_L700_METADATA = {
     "requested_from": "0x34:0x0",
     "requested_to": "0x1A63E8:0x270F",
 }
-PILOT_L742_RECEIPT = pathlib.Path(
-    r"G:\bea-ttd\q-pilot-cov-l742-20260731\receipt.json"
-)
-PILOT_L700_RECEIPT = pathlib.Path(
-    r"G:\bea-ttd\q-pilot-cov-l700-20260731\receipt.json"
-)
+PILOT_L742_RECEIPT = ROOT / "local-lab/evidence/ttd-retained/q-pilot-cov-l742-20260731/receipt.json"
+PILOT_L700_RECEIPT = ROOT / "local-lab/evidence/ttd-retained/q-pilot-cov-l700-20260731/receipt.json"
 
 
 def read(path: pathlib.Path) -> str:

@@ -766,13 +766,16 @@ tool's own documentation, not here.
   single elevated shell.
   **Standing caveat: TTD recording is Windows-only and requires an elevated
   token.** The current Omarchy host cannot record, and the prepared Windows VM
-  is not yet activated. Once activated and provisioned with TTD, start an
+  is not yet activated. The old 75 raw recordings were deliberately retired;
+  retained extracts cannot be replayed to answer new questions. New recording
+  is outside the current preparation task. Once separately resumed and provisioned with TTD, start an
   unattended campaign from one elevated guest shell; the manual attach helper
   raises UAC for an individual capture.
 - `ttd_coverage_index.py` (P5) — the offline cross-trace query root over the
   retained exec-coverage receipts. `build` walks an explicitly supplied
   receipts root. `G:\bea-ttd` is the historical Windows corpus path, not a
-  current Linux route; recovered evidence subsets live under the canonical
+  current Linux route. Use `--root local-lab/evidence/ttd-retained` for the
+  relocated B receipt collection; other recovered evidence subsets remain under
   repo-local `local-lab/`, and no claim is made here that the full historical
   corpus is present. The tool validates every `coverage.jsonl`
   fail-closed (per-row byte/VA/RVA arithmetic, module-span domain bounds,
@@ -789,7 +792,8 @@ tool's own documentation, not here.
   per-address trace membership plus must-hit / must-miss controls; it launches
   no debugger and never records. The preregistered first question (which
   retained traces contain any of the nine FireLock PCs, with ApplyDamage as
-  must-hit and current-time BSS as must-miss) is answered in PROGRAM.md P5.
+  must-hit and current-time BSS as must-miss) is a completed P5 historical result,
+  not a current promise of raw trace replay.
   Focused gate: `python ./tools/ttd_coverage_index_tests.py` (registered in
   `npm run test:tools`).
 - `Record-Level521Session.ps1` / `Test-Level521NativeCoverage.ps1` —

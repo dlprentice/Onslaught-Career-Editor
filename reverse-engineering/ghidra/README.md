@@ -129,7 +129,8 @@ POST recovery was created at
 and is now represented by the sealed Archive A recovery package;
 it reopened as `BEA.exe`, MD5 `3b456964020070efe696d2cc09464a55`, specimen
 SHA-256 `74154bfa…7750`. Future live work can make the snapshot lag again; each
-refresh remains a separately authorized promotion. That ceremony's ignored live
+refresh must be part of an authorized promotion plan, not an automatic sync. Its ordinary
+approved gates do not need repeated permission. That ceremony's ignored live
 readback is
 `local-lab/name-cohort-battleengine-set-collision-shape-ceremony-2026-08-28/readback.json`
 (2,264 bytes, SHA-256
@@ -233,25 +234,28 @@ letters speculatively:
 | Activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` (ignored completion receipt and semantic PRE/POST) |
 | External recovery | `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` (sealed package; restore elsewhere before opening) |
 | Dated copies of both homes | `/srv/archive-a/onslaught-ghidra-cold/2026-09-04/` (checkpoint and mutable project stored separately) |
-| Second-disk cold mirror | `/srv/archive-b/onslaught-ghidra-cold-mirror/` (recovery only; never open in place) |
+| Same-drive cold mirror pending reconciliation | `/srv/archive-b/onslaught-ghidra-cold-mirror/` (B also holds the live repository; this is not drive-failure protection) |
 
 The former Samsung raw snapshot, Archive A Windows `source/` tree, and
 Recovery reconciliation folder have been deleted. Their old receipts are
-history, not additional surviving database copies. Keep the current cold
-copies and the historical rehearsal projects until David approves a specific
-numbered deletion batch. A larger database generation counter in a rehearsal
+history, not additional surviving database copies. Keep Archive A's independent cold
+recovery and David's explicit historical-project retention holds. Reconcile proven redundant
+copies under the approved storage plan with exact-path/hash records; do not ask again solely
+for a batch number. A larger database generation counter in a rehearsal
 copy does not make it the reviewed or writable authority.
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
 live under real, ignored canonical-checkout `local-lab/` — do not commit them.
-Child worktrees use the canonical absolute path; never create a duplicate lab,
-symlink, bind mount, or read-only substitute. Prefer **headless CLI** exports
+The complete repository is on encrypted Archive B with a bind/automount at its familiar Projects
+path; both Ghidra homes moved without database mutation. Child worktrees use the canonical
+absolute lab path; never create a duplicate lab, symlink or separately mounted/read-only substitute.
+Prefer **headless CLI** exports
 and scripts under `tools/` for automation only after the selected project and
 ceremony gate permit them. Do not assume a Ghidra MCP
-extension is installed or required. Mutating the maintainer project is a
-separately authorized action; default posture is read-only on a disposable
-copy. Promoting live maintainer DB bytes into this tracked snapshot is likewise
-separately authorized.
+extension is installed or required. A mutation/promotion plan must explicitly cover its
+cohort, live apply and tracked refresh; those approved steps do not need separate permission
+requests. The current development hold still applies. Default inspection is read-only on a
+disposable copy, never an automatic live open or checkpoint synchronization.
 
 ## Promotion-tool status
 

@@ -4,7 +4,8 @@
 For each campaign residual with observationState=EXECUTED:
 
   1. Coverage join — bytes of [start,end) present in a union of existing
-     coverage.jsonl indexes (discover under G:/bea-ttd and local-lab).
+     coverage.jsonl indexes (discover under repository-local local-lab,
+     including evidence/ttd-retained; retired recordings are not replayed).
   2. Callback-slot / CALL-reg join — re_callreg_imm_peephole.analyze over the
      residual start VA as candidate (imm32 install / near CALL-reg).
   3. Absolute-pointer inbound — image dwords equal to start (or interior) from
@@ -401,7 +402,7 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         action="append",
         default=None,
-        help="Root(s) to discover coverage.jsonl (repeatable). Default: G:/bea-ttd + local-lab",
+        help="Root(s) to discover coverage.jsonl (repeatable). Default: repository local-lab, including retained TTD evidence",
     )
     p.add_argument(
         "--coverage-limit",
@@ -413,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--json-out", type=Path, required=True)
     args = p.parse_args(argv)
 
-    roots = args.coverage_root or [Path("G:/bea-ttd"), Path("local-lab")]
+    roots = args.coverage_root or [cov.REPO / "local-lab"]
     result = run_join(
         specimen=args.specimen,
         campaign_residuals=args.campaign_residuals,

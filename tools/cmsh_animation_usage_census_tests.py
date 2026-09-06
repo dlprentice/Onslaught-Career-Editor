@@ -225,7 +225,12 @@ DATA_ROOT = Path(
         census.ROOT / "local-lab" / "safe-copy-bea-pristine" / "data",
     )
 )
-INDEX_PATH = Path(os.environ.get("ONSLAUGHT_ASSET_INDEX", "G:/bea-asset-mirror/INDEX.jsonl"))
+INDEX_PATH = Path(
+    os.environ.get(
+        "ONSLAUGHT_ASSET_INDEX",
+        census.ROOT / "local-lab/inputs/asset-mirror/INDEX.jsonl",
+    )
+)
 
 
 @unittest.skipUnless(

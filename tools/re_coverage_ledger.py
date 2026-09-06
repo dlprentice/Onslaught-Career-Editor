@@ -100,7 +100,7 @@ REPO = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
 # Defaults. Every one of these is overridable on the command line; they are the
-# measured locations as of 2026-08-02 and are recorded into the snapshot.
+# current local owners; their measured contents are recorded into each snapshot.
 # ---------------------------------------------------------------------------
 
 PRISTINE_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -111,7 +111,7 @@ DEFAULT_NATIVES = REPO / "local-lab/ghidra-from-trace-2026-07-28/script-native-t
 DEFAULT_PARITY_GRAPH = REPO / "local-lab/parity-lab-static-v5-2026-07-29/parity-graph.ready.json"
 
 DEFAULT_COVERAGE_ROOTS = [
-    Path("G:/bea-ttd/q-campaign-coverage-v1"),
+    REPO / "local-lab/evidence/ttd-retained/q-campaign-coverage-v1",
     REPO / "local-lab/startup-to-main-menu-20260729-173124-exec-v1",
     REPO / "local-lab/frontend-manual-02-exec-par-v2",
     REPO / "local-lab/options-open-manual-01-exec-v1",

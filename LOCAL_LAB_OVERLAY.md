@@ -18,8 +18,8 @@ Current owners:
   writable, Git-ignored owner for manually supplied game installs, copied
   runtime targets, converted rebuild assets, campaign evidence, and other
   durable workstation-local inputs;
-- `.artifacts/` — disposable validation, screenshots, publish output, reports,
-  and extracted release candidates;
+- `.artifacts/` — legacy validation, screenshots, publish output, reports,
+  and extracted release candidates; inspect before retirement because some is unique evidence;
 - `local-data/` (Git-ignored, inside this checkout; `~/ProjectData` no longer exists) —
   recovered worktree/conflict packages, preserved Windows-profile inputs, retail
   profiles, media, VM media, and the gen32 host attestations that are not part of
@@ -28,9 +28,11 @@ Current owners:
   (12.1.3, `db.18635`, owner `xsniper80`); the tracked checkpoint and sealed
   off-volume package are preservation owners, never writable inputs.
 
-The canonical lab was moved by same-filesystem atomic rename on 2026-08-30; the
-old ProjectData path is absent, and no twin, symlink, bind mount, or read-only
-view remains. It is a physical directory inside only the canonical checkout.
+The canonical lab was moved inside the checkout by atomic rename on 2026-08-30.
+On 2026-09-05 the complete checkout moved to `/srv/archive-b/Onslaught-Career-Editor`
+on encrypted ext4. The familiar Projects path bind/automount reaches those same files;
+the lab itself remains a normal writable child directory. The verified Samsung original
+was retired. The old ProjectData path is absent, not a compatibility link.
 Fresh clones and Git child worktrees do not receive ignored content. A worktree
 must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
 the owning tool's explicit lab option; do not create a per-worktree copy.
@@ -64,5 +66,6 @@ OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution are installed.
 The activation ceremony completed on 2026-08-31: `local-lab/ghidra-projects/BEA/`
 is the sole mutable PC project at `db.18635`, and its ignored completion receipt
 is under `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`.
-Activation does not authorize arbitrary database changes; each semantic mutation
-still requires its own PRE/rehearsal/authorization/readback/POST gate.
+Semantic development remains paused. A future authorized mutation plan still requires its
+bounded PRE/rehearsal/apply/readback/POST checks; ordinary steps within that approved
+scope do not require repeated user permission.

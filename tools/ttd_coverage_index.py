@@ -55,9 +55,9 @@
 #
 # USAGE
 # -----
-#   py -3 tools\ttd_coverage_index.py build --root G:\bea-ttd \
-#       --out .artifacts\ttd-coverage-index.json
-#   py -3 tools\ttd_coverage_index.py query --index .artifacts\ttd-coverage-index.json \
+#   python tools/ttd_coverage_index.py build --root local-lab/evidence/ttd-retained \
+#       --out local-data/ttd-coverage-index.json
+#   python tools/ttd_coverage_index.py query --index local-data/ttd-coverage-index.json \
 #       --va 0x00407060,0x004f9a90 --expect-hit 0x004f9a90 --expect-miss 0x00672fd0
 #
 # Addresses may be given as absolute VAs (--va) or as RVAs against the common

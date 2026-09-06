@@ -5,6 +5,7 @@ import json
 import pathlib
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -49,8 +50,12 @@ class ExecutedResidualJoinPlateTests(unittest.TestCase):
 class ExecutedResidualJoinToolTests(unittest.TestCase):
     def test_cli_smoke_limited_coverage(self) -> None:
         # limited coverage roots keep the unit test bounded
-        out = ROOT / "local-lab" / "_tmp_executed_join_smoke" / "JOIN.json"
-        out.parent.mkdir(parents=True, exist_ok=True)
+        scratch_root = ROOT / "local-data" / "test-runs"
+        scratch_root.mkdir(parents=True, exist_ok=True)
+        scratch = self.enterContext(
+            tempfile.TemporaryDirectory(prefix="executed-join-", dir=scratch_root)
+        )
+        out = pathlib.Path(scratch) / "JOIN.json"
         completed = subprocess.run(
             [
                 sys.executable,
