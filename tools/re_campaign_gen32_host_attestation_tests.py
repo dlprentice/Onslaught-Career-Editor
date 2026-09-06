@@ -187,7 +187,7 @@ class Gen32HostAttestationUnitTests(unittest.TestCase):
         implicit_repo_output = self.lab.parent / "host-attestations" / expected.name
         with self.assertRaisesRegex(
             host.AttestationError,
-            "explicit ProjectData route",
+            "explicit local-data route",
         ):
             host._authorized_attestation_path(
                 implicit_repo_output,
@@ -336,7 +336,7 @@ class Gen32HostAttestationUnitTests(unittest.TestCase):
             timeout=60,
         )
         self.assertEqual(completed.returncode, 10)
-        self.assertIn("explicit ProjectData route", completed.stderr)
+        self.assertIn("explicit local-data route", completed.stderr)
         self.assertNotIn("CAMPAIGN_HOST_INTEGRITY_VERIFIED", completed.stdout)
 
     def test_integrity_mode_never_prints_or_writes_full_replay_authority(self) -> None:

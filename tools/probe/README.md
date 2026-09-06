@@ -4,7 +4,7 @@ Status: integrated — the three stages below were built in separate lanes and
 merged here; on 2026-08-02 the original nine-launch integration was followed by
 six replicated Mission-logger launches and seven Mission VM-trace/control
 launches, all unattended.
-Last updated: 2026-08-31.
+Last updated: 2026-09-06 (Linux fixture path and operational-ledger routing; no new runtime probe).
 Summary: author a probe that makes specific engine behaviour fire, run it
 unattended and record it, then put the result through a stage that tries to kill
 it. Authoring, running and refuting are three separate programs with three
@@ -520,7 +520,7 @@ sanitised one.
 | `ADVERSARY-PROMPT.md` | the brief handed to a refuting agent. Six attacks, run in order, with a required return shape |
 | `adversary.py` | renders the brief, merges the attack report back into the finding, and audits the refuter's own kill rate |
 | `fixtures/` | the two real 2026-07-31 records |
-| `refute_tests.py` | 43 tests, including 16 mutations and 16 rule-neuterings |
+| `refute_tests.py` | Admissibility, mutation, rule-neutering and canonical ledger-routing tests |
 
 No third-party dependencies; `jsonschema` is not installed on this machine, so
 `refute.py` carries a small validator for the schema subset the file uses.
@@ -533,9 +533,19 @@ python tools/probe/refute.py --template > new.json       # blank record
 python tools/probe/refute.py --explain                   # the 16 rules
 python tools/probe/adversary.py --brief FINDING.json     # the attack brief
 python tools/probe/adversary.py --merge FINDING.json --attack ATTACK.json -o merged.json
-python tools/probe/adversary.py --audit --ledger local-lab/probe/refutation-ledger.jsonl
+python tools/probe/refute.py FINDING.json --ledger       # canonical operational ledger
+python tools/probe/adversary.py --audit                  # reads that same ledger
 python tools/probe/refute_tests.py                       # self-test
 ```
+
+The default ledger is `local-data/probe/refutation-ledger.jsonl` beside the
+existing canonical lab. Child worktrees set `BEA_LOCAL_LAB` to that lab's
+absolute path. Resolution is lazy: template generation and adjudication without
+`--ledger` do not need private data. A missing `local-data/` root or linked
+default output is refused without creating a replacement root; an explicit
+`--ledger PATH` still selects the caller's path. The ledger is operational
+history, not a campaign authority. No old ledger existed at the former default
+`local-lab/probe/` during the September 6 routing correction.
 
 The loop shape:
 

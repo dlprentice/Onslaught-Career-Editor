@@ -90,7 +90,28 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
 SCHEMA_PATH = HERE / "finding_schema.json"
 FIXTURES = HERE / "fixtures"
-DEFAULT_LEDGER = REPO_ROOT / "local-lab" / "probe" / "refutation-ledger.jsonl"
+DEFAULT_LEDGER = Path("local-data/probe/refutation-ledger.jsonl")
+
+
+def default_ledger() -> Path:
+    """Resolve operational output beside the existing canonical lab, lazily.
+
+    A child worktree uses BEA_LOCAL_LAB; it must not create a shadow lab or
+    operational root merely because a command requested its default ledger.
+    """
+    import bea_lab
+
+    try:
+        lab = bea_lab.find_lab()
+    except bea_lab.LabNotFound as error:
+        raise OSError(str(error)) from error
+    data = lab.parent / "local-data"
+    if data.is_symlink() or not data.is_dir():
+        raise OSError(f"default ledger needs an existing plain local-data directory: {data}")
+    ledger = data / "probe" / "refutation-ledger.jsonl"
+    if ledger.parent.is_symlink() or ledger.is_symlink():
+        raise OSError(f"default ledger refuses a linked output path: {ledger}")
+    return ledger
 
 SURVIVED = "SURVIVED"
 REFUTED = "REFUTED"
@@ -918,9 +939,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("finding", nargs="?", type=Path,
                         help="a finding record JSON file")
     parser.add_argument("--json-out", type=Path)
-    parser.add_argument("--ledger", type=Path, nargs="?", const=DEFAULT_LEDGER,
+    parser.add_argument("--ledger", type=Path, nargs="?", const=True,
                         help="append this adjudication to a refutation ledger "
-                             f"(default {DEFAULT_LEDGER})")
+                             f"(default: canonical {DEFAULT_LEDGER}; worktrees use BEA_LOCAL_LAB)")
     parser.add_argument("--min-sample-n", type=int, default=1,
                         help="floor on the summed discriminating sample size")
     parser.add_argument("--template", action="store_true",
@@ -961,13 +982,19 @@ def main(argv: list[str] | None = None) -> int:
     report = adjudicate(finding, min_sample_n=arguments.min_sample_n)
     report["source"] = str(arguments.finding)
 
+    try:
+        ledger = default_ledger() if arguments.ledger is True else arguments.ledger
+    except OSError as error:
+        print(f"cannot select ledger: {error}", file=sys.stderr)
+        return 4
+
     if not arguments.quiet:
         print(render(report))
     if arguments.json_out:
         arguments.json_out.parent.mkdir(parents=True, exist_ok=True)
         arguments.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    if arguments.ledger:
-        append_ledger(arguments.ledger, report, finding)
+    if ledger:
+        append_ledger(ledger, report, finding)
     return report["exitCode"]
 
 

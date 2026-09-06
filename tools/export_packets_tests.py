@@ -22,6 +22,10 @@ incremental gate is decoration.
 
 from __future__ import annotations
 
+import hashlib
+import importlib.util
+import contextlib
+import io
 import json
 import os
 import stat
@@ -29,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 TOOL = Path(__file__).resolve().parent / "export_packets.py"
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +51,8 @@ EXPECTED_VAS = [
 FAKE_HEADLESS_INNER = """\
 import hashlib, json, os, sys
 args = sys.argv[1:]
+with open(os.path.join(os.path.dirname(__file__), "headless-calls.jsonl"), "a") as log:
+    log.write(json.dumps(args) + "\\n")
 # Launched as: python fake-headless-inner.py <project_root> <name> <flags...>
 rest = args
 project_root, project_name = rest[0], rest[1]
@@ -123,32 +130,34 @@ for entry in entries:
     manifest_packets[name] = {"sha256": hashlib.sha256(raw).hexdigest()}
 manifest = {"schema": "bea.re.triage-run-manifest.v1",
             "executableSha256": IMAGE, "packetsWritten": len(entries),
+            "programName": "BEA.exe", "programMd5": "fake-md5",
+            "imageBase": "00400000", "language": "fake-x86",
+            "campaignGradesSource": closure,
+            "campaignGradesSha256": hashlib.sha256(open(closure, "rb").read()).hexdigest() if closure else None,
             "packets": manifest_packets}
 open(os.path.join(out, "run-manifest.json"), "w", encoding="utf-8").write(
     json.dumps(manifest, indent=2))
 open(ready, "w", encoding="utf-8").write(json.dumps(
     {"schema": "bea.re.triage-ready.v1", "status": "READY",
      "executableSha256": IMAGE, "packetsWritten": len(entries),
+     "manifest": {"sha256": hashlib.sha256(open(os.path.join(out, "run-manifest.json"), "rb").read()).hexdigest()},
      "outputDirName": os.path.basename(out)}, indent=2))
 print("TRIAGE_PACKETS_READY count=%d exe=%s" % (len(entries), IMAGE))
 """
 
 
 def write_fake_headless(root: Path) -> Path:
-    """A real .bat that forwards to a deterministic Python stub.
-
-    The driver composes ``cmd.exe /d /s /c call <bat> ...`` and reads the
-    child's stdout, so the fake must be an actual batch file whose stdout
-    carries the same TRIAGE_ markers as ExportTriagePacket.java.
-    """
+    """An executable host-native stub; no Ghidra program is opened."""
     inner = root / "fake-headless-inner.py"
     inner.write_text(FAKE_HEADLESS_INNER.replace("IMAGE", repr(IMAGE)), encoding="utf-8")
-    fake = root / "fake-analyzeHeadless.bat"
-    fake.write_text(
-        "@echo off\r\n"
-        f"\"{sys.executable}\" \"{inner}\" %*\r\n",
-        encoding="utf-8",
-    )
+    if os.name == "nt":
+        fake = root / "fake-analyzeHeadless.bat"
+        fake.write_text("@echo off\r\n" + f'"{sys.executable}" "{inner}" %*\r\n',
+                        encoding="utf-8")
+    else:
+        fake = root / "fake-analyzeHeadless"
+        fake.write_text(f"#!{sys.executable}\n" + inner.read_text(), encoding="utf-8")
+        fake.chmod(fake.stat().st_mode | stat.S_IXUSR)
     return fake
 
 
@@ -346,6 +355,216 @@ def test_driver_refuses_live_project_by_default(root: Path) -> None:
     combined = proc.stdout + proc.stderr
     assert proc.returncode == 1, combined
     assert "live maintainer project" in combined, combined
+
+
+def output_bytes(out: Path) -> dict[str, bytes]:
+    return {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()}
+
+
+def test_dry_run_does_not_create_output_or_launch(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = root / "absent/packets"
+    vas = write_va_list(root, EXPECTED_VAS)
+    code, output = run_driver(["--dry-run"], root, fake, vas, out)
+    assert code == 0, output
+    assert not out.parent.exists()
+    assert not (root / "headless-calls.jsonl").exists()
+
+
+def test_force_refusal_preserves_committed_evidence(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    before = output_bytes(out)
+    for flags in [["--force"], ["--force", "--dry-run"]]:
+        code, output = run_driver(flags, root, fake, vas, out)
+        assert code == 1 and "bookkeeping" in output, output
+        assert output_bytes(out) == before
+    assert len((root / "headless-calls.jsonl").read_text().splitlines()) == 1
+
+
+def test_dry_run_preserves_orphan_packets_and_bookkeeping(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    packet = out / f"packet-{EXPECTED_VAS[0]}.json"
+    packet.write_text(json.dumps({"executableSha256": IMAGE}))
+    before = output_bytes(out)
+    for flags in [["--dry-run"], ["--dry-run", "--force"]]:
+        code, output = run_driver(flags, root, fake, vas, out)
+        assert code == 0, output
+        assert output_bytes(out) == before
+    (out / "run-manifest.json").write_text('{"retained": true}')
+    before = output_bytes(out)
+    code, output = run_driver(["--dry-run"], root, fake, vas, out)
+    assert code == 1 and "incomplete run bookkeeping" in output, output
+    assert output_bytes(out) == before
+    assert not (root / "headless-calls.jsonl").exists()
+
+
+def test_incremental_extension_preserves_packets_and_commits_all_hashes(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    packet = out / f"packet-{EXPECTED_VAS[0]}.json"
+    first = packet.read_bytes()
+    vas = write_va_list(root, EXPECTED_VAS)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0 and "wrote=4 skipped=1" in output, output
+    assert packet.read_bytes() == first
+    manifest_file = out / "run-manifest.json"
+    manifest = json.loads(manifest_file.read_text())
+    ready = json.loads((out / "triage-ready.json").read_text())
+    assert ready["manifest"]["sha256"] == hashlib.sha256(manifest_file.read_bytes()).hexdigest()
+    assert ready["packetsWritten"] == manifest["packetsWritten"] == 5
+    for name, row in manifest["packets"].items():
+        assert row["sha256"] == hashlib.sha256((out / name).read_bytes()).hexdigest()
+    assert len((root / "headless-calls.jsonl").read_text().splitlines()) == 2
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0 and "SKIP all 5" in output, output
+
+
+def test_failed_recut_keeps_the_original_packet(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    packet = out / f"packet-{EXPECTED_VAS[0]}.json"
+    packet.write_text('{"unique old evidence": true}')
+    before = packet.read_bytes()
+    inner = root / "fake-headless-inner.py"
+    bad = inner.read_text().replace('"status": "READY"', '"status": "FAILED"')
+    inner.write_text(bad)
+    if os.name != "nt":
+        fake.write_text(f"#!{sys.executable}\n" + bad)
+    code, output = run_driver(["--force"], root, fake, vas, out)
+    assert code == 1 and "retained for review" in output, output
+    assert packet.read_bytes() == before
+    assert not (out / "triage-ready.json").exists()
+
+
+def test_skip_requires_bound_receipts(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    manifest = out / "run-manifest.json"
+    manifest.write_text(manifest.read_text() + " ")
+    before = output_bytes(out)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "manifest hash mismatch" in output, output
+    assert output_bytes(out) == before
+
+
+def test_publication_failure_restores_original_packets(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:2])
+    for entry in EXPECTED_VAS[:2]:
+        (out / f"packet-{entry}.json").write_text(json.dumps({"retained": entry}))
+    before = output_bytes(out)
+    closure = root / "empty-closure.tsv"
+    closure.touch()
+    spec = importlib.util.spec_from_file_location("export_packets_publication", TOOL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    original_replace = Path.replace
+    replaced = 0
+
+    def fail_second_packet(path: Path, target: Path) -> Path:
+        nonlocal replaced
+        if path.name.startswith("packet-") and Path(target).parent == out:
+            replaced += 1
+            if replaced == 2:
+                raise OSError("injected second publication failure")
+        return original_replace(path, target)
+
+    output = io.StringIO()
+    with mock.patch.object(Path, "replace", fail_second_packet), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+        code = module.main([str(vas), str(out), "--force", "--ghidra", str(fake),
+                            "--project-root", str(root / "proj"), "--closure-tsv", str(closure)])
+    assert code == 1 and replaced == 2, output.getvalue()
+    assert "injected second publication failure" in output.getvalue()
+    assert output_bytes(out) == before
+
+
+def test_extension_rechecks_an_unrequested_inherited_packet(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    before = output_bytes(out)
+    victim = out / f"packet-{EXPECTED_VAS[0]}.json"
+    inner = root / "fake-headless-inner.py"
+    payload = f"from pathlib import Path\nPath({str(victim)!r}).write_text('changed by another writer')\n" + inner.read_text()
+    inner.write_text(payload)
+    if os.name != "nt":
+        fake.write_text(f"#!{sys.executable}\n" + payload)
+    vas = write_va_list(root, EXPECTED_VAS[1:2])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "hash mismatch" in output, output
+    assert (out / "run-manifest.json").read_bytes() == before["run-manifest.json"]
+    assert (out / "triage-ready.json").read_bytes() == before["triage-ready.json"]
+    assert not (out / f"packet-{EXPECTED_VAS[1]}.json").exists()
+
+
+def test_extension_refuses_a_different_closure_before_launch(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    before = output_bytes(out)
+    changed = root / "different-closure.tsv"
+    changed.write_text("entryVa\tgradeAfter\n")
+    vas = write_va_list(root, EXPECTED_VAS[1:2])
+    code, output = run_driver(["--closure-tsv", str(changed)], root, fake, vas, out)
+    assert code == 1 and "closure provenance differs" in output, output
+    assert output_bytes(out) == before
+    assert len((root / "headless-calls.jsonl").read_text().splitlines()) == 1
+
+
+def test_native_paths_and_arguments_are_passed_without_a_shell(root: Path) -> None:
+    if os.name == "nt":
+        return  # Windows uses the separate guarded batch contract below.
+    nested = root / "space ; literal"
+    nested.mkdir()
+    fake = write_fake_headless(nested)
+    make_project(nested)
+    out = make_output(nested)
+    vas = write_va_list(nested, EXPECTED_VAS[:1])
+    code, output = run_driver(["--program", "BEA name;literal.exe"], nested, fake, vas, out)
+    assert code == 0, output
+    args = json.loads((nested / "headless-calls.jsonl").read_text())
+    assert args[args.index("-process") + 1] == "BEA name;literal.exe"
+
+
+def test_windows_batch_quoting_retains_its_guard(root: Path) -> None:
+    spec = importlib.util.spec_from_file_location("export_packets", TOOL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    argv = module.windows_batch_argv(root / "with space/analyzeHeadless.bat", ["safe path", "-readOnly"])
+    assert argv[1:4] == ["/d", "/s", "/c"] and '"safe path"' in argv[-1], argv
+    try:
+        module.windows_batch_argv(root / "analyzeHeadless.bat", ["bad&argument"])
+    except module.DriverError:
+        pass
+    else:
+        raise AssertionError("Windows shell metacharacter was accepted")
 
 
 def test_java_exporter_static_contract(root=None) -> None:

@@ -18,6 +18,8 @@ Run:  python tools/probe/refute_tests.py
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -716,6 +718,73 @@ class CommandLine(unittest.TestCase):
     def test_a_bad_path_is_an_error_not_a_verdict(self) -> None:
         done = self.run_tool("refute.py", str(HERE / "no-such-finding.json"))
         self.assertEqual(4, done.returncode)
+
+    def test_worktree_defaults_share_the_canonical_operational_ledger(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="probe-routing-") as tmp:
+            root = Path(tmp)
+            tool_dir, lab, env = self.routing_fixture(root)
+            (lab.parent / "local-data").mkdir()
+            done = self.run_isolated(tool_dir, env, "refute.py",
+                                     str(EXECUTED_LAW), "--quiet", "--ledger")
+            self.assertEqual(0, done.returncode, done.stderr)
+            ledger = lab.parent / "local-data/probe/refutation-ledger.jsonl"
+            self.assertEqual(refute.SURVIVED, adversary.read_ledger(ledger)[0]["verdict"])
+            audit_output = root / "audit.json"
+            audit = self.run_isolated(tool_dir, env, "adversary.py", "--audit",
+                                      "--out", str(audit_output))
+            self.assertEqual(1, audit.returncode, audit.stderr)
+            self.assertEqual(str(ledger), json.loads(audit_output.read_text())["ledger"])
+            self.assertFalse((root / "worktree/local-lab").exists())
+            self.assertFalse((root / "worktree/local-data").exists())
+
+    def test_default_ledger_requires_the_existing_operational_root(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="probe-routing-") as tmp:
+            root = Path(tmp)
+            tool_dir, lab, env = self.routing_fixture(root)
+            for tool, args in [("refute.py", [str(EXECUTED_LAW), "--ledger"]),
+                               ("adversary.py", ["--audit"])]:
+                done = self.run_isolated(tool_dir, env, tool, *args)
+                self.assertEqual(4, done.returncode, done.stdout + done.stderr)
+                self.assertIn("existing plain local-data", done.stderr)
+            self.assertFalse((lab.parent / "local-data").exists())
+            self.assertFalse((root / "worktree/local-lab").exists())
+            # Read-only template use does not depend on private project data.
+            done = self.run_isolated(tool_dir, env, "refute.py", "--template")
+            self.assertEqual(0, done.returncode, done.stderr)
+
+    def test_default_ledger_refuses_linked_output_without_writing(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="probe-routing-") as tmp:
+            root = Path(tmp)
+            tool_dir, lab, env = self.routing_fixture(root)
+            data = lab.parent / "local-data"
+            data.mkdir()
+            outside = root / "outside"
+            outside.mkdir()
+            (data / "probe").symlink_to(outside, target_is_directory=True)
+            done = self.run_isolated(tool_dir, env, "refute.py",
+                                     str(EXECUTED_LAW), "--ledger")
+            self.assertEqual(4, done.returncode, done.stderr)
+            self.assertIn("linked output", done.stderr)
+            self.assertEqual([], list(outside.iterdir()))
+
+    @staticmethod
+    def routing_fixture(root: Path) -> tuple[Path, Path, dict[str, str]]:
+        tool_dir = root / "worktree/tools/probe"
+        tool_dir.mkdir(parents=True)
+        for name in ["refute.py", "adversary.py", "bea_lab.py", "finding_schema.json"]:
+            shutil.copyfile(HERE / name, tool_dir / name)
+        lab = root / "canonical/local-lab"
+        (lab / "msl").mkdir(parents=True)
+        (lab / "aya_roundtrip.py").touch()
+        (lab / "msl/script_parse.py").touch()
+        return tool_dir, lab, {**os.environ, "BEA_LOCAL_LAB": str(lab),
+                               "PYTHONDONTWRITEBYTECODE": "1"}
+
+    @staticmethod
+    def run_isolated(tool_dir: Path, env: dict[str, str], tool: str,
+                     *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run([sys.executable, str(tool_dir / tool), *args],
+                              env=env, capture_output=True, text=True, timeout=30)
 
 
 def main() -> int:

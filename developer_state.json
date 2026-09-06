@@ -643,8 +643,8 @@
     "successMarker": "CAMPAIGN_HOST_REPLAY_VERIFIED",
     "currentLabRoot": "/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor/local-lab",
     "durableOutputRoot": "/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor/local-data/host-attestations",
-    "currentToolSha256": "15fffae7f4fd937581ededf82ad11d4bdbcaac3098639d4a504618c4b7ac48e5",
-    "currentTestsSha256": "c23caf08e9d0fad6f5fc86012b2aee2c77c711972eadfadcb2d13b959b4cf655",
+    "currentToolSha256": "e9d4e262e2eccf96b4ea46d7beaa643ee1a82441bdcc0cbb6d8542f577675f3a",
+    "currentTestsSha256": "f72f2a61131c30829c92f69f47199cd063531dd8a359ccff71d6c19310ab3312",
     "readOnlyGate20260830": "PASS: integrity replay printed CAMPAIGN_HOST_INTEGRITY_VERIFIED; 14/14 focused tests passed, including exact-machine and retired-twin rejection, isolated durable-writer controls, the real full temporary replay, unchanged critical-input fingerprints, and unchanged durable-attestation-directory fingerprints. No new durable attestation was written.",
     "preCutoverDurableAttestation": {
       "status": "HISTORICAL_PROJECTDATA_LAB_BINDING",
@@ -655,7 +655,7 @@
       "testsSha256": "a784408a9483131b8f8ae189fb569ae1e3b98eef6566ce349d6236979e499524",
       "landedCommit": "da64db43e92a94ec352e6d085f5ee0ddbf34face"
     },
-    "disposition": "The current host adapter binds only the real plain repository-local lab and pins durable output independently to ProjectData. The historical attestation remains evidence of the pre-cutover binding; no frozen READY, reducer, authority receipt, ledger, or historical logical path was modified."
+      "disposition": "The current host adapter binds only the real plain repository-local lab and pins durable output independently to repository-local local-data/host-attestations. The historical attestation remains evidence of the pre-cutover binding; no frozen READY, reducer, authority receipt, ledger, or historical logical path was modified. September 6 changed diagnostic/help wording only; the 13 focused host-routing unit tests passed. The full-replay receipt remains dated; no new full replay was run for this wording correction."
   },
   "candidateTipDisposition": "The original candidate Generations 11-73 are superseded projection history, never a parent or authority; their valid claims were re-admitted field-by-field through the exact closure.",
   "nextValidGeneration": 33,

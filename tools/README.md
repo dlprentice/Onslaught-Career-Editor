@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -258,7 +258,7 @@ rename guards operate only on explicitly selected local project roots.
 
 `tools/export_packets.py` is the batch function-triage packet exporter: it
 takes a VA list file and an output directory, invokes headless Ghidra **once**
-(`-readOnly -noanalysis`) over the whole list, and emits one stable-schema
+(`-readOnly -noanalysis`) over the VAs needing export, and emits one stable-schema
 JSON packet per VA (`bea.re.triage-packet.v1`) — decompile slice, callers and
 callees (STATIC_DIRECT instruction flows), referenced defined strings with
 their referring functions, observed vtable-pointer evidence (slot-0 dword,
@@ -272,23 +272,33 @@ Read-only posture: the historical Windows H: POST backup
 (`H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627) is provenance,
 not a current default or Omarchy route. Current runs require both an explicit
 prepared project root and an explicit Ghidra executable. The sole mutable Linux
-PC project is `local-lab/ghidra-projects/BEA/` at `db.18635`; ordinary exporter
-runs still use it read-only. Pointing at the historical live maintainer
-project is refused unless `--allow-live-project` is passed, and every invocation
-stays `-readOnly -noanalysis`. Incremental: a re-run over
-the same output directory skips VAs whose packets already exist with the same
-image hash (and a live READY receipt) without launching Ghidra at all;
-`--force` removes matching-image packets first and re-cuts them, while a packet
-cut from a *different* image refuses rather than being silently overwritten.
+PC project is `local-lab/ghidra-projects/BEA/`; ordinary exporter runs use a
+prepared disposable copy. Both the Linux writable owner and historical Windows
+live owner are refused unless `--allow-live-project` is explicit; the reviewed
+checkpoint is always refused. Every invocation stays `-readOnly -noanalysis`.
+The current development hold does not permit an actual Ghidra opening.
 
-```powershell
-python ./tools/export_packets.py ./tools/packet-va-cgame-level-flow.txt `
-  ./local-lab/packet-runs/cgame-level-flow `
-  --project-root <prepared-read-only-project-directory> `
-  --ghidra <path-to-analyzeHeadless.bat>
-python ./tools/export_packets.py <addresses.txt> <out-dir> `
-  --project-root <prepared-read-only-project-directory> `
-  --ghidra <path-to-analyzeHeadless.bat> --dry-run
+Linux uses the native `analyzeHeadless` executable through direct arguments;
+Windows retains its guarded batch launcher. `--dry-run` performs read-only
+planning and creates or replaces nothing. A re-run verifies READY, its manifest
+hash and every inherited packet before skipping completed VAs. An extension
+exports only missing VAs and publishes a combined hash map; the specimen,
+program metadata and closure-table hash must agree. Different provenance needs
+a fresh output directory. Orphan packets are not certified by an image field alone.
+
+`--force` may replace the requested packets, including foreign-image packets,
+but refuses while run bookkeeping exists. Preserve an incomplete run and select
+a fresh directory. New output is staged and verified before publication; prior
+bytes remain recoverable until the final set verifies, and publication failure
+restores replaced destinations. If recovery itself fails, the error names the
+retained staging directory and originals. Failure stages stay for review; a
+successful run cleans its own stage. No project/database payload is copied.
+
+```bash
+python ./tools/export_packets.py ./tools/packet-va-cgame-level-flow.txt \
+  ./local-data/packet-runs/cgame-level-flow \
+  --project-root /absolute/prepared-project-copy \
+  --ghidra /absolute/ghidra/support/analyzeHeadless --dry-run
 ```
 
 The named 5-VA smoke list `tools/packet-va-cgame-level-flow.txt` carries the
@@ -297,7 +307,7 @@ tracked CGame level-flow identities from
 it is the gate's example list and the smoke suite's fixture. The focused gate
 is:
 
-```powershell
+```bash
 python ./tools/export_packets_tests.py
 ```
 

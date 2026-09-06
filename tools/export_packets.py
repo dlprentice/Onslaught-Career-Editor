@@ -9,8 +9,8 @@ maintainer project), and emits one JSON packet per VA: decompile, xrefs
 campaign grade joined from the tracked closure TSV when present.
 
 Incremental: a re-run over the same output directory skips packets that
-already exist with a matching image hash unless ``--force`` removes them
-first. The Ghidra-side script refuses any leftover packet, so the skip
+already belong to a verified matching-image run. ``--force`` replaces requested
+packets only after the new export verifies. The Ghidra-side script refuses any leftover packet, so the skip
 decision belongs here and only here.
 
 Read-only posture:
@@ -23,7 +23,7 @@ Read-only posture:
 
 Usage:
   python ./tools/export_packets.py <addresses.txt> <output-dir>
-      --project-root DIR --ghidra PATH-to-analyzeHeadless.bat
+      --project-root DIR --ghidra PATH-to-analyzeHeadless
       [--project-name BEA] [--program BEA.exe] [--closure-tsv FILE]
       [--force] [--timeout SECONDS] [--dry-run]
 
@@ -38,6 +38,9 @@ import json
 import os
 import re
 import subprocess
+import shlex
+import tempfile
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -112,7 +115,7 @@ def plan(entries: list[str], output_root: Path, image_sha256: str) -> tuple[list
             todo.append(entry)
             continue
         try:
-            body = json.loads(packet.read_text(encoding="utf-8"))
+            body = read_object(packet)
         except (OSError, json.JSONDecodeError):
             raise DriverError(
                 f"existing packet is unreadable; remove it or use --force: {packet}"
@@ -142,13 +145,13 @@ def main(argv: list[str] | None = None) -> int:
         "--ghidra",
         type=Path,
         required=True,
-        help="explicit path to analyzeHeadless.bat",
+        help="explicit native analyzeHeadless or Windows analyzeHeadless.bat path",
     )
     parser.add_argument("--closure-tsv", type=Path, default=None,
                         help="campaign closure TSV for grade joins "
                              "(default: the tracked c1-closure TSV when present)")
     parser.add_argument("--force", action="store_true",
-                        help="delete matching-image packets for requested VAs first")
+                        help="replace requested packets after verified export; refuses existing run bookkeeping")
     parser.add_argument("--allow-live-project", action="store_true",
                         help="permit pointing at the live maintainer project "
                              "(still read-only)")
@@ -168,172 +171,220 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
 
+def headless_argv(headless: Path, arguments: list[str]) -> list[str]:
+    """Use native argv on Linux; retain the guarded Windows batch launcher."""
+    if headless.suffix.lower() in {".bat", ".cmd"}:
+        if os.name != "nt":
+            raise DriverError("Windows batch launcher cannot run here; select native analyzeHeadless")
+        return windows_batch_argv(headless, arguments)
+    if os.name != "nt" and not os.access(headless, os.X_OK):
+        raise DriverError(f"native analyzeHeadless is not executable: {headless}")
+    return [str(headless.resolve()), *arguments]
+
+
+def read_object(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise DriverError(f"expected a JSON object: {path}")
+    return value
+
+
+def verified_run(output_root: Path) -> tuple[dict, dict]:
+    """Verify the commit marker, manifest and every packet before reuse."""
+    ready = read_object(output_root / "triage-ready.json")
+    manifest_path = output_root / "run-manifest.json"
+    manifest = read_object(manifest_path)
+    if (ready.get("schema") != SCHEMA_READY or ready.get("status") != "READY"
+            or ready.get("executableSha256") != EXPECTED_IMAGE_SHA256):
+        raise DriverError("unexpected READY receipt schema/status/image")
+    if (manifest.get("schema") != "bea.re.triage-run-manifest.v1"
+            or manifest.get("executableSha256") != EXPECTED_IMAGE_SHA256):
+        raise DriverError("unexpected run manifest schema/image")
+    ready_manifest = ready.get("manifest")
+    if not isinstance(ready_manifest, dict) or ready_manifest.get("sha256") != sha256_file(manifest_path):
+        raise DriverError("READY manifest hash mismatch")
+    packets = manifest.get("packets")
+    if not isinstance(packets, dict) or not packets:
+        raise DriverError("run manifest contains no packet map")
+    if any(record.get("packetsWritten") != len(packets) for record in (ready, manifest)):
+        raise DriverError("run receipt packet count mismatch")
+    for name, record in packets.items():
+        if not re.fullmatch(r"packet-0x[0-9a-f]{1,16}\.json", name):
+            raise DriverError(f"invalid manifest packet name: {name!r}")
+        packet = output_root / name
+        if packet.is_symlink() or not packet.is_file():
+            raise DriverError(f"promised plain packet absent: {packet}")
+        if not isinstance(record, dict) or record.get("sha256") != sha256_file(packet):
+            raise DriverError(f"manifest hash mismatch for {name}")
+        body = read_object(packet)
+        if (body.get("schema") != SCHEMA_PACKET
+                or body.get("executableSha256") != EXPECTED_IMAGE_SHA256
+                or body.get("requestedVa") != name[7:-5]):
+            raise DriverError(f"packet identity/schema mismatch: {packet}")
+    return ready, manifest
+
+
 def run(args: argparse.Namespace) -> int:
     repo_root = Path(__file__).resolve().parents[1]
     script = repo_root / "tools" / "ExportTriagePacket.java"
-
-    headless = args.ghidra
+    headless = args.ghidra.resolve()
     if not headless.is_file():
         raise DriverError(f"analyzeHeadless not found: {headless}")
-    project_root = args.project_root
-    if not (project_root / f"{args.project_name}.gpr").is_file():
+    project_root = args.project_root.resolve()
+    project_file = project_root / f"{args.project_name}.gpr"
+    if not project_file.is_file():
         raise DriverError(f"Ghidra project not found under: {project_root}")
-    if not args.allow_live_project:
-        try:
-            same = project_root.resolve() == LIVE_PROJECT_ROOT.resolve()
-        except OSError:
-            same = False
-        if same:
-            raise DriverError(
-                "refusing the live maintainer project by default; pass "
-                "--allow-live-project to override (the run stays read-only)"
-            )
-
-    addresses_path = args.addresses
+    canonical = Path("/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor")
+    checkpoint = canonical / "reverse-engineering/ghidra/BEA.gpr"
+    working = canonical / "local-lab/ghidra-projects/BEA/BEA.gpr"
+    if checkpoint.is_file() and project_file.samefile(checkpoint):
+        raise DriverError("refusing the reviewed checkpoint; use a prepared disposable project copy")
+    live = (project_root == LIVE_PROJECT_ROOT.resolve()
+            or (working.is_file() and project_file.samefile(working)))
+    if live and not args.allow_live_project:
+        raise DriverError("refusing the live maintainer project by default; pass "
+                          "--allow-live-project to override (the run stays read-only)")
+    if not script.is_file():
+        raise DriverError(f"Ghidra script missing: {script}")
+    addresses_path = args.addresses.resolve()
     if not addresses_path.is_file():
         raise DriverError(f"address list not found: {addresses_path}")
     entries = read_address_list(addresses_path)
-
-    output_root = args.output_dir
-    output_root.mkdir(parents=True, exist_ok=True)
-
+    if args.timeout <= 0:
+        raise DriverError("timeout must be positive")
+    output_root = args.output_dir.absolute()
+    if output_root.is_symlink() or (output_root.exists() and not output_root.is_dir()):
+        raise DriverError(f"output must be a plain directory: {output_root}")
+    if output_root.resolve().is_relative_to(project_root):
+        raise DriverError("packet output must be outside the Ghidra project directory")
     ready_path = output_root / "triage-ready.json"
     manifest_path = output_root / "run-manifest.json"
-
+    touched = [ready_path, manifest_path, *(output_root / f"packet-{v}.json" for v in entries)]
+    for path in touched:
+        if path.is_symlink() or (path.exists() and not path.is_file()):
+            raise DriverError(f"output is not a plain file: {path}")
+    # Finish every refusal before mkdir, deletion, replacement or a process launch.
+    if args.force and any(p.exists() for p in (manifest_path, ready_path)):
+        raise DriverError("--force refuses to delete run bookkeeping; preserve it and use a fresh directory")
     closure_tsv = args.closure_tsv
     if closure_tsv is None:
-        candidate = (
-            repo_root
-            / "reverse-engineering"
-            / "binary-analysis"
-            / "function-c1-closure-2026-08-11.tsv"
-        )
+        candidate = repo_root / "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv"
         closure_tsv = candidate if candidate.is_file() else None
     elif not closure_tsv.is_file():
         raise DriverError(f"--closure-tsv not found: {closure_tsv}")
-
-    # Incremental skip decision. The Ghidra-side script refuses leftovers, so
-    # anything surviving this point must be removed before the invocation.
+    closure_tsv = closure_tsv.resolve() if closure_tsv else None
+    prior_manifest = None
+    if ready_path.is_file():
+        _, prior_manifest = verified_run(output_root)
+        closure_hash = sha256_file(closure_tsv) if closure_tsv else None
+        if prior_manifest.get("campaignGradesSha256") != closure_hash:
+            raise DriverError("closure provenance differs from the committed run; use a fresh output directory")
+    elif manifest_path.exists():
+        raise DriverError("incomplete run bookkeeping; preserve it and use a fresh output directory")
     if args.force:
-        for entry in entries:
-            packet = output_root / f"packet-{entry}.json"
-            if packet.is_file():
-                packet.unlink()
-        stale_manifests = [manifest_path, ready_path]
-        for stale in stale_manifests:
-            if stale.exists():
-                raise DriverError(
-                    f"--force refuses to delete run bookkeeping; clean it by hand: {stale}"
-                )
-    todo, skipped = plan(entries, output_root, EXPECTED_IMAGE_SHA256)
-    if not todo:
-        ready_body = json.loads(ready_path.read_text(encoding="utf-8")) \
-            if ready_path.is_file() else None
-        if isinstance(ready_body, dict) and ready_body.get("schema") == SCHEMA_READY:
-            print(
-                f"SKIP all {len(skipped)} requested VAs already have "
-                f"{EXPECTED_IMAGE_SHA256[:12]}... packets under {output_root}"
-            )
-            return 0
-        # Packets survive but no READY commit marker: rerun everything fresh.
-        for entry in entries:
-            (output_root / f"packet-{entry}.json").unlink(missing_ok=True)
-        manifest_path.unlink(missing_ok=True)
         todo, skipped = list(entries), []
-
+    else:
+        todo, skipped = plan(entries, output_root, EXPECTED_IMAGE_SHA256)
+        if prior_manifest:
+            uncommitted = [v for v in skipped if f"packet-{v}.json" not in prior_manifest["packets"]]
+            todo += uncommitted
+            skipped = [v for v in skipped if v not in uncommitted]
+        else:
+            # Orphan packets are never certified by their image field alone.
+            todo, skipped = list(entries), []
+    def invocation(stage: Path) -> list[str]:
+        return headless_argv(headless, [
+            str(project_root), args.project_name, "-process", args.program,
+            "-readOnly", "-noanalysis", "-scriptPath", str(script.parent),
+            "-postScript", script.name, str(stage / "addresses.txt"),
+            str(stage / "packets"), str(stage / "packets/triage-ready.json"),
+            *([str(closure_tsv)] if closure_tsv else []),
+        ])
+    # The placeholder describes the staging layout without creating it.
+    preview = invocation(output_root / ".triage-preview")
     if args.dry_run:
-        argv_display = windows_batch_argv(
-            headless,
-            [
-                str(project_root),
-                args.project_name,
-                "-process", args.program,
-                "-readOnly", "-noanalysis",
-                "-scriptPath", str(script.parent),
-                "-postScript", script.name,
-                str(addresses_path),
-                str(output_root),
-                str(ready_path),
-                *([str(closure_tsv)] if closure_tsv else []),
-            ],
-        )[-1]
         print(f"DRY-RUN entries={len(entries)} todo={len(todo)} skipped={len(skipped)}")
-        print(f"  {argv_display}")
+        print("  " + shlex.join(preview))
         return 0
-
-    if not script.is_file():
-        raise DriverError(f"Ghidra script missing: {script}")
-
-    # Absolutize everything handed across the process boundary so the
-    # headless child's working directory can never reinterpret a relative
-    # path differently than the caller meant it.
-    addresses_arg = addresses_path.resolve()
-    output_arg = output_root.resolve()
-    ready_arg = ready_path.resolve()
-    closure_arg = closure_tsv.resolve() if closure_tsv else None
-
-    batch_arguments = [
-        str(project_root),
-        args.project_name,
-        "-process", args.program,
-        "-readOnly", "-noanalysis",
-        "-scriptPath", str(script.parent),
-        "-postScript", script.name,
-        str(addresses_arg),
-        str(output_arg),
-        str(ready_arg),
-    ]
-    if closure_arg:
-        batch_arguments.append(str(closure_arg))
-    argv = windows_batch_argv(headless, batch_arguments)
-
+    if not todo:
+        print(f"SKIP all {len(skipped)} requested VAs already have verified packets under {output_root}")
+        return 0
+    before = {p: sha256_file(p) if p.exists() else None for p in touched}
+    output_root.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=".triage-", dir=output_root))
+    staged_output = stage / "packets"
+    staged_output.mkdir()
+    (stage / "addresses.txt").write_text("\n".join(todo) + "\n", encoding="utf-8")
     started = time.monotonic()
-    completed = subprocess.run(argv, capture_output=True, text=True,
-                               timeout=args.timeout)
-    elapsed = time.monotonic() - started
-    combined = (completed.stdout or "") + (completed.stderr or "")
-    for line in combined.splitlines():
-        if line.startswith(("TRIAGE_", "INFO  TRIAGE_", "WARN", "ERROR")):
-            print(line)
-    if completed.returncode != 0:
-        tail = "\n".join(combined.splitlines()[-30:])
-        raise DriverError(
-            f"headless exited {completed.returncode} after {elapsed:.0f}s\n{tail}"
-        )
-    if "TRIAGE_PACKETS_READY" not in combined:
-        raise DriverError("headless finished but emitted no TRIAGE_PACKETS_READY marker")
-
-    # Verify the READY receipt and every packet hash before claiming success.
-    if not ready_path.is_file():
-        raise DriverError("READY receipt absent after a marker-complete run")
-    ready = json.loads(ready_path.read_text(encoding="utf-8"))
-    if ready.get("schema") != SCHEMA_READY or ready.get("status") != "READY":
-        raise DriverError(f"unexpected READY receipt schema/status: {ready_path}")
-    if ready.get("executableSha256") != EXPECTED_IMAGE_SHA256:
-        raise DriverError(
-            f"READY receipt names image {ready.get('executableSha256')}, expected "
-            f"{EXPECTED_IMAGE_SHA256}"
-        )
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest_packets = manifest.get("packets", {})
-    for entry in todo:
-        packet = output_root / f"packet-{entry}.json"
-        if not packet.is_file():
-            raise DriverError(f"promised packet absent: {packet}")
-        body = json.loads(packet.read_text(encoding="utf-8"))
-        if body.get("schema") != SCHEMA_PACKET:
-            raise DriverError(f"unexpected packet schema: {packet}")
-        if body.get("executableSha256") != EXPECTED_IMAGE_SHA256:
-            raise DriverError(f"packet names a foreign image: {packet}")
-        recorded = manifest_packets.get(packet.name, {}).get("sha256")
-        actual = sha256_file(packet)
-        if recorded != actual:
-            raise DriverError(f"manifest hash mismatch for {packet.name}")
-
-    print(
-        f"PACKETS_OK wrote={len(todo)} skipped={len(skipped)} "
-        f"elapsed={elapsed:.0f}s out={output_root}"
-    )
+    published: list[Path] = []
+    previous = stage / "previous"
+    try:
+        completed = subprocess.run(invocation(stage), capture_output=True, text=True,
+                                   timeout=args.timeout)
+        combined = (completed.stdout or "") + (completed.stderr or "")
+        for line in combined.splitlines():
+            if line.startswith(("TRIAGE_", "INFO  TRIAGE_", "WARN", "ERROR")):
+                print(line)
+        if completed.returncode != 0 or "TRIAGE_PACKETS_READY" not in combined:
+            raise DriverError(f"headless failed or emitted no READY marker (exit {completed.returncode}):\n"
+                              + "\n".join(combined.splitlines()[-30:]))
+        ready, manifest = verified_run(staged_output)
+        expected = {f"packet-{v}.json" for v in todo}
+        if set(manifest["packets"]) != expected:
+            raise DriverError("exported packet population differs from the requested VAs")
+        # Existing evidence remains intact until the complete new export verifies.
+        for path, digest in before.items():
+            if path.is_symlink() or (sha256_file(path) if path.exists() else None) != digest:
+                raise DriverError(f"output changed during export: {path}")
+        if prior_manifest:
+            _, current_prior = verified_run(output_root)
+            if current_prior != prior_manifest:
+                raise DriverError("committed run changed during export")
+            for field in ("programName", "programMd5", "imageBase", "language", "campaignGradesSha256"):
+                if manifest.get(field) != prior_manifest.get(field):
+                    raise DriverError(f"export provenance differs from the committed run: {field}")
+            manifest["previousManifestSha256"] = before[manifest_path]
+            manifest["packets"] = {**prior_manifest["packets"], **manifest["packets"]}
+        manifest["requestedAddressList"] = str(addresses_path)
+        manifest["packetsWritten"] = len(manifest["packets"])
+        new_manifest = staged_output / "run-manifest.json"
+        new_manifest.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        ready["packetsWritten"] = len(manifest["packets"])
+        ready["outputDirName"] = output_root.name
+        ready["manifest"] = {"sha256": sha256_file(new_manifest)}
+        new_ready = staged_output / "triage-ready.json"
+        new_ready.write_text(json.dumps(ready, indent=2) + "\n", encoding="utf-8")
+        destinations = [*(output_root / name for name in sorted(expected)), manifest_path, ready_path]
+        previous.mkdir()
+        for path in destinations:
+            if before[path] is not None:
+                backup = previous / path.name
+                shutil.copy2(path, backup)
+                if sha256_file(backup) != before[path]:
+                    raise DriverError(f"original changed while preserving publication recovery: {path}")
+        # Keep the old bytes recoverable until the complete public set verifies.
+        for path in destinations:
+            (staged_output / path.name).replace(path)
+            published.append(path)
+        verified_run(output_root)  # READY was published last.
+    except (DriverError, OSError, json.JSONDecodeError, subprocess.TimeoutExpired) as error:
+        recovery_errors = []
+        for path in published:
+            try:
+                if before[path] is None:
+                    path.unlink()
+                else:
+                    restore = stage / ("restore-" + path.name)
+                    os.link(previous / path.name, restore)
+                    os.replace(restore, path)
+            except OSError as recovery_error:
+                recovery_errors.append(f"{path}: {recovery_error}")
+        detail = "\nRecovery needs attention; original bytes remain under previous/: " + "; ".join(recovery_errors) if recovery_errors else ""
+        raise DriverError(f"{error}{detail}\nIncomplete export retained for review: {stage}") from error
+    else:
+        shutil.rmtree(stage)
+    print(f"PACKETS_OK wrote={len(todo)} skipped={len(skipped)} "
+          f"elapsed={time.monotonic() - started:.0f}s out={output_root}")
     return 0
 
 

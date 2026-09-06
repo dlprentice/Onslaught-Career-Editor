@@ -375,7 +375,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="fold an attack report back into a finding")
     parser.add_argument("--attack", type=Path, metavar="ATTACK_REPORT")
     parser.add_argument("--audit", action="store_true")
-    parser.add_argument("--ledger", type=Path, default=refute.DEFAULT_LEDGER)
+    parser.add_argument("--ledger", type=Path,
+                        help=f"ledger path (default: canonical {refute.DEFAULT_LEDGER})")
     parser.add_argument("--record-attack", type=Path, metavar="ATTACK_REPORT",
                         help="append an attack report's conclusion to the ledger")
     parser.add_argument("-o", "--out", type=Path)
@@ -424,6 +425,13 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(payload)
         return 0
+
+    if arguments.record_attack or arguments.audit:
+        try:
+            arguments.ledger = arguments.ledger or refute.default_ledger()
+        except OSError as error:
+            print(f"cannot select ledger: {error}", file=sys.stderr)
+            return 4
 
     if arguments.record_attack:
         attack_report = json.loads(

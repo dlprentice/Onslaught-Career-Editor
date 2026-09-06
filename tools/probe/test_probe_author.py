@@ -102,7 +102,7 @@ class Fix:
     def __init__(self, lab: str | None, workdir: Path):
         self.lab_root = bea_lab.find_lab(lab)
         self.lab = str(self.lab_root)
-        self.res = self.lab_root / "safe-copy-bea-pristine" / "data" / "Resources"
+        self.res = self.lab_root / "safe-copy-bea-pristine" / "data" / "resources"
         self.src = str(self.res / "905_res_PC.aya")
         self.src100 = str(self.res / "100_res_PC.aya")
         self.specimen = self.lab_root / "safe-copy-bea-pristine" / "BEA.exe.original.backup"

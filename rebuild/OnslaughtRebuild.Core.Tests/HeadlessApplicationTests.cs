@@ -783,6 +783,10 @@ public sealed class HeadlessApplicationTests
     // evaluate one canonical identity: refusal fires for the alias exactly
     // when it fires for the ordinary form, and no write may proceed through
     // a namespace form the boundary did not evaluate.
+    // These namespace identities exist only on Windows. On Linux the same
+    // spelling is not an absolute path and must be refused by the earlier
+    // absolute-.json guard. Exercise that refusal too, without skipping the
+    // tests or changing the Windows identity assertions.
     // ------------------------------------------------------------------
 
     [Fact]
@@ -808,7 +812,10 @@ public sealed class HeadlessApplicationTests
 
             ArgumentException refused = Assert.Throws<ArgumentException>(
                 () => TapeFile.WriteNew(extended, BoundaryProbeTape(), [knownRoot]));
-            Assert.Contains("game or save root", refused.Message, StringComparison.Ordinal);
+            string expectedReason = OperatingSystem.IsWindows()
+                ? "game or save root"
+                : "absolute .json destination path";
+            Assert.Contains(expectedReason, refused.Message, StringComparison.Ordinal);
 
             // The alias must not have created the file at its ordinary
             // identity either: both spellings name ONE destination, and the
@@ -833,7 +840,10 @@ public sealed class HeadlessApplicationTests
         ArgumentException refused = Assert.Throws<ArgumentException>(
             () => TapeFile.WriteNew(deviceDestination, BoundaryProbeTape()));
 
-        Assert.Contains("device namespace", refused.Message, StringComparison.Ordinal);
+        string expectedReason = OperatingSystem.IsWindows()
+            ? "device namespace"
+            : "absolute .json destination path";
+        Assert.Contains(expectedReason, refused.Message, StringComparison.Ordinal);
 
         // A volume-GUID body is equally unevaluated: refuse rather than
         // compare a fabricated identity.
@@ -841,7 +851,7 @@ public sealed class HeadlessApplicationTests
             () => TapeFile.WriteNew(
                 @"\\?\Volume{9c5f8a3e-0000-0000-0000-000000000000}\probe.json",
                 BoundaryProbeTape()));
-        Assert.Contains("device namespace", volumeRefused.Message, StringComparison.Ordinal);
+        Assert.Contains(expectedReason, volumeRefused.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -870,7 +880,10 @@ public sealed class HeadlessApplicationTests
                 ArgumentException refused = Assert.Throws<ArgumentException>(
                     () => TapeFile.WriteNew(dotDot, BoundaryProbeTape(), [knownRoot]));
 
-                Assert.Contains("game or save root", refused.Message, StringComparison.Ordinal);
+                string expectedReason = OperatingSystem.IsWindows()
+                    ? "game or save root"
+                    : "absolute .json destination path";
+                Assert.Contains(expectedReason, refused.Message, StringComparison.Ordinal);
 
                 // Refusal precedes every parent creation: neither spelling of
                 // the destination exists, and the missing directory segment

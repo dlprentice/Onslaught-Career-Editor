@@ -983,7 +983,7 @@ def _authorized_attestation_root(output_root: Path) -> Path:
     selected_root = Path(os.path.abspath(expanded_root))
     if selected_root != HOST_ATTESTATIONS_ROOT:
         raise AttestationError(
-            "attestation output owner differs from the explicit ProjectData route: "
+            "attestation output owner differs from the explicit local-data route: "
             f"{selected_root}"
         )
     return selected_root
@@ -1231,7 +1231,7 @@ def _parser() -> argparse.ArgumentParser:
         "--attestation-root",
         type=Path,
         default=HOST_ATTESTATIONS_ROOT,
-        help="explicit durable output owner; must remain the pinned ProjectData route",
+        help="explicit durable output owner; must remain the pinned local-data route",
     )
     return parser
 
