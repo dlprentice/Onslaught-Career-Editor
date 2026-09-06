@@ -372,6 +372,32 @@ def test_dry_run_does_not_create_output_or_launch(root: Path) -> None:
     assert not (root / "headless-calls.jsonl").exists()
 
 
+def test_output_refuses_project_through_bind_alias(root: Path) -> None:
+    fake = write_fake_headless(root)
+    project = make_project(root)
+    alias = root / "bind-alias"
+    alias.mkdir()
+    out = alias / "missing/packets"
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    spec = importlib.util.spec_from_file_location("export_packets_alias", TOOL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    original_samefile = Path.samefile
+
+    def samefile(path, other):
+        if path == alias and Path(other) == project:
+            return True
+        return original_samefile(path, other)
+
+    captured = io.StringIO()
+    with mock.patch.object(Path, "samefile", samefile), contextlib.redirect_stderr(captured):
+        code = module.main([str(vas), str(out), "--ghidra", str(fake),
+                            "--project-root", str(project), "--dry-run"])
+    assert code == 1 and "outside the Ghidra project" in captured.getvalue(), captured.getvalue()
+    assert list(alias.iterdir()) == []
+    assert not (root / "headless-calls.jsonl").exists()
+
+
 def test_force_refusal_preserves_committed_evidence(root: Path) -> None:
     fake = write_fake_headless(root)
     make_project(root)
@@ -395,9 +421,11 @@ def test_dry_run_preserves_orphan_packets_and_bookkeeping(root: Path) -> None:
     packet = out / f"packet-{EXPECTED_VAS[0]}.json"
     packet.write_text(json.dumps({"executableSha256": IMAGE}))
     before = output_bytes(out)
-    for flags in [["--dry-run"], ["--dry-run", "--force"]]:
+    for flags, expected_code in [(["--dry-run"], 1), (["--dry-run", "--force"], 0)]:
         code, output = run_driver(flags, root, fake, vas, out)
-        assert code == 0, output
+        assert code == expected_code, output
+        if expected_code:
+            assert "unregistered packet" in output, output
         assert output_bytes(out) == before
     (out / "run-manifest.json").write_text('{"retained": true}')
     before = output_bytes(out)
@@ -405,6 +433,43 @@ def test_dry_run_preserves_orphan_packets_and_bookkeeping(root: Path) -> None:
     assert code == 1 and "incomplete run bookkeeping" in output, output
     assert output_bytes(out) == before
     assert not (root / "headless-calls.jsonl").exists()
+
+
+def test_unregistered_packet_requires_explicit_replacement(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    packet = out / f"packet-{EXPECTED_VAS[0]}.json"
+    packet.write_text(json.dumps({"schema": "bea.re.triage-packet.v1",
+                                  "executableSha256": IMAGE,
+                                  "requestedVa": EXPECTED_VAS[0],
+                                  "decompile": "unique retained evidence"}))
+    before = output_bytes(out)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "unregistered packet" in output, output
+    assert output_bytes(out) == before
+    assert not (root / "headless-calls.jsonl").exists()
+
+
+def test_incremental_extension_refuses_unregistered_packet(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    packet = out / f"packet-{EXPECTED_VAS[1]}.json"
+    packet.write_text(json.dumps({"schema": "bea.re.triage-packet.v1",
+                                  "executableSha256": IMAGE,
+                                  "requestedVa": EXPECTED_VAS[1],
+                                  "decompile": "unique unregistered evidence"}))
+    before = output_bytes(out)
+    vas = write_va_list(root, EXPECTED_VAS[:2])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "unregistered packet" in output, output
+    assert output_bytes(out) == before
+    assert len((root / "headless-calls.jsonl").read_text().splitlines()) == 1
 
 
 def test_incremental_extension_preserves_packets_and_commits_all_hashes(root: Path) -> None:

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""Run every tools/ test suite and report one summary.
+"""Run every host-supported tools/ test suite and report one summary.
 
-WHY THIS EXISTS.  ``npm run test:tools`` used to chain thirteen suites with
-``&&``.  A failure in the middle meant the suites after it never ran and were
-silently unverified: one red suite hid the state of every suite behind it, and
-a flaky one could mask a real regression indefinitely (task #158).
-
-So every suite runs, every time.  Output is streamed as it happens - a summary
+Every supported suite runs, even after a failure. Windows-dependent suites
+are explicitly reported as skipped on other hosts, never counted as passes.
+Output is streamed as it happens - a summary
 is a navigation aid, not a replacement for the failing suite's own report - and
 the exit code is non-zero when any suite failed, exactly as the chain was.
 
@@ -18,11 +15,15 @@ of them compile executables and spawn PowerShell.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
+import os
 import pathlib
 import subprocess
 import sys
 import time
 import unittest
+from unittest import mock
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -130,6 +131,13 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/worldheaders_decode.py", "--self-test"),
 )
 
+WINDOWS_ONLY = {
+    "tools/runtime_process_identity_probe.py": "copies and runs Windows cmd.exe fixtures",
+    "tools/send_game_window_input_probe.py": "exercises Windows window/input APIs",
+    "tools/start_cdb_server_probe.py": "requires Windows .NET Framework csc.exe",
+    "tools/ttd_pipeline_contract_tests.py": "requires powershell.exe, py and cmd.exe fixtures",
+}
+
 
 def format_summary(results: list[dict[str, object]]) -> str:
     """One line per suite, failures repeated at the end so none can be missed."""
@@ -139,17 +147,22 @@ def format_summary(results: list[dict[str, object]]) -> str:
     for row in results:
         lines.append(
             "{status:4}  {name:<{width}}  exit={exit:<4} {seconds:>7.1f}s".format(
-                status="PASS" if row["exitCode"] == 0 else "FAIL",
+                status="SKIP" if row.get("skipReason") else "PASS" if row["exitCode"] == 0 else "FAIL",
                 name=str(row["name"]),
                 width=width,
                 exit=str(row["exitCode"]),
                 seconds=float(str(row["seconds"])),
             )
         )
-    failed = [row for row in results if row["exitCode"] != 0]
+        if row.get("skipReason"):
+            lines.append(f"      {row['skipReason']}")
+    failed = [row for row in results if row["exitCode"] not in (None, 0)]
+    skipped = [row for row in results if row.get("skipReason")]
+    passed = sum(row["exitCode"] == 0 for row in results)
     lines.append(
-        f"{len(results) - len(failed)} passed, {len(failed)} failed, "
-        f"{len(results)} run"
+        f"{passed} passed, {len(failed)} failed, "
+        f"{len(results) - len(skipped)} run"
+        + (f", {len(skipped)} skipped (Windows required)" if skipped else "")
     )
     if failed:
         lines.append("failed suites:")
@@ -170,16 +183,23 @@ def run_suite(command: tuple[str, ...]) -> dict[str, object]:
     }
 
 
-def run_all(suites: tuple[tuple[str, ...], ...] = SUITES) -> int:
+def run_all(suites: tuple[tuple[str, ...], ...] = SUITES, *, host_os: str | None = None) -> int:
+    host_os = os.name if host_os is None else host_os
     results: list[dict[str, object]] = []
     for index, command in enumerate(suites, start=1):
         print(
             f"\n[{index}/{len(suites)}] {' '.join(command)}",
             flush=True,
         )
-        results.append(run_suite(command))
+        if host_os != "nt" and command[0] in WINDOWS_ONLY:
+            reason = "Windows host required: " + WINDOWS_ONLY[command[0]]
+            print("SKIP " + reason, flush=True)
+            results.append({"name": " ".join(command), "exitCode": None,
+                            "seconds": 0.0, "skipReason": reason})
+        else:
+            results.append(run_suite(command))
     print(format_summary(results), flush=True)
-    return 1 if any(row["exitCode"] != 0 for row in results) else 0
+    return 1 if any(row["exitCode"] not in (None, 0) for row in results) else 0
 
 
 class RunToolTestsSelfTest(unittest.TestCase):
@@ -227,6 +247,24 @@ class RunToolTestsSelfTest(unittest.TestCase):
         for command in SUITES:
             with self.subTest(suite=command[0]):
                 self.assertTrue((ROOT / command[0]).is_file(), command[0])
+        self.assertTrue(set(WINDOWS_ONLY) <= {command[0] for command in SUITES})
+
+    def test_windows_suites_are_reported_without_launching_on_linux(self) -> None:
+        windows = tuple((path,) for path in WINDOWS_ONLY)
+        portable = ("tools/run_tool_tests.py", "--emit-exit-code", "0")
+
+        def result(command):
+            return {"name": " ".join(command), "exitCode": 0, "seconds": 0.0}
+
+        for host, expected in [("posix", [portable]), ("nt", [*windows, portable])]:
+            captured = io.StringIO()
+            with mock.patch(__name__ + ".run_suite", side_effect=result) as run, contextlib.redirect_stdout(captured):
+                self.assertEqual(0, run_all((*windows, portable), host_os=host))
+            self.assertEqual(expected, [call.args[0] for call in run.call_args_list])
+            if host == "posix":
+                self.assertIn("1 passed, 0 failed, 1 run, 4 skipped (Windows required)", captured.getvalue())
+            else:
+                self.assertIn("5 passed, 0 failed, 5 run", captured.getvalue())
 
 
 def main(argv: list[str] | None = None) -> int:

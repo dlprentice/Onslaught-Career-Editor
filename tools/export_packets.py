@@ -255,7 +255,9 @@ def run(args: argparse.Namespace) -> int:
     output_root = args.output_dir.absolute()
     if output_root.is_symlink() or (output_root.exists() and not output_root.is_dir()):
         raise DriverError(f"output must be a plain directory: {output_root}")
-    if output_root.resolve().is_relative_to(project_root):
+    if (output_root.resolve().is_relative_to(project_root)
+            or any(parent.exists() and parent.samefile(project_root)
+                   for parent in (output_root, *output_root.parents))):
         raise DriverError("packet output must be outside the Ghidra project directory")
     ready_path = output_root / "triage-ready.json"
     manifest_path = output_root / "run-manifest.json"
@@ -287,11 +289,13 @@ def run(args: argparse.Namespace) -> int:
         todo, skipped = plan(entries, output_root, EXPECTED_IMAGE_SHA256)
         if prior_manifest:
             uncommitted = [v for v in skipped if f"packet-{v}.json" not in prior_manifest["packets"]]
-            todo += uncommitted
-            skipped = [v for v in skipped if v not in uncommitted]
         else:
-            # Orphan packets are never certified by their image field alone.
-            todo, skipped = list(entries), []
+            uncommitted = list(skipped)
+        if uncommitted:
+            # An image field proves neither run membership nor permission to
+            # replace a packet that may hold distinct retained evidence.
+            raise DriverError("unregistered packet already exists; preserve it and use a fresh output directory "
+                              "or explicitly --force a directory without run bookkeeping")
     def invocation(stage: Path) -> list[str]:
         return headless_argv(headless, [
             str(project_root), args.project_name, "-process", args.program,
