@@ -7,7 +7,7 @@
   pages, not from recollection. The `lore` verbs joined on 2026-08-23 and the `media`
   verbs joined the same day; their envelopes and exit codes below were produced the
   same way, against this build.
-- **Last updated:** 2026-08-31
+- **Last updated:** 2026-09-06
 - **Summary:** the envelope, the exit codes, the whole verb surface, and one session
   that works start to finish.
 
@@ -209,6 +209,8 @@ wrote down is a gap nobody closes:
 - **Cheats** — composing a cheat-named save copy. No verb.
 - **Trainer hotkeys and music playback** — `trainer music --out <file>` renders the tune
   to disk; playing it is the app's job.
+- **Standalone Asset Library parity** remains unverified; command-surface inspection and
+  per-verb Windows acceptance are still required, as recorded in `PROGRAM.md` P11.
 
 ## Rules that bind a headless caller
 

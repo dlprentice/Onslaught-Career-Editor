@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete; feature execution on hold
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 Summary: the three outcomes, acceptance criteria, evidence rules, and full retail RE mandate.
 
 This is the maintainer's statement of what is wanted. Measurements can correct
@@ -16,12 +16,20 @@ Execution history remains in Git and the existing evidence owners.
 2. Rebuild it in Godot at 1:1 behavioral and experiential parity, beginning with
    the complete released startup → splash/intro → menus → loading → Level 100
    tutorial and completion path.
-3. Ship a polished WinUI 3 preservation toolkit for careers, saves, safe copies,
-   patching, media, and other proven capabilities, with no known data-loss path.
+3. Ship a polished Godot preservation/toolkit companion for Linux and Windows,
+   covering careers, saves, safe copies, patching, media, and other proven
+   capabilities, with no known data-loss path.
 
 These outcomes are coequal. RE supplies behavior to the rebuild and toolkit;
 their missing capabilities expose the next retail questions. A task's focus
 does not demote either of the other outcomes.
+
+David selected Godot to replace the WinUI 3 companion on September 6. The existing
+WinUI/AppCore implementation remains migration material; there is no Godot companion
+implementation or runtime acceptance yet. The migration must retain the toolkit's
+capability scope, file-preservation safeguards and provenance boundaries, and validate
+the companion on both target platforms. It begins only after the baseline report and
+David's further direction.
 
 ### The rebuild property, and the test that stands in for it
 
@@ -62,8 +70,8 @@ Keep every nonterminal entity reachable and map retail entities to rebuild owner
 implementations, and parity tests. Never count `UNSCORED` evidence as success.
 
 The storage-consolidation hold remains in force: no new RE campaign, rebuild
-feature, WinUI/CLI feature, or semantic Ghidra mutation until David resumes that
-work. Authorized routing repair, read-only audit, checksum validation, and repository
+feature, companion migration/feature, CLI feature, or semantic Ghidra mutation until
+David resumes that work. Authorized routing repair, read-only audit, checksum validation, and repository
 organization may proceed. Completing storage work does not silently lift the hold.
 See [the program](PROGRAM.md) for the durable backlog and acceptance gates.
 

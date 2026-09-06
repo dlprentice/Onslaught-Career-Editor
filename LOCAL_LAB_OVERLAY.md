@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-09-05.
+Last updated: 2026-09-06.
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -21,7 +21,7 @@ Current owners:
 - `.artifacts/` — legacy validation, screenshots, publish output, reports,
   and extracted release candidates; inspect before retirement because some is unique evidence;
 - `local-data/` (Git-ignored, inside this checkout; `~/ProjectData` no longer exists) —
-  recovered worktree/conflict packages, preserved Windows-profile inputs, retail
+  grouped `recovered/` packages, retained `_recovered-worktrees/` and Windows-profile inputs, retail
   profiles, media, VM media, and the gen32 host attestations that are not part of
   `local-lab/`; its own `AGENTS.md` describes the recovered packages;
 - `local-lab/ghidra-projects/BEA/` — the sole mutable PC Ghidra project

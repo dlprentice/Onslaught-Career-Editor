@@ -1,13 +1,13 @@
 # Execution Program
 
-Status: durable backlog; feature execution on hold; organization in progress
-Last updated: 2026-09-05
+Status: durable backlog; feature execution on hold; internal preparation complete
+Last updated: 2026-09-06
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
-The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the WinUI
-toolkit coequal. The storage-consolidation hold remains: new RE campaigns,
-rebuild features, WinUI/CLI features, and semantic Ghidra mutation await David's
-explicit resumption. Approved organization, routing repair, read-only audit, and
+The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
+toolkit companion coequal. The storage-consolidation hold remains: new RE campaigns,
+rebuild features, companion migration/features, CLI features, and semantic Ghidra mutation
+await David's explicit resumption. Approved organization, routing repair, read-only audit, and
 checksum validation can continue. Finishing relocation does not resume features.
 
 Use `developer_state.json` → `current_re_authority` as the sole live campaign
@@ -60,13 +60,19 @@ Record an actual play session as a `CommandTape`, then replay it twice under
 procedure is documented under `rebuild/tools/`. Windows input capture is required;
 a synthetic tape does not meet this gate.
 
-### P10 — WinUI release acceptance — SOURCE CUT COMPLETE; ACCEPTANCE OPEN
+### P10 — Godot toolkit companion — SELECTED; MIGRATION NOT STARTED
 
-The v1.0.12 source cut is merged. Remaining Windows work: regenerate and verify
-third-party notices, run [public signoff](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md),
-and pass the portable ZIP probe. Publication follows [README.RELEASE.md](README.RELEASE.md).
-Linux static checks do not substitute for Windows acceptance. The evaluation guest
-is staged under `local-data/windows-vm/`; read its guide before activation.
+David replaced the WinUI 3 lane with a Godot companion for Linux and Windows on
+September 6. Retain the existing WinUI/AppCore source and tests as migration material;
+the merged v1.0.12 source cut and its open Windows acceptance are historical status,
+not a queued WinUI release. [README.RELEASE.md](README.RELEASE.md) retains that artifact's
+procedure. No new companion project or migration implementation has been created.
+
+After David resumes development, convert the companion while preserving careers,
+saves, safe copies, patching, media and related toolkit capabilities. Acceptance:
+usable Godot workflows validated on Linux and Windows, preserved unknown save bytes
+and guarded writes, and current capability/provenance documentation. The shared engine
+does not collapse the companion and retail-parity rebuild into one outcome.
 
 ### P11 — CLI parity — OPEN
 
@@ -79,7 +85,7 @@ Acceptance: close the remaining gaps with per-verb Windows tests, keep
 [CLI.md](CLI.md) aligned with the implemented command surface, and keep public
 copy free of internal process language. Source inspection is not Windows acceptance.
 
-### P12 — Repository storage and disposition audit — CUTOVER COMPLETE; AUDIT OPEN
+### P12 — Repository preparation — INTERNAL BASELINE COMPLETE; EXTERNAL AUDIT OPEN
 
 The complete checkout now lives at `/srv/archive-b/Onslaught-Career-Editor`,
 with a bind/automount at `/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor`.
@@ -87,13 +93,43 @@ with a bind/automount at `/home/xsniper80/Projects/game-dev/Onslaught-Career-Edi
 The old ProjectData route stays absent. Current mount and recovery rules belong
 in [AGENTS.md](AGENTS.md) and the existing local data guides.
 
-Remaining acceptance: repair active tracked/tool/selector routing and classify
-families as working authority, unique history, justified recovery copy, or proven
-redundancy. Check real references and hashes before retirement; preserve unresolved
-unique work. Existing Archive B mirrors share the project's physical drive and
-therefore do not protect against its loss. Historical ignored non-lab recovery
-coverage remains unresolved. Record material dispositions in the existing migration
-queue under the approved scope, without inventing another approval gate or backup.
+David's September 6 repository-internal preparation is complete. Further RE,
+rebuild and Godot companion work await his direction. Completed scope:
+
+- [x] Align current guides, implementation maps, platform boundaries and timing prose;
+  retain all three goals, evidence grades, save/provenance rules and development holds.
+- [x] Repair the packet exporter's Linux launcher, dry-run/refusal behavior,
+  verified incremental reuse and recoverable publication; repair canonical probe-ledger
+  routing and the case-sensitive authoring fixture. Correct host-attestor diagnostics
+  without changing any frozen campaign selector, pin, grade or receipt.
+- [x] Group the four recovery packages under `local-data/recovered/`, preserving
+  all 120 files / 28,217,115 bytes and recorded metadata. Retain both unselected
+  seed stages under `local-data/recovered/seed-staging/` and fourteen historical
+  validation files under `local-data/test-runs/retained-lab-records/`: another
+  126 files / 68,827,682 bytes, with unchanged hashes and recorded metadata.
+  The existing migration queue and local-data owner map record exact paths.
+- [x] Close the bounded lab-root and tool reviews, retaining failed attempts,
+  distinct staging trees and all frozen contents. Review findings and their
+  reproduced resolutions live under `local-lab/reviews/preparation-20260906/`.
+- [x] Correct the three Linux test assertions that expected Windows namespace
+  messages. The affected class passes 22/22 without skips or production behavior
+  changes; no new broad Core or Windows runtime result is claimed.
+- [x] Pass the affected existing tool suites and documentation/public-payload
+  gates. [VALIDATION.md](VALIDATION.md) records the focused results and limits.
+
+KEEP in place: the reviewed and writable Ghidra homes, frozen campaign inputs
+and receipt graphs, explicitly retained historical/rehearsal projects,
+`local-data/_recovered-worktrees/` and `local-data/windows-profile-2026-08-28/`.
+Ignored status and a historical name do not establish redundancy. Existing dated
+logs, manifests and citations remain evidence, not a new execution queue.
+
+External disposition belongs to the storage owner: Archive B's old lab/cold
+mirrors, Archive A's graveyard, non-Onslaught B collections and the unresolved
+historical ignored non-lab recovery investigation. B-side mirrors are on the
+working project's drive and do not protect against its loss; a dedicated backup
+drive remains David's decision. These dependencies do not authorize changes to
+external copies, production backup jobs or the Windows VM. The VM remains staged,
+and Windows/Godot runtime acceptance and the P7/P8/P10/P11 feature gaps stay open.
 
 ## Completed items
 

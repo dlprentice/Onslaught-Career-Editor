@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-08-31
+Last updated: 2026-09-06
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -20,7 +20,7 @@ counts here.
 
 ```mermaid
 flowchart LR
-    W["WinUI 3 app"] --> A["AppCore"]
+    W["Retained WinUI 3 shell"] --> A["AppCore"]
     C["Maintainer CLI"] --> A
     AT["AppCore tests"] --> A
     CT["CLI tests"] --> C
@@ -32,8 +32,10 @@ flowchart LR
 ```
 
 The arrows are source dependencies, not priority. Full retail reverse
-engineering, the 1:1 Godot rebuild, and the WinUI 3 toolkit are coequal project
-outcomes. The current goal determines which one receives attention now.
+engineering, the 1:1 Godot rebuild, and the Godot toolkit companion are coequal
+project outcomes. The diagram maps existing source: the Godot companion selected
+on September 6 has not been implemented, and the WinUI/AppCore code is retained
+as migration material. Future architecture belongs to separately resumed development.
 
 | Project | Declared role and dependencies |
 | --- | --- |
@@ -106,7 +108,8 @@ safe-copy implementation.
 | Path | Authority |
 | --- | --- |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
-| `local-lab/` and `local-proofs/` | Ignored machine-local evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. Canonical-checkout `local-lab/` is one real writable directory, not a link or tracked content; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns routing, and `local-lab/INDEX.md` maps the retained corpus. |
+| `local-lab/` | Ignored machine-local evidence, retail inputs, captures and frozen proof graphs. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns routing, and `local-lab/INDEX.md` maps the retained corpus. |
+| `local-data/` | The real ignored repository child for operational outputs, host binding, staged VM state and preserved recovery packages; its `AGENTS.md` owns the internal map. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
 | [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Focused extraction, validation, Ghidra, asset, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |

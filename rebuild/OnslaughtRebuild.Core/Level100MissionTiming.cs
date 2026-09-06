@@ -241,7 +241,7 @@ public static class Level100MissionTiming
     /// So the greeting is held, not skipped, and every later message inherits
     /// the same offset. <c>FINISHED_PANNING</c> arrives at the end of the
     /// six-second pan (<c>SimulationConstants.Level100OpeningPanTicks</c> =
-    /// 180, and <c>CPanCamera::GetShowHUD</c> is false for all of it), and
+    /// 120 at the current 20 Hz, and <c>CPanCamera::GetShowHUD</c> is false for all of it), and
     /// <c>ALLOWED_TO_PLAY_MESSAGES</c> is one released event frame later.
     /// At 20 Hz that is 120 + 1 = <b>121</b>. At 30 Hz it was 180 + 2 = 182,
     /// which is exactly the tick two fresh uninterrupted app-owned Steam runs

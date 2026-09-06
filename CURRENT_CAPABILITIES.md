@@ -1,7 +1,8 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-31. Read `developer_state.json` →
+Last updated: 2026-09-06 (Godot companion direction and current Core timing; no product runtime rerun).
+Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
 `reverse-engineering/ghidra/README.md` for the reviewed tracked checkpoint and
@@ -17,12 +18,13 @@ Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
 re-measure before relying on one.
 
-Onslaught Toolkit has one player-facing preservation app: the WinUI 3 Windows
-app. AppCore owns its file and copied-target correctness. Full retail reverse
-engineering and the 1:1 Godot rebuild are coequal project outcomes, not
-subordinate app lanes; the unshipped CLI and focused tools are support surfaces.
+The implemented preservation app is the WinUI 3 Windows app; AppCore owns its
+file and copied-target correctness. On September 6 David selected conversion to a
+Godot companion for Linux and Windows. That companion is not implemented or validated
+yet. Full retail RE, the 1:1 Godot rebuild and the Godot toolkit companion remain
+coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
-## WinUI toolkit
+## Existing WinUI toolkit — migration material
 
 The primary navigation is Home, Windowed & Mods, Save Lab, Cheats, Media, Lore,
 Asset Library, Settings, and About.
@@ -226,8 +228,10 @@ That controlled setup now also owns one rebuild behavior. One clean and two
 modified fresh copies bound Transform through copied `defaultoptions.bea` and
 delivered retail action `0x21` to player one's BattleEngine. The control stayed
 in raw walker state `2`; both modified runs repeated `2 → 1 → 3`, with the
-raw transition lasting 535.359–537.249 ms. Deterministic Core maps only that
-walker-to-jet state to 16 ticks at 30 Hz. A later clean control and two fresh
+raw transition lasting 535.359–537.249 ms. The current Core represents that
+walker-to-jet state with 10 ticks at 20 Hz (`SimulationConstants.WalkerToJetTransitionTicks`
+and `TicksPerSecond`); the runtime window above remains the dated observation.
+A later clean control and two fresh
 modified repetitions established the separate released presentation: the
 renderer swaps to the 54-part jet hierarchy at transition entry, external
 `walktofly` runs for about 1.24 seconds, and the 21-part cockpit completes its
@@ -365,7 +369,9 @@ released four-point Level 100 pan around the exterior Aquila, switches to the
 retained first-person cockpit and HUD after 5.95 seconds, and reaches the retail
 playing-camera state after six seconds. Level 100's script keeps the player
 deactivated beyond that camera handoff: Core enables movement/look only when the
-released power flag changes at tick 1000 relative to the pan start. The Firing
+mission script and message schedule enable power. The historical tick-1000
+observation in `rebuild/PROVENANCE.md` uses 30 Hz Core sample coordinates;
+current scheduling belongs to `Level100MissionTiming`. The Firing
 Range later deactivates the player, then re-enables it with only the Pulse
 Cannon; flight remains disabled. Two fresh
 uninterrupted safe-copy runs repeated the same camera endpoints, six-second
@@ -398,7 +404,7 @@ inversion, and jet mouse response are not yet claimed.
 > `0x005d97c8 = 0.004333333`. The old pointer scalar `13/2000` is exactly
 > `1.5 × 13/3000`; it is now `91/3000 = 7.0 × 13/3000`, so aiming had been
 > 4.67× too slow at equal hand motion (`fed5829b`).
-Core retains the previously measured 16-tick walker-to-jet transition, but the
+Core uses the source-declared 10-tick walker-to-jet transition at 20 Hz, but the
 clean opening's flight gate keeps it unavailable until later tutorial
 progression is implemented. The walker, jet, and first-person cockpit now load
 directly from their exact released AYA files as 63-, 54-, and 21-part

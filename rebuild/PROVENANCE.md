@@ -1,7 +1,8 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-31. Added the exact world-110 all-40 serialized
+Last updated: 2026-09-06 (historical timing coordinates clarified; no new retail measurement).
+The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
 terrain-height prefix, plus the standalone ordered
@@ -860,7 +861,8 @@ uses the released orientation with local points `(0,10,-4.3)`, `(5,0,1.3)`,
 `CBSpline`. The camera changed to the first-person `CThingCamera` at event time
 `8.95`; game state remained panning until `9.0`. `CPlayer__ReceiveButtonAction`
 at `0x004D3110` rejects normal player actions below playing state. That establishes
-the 180-tick camera-state boundary, but does not itself enable Level 100 input;
+the six-second camera-state boundary: 180 ticks in the historical 30 Hz Core
+sample coordinates, or 120 ticks in the current 20 Hz Core. It does not itself enable Level 100 input;
 the later mission power gate is documented below. `CPanCamera::GetShowHUD` is
 false; the control camera owns the HUD-visible handoff. Raw sampler output and
 copied games were disposable and are not retained.
@@ -1290,7 +1292,8 @@ initial phase remain unproven.
 
 One clean control and two fresh, uninterrupted app-owned Level 100 runs then
 repeated the first eight message boundaries within one 50 ms retail sample.
-With Core tick zero aligned to Steam's game-time-`3.0` pan start, their intervals
+In the historical 30 Hz Core sample coordinates, with tick zero aligned to
+Steam's game-time-`3.0` pan start, their intervals
 are HUD introduction `182..351`, threat circle `357..567`, scanner `573..756`,
 message log `762..926`, technician `932..998`, movement `1004..1220`, Target
 Zone 1 instruction `1226..1387`, and objective-scanner instruction `1393..1530`.

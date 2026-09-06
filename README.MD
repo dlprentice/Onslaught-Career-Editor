@@ -1,20 +1,26 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-05 (toolchain pins updated to Godot 4.7.2 and Node 26;
-player-facing behavior and older lane claims retain their dated boundaries).
+Last updated: 2026-09-06 (Godot companion direction and Linux preparation;
+existing implementation claims retain their dated boundaries).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
 Onslaught Toolkit is a preservation, tooling, and original-code reconstruction
-project for *Battle Engine Aquila* (2003). The primary product is a WinUI 3
-Windows app for inspecting and safely editing real save/options files, preparing
-copied game profiles, applying evidence-backed patches to copied executables,
-and browsing locally supplied media, catalogs, and project lore.
+project for *Battle Engine Aquila* (2003), with three coequal outcomes: retail
+reverse engineering, a 1:1 Godot reconstruction, and a Godot preservation/toolkit
+companion for Linux and Windows. The companion covers real save/options files,
+safe game copies, evidence-backed patches, media, catalogs and lore.
 
-## Playing Battle Engine Aquila on a modern PC
+The existing companion implementation uses WinUI 3 on Windows. David selected its
+conversion to Godot on September 6; that migration has not started. The existing
+source and capabilities are retained as migration material. Development resumes
+only after the baseline report and his further direction.
 
-If you own the game and just want to play it, you do not need anything below
+## Using the existing Windows toolkit
+
+These instructions describe the existing Windows release, not a Godot or Linux
+companion build. If you own the game and just want to play it, you do not need anything below
 this section — no .NET, no Node, no Python, no build.
 
 1. Download the portable ZIP from
@@ -45,8 +51,7 @@ by the game's publishers or rights holders. Repository licenses cover their
 respective project code and documentation; they grant no rights in the retail
 game, its assets, names, or trademarks.
 
-The toolkit never replaces or mutates the installed retail game. The
-GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
+The GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
 now enters through the locally materialized released Lost Toys logo, opening
 montage, and splash, then click-to-start, main menu, a career-name entry page
@@ -78,11 +83,11 @@ as files in the current source tree or its release packages.
 > [`rebuild/README.md`](rebuild/README.md)'s `## Current truth` for the full list
 > and its authority.
 
-## Active surfaces
+## Existing source surfaces
 
 | Path | Owner |
 | --- | --- |
-| `OnslaughtCareerEditor.WinUI/` | Primary Windows user experience |
+| `OnslaughtCareerEditor.WinUI/` | Retained Windows companion shell; migration material for the planned Godot companion |
 | `OnslaughtCareerEditor.AppCore/` | Save, options, safe-copy, patch, media, catalog, and lore correctness |
 | `OnslaughtCareerEditor.Cli/` | Unshipped maintainer adapter over AppCore |
 | `rebuild/` | GPL RE-informed deterministic reconstruction |
@@ -108,8 +113,8 @@ The current engineering host is Omarchy Linux. It owns Git, documentation,
 Python tools, reverse engineering, and the Core/Client/headless rebuild.
 AppCore source compiles here, but its full suite, WinUI 3, the Windows-targeted
 CLI, and the currently admitted Godot runtime/build/smoke/capture routes remain
-Windows-only. An isolated Windows 11 evaluation VM is prepared outside the
-repository at `local-data/windows-vm/`, but it is not yet
+Windows-only. An isolated Windows 11 evaluation VM is staged inside the
+repository's ignored `local-data/windows-vm/`, but it is not yet
 defined or running; there is no current native Windows or controlled Godot
 execution route until its separate activation gate completes.
 
@@ -171,9 +176,9 @@ npm run test:cli
 npm run run:rebuild-godot
 ```
 
-`npm test` builds the active solution once, then checks the consequential
-save/codec/write/copy/patch contracts and the static WinUI accessibility audit.
-It deliberately excludes broad UI, native Godot, release packaging, Ghidra,
+`npm test` builds the active solution once, then runs selected AppCore contracts,
+UI tests excluding `WinUIRuntime` and `LegacyWpf`, and the CLI tests.
+It excludes native UI runtime, native Godot, release packaging, Ghidra,
 local runtime evidence, and historical accounting. It is a Windows-VM command,
 not the Linux default. Use the smallest focused host-appropriate command.
 

@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 Summary: what the project is, the rules that protect the evidence and the user's files, where things live on this
 Linux laptop, which commands work here, and the gotchas that have already cost data.
 
@@ -12,11 +12,17 @@ this repository guide is more specific and wins here.
 ## What this is
 
 A preservation project for *Battle Engine Aquila* (2003) with three coequal outcomes: reverse the retail game so it
-can be understood, patched and modded; rebuild it in Godot at 1:1 behavioral parity; and ship the WinUI 3 toolkit
-for careers, saves, safe copies, patches and media. RE feeds the rebuild, the rebuild exposes the next retail
-questions, and both make safe app features possible. [`GOAL.md`](GOAL.md) states the standing outcomes,
+can be understood, patched and modded; rebuild it in Godot at 1:1 behavioral parity; and ship a Godot toolkit
+companion for Linux and Windows for careers, saves, safe copies, patches and media. RE feeds the rebuild,
+the rebuild exposes the next retail questions, and both make safe app features possible.
+[`GOAL.md`](GOAL.md) states the standing outcomes,
 [`PROGRAM.md`](PROGRAM.md) is the work queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is
 proven today, and `~/Projects/game-dev/PLAN.md` section 6 is where David wants the repository to go (three repos).
+
+David replaced the WinUI 3 development lane with the Godot companion on September 6.
+Keep the existing WinUI/AppCore source as migration material; no companion conversion
+begins until the completed baseline report and his further direction. Existing Windows
+release procedures describe the retained implementation, not a queued WinUI release.
 
 The host is this Linux laptop. It owns Git, documentation, the Python tooling, reverse engineering, Ghidra and the
 Core/Client/headless rebuild lanes. WinUI 3, the full AppCore suite, the Windows-targeted CLI, the portable ZIP
@@ -25,16 +31,21 @@ and the controlled Godot launch/smoke/capture routes need Windows; the evaluatio
 Do not report Linux static checks as Windows or Godot evidence.
 
 A storage-consolidation hold has been in force since 2026-08-31 (`developer_state.json` →
-`_STORAGE_CONSOLIDATION_HOLD_20260831`): no new RE campaign, rebuild feature, WinUI/CLI feature or semantic
-Ghidra mutation until David lifts it. Routing repair, read-only audit, checksum validation and repository
-organization are fine.
+`_STORAGE_CONSOLIDATION_HOLD_20260831`): no new RE campaign, rebuild feature, companion migration/feature,
+CLI feature or semantic Ghidra mutation until David lifts it. Routing repair, read-only audit,
+checksum validation and repository
+organization are fine. David authorized repository-internal preparation on 2026-09-06:
+close current documentation/routing defects, organize safe internal data families and repair their existing
+tools. This does not open Ghidra projects, activate the Windows VM or resume features. External archive
+mirrors, graveyard reconciliation and the historical recovery investigation belong to the storage task.
 
 ## Ground rules
 
 - Game/save writes require an informed user choice and a verified recovery copy before overwriting original
   data; `BinaryPatchEngine.AuthorizeInstalledGameWrite` in AppCore is the model. Never manufacture an
   "original" from an already modified file, and never destroy career data as a side effect.
-- The pristine specimen (`BEA.exe`, SHA-256 `74154bfa…`) is the byte-measurement baseline: read it, never write
+- The pristine specimen (`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfa…`)
+  is the byte-measurement baseline: read it, never write
   it. Every byte or address finding names the specimen it was read from, with its hash. The maintainer's
   installed `BEA.exe` is deliberately patched and is not evidence.
 - Do not synthesize `.bes` saves. Start from a real baseline and preserve length, reserved fields and unknown
@@ -74,13 +85,17 @@ organization are fine.
   retail data; retail executables, decompiler output and separately licensed material stay out of it
   (`rebuild/PROVENANCE.md`). `OnslaughtRebuild.Core` stays deterministic and free of presentation, filesystem,
   clock, process, network and GPU APIs.
+  Using Godot for the companion does not merge MIT application code, GPL rebuild code
+  and private retail material into one licensing boundary.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.
 - Reuse existing tooling and records; avoid duplicate test frameworks, broad routine matrices and new status
   or handoff files. Add a focused test when a real behavioral gap needs one. Hosted CI and release automation
-  are not part of the present preparation task. Work on `main`, pushed to
-  `dlprentice/Onslaught-Career-Editor`; normal commits and pushes are authorized. Release preparation remains
+  are not part of the present preparation task. Use a branch or repo-local `.worktrees/` when useful;
+  David retired the blanket main-only restriction on 2026-09-06. Worktrees use the canonical lab explicitly
+  and never receive a copied corpus. Keep scoped work pushed to `dlprentice/Onslaught-Career-Editor`;
+  normal commits and pushes are authorized. Release preparation remains
   subject to the actual development hold and the selected platform's validation, not repeated step approvals.
 - Root commands use `python` (3.14) and forward-slash paths; Windows-only scripts fail fast here through
   `tools/require_windows_host.py`. Drive letters in old receipts are history, not routing.
@@ -89,7 +104,7 @@ organization are fine.
 
 | Path | What it is |
 | --- | --- |
-| `OnslaughtCareerEditor.AppCore/`, `.WinUI/`, `.Cli/` and their `*.Tests/` | The toolkit: shared AppCore (save/options codecs, safe copies, patch planning, media, lore), the WinUI 3 shell, the unshipped maintainer CLI (`CLI.md`). AppCore compiles here; its full suite and the UI run only on Windows. |
+| `OnslaughtCareerEditor.AppCore/`, `.WinUI/`, `.Cli/` and their `*.Tests/` | Existing toolkit implementation and migration material: shared AppCore (save/options codecs, safe copies, patch planning, media, lore), the retained WinUI 3 shell, the unshipped maintainer CLI (`CLI.md`). The Godot companion is not implemented. AppCore compiles here; its full suite and the existing UI run only on Windows. |
 | `rebuild/` | The GPL Godot reconstruction: `OnslaughtRebuild.Core` (deterministic 20 Hz simulation), `Client`, `Headless` (tape replay), `Godot` (.NET renderer; launch is Windows-only today), `tools/` (retail materializer, capture scripts). Read `rebuild/README.md`, `PROVENANCE.md`, `DETERMINISM.md` and `PARITY.md` before touching it. |
 | `reverse-engineering/` | Promoted, specimen-bound evidence. Start at `RE-INDEX.md`; `ghidra/` is the tracked checkpoint; `REVIEW-PROTOCOL.md` governs external reviews; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
 | `tools/` | About 550 files: RE and campaign tooling, Ghidra scripts (`*.java`, replayable `cohort-specs/`), documentation and safety gates, asset export, release helpers. `tools/README.md` says what each is for. |
@@ -98,7 +113,7 @@ organization are fine.
 | `developer_state.json` | 935 KB of resumable state. `current_re_authority` is the only live selector; the dated `_*` keys are history. Awareness, never truth that primary evidence cannot overturn. |
 | Root `*.md` | `README.MD` (product and lanes), `PROJECT-INDEX.md` (code ownership), `VALIDATION.md` (which gate for which change), `DOCUMENTATION.md` (the header standard), `CONTRIBUTING.md`, `SECURITY.md`, `LOCAL_LAB_OVERLAY.md`, `README.RELEASE.md`. A new tracked `.md` needs `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block. |
 | `local-lab/` (ignored) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
-| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/` (the gen32 attestor's pinned output), `retail-profiles/`, `media/`, `vm-media/`, `windows-vm/`, `windows-profile-2026-08-28/`, and the `_recovered-*` reconciliation packages described by its own `AGENTS.md`. |
+| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/`, current retail/media inputs, staged VM data, operational outputs and grouped `recovered/` packages. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. Its own `AGENTS.md` owns the exact map. |
 | `.artifacts/` (ignored) | Legacy validation, screenshot and publish output. It can contain unique evidence, so ignored does not mean disposable. Keep existing coupled tool paths; use `local-data/` for new general-purpose outputs and the numbered queue for retirement. |
 
 ## Commands
@@ -112,7 +127,7 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 | Docs gate: links, headers, function names, authority pointers | `npm run test:docs` (about 2 s) |
 | Public payload boundary | `npm run test:safety` (about 20 s) |
 | One tools suite | `python tools/<name>_tests.py`; the function-name check alone is `python tools/re_function_doc_names_check.py --strict` |
-| Rebuild Core tests | `npm run test:rebuild-core` (materializes first; measured 2026-08-31 at 34 min with three known Linux-host failures in `TapeFileWriteNew_*`); `npm run test:rebuild-ferry-sweep` for the excluded ferry oracle |
+| Rebuild Core tests | `npm run test:rebuild-core` (materializes first; the August 31 broad run took 34 min; its three Linux assertion failures were corrected and the affected class passed 22/22 on September 6 — see `VALIDATION.md`); `npm run test:rebuild-ferry-sweep` for the excluded ferry oracle |
 | Rebuild Client tests | `npm run test:rebuild-client` |
 | Materialize retail inputs | From this repo: `npm run prepare:rebuild-assets -- --game-root "$PWD/local-lab/safe-copy-bea-pristine"` writes into `local-lab/rebuild-godot/`; Linux has no Steam discovery, so a fresh stage needs explicit `--game-root` |
 | Headless replay | `npm run run:rebuild-headless -- <args>` |
@@ -129,8 +144,9 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 2. A new or edited tracked `.md` has the header fields and no volatile generation numbers, and is not added to
    `tools/doc_header_backlog.txt`.
 3. Evidence claims name their specimen, capture or test; anything unproven is written as an open question.
-4. `git status` shows only your change and nothing from `local-lab/` or `local-data/`. Commit on `main` with a
-   plain message and push, then continue the remaining authorized work rather than stopping after a substep.
+4. Review `git status`, preserve unrelated changes, and stage only the scoped tracked paths, never
+   `local-lab/` or `local-data/`. Commit with a plain message and push the working branch, then continue
+   the remaining authorized work rather than stopping after a substep.
 
 ## Gotchas learned the hard way
 

@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-08-07
+Last updated: 2026-09-06
 Evidence: SOURCE — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -38,12 +38,14 @@ comparable byte-for-byte across hosts.
 
 ## The tape and its bounds
 
-The headless runner (`OnslaughtRebuild.Headless`) records input tapes and
-replays them:
+The headless runner (`OnslaughtRebuild.Headless`) reads and replays supplied
+command tapes. Recording and replaying an actual human-input session remains
+open in `PROGRAM.md` P8.
 
 - `MaximumTapeBytes = 8 MiB`
 - `MaximumReplaySteps = 100 000`
-- A replay is run twice; the second run must reproduce the first run's hash,
+- A replay runs twice by default (`--repeat` can select another count); each
+  additional run must reproduce the first run's hash,
   or the run fails with "Determinism failure: repeated replay produced
   different hashes."
 - `--expect <hash>` requires the replay trace hash to equal the expected

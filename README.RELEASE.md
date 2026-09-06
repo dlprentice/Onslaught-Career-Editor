@@ -1,9 +1,14 @@
 # WinUI release candidate
 
-Status: active — the release-candidate shape and its boundary
-Last updated: 2026-08-31 (host routing; candidate shape remains unchanged).
+Status: retained WinUI reference — superseded as the planned companion release lane
+Last updated: 2026-09-06 (Godot companion direction; candidate shape unchanged).
 Summary: what a candidate ZIP contains, what it explicitly does not claim, and
 which steps remain separately authorized.
+
+David selected conversion to a Godot companion for Linux and Windows on September 6.
+This document preserves the existing WinUI artifact procedure; it is not a queued
+release or permission to begin migration. [PROGRAM.md](PROGRAM.md) P10 owns that
+future work after the baseline report and further direction.
 
 The supported downloadable shape is an unsigned, self-contained Windows x64
 portable ZIP. It is not an installer, MSIX, Store package, signed artifact, or
@@ -22,7 +27,8 @@ wrapper:
 It must not contain retail game files, copied executables, saves, extracted
 assets, media payloads, Ghidra data, debugger output, private captures, or
 rebuild binaries. Users provide their own retail installation for game-aware
-workflows, and mutating workflows operate only on copied files or safe copies.
+workflows. Writes to original game data require the owner's informed choice and
+a verified recovery copy; development and validation use copied targets.
 
 ## Build and verify a local candidate
 
@@ -52,9 +58,10 @@ is generated from restored project dependencies and must agree with
 
 ## Publication boundary
 
-A passing local candidate does not authorize a commit, push, tag, GitHub
-Release, upload, signing request, announcement, or installation. Those are
-separate maintainer actions. Historical release notes and superseded package
+A passing local candidate does not by itself authorize publication, signing,
+announcements or installation. Follow the scope already authorized under
+[AGENTS.md](AGENTS.md); normal commits and pushes within that scope need no
+additional approval. Historical release notes and superseded package
 accounting are available in Git history rather than duplicated in the active
 tree.
 

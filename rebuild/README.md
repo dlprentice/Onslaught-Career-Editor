@@ -1,7 +1,8 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-31. The bounded world-110 all-40 serialized
+Last updated: 2026-09-06 (current timing and historical sample coordinates clarified).
+The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
 composition, and
@@ -521,9 +522,11 @@ a six-second Steam pan, control-view handoff at 5.95 seconds, and then the
 attached first-person view at the Aquila center of gravity with its horizontal
 orientation and BattleEngine-owned vertical pitch, 58.7155-degree vertical
 field of view, 0.1 near plane, and authored frame-25 walker cockpit. Core
-mirrors the released playing-state
-camera boundary at 180 fixed ticks, then keeps movement/look gated until the
-mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
+represents the six-second playing-state camera boundary at 120 fixed ticks
+(`SimulationConstants.Level100OpeningPanTicks`). Movement/look remain gated until
+the mission script and message timing power the Aquila; `Level100MissionTiming`
+owns that schedule. The older tick-1000 power observation used 30 Hz Core sample
+coordinates, as recorded in `PROVENANCE.md`. Reaching the Firing Range temporarily
 deactivates the player, then re-enables it with the Pulse Cannon; flight remains
 disabled. Walker pitch uses the released `1/117`-radian input and `0.8`
 retention verbatim, with the two repeated absolute limits measured
