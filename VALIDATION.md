@@ -1,16 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-06 (Linux preparation checks and default Windows gate description).
-The 2026-08-31 causal Blaster impact identity and ordered World-110
-authored-start assignment composition produced a broad non-ferry Core receipt of
-1,130 passed / 3 known failed / 1,133 total; PROGRAM P9 moved the forty-run
-`Level100FerrySweepFixture` from the default Core command to an explicit sweep.
-Runner discovery proves the post-split 942-test population is exactly the
-disjoint union of 936 default tests and six ferry tests; the explicit command
-passed all six over the unchanged twenty-perturbation, two-arm matrix. Timing
-and overload-invalidity details are in the Rebuild Core row.
-Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
+Last updated: 2026-09-07 (native Linux Godot and first Save Lab workflow).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -18,59 +9,71 @@ Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
 
-David selected a Godot companion for Linux and Windows on September 6, replacing
-the WinUI development lane. The table still describes existing code and commands;
-WinUI and portable-ZIP checks remain reference procedures for that retained source.
-They are not queued companion acceptance work. The future Godot companion needs its
-own implemented workflows and native platform validation after development resumes.
+Linux is the active development and native Godot host. `npm test` runs the
+supported Save Lab service/gate checks and both fake-tool launcher suites without
+opening a window. `npm run build` and `npm run dev` build/run the Godot companion.
+The rebuild has native Linux build/run/smoke/capture commands; live input checks
+need an available desktop. Source and headless tests alone do not establish native
+input, audio, focus or full tutorial behavior.
 
-Run host-appropriate gates. Omarchy is authoritative for documentation,
-safety, reverse engineering, retail materialization, and the
-Core/Client/headless rebuild. `npm test`, `npm run dev`, the full AppCore suite,
-WinUI, CLI, the full `test:rebuild` aggregate, and controlled Godot
-build/launch/smoke/capture require the isolated Windows VM after activation.
-Linux static behavior is not native Windows or Godot evidence. Root scripts use
-`python` and forward-slash paths; Windows-only commands also fail fast before
-attempting their toolchain.
-The 2026-08-30 Linux measurement of the otherwise buildable AppCore lane was
-**1,575 passed / 26 failed / 1,601 total**; the failures depend on Windows path,
-process, and media behavior, so the root full-suite command is guarded rather
-than misreported as a Linux gate.
+The retained WinUI default is `npm run test:winui`. The full legacy AppCore suite,
+WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated; the evaluation
+VM is inactive. Historical Windows rebuild launchers use explicit `:windows` aliases
+and need their older engine manifest revalidated against the current managed SDK.
+No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
+run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
+are not replaced by the focused portable results below.
 
 | Change | Focused evidence |
 | --- | --- |
 | Documentation or deletion only | `git diff --check`, `npm run test:docs`, and the affected generator/reference check |
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
-| AppCore behavior | In the Windows VM, `npm run test:appcore`; a deliberately selected platform-neutral fixture may run directly on Linux, but is not the full gate |
+| AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
 | WinUI behavior or copy | In the Windows VM, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
-| Save, options, copied-target, or patch safety | On Linux, only a deliberately selected platform-neutral AppCore fixture; in the Windows VM, `npm run test:safe-copy` also covers the UI regression half |
+| Save, options, copied-target, or patch safety | Save Lab changes use `test:save-lab`, including the real baseline, original/unselected-byte preservation and Linux publication guards. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
 | CLI | In the Windows VM, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture in the Windows VM unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore runs only in the VM. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | In the Windows VM, the matching `test:rebuild-*` command; native smoke only when native behavior changed. Linux Godot source/static work is not native runtime evidence |
-| Frontend page drawing | In the Windows VM, `pwsh -NoLogo -NoProfile -File ./rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which scores the capture against the retail reference and returns `FAIL` on regression. The scorer's portable tests are only one subset of `npm run test:tools` |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` and `build:rebuild-godot` build without a visible app. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
+| Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
 | Portable ZIP inputs or layout | In the Windows VM, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
 | Campaign ledger / generation TSVs | The externally pinned frozen bootstrap in `current_re_authority.verify`; a generation number, matching ledgers, self-derived pins, integrity-only success, or candidate reducer is not authority |
 | Tracked evidence register or current authority pointer | `python ./tools/re_evidence_register_export.py --state developer_state.json --check-header-only` for the portable header gate; on the maintainer host, omit `--check-header-only` and use `--check` for literal-pinned full replay plus byte equality |
 | C1 PE plate apply | Exact current pack path/bytes/SHA, entity/body identity, pristine-byte validation, and a field-scoped reducer. Independent normal/adversarial review is strongly advised for consequential changes but is not a fixed model matrix; see `reverse-engineering/REVIEW-PROTOCOL.md` |
 | C2_BOUNDED_RUNTIME claim | Entity-scoped controlled runtime + can-fail refuter; refuse PE-only bulk C2 |
-| Ghidra mutation | `reverse-engineering/ghidra/README.md` promotion gate + explicit operator authorization; default **not authorized** |
+| Ghidra mutation | A declared cohort within the authorized task and the preservation/rehearsal/readback gate in `reverse-engineering/ghidra/README.md`; no writable opening of the tracked or cold owner. |
 
-Rebuild commands materialize their exact retail inputs to ignored paths. On
-Linux the root command selects canonical `local-lab/rebuild-godot`, but a fresh
-materialization requires `-- --game-root "/absolute/game/root"`; Windows retains
-Steam discovery. Run `npm run prepare:rebuild-assets` explicitly when only that
-boundary changed.
+Rebuild commands materialize their exact retail inputs to ignored paths. Linux
+selects canonical `local-lab/rebuild-godot` and discovers Steam library roots;
+`-- --game-root "/absolute/game/root"` overrides discovery. A fresh checkout needs
+its private canonical lab owner; worktrees reuse it. `prepare:rebuild-assets`
+is sufficient when only that boundary changed.
 
-Inside the Windows VM, `npm test` is the focused default handoff for
-cross-cutting active-product work:
-one WinUI solution build, selected AppCore contracts, UI tests excluding
-`WinUIRuntime`/`LegacyWpf`, and CLI tests. It does not run native UI runtime,
-rebuild, release packaging, Ghidra, private runtime probes, or historical
-repository accounting.
+The retained Windows `test:winui` builds one WinUI solution, then runs selected
+AppCore contracts, UI tests excluding `WinUIRuntime`/`LegacyWpf`, and CLI tests.
+It is not the Linux default or a replacement for native acceptance.
+
+September 6 Linux phase results are in
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`: the default gate passed
+**24/24** Save Lab/composition tests and **14/14** fake-tool launcher tests;
+startup cache/audio tests passed **16/16**. Focused recorder/headless tests passed
+**59/59**, and client launch/career tests **12/12**. The native First Flight smoke
+completed, and the separately recorded **9,367-tick** session replayed twice with
+both live expected hashes verified. That session was mostly idle and did not
+complete the tutorial. The companion's native shell/file dialog opened, but its
+UI write/reopen flow remains pending. Startup logo/montage audio decoded with
+format/length readback; native playback of those new tracks remains pending.
+These are bounded results, not a new broad Core, Windows or full parity receipt.
+
+The World 110 integration review exposed a setter/restore mismatch: script
+assignment still used the World 100 list. The new focused regression failed
+before repair, then **24/24** affected construction/registry tests passed.
+The existing Level 100 fingerprint passed separately without repinning.
+Both Godot projects then built through the shared Linux launcher with zero
+warnings/errors. This remains partial construction, not second-world runtime.
 
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and

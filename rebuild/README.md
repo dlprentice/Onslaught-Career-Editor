@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-06 (current timing and historical sample coordinates clarified).
+Last updated: 2026-09-07 (native Linux route, live tape recording and partial World 110 construction).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -44,8 +44,10 @@ world; the first-time intro then plays before gameplay activation. Repeating
 `--career-save=<path>` opts in exact named career files for the Load Game list;
 the host performs no directory or installed-save discovery and never writes
 those files.
-`--skipfmv`, smoke, and capture modes suppress those video sequences. Their
-Bink audio streams are not decoded, so video playback is currently silent.
+`--skipfmv`, smoke, and capture modes suppress those video sequences. Logo,
+montage and English Level 100 intro audio are decoded beside their frames. The
+intro produced native audio on Linux; playback of the newly added logo/montage
+tracks still needs a live check.
 (*Extended 2026-07-28: this read "click-to-start page, v3 main-menu language, a
 Level 100-only level selector, and the released loading-screen language". The
 three pages added had already shipped; see* `## Current truth` *below for the
@@ -144,40 +146,54 @@ live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
 [`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md), and
 [`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) recipes.
 
-## Run (Windows VM)
+## Run on Linux
 
-Inside the activated isolated Windows VM, install .NET 8, then from the
-repository root run:
+Use the installed pinned Godot 4.7.2 .NET engine and its bundled C# packages:
 
-```powershell
+```bash
+npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
-The command first detects a lawfully obtained retail installation and
-materializes the exact current source/runtime files to ignored paths. For a custom
-location, run
-`pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
-run uses the pinned official Godot 4.7.1 .NET Windows toolchain described by
-`toolchains/godot-4.7-stable-win-x64.json`. When the process—or, on Windows,
-the current user—has `GODOT_DOTNET_ROOT` pointing to that exact verified tree,
-the system installation is reused; otherwise the archive is downloaded to a
-per-user cache and verified before every execution.
-Use `pwsh rebuild/tools/Run-FirstFlight.ps1 -Offline` to forbid downloads.
+`rebuild/tools/first_flight.py` discovers the user's Linux Steam libraries or
+accepts `--game-root "/absolute/game/root"`. It prepares the exact supported
+retail inputs under canonical `local-lab/rebuild-godot/` and startup media under
+`local-lab/startup-media/`, restores against bundled Godot packages with the lock
+file, and launches from this checkout. Required non-Godot NuGet dependencies must
+already be available in the package cache. It never downloads or installs an engine.
+A genuinely fresh canonical clone needs its private `local-lab/` owner first;
+child worktrees reuse that canonical owner instead of creating a second corpus.
 
-`npm run prepare:rebuild-assets` performs the same exact local materialization
-without building or launching. Core, Client, and headless commands consume the
-materialized owner on their own host; no separate manual extraction path is
-required.
-On Linux, the root command selects the canonical checkout's real
-`local-lab/rebuild-godot` staging owner. A fresh canonical clone must first
-create its private owner with `mkdir -m 700 ./local-lab`, and a fresh run
-requires `-- --game-root "/absolute/game/root"`. Never create a child-worktree
-twin or link. Core, Client, and headless execution are native Linux lanes after
-that materialization. The Windows VM uses its own checkout and its own ignored
-work root; it never shares the host's `local-lab` as guest-writable state. The
-currently admitted pinned Godot build/launch, native smoke, and capture routes
-remain Windows-only until the separate Linux toolchain manifest and smoke
-runner are verified.
+The launcher owns scratch, user data/cache and fresh run logs under canonical
+`local-data/first-flight/`, including from a worktree. `--no-build` reuses the
+managed build; `--no-prepare` also skips asset validation/preparation and therefore
+requires already current inputs. Engine flags use `--engine-arg=VALUE`; game
+arguments follow a separate `--`. The launcher stops only its own process group
+on exit, interruption or timeout.
+
+```bash
+npm run test:rebuild-godot-smoke
+npm run capture:rebuild-godot -- -- --capture-plan=mainmenu
+npm run run:rebuild-godot -- -- --record-tape="$PWD/local-data/first-flight/my-session.json"
+npm run run:rebuild-headless -- --tape "$PWD/local-data/first-flight/my-session.json" --repeat 2
+```
+
+Use a new tape filename and close the game normally to finalize it. The recorder
+hashes snapshots as live input is consumed; playback verifies those embedded trace
+and final-state expectations. `--expect <traceHash>` may supply the recorded trace
+explicitly and still verifies an embedded final-state hash. A mostly idle native
+session passed two replays on September 6. A substantial tutorial playthrough is
+still required; synthetic smoke and captured screenshots do not meet that acceptance.
+
+`prepare:rebuild-assets`, Core/Client tests and headless replay do not open a
+window. Run/smoke/capture require an available desktop. The September 6 native
+smoke and live startup into Level 100 establish Linux runtime execution; complete
+controls/audio/tutorial parity remains unverified.
+
+Historical Windows PowerShell launchers remain under `tools/`, with explicit
+`run:rebuild-godot:windows` and `test:rebuild-godot-smoke:windows` aliases. Their
+4.7.1 engine manifest needs revalidation against the current 4.7.2 managed SDK
+before new Windows acceptance. The staged Windows VM remains inactive.
 
 Controls:
 
@@ -195,6 +211,16 @@ Controls:
 | `R` | Reset the slice |
 
 ## Current truth
+
+World 110 now has a separate, incomplete construction stage:
+[`RetailWorld110InitialConstruction`](OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)
+uses its own terrain and 43 admitted direct actors; its player overload constructs
+detached Start/engine/player shells with real configuration fields and distinct
+reader cells. It does not initialize all actor classes, publish a complete world,
+run squads/spawners or construct a playable session. The Godot host therefore
+still loads only World 100. Static admission and the unresolved Init dependencies
+are recorded in
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
@@ -669,10 +695,10 @@ npm run test:rebuild-client
 npm run run:rebuild-headless
 ```
 
-Inside the activated Windows VM, add the controlled native Godot smoke when
-the rendering/runtime path changed:
+On an available Linux desktop, add the native Godot smoke when the
+rendering/runtime path changed:
 
-```powershell
+```bash
 npm run test:rebuild-godot-smoke
 ```
 
@@ -688,8 +714,9 @@ checks focus/cursor policy, a fresh retry, and return to the same Main Menu with
 the Level 100 world released. It writes structured report and log evidence
 only; it has no screenshot or visual-parity machinery.
 
-Visual regression is a separate gate. `rebuild/tools/Capture-Frontend.ps1`
-captures a plan and scores it against the retail reference through
+Visual regression is a separate gate. Linux `capture:rebuild-godot` produces
+the frames; score them with the relevant retail references. The historical
+Windows `rebuild/tools/Capture-Frontend.ps1` combines capture and scoring through
 `tools/score_frontend_capture.py`, folding that verdict into `Status`: a
 frontend regression returns `FAIL`, and a run with nothing to score against
 returns `UNSCORED` rather than `PASS`. Its thresholds live in

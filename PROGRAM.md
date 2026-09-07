@@ -1,14 +1,14 @@
 # Execution Program
 
-Status: durable backlog; feature execution on hold; internal preparation complete
-Last updated: 2026-09-06
+Status: durable backlog; Linux development phase active; internal preparation complete
+Last updated: 2026-09-07
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
-toolkit companion coequal. The storage-consolidation hold remains: new RE campaigns,
-rebuild features, companion migration/features, CLI features, and semantic Ghidra mutation
-await David's explicit resumption. Approved organization, routing repair, read-only audit, and
-checksum validation can continue. Finishing relocation does not resume features.
+toolkit companion coequal. On September 6 David accepted the baseline and explicitly
+resumed the rebuild-led phase below. The historical storage hold no longer blocks its
+normal implementation. Save/evidence protections remain; no Windows VM activation,
+external archive cleanup, production work or repository split is included.
 
 Use `developer_state.json` → `current_re_authority` as the sole live campaign
 selector. Capability claims belong in [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md),
@@ -18,13 +18,35 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ## Open work
 
+### Active phase — Linux playable slices and first Save Lab workflow
+
+1. Establish native Linux Godot build, launch, real input, audio, pause/focus,
+   capture and live tape recording/replay using the installed pinned tools.
+2. Complete the cold first-career Level 100 tutorial through player input and
+   player-observable information, including completion/debrief/return and retry/
+   failure. Compare presentation, audio, timing, controls and world behavior with
+   retail; neither the synthetic smoke route nor a single Won establishes parity.
+3. Resolve blocking systems with targeted, specimen-bound RE and implemented
+   contracts. Keep the independent full-retail mandate and existing evidence owners.
+4. Deliver a separate Godot Save Lab: open a real save, edit one supported field
+   to a new copy, reopen and verify the original and every unselected byte.
+5. Construct real World 110 from its own admitted inputs, then demonstrate the
+   100→110 transition, useful play, retry and return without substituting World 100.
+
+Refactor responsibilities where these steps expose a concrete problem. Reuse useful
+Core/Client/AppCore code and retain WinUI migration material. Validate focused changes,
+commit/push coherent milestones, update the existing capability/validation documents,
+and stop with a phase report when these deliverables are complete. This phase does not
+complete the full retail RE, game-parity or companion mandate.
+
 ### P6 — Campaign bookkeeping relief — OPEN; NOT IMPLEMENTED
 
 Close already-triaged-out questions with their existing terminal verdicts and
 decouple campaign generations from purely structural Ghidra promotions, re-grounding
 when semantic grades require it. This is proposed policy, not today's authority.
 Acceptance: a verified generation cut closes the intended rows with zero semantic
-movement and the policy is recorded in campaign owner documents. Feature hold applies.
+movement and the policy is recorded in campaign owner documents. This bookkeeping
+proposal is not a prerequisite for the active playable slices.
 
 ### P7 — World-110 generalization — PARTIAL; NOT PLAYABLE
 
@@ -32,6 +54,13 @@ Accepted pieces include exact serialized player-start admission, the bounded
 height-clamp prefix, ordered start-list selection, standalone player/engine assignment,
 ordered composition over adapter-supplied identities, and all-40 initial-object seed
 admission. These deterministic pieces do not construct a playable world.
+
+The active phase now constructs an explicitly incomplete World 110 stage from
+its own terrain and 43 admitted direct actors, with real authored transforms,
+behavior selectors and physics life. It also owns detached Start/engine/player
+shells with measured configuration and reader fields. Concrete class Init,
+world publication and event ordering are still missing; these shells are not a
+completed session or a reason to claim 100→110 play.
 
 Remaining: complete start/actor/player/Battle Engine construction, real ownership
 and reader identities, physics/coordinate enrichment, squad/spawner expansion and
@@ -44,22 +73,26 @@ section of [rebuild/README.md](rebuild/README.md) updated without widening parti
 The serialized-seed ceiling is in
 [world-110-initial-constructor-seeds.md](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
 
-### P8 — Human-input replay tapes — OPEN
+### P8 — Player-input replay tapes — IN PROGRESS
 
 Record an actual play session as a `CommandTape`, then replay it twice under
 `--expect` with identical results. Acceptance: both runs pass and the recording
-procedure is documented under `rebuild/tools/`. Windows input capture is required;
-a synthetic tape does not meet this gate.
+procedure is documented under `rebuild/tools/`. Native Linux input capture is now
+in scope. Expected hashes must be measured during live play; a synthetic tape or
+expectations generated by replaying the same tape do not meet this gate.
+The September 6 mostly idle native session passed both expected hashes across
+two replays. Recording now works; a substantial player-input tutorial recording
+and its workflow acceptance remain open.
 
-### P10 — Godot toolkit companion — SELECTED; MIGRATION NOT STARTED
+### P10 — Godot toolkit companion — FIRST WORKFLOW IN PROGRESS
 
 David replaced the WinUI 3 lane with a Godot companion for Linux and Windows on
 September 6. Retain the existing WinUI/AppCore source and tests as migration material;
 the merged v1.0.12 source cut and its open Windows acceptance are historical status,
 not a queued WinUI release. [README.RELEASE.md](README.RELEASE.md) retains that artifact's
-procedure. No new companion project or migration implementation has been created.
+procedure. The active phase begins with the portable AppCore-backed Save Lab workflow.
 
-After David resumes development, convert the companion while preserving careers,
+Convert the companion while preserving careers,
 saves, safe copies, patching, media and related toolkit capabilities. Acceptance:
 usable Godot workflows validated on Linux and Windows, preserved unknown save bytes
 and guarded writes, and current capability/provenance documentation. The shared engine
@@ -85,8 +118,8 @@ The old ProjectData route stays absent. Current mount and recovery rules belong
 in [AGENTS.md](AGENTS.md) and the existing local data guides.
 
 David's September 6 repository-internal preparation and independent follow-up audit
-are complete. Further RE,
-rebuild and Godot companion work await his direction. Completed scope:
+are complete. He subsequently authorized the active development phase above.
+Completed preparation scope:
 
 - [x] Align current guides, implementation maps, platform boundaries and timing prose;
   retain all three goals, evidence grades, save/provenance rules and development holds.
@@ -125,13 +158,14 @@ and receipt graphs, explicitly retained historical/rehearsal projects,
 Ignored status and a historical name do not establish redundancy. Existing dated
 logs, manifests and citations remain evidence, not a new execution queue.
 
-External disposition belongs to the storage owner: Archive B's old lab/cold
-mirrors, Archive A's graveyard, non-Onslaught B collections and the unresolved
-historical ignored non-lab recovery investigation. B-side mirrors are on the
-working project's drive and do not protect against its loss; a dedicated backup
-drive remains David's decision. These dependencies do not authorize changes to
-external copies, production backup jobs or the Windows VM. The VM remains staged,
-and Windows/Godot runtime acceptance and the P7/P8/P10/P11 feature gaps stay open.
+The storage owner's later September 6 closeout retired both B-side lab/cold
+mirrors and moved remaining non-project B collections to A. It also retired a
+few proven Archive A duplicates. The current checkout/lab/data stay on B, with
+independent Ghidra cold recovery on A; this is not a whole-lab backup. Other
+graveyard material and historical ignored non-lab recovery remain unresolved.
+The migration queue owns those receipts; this development phase does not reopen
+external cleanup or backup work. The VM remains inactive. Native Linux Godot now
+runs, while complete runtime acceptance and the P7/P8/P10/P11 gaps remain open.
 
 ## Completed items
 

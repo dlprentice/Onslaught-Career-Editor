@@ -1,15 +1,15 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
 Onslaught has three coequal outcomes: retail reverse engineering, the 1:1 Godot
-rebuild, and a Godot toolkit companion for Linux and Windows. WinUI/AppCore/CLI
-source remains migration material. The development hold in [AGENTS.md](AGENTS.md)
-permits repository preparation; features and companion conversion await David's
-direction. Keep changes focused and use existing records and validation.
+rebuild, and a Godot toolkit companion for Linux and Windows. The active phase in
+[PROGRAM.md](PROGRAM.md) resumes native Linux play, targeted RE and the first
+AppCore-backed Godot Save Lab. WinUI remains migration material. Keep changes
+focused and use existing records and validation.
 
 ## Start here
 
@@ -31,19 +31,19 @@ npm run test:docs
 npm run test:safety
 ```
 
-`npm test`, `npm run dev`, the full AppCore suite, CLI/UI tests, release
-packaging, and the currently admitted controlled Godot runtime run inside the
-Windows host. The evaluation VM is staged but has not been built or activated.
-Root commands fail fast when a Windows-only lane is invoked from Linux; these
-retained-source procedures do not establish a Linux Godot companion workflow.
+`npm test` runs Linux Save Lab and launcher tests without opening a window;
+`npm run dev` launches the Godot companion. The rebuild also has native Linux
+runtime commands. The full legacy AppCore suite, CLI/WinUI and packaging retain
+Windows guards. The evaluation VM is staged and inactive. Native workflow checks
+are separate from build, static or headless evidence.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
 its command list in new documents.
 
 ## Ownership
 
-- The retained WinUI shell owns its existing navigation and presentation.
-  Its Godot successor has been selected but is not implemented.
+- The Godot companion owns Save Lab presentation; retained WinUI supplies the
+  remaining migration material. Both use AppCore for file correctness.
 - AppCore owns save/options preservation, copied-target safety, patch planning,
   media/catalog parsing, and other shared correctness.
 - The C# CLI adapts AppCore behavior; it should not fork file-format rules.

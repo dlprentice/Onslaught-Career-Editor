@@ -457,7 +457,7 @@ public sealed class HeadlessApplicationTests
         // HeadlessApplication.LoadActorDefinitions resolves — a recorded tape
         // only replays under the same actor set it was captured with.
         var definitions = LoadMaterializedActorDefinitions();
-        var recorder = new CommandTapeRecorder();
+        using var recorder = new CommandTapeRecorder();
         var session = new InteractiveSession(seed, definitions);
         session.EnableRecording(recorder);
 
@@ -501,16 +501,9 @@ public sealed class HeadlessApplicationTests
         Assert.Equal(1, releasedConsumed.MoveX);
 
         WorldSnapshot final = session.CurrentSnapshot;
-        CommandTape probe = CommandTapeCodec.Deserialize(
-            CommandTapeCodec.Serialize(recorder.Build("probe", seed)));
-        string traceHash = ReplayRunner.Run(probe, definitions).TraceHash;
         CommandTape tape = CommandTapeCodec.Deserialize(
-            CommandTapeCodec.Serialize(recorder.Build(
-                "recorded-headless",
-                seed,
-                final.Tick,
-                StateHasher.ComputeHex(final),
-                traceHash)));
+            CommandTapeCodec.Serialize(recorder.BuildObserved("recorded-headless", seed)));
+        string traceHash = Assert.IsType<string>(tape.ExpectedTraceHash);
         string tapePath = WriteTemporaryTape(CommandTapeCodec.Serialize(tape));
 
         // Capture-side equivalence before the file-level gate: serializing and
@@ -533,6 +526,52 @@ public sealed class HeadlessApplicationTests
             Assert.Equal(string.Empty, error.ToString());
             using JsonDocument result = JsonDocument.Parse(output.ToString());
             Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
+            Assert.True(result.RootElement.GetProperty("finalStateHashChecked").GetBoolean());
+            Assert.True(result.RootElement.GetProperty("finalStateHashVerified").GetBoolean());
+        }
+        finally
+        {
+            File.Delete(tapePath);
+        }
+    }
+
+    [Fact]
+    public void ExplicitTraceExpectation_StillRejectsForgedEmbeddedFinalStateHash()
+    {
+        var tape = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "forged-final-state",
+            23,
+            3,
+            null,
+            null,
+            []);
+        ReplayResult actual = ReplayRunner.Run(tape, LoadMaterializedActorDefinitions());
+        string forgedFinalHash = new('0', 64);
+        Assert.NotEqual(forgedFinalHash, actual.FinalStateHash);
+        tape = tape with
+        {
+            ExpectedFinalStateHash = forgedFinalHash,
+            ExpectedTraceHash = actual.TraceHash,
+        };
+        string tapePath = WriteTemporaryTape(CommandTapeCodec.Serialize(tape));
+
+        try
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+            int exitCode = HeadlessApplication.Run(
+                ["--tape", tapePath, "--expect", actual.TraceHash, "--repeat", "2"],
+                output,
+                error);
+
+            Assert.Equal(2, exitCode);
+            using JsonDocument result = JsonDocument.Parse(output.ToString());
+            Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
+            Assert.True(result.RootElement.GetProperty("finalStateHashChecked").GetBoolean());
+            Assert.False(result.RootElement.GetProperty("finalStateHashVerified").GetBoolean());
+            Assert.Equal(forgedFinalHash, result.RootElement.GetProperty("expectedFinalStateHash").GetString());
+            Assert.Contains("Final state hash did not match", error.ToString(), StringComparison.Ordinal);
         }
         finally
         {

@@ -290,6 +290,16 @@ LEVEL110_INITIAL_OBJECT_SEEDS = (
 WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
+LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v1"
+WORLD110_INITIAL_ACTORS_SHA256 = (
+    "64f95b4465470d3e2d1fb5df1df78007c866ecd31d8bf6d78ab52493f8c30308"
+)
+LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
+WORLD110_PLAYER_INPUTS_SHA256 = (
+    "3bcd5eac3bf17474f60e67d3f4aa135dd239de9a896d63f64f23c494fe339c7d"
+)
+BATTLE_ENGINE_CONFIGURATIONS = "data/battle engine configurations.dat"
 LEVEL110_SCRIPT_ROOT = CORE_ASSETS / "Level110/Scripts"
 LEVEL110_SCRIPT_OBJECTS = (
     ("beacon", 200, "8e75c80c01e8def1841c51a9234cc14d33590d4a9a031e087db0325762c35be7"),
@@ -1561,6 +1571,8 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
         ),
         *later_worlds,
         (LEVEL110_INITIAL_OBJECT_SEEDS, WORLD110_INITIAL_OBJECT_SEEDS_SHA256),
+        (LEVEL110_INITIAL_ACTORS, WORLD110_INITIAL_ACTORS_SHA256),
+        (LEVEL110_PLAYER_INPUTS, WORLD110_PLAYER_INPUTS_SHA256),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
         (FRONTEND_WORLD_STRINGS, FRONTEND_WORLD_STRINGS_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
@@ -1719,22 +1731,25 @@ def _outputs_ready() -> bool:
 
 def _steam_roots() -> list[Path]:
     roots: list[Path] = []
-    try:
-        import winreg
+    if sys.platform.startswith("linux"):
+        roots.extend((Path.home() / ".local/share/Steam", Path.home() / ".steam/steam"))
+    else:
+        try:
+            import winreg
 
-        for hive, key_name, value_name in (
-            (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamPath"),
-            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath"),
-        ):
-            try:
-                with winreg.OpenKey(hive, key_name) as key:
-                    roots.append(Path(winreg.QueryValueEx(key, value_name)[0]))
-            except OSError:
-                pass
-    except ImportError:
-        pass
+            for hive, key_name, value_name in (
+                (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamPath"),
+                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath"),
+            ):
+                try:
+                    with winreg.OpenKey(hive, key_name) as key:
+                        roots.append(Path(winreg.QueryValueEx(key, value_name)[0]))
+                except OSError:
+                    pass
+        except ImportError:
+            pass
 
-    roots.extend((Path(r"C:\Program Files (x86)\Steam"), Path(r"C:\Program Files\Steam")))
+        roots.extend((Path(r"C:\Program Files (x86)\Steam"), Path(r"C:\Program Files\Steam")))
     libraries: list[Path] = []
     for root in roots:
         libraries.append(root)
@@ -1743,7 +1758,14 @@ def _steam_roots() -> list[Path]:
             text = vdf.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        libraries.extend(Path(value.replace("\\\\", "\\")) for value in re.findall(r'"path"\s+"([^"]+)"', text))
+        libraries.extend(
+            Path(re.sub(r'\\(["\\])', r'\1', value))
+            for value in re.findall(r'"path"\s+"((?:\\.|[^"\\])*)"', text)
+        )
+    if sys.platform.startswith("linux"):
+        # Steam's compatibility root is commonly a symlink to the first root.
+        # Resolve identities without changing Steam's configuration or contents.
+        return list(dict.fromkeys(library.resolve() for library in libraries))
     return libraries
 
 
@@ -1754,15 +1776,16 @@ def _game_candidates(explicit: Path | None) -> list[Path]:
     candidates: list[Path] = []
     for library in _steam_roots():
         candidates.append(library / "steamapps/common/Battle Engine Aquila")
-    candidates.extend(
-        Path(path)
-        for path in (
-            r"D:\Steam\steamapps\common\Battle Engine Aquila",
-            r"D:\SteamLibrary\steamapps\common\Battle Engine Aquila",
-            r"E:\Steam\steamapps\common\Battle Engine Aquila",
-            r"E:\SteamLibrary\steamapps\common\Battle Engine Aquila",
+    if not sys.platform.startswith("linux"):
+        candidates.extend(
+            Path(path)
+            for path in (
+                r"D:\Steam\steamapps\common\Battle Engine Aquila",
+                r"D:\SteamLibrary\steamapps\common\Battle Engine Aquila",
+                r"E:\Steam\steamapps\common\Battle Engine Aquila",
+                r"E:\SteamLibrary\steamapps\common\Battle Engine Aquila",
+            )
         )
-    )
     unique: list[Path] = []
     seen: set[str] = set()
     for candidate in candidates:
@@ -2075,7 +2098,9 @@ class _WorldReader:
         return value
 
 
-def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list[list[float | int]], int]:
+def _parse_static_world(
+    raw_level: bytes, *, preserve_serialized_names: bool = False,
+) -> tuple[list[dict[str, object]], list[list[float | int]], int]:
     bswd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"BSWD")
     reader = _WorldReader(bswd)
     if (
@@ -2123,7 +2148,7 @@ def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list
                 "attachScripts": attach_scripts != 0,
                 "mesh": mesh_key,
                 "meshNumber": mesh_number,
-                "name": name or definition,
+                "name": name if preserve_serialized_names else name or definition,
                 "ordinal": ordinal,
                 "retailOrientation": yaw_pitch_roll,
                 "retailPosition": position,
@@ -2134,6 +2159,9 @@ def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list
                 "yaw": yaw_pitch_roll[0],
             }
         )
+        if preserve_serialized_names:
+            objects[-1]["activeWord"] = active
+            objects[-1]["attachScriptsToUnitsWord"] = attach_scripts
 
     if reader.uint16() != 0 or reader.int32() != 2:
         raise RuntimeError("Level 100 tree groups are not the supported explicit layout")
@@ -3333,6 +3361,136 @@ def _spawn_pose(
         [_normalize_angle(world_yaw), 0.0, 0.0],
         world_basis,
     )
+
+
+def _world110_player_input_bytes(raw_world: bytes, configuration_data: bytes) -> bytes:
+    """Real RLWD configuration names and the admitted shipped configuration fields.
+
+    CWorld::LoadWorldHeader skips BSWD names and loads the RLWD name table.
+    The existing source-bounded decoder owns file framing and unknown bytes.
+    """
+    sys.path.insert(0, str(ROOT / "tools"))
+    import battle_engine_config_decode as configuration_decoder
+
+    configurations = configuration_decoder.parse_exact_baseline(configuration_data)
+    _parse_world110_initial_object_seeds(raw_world)
+    rlwd = _chunk_payload(
+        _chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"), b"RLWD"
+    )
+    reader = _WorldReader(rlwd)
+    reader.uint16()
+    for _ in range(3):
+        reader.int32()
+    names = [reader.string8() for _ in range(reader.int32())]
+    records = []
+    for record in configurations.records:
+        records.append({
+            "name": record.configuration_name,
+            "lifeBits": _signed_int32_bits(record.field("mLife").u32_bits),
+            "energyBits": _signed_int32_bits(record.field("mEnergy").u32_bits),
+            "storeHeat": [_signed_int32_bits(record.field(f"mStoreHeat[{n}]").u32_bits)
+                          for n in range(configuration_decoder.STORE_COUNT)],
+            "storeValueBits": [_signed_int32_bits(record.field(f"mStoreValue[{n}]").u32_bits)
+                               for n in range(configuration_decoder.STORE_COUNT)],
+        })
+    return (json.dumps({
+        "schema": "onslaught.world110-player-inputs.v1",
+        "worldNumber": 110,
+        "rlwdSha256": WORLD110_RLWD_SHA256,
+        "configurationSourceSha256": configuration_decoder.BASELINE_SHA256,
+        "configurationNames": names,
+        "records": records,
+    }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def _world110_initial_actor_bytes(raw_world: bytes, physics_data: bytes) -> bytes:
+    """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
+
+    Reuses the existing Core coordinate datum and exact yaw-only conversion.
+    This is a reconstruction frame, not World 110's player-start identity.
+    No start, squad, spawner, path or script-object constructor is substituted.
+    """
+    if _sha256(physics_data) != PHYSICS_DEFINITIONS_SHA256:
+        raise RuntimeError("world 110 physics source identity changed")
+    bswd = _chunk_payload(
+        _chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"), b"BSWD"
+    )
+    if len(bswd) != 54_669 or _sha256(bswd) != (
+        "04c5a3838548a2c50819f46dc1f1746f7c20ec4aa34678bd23c8bcd2186010f4"
+    ):
+        raise RuntimeError("world 110 shared base-world identity changed")
+    base_objects, _, _ = _parse_static_world(
+        raw_world, preserve_serialized_names=True
+    )
+    seeds = _parse_world110_initial_object_seeds(raw_world)
+    physics = _physics_records(physics_data)
+    inputs = [(f"wres:bswd:{item['ordinal']:04d}", item, True)
+              for item in base_objects]
+    for seed in seeds:
+        if seed.thing_type != 8:
+            continue
+        inputs.append((f"wres:rlwd:{seed.ordinal:04d}", {
+            "definition": seed.tail.definition_name,
+            "thingType": seed.thing_type,
+            "name": seed.name,
+            "script": seed.script,
+            "active": seed.active != 0,
+            "activeWord": seed.active,
+            "allegiance": seed.allegiance,
+            "target": seed.target,
+            "meshNumber": seed.mesh_number,
+            "spawnScript": seed.spawn_script,
+            "attachScriptsToUnitsWord": seed.attach_scripts,
+            "retailPosition": struct.unpack("<3f", struct.pack("<3I", *seed.position_bits)),
+            "retailOrientation": struct.unpack("<3f", struct.pack("<3I", *seed.orientation_bits)),
+        }, False))
+
+    rows = []
+    for identity, item, is_static in inputs:
+        definition = item["definition"]
+        is_unit = item["thingType"] == 8
+        fields = _physics_record(physics, 1, definition) if is_unit else None
+        life = struct.unpack("<f", fields[3])[0] if fields is not None else None
+        if life is not None and (not math.isfinite(life) or life < 0):
+            raise RuntimeError(f"world 110 Unit life is invalid: {definition}")
+        rows.append({
+            "serializedThingType": item["thingType"],
+            "activeWord": item["activeWord"],
+            "allegiance": item["allegiance"],
+            "target": item["target"],
+            "meshNumber": item["meshNumber"],
+            "spawnScript": item["spawnScript"],
+            "attachScriptsToUnitsWord": item["attachScriptsToUnitsWord"],
+            "serializedBehaviourType": struct.unpack("<I", fields[8])[0] if fields else None,
+            "internalBehaviourSelector": _unit_behavior_selector(fields) if fields else None,
+            "lifeFloatBits": _float_bits(life) if life is not None else None,
+            "actor": {
+                "authoredOrder": len(rows),
+                "definitionIdentity": identity,
+                "definitionName": definition,
+                "name": item["name"],
+                "scriptName": item["script"] or None,
+                "meshBinding": _definition_string(fields, 9) if fields else item["mesh"],
+                "isStatic": is_static,
+                "active": item["active"],
+                # Existing Core health convention is thousandths of Unit life.
+                # Type 35 has no Unit life field; zero is not an invulnerability claim.
+                "initialHealth": _round_away_from_zero(life * 1000) if life is not None else 0,
+                "authoredTransform": _authored_transform(item["retailPosition"], item["retailOrientation"]),
+                "initialPose": _actor_pose(item["retailPosition"], item["retailOrientation"]),
+            },
+        })
+    if len(rows) != 43:
+        raise RuntimeError("world 110 direct initial actor count changed")
+    return (json.dumps({
+        "schema": WORLD110_INITIAL_ACTORS_SCHEMA,
+        "worldNumber": 110,
+        "archiveSha256": WORLD110_ARCHIVE_SHA256,
+        "baseWorldSha256": _sha256(bswd),
+        "initialObjectSeedsSha256": WORLD110_INITIAL_OBJECT_SEEDS_SHA256,
+        "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
+        "rows": rows,
+    }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
 def _build_actor_definition_set(
@@ -5169,6 +5327,27 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
             seed_target = stage / LEVEL110_INITIAL_OBJECT_SEEDS
             seed_target.parent.mkdir(parents=True, exist_ok=True)
             seed_target.write_bytes(seed_data)
+            actor_data = _world110_initial_actor_bytes(
+                raw_world,
+                _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256),
+            )
+            actor_hash = _sha256(actor_data)
+            if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:
+                raise RuntimeError(
+                    "world 110 initial actors did not reproduce exactly "
+                    f"(SHA-256 {actor_hash})"
+                )
+            (stage / LEVEL110_INITIAL_ACTORS).write_bytes(actor_data)
+            player_data = _world110_player_input_bytes(
+                raw_world, (game_root / BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
+            )
+            player_hash = _sha256(player_data)
+            if player_hash != WORLD110_PLAYER_INPUTS_SHA256:
+                raise RuntimeError(
+                    "world 110 player inputs did not reproduce exactly "
+                    f"(SHA-256 {player_hash})"
+                )
+            (stage / LEVEL110_PLAYER_INPUTS).write_bytes(player_data)
         scripts = _parse_world_scripts(
             raw_world,
             admission.world_number,
@@ -5343,8 +5522,9 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
 # No language selector is built. Tracks 1-4 are identified but nothing in the
 # reconstruction selects a language, and shipping a surface with one consumer
 # and no evidence behind its wiring is how dead settings accumulate. LTLogo.vid
-# and OpeningFMV.vid each carry exactly ONE audio track, so the question does
-# not even arise for them; their audio is a separate, unimplemented item.
+# and OpeningFMV.vid each carry exactly ONE audio track. Their track-0 headers
+# and 44.1 kHz stereo streams were read back from the Linux Steam installation
+# on 2026-09-06; they use the same measured decode and playback path.
 STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v4"
 STARTUP_FRAME_SET_DOMAIN = b"onslaught-startup-frame-set.v1\0"
 STARTUP_MEDIA_CLIPS = (
@@ -5359,6 +5539,8 @@ STARTUP_MEDIA_CLIPS = (
 # before the decode runs, exactly as the video geometry is; they are stated here
 # so a mismatch is an error rather than a silently different output.
 STARTUP_MEDIA_AUDIO = {
+    "LostToysLogo": (0, "audio-track00.wav", 44100, 2, 16),
+    "OpeningMontage": (0, "audio-track00.wav", 44100, 2, 16),
     "Level100IntroCutscene": (0, "voice-track00.wav", 44100, 2, 16),
 }
 

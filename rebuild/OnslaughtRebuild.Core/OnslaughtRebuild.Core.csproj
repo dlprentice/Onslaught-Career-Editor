@@ -27,6 +27,10 @@
                       LogicalName="OnslaughtRebuild.Core.Assets.Level110.level110-heightfield.hfld.bin" />
     <EmbeddedResource Include="Assets\Level110\level110-initial-object-seeds.json"
                       LogicalName="OnslaughtRebuild.Core.Assets.Level110.level110-initial-object-seeds.json" />
+    <EmbeddedResource Include="Assets\Level110\level110-initial-actors.json"
+                      LogicalName="OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json" />
+    <EmbeddedResource Include="Assets\Level110\level110-player-inputs.json"
+                      LogicalName="OnslaughtRebuild.Core.Assets.Level110.level110-player-inputs.json" />
     <EmbeddedResource Include="Assets\Level110\Scripts\*.mso.bin" />
     <EmbeddedResource Include="Assets\Level200\level200-heightfield.hfld.bin"
                       LogicalName="OnslaughtRebuild.Core.Assets.Level200.level200-heightfield.hfld.bin" />

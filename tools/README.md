@@ -1,12 +1,12 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
-`tools/` supports retail research, the Godot rebuild, and the retained toolkit
+`tools/` supports retail research, the Godot rebuild, the Godot companion and retained toolkit
 source through guarded extraction, format inspection, Ghidra instruments and
-focused checks. The Godot companion conversion has not started. Existing WinUI
+focused checks. Existing WinUI
 packaging helpers remain reference tooling for that retained source.
 
 Root [`package.json`](../package.json) is the command authority. On Omarchy,
@@ -17,8 +17,9 @@ npm run test:docs
 npm run test:safety
 ```
 
-`npm test` and Windows-bound runtime/release tools run only inside the isolated
-Windows VM. Current root commands and reusable examples use `python` and
+`npm test` runs the Linux Save Lab and launcher checks without opening a window.
+`test:winui` and Windows-bound runtime/release tools retain their Windows guard.
+Current root commands and reusable examples use `python` and
 forward-slash paths on both hosts. Dated receipts and historical evidence may
 retain the literal Windows commands and drive letters that produced them; a
 tool can also have an explicitly documented Windows evidence dependency.
@@ -34,6 +35,11 @@ limited to the target window. Windows runtime helpers remain Windows-gated.
 
 ## Product and release
 
+- `godot_host.py` supplies pinned installed-engine discovery, locked bundled-SDK
+  restore/build and owned-process cleanup for both Godot lanes. Its CLI builds or
+  runs the MIT companion and routes logs/user data under canonical `local-data/companion/`.
+  `rebuild/tools/first_flight.py` adds retail preparation and rebuild runtime modes;
+  the shared helper imports no GPL or retail code.
 - `winui_lore_pack_builder.py` builds the short-path offline pack from the
   canonical `lore/` tree and the single `lore-book/BOOK.md` entry guide.
 - `winui_zip_package_probe.py` builds the disposable publish and inspects the
@@ -52,8 +58,8 @@ These tools do not publish, sign, or install anything by themselves.
 - `doc_header_check.py` enforces the header contract in
   [`DOCUMENTATION.md`](../DOCUMENTATION.md) — Status, Date, Verdict/Summary
   everywhere, plus Evidence and Specimen on findings. It rejects a byte claim
-  that names no specimen, and a specimen that cites the deliberately patched
-  Steam install. `doc_header_backlog.txt` holds the pre-standard documents and
+  that names no specimen, and a specimen that cites an installed Steam path instead
+  of the preserved measurement input. `doc_header_backlog.txt` holds the pre-standard documents and
   may only shrink; `--self-test` exercises the rules without a repository, and
   exit `2` means the check could not run rather than that it found nothing.
 - `re_function_doc_names_check.py` re-resolves every per-function note's name
@@ -290,7 +296,9 @@ PC project is `local-lab/ghidra-projects/BEA/`; ordinary exporter runs use a
 prepared disposable copy. Both the Linux writable owner and historical Windows
 live owner are refused unless `--allow-live-project` is explicit; the reviewed
 checkpoint is always refused. Every invocation stays `-readOnly -noanalysis`.
-The current development hold does not permit an actual Ghidra opening.
+An exporter command is not permission to open an authority. Necessary Ghidra
+work in the resumed phase still follows the declared cohort and preservation/readback
+workflow in [`ghidra/README.md`](../reverse-engineering/ghidra/README.md).
 
 Linux uses the native `analyzeHeadless` executable through direct arguments;
 Windows retains its guarded batch launcher. `--dry-run` performs read-only

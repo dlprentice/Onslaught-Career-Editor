@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-06 (historical timing coordinates clarified; no new retail measurement).
+Last updated: 2026-09-07 (startup audio decode added; earlier claims retain their dated evidence).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
@@ -150,8 +150,21 @@ and one lifecycle seam that constructs, replaces, or disposes the existing
 Level 100 session/world. The `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
-and capture modes suppress the reconstructed video sequences. Their Bink audio
-streams are not decoded, so video playback is currently silent.
+and capture modes suppress the reconstructed video sequences. The materializer
+decodes track 0 for the single-track logo/montage and the English Level 100 intro
+beside their lossless video frames. Native Linux intro playback produced audio;
+the newly added logo/montage streams still need a playback check. The September 6
+decode measured these exact source/output identities:
+
+| Source | Source SHA-256 | PCM sample frames, 44.1 kHz stereo 16-bit | Output SHA-256 |
+| --- | --- | ---: | --- |
+| `data/video/LTLogo.vid` | `2f2819b52b696b2feec5b9bbd60e2d0a1e3f95e48d455ecdc1f3152e06e32b34` | 405,120 | `8051d1a509748e7e0578fcc97c642c82cedaebd638d50f30771a2a71f70d783b` |
+| `data/video/OpeningFMV.vid` | `530656d5392ed2e75a75a50e581fa5a0577be71234c0aae0a6af31b24468c7f1` | 3,624,960 | `f6b26ded9f9e3c42a743e1670ec9864df60bea655bc9886f288abb96d130a9bd` |
+
+These match the source track IDs/rate and the existing less-than-one-audio-frame
+overhang law. The source was the user's Linux Steam installation; the generated
+audio remains under ignored `local-lab/startup-media/`. Decode identity does not
+establish native playback timing, volume or mixing parity.
 
 The career reader ports Stuart's raw version-plus-`CCareer` shape
 (`Career.cpp:1084-1163`, `Career.h:76-207`) and applies only measured PC deltas:

@@ -321,6 +321,13 @@ namespace OnslaughtCareerEditor.AppCore
         public const int KILL_INFANTRY = 3;
         public const int KILL_MECHS = 4;
 
+        internal static int KillCountFileOffset(int category)
+        {
+            if (category is < KILL_AIRCRAFT or > KILL_MECHS)
+                throw new ArgumentOutOfRangeException(nameof(category));
+            return KILLS_BASE + category * 4;
+        }
+
         private const uint LINK_COMPLETE = 1;
         private const uint LINK_BROKEN = 2;
 
@@ -579,133 +586,9 @@ namespace OnslaughtCareerEditor.AppCore
                     ? null
                     : mutation.ReadAllBytes(copyOptionsPath);
 
-                // Validate file size (strict check)
-                if (buf.Length != EXPECTED_FILE_SIZE)
-                {
-                    return PatchResult.Fail($"Invalid .bes file. Expected {EXPECTED_FILE_SIZE} bytes, got {buf.Length}. " +
-                           "This may not be a valid Battle Engine Aquila career save file.");
-                }
-
-                ushort versionWord = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0, 2));
-                if (versionWord != VERSION_WORD)
-                {
-                    uint headerDword = ReadUInt32(buf, 0x0000);
-                    return PatchResult.Fail($"Invalid .bes version word. Expected 0x{VERSION_WORD:X4}, got 0x{versionWord:X4} (header dword view 0x{headerDword:X8}).");
-                }
-
-                // NOTE (Feb 2026): Don't write to legacy aligned offsets like 0x22D4.
-                // In true dword view, mCareerInProgress is at 0x248A (CCareer offset 0x2488).
-                // The save works without setting mCareerInProgress.
-
-                // NOTE: Save-file god mode patching remains intentionally unsupported.
-                // Steam evidence shows god mode is runtime-cheat/menu gated; do not imply a .bes flag can force it.
-
-                // --- nodes (selective patching) ---
-                if (PatchNodes)
-                {
-                    // The node pass skips unused slots to avoid touching unknown padding. A rank override
-                    // aimed at such a slot can therefore never reach the file, so refuse before committing
-                    // rather than reporting success with the override dropped.
-                    if (LevelRanks is { Count: > 0 })
-                    {
-                        List<int> unreachable = new();
-                        foreach (int nodeIndex in LevelRanks.Keys)
-                        {
-                            int probeOff = NODE_BASE + nodeIndex * NODE_SIZE;
-                            if (probeOff + NODE_SIZE > buf.Length ||
-                                ReadUInt32(buf, probeOff + 0x10) == 0)
-                            {
-                                unreachable.Add(nodeIndex);
-                            }
-                        }
-
-                        if (unreachable.Count > 0)
-                        {
-                            unreachable.Sort();
-                            return PatchResult.Fail(
-                                "Mission rank overrides target career node slot(s) " +
-                                string.Join(", ", unreachable) +
-                                ", which this save leaves unused (world id 0). The node pass never writes unused " +
-                                "slots, so those overrides would be discarded. Remove them or choose a save whose " +
-                                "career map includes those missions.");
-                        }
-                    }
-
-                    for (int n = 0; n < NODE_COUNT; n++)
-                    {
-                        int off = NODE_BASE + n * NODE_SIZE;
-                        if (off + NODE_SIZE > buf.Length) break;
-
-                        uint world = ReadUInt32(buf, off + 0x10);
-                        if (world == 0)
-                        {
-                            // Unused node slots in retail saves; avoid touching unknown padding.
-                            continue;
-                        }
-
-                        // Use the per-mission override if this node has one, otherwise the baseline.
-                        // A null baseline means "keep": PatchNode then marks the mission complete and
-                        // leaves the existing grade record alone instead of overwriting 42 other
-                        // missions with the baseline the caller never asked for.
-                        string? nodeRank = Rank;
-                        if (LevelRanks != null && LevelRanks.TryGetValue(n, out var overrideRank))
-                        {
-                            nodeRank = overrideRank;
-                        }
-                        PatchNode(buf, off, n, nodeRank);
-                    }
-                }
-
-                // --- links (minimal change) (selective patching) ---
-                // Link layout (true view): [0]=linkState/type, [4]=toNode (0xFFFFFFFF for unused).
-                // Avoid clobbering link types (values like 2 appear in real saves).
-                if (PatchLinks)
-                {
-                    for (int l = 0; l < LINK_COUNT; l++)
-                    {
-                        int off = LINK_BASE + l * LINK_SIZE;
-                        uint current = ReadUInt32(buf, off);
-                        uint toNode = ReadUInt32(buf, off + 4);
-                        if (toNode == 0xFFFFFFFF)
-                            continue;
-                        if (current == 0)
-                            WriteUInt32(buf, off, LINK_COMPLETE);
-                    }
-                }
-
-                // --- goodies (true view: raw ints 0/1/2/3) (selective patching) ---
-                if (PatchGoodies)
-                {
-                    // Never reached with a null style: the preflight refuses PatchGoodies without one,
-                    // because this pass has no per-slot value it could keep and must not rewrite all
-                    // 233 displayable dwords on an unstated choice.
-                    uint goodieState = UseNewGoodiesInstead == true ? GOODIE_NEW : GOODIE_OLD;
-                    for (int g = 0; g < GOODIE_COUNT; g++)
-                    {
-                        if (g >= GOODIE_DISPLAYABLE_COUNT)
-                            continue;
-                        int off = GOODIE_BASE + g * 4;
-                        WriteUInt32(buf, off, goodieState);
-                    }
-                }
-
-                // --- kills (per-category if specified, otherwise all same) (selective patching) ---
-                if (PatchKills)
-                {
-                    SetKillCounts(buf, GlobalKillCount, PerCategoryKills);
-                }
-
-                // --- CCareer settings overrides (only if explicitly set) ---
-                ApplyCareerSettingsOverrides(buf);
-
-                // --- Options entries + tail snapshot (optional raw copy) ---
-                ApplyOptionsCopy(buf, copyOptionsBuffer);
-
-                // --- Options entry overrides (keybind edits) ---
-                ApplyOptionsEntryOverrides(buf);
-
-                // --- Options tail scalar overrides (boot-time global option values) ---
-                ApplyOptionsTailOverrides(buf);
+                PatchResult bufferResult = PatchBuffer(buf, copyOptionsBuffer);
+                if (!bufferResult.Success)
+                    return bufferResult;
 
                 mutation.Commit(buf);
                 return PatchResult.Ok($"Successfully patched: {Path.GetFileName(outputPath)}");
@@ -714,6 +597,154 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
+        }
+
+        // Shared mutation implementation: file workflows and Save Lab both use these exact passes.
+        internal byte[] CreatePatchedBytes(ReadOnlySpan<byte> baseline)
+        {
+            string? rejection = DescribeDiscardedOverrideRequest();
+            if (rejection is not null)
+                throw new InvalidOperationException(rejection);
+            if (!string.IsNullOrWhiteSpace(CopyOptionsFromPath))
+                throw new InvalidOperationException("Buffer patching does not read an options source file.");
+            byte[] bytes = baseline.ToArray();
+            PatchResult result = PatchBuffer(bytes, copyOptionsBuffer: null);
+            if (!result.Success)
+                throw new InvalidOperationException(result.Message);
+            return bytes;
+        }
+
+        private PatchResult PatchBuffer(byte[] buf, byte[]? copyOptionsBuffer)
+        {
+            // Validate file size (strict check)
+            if (buf.Length != EXPECTED_FILE_SIZE)
+            {
+                return PatchResult.Fail($"Invalid .bes file. Expected {EXPECTED_FILE_SIZE} bytes, got {buf.Length}. " +
+                       "This may not be a valid Battle Engine Aquila career save file.");
+            }
+
+            ushort versionWord = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0, 2));
+            if (versionWord != VERSION_WORD)
+            {
+                uint headerDword = ReadUInt32(buf, 0x0000);
+                return PatchResult.Fail($"Invalid .bes version word. Expected 0x{VERSION_WORD:X4}, got 0x{versionWord:X4} (header dword view 0x{headerDword:X8}).");
+            }
+
+            // NOTE (Feb 2026): Don't write to legacy aligned offsets like 0x22D4.
+            // In true dword view, mCareerInProgress is at 0x248A (CCareer offset 0x2488).
+            // The save works without setting mCareerInProgress.
+
+            // NOTE: Save-file god mode patching remains intentionally unsupported.
+            // Steam evidence shows god mode is runtime-cheat/menu gated; do not imply a .bes flag can force it.
+
+            // --- nodes (selective patching) ---
+            if (PatchNodes)
+            {
+                // The node pass skips unused slots to avoid touching unknown padding. A rank override
+                // aimed at such a slot can therefore never reach the file, so refuse before committing
+                // rather than reporting success with the override dropped.
+                if (LevelRanks is { Count: > 0 })
+                {
+                    List<int> unreachable = new();
+                    foreach (int nodeIndex in LevelRanks.Keys)
+                    {
+                        int probeOff = NODE_BASE + nodeIndex * NODE_SIZE;
+                        if (probeOff + NODE_SIZE > buf.Length ||
+                            ReadUInt32(buf, probeOff + 0x10) == 0)
+                        {
+                            unreachable.Add(nodeIndex);
+                        }
+                    }
+
+                    if (unreachable.Count > 0)
+                    {
+                        unreachable.Sort();
+                        return PatchResult.Fail(
+                            "Mission rank overrides target career node slot(s) " +
+                            string.Join(", ", unreachable) +
+                            ", which this save leaves unused (world id 0). The node pass never writes unused " +
+                            "slots, so those overrides would be discarded. Remove them or choose a save whose " +
+                            "career map includes those missions.");
+                    }
+                }
+
+                for (int n = 0; n < NODE_COUNT; n++)
+                {
+                    int off = NODE_BASE + n * NODE_SIZE;
+                    if (off + NODE_SIZE > buf.Length) break;
+
+                    uint world = ReadUInt32(buf, off + 0x10);
+                    if (world == 0)
+                    {
+                        // Unused node slots in retail saves; avoid touching unknown padding.
+                        continue;
+                    }
+
+                    // Use the per-mission override if this node has one, otherwise the baseline.
+                    // A null baseline means "keep": PatchNode then marks the mission complete and
+                    // leaves the existing grade record alone instead of overwriting 42 other
+                    // missions with the baseline the caller never asked for.
+                    string? nodeRank = Rank;
+                    if (LevelRanks != null && LevelRanks.TryGetValue(n, out var overrideRank))
+                    {
+                        nodeRank = overrideRank;
+                    }
+                    PatchNode(buf, off, n, nodeRank);
+                }
+            }
+
+            // --- links (minimal change) (selective patching) ---
+            // Link layout (true view): [0]=linkState/type, [4]=toNode (0xFFFFFFFF for unused).
+            // Avoid clobbering link types (values like 2 appear in real saves).
+            if (PatchLinks)
+            {
+                for (int l = 0; l < LINK_COUNT; l++)
+                {
+                    int off = LINK_BASE + l * LINK_SIZE;
+                    uint current = ReadUInt32(buf, off);
+                    uint toNode = ReadUInt32(buf, off + 4);
+                    if (toNode == 0xFFFFFFFF)
+                        continue;
+                    if (current == 0)
+                        WriteUInt32(buf, off, LINK_COMPLETE);
+                }
+            }
+
+            // --- goodies (true view: raw ints 0/1/2/3) (selective patching) ---
+            if (PatchGoodies)
+            {
+                // Never reached with a null style: the preflight refuses PatchGoodies without one,
+                // because this pass has no per-slot value it could keep and must not rewrite all
+                // 233 displayable dwords on an unstated choice.
+                uint goodieState = UseNewGoodiesInstead == true ? GOODIE_NEW : GOODIE_OLD;
+                for (int g = 0; g < GOODIE_COUNT; g++)
+                {
+                    if (g >= GOODIE_DISPLAYABLE_COUNT)
+                        continue;
+                    int off = GOODIE_BASE + g * 4;
+                    WriteUInt32(buf, off, goodieState);
+                }
+            }
+
+            // --- kills (per-category if specified, otherwise all same) (selective patching) ---
+            if (PatchKills)
+            {
+                SetKillCounts(buf, GlobalKillCount, PerCategoryKills);
+            }
+
+            // --- CCareer settings overrides (only if explicitly set) ---
+            ApplyCareerSettingsOverrides(buf);
+
+            // --- Options entries + tail snapshot (optional raw copy) ---
+            ApplyOptionsCopy(buf, copyOptionsBuffer);
+
+            // --- Options entry overrides (keybind edits) ---
+            ApplyOptionsEntryOverrides(buf);
+
+            // --- Options tail scalar overrides (boot-time global option values) ---
+            ApplyOptionsTailOverrides(buf);
+
+            return PatchResult.Ok("Save bytes prepared.");
         }
 
         public static PatchResult PatchGoodieStates(string inputPath, string outputPath, IReadOnlyDictionary<int, uint>? statesByIndex)
@@ -1569,6 +1600,26 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public static SaveAnalysis AnalyzeSave(string filePath)
         {
+            try
+            {
+                return AnalyzeBytes(File.ReadAllBytes(filePath), filePath);
+            }
+            catch (Exception)
+            {
+                return new SaveAnalysis
+                {
+                    FilePath = filePath,
+                    IsOptionsFile = string.Equals(Path.GetExtension(filePath), ".bea", StringComparison.OrdinalIgnoreCase)
+                        || Path.GetFileName(filePath).StartsWith("defaultoptions.bea", StringComparison.OrdinalIgnoreCase),
+                    IsValid = false,
+                    ErrorMessage = SaveAnalyzerService.AnalysisFailed
+                };
+            }
+        }
+
+        /// <summary>Analyze a stable snapshot using the same decoder as the path-based analyzer.</summary>
+        public static SaveAnalysis AnalyzeBytes(ReadOnlySpan<byte> bytes, string filePath = "career.bes")
+        {
             var analysis = new SaveAnalysis();
             analysis.FilePath = filePath;
             string fileNameOnly = Path.GetFileName(filePath);
@@ -1578,7 +1629,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                byte[] buf = File.ReadAllBytes(filePath);
+                byte[] buf = bytes.ToArray();
                 analysis.FileSize = buf.Length;
 
                 // Validate file size

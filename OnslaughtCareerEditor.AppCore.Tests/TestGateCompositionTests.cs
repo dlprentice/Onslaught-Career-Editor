@@ -1,15 +1,12 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests
 {
     /// <summary>
-    /// Guards the composition of the npm test gates themselves. The root
-    /// package.json selects tests by FullyQualifiedName substring, so renaming a
-    /// test class silently shrinks the gate without failing anything; this suite
-    /// makes that failure loud, and pins the two gate properties the UX campaign
-    /// depends on (the static UI sweep stays in the default gate, and the
-    /// runtime sweep stays reachable by script).
+    /// Guards name-filter reachability and the retained Windows UI gate.
+    /// The default Linux gate is the Godot companion's supported Save Lab slice.
     /// </summary>
     public class TestGateCompositionTests
     {
@@ -23,20 +20,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         };
 
         /// <summary>
-        /// The other direction, and the one that was missing.
-        ///
-        /// The check below guards tokens against classes: a rename cannot silently shrink the
-        /// gate. Nothing guarded classes against tokens, so a NEW suite was silently outside it -
-        /// and on 2026-08-01 five of them were, 144 tests including <c>AppConfigTests</c>, which
-        /// covers the config-root isolation every UI test depends on. They were green. Nobody
-        /// had run them since they were written.
-        ///
-        /// A test class that nothing selects is a test class that does not exist. Adding one and
-        /// forgetting the filter is the easiest mistake here to make, which is exactly why it
-        /// needs a guard rather than a convention.
+        /// Keep the selected AppCore fixtures reachable through the scripted gates.
         /// </summary>
         [Fact]
-        public void EveryAppCoreTestClassIsSelectedByTheDefaultGate()
+        public void EveryAppCoreTestClassIsSelectedByAScriptedGate()
         {
             string root = FindRepoRoot();
             string packageJson = File.ReadAllText(Path.Combine(root, "package.json"));
@@ -76,7 +63,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.True(
                 unreachable.Count == 0,
                 $"These AppCore test classes are not selected by any npm test filter, so they never "
-                    + $"run in the default gate: {string.Join(", ", unreachable.Distinct())}. Add a "
+                    + $"run in a filtered gate: {string.Join(", ", unreachable.Distinct())}. Add a "
                     + "FullyQualifiedName~ token to package.json, or delete the suite.");
         }
 
@@ -126,21 +113,20 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
-        public void TheDefaultGateKeepsTheStaticUiSweepAndTheRuntimeSweepStaysScripted()
+        public void TheRetainedWindowsGateKeepsTheStaticUiSweepAndRuntimeRemainsReachable()
         {
-            string packageJson = File.ReadAllText(Path.Combine(FindRepoRoot(), "package.json"));
+            using JsonDocument package = JsonDocument.Parse(
+                File.ReadAllText(Path.Combine(FindRepoRoot(), "package.json")));
+            JsonElement scripts = package.RootElement.GetProperty("scripts");
+            string windowsGate = scripts.GetProperty("test:winui").GetString()!;
+            Assert.Contains("TestCategory=WinUIRuntime", scripts.GetProperty("test:ui-runtime").GetString());
 
-            Assert.Contains("TestCategory!=WinUIRuntime", packageJson);
-            Assert.Contains("\"test:ui-runtime\"", packageJson);
-            Assert.Contains("TestCategory=WinUIRuntime", packageJson);
-
-            // The default gate must not regress to a single-class UI filter: the
-            // UiTests invocation inside "test" has to be the category exclusion,
-            // not a FullyQualifiedName pick.
+            // Read this command explicitly: JSON property order must not decide
+            // whether the static or runtime UI invocation is checked.
             Match uiInvocation = Regex.Match(
-                packageJson,
-                "OnslaughtCareerEditor\\.UiTests\\.csproj[^&]*--filter \\\\\"([^\\\\]+)\\\\\"");
-            Assert.True(uiInvocation.Success, "The default gate should run OnslaughtCareerEditor.UiTests with an explicit --filter.");
+                windowsGate,
+                "OnslaughtCareerEditor\\.UiTests\\.csproj[^&]*--filter \"([^\"]+)\"");
+            Assert.True(uiInvocation.Success, "The retained Windows gate should run OnslaughtCareerEditor.UiTests with an explicit --filter.");
             Assert.Contains("TestCategory!=WinUIRuntime", uiInvocation.Groups[1].Value);
         }
 

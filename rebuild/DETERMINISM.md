@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 Evidence: SOURCE — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -39,8 +39,12 @@ comparable byte-for-byte across hosts.
 ## The tape and its bounds
 
 The headless runner (`OnslaughtRebuild.Headless`) reads and replays supplied
-command tapes. Recording and replaying an actual human-input session remains
-open in `PROGRAM.md` P8.
+command tapes. `InteractiveSession` supplies the consumed input and resulting
+snapshot to `CommandTapeRecorder`; `BuildObserved` freezes hashes measured during
+that session without replaying it. The native Godot host writes a new tape at
+exit when `--record-tape=/absolute/path.json` is set. A mostly idle native session
+replayed twice on September 6; a substantial player walkthrough remains open in
+`PROGRAM.md` P8. See [`README.md`](README.md) for recording commands.
 
 - `MaximumTapeBytes = 8 MiB`
 - `MaximumReplaySteps = 100 000`
@@ -49,7 +53,8 @@ open in `PROGRAM.md` P8.
   or the run fails with "Determinism failure: repeated replay produced
   different hashes."
 - `--expect <hash>` requires the replay trace hash to equal the expected
-  value exactly.
+  value exactly. It does not suppress an embedded `expectedFinalStateHash`;
+  both must match when the tape contains that value.
 
 ## What `--expect` means
 

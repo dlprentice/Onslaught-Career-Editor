@@ -637,12 +637,20 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _ExitTree()
     {
-        PersistRecordedTapeIfRequested();
-        if (!_smokeMode)
+        try
         {
-            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
+            PersistRecordedTapeIfRequested();
         }
-        ReleaseSyntheticInput();
+        finally
+        {
+            _tapeRecorder?.Dispose();
+            _tapeRecorder = null;
+            if (!_smokeMode)
+            {
+                ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
+            }
+            ReleaseSyntheticInput();
+        }
     }
 
     private static void ConfigureInputMap()
@@ -1005,11 +1013,10 @@ public sealed partial class FirstFlightGame : Node3D
         new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
 
     /// <summary>
-    /// P8 stage 1 recorder seam. When --record-tape was given, the session
+    /// When --record-tape was given, the session
     /// feeds its exact consumed per-tick input — post-quantise look permille,
     /// merged pulses, consumed edges — into an in-process recorder from the
-    /// first gameplay tick. No native session runs on this card; this only
-    /// arms the capture path.
+    /// first gameplay tick, together with the resulting live state hashes.
     /// </summary>
     private void EnableRecordingIfRequested(InteractiveSession session)
     {
@@ -1040,19 +1047,15 @@ public sealed partial class FirstFlightGame : Node3D
         {
             // The wire contract requires at least one tick; exiting before the
             // first simulation step has no replayable session to finalize.
+            _tapeRecorder.Dispose();
+            _tapeRecorder = null;
             return;
         }
 
-        CommandTape tape = _tapeRecorder.Build(
-            $"recorded-{final.Tick}",
-            SimulationSeed,
-            final.Tick,
-            StateHasher.ComputeHex(final),
-            ReplayRunner.Run(
-                    _tapeRecorder.Build($"recorded-{final.Tick}", SimulationSeed),
-                    Level100StaticWorldAsset.LoadActorDefinitions())
-                .TraceHash);
+        CommandTape tape = _tapeRecorder.BuildObserved(
+            $"recorded-{final.Tick}", SimulationSeed);
         TapeFile.WriteNew(_recordTapePath, tape);
+        _tapeRecorder.Dispose();
         GD.Print($"Recorded command tape written to {_recordTapePath}");
         // Exactly once per explicit request: retry/return flows must not arm a
         // second recorder that could only collide with the create-new path.
@@ -1572,71 +1575,13 @@ public sealed partial class FirstFlightGame : Node3D
 
     private void ParseUserArguments()
     {
-        foreach (string argument in OS.GetCmdlineUserArgs())
-        {
-            if (argument == "--smoke")
-            {
-                _smokeMode = true;
-            }
-            else if (argument.StartsWith("--report=", StringComparison.Ordinal))
-            {
-                _smokeReportPath = argument["--report=".Length..];
-            }
-            else if (argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
-                     argument.StartsWith("--capture-plan=", StringComparison.Ordinal) ||
-                     argument.StartsWith("--capture-size=", StringComparison.Ordinal) ||
-                     argument.StartsWith("--capture-offsets-ms=", StringComparison.Ordinal))
-            {
-                // Consumed by FrontendCaptureRig.TryCreate during _Ready.
-                _captureArgumentsPresent = true;
-            }
-            else if (argument == "--skipfmv")
-            {
-                // Retail's own flag, reproduced by name: CLIParams.cpp:272 sets
-                // mSkipFMV, and CGame::GetIntroFMV returns -1 when it is set.
-                _skipStartupMedia = true;
-            }
-            else if (argument == "--intro")
-            {
-                _forceStartupMedia = true;
-            }
-            else if (argument.StartsWith("--startup-media=", StringComparison.Ordinal))
-            {
-                // Consumed by RetailStartupSequence.ResolveMediaRoot.
-            }
-            else if (argument.StartsWith("--record-tape=", StringComparison.Ordinal))
-            {
-                _recordTapePath = argument["--record-tape=".Length..];
-            }
-            else
-            {
-                throw new ArgumentException($"Unknown First Flight argument '{argument}'.");
-            }
-        }
-
-        if (_smokeMode)
-        {
-            if (string.IsNullOrWhiteSpace(_smokeReportPath) ||
-                !Path.IsPathFullyQualified(_smokeReportPath))
-            {
-                throw new ArgumentException("Smoke mode requires an absolute --report path.");
-            }
-        }
-
-        if (_recordTapePath is not null &&
-            (!Path.IsPathFullyQualified(_recordTapePath) ||
-                !string.Equals(
-                    Path.GetExtension(_recordTapePath),
-                    ".json",
-                    StringComparison.OrdinalIgnoreCase)))
-        {
-            // Recording is an explicitly-named-destination feature only: a
-            // relative path would silently depend on the working directory,
-            // and requiring .json makes career saves / retail binaries invalid
-            // even when the named path does not exist yet.
-            throw new ArgumentException(
-                "--record-tape requires an absolute .json path outside career-save and retail storage.");
-        }
+        FirstFlightLaunchOptions options = FirstFlightLaunchOptions.Parse(OS.GetCmdlineUserArgs());
+        _smokeMode = options.Smoke;
+        _smokeReportPath = options.ReportPath;
+        _captureArgumentsPresent = options.CaptureArgumentsPresent;
+        _skipStartupMedia = options.SkipStartupMedia;
+        _forceStartupMedia = options.ForceStartupMedia;
+        _recordTapePath = options.RecordTapePath;
     }
 
     private SmokeReport CaptureSmokeReport()

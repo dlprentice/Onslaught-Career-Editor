@@ -455,7 +455,7 @@ public sealed class Level100ActorDefinitionSet
     {
         if (definition.AuthoredOrder != expectedOrder ||
             string.IsNullOrWhiteSpace(definition.DefinitionIdentity) ||
-            string.IsNullOrWhiteSpace(definition.Name) ||
+            definition.Name is null ||
             definition.AuthoredTransform is null ||
             definition.InitialPose is null ||
             !HasFiniteAuthoredTransform(definition.AuthoredTransform) ||
@@ -873,14 +873,28 @@ public sealed class Level100ActorRegistry
     }
 
     private readonly Level100ActorDefinitionSet _definitions;
+    private readonly RetailWorldTerrain _terrain;
+    private readonly bool _initializeSupport;
     private readonly SortedDictionary<int, Actor> _actors = [];
     private readonly List<Level100ActorFactSnapshot> _pendingFacts = [];
     private int _nextActorId = 1;
     private long _nextFactSequence = 1;
 
     public Level100ActorRegistry(Level100ActorDefinitionSet definitions)
+        : this(definitions, RetailWorldTerrain.World100, initializeSupport: true)
+    {
+    }
+
+    // Partial world construction retains authored positions until class Init
+    // owns its ground/water overrides. The existing Level 100 policy is unchanged.
+    internal Level100ActorRegistry(
+        Level100ActorDefinitionSet definitions,
+        RetailWorldTerrain terrain,
+        bool initializeSupport)
     {
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
+        _terrain = terrain ?? throw new ArgumentNullException(nameof(terrain));
+        _initializeSupport = initializeSupport;
         foreach (Level100ActorDefinition definition in definitions.Actors)
         {
             Level100ActorId actorId = AllocateId();
@@ -895,8 +909,19 @@ public sealed class Level100ActorRegistry
     public Level100ActorRegistry(
         Level100ActorDefinitionSet definitions,
         Level100ActorRegistrySnapshot snapshot)
+        : this(definitions, snapshot, RetailWorldTerrain.World100, initializeSupport: true)
+    {
+    }
+
+    internal Level100ActorRegistry(
+        Level100ActorDefinitionSet definitions,
+        Level100ActorRegistrySnapshot snapshot,
+        RetailWorldTerrain terrain,
+        bool initializeSupport)
     {
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
+        _terrain = terrain ?? throw new ArgumentNullException(nameof(terrain));
+        _initializeSupport = initializeSupport;
         ArgumentNullException.ThrowIfNull(snapshot);
         if (!StringComparer.Ordinal.Equals(
                 snapshot.DefinitionSetIdentitySha256,
@@ -1140,9 +1165,10 @@ public sealed class Level100ActorRegistry
     public void SetScript(Level100ActorId actorId, string scriptName)
     {
         ArgumentException.ThrowIfNullOrEmpty(scriptName);
-        if (!Level100MissionProgram.ProgramNames.Contains(scriptName, StringComparer.Ordinal))
+        if (!Level100MissionProgram.ProgramNamesFor(_definitions.WorldNumber)
+                .Contains(scriptName, StringComparer.Ordinal))
         {
-            throw new InvalidOperationException($"Unknown Level 100 script '{scriptName}'.");
+            throw new InvalidOperationException($"Unknown Level {_definitions.WorldNumber} script '{scriptName}'.");
         }
 
         Require(actorId).ScriptName = scriptName;
@@ -1458,6 +1484,10 @@ public sealed class Level100ActorRegistry
         string? definitionName,
         Level100ActorPoseSnapshot pose)
     {
+        if (!_initializeSupport)
+        {
+            return pose;
+        }
         Level100ActorMotionDefinition? motion =
             _definitions.FindMotionDefinition(definitionName);
         int groundOriginOffset =
@@ -1466,12 +1496,12 @@ public sealed class Level100ActorRegistry
                 : 0;
         int seated = Math.Max(
             checked(
-                Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                _terrain.SampleGroundElevationMillimeters(
                     new SimVector2(
                         pose.PositionMillimeters.X,
                         pose.PositionMillimeters.Z)) +
                 groundOriginOffset),
-            Level100Terrain.WaterElevationMillimeters);
+            _terrain.WaterElevationMillimeters);
         return pose.PositionMillimeters.Y >= seated
             ? pose
             : pose with
@@ -1568,7 +1598,7 @@ public sealed class Level100ActorRegistry
                 (actor.Active || actor.IsObjective)) ||
             !Enum.IsDefined(actor.TargetGroup) ||
             (actor.ScriptName is not null &&
-                !Level100MissionProgram.ProgramNames.Contains(
+                !Level100MissionProgram.ProgramNamesFor(_definitions.WorldNumber).Contains(
                     actor.ScriptName,
                     StringComparer.Ordinal)) ||
             (actor.Trigger.HasValue && !Enum.IsDefined(actor.Trigger.Value)) ||

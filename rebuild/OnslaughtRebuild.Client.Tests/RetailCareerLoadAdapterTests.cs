@@ -14,9 +14,13 @@ public sealed class RetailCareerLoadAdapterTests
             "fixtures",
             "gold_career_save.bin");
 
+        string[] arguments = [$"--career-save={fixturePath}"];
+        // Exercise the host's earlier argument gate as well as the file adapter.
+        // The former gate rejected this supported argument before the adapter ran.
+        FirstFlightLaunchOptions.Parse(arguments);
         IReadOnlyList<RetailCareerDescriptor> descriptors =
             RetailCareerLoadAdapter.ReadExplicitSelections(
-                [$"--career-save={fixturePath}"]);
+                arguments);
 
         RetailCareerDescriptor descriptor = Assert.Single(descriptors);
         Assert.Null(descriptor.SlotNumber);

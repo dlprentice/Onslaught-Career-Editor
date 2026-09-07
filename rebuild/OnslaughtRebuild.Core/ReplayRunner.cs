@@ -38,8 +38,6 @@ public sealed record ReplayComparison(
 
 public static class ReplayRunner
 {
-    private static readonly byte[] s_traceHeader = CreateTraceHeader();
-
     private readonly record struct ReplayStep(
         int Tick,
         SimInput Input,
@@ -51,7 +49,7 @@ public static class ReplayRunner
         private readonly CommandTape _tape;
         private readonly CommandTapeReader _reader;
         private readonly Simulation _simulation;
-        private readonly IncrementalHash _trace;
+        private readonly ReplayTraceHasher _trace = new();
         private WorldSnapshot _state;
         private int _nextTick;
         private bool _completed;
@@ -64,8 +62,6 @@ public static class ReplayRunner
             _reader = new CommandTapeReader(tape);
             _simulation = new Simulation(tape.Seed, level100ActorDefinitions);
             _state = _simulation.Snapshot;
-            _trace = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            _trace.AppendData(s_traceHeader);
         }
 
         public bool HasNext => _nextTick < _tape.DurationTicks;
@@ -81,7 +77,7 @@ public static class ReplayRunner
             SimInput input = _reader.ReadNext(tick);
             _state = _simulation.Step(input);
             byte[] stateBytes = StateHasher.GetCanonicalBytes(_state);
-            _trace.AppendData(CreateTraceEntry(tick, input, stateBytes));
+            _trace.Append(tick, input, stateBytes);
             return new ReplayStep(tick, input, _state, stateBytes);
         }
 
@@ -97,7 +93,7 @@ public static class ReplayRunner
             return new ReplayResult(
                 _state,
                 StateHasher.ComputeHex(_state),
-                Convert.ToHexString(_trace.GetHashAndReset()).ToLowerInvariant());
+                _trace.GetCurrentHash());
         }
 
         public void Dispose() => _trace.Dispose();
@@ -475,6 +471,26 @@ public static class ReplayRunner
 
     private static string HashHex(byte[] bytes) =>
         Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+}
+
+/// <summary>
+/// One canonical trace format for replay and live recording. Callers supply
+/// each consumed input and the canonical bytes of its actual resulting state.
+/// </summary>
+internal sealed class ReplayTraceHasher : IDisposable
+{
+    private static readonly byte[] s_traceHeader = CreateTraceHeader();
+    private readonly IncrementalHash _trace = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+    public ReplayTraceHasher() => _trace.AppendData(s_traceHeader);
+
+    public void Append(int inputSlot, SimInput input, byte[] stateBytes) =>
+        _trace.AppendData(CreateTraceEntry(inputSlot, input, stateBytes));
+
+    public string GetCurrentHash() =>
+        Convert.ToHexString(_trace.GetCurrentHash()).ToLowerInvariant();
+
+    public void Dispose() => _trace.Dispose();
 
     private static byte[] CreateTraceHeader()
     {

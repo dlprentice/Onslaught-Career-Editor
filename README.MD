@@ -1,8 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-06 (Godot companion direction and Linux preparation;
-existing implementation claims retain their dated boundaries).
+Last updated: 2026-09-07 (native Linux Godot route and first companion workflow).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -12,10 +11,12 @@ reverse engineering, a 1:1 Godot reconstruction, and a Godot preservation/toolki
 companion for Linux and Windows. The companion covers real save/options files,
 safe game copies, evidence-backed patches, media, catalogs and lore.
 
-The existing companion implementation uses WinUI 3 on Windows. David selected its
-conversion to Godot on September 6; that migration has not started. The existing
-source and capabilities are retained as migration material. Development resumes
-only after the baseline report and his further direction.
+The active companion is the [Godot Save Lab](companion/OnslaughtToolkit.Godot/README.md),
+which reuses AppCore to inspect a real save and write a supported kill-count edit
+to a separate copy. Its service tests pass on Linux and its native shell opens;
+the complete UI write/reopen workflow remains to be demonstrated. The broader
+WinUI toolkit stays available as migration material. The approved phase also
+advances native rebuild play and targeted retail RE; see [PROGRAM.md](PROGRAM.md).
 
 ## Using the existing Windows toolkit
 
@@ -63,8 +64,9 @@ frontend projects the bounded debrief result and applies the in-memory
 career-law update; Confirm or Back then returns to the selector where unlocked
 World 110 may be selected, but the host cannot yet construct that world. An
 Options page and a quit confirmation are reachable
-from the main menu. The video sequences are currently silent because their
-Bink audio streams have not been decoded or assigned to a language. The
+from the main menu. Startup logo/montage audio and the English Level 100 intro
+are decoded locally; the intro has produced native audio, while the newly added
+logo/montage tracks still need a playback check. The
 frontend owns no gameplay or save-write path. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by
@@ -74,20 +76,12 @@ does not claim retail parity. The exact retail inputs used by that slice are
 materialized locally from the user's own installation and are not distributed
 as files in the current source tree or its release packages.
 
-> **Historical correction 2026-07-28; superseded by the current truth above.**
-> The entry-path sentence previously read "It now
-> enters through a bounded released-style click-to-start, main menu, Level 100
-> selector, and loading handoff into the canonical Level 100 simulation." That
-> understated shipped work by five screens. Nothing was withdrawn, and the
-> career-name page still persists nothing — see
-> [`rebuild/README.md`](rebuild/README.md)'s `## Current truth` for the full list
-> and its authority.
-
 ## Existing source surfaces
 
 | Path | Owner |
 | --- | --- |
-| `OnslaughtCareerEditor.WinUI/` | Retained Windows companion shell; migration material for the planned Godot companion |
+| `companion/OnslaughtToolkit.Godot/` | MIT Godot Save Lab; separate from the GPL rebuild |
+| `OnslaughtCareerEditor.WinUI/` | Retained Windows companion shell and migration material |
 | `OnslaughtCareerEditor.AppCore/` | Save, options, safe-copy, patch, media, catalog, and lore correctness |
 | `OnslaughtCareerEditor.Cli/` | Unshipped maintainer adapter over AppCore |
 | `rebuild/` | GPL RE-informed deterministic reconstruction |
@@ -109,25 +103,23 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-The current engineering host is Omarchy Linux. It owns Git, documentation,
-Python tools, reverse engineering, and the Core/Client/headless rebuild.
-AppCore source compiles here, but its full suite, WinUI 3, the Windows-targeted
-CLI, and the currently admitted Godot runtime/build/smoke/capture routes remain
-Windows-only. An isolated Windows 11 evaluation VM is staged inside the
-repository's ignored `local-data/windows-vm/`, but it is not yet
-defined or running; there is no current native Windows or controlled Godot
-execution route until its separate activation gate completes.
+The engineering host is Omarchy Linux. Native Godot build/run routes use the
+installed pinned Godot 4.7.2 .NET engine. The rebuild's synthetic native smoke
+and a live session's two deterministic replays passed; full tutorial acceptance
+is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
+and the Windows-targeted CLI retain Windows dependencies. The evaluation VM
+under ignored `local-data/windows-vm/` remains inactive.
 
 Common requirements:
 
 - .NET 10 SDK with the .NET 8 targeting/runtime support used by the rebuild
 - Node.js 26.x with npm 11.19.x (the mise-managed versions pinned by `game_pipeline_shared`)
 - Python 3 available as `python`
-- PowerShell 7 for rebuild and Godot tooling
+- Godot 4.7.2 .NET with its bundled C# packages; AppCore dependencies restored
+  into the local NuGet cache
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
-- Windows 10 or 11 for WinUI, CLI, and the currently admitted controlled Godot
-  execution/capture route
+- Windows 10 or 11 and PowerShell 7 only for retained Windows procedures
 
 For a fresh checkout:
 
@@ -139,9 +131,12 @@ cd Onslaught-Career-Editor
 For an existing checkout, initialize the pinned source references once with
 `git submodule update --init --recursive`.
 
-On Omarchy, start with the portable gates:
+On Linux, the companion needs no retail installation:
 
 ```bash
+npm run build
+npm run dev
+npm test
 npm run test:docs
 npm run test:safety
 ```
@@ -154,45 +149,26 @@ The retail-backed Core/Client/headless lanes also need ignored local inputs.
 On Linux, `prepare:rebuild-assets` selects the canonical checkout's real
 `local-lab/rebuild-godot` staging owner. A genuinely fresh canonical clone has
 no ignored `local-lab/`; create that private owner once from the canonical
-checkout only—never as a child-worktree twin or link—then name the retail path
-on its first materialization:
+checkout only—never as a child-worktree twin or link. Linux Steam libraries are
+discovered automatically; an explicit `--game-root` selects another installation:
 
 ```bash
 mkdir -m 700 ./local-lab
 npm run prepare:rebuild-assets -- --game-root "/absolute/path/to/Battle Engine Aquila"
-npm run test:rebuild-core
-npm run test:rebuild-client
-```
-
-Inside the activated Windows VM, use the Windows lanes:
-
-```powershell
-npm test
-npm run dev
-npm run test:appcore
-npm run test:ui
-npm run test:ui-runtime
-npm run test:cli
+npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
-`npm test` builds the active solution once, then runs selected AppCore contracts,
-UI tests excluding `WinUIRuntime` and `LegacyWpf`, and the CLI tests.
-It excludes native UI runtime, native Godot, release packaging, Ghidra,
-local runtime evidence, and historical accounting. It is a Windows-VM command,
-not the Linux default. Use the smallest focused host-appropriate command.
+The launchers put scratch, logs and engine user data under canonical
+`local-data/companion/` or `local-data/first-flight/`, including from a Git worktree.
+[`rebuild/README.md`](rebuild/README.md) documents runtime modes, input and recording.
+`npm test` runs the supported Save Lab and launcher checks without opening a window.
+Core/Client changes use their focused test projects, as mapped in `VALIDATION.md`.
 
-The Level 100 Opening Slice currently launches only inside the activated
-Windows VM. Its first run downloads and verifies the pinned Windows Godot .NET
-archive into a per-user cache, detects the VM's retail installation, and
-materializes the exact supported rebuild inputs to ignored local paths. For a
-custom location, run `pwsh ./rebuild/tools/Run-FirstFlight.ps1 -GameRoot
-"<game folder>"` in the VM. A native Linux Godot 4.7.2 installation exists, but
-it is not yet admitted by the repository's per-file toolchain manifest or smoke
-runner and therefore is not a supported execution route.
-The VM should use its own Git checkout or verified transfer; do not share the
-host checkout, home directory, SSH agent, Docker socket, or archive drives as
-guest-writable state.
+The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`.
+Historical Windows rebuild launchers have explicit `:windows` aliases; their
+older engine manifest needs revalidation against the current managed SDK before
+new Windows acceptance. This phase does not activate the VM.
 
 ## Data and mutation safety
 

@@ -1,16 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-31 (world-110 all-40 serialized initial-object seed and
-player-start admissions, complete ordered start-list resolution, bounded terrain-height prefix, and
-the standalone ordered player/Battle Engine assignment plus adapter-supplied
-every-match composition, with their measured mutation kills; earlier
-surfaces include authored-definition admission,
-the native-84 secondary completion instrument, the bounded native-88 session,
-Thing/Actor base-state seam;
-selector/briefing per-world string law;
-merged wt/t_0bace7cd Pulse Cannon ReadyToCharge gate and Charged-2 fire;
-Level 100 EnableFlightMode +0x58c store on takeoff).
+Last updated: 2026-09-07 (partial World 110 construction boundaries; no new runtime-parity claim).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -18,8 +9,8 @@ is MEASURED: its anchor re-derived from the pristine specimen and its mutation
 kill observed.
 Specimen: `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-(the retail addresses cited in the divergences table are from the pristine
-specimen; the installed BEA.exe is deliberately patched).
+(the retail addresses cited in the divergences table are from the preserved
+pristine specimen; do not infer another executable's identity from its folder name).
 Summary: the gradeable dimensions of parity, the gate each currently has (or
 lacks), and the standing exceptions. This document names the gap; it does not
 claim the gap is closed.
@@ -33,6 +24,15 @@ The pinned `references/Onslaught` source is the architecture and intent
 authority. The pristine retail specimen (`74154bfa…`) is the behavior
 authority. Where they disagree, the shipped bytes win — but only after a
 measurement proves the divergence, and the divergence is recorded.
+
+The September Linux construction work remains partial. World 110 has its own
+terrain/direct actor state and detached Start/engine/player shells with selected
+configuration and reader fields. Focused tests verify those boundaries, including
+script assignment/restoration against the selected world's script list. Full
+class Init, squads, events and gameplay remain open. See
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md)
+for static evidence; these partial constructors add no completed runtime-parity
+row to the table below.
 
 ## Known divergences (measured)
 

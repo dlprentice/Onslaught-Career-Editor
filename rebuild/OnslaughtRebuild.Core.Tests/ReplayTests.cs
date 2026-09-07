@@ -843,11 +843,11 @@ public sealed class ReplayTests
         const uint seed = 11;
         var definitions = ActorDefinitions;
         var simulation = new Simulation(seed, definitions);
-        var recorder = new CommandTapeRecorder();
+        using var recorder = new CommandTapeRecorder();
         for (int tick = 0; tick < WarmupTicksForRecording; tick++)
         {
-            simulation.Step(SimInput.Idle);
-            recorder.Observe(tick, SimInput.Idle);
+            WorldSnapshot state = simulation.Step(SimInput.Idle);
+            recorder.Observe(tick, SimInput.Idle, state);
         }
 
         WorldSnapshot final = simulation.Snapshot;
@@ -862,27 +862,63 @@ public sealed class ReplayTests
                 365,
                 -183);
             final = simulation.Step(input);
-            recorder.Observe(WarmupTicksForRecording + offset, input);
+            recorder.Observe(WarmupTicksForRecording + offset, input, final);
         }
 
-        string traceHash = ReplayRunner.Run(
-                recorder.Build("trace-probe", seed),
-                definitions)
-            .TraceHash;
-
-        CommandTape tape = recorder.Build(
-            "recorded-replay",
-            seed,
-            final.Tick,
-            StateHasher.ComputeHex(final),
-            traceHash);
+        CommandTape tape = recorder.BuildObserved("recorded-replay", seed);
 
         ReplayResult replayed = ReplayRunner.Run(
             CommandTapeCodec.Deserialize(CommandTapeCodec.Serialize(tape)),
             definitions);
 
-        Assert.Equal(traceHash, replayed.TraceHash);
+        Assert.Equal(tape.ExpectedTraceHash, replayed.TraceHash);
         Assert.Equal(StateHasher.ComputeHex(final), replayed.FinalStateHash);
+        Assert.Equal(tape.ExpectedFinalStateHash, replayed.FinalStateHash);
+    }
+
+    [Fact]
+    public void ObservedRecording_PreservesTransientStateDivergenceEvenWhenTheFinalStateMatches()
+    {
+        const uint seed = 11;
+        var definitions = ActorDefinitions;
+        var simulation = new Simulation(seed, definitions);
+        using var recorder = new CommandTapeRecorder();
+        for (int tick = 0; tick < 3; tick++)
+        {
+            WorldSnapshot actual = simulation.Step(SimInput.Idle);
+            // Inject one wrong intermediate observation, then return to the
+            // genuine simulation snapshots. A trace derived by replay would
+            // erase this divergence even though it happened during recording.
+            WorldSnapshot observed = tick == 0 ? actual with { Hull = actual.Hull - 1 } : actual;
+            recorder.Observe(tick, SimInput.Idle, observed);
+        }
+
+        CommandTape tape = recorder.BuildObserved("transient-divergence", seed);
+        ReplayResult replayed = ReplayRunner.Run(tape, definitions);
+
+        Assert.Equal(tape.ExpectedFinalStateHash, replayed.FinalStateHash);
+        Assert.NotEqual(tape.ExpectedTraceHash, replayed.TraceHash);
+    }
+
+    [Fact]
+    public void ObservedRecording_RejectsMissingOrOutOfOrderSnapshots()
+    {
+        var simulation = new Simulation(11, ActorDefinitions);
+        WorldSnapshot first = simulation.Step(SimInput.Idle);
+        WorldSnapshot second = simulation.Step(SimInput.Idle);
+        using var recorder = new CommandTapeRecorder();
+
+        Assert.Throws<ArgumentException>(() => recorder.Observe(0, SimInput.Idle, second));
+        Assert.Equal(0, recorder.NextTick);
+        recorder.Observe(0, SimInput.Idle, first);
+        Assert.Throws<InvalidOperationException>(() => recorder.Observe(1, SimInput.Idle));
+        recorder.Observe(1, SimInput.Idle, second);
+        Assert.Equal(2, recorder.BuildObserved("complete-observations", 11).DurationTicks);
+
+        using var inputsOnly = new CommandTapeRecorder();
+        inputsOnly.Observe(0, SimInput.Idle);
+        Assert.Throws<InvalidOperationException>(() => inputsOnly.Observe(1, SimInput.Idle, second));
+        Assert.Throws<InvalidOperationException>(() => inputsOnly.BuildObserved("missing-first-state", 11));
     }
 
     /// <summary>

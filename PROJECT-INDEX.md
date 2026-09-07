@@ -1,9 +1,9 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 Summary: stable ownership, dependency direction, and code-entry routing for the
-Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
+Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
 
 This index answers **where code and responsibility live**. It does not restate
@@ -21,6 +21,7 @@ counts here.
 ```mermaid
 flowchart LR
     W["Retained WinUI 3 shell"] --> A["AppCore"]
+    T["Godot Save Lab"] --> A
     C["Maintainer CLI"] --> A
     AT["AppCore tests"] --> A
     CT["CLI tests"] --> C
@@ -33,14 +34,14 @@ flowchart LR
 
 The arrows are source dependencies, not priority. Full retail reverse
 engineering, the 1:1 Godot rebuild, and the Godot toolkit companion are coequal
-project outcomes. The diagram maps existing source: the Godot companion selected
-on September 6 has not been implemented, and the WinUI/AppCore code is retained
-as migration material. Future architecture belongs to separately resumed development.
+project outcomes. The companion and retained Windows adapters share AppCore.
+The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
+| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/OnslaughtToolkit.Godot.csproj) | .NET 8 Godot companion. Save Lab presentation, file selection and results; references AppCore only. |
 | [`OnslaughtCareerEditor.WinUI`](OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj) | .NET 10 WinUI 3 executable. Owns the shell, pages, interaction, and presentation; references AppCore. |
-| [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
+| [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
 | [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Windows-targeted, unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
 | [`OnslaughtCareerEditor.AppCore.Tests`](OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj) | Focused AppCore behavior and safety tests. |
 | [`OnslaughtCareerEditor.Cli.Tests`](OnslaughtCareerEditor.Cli.Tests/OnslaughtCareerEditor.Cli.Tests.csproj) | CLI envelope and adapter tests. |
@@ -50,22 +51,28 @@ as migration material. Future architecture belongs to separately resumed develop
 | [`OnslaughtRebuild.Headless`](rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj) | Command-tape replay and deterministic verification; references Client and Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Rendering, audio, native integration, and player input; references Client and Core. |
 
-Host boundary: Omarchy owns the repository, reverse engineering, and
-Core/Client/headless rebuild execution. AppCore source compiles here, but its
-full suite retains Windows path/process/media behavior. Godot source can be
-edited here, but the currently admitted controlled Godot build/launch, native
-smoke, and capture routes remain Windows-only alongside full AppCore
-validation, the WinUI executable, native UI tests, and CLI. They run only in
-the isolated Windows VM after activation; that VM is currently staged, not
-defined or running. A Linux static check or Windows-target build failure is not
-native Windows/Godot validation.
+Host boundary: Linux owns native Godot, Core/Client/headless execution and the
+portable Save Lab service. The full legacy AppCore suite, WinUI and CLI retain
+Windows path/process/media behavior. The Windows VM remains staged and inactive.
+[`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
+runtime checks and unfinished acceptance.
 
 [`OnslaughtCareerEditor.WinUI.slnx`](OnslaughtCareerEditor.WinUI.slnx) and
 [`rebuild/OnslaughtRebuild.slnx`](rebuild/OnslaughtRebuild.slnx) are the
 machine-readable project lists. [`rebuild/README.md`](rebuild/README.md) owns
 the rebuild assembly contract in detail.
 
-## WinUI route map
+## Companion route
+
+[`SaveLab.tscn`](companion/OnslaughtToolkit.Godot/SaveLab.tscn) mounts
+[`SaveLab.cs`](companion/OnslaughtToolkit.Godot/SaveLab.cs). The UI calls
+[`SaveLabService`](OnslaughtCareerEditor.AppCore/SaveLabService.cs) to open an
+immutable source snapshot and publish a supported edit to a new copy, then reopen
+it. `BesFilePatcher` owns the byte codec; `SaveLabFileTransaction` owns Linux
+descriptor-based safe publication and the existing Windows transaction adapter.
+The UI contains no second save-format implementation.
+
+## Retained WinUI route map
 
 [`MainWindow.xaml`](OnslaughtCareerEditor.WinUI/MainWindow.xaml) owns visible
 navigation order. [`MainWindow.xaml.cs`](OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs)
@@ -93,20 +100,21 @@ tests rather than assuming the representative list is exhaustive.
 | Domain | Representative owners |
 | --- | --- |
 | Configuration and discovery | `AppConfig`, `AppThemePreference`, `DisplayResolutionPreset`, `ConfigurationEditorService`, `GameProfileControlOptionsService`, `GameProfilePreflightService` |
-| Saves and write safety | `BesFilePatcher`, `SaveAnalyzerService`, `SaveEditorService`, `SaveEditorAdvancedService`, `SavePatchIntentContract`, `FileMutationSafety`, `MissionScript*SaveCodec` |
+| Saves and write safety | `BesFilePatcher`, `SaveLabService`, `SaveLabFileTransaction`, `SaveAnalyzerService`, `SaveEditorService`, `SaveEditorAdvancedService`, `SavePatchIntentContract`, `FileMutationSafety`, `MissionScript*SaveCodec` |
 | Safe copies, patches, and runtime | `SafeCopyCatalog`, `SafeCopySaveRescue`, `BinaryPatchEngine`, `BinaryPatchPlanBuilder`, `GameProfileRuntimeService`, `GameProfileManagedProcessRegistry`, `GameProfileMusicReplacementService` |
 | Cheats and live trainer | `CheatCodeCatalog`, `CheatSaveNameComposer`, `CheatSaveWriterService`, `LiveTrainerMemoryAccess`, `LiveTrainerSession`, `TrainerHotkeys`, `TrainerMusicSynth` |
 | Media, assets, and Goodies | `MediaCatalogService`, `AssetCatalog*`, `AssetModel*`, `Goodie*`, `FbxModelSummaryReader`, `PngHeaderReader` |
 | Lore and game text | `LoreBrowserService`, `LoreDocument*`, `CampaignLoreComposer`, `GameTextCatalog` |
 
-Keep reusable correctness here. WinUI owns user interaction and state display;
-the CLI translates envelopes; neither should grow a second save, patch, or
-safe-copy implementation.
+Keep reusable correctness here. Godot and retained WinUI own interaction and
+state display; the CLI translates envelopes. They share save, patch and safe-copy
+implementations.
 
 ## Repository owners
 
 | Path | Authority |
 | --- | --- |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot toolkit presentation; AppCore owns correctness. `tools/godot_host.py` supplies the shared installed-engine build/process support used by both Godot lanes. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
 | `local-lab/` | Ignored machine-local evidence, retail inputs, captures and frozen proof graphs. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns routing, and `local-lab/INDEX.md` maps the retained corpus. |
 | `local-data/` | The real ignored repository child for operational outputs, host binding, staged VM state and preserved recovery packages; its `AGENTS.md` owns the internal map. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
@@ -148,7 +156,8 @@ wrong — fix the rows, not the document.
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
   + canonical-checkout `local-lab/INDEX.md`
-- **App lane:** [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) /
+- **App lane:** [`Godot Save Lab`](companion/OnslaughtToolkit.Godot/README.md) /
+  [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) /
   [`CLI.md`](CLI.md) / [`README.RELEASE.md`](README.RELEASE.md) /
   [`CHANGELOG.md`](CHANGELOG.md)
 

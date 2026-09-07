@@ -151,6 +151,76 @@ def _world110_initial_object_fixture(
     return reader, objects
 
 
+class World110InitialActorMaterializationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        # Local retail inputs are deliberately not fixtures or public payloads.
+        try:
+            game = materializer._resolve_game_root(None)
+        except RuntimeError as error:
+            raise unittest.SkipTest("World110 tests require local retail inputs") from error
+        import sys
+        sys.path.insert(0, str(materializer.ROOT / "tools"))
+        from aya_archive_inventory import inflate_aya_bytes
+        cls.raw_world = inflate_aya_bytes(materializer._read_exact(
+            game / materializer.WORLD110_ARCHIVE,
+            materializer.WORLD110_ARCHIVE_SHA256,
+        ))
+        cls.physics = materializer._read_exact(
+            game / materializer.PHYSICS_DEFINITIONS,
+            materializer.PHYSICS_DEFINITIONS_SHA256,
+        )
+        cls.configurations = (game / materializer.BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
+
+    def test_real110_player_inputs_use_rlwd_names_and_exact_configuration_fields(self) -> None:
+        data = materializer._world110_player_input_bytes(self.raw_world, self.configurations)
+        self.assertEqual(materializer.WORLD110_PLAYER_INPUTS_SHA256, materializer._sha256(data))
+        document = json.loads(data)
+        self.assertEqual(["Aquila Prototype"], document["configurationNames"])
+        self.assertEqual(6, len(document["records"]))
+        self.assertEqual("Aquila Prototype", document["records"][3]["name"])
+        self.assertEqual(0x41A00000, document["records"][3]["lifeBits"])
+        self.assertEqual(0x41000000, document["records"][3]["energyBits"])
+        self.assertIn((materializer.LEVEL110_PLAYER_INPUTS,
+                       materializer.WORLD110_PLAYER_INPUTS_SHA256), materializer._fixed_outputs())
+
+    def test_changed_configuration_source_is_rejected(self) -> None:
+        changed = bytearray(self.configurations)
+        changed[8] ^= 1
+        with self.assertRaises(ValueError):
+            materializer._world110_player_input_bytes(self.raw_world, bytes(changed))
+
+    def test_real110_artifact_reproduces_and_contains_its_own_unit_rows(self) -> None:
+        data = materializer._world110_initial_actor_bytes(self.raw_world, self.physics)
+        self.assertEqual(materializer.WORLD110_INITIAL_ACTORS_SHA256,
+                         materializer._sha256(data))
+        document = json.loads(data)
+        self.assertEqual(110, document["worldNumber"])
+        self.assertEqual(43, len(document["rows"]))
+        units = [row["actor"] for row in document["rows"] if not row["actor"]["isStatic"]]
+        self.assertEqual([8, 12, 13, 20, 25, 34, 35, 36, 37, 38],
+                         [int(row["definitionIdentity"][-4:]) for row in units])
+        self.assertEqual([""] * 10, [row["name"] for row in units])
+        self.assertEqual("Muspell Light Landing Empty", units[2]["definitionName"])
+        self.assertEqual(4_000, units[4]["initialHealth"])
+        self.assertIn((materializer.LEVEL110_INITIAL_ACTORS,
+                       materializer.WORLD110_INITIAL_ACTORS_SHA256),
+                      materializer._fixed_outputs())
+
+    def test_real110_names_do_not_change_legacy_static_world_projection(self) -> None:
+        legacy, _, _ = materializer._parse_static_world(self.raw_world)
+        exact, _, _ = materializer._parse_static_world(
+            self.raw_world, preserve_serialized_names=True)
+        self.assertEqual("Iceberg 1", legacy[4]["name"])
+        self.assertEqual("", exact[4]["name"])
+        self.assertEqual("Tank Factory", exact[1]["name"])
+        self.assertEqual(legacy, materializer._parse_static_world(self.raw_world)[0])
+
+    def test_changed_physics_is_rejected_before_construction(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "physics source identity"):
+            materializer._world110_initial_actor_bytes(self.raw_world, b"wrong physics")
+
+
 class PhysicsDefinitionTests(unittest.TestCase):
     def test_ordered_stream_preserves_duplicate_records_and_fields(self) -> None:
         records = [
@@ -215,6 +285,58 @@ class PhysicsDefinitionTests(unittest.TestCase):
                 materializer._unit_behavior_selector({8: struct.pack("<I", value)})
         with self.assertRaisesRegex(RuntimeError, "not one dword"):
             materializer._unit_behavior_selector({8: b"\x01"})
+
+
+class LinuxSteamDiscoveryTests(unittest.TestCase):
+    @staticmethod
+    def _installation(root: Path) -> Path:
+        for name in ("BEA.exe", materializer.LEVEL_ARCHIVE,
+                     materializer.BASE_ARCHIVE, materializer.SOUND_BANK):
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+        return root
+
+    def test_linux_default_steam_installation_is_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            game = self._installation(home / ".local/share/Steam/steamapps/common/Battle Engine Aquila")
+            with mock.patch.object(materializer.sys, "platform", "linux"), mock.patch.object(Path, "home", return_value=home):
+                self.assertEqual(game, materializer._resolve_game_root(None))
+                self.assertTrue(all("C:" not in str(path) for path in materializer._steam_roots()))
+
+    def test_libraryfolders_and_steam_alias_resolve_one_library(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            steam = home / ".local/share/Steam"
+            (steam / "steamapps").mkdir(parents=True)
+            (home / ".steam").mkdir()
+            (home / ".steam/steam").symlink_to(steam, target_is_directory=True)
+            library = home / "Games Library"
+            game = self._installation(library / "steamapps/common/Battle Engine Aquila")
+            (steam / "steamapps/libraryfolders.vdf").write_text(
+                '"libraryfolders" { "0" { "path" "' + str(steam) +
+                '" } "1" { "path" "' + str(library) + '" } }', encoding="utf-8"
+            )
+            with mock.patch.object(materializer.sys, "platform", "linux"), mock.patch.object(Path, "home", return_value=home):
+                self.assertEqual([steam, library], materializer._steam_roots())
+                self.assertEqual(game, materializer._resolve_game_root(None))
+
+    def test_explicit_installation_wins_and_incomplete_override_does_not_fall_back(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            explicit = self._installation(root / "selected")
+            with mock.patch.object(materializer, "_steam_roots") as discovery:
+                self.assertEqual(explicit, materializer._resolve_game_root(explicit))
+                with self.assertRaisesRegex(RuntimeError, "not a complete"):
+                    materializer._resolve_game_root(root / "missing")
+            discovery.assert_not_called()
+
+    def test_windows_legacy_candidates_are_retained(self) -> None:
+        with mock.patch.object(materializer.sys, "platform", "win32"), mock.patch.object(materializer, "_steam_roots", return_value=[]):
+            candidates = materializer._game_candidates(None)
+        self.assertEqual(4, len(candidates))
+        self.assertTrue(any(r"D:\SteamLibrary" in str(path) for path in candidates))
 
 
 class WorkRootRoutingTests(unittest.TestCase):

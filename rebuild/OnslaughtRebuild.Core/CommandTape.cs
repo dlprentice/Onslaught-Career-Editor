@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -419,10 +420,13 @@ internal sealed class CommandTapeReader
 /// caller decides which ticks exist (recording starts at gameplay, tick 0,
 /// with a fixed seed) and how the finished tape is persisted.</para>
 /// </summary>
-public sealed class CommandTapeRecorder
+public sealed class CommandTapeRecorder : IDisposable
 {
     private readonly List<(int Tick, SimInput Input)> _observations = [];
+    private ReplayTraceHasher? _trace;
+    private byte[]? _lastStateBytes;
     private int _nextTick;
+    private bool _disposed;
 
     /// <summary>
     /// The number of ticks observed so far; the next legal observation is
@@ -438,6 +442,47 @@ public sealed class CommandTapeRecorder
     /// </summary>
     public void Observe(int tick, SimInput input)
     {
+        ValidateObservation(tick, input);
+        if (_trace is not null)
+        {
+            throw new InvalidOperationException("An observed-state recording requires a resulting snapshot for every input.");
+        }
+
+        _observations.Add((tick, input));
+        _nextTick = tick + 1;
+    }
+
+    /// <summary>
+    /// Records the input and hashes the actual resulting snapshot immediately.
+    /// Every step from tick zero must include its snapshot; mixing input-only
+    /// observations would leave an unverified gap in the live trace.
+    /// </summary>
+    public void Observe(int tick, SimInput input, WorldSnapshot resultingState)
+    {
+        ArgumentNullException.ThrowIfNull(resultingState);
+        ValidateObservation(tick, input);
+        if (_trace is null && _nextTick != 0)
+        {
+            throw new InvalidOperationException("Observed-state recording must include snapshots from the first input.");
+        }
+        if (resultingState.Tick != checked(tick + 1))
+        {
+            throw new ArgumentException(
+                "The resulting snapshot must belong to the recorded input's next simulation tick.",
+                nameof(resultingState));
+        }
+
+        byte[] stateBytes = StateHasher.GetCanonicalBytes(resultingState);
+        _trace ??= new ReplayTraceHasher();
+        _trace.Append(tick, input, stateBytes);
+        _lastStateBytes = stateBytes;
+        _observations.Add((tick, input));
+        _nextTick = tick + 1;
+    }
+
+    private void ValidateObservation(int tick, SimInput input)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         input.Validate();
         if (tick != _nextTick)
         {
@@ -452,9 +497,33 @@ public sealed class CommandTapeRecorder
                 $"Observation jumped to tick {tick}; tick {_nextTick} was never observed. A gap would record an input sequence the session never ran.",
                 nameof(tick));
         }
+    }
 
-        _observations.Add((tick, input));
-        _nextTick = tick + 1;
+    /// <summary>
+    /// Builds a tape whose expectations came entirely from the ordered states
+    /// observed during recording. No simulation is replayed to derive a hash.
+    /// The recorder remains usable until its owner disposes it.
+    /// </summary>
+    public CommandTape BuildObserved(string name, uint seed)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_trace is null || _lastStateBytes is null)
+        {
+            throw new InvalidOperationException("A verified recording requires at least one observed input and resulting snapshot.");
+        }
+
+        return Build(
+            name,
+            seed,
+            _nextTick,
+            Convert.ToHexString(SHA256.HashData(_lastStateBytes)).ToLowerInvariant(),
+            _trace.GetCurrentHash());
+    }
+
+    public void Dispose()
+    {
+        _trace?.Dispose();
+        _disposed = true;
     }
 
     /// <summary>
@@ -477,6 +546,7 @@ public sealed class CommandTapeRecorder
         string? expectedFinalStateHash = null,
         string? expectedTraceHash = null)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (durationTicks < _nextTick)
         {

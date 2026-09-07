@@ -258,7 +258,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 new ModProjectSelectionEntry("texture", "texture:textures/texture_missing.tga"),
                 new ModProjectSelectionEntry("texture", "texture:textures/texture_one.tga"),
             };
-            var backward = forward.Reverse().ToArray();
+            var backward = Enumerable.Reverse(forward).ToArray();
 
             ModProjectPlan first = ModProjectPlannerService.BuildPlan(snapshot, forward);
             ModProjectPlan second = ModProjectPlannerService.BuildPlan(snapshot, backward);

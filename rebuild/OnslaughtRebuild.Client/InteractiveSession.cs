@@ -157,19 +157,20 @@ public sealed class InteractiveSession
     /// The SimInput Core consumed on the most recent simulation step: post
     /// quantise (pointer motion already converted to the analogue permille
     /// axis), post pulse merge, and with every consumed edge folded in. This
-    /// is exactly what a replay must feed Core to reproduce this session, and
-    /// it is what <see cref="CommandTapeRecorder.Observe"/> records.
+    /// is exactly what a replay must feed Core to reproduce this session. The
+    /// recorder pairs it with the actual resulting snapshot on every step.
     /// </summary>
     public SimInput? LastConsumedInput { get; private set; }
 
     /// <summary>
     /// Enables tape recording for the whole session: every simulation step
-    /// feeds its consumed input to <paramref name="recorder"/>. It must be
+    /// feeds its consumed input and resulting snapshot to <paramref name="recorder"/>. It must be
     /// enabled with an empty recorder before tick 0; there is deliberately no
     /// retroactive or partial-session capture that could invent pre-enable
     /// input. Recording is deterministic and in-process only; persisting the
     /// finished tape is the caller's decision via
-    /// <see cref="TapeFile.WriteNew"/>.
+    /// <see cref="TapeFile.WriteNew"/>. The caller owns the recorder and must
+    /// dispose it after saving or abandoning the recording.
     /// </summary>
     public void EnableRecording(CommandTapeRecorder recorder)
     {
@@ -685,7 +686,7 @@ public sealed class InteractiveSession
             LastConsumedInput = consumedInput;
             if (_recorder is not null)
             {
-                _recorder.Observe(_recordedTicks++, consumedInput);
+                _recorder.Observe(_recordedTicks++, consumedInput, CurrentSnapshot);
             }
 
             level100MissionEvents.AddRange(CurrentSnapshot.Level100MissionEvents);

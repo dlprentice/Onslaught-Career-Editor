@@ -23,8 +23,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         [Fact]
         public void BuildDefaultSaveOutputPath_AppendsPatchedSuffix()
         {
-            string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\temp\career.bes", @"C:\safe-output");
-            Assert.Equal(@"C:\safe-output\career_patched.bes", output);
+            string directory = Path.Combine(Path.GetTempPath(), "safe-output");
+            string output = SaveEditorService.BuildDefaultSaveOutputPath(Path.Combine(Path.GetTempPath(), "career.bes"), directory);
+            Assert.Equal(Path.Combine(directory, "career_patched.bes"), output);
         }
 
         [Fact]
@@ -279,7 +280,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             SaveAnalysis analysis = new()
             {
                 IsValid = true,
-                FilePath = @"C:\temp\career.bes",
+                FilePath = Path.Combine(Path.GetTempPath(), "career.bes"),
                 IsOptionsFile = false,
                 FileSize = BesFilePatcher.EXPECTED_FILE_SIZE,
                 VersionWord = BesFilePatcher.VERSION_WORD,
@@ -523,7 +524,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             SaveAnalysis analysis = new()
             {
                 IsValid = false,
-                FilePath = @"C:\temp\broken.bes",
+                FilePath = Path.Combine(Path.GetTempPath(), "broken.bes"),
                 ErrorMessage = "Invalid file size"
             };
 

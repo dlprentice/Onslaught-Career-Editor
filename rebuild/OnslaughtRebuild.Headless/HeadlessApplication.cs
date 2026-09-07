@@ -225,7 +225,10 @@ public static class HeadlessApplication
     {
         if (options.ExpectedTraceHash is not null)
         {
-            return new VerificationExpectation(options.ExpectedTraceHash, null, "command-line");
+            return new VerificationExpectation(
+                options.ExpectedTraceHash,
+                tape.ExpectedFinalStateHash,
+                "command-line");
         }
 
         if (tape.ExpectedTraceHash is not null || tape.ExpectedFinalStateHash is not null)

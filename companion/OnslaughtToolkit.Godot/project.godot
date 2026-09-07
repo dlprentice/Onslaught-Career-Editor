@@ -1,0 +1,25 @@
+; MIT companion application. No retail assets or GPL rebuild dependencies.
+config_version=5
+
+[application]
+config/name="Onslaught Toolkit - Save Lab"
+run/main_scene="res://SaveLab.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+config/use_custom_user_dir=true
+config/custom_user_dir_name="OnslaughtToolkit"
+
+[display]
+window/size/viewport_width=1080
+window/size/viewport_height=860
+window/size/window_width_override=1080
+window/size/window_height_override=860
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+
+[dotnet]
+project/assembly_name="OnslaughtToolkit.Godot"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.043, 0.063, 0.09, 1)

@@ -1,7 +1,7 @@
 # The goal
 
-Status: standing maintainer objective; not complete; feature execution on hold
-Last updated: 2026-09-06
+Status: standing maintainer objective; not complete; scoped development active
+Last updated: 2026-09-07
 Summary: the three outcomes, acceptance criteria, evidence rules, and full retail RE mandate.
 
 This is the maintainer's statement of what is wanted. Measurements can correct
@@ -25,11 +25,12 @@ their missing capabilities expose the next retail questions. A task's focus
 does not demote either of the other outcomes.
 
 David selected Godot to replace the WinUI 3 companion on September 6. The existing
-WinUI/AppCore implementation remains migration material; there is no Godot companion
-implementation or runtime acceptance yet. The migration must retain the toolkit's
+WinUI implementation remains migration material and portable AppCore code is being
+reused by the first Godot Save Lab workflow. The migration must retain the toolkit's
 capability scope, file-preservation safeguards and provenance boundaries, and validate
-the companion on both target platforms. It begins only after the baseline report and
-David's further direction.
+the companion on both target platforms. David accepted the baseline and resumed this
+development phase on September 6; current implementation and validation belong in
+[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md).
 
 ### The rebuild property, and the test that stands in for it
 
@@ -69,13 +70,16 @@ and failure behavior; progress relevant contracts toward `REBUILD_READY`.
 Keep every nonterminal entity reachable and map retail entities to rebuild owners,
 implementations, and parity tests. Never count `UNSCORED` evidence as success.
 
-The storage-consolidation hold remains in force: no new RE campaign, rebuild
-feature, companion migration/feature, CLI feature, or semantic Ghidra mutation until
-David resumes that work. Authorized routing repair, read-only audit, checksum validation, and repository
-organization may proceed. Completing storage work does not silently lift the hold.
-See [the program](PROGRAM.md) for the durable backlog and acceptance gates.
+David explicitly resumed development on September 6 after accepting the baseline and
+the rebuild-led assessment. The approved phase covers native Linux launch/input/audio/
+capture, the full player-input Level 100 route, targeted RE, the first Godot Save Lab
+workflow, real World 110 construction and transition, and necessary refactoring inside
+this repository. The historical storage hold no longer blocks those steps. Ghidra
+preservation and save/provenance safeguards still apply; the Windows VM, external
+archive reconciliation and production systems remain outside this phase.
+See [the program](PROGRAM.md) for milestones and acceptance gates.
 
-When resumed, select → preregister → measure → refute → advance. Prioritize
+Select → preregister → measure → refute → advance. Prioritize
 blocked contracts, call chains, patch/mod value, and playable slices. Mine surviving
 evidence first; raw TTD recordings have been retired, so historical capture claims
 do not imply replay availability. Use the smallest controlled safe-copy experiment

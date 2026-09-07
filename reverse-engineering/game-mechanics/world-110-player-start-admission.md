@@ -1,17 +1,17 @@
 # World 110 authored player-start admission
 
-Status: accepted authored-data admission, ordered list resolution, bounded
-height clamp, standalone player/engine assignment, and ordered adapter-supplied
-assignment composition; runtime construction remains open
-Date: 2026-08-31
+Status: accepted authored-data and bounded static construction contracts;
+detached Start/engine/player shells implemented, complete initialization open
+Last updated: 2026-09-06
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
 admits its serialized pre-initialization fields, the complete ordered-match
 selection law, the released no-match fallback plan, and the exact
 terrain-height prefix of `CStart::Init`. Separate deterministic owners carry
 valid-object `CPlayer::AssignBattleEngine` order and invoke it once for every
 ordered match over adapter-supplied, already-constructed engine/cell identities.
-No path constructs the `CStart`, Battle Engine, player, reader storage, or a
-playable World-110 session.
+The production constructor now owns distinct Start, engine and player shells
+and their reader storage, retaining supported initialization fields. It does
+not complete their lifecycle, publish a world, or perform post-load assignment.
 Evidence: MEASURED — the exact record was reread from the hash-pinned retail
 archive; the retained 66-level round-trip census independently corroborates the
 type-15 tail grammar; pinned source owns the serialized fields and post-load
@@ -292,22 +292,176 @@ ordering, not runtime object construction or virtual policy effects.
 
 ## Deliberate limits
 
-This seam does **not** establish or implement:
+The older admission, clamp and assignment helpers keep their original bounded
+contracts. The detached construction owner below adds owned storage; neither
+lane completes:
 
-- the remainder of `CStart::Init` from `0x004eae4c` onward, including
-  `CComplexThing::Init`;
-- `CStart::GetPlayerObject` or any Battle Engine allocation/initialization;
-- `CGame::LoadLevel` player/controller construction;
-- runtime discovery/construction of the `GetPlayerObject` values and their
-  reader cells, live post-load integration, policy-method execution, or
-  earlier-match object lifetimes beyond the retained stale-link law;
+- Start's `CComplexThing::Init`/`CThing::Init` resource instantiation and world
+  publication, including a proven class-15 resource-descriptor result;
+- full Battle Engine constructor/Init dependencies, including Unit/base Init,
+  parts, collision, resource objects, targeting and initial random events;
+- the surrounding `CGame::LoadLevel` world/controller construction sequence;
+- live post-load integration, God-policy execution, fallback Start execution,
+  or earlier-match object lifetimes beyond the retained stale-link law;
 - `CPlayer::Init` or the post-load state-pair writes;
-- a construction-ready world-110 actor definition set, actor registry,
-  `InteractiveSession`, Godot lifecycle, or playable world 110.
+- a complete World110 `Simulation`, `InteractiveSession`, Godot lifecycle or
+  playable session.
 
 The authored position and bounded final Z are therefore placement evidence,
 not a claim that the rest of initialization leaves every coordinate,
 orientation, object, or ownership field unchanged.
+
+## Start, engine and player static construction boundary
+
+On September 6 the named pristine specimen was hashed again, its PE section
+mapping was decoded, and every selected instruction in the retained exports
+was compared with the corresponding specimen bytes. Selected instruction
+bytes matched with zero mismatches. Bounded GNU `objdump` disassembly was used
+to independently read the Start suffix, spawn call/return boundary, player
+constructor and relevant vtable targets. This is static evidence only; no
+retail process, Ghidra project or desktop session was opened.
+
+The retained exports are under
+`local-lab/ghidra-fullpass-2026-07-23/exports/`. Paths in this table name
+`decompile/` entries in their wave; `instructions.tsv` supplies the checked
+instruction addresses and bytes. Export comments are fallible: in particular,
+the old Start comment's “player-object globals” interpretation is incorrect.
+
+| Owner/export | Half-open pristine range | Bytes | Raw SHA-256 |
+| --- | --- | ---: | --- |
+| W007 `004eacc0_CStart__Constructor.c` | `[0x004eacc0,0x004ead44)` | 132 | `e86928e2e14cf526b9ed2933e092f3ea68095930e9cdf0495fc4dcc0941f418e` |
+| W007 `004eae10_CStart__Init.c` | `[0x004eae10,0x004eaf1a)` | 266 | `67ada0c7c363cd7f8ee3a059c198f568b687739f020a352b0ba6c2a37357934d` |
+| Same Init, suffix after admitted sampler | `[0x004eae4c,0x004eaf1a)` | 206 | `1889a0910cbea5010703f7c6fefa1f00fc0128f7da9458be0d0d34a8a0edea44` |
+| W007 `004eaf20_CStart__SpawnBattleEngine.c` | `[0x004eaf20,0x004eb12d)` | 525 | `b6bba0b576b156ae3e73ee11220eccb436b494002b746853bc1b9b0a0fe3f109` |
+| W004 `0046d040_CGame__PostLoadProcess.c` | `[0x0046d040,0x0046d265)` | 549 | `0903b78f65a5e2807e9bee27ad83555063cc2dd62cbe49419193dae0d2ed1895` |
+| W006 `004d2780_CPlayer__ctor.c` | `[0x004d2780,0x004d280f)` | 143 | `f35b657fe04e70f8f6459aba93d5437811748e0d29ca310975ebf8342238ed08` |
+| W001 `00404dd0_CBattleEngine__Init.c` | `[0x00404dd0,0x004058fa)` | 2,858 | `44f563280d5c5748d2d09490113f4a5c27fa0d6c9e7d09a9abc8da0eece7dde0` |
+| W001 `0040c650_CBattleEngine__UpdateConfiguration.c` | `[0x0040c650,0x0040c711)` | 193 | `c9b972544882212d5610222edf14c5b939cee9b1f24f98c46c03d025bc5a6cdd` |
+
+The Start constructor calls the complex-thing base constructor, zeros its
+engine reader at `+0x7c`, and constructs embedded init storage at `+0x84`.
+It initializes the configuration and plane-mode words at `+0x444/+0x448` to
+zero. These are init fields, not pointers to a player or engine.
+
+The Init entry writes `-1` to the supplied init's `+0x70` and clears flag bit
+2 at Start `+0x2c`. After the already-admitted height clamp it calls
+`CComplexThing::Init` at `0x004eae4f`, then adds Start at the head of the global
+start list at `0x004eae5a`. Its effective player number comes from init
+`+0x3c0`; nonzero global `0x008a9bb4` swaps 1 and 2, leaving other values
+unchanged. It copies clamped position, Euler words and allegiance into the
+embedded engine initializer, then selects configuration ID `0x008a9bb8` for
+effective player 1 or `0x008a9bbc` otherwise. These globals are
+`CGame +0x11c/+0x120/+0x124`, corresponding to frontend settings in pinned
+`references/Onslaught/game.h:63-73`. `CGame::CGame` at `0x0046c210` and
+`game.cpp:216-224` initialize them to zero. That proves fresh-game defaults;
+it does not prove the values after a frontend selection.
+
+The engine initializer's configuration word is embedded `+0x3c0`, hence
+Start `+0x444`. Its plane-mode word is embedded `+0x3c4`, hence Start
+`+0x448`; Start copies this from authored Start init `+0x3bc`. The supported
+XYZ/Euler projection does not assign meaning to the fourth FVector word or
+otherwise pretend to reconstruct an entire native init buffer.
+
+`SpawnBattleEngine(0)` calls the OID factory with type 3 at `0x004eaf43`,
+publishes the returned engine through Start's reader at `0x004eaf51`, and only
+then calls non-null engine Init with the embedded initializer at
+`0x004eaf6a`. Its collision-template resets occur **after that call returns**,
+at `0x004eaf77..0x004eafc5`. They must not be applied before initial engine
+Init. The play-effect branch is skipped for this initial call. The factory
+case is retained in W006 `004bf090_OID__CreateObject.c:28-66`; it allocates
+`0x63c` bytes and zeros the engine's player reader at `+0x574`.
+
+There are three separate reader cells:
+
+| Cell | Initial target | Later operation |
+| --- | --- | --- |
+| Start `+0x7c` | null, then its allocated engine | SetReader before engine Init |
+| Player `+0x1c` | null | PostLoadProcess → AssignBattleEngine |
+| Engine `+0x574` | null | AssignBattleEngine → SetPlayer |
+
+PostLoadProcess directly reads Start `+0x7c` at `0x0046d0d3`; the source's
+`GetPlayerObject()` does not allocate another object there. The player ctor
+stores its number, sets both view modes to 1, zeros seven stats and five kill
+counts, and copies a complete God dword. The player-1 read at `0x004d27f3`
+is runtime `0x00662ab4`, corresponding to the admitted career-container word
+at `0x2496`; pinned `Player.cpp:24-34,247-265` supplies the source bridge.
+This does not execute the later God-policy virtuals or `CPlayer::Init`'s
+camera/host-time work.
+
+## Configuration inputs and unfinished engine initialization
+
+World110's exact RLWD name table contains **Aquila Prototype**. Its shared
+BSWD contains Paladin Prototype, but that table is skipped: W008
+`0050d4c0_CWorld__LoadWorldHeader.c` branches to configuration Load for the
+non-base world and Skip for the base world. The byte-checked body is
+`[0x0050d4c0,0x0050d577)`, 183 bytes, SHA-256
+`a6518553f1f15ae04dff03db169812950b44704417dd7190c3dee3dec454eb16`.
+
+The existing hash-gated `tools/battle_engine_config_decode.py` owns the
+1,514-byte shipped configuration data, SHA-256
+`58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a`.
+The source loader and byte-checked retail loader at
+`[0x0040f980,0x00410113)` read life/energy into configuration `+0x1c/+0x20`;
+the 1,939-byte body hash is
+`77e45d9fe461d98d44ad33d9bf3242e557b9fe42bf33cae8b761b35ee63d0742`.
+The genuine Aquila record has life bits `0x41a00000` and energy bits
+`0x41000000`. The existing Core configuration lookup owns the name-table
+index clamp, case-sensitive search and fallback; no second selection law was
+introduced for World110.
+
+`UpdateConfiguration` writes life/energy and resets six stores. For each
+store, overheat becomes zero, the raw heat word is copied, and current value
+is capacity when the heat word is zero, otherwise zero. Engine Init repeats
+those scalar/store writes, sets walker state 2 and shields equal to energy
+for zero plane mode, or jet state 3 and zero shields otherwise. These are
+supported initialization writes, not proof of final state after nested Init.
+
+Review of the **complete** 2,858-byte engine Init and pinned
+`references/Onslaught/BattleEngine.cpp:63-351` leaves these dependencies:
+
+- walker/jet construction and weapon configuration; two render meshes, emitter
+  enumeration and the LegMotion-dependent motion controller;
+- `CUnit::Init` at call `0x004054c6`, base/AI/component construction, collision
+  shape radius/height and world publication;
+- cockpit and radar-warning receiver construction, equipment/readers and safe
+  position/time state;
+- the state-dependent part/mesh switch, Random call at `0x0040586e`, initial
+  event `0x1772` scheduled at `0x004058b2`, and HandleAutoAim at `0x004058ba`.
+
+Source-only defaults or top-level RNG counts do not discharge those nested
+dependencies. Start's own base Init also calls resource-chain instantiation
+for OID 15; its concrete descriptor result remains unadmitted. Consequently
+the new constructor does not claim completed native Init, full call ordering,
+post-load readiness or final engine position.
+
+## Detached production construction and focused checks
+
+[`RetailWorld110InitialConstruction.Create(career, settings)`](../../rebuild/OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)
+now owns a
+[`RetailWorld110PlayerConstruction`](../../rebuild/OnslaughtRebuild.Core/RetailWorld110PlayerConstruction.cs).
+The caller supplies validated career data and explicit frontend settings;
+object and reader identities are allocated by the owner. Identities are local
+Core tokens and make no claim about retail addresses or global thing-number
+order. The Start reader targets its allocated engine; player/engine reciprocal
+cells remain null. The supported Start/template and engine scalar/store fields
+are constructed as a detached partial projection across unfinished Init
+dependencies. Neither the Start template's post-Init reset nor post-load
+assignment is exposed as completed work.
+
+The production materializer emits the exact local
+`level110-player-inputs.json` resource: 1,357 bytes, SHA-256
+`3bcd5eac3bf17474f60e67d3f4aa135dd239de9a896d63f64f23c494fe339c7d`.
+It carries World110's RLWD table and the admitted configuration fields from
+the shipped data, with no restamped Level100 fixture or invented player row.
+
+Focused checks live in
+[`RetailWorld110PlayerConstructionTests.cs`](../../rebuild/OnslaughtRebuild.Core.Tests/RetailWorld110PlayerConstructionTests.cs)
+and `World110InitialActorMaterializationTests` in
+[`materialize_retail_assets_tests.py`](../../rebuild/tools/materialize_retail_assets_tests.py).
+They distinguish all three reader cells, preserve raw God/settings words,
+verify actual World110 configuration selection and stores, and assert that
+post-load readers remain unassigned. They are deterministic construction
+evidence, not retail runtime evidence.
 
 ## Cheapest falsifier
 
