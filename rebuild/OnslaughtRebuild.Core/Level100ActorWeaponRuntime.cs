@@ -429,7 +429,8 @@ public sealed partial class Level100ActorMechanics
         // The launch direction is the WEAPON's aim transform
         // (`burstContext+0x30`), not the unit's facing.
         // `OID__UpdateAimTransformAndAttachTargetReader` @0x00509140 rebuilds
-        // that matrix every update from `-atan2(...)` and `acos(...)` of the
+        // that matrix every update from `-atan2(...)` and finite-interior
+        // `asin(...)` elevation (0x0055dcb0, despite its retained Acos label) of the
         // vector to the attached target reader, so a weapon that is allowed to
         // fire is already pointing at what it is firing at. The unit's own
         // facing is what CWeaponYawTolerance gates, which is why the two are

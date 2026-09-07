@@ -5,8 +5,8 @@ Date: 2026-09-07
 Verdict: Core admits all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
-September 7 extension records the ordered retail Unit and child-turret initializers and their
-remaining connected-construction dependencies.
+September 7 extension records ordered Unit/child initialization and prepares the
+four landing-craft turret inputs from the measured attachment calculation.
 Evidence: MEASURED serialized data plus SOURCE-INFORMED field semantics — the
 hash-pinned retail archive and RLWD reproduce every offset, record digest, raw
 word, common field, and tail; pinned `InitThing` source names the version-50
@@ -279,9 +279,9 @@ arguments; it cannot establish the initial world's complete actor/RNG state.
 The Unit constructor explicitly initializes readers, lists and many scalar
 fields, but it does not establish zero for every byte of the object. In
 particular, fourth vector words copied through temporary storage into
-`+0x158/+0x204` are not admitted as zero. No Core or materializer change is
-part of this static extension, and none of these findings upgrades the
-existing direct-actor projection to completed Unit instances.
+`+0x158/+0x204` are not admitted as zero. These findings do not upgrade the
+existing direct-actor projection to completed Unit instances. The connected
+Component-input calculation below stops before child Init.
 
 ### Four landing-craft turret children
 
@@ -313,8 +313,12 @@ Its `Component` emitter references part 31, `Emit08`, under `mainbody`.
 
 1. Parent Unit allocates and binds its owned reader to the new child **before**
    child Init. It requests attachment tag 20/index 1 and creates a fresh initializer:
-   profile, transformed pose, allegiance 1, active 1, empty script/name/spawn script,
-   and null target/spawned-by. This does not supply an AI parent reader.
+   profile, transformed position, allegiance 1, active 1, empty script/name/spawn
+   script, and null target/spawned-by. Because the parent initializer uses Euler
+   mode, `0x004f8c99..0x004f8cc9` converts the attachment matrix to three Euler
+   words before child Init; the matrix itself is not the initialized child basis.
+   Active/attach-script words and spawn script are copied from the parent input.
+   This does not supply an AI parent reader.
 2. Component Init clears its independent parent reader `+0x26c`, tag `+0x270`
    and scalars `+0x250/+0x254`; creates its motion controller at `+0x70`, bound
    to the child with both cached angles -999; then writes initializer collision
@@ -340,12 +344,51 @@ Its `Component` emitter references part 31, `Emit08`, under `mainbody`.
 The child Unit's event 4003 precedes the animation request, which precedes the
 AI request; parent binding follows them. Delivery uses the existing
 [event-manager contract](../binary-analysis/functions/CEventManager.cpp.md).
-The earlier [Actor/base transaction](../binary-analysis/functions/Actor.cpp.md)
-can synchronously scan collision neighbors before this tail, so neither the
-authored active word nor the eliminated AI branch proves final `+0x214` or a total
-transitive RNG count. The remaining connected step needs real parent attachment
-pose/cache evaluation through [Unit UpdateTransform](../binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md),
-`0x004dd160` and `0x004b4de0`, plus actual render/collision publication and callback
-results. Static emitter coordinates cannot replace that pose. This narrows the
-child-specific work to concrete motion, animation, AI, guide and reader owners;
-it does not complete the shared initialization transaction or add a Core scaffold.
+The four initial attachment calculations now have a connected implementation in
+`RetailWorld110InitialConstruction.ComponentInitInputs`. The existing actor asset
+materializes the shared local mesh pose once and its four ordered owner uses.
+Core retains actual float positions, computes the attachment with measured store
+order, then converts to child Euler inputs. The
+[Unit transform owner](../binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md)
+records cache eligibility, the constant part chain, inverse-trig correction and
+native arithmetic probe. This prepares incoming arguments; it creates no child
+or event and does not complete Unit Init.
+
+### Parent origin and initial collision boundary
+
+All four origins are above both surfaces in retail's down-positive Z convention:
+
+| RLWD row | Authored XYZ | Ground Z, approximately |
+| --- | --- | ---: |
+| 0008 | 215, 422, -20 | 1.160044 |
+| 0012 | 205.125, 327.125, -25 | -10.599707 |
+| 0013 | 237.5, 340, -30 | -10.458707 |
+| 0020 | 170, 505, -25 | 1.160044 |
+
+The admitted HFLD is SHA-256
+`fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`;
+water Z is `-8.84000015`. Existing Core terrain sampling independently checks
+the four clamp decisions. This is origin clearance, not whole-volume clearance.
+
+Fresh initializer collision fields retain delayed-start 1 and delay -1. Copy
+does not replace those destination defaults. Dropship Init
+`[0x00446d70,0x00447040)`, SHA-256
+`3bace4c1afb0fdd62a7de7a35ae40c884e7f5610d96ad3b7d6ffc182374d984a`,
+sets minimum/maximum levels 2 and ORs mask `0x0a400140`. The child separately
+sets mask `0x40100020`. Both persistent components clear readiness before their
+initial neighbor scan. The shared response consequently exits before narrowphase,
+pose correction or owner Hit. No empty-neighbor assumption is needed for that
+gate. Real peers still affect filters and detector event 2000 scheduling.
+
+The child's actual outer BBOX radius is `0x3f07ff7f` (0.531242311), distinct from
+render radius `0x3f132175`. Its XY enclosing extent selects MapWho level 4 and
+no big-set append; the parent's extent selects level 2 and big-set publication.
+Before its parent reader is bound, child speed lookup returns 142.0. The child
+is inserted at the MapWho sector head before collision Init; world-list head
+publication follows the scan, with Unit/faction publication later. Those ordered
+publications, real peers and scheduled readiness/detector events still require
+implementation. Full collision responses are needed once readiness is restored.
+
+These bounded conditions close the initial pose dependency. They do not establish
+the complete world's event/RNG state or replace the remaining child motion,
+animation, AI, guide and reader lifecycle.

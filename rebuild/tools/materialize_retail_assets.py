@@ -291,9 +291,13 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v1"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v2"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "64f95b4465470d3e2d1fb5df1df78007c866ecd31d8bf6d78ab52493f8c30308"
+    "6ff0f899aaeaf1322c8089d92235e81d2851c2bc29fa1558028f1d7494115d04"
+)
+WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
+WORLD110_LANDING_CRAFT_MESH_SHA256 = (
+    "f586cc84f577e441eba425d5c95dbca3e057d063229bf5c2999227157704424b"
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -3303,29 +3307,14 @@ def _authored_transform(position, orientation) -> dict[str, list[int]]:
     }
 
 
-def _mesh_emitters(inflated: bytes, parsed) -> dict[str, dict[str, object]]:
-    offset = inflated.find(b"CEMT")
-    if offset < 0 or offset + 12 > len(inflated):
-        return {}
-    size = struct.unpack_from("<I", inflated, offset + 4)[0]
-    end = offset + 8 + size
-    if end > len(inflated):
-        raise RuntimeError("Level 100 mesh has a truncated CEMT payload")
-    cursor = offset + 8
-    record_size = struct.unpack_from("<I", inflated, cursor)[0]
-    cursor += 4
-    if record_size != 336 or (size - 4) % (record_size + 4) != 0:
-        raise RuntimeError("Level 100 mesh has an unsupported CEMT layout")
+def _mesh_emitters(parsed) -> dict[str, dict[str, object]]:
     result: dict[str, dict[str, object]] = {}
-    for _ in range((size - 4) // (record_size + 4)):
-        record = inflated[cursor : cursor + record_size]
-        part_index = struct.unpack_from("<I", inflated, cursor + record_size)[0]
-        cursor += record_size + 4
-        if part_index >= len(parsed.parts):
-            raise RuntimeError("Level 100 CEMT refers to an invalid mesh part")
-        name = record[76:332].split(b"\0", 1)[0].decode("ascii")
+    for binding in parsed.emitter_bindings():
+        name, part_index = binding.name, binding.part_ordinal
         if not name.startswith("Spawner"):
             continue
+        if part_index is None:
+            raise RuntimeError(f"Level 100 emitter {name} has no mesh part")
         if name in result:
             raise RuntimeError(f"Level 100 mesh has duplicate emitter {name}")
         transform = parsed.parts[part_index].transform
@@ -3334,8 +3323,6 @@ def _mesh_emitters(inflated: bytes, parsed) -> dict[str, dict[str, object]]:
             "partOrdinal": part_index,
             "position": transform.position,
         }
-    if cursor != end:
-        raise RuntimeError("Level 100 CEMT payload did not reproduce")
     return result
 
 
@@ -3403,7 +3390,89 @@ def _world110_player_input_bytes(raw_world: bytes, configuration_data: bytes) ->
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
-def _world110_initial_actor_bytes(raw_world: bytes, physics_data: bytes) -> bytes:
+def _world110_component_attachment(rows, physics, mesh_data: bytes) -> dict[str, object]:
+    """The four first Component queries, not completed child initialization.
+
+    Unit 0x004fc4e0 uses a shared local-pose cache for these fresh profiles.
+    Their base Init changes no authored origin before the query. Complex Init
+    0x004f4008..0x004f40cc supplies the yaw-only basis, including signed zeros.
+    The three stored sine/cosine pairs were checked with native x87 arithmetic
+    under explicit 53-bit, round-to-nearest control; this is not game execution.
+    See the existing CUnit__UpdateTransform evidence owner for the bounds.
+    """
+    from cmsh_static_preview import inflate_aya, parse_cmsh_stream
+
+    if _sha256(mesh_data) != WORLD110_LANDING_CRAFT_MESH_SHA256:
+        raise RuntimeError("world 110 landing-craft mesh identity changed")
+    inflated = inflate_aya(mesh_data)
+    parsed = parse_cmsh_stream(inflated)
+    matches = [binding for binding in parsed.emitter_bindings()
+               if binding.name == "Component" and binding.selector == 1]
+    if len(matches) != 1 or matches[0].part_ordinal != 31:
+        raise RuntimeError("world 110 Component/1 mesh binding changed")
+    parts = parsed.file_parts()
+    for index, parent in ((31, 1), (1, 0), (0, None)):
+        part = parts[index]
+        if (part.parent != parent or part.track is None
+                or part.track.frame_map != (0,) * 36 or len(part.track.hierarchy) != 1):
+            raise RuntimeError("world 110 Component hierarchy is not the admitted constant pose")
+    track = parts[31].track
+    if len(track.cached_position_bytes) != 16 or len(track.cached_orientation_bytes) != 48:
+        raise RuntimeError("world 110 Component model-pose cache changed")
+    position = list(struct.unpack("<4i", track.cached_position_bytes)[:3])
+    padded_basis = struct.unpack("<12i", track.cached_orientation_bytes)
+    basis = [padded_basis[index] for index in (0, 1, 2, 4, 5, 6, 8, 9, 10)]
+    if (position != [_float_bits(value) for value in parts[31].transform.position]
+            or basis != [_float_bits(value) for row in parts[31].transform.rows for value in row]):
+        raise RuntimeError("world 110 Component model pose disagrees with its cache")
+
+    uses = []
+    for row in rows:
+        if row["serializedThingType"] != 8:
+            continue
+        actor = row["actor"]
+        fields = _physics_record(physics, 1, actor["definitionName"])
+        for raw in fields.values(27):
+            name_end = raw.index(0)
+            if len(raw) != name_end + 5:
+                raise RuntimeError("world 110 component use layout changed")
+            name = raw[:name_end].decode("ascii")
+            selector = struct.unpack_from("<i", raw, name_end + 1)[0]
+            if name != "Dropship Gun Turret" or selector != 1:
+                raise RuntimeError("world 110 component use is outside the admitted profile")
+            _physics_record(physics, 7, name)
+            yaw_bits, pitch_bits, roll_bits = actor["authoredTransform"]["retailEulerFloatBits"]
+            if pitch_bits != 0 or roll_bits != 0 or yaw_bits not in (0, 0x40490FDB, 0x40782696):
+                raise RuntimeError("world 110 landing-craft Init Euler inputs changed")
+            yaw = struct.unpack("<f", struct.pack("<i", yaw_bits))[0]
+            c, s = _f32(math.cos(yaw)), _f32(math.sin(yaw))
+            # Preserve the finite yaw-only specialization of the actual stores;
+            # a mathematical identity matrix loses the negative-zero words.
+            parent_basis = [c, -s, _f32(0.0 * c + 0.0 * s),
+                            s, c, _f32(0.0 * s - 0.0 * c), -0.0, 0.0, 1.0]
+            uses.append({
+                "parentDefinitionIdentity": actor["definitionIdentity"],
+                "componentDefinitionName": name,
+                "parentInitBasisFloatBits": [_float_bits(value) for value in parent_basis],
+            })
+    if [use["parentDefinitionIdentity"] for use in uses] != [
+            "wres:rlwd:0008", "wres:rlwd:0012", "wres:rlwd:0013", "wres:rlwd:0020"]:
+        raise RuntimeError("world 110 landing-craft Component use order changed")
+    return {
+        "meshSourceSha256": WORLD110_LANDING_CRAFT_MESH_SHA256,
+        "meshInflatedSha256": _sha256(inflated),
+        "emitterTag": 20,
+        "selector": 1,
+        "partOrdinal": 31,
+        "localPositionFloatBits": position,
+        "localBasisFloatBits": basis,
+        "uses": uses,
+    }
+
+
+def _world110_initial_actor_bytes(
+    raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes,
+) -> bytes:
     """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
 
     Reuses the existing Core coordinate datum and exact yaw-only conversion.
@@ -3490,6 +3559,7 @@ def _world110_initial_actor_bytes(raw_world: bytes, physics_data: bytes) -> byte
         "initialObjectSeedsSha256": WORLD110_INITIAL_OBJECT_SEEDS_SHA256,
         "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
         "rows": rows,
+        "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
@@ -4072,7 +4142,7 @@ def _materialize_static_world(
         inflated = inflate_aya(data)
         parsed = parse_cmsh_stream(inflated)
         if mesh_key in ("fb_tank_factory", "fb_aircraft_factory"):
-            emitters_by_mesh[mesh_key] = _mesh_emitters(inflated, parsed)
+            emitters_by_mesh[mesh_key] = _mesh_emitters(parsed)
         signatures = sorted(
             {group.raw_texr_u32 for part in parsed.parts for group in part.groups}
         )
@@ -5330,6 +5400,8 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
             actor_data = _world110_initial_actor_bytes(
                 raw_world,
                 _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256),
+                _read_exact(game_root / WORLD110_LANDING_CRAFT_MESH,
+                            WORLD110_LANDING_CRAFT_MESH_SHA256),
             )
             actor_hash = _sha256(actor_data)
             if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:

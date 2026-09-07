@@ -73,6 +73,12 @@ Implementing that order still requires actual render/mesh state, collision and
 publication effects, and recursive child initialization; static body closure
 does not complete those runtime objects.
 
+The four landing-craft Component inputs now use their actual mesh attachment,
+parent float pose and matrix-to-Euler conversion. Native x87 arithmetic and
+focused Core checks agree on their meaningful output words. This closes an
+incoming-argument dependency; child allocation, Init and event/world publication
+remain unfinished.
+
 Remaining: complete start/actor/player/Battle Engine construction, real ownership
 and reader identities, physics/coordinate enrichment, squad/spawner expansion and
 publication order, policy effects, player initialization, registry/state hashing,

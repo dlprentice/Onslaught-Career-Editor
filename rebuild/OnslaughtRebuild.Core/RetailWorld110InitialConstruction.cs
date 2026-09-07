@@ -19,6 +19,28 @@ public sealed record RetailWorld110InitialActorInput(
     Level100ActorDefinition Actor);
 
 /// <summary>
+/// Real arguments prepared for one landing-craft Component Init. Owner identity
+/// is construction provenance, not an already-bound child parent reader. No
+/// child object, world publication or event dispatch is represented here.
+/// </summary>
+public sealed record RetailWorld110ComponentInitInput(
+    Level100ActorId OwnerActorId,
+    string OwnerDefinitionIdentity,
+    string ComponentDefinitionName,
+    int AttachmentIndex,
+    RetailUnitAttachmentPose AttachmentPose,
+    Level100FloatVector3Bits RetailEulerFloatBits,
+    int Allegiance,
+    int ActiveWord,
+    int AttachScriptsToUnitsWord,
+    string SpawnScript)
+{
+    public int OrientationTypeWord => 0;
+    public string Name => string.Empty;
+    public string Script => string.Empty;
+}
+
+/// <summary>
 /// Production construction of the admitted direct World 110 actors, before
 /// class initialization. This is an incomplete construction stage, not a
 /// playable world or a Simulation factory. It allocates Core actor/base state
@@ -35,23 +57,30 @@ public sealed record RetailWorld110InitialActorInput(
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "64f95b4465470d3e2d1fb5df1df78007c866ecd31d8bf6d78ab52493f8c30308";
+        "6ff0f899aaeaf1322c8089d92235e81d2851c2bc29fa1558028f1d7494115d04";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
 
-    private static readonly Lazy<IReadOnlyList<RetailWorld110InitialActorInput>> s_inputs =
+    internal sealed record AttachmentUse(string OwnerIdentity, string ComponentName,
+        Level100FloatBasis3Bits ParentInitBasis);
+    internal sealed record Inputs(IReadOnlyList<RetailWorld110InitialActorInput> Actors,
+        RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses);
+
+    private static readonly Lazy<Inputs> s_inputs =
         new(LoadEmbedded);
 
     private RetailWorld110InitialConstruction()
     {
-        ActorInputs = s_inputs.Value;
+        Inputs inputs = s_inputs.Value;
+        ActorInputs = inputs.Actors;
         InitialObjectSeeds = RetailWorldInitialObjectSeedAdmission.World110;
         Terrain = RetailWorldTerrain.World110;
         ActorDefinitions = new Level100ActorDefinitionSet(
             ActorInputs.Select(input => input.Actor), [], worldNumber: 110);
         Actors = new Level100ActorRegistry(
             ActorDefinitions, Terrain, initializeSupport: false);
+        ComponentInitInputs = PrepareComponentInputs(inputs);
         UnconstructedInitialObjects = Array.AsReadOnly(
             InitialObjectSeeds.Rows.Where(seed => seed.ThingType != 8).ToArray());
     }
@@ -74,6 +103,14 @@ public sealed class RetailWorld110InitialConstruction
 
     public IReadOnlyList<RetailWorld110InitialActorInput> ActorInputs { get; }
 
+    /// <summary>
+    /// The four ordered Unit attachment queries and their following Euler
+    /// conversion. The admitted parent Init origin survives the ground/water
+    /// clamps and delayed collision response. Complete parent/child Init and
+    /// world/event ownership remain unfinished; these are incoming arguments.
+    /// </summary>
+    public IReadOnlyList<RetailWorld110ComponentInitInput> ComponentInitInputs { get; }
+
     public RetailWorldInitialObjectSeedProjection InitialObjectSeeds { get; }
 
     public RetailWorldTerrain Terrain { get; }
@@ -90,7 +127,28 @@ public sealed class RetailWorld110InitialConstruction
     public Level100ActorRegistry RestoreActors(Level100ActorRegistrySnapshot snapshot) =>
         new(ActorDefinitions, snapshot, Terrain, initializeSupport: false);
 
-    private static IReadOnlyList<RetailWorld110InitialActorInput> LoadEmbedded()
+    private IReadOnlyList<RetailWorld110ComponentInitInput> PrepareComponentInputs(Inputs inputs)
+    {
+        var actorsByIdentity = Actors.Snapshot.Actors.ToDictionary(actor => actor.DefinitionIdentity);
+        return Array.AsReadOnly(inputs.AttachmentUses.Select(use =>
+        {
+            RetailWorld110InitialActorInput parent = ActorInputs.Single(
+                input => input.Actor.DefinitionIdentity == use.OwnerIdentity);
+            // Keep the original float words. The registry's millimetres lose
+            // precision and are not a round-trip source for retail transforms.
+            var parentPose = new RetailUnitAttachmentPose(
+                parent.Actor.AuthoredTransform.RetailPositionFloatBits, use.ParentInitBasis);
+            RetailUnitAttachmentPose attachment = RetailUnitAttachmentPose.Transform(
+                parentPose, inputs.LocalAttachment);
+            return new RetailWorld110ComponentInitInput(
+                actorsByIdentity[use.OwnerIdentity].ActorId, use.OwnerIdentity,
+                use.ComponentName, 1, attachment, attachment.ToComponentEuler(),
+                parent.Allegiance, parent.ActiveWord, parent.AttachScriptsToUnitsWord,
+                parent.SpawnScript);
+        }).ToArray());
+    }
+
+    private static Inputs LoadEmbedded()
     {
         using Stream stream = typeof(RetailWorld110InitialConstruction).Assembly
             .GetManifestResourceStream(ResourceName) ??
@@ -101,7 +159,7 @@ public sealed class RetailWorld110InitialConstruction
         return Decode(memory.ToArray());
     }
 
-    internal static IReadOnlyList<RetailWorld110InitialActorInput> Decode(byte[] source)
+    internal static Inputs Decode(byte[] source)
     {
         ArgumentNullException.ThrowIfNull(source);
         if (!StringComparer.OrdinalIgnoreCase.Equals(
@@ -112,7 +170,7 @@ public sealed class RetailWorld110InitialConstruction
 
         using JsonDocument document = JsonDocument.Parse(source);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v1" ||
+        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v2" ||
             root.GetProperty("worldNumber").GetInt32() != 110 ||
             root.GetProperty("archiveSha256").GetString() != RetailWorld110LevelActors.SourceArchiveSha256)
         {
@@ -159,7 +217,21 @@ public sealed class RetailWorld110InitialConstruction
                 row.GetProperty("attachScriptsToUnitsWord").GetInt32(), definition));
         }
 
-        return Array.AsReadOnly(rows.ToArray());
+        JsonElement attachment = root.GetProperty("componentAttachment");
+        if (attachment.GetProperty("emitterTag").GetInt32() != 20 ||
+            attachment.GetProperty("selector").GetInt32() != 1 ||
+            attachment.GetProperty("partOrdinal").GetInt32() != 31)
+        {
+            throw new ArgumentException("World110 Component attachment binding changed.", nameof(source));
+        }
+        var localAttachment = new RetailUnitAttachmentPose(
+            VectorBits(attachment.GetProperty("localPositionFloatBits")),
+            Basis(attachment.GetProperty("localBasisFloatBits")));
+        var uses = attachment.GetProperty("uses").EnumerateArray().Select(use => new AttachmentUse(
+            use.GetProperty("parentDefinitionIdentity").GetString()!,
+            use.GetProperty("componentDefinitionName").GetString()!,
+            Basis(use.GetProperty("parentInitBasisFloatBits")))).ToArray();
+        return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses));
     }
 
     private static int? OptionalInt(JsonElement value) =>

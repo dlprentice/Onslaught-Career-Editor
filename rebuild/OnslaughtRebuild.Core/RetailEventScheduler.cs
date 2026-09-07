@@ -185,8 +185,8 @@ public sealed class RetailEventScheduler
     /// <c>mov dword ptr [esp+0x10], 3</c> loop counters in <c>Flush</c>.</summary>
     public const int PriorityLanes = 3;
 
-    /// <summary><c>MAX_NUM_EVENTS</c> — <c>eventmanager.h:20</c>. Not read out
-    /// of the image; <c>Init</c> was not disassembled.</summary>
+    /// <summary><c>MAX_NUM_EVENTS</c> — <c>eventmanager.h:20</c>, confirmed by
+    /// the allocation and constructor count in retail Init <c>0x0044B060</c>.</summary>
     public const int MaxEvents = 20_000;
 
     /// <summary><c>CLOCK_TICK</c> — <c>thing.h:29</c>; <c>0x005D8578</c>.</summary>

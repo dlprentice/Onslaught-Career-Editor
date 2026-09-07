@@ -338,6 +338,17 @@ now captures the overflow visit count before overflow callbacks, matching retail
 the regression failed before repair and all 32 affected tests passed. This is
 source/static progress, not a new live playthrough or parity result.
 
+World 110 now prepares the four landing-craft turret constructor inputs from
+real owner identities and the shared `Component`/1 mesh attachment. The
+[transform implementation](rebuild/OnslaughtRebuild.Core/RetailUnitAttachmentPose.cs)
+preserves measured translation/matrix store order and the following Euler
+conversion; its four results match an independent native x87 arithmetic probe.
+The [RE owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md)
+also corrects the misleading retained acos label: this finite path computes asin.
+The existing mesh parser now handles conditional emitter part indices and keeps
+unknown bytes intact. No turret child has been initialized or published by this
+step, and no new retail or Godot playthrough occurred.
+
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu
 (New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`

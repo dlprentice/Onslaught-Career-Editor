@@ -250,7 +250,6 @@ reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__BallisticAimState.
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__FinishedPlayingCurrentAnimation.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Init.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__TriggerEffect.md
-reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md
 reverse-engineering/binary-analysis/functions/World.cpp/CWorld__LoadWorld.md
 reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md
 reverse-engineering/binary-analysis/functions/console.cpp/CConsole__AppendToStatusBufferV.md

@@ -85,6 +85,26 @@ directory above. Actor/base and Unit initialization extensions are static
 evidence, independently checked against selected complete pristine bodies;
 no new runtime, full-campaign or broad Core result is claimed.
 
+The subsequent World110 attachment change passed **20/20 Core facts, zero
+skipped**: attachment arithmetic, real initial construction, detached player
+construction and the existing World100 forty-step fingerprint. The unchanged
+fingerprint was not repinned. The materializer's affected fixtures passed
+**12/12**; the existing synthetic mesh parser/re-emitter fixtures plus new
+emitter framing cases passed **65/65**, without running a corpus census.
+The two real factory meshes produced the same four spawner transforms before
+and after the parser change. The existing materializer published only the
+changed 38,751-byte World110 actor/input asset.
+
+An original native x87 probe under explicit `0x027f` checked all four attachment
+positions, nine-component bases and child Euler outputs; it executed no retail
+code. Exact source/log hashes and static body evidence are in the
+[Unit transform owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md).
+The `world110-attachment-{core,materializer,docs,safety}.log` and
+`mesh-emitter-tests.log` files use the existing Linux run directory above.
+Read-only reviews found no remaining parser or arithmetic defects after the
+misplaced test assertions were corrected. These results do not establish
+complete child initialization, second-world play or general animated/x87 parity.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

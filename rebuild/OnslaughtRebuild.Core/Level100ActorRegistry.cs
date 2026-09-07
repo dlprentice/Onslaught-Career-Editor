@@ -24,8 +24,8 @@ public readonly record struct SimVector3(int X, int Y, int Z)
 
 /// <summary>
 /// Exact IEEE-754 single-precision components retained from the released mesh
-/// emitter. Core treats these as immutable authored data rather than doing
-/// presentation or floating-point transform work with them.
+/// emitter or a bounded deterministic transform. Word storage preserves signed
+/// zeros and keeps engine/presentation vector types outside Core.
 /// </summary>
 public readonly record struct Level100FloatVector3Bits(int X, int Y, int Z);
 

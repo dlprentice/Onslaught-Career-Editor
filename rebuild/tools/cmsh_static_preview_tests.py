@@ -514,6 +514,49 @@ def build_order_stream(order: tuple[str, ...], siblings: tuple[str, ...] = (), o
     return bytes(header) + _chunk(b"CMST", b"") + part + b"".join(_chunk(tag.encode("ascii"), b"x") for tag in siblings)
 
 
+class MeshEmitterBindingTests(unittest.TestCase):
+    @staticmethod
+    def _payload(*bindings: tuple[str, int, int | None]) -> bytes:
+        records = bytearray(struct.pack("<I", 336))
+        for name, selector, part in bindings:
+            record = bytearray(336)
+            encoded = name.encode("ascii")
+            record[76:76 + len(encoded)] = encoded
+            struct.pack_into("<I", record, 0x40, 0 if part is None else 0x12345678)
+            struct.pack_into("<i", record, 332, selector)
+            records.extend(record)
+            if part is not None:
+                records.extend(struct.pack("<I", part))
+        return bytes(records)
+
+    def test_framed_emitters_ignore_tag_in_header_and_preserve_duplicate_names(self):
+        source = bytearray(build_order_stream(ACCEPTED_PART_ORDERS[0]))
+        # A mesh name is not a chunk boundary. The previous materializer's
+        # bytes.find(CEMT) selected this decoy instead of the real sibling.
+        source[0x2C:0x34] = b"CEMTfake"
+        source.extend(_bbox())
+        bindings = (("SpawnerA", 1, 0), ("Component", -1, None), ("Component", 2, 0))
+        source.extend(_chunk(b"CEMT", self._payload(*bindings)))
+        parsed = preview.parse_cmsh_stream(bytes(source))
+        self.assertEqual(tuple(preview.MeshEmitterBinding(*row) for row in bindings),
+                         parsed.emitter_bindings())
+        self.assertEqual(bytes(source), preview.emit_cmsh_stream(parsed)[0])
+
+    def test_no_emitter_chunk_has_no_bindings(self):
+        parsed = preview.parse_cmsh_stream(build_order_stream(ACCEPTED_PART_ORDERS[0]))
+        self.assertEqual((), parsed.emitter_bindings())
+
+    def test_malformed_or_out_of_range_emitter_records_are_rejected(self):
+        parsed = preview.parse_cmsh_stream(build_order_stream(ACCEPTED_PART_ORDERS[0]))
+        for payload in (b"", struct.pack("<I", 335), self._payload(("Component", 1, 0))[:-1],
+                        self._payload(("Component", 1, None))[:-1],
+                        self._payload(("Component", 1, 1))):
+            with self.subTest(payload=payload[:8]):
+                changed = replace(parsed, siblings=(preview.MeshSibling(b"CEMT", payload),))
+                with self.assertRaises(preview.CmshProfileError):
+                    changed.emitter_bindings()
+
+
 EXPECTED_OBJ = b"""v 12.0 19.0 -33.0
 v 15.0 16.0 -36.0
 v 18.0 13.0 -39.0

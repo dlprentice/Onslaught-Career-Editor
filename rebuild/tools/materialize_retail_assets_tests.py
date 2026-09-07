@@ -10,6 +10,7 @@ import zlib
 import json
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import materialize_retail_assets as materializer
@@ -171,6 +172,9 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
             materializer.PHYSICS_DEFINITIONS_SHA256,
         )
         cls.configurations = (game / materializer.BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
+        cls.landing_craft_mesh = materializer._read_exact(
+            game / materializer.WORLD110_LANDING_CRAFT_MESH,
+            materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
 
     def test_real110_player_inputs_use_rlwd_names_and_exact_configuration_fields(self) -> None:
         data = materializer._world110_player_input_bytes(self.raw_world, self.configurations)
@@ -191,7 +195,8 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
             materializer._world110_player_input_bytes(self.raw_world, bytes(changed))
 
     def test_real110_artifact_reproduces_and_contains_its_own_unit_rows(self) -> None:
-        data = materializer._world110_initial_actor_bytes(self.raw_world, self.physics)
+        data = materializer._world110_initial_actor_bytes(
+            self.raw_world, self.physics, self.landing_craft_mesh)
         self.assertEqual(materializer.WORLD110_INITIAL_ACTORS_SHA256,
                          materializer._sha256(data))
         document = json.loads(data)
@@ -216,9 +221,48 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual("Tank Factory", exact[1]["name"])
         self.assertEqual(legacy, materializer._parse_static_world(self.raw_world)[0])
 
+    def test_real110_component_queries_keep_mesh_cache_and_constructor_zero_signs(self) -> None:
+        document = json.loads(materializer._world110_initial_actor_bytes(
+            self.raw_world, self.physics, self.landing_craft_mesh))
+        attachment = document["componentAttachment"]
+        self.assertEqual((20, 1, 31),
+                         (attachment["emitterTag"], attachment["selector"], attachment["partOrdinal"]))
+        self.assertEqual([0x3D49079B, 0x412496BD, -1067183804],
+                         attachment["localPositionFloatBits"])
+        self.assertEqual(["wres:rlwd:0008", "wres:rlwd:0012", "wres:rlwd:0013", "wres:rlwd:0020"],
+                         [use["parentDefinitionIdentity"] for use in attachment["uses"]])
+        for index, use in enumerate(attachment["uses"]):
+            self.assertEqual("Dropship Gun Turret", use["componentDefinitionName"])
+            basis = use["parentInitBasisFloatBits"]
+            self.assertEqual(-2147483648, basis[6])
+            self.assertEqual(0 if index == 2 else -2147483648, basis[2])
+        # Native x87 FCOS/FSIN stores for yaw40782696 under explicit027f.
+        self.assertEqual([-1086470375, -1087647576],
+                         [attachment["uses"][1]["parentInitBasisFloatBits"][i] for i in (0, 3)])
+
+    def test_changed_component_mesh_is_rejected(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "mesh identity changed"):
+            materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh")
+
     def test_changed_physics_is_rejected_before_construction(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "physics source identity"):
-            materializer._world110_initial_actor_bytes(self.raw_world, b"wrong physics")
+            materializer._world110_initial_actor_bytes(
+                self.raw_world, b"wrong physics", self.landing_craft_mesh)
+
+
+class MeshEmitterMaterializationTests(unittest.TestCase):
+    def test_unbound_non_spawner_is_skipped_without_consuming_a_part(self):
+        from cmsh_static_preview import MeshEmitterBinding
+        parsed = SimpleNamespace(parts=(), emitter_bindings=lambda: (
+            MeshEmitterBinding("Component", -1, None),))
+        self.assertEqual({}, materializer._mesh_emitters(parsed))
+
+    def test_unbound_spawner_is_not_replaced_with_a_default_pose(self):
+        from cmsh_static_preview import MeshEmitterBinding
+        parsed = SimpleNamespace(parts=(), emitter_bindings=lambda: (
+            MeshEmitterBinding("SpawnerA", 1, None),))
+        with self.assertRaisesRegex(RuntimeError, "has no mesh part"):
+            materializer._mesh_emitters(parsed)
 
 
 class PhysicsDefinitionTests(unittest.TestCase):

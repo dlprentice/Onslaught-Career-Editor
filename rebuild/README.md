@@ -216,7 +216,10 @@ World 110 now has a separate, incomplete construction stage:
 [`RetailWorld110InitialConstruction`](OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)
 uses its own terrain and 43 admitted direct actors; its player overload constructs
 detached Start/engine/player shells with real configuration fields and distinct
-reader cells. It does not initialize all actor classes, publish a complete world,
+reader cells. It also prepares four landing-craft turret inputs from their exact
+mesh attachment and parent pose, including float-store order and the Euler
+conversion before child Init. The arithmetic matches a native x87 probe; these
+inputs do not allocate or initialize turret children. It does not initialize all actor classes, publish a complete world,
 run squads/spawners or construct a playable session. The Godot host therefore
 still loads only World 100. Static admission and the unresolved Init dependencies
 are recorded in

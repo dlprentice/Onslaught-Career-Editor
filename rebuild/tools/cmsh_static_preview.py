@@ -128,12 +128,14 @@ class _BoundingBox:
 
 @dataclass(frozen=True)
 class MeshSibling:
-    """One post-body sibling chunk, kept whole because nothing parses inside it.
+    """One post-body sibling chunk, preserved whole for exact re-emission.
 
     `parse_cmsh_stream` validates only the sibling *order*; the payload is
     opaque to it. A `PMS2`/`PMSH` payload holds a further complete CMSH stream,
     which the corpus census decodes as a stream in its own right - but at this
-    level the bytes are carried, not interpreted.
+    level the bytes are carried, not derived. `ParsedMesh.emitter_bindings`
+    separately reads CEMT names and part indices without interpreting the
+    remaining emitter fields or changing that byte accounting.
     """
 
     tag: bytes
@@ -146,6 +148,13 @@ class MeshTexture:
     raw_cmst_entry: bytes
     raw_texb_metadata: bytes
     raw_name_field: bytes
+
+
+@dataclass(frozen=True)
+class MeshEmitterBinding:
+    name: str
+    selector: int
+    part_ordinal: int | None
 
 
 @dataclass(frozen=True)
@@ -275,6 +284,48 @@ class ParsedMesh:
     def file_parts(self) -> tuple[_Part, ...]:
         """The parts as the file states them, before `REFR` geometry expansion."""
         return self.source_parts or self.parts
+
+    def emitter_bindings(self) -> tuple[MeshEmitterBinding, ...]:
+        """Ordered CEMT names/selectors/parts, without selecting an animation pose.
+
+        Consume the framed sibling, never a tag-shaped sequence inside a mesh
+        name, vertex buffer or nested mesh. Retain duplicate names here; a
+        consumer requiring a unique binding must establish that separately.
+        Retail 0x004ab210..0x004ab2ae copies each 336-byte record and reads a
+        trailing part index only when its +0x40 marker is nonzero. Lookup
+        0x004aa820 compares the raw selector at +0x14c, not the list ordinal.
+        Records and all their unknown fields remain carried raw.
+        """
+        chunks = [sibling for sibling in self.siblings if sibling.tag == b"CEMT"]
+        if not chunks:
+            return ()
+        if len(chunks) != 1:
+            raise CmshProfileError("invalid declared length/count", 0, "CEMT siblings")
+        payload = chunks[0].raw_payload
+        if len(payload) < 4 or struct.unpack_from("<I", payload)[0] != 336:
+            raise CmshProfileError("invalid declared length/count", 0, "CEMT records")
+        bindings = []
+        offset = 4
+        while offset < len(payload):
+            if len(payload) - offset < 336:
+                raise CmshProfileError("truncation", offset, "CEMT record")
+            record = payload[offset:offset + 336]
+            offset += 336
+            part_index = None
+            if struct.unpack_from("<I", record, 0x40)[0] != 0:
+                if len(payload) - offset < 4:
+                    raise CmshProfileError("truncation", offset, "CEMT part index")
+                part_index = struct.unpack_from("<I", payload, offset)[0]
+                offset += 4
+                if part_index >= len(self.file_parts()):
+                    raise CmshProfileError("invalid declared length/count", offset - 4, "CEMT part index")
+            try:
+                name = record[76:332].split(b"\0", 1)[0].decode("ascii")
+            except UnicodeDecodeError as error:
+                raise CmshProfileError("unsupported profile", offset, "CEMT name") from error
+            bindings.append(MeshEmitterBinding(
+                name, struct.unpack_from("<i", record, 332)[0], part_index))
+        return tuple(bindings)
 
 
 _PART_ORDERS = {

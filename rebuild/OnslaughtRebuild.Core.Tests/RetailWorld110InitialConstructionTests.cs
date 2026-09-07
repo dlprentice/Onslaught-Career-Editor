@@ -8,6 +8,78 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class RetailWorld110InitialConstructionTests
 {
     [Fact]
+    public void ComponentInitInputs_UseFourRealOwnersAndNativeArithmeticResults()
+    {
+        var world = RetailWorld110InitialConstruction.Create();
+        Assert.Equal(new[] { "wres:rlwd:0008", "wres:rlwd:0012", "wres:rlwd:0013", "wres:rlwd:0020" },
+            world.ComponentInitInputs.Select(input => input.OwnerDefinitionIdentity));
+        // Independent arithmetic probe: original x87 instructions under
+        // explicit027f, not a captured game run or this C# implementation.
+        uint[][] positions = [
+            [0x4356f370, 0x43cddb4a, 0xc1bc8228],
+            [0x4353fe1d, 0x439fbbae, 0xc1e48228],
+            [0x436d8c90, 0x43af24b6, 0xc2064114],
+            [0x4329f370, 0x43f75b4a, 0xc1e48228]];
+        uint[] yaw = [0xc0490fda, 0xc019f91f, 0xb1466810, 0xc0490fda];
+        uint[][] bases = [
+            [0xbf800000, 0x33b3c5a5, 0xb34ff226, 0xb3c07e26, 0xbf7d8235, 0x3e0e8363, 0xb31be221, 0x3e0e8363, 0x3f7d8235],
+            [0xbf3dc719, 0x3f2a249a, 0xbdbf4bda, 0xbf2bd0a8, 0xbf3bee4a, 0x3dd34ba9, 0xb31be221, 0x3e0e8363, 0x3f7d8235],
+            [0x3f800000, 0x314479c2, 0x331bb081, 0x31181ef8, 0x3f7d8235, 0xbe0e8363, 0xb31be221, 0x3e0e8363, 0x3f7d8235]];
+        for (int index = 0; index < world.ComponentInitInputs.Count; index++)
+        {
+            RetailWorld110ComponentInitInput input = world.ComponentInitInputs[index];
+            Assert.Equal(new Level100FloatVector3Bits(unchecked((int)positions[index][0]),
+                unchecked((int)positions[index][1]), unchecked((int)positions[index][2])),
+                input.AttachmentPose.PositionFloatBits);
+            Assert.Equal(new Level100FloatVector3Bits(unchecked((int)yaw[index]), 0x3e0efa33, 0x331d6a4f),
+                input.RetailEulerFloatBits);
+            uint[] basis = bases[index == 3 ? 0 : index];
+            Assert.Equal(new Level100FloatBasis3Bits(
+                unchecked((int)basis[0]), unchecked((int)basis[1]), unchecked((int)basis[2]),
+                unchecked((int)basis[3]), unchecked((int)basis[4]), unchecked((int)basis[5]),
+                unchecked((int)basis[6]), unchecked((int)basis[7]), unchecked((int)basis[8])),
+                input.AttachmentPose.BasisFloatBits);
+            Assert.Equal("Dropship Gun Turret", input.ComponentDefinitionName);
+            Assert.Equal(1, input.AttachmentIndex);
+            Assert.Equal(0, input.OrientationTypeWord);
+            Assert.Equal(1, input.Allegiance);
+            Assert.Equal(1, input.ActiveWord);
+            Assert.Empty(input.Name);
+            Assert.Empty(input.Script);
+            Assert.Empty(input.SpawnScript);
+            Level100ActorSnapshot owner = world.Actors.Snapshot.Actors.Single(
+                actor => actor.ActorId == input.OwnerActorId);
+            Assert.Equal(input.OwnerDefinitionIdentity, owner.DefinitionIdentity);
+        }
+        // Preparing incoming arguments does not allocate/publish children.
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count);
+        Assert.Empty(world.Actors.Snapshot.PendingFacts);
+    }
+
+    [Fact]
+    public void LandingCraftOrigins_AlreadyClearTheActualGroundAndWaterClamps()
+    {
+        var world = RetailWorld110InitialConstruction.Create();
+        foreach (RetailWorld110ComponentInitInput component in world.ComponentInitInputs)
+        {
+            var position = world.ActorInputs.Single(
+                input => input.Actor.DefinitionIdentity == component.OwnerDefinitionIdentity)
+                .Actor.AuthoredTransform.RetailPositionFloatBits;
+            float x = BitConverter.Int32BitsToSingle(position.X);
+            float y = BitConverter.Int32BitsToSingle(position.Y);
+            float z = BitConverter.Int32BitsToSingle(position.Z);
+            Level100Terrain terrain = world.Terrain.Heightfield;
+            float ground = terrain.SampleHeightUnitsAtFixed(
+                (int)(x * Level100Terrain.FixedPointUnitsPerRetailUnit),
+                (int)(y * Level100Terrain.FixedPointUnitsPerRetailUnit)) * terrain.HeightScale;
+            // Down-positive retail Z. This proves the actual origin clamp
+            // decisions, not clearance for the entire collision volume.
+            Assert.True(z < ground);
+            Assert.True(z < terrain.WaterLevel);
+        }
+    }
+
+    [Fact]
     public void ProductionConstruction_UsesReal110UnitsAndPreservesUnnamedActors()
     {
         var world = RetailWorld110InitialConstruction.Create();
