@@ -19,7 +19,7 @@ public sealed class RetailWorld110AdmissionTests
 
     /// <summary>
     /// A world-110-stamped projection of the proven Level 100 test fixture.
-    /// It is a bounded session instrument only: the actor/spawn/path content
+    /// It is a direct mission-program test instrument only: the actor/spawn/path content
     /// remains the Level 100 fixture and makes no world-110 static-world claim.
     /// </summary>
     internal static Level100ActorDefinitionSet CreateWorld110Definitions()
@@ -278,10 +278,9 @@ public sealed class RetailWorld110AdmissionTests
         repeat.RunWorld110SecondaryObjectiveCompleteInstrument();
         Assert.Equal(after.SecondaryObjectives, repeat.Snapshot.SecondaryObjectives);
 
-        WorldSnapshot envelope = new Simulation(
-            1,
-            definitions,
-            worldNumber: World110).Snapshot;
+        // Synthetic hash envelope only; all World110 script execution above
+        // is through the direct mission owner, not an unsupported Simulation.
+        WorldSnapshot envelope = new Simulation(1, Level100TestActorDefinitions.Create()).Snapshot;
         string failedHash = StateHasher.ComputeHex(envelope with { Level100Mission = before });
         string completeHash = StateHasher.ComputeHex(envelope with { Level100Mission = after });
         string repeatHash = StateHasher.ComputeHex(

@@ -317,18 +317,10 @@ public sealed class RetailWorldPlayerStartAdmissionTests
     }
 
     [Fact]
-    public void RejectedAdmission_DoesNotMutateAdjacentWorld110SessionState()
+    public void RejectedAdmission_DoesNotMutateActualWorld110ConstructionState()
     {
-        // Admission is deliberately detached today. Keep this forward guard so
-        // a later constructor integration cannot turn rejection into a partial
-        // session mutation.
-        Level100ActorDefinitionSet definitions =
-            RetailWorld110AdmissionTests.CreateWorld110Definitions();
-        var simulation = new Simulation(
-            1,
-            definitions,
-            worldNumber: Level100MissionProgram.WorldNumber110);
-        WorldSnapshot before = simulation.Snapshot;
+        var world = RetailWorld110InitialConstruction.Create();
+        Level100ActorRegistrySnapshot before = world.Actors.Snapshot;
         RetailWorldPlayerStartRecord changed = ExactStart() with
         {
             PositionZBits = 0,
@@ -340,14 +332,11 @@ public sealed class RetailWorldPlayerStartAdmissionTests
                 RetailWorld110LevelActors.ArchiveIdentity,
                 [changed]));
 
-        WorldSnapshot after = simulation.Snapshot;
-        Assert.Equal(StateHasher.ComputeHex(before), StateHasher.ComputeHex(after));
-        Assert.Equal(
-            "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa",
-            after.Level100Mission.ProgramSha256);
-        Assert.Equal(
-            35,
-            Assert.Single(after.Level100Mission.Continuations).Execution.InstructionPointer);
+        Level100ActorRegistrySnapshot after = world.Actors.Snapshot;
+        Assert.Equal(before.Actors, after.Actors);
+        Assert.Equal(before.BaseStates, after.BaseStates);
+        Assert.Equal(before.DefinitionSetIdentitySha256, after.DefinitionSetIdentitySha256);
+        Assert.Equal(43, after.Actors.Count);
     }
 
     private static RetailWorldPlayerStartRecord ExactStart() =>

@@ -3,6 +3,9 @@
 Status: historical audit of base `04cdd9c3`. Its completion-causality grades
 and test census remain a record of that base; the 2026-08-27 debriefing landing
 supersedes its N1 mechanics and direct-LevelSelect/current-capability claims.
+The September 7 World110 Simulation guard also supersedes the historical
+relabeled-Level100 session/idle-step claims below; direct mission and synthetic
+hash-envelope coverage remain in the current tests.
 Date: 2026-08-24 (rev E, current-main census 16/46)
 
 2026-08-27 outcome: Client now applies the Career update, consumes the two

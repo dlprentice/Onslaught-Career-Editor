@@ -3,14 +3,16 @@
 > Address: `0x004F9820`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-07
 Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: shared CUnit slot-0 event handler. It switches on signed 16-bit event
 IDs 4001–4005, with direct arms for 4001, 4003, 4004, and 4005; 4002 and all
-other values fall through `CActor__HandleEvent`. Event `0x0fa4` (4004) calls
+other values fall through `CActor__HandleEvent`. Event 4003 samples the two
+current cameras, gated by player existence, and consumes one shared random draw.
+Event `0x0fa4` (4004) calls
 `CUnit__SpawnProfileDropPickup` and then virtual slot 14. The proved
 CComponent/CGillMHead and CWarspite/CGillM/CThunderHead/CMech producer vtables
 resolve that slot to `CComplexThing__AddShutdownEvent`, so their delayed 4004
@@ -39,12 +41,51 @@ default. The exact jump table is:
 | ---: | --- | --- |
 | 4001 (`0x0fa1`) | `0x004f9844` | call `CUnit__UpdateFireControlYawAndQueueEvent` |
 | 4002 (`0x0fa2`) | `0x004f9988` | default to `CActor__HandleEvent` |
-| 4003 (`0x0fa3`) | `0x004f98a8` | update `+0x110` from the bounded nearby/global scan, then reschedule 4003 through `AddEvent_TimeFromNow` |
+| 4003 (`0x0fa3`) | `0x004f98a8` | update `+0x110` from current-camera distance, then reschedule 4003 through `AddEvent_TimeFromNow` |
 | 4004 (`0x0fa4`) | `0x004f9972` | profile-drop pickup, then receiver slot 14 |
 | 4005 (`0x0fa5`) | `0x004f9854` | decrement `+0x218` by `+0x21c`, reschedule 4005 for `NEXT_FRAME` while positive, else clear it |
 
 The table describes static branch/callee effects; it does not assign missing
 source enum spellings to 4001, 4003, or 4005.
+
+## Event 4003: current cameras and shared random order
+
+The September 7 check compared all 122 W008 retained instruction rows with the
+pristine body above; every byte matched. An independent bounded `objdump`
+decode reproduced the 4003 arm. This pass did not rerun the older whole-image
+caller or operand censuses below. The half-open arm
+`[0x004f98a8,0x004f9972)` is 202 bytes, SHA-256
+`5be4b322eeeafb9628ddd2c315409a3c6ae2ec323af699786deb2664f4e60602`.
+
+The handler clears Unit `+0x110`, then visits exactly two slots in order.
+`CGame` is at `0x008a9a98`; player pointers at `+0x2a4/+0x2a8` gate current
+camera pointers at `+0x2c4/+0x2c8`. For each nonnull pair it calls camera
+virtual slot zero, `GetPos()`. The player and Battle Engine positions are not
+read by this arm. Pinned source `game.h:306–309` identifies the arrays and
+`Camera.h:22` identifies the camera slot. Retail independently confirms the
+camera getter at `0x0046f2c0` and setter at `0x004705e0`; the latter separates
+current cameras from old cameras at `+0x2d4` during free-camera mode.
+The getter's complete 14-byte body `[0x0046f2c0,0x0046f2ce)` has SHA-256
+`c8028c18d1710385cfaab47d500eb26dfc575803cb5aa28fc46ac7bc9a223cf1`.
+
+Using current Unit XYZ at `+0x1c/+0x20/+0x24`, the x87 arm computes
+`(dz*dz + dx*dx) + dy*dy`, without float stores for differences or the sum.
+For finite values, strict `<2500.0f` sets `+0x110=1`; equality does not.
+It still visits the second slot after a successful first comparison. This is
+not a line-of-sight or visibility query. Nonfinite/x87 exception behavior is
+outside this finite contract.
+
+Only after both possible camera callbacks, the handler consumes one shared
+gameplay RNG result. The signed remainder by 65,536 is multiplied by the exact
+float `2^-16`, then added to `3.0f` and stored as a float delay.
+`AddEvent_TimeFromNow` adds the then-current manager time and stores again.
+The tuple is `(4003, this Unit, priority 0, null data, incoming-event reuse)`.
+The constants were read at `0x005dfb70` (2500), `0x005d8d54` (`2^-16`) and
+`0x005d8cc0` (3). No separate random stream or constructor-time camera snapshot
+can substitute for those ordered reads. The resulting flag also gates the
+[attachment cache](CUnit__UpdateTransform.md); its value at first delivery
+depends on completed loading and preceding callbacks. This static contract
+does not establish a first-frame value or a live Core event consumer.
 
 ## Event 0x0FA4 handler (byte-exact)
 

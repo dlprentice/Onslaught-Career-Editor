@@ -18,45 +18,16 @@ public sealed class SimulationTests
     }
 
     /// <summary>
-    /// The bounded world-110 session uses a world-stamped projection of the
-    /// proven Level 100 fixture only as an execution instrument. Its exact
-    /// LevelScript crosses native 88 during construction, then two identical
-    /// simulations advance one ordinary idle step with the same secondary
-    /// state and canonical hash. This is deterministic Core admission, not a
-    /// claim that the Level 100 actor/static-world fixture is authored world
-    /// 110 content.
+    /// Actual World110 inputs do not make the Level100 initialization path a
+    /// supported second-world session. Refuse it before loading Level100 Setup.
     /// </summary>
     [Fact]
-    public void World110Session_CrossesNative88AndStepsDeterministically()
+    public void Constructor_RejectsIncompleteWorld110BeforeRunningLevel100Setup()
     {
-        Level100ActorDefinitionSet definitions =
-            RetailWorld110AdmissionTests.CreateWorld110Definitions();
-        var first = new Simulation(
-            1,
-            definitions,
-            worldNumber: Level100MissionProgram.WorldNumber110);
-        var repeat = new Simulation(
-            1,
-            definitions,
-            worldNumber: Level100MissionProgram.WorldNumber110);
-
-        Assert.Equal(Level100MissionProgram.WorldNumber110, first.WorldNumber);
-        Assert.Equal(
-            RetailSecondaryObjectiveStatus.Failed,
-            first.Snapshot.Level100Mission.SecondaryObjectives[1].Status);
-
-        WorldSnapshot firstStep = first.Step(SimInput.Idle);
-        WorldSnapshot repeatStep = repeat.Step(SimInput.Idle);
-
-        Assert.Equal(1, firstStep.Tick);
-        Assert.Equal(Level100MissionProgram.WorldNumber110, firstStep.Level100Mission.WorldNumber);
-        Assert.Equal(
-            new RetailSecondaryObjectiveSnapshot(
-                1,
-                114309509,
-                RetailSecondaryObjectiveStatus.Failed),
-            firstStep.Level100Mission.SecondaryObjectives[1]);
-        Assert.Equal(StateHasher.ComputeHex(firstStep), StateHasher.ComputeHex(repeatStep));
+        var world = RetailWorld110InitialConstruction.Create();
+        NotSupportedException error = Assert.Throws<NotSupportedException>(() =>
+            new Simulation(1, world.ActorDefinitions, worldNumber: 110));
+        Assert.Contains("construction is incomplete", error.Message);
     }
 
     /// <summary>
@@ -84,12 +55,13 @@ public sealed class SimulationTests
             StateHasher.ComputeHex(rootState));
         Assert.Equal(42, CanonicalSchemaVersion(rootState));
 
-        var world110 = new Simulation(
-            1,
-            RetailWorld110AdmissionTests.CreateWorld110Definitions(),
+        var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
+        var world110 = new Level100Mission(actors, actors.GetThingRef("Player 1")!.Value,
             worldNumber: Level100MissionProgram.WorldNumber110);
-        WorldSnapshot state = world110.Step(SimInput.Idle);
-        Level100MissionSnapshot mission = state.Level100Mission;
+        Level100MissionSnapshot mission = world110.Snapshot;
+        // A synthetic hash envelope around the real mission-program result.
+        // No World110 Simulation or actor lifecycle is executed by this check.
+        WorldSnapshot state = rootState with { Level100Mission = mission };
         RetailSecondaryObjectiveSnapshot[] changedObjectives =
             mission.SecondaryObjectives
                 .Select((item, index) => index == 1

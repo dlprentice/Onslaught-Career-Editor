@@ -40,6 +40,30 @@ public sealed record RetailWorld110ComponentInitInput(
     public string Script => string.Empty;
 }
 
+/// <summary>One serialized XY/variant record, before terrain, yaw or Tree Init.</summary>
+public readonly record struct RetailWorld110TreePlacement(
+    int PositionXFloatBits, int PositionYFloatBits, int Variant);
+
+public sealed record RetailWorld110TreeGroupInput(
+    string Name,
+    int HeaderOffset,
+    int RecordsOffset,
+    string RecordsSha256,
+    bool CallsTreeInit,
+    IReadOnlyList<RetailWorld110TreePlacement> Placements);
+
+/// <summary>
+/// An ordered table read by LoadWorld. Only BSWD pines call Tree Init in this
+/// world. Ferns and the repeated RLWD table are consumed without creating trees.
+/// CallsTreeInit describes the measured retail branch, not completed Core work.
+/// </summary>
+public sealed record RetailWorld110TreeTableInput(
+    string SourceChunk,
+    string SourceSha256,
+    int HeaderOffset,
+    int EndOffset,
+    IReadOnlyList<RetailWorld110TreeGroupInput> Groups);
+
 /// <summary>
 /// Production construction of the admitted direct World 110 actors, before
 /// class initialization. This is an incomplete construction stage, not a
@@ -50,14 +74,14 @@ public sealed record RetailWorld110ComponentInitInput(
 /// Core actor IDs are local allocation IDs, not retail thing numbers. Authored
 /// poses are retained pending class Init ground/water policy. Script names are
 /// bound as data but no script is run. The thirty other RLWD objects, two BSWD
-/// type-37 objects, player/engine, squad members and spawner output still need
+/// type-37 objects, trees, player/engine, squad members and spawner output still need
 /// their constructors. Unit life uses Core's existing thousandths convention;
 /// type-35 life is absent and its registry zero does not prove invulnerability.
 /// </remarks>
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "6ff0f899aaeaf1322c8089d92235e81d2851c2bc29fa1558028f1d7494115d04";
+        "4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
@@ -65,7 +89,8 @@ public sealed class RetailWorld110InitialConstruction
     internal sealed record AttachmentUse(string OwnerIdentity, string ComponentName,
         Level100FloatBasis3Bits ParentInitBasis);
     internal sealed record Inputs(IReadOnlyList<RetailWorld110InitialActorInput> Actors,
-        RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses);
+        RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses,
+        IReadOnlyList<RetailWorld110TreeTableInput> TreeTables);
 
     private static readonly Lazy<Inputs> s_inputs =
         new(LoadEmbedded);
@@ -74,6 +99,7 @@ public sealed class RetailWorld110InitialConstruction
     {
         Inputs inputs = s_inputs.Value;
         ActorInputs = inputs.Actors;
+        TreeTables = inputs.TreeTables;
         InitialObjectSeeds = RetailWorldInitialObjectSeedAdmission.World110;
         Terrain = RetailWorldTerrain.World110;
         ActorDefinitions = new Level100ActorDefinitionSet(
@@ -102,6 +128,11 @@ public sealed class RetailWorld110InitialConstruction
     public RetailWorld110PlayerConstruction? PlayerConstruction { get; private set; }
 
     public IReadOnlyList<RetailWorld110InitialActorInput> ActorInputs { get; }
+
+    public IReadOnlyList<RetailWorld110TreeTableInput> TreeTables { get; }
+
+    public int UnconstructedTreeCount => TreeTables.SelectMany(table => table.Groups)
+        .Where(group => group.CallsTreeInit).Sum(group => group.Placements.Count);
 
     /// <summary>
     /// The four ordered Unit attachment queries and their following Euler
@@ -170,7 +201,7 @@ public sealed class RetailWorld110InitialConstruction
 
         using JsonDocument document = JsonDocument.Parse(source);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v2" ||
+        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v3" ||
             root.GetProperty("worldNumber").GetInt32() != 110 ||
             root.GetProperty("archiveSha256").GetString() != RetailWorld110LevelActors.SourceArchiveSha256)
         {
@@ -231,7 +262,30 @@ public sealed class RetailWorld110InitialConstruction
             use.GetProperty("parentDefinitionIdentity").GetString()!,
             use.GetProperty("componentDefinitionName").GetString()!,
             Basis(use.GetProperty("parentInitBasisFloatBits")))).ToArray();
-        return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses));
+        var treeTables = new List<RetailWorld110TreeTableInput>();
+        foreach (JsonElement table in root.GetProperty("treeTables").EnumerateArray())
+        {
+            var groups = new List<RetailWorld110TreeGroupInput>();
+            foreach (JsonElement group in table.GetProperty("groups").EnumerateArray())
+            {
+                var placements = group.GetProperty("placements").EnumerateArray()
+                    .Select(placement => new RetailWorld110TreePlacement(
+                        placement[0].GetInt32(), placement[1].GetInt32(),
+                        placement[2].GetInt32())).ToArray();
+                groups.Add(new(group.GetProperty("name").GetString()!,
+                    group.GetProperty("headerOffset").GetInt32(),
+                    group.GetProperty("recordsOffset").GetInt32(),
+                    group.GetProperty("recordsSha256").GetString()!,
+                    group.GetProperty("callsTreeInit").GetBoolean(),
+                    Array.AsReadOnly(placements)));
+            }
+            treeTables.Add(new(table.GetProperty("sourceChunk").GetString()!,
+                table.GetProperty("sourceSha256").GetString()!,
+                table.GetProperty("headerOffset").GetInt32(),
+                table.GetProperty("endOffset").GetInt32(), Array.AsReadOnly(groups.ToArray())));
+        }
+        return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses),
+            Array.AsReadOnly(treeTables.ToArray()));
     }
 
     private static int? OptionalInt(JsonElement value) =>

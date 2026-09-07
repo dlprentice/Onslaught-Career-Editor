@@ -79,6 +79,15 @@ focused Core checks agree on their meaningful output words. This closes an
 incoming-argument dependency; child allocation, Init and event/world publication
 remain unfinished.
 
+The same construction owner now retains both explicit-tree tables and marks
+the loader's actual branches: 1,481 BSWD pines need initialization; ferns and
+the repeated RLWD records are consumed without creating trees. The first
+lander/child collision exclusions and the separate Unit, animation and AI event
+listeners are recorded in the World-110 owner above. Real MapWho/list ownership
+and shared event/RNG execution remain the next implementation dependencies.
+The old test-only Simulation route that ran Level100 Setup under a World110
+stamp is explicitly rejected; direct World110 mission and hash tests remain.
+
 Remaining: complete start/actor/player/Battle Engine construction, real ownership
 and reader identities, physics/coordinate enrichment, squad/spawner expansion and
 publication order, policy effects, player initialization, registry/state hashing,

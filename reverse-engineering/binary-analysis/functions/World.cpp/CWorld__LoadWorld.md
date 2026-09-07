@@ -1,26 +1,34 @@
 # CWorld__LoadWorld
 
-<!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 live correction closeout:** `0x0050b9c0` signature/comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
-<!-- ghidra-full-reaudit-20260713:end -->
+> Address: 0x0050b9c0 | Source: World.cpp
 
-> Address: 0x0050b9c0 | Source: World.cpp (source file not present in `references/Onslaught/` snapshot)
+Status: active bounded static contract
+Last updated: 2026-09-07
+Summary: three-argument world loader; allocation, explicit-tree initialization,
+ordinary-object initialization and base-world skip order are byte-checked.
+Source File: none — World.cpp is absent from the pinned references/Onslaught snapshot | Binary: BEA.exe pristine specimen (identity below).
+Evidence: pristine executable bytes and exact World110 BSWD/RLWD inputs; no
+new retail execution, Ghidra mutation or complete runtime-construction claim.
+Specimen: local-lab/safe-copy-bea-pristine/BEA.exe.original.backup,
+2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
-## Status
-- **Named in Ghidra:** Yes
-- **Current live-Ghidra signature:** corrected three-stack-argument prototype,
-  applied and exactly read back on 2026-07-13
-- **Revalidated ABI:** three explicit arguments
-- **Verified vs Source:** Partial (behavior-level; source file is not present in current `references/Onslaught/` snapshot)
-- **Latest static treatment:** 2026-07-13 runtime-critical revalidation
+## Identity and ABI
 
-## Purpose
+The half-open body `[0x0050b9c0,0x0050d4b2)` is 6,898 bytes, SHA-256
+`8deeac85f88c5a505f4b65dc2ff05b2c485aea78cd93523558949c0de3f96e5d`.
+All 2,023 retained own-function instruction rows in
+`local-lab/ghidra-fullpass-2026-07-23/exports/W008/instructions.tsv` matched
+pristine bytes on September 7. Bounded independent `objdump` readback also
+confirmed the explicit-tree branch.
 
-Loads serialized world state from a `CDXMemBuffer`-style input. The body is the
-main retail world-load worker reached from `CWorld__LoadWorldFile`; static
-evidence does not establish that its input is an `.aya` archive.
+Entry ECX is the receiver. The three stack arguments are the memory-buffer
+read receiver, the base-world flag, and the initial world-state setup flag.
+The final `RET 0xc` confirms three explicit arguments. The boolean return
+interpretation and prototype are inherited from the
+[July 13 ABI correction](../../ghidra-full-reaudit-closeout-2026-07-13.md);
+this pass did not reopen the database or promote new metadata.
 
-## Signature
 ```c
 bool __thiscall CWorld__LoadWorld(
     void * this,
@@ -29,89 +37,78 @@ bool __thiscall CWorld__LoadWorld(
     int initialize_world_state);
 ```
 
-Raw prologue stack accounting maps entry argument 1 to the memory-buffer read
-receiver, argument 2 to the base-world gate forwarded into
-`CWorld__LoadWorldHeader`, and nonzero argument 3 to initial teardown/LOD/global
-world setup. The sole return is `RET 0xc`, proving three stack arguments. The
-argument names are bounded semantic labels; arity, order, and callee cleanup are
-direct ABI evidence.
+The input is a world buffer, not established as a whole AYA archive by this
+body. The World110 materializer separately identifies the enclosing chunks.
 
-## MEASURED 2026-08-19 (L100 score-time tail)
+## Allocation and initialization order
 
-Independently re-read official specimen `74154bfa…7750` and inflated
-`100_res_PC.aya` SHA-256 `115ede05…2df4` after `t_01b77abf`. No Ghidra.
-Wave844 / 2026-07-13 text below is not this proof.
+1. Header/script loading and the recursive base-world load precede the outer
+   world's ordinary objects. The recursive call is at `0x0050bbf5`.
+2. Ordinary-object records allocate their objects before the explicit-tree
+   loop. Allocation is distinct from virtual Init and world publication.
+3. The explicit-tree loop consumes groups and records in serialized order.
+   Its eligible records call OID 7 creation at `0x0050cec4` and virtual Init
+   at `0x0050ced8`.
+4. Influence-map load/skip follows at `[0x0050cf11,0x0050cf3d)`. The ordinary
+   Init loop then resolves target references and applies the career-existence
+   gate before each eligible virtual Init at `0x0050cfc8`.
+5. Waypoint/occupancy work follows. Only the non-base path can reach
+   `CWorld__SpawnInitialThings` at `0x0050d431`, after ordinary initialization;
+   the base flag at `0x0050d417` skips to `0x0050d48e`.
 
-The only image `fstp` of `CGame+0x108` / `+0x10c` is `0x0050d2e0` /
-`0x0050d2ed`. Last Level 100 `LoadWorld` is the outer RLWD parse.
-Payload dwords 8 and 9 at `+0x147ba` / `+0x147be` are `300.0f` /
-`500.0f`. `(pct − full)>0`. Authored names for the other nine tail
-dwords are not claimed.
+Thus explicit base-world trees precede ordinary base-world Init. The base load
+finishes before World110's RLWD Init, whose first landing craft is ordinal 8.
+Later squad records may have allocated objects but their Init has not run at
+that point. Saved career bits can omit ordinary-object Init; a serialized
+row count is not a claim that every corresponding object was published.
 
-Cheapest falsifier: `0x0010d2e0` is not `d9 1d a0 9b 8a 00`, **or**
-L100 RLWD payload `+0x147ba` is not `00 00 96 43`.
+## Explicit trees: repeated data is not repeated creation
 
-## Historical Wave844 Static Read-Back
+Each record reads float X, float Y and signed variant before deciding whether
+to instantiate it. The reads occur at `0x0050cde1`, `0x0050cdf2` and
+`0x0050ce00`. The gate `[0x0050ce05,0x0050ce1b)` admits a base-world load;
+for a non-base load it skips allocation when the base-world id is not `-1`.
+Its 22 bytes have SHA-256
+`7eb2326beb6bcd9f166d66adbf0258df2779979a6de3eb2b444654c7fcbafde2`.
 
-Wave844 saved comment/tag evidence and preserved the then-existing one-argument
-signature. That preservation is historical read-back, not semantic validation;
-the 2026-07-13 raw ABI review supersedes it. Wave844 made no function-boundary
-or executable-byte change.
+For admitted records, four-character comparisons at `0x0050ce99` and
+`0x0050ceb4` bypass allocation for names beginning with `fern` or `bush`.
+The literals were read at `0x00633a74` and `0x00633a6c`. These are loader
+branches, not a general rule that vegetation data is disposable.
 
-Key static anchors:
+World110's base tree region `[2709,29549)` and level tree region
+`[18327,45167)` are byte-identical 26,840-byte tables, SHA-256
+`26d874c61ed827db550feb27e57e3c076440d58b432ad0788e2a379b08db82a9`.
+Each contains 753 ferns and 1,481 pines. Only the base-world pine records call
+Tree Init; all level-world records are read past because a base is present.
+This conclusion follows the branch and each table's role, rather than
+content deduplication. Both serialized tables remain preserved.
+Exact source identities, group offsets and the connected Core input boundary
+are in the [World110 owner](../../../game-mechanics/world-110-initial-constructor-seeds.md).
 
-- Sole caller xref: `0x0050b720 CWorld__LoadWorldFile`.
-- Prologue/tail: `0x0050b9da` calls `CRT__AllocaProbe` for a `0x38cc-byte stack frame`; `0x0050d4af` returns with `RET 0xc`.
-- Setup: calls `CWorld__InitLODLists`, `CWorld__LoadWorldHeader`, `CWorld__LoadScriptEvents`, and recursive/base `CWorld__LoadWorldFile`.
-- Entity and resource load path: calls `CHeightField__TraceMapLoadRequestAndCheckLoadedFlags`, `CEngine__LoadAllNamedMeshes`, `CWorldPhysicsManager__CreateSquad`, `CWorldPhysicsManager__CreateThingByType`, `CWorldPhysicsManager__CreateEffect`, `CWorldPhysicsManager__CreateTrigger`, `OID__CreateObject`, `InitThing__CreateThingByType`, and `CWorldMeshList__Add`.
-- Tail: calls `CInfluenceMapManager__SkipLoad` or `CInfluenceMapManager__Load`, `CWaypointManager__LoadWaypoints`, version-gated occupancy chunk helpers, `CWorld__SpawnInitialThings`, `CInfluenceMapManager__Update`, `CInfluenceMapManager__PropagateDistances`, `CWorld__ClearOccupancyBitsUsingHeightBands`, and either `CWorld__ApplyStaticMaskToOccupancyBitplanes` or `CWorld__RebuildOccupancyGridFromDynamicSet`.
+## Existing score-time finding
 
-Post-Wave844 queue telemetry: `5668/6098 = 92.95%` strict clean-signature proxy. Next raw commentless row: `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-050626_post_wave844_cworld_load_world_verified`.
+The August 19 L100 receipt reported the final outer RLWD score-time stores to
+`CGame+0x108/+0x10c` at `0x0050d2e0/0x0050d2ed`, with payload words at
+`+0x147ba/+0x147be` equal to 300.0f and 500.0f. This is an inherited bounded
+measurement, not a September 7 reread of those L100 values. It does not name
+the other tail words or establish runtime score behavior by itself.
 
-Boundary: this is static retail Ghidra evidence only. Exact world-buffer schema, concrete stack-local structure layouts, exact source-body identity, runtime load behavior, BEA patching, and rebuild parity remain deferred.
+## Implementation and evidence boundary
 
-## Loading Process
+The shared explicit-tree parser now preserves group/record order, raw XY
+words, variants and exact offsets. World110 retains the two tables in its
+existing initial actor/input asset and marks the measured Tree Init branch.
+Level100's existing pine/shadow projection and waypoint parser use that same
+reader. No second tree artifact, render path or live world has been created.
 
-1. Read and validate the observed world version range (`43..50`).
-2. Load the world header and script-event data from the memory buffer.
-3. Load heightfield and named-mesh state.
-4. Create squads, things, effects, triggers, and related world objects.
-5. Load or skip influence-map data and load waypoints.
-6. For the non-base path, spawn initial things and finalize influence and
-   occupancy state.
+Tree terrain/yaw/resource initialization, complete ordinary class Init,
+reader/world/MapWho publication, shared event/random order and post-load
+player assignment still require concrete owners. Static loop closure does not
+establish a playable World110 or campaign transition. The older wave queue
+percentages, generic memory claims and level-number classifications do not
+serve as current evidence for this body.
 
-## Call-Chain Anchors (Pass 2)
-
-- `CWorld__LoadWorldFile` delegates into this function (`functions/World.cpp/_index.md`).
-- This function fans out into header/LOD/spawn setup helpers (`CWorld__LoadWorldHeader`, `CWorld__InitLODLists`, `CWorld__SpawnInitialThings`).
-- Waypoint loading is called from this world-load chain (`functions/WaypointManager.cpp/_index.md`).
-- The fresh targeted xref export retains one direct caller:
-  `0x0050b720 CWorld__LoadWorldFile`.
-
-## Level Naming
-
-Levels follow a numeric naming convention:
-
-| Range | Type | Example |
-|-------|------|---------|
-| 100-199 | Tutorial | Level 100 |
-| 200-599 | Campaign | Level 200, 300... |
-| 600-699 | Evolution | Level 600+ |
-
-## Crash Investigation
-
-The Evo levels (600+) were crashing until the lower-bits preservation bug was fixed. The crash occurred during world loading when the game read corrupted data from the save file.
-
-## Memory Management
-
-Level loading is memory-intensive. The function:
-- Unloads previous level data
-- Allocates memory for new level
-- Streams assets as needed
-- May trigger garbage collection
-
-## Notes
-- Migrated from ghidra-analysis.md (Dec 2025)
-- Critical for understanding level structure
-- Related to AYAResourceExtractor tool (Stuart's GitHub)
-- Level crashes were caused by save file corruption, not world loading bugs
+Cheapest falsifier: compare the exact body and the base/name skip branches
+above, then reproduce both admitted tree regions from the pinned World110
+archive. Controlled runtime validation remains separate.

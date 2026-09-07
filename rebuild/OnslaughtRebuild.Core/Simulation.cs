@@ -149,6 +149,13 @@ public sealed class Simulation
                 nameof(level100ActorDefinitions));
         }
 
+        if (worldNumber != Level100MissionProgram.WorldNumber100)
+        {
+            throw new NotSupportedException(
+                "World 110 construction is incomplete. Use its admitted inputs or direct mission tests; " +
+                "the Level 100 simulation cannot initialize that world.");
+        }
+
         _worldNumber = worldNumber;
         _level100TutorialProgress = tutorialProgress;
         ResetDynamicState();

@@ -291,9 +291,9 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v2"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v3"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "6ff0f899aaeaf1322c8089d92235e81d2851c2bc29fa1558028f1d7494115d04"
+    "4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
@@ -2102,9 +2102,61 @@ class _WorldReader:
         return value
 
 
-def _parse_static_world(
+class _WorldTreeGroup(NamedTuple):
+    name: str
+    header_offset: int
+    records_offset: int
+    records_sha256: str
+    placements: tuple[tuple[int, int, int], ...]
+
+
+class _WorldTreeTable(NamedTuple):
+    header_offset: int
+    end_offset: int
+    groups: tuple[_WorldTreeGroup, ...]
+
+
+def _read_explicit_tree_groups(reader: _WorldReader) -> _WorldTreeTable:
+    """The supported two-group table, retaining float words and record order.
+
+    World-specific names/counts and whether a group is instantiated belong to
+    the caller. Equal placements are distinct serialized records.
+    """
+    header_offset = reader.position
+    if reader.uint16() != 0 or reader.int32() != 2:
+        raise RuntimeError("world tree groups are not the supported explicit layout")
+    groups: list[_WorldTreeGroup] = []
+    for _ in range(2):
+        group_offset = reader.position
+        name = reader.string8()
+        count = reader.int32()
+        if count < 0 or count > 4096 or any(group.name == name for group in groups):
+            raise RuntimeError("world has invalid explicit tree metadata")
+        records_offset = reader.position
+        placements = []
+        for _ in range(count):
+            raw = reader._take(12)
+            x_bits, y_bits, variant = struct.unpack("<iii", raw)
+            if not all(math.isfinite(value) for value in struct.unpack("<2f", raw[:8])):
+                raise RuntimeError("world tree placement contains a non-finite value")
+            if variant not in range(4):
+                raise RuntimeError("world has an unsupported tree variant")
+            placements.append((x_bits, y_bits, variant))
+        groups.append(_WorldTreeGroup(name, group_offset, records_offset,
+            _sha256(reader.data[records_offset:reader.position]), tuple(placements)))
+    return _WorldTreeTable(header_offset, reader.position, tuple(groups))
+
+
+def _require_snow_tree_groups(table: _WorldTreeTable) -> None:
+    if [(group.name, len(group.placements)) for group in table.groups] != [
+        ("fernsnow", 753), ("pinesnow", 1481)
+    ]:
+        raise RuntimeError("world snow tree groups changed")
+
+
+def _parse_static_world_inputs(
     raw_level: bytes, *, preserve_serialized_names: bool = False,
-) -> tuple[list[dict[str, object]], list[list[float | int]], int]:
+) -> tuple[list[dict[str, object]], _WorldTreeTable]:
     bswd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"BSWD")
     reader = _WorldReader(bswd)
     if (
@@ -2167,36 +2219,23 @@ def _parse_static_world(
             objects[-1]["activeWord"] = active
             objects[-1]["attachScriptsToUnitsWord"] = attach_scripts
 
-    if reader.uint16() != 0 or reader.int32() != 2:
-        raise RuntimeError("Level 100 tree groups are not the supported explicit layout")
-    groups: dict[str, list[list[float | int]]] = {}
-    for _ in range(2):
-        group_name = reader.string8()
-        count = reader.int32()
-        if count < 0 or count > 4096 or group_name in groups:
-            raise RuntimeError("Level 100 has invalid explicit tree metadata")
-        instances: list[list[float | int]] = []
-        for _ in range(count):
-            x = reader.single()
-            y = reader.single()
-            variant = reader.int32()
-            if variant not in range(4):
-                raise RuntimeError("Level 100 has an unsupported tree variant")
-            instances.append([x, y, variant])
-        groups[group_name] = instances
-
-    ferns = groups.get("fernsnow")
-    pines = groups.get("pinesnow")
-    if (
-        len(objects) != 33
-        or ferns is None
-        or len(ferns) != 753
-        or pines is None
-        or len(pines) != 1481
-        or reader.position != 29_549
-    ):
+    trees = _read_explicit_tree_groups(reader)
+    _require_snow_tree_groups(trees)
+    if len(objects) != 33 or reader.position != 29_549:
         raise RuntimeError("Level 100 base-world object/tree counts do not reproduce")
-    return objects, pines, len(ferns)
+    return objects, trees
+
+
+def _parse_static_world(
+    raw_level: bytes, *, preserve_serialized_names: bool = False,
+) -> tuple[list[dict[str, object]], list[list[float | int]], int]:
+    """Existing render/shadow projection; no second interpretation of records."""
+    objects, trees = _parse_static_world_inputs(
+        raw_level, preserve_serialized_names=preserve_serialized_names)
+    ferns, pines = trees.groups
+    placements = [[*struct.unpack("<2f", struct.pack("<2i", x, y)), variant]
+                  for x, y, variant in pines.placements]
+    return objects, placements, len(ferns.placements)
 
 
 LEVEL100_SCRIPT_NAMES = tuple(item[0] for item in LEVEL100_SCRIPT_OBJECTS)
@@ -2812,18 +2851,7 @@ def _parse_level_world_actors_and_waypoints(
                 "thingType": thing_type,
             }
         )
-    if reader.uint16() != 0 or reader.int32() != 2:
-        raise RuntimeError("Level 100 initial-actor records did not end at the tree groups")
-
-    for expected_name, expected_count in (("fernsnow", 753), ("pinesnow", 1_481)):
-        name = reader.string8()
-        count = reader.int32()
-        if name != expected_name or count != expected_count:
-            raise RuntimeError("Level 100 level-world tree groups changed")
-        for _ in range(count):
-            reader.single()
-            reader.single()
-            reader.int32()
+    _require_snow_tree_groups(_read_explicit_tree_groups(reader))
 
     # The 121-entry table is the navigation/occupancy graph, NOT the array the
     # eight named paths index. It is still read and range-validated in full,
@@ -3488,10 +3516,37 @@ def _world110_initial_actor_bytes(
         "04c5a3838548a2c50819f46dc1f1746f7c20ec4aa34678bd23c8bcd2186010f4"
     ):
         raise RuntimeError("world 110 shared base-world identity changed")
-    base_objects, _, _ = _parse_static_world(
+    base_objects, base_trees = _parse_static_world_inputs(
         raw_world, preserve_serialized_names=True
     )
     seeds = _parse_world110_initial_object_seeds(raw_world)
+    rlwd = _chunk_payload(
+        _chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"), b"RLWD")
+    level_reader = _WorldReader(rlwd)
+    level_reader.position = WORLD110_TREE_GROUP_HEADER_OFFSET
+    level_trees = _read_explicit_tree_groups(level_reader)
+    _require_snow_tree_groups(level_trees)
+    if base_trees.header_offset != 2709 or level_trees.end_offset != 45167:
+        raise RuntimeError("world 110 explicit tree boundaries changed")
+    tree_tables = []
+    for chunk, payload, table in (("BSWD", bswd, base_trees), ("RLWD", rlwd, level_trees)):
+        tree_tables.append({
+            "sourceChunk": chunk,
+            "sourceSha256": _sha256(payload),
+            "headerOffset": table.header_offset,
+            "endOffset": table.end_offset,
+            "groups": [{
+                "name": group.name,
+                "headerOffset": group.header_offset,
+                "recordsOffset": group.records_offset,
+                "recordsSha256": group.records_sha256,
+                # LoadWorld reads both tables. A non-base load with a base
+                # present skips its trees; the base load also skips fern/bush
+                # groups. These exact tables therefore create only BSWD pines.
+                "callsTreeInit": chunk == "BSWD" and group.name == "pinesnow",
+                "placements": group.placements,
+            } for group in table.groups],
+        })
     physics = _physics_records(physics_data)
     inputs = [(f"wres:bswd:{item['ordinal']:04d}", item, True)
               for item in base_objects]
@@ -3559,6 +3614,7 @@ def _world110_initial_actor_bytes(
         "initialObjectSeedsSha256": WORLD110_INITIAL_OBJECT_SEEDS_SHA256,
         "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
         "rows": rows,
+        "treeTables": tree_tables,
         "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 

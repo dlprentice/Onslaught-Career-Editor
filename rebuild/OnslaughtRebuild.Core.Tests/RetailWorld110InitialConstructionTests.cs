@@ -2,11 +2,53 @@
 
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.TestSupport;
+using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class RetailWorld110InitialConstructionTests
 {
+    [Fact]
+    public void TreeInputs_RetainBothTablesButOnlyBasePinesCallInit()
+    {
+        var world = RetailWorld110InitialConstruction.Create();
+        Assert.Equal(new[] { "BSWD", "RLWD" }, world.TreeTables.Select(table => table.SourceChunk));
+        Assert.Equal(new[] { 2709, 18327 }, world.TreeTables.Select(table => table.HeaderOffset));
+        Assert.Equal(new[] { 29549, 45167 }, world.TreeTables.Select(table => table.EndOffset));
+        Assert.Equal(new[] { false, true, false, false },
+            world.TreeTables.SelectMany(table => table.Groups).Select(group => group.CallsTreeInit));
+        string[] digests = [
+            "c6b83ebfacf563f04294decfd1d5879726895bbd33fb23f2164b01c391117372",
+            "c4308e46dad3b687051eb9c6e4650f923133d713f92401f3db997a6fa28bae59"];
+        foreach (RetailWorld110TreeTableInput table in world.TreeTables)
+        {
+            Assert.Equal(new[] { "fernsnow", "pinesnow" }, table.Groups.Select(group => group.Name));
+            Assert.Equal(new[] { 753, 1481 }, table.Groups.Select(group => group.Placements.Count));
+            for (int groupIndex = 0; groupIndex < table.Groups.Count; groupIndex++)
+            {
+                RetailWorld110TreeGroupInput group = table.Groups[groupIndex];
+                byte[] records = new byte[group.Placements.Count * 12];
+                for (int index = 0; index < group.Placements.Count; index++)
+                {
+                    RetailWorld110TreePlacement placement = group.Placements[index];
+                    BinaryPrimitives.WriteInt32LittleEndian(records.AsSpan(index * 12), placement.PositionXFloatBits);
+                    BinaryPrimitives.WriteInt32LittleEndian(records.AsSpan(index * 12 + 4), placement.PositionYFloatBits);
+                    BinaryPrimitives.WriteInt32LittleEndian(records.AsSpan(index * 12 + 8), placement.Variant);
+                }
+                Assert.Equal(digests[groupIndex], group.RecordsSha256);
+                Assert.Equal(digests[groupIndex], Convert.ToHexString(SHA256.HashData(records)), ignoreCase: true);
+                Assert.Throws<NotSupportedException>(() =>
+                    ((IList<RetailWorld110TreePlacement>)group.Placements)[0] = default);
+            }
+        }
+        // The two serialized tables are retained; neither is silently merged
+        // or treated as a second instantiated grove. No tree Init runs here.
+        Assert.Equal(1481, world.UnconstructedTreeCount);
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count);
+        Assert.Empty(world.Actors.Snapshot.PendingFacts);
+    }
+
     [Fact]
     public void ComponentInitInputs_UseFourRealOwnersAndNativeArithmeticResults()
     {

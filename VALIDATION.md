@@ -105,6 +105,25 @@ Read-only reviews found no remaining parser or arithmetic defects after the
 misplaced test assertions were corrected. These results do not establish
 complete child initialization, second-world play or general animated/x87 parity.
 
+The World110 tree-input and Simulation-boundary change passed **71/71 Core
+facts, zero skipped**, plus **14/14 focused materializer checks**. The initial
+adjacent hash check exposed the old test-only World110 Simulation running
+Level100 Setup; that unsupported route now fails before initialization. Direct
+native-88/native-84 mission coverage, definition/world mismatch checks, actual
+construction/player tests and the unchanged World100 forty-step hash passed.
+Logs are `world110-trees-core.log` (initial failure),
+`world110-trees-core-fixed.log` and `world110-trees-materializer.log` in the
+existing Linux run directory.
+
+An in-memory counterexample at Level100 RLWD offset 52,498 changed a variant
+to 4: the previous committed parser accepted it; the shared reader rejected it.
+The exact archive pin already protected ordinary source selection. Independent
+old/new parser comparison preserved the complete actual100/110 base actor/pine
+outputs in both name modes and all actual100 level actors/waypoint paths.
+Only the new 155,972-byte World110 input asset was published locally. Both tree
+tables' raw record digests also reproduced after Core decoding. Tree Init,
+MapWho publication, live AI/scheduler integration and World110 play remain open.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

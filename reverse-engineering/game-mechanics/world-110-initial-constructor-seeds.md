@@ -6,7 +6,8 @@ Verdict: Core admits all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
 September 7 extension records ordered Unit/child initialization and prepares the
-four landing-craft turret inputs from the measured attachment calculation.
+four landing-craft turret inputs from the measured attachment calculation. It
+also retains both explicit-tree tables and their distinct loader branches.
 Evidence: MEASURED serialized data plus SOURCE-INFORMED field semantics — the
 hash-pinned retail archive and RLWD reproduce every offset, record digest, raw
 word, common field, and tail; pinned `InitThing` source names the version-50
@@ -91,7 +92,49 @@ The 16 definition-bearing RLWD seeds join exactly to the existing RLWD subset
 of `RetailWorld110LevelActors.AuthoredDefinitions`. Its 33 shared-BSWD
 definitions remain separately owned and are not fabricated as rows in this
 RLWD projection. Existing player-start, height-clamp, script/HFLD admission,
-bounded session, and World-100 canonical-hash outputs remain unchanged.
+direct mission execution, and World-100 canonical-hash outputs remain unchanged.
+
+## Explicit-tree inputs and initialization order
+
+The byte-checked [world loader](../binary-analysis/functions/World.cpp/CWorld__LoadWorld.md)
+allocates ordinary objects before its explicit trees, but calls ordinary Init
+after the tree loop. The recursive BSWD load completes before outer RLWD
+allocation/Init. The 35 BSWD ordinary rows include the 33 current actor inputs
+and two type-37 SafeSides; their career-existence gate is separate from trees.
+
+| Table/group | Group header | Record interval | Records | Tree Init branch |
+| --- | ---: | --- | ---: | --- |
+| BSWD fernsnow | 2715 | `[2728,11764)` | 753 | skipped by name prefix |
+| BSWD pinesnow | 11764 | `[11777,29549)` | 1481 | eligible, serialized order |
+| RLWD fernsnow | 18333 | `[18346,27382)` | 753 | skipped because a base is present |
+| RLWD pinesnow | 27382 | `[27395,45167)` | 1481 | skipped because a base is present |
+
+The base payload is 54,669 bytes, SHA-256
+`04c5a3838548a2c50819f46dc1f1746f7c20ec4aa34678bd23c8bcd2186010f4`.
+Both full tree regions, BSWD `[2709,29549)` and RLWD `[18327,45167)`, are
+identical 26,840-byte tables, SHA-256
+`26d874c61ed827db550feb27e57e3c076440d58b432ad0788e2a379b08db82a9`.
+Their fern record stream hashes to
+`c6b83ebfacf563f04294decfd1d5879726895bbd33fb23f2164b01c391117372`;
+their pine stream hashes to
+`c4308e46dad3b687051eb9c6e4650f923133d713f92401f3db997a6fa28bae59`.
+Each record is raw float X, raw float Y and integer variant, with no serialized
+Z. Actual variants are 0–3. Table endpoints are not payload endpoints.
+
+The existing `level110-initial-actors.json` now includes both tables under
+`onslaught.world110-initial-actors.v3`: 155,972 bytes, SHA-256
+`4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c`.
+The materializer shares one ordered tree reader with Level100's render/shadow
+projection and waypoint parser. Core retains read-only groups, exact XY words,
+variants, record digests and offsets. `CallsTreeInit` marks the retail branch;
+`UnconstructedTreeCount` is 1,481. Neither property runs Tree Init, publishes a
+MapWho entry, supplies terrain-derived Z/yaw, or consumes initialization RNG.
+The two source tables are not merged or counted as two instantiated groves.
+
+The former test-only World110 `Simulation` route ran Level100's Setup against
+relabeled Level100 definitions. It now fails explicitly before initialization.
+Direct World110 mission-program tests remain supported; schema-43 hash checks
+use explicit synthetic envelopes. They do not establish a second-world session.
 
 ## Falsifier and hard ceiling
 
@@ -392,3 +435,88 @@ implementation. Full collision responses are needed once readiness is restored.
 These bounded conditions close the initial pose dependency. They do not establish
 the complete world's event/RNG state or replace the remaining child motion,
 animation, AI, guide and reader lifecycle.
+
+## First landing craft: actual prior collision peers
+
+A further bounded static review covers the first parent, RLWD0008, and its
+child, before event delivery. The superset of prior ordinary BSWD objects is
+35; career bits may omit their Init. Base pines initialize before those objects.
+RLWD rows 0–7 then initialize LevelScript, Start/engine, Setup, two waypoints,
+the inactive spawner, and two more waypoints. Later squad Init and the final
+SpawnInitialThings pass have not run. Actual BSWD profiles contain no nested
+Component or BasedOn entries; their three attached spawners and destructible
+segment objects do not publish additional MapWho Things during Init.
+
+| Prior peer | Parent mask `0x0a400140` | Child mask `0x40100020` |
+| --- | --- | --- |
+| Pines | rejected by `0x02000000` | rejected by `0x20` |
+| Six iceberg features | rejected by `0x00400000` | rejected by `0x00100000` / `0x20` |
+| Ordinary/simple buildings | rejected by `0x100` | rejected by `0x40000000` |
+| BSWD cannons 3, 10, 11, 12 | mutual masks pass; outside searched sectors | rejected by `0x40000000` |
+| Start-created walker | mutual masks pass; outside searched sectors | mutual masks pass; outside searched sectors |
+| Scripts and waypoints | no persistent collision component | same |
+| Start, SafeSides, standalone spawner | MapWho flag cleared | same |
+| Parent lander | self excluded | rejected by `0x40000000` |
+
+Relevant type setters are pine `0x004bfa90`, feature `0x00510110`, building
+`0x00417660`, cannon `0x0050ea20` and engine `0x00405f00`. Unit's shared
+setter `0x004fcdc0` adds `0x80000013`, plus conditional `0x00200000`.
+Collision-mask writes are tree `0x004f650c`, feature `0x0044ca64/0x0044ca6c`,
+building `0x004171c6/0x004171ce`, simple building `0x004dfa50/0x004dfa5f`,
+cannon `0x0041b1c3`, and the fresh zero-mask initializer at `0x0048dd4c`.
+The legacy Core registry's ammunition/engine-only type projection cannot
+substitute for these full type words.
+
+The actual mesh files below were read from Steam's installed
+`data/resources/meshes/`; their framed outer BBOX records were decoded without
+tag scanning. The XY extent uses `sqrt((abs(originX)+axisX)^2 +
+(abs(originY)+axisY)^2)` at `0x00492ba0`; level selection is `0x00491c50`.
+
+| Mesh | Source SHA-256 | XY extent, approximately |
+| --- | --- | ---: |
+| `m_ft_sam.msh.aya` | `9a82f27454863c19c05a8cdedcc99cc05300aed75b8e54467a980c94bf5ba4a2` | 1.727473 |
+| `m_ft_blaster.msh.aya` | `9833cd459e00b1c2068f9db6be34ee0e6a3f2d0b01d780946a338d5682abb4cb` | 1.727118 |
+| `m_ft_pulse.msh.aya` | `1cc399936cdd171c44297dcbc6ef2ff2e187319de707d0f4c564e338a9770b9c` | 1.727834 |
+| `m_f_be1.msh.aya` | `d4c8fa752229af4111b31efa5ff5928c892736faa6a807915412767f3cd3c6b2` | 2.134792 |
+
+These peers occupy level 4, whose cells are eight units wide. Cannon Y values
+are 240–282; engine Y is 258.8125. The parent's level-2 descendant search spans
+Y `[384,480)`; the child's level-4 neighbors span `[400,424)`. Coarser passes
+inspect objects stored at their own levels and cannot reintroduce those level-4
+peers. Under normal successful initialization, no eligible collision pair
+therefore reaches either first scan. This derives an empty result from actual
+nonempty membership; it does not justify an empty-world adapter. Other landers,
+later events and ready-on collision remain outside this result.
+
+CPlayer itself is allocated after World.Load returns, as pinned
+`game.cpp:700–718` and retail call/store sites `0x0046cea9/0x0046cf2d` show.
+PostLoadProcess later assigns the engine and runs Player Init. A separate
+physical Player Thing must not be invented beside the Start-created engine.
+
+## Initial scheduled listeners remain distinct
+
+Unit 4003 targets the child Unit. Its
+[handler](../binary-analysis/functions/Unit.cpp/CUnit__HandleEvent.md) reads the
+delivery-time current cameras and consumes one shared random result after
+both slots; constructor engine coordinates are not a replacement.
+
+Animation 3000 targets the separate animation object, vtable `0x005d87c8`.
+Wrapper `[0x00404750,0x00404784)` has SHA-256
+`5a854456bc7fcb9390d6ce819e2369bfc8ab09dc1218370565630b72dca37ab9`;
+Process `[0x00404790,0x0040485e)` has SHA-256
+`3125c3d82888672476e77e548dc2eb35c5dd7d0ac5f8e5c0f8648f11fb2b5714`.
+If mode remains `-1` at delivery, Process copies frame `+8` to previous frame
+`+0xc`, without frame advance or RNG. The wrapper requeues 3000 at `-1.0f`,
+priority zero, null data, reusing the incoming event. Earlier callbacks could
+change the mode before delivery.
+
+AI 3000 targets the separate AI object. Its `0x005d8d1c` vtable resolves slot
+zero to `0x004ff330`, `+0x24` to `0x004fec60`, `+0xc` to `0x004fef40`,
+`+0x10` to `0x004ff4f0`, and `+0x2c` to `0x004ff710`. The actual empty
+attached-spawner list skips the all-squad spawning probe, but target selection
+still scans the opponent list. A null constructor target does not prove an
+idle first update. The existing Core UnitAI transactions own bounded laws;
+they do not yet execute live peers, selected weapon/ballistic helpers or
+reader lifetime effects. A world owner must execute those calls in order and
+acquire RNG only after earlier effects. No live scheduler/UnitAI integration is
+claimed by the new tree inputs or this static event closure.

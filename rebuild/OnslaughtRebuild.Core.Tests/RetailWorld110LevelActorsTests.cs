@@ -182,15 +182,10 @@ public sealed class RetailWorld110LevelActorsTests
     }
 
     [Fact]
-    public void RejectedAdmission_DoesNotMutateAdjacentWorld110SessionState()
+    public void RejectedAdmission_DoesNotMutateActualWorld110ConstructionState()
     {
-        Level100ActorDefinitionSet definitions =
-            RetailWorld110AdmissionTests.CreateWorld110Definitions();
-        var simulation = new Simulation(
-            1,
-            definitions,
-            worldNumber: Level100MissionProgram.WorldNumber110);
-        WorldSnapshot before = simulation.Snapshot;
+        var world = RetailWorld110InitialConstruction.Create();
+        Level100ActorRegistrySnapshot before = world.Actors.Snapshot;
         RetailWorldAuthoredDefinitionIdentity[] changed =
             RetailWorld110LevelActors.AuthoredDefinitions.ToArray();
         changed[0] = changed[0] with { DefinitionName = "Wrong definition" };
@@ -201,20 +196,11 @@ public sealed class RetailWorld110LevelActorsTests
                 RetailWorld110LevelActors.ArchiveIdentity,
                 changed));
 
-        WorldSnapshot after = simulation.Snapshot;
-        Assert.Equal(StateHasher.ComputeHex(before), StateHasher.ComputeHex(after));
-        Assert.Equal(
-            "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa",
-            after.Level100Mission.ProgramSha256);
-        Assert.Equal(
-            Level100Terrain.World110SourceSha256,
-            Level100Terrain.World110.PayloadSha256);
-        Assert.Equal(
-            RetailSecondaryObjectiveStatus.Failed,
-            after.Level100Mission.SecondaryObjectives[1].Status);
-        Assert.Equal(
-            35,
-            Assert.Single(after.Level100Mission.Continuations).Execution.InstructionPointer);
+        Level100ActorRegistrySnapshot after = world.Actors.Snapshot;
+        Assert.Equal(before.Actors, after.Actors);
+        Assert.Equal(before.BaseStates, after.BaseStates);
+        Assert.Equal(before.DefinitionSetIdentitySha256, after.DefinitionSetIdentitySha256);
+        Assert.Equal(43, after.Actors.Count);
     }
 
     [Fact]

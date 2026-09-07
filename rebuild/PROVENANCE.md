@@ -10,7 +10,7 @@ terrain-height prefix, plus the standalone ordered
 composition. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
 bounded world-110 authored-definition projection,
-native-84 completion instrument, native-88 first-Pause session, and current
+native-84 completion instrument, native-88 first-Pause mission execution, and current
 Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
 and retained-particle claims retain their narrower dated evidence boundaries.
@@ -188,11 +188,11 @@ does not project that general state: it does not read `SelectedWorldNumber` for
 rendering or implement LevelSelect keyboard traversal, its pointer path exposes
 only world 100 and unlocked world 110, and the host constructs only world 100.
 
-Core now has a separate, explicit world-110 session instrument. It accepts only
-a definition set stamped world 110, loads the exact 5,110-byte world-110
+Core has a direct world-110 mission-program instrument. It accepts only
+a definition set stamped world 110 and loads the exact 5,110-byte world-110
 `LevelScript` (SHA-256 `f5c157ba…22aa`), executes its one native-88
-`SecondaryObjectiveFailed` call, and reaches the script's first `Pause` before
-one ordinary deterministic idle step. Stuart's `game.h:22-24,179-187` owns the
+`SecondaryObjectiveFailed` call, reaching the script's first `Pause`.
+Stuart's `game.h:22-24,179-187` owns the
 ten-entry, zero-based secondary array and `(num, string_id)` signature; the
 pristine `0x00534470` body writes the text dword and `MOS_FAILED=2` to the
 distinct secondary base at `0x008A9B2C`. Re-decoding the pinned object in this
@@ -200,10 +200,13 @@ pass fixed the call at instruction 22 with slot `1` and text id `114309509`;
 instruction 34 is the first `Pause`. The intervening non-waiting
 `_110_PROTECT` request uses exact retail `110_protect.ogg` (SHA-256
 `03f1fc8e…35d3`, 172,496 samples at 44.1 kHz), which yields 90 ticks under the
-already-retained message-duration law. This is a bounded Core execution probe,
-not authored world-110 actor/static-world ownership: it deliberately stamps the
-proven Level 100 test fixture, still runs the existing Level 100 mechanics, and
-does not give the Godot host a world-110 lifecycle. StateHasher schema 43 binds
+already-retained message-duration law. This direct mission probe uses a stamped
+Level100 test fixture for native-call receivers; it does not initialize or step
+a World110 simulation. The former test-only Simulation route loaded Level100's
+Setup and was removed from admission on September 7. Actual World110
+construction remains partial and that Simulation request now fails explicitly.
+StateHasher schema 43 is checked with synthetic envelopes around direct mission
+results; it binds
 the non-root world stamp and all ten secondary records; an all-default world-100
 mission stays on schema 42 and retains the independently measured 40-step hash
 `b8a1c8bc…11216`. No native human-play, full mission, result, client, or visual
@@ -213,7 +216,7 @@ The same admitted world-110 object contains one authored native-84
 `SecondaryObjectiveComplete` at instruction 66, attribute `0x00000254`, fed by
 the exact constants at instructions 64 and 65 (slot `1`, text id `114309509`)
 and followed by the void-result pop at 67. The ordinary opening above does
-**not** reach it: that session remains suspended at the earlier instruction-34
+**not** reach it: that mission remains suspended at the earlier instruction-34
 Pause. `RunWorld110SecondaryObjectiveCompleteInstrument` is therefore an
 explicit bounded Core instrument over only authored instructions 64..67. It
 turns the already-failed slot into `MOS_COMPLETE=1`, leaves the first-Pause

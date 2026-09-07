@@ -349,6 +349,17 @@ The existing mesh parser now handles conditional emitter part indices and keeps
 unknown bytes intact. No turret child has been initialized or published by this
 step, and no new retail or Godot playthrough occurred.
 
+The existing World110 input asset also retains both explicit-tree tables. The
+byte-checked loader initializes only the 1,481 base-world pines; it skips ferns
+and the repeated level-world table. Core preserves these distinctions without
+running Tree Init. The shared parser now rejects unsupported variants in the
+Level100 level-world table as well as the base table. A focused adjacent check
+exposed the old World110 Simulation test's use of Level100 Setup. That route now
+fails explicitly before initialization; exact World110 mission execution and
+synthetic schema-43 hash checks remain supported. The corrected scope passed
+71 Core facts and 14 materializer checks; the World100 forty-step hash stayed
+unchanged. This does not establish a complete World110 runtime.
+
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu
 (New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`

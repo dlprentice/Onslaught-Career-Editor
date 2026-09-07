@@ -152,6 +152,45 @@ def _world110_initial_object_fixture(
     return reader, objects
 
 
+class ExplicitTreeGroupTests(unittest.TestCase):
+    @staticmethod
+    def table(first=None) -> bytes:
+        rows = first if first is not None else [(0x80000000, 0, 3), (0x80000000, 0, 3)]
+        payload = struct.pack("<Hi", 0, 2)
+        for name, placements in ((b"pinesnow", rows), (b"fernsnow", [(0, 0x80000000, 1)])):
+            payload += struct.pack("<B", len(name)) + name + struct.pack("<i", len(placements))
+            payload += b"".join(struct.pack("<IIi", *row) for row in placements)
+        return payload
+
+    def test_order_duplicates_signed_zero_and_exact_boundaries_survive(self):
+        payload = self.table()
+        reader = materializer._WorldReader(payload + b"next section")
+        table = materializer._read_explicit_tree_groups(reader)
+        self.assertEqual((0, len(payload)), (table.header_offset, table.end_offset))
+        self.assertEqual(["pinesnow", "fernsnow"], [group.name for group in table.groups])
+        first, second = table.groups
+        self.assertEqual(((-2147483648, 0, 3),) * 2, first.placements)
+        self.assertEqual(((0, -2147483648, 1),), second.placements)
+        self.assertEqual((6, 19, 43, 56),
+                         (first.header_offset, first.records_offset,
+                          second.header_offset, second.records_offset))
+        self.assertEqual(materializer._sha256(payload[19:43]), first.records_sha256)
+        self.assertEqual(b"next section", reader.data[reader.position:])
+
+    def test_invalid_variant_and_nonfinite_position_are_rejected(self):
+        for row, reason in (((0, 0, 4), "tree variant"),
+                            ((0, 0, -1), "tree variant"),
+                            ((0x7F800000, 0, 0), "non-finite")):
+            with self.subTest(row=row), self.assertRaisesRegex(RuntimeError, reason):
+                materializer._read_explicit_tree_groups(materializer._WorldReader(self.table([row])))
+
+    def test_truncated_table_is_rejected(self):
+        payload = self.table()
+        for end in (5, 18, 30, len(payload) - 1):
+            with self.subTest(end=end), self.assertRaisesRegex(RuntimeError, "truncated"):
+                materializer._read_explicit_tree_groups(materializer._WorldReader(payload[:end]))
+
+
 class World110InitialActorMaterializationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -163,6 +202,8 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         import sys
         sys.path.insert(0, str(materializer.ROOT / "tools"))
         from aya_archive_inventory import inflate_aya_bytes
+        cls.raw100 = inflate_aya_bytes(materializer._read_exact(
+            game / materializer.LEVEL_ARCHIVE, materializer.LEVEL_ARCHIVE_SHA256))
         cls.raw_world = inflate_aya_bytes(materializer._read_exact(
             game / materializer.WORLD110_ARCHIVE,
             materializer.WORLD110_ARCHIVE_SHA256,
@@ -220,6 +261,44 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual("", exact[4]["name"])
         self.assertEqual("Tank Factory", exact[1]["name"])
         self.assertEqual(legacy, materializer._parse_static_world(self.raw_world)[0])
+
+    def test_real110_tree_tables_retain_repeated_data_and_retail_skip_branches(self):
+        document = json.loads(materializer._world110_initial_actor_bytes(
+            self.raw_world, self.physics, self.landing_craft_mesh))
+        base, level = document["treeTables"]
+        self.assertEqual(["BSWD", "RLWD"], [base["sourceChunk"], level["sourceChunk"]])
+        self.assertEqual((2709, 29549, 18327, 45167),
+                         (base["headerOffset"], base["endOffset"],
+                          level["headerOffset"], level["endOffset"]))
+        self.assertEqual([False, True, False, False],
+                         [group["callsTreeInit"] for table in (base, level) for group in table["groups"]])
+        for index, (count, digest) in enumerate(((753,
+                "c6b83ebfacf563f04294decfd1d5879726895bbd33fb23f2164b01c391117372"),
+                (1481, "c4308e46dad3b687051eb9c6e4650f923133d713f92401f3db997a6fa28bae59"))):
+            self.assertEqual(count, len(base["groups"][index]["placements"]))
+            self.assertEqual(digest, base["groups"][index]["recordsSha256"])
+            self.assertEqual(base["groups"][index]["placements"], level["groups"][index]["placements"])
+        # The old rendering/shadow projection still supplies one base pine set.
+        self.assertEqual(materializer._parse_static_world(self.raw100)[1:],
+                         materializer._parse_static_world(self.raw_world)[1:])
+
+    def test_level100_rlwd_variant_is_checked_by_the_shared_reader(self):
+        tables = []
+        read = materializer._read_explicit_tree_groups
+        def capture(reader):
+            table = read(reader)
+            tables.append(table)
+            return table
+        with mock.patch.object(materializer, "_read_explicit_tree_groups", side_effect=capture):
+            materializer._parse_level_world_actors_and_waypoints(self.raw100)
+        self.assertEqual(1, len(tables))
+        wrld = materializer._chunk_payload(materializer._chunk_payload(self.raw100, b"WRES"), b"WRLD")
+        rlwd = materializer._chunk_payload(wrld, b"RLWD")
+        changed = bytearray(rlwd)
+        struct.pack_into("<i", changed, tables[0].groups[0].records_offset + 8, 4)
+        self.assertEqual(1, self.raw100.count(rlwd))
+        with self.assertRaisesRegex(RuntimeError, "tree variant"):
+            materializer._parse_level_world_actors_and_waypoints(self.raw100.replace(rlwd, bytes(changed), 1))
 
     def test_real110_component_queries_keep_mesh_cache_and_constructor_zero_signs(self) -> None:
         document = json.loads(materializer._world110_initial_actor_bytes(

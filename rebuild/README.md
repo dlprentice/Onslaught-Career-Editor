@@ -8,7 +8,7 @@ ordered start-list resolution, adapter-supplied every-match assignment
 composition, and
 `CStart::Init` terrain-height projections, plus the standalone ordered
 player/Battle Engine assignment,
-native-88 Core session, career read/load frontend slice, and world-admission
+native-88 direct mission execution, career read/load frontend slice, and world-admission
 claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
@@ -219,11 +219,15 @@ detached Start/engine/player shells with real configuration fields and distinct
 reader cells. It also prepares four landing-craft turret inputs from their exact
 mesh attachment and parent pose, including float-store order and the Euler
 conversion before child Init. The arithmetic matches a native x87 probe; these
-inputs do not allocate or initialize turret children. It does not initialize all actor classes, publish a complete world,
+inputs do not allocate or initialize turret children. Both explicit-tree tables
+are retained, with the 1,481 base-world pine Init calls distinguished from
+skipped ferns and repeated level-world records. Tree Init remains unimplemented.
+Simulation now explicitly rejects World110 before the Level100 setup path.
+This stage does not initialize all actor classes, publish a complete world,
 run squads/spawners or construct a playable session. The Godot host therefore
 still loads only World 100. Static admission and the unresolved Init dependencies
 are recorded in
-[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
+[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
@@ -265,8 +269,9 @@ completed incoming link points at it. The launch edge was renamed
 `LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
 *constructs* is still Level 100 only: world-110's compiled scripts, heightfield,
 identity-only authored-definition projection, and exact serialized player-1
-start are admitted by Core (below), and a bounded Core-only session now steps
-its LevelScript against a world-stamped copy of the Level 100 test fixture. A
+start are admitted by Core (below), and direct mission tests execute its
+LevelScript through the first wait. The old relabeled-Level100 Simulation route
+is explicitly unsupported. A
 construction-ready world-110 actor/player/Battle Engine set and Godot lifecycle
 still do not exist, so the host cannot build that world. After a Level 100 Won
 reaches `FrontEndHandoffReady`, Client applies
@@ -433,12 +438,14 @@ envelope, and complete 40-row serialized initial-object seed table into
 admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
-An explicit Core-only session now consumes the world-110 LevelScript through its
-first `Pause` and one idle step. Native 88 writes the measured failed secondary
+Direct mission tests consume the world-110 LevelScript through its
+first `Pause`. Native 88 writes the measured failed secondary
 slot, and StateHasher schema 43 binds the non-root world and all ten secondary
-records while default world 100 stays byte-identical on schema 42. This session
-deliberately stamps the existing Level 100 test definitions: no product/Godot
-simulation consumes world-110 terrain or authored actors, and no world-110
+records in synthetic snapshot envelopes while default world 100 stays
+byte-identical on schema 42. The direct mission tests use stamped Level100
+definitions as native-call instruments. Simulation rejects World110 before
+the Level100 initialization path; no product/Godot simulation consumes
+world-110 terrain or authored actors, and no world-110
 FillOut or full mission run exists. The level-world initial-object table is
 measured (40 RLWD serialized rows, header `(2, 0, 40)`; types 19 and 28 have tails
 Level 100 does not use) and the BSWD island is byte-identical to Level 100
