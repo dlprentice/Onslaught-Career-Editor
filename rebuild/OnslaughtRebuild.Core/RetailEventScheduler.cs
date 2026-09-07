@@ -111,14 +111,14 @@ public readonly record struct RetailEventDispatch(
 /// <para>
 /// Owner in the pinned drop: <c>references/Onslaught/eventmanager.cpp</c> and
 /// <c>eventmanager.h</c>. Retail identities read out of the pristine
-/// <c>74154bfa…</c> image (file offset = VA - 0x400000):
+/// <c>74154bfa…</c> image using its PE section map:
 /// </para>
 /// <list type="bullet">
 /// <item><c>0x0044B370</c> <c>AddEvent(event_num, to_call, time, start_or_end, data, re_use_event)</c>
 /// — <c>eventmanager.cpp:170-279</c>.</item>
 /// <item><c>0x0044B2D0</c> <c>AddEvent(time_from_now, …)</c> — <c>eventmanager.cpp:143-146</c>;
-/// it is a two-instruction forwarder that computes <c>time_from_now + mTime</c>
-/// on the x87 stack and tail-calls <c>0x0044B370</c>.</item>
+/// it computes <c>time_from_now + mTime</c> on the x87 stack, stores the sum
+/// as float32 at <c>0x0044B2F6</c>, then calls <c>0x0044B370</c>.</item>
 /// <item><c>0x0044B2A0</c> <c>GetNextFreeEvent</c> — <c>eventmanager.cpp:112-125</c>.</item>
 /// <item><c>0x0044B5C0</c> <c>Update</c> — <c>eventmanager.cpp:284-304</c>, with
 /// <c>AdvanceTime</c> inlined and <c>Flush</c> called at <c>0x0044B5F6</c>.</item>
@@ -129,7 +129,7 @@ public readonly record struct RetailEventDispatch(
 /// <para>
 /// <b>Source and retail agree</b> on every branch, constant and statement order
 /// checked. The pristine image carries both diagnostic strings verbatim
-/// (<c>0x00628D94</c>, <c>0x00628D60</c>) and all five scheduling constants as
+/// (<c>0x00628D94</c>, <c>0x00628D60</c>) and all six scheduling constants as
 /// exact float32: <c>0.051f</c> at <c>0x005DB294</c>, <c>0.0001f</c> at
 /// <c>0x005D8570</c>, <c>1000000.0f</c> at <c>0x005DB290</c>, <c>0.001f</c> at
 /// <c>0x005D8580</c>, <c>GAME_FR = 20.0f</c> at <c>0x005D857C</c> and
@@ -145,29 +145,33 @@ public readonly record struct RetailEventDispatch(
 /// <c>mOverflowEventListBuffer</c>.
 /// </para>
 /// <para>
-/// <b>Two retail facts the source text does not state.</b> First, the event
+/// <b>Two details relevant to the translation.</b> First, the event
 /// number is stored as a <b>signed 16-bit field</b>: <c>CScheduledEvent::Set</c>
 /// at <c>0x004DE1F0</c> writes <c>mov word ptr [esi+4], ax</c>, the re-use arm
 /// at <c>0x0044B4E0</c> does the same, and <c>AddEvent(CScheduledEvent*)</c>
 /// re-reads it with <c>movsx eax, word ptr [esi+4]</c> at <c>0x0044B32E</c>.
-/// An event number outside <c>[-32768, 32767]</c> therefore wraps, silently.
+/// This confirms the <c>short</c> storage in <c>event.h</c>: an event number
+/// outside <c>[-32768, 32767]</c> wraps silently despite the <c>int</c> parameter.
 /// Second, retail keeps every intermediate of the delay computation on the x87
 /// stack: there is no float store between <c>time - mTime</c>,
 /// <c>- 0.001f</c>, <c>* 20.0f</c> and <c>floor</c>, so the arithmetic runs at
 /// the x87 precision control, not at float. This implementation uses
 /// <c>double</c> for exactly those intermediates, which reproduces the Win32
-/// CRT default of 53-bit precision control. The only float rounding retail does
-/// perform is the <c>fstp dword</c> at <c>0x0044B3DF</c> that lands
-/// <c>mTime + 0.0001f</c>, and that store is reproduced here.
+/// CRT default of 53-bit precision control; this static body does not establish
+/// the control word of every runtime caller. The immediate-negative arm rounds
+/// <c>mTime + 0.0001f</c> with <c>fstp dword</c> at <c>0x0044B3DF</c>.
+/// The relative-time overload also rounds its sum before this body is called.
 /// </para>
 /// <para>
 /// <b>Not established here.</b> Which listeners exist, what
 /// <c>HandleEvent</c> does, and how <c>SPtrSet</c>/<c>OPtrSet</c> allocate. This
 /// type models listeners as opaque non-zero integer identities so the routing,
 /// ordering and recycling contracts can be pinned without inventing a
-/// listener graph. The 20 000-entry pool is <c>MAX_NUM_EVENTS</c> from
-/// <c>eventmanager.h:20</c> and is unverified against the image; the exhaustion
-/// arm's diagnostic string is verified, its capacity is not.
+/// listener graph. The 20 000-entry pool agrees with <c>eventmanager.h:20</c>
+/// and retail <c>Init</c> at <c>0x0044B060</c>: allocation size
+/// <c>0x61A84 = 20000 * 20 + 4</c>, 20 000 constructor iterations and
+/// 19 999 next-record links followed by null. Exact body pins and the static
+/// evidence boundary are in <c>reverse-engineering/source-code/io/event-system.md</c>.
 /// </para>
 /// </remarks>
 public sealed class RetailEventScheduler
@@ -267,7 +271,8 @@ public sealed class RetailEventScheduler
     /// <summary>
     /// <c>CEventManager::Init</c> — <c>eventmanager.cpp:41-68</c>. The pool is
     /// chained <c>0-&gt;1-&gt;…-&gt;19998-&gt;19999-&gt;NULL</c> and the head is
-    /// entry 0, so the first allocation is handle 0.
+    /// entry 0, so the first allocation is handle 0. This Core reset also clears
+    /// its containers; it does not model retail Init twice without Shutdown.
     /// </summary>
     public void Init()
     {
@@ -334,8 +339,8 @@ public sealed class RetailEventScheduler
     /// <summary>
     /// <c>CEventManager::AddEvent(const float&amp; time_from_now, …)</c> —
     /// <c>eventmanager.cpp:143-146</c>, <c>0x0044B2D0</c>. The sum is formed on
-    /// the x87 stack and passed by reference without a float store, so it is
-    /// computed here at <c>double</c> and only the callee's own arms round.
+    /// the x87 stack, rounded to float32 by <c>fstp dword</c> at
+    /// <c>0x0044B2F6</c>, then passed by reference to the absolute scheduler.
     /// </summary>
     public RetailEventAdmission AddEventTimeFromNow(
         float timeFromNow,
@@ -547,7 +552,9 @@ public sealed class RetailEventScheduler
     /// <c>mCurrentProcessOverflowEventNum</c> while the head's due time is
     /// <b>strictly</b> less than <c>mTime</c> (<c>test ah, 1 / je</c> at
     /// <c>0x0044B6D9</c> — an event due exactly on the frame boundary waits a
-    /// frame); then cleanup. This is the restriction
+    /// frame). The overflow count is captured once after the ring callbacks,
+    /// before any overflow callback (<c>0x0044B6BF</c>), and bounds that walk
+    /// even if callbacks append entries. Cleanup follows. This is the restriction
     /// <c>eventmanager.h:38-41</c> documents: an overflow event is effectively
     /// last, whatever priority it was filed with.
     /// </para>
@@ -566,7 +573,7 @@ public sealed class RetailEventScheduler
     /// The callback is optional and caller-supplied; Core has no listeners of
     /// its own. Retail iterates the ready slot through the set's own cursor, so
     /// an append made during the walk would be visited — the index walk here
-    /// preserves that. No released path can reach it: the only slot a callback
+    /// preserves that. With the clock unchanged inside callbacks, the only slot a callback
     /// can target immediately is <c>mCurrentBufferNum</c>, which
     /// <c>AdvanceTime</c> has already rotated past the slot being drained, and
     /// the two ring slots that would wrap onto it are both at or beyond the
@@ -597,7 +604,8 @@ public sealed class RetailEventScheduler
             }
         }
 
-        while (_overflow.Count > _overflowCursor &&
+        int overflowCount = _overflow.Count;
+        while (overflowCount > _overflowCursor &&
                DueTimeOf(_overflow[_overflowCursor]) < _time)
         {
             int handle = _overflow[_overflowCursor];

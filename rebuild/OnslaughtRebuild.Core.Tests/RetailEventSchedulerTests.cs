@@ -285,6 +285,48 @@ public sealed class RetailEventSchedulerTests
         Assert.Equal(0, scheduler.TotalEvents);
     }
 
+    // Flush snapshots the overflow count in EDI at 0x0044B6BF, before its
+    // callbacks, and compares that same value at 0x0044B6FB. This adversarial
+    // caller advances the scheduler inside a callback so an appended overflow
+    // event becomes due. It distinguishes the loop bound; it is not evidence
+    // that any retail listener advances time this way.
+    [Fact]
+    public void Flush_OverflowCallbacksCannotExtendTheCapturedVisitCount()
+    {
+        var scheduler = new RetailEventScheduler();
+        Assert.Equal(
+            RetailEventPlacement.Overflow,
+            scheduler.AddEvent(99, Listener, 10.0f).Placement);
+        for (int frame = 0; frame < 200; frame++)
+        {
+            Assert.Empty(scheduler.Update());
+        }
+
+        IReadOnlyList<RetailEventDispatch> firstFlush = scheduler.Update((owner, dispatch) =>
+        {
+            if (dispatch.EventNum != 99)
+            {
+                return;
+            }
+
+            Assert.Equal(
+                RetailEventPlacement.Overflow,
+                owner.AddEvent(100, Listener, 20.0f).Placement);
+            for (int frame = 0; frame < 201; frame++)
+            {
+                owner.AdvanceTime();
+            }
+
+            Assert.True(owner.Time > 20.0f);
+        });
+
+        Assert.Equal(99, Assert.Single(firstFlush).EventNum);
+        Assert.Equal(1, scheduler.TotalEvents);
+        Assert.Equal(100, Assert.Single(scheduler.Flush()).EventNum);
+        Assert.Equal(0, scheduler.TotalEvents);
+        Assert.Equal(RetailEventScheduler.MaxEvents, scheduler.FreeEventCount());
+    }
+
     // Pins the overflow insertion scan of eventmanager.cpp:222-226 (the <=
     // advance at 0x0044B459): the list stays sorted by due time, and an event
     // equal in time to a resident one is inserted AFTER it. Assert on indices,
@@ -305,8 +347,8 @@ public sealed class RetailEventSchedulerTests
     // Pins the int16 storage of the event number: CScheduledEvent::Set writes a
     // WORD (0x004DE1F0), and AddEvent(CScheduledEvent*) re-reads it with movsx
     // (0x0044B32E). 40000 comes back as -25536. A rebuild storing an int passes
-    // 40000 through and fails. The source text says "const int event_num"
-    // throughout and gives no hint of this.
+    // 40000 through and fails. The scheduler's int parameter does not change
+    // the short storage explicitly declared in event.h.
     [Fact]
     public void AddEvent_StoresTheEventNumberAsSignedSixteenBits()
     {

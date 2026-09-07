@@ -1,283 +1,162 @@
-# Event System
-
-## Event System (event.cpp/h, scheduledevent.cpp/h, eventmanager.cpp/h)
-
-> Analysis added December 2025
-
-**Purpose**: Time-based event scheduling and dispatch for the 20 FPS game loop. This system is purely runtime - **NOT persisted to save files**.
-
-### Core Classes
-
-The event system is built around three classes:
-
-| Class | Purpose |
-|-------|---------|
-| `CEvent` | Base event with `mEventNum` (short) and `mToCall` (CActiveReader<CMonitor>) |
-| `CScheduledEvent` | Extends CEvent, adds `mTime` for scheduling and `mData` for payload |
-| `CEventManager` | Ring buffer scheduler, accessed via global singleton `EVENT_MANAGER` |
-
-### Key Constants
-
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `CLOCK_TICK` | 0.05f | 50ms per frame (20 FPS game loop) |
-| `MAX_NUM_EVENTS` | 20000 | Pre-allocated event pool size |
-| `NUM_EVENT_LIST_BUFFERS` | 200 | Ring buffer slots (10 seconds of frames) |
-| `NUM_PRIORITY` | 3 | START/MIDDLE/END_OF_FRAME execution order |
-| `NEXT_FRAME` | -1.0 | Magic value to schedule for next frame |
-
-### Scheduling Mechanism
-
-Events are scheduled using a ring buffer with overflow handling:
-
-- **Events within 10 seconds**: Stored in the ring buffer with wrap-around index
-- **Events beyond 10 seconds**: Stored in overflow buffer (time-sorted)
-- **3 priority levels per frame**: Controls execution order within a frame
-
-The ring buffer provides O(1) scheduling for near-future events (the common case), while the overflow buffer handles rare long-delay events.
-
-### Event ID Ranges
-
-Events are organized by class, each with a base offset:
-
-| Class | Base | Example Events |
-|-------|------|----------------|
-| `EThingEvent` | 2000 | SHUTDOWN, START_DIE_PROCESS |
-| `ActorEvent` | 3000 | MOVE, LF_MOVE |
-| `EPlayerEvent` | 4000 | GOTO_CONTROL_VIEW |
-| `EBattleEngineEvent` | 6000 | BECOME_JET, BECOME_WALKER |
-| `EGameEvent` | 2000 | DEMO_RESTART_LEVEL, PAUSE_GAME |
-
-### CActiveReader Safety Pattern
-
-The event system uses `CActiveReader<CMonitor>` for safe event dispatch:
-
-1. Target objects register listeners with the event system
-2. When a target object dies, `ToReadDied()` is called, which nullifies the pointer
-3. On event dispatch, `GetToCall()` is checked - if NULL, the event is silently skipped
-
-This pattern prevents crashes from events targeting destroyed objects (a common source of bugs in game engines).
-
-### Memory Pool
-
-The event system uses a pre-allocated memory pool for efficiency:
-
-- **20,000 events** pre-allocated at startup
-- Free list linked via `mNextFreeSE` (union with `mTime` to save memory)
-- `mBeingReused` flag prevents double-freeing during rapid allocation/deallocation cycles
-
-This design avoids runtime heap allocation, which is critical for maintaining consistent frame timing.
-
-### Relevance to Save Editing
-
-**NONE** - Events are purely runtime state.
-
-- A fresh event pool is created at level load
-- No event data is serialized to .bes files
-- Event scheduling state is discarded when the game exits
-
-The event system is important for understanding game architecture and debugging, but has no impact on save file editing.
-
-### Files Analyzed for This Section
-
-| File | Purpose |
-|------|---------|
-| `event.cpp` | CEvent implementation |
-| `event.h` | CEvent class definition |
-| `scheduledevent.cpp` | CScheduledEvent implementation |
-| `scheduledevent.h` | CScheduledEvent class definition, memory pool |
-| `eventmanager.cpp` | CEventManager ring buffer implementation |
-| `eventmanager.h` | CEventManager class definition, constants |
-
----
-
-## Event Manager (EventManager.cpp/h)
-
-Time-based event scheduling system for game logic.
-
-**Key Constants:**
-| Constant | Value | Notes |
-|----------|-------|-------|
-| `MAX_NUM_EVENTS` | 20000 | Maximum schedulable events |
-| `NUM_EVENT_LIST_BUFFERS` | 200 | 10 seconds at 20fps |
-
-**Architecture:**
-- Circular buffer for near-future events
-- Overflow list for far-future events
-- Priority-based execution within frames
-
-**Steam BEA.exe Mapping (verified):**
-
-| Address | Name | Notes |
-|---------|------|-------|
-| 0x0044afe0 | `CEventManager__scalar_deleting_dtor` | MSVC scalar deleting dtor wrapper |
-| 0x0044b000 | `CEventManager__dtor` | Calls `CEventManager__Shutdown` |
-| 0x0044b060 | `CEventManager__Init` | Allocates overflow container + 20,000 event pool |
-| 0x0044b1f0 | `CEventManager__Shutdown` | Clears ring/overflow state and frees pool |
-| 0x0044b2a0 | `CEventManager__GetNextFreeEvent` | Pops event free-list head |
-| 0x0044b2d0 | `CEventManager__AddEvent_TimeFromNow` | Relative-time AddEvent overload |
-| 0x0044b310 | `CEventManager__AddEvent_ScheduledEvent` | Scheduled-event overload |
-| 0x0044b370 | `CEventManager__AddEvent_AtTime` | Main scheduler (ring + overflow insertion) |
-| 0x0044b5c0 | `CEventManager__Update` | Calls `AdvanceTime` then `Flush` |
-| 0x0044b600 | `CEventManager__AdvanceTime` | Retail variant returns wrap flag while advancing |
-| 0x0044b640 | `CEventManager__Flush` | Executes due events, cleans up free-list/reuse state |
-
-Related scheduled-event helpers (mapped by callsite inference):
-
-| Address | Name | Notes |
-|---------|------|-------|
-| 0x004de1f0 | `CScheduledEvent__Set` | Implements `Set(event_num, time, to_call, data)` (`mToCall`, `mData`, reuse flag) |
-| 0x004de230 | `CScheduledEvent__dtor` | Destructor path: decrements static live counter and unregisters ActiveReader fields |
-
-**Priority Levels:**
-| Priority | Timing |
-|----------|--------|
-| `START_OF_FRAME` | Before physics |
-| `MIDDLE_OF_FRAME` | During update |
-| `END_OF_FRAME` | After rendering |
-
-**Developer Comment:** "at the mo" (British slang for "at the moment")
-
-**Typos Preserved:**
-| Typo | Should Be |
-|------|-----------|
-| `schuled event` | scheduled event |
-| `witch offset buffer` | which offset buffer |
-| `previus_num_events_called` | previous_num_events_called |
-
----
-
-## Active Reader System (activereader.cpp/h)
-
-> Analysis added December 2025
-
-The Active Reader system provides a runtime smart pointer/observer pattern for safely referencing game objects that can be destroyed during gameplay. **This is purely runtime memory management and has NO relevance to save files.**
-
-### Purpose
-
-In a game where objects can be destroyed at any time (enemies killed, buildings demolished, etc.), holding raw pointers to those objects creates a risk of dangling pointers. The Active Reader pattern provides:
-
-1. **Safe object references** - Automatically detects when referenced objects are destroyed
-2. **Null-on-delete semantics** - Pointers become NULL when their targets are destroyed
-3. **Type-safe access** - Template class ensures correct typing
-
-### Classes
-
-| Class | Purpose |
-|-------|---------|
-| `CGenericActiveReader` | Base class with `mToRead` pointer and deletion callback |
-| `CActiveReader<T>` | Template wrapper for type-safe access to objects of type T |
-
-### How It Works
-
-```
-1. CActiveReader<CUnit> reader;      // Create smart pointer
-2. reader.Set(someUnit);             // Point to a unit
-      │
-      ├── Register with CMonitor base class for deletion callbacks
-      │
-3. (gameplay happens)
-      │
-4. someUnit gets destroyed
-      │
-      ├── CMonitor shutdown/destructor logic nulls all registered reader cells (ToReadDied)
-      │
-      ▼
-5. reader.mToRead = NULL             // Pointer safely nullified
-      │
-6. reader.Read() returns NULL        // Safe access, no crash
-```
-
-### Integration with CMonitor
-
-The system requires referenced objects to inherit from `CMonitor`:
-
-```cpp
-// Conceptual - objects must be CMonitor-derived
-class CUnit : public CMonitor { ... };
-
-// When a CMonitor-derived object is destroyed, it notifies all readers:
-CMonitor::~CMonitor() {
-    // Notify all active readers that this object died
-    for (each registered reader) {
-        reader->ToReadDied();
-    }
-}
-```
-
-### Steam Build Mapping (BEA.exe)
-
-The Steam PC port implements a functionally similar pattern (not assumed as source-identical), but in a very compact way:
-- A `CGenericActiveReader` / `CActiveReader<T>` is often just the 4-byte **cell** that holds `mToRead`.
-- The monitored object stores a deletion-event list pointer at `monitor + 0x04` (lazily allocated as a `CSPtrSet`).
-- The deletion list stores pointers to reader cells; on monitor shutdown/destruction the engine nulls each cell (`*cell = NULL`), matching `ToReadDied()`.
-
-Mapped helpers in the Steam build:
-| Address | Name | Purpose |
-|---------|------|---------|
-| 0x00401000 | `CGenericActiveReader__SetReader` | Remove from old `mToRead+0x04`, assign, register with new monitor |
-| 0x00401040 | `CMonitor__AddDeletionEvent` | Allocate/init `CSPtrSet` at `monitor+0x04` (if NULL) and add a reader cell |
-| 0x0042d9b0 | `CMonitor__DeleteDeletionEvent` | Remove a reader cell from `monitor+0x04` deletion list when present |
-| 0x0044b1d0 | `CGenericActiveReader__dtor` | Unregister helper (removes reader cell from `mToRead+0x04`) |
-| 0x004bac40 | `CMonitor__Shutdown` | Monitor shutdown/destructor: iterate `monitor+0x04` and null each reader cell (`*cell = NULL`), then clear+free the `CSPtrSet` |
-
-Binary-level details: [`CMonitor__Process`](../../binary-analysis/functions/monitor.h/CMonitor__Process.md)
-
-### Usage Throughout Codebase
-
-Active Readers are used extensively for object references that may become invalid:
-
-| Header File | Field | Type | Purpose |
-|-------------|-------|------|---------|
-| `BattleEngine.h` | `mUnit` | `CActiveReader<CUnit>` | Current target unit |
-| `BattleEngine.h` | `mStandingOnThing` | `CActiveReader<CThing>` | Ground/platform reference |
-| `BattleEngine.h` | `mAutoAimTarget` | `CActiveReader<CThing>` | Auto-aim lock target |
-| `BattleEngine.h` | `mPlayer` | `CActiveReader<CPlayer>` | Owner player |
-| `Camera.h` | `mForThing` | `CActiveReader<CThing>` | Camera focus target |
-| `Player.h` | `mBattleEngine` | `CActiveReader<CBattleEngine>` | Player's battle engine |
-| `event.h` | Event targets | `CActiveReader<*>` | Event dispatch targets |
-| `scheduledevent.h` | Event data | `CActiveReader<*>` | Scheduled event references |
-
-### Debug Integration
-
-The system integrates with `CDXMemoryManager` for debug validation:
-
-```cpp
-#ifdef DEBUG
-// Memory manager can validate active reader consistency
-// Detect readers pointing to freed memory
-// Track reader registration/deregistration
-#endif
-```
-
-### Relevance to Save Editing
-
-**NONE** - This is purely runtime memory management.
-
-| Aspect | Save System | Active Reader System |
-|--------|-------------|---------------------|
-| **Persistence** | Written to .bes file | Never serialized |
-| **Lifetime** | Survives game restart | Lost on level change |
-| **Purpose** | Track player progress | Manage runtime references |
-| **Data Location** | File offsets 0x0000-0x2714 | Only in RAM |
-
-`CActiveReader` fields in structs are **transient** - they exist only while the game is running. When a save file is loaded, these pointers are re-established at runtime from the loaded game state, not from the save file itself.
-
-### Why This Matters for RE
-
-Understanding which struct fields are `CActiveReader<T>` helps identify:
-
-1. **Transient vs persistent fields** - Reader fields are NOT saved
-2. **Object relationships** - Shows what objects reference what
-3. **Struct size accuracy** - Reader fields consume memory but not file space
-
-When analyzing struct layouts, any field typed as `CActiveReader<*>` can be ignored for save file purposes.
-
-### Files Analyzed for This Section
-
-| File | Purpose |
-|------|---------|
-| `activereader.cpp` | Implementation of ToReadDied, registration |
-| `activereader.h` | CGenericActiveReader and CActiveReader<T> template |
-
----
+# Event scheduler and active readers
+
+Status: active — source map and bounded retail static contract
+Last updated: 2026-09-07
+Summary: event admission, dispatch order, recycling and reader lifetimes; exact
+scheduler body checks support the Core implementation without establishing
+whole-game runtime parity.
+Evidence: MEASURED pristine instructions and focused Core tests;
+SOURCE-INFORMED names from pinned `references/Onslaught` commit
+`5352a81cdb838b145a57f7febc5d9fc4b0129ebb`. The separately retained runtime
+contract below remains a candidate and was not replayed or promoted here.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752
+bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Owners and evidence
+
+The pinned source owners are
+[`eventmanager.cpp`](../../../references/Onslaught/eventmanager.cpp),
+[`eventmanager.h`](../../../references/Onslaught/eventmanager.h),
+[`event.h`](../../../references/Onslaught/event.h), and
+[`scheduledevent.h`](../../../references/Onslaught/scheduledevent.h).
+`CEvent` holds a destination reader and signed 16-bit event number;
+`CScheduledEvent` adds a data reader, reuse flag and time/free-link union.
+`CEventManager` owns their pool, ring and time-ordered overflow list.
+
+The existing [scheduler semantic crosswalk](../../binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv)
+records source/retail/demo body comparisons. The September 7 readback checked
+these complete bodies against PE-mapped pristine bytes using retained
+`local-lab/ghidra-fullpass-2026-07-23/exports/W003/instructions.tsv`:
+
+| Body, half-open | Bytes / instruction rows | Raw body SHA-256 |
+| --- | ---: | --- |
+| `Init [0x0044b060,0x0044b185)` | 293 / 85 | `4b75a4fcc8bb250ed01a34d90def65a0ad268345670274f07af55983b9edc9b9` |
+| Relative `AddEvent [0x0044b2d0,0x0044b303)` | 51 / 18 | `d57456182657dbf16c4a79e1ec5c1f348d7c18663bfc1f79c87ef3e54602f450` |
+| `Flush [0x0044b640,0x0044b837)` | 503 / 191 | `84e5ad90944eb1b99461b10f839d1a3101b321f605094c959da57086ae93a2b4` |
+
+All 294 selected instruction rows matched. No Ghidra project was opened.
+This checks retained instruction bytes and static control flow; it does not
+observe a live listener or recover a deleted recording.
+
+The [absolute AddEvent contract](../../contracts/engine-world/CEventManager__AddEvent_AtTime__0044b370.md)
+owns the earlier, bounded Level-100 queue observations and their refuters.
+Those retained extracts are not new runtime validation, and their C2 candidate
+status does not change with this static update.
+
+## Admission and clock
+
+`eventmanager.cpp:170-279` and the crosswalk identify the absolute scheduler
+at `0x0044b370`. An invalid manager or null listener is rejected. For a valid
+request, the branches are:
+
+1. At or before `mTime + 0.051f`, append to the current ring slot. A negative
+   request, including `NEXT_FRAME = -1.0f`, stores `mTime + 0.0001f` rounded
+   to float32 as its due time.
+2. On the later-time arm, reject requested times over `1,000,000.0f`.
+   Otherwise compute `floor((requested - mTime - 0.001f) * 20)`.
+3. Offsets below 198 select a wrapped ring slot. Offsets of 198 or greater
+   enter the sorted overflow list. The ring has 200 slots, but its admission
+   boundary is not a simple ten-second comparison.
+
+The three ring lanes are `START_OF_FRAME = 0`, `MIDDLE_OF_FRAME = 1`, and
+`END_OF_FRAME = 2`. They specify ordering inside `Flush`; these names do not
+prove separate placement before physics, during update, or after rendering.
+Ring insertion is FIFO within a lane. Overflow insertion begins at the current
+processing cursor and puts a new event after existing equal-time events.
+
+Relative `AddEvent` (`eventmanager.cpp:143-146`) adds the current manager time
+on the x87 stack, then **stores the sum as float32 at `0x0044b2f6` before the
+call at `0x0044b2fb`**. It is not an unrounded tail-call forwarder. The
+absolute scheduler's delay calculation has no intermediate float32 stores;
+Core uses double intermediates for the expected 53-bit precision mode. This
+body alone does not establish every caller's runtime x87 control word.
+
+`AdvanceTime` (`eventmanager.cpp:293-304`, `0x0044b600`) increments the frame
+count, stores `frameCount * 0.05f` as float32, marks the old ring slot ready,
+and rotates the current slot modulo 200. It does not accumulate repeated
+`+0.05f`. Source returns `void`; an incidental register value after the modulo
+operation is not a supported wrap-flag return contract. `Update` calls
+`AdvanceTime` and then `Flush`.
+
+## Dispatch and reuse
+
+`eventmanager.cpp:311-411` and the checked `Flush` body establish this order:
+
+1. Visit the ready ring slot's lanes 0, 1 and 2 in order.
+2. Snapshot the overflow count **after ring callbacks and before overflow
+   callbacks** (`mov edi,[ecx+8]` at `0x0044b6bf`). Walk from the overflow
+   cursor while it is below that captured count and due time is **strictly
+   less than** the current manager time. The loop compares the same `EDI`
+   at `0x0044b6fb`; it does not reread the count after each callback.
+3. Recycle visited ring records, then the visited overflow prefix, and update
+   counters. An overflow record executes after all ring lanes regardless of
+   its originally requested priority.
+
+Each visited record has reuse cleared before the callback. The overflow
+cursor advances before its callback, which constrains subsequent insertion.
+A null destination skips the callback but still counts as processed.
+Cleanup frees records that were not rearmed and decrements the live-event
+count for every visited entry. Rearming through the supplied handle therefore
+preserves the record without leaking the live count.
+
+`Init` allocates `0x61a84 = 20,000 * 20 + 4` bytes, constructs 20,000 event
+records, links 19,999 successors and terminates the free list with null.
+This pool size was already measured in the earlier crosswalk and was checked
+again here. It is not merely an unverified header constant. The pool avoids
+per-record allocation; it does not prove that ring/list insertion or callbacks
+perform no heap allocation. The reuse flag controls callback rearming, not a
+general guarantee against all double frees.
+
+## Active-reader lifetime boundary
+
+[`activereader.cpp`](../../../references/Onslaught/activereader.cpp) and
+[`activereader.h`](../../../references/Onslaught/activereader.h) describe
+non-owning monitored references. Setting the same target is a no-op;
+otherwise a reader unregisters from its old target, publishes the new pointer,
+and registers with that target. A target's shutdown invalidates its registered
+reader cells. An event checks its destination before calling it.
+
+The [monitor owner](../../binary-analysis/functions/CMonitor.cpp.md) and
+[deletion-list contract](../../contracts/engine-world/CMonitor__AddDeletionEvent__00401040.md)
+retain the binary evidence and limits. The helper map is:
+
+| Address | Operation |
+| --- | --- |
+| `0x00401000` | Set reader: detach old, assign, attach new |
+| `0x00401040` | Add a reader cell to the monitor's lazily allocated deletion list |
+| `0x0042d9b0` | Remove a reader cell from that list |
+| `0x0044b1d0` | Reader destructor unregisters its cell |
+| `0x004bac40` | Monitor shutdown nulls registered cells and releases its list |
+
+A retail reader cell holds a 32-bit target pointer; the monitor's reverse-list
+pointer is at `monitor+0x04`. The relationship appears in event destination
+and data fields and in player, Battle Engine and camera references. It neither
+owns the target nor makes unchecked dereferences universally safe.
+
+These source owners define runtime pointers and scheduling records, not a
+`.bes` byte layout. They provide no basis for writing pointer values into a
+save or clearing unknown save bytes. Event-driven gameplay can still affect
+results later saved by the career code; absence of event serialization is not
+absence of indirect save effects. Save layout belongs to the
+[save-format owner](../../save-file/save-format.md).
+
+## Rebuild coverage and remaining limits
+
+[`RetailEventScheduler`](../../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs)
+models routing, the clock, dispatch and recycling with opaque listener IDs.
+[`RetailActiveReaderGraph`](../../../rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs)
+models reader membership separately; it is not automatically wired into every
+scheduler listener. Core's reusable `Init` also clears its containers; that
+reset convenience is not proof that calling retail `Init` twice without
+`Shutdown` is valid.
+
+The focused `RetailEventSchedulerTests` fixture passed **32/32** on September 7.
+`Flush_OverflowCallbacksCannotExtendTheCapturedVisitCount` failed before the
+count-snapshot correction and passed afterward. It deliberately advances the
+clock inside a caller-supplied callback so a newly appended event becomes due;
+this distinguishes the static loop bound, not a witnessed retail listener
+behavior. Logs are in
+`local-data/test-runs/linux-route-20260906-af1sa_l9/scheduler-overflow-{red,green}.log`.
+No broad Core result, native gameplay result, World-110 initialization closure,
+or full parity claim follows from this focused check.

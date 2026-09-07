@@ -466,7 +466,6 @@ reverse-engineering/source-code/gameplay/career-system.md
 reverse-engineering/source-code/gameplay/game-system.md
 reverse-engineering/source-code/io/_index.md
 reverse-engineering/source-code/io/chunker-system.md
-reverse-engineering/source-code/io/event-system.md
 reverse-engineering/source-code/io/storage-system.md
 reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md
 reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md

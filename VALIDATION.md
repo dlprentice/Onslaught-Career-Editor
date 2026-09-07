@@ -75,6 +75,16 @@ The existing Level 100 fingerprint passed separately without repinning.
 Both Godot projects then built through the shared Linux launcher with zero
 warnings/errors. This remains partial construction, not second-world runtime.
 
+September 7 targeted RE reproduced a Core scheduler overflow-count mismatch:
+the new callback regression failed before the fix, then the complete affected
+`RetailEventSchedulerTests` fixture passed **32/32, zero skipped**. The
+[event-system owner](reverse-engineering/source-code/io/event-system.md) records
+the pristine instruction sites, body hashes and test's artificial callback
+boundary. Its `scheduler-overflow-{red,green}.log` files share the Linux run
+directory above. Actor/base and Unit initialization extensions are static
+evidence, independently checked against selected complete pristine bodies;
+no new runtime, full-campaign or broad Core result is claimed.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

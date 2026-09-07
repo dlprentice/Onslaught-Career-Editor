@@ -20,6 +20,10 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ### Active phase — Linux playable slices and first Save Lab workflow
 
+David retains desktop control until he explicitly releases it. Prioritize
+RE and rebuild source/headless work meanwhile; live retail/rebuild playthroughs
+and the Save Lab UI workflow remain pending.
+
 1. Establish native Linux Godot build, launch, real input, audio, pause/focus,
    capture and live tape recording/replay using the installed pinned tools.
 2. Complete the cold first-career Level 100 tutorial through player input and
@@ -61,6 +65,13 @@ behavior selectors and physics life. It also owns detached Start/engine/player
 shells with measured configuration and reader fields. Concrete class Init,
 world publication and event ordering are still missing; these shells are not a
 completed session or a reason to claim 100→110 play.
+
+The complete static Actor/base and Unit initialization order is now recorded in
+the existing [Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
+and [World-110 owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+Implementing that order still requires actual render/mesh state, collision and
+publication effects, and recursive child initialization; static body closure
+does not complete those runtime objects.
 
 Remaining: complete start/actor/player/Battle Engine construction, real ownership
 and reader identities, physics/coordinate enrichment, squad/spawner expansion and

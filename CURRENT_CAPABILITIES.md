@@ -327,6 +327,17 @@ playback still awaits the next desktop session. David reported successful retail
 Steam/Proton launch; the agent inspected that installation and executable identity
 but has not reproduced the retail playthrough.
 
+**September 7 source and RE progress.** The
+[Actor/base contract](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
+and [Unit construction order](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
+now resolve the static ordering of script binding, publication, shared random
+draws, weapons, attached spawners and movement requests. World 110 still lacks
+the complete execution of those dependencies. The
+[scheduler implementation](rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs)
+now captures the overflow visit count before overflow callbacks, matching retail;
+the regression failed before repair and all 32 affected tests passed. This is
+source/static progress, not a new live playthrough or parity result.
+
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu
 (New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`
