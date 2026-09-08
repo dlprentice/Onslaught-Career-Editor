@@ -272,8 +272,34 @@ Only 20 frames/s matches this synthetic runner's one 20 Hz tick per frame.
 The two `first-flight-smoke.json` reports are under `movie/` and
 `movie-realtime/` in `local-data/first-flight/progress-video-20260908-a/`.
 They establish the smoke route, including retry/return, without desktop access;
-they do not establish live player acceptance. Input-method/vsync warnings reflect
-the private server; four ObjectDB leaks at exit remain an open runtime warning.
+they do not establish live player acceptance. The recording's four ObjectDB leaks
+were subsequently reproduced and corrected as described below.
+
+The audio shutdown correction passed **174/174** focused Client audio, music,
+startup, frontend and pause checks (`audio-retirement-client-20260908.log` in
+the same Linux test directory), and the Godot build passed with zero warnings/errors.
+Under the same private display/Dummy-audio route, `lifecycle-smoke-red-command.log`
+reported four leaked objects. Stream-identity instrumentation in
+`lifecycle-stream-identity-command.log` mapped eight leaked objects to the final
+frontend and just-retired tutorial Ogg playback graphs. The instrumentation was
+removed. `lifecycle-retirement-green-b-command.log` then completed the full smoke
+without leaked objects or shutdown timeout. Its report retains tick 2,148, the
+same state hash, fresh retry session and released world on return. Wall-clock
+voice progress differs between runs and is not a deterministic/audio-parity claim.
+The window-close check (`lifecycle-window-close-d-command.log`) and main-menu
+capture (`lifecycle-capture-close-command.log`, 161/161 saved, screen-matched
+frames) also exited cleanly. All five logs and the reports are under
+`local-data/first-flight/progress-video-20260908-a/`. Earlier close-test attempts
+failed in the private display setup; the accepted run pre-created the close
+protocol atom that Godot expects a window manager to provide. No host desktop
+input was used. The private driver's V-Sync warning remains; Windows and audible
+output were not tested by these runs.
+
+The shutdown mechanism follows the pinned engine's deferred playback deletion
+in [AudioServer](https://github.com/godotengine/godot/blob/ed1daf0bf/servers/audio/audio_server.cpp).
+The adapter polls native weak references through disposed Variants, avoiding a
+new managed reference while waiting for retirement. It reports a failed drain
+and nonzero exit after five seconds instead of treating a fixed delay as success.
 
 The broader cold/returning selection passed **6/9**
 (`living-plane-turn-routes-20260908.log`). Two failures remain real full-combat

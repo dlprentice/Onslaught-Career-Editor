@@ -335,11 +335,22 @@ one 20 Hz simulation tick per frame. No desktop input or desktop capture was use
 The smoke exercised movement, four fire inputs, retry and return; its mission
 was still Running. It is development footage, not a completed player tutorial,
 retail comparison or performance benchmark. Logs and raw recordings are in
-`local-data/first-flight/progress-video-20260908-a/`. Godot reported four leaked
-ObjectDB instances at exit; that lifecycle warning remains unresolved. The
-labelled 50-second preview is `onslaught-progress-2026-09-08-final.mp4` in that
+`local-data/first-flight/progress-video-20260908-a/`. The recording predates the
+audio-exit correction below. The labelled 50-second preview is
+`onslaught-progress-2026-09-08-final.mp4` in that
 directory; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
 show the production source at `5fc65256`; the preview uses edited excerpts.
+
+**Audio shutdown.** The Godot host now stops producers and streams before quitting,
+then lets the mixer release outstanding playback objects. One shared weak-reference
+observer covers music, samples, radio and FMV tracks, including recently replaced
+tracks; menu, window, capture and smoke exits use the same shutdown owner. The
+private full smoke went from four/eight leaked Ogg objects in the two diagnostic
+runs to none, preserving its 2,148-tick simulation hash and retry/return results.
+The private window-close event and main-menu capture also exited without leaked
+objects; **174/174** focused audio/frontend checks passed. These are lifecycle
+checks with the Dummy audio driver, not audible mixing or Windows acceptance.
+Exact logs and remaining boundaries are in [VALIDATION.md](VALIDATION.md).
 
 **September 8 copied-retail observation.** A pristine-identity retail copy also
 reached and rendered Level 100 through installed Proton Experimental Wine and

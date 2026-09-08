@@ -106,6 +106,8 @@ public sealed partial class RetailStartupSequence : Control
     private bool _completed;
     private bool _initialized;
 
+    internal AudioPlaybackRetirement PlaybackRetirement { get; set; } = null!;
+
     /// <summary>Raised once, on the frame the sequence stops owning the screen.</summary>
     public event Action? Completed;
 
@@ -525,6 +527,7 @@ public sealed partial class RetailStartupSequence : Control
         // behind the picture; the video frame index is taken from the same
         // number, so seeking is what makes them start together.
         _voice.Play((float)frame.BeatSeconds);
+        PlaybackRetirement.Observe(_voice);
         _voiceCue = cue;
     }
 

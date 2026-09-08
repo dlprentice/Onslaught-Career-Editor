@@ -28,6 +28,9 @@ public sealed partial class FirstFlightGame : Node3D
 
     private InteractiveSession _session = null!;
     private readonly Level100PauseMenu _pauseMenu = new();
+    private readonly AudioPlaybackRetirement _audioRetirement = new();
+    private int? _quitExitCode;
+    private ulong _audioShutdownDeadlineMs;
     private Level100Audio _audio = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
@@ -97,6 +100,7 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Ready()
     {
+        GetTree().AutoAcceptQuit = false;
         try
         {
             ConfigureInputMap();
@@ -106,13 +110,17 @@ public sealed partial class FirstFlightGame : Node3D
             window.Title = "Onslaught Rebuild - Battle Engine Aquila";
             _windowHasFocus = window.HasFocus();
 
-            _audio = new Level100Audio();
+            _audio = new Level100Audio { PlaybackRetirement = _audioRetirement };
             AddChild(_audio);
             _hudAssetCatalog = Level100HudAssetCatalog.Load();
 
             IReadOnlyList<RetailCareerDescriptor> careerDescriptors =
                 RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs());
-            _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
+            _frontend = new RetailFrontendFlow
+            {
+                Name = "RetailStartupFrontend",
+                PlaybackRetirement = _audioRetirement,
+            };
             _frontend.Initialize(careerDescriptors);
             _frontend.CareerSelected += SelectCareer;
             _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
@@ -120,6 +128,7 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.GameplayActivated += ActivateFrontendGameplay;
             _frontend.GameplaySuspended += SuspendFrontendGameplay;
             _frontend.ReturnToMainMenuRequested += ReleaseLevel100ForMainMenu;
+            _frontend.ExitRequested += () => RequestQuit(0);
             _frontend.CursorModeRequested += ApplyFrontendCursorMode;
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
             _frontend.OptionsSettingsChanged += ApplyOptionsSettings;
@@ -135,6 +144,7 @@ public sealed partial class FirstFlightGame : Node3D
                 // captured pixel; _requestedCursorMode still tracks the released
                 // policy exactly as it does in product mode.
                 _captureMode = true;
+                rig!.Completed += () => RequestQuit(0);
                 AddChild(rig);
             }
 
@@ -144,7 +154,7 @@ public sealed partial class FirstFlightGame : Node3D
         {
             SetProcess(false);
             GD.PushError($"Level 100 opening slice failed to initialize: {exception.Message}");
-            GetTree().Quit(4);
+            RequestQuit(4);
         }
     }
 
@@ -168,6 +178,21 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Process(double delta)
     {
+        if (_quitExitCode is int exitCode)
+        {
+            int pending = _audioRetirement.PendingCount;
+            if (pending == 0)
+            {
+                GetTree().Quit(exitCode);
+            }
+            else if (Time.GetTicksMsec() >= _audioShutdownDeadlineMs)
+            {
+                GD.PushError($"Audio shutdown timed out with {pending} playback objects still alive.");
+                GetTree().Quit(exitCode == 0 ? 4 : exitCode);
+            }
+            return;
+        }
+
         if (_level100WorldCreated)
         {
             _pauseView.AdvanceAnimation(delta);
@@ -612,6 +637,16 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Notification(int what)
     {
+        if (what == NotificationWMCloseRequest)
+        {
+            RequestQuit(0);
+            return;
+        }
+        if (_quitExitCode.HasValue)
+        {
+            return;
+        }
+
         if (what == NotificationWMWindowFocusOut)
         {
             _windowHasFocus = false;
@@ -635,6 +670,56 @@ public sealed partial class FirstFlightGame : Node3D
         }
     }
 
+    private void RequestQuit(int exitCode)
+    {
+        if (_quitExitCode.HasValue)
+        {
+            if (exitCode != 0)
+            {
+                _quitExitCode = exitCode;
+            }
+            return;
+        }
+
+        _quitExitCode = exitCode;
+        _audioShutdownDeadlineMs = Time.GetTicksMsec() + 5_000;
+        _gameplayActive = false;
+        SetProcessInput(false);
+        // Freeze producers before stopping audio. Ordinary frames continue only
+        // for the root's retirement check and Godot's mixer/main-thread cleanup.
+        foreach (Node child in GetChildren())
+        {
+            FreezeForQuit(child);
+        }
+        if (GodotObject.IsInstanceValid(_audio))
+        {
+            // Queue the owned 3D players for deletion too: a Play issued before
+            // its first physics frame holds a pending-start Ref even after Stop.
+            _audio.StopLevel100Audio();
+        }
+        ProcessMode = ProcessModeEnum.Always;
+        SetProcess(true);
+    }
+
+    private static void FreezeForQuit(Node node)
+    {
+        node.ProcessMode = ProcessModeEnum.Disabled;
+        if (node is AudioStreamPlayer player)
+        {
+            player.Stop();
+            player.Stream = null;
+        }
+        else if (node is AudioStreamPlayer3D spatialPlayer)
+        {
+            spatialPlayer.Stop();
+            spatialPlayer.Stream = null;
+        }
+        foreach (Node child in node.GetChildren())
+        {
+            FreezeForQuit(child);
+        }
+    }
+
     public override void _ExitTree()
     {
         try
@@ -645,6 +730,7 @@ public sealed partial class FirstFlightGame : Node3D
         {
             _tapeRecorder?.Dispose();
             _tapeRecorder = null;
+            _audioRetirement.Dispose();
             if (!_smokeMode)
             {
                 ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
@@ -830,7 +916,7 @@ public sealed partial class FirstFlightGame : Node3D
         {
             SetProcess(false);
             GD.PushError($"Level 100 failed to load from the frontend: {exception.Message}");
-            GetTree().Quit(4);
+            RequestQuit(4);
         }
     }
 
@@ -859,7 +945,7 @@ public sealed partial class FirstFlightGame : Node3D
         if (!_level100WorldCreated)
         {
             GD.PushError("The frontend tried to activate gameplay before Level 100 was ready.");
-            GetTree().Quit(4);
+            RequestQuit(4);
             return;
         }
 
@@ -1445,7 +1531,11 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        var sequence = new RetailStartupSequence { Name = "RetailStartupSequence" };
+        var sequence = new RetailStartupSequence
+        {
+            Name = "RetailStartupSequence",
+            PlaybackRetirement = _audioRetirement,
+        };
         sequence.Initialize(
             RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
             // A capture run is deterministic by contract, so the sequence has to
@@ -1542,7 +1632,11 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        var sequence = new RetailStartupSequence { Name = "RetailAttractRestart" };
+        var sequence = new RetailStartupSequence
+        {
+            Name = "RetailAttractRestart",
+            PlaybackRetirement = _audioRetirement,
+        };
         sequence.InitializeForAttract(
             RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
             _captureArgumentsPresent
@@ -1723,12 +1817,12 @@ public sealed partial class FirstFlightGame : Node3D
             WriteNewFileDurably(
                 _smokeReportPath!,
                 new UTF8Encoding(false).GetBytes(json + System.Environment.NewLine));
-            GetTree().Quit(0);
+            RequestQuit(0);
         }
         catch (Exception exception)
         {
             GD.PushError($"First Flight smoke failed: {exception.Message}");
-            GetTree().Quit(4);
+            RequestQuit(4);
         }
     }
 

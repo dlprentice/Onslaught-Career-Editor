@@ -99,6 +99,8 @@ public sealed partial class FrontendCaptureRig : Node
     private int[]? _requestedOffsetsMs;
     private readonly List<int> _droppedOffsetsMs = [];
 
+    public event Action? Completed;
+
     /// <summary>
     /// Frames are chosen to land on settled state, not on transition edges.
     /// FEBack128 runs at 15 fps over 286 frames; at --fixed-fps 60 one video
@@ -676,7 +678,7 @@ public sealed partial class FrontendCaptureRig : Node
         {
             _finished = true;
             WriteManifest();
-            GetTree().Quit();
+            Completed?.Invoke();
         }
     }
 
@@ -736,7 +738,7 @@ public sealed partial class FrontendCaptureRig : Node
         _finished = true;
         _pendingLabel = null;
         WriteManifest();
-        GetTree().Quit();
+        Completed?.Invoke();
     }
 
     private void WriteManifest()

@@ -53,6 +53,8 @@ public sealed partial class Level100Audio : Node3D
     private readonly Dictionary<AudioStreamPlayer, float> _frontendBaseVolumes = [];
     private readonly RetailMusicPolicy _musicPolicy = new();
 
+    internal AudioPlaybackRetirement PlaybackRetirement { get; set; } = null!;
+
     private AudioStreamPlayer _tutorialVoice = null!;
 
     // Retail owns exactly one music channel: the CMusic singleton at
@@ -330,6 +332,7 @@ public sealed partial class Level100Audio : Node3D
                         throw new InvalidOperationException(
                             "A music play action requires a track identity."));
                     _music.Play();
+                    PlaybackRetirement.Observe(_music);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(action));
@@ -758,6 +761,7 @@ public sealed partial class Level100Audio : Node3D
         _terminalBaseVolumes.Add(player, spec.LinearVolume);
         AddChild(player);
         player.Play();
+        PlaybackRetirement.Observe(player);
         player.StreamPaused = _gameplayPaused;
     }
 
@@ -787,6 +791,7 @@ public sealed partial class Level100Audio : Node3D
         _frontendBaseVolumes.Add(player, spec.LinearVolume);
         AddChild(player);
         player.Play();
+        PlaybackRetirement.Observe(player);
     }
 
     // Ordered Level100MessageRequested events enter by canonical speaker and
@@ -960,6 +965,7 @@ public sealed partial class Level100Audio : Node3D
         _gameplayOneShots.Add(player);
         _gameplayBaseVolumes.Add(player, spec.LinearVolume);
         player.Play();
+        PlaybackRetirement.Observe(player);
         player.StreamPaused = _gameplayPaused;
     }
 
@@ -1012,6 +1018,7 @@ public sealed partial class Level100Audio : Node3D
                 ListenerDistance(player),
                 initialSubVolume);
         player.Play();
+        PlaybackRetirement.Observe(player);
         player.StreamPaused = _gameplayPaused;
     }
 
@@ -1244,6 +1251,7 @@ public sealed partial class Level100Audio : Node3D
             gameplay: true,
             Level100AudioCatalog.RetailListenerSourceVolume);
         _tutorialVoice.Play();
+        PlaybackRetirement.Observe(_tutorialVoice);
         _tutorialVoice.StreamPaused = _gameplayPaused;
     }
 

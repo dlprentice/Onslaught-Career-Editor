@@ -646,6 +646,10 @@ public sealed partial class RetailFrontendFlow : Control
 
     public event Action? ReturnToMainMenuRequested;
 
+    public event Action? ExitRequested;
+
+    internal AudioPlaybackRetirement PlaybackRetirement { get; set; } = null!;
+
     public event Action<RetailCareerDescriptor>? CareerSelected;
 
     public event Action<RetailFrontendAudioCue>? AudioCueRequested;
@@ -3718,7 +3722,7 @@ public sealed partial class RetailFrontendFlow : Control
         HandleNavigationSignal(signal);
         if (signal == RetailFrontendSignal.ExitRequested)
         {
-            GetTree().Quit(0);
+            ExitRequested?.Invoke();
         }
         QueueRedraw();
     }
