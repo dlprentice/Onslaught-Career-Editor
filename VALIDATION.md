@@ -96,6 +96,11 @@ count when pause makes it differ from the already-hashed mission tick. The
 checks do not establish a complete spatial blast, exact motion/expiry, event
 dispatch ordering or a live playthrough.
 
+The charged Pulse zero-spread correction first failed its direction regression
+with 2,124 microradians of unwanted yaw, then passed **8/8 Core and 1/1 Client**
+checks. Both scatter random draws remain, and no fingerprint changed. The
+`large-pulse-zero-scatter-{red,green,client}-20260908.log` files retain the runs.
+
 The World 110 integration review exposed a setter/restore mismatch: script
 assignment still used the World 100 list. The new focused regression failed
 before repair, then **24/24** affected construction/registry tests passed.

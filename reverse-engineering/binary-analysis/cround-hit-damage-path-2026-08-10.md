@@ -461,8 +461,20 @@ swept contact owner. It applies one direct `8.0f` store, without the Medium
 second stage or an unconditional Large `4.0f` addition. Production contact
 checks distinguish 70 mm and 200 mm terrain clearance and observe target life
 `6 -> -2` with one direct damage stage. The separate Large explosion has radius
-1 and maximum damage 4; its spatial application, zero-inaccuracy mode,
-sound/effects, float motion and strict expiry remain open.
+1 and maximum damage 4; its spatial application, sound/effects, float motion
+and strict expiry remain open.
+
+The `Charged 2` weapon record `[0x135b3,0x1368a)` (215 bytes, SHA-256
+`6c603aa0e6654cdf6b8ed78dd377ef351a0378a3d10941138ae36860acad5234`)
+sets inaccuracy field 1 at `0x135df` to positive zero. The apply body at
+`0x00435cd0` places it in mode `+0x34`. The burst body still calls the shared
+random stream at `0x00506e0a` and `0x00506e3e` before multiplying by this field;
+there is no zero-value bypass. Its complete `[0x005069f0,0x005078ac)` body
+SHA-256 is `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`.
+Simulation now passes zero through the existing two-draw scatter owner. A
+charged-launch regression rejected the former Medium scatter and checks both
+the resulting direction and stream state. This does not establish every
+constructor/effect draw or the full game's random-stream phase.
 
 ## Remaining evidence boundary
 

@@ -3625,14 +3625,18 @@ public sealed class Simulation
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
+            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
+            // Charged2 field 1 @0x135DF in the pinned physics.dat is +0
+            // CWeaponInaccuracy. The retail scatter block still draws twice
+            // (0x00506E0A/0x00506E3E), then multiplies each by mode+0x34.
+            // Preserve those draws even when both angular offsets are zero.
             (int yawInaccuracy, int pitchInaccuracy) =
                 _level100ActorMechanics.NextWeaponInaccuracy(
-                    SimulationConstants.PulseCannonInaccuracyMicroRadians);
-            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
+                    largePulse ? 0 : SimulationConstants.PulseCannonInaccuracyMicroRadians);
             LaunchWalkerRound(
-                // Large now carries its own physical scalars. Its spatial
-                // blast, authored zero inaccuracy, launch sound and impact
-                // presentation remain open; this is not complete parity.
+                // Large carries its own physical scalars and zero scatter.
+                // Its spatial blast, launch sound and impact presentation
+                // remain open; this is not complete parity.
                 pulseRound,
                 largePulse ? SimulationConstants.LargePulseSpeedPerTick :
                     SimulationConstants.ProjectileSpeedPerTick,

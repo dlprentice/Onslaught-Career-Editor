@@ -350,9 +350,10 @@ countdowns as the gate. The charged mode uses its 0.5-second reload. Focused
 checks passed (43 frontend, 68 Core and five input/weapon Client tests).
 September 8 connected the shared retail event-clock calculation to weapon
 readiness, including level reset and gameplay pause. Large now uses its authored
-speed 20, nominal lifetime 7 seconds, contact radius 0.20 and direct damage 8.
+speed 20, nominal lifetime 7 seconds, contact radius 0.20 and direct damage 8;
+its zero aim spread preserves the two retail scatter random draws.
 Contact inputs preserve the original serialized BBOX/render-radius float words.
-Spatial blasts, Large scatter/effects, precise float motion/expiry and complete
+Spatial blasts, Large effects, precise float motion/expiry and complete
 controller/event ordering remain open. These changes have not had a live
 desktop playthrough; focused results are in [VALIDATION.md](VALIDATION.md).
 

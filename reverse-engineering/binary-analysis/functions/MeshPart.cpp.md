@@ -1,7 +1,8 @@
 # MeshPart.cpp Functions
 
 Status: active static function map
-Last updated: 2026-08-12
+Last updated: 2026-09-08
+Summary: source-coordinate map with the former material-loader interpretation corrected to BBOX input.
 Source File: `C:\dev\ONSLAUGHT2\MeshPart.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 `C:\dev\ONSLAUGHT2\MeshPart.cpp` is named by the shipped image and is **absent
@@ -14,14 +15,14 @@ see [that report](../pc-native-source-coordinates-2026-08-12.md).
 Each row below carries **measured** facts only: the exact entry address, the
 current Ghidra name, body size, callee-popped argument count from `ret imm`, the
 `__FILE__`/`__LINE__` coordinates the compiler emitted inside the body, and the
-heaviest direct callees. **No purpose is invented.** Where the existing name
-already describes the function, that name is the claim and the evidence either
-supports it or is silent — none of it is contradicted here.
+heaviest direct callees. A current saved name is not itself a behavior proof.
+The September 8 BBOX reading below contradicts the material-loader name at
+`0x004B3180`; that saved metadata still needs a separately scoped correction.
 
 Argument counts are callee-popped stack arguments; `this` travels in ECX and is
 not counted.
 
-| Address | Current name | Bytes | Stack args | Source lines | Heaviest callees |
+| Address | Current name | Bytes | Callee-popped args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x004AE2B0` | `CMeshPart__CreatePolyBucket` | 383 | 0 | 233 | `CMesh__GetNameOrUnknown` ×3, `stricmp` ×2 |
 | `0x004AE4B0` | `CMeshPart__Init` | 400 | 0 | 351 | `CDXMemoryManager__Alloc` ×2, `CDXMeshVB__ctor` |
@@ -48,9 +49,34 @@ Two evidence joins worth keeping:
   `CMeshPart__AllocateGeometry`, proving that cloning performs explicit
   initialization and geometry allocation. Whether it also copies raw buffers
   is not settled by the call list.
-- `LoadFromStream` and `LoadMaterial` are the only chunk-reader consumers here,
+- `LoadFromStream` and the BBOX reader currently named `LoadMaterial` are the only chunk-reader consumers here,
   and `LoadVerticesAndTriangles` and `LoadVerticesWithBones` read through
   `CDXMemBuffer` instead — two distinct input paths into the same object.
+
+## BBOX reader correction
+
+The complete `[0x004b3180,0x004b31ed)` body is 109 bytes / 42 instructions,
+SHA-256 `caad00aebffb7cc09b08813726eb633f0c949e4bf7126deac1b89b234f4e44d2`
+from the pristine specimen above. It receives a chunk reader and an optional
+existing destination as two caller-cleaned stack arguments; the plain `RET`
+does not mean zero arguments. It advances the chunk reader, allocates exactly
+40 bytes if the destination is null, reads `16 + 16 + 4 + 4` bytes into offsets
+`0`, `0x10`, `0x20`, `0x24`, and returns that pointer. It performs no floating
+arithmetic or material/texture lookup.
+
+The serialized mesh loader calls it at `0x004ab205`, stores the returned pointer
+in the resource's `+0x150` at `0x004ab20a`, and cleans both arguments at
+`0x004ab213`. The bounding-box getter at `0x004de060` returns this same field;
+the thing radius getter at `0x004f3940` then loads its `+0x24` word. The actual
+mesh BBOX payload is the same 40-byte layout. The
+[round/contact geometry owner](../cround-hit-damage-path-2026-08-10.md#serialized-geometry-and-terminal-target-tank-behavior)
+records the complete loader/getter body pins and raw Level 100 inputs.
+
+This supports a bounding-box read/reuse contract. The saved `LoadMaterial` name,
+`existing_material` parameter name and material tag are misleading; the current
+two-argument `__cdecl` shape is consistent with the bytes. Original source name
+and class ownership remain unproven because `MeshPart.cpp` is absent from the
+pinned drop. No live mesh-load observation or Ghidra mutation is claimed here.
 
 ## Counting note
 
@@ -61,8 +87,8 @@ allocation-site density, not as a function count.
 
 ## Open
 
-- No behaviour is established. Argument counts, callees and line numbers do not
-  give a contract; every one of these eleven still needs its own reading.
+- The BBOX reader has the bounded static contract above. Callees and line
+  numbers alone do not establish the other ten functions' complete behavior.
 - The bone-weighted vertex path at seven arguments is the widest interface here
   and the natural first target.
 

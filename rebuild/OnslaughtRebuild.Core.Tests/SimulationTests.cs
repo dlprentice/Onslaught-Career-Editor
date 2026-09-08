@@ -1601,6 +1601,25 @@ public sealed class SimulationTests
             pulseShot.FacingPitchMicroRad,
             pulseOffset);
 
+        Simulation chargedPulse = CreateFiringRangeExerciseSimulation();
+        for (int sample = 0; sample < 10; sample++)
+            chargedPulse.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        int chargedSeed = chargedPulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
+        var chargedRandom = new Level100ReleasedRandom(chargedSeed);
+        // The pristine scatter block calls the shared stream at 0x00506E0A
+        // and 0x00506E3E before each mode+0x34 multiply. Charged2's +0
+        // inaccuracy removes the offsets, never either draw. This checks only
+        // that bounded scatter stage, not every retail constructor/effect draw.
+        chargedRandom.Next();
+        chargedRandom.Next();
+        Assert.NotEqual(chargedSeed, chargedRandom.Seed);
+        WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot chargedRound = Assert.Single(chargedShot.Projectiles);
+        Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge, chargedRound.Kind);
+        Assert.Equal(chargedRandom.Seed, chargedShot.Level100ActorMechanics.ReleasedRandomSeed);
+        AssertDirection(chargedRound, chargedShot.FacingYawMicroRad,
+            chargedShot.FacingPitchMicroRad, (0, 0));
+
         Simulation jet = CreatePlayingSimulation();
         jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
         jet.Step(new SimInput(0, 0, SimActions.ToggleMode));

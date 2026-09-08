@@ -259,6 +259,8 @@ tap-fire at charge 0 stays Medium. The September 8 wiring uses
 `RetailEventScheduler.TimeAtFrameCount` for the level's stored clock, including
 reset and gameplay pause. Large now projects its authored speed 20, lifetime 7,
 radius 0.20 and direct damage 8 through the existing motion/contact owners.
+Its zero inaccuracy still consumes both scatter random draws, checked by
+`SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder`.
 `SimulationTests.PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits`
 and the `PulseRadius_*` / `PulseMeshContact_*` checks cover those bounded changes.
 Spatial blasts, float motion/expiry and full controller/event ordering remain
