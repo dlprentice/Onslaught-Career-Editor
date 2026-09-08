@@ -157,12 +157,11 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7.1-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
-    # Shared 2,148-step tape expectation from InteractiveSessionTests. The
-    # signed actor bases and Air Trainer profile life are now part of the
-    # materialized definition identity. Two identical in-process input runs
-    # reproduce this hash with the existing gameplay assertions intact. Native Godot/Windows
-    # execution of this updated retained gate remains pending.
-    Assert-SmokeValue 'stateHash' '2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365' $report.stateHash
+    # Shared 2,148-step tape expectation after the living-aircraft turn-rate
+    # correction. Repeated Client input runs and native Linux Godot smoke
+    # reproduce it with the gameplay assertions intact. Windows execution of
+    # this retained gate remains pending.
+    Assert-SmokeValue 'stateHash' 'bc5d99c7f1fbd5e2bf86363e5309e5aa77f0ad132241ef08a9e61b15d75b3dfd' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

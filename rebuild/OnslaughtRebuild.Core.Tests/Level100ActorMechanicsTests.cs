@@ -7,6 +7,45 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100ActorMechanicsTests
 {
+    [Theory]
+    [InlineData("Air Trainer", "AirTrainer")]
+    [InlineData("Target Drone", "AirborneDrone1")]
+    public void LivingPlaneUsesFullInitializedAirTurnRate(string definition, string script)
+    {
+        // CAirUnit Init copies profile +0xb8 unchanged to all three rate
+        // fields (0x00402b0c..0x00402b32). The factor 1/3 at 0x00402fc5
+        // belongs to the TF_DYING arm, which living aircraft skip.
+        var definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId plane = Assert.Single(actors.SpawnThing(
+            actors.GetThingRef("Airfield")!.Value, definition, "SpawnerB", 1, script));
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        actors.SetPose(plane, actors.GetPose(plane) with
+        {
+            PositionMillimeters = new SimVector3(0, 70_000, 0),
+            BasisFloatBits = IdentityBasis(),
+            LinearVelocityMillimetersPerTick = SimVector3.Zero,
+            AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
+        });
+        actors.SetPose(player, actors.GetPose(player) with
+        {
+            PositionMillimeters = new SimVector3(100_000, 70_000, 0),
+        });
+        Assert.True(actors.GetActor(plane).Active);
+        Assert.Equal(Level100ActorLifecycle.Alive, actors.GetActor(plane).Lifecycle);
+        var mechanics = new Level100ActorMechanics(actors, definitions);
+        mechanics.ApplyCommand(Command(1, plane,
+            Level100ActorScriptCommandKind.Attack, targetActorId: player));
+
+        Assert.Empty(mechanics.AdvanceTick());
+
+        // Both errors exceed the easing threshold, exposing the cap. Retail
+        // field 6 is 0x3d32b8c2 (0.04363323 rad) for both profiles. This checks
+        // its microradian projection, not the remaining native transaction.
+        Assert.Equal(new SimVector3(-43_633, -43_633, 0),
+            actors.GetPose(plane).AngularVelocityMicroRadiansPerTick);
+    }
+
     [Fact]
     public void Mechanics_AdvancesBasePoseAndKeepsTheLevel100FullStopDivergence()
     {

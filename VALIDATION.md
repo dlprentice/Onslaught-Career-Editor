@@ -253,6 +253,38 @@ coefficient example that did not distinguish multiplication from division.
 This primitive does not yet replace aircraft movement or its matrix builder;
 no new full-route run or replay fingerprint is claimed for it.
 
+The living-Plane turn-rate correction passed **34/34** mechanics/Euler checks
+and **1/1** repeated Client FirstFlight check. Both aircraft first failed at
+14,544 rather than 43,633 microradians. Logs are
+`living-plane-turn-{red,final-core,client-final}-20260908.log` in the same
+Linux directory. The Godot build also passed with zero warnings/errors.
+The native Godot smoke then completed at 2,148 ticks with the same fingerprint
+on a private authenticated Xvfb display, at both 60 and 20 recording frames/s.
+Only 20 frames/s matches this synthetic runner's one 20 Hz tick per frame.
+The two `first-flight-smoke.json` reports are under `movie/` and
+`movie-realtime/` in `local-data/first-flight/progress-video-20260908-a/`.
+They establish the smoke route, including retry/return, without desktop access;
+they do not establish live player acceptance. Input-method/vsync warnings reflect
+the private server; four ObjectDB leaks at exit remain an open runtime warning.
+
+The broader cold/returning selection passed **6/9**
+(`living-plane-turn-routes-20260908.log`). Two failures remain real full-combat
+gaps: the unchanged cold driver aborts with one final-wave kill, and the
+returning driver aborts with five. Both cold input adapters still match exactly
+at Won/tick 7260/hull 2750, hash
+`72defa3e803b75a263687945a34f30c1b64afaa6c432fba7a4752b64a32c3d4f`.
+Their full-combat assertions remain intact; the earlier successful routes below
+predate this corrected flight behavior.
+
+The third failure was an unsupported statistical hit-rate requirement. A
+focused old-cap control passed its former limits, showing route sensitivity;
+the source was restored to the measured full cap afterward. The test now checks
+causal hit/miss receipts, unique round identities, damage and disappearance,
+without treating an earlier sortie's percentages as a retail invariant.
+That check passed separately: each control's 67 damage events matched 67 named
+round hits (`living-plane-turn-{old-cap-control,causal-receipts}-20260908.log`).
+Existing finite-cylinder contact tests and both full-combat requirements remain.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing
@@ -263,9 +295,9 @@ unquantized cold fixture issued different commands and lost to water; it was
 retired as an invalid adapter-comparison requirement. The separate returning,
 naive and trigger-disabled controls remain.
 
-After the signed-basis and Trainer-life corrections, the repeated FirstFlight
-fingerprint is `2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365`
-(`trainer-life-client-final-20260908.log`). Its retained Windows-launcher
+After the living-Plane rate correction, the repeated FirstFlight
+fingerprint is `bc5d99c7f1fbd5e2bf86363e5309e5aa77f0ad132241ef08a9e61b15d75b3dfd`
+(`living-plane-turn-client-final-20260908.log`). Its retained Windows-launcher
 expectation was updated for the same tape, without Windows execution. The
 earlier controller-phase logs are `controller-phase-final-focused-20260908.log`,
 `controller-phase-final-smoke-20260908.log` and

@@ -327,6 +327,17 @@ playback still awaits the next desktop session. David reported successful retail
 Steam/Proton launch; the agent inspected that installation and executable identity
 but has not reproduced the retail playthrough.
 
+**September 8 isolated rendering.** The corrected living-aircraft build completed
+the native synthetic smoke at 2,148 ticks with the same final hash as the Client
+check. A private authenticated Xvfb server and software renderer produced actual
+Godot menu frames and a 107.9-second movie at 20 frames/s, matching the smoke's
+one 20 Hz simulation tick per frame. No desktop input or desktop capture was used.
+The smoke exercised movement, four fire inputs, retry and return; its mission
+was still Running. It is development footage, not a completed player tutorial,
+retail comparison or performance benchmark. Logs and raw recordings are in
+`local-data/first-flight/progress-video-20260908-a/`. Godot reported four leaked
+ObjectDB instances at exit; that lifecycle warning remains unresolved.
+
 **September 7 source and RE progress.** The
 [Actor/base contract](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
 and [Unit construction order](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
@@ -675,10 +686,9 @@ driver now aims from that retained launch pose instead of compensating for the
 former reversed phase order.
 
 The cold-start harness and its direct-Core control now load the full 44-actor
-shipping manifest through the production hash-checked decoder. The route
-destroys all 22 targets, including all six final-wave drones, keeps the abort
-false, completes primary objective 4 and reaches `Won` through
-`Reached Target Zone 4`.
+shipping manifest through the production hash-checked decoder. Its earlier
+22-target completion preceded the living-aircraft turn-rate correction below;
+that result is no longer the current full-combat outcome.
 The direct-Core control uses the same pointer-quantized commands and matches the
 complete state hash and pose trace. These are the two comparable inputs in
 [the cold-start tests](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
@@ -686,12 +696,23 @@ The September 8 signed-basis correction is separately covered by exact tilted-of
 tests, real materialization and focused Client checks; it does not establish
 native flight or visual parity. The authored Flyby and spawned AirTrainer now
 start with their physics profile's 3000 milli-life, including restore and render
-projection checks. The shipping-data cold-start route still passes after that
-correction. Aircraft vulnerability and complete damage/death behavior remain open.
+projection checks. Aircraft vulnerability and complete damage/death behavior
+remain open.
+
+Living Planes now retain their full initialized air turn rate. Retail reduces
+it to one third only while dying; the former mover applied that reduction to
+living aircraft too. Both materialized aircraft first failed a discriminating
+test, then passed with the full rate. The affected mechanics/Euler selection
+passes 34 checks and the repeated FirstFlight tape passes, but complete cold
+combat currently fails: both input adapters reach `Won` at tick 7260 with hull
+2750 through the low-health abort after only one final-wave kill. Their complete
+state and pose traces still match. The six-kill/no-abort assertions remain;
+neither a winning terminal state nor input-adapter equality closes this gap.
 
 The separate returning-career driver retains reduced fixture definitions. It
-also clears all 22 targets without the
-abort, completes objective 4 and wins, at tick 7621 with hull 10,468. Its
+now takes the abort after five final-wave kills and reaches `Won` at tick 6331
+with hull 6750. Its earlier 22-target result at tick 7621 preceded the same
+turn-rate correction. The
 [full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs)
 retain the independent naive and trigger-disabled controls. The retired
 unquantized cold control used different commands and lost to water after two

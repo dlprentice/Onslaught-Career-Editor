@@ -1797,9 +1797,8 @@ public sealed class InteractiveSessionTests
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
             CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
         Assert.True(
-            // Air Trainer initial life now comes from its physics profile;
-            // actor state and the materialized definition identity both change.
-            finalStateHash == "2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365",
+            // Living aircraft now retain their full initialized turn rate.
+            finalStateHash == "bc5d99c7f1fbd5e2bf86363e5309e5aa77f0ad132241ef08a9e61b15d75b3dfd",
             $"First-flight final state hash: {finalStateHash}");
     }
 

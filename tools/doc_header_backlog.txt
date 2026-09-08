@@ -42,7 +42,6 @@ reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md
 reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md
 reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md
 reverse-engineering/binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md
-reverse-engineering/binary-analysis/functions/AirUnit.cpp/CAirUnit__Init.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__FinishedPlayingCurrentAnimation.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GroundParticleEffect.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md

@@ -737,28 +737,21 @@ public static class SimulationConstants
     //
     // The value-id -> class map is
     // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md;
-    // ids 2/6 write unit-record +0xb4/+0xb8, exactly the slots the ground ids
-    // 1/5 write, which is why the air unit reuses the ground guide's turn law
-    // with its own field.
+    // ids 2/6 write unit-record +0xb4/+0xb8. CAirUnit Init copies +0xb8 to
+    // all three Euler rate fields at 0x00402b0c..0x00402b32. The factor 1/3
+    // at 0x00402fc5 applies only while TF_DYING; living Plane motion uses
+    // the full rate. The air and ground guides have different move paths.
     //
-    // These are NOT carried on `Level100ActorMotionDefinition` because that
-    // record reaches Core through
-    // rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:142,
-    // an eleven-argument positional construction in a tree this work does not
-    // own, and InteractiveSessionTests.cs:730-741 pins every non-GroundVehicle
-    // motion scalar to null. `materialize_retail_assets.py`
-    // `_level100_actor_motion_definitions` asserts these exact bits on every
-    // run, so the two cannot drift apart silently.
+    // The current Plane path reads these constants; its manifest motion
+    // scalars remain null. materialize_retail_assets.py validates these exact
+    // profile words in _level100_actor_motion_definitions.
     //
-    // Speed unit: the air guide (CAirGuide vtable 0x005d8594 slot 3 =
-    // 0x00402280) sets mVelocity (unit +0x14c) to
-    // `GetMaxVelocity() * 0.05 * 4.0` along the facing axis, where 0.05 is
-    // 1/GAME_FR at the measured 20 Hz released tick (DAT_005d8584) and 4.0 is
-    // DAT_005d85bc. The already-tested ground reconstruction moves at
-    // CUnitGroundVelocity units per second, and the ground guide
-    // (CGroundVehicleGuide__VFunc03 @0x0047d750) is the same virtual with the
-    // same two factors, so the net rate is the record value in units per
-    // second and the 4.0 is the full-move cadence, not a speed multiplier.
+    // CAirGuide slot 3 writes drive using GetMaxVelocity() * 0.05 * 4.0.
+    // AirUnit motion subsequently clamps velocity to GetMaxVelocity() * 0.05
+    // before Unit moves the Actor. The current reconstruction uses that cap
+    // as constant speed; it does not yet reproduce the retained drive,
+    // friction, gravity and velocity transaction. Plane's multiplier is 1.0;
+    // the guide's factor 4 is not GroundVehicle's four-tick cadence.
     public const int Level100TargetDroneAirSpeedMillimetersPerSecond = 5_500;
     public const int Level100AirTrainerAirSpeedMillimetersPerSecond = 9_200;
     public const int Level100PlaneAirTurnRateFloatBits = 0x3D32B8C2;

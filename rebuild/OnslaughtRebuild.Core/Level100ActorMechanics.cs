@@ -323,34 +323,12 @@ public sealed partial class Level100ActorMechanics
     // Decoded read-only from the pristine BEA.exe, sha256
     // 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750, and
     // written up in local-lab/PLANE-MOTION-AND-ACTOR-WEAPONS-2026-07-26.md.
-    // Three released functions own this between them:
-    //
-    //   CAirGuide::VFunc03            0x00402280  (CAirGuide vtable 0x005d8594
-    //                                              slot 3) - produces the
-    //                                              desired euler triple at
-    //                                              unit+0x120 and writes
-    //                                              mVelocity at unit+0x14c.
-    //   CUnit__SmoothEulerTowardTargetAndBuildMatrix
-    //                                 0x004fa4b0  - turns the current euler
-    //                                              (unit+0x114) toward the
-    //                                              desired by
-    //                                              min(|error| * MM * 0.1,
-    //                                                  MM * maxStep), where
-    //                                              MM is vtable slot 24 and
-    //                                              DAT_005d85c0 = 0.1.
-    //   CUnit__UpdateMotionAndTrailEffects
-    //                                 0x00402fa0  - sets the three max euler
-    //                                              steps to
-    //                                              record[+0xb8] * 0.333333
-    //                                              (DAT_005d8608), accumulates
-    //                                              mVelocity into the move
-    //                                              buffer at unit+0x7c, and
-    //                                              CLAMPS that buffer's
-    //                                              magnitude to
-    //                                              GetMaxVelocity() * 0.05
-    //                                              (vtable slot 111 @0x1bc,
-    //                                              which returns
-    //                                              record[+0xb4]).
+    // CAirGuide slot 3 (0x00402280) produces desired Euler at Unit+0x120
+    // and drive at +0x14c. Unit 0x004fa4b0 smooths current Euler toward it.
+    // CAirUnit Init 0x00402b0c copies profile+0xb8 unchanged into all three
+    // maximum steps. CAirUnit__UpdateMotionAndTrailEffects (0x00402fa0)
+    // reduces those rates by float 1/3 ONLY in its TF_DYING arm; the living
+    // aircraft handled here retain the full initialized rate.
     //
     // This remains a compatibility approximation: integer yaw/pitch are
     // recovered from the projected basis, roll is discarded, and constant
@@ -383,11 +361,9 @@ public sealed partial class Level100ActorMechanics
         int desiredYaw = PlaneDesiredYaw(pose, guideTarget, currentYaw);
         int desiredPitch = PlaneDesiredPitch(pose);
 
-        int maximumStep = DivideRoundNearest(
-            (long)ScalePositiveFloatBits(
-                SimulationConstants.Level100PlaneAirTurnRateFloatBits,
-                1_000_000),
-            3);
+        int maximumStep = ScalePositiveFloatBits(
+            SimulationConstants.Level100PlaneAirTurnRateFloatBits,
+            1_000_000);
         int nextYaw = NormalizeMicroRad(
             currentYaw + PlaneEulerStep(currentYaw, desiredYaw, maximumStep));
         int nextPitch = NormalizeMicroRad(

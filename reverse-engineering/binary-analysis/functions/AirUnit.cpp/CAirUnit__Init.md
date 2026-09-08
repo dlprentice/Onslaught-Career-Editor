@@ -1,6 +1,42 @@
 # CAirUnit__Init
 
+Status: active static contract; dated export receipts retained below
+Last updated: 2026-09-08
+Source File: none — `AirUnit.cpp` is absent from the pinned source drop | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Summary: air-unit initialization, including the full living-aircraft Euler rate and the separate dying-state reduction.
+
 > Address: 0x00402ad0 | Source: AirUnit.cpp (source file not present in `references/Onslaught/` snapshot)
+
+## Living-aircraft turn rate, September 8
+
+Fresh reads use `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+After base initialization, this function loads the selected profile from
+**initializer** `+0x3bc`, reads its air turn rate at `+0xb8`, and copies that
+word unchanged into Unit `+0x12c`, `+0x130` and `+0x134`.
+
+At `0x00402fae`, `CAirUnit__UpdateMotionAndTrailEffects` tests Thing flag
+`0x4` (`TF_DYING`). The clear branch at `0x00402fb1` skips all three rate
+rewrites. Only the dying arm multiplies the profile value by `0x3eaaaaab`
+(float one third, at `0x005d8608`). Living Plane/guide movement does not apply
+that reduction. Air Trainer and Target Drone both supply `0x3d32b8c2`
+(0.04363323 radians); the rebuild's living-aircraft cap now projects this
+full value to 43,633 microradians instead of 14,544.
+
+Half-open measured spans:
+
+| Operation | Range | SHA-256 |
+| --- | --- | --- |
+| Initial profile/rate copy | `0x00402afe..0x00402b32` | `f8014540c012c1d36509d18742430cc9fc0a3d409efd8219a26117eb26493dc5` |
+| Dying gate and reduced-rate stores | `0x00402fa0..0x00402feb` | `80f58a62c1f928b7b2e7c1a38c7122b00c0c2ab79cfcd19e058828fdf018b515` |
+
+The two materialized-aircraft regressions first reproduced the incorrect
+one-third cap. This corrects that branch selection within the existing mover;
+retained raw flight state, banking, guide caching and the complete native
+movement/death transaction remain unfinished. No live game or writable Ghidra
+session was used for this correction. Historical naming and export counts below
+are dated receipts, not current runtime validation.
 
 ## Name corrections — 2026-07-28
 

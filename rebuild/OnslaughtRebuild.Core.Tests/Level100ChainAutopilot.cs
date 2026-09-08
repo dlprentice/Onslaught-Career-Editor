@@ -481,18 +481,12 @@ internal sealed class Level100ChainAutopilot
     /// <summary>
     /// The same run with the trigger held shut for the whole of beat 9.
     ///
-    /// <para><b>This is a control, and it is the only way two of this suite's
-    /// measurements are still takeable.</b> Both
+    /// <para>This control deliberately exercises the authored low-hull abort
+    /// and supplies Blaster outcomes independently of the main route's combat
+    /// performance. It supports
     /// <see cref="Level100FullChainTests.AbortAirborneDrones_SilencesTheDronesThatWereAttacking"/>
     /// and
-    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
-    /// observe things that only happen to a player who is losing beat 9: the
-    /// released sub-40 % <c>Abort Airborne Drones</c> poll, and Blasters
-    /// launched at a player whose crossing speed is below what the
-    /// <c>18 / slant</c> law needs. The main run no longer supplies either,
-    /// because it clears the wave. Neither assertion in either test was
-    /// changed; they were given a run that still reaches the state they are
-    /// about.</para>
+    /// <see cref="Level100FullChainTests.BlasterDamageMatchesCausalRoundReceipts"/>.</para>
     ///
     /// <para>The only difference is <see cref="SimActions.Fire"/> in beat 9.
     /// <c>Simulation.TryFire</c> precedes <c>UpdateMovement</c> and does not
@@ -513,23 +507,10 @@ internal sealed class Level100ChainAutopilot
     /// a pilot who tracks the drones and shoots at nothing while flying
     /// straight through the wave.
     ///
-    /// <para><b>It exists because the driver got better and took an observable
-    /// with it.</b> Since the 20 Hz migration re-derived
-    /// <see cref="ErrorPole"/>, the crabbing control is never hit by a
-    /// <c>Blaster</c> at all: measured on the trigger-shut control, 243 rounds,
-    /// <b>zero</b> impacts, and the lowest <c>v_perp * R / 18</c> the wave ever
-    /// got was 1.21 - so
-    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
-    /// had a 217-round population above the law's requirement and an EMPTY one
-    /// below it. A separatrix needs both sides.</para>
-    ///
-    /// <para><b>And the variable it removes is the one the law is about.</b>
-    /// <see cref="EngageWaveTwo"/>'s own remarks say the held crab is what
-    /// defeats the Blaster, because <c>Simulation.JetAlignmentPermille</c>
-    /// returns 0 while <c>MoveX</c> is held and the flight path is never pulled
-    /// back onto the nose. Nothing tested that. This control does: it is the
-    /// same sortie with <c>MoveX</c> 0, and the difference between the two
-    /// populations is the crab's whole worth.</para>
+    /// <para>Removing the crab supplies a distinct movement and impact path
+    /// for <see cref="Level100FullChainTests.BlasterDamageMatchesCausalRoundReceipts"/>.
+    /// Historical hit counts are not invariants; the test checks actual round
+    /// identities and damage receipts in both controls.</para>
     /// </summary>
     internal static Level100ChainAutopilot CreateWithWaveTwoTriggerAndCrabHeldShut()
     {
@@ -591,8 +572,8 @@ internal sealed class Level100ChainAutopilot
     // Blaster ballistics measurement
     //
     // Pure observation of snapshots the driver already reads. It changes no
-    // input and is not consulted by any decision: it exists to test the
-    // `18 / slant` crossing-speed law against the run's own hits and misses.
+    // input and is not consulted by any decision. Round identity, damage and
+    // disappearance receipts establish hits; reconstructed geometry is diagnostic.
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -2147,14 +2128,13 @@ internal sealed class Level100ChainAutopilot
     /// pulling the flight path back onto the nose and the airframe holds a
     /// standing crab. The reticle does not move; the aeroplane does.</para>
     ///
-    /// <para><b>Standing off was the obvious next move and it was measured and
-    /// rejected.</b> The <c>18 / slant</c> requirement falls as range grows, so
-    /// fighting at 15-20 m rather than 4-8 m should be nearly free - and on the
-    /// Blaster axis it is. See
-    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
-    /// for the law itself. Two stand-off disciplines were flown, both holding a
-    /// band by putting the nearest drone off the nose while inside the floor
-    /// and re-attacking past the ceiling:</para>
+    /// <para>Historical stand-off experiments tried to reduce Blaster hits by
+    /// increasing range. Their counts below describe the model at that time;
+    /// they do not establish a universal range/velocity law.
+    /// <see cref="Level100FullChainTests.BlasterDamageMatchesCausalRoundReceipts"/>
+    /// now checks causal accounting for the current model. Both experiments
+    /// held a band by putting the nearest drone off the nose while inside the
+    /// floor and re-attacking past the ceiling:</para>
     ///
     /// <list type="table">
     ///   <item><description>11-19 m band, 90 degrees off: the historical
