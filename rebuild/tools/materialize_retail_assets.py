@@ -293,7 +293,7 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
 WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v7"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578"
+    "ace932aaf6277b1ebe1a7b5408024fc638eb1d70bb0be5731ae878eab8292ba4"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
@@ -582,45 +582,12 @@ STATIC_WORLD_ANIMATED_MESHES = {
     "ft_pulse": 101,
     "ft_sam": 21,
 }
-# Reproducibility pin for the generated manifest. Moved 2026-07-27 from
-# e4cc77ff457edd7ada351cc92347108cee2e2ae6e01a16dee277b5cb83841f06 by the
-# waypoint-path coordinate correction in
-# `_parse_level_world_actors_and_waypoints`; schema v13 -> v14. (Its own
-# predecessor was f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314
-# f9224, moved by the PINE_MESH_QUALITY_DISTANCE 70.0 -> 30.0 correction.)
-#
-# MEASURED leaf diff against the previous manifest, 9,685 -> 9,723 leaves:
-#   changed 181 - `schema` (1) and `waypointPaths` (180)
-#   added    38 - `waypointPaths[].isClosed` (8) and
-#                 `waypointPaths[].targetChainNodeIndices` (30 elements)
-#   removed   0
-# NOTHING outside `waypointPaths` and `schema` moved. Meshes, textures, pines,
-# actor definitions, spawn definitions, motion definitions, objects, water and
-# every source hash are leaf-for-leaf identical.
-#
-# The 180 changed waypoint leaves are exactly 30 points x (3 position + 3 of 4
-# retail float-bit components). The 30 fourth components did NOT change, and
-# that is a check rather than a coincidence: the navigation graph's w was 0.0
-# for all 121 entries, and the marker records have no fourth component, so both
-# readings emit the float bits of 0.0f there.
-#
-# MOVED AGAIN 2026-08-01 from
-# 2dfad0dc536b2cdf5e01b26f04cf81c4185975d85357c16498adbacdbb8b8568 by the
-# VERTICAL DATUM correction at `_actor_pose`: the authored vertical now goes
-# through `_core_elevation_millimeters` instead of being written raw. Schema
-# unchanged - this moves values, not shape.
-#
-# MEASURED leaf diff against the previous manifest, 9,723 leaves either side:
-#   changed 54 - `actorDefinitions[].initialPose.positionMillimeters[1]` (44)
-#                and `spawnDefinitions[].initialPose.positionMillimeters[1]`
-#                (10)
-#   added     0
-#   removed   0
-# NOTHING outside those two vertical components moved. `authoredTransform`,
-# `objects`, `waypointPaths`, meshes, textures, pines, motion definitions,
-# water and every source hash are leaf-for-leaf identical - which is the check
-# that this was a datum conversion and not a re-decode.
-STATIC_WORLD_MANIFEST_SHA256 = "97e3b3bf3399d9d3de5d85605efb97a849455ac3b2220981d20fdaf3608f0c27"
+# Reproducibility pin for the v14 manifest: authored waypoint coordinates,
+# up-positive Core positions, and signed retail-to-Core bases. The 2026-09-08
+# Q*B*inverse(Q) correction changes 237 +0 words to -0 across 44 actors and
+# 10 spawns. Raw transforms, positions, paths and all other fields are unchanged.
+# Keep this pin aligned with Level100ActorDefinitionManifest.ExpectedManifestSha256.
+STATIC_WORLD_MANIFEST_SHA256 = "ee834981471beed4bb6df0a6b803b0805ed54740529ffddc17dccedf07fbd552"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -3380,9 +3347,12 @@ def _matrix_vector(matrix, vector) -> list[float]:
 
 
 def _change_basis_retail_to_core(retail_basis) -> list[list[float]]:
-    # Core axes are retail X,Z,Y. The permutation is its own inverse.
-    permutation = [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
-    return _matrix_multiply(_matrix_multiply(permutation, retail_basis), permutation)
+    # Match position/velocity conversion Q(x,y,z)=(x,-z,y): Q*B*inverse(Q).
+    # Direct selection/negation also preserves the float words' signed zeros.
+    b = retail_basis
+    return [[b[0][0], -b[0][2], b[0][1]],
+            [-b[2][0], b[2][2], -b[2][1]],
+            [b[1][0], -b[1][2], b[1][1]]]
 
 
 def _authored_transform(position, orientation) -> dict[str, list[int]]:

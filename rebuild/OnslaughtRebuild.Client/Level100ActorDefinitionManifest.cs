@@ -13,52 +13,13 @@ namespace OnslaughtRebuild.Client;
 /// </summary>
 public static class Level100ActorDefinitionManifest
 {
-    // Moved 2026-07-27 from
-    // E4CC77FF457EDD7ADA351CC92347108CEE2E2AE6E01A16DEE277B5CB83841F06 by the
-    // waypoint-path coordinate correction (task #114 section 4-B). The eight
-    // named paths index RLWD initial-actor ordinals of the 30 thingType-18
-    // marker records, not the 121-entry navigation graph the materializer was
-    // reading; nodeIndex was already right, only the coordinate lookup was
-    // wrong. Schema v13 -> v14 for the two fields the correction adds.
-    //
-    // Verified against the previous manifest, 9,685 -> 9,723 leaves:
-    //   changed 181 - schema (1) and waypointPaths (180)
-    //   added    38 - waypointPaths[].isClosed and .targetChainNodeIndices
-    //   removed   0
-    // Nothing outside waypointPaths and schema moved.
-    //
-    // UNLIKE the pine move this replaces, this one DOES reach the decoder and
-    // DOES move the simulation state hash, by two independent routes: the
-    // waypoint positions and retail component bits feed
-    // Level100ActorRegistry.ComputeIdentity, whose digest StateHasher writes;
-    // and the ground actors now drive along different, much longer routes. Both
-    // are intended. See the golden in InteractiveSessionTests.
-    //
-    // MOVED AGAIN 2026-08-01 from
-    // 2DFAD0DC536B2CDF5E01B26F04CF81C4185975D85357C16498ADBACDBB8B8568 by the
-    // VERTICAL DATUM correction in materialize_retail_assets.py `_actor_pose`.
-    // The authored vertical was being written raw - a DOWN-POSITIVE retail Z -
-    // into a Core Y every consumer reads as up; it now goes through
-    // `_core_elevation_millimeters`, the same `-10.0 - retailZ` conversion the
-    // renderer and `authoredElevationMillimeters` already spelled.
-    //
-    // Verified against the previous manifest, 9,723 leaves either side:
-    //   changed 54 - actorDefinitions[].initialPose.positionMillimeters[1] (44)
-    //                and spawnDefinitions[].initialPose.positionMillimeters[1]
-    //                (10)
-    //   added     0
-    //   removed   0
-    // NOTHING outside those two vertical components moved - not
-    // authoredTransform, not objects, not waypointPaths, not one source hash.
-    // Transporter and Air Trainer -15000 -> +5000, Player 1 -10000 -> 0,
-    // Forseti Docks -8871 -> -1129, every retail-Z-0 static 0 -> -10000.
-    //
-    // It reaches the decoder and moves the simulation state hash. The -10000
-    // statics are NOT left buried: this landed together with the general
-    // CThing::Init support clamp in Level100ActorRegistry.SeatOnGround, which
-    // is what puts them back on the terrain. Neither half is correct alone.
+    // Schema v14 retains authored waypoint coordinates and Core's up-positive
+    // position datum. The signed retail-to-Core basis correction on 2026-09-08
+    // changes only 237 +0 words to -0 across 44 actors and 10 spawns; raw retail
+    // transforms, positions, paths and source identities are unchanged.
+    // Definition identity hashes those exact words, so replay pins move too.
     public const string ExpectedManifestSha256 =
-        "97E3B3BF3399D9D3DE5D85605EFB97A849455AC3B2220981D20FDAF3608F0C27";
+        "EE834981471BEED4BB6DF0A6B803B0805ED54740529FFDDC17DCCEDF07FBD552";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =

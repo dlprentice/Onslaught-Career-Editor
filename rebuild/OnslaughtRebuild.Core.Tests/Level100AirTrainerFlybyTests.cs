@@ -51,7 +51,7 @@ public sealed class Level100AirTrainerFlybyTests
     /// <summary>
     /// The Air Trainer's authored initial pose, from the hash-pinned manifest
     /// <c>level100-static-world.json</c> (sha256
-    /// <c>97E3B3BF…0C27</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
+    /// <c>EE834981…D552</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
     /// fixture parks every non-static actor at the origin, which is fine for
     /// the tests that only need an actor to exist and useless for a test about
     /// a flight path, so this one is stated here and cross-checked against the
@@ -76,9 +76,9 @@ public sealed class Level100AirTrainerFlybyTests
     /// </summary>
     internal static readonly Level100FloatBasis3Bits AuthoredAirTrainerBasis =
         new(
-            -1_082_130_432, 0, 867_941_678,
-            0, 1_065_353_216, 0,
-            -1_279_541_970, 0, -1_082_130_432);
+            -1_082_130_432, int.MinValue, 867_941_678,
+            int.MinValue, 1_065_353_216, int.MinValue,
+            -1_279_541_970, int.MinValue, -1_082_130_432);
 
     private const int FlightCoreTicks = 200 * SimulationConstants.TicksPerSecond;
 

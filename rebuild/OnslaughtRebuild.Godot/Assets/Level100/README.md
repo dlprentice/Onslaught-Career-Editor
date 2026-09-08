@@ -1,5 +1,9 @@
 # Level 100 opening assets
 
+Status: active
+Last updated: 2026-09-08
+Summary: locally materialized training assets, their identities and provenance.
+
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
 three training target meshes, the two ambient aircraft meshes,
@@ -205,9 +209,13 @@ is emitted verbatim as the `mesh` field of the hash-pinned
 file name, so both pinned generated payloads are byte-unchanged:
 `level100-static-world.json` = `2DFAD0DC…8568` and `level100-contact-owners.json`
 = `C45E89D1…D524F2`, exactly their pins at the time. `level100-static-world.json`
-has since moved to `97E3B3BF…0C27`, by the 2026-08-01 vertical-datum correction
+subsequently moved to `97E3B3BF…0C27`, by the 2026-08-01 vertical-datum correction
 in `_actor_pose` and nothing else — 54 leaves, all of them an actor's or a
 spawn's `initialPose.positionMillimeters[1]`.
+The September 8 signed basis conversion moves it to `EE834981…D552`:
+237 projected-basis words change from +0 to -0, with all raw retail fields,
+positions and other content unchanged. Both current materializer and decoder
+enforce the new identity; historical receipts retain their original pins.
 
 MEASURED from each mesh's own `MSHT`/`TEXB` records: `m_FA_F24_training.msh.aya`
 names `meshtex\f_pulsetank_training.tga` and `meshtex\Chrome3.tga` with TEXB

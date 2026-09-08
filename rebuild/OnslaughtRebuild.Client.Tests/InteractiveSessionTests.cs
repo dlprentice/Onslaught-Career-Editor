@@ -1797,7 +1797,9 @@ public sealed class InteractiveSessionTests
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
             CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
         Assert.True(
-            finalStateHash == "4b225ba60ede77c1b00810fb3abdf225c376aadf348820355b47752f71a4ab04",
+            // Signed retail-to-Core basis conversion retains -0 in the
+            // materialized definitions and therefore their hashed identity.
+            finalStateHash == "5a8403628e52ea241a2a4c518f4bf1a965d96ce0c572888bf77babcffb54f5e0",
             $"First-flight final state hash: {finalStateHash}");
     }
 

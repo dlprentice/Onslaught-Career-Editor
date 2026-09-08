@@ -193,6 +193,28 @@ open. The subsequent cold-start/pointer/handoff selection passed **5/5**
 (`ground-dying-motion-routes-20260908.log`) without driver or fingerprint changes.
 These results do not establish live play parity.
 
+The retail-to-Core basis correction passed **112/112** focused Core checks
+(Thing/Actor projection, mechanics, contacts, registry and existing World 110
+construction) and **76/76** materializer checks. Both exact quarter-turn offset
+cases and signed-zero preservation first failed against the old unsigned
+permutation. The Core cases also check the resulting rendered point without
+launching Godot. Real materialization reproduced **389 exact files**. The two
+changed manifests contain only projected-basis signed-zero changes: 237 words
+across Level 100's 44 actors/10 spawns, and 189 across World 110's 43 actors.
+Raw retail words, positions and non-pose fields are unchanged. Logs are
+`actor-basis-{core,python}-red-20260908.log`,
+`actor-basis-{core,python}-final-20260908.log` and
+`actor-basis-materialize-20260908.log` in the same Linux directory.
+The materialized Client selection passed **7/7** after updating the manifest
+identity and reproducing the new first-flight fingerprint twice; the earlier
+`client-initial` and `client-pin` logs preserve the stale-pin failures.
+The five existing cold-start/handoff tests also pass (`actor-basis-routes-20260908.log`),
+but use reduced hand-built definitions and do not validate the new manifest.
+The coupled waypoint/flyby checks passed **10/10** after preserving the four
+negative-zero words in their authored Trainer basis; the prior mismatch and
+the correction are retained in `actor-basis-waypoints-20260908.log` and
+`actor-basis-waypoints-final-20260908.log`.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

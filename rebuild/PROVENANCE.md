@@ -325,8 +325,10 @@ through SAT Cannon initialization and the six following Features in authored ord
 The materializer retains SAT's CAMD mode IDs, ordered weapon/mode records,
 ground-profile defaults and each iceberg profile, plus full original CPOS/CORI
 word arrays. It does not export vertex/index geometry or treat padding as state.
-The v7 materialized actor payload is 234,999 bytes with
-SHA-256 `7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578`.
+The v7 materialized actor payload is 236,889 bytes with
+SHA-256 `ace932aaf6277b1ebe1a7b5408024fc638eb1d70bb0be5731ae878eab8292ba4`.
+The September 8 signed coordinate conversion changes 189 zero words in the
+43 projected initial bases; raw retail transforms and other fields are unchanged.
 The collision centre uses the type-selected retail branch and explicit float
 stores; the transformed branch shares the existing attachment point arithmetic.
 The source mesh, static body pins and fresh resource-route assumptions belong

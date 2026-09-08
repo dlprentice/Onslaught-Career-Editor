@@ -1,11 +1,78 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.Client;
 
 namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class ThingActorBaseStateTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RetailPoses_RotationAgreesWithConvertedOffset(bool pitch)
+    {
+        const int one = 0x3f800000;
+        const int minusOne = unchecked((int)0xbf800000);
+        // Exact quarter turns isolate the axis conversion from Euler/trig math.
+        var basis = pitch
+            ? new Level100FloatBasis3Bits(one, 0, 0, 0, 0, minusOne, 0, one, 0)
+            : new Level100FloatBasis3Bits(0, 0, one, 0, one, 0, minusOne, 0, 0);
+        var origin = new Level100FloatVector3Bits(
+            BitConverter.SingleToInt32Bits(288.6875f),
+            BitConverter.SingleToInt32Bits(243.25f),
+            BitConverter.SingleToInt32Bits(-10f));
+        var raw = new RetailActorPoseSnapshot(origin, basis);
+        var state = new ThingActorBaseState(new(SimVector3.Zero, IdentityBasis()),
+            SimVector3.Zero, SimVector3.Zero, 0);
+        state.BeginRetailInitialization(raw, raw, 0);
+
+        // Local retail offset (2,3,5) becomes Core (2,-5,3). Rotating it in
+        // retail first gives (2,-5,3) for pitch or (5,3,-2) for roll.
+        SimVector3 expected = pitch ? new(2000, -3000, -5000) : new(5000, 2000, 3000);
+        foreach (ThingActorPoseSnapshot pose in new[] { state.Snapshot.CurrentPose, state.Snapshot.OldPose })
+        {
+            Level100FloatBasis3Bits b = pose.BasisFloatBits;
+            static float F(int bits) => BitConverter.Int32BitsToSingle(bits);
+            var actual = new SimVector3(
+                (int)(F(b.Row0X) * 2000 - F(b.Row0Y) * 5000 + F(b.Row0Z) * 3000),
+                (int)(F(b.Row1X) * 2000 - F(b.Row1Y) * 5000 + F(b.Row1Z) * 3000),
+                (int)(F(b.Row2X) * 2000 - F(b.Row2Y) * 5000 + F(b.Row2Z) * 3000));
+            Assert.Equal(expected, actual);
+        }
+        Assert.Equal(raw, state.Snapshot.RetailPoses!.Current);
+
+        var target = new TargetSnapshot(new(1), 1, "Target Drone", "m_FA_F24_training.msh.aya",
+            SimVector2.Zero, 1000, true,
+            new(SimVector3.Zero, state.Snapshot.CurrentPose.BasisFloatBits,
+                SimVector3.Zero, SimVector3.Zero));
+        Level100RenderBasis3 render = Level100TargetPresentation.Project(target).Basis;
+        // The mesh converter plus its -90-degree X child rotation maps the
+        // same local retail point to Godot (2,-5,-3). No renderer sign repair.
+        var renderedPoint = new Level100RenderVector3(
+            render.XAxis.X * 2 - render.YAxis.X * 5 - render.ZAxis.X * 3,
+            render.XAxis.Y * 2 - render.YAxis.Y * 5 - render.ZAxis.Y * 3,
+            render.XAxis.Z * 2 - render.YAxis.Z * 5 - render.ZAxis.Z * 3);
+        Assert.Equal(pitch ? new(2, -3, 5) : new Level100RenderVector3(5, 2, -3), renderedPoint);
+    }
+
+    [Fact]
+    public void RetailPoses_ProjectionPreservesSignedPermutationWords()
+    {
+        const int negativeZero = int.MinValue;
+        var raw = new RetailActorPoseSnapshot(new(0x43880000, 0x43700000, unchecked((int)0xc1200000)),
+            IdentityBasis() with { Row0Y = negativeZero, Row1X = negativeZero,
+                Row1Z = negativeZero, Row2Y = negativeZero });
+        var state = new ThingActorBaseState(new(SimVector3.Zero, IdentityBasis()),
+            SimVector3.Zero, SimVector3.Zero, 0);
+        state.BeginRetailInitialization(raw, raw, 0);
+        var expected = IdentityBasis() with { Row0Y = negativeZero, Row0Z = negativeZero,
+            Row1X = negativeZero, Row2X = negativeZero };
+        Assert.Equal(expected, state.Snapshot.CurrentPose.BasisFloatBits);
+        Assert.Equal(expected, state.Snapshot.OldPose.BasisFloatBits);
+        Assert.Same(raw, state.Snapshot.RetailPoses!.Current);
+    }
+
     [Fact]
     public void RetailPoses_PreserveExactWordsAndPositionOnlyOperations()
     {

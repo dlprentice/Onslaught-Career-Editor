@@ -674,13 +674,17 @@ controller phase fires before actor movement and mission callbacks. The test
 driver now aims from that retained launch pose instead of compensating for the
 former reversed phase order.
 
-The client route destroys all 22 targets, including all six final-wave drones,
-keeps the abort false, completes primary objective 4 and reaches `Won` through
-`Reached Target Zone 4`. The measured endpoint is tick 8406, hull 10,494, hash
-`1ae4204dd6bbfe514ea8ec8b2938ab7d2491016cc39bb515895fc598c285e767`.
+This harness currently uses reduced, hand-built actor definitions rather than
+the shipping manifest. Its route destroys all 22 targets, including all six
+final-wave drones, keeps the abort false, completes primary objective 4 and
+reaches `Won` through `Reached Target Zone 4`.
 The direct-Core control uses the same pointer-quantized commands and matches the
 complete state hash and pose trace. These are the two comparable inputs in
 [the cold-start tests](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
+This result does not cover the full materialized actor set. The September 8
+signed-basis correction is separately covered by exact tilted-offset/renderer
+tests, real materialization and focused Client checks; it does not establish
+native flight or visual parity.
 
 The separate returning-career driver also clears all 22 targets without the
 abort, completes objective 4 and wins, at tick 7621 with hull 10,468. Its

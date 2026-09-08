@@ -60,6 +60,15 @@ sample the game, driver or Proton control word. These primitives are not yet
 connected to the spatial explosion scan; no whole-simulation precision claim
 or replay fingerprint change follows from this correction.
 
+Retail vectors map to Core as `Q(x,y,z) = (x,-z,y)`, apart from the position
+datum. Both the materializer and raw Actor pose projection therefore convert
+orientation by `Q * B * inverse(Q)`. The unsigned Y/Z swap was incorrect for
+pitch and roll. Direct selection and sign-bit changes preserve signed zeros;
+Core hashes those words, so even yaw-only definition identities change after
+this correction. The quarter-turn offset and renderer checks in
+`ThingActorBaseStateTests` and the materializer's `Level100FloatGeometryTests`
+test coordinate consistency, not live retail Euler arithmetic or flight parity.
+
 ## What Core may not do
 
 Core simulation truth must be independent of presentation and environment.

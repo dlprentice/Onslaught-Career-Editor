@@ -23,7 +23,6 @@ patches/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/Aquila/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/Frontend/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md
-rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/PauseMenu/README.md
 reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md
 reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md

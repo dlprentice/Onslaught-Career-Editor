@@ -428,10 +428,12 @@ public sealed class ThingActorBaseState
     private static ThingActorPoseSnapshot ProjectRetailPose(RetailActorPoseSnapshot pose)
     {
         Level100FloatBasis3Bits b = pose.BasisFloatBits;
-        // Existing Core datum and P*B*P axis permutation; raw state stays retail.
+        // Positions and local vectors use Q(x,y,z)=(x,-z,y), so a basis must
+        // use Q*B*inverse(Q). Flip words directly to retain signed zeros.
         return new(ProjectRetailPosition(pose.PositionFloatBits),
-            new(b.Row0X, b.Row0Z, b.Row0Y, b.Row2X, b.Row2Z, b.Row2Y,
-                b.Row1X, b.Row1Z, b.Row1Y));
+            new(b.Row0X, b.Row0Z ^ int.MinValue, b.Row0Y,
+                b.Row2X ^ int.MinValue, b.Row2Z, b.Row2Y ^ int.MinValue,
+                b.Row1X, b.Row1Z ^ int.MinValue, b.Row1Y));
     }
 
     private static SimVector3 ProjectRetailPosition(Level100FloatVector3Bits p)

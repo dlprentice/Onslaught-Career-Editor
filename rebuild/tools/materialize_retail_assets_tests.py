@@ -153,6 +153,34 @@ def _world110_initial_object_fixture(
 
 
 class Level100FloatGeometryTests(unittest.TestCase):
+    def test_actor_basis_transforms_offsets_in_core_coordinate_system(self):
+        # Synthetic exact quarter turns, independent of the unresolved retail
+        # Euler producer. A point rotated in retail must land at the same Core
+        # position as its converted offset rotated by the converted basis.
+        origin = [288.6875, 243.25, -10.0]
+        for label, basis, rotated_offset in (
+            ("pitch", [[1, 0, 0], [0, 0, -1], [0, 1, 0]], [2, -5, 3]),
+            ("roll", [[0, 0, 1], [0, 1, 0], [-1, 0, 0]], [5, 3, -2]),
+        ):
+            with self.subTest(rotation=label):
+                pose = materializer._actor_pose(origin, [0, 0, 0], basis)
+                point = materializer._actor_pose(
+                    [a + b for a, b in zip(origin, rotated_offset)], [0, 0, 0])
+                floats = [struct.unpack("<f", struct.pack("<i", word))[0]
+                          for word in pose["basisFloatBits"]]
+                core_offset = [2000, -5000, 3000]  # retail local point (2,3,5)
+                actual = [sum(floats[row * 3 + col] * core_offset[col]
+                              for col in range(3)) for row in range(3)]
+                self.assertEqual(point["positionMillimeters"], actual)
+
+    def test_actor_basis_preserves_signed_permutation_words(self):
+        pose = materializer._actor_pose([288.6875, 243.25, -10.0], [0, 0, 0],
+            [[1.0, -0.0, 0.0], [-0.0, 1.0, -0.0], [0.0, -0.0, 1.0]])
+        negative_zero = -0x80000000
+        self.assertEqual([0x3f800000, negative_zero, negative_zero,
+                          negative_zero, 0x3f800000, 0,
+                          negative_zero, 0, 0x3f800000], pose["basisFloatBits"])
+
     def test_original_part_words_keep_padding_and_absent_caches(self):
         from cmsh_static_preview import _Transform, _BoundingBox, _RigidTrack
         pose = _Transform(((1.0, -0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),

@@ -83,7 +83,7 @@ public sealed record RetailWorld110TreeTableInput(
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578";
+        "ace932aaf6277b1ebe1a7b5408024fc638eb1d70bb0be5731ae878eab8292ba4";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
