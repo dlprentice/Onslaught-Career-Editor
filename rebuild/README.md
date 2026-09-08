@@ -225,13 +225,16 @@ skipped ferns and repeated level-world records. Its explicit base-tree factory
 now constructs those pines with actual spatial membership and collision-readiness
 events. It takes the incoming RNG seed and states its nearest/53-bit numerical
 assumption; the retail call's FP environment and final tree orientation remain
-open. `CreateWithControlTower(seed)` extends this fresh resource-route prefix
-through the first Tower's Core state, using the same Actor owner, live pines,
-29 destructible segments, shared RNG and five pending events. Its AI has real
-reader cells and the separate world memberships retain their insertion rules.
+open. `CreateWithInitialBuildings(seed)` extends this fresh resource-route prefix
+through the Tower, factory and repair pad, using the same Actor owners, live
+pines, 64 destructible segments, shared RNG and 15 pending events. The factory
+prepares its attached Sabre template without spawning; the repair weapon uses
+shared charge/selection state and two empty effect nodes without firing.
+Their AI has real reader cells and the separate world memberships retain their
+insertion rules. `CreateWithControlTower(seed)` stops the same path after one Building.
 Renderer/resource caches, full collision response, remaining ordinary actors
 and frame delivery are unfinished; legacy mutation, restore and hashing reject
-the incomplete Tower state.
+the incomplete Building state.
 Simulation now explicitly rejects World110 before the Level100 setup path.
 This stage does not initialize all actor classes, publish a complete world,
 run squads/spawners or construct a playable session. The Godot host therefore

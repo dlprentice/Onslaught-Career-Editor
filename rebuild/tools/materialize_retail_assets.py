@@ -291,17 +291,21 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v5"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v6"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "fdc6869be1743c689ebd97bd4fba29f342c82ffa522bca9739531ffb3ddbc00b"
+    "5ef08128e6bf0ab2fe59bd036871d4700b95d2330257a285b06dc11ff7110f97"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
     "f586cc84f577e441eba425d5c95dbca3e057d063229bf5c2999227157704424b"
 )
-WORLD110_CONTROL_TOWER_MESH = "data/resources/meshes/m_fb_control_tower.msh.aya"
-WORLD110_CONTROL_TOWER_MESH_SHA256 = (
-    "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91"
+WORLD110_BUILDING_MESHES = (
+    ("fb_control_tower.msh", "data/resources/meshes/m_fb_control_tower.msh.aya",
+     "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91", 39),
+    ("fb_tank_factory.msh", "data/resources/meshes/m_fb_tank_factory.msh.aya",
+     "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de", 29),
+    ("fb_health_pad.msh", "data/resources/meshes/m_fb_health_pad.msh.aya",
+     "4ec6cb1d589c866acfa292232ca4f850967faea899c2f082329bff78e647ab44", 20),
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -3544,21 +3548,22 @@ def _world110_component_attachment(rows, physics, mesh_data: bytes) -> dict[str,
     }
 
 
-def _world110_control_tower_mesh(source: bytes) -> dict[str, object]:
+def _world110_building_mesh(source: bytes, index: int) -> dict[str, object]:
     """The actual Init geometry, not rendered/expanded reference-part copies."""
     from cmsh_static_preview import inflate_aya, parse_cmsh_stream
-    if _sha256(source) != WORLD110_CONTROL_TOWER_MESH_SHA256:
-        raise RuntimeError("world 110 Control Tower mesh identity changed")
+    mesh_name, _, source_hash, part_count = WORLD110_BUILDING_MESHES[index]
+    if _sha256(source) != source_hash:
+        raise RuntimeError(f"world 110 building mesh identity changed: {mesh_name}")
     parsed = parse_cmsh_stream(inflate_aya(source))
     parts = parsed.file_parts()
-    if len(parts) != 39 or struct.unpack_from("<I", parsed.raw_header, 0x14)[0] != 0:
-        raise RuntimeError("Control Tower part/animation profile changed")
+    if len(parts) != part_count or struct.unpack_from("<I", parsed.raw_header, 0x14)[0] != 0:
+        raise RuntimeError("building part/animation profile changed")
     boxes = [sibling.raw_payload for sibling in parsed.siblings if sibling.tag == b"BBOX"]
     if len(boxes) != 1 or len(boxes[0]) != 48 or boxes[0][:8] != b"BBOX\x28\0\0\0":
-        raise RuntimeError("Control Tower global bounding box changed")
+        raise RuntimeError("building global bounding box changed")
     return {
-        "meshName": "fb_control_tower.msh",
-        "sourceSha256": WORLD110_CONTROL_TOWER_MESH_SHA256,
+        "meshName": mesh_name,
+        "sourceSha256": source_hash,
         "meshRadiusFloatBits": struct.unpack_from("<i", parsed.raw_header, 0x164)[0],
         "globalBoundingBoxWords": list(struct.unpack_from("<10i", boxes[0], 8)),
         "parts": [{
@@ -3576,9 +3581,100 @@ def _world110_control_tower_mesh(source: bytes) -> dict[str, object]:
     }
 
 
+def _world110_building_unit_uses(rows, physics) -> list[dict[str, object]]:
+    """Ordered raw Unit field 7/18 tuples for the three admitted buildings."""
+    result = []
+    for index, row in enumerate(rows[:3]):
+        actor = row["actor"]
+        if (actor["definitionIdentity"] != f"wres:bswd:{index:04d}"
+                or actor["meshBinding"] + ".msh" != WORLD110_BUILDING_MESHES[index][0]
+                or row["serializedThingType"] != 8):
+            raise RuntimeError("world 110 building Unit profile changed")
+        fields = _physics_record(physics, 1, actor["definitionName"])
+        record = {"actorDefinitionIdentity": actor["definitionIdentity"]}
+        for field_id, key in ((7, "weaponUses"), (18, "spawnerUses")):
+            uses = []
+            for raw in fields.values(field_id):
+                definition_end = raw.index(0)
+                tag_end = raw.index(0, definition_end + 1)
+                if len(raw) != tag_end + 5:
+                    raise RuntimeError("world 110 building Unit use layout changed")
+                uses.append({
+                    "definitionName": raw[:definition_end].decode("ascii"),
+                    "tagName": raw[definition_end + 1:tag_end].decode("ascii"),
+                    "rawCreationFlags": struct.unpack_from("<I", raw, tag_end + 1)[0],
+                })
+            record[key] = uses
+        result.append(record)
+    return result
+
+
+def _world110_building_definitions(uses, physics_data: bytes, physics):
+    """Bounded authored profiles and released type-2 constructor defaults.
+
+    CWeaponStatement__Create 0x0042f5f0 supplies absent fields; 0x00434610
+    resolves slot names in type-3 source order and 0x004349c0 applies ID 7.
+    This admits the actual Repair Pad profile, not a generic weapon parser.
+    """
+    stream = _physics_record_stream(physics_data)
+    weapon_records = [record for record in stream if record.record_type == 2]
+    mode_records = [record for record in stream if record.record_type == 3]
+    weapon_names = list(dict.fromkeys(use["definitionName"]
+        for record in uses for use in record["weaponUses"]))
+    spawner_names = list(dict.fromkeys(use["definitionName"]
+        for record in uses for use in record["spawnerUses"]))
+    if weapon_names != ["Repair Pad"] or spawner_names != ["Sabre Factory Spawner"]:
+        raise RuntimeError("world 110 building definition admission changed")
+
+    def raw_fields(record):
+        return [{"fieldId": field_id, "rawHex": raw.hex()} for field_id, raw in record.fields]
+
+    weapon = physics[(2, weapon_names[0])][0]
+    if [field_id for field_id, _ in weapon.fields] != [1, 7]:
+        raise RuntimeError("world 110 Repair Pad weapon field profile changed")
+    fields = _physics_record(physics, 2, weapon.name)
+    slots = [-1] * 5
+    for raw in fields.values(1):
+        if len(raw) < 6 or raw[-1] != 0 or b"\0" in raw[4:-1]:
+            raise RuntimeError("world 110 weapon charge slot layout changed")
+        slot = struct.unpack_from("<i", raw)[0]
+        if not 0 <= slot < 5:
+            raise RuntimeError("world 110 weapon charge slot index changed")
+        name = raw[4:-1].decode("ascii")
+        slots[slot] = next((index for index, mode in enumerate(mode_records)
+                            if mode.name == name), -1)
+        if slots[slot] == -1:
+            raise RuntimeError("world 110 weapon charge mode is absent")
+    if slots[0] < 0:
+        raise RuntimeError("world 110 weapon initial mode is absent")
+    mode = mode_records[slots[0]]
+    adjust_aim = struct.unpack("<f", fields[7])[0]
+    weapons = [{
+        "definitionName": weapon.name,
+        "typeOrdinal": weapon_records.index(weapon),
+        "chargeRateFloatBits": 0x40000000,
+        "chargeSlots": slots,
+        "consumptionFloatBits": 0x3f800000,
+        "ammoStore": 0, "zoomMode": 0, "adjustAimWord": int(adjust_aim != 0),
+        "fields": raw_fields(weapon),
+        "selectedMode": {"definitionName": mode.name, "typeOrdinal": slots[0],
+                         "fields": raw_fields(mode)},
+    }]
+    spawners = []
+    for name in spawner_names:
+        fields = _physics_record(physics, 5, name)
+        target = _definition_string(fields, 1)
+        spawners.append({
+            "definitionName": name, "targetUnitDefinitionName": target,
+            "targetUnitBehaviourSelector": _unit_behavior_selector(_physics_record(physics, 1, target)),
+            "fields": raw_fields(physics[(5, name)][0]),
+        })
+    return weapons, spawners
+
+
 def _world110_initial_actor_bytes(
     raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes,
-    pine_meshes: tuple[bytes, ...], control_tower_mesh: bytes,
+    pine_meshes: tuple[bytes, ...], building_meshes: tuple[bytes, ...],
 ) -> bytes:
     """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
 
@@ -3685,6 +3781,10 @@ def _world110_initial_actor_bytes(
         })
     if len(rows) != 43:
         raise RuntimeError("world 110 direct initial actor count changed")
+    if len(building_meshes) != len(WORLD110_BUILDING_MESHES):
+        raise RuntimeError("world 110 building mesh count changed")
+    building_uses = _world110_building_unit_uses(rows, physics)
+    weapons, spawners = _world110_building_definitions(building_uses, physics_data, physics)
     return (json.dumps({
         "schema": WORLD110_INITIAL_ACTORS_SCHEMA,
         "worldNumber": 110,
@@ -3695,7 +3795,11 @@ def _world110_initial_actor_bytes(
         "rows": rows,
         "treeTables": tree_tables,
         "treeMeshes": _world110_tree_mesh_inputs(pine_meshes),
-        "controlTowerMesh": _world110_control_tower_mesh(control_tower_mesh),
+        "buildingMeshes": [_world110_building_mesh(source, index)
+                           for index, source in enumerate(building_meshes)],
+        "buildingUnitUses": building_uses,
+        "buildingWeaponDefinitions": weapons,
+        "buildingSpawnerDefinitions": spawners,
         "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -5540,8 +5644,8 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
                 _read_exact(game_root / WORLD110_LANDING_CRAFT_MESH,
                             WORLD110_LANDING_CRAFT_MESH_SHA256),
                 _read_pine_meshes(game_root),
-                _read_exact(game_root / WORLD110_CONTROL_TOWER_MESH,
-                            WORLD110_CONTROL_TOWER_MESH_SHA256),
+                tuple(_read_exact(game_root / path, digest)
+                      for _, path, digest, _ in WORLD110_BUILDING_MESHES),
             )
             actor_hash = _sha256(actor_data)
             if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:

@@ -49,7 +49,7 @@ public sealed class RetailWorld110InitialConstructionTests
         Assert.Equal(3, world.OccupancyBitplanes.Count);
         Assert.All(world.OccupancyBitplanes, plane =>
         { Assert.Equal(8192, plane.Count); Assert.All(plane, value => Assert.Equal(255, value)); });
-        Assert.Same(tower.PrimaryEffect, world.PrimaryEffectHead);
+        Assert.Same(tower.PrimaryEffect, world.EffectHead);
         Assert.Same(tower, tower.PrimaryEffect.Owner);
         Assert.Null(tower.PrimaryEffect.Next);
         Assert.False(tower.PrimaryEffect.HasEffect);
@@ -156,6 +156,212 @@ public sealed class RetailWorld110InitialConstructionTests
         var envelope = new Simulation(1, Level100TestActorDefinitions.Create()).Snapshot;
         Assert.Throws<NotSupportedException>(() => StateHasher.ComputeHex(envelope with
         { Level100Actors = world.Actors.Snapshot }));
+    }
+
+    [Fact]
+    public void InitialBuildings_ShareRealSpatialListsAndPreserveInactiveFactory()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithInitialBuildings(123456);
+        var buildings = world.Buildings;
+        Assert.Equal(new[] { "Control Tower", "Tank Factory", "Health Pad" },
+            buildings.Select(building => building.Input.Actor.Name));
+        Assert.Equal(new[] { new RetailMapWhoSector(17,15,3), new RetailMapWhoSector(9,8,2),
+            new RetailMapWhoSector(14,15,3) }, buildings.Select(building => building.MapEntry.Sector));
+        Assert.Equal(new[] { 15, 648, 24 }, buildings.Select(building => building.InitialRejectedPeerCount));
+        Assert.Equal(new uint[] { 0xc1199926, 0xc1223a09, 0xc116679a },
+            buildings.Select(building => unchecked((uint)building.PositionFloatBits.Z)));
+        Assert.Equal(1484, world.SpatialEntryCount);
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count);
+        Assert.Equal(buildings.Reverse(), world.InitializedThingsNewestFirst.Take(3));
+        Assert.Equal(world.Trees.Reverse(), world.InitializedThingsNewestFirst.Skip(3));
+        Assert.Equal(buildings.Reverse(), world.NamedBuildingsNewestFirst);
+        Assert.Equal(buildings.Reverse(), world.UnitsNewestFirst);
+        Assert.Equal(buildings.Reverse(), world.OccupancyCandidatesNewestFirst);
+        Assert.Equal(buildings, world.FactionUnits(0));
+        Assert.Empty(world.FactionUnits(1));
+        Assert.Equal(3, world.UnitCount(0, 7));
+        Assert.Equal(0, world.WorldMeshCatalogCount);
+        Assert.Same(buildings[1], Assert.Single(world.BigThingsOldestFirst));
+        Assert.Equal(ThingActorFlags.InMapWho | ThingActorFlags.IsBigThing, buildings[1].ActorState.Flags);
+        Assert.Equal(new[] { 1, 0, 1 }, buildings.Select(building => building.ActiveWord));
+        Assert.False(world.Actors.GetActor(buildings[1].ActorId).Active);
+        Assert.False(buildings[1].ActorState.IsShuttingDown);
+        Assert.Equal(new Level100FloatBasis3Bits(unchecked((int)0xbe5e1af1), unchecked((int)0xbf79e7d8), 0,
+            0x3f79e7d8, unchecked((int)0xbe5e1af1), 0, int.MinValue, 0, 0x3f800000),
+            buildings[1].ActorState.RetailPoses!.Current.BasisFloatBits);
+        Assert.All(buildings, building =>
+        {
+            Assert.Equal(0xc0900133u, building.ThingTypeMask);
+            Assert.Same(building, building.MapEntry.Owner);
+            Assert.Same(building.ActorState.RetailPoses, world.Actors.GetBaseState(building.ActorId).RetailPoses);
+            Assert.Equal(building.ActorState.RetailPoses!.Current, building.ActorState.RetailPoses.Old);
+        });
+    }
+
+    [Fact]
+    public void FactoryAndRepairSegments_PreserveMeasuredHealthAndSwapAliases()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithInitialBuildings(123456);
+        var factory = world.Buildings[1].Segments;
+        var repair = world.Buildings[2].Segments;
+        Assert.Equal(5, factory.CoreCount);
+        Assert.Equal(2, repair.CoreCount);
+        Assert.Equal(0x4279769d, BitConverter.SingleToInt32Bits(factory.TotalWeight));
+        Assert.Equal(0x43b6a6e8, BitConverter.SingleToInt32Bits(factory.InitialTotalHealth));
+        Assert.Equal(0x41b3dbe3, BitConverter.SingleToInt32Bits(repair.TotalWeight));
+        Assert.Equal(0x43031ead, BitConverter.SingleToInt32Bits(repair.InitialTotalHealth));
+        // Independent CMSH DFS/float-store oracles, not Core-produced snapshots.
+        Assert.Equal(new[] { 0,1,2,3,4,7,10,17,18,19,20,21,22,23,24,25,26,27,28 },
+            factory.Allocated.Select(segment => segment.PartOrdinal));
+        Assert.Equal(new[] { 0,0x42c8684d,0x41ca653b,0x407ae3dc,0x412be44a,0x410c891f,0x410c891f,
+            0x428fa076,0x40a17186,0x40a17186,0x4136b2ef,0x40a19143,0x40a19139,0x428fa076,
+            0x40a17187,0x40a17298,0x41426c98,0x40a184d0,0x40a184e9 },
+            factory.Allocated.Select(segment => BitConverter.SingleToInt32Bits(segment.Health)));
+        Assert.Equal(new[] { 23,17,10,7,2 }, factory.ByPart[1]!.ChildrenNewestFirst.Select(segment => segment.PartOrdinal));
+        Assert.Equal(new[] { 0,1,3,4,6,7,8,9,10,13,14,15,16,17,18,19 },
+            repair.Allocated.Select(segment => segment.PartOrdinal));
+        Assert.Equal(new[] { 0,0x427f9961,0x403445cf,0x40838c20,0x4050617f,0x40518fbd,0x4109bf41,
+            0x4109bf44,0x411f0e82,0,0x40852600,0x40923f3f,0x40923f3f,0x40852600,0x40923f3f,0x40923f3f },
+            repair.Allocated.Select(segment => BitConverter.SingleToInt32Bits(segment.Health)));
+        Assert.Equal(21, repair.ByPart.Count);
+        Assert.Equal(18, repair.ByPart.Count(segment => segment is not null));
+        Assert.Same(repair.ByPart[17], repair.ByPart[5]);
+        Assert.Same(repair.ByPart[18], repair.ByPart[2]);
+        Assert.Null(repair.ByPart[20]);
+        foreach (int ordinal in new[] { 17, 18 })
+        {
+            Assert.Equal(RetailBuildingSegmentKind.Swap, repair.ByPart[ordinal]!.Kind);
+            Assert.Equal(1, repair.ByPart[ordinal]!.NumNmic);
+            Assert.Equal(0, repair.ByPart[ordinal]!.CurrentVariant);
+        }
+        Assert.All(repair.Allocated.Where(segment => segment.Kind != RetailBuildingSegmentKind.Swap), segment =>
+        { Assert.Null(segment.NumNmic); Assert.Null(segment.CurrentVariant); });
+        Assert.Equal(world.Buildings.SelectMany(building => building.Segments.Allocated).Reverse(),
+            world.SegmentsNewestFirst);
+        Assert.Equal(64, world.SegmentsNewestFirst.Select(segment => segment.Identity).Distinct().Count());
+    }
+
+    [Fact]
+    public void FactorySpawner_CopiesAuthoredFactoryArgumentsWithoutSpawningOrChangingProfile()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithInitialBuildings(123456);
+        var factory = world.Buildings[1];
+        var spawner = Assert.Single(factory.Spawners);
+        Assert.Same(factory, spawner.Owner);
+        Assert.Same(factory.Input, spawner.Initializer.CopiedFrom);
+        Assert.Equal("Sabre Factory Spawner", spawner.Definition.DefinitionName);
+        Assert.Equal("AV-14B Sabre Pulse Tank", spawner.Definition.TargetUnitDefinitionName);
+        Assert.Equal(2, spawner.Definition.TargetUnitBehaviourSelector);
+        Assert.Equal(10, spawner.TagIndex);
+        Assert.Equal(0x24100u, spawner.CreationContext);
+        var emitter = Assert.Single(factory.Mesh.Emitters, emitter => emitter.Name == "SpawnerA");
+        Assert.Equal(1, emitter.Selector);
+        Assert.Equal(9, emitter.PartOrdinal);
+        Assert.Equal("Forseti Pulse Tank Factory", spawner.Initializer.ProfileDefinitionName);
+        Assert.Equal(new Level100FloatVector3Bits(0x43956800,0x4384d000,int.MinValue),
+            spawner.Initializer.PositionFloatBits);
+        Assert.NotEqual(factory.PositionFloatBits, spawner.Initializer.PositionFloatBits);
+        Assert.Equal(new Level100FloatVector3Bits(0x3fe50c2a,0,0), spawner.Initializer.EulerFloatBits);
+        Assert.Equal(0, spawner.Initializer.Target);
+        Assert.Equal(-1, factory.Input.Target);
+        Assert.Equal(1, spawner.Initializer.ActiveWord);
+        Assert.Equal(0, factory.ActiveWord);
+        Assert.Equal(0, spawner.Initializer.OrientationTypeWord);
+        Assert.Equal(0, spawner.Initializer.Allegiance);
+        Assert.Equal(0, spawner.Initializer.MeshNumber);
+        Assert.Equal(0, spawner.Initializer.AttachScriptsToUnitsWord);
+        Assert.Empty(spawner.Initializer.Name);
+        Assert.Empty(spawner.Initializer.Script);
+        Assert.Empty(spawner.Initializer.SpawnScript);
+        Assert.False(spawner.MutatedSharedProfile);
+        Assert.Empty(factory.Weapons);
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count); // No new Sabre actor.
+    }
+
+    [Fact]
+    public void RepairWeapon_UsesSharedStateAndEffectListWithoutInventingFiring()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithInitialBuildings(123456);
+        var tower = world.Buildings[0];
+        var factory = world.Buildings[1];
+        var repair = world.Buildings[2];
+        var weapon = Assert.Single(repair.Weapons);
+        Assert.Same(repair, weapon.Owner);
+        Assert.Equal("Repair Pad", weapon.Definition.DefinitionName);
+        Assert.Equal("Repair Pad", weapon.CurrentMode.DefinitionName);
+        Assert.Equal(13, weapon.Definition.TypeOrdinal);
+        Assert.Equal(11, weapon.CurrentMode.TypeOrdinal);
+        Assert.Same(weapon.Definition.SelectedMode, weapon.CurrentMode);
+        Assert.Equal(new[] { 11,-1,-1,-1,-1 }, weapon.ChargeState.Levels);
+        Assert.Equal(2, weapon.ChargeState.ChargeRate);
+        Assert.True(weapon.ChargeState.ReadyToChargeGateActive);
+        Assert.Equal(0, weapon.Charge);
+        Assert.Equal(-200, weapon.ReadyAtTime);
+        Assert.True(RetailWeaponCharge.ReadyToCharge(weapon.ChargeState, 0));
+        Assert.False(RetailWeaponCharge.CanCharge(weapon.ChargeState));
+        Assert.Equal(1, weapon.MountedState.Consumption);
+        Assert.Equal(0, weapon.MountedState.AmmoStore);
+        Assert.Equal(0, weapon.MountedState.ZoomMode);
+        Assert.Equal(0, weapon.Definition.AdjustAimWord);
+        Assert.Equal(8u, weapon.Use.RawCreationFlags);
+        Assert.Equal(2, weapon.TagIndex);
+        Assert.Equal(2, weapon.UnitTagIndex);
+        Assert.Equal(1, weapon.ActiveWord);
+        Assert.Equal(1, weapon.InitializedWord);
+        Assert.Equal(0, weapon.ModeIndex);
+        Assert.False(weapon.HasTurretPart);
+        Assert.False(weapon.HasBarrelPart);
+        Assert.Equal(0, weapon.BasisFloatBits.Row2X);
+        Assert.Equal(int.MinValue, repair.ActorState.RetailPoses!.Current.BasisFloatBits.Row2X);
+        Assert.Same(repair.PrimaryEffect, world.EffectHead);
+        Assert.Same(weapon.Effect1C, repair.PrimaryEffect.Next);
+        Assert.Same(weapon.Effect14, weapon.Effect1C.Next);
+        Assert.Same(factory.PrimaryEffect, weapon.Effect14.Next);
+        Assert.Same(tower.PrimaryEffect, factory.PrimaryEffect.Next);
+        Assert.Null(tower.PrimaryEffect.Next);
+        Assert.Same(weapon, weapon.Effect14.Owner);
+        Assert.Same(weapon, weapon.Effect1C.Owner);
+        Assert.Equal(0x14, weapon.Effect14.OwnerOffset);
+        Assert.Equal(0x1c, weapon.Effect1C.OwnerOffset);
+        for (var link = world.EffectHead; link is not null; link = link.Next) Assert.False(link.HasEffect);
+        Assert.Empty(repair.Spawners);
+        Assert.Equal(new[] { RetailBuildingAiKind.Warspite, RetailBuildingAiKind.Warspite, RetailBuildingAiKind.RepairPad },
+            world.Buildings.Select(building => building.Ai.Kind));
+        Assert.Equal(new[] { 0,0,1 }, world.Buildings.Select(building => building.RepairAiFlagWord));
+    }
+
+    [Fact]
+    public void InitialBuildings_AddFifteenEventsAndThreeDrawsOnExistingOwners()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithInitialBuildings(123456);
+        var random = new Level100ReleasedRandom(123456);
+        for (int index = 0; index < 1484; index++) random.Next();
+        Assert.Equal(random.Seed, world.ReleasedRandomSeed);
+        Assert.Equal(1481, world.PendingTreeEvents);
+        Assert.Equal(1496, world.PendingEvents);
+        var admissions = world.Buildings.SelectMany(building => new[] { building.Collision.InitialEvent,
+            building.MoveEvent, building.UnitEvent, building.Ai.InitialEvent, building.Animation.InitialEvent }).ToArray();
+        Assert.Equal(Enumerable.Range(1481, 15), admissions.Select(admission => admission.Handle));
+        Assert.Equal(Enumerable.Range(0,3).SelectMany(_ => new short[] { 3000,3000,4003,3000,3000 }),
+            admissions.Select(admission => world.Events!.EventNumOf(admission.Handle)));
+        Assert.Equal(world.Buildings.SelectMany(building => new[] { building.Collision.Identity, building.Identity,
+            building.Identity, building.Ai.Identity, building.Animation.Identity }),
+            admissions.Select(admission => world.Events!.ListenerOf(admission.Handle)));
+        Assert.All(world.Buildings, building =>
+        {
+            Assert.Equal(0, building.MovePhase);
+            Assert.Equal(0, building.FireControlEnabledWord);
+            Assert.Equal(new RetailActorMotionSnapshot(0,1), building.ActorState.RetailMotion);
+            Assert.Null(building.Ai.TargetIdentity);
+            Assert.Null(building.Ai.SpawnedByIdentity);
+        });
+        Assert.Equal(9, world.Buildings.SelectMany(building => new[] { building.Ai.ReaderCell0C,
+            building.Ai.TargetReaderCell24, building.Ai.SpawnedByReaderCell28 }).Distinct().Count());
+        Assert.Throws<NotSupportedException>(() => world.AdvanceTreeReadinessEvents());
+        Assert.Equal(0, world.EventTime);
+        Assert.Equal(1496, world.PendingEvents);
+        Assert.All(world.Buildings, building =>
+            Assert.Throws<NotSupportedException>(() => world.Actors.ReportDied(building.ActorId)));
     }
 
     [Fact]

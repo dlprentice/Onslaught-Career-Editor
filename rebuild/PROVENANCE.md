@@ -313,15 +313,18 @@ complete collision response and world load/reset remain unmeasured. Exact body
 hashes and implementation limits are in the same World110 evidence owner above.
 The payload stays ignored; no retail executable/decompiler body was added to Core.
 
-The first Control Tower extension uses those same owners and the existing Actor
-allocation. `RetailWorld110Building` and `RetailBuildingSegments` implement its
-bounded Core construction from the pinned physics and source mesh metadata:
-float poses, graph/scales, AI reader cells, five event admissions and actual
-world memberships. The v5 materialized actor payload is 164,510 bytes with
-SHA-256 `fdc6869be1743c689ebd97bd4fba29f342c82ffa522bca9739531ffb3ddbc00b`.
+The first three Buildings use those same owners and existing Actor allocations.
+`RetailWorld110Building`, `RetailBuildingSegments` and `RetailUnitConstructionAttachments`
+implement bounded Core construction from pinned physics and source mesh metadata:
+float poses, graph/scales, AI reader cells, 15 event admissions, world memberships,
+the factory's private spawner Init and the repair weapon's empty effect links.
+Weapon/mode/spawner records and resolved constructor defaults are materialized
+locally; no definition ordinal is hardcoded into the Core constructor.
+The v6 materialized actor payload is 175,671 bytes with
+SHA-256 `5ef08128e6bf0ab2fe59bd036871d4700b95d2330257a285b06dc11ff7110f97`.
 The source mesh, static body pins and fresh resource-route assumptions belong
 to the same RE owner. Renderer/cache allocation, frame delivery, damage and
-complete load/reset remain unimplemented. The focused tests are reconstruction
+complete load/reset, spawning and repair fire remain unimplemented. The focused tests are reconstruction
 checks with declared arithmetic assumptions, not observed retail play.
 
 `RetailMapWho.SortAfterLoad()` implements the separately measured PostLoad

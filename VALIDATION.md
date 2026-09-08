@@ -171,6 +171,20 @@ reconstruction checks under explicit fresh resource-route and numerical
 assumptions. No renderer-cache, frame-delivery, damage, reset, retail runtime
 or full parity acceptance is claimed.
 
+The extension through the factory and repair pad passed **174/174 focused Core
+facts** and **13/13 World110 materializer checks**, zero skipped. The selection
+includes existing charge/selection laws and the World100 forty-step hash check.
+It checks 64 segment owners, repair aliases and exact health words, factory
+big-list/active-state behavior, copied spawner inputs, repair mode/charge state,
+the shared effect chain, and 15 events with three Actor draws. Reversing the
+weapon's two effect-node constructors deliberately failed its instance/order
+assertion (expected weapon `+0x1c`, actual `+0x14`); source was restored byte for
+byte before rerunning the selection. Logs are `initial-buildings-core.log`,
+`initial-buildings-materializer.log` and `initial-buildings-mutation.log` in the
+same Linux run directory. Only the ignored 175,671-byte v6 actor input was
+regenerated. These are construction checks; they establish neither tank
+spawning, repair firing, rendered World110 nor runtime parity.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

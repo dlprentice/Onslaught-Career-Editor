@@ -358,19 +358,22 @@ without rescheduling. MapWho owns live links and a shared cursor; its separate
 PostLoad sort preserves the original-tail stop rule and leaves layer 0 alone.
 All object and reader identities use one world allocator.
 
-The first Control Tower extends that prefix using the same Actor owner with
-exact float poses, 29 destructible segments, three AI reader cells and five
-undelivered events in the shared scheduler. Named, world, Unit, faction, effect
-and inactive occupancy memberships retain their actual insertion rules.
-The latest focused selection passed **96/96 Core facts and 11/11 materializer
+The first three Buildings extend that prefix using the same Actor owners with
+exact float poses, 64 destructible segments, nine AI reader cells and 15
+undelivered events in the shared scheduler. Named, world, Unit, big-Thing,
+faction, effect and inactive occupancy memberships retain their actual insertion
+rules. The inactive factory owns an active attached-spawner template, with no
+spawned tank. The repair pad owns its actual weapon definition/mode, shared
+charge/selection state and two empty effect nodes; no firing/healing is implemented.
+The latest focused selection passed **174/174 Core facts and 13/13 materializer
 checks**, with the World100 forty-step hash unchanged; [VALIDATION.md](VALIDATION.md)
 records the checks and controlled failures.
 
 These factories take an incoming RNG seed and explicitly assume nearest/53-bit
-arithmetic; the Tower additionally selects a fresh resource route with preloaded
+arithmetic; the Building factories select a fresh resource route with preloaded
 geometry. Renderer/resource caches, remaining actors, frame delivery, damage,
 reset and playable World110 remain unfinished. Legacy mutation, restore and
-hashing reject the incomplete Tower state. Simulation rejects World110 before
+hashing reject the incomplete Building state. Simulation rejects World110 before
 Level100 Setup; direct World110 mission instruments remain supported. The
 [World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
 retains the contracts and unresolved startup FP/seed boundary.

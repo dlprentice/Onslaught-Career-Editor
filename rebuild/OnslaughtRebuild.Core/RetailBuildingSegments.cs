@@ -7,7 +7,7 @@ public sealed record RetailBuildingMeshPart(string Name, int Type, int? Referenc
     int? Parent, IReadOnlyList<int> Children, int? Nmic, int NumNmic, int IsNmic,
     Level100FloatVector3Bits HalfExtentFloatBits);
 
-public sealed record RetailBuildingEmitter(string Name, int Selector, int PartOrdinal);
+public sealed record RetailBuildingEmitter(string Name, int Selector, int? PartOrdinal);
 
 public sealed record RetailBuildingMesh(string Name, string SourceSha256,
     int RadiusFloatBits, IReadOnlyList<int> GlobalBoundingBoxWords,
@@ -24,7 +24,7 @@ public sealed class RetailBuildingSegment
     private readonly LinkedList<RetailBuildingSegment> _children = [];
     internal RetailBuildingSegment(int identity, int partOrdinal,
         RetailBuildingSegmentKind kind, RetailBuildingSegment? parent,
-        float weight, int? coreOrdinal)
+        float weight, int? coreOrdinal, int? numNmic)
     {
         Identity = identity;
         PartOrdinal = partOrdinal;
@@ -32,6 +32,7 @@ public sealed class RetailBuildingSegment
         Parent = parent;
         Weight = weight;
         CoreOrdinal = coreOrdinal;
+        NumNmic = numNmic;
     }
 
     public int Identity { get; }
@@ -40,6 +41,8 @@ public sealed class RetailBuildingSegment
     public RetailBuildingSegment? Parent { get; }
     public float Weight { get; }
     public int? CoreOrdinal { get; }
+    public int? NumNmic { get; }
+    public int? CurrentVariant => Kind == RetailBuildingSegmentKind.Swap ? 0 : null;
     public float Health { get; private set; }
     public float InitialHealth { get; private set; }
     public bool Active => true;
@@ -68,7 +71,7 @@ public sealed class RetailBuildingSegment
 }
 
 /// <summary>
-/// Successful segment initialization for the admitted Control Tower geometry.
+/// Successful segment initialization for the admitted Building geometry.
 /// Pristine 74154bfa…7750: 444660,444c10,4449c0,442870,443590,442900.
 /// Exact body/data pins and numerical limits live in the World110 RE owner.
 /// No damage, destruction, callbacks or animation evaluation is implemented.
@@ -111,7 +114,8 @@ public sealed class RetailBuildingSegments
                     RetailBuildingSegmentKind.Extra;
                 if (parent is not null) totalWeight = (float)((double)totalWeight + weight);
                 current = new(allocateIdentity(), ordinal, kind, parent, weight,
-                    kind == RetailBuildingSegmentKind.Core ? ++cores : null);
+                    kind == RetailBuildingSegmentKind.Core ? ++cores : null,
+                    kind == RetailBuildingSegmentKind.Swap ? part.NumNmic : null);
                 allocated.Add(current);
                 publish(current);
                 current.LinkToParent();

@@ -462,6 +462,15 @@ the water clamp. The later virtual `0x4dfd10` invokes Actor/Thing ground seating
 again and copies **position only** to old position. It leaves the old basis
 alone. These are calculated input-specific values, not a captured game run.
 
+Factory yaw is `0x3fe50c2a`, with positive-zero pitch/roll. Native x87 cosine/
+sine followed by float stores gives `0xbe5e1af1/0x3f79e7d8`, matching the
+materialized words for this exact input. Direct Euler matrix arithmetic at
+`0x4f4008..0x4f40cc` additionally stores negative zero at row 2, column 0.
+Core retains it for all three Buildings. This does not establish arbitrary
+libm/x87 transcendental equivalence. Factory's layer-2 MapWho registration is
+followed by **tail** insertion into the big-Thing list and flag `0x40`, before
+collision Init; ordinary Thing publication still uses the head afterward.
+
 Actor's multiplier is 1 for these Buildings. Each still takes one shared RNG
 draw, stores remainder zero, and schedules MOVE 3000 at -1 with countdown 1.
 Their Unit fire-control gate remains zero, so the unconditional helper call
@@ -479,6 +488,50 @@ zero, AI's timestamp is zero and the other four store `0.0001f`. Immediate
 bucket dispatch is **FIFO**, not a sort by those timestamps. No frame delivery
 is implied by this census.
 
+#### Factory template and repair weapon
+
+Factory attachment retains four distinct inputs: raw creation context
+`0x24100`, mapped `SpawnerA` tag index 10, target Sabre behavior selector 2,
+and mesh emitter selector 1 at part 9. No flags-to-selector conversion occurs.
+The attached constructor resolves `Sabre Factory Spawner` and its target
+`AV-14B Sabre Pulse Tank`; selector 2 passes `0x50f680`, so its conditional
+shared-profile mutation is skipped. The private Init copy retains the
+**factory** profile pointer, authored position/yaw, mesh, allegiance and spawn
+script. Unit then sets target/orientation type/roll to zero, active to one,
+and script/name to empty. Its position is the authored negative-zero Z, not
+the owner's later grounded Z. Velocity, collision initialization, force radius,
+spawned-by and waypoint are omitted by Copy and retain constructor defaults.
+This is an attached template, not standalone spawner Init or a spawned tank.
+
+Repair's actual Unit tuple is `Repair Pad / GunB / 8`. Weapon creation occurs
+before Actor Init. Type-2 weapon ordinal 13 resolves slot zero to type-3 mode
+ordinal 11, both named `Repair Pad`; the similarly named second mode is not
+selected. The materializer derives those ordinals from source order and retains
+both ordered raw records. Definition-constructor defaults supply charge rate 2,
+consumption 1, ammo store 0 and zoom 0; actual field 7 sets AdjustAim to zero.
+Charge slots resolve to `[11,-1,-1,-1,-1]`. Weapon-owned charge starts at zero,
+ready time at -200, mode index at zero and active at one. Its shared initializer
+stores the direct Unit owner, initialized word 1 and tag 2; Unit also stores
+tag 2 at `+0xac` and appends the weapon to its list. Core reuses the existing
+charge and mounted-weapon state owners. It does not substitute Level100's
+three combat-weapon implementations for repair firing.
+
+The weapon's vector constructor visits embedded effect nodes `+0x14`, then
+`+0x1c`; each clears its payload and pushes onto the same process-global head
+as Unit primary nodes. The resulting connected chain is **Repair primary →
+weapon +1c → weapon +14 → Factory primary → Tower primary**. These nodes emit
+nothing and schedule no event or RNG draw. Integer-Euler construction of the
+weapon's matrix yields nine identity/positive-zero words; it is a different
+route from Actor's direct Euler matrix. Matrix padding, weapon `+0x24/+0x28`
+and `+0x90` remain unadmitted; the latter copies an unwritten stack word.
+
+Repair AI executes the same shared initialization and one event as the other
+Buildings, then changes its dispatch table and sets Unit `+0x1f4=1`. Core
+retains this as a raw repair-AI flag; its wider gameplay meaning is still open.
+No additional reader, event or RNG draw follows. All three therefore add
+15 events and three draws to the connected tree prefix. Firing, healing,
+spawning, sound, effect emission and later AI delivery remain unimplemented.
+
 #### Destructible geometry and resource boundary
 
 Controller Init `0x444660` walks source mesh children in serialized DFS order.
@@ -492,7 +545,9 @@ in the name.
 Tower has **29 segments: eight cores and 21 extras**; factory has 19 (five cores
 and 14 extras); repair pad has 16 (two cores, two swaps and 12 extras). Repair
 pad's two NMIC references alias existing segment owners, so its 18 non-null
-part-array cells do not mean 18 allocations. Tower's array has 40 cells,
+part-array cells do not mean 18 allocations: part 5 aliases segment 17 and
+part 2 aliases segment 18. Both swap owners retain `NumNmic=1` and current
+variant zero. Tower's array has 40 cells,
 including the extra null sentinel after its 39 source parts; ten emitter parts
 remain null. No segment Init creates a gameplay event, RNG draw or animation.
 
@@ -504,6 +559,8 @@ stays wide until the final float store. Health summation follows the reversed
 child-list order, storing float after each addition. Tower's total weight is
 `0x425e25dc`; cached subtree health is `0x433a4938`. Tests carry the independently
 calculated per-part scale words, graph order and shared-owner assertions.
+Factory total weight/health words are `0x4279769d/0x43b6a6e8`; repair pad's
+are `0x41b3dbe3/0x43031ead`, including the repeated alias scale calls.
 
 CRTMesh Init on an existing named mesh prepares pose-cache allocations and ten
 `_Fenrir Flame Effect` descriptor slots. CEMT's ten record IDs are all zero and
@@ -519,11 +576,11 @@ load is outside this closure; preloaded metadata alone does not prove a live
 cache hit. Core retains the actual geometry/emitter inputs but does not yet
 allocate or execute those renderer/resource caches.
 
-#### Fresh world state and implemented Tower
+#### Fresh world state and implemented Buildings
 
 World construction (`0x50a9c0`) and shutdown (`0x50ada0`) clear two 26-dword
 counter arrays at `world+0x130/+0x198`. A plain LoadWorld call does not. The
-Tower increments side 0 selector 7; zero is justified only by the fresh
+three Buildings increment side 0 selector 7; zero is justified only by the fresh
 lifecycle boundary, not assumed at arbitrary BSWD entry. World constructor
 also initializes its lists. The primary effect link is a distinct owned node,
 inserted into the process-global effect list with null payload; it emits nothing.
@@ -545,12 +602,13 @@ marks an existing entry. `Control Tower` therefore misses; it must not create
 a used-name entry. An alternate non-resource route requires the entire ordered
 parse/recursive definition catalog, not a synthetic singleton.
 
-`RetailWorld110InitialConstruction.CreateWithControlTower(seed)` now constructs
-the first Tower's bounded Core state after the actual 1,481 pines. It uses the
-existing registry Actor owner with exact float current/old poses and movement
+`RetailWorld110InitialConstruction.CreateWithInitialBuildings(seed)` constructs
+the first three Buildings' bounded Core state after the actual 1,481 pines.
+`CreateWithControlTower(seed)` stops the same path after one Building. They use
+the existing registry Actor owners with exact float current/old poses and movement
 scheduling state, the live spatial index, shared RNG and event pool, actual
-segment/AI reader owners, and distinct named, all-Thing, Unit, faction, effect
-and occupancy memberships. The factory explicitly selects the fresh successful
+segment/AI reader owners, and distinct named, all-Thing, Unit, big-Thing, faction,
+effect and occupancy memberships. These factories explicitly select the fresh successful
 resource route and preloaded materialized geometry. Renderer/cache allocation,
 remaining Building/Feature initialization, damage, frame delivery, world reset
 and playable session construction remain open. Legacy registry mutation,
@@ -584,6 +642,15 @@ The following bodies were independently read from the pristine executable:
 | World shutdown `[0x50ada0,0x50af6d)` | `e1789c52f92f7a0a5a02e82150269a8363aeee822fc7c4e850f1d24d680d8281` |
 | Catalog MarkUsed `[0x50dc20,0x50dca1)` | `30d10d0e220e0d4c288ff9ea6c6f2d7d15040f261a87b996b9b964fd54a644ac` |
 | Resource-level equality `[0x472650,0x472662)` | `f6f7faa01acf005fbc37835f9e581515749f9e0d029cd0f33cb414e902cbb6a5` |
+| Weapon factory `[0x50f6d0,0x50f798)` | `24c11cf31e6e093dfcc12fcc33e6dfbc641dd939e81827970628c33c452103b2` |
+| Weapon constructor `[0x505e00,0x505f61)` | `13bb0ee57dc0d0c3fa34baa3b2f8dd18af2c041fbda58673a697dea0c44ad048` |
+| Effect-node constructor `[0x456830,0x456843)` | `c9b9ff0d364b7f905aa76e6b8dcc04e57f36ffa52809179134cc8dd2e5886a1f` |
+| Effect-list head push `[0x4cb040,0x4cb04e)` | `0859cc057975a25ba7674c7876cac0845c5842217afaccd96d7306ff0abb278d` |
+| Vector constructor iterator `[0x55dc20,0x55dc8a)` | `de3d4cd1a275dac16b796804d647198aa347f15dcc80a468f1249a3a60507e65` |
+| Shared weapon initializer `[0x44a830,0x44a848)` | `f6ee4512a39314c5f69effe255c5a64d8d957845a0b3afe94b11afbd4d1b08a7` |
+| Weapon-definition defaults `[0x42f5f0,0x42f6f1)` | `375cd9b34597b47133c1d9d36baf3ed9485aada34599d7b7336de470a598554a` |
+| Weapon mode binding `[0x434610,0x43474e)` | `ecfd6e6e0ecc67d77ce2b674393bc09cdebe84e4b9710183de8384d3eca80db1` |
+| AdjustAim assignment `[0x4349c0,0x434a76)` | `bed083f4ac64065496f7d1991d1580717f00c0fecf26e7f18dec2fce21383d97` |
 
 ### Four landing-craft turret children
 
