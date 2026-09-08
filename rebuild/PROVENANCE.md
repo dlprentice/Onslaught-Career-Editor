@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-07 (startup audio decode added; earlier claims retain their dated evidence).
+Last updated: 2026-09-08 (raw contact geometry and segmented explosion evidence; earlier claims retain their dated evidence).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
@@ -1493,27 +1493,38 @@ Target Tank remains MapWho/collision registered under `TF_DYING` until its
 delayed `+0.5f` shutdown and can take a positive part-`-1` explosion store
 without dispatching death twice.
 
-The retained Level 100 meshes and pristine dispatch close the distinct
-admission/render radii required for spatial projection: Target Tank
-`0x3F88ED6D`/`0x3FC487A7`, Target Truck
-`0x3FA644E3`/`0x3FE83ED3`, Target Drone
-`0x3FC2684F`/`0x3FE9F831`, and Warehouse
-`0x40F2BEF5`/`0x41088DDF`. The left value is the primary collision radius; the
-right is virtual `GetRadius` for radial falloff. Their centres follow exact
-class rules and cannot be reconstructed bit-exactly from the current
-integer-quantized part catalog.
+The contact catalog preserves raw global BBOX origin/radius, mesh render-radius
+and class scale words. The
+[serialized geometry evidence](../reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md#serialized-geometry-and-terminal-target-tank-behavior)
+corrects the former alternate-loader estimates: they were static recomputations,
+not measured normal-live radii. The serialized loader copies the original
+words, and GroundUnit separately applies stored `0.8f` to its primary sphere.
+Instance centres and pose-cache rounding still need their own implementation;
+quantized part bounds cannot recover discarded input precision.
+
+`RetailMeshPartPose` implements original RE-informed arithmetic for the
+single-frame normal-cache hierarchy and owner composition, with distinct
+operation orders and explicit float32 stores under the declared 53-bit/RN
+contract. Tests use retained Warehouse hierarchy words and labeled synthetic
+rounding cases. It does not yet execute collision cache selection, controller
+changes or the explosion scan, and does not claim live FPU equivalence. The
+round/contact evidence linked above owns its specimen and instruction pins.
 
 Core currently retains two full whole-body stores per Pulse, preserving the
 observed aggregate and intermediate `0.8` store but approximating the second
 transaction as an unconditional `1.0` on the direct receiver. Tests pin that
-approximation; they are not spatial-explosion parity proof. The supported next
-boundary starts by carrying exact global-BBOX origin, class-selected primary
-radius, and render-radius bits through the existing asset materializer. A
+approximation; they are not spatial-explosion parity proof. With raw input
+geometry now carried by the existing materializer, the next boundary is a
 distinct synchronous explosion at the resolved round position minus
 `normalize(velocity)*0.1` can then apply primary-volume admission and
-per-candidate falloff. Natural Level 100 candidate order and Warehouse's
-controller/report carrier remain unresolved, so the Warehouse path continues
-to consume only its independently observed aggregate outcome.
+per-candidate falloff. The
+[Warehouse report evidence](../reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md#warehouse-segmented-explosion-report)
+now establishes up to six ordered part contacts, each using its own signed
+bounds distance and falloff. Its damage override forwards each part to the
+segment controller; part `-1` does not apply aggregate segment damage.
+Natural Level 100 candidate order, actual Warehouse contact rows and cache/controller
+execution remain unresolved. The current one-part aggregate shortcut remains an
+explicit implementation gap.
 Generation 20 adds a narrower retained-trace check on the retail carrier: ten
 internal slot-40 calls across three independent TTD sessions cover both
 `CExplosion::Hit` damage arms and carry source equal to the explosion object,

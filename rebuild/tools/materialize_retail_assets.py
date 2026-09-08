@@ -628,10 +628,11 @@ LEVEL100_CONTACT_ASSET = (
     CORE_ASSETS / "Level100/level100-contact-owners.json"
 )
 LEVEL100_CONTACT_ASSET_SHA256 = (
-    "ced815d60bddb37f8706e4de41b3a53721dc78562867ca4b6ebb6f8a5d5a0003"
+    "255f5ee66f7da8dcdd88e3e2e36b8d0ce48d68ee27dad29cb7ed524867b2e201"
 )
-# Aggregate of the 24 collision-bearing facility meshes only. The accepted
-# static-world aggregate above additionally owns the four tree meshes.
+# Retained historical identity for the 24 contact-source meshes. This generator
+# emits the literal; its recipe is not recomputed here. The complete generated
+# asset hash is the current integrity gate.
 LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256 = (
     "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
 )
@@ -4103,6 +4104,44 @@ def _round_scaled_away(value: float, scale: int) -> int:
     return math.floor(scaled + 0.5) if scaled >= 0 else math.ceil(scaled - 0.5)
 
 
+def _contact_part_float_geometry(part) -> dict[str, object]:
+    """Original file records, not the resolved preview or selected runtime pose.
+
+    BBOX words 3/7 (vector padding) and word 8 are retained opaque.
+    Position/orientation arrays retain their opaque fourth words as well.
+    """
+    from cmsh_static_preview import _orientation_bytes, _position_bytes
+
+    def words(data: bytes) -> list[int]:
+        return list(struct.unpack(f"<{len(data) // 4}I", data))
+
+    box = part.bounding_box
+    track = part.track
+    return {
+        "sourceId": struct.unpack_from("<I", part.raw_cmsp, 0x88)[0],
+        "sourceType": part.part_type,
+        "reference": part.reference,
+        "parent": part.parent,
+        "children": list(part.children),
+        "nmic": part.nmic,
+        "boundingBoxWords": words(struct.pack("<3fI3fIIf", *box.center,
+            box.pad_words[0], *box.half_extents, box.pad_words[1], box.valid, box.radius)),
+        "cmspTransformWords": words(part.raw_cmsp[:0x80]),
+        "cmsp118Word": struct.unpack_from("<I", part.raw_cmsp, 0x118)[0],
+        "positionCacheInheritanceWord": struct.unpack_from("<I", part.raw_cmsp, 0x11c)[0],
+        "orientationCacheInheritanceWord": struct.unpack_from("<I", part.raw_cmsp, 0x120)[0],
+        "frameMap": None if track is None else list(track.frame_map),
+        "hierarchyPositionWords": None if track is None else
+            [words(_position_bytes(pose)) for pose in track.hierarchy],
+        "hierarchyOrientationWords": None if track is None else
+            [words(_orientation_bytes(pose)) for pose in track.hierarchy],
+        "cachedPositionWords": None if track is None or not track.cached_position_bytes
+            else words(track.cached_position_bytes),
+        "cachedOrientationWords": None if track is None or not track.cached_orientation_bytes
+            else words(track.cached_orientation_bytes),
+    }
+
+
 def _contact_part_records(parsed) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for index, part in enumerate(parsed.parts):
@@ -4161,6 +4200,7 @@ def _contact_part_records(parsed) -> list[dict[str, object]]:
         segment_value = max(part.bounding_box.half_extents)
         records.append(
             {
+                "floatGeometry": _contact_part_float_geometry(parsed.file_parts()[index]),
                 "centerMillimeters": [
                     _round_scaled_away(value, 1_000) for value in center
                 ],
@@ -4423,7 +4463,7 @@ def _level100_contact_asset(
                 struct.unpack("<f", round_fields[12])[0], 1_000
             ),
         },
-        "schema": "onslaught.level100-contact-owners.v5",
+        "schema": "onslaught.level100-contact-owners.v6",
         "staticMeshCount": len(parsed_static),
         "staticSourceAggregateSha256": (
             LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256

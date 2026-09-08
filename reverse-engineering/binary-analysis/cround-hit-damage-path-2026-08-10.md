@@ -10,8 +10,9 @@ Verdict: direct-round damage byte-provably precedes the synchronous small-
 explosion neighbor scan, but the explosion is spatial rather than bound to the
 original receiver. Its configured damage is a radial maximum, not an
 unconditional second call. The PC MapWho traversal/filter chain, four modeled
-Level 100 serialized geometry inputs, and the terminal Target Tank's continued
-eligibility with part `-1` have bounded static contracts. Live resource selection,
+Level 100 serialized geometry inputs, Warehouse's ordered segmented report, and
+the terminal Target Tank's continued eligibility with part `-1` have bounded
+static contracts. Live resource selection,
 receiver order, per-shot falloff bits, expanding-radius timing, and broader parity remain open.
 Specimen: pristine Steam `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -126,10 +127,11 @@ register forms, 21 branches, and call topology after relocation normalization.
 - requires a positive current radius at `this+0x7C`;
 - applies the `CExplosionSmart` (`config+0x44`) allegiance/type filter;
 - calls `CComplexThing::Hit`;
-- computes center distance minus the target's virtual radius and clamps it to
-  zero;
-- optionally iterates collision-report part records and adjusts the effective
-  distance for each part;
+- computes center distance minus the target's virtual radius for the ordinary
+  part-`-1` path;
+- for a controller-bearing unit with a valid positive-count collision report,
+  replaces that distance with maximum radius plus each stored part distance;
+- clamps the selected distance to zero;
 - damages a part/body only when effective distance is within the current
   radius; and
 - optionally notifies the linked creator at virtual offset `+0x194` when the
@@ -362,10 +364,11 @@ stores the sphere radius; body SHA-256
 Plane and Building use the base sphere without that multiplier. This is the
 checked initialization path, not a new live resource-selection observation.
 
-Contact schema v5 now preserves these raw words and the separate class scale in
+The contact catalog preserves these raw words and the separate class scale in
 `Level100ContactDefinition.FloatGeometry`. Instance position/basis and centre
 rounding remain separate work. The primary sphere controls collision admission;
-falloff uses owner-position distance minus the distinct virtual render radius.
+the ordinary part-`-1` falloff uses owner-position distance minus the distinct
+virtual render radius. The segmented-report arm below uses its own distances.
 Reconstructing either from quantized parts or copying the old estimate table
 would discard the original input.
 
@@ -379,6 +382,77 @@ the new explosion, it therefore receives part `-1` damage even while dying.
 The second call can lower stored life again but cannot dispatch death twice.
 The scanner also continues to other eligible receivers; the original target is
 neither guaranteed first nor unique.
+
+### Warehouse segmented explosion report
+
+The September 8 pristine review closes the static carrier but not any particular
+shot's selected parts. `CBuilding::Init` at `0x00417190` writes collision minimum
+and maximum level 2 at `0x004171b7/0x004171ba`. The shared resolver's OBB flag
+sets the selected Warehouse mesh-volume `+0x18` at `0x004265fd`. Mesh/sphere
+dispatch reaches `0x004ac6e0`, whose bounds arm calls `0x004ac140` for each
+eligible part in ascending native order. Passive bounds testing calls
+`Geometry__DistanceOutsideAabb` at `0x00479770`, subtracts the effective sphere
+radius and stores the accepted signed distance at report `+0xc4`.
+
+The append block `[0x004aca40,0x004acada)` (SHA-256
+`f9b60939e01e50726de01de7e5f107c6314a7a9e18f552161edd276e0d321f28`)
+copies the selected part-context `+0x88` into `report+0x68[i]`, copies that
+signed distance into `report+0xac[i]`, and stops at six contacts. Referenced
+geometry does not replace the selected part's identity. This is an ordered
+multi-part report, not the direct projectile's single selected triangle/part.
+
+The segmented `CExplosion::Hit` block `[0x0044bfd3,0x0044bfef)` (SHA-256
+`1690f50a8e02b7fd17600eb6def858e6f138d1ff50c847ce9203bb5a077a98f9`)
+selects the report part and stores `maximumRadius + report.distance[i]` as a
+float32 before the shared zero clamp and radius gate. It applies the configured
+falloff separately to each row in stored order. Owner-centre/render-radius
+distance belongs to the other arm and must not replace these part distances.
+
+Warehouse's damage override `[0x004179a0,0x00417a1f)` (SHA-256
+`8c5b53ba2103a1e649299af8ebb3634e9ada49f4b3a75a6cccf11220e0bf5ead`)
+forwards unchanged damage arguments to `0x004f9a90` when its segment controller
+exists, even while dying. That controller's `[0x00444030,0x00444063)` entry
+(SHA-256 `581e797a9ab59bdbc2fb24c0ce3de629e9c003b3335196b728c8c3a49d9d5667`)
+sends part `-1` past segment damage and destruction evaluation to the later
+threshold check. Part `-1` therefore cannot stand in for aggregate Warehouse
+damage. The current combined Pulse amount assigned to one direct-hit part is
+still an approximation that this separate report operation must replace.
+
+The selected Warehouse mesh has 28 parts, including six geometry references.
+All parts have one HPOS/HORI hierarchy frame and 101 zero VHFM entries, but only
+ten have a CORI cache record. Contact schema v6 preserves all these original
+records separately from the resolved, quantized preview. An absent CORI is not
+an identity matrix. The normal collision path uses the animation-aware runtime
+pose cache: collision-volume `+0x1c` is the ignore-animation flag, distinct from
+the fixed-transform flag at `+0x20`. `SetPartBounds` selects `0x004b4de0`, whose
+normal-cache branch evaluates the hierarchy through `0x004b5330` and then applies
+the owner pose. It does not simply read the serialized CPOS/CORI values.
+
+The original [mesh pose arithmetic](../../rebuild/OnslaughtRebuild.Core/RetailMeshPartPose.cs)
+implements the bounded, single-frame normal-cache composition under an explicit
+53-bit round-to-nearest assumption. Hierarchy and owner matrix products have
+different accumulation orders. Both retain the X position dot through
+translation, while Y/Z dots receive float32 stores first. Initial interpolation
+still adds positive zero and can normalize negative zero. The half-open pins are
+`[0x004b554b,0x004b55d0)` HPOS SHA-256
+`931f404a8737a66e9d9af59af89e208077d0a2c967d2fee047942a0df4a1944c`,
+`[0x004b55d0,0x004b57ae)` HORI SHA-256
+`615dac697ae79717071e3bbbd811c9bf084a8f74c1bb348432dfbe46ab7ff27e`,
+`[0x004b57ef,0x004b59af)` hierarchy composition SHA-256
+`6c58928375da8cec09558da332bded657c28eb1d37a53b4ecaaf6af8c41c0d7e`,
+and `[0x004b4ef2,0x004b50bb)` owner tail SHA-256
+`dbc94feb51aeda7dffdaabb87bb69215c1f0e6b3b5b0d9a2969b7f410e993caf`.
+All actual Warehouse hierarchy parents have identity orientation; rotated leaves
+do not provide a rotated-parent runtime sample. The focused tests combine raw
+Warehouse inputs and explicitly synthetic cancellation/store discriminators.
+This arithmetic is not yet connected to a runtime explosion scan. Cache refresh,
+controller-modified poses, early-tick equivalence and live FPU state remain open.
+
+Actual row count, part IDs and distance words depend on explosion position,
+pose-cache transforms, activity and shape selection. A useful copied-runtime
+check records report `+0x80`, six `+0x68/+0xac` pairs and the outgoing damage
+arguments through `0x004179a0 -> 0x004f9a90 -> 0x00444030`; the retained
+centreline hit count does not establish those values.
 
 ## Remaining `CExplosion` virtual tail
 
@@ -443,14 +517,14 @@ aggregate approximation:
   pulse-specific owner rather than the generic one-damage round path.
 
 The tests that pin an unconditional first/terminal pair are approximation
-tests, not retail parity proof. Contact schema v5 now carries the original
+tests, not retail parity proof. The contact catalog carries the original
 global BBOX origin/radius, class scale and render-radius bits into each target
 definition. The remaining runtime correction needs a distinct synchronous explosion at
 `round.position - normalize(velocity)*0.1`, primary-volume admission, and
 per-candidate falloff after the direct `0.8` call. Target Tank is proven
-nonsegmented on this path. Warehouse keeps the independently observed aggregate
-fallback until its controller/report behavior is closed; that fallback must
-not be generalized to whole-body actors.
+nonsegmented on this path. Warehouse keeps the aggregate fallback until the
+separately admitted per-part bounds report above is implemented and checked;
+that fallback must not be generalized to whole-body actors.
 
 The September 8 Large correction separately reads the `Mech Pulse Bolt Large`
 record `[0xacda,0xad9b)` from the same pinned physics input (193 bytes, SHA-256
@@ -481,8 +555,8 @@ constructor/effect draw or the full game's random-stream phase.
 Still unresolved are the source names of instance fields `this+0xE8`, `+0xEC`,
 `+0x11C`, and `+0x124`; which exact gate rejected the contrasting runtime
 invocation; the natural Level 100 explosion candidate order, live positions,
-and per-shot falloff bits; Warehouse and other controller-bearing segmented
-parts; targets rejected by the explicit flag/smart/allegiance gates; expanding
+and per-shot falloff bits; Warehouse cache/controller execution and selected
+segmented contacts; targets rejected by the explicit flag/smart/allegiance gates; expanding
 `R > 3` timing; behavior outside the captured runtime window; and general
 reconstruction parity. The retained traces prove bounded internal
 source/shield/part carriers at both slot-40 call sites; they do not close the

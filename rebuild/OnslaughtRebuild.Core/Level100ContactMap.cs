@@ -199,8 +199,10 @@ public sealed class Level100ContactPart
         Level100Vector3 halfExtents,
         Level100Basis3 orientation,
         int[] vertices,
-        int[] triangles)
+        int[] triangles,
+        Level100ContactPartFloatGeometry floatGeometry)
     {
+        FloatGeometry = floatGeometry;
         Index = index;
         Parent = parent;
         Reference = reference;
@@ -214,6 +216,8 @@ public sealed class Level100ContactPart
         VerticesMillimeters = vertices;
         Triangles = triangles;
     }
+
+    public Level100ContactPartFloatGeometry FloatGeometry { get; }
 
     public int Index { get; }
 
@@ -242,6 +246,23 @@ public sealed class Level100ContactPart
 
     public ReadOnlyMemory<int> Triangles { get; }
 }
+
+/// <summary>
+/// Original file records, separate from referenced geometry and the quantized preview.
+/// BBOX words 3/7 (vector padding), word 8 and transform fourth words stay opaque.
+/// CMSP words retain orientation blocks +00/+30 and position blocks +60/+70.
+/// Hierarchy rows have 4 position or 12 orientation words; caches use the same strides.
+/// Null caches mean absent records, not identity transforms or a selected runtime pose.
+/// </summary>
+public sealed record Level100ContactPartFloatGeometry(
+    uint SourceId, int SourceType, int? Reference, int? Parent,
+    ReadOnlyMemory<int> Children, int? Nmic,
+    ReadOnlyMemory<uint> BoundingBoxWords, ReadOnlyMemory<uint> CmspTransformWords,
+    uint Cmsp118Word, uint PositionCacheInheritanceWord, uint OrientationCacheInheritanceWord,
+    ReadOnlyMemory<int>? FrameMap,
+    IReadOnlyList<ReadOnlyMemory<uint>>? HierarchyPositionWords,
+    IReadOnlyList<ReadOnlyMemory<uint>>? HierarchyOrientationWords,
+    ReadOnlyMemory<uint>? CachedPositionWords, ReadOnlyMemory<uint>? CachedOrientationWords);
 
 /// <summary>Original untransformed mesh words. Instance transforms and centre rounding are separate.</summary>
 public sealed record Level100ContactFloatGeometry(
@@ -331,7 +352,8 @@ public sealed class Level100ContactCatalog
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json";
     private const string SourceSha256 =
-        "CED815D60BDDB37F8706E4DE41B3A53721DC78562867CA4B6EBB6F8A5D5A0003";
+        "255F5EE66F7DA8DCDD88E3E2E36B8D0CE48D68EE27DAD29CB7ED524867B2E201";
+    // Retained historical source identity; SourceSha256 verifies the complete asset.
     private const string StaticSourceAggregateSha256 =
         "8D85C9BFBE366C815E00D3900D8D29B71A33BEF7A60CDDFCE9ED6AC558E06B4C";
     private const string TargetTankSourceSha256 =
@@ -401,7 +423,7 @@ public sealed class Level100ContactCatalog
             throw new InvalidDataException("The Level 100 contact asset is empty.");
         if (!StringComparer.Ordinal.Equals(
                 document.Schema,
-                "onslaught.level100-contact-owners.v5") ||
+                "onslaught.level100-contact-owners.v6") ||
             document.DefinitionCount != 24 ||
             document.InstanceCount != 33 ||
             document.PartCount != 362 ||
@@ -739,7 +761,8 @@ public sealed class Level100ContactCatalog
                 ReadVector(row.HalfExtentsMillimeters),
                 ReadBasis(row.OrientationPartsPerMillion),
                 row.VerticesMillimeters,
-                row.Triangles);
+                row.Triangles,
+                ReadPartFloatGeometry(row));
         }
         return parts;
     }
@@ -821,8 +844,64 @@ public sealed class Level100ContactCatalog
         public string RootMode { get; set; } = string.Empty;
     }
 
+    private static Level100ContactPartFloatGeometry ReadPartFloatGeometry(PartRow part)
+    {
+        PartFloatGeometryRow row = part.FloatGeometry ??
+            throw new InvalidDataException("Level 100 is missing original part records.");
+        bool hasTrack = row.FrameMap is not null;
+        if (row.SourceType != part.Type || row.Reference != (part.Reference < 0 ? null : part.Reference) ||
+            row.Parent != (part.Parent < 0 ? null : part.Parent) ||
+            row.BoundingBoxWords.Length != 10 || row.CmspTransformWords.Length != 32 ||
+            hasTrack != (row.HierarchyPositionWords is not null) ||
+            hasTrack != (row.HierarchyOrientationWords is not null) ||
+            (hasTrack && (row.FrameMap!.Length == 0 ||
+                row.HierarchyPositionWords!.Length == 0 ||
+                row.HierarchyPositionWords.Length != row.HierarchyOrientationWords!.Length ||
+                row.HierarchyPositionWords.Any(words => words.Length != 4) ||
+                row.HierarchyOrientationWords.Any(words => words.Length != 12) ||
+                row.FrameMap.Any(frame => frame < 0 || frame >= row.HierarchyPositionWords.Length))) ||
+            (row.CachedPositionWords is not null &&
+                (row.CachedPositionWords.Length == 0 || row.CachedPositionWords.Length % 4 != 0)) ||
+            (row.CachedOrientationWords is not null &&
+                (row.CachedOrientationWords.Length == 0 || row.CachedOrientationWords.Length % 12 != 0)))
+        {
+            throw new InvalidDataException("Level 100 has invalid original part records.");
+        }
+        return new(row.SourceId, row.SourceType, row.Reference, row.Parent, row.Children, row.Nmic,
+            row.BoundingBoxWords, row.CmspTransformWords, row.Cmsp118Word,
+            row.PositionCacheInheritanceWord, row.OrientationCacheInheritanceWord,
+            row.FrameMap is null ? (ReadOnlyMemory<int>?)null : new ReadOnlyMemory<int>(row.FrameMap),
+            row.HierarchyPositionWords is null ? null : Array.AsReadOnly(row.HierarchyPositionWords
+                .Select(words => new ReadOnlyMemory<uint>(words)).ToArray()),
+            row.HierarchyOrientationWords is null ? null : Array.AsReadOnly(row.HierarchyOrientationWords
+                .Select(words => new ReadOnlyMemory<uint>(words)).ToArray()),
+            row.CachedPositionWords is null ? (ReadOnlyMemory<uint>?)null : new ReadOnlyMemory<uint>(row.CachedPositionWords),
+            row.CachedOrientationWords is null ? (ReadOnlyMemory<uint>?)null : new ReadOnlyMemory<uint>(row.CachedOrientationWords));
+    }
+
+    private sealed class PartFloatGeometryRow
+    {
+        public uint SourceId { get; set; }
+        public int SourceType { get; set; }
+        public int? Reference { get; set; }
+        public int? Parent { get; set; }
+        public int[] Children { get; set; } = [];
+        public int? Nmic { get; set; }
+        public uint[] BoundingBoxWords { get; set; } = [];
+        public uint[] CmspTransformWords { get; set; } = [];
+        public uint Cmsp118Word { get; set; }
+        public uint PositionCacheInheritanceWord { get; set; }
+        public uint OrientationCacheInheritanceWord { get; set; }
+        public int[]? FrameMap { get; set; }
+        public uint[][]? HierarchyPositionWords { get; set; }
+        public uint[][]? HierarchyOrientationWords { get; set; }
+        public uint[]? CachedPositionWords { get; set; }
+        public uint[]? CachedOrientationWords { get; set; }
+    }
+
     private sealed class PartRow
     {
+        public PartFloatGeometryRow? FloatGeometry { get; set; }
         public int Index { get; set; }
         public int Parent { get; set; }
         public int Reference { get; set; }

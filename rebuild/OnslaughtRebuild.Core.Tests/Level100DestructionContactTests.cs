@@ -7,6 +7,44 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100DestructionContactTests
 {
+    [Fact]
+    public void WarehouseRetainsOriginalPartRecordsWithoutSelectingRuntimePose()
+    {
+        var parts = Level100ContactCatalog.Instance.GetDefinition("Warehouse").Parts;
+        Assert.Equal(28, parts.Count);
+        Assert.Equal(22, parts.Count(part => part.FloatGeometry.SourceType == 1));
+        Assert.Equal(6, parts.Count(part => part.FloatGeometry.SourceType == 6));
+        Assert.Equal(new[] { 0, 8, 16, 17, 19, 20, 22, 24, 25, 27 },
+            parts.Where(part => part.FloatGeometry.CachedOrientationWords.HasValue)
+                .Select(part => part.Index));
+        foreach (var part in parts)
+        {
+            var raw = part.FloatGeometry;
+            Assert.Equal((uint)part.Index, raw.SourceId);
+            Assert.Equal(1u, raw.Cmsp118Word);
+            Assert.Equal(0u, raw.PositionCacheInheritanceWord);
+            Assert.Equal(raw.CachedOrientationWords.HasValue ? 0u : 1u,
+                raw.OrientationCacheInheritanceWord);
+            Assert.Equal(101, raw.FrameMap!.Value.Length);
+            Assert.All(raw.FrameMap.Value.ToArray(), frame => Assert.Equal(0, frame));
+            Assert.Single(raw.HierarchyPositionWords!);
+            Assert.Single(raw.HierarchyOrientationWords!);
+            Assert.Equal(4, raw.CachedPositionWords!.Value.Length);
+            Assert.Equal(10, raw.BoundingBoxWords.Length);
+            Assert.Equal(32, raw.CmspTransformWords.Length);
+        }
+        // REFR keeps its empty original BBOX alongside the existing resolved
+        // preview. Neither HORI nor a parent's CORI substitutes for absent CORI.
+        var referenced = parts[27];
+        Assert.Equal(19, referenced.FloatGeometry.Reference);
+        Assert.Equal(0u, referenced.FloatGeometry.BoundingBoxWords.Span[8]);
+        Assert.True(referenced.HalfExtents.X > 0);
+        Assert.Null(parts[1].FloatGeometry.CachedOrientationWords);
+        Assert.NotNull(parts[1].FloatGeometry.HierarchyOrientationWords);
+        Assert.Equal(7u, parts[0].FloatGeometry.CachedPositionWords!.Value.Span[3]);
+        Assert.Equal(0u, parts[0].FloatGeometry.HierarchyPositionWords![0].Span[3]);
+    }
+
     [Theory]
     [InlineData("Target Tank", 0x3d30cb70u, 0xbe24c554u, 0xbec4d063u, 0x3fab28c8u, 0x3fc487a7u, 0x3f4ccccdu)]
     [InlineData("Target Truck", 0xbb8d5d80u, 0xbd4d6660u, 0xbef307e4u, 0x3fcfd61cu, 0x3fe83ed3u, 0x3f4ccccdu)]

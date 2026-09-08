@@ -91,7 +91,7 @@ These selections overlap and are not a new total-suite census. The existing
 forty-step and FirstFlight fingerprints held without repinning. Logs share the
 Linux run directory above: `retail-clock-{core,client}-20260908.log`,
 `contact-float-geometry-materializer.log`, and `large-pulse-{core,client}-20260908.log`.
-The contact schema is v5; conditional canonical schema 45 retains an event frame
+That contact change introduced schema v5; conditional canonical schema 45 retains an event frame
 count when pause makes it differ from the already-hashed mission tick. The
 checks do not establish a complete spatial blast, exact motion/expiry, event
 dispatch ordering or a live playthrough.
@@ -100,6 +100,18 @@ The charged Pulse zero-spread correction first failed its direction regression
 with 2,124 microradians of unwanted yaw, then passed **8/8 Core and 1/1 Client**
 checks. Both scatter random draws remain, and no fingerprint changed. The
 `large-pulse-zero-scatter-{red,green,client}-20260908.log` files retain the runs.
+
+Contact schema v6 additionally preserves all 362 original part records,
+including hierarchy inputs, opaque words and absent CPOS/CORI caches. Stripping
+only those additions and restoring the old schema reproduces the exact v5
+payload hash. The full materializer suite passed **74/74** and contact tests
+**23/23**; the former log is `contact-v6-materializer-full-20260908.log` in the
+Linux run directory above. Runtime sweeps remain unchanged. These inputs do
+not establish the selected collision pose or runtime explosion report.
+The subsequent mesh-pose arithmetic passed **7/7** focused tests, covering raw
+Warehouse hierarchy inputs, signed zero and distinct matrix/store ordering.
+Those results were captured in the task transcript. They do not establish
+runtime cache/controller execution or the live FPU state.
 
 The World 110 integration review exposed a setter/restore mismatch: script
 assignment still used the World 100 list. The new focused regression failed

@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-09-06.
+Last updated: 2026-09-08.
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -25,7 +25,8 @@ Current owners:
   profiles, media, VM media, and the gen32 host attestations that are not part of
   `local-lab/`; its own `AGENTS.md` describes the recovered packages;
 - `local-lab/ghidra-projects/BEA/` — the sole mutable PC Ghidra project
-  (12.1.3, `db.18635`, owner `xsniper80`); the tracked checkpoint and sealed
+  (12.1.3, owner `xsniper80`; measured state in the
+  [Ghidra owner](reverse-engineering/ghidra/README.md)); the tracked checkpoint and sealed
   off-volume package are preservation owners, never writable inputs.
 
 The canonical lab was moved inside the checkout by atomic rename on 2026-08-30.
@@ -63,9 +64,11 @@ history, not a liveness oracle. The DeepSeek drop remains at
 3,211-line historical catalog is `local-lab/INDEX-CATALOG-2026-08-17.md`.
 
 OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution are installed.
-The activation ceremony completed on 2026-08-31: `local-lab/ghidra-projects/BEA/`
-is the sole mutable PC project at `db.18635`, and its ignored completion receipt
-is under `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`.
-Semantic development remains paused. A future authorized mutation plan still requires its
-bounded PRE/rehearsal/apply/readback/POST checks; ordinary steps within that approved
-scope do not require repeated user permission.
+The activation completed on 2026-08-31; its ignored completion receipt is under
+`local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`. David resumed
+scoped development on September 6 and requested the Ghidra quality pass on
+September 7. The working project has since received the bounded corrections
+recorded by the Ghidra owner above. Each declared cohort still requires its
+PRE/rehearsal/apply/readback/POST checks; ordinary steps within the approved
+scope do not require repeated user permission. The reviewed checkpoint and
+independent cold recovery remain separate preservation owners.

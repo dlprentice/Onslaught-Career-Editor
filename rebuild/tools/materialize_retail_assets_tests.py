@@ -153,6 +153,43 @@ def _world110_initial_object_fixture(
 
 
 class Level100FloatGeometryTests(unittest.TestCase):
+    def test_original_part_words_keep_padding_and_absent_caches(self):
+        from cmsh_static_preview import _Transform, _BoundingBox, _RigidTrack
+        pose = _Transform(((1.0, -0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+                          (-0.0, 2.0, 3.0), (0x7fc01234, 17, 19), 0xffffffff)
+        cmsp = bytearray(0x13c)
+        struct.pack_into("<I", cmsp, 0x88, 9)
+        struct.pack_into("<III", cmsp, 0x118, 1, 0, 1)
+        source = SimpleNamespace(raw_cmsp=bytes(cmsp), part_type=6,
+            reference=3, parent=2, children=(), nmic=None,
+            bounding_box=_BoundingBox((-0.0, 0.0, 0.0), (0.0, 0.0, 0.0), 0, 0.0,
+                                     (0x7fc01234, 0xffffffff)),
+            track=_RigidTrack((0, 0), (pose,), b"", struct.pack("<4I", 1, 2, 3, 4)))
+        actual = materializer._contact_part_float_geometry(source)
+        self.assertEqual((9, 6, 3, 2), tuple(actual[k] for k in
+                         ("sourceId", "sourceType", "reference", "parent")))
+        self.assertEqual([0x80000000, 0, 0, 0x7fc01234, 0, 0, 0, 0xffffffff, 0, 0],
+                         actual["boundingBoxWords"])
+        self.assertEqual([0x80000000, 0x40000000, 0x40400000, 0xffffffff],
+                         actual["hierarchyPositionWords"][0])
+        self.assertEqual(0x7fc01234, actual["hierarchyOrientationWords"][0][3])
+        self.assertEqual([1, 2, 3, 4], actual["cachedPositionWords"])
+        self.assertIsNone(actual["cachedOrientationWords"])
+        self.assertEqual([0, 0], actual["frameMap"])
+        self.assertEqual(1, actual["cmsp118Word"])
+        preview = SimpleNamespace(transform=pose,
+            bounding_box=_BoundingBox((1.0, 2.0, 3.0), (4.0, 5.0, 6.0), 1, 9.0),
+            vertices=(), groups=(), name="referencing part", parent=2, reference=3, part_type=6)
+        record = materializer._contact_part_records(SimpleNamespace(
+            parts=(preview,), file_parts=lambda: (source,)))[0]
+        self.assertEqual([4000, 5000, 6000], record["halfExtentsMillimeters"])
+        self.assertEqual(actual, record["floatGeometry"])
+        source.track = None
+        missing = materializer._contact_part_float_geometry(source)
+        for key in ("frameMap", "hierarchyPositionWords", "hierarchyOrientationWords",
+                    "cachedPositionWords", "cachedOrientationWords"):
+            self.assertIsNone(missing[key])
+
     def test_stored_float_words_are_preserved_without_instance_rounding(self):
         # A synthetic parser result keeps this tools suite independent of an
         # installed game. Core's materialized-catalog test checks all four real
