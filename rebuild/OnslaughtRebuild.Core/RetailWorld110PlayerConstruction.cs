@@ -137,7 +137,7 @@ public sealed class RetailWorld110PlayerConstruction
         int LifeBits, int EnergyBits);
     private sealed record Inputs(string?[] WorldNames, ConfigurationInput[] Configurations);
     private static readonly Lazy<Inputs> s_inputs = new(LoadEmbedded);
-    private readonly RetailActiveReaderGraph _readers = new();
+    private readonly RetailActiveReaderGraph _readers;
 
     internal RetailWorld110PlayerConstruction(RetailWorld110InitialConstruction world,
         RetailCareerSave career, RetailWorld110GameSettings settings)
@@ -145,6 +145,7 @@ public sealed class RetailWorld110PlayerConstruction
         ArgumentNullException.ThrowIfNull(career);
         ArgumentNullException.ThrowIfNull(settings);
         Settings = settings;
+        _readers = world.Readers;
         RetailWorldInitialObjectSeed seed = world.InitialObjectSeeds.StartSeeds.Single();
         var admission = RetailWorldPlayerStartAdmission.Admit(110,
             world.InitialObjectSeeds.ArchiveIdentity, [seed.ToPlayerStartRecord()]);
@@ -159,15 +160,14 @@ public sealed class RetailWorld110PlayerConstruction
             seed.Allegiance, configurationId,
             ((RetailWorldStartSeedTail)seed.Tail).PlaneModeWord);
 
-        // One local allocation domain; its numbers are not retail thing numbers
-        // or addresses. Unconstructed objects make retail-wide ordering unknown.
-        int next = world.Actors.Snapshot.NextActorId;
-        int startIdentity = next++;
-        int engineIdentity = next++;
-        int playerIdentity = next++;
-        int startReaderIdentity = next++;
-        int engineReaderIdentity = next++;
-        int playerReaderIdentity = next;
+        // All shells and reader cells share the world's identity allocator;
+        // actor registry IDs remain a separate dense, explicitly mapped domain.
+        int startIdentity = world.AllocateObjectIdentity();
+        int engineIdentity = world.AllocateObjectIdentity();
+        int playerIdentity = world.AllocateObjectIdentity();
+        int startReaderIdentity = world.AllocateObjectIdentity();
+        int engineReaderIdentity = world.AllocateObjectIdentity();
+        int playerReaderIdentity = world.AllocateObjectIdentity();
         _readers.CreateReaderCell(startReaderIdentity);
         _readers.CreateReaderCell(engineReaderIdentity);
         _readers.CreateReaderCell(playerReaderIdentity);

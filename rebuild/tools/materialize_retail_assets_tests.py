@@ -213,6 +213,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
             materializer.PHYSICS_DEFINITIONS_SHA256,
         )
         cls.configurations = (game / materializer.BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
+        cls.pine_meshes = materializer._read_pine_meshes(game)
         cls.landing_craft_mesh = materializer._read_exact(
             game / materializer.WORLD110_LANDING_CRAFT_MESH,
             materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
@@ -237,7 +238,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_artifact_reproduces_and_contains_its_own_unit_rows(self) -> None:
         data = materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh)
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes)
         self.assertEqual(materializer.WORLD110_INITIAL_ACTORS_SHA256,
                          materializer._sha256(data))
         document = json.loads(data)
@@ -264,7 +265,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_tree_tables_retain_repeated_data_and_retail_skip_branches(self):
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes))
         base, level = document["treeTables"]
         self.assertEqual(["BSWD", "RLWD"], [base["sourceChunk"], level["sourceChunk"]])
         self.assertEqual((2709, 29549, 18327, 45167),
@@ -281,6 +282,25 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         # The old rendering/shadow projection still supplies one base pine set.
         self.assertEqual(materializer._parse_static_world(self.raw100)[1:],
                          materializer._parse_static_world(self.raw_world)[1:])
+
+    def test_tree_mesh_inputs_preserve_header_radius_and_all_global_bbox_words(self):
+        from cmsh_static_preview import inflate_aya
+        meshes = materializer._world110_tree_mesh_inputs(self.pine_meshes)
+        self.assertEqual([0x4005575c, 0x4007f5c1, 0x400cea52, 0x40054422],
+                         [mesh["meshRadiusFloatBits"] for mesh in meshes])
+        for variant, (source, mesh) in enumerate(zip(self.pine_meshes, meshes)):
+            raw = inflate_aya(source)
+            self.assertEqual(raw[-40:], struct.pack("<10i", *mesh["globalBoundingBoxWords"]))
+            self.assertEqual(f"pinesnow{variant}.MSH", mesh["meshName"])
+            self.assertEqual(materializer.PINE_MESH_SHA256[variant], mesh["sourceSha256"])
+            self.assertEqual(list(struct.unpack_from("<3f", raw, len(raw) - 40)),
+                             materializer._pine_global_center(source, inflate_aya, variant))
+            # The cylinder half-height uses header radius, not BBOX radius.
+            self.assertNotEqual(mesh["meshRadiusFloatBits"], mesh["globalBoundingBoxWords"][9])
+        changed = list(self.pine_meshes)
+        changed[2] = changed[0]
+        with self.assertRaisesRegex(RuntimeError, "pine mesh identity changed: 2"):
+            materializer._world110_tree_mesh_inputs(tuple(changed))
 
     def test_level100_rlwd_variant_is_checked_by_the_shared_reader(self):
         tables = []
@@ -302,7 +322,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_component_queries_keep_mesh_cache_and_constructor_zero_signs(self) -> None:
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes))
         attachment = document["componentAttachment"]
         self.assertEqual((20, 1, 31),
                          (attachment["emitterTag"], attachment["selector"], attachment["partOrdinal"]))
@@ -321,12 +341,12 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_changed_component_mesh_is_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "mesh identity changed"):
-            materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh")
+            materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh", self.pine_meshes)
 
     def test_changed_physics_is_rejected_before_construction(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "physics source identity"):
             materializer._world110_initial_actor_bytes(
-                self.raw_world, b"wrong physics", self.landing_craft_mesh)
+                self.raw_world, b"wrong physics", self.landing_craft_mesh, self.pine_meshes)
 
 
 class MeshEmitterMaterializationTests(unittest.TestCase):

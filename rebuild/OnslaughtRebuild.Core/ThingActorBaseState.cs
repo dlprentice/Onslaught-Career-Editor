@@ -4,15 +4,17 @@ namespace OnslaughtRebuild.Core;
 
 /// <summary>
 /// The source <c>CThing::mFlags</c> bits that this deterministic Core seam
-/// currently carries. World/map/render ownership bits remain outside Core.
+/// currently carries. Actor motion remains separate from CThing publication.
 /// </summary>
 [Flags]
 public enum ThingActorFlags : ushort
 {
     None = 0,
     DeclaredShutdown = 1 << 0,
+    InMapWho = 1 << 1,
     Dying = 1 << 2,
     Invisible = 1 << 4,
+    IsBigThing = 1 << 6,
 }
 
 /// <summary>
@@ -112,12 +114,11 @@ public sealed class ThingActorBaseState
     public static readonly int InitialContactTimeFloatBits =
         BitConverter.SingleToInt32Bits(-100.0f);
 
-    private ThingActorFlags _flags;
+    private readonly ThingBaseState _thing;
     private ThingActorPoseSnapshot _currentPose;
     private ThingActorPoseSnapshot _oldPose;
     private SimVector3 _velocity;
     private SimVector3 _angularVelocity;
-    private uint _thingTypeMask;
     private int _lastTimeOnGroundFloatBits;
     private int _lastTimeInWaterFloatBits;
     private int _lastTimeOnObjectFloatBits;
@@ -133,7 +134,7 @@ public sealed class ThingActorBaseState
         _oldPose = initialPose;
         _velocity = velocity;
         _angularVelocity = angularVelocity;
-        SetThingType(specificTypeMask);
+        _thing = new(ThingActorTypeMasks.ActorLineage, specificTypeMask);
         _lastTimeOnGroundFloatBits = InitialContactTimeFloatBits;
         _lastTimeInWaterFloatBits = InitialContactTimeFloatBits;
         _lastTimeOnObjectFloatBits = InitialContactTimeFloatBits;
@@ -163,24 +164,23 @@ public sealed class ThingActorBaseState
                 nameof(snapshot));
         }
 
-        _flags = snapshot.Flags;
+        _thing = new(ThingActorTypeMasks.ActorLineage, snapshot.ThingTypeMask, snapshot.Flags);
         _currentPose = snapshot.CurrentPose;
         _oldPose = snapshot.OldPose;
         _velocity = snapshot.Velocity;
         _angularVelocity = snapshot.AngularVelocity;
-        _thingTypeMask = snapshot.ThingTypeMask;
         _lastTimeOnGroundFloatBits = snapshot.LastTimeOnGroundFloatBits;
         _lastTimeInWaterFloatBits = snapshot.LastTimeInWaterFloatBits;
         _lastTimeOnObjectFloatBits = snapshot.LastTimeOnObjectFloatBits;
     }
 
     public ThingActorBaseStateSnapshot Snapshot => new(
-        _flags,
+        _thing.Flags,
         _currentPose,
         _oldPose,
         _velocity,
         _angularVelocity,
-        _thingTypeMask,
+        _thing.TypeMask,
         _lastTimeOnGroundFloatBits,
         _lastTimeInWaterFloatBits,
         _lastTimeOnObjectFloatBits);
@@ -189,44 +189,25 @@ public sealed class ThingActorBaseState
     /// Retail <c>0x00401470</c>, source inline
     /// <c>CThing::MakeInvisible</c>: set <c>TF_INVISIBLE</c>.
     /// </summary>
-    public void MakeInvisible() => _flags |= ThingActorFlags.Invisible;
+    public void MakeInvisible() => _thing.MakeInvisible();
 
     /// <summary>
     /// Retail <c>0x00401460</c>, source inline
     /// <c>CThing::MakeVisible</c>: clear <c>TF_INVISIBLE</c>.
     /// </summary>
-    public void MakeVisible() => _flags &= ~ThingActorFlags.Invisible;
+    public void MakeVisible() => _thing.MakeVisible();
 
     /// <summary>
     /// Retail <c>0x004f3760</c>, source <c>CThing::AddShutdownEvent</c>:
     /// set <c>TF_DECLARED_SHUTDOWN</c> once. Scheduling remains outside Core.
     /// </summary>
-    public bool DeclareShutdown()
-    {
-        if ((_flags & ThingActorFlags.DeclaredShutdown) != 0)
-        {
-            return false;
-        }
-
-        _flags |= ThingActorFlags.DeclaredShutdown;
-        return true;
-    }
+    public bool DeclareShutdown() => _thing.DeclareShutdown();
 
     /// <summary>
     /// Retail <c>0x004f37a0</c>, source <c>CThing::StartDieProcess</c>:
     /// set <c>TF_DYING</c> once, then declare shutdown.
     /// </summary>
-    public bool StartDieProcess()
-    {
-        if ((_flags & ThingActorFlags.Dying) != 0)
-        {
-            return false;
-        }
-
-        _flags |= ThingActorFlags.Dying;
-        DeclareShutdown();
-        return true;
-    }
+    public bool StartDieProcess() => _thing.StartDieProcess();
 
     /// <summary>
     /// The source/retail <c>CActor::Move</c> ordering: capture current pose as
@@ -282,7 +263,7 @@ public sealed class ThingActorBaseState
     /// stored mask with the supplied subclass bits OR the full actor lineage.
     /// </summary>
     public void SetThingType(uint specificTypeMask) =>
-        _thingTypeMask = specificTypeMask | ThingActorTypeMasks.ActorLineage;
+        _thing.SetThingType(specificTypeMask);
 
     /// <summary>
     /// Retail <c>0x00402000</c>, source <c>CActor::DeclareOnGround</c>.

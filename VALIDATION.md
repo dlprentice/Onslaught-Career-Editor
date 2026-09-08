@@ -121,8 +121,27 @@ The exact archive pin already protected ordinary source selection. Independent
 old/new parser comparison preserved the complete actual100/110 base actor/pine
 outputs in both name modes and all actual100 level actors/waypoint paths.
 Only the new 155,972-byte World110 input asset was published locally. Both tree
-tables' raw record digests also reproduced after Core decoding. Tree Init,
-MapWho publication, live AI/scheduler integration and World110 play remain open.
+tables' raw record digests also reproduced after Core decoding. That step did
+not initialize trees or integrate live listeners; the following step extends it.
+
+The connected base-tree prefix passed **69/69 Core facts, zero skipped**, and
+**10/10 World110 materializer checks**. The Core selection covers actual pine
+construction, float terrain/mesh fields, one shared draw per tree, 1,481 real
+readiness callbacks, world/player/reader identity separation, live sector-list
+ordering and mutation, shared Actor state, existing scheduler laws and the
+unchanged World100 forty-step hash. An initial radius-boundary test expected
+the next float to cross a layer; direct arithmetic showed its product still
+stores as 8.0f. The corrected test preserves that additional equality case and
+checks the following float crosses. Logs are `tree-prefix-core.log`,
+`tree-prefix-core-fixed.log` and `tree-prefix-materializer.log` in the same
+existing Linux run directory. The ignored World110 asset is now 157,121 bytes;
+only that derived input was regenerated. Read-only review also exposed and
+closed mutable collection/index escape routes from the world owner.
+
+These checks execute the reconstruction under explicit nearest/53-bit numerical
+assumptions and a supplied incoming seed. They do not measure the retail load's
+control word/seed, final tree orientation, full collision responses, transition
+reset or World110 play. No desktop, Ghidra or broad runtime campaign was used.
 
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and

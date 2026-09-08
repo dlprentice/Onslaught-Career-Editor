@@ -570,8 +570,9 @@ public sealed class RetailEventScheduler
     /// <c>UPDATE_CAMERA</c> every frame forever without draining the pool.
     /// </para>
     /// <para>
-    /// The callback is optional and caller-supplied; Core has no listeners of
-    /// its own. Retail iterates the ready slot through the set's own cursor, so
+    /// The callback is optional and supplied by the owning world; the World110
+    /// tree prefix now dispatches its collision listeners here. Retail iterates
+    /// the ready slot through the set's own cursor, so
     /// an append made during the walk would be visited — the index walk here
     /// preserves that. With the clock unchanged inside callbacks, the only slot a callback
     /// can target immediately is <c>mCurrentBufferNum</c>, which

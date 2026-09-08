@@ -10,6 +10,96 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class RetailWorld110InitialConstructionTests
 {
     [Fact]
+    public void BaseTrees_ConstructRealOwnedCThingsAndPublishOnceInLoadOrder()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithBaseTrees(123456);
+        Assert.Equal(1481, world.Trees.Count);
+        Assert.Equal(1481, world.SpatialEntryCount);
+        Assert.Equal(0, world.UnconstructedTreeCount);
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count);
+        Assert.Equal(world.Trees.Reverse(), world.InitializedTreesNewestFirst);
+        Assert.False(world.InitializedTreesNewestFirst is ICollection<RetailWorld110Tree>);
+        var placements = world.TreeTables[0].Groups[1].Placements;
+        foreach (RetailWorld110Tree tree in world.Trees)
+        {
+            Assert.Equal(placements[tree.Ordinal].PositionXFloatBits, tree.PositionFloatBits.X);
+            Assert.Equal(placements[tree.Ordinal].PositionYFloatBits, tree.PositionFloatBits.Y);
+            Assert.Equal(placements[tree.Ordinal].Variant, tree.Mesh.Variant);
+            Assert.Same(tree, tree.MapEntry.Owner);
+            Assert.True(tree.MapEntry.IsRegistered);
+            Assert.Equal(4, tree.MapEntry.Sector.Layer);
+            Assert.Equal(ThingActorFlags.InMapWho, tree.Flags);
+            Assert.Equal(0x02800021u, tree.ThingTypeMask);
+            Assert.Equal(0u, tree.ThingTypeMask & (ThingActorTypeMasks.Actor | ThingActorTypeMasks.ComplexThing));
+            Assert.False(tree.MatrixCacheValid);
+            Assert.False(tree.HasFallingTreeData);
+        }
+        // Constructor scans inspect real earlier pines, not an empty provider.
+        Assert.True(world.Trees.Sum(tree => tree.InitialRejectedPeerCount) > 1000);
+        var neighbors = world.GetTreeCollisionNeighbors(0);
+        Assert.Contains(world.Trees[0], neighbors);
+        Assert.True(neighbors.Count > 1);
+        Assert.All(neighbors, tree => Assert.Same(world.Trees[tree.Ordinal], tree));
+        Assert.Throws<NotSupportedException>(() => ((IList<RetailWorld110Tree>)world.Trees).Clear());
+    }
+
+    [Fact]
+    public void BaseTrees_UseActualTerrainFloatWordsAndDistinctMeshBounds()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithBaseTrees(123456);
+        int[] radii = [0x4005575c, 0x4007f5c1, 0x400cea52, 0x40054422];
+        Assert.Equal(radii, world.TreeMeshes.Select(mesh => mesh.MeshRadiusFloatBits));
+        foreach (RetailWorld110Tree tree in world.Trees)
+        {
+            float x = BitConverter.Int32BitsToSingle(tree.PositionFloatBits.X);
+            float y = BitConverter.Int32BitsToSingle(tree.PositionFloatBits.Y);
+            // Independent fixed-coordinate formulation, equivalent only for
+            // these admitted inputs under the stated nearest-store assumption.
+            float sampled = world.Terrain.Heightfield.SampleHeightUnitsAtFixed(
+                (int)Math.Floor(x * 256.0), (int)Math.Floor(y * 256.0)) * world.Terrain.Heightfield.HeightScale;
+            float expected = Math.Min(sampled, world.Terrain.Heightfield.WaterLevel);
+            Assert.Equal(BitConverter.SingleToInt32Bits(expected), tree.PositionFloatBits.Z);
+            Assert.Equal(0x3e4ccccd, tree.CollisionRadiusFloatBits);
+            Assert.Equal(0x3d23d70b, tree.CollisionRadiusSquaredFloatBits);
+            Assert.Equal(BitConverter.SingleToInt32Bits(
+                BitConverter.Int32BitsToSingle(radii[tree.Mesh.Variant]) / 2), tree.CollisionHalfHeightFloatBits);
+            Assert.Equal(0x20u, tree.CollisionMask);
+            Assert.Equal(1, tree.CollisionMaximumKind);
+        }
+        Assert.Equal(new RetailMapWhoSector(41, 31, 4), world.Trees[0].MapEntry.Sector);
+        Assert.All(world.TreeMeshes, mesh => Assert.Throws<NotSupportedException>(() =>
+            ((IList<int>)mesh.GlobalBoundingBoxWords).Clear()));
+    }
+
+    [Fact]
+    public void BaseTrees_ConsumeOneSharedDrawEachAndDispatchActualReadinessListeners()
+    {
+        var world = RetailWorld110InitialConstruction.CreateWithBaseTrees(123456);
+        var random = new Level100ReleasedRandom(123456);
+        foreach (RetailWorld110Tree tree in world.Trees)
+        {
+            int expected = (int)Math.Round((random.Next() % 65536) / 2048.0, MidpointRounding.ToEven);
+            Assert.Equal(expected, tree.InitialRotationSelector);
+            Assert.False(tree.CollisionReady);
+            Assert.Equal(RetailEventPlacement.ImmediateBucket, tree.ReadinessEvent.Placement);
+        }
+        Assert.Contains(world.Trees, tree => tree.InitialRotationSelector == 32);
+        Assert.Equal(random.Seed, world.ReleasedRandomSeed);
+        Assert.Equal(1481, world.PendingTreeEvents);
+        var dispatched = world.AdvanceTreeReadinessEvents();
+        Assert.Equal(world.Trees.Select(tree => tree.CollisionIdentity), dispatched.Select(item => item.Listener));
+        Assert.All(dispatched, item =>
+        {
+            Assert.Equal(3000, item.EventNum);
+            Assert.Equal(RetailEventPriority.StartOfFrame, item.Priority);
+        });
+        Assert.All(world.Trees, tree => Assert.True(tree.CollisionReady));
+        Assert.Equal(0, world.PendingTreeEvents);
+        Assert.Equal(random.Seed, world.ReleasedRandomSeed); // No callback draw.
+        Assert.Empty(world.AdvanceTreeReadinessEvents()); // No reschedule.
+    }
+
+    [Fact]
     public void TreeInputs_RetainBothTablesButOnlyBasePinesCallInit()
     {
         var world = RetailWorld110InitialConstruction.Create();

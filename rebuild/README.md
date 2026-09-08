@@ -221,7 +221,11 @@ mesh attachment and parent pose, including float-store order and the Euler
 conversion before child Init. The arithmetic matches a native x87 probe; these
 inputs do not allocate or initialize turret children. Both explicit-tree tables
 are retained, with the 1,481 base-world pine Init calls distinguished from
-skipped ferns and repeated level-world records. Tree Init remains unimplemented.
+skipped ferns and repeated level-world records. Its explicit base-tree factory
+now constructs those pines with actual spatial membership and collision-readiness
+events. It takes the incoming RNG seed and states its nearest/53-bit numerical
+assumption; the retail call's FP environment and final tree orientation remain
+open. Full collision response and ordinary actor initialization are unfinished.
 Simulation now explicitly rejects World110 before the Level100 setup path.
 This stage does not initialize all actor classes, publish a complete world,
 run squads/spawners or construct a playable session. The Godot host therefore

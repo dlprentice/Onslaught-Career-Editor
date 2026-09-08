@@ -291,9 +291,9 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v3"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v4"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c"
+    "ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
@@ -3174,7 +3174,7 @@ def _pine_imposter_views(raw_level: bytes) -> list[list[list[float]]]:
     return views
 
 
-def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]:
+def _pine_global_bbox_words(source: bytes, inflate_aya, variant: int) -> list[int]:
     inflated = inflate_aya(source)
     outer_offset = len(inflated) - 56
     inner_offset = outer_offset + 8
@@ -3190,7 +3190,49 @@ def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]
     center_bits = struct.unpack_from("<3I", inflated, inner_offset + 8)
     if center_bits != PINE_CENTER_BITS[variant]:
         raise RuntimeError(f"pinesnow{variant} global BBOX center changed")
-    return list(struct.unpack("<3f", struct.pack("<3I", *center_bits)))
+    words = list(struct.unpack_from("<10i", inflated, inner_offset + 8))
+    values = struct.unpack_from("<10f", inflated, inner_offset + 8)
+    if words[8] != 1 or any(not math.isfinite(values[i]) for i in (0, 1, 2, 4, 5, 6, 9)) or any(values[i] <= 0 for i in (4, 5, 6, 9)):
+        raise RuntimeError(f"pinesnow{variant} global BBOX is invalid")
+    return words
+
+
+def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]:
+    # Retain the unchanged Level100 rendering projection from the one reader.
+    words = _pine_global_bbox_words(source, inflate_aya, variant)
+    return list(struct.unpack("<3f", struct.pack("<3i", *words[:3])))
+
+
+def _read_pine_meshes(game_root: Path) -> tuple[bytes, ...]:
+    from aya_archive_inventory import build_asset_resolver
+    resolver = build_asset_resolver(game_root / "data/resources")
+    result = []
+    for variant, key in enumerate(PINE_MESH_KEYS):
+        matches = resolver.mesh_index.get(f"{key}.msh", [])
+        if len(matches) != 1:
+            raise RuntimeError(f"expected one exact loose mesh for {key}, found {len(matches)}")
+        result.append(_read_exact(Path(matches[0]), PINE_MESH_SHA256[variant]))
+    return tuple(result)
+
+
+def _world110_tree_mesh_inputs(pine_meshes: tuple[bytes, ...]) -> list[dict[str, object]]:
+    from cmsh_static_preview import inflate_aya
+    if len(pine_meshes) != 4:
+        raise RuntimeError("world 110 requires four pine meshes")
+    result = []
+    for variant, source in enumerate(pine_meshes):
+        if _sha256(source) != PINE_MESH_SHA256[variant]:
+            raise RuntimeError(f"world 110 pine mesh identity changed: {variant}")
+        inflated = inflate_aya(source)
+        result.append({
+            "variant": variant,
+            "meshName": f"pinesnow{variant}.MSH",
+            "sourceSha256": PINE_MESH_SHA256[variant],
+            # CMSH payload starts at8; CRTTree::Init copies mesh+0x164.
+            "meshRadiusFloatBits": struct.unpack_from("<i", inflated, 8 + 0x164)[0],
+            "globalBoundingBoxWords": _pine_global_bbox_words(source, inflate_aya, variant),
+        })
+    return result
 
 
 LEVEL100_PLAYER_START_X = 288.6875
@@ -3500,6 +3542,7 @@ def _world110_component_attachment(rows, physics, mesh_data: bytes) -> dict[str,
 
 def _world110_initial_actor_bytes(
     raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes,
+    pine_meshes: tuple[bytes, ...],
 ) -> bytes:
     """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
 
@@ -3615,6 +3658,7 @@ def _world110_initial_actor_bytes(
         "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
         "rows": rows,
         "treeTables": tree_tables,
+        "treeMeshes": _world110_tree_mesh_inputs(pine_meshes),
         "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -5458,6 +5502,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
                 _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256),
                 _read_exact(game_root / WORLD110_LANDING_CRAFT_MESH,
                             WORLD110_LANDING_CRAFT_MESH_SHA256),
+                _read_pine_meshes(game_root),
             )
             actor_hash = _sha256(actor_data)
             if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:

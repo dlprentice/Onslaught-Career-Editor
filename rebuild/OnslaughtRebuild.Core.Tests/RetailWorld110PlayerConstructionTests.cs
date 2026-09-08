@@ -8,6 +8,27 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class RetailWorld110PlayerConstructionTests
 {
     [Fact]
+    public void TreeAndPlayerConstruction_ShareWorldIdentityAndReaderOwnership()
+    {
+        var world = RetailWorld110InitialConstruction.Create(Career(),
+            RetailWorld110GameSettings.FreshGameDefaults, randomSeedAtFirstTree: 123456);
+        var player = world.PlayerConstruction!;
+        int[] shells = [player.Start.Identity, player.BattleEngine.Identity, player.Player.Identity,
+            player.Start.BattleEngineReaderCellIdentity, player.BattleEngine.PlayerReaderCellIdentity,
+            player.Player.BattleEngineReaderCellIdentity];
+        int[] identities = world.ActorWorldIdentities.Values
+            .Concat(world.Trees.SelectMany(tree => new[] { tree.Identity, tree.CollisionIdentity }))
+            .Concat(shells).ToArray();
+        Assert.Equal(43 + 1481 * 2 + 6, identities.Length);
+        Assert.Equal(identities.Length, identities.Distinct().Count());
+        Assert.All(shells, identity => Assert.True(identity > world.Trees[^1].CollisionIdentity));
+        Assert.Equal(player.BattleEngine.Identity,
+            player.ReaderTargetOf(player.Start.BattleEngineReaderCellIdentity));
+        Assert.Equal(43, world.Actors.Snapshot.Actors.Count); // Registry IDs stay dense.
+        Assert.Equal(world.Actors.Snapshot.Actors, world.RestoreActors(world.Actors.Snapshot).Snapshot.Actors);
+    }
+
+    [Fact]
     public void ProductionFactory_OwnsObjectsAndThreeDistinctReaderCells()
     {
         var world = RetailWorld110InitialConstruction.Create(Career(),

@@ -7,7 +7,8 @@ immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
 September 7 extension records ordered Unit/child initialization and prepares the
 four landing-craft turret inputs from the measured attachment calculation. It
-also retains both explicit-tree tables and their distinct loader branches.
+also retains both explicit-tree tables and constructs the base pine prefix
+with owned spatial membership and readiness events under explicit FP/seed assumptions.
 Evidence: MEASURED serialized data plus SOURCE-INFORMED field semantics — the
 hash-pinned retail archive and RLWD reproduce every offset, record digest, raw
 word, common field, and tail; pinned `InitThing` source names the version-50
@@ -121,15 +122,108 @@ their pine stream hashes to
 Each record is raw float X, raw float Y and integer variant, with no serialized
 Z. Actual variants are 0–3. Table endpoints are not payload endpoints.
 
-The existing `level110-initial-actors.json` now includes both tables under
-`onslaught.world110-initial-actors.v3`: 155,972 bytes, SHA-256
-`4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c`.
+The existing `level110-initial-actors.json` includes both tables and four
+exact mesh input records under `onslaught.world110-initial-actors.v4`:
+157,121 bytes, SHA-256
+`ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8`.
 The materializer shares one ordered tree reader with Level100's render/shadow
-projection and waypoint parser. Core retains read-only groups, exact XY words,
-variants, record digests and offsets. `CallsTreeInit` marks the retail branch;
-`UnconstructedTreeCount` is 1,481. Neither property runs Tree Init, publishes a
-MapWho entry, supplies terrain-derived Z/yaw, or consumes initialization RNG.
-The two source tables are not merged or counted as two instantiated groves.
+projection and waypoint parser, and one global-BBOX reader with its pine renderer.
+Core retains read-only groups, raw XY, variants, record digests and offsets.
+`CallsTreeInit` marks the retail branch; the plain `Create()` stage leaves
+1,481 unconstructed trees. `CreateWithBaseTrees(randomSeedAtFirstTree)` constructs
+those pines once and reduces that count to zero. The repeated RLWD table never
+creates another grove.
+
+### Connected base-tree prefix and numerical limits
+
+`RetailWorld110Tree` owns CThing state, exact retail XYZ, its mesh fields,
+MapWho entry and persistent collision listener. `ThingBaseState` shares flags
+and type composition with the existing Actor owner without giving trees Actor
+lineage, old pose, movement or contact timestamps. Ordinary actor states remain
+allocated but uninitialized during this tree prefix. World identities, collision
+listeners and subsequent detached player/reader shells use one allocator; the
+43 dense actor IDs remain a separate explicitly mapped domain, not retail thing
+numbers. This does not reproduce complete retail allocation order.
+
+The successful explicit-name path performs one shared RNG draw per tree,
+rounds `(draw % 65536)/2048` through FISTP, and stores the result. Nearest rounding
+can produce 32. It skips the second draw used for unspecified mesh variants.
+Terrain samples the actual World110 HFLD and stores float Z, then clamps to water.
+Its biased-float coordinate conversion agrees with `floor(XY*256)` for all
+2,962 admitted pine coordinates under nearest float stores. The repeated ground
+comparison can take a same-float Teleport; the concrete Tree movement callback
+adds no RNG, event or matrix query.
+
+MapWho insertion precedes collision initialization. Each tree gets cylinder
+radius `0x3e4ccccd`, squared radius `0x3d23d70b`, half-height equal to half its
+CMSH header radius, mask `0x20` and maximum collision kind 1. Its persistent
+collision component queues event **ID 3000** at relative time −1, priority 0,
+with null data/reuse, then scans actual current sector lists. Earlier trees fail
+mask `0x20`; the scan is not supplied an empty candidate list. Renderability is
+added afterward and world membership is inserted at the head. Final tree type
+is `0x02800021`; flags are 2. Dispatching the owned event only sets readiness;
+it performs no scan, reschedule or RNG draw. The implemented prefix therefore
+consumes 1,481 draws and creates 1,481 events, resolved to those same tree objects.
+Full collision response/geometry, falling, destruction and ordinary actor Init
+are not provided by this prefix.
+
+The four exact `m_pinesnow{0,1,2,3}.MSH.aya` inputs are 22,486 / 14,290 /
+20,023 / 20,214 bytes; their complete existing source hashes remain in
+`PINE_MESH_SHA256`. The CMSH header radius at inflated file `0x16c` is respectively
+`4005575c`, `4007f5c1`, `400cea52`, `40054422`. It is distinct from the final
+40-byte global BBOX's radius. The materializer retains all ten BBOX words,
+including padding; spatial radius uses unrotated center/half-extents XY only.
+All four select layer 4, so no initial pine enters the separate big-object list.
+
+`RetailMapWho` owns five layers with cell widths 128/64/32/16/8 and grids
+4/8/16/32/64. Radius selection stores float32(radius × float32(2.01)) before
+comparison; equality selects the finer layer. Insertion is at the head;
+same-sector updates preserve order and changed-sector updates reinsert at the
+head without recalculating radius. Removal preserves the removed links, layer
+and shared cursor. Initial scans visit descending layers, X-outer/Y-inner 3×3
+neighbors, with child slots (0,0),(1,0),(0,1),(1,1) recursively visited before
+parent entries only at the starting layer. Every list uses the shared cursor
+and reads its successor after the callback. Nested queries or list mutations
+therefore affect continuation; a captured array is not equivalent. Later
+PostLoad Sort, radius/line queries and movement collision effects remain open.
+
+**Numerical admission:** the factory takes the incoming shared RNG state
+explicitly and currently selects binary64 arithmetic, nearest float32 stores
+and nearest-even FISTP. These are reconstruction assumptions, not a measured
+retail load environment. The live load's control word and incoming seed remain
+open. MapWho contains no local rounding-control instruction; at layer 4, 336
+actual placements differ among floor/nearest/ceiling. The first pine maps to
+(41,31) under nearest versus (41,30) under floor. The standalone index's
+integer-rounding parameter tests that particular law; it is not a complete
+alternative x87 environment. Capture the control word and seed at the first
+Tree Init when desktop/runtime work is available.
+
+The random selector also does **not** establish final standing yaw. Init leaves
+the matrix cache dirty. The first normal matrix query replaces the selector
+using `((treeAddress >> 4) & 3)`, float π/2 and global `0x67a680`, then copies
+one table entry. The prefix does not query or invent that matrix. Native address
+phase, later render angle and transition/reset ownership remain unadmitted.
+
+The following bounded bodies were read from the pristine specimen named above;
+their exact hashes were measured directly. Retained exports under
+`local-lab/ghidra-fullpass-2026-07-23/exports/` informed the same analysis.
+No Ghidra database or retail process was opened.
+
+| Half-open body | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Tree Init `[0x4f6080,0x4f63b1)` | 817 | `01f4285f653b2bbedab55d89fe94ba654425aae198ba02f74eab0834ada0607f` |
+| Tree collision Init `[0x4f6480,0x4f6534)` | 180 | `a4921ce0934191a263740e6d5c5eb7a6cc9786044b5c9f2550b373097ef8db7e` |
+| MapWho Init `[0x4919b0,0x491c4b)` | 667 | `633606b81f640cd5c00a308dfa8f73ebf0d7b81cdd2b7dc90c3116b4505e9288` |
+| Radius layer `[0x491c50,0x491ccf)` | 127 | `162737eb8441c675a372b5e8a8659b03e7dc5155a2f1699ad08d52c28bf621a9` |
+| World-to-sector `[0x492670,0x4926dd)` | 109 | `dbda2072298393de6f225842734bc10876e06f635994f1db94e6cb82c98b6ea8` |
+| Entry Init `[0x492ba0,0x492c58)` | 184 | `1f4a1f596520e4f7d5e42e5bac52cb848cde7c91a42e5a5bbf8450a5779ce7ec` |
+| Persistent Init `[0x4269b0,0x4269f6)` | 70 | `bd4cf3f803c5d5a661b2d81ef96d1c2753a6ba4be722a4d1c6673ea96dedddd4` |
+| Readiness handler `[0x426a20,0x426a38)` | 24 | `0cf29c9c31fba213a38f5dfb2e4dbb21d7526f4d19fdbbcd5a64dca9ab82ea9b` |
+| Normal dirty matrix prefix `[0x4f6560,0x4f660c)` | 172 | `58de33539f7bf79083e77324ef79faf75bcb2310b4f60dd27e1fd63ac5501fa5` |
+
+Pinned GPL source `thing.cpp:27-89`, `InitThing.cpp:68-86`,
+`InitThing.h:76-109,360-369`, and `engine.h:22` supply the base lifecycle,
+initializer defaults and big-list threshold; Tree and MapWho sources are absent.
 
 The former test-only World110 `Simulation` route ran Level100's Setup against
 relabeled Level100 definitions. It now fails explicitly before initialization.

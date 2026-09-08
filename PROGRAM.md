@@ -63,8 +63,8 @@ The active phase now constructs an explicitly incomplete World 110 stage from
 its own terrain and 43 admitted direct actors, with real authored transforms,
 behavior selectors and physics life. It also owns detached Start/engine/player
 shells with measured configuration and reader fields. Concrete class Init,
-world publication and event ordering are still missing; these shells are not a
-completed session or a reason to claim 100→110 play.
+ordinary-object publication and event ordering are still missing; these shells
+are not a completed session or a reason to claim 100→110 play.
 
 The complete static Actor/base and Unit initialization order is now recorded in
 the existing [Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
@@ -79,12 +79,16 @@ focused Core checks agree on their meaningful output words. This closes an
 incoming-argument dependency; child allocation, Init and event/world publication
 remain unfinished.
 
-The same construction owner now retains both explicit-tree tables and marks
-the loader's actual branches: 1,481 BSWD pines need initialization; ferns and
-the repeated RLWD records are consumed without creating trees. The first
-lander/child collision exclusions and the separate Unit, animation and AI event
-listeners are recorded in the World-110 owner above. Real MapWho/list ownership
-and shared event/RNG execution remain the next implementation dependencies.
+The construction owner retains both explicit-tree tables and can now construct
+the 1,481 base-world pines with real MapWho entries, live neighbor traversal and
+owned collision-readiness events. The prefix requires an explicit incoming RNG
+seed and uses a stated nearest/53-bit arithmetic assumption. It shares object/
+reader identity allocation with subsequent detached player shells. Actual retail
+FP/seed state, final tree orientation, complete collision response and ordinary
+actor initialization remain open. The first lander/child collision exclusions
+and separate Unit/animation/AI listeners are recorded in the World-110 owner.
+Next, connect ordinary object Init to these shared spatial, event and RNG owners;
+do not restore an empty-peer adapter or call the world playable.
 The old test-only Simulation route that ran Level100 Setup under a World110
 stamp is explicitly rejected; direct World110 mission and hash tests remain.
 

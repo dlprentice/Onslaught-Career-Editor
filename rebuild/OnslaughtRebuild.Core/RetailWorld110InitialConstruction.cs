@@ -74,14 +74,16 @@ public sealed record RetailWorld110TreeTableInput(
 /// Core actor IDs are local allocation IDs, not retail thing numbers. Authored
 /// poses are retained pending class Init ground/water policy. Script names are
 /// bound as data but no script is run. The thirty other RLWD objects, two BSWD
-/// type-37 objects, trees, player/engine, squad members and spawner output still need
-/// their constructors. Unit life uses Core's existing thousandths convention;
+/// type-37 objects, player/engine, squad members and spawner output still need
+/// complete initialization. The explicit base-tree factory adds initialized
+/// pines and their readiness events under stated numerical assumptions.
+/// Unit life uses Core's existing thousandths convention;
 /// type-35 life is absent and its registry zero does not prove invulnerability.
 /// </remarks>
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "4114c568675907e2e5dac1e09ed0e7b3cab861a9c34127ce373b65921036cc7c";
+        "ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
@@ -90,28 +92,48 @@ public sealed class RetailWorld110InitialConstruction
         Level100FloatBasis3Bits ParentInitBasis);
     internal sealed record Inputs(IReadOnlyList<RetailWorld110InitialActorInput> Actors,
         RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses,
-        IReadOnlyList<RetailWorld110TreeTableInput> TreeTables);
+        IReadOnlyList<RetailWorld110TreeTableInput> TreeTables,
+        IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes);
 
     private static readonly Lazy<Inputs> s_inputs =
         new(LoadEmbedded);
 
-    private RetailWorld110InitialConstruction()
+    private int _nextObjectIdentity = 1;
+    private readonly Dictionary<int, RetailWorld110Tree> _treeListeners = [];
+    private readonly LinkedList<RetailWorld110Tree> _initializedTrees = [];
+    private RetailEventScheduler? _events;
+    internal RetailActiveReaderGraph Readers { get; } = new();
+
+    private RetailWorld110InitialConstruction(int? randomSeedAtFirstTree = null)
     {
         Inputs inputs = s_inputs.Value;
         ActorInputs = inputs.Actors;
         TreeTables = inputs.TreeTables;
+        TreeMeshes = inputs.TreeMeshes;
         InitialObjectSeeds = RetailWorldInitialObjectSeedAdmission.World110;
         Terrain = RetailWorldTerrain.World110;
         ActorDefinitions = new Level100ActorDefinitionSet(
             ActorInputs.Select(input => input.Actor), [], worldNumber: 110);
         Actors = new Level100ActorRegistry(
             ActorDefinitions, Terrain, initializeSupport: false);
+        ActorWorldIdentities = new System.Collections.ObjectModel.ReadOnlyDictionary<Level100ActorId, int>(
+            Actors.Snapshot.Actors.ToDictionary(actor => actor.ActorId, _ => AllocateObjectIdentity()));
         ComponentInitInputs = PrepareComponentInputs(inputs);
         UnconstructedInitialObjects = Array.AsReadOnly(
             InitialObjectSeeds.Rows.Where(seed => seed.ThingType != 8).ToArray());
+        if (randomSeedAtFirstTree.HasValue) InitializeBaseTrees(randomSeedAtFirstTree.Value);
     }
 
     public static RetailWorld110InitialConstruction Create() => new();
+
+    /// <summary>
+    /// Constructs the successful fresh-world base-tree prefix using an explicit
+    /// RNG state at the first tree. Arithmetic is binary64 with nearest float32
+    /// stores and nearest-even FISTP. These are explicit reconstruction assumptions;
+    /// the live load's seed/control word and complete load/reset remain unobserved.
+    /// </summary>
+    public static RetailWorld110InitialConstruction CreateWithBaseTrees(int randomSeedAtFirstTree) =>
+        new(randomSeedAtFirstTree);
 
     /// <summary>
     /// Adds detached player-construction shells with explicit career/settings
@@ -125,14 +147,81 @@ public sealed class RetailWorld110InitialConstruction
         return world;
     }
 
+    public static RetailWorld110InitialConstruction Create(
+        RetailCareerSave career, RetailWorld110GameSettings settings, int randomSeedAtFirstTree)
+    {
+        var world = new RetailWorld110InitialConstruction(randomSeedAtFirstTree);
+        world.PlayerConstruction = new(world, career, settings);
+        return world;
+    }
+
     public RetailWorld110PlayerConstruction? PlayerConstruction { get; private set; }
 
     public IReadOnlyList<RetailWorld110InitialActorInput> ActorInputs { get; }
 
     public IReadOnlyList<RetailWorld110TreeTableInput> TreeTables { get; }
 
+    public IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes { get; }
+    public IReadOnlyList<RetailWorld110Tree> Trees { get; private set; } = Array.Empty<RetailWorld110Tree>();
+    public IEnumerable<RetailWorld110Tree> InitializedTreesNewestFirst
+    {
+        get { foreach (RetailWorld110Tree tree in _initializedTrees) yield return tree; }
+    }
+    public IReadOnlyDictionary<Level100ActorId, int> ActorWorldIdentities { get; }
+    internal RetailMapWho? MapWho { get; private set; }
+    internal Level100ReleasedRandom? ReleasedRandom { get; private set; }
+    public int SpatialEntryCount => MapWho?.Count ?? 0;
+    public int? ReleasedRandomSeed => ReleasedRandom?.Seed;
+    public int PendingTreeEvents => _events?.TotalEvents ?? 0;
+
+    /// <summary>
+    /// A read-only query of current membership. Initialization itself consumes
+    /// the live callback traversal, not this diagnostic projection.
+    /// </summary>
+    public IReadOnlyList<RetailWorld110Tree> GetTreeCollisionNeighbors(int treeOrdinal)
+    {
+        if (MapWho is null) throw new InvalidOperationException("Base trees are not initialized.");
+        var neighbors = new List<RetailWorld110Tree>();
+        MapWho.VisitInitialCollisionNeighbors(Trees[treeOrdinal].MapEntry,
+            entry => neighbors.Add((RetailWorld110Tree)entry.Owner));
+        return neighbors.AsReadOnly();
+    }
+
     public int UnconstructedTreeCount => TreeTables.SelectMany(table => table.Groups)
-        .Where(group => group.CallsTreeInit).Sum(group => group.Placements.Count);
+        .Where(group => group.CallsTreeInit).Sum(group => group.Placements.Count) - Trees.Count;
+
+    internal int AllocateObjectIdentity() => checked(_nextObjectIdentity++);
+
+    /// <summary>
+    /// Advances the owned readiness events only. This is not a World110 game
+    /// tick: ordinary actor/script/player listeners are not initialized yet.
+    /// </summary>
+    public IReadOnlyList<RetailEventDispatch> AdvanceTreeReadinessEvents()
+    {
+        if (_events is null) throw new InvalidOperationException("Base trees are not initialized.");
+        _events.AdvanceTime();
+        return _events.Flush((_, item) => _treeListeners[item.Listener].HandleCollisionEvent(item)).ToArray();
+    }
+
+    private void InitializeBaseTrees(int seed)
+    {
+        MapWho = new(MidpointRounding.ToEven);
+        ReleasedRandom = new(seed);
+        _events = new();
+        var trees = new List<RetailWorld110Tree>();
+        foreach (RetailWorld110TreeTableInput table in TreeTables)
+            foreach (RetailWorld110TreeGroupInput group in table.Groups.Where(group => group.CallsTreeInit))
+                foreach (RetailWorld110TreePlacement placement in group.Placements)
+                {
+                    var tree = new RetailWorld110Tree(AllocateObjectIdentity(), AllocateObjectIdentity(),
+                        trees.Count, placement, TreeMeshes[placement.Variant], Terrain.Heightfield,
+                        ReleasedRandom, MapWho, _events);
+                    _treeListeners.Add(tree.CollisionIdentity, tree);
+                    _initializedTrees.AddFirst(tree); // CThing world publication follows collision Init.
+                    trees.Add(tree);
+                }
+        Trees = trees.AsReadOnly();
+    }
 
     /// <summary>
     /// The four ordered Unit attachment queries and their following Euler
@@ -201,7 +290,7 @@ public sealed class RetailWorld110InitialConstruction
 
         using JsonDocument document = JsonDocument.Parse(source);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v3" ||
+        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v4" ||
             root.GetProperty("worldNumber").GetInt32() != 110 ||
             root.GetProperty("archiveSha256").GetString() != RetailWorld110LevelActors.SourceArchiveSha256)
         {
@@ -284,8 +373,14 @@ public sealed class RetailWorld110InitialConstruction
                 table.GetProperty("headerOffset").GetInt32(),
                 table.GetProperty("endOffset").GetInt32(), Array.AsReadOnly(groups.ToArray())));
         }
+        var treeMeshes = root.GetProperty("treeMeshes").EnumerateArray().Select(mesh =>
+            new RetailWorld110TreeMesh(mesh.GetProperty("variant").GetInt32(),
+                mesh.GetProperty("meshName").GetString()!, mesh.GetProperty("sourceSha256").GetString()!,
+                mesh.GetProperty("meshRadiusFloatBits").GetInt32(),
+                Array.AsReadOnly(mesh.GetProperty("globalBoundingBoxWords").EnumerateArray()
+                    .Select(word => word.GetInt32()).ToArray()))).ToArray();
         return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses),
-            Array.AsReadOnly(treeTables.ToArray()));
+            Array.AsReadOnly(treeTables.ToArray()), Array.AsReadOnly(treeMeshes));
     }
 
     private static int? OptionalInt(JsonElement value) =>

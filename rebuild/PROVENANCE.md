@@ -303,6 +303,16 @@ campaign handoff is added. The bounded evidence and exact ceiling are recorded
 in
 [`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
 
+The September 7 base-tree factory is a separate, implemented extension of those
+inputs. It constructs 1,481 CThing-derived pines, their live MapWho membership
+and readiness listeners. It uses actual World110 terrain and hash-pinned CMSH
+header/global bounds, consumes an explicit incoming RNG stream and dispatches
+owned events. It assumes nearest float stores, binary64 arithmetic and nearest-
+even integer conversion; runtime FP state/seed, address-dependent final yaw,
+complete collision response and world load/reset remain unmeasured. Exact body
+hashes and implementation limits are in the same World110 evidence owner above.
+The payload stays ignored; no retail executable/decompiler body was added to Core.
+
 The controlled decoder mutation swapped type-28 amount and mode while leaving
 the embedded bytes and hash valid. The exact squad fact failed with expected
 amounts `(5, 5, 3, 5, 4)` and actual `(0, 0, 0, 0, 0)`; byte-for-byte source

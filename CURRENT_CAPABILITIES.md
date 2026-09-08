@@ -351,14 +351,24 @@ step, and no new retail or Godot playthrough occurred.
 
 The existing World110 input asset also retains both explicit-tree tables. The
 byte-checked loader initializes only the 1,481 base-world pines; it skips ferns
-and the repeated level-world table. Core preserves these distinctions without
-running Tree Init. The shared parser now rejects unsupported variants in the
+and the repeated level-world table. Core preserves these distinctions. The shared parser now rejects unsupported variants in the
 Level100 level-world table as well as the base table. A focused adjacent check
 exposed the old World110 Simulation test's use of Level100 Setup. That route now
 fails explicitly before initialization; exact World110 mission execution and
 synthetic schema-43 hash checks remain supported. The corrected scope passed
 71 Core facts and 14 materializer checks; the World100 forty-step hash stayed
 unchanged. This does not establish a complete World110 runtime.
+
+The subsequent [base-tree construction](rebuild/OnslaughtRebuild.Core/RetailWorld110Tree.cs)
+now creates those 1,481 pines, actual spatial entries and collision listeners in
+order. Shared RNG advances once per tree; the event manager dispatches 1,481
+readiness callbacks to the owned objects without rescheduling. The spatial index
+uses live linked lists and a shared cursor. Tree, actor, player and reader IDs
+use one world allocator with a separate actor-ID map. The focused gate passed
+69 Core facts and 10 materializer checks; World100's forty-step hash remained
+unchanged. This prefix explicitly assumes nearest/53-bit arithmetic and takes
+an incoming RNG seed; it does not establish the retail load's FP environment,
+final tree yaw, full collision response or a playable World110.
 
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu
