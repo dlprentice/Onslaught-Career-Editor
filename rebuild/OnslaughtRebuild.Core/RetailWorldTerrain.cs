@@ -33,4 +33,20 @@ public sealed class RetailWorldTerrain
 
     public int SampleGroundElevationMillimeters(SimVector2 position) =>
         Heightfield.SampleGroundElevationMillimeters(position);
+
+    /// <summary>
+    /// Retail 47eb80 coordinate conversion with the declared nearest float
+    /// stores. The biased float's bits form the fixed coordinate, not a cast.
+    /// </summary>
+    internal static float SampleRetailHeight(Level100Terrain terrain, Level100FloatVector3Bits position)
+    {
+        static int Coordinate(int bits)
+        {
+            double value = BitConverter.Int32BitsToSingle(bits);
+            float biased = (float)((value - BitConverter.Int32BitsToSingle(0x3afffeb0)) + 49152.0);
+            return unchecked(BitConverter.SingleToInt32Bits(biased) - 0x47400000);
+        }
+        return (float)((double)terrain.SampleHeightUnitsAtFixed(
+            Coordinate(position.X), Coordinate(position.Y)) * terrain.HeightScale);
+    }
 }

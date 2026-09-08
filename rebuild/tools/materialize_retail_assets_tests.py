@@ -214,6 +214,9 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         )
         cls.configurations = (game / materializer.BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
         cls.pine_meshes = materializer._read_pine_meshes(game)
+        cls.control_tower_mesh = materializer._read_exact(
+            game / materializer.WORLD110_CONTROL_TOWER_MESH,
+            materializer.WORLD110_CONTROL_TOWER_MESH_SHA256)
         cls.landing_craft_mesh = materializer._read_exact(
             game / materializer.WORLD110_LANDING_CRAFT_MESH,
             materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
@@ -238,7 +241,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_artifact_reproduces_and_contains_its_own_unit_rows(self) -> None:
         data = materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes)
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.control_tower_mesh)
         self.assertEqual(materializer.WORLD110_INITIAL_ACTORS_SHA256,
                          materializer._sha256(data))
         document = json.loads(data)
@@ -263,9 +266,25 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual("Tank Factory", exact[1]["name"])
         self.assertEqual(legacy, materializer._parse_static_world(self.raw_world)[0])
 
+    def test_control_tower_keeps_source_parts_and_duplicate_emitter_bindings(self):
+        mesh = materializer._world110_control_tower_mesh(self.control_tower_mesh)
+        self.assertEqual(39, len(mesh["parts"]))
+        self.assertEqual(["CORE01", "CORE02", "core4", "CORE03", "CORE05", "CORE06", "core7", "CORE08"],
+                         [part["name"] for part in mesh["parts"] if part["name"].startswith(("core", "CORE"))])
+        self.assertTrue(all(part["numNmic"] == part["isNmic"] == 0 for part in mesh["parts"]))
+        self.assertEqual(["_Fenrir Flame Effect"] * 10, [entry["name"] for entry in mesh["emitters"]])
+        self.assertEqual([0] * 10, [entry["selector"] for entry in mesh["emitters"]])
+        self.assertEqual([7,26,27,28,29,34,35,36,37,38], [entry["partOrdinal"] for entry in mesh["emitters"]])
+        self.assertEqual(0x416d5d81, mesh["meshRadiusFloatBits"])
+        self.assertEqual([0x20202020, 0x20202020], [mesh["globalBoundingBoxWords"][i] for i in (3,7)])
+        changed = bytearray(self.control_tower_mesh)
+        changed[-1] ^= 1
+        with self.assertRaisesRegex(RuntimeError, "Control Tower mesh identity"):
+            materializer._world110_control_tower_mesh(bytes(changed))
+
     def test_real110_tree_tables_retain_repeated_data_and_retail_skip_branches(self):
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.control_tower_mesh))
         base, level = document["treeTables"]
         self.assertEqual(["BSWD", "RLWD"], [base["sourceChunk"], level["sourceChunk"]])
         self.assertEqual((2709, 29549, 18327, 45167),
@@ -322,7 +341,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_component_queries_keep_mesh_cache_and_constructor_zero_signs(self) -> None:
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.control_tower_mesh))
         attachment = document["componentAttachment"]
         self.assertEqual((20, 1, 31),
                          (attachment["emitterTag"], attachment["selector"], attachment["partOrdinal"]))
@@ -341,12 +360,13 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_changed_component_mesh_is_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "mesh identity changed"):
-            materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh", self.pine_meshes)
+            materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh",
+                                                       self.pine_meshes, self.control_tower_mesh)
 
     def test_changed_physics_is_rejected_before_construction(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "physics source identity"):
             materializer._world110_initial_actor_bytes(
-                self.raw_world, b"wrong physics", self.landing_craft_mesh, self.pine_meshes)
+                self.raw_world, b"wrong physics", self.landing_craft_mesh, self.pine_meshes, self.control_tower_mesh)
 
 
 class MeshEmitterMaterializationTests(unittest.TestCase):

@@ -83,7 +83,7 @@ public sealed record RetailWorld110TreeTableInput(
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8";
+        "fdc6869be1743c689ebd97bd4fba29f342c82ffa522bca9739531ffb3ddbc00b";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
@@ -93,14 +93,23 @@ public sealed class RetailWorld110InitialConstruction
     internal sealed record Inputs(IReadOnlyList<RetailWorld110InitialActorInput> Actors,
         RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses,
         IReadOnlyList<RetailWorld110TreeTableInput> TreeTables,
-        IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes);
+        IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes, RetailBuildingMesh ControlTowerMesh);
 
     private static readonly Lazy<Inputs> s_inputs =
         new(LoadEmbedded);
 
     private int _nextObjectIdentity = 1;
     private readonly Dictionary<int, RetailWorld110Tree> _treeListeners = [];
-    private readonly LinkedList<RetailWorld110Tree> _initializedTrees = [];
+    private readonly LinkedList<IRetailMapWhoOwner> _initializedThings = [];
+    private readonly LinkedList<RetailWorld110Building> _namedBuildings = [];
+    private readonly LinkedList<RetailWorld110Building> _units = [];
+    private readonly LinkedList<RetailBuildingSegment> _segments = [];
+    private readonly LinkedList<RetailWorld110Building> _occupancyCandidates = [];
+    private readonly List<RetailWorld110Building>[] _factions = [[], []];
+    private readonly int[,] _unitCounts = new int[2, 26];
+    // On the fresh resource-loaded route, 50d9e0 skips definition-catalog Add.
+    // MarkUsed50dc20 can only set an existing exact-name entry; misses stay empty.
+    private readonly Dictionary<string, bool> _worldMeshUsage = new(StringComparer.Ordinal);
     private RetailEventScheduler? _events;
     internal RetailActiveReaderGraph Readers { get; } = new();
 
@@ -136,6 +145,23 @@ public sealed class RetailWorld110InitialConstruction
         new(randomSeedAtFirstTree);
 
     /// <summary>
+    /// Extends the fresh-process, successful-allocation base-tree prefix through
+    /// the first Control Tower's Core initialization. Uses preloaded materialized
+    /// mesh geometry; render/resource caches remain adapter work. Shared counters,
+    /// lists and effect head start at the fresh lifecycle boundary, not arbitrary
+    /// BSWD re-entry. No frame is delivered and this is not a playable Simulation.
+    /// </summary>
+    public static RetailWorld110InitialConstruction CreateWithControlTower(int randomSeedAtFirstTree)
+    {
+        var world = new RetailWorld110InitialConstruction(randomSeedAtFirstTree);
+        Level100ActorId actorId = world.Actors.Snapshot.Actors.Single(
+            actor => actor.DefinitionIdentity == "wres:bswd:0000").ActorId;
+        world.ControlTower = new(world, actorId, world.ActorInputs[0],
+            s_inputs.Value.ControlTowerMesh, world._events!);
+        return world;
+    }
+
+    /// <summary>
     /// Adds detached player-construction shells with explicit career/settings
     /// inputs. Full world initialization and post-load assignment remain pending.
     /// </summary>
@@ -165,14 +191,31 @@ public sealed class RetailWorld110InitialConstruction
     public IReadOnlyList<RetailWorld110Tree> Trees { get; private set; } = Array.Empty<RetailWorld110Tree>();
     public IEnumerable<RetailWorld110Tree> InitializedTreesNewestFirst
     {
-        get { foreach (RetailWorld110Tree tree in _initializedTrees) yield return tree; }
+        get { foreach (var thing in _initializedThings) if (thing is RetailWorld110Tree tree) yield return tree; }
     }
+    public IEnumerable<IRetailMapWhoOwner> InitializedThingsNewestFirst => Enumerate(_initializedThings);
+    public IEnumerable<RetailWorld110Building> NamedBuildingsNewestFirst => Enumerate(_namedBuildings);
+    public IEnumerable<RetailWorld110Building> UnitsNewestFirst => Enumerate(_units);
+    public IEnumerable<RetailBuildingSegment> SegmentsNewestFirst => Enumerate(_segments);
+    public IEnumerable<RetailWorld110Building> OccupancyCandidatesNewestFirst => Enumerate(_occupancyCandidates);
+    public RetailWorld110Building? ControlTower { get; private set; }
+    public RetailBuildingEffectLink? PrimaryEffectHead { get; private set; }
+    public bool OccupancyActive => false;
+    public IReadOnlyList<IReadOnlyList<byte>> OccupancyBitplanes { get; private set; } = [];
+    public IReadOnlyList<int> OccupancySlopeThresholdFloatBits { get; private set; } = [];
+    public IReadOnlyList<RetailWorld110Building> FactionUnits(int allegiance) => _factions[allegiance].AsReadOnly();
+    public int UnitCount(int allegiance, int selector) => _unitCounts[allegiance, selector];
+    public int WorldMeshCatalogCount => _worldMeshUsage.Count;
+    public bool IsUnitDefinitionUsed(string name) => _worldMeshUsage.TryGetValue(name, out bool used) && used;
     public IReadOnlyDictionary<Level100ActorId, int> ActorWorldIdentities { get; }
     internal RetailMapWho? MapWho { get; private set; }
     internal Level100ReleasedRandom? ReleasedRandom { get; private set; }
+    internal RetailEventScheduler? Events => _events;
     public int SpatialEntryCount => MapWho?.Count ?? 0;
     public int? ReleasedRandomSeed => ReleasedRandom?.Seed;
-    public int PendingTreeEvents => _events?.TotalEvents ?? 0;
+    public int PendingTreeEvents => Trees.Count(tree => !tree.CollisionReady);
+    public int PendingEvents => _events?.TotalEvents ?? 0;
+    public float EventTime => _events?.Time ?? 0;
 
     /// <summary>
     /// A read-only query of current membership. Initialization itself consumes
@@ -183,7 +226,7 @@ public sealed class RetailWorld110InitialConstruction
         if (MapWho is null) throw new InvalidOperationException("Base trees are not initialized.");
         var neighbors = new List<RetailWorld110Tree>();
         MapWho.VisitInitialCollisionNeighbors(Trees[treeOrdinal].MapEntry,
-            entry => neighbors.Add((RetailWorld110Tree)entry.Owner));
+            entry => { if (entry.Owner is RetailWorld110Tree tree) neighbors.Add(tree); });
         return neighbors.AsReadOnly();
     }
 
@@ -191,6 +234,24 @@ public sealed class RetailWorld110InitialConstruction
         .Where(group => group.CallsTreeInit).Sum(group => group.Placements.Count) - Trees.Count;
 
     internal int AllocateObjectIdentity() => checked(_nextObjectIdentity++);
+    internal void PublishNamedBuilding(RetailWorld110Building building) => _namedBuildings.AddFirst(building);
+    internal void PublishInitializedThing(IRetailMapWhoOwner thing) => _initializedThings.AddFirst(thing);
+    internal void PublishUnit(RetailWorld110Building unit) => _units.AddFirst(unit);
+    internal void PublishSegment(RetailBuildingSegment segment) => _segments.AddFirst(segment);
+    internal void PublishFactionUnit(RetailWorld110Building unit) => _factions[unit.Allegiance].Add(unit);
+    internal void IncrementUnitCount(int allegiance, int selector) => _unitCounts[allegiance, selector]++;
+    internal void MarkUnitDefinitionUsed(string name)
+    {
+        if (_worldMeshUsage.ContainsKey(name)) _worldMeshUsage[name] = true;
+    }
+    internal void PublishOccupancyCandidate(RetailWorld110Building building) => _occupancyCandidates.AddFirst(building);
+    internal RetailBuildingEffectLink AddPrimaryEffect(RetailWorld110Building owner) =>
+        PrimaryEffectHead = new(owner, PrimaryEffectHead);
+
+    private static IEnumerable<T> Enumerate<T>(IEnumerable<T> source)
+    {
+        foreach (T item in source) yield return item;
+    }
 
     /// <summary>
     /// Advances the owned readiness events only. This is not a World110 game
@@ -199,6 +260,8 @@ public sealed class RetailWorld110InitialConstruction
     public IReadOnlyList<RetailEventDispatch> AdvanceTreeReadinessEvents()
     {
         if (_events is null) throw new InvalidOperationException("Base trees are not initialized.");
+        if (ControlTower is not null)
+            throw new NotSupportedException("Building listeners require the complete world event dispatcher.");
         _events.AdvanceTime();
         return _events.Flush((_, item) => _treeListeners[item.Listener].HandleCollisionEvent(item)).ToArray();
     }
@@ -208,6 +271,12 @@ public sealed class RetailWorld110InitialConstruction
         MapWho = new(MidpointRounding.ToEven);
         ReleasedRandom = new(seed);
         _events = new();
+        // 50d580/4bc260 before BSWD recursion: three all-set bitplanes, inactive
+        // until the later non-base load tail. No invented Building footprint.
+        OccupancyBitplanes = Array.AsReadOnly(Enumerable.Range(0, 3).Select(_ =>
+            (IReadOnlyList<byte>)Array.AsReadOnly(Enumerable.Repeat((byte)255, 8192).ToArray())).ToArray());
+        OccupancySlopeThresholdFloatBits = Array.AsReadOnly(new[] { 35, 45, 60 }.Select(degrees =>
+            BitConverter.SingleToInt32Bits((float)(degrees * (double)0.01745329238474369f))).ToArray());
         var trees = new List<RetailWorld110Tree>();
         foreach (RetailWorld110TreeTableInput table in TreeTables)
             foreach (RetailWorld110TreeGroupInput group in table.Groups.Where(group => group.CallsTreeInit))
@@ -217,7 +286,7 @@ public sealed class RetailWorld110InitialConstruction
                         trees.Count, placement, TreeMeshes[placement.Variant], Terrain.Heightfield,
                         ReleasedRandom, MapWho, _events);
                     _treeListeners.Add(tree.CollisionIdentity, tree);
-                    _initializedTrees.AddFirst(tree); // CThing world publication follows collision Init.
+                    PublishInitializedThing(tree); // CThing publication follows collision Init.
                     trees.Add(tree);
                 }
         Trees = trees.AsReadOnly();
@@ -290,7 +359,7 @@ public sealed class RetailWorld110InitialConstruction
 
         using JsonDocument document = JsonDocument.Parse(source);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v4" ||
+        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v5" ||
             root.GetProperty("worldNumber").GetInt32() != 110 ||
             root.GetProperty("archiveSha256").GetString() != RetailWorld110LevelActors.SourceArchiveSha256)
         {
@@ -379,8 +448,22 @@ public sealed class RetailWorld110InitialConstruction
                 mesh.GetProperty("meshRadiusFloatBits").GetInt32(),
                 Array.AsReadOnly(mesh.GetProperty("globalBoundingBoxWords").EnumerateArray()
                     .Select(word => word.GetInt32()).ToArray()))).ToArray();
+        JsonElement towerMesh = root.GetProperty("controlTowerMesh");
+        var parts = towerMesh.GetProperty("parts").EnumerateArray().Select(part =>
+            new RetailBuildingMeshPart(part.GetProperty("name").GetString()!, part.GetProperty("type").GetInt32(),
+                OptionalInt(part.GetProperty("reference")), OptionalInt(part.GetProperty("parent")),
+                Array.AsReadOnly(part.GetProperty("children").EnumerateArray().Select(value => value.GetInt32()).ToArray()),
+                OptionalInt(part.GetProperty("nmic")), part.GetProperty("numNmic").GetInt32(),
+                part.GetProperty("isNmic").GetInt32(), VectorBits(part.GetProperty("halfExtentFloatBits")))).ToArray();
+        var emitters = towerMesh.GetProperty("emitters").EnumerateArray().Select(emitter =>
+            new RetailBuildingEmitter(emitter.GetProperty("name").GetString()!,
+                emitter.GetProperty("selector").GetInt32(), emitter.GetProperty("partOrdinal").GetInt32())).ToArray();
+        var mesh = new RetailBuildingMesh(towerMesh.GetProperty("meshName").GetString()!,
+            towerMesh.GetProperty("sourceSha256").GetString()!, towerMesh.GetProperty("meshRadiusFloatBits").GetInt32(),
+            Array.AsReadOnly(towerMesh.GetProperty("globalBoundingBoxWords").EnumerateArray()
+                .Select(word => word.GetInt32()).ToArray()), Array.AsReadOnly(parts), Array.AsReadOnly(emitters));
         return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses),
-            Array.AsReadOnly(treeTables.ToArray()), Array.AsReadOnly(treeMeshes));
+            Array.AsReadOnly(treeTables.ToArray()), Array.AsReadOnly(treeMeshes), mesh);
     }
 
     private static int? OptionalInt(JsonElement value) =>

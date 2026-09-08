@@ -58,6 +58,15 @@ public sealed class RetailMapWho
     public MidpointRounding IntegerRounding { get; }
     public int Count => _entries.Count;
 
+    internal static float MeshSpatialRadius(IReadOnlyList<int> bbox)
+    {
+        double x = Math.Abs((double)BitConverter.Int32BitsToSingle(bbox[0])) +
+            BitConverter.Int32BitsToSingle(bbox[4]);
+        double y = Math.Abs((double)BitConverter.Int32BitsToSingle(bbox[1])) +
+            BitConverter.Int32BitsToSingle(bbox[5]);
+        return (float)Math.Sqrt(y * y + x * x); // 492bd0..492beb, one final store.
+    }
+
     public static int GetLevelForRadius(float radius)
     {
         if (!float.IsFinite(radius) || radius < 0) throw new ArgumentOutOfRangeException(nameof(radius));

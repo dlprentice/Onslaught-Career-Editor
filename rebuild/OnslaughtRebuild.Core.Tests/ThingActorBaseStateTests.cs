@@ -7,6 +7,55 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class ThingActorBaseStateTests
 {
     [Fact]
+    public void RetailPoses_PreserveExactWordsAndPositionOnlyOperations()
+    {
+        var state = new ThingActorBaseState(new(SimVector3.Zero, IdentityBasis()),
+            SimVector3.Zero, SimVector3.Zero, 0);
+        var current = new RetailActorPoseSnapshot(new(0x43880001, 0x43700001, unchecked((int)0xc1200001)),
+            IdentityBasis() with { Row0Y = int.MinValue });
+        var old = current with { BasisFloatBits = IdentityBasis() with { Row2X = int.MinValue } };
+        state.BeginRetailInitialization(current, old, 0x40100130);
+        state.SetRetailMotion(0, 1);
+        Assert.Same(current, state.Snapshot.RetailPoses!.Current);
+        Assert.Same(old, state.Snapshot.RetailPoses!.Old);
+        Assert.Equal(new SimVector3(-16687, 0, -3250), state.Snapshot.CurrentPose.PositionMillimeters);
+        Assert.Equal(new RetailActorMotionSnapshot(0, 1), state.Snapshot.RetailMotion);
+        var next = current.PositionFloatBits with { Z = unchecked((int)0xc1300001) };
+        state.SetRetailPosition(next);
+        Assert.Equal(old, state.Snapshot.RetailPoses.Old);
+        state.CopyRetailPositionToOld();
+        Assert.Equal(next, state.Snapshot.RetailPoses.Old.PositionFloatBits);
+        Assert.Equal(old.BasisFloatBits, state.Snapshot.RetailPoses.Old.BasisFloatBits);
+        state.TeleportRetailPosition(current.PositionFloatBits);
+        Assert.Equal(current, state.Snapshot.RetailPoses.Current);
+        Assert.Equal(old, state.Snapshot.RetailPoses.Old);
+        Assert.Throws<NotSupportedException>(() => new ThingActorBaseState(state.Snapshot));
+    }
+
+    [Fact]
+    public void RetailPoses_RejectUnprojectableAndLegacyMutationsAtomically()
+    {
+        var state = new ThingActorBaseState(new(SimVector3.Zero, IdentityBasis()),
+            SimVector3.Zero, SimVector3.Zero, 0);
+        var valid = new RetailActorPoseSnapshot(new(0x43880000, 0x43700000, unchecked((int)0xc1200000)),
+            IdentityBasis());
+        var overflowing = valid with { PositionFloatBits = valid.PositionFloatBits with
+            { X = BitConverter.SingleToInt32Bits(3_000_000f) } };
+        var fresh = state.Snapshot;
+        Assert.Throws<OverflowException>(() => state.BeginRetailInitialization(valid, overflowing, 0));
+        Assert.Equal(fresh, state.Snapshot);
+        state.BeginRetailInitialization(valid, valid, 0);
+        var before = state.Snapshot;
+        Assert.Throws<OverflowException>(() => state.SetRetailPosition(overflowing.PositionFloatBits));
+        Assert.Throws<OverflowException>(() => state.TeleportRetailPosition(overflowing.PositionFloatBits));
+        Assert.Throws<ArgumentException>(() => state.SetRetailPosition(valid.PositionFloatBits with { X = 0x7fc00000 }));
+        Assert.Throws<NotSupportedException>(() => state.ResetPose(fresh.CurrentPose));
+        Assert.Throws<NotSupportedException>(() => state.AdvancePose(fresh.CurrentPose));
+        Assert.Throws<NotSupportedException>(() => state.SetVelocity(new(1, 2, 3)));
+        Assert.Equal(before, state.Snapshot);
+    }
+
+    [Fact]
     public void Visibility_UsesTheReleasedInvisibleFlagAndIsIdempotent()
     {
         ThingActorBaseState state = CreateState();

@@ -95,7 +95,8 @@ not build a profile from the actor's display name or its numeric class ID.
    from **mesh part index 2**, regardless of which index matched, into Unit
    `+0x1f8..+0x204` (`0x004f9037` proves the fixed index). Notify an existing
    squad reader via virtual `+0x110`; initialize an existing destructible
-   segments controller (`0x00444660`); mark the profile name used; increment
+   segments controller (`0x00444660`); mark an existing exact profile-name catalog
+   entry used (a miss changes nothing); increment
    the counter indexed by profile behavior for allegiance 0 or 1 only.
 7. Call fire-control refresh at `0x004f90ce`, then scan all non-null mesh parts
    case-insensitively for `nexus` and `weakpoint`, setting `+0x228/+0x22c`.
@@ -135,6 +136,8 @@ allocation/resource failure paths or live behavior.
 
 The [World110 admission](../../../game-mechanics/world-110-initial-constructor-seeds.md)
 owns its actual profiles, dependency hashes, inherited-list caveat and four
-landing-craft child inputs. Its 43 direct actor projections are not completed
-Unit objects. [The event handler](CUnit__HandleEvent.md) owns event 4003's later
+landing-craft child inputs. Its first Control Tower now has bounded Core Init;
+the 43 direct projections are not 43 completed Units. The resource-route usage
+catalog remains empty, so the Tower's MarkUsed call is a no-op.
+[The event handler](CUnit__HandleEvent.md) owns event 4003's later
 behavior; scheduling it is not equivalent to executing it.

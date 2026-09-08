@@ -92,8 +92,11 @@ along with the first three Buildings' render/animation route and the Feature
 contract. PostLoad spatial sorting is implemented separately and awaits the
 complete load sequence. Startup RE narrows the seed/FP witnesses without claiming
 those runtime values were measured.
-Next, connect ordinary object Init to these shared spatial, event and RNG owners;
-do not restore an empty-peer adapter or call the world playable.
+The first Control Tower now uses those shared owners, the existing Actor state,
+real destructible segments and distinct AI readers/listeners. The remaining
+ordinary objects and renderer/resource caches still need integration before
+world event delivery, reset and play. Keep the same spatial/event/RNG ownership
+when extending the next Building; the Tower prefix is not a playable world.
 The old test-only Simulation route that ran Level100 Setup under a World110
 stamp is explicitly rejected; direct World110 mission and hash tests remain.
 

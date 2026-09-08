@@ -291,13 +291,17 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v4"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v5"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8"
+    "fdc6869be1743c689ebd97bd4fba29f342c82ffa522bca9739531ffb3ddbc00b"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
     "f586cc84f577e441eba425d5c95dbca3e057d063229bf5c2999227157704424b"
+)
+WORLD110_CONTROL_TOWER_MESH = "data/resources/meshes/m_fb_control_tower.msh.aya"
+WORLD110_CONTROL_TOWER_MESH_SHA256 = (
+    "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91"
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -3540,9 +3544,41 @@ def _world110_component_attachment(rows, physics, mesh_data: bytes) -> dict[str,
     }
 
 
+def _world110_control_tower_mesh(source: bytes) -> dict[str, object]:
+    """The actual Init geometry, not rendered/expanded reference-part copies."""
+    from cmsh_static_preview import inflate_aya, parse_cmsh_stream
+    if _sha256(source) != WORLD110_CONTROL_TOWER_MESH_SHA256:
+        raise RuntimeError("world 110 Control Tower mesh identity changed")
+    parsed = parse_cmsh_stream(inflate_aya(source))
+    parts = parsed.file_parts()
+    if len(parts) != 39 or struct.unpack_from("<I", parsed.raw_header, 0x14)[0] != 0:
+        raise RuntimeError("Control Tower part/animation profile changed")
+    boxes = [sibling.raw_payload for sibling in parsed.siblings if sibling.tag == b"BBOX"]
+    if len(boxes) != 1 or len(boxes[0]) != 48 or boxes[0][:8] != b"BBOX\x28\0\0\0":
+        raise RuntimeError("Control Tower global bounding box changed")
+    return {
+        "meshName": "fb_control_tower.msh",
+        "sourceSha256": WORLD110_CONTROL_TOWER_MESH_SHA256,
+        "meshRadiusFloatBits": struct.unpack_from("<i", parsed.raw_header, 0x164)[0],
+        "globalBoundingBoxWords": list(struct.unpack_from("<10i", boxes[0], 8)),
+        "parts": [{
+            "name": part.raw_cmsp[0xdc:0xfc].split(b"\0", 1)[0].decode("ascii"),
+            "type": part.part_type,
+            "reference": part.reference, "parent": part.parent,
+            "children": part.children, "nmic": part.nmic,
+            "numNmic": struct.unpack_from("<i", part.raw_cmsp, 0xa0)[0],
+            "isNmic": struct.unpack_from("<i", part.raw_cmsp, 0xa4)[0],
+            "halfExtentFloatBits": [_float_bits(value) for value in part.bounding_box.half_extents],
+        } for part in parts],
+        "emitters": [{"name": binding.name, "selector": binding.selector,
+                      "partOrdinal": binding.part_ordinal}
+                     for binding in parsed.emitter_bindings()],
+    }
+
+
 def _world110_initial_actor_bytes(
     raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes,
-    pine_meshes: tuple[bytes, ...],
+    pine_meshes: tuple[bytes, ...], control_tower_mesh: bytes,
 ) -> bytes:
     """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
 
@@ -3659,6 +3695,7 @@ def _world110_initial_actor_bytes(
         "rows": rows,
         "treeTables": tree_tables,
         "treeMeshes": _world110_tree_mesh_inputs(pine_meshes),
+        "controlTowerMesh": _world110_control_tower_mesh(control_tower_mesh),
         "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -5503,6 +5540,8 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
                 _read_exact(game_root / WORLD110_LANDING_CRAFT_MESH,
                             WORLD110_LANDING_CRAFT_MESH_SHA256),
                 _read_pine_meshes(game_root),
+                _read_exact(game_root / WORLD110_CONTROL_TOWER_MESH,
+                            WORLD110_CONTROL_TOWER_MESH_SHA256),
             )
             actor_hash = _sha256(actor_data)
             if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:

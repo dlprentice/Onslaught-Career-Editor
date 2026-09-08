@@ -1055,6 +1055,22 @@ public sealed class Level100ActorRegistry
     public ThingActorBaseStateSnapshot GetBaseState(Level100ActorId actorId) =>
         Require(actorId).BaseState.Snapshot;
 
+    // World110 initializes the same allocation the registry already owns.
+    internal ThingActorBaseState GetConstructionState(Level100ActorId actorId)
+    {
+        if (_definitions.WorldNumber != 110 || _initializeSupport)
+            throw new InvalidOperationException("Retail construction state belongs to the World110 construction route.");
+        return Require(actorId).BaseState;
+    }
+
+    private Actor RequireMutable(Level100ActorId actorId)
+    {
+        Actor actor = Require(actorId);
+        if (actor.BaseState.HasRetailConstruction)
+            throw new NotSupportedException("Retail construction needs its complete world lifecycle before legacy actor mutation.");
+        return actor;
+    }
+
     internal Level100ActorPoseSnapshot GetPose(Level100ActorId actorId) =>
         ToLevel100Pose(Require(actorId).BaseState.Snapshot);
 
@@ -1127,7 +1143,7 @@ public sealed class Level100ActorRegistry
 
     public void Activate(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (actor.Lifecycle == Level100ActorLifecycle.Destroyed)
         {
             throw new InvalidOperationException("A destroyed Level 100 actor cannot be activated.");
@@ -1138,7 +1154,7 @@ public sealed class Level100ActorRegistry
 
     public void Deactivate(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         actor.Active = false;
         if (actor.Trigger.HasValue && actor.TriggerEntered)
         {
@@ -1149,7 +1165,7 @@ public sealed class Level100ActorRegistry
 
     public void SetObjective(Level100ActorId actorId, bool objective)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (objective && actor.Lifecycle == Level100ActorLifecycle.Destroyed)
         {
             throw new InvalidOperationException(
@@ -1171,7 +1187,7 @@ public sealed class Level100ActorRegistry
             throw new InvalidOperationException($"Unknown Level {_definitions.WorldNumber} script '{scriptName}'.");
         }
 
-        Require(actorId).ScriptName = scriptName;
+        RequireMutable(actorId).ScriptName = scriptName;
     }
 
     /// <summary>
@@ -1186,7 +1202,7 @@ public sealed class Level100ActorRegistry
             throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
         }
 
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         actor.BaseState.ResetPose(ToBasePose(pose));
         actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
         actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
@@ -1204,7 +1220,7 @@ public sealed class Level100ActorRegistry
             throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
         }
 
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         actor.BaseState.AdvancePose(ToBasePose(pose));
         actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
         actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
@@ -1224,7 +1240,7 @@ public sealed class Level100ActorRegistry
             throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
         }
 
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         actor.BaseState.UpdateCurrentPose(ToBasePose(pose));
         actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
         actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
@@ -1237,25 +1253,25 @@ public sealed class Level100ActorRegistry
     /// </summary>
     internal void StopMotion(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         actor.BaseState.Stop();
         actor.BaseState.SetAngularVelocity(SimVector3.Zero);
     }
 
     public void MakeVisible(Level100ActorId actorId) =>
-        Require(actorId).BaseState.MakeVisible();
+        RequireMutable(actorId).BaseState.MakeVisible();
 
     public void MakeInvisible(Level100ActorId actorId) =>
-        Require(actorId).BaseState.MakeInvisible();
+        RequireMutable(actorId).BaseState.MakeInvisible();
 
     public void DeclareOnGround(Level100ActorId actorId, int eventTimeFloatBits) =>
-        Require(actorId).BaseState.DeclareOnGround(eventTimeFloatBits);
+        RequireMutable(actorId).BaseState.DeclareOnGround(eventTimeFloatBits);
 
     public void DeclareInWater(Level100ActorId actorId, int eventTimeFloatBits) =>
-        Require(actorId).BaseState.DeclareInWater(eventTimeFloatBits);
+        RequireMutable(actorId).BaseState.DeclareInWater(eventTimeFloatBits);
 
     public void DeclareOnObject(Level100ActorId actorId, int eventTimeFloatBits) =>
-        Require(actorId).BaseState.DeclareOnObject(eventTimeFloatBits);
+        RequireMutable(actorId).BaseState.DeclareOnObject(eventTimeFloatBits);
 
     public void SetHealth(Level100ActorId actorId, int health)
     {
@@ -1264,7 +1280,7 @@ public sealed class Level100ActorRegistry
             throw new ArgumentOutOfRangeException(nameof(health));
         }
 
-        Require(actorId).Health = health;
+        RequireMutable(actorId).Health = health;
     }
 
     public void ReportHit(
@@ -1272,7 +1288,7 @@ public sealed class Level100ActorRegistry
         Level100ActorId? otherActorId = null,
         uint otherThingTypeMask = 0)
     {
-        _ = Require(actorId);
+        _ = RequireMutable(actorId);
         if ((otherThingTypeMask & ~Level100ReleasedThingTypeMasks.ProvenBits) != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(otherThingTypeMask));
@@ -1280,7 +1296,7 @@ public sealed class Level100ActorRegistry
 
         if (otherActorId.HasValue)
         {
-            uint actorMask = SpecificThingTypeMask(Require(otherActorId.Value));
+            uint actorMask = SpecificThingTypeMask(RequireMutable(otherActorId.Value));
             if (otherThingTypeMask != 0 && otherThingTypeMask != actorMask)
             {
                 throw new ArgumentException("A hit source actor and type mask disagree.");
@@ -1293,7 +1309,7 @@ public sealed class Level100ActorRegistry
 
     public bool ReportStartedDying(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (actor.Lifecycle != Level100ActorLifecycle.Alive)
         {
             return false;
@@ -1311,7 +1327,7 @@ public sealed class Level100ActorRegistry
 
     public bool ReportDied(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (actor.Lifecycle == Level100ActorLifecycle.Destroyed)
         {
             return false;
@@ -1329,7 +1345,7 @@ public sealed class Level100ActorRegistry
         Level100ActorId actorId,
         Level100MissionJetModeState entryJetModeState)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             return false;
@@ -1342,7 +1358,7 @@ public sealed class Level100ActorRegistry
 
     public void MarkTriggerEventDispatched(Level100ActorId actorId)
     {
-        Actor actor = Require(actorId);
+        Actor actor = RequireMutable(actorId);
         if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             throw new InvalidOperationException("Trigger dispatch is not ready.");

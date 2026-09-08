@@ -154,6 +154,23 @@ Logs are `mapwho-postload-core.log`, `mapwho-postload-mutation.log` and
 Sort remains separate from the incomplete world-load sequence. Building,
 Feature and startup findings in this pass are static evidence, not live checks.
 
+The first Control Tower Core construction passed **96/96 focused Core facts**
+and **11/11 World110 materializer checks**, zero skipped. Checks cover the
+existing Actor/raw-pose owner, real 15-pine collision rejection, 29 segment
+allocations/eight cores, exact graph/scale words, five undelivered shared events,
+AI reader cells, world memberships and rejection of unsupported lifecycle,
+restore and hashing. The existing World100 forty-step hash remains unchanged.
+A deliberate child-tail mutation failed the independent sibling-order oracle
+(expected `[33,32,31,30,2]`, actual `[2,30,31,32,33]`); original bytes were restored
+and the expanded 96-fact selection passed,
+including the existing World100 registry suite.
+Logs are `control-tower-core.log`, `control-tower-materializer.log` and
+`control-tower-mutation.log` in the same Linux run directory. Only the ignored
+164,510-byte v5 World110 actor input was regenerated. These are headless
+reconstruction checks under explicit fresh resource-route and numerical
+assumptions. No renderer-cache, frame-delivery, damage, reset, retail runtime
+or full parity acceptance is claimed.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

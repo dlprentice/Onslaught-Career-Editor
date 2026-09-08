@@ -395,7 +395,8 @@ The normal Building wrapper is primary-table `0x5d8eb4` slot 9,
 ORs mask `0x08000020`; `init+0x8c` receives `(profile+0x13c == 0)`. It creates
 the destructible-segment controller at Building `+0x178` and its motion
 controller at Thing `+0x70`, then calls shared Unit Init at `0x41727d`.
-After Unit returns, a segment count of zero destroys and clears those controllers.
+After Unit returns, a **core count** of zero destroys and clears those controllers.
+The measured counts are 8, 5 and 2, so all three retain them.
 The subsequent order is:
 
 1. Look up `closed`, calling SetAnimMode(index,1,1) only when the result is not -1.
@@ -438,17 +439,124 @@ getter selects its primary mesh `+0x14`, not the separate rubble mesh `+0x54`.
 For this resolved state, `closed`, `notshut` and `Idle` each return -1.
 The two guarded calls are skipped and `+0x260` becomes zero. The final Idle
 call still enters the animation wrapper: index/mode -1, frame 0, force-loop 1,
-fallback increment 1.0f. A null existing Thing animation owner causes allocation
-and a request for its own event 3000 at -1. Neither Unit Init nor the AI stage
-directly writes that owner or calls SetAnim; preceding collision, component
-and destructible callbacks must still be excluded before claiming exactly one
-new owner/event for each Building. No unconditional event census is inferred.
+fallback increment 1.0f. The preceding collision, segment and AI paths below
+create no animation owner, so this call allocates one and requests its own
+3000 event at -1 on the admitted successful path.
 
-These are static contracts for the exact input selection. Segment destruction,
-the virtual `0x4dfd10` effect, complete AI/spawner initialization, real collision
-peers and occupancy remain integration work. There is no direct shared-RNG call
-in the Building wrapper; its transitive Unit/Actor/AI/callback behavior owns the
-actual stream consumption. The three Buildings are not implemented yet.
+#### Collision, movement and AI
+
+The concrete Building/Unit type chain produces `0xc0100133`, then renderability
+adds `0x00800000`. Its initial persistent collision mask is `0x08000020`;
+every preceding pine (`0x02800021`) and Building (`0xc0900133`) intersects it.
+The persistent filter at `0x426900` rejects those pairs before readiness or
+narrowphase. The immediate scan still traverses the real spatial owners.
+Desired/minimum/maximum kinds are 1/2/2, response 2, fixed-transform/delayed flags
+are `0x0a9` after clearing readiness. Collision readiness uses the **relative**
+`AddEventTimeFromNow(-1,3000,collision)` overload.
+
+Under the declared nearest/53-bit arithmetic, Tower, factory and repair pad
+occupy sectors `(17,15,3)`, `(9,8,2)`, `(14,15,3)`. Their prior candidate sets
+contain 15 pines, 647 pines plus Tower, and 24 pines respectively. Authored Z is
+clamped to ground words `0xc1199926`, `0xc1223a09`, `0xc116679a`; none then hits
+the water clamp. The later virtual `0x4dfd10` invokes Actor/Thing ground seating
+again and copies **position only** to old position. It leaves the old basis
+alone. These are calculated input-specific values, not a captured game run.
+
+Actor's multiplier is 1 for these Buildings. Each still takes one shared RNG
+draw, stores remainder zero, and schedules MOVE 3000 at -1 with countdown 1.
+Their Unit fire-control gate remains zero, so the unconditional helper call
+adds no 4001 or draw. Inactive factory status does not imply shutdown. Its
+attached Sabre spawner is an owned template, not a spawned Sabre, and creates
+no immediate spatial entry, event or draw.
+
+Shared AI `0x4fe710` stores a direct Unit owner and creates three null active
+reader cells (`+0x0c/+0x24/+0x28`). Serialized target -1 is normalized to null;
+spawned-by is null. State becomes 1 and AI requests 3000 at the current time.
+Empty scripts suppress owner event 2003; profile `+0x19c=0` suppresses four
+jitter draws. Thus the selected Tower Core path requests five events in order:
+collision 3000, Actor 3000, Unit 4003, AI 3000, animation 3000. At fresh time
+zero, AI's timestamp is zero and the other four store `0.0001f`. Immediate
+bucket dispatch is **FIFO**, not a sort by those timestamps. No frame delivery
+is implied by this census.
+
+#### Destructible geometry and resource boundary
+
+Controller Init `0x444660` walks source mesh children in serialized DFS order.
+Eligible type-1 geometry with original `+0xa4=0` creates a segment. Names whose
+first four bytes are exactly `core` or `CORE` create cores; otherwise positive
+`+0xa0` selects the swap variant, exact `x1`/`X1` selects kind 3, and the remaining
+eligible nodes create extras. Global segment publication precedes head insertion
+into the parent child list. Core ordinals count construction order, not digits
+in the name.
+
+Tower has **29 segments: eight cores and 21 extras**; factory has 19 (five cores
+and 14 extras); repair pad has 16 (two cores, two swaps and 12 extras). Repair
+pad's two NMIC references alias existing segment owners, so its 18 non-null
+part-array cells do not mean 18 allocations. Tower's array has 40 cells,
+including the extra null sentinel after its 39 source parts; ten emitter parts
+remain null. No segment Init creates a gameplay event, RNG draw or animation.
+
+A segment's weight is the largest XYZ bounding-box half-extent. Non-root weights
+accumulate with a float store after each addition; the root weight is excluded.
+Scaling divides weight by total, multiplies by profile life, then by five for
+cores other than ordinal 1; the first core receives zero. Intermediate arithmetic
+stays wide until the final float store. Health summation follows the reversed
+child-list order, storing float after each addition. Tower's total weight is
+`0x425e25dc`; cached subtree health is `0x433a4938`. Tests carry the independently
+calculated per-part scale words, graph order and shared-owner assertions.
+
+CRTMesh Init on an existing named mesh prepares pose-cache allocations and ten
+`_Fenrir Flame Effect` descriptor slots. CEMT's ten record IDs are all zero and
+reference parts `7,26,27,28,29,34,35,36,37,38`. Lookup may find a particle
+catalog entry or null; it starts no emission. The three pose arrays are
+**unwritten**, while the fourth 39-word array contains -1. The header has
+integer -9999 and float word `0xc7c34f80` sentinels. Building's concrete render
+interface takes the imposter-cache branch; a successful result allocates an
+unwritten byte. CRTBuilding resolves the separate rubble mesh and overwrites
+render `+4` with 1.0f. Console registration and these admitted cache/allocation
+paths request no gameplay event or shared draw. A mesh cache miss's resource
+load is outside this closure; preloaded metadata alone does not prove a live
+cache hit. Core retains the actual geometry/emitter inputs but does not yet
+allocate or execute those renderer/resource caches.
+
+#### Fresh world state and implemented Tower
+
+World construction (`0x50a9c0`) and shutdown (`0x50ada0`) clear two 26-dword
+counter arrays at `world+0x130/+0x198`. A plain LoadWorld call does not. The
+Tower increments side 0 selector 7; zero is justified only by the fresh
+lifecycle boundary, not assumed at arbitrary BSWD entry. World constructor
+also initializes its lists. The primary effect link is a distinct owned node,
+inserted into the process-global effect list with null payload; it emits nothing.
+
+The outer load initializes three occupancy bitplanes before BSWD recursion.
+Each has 8,192 bytes of `0xff` and a stored radians threshold for 35, 45 or 60
+degrees. Activation is zero. The first Tower's `0x50b010 → 0x4bc480` only
+prepends it to the occupancy candidate list, then exits before any geometry,
+terrain, bit change or shadow test. Activation and rasterization belong to the
+later non-base load tail. Candidate-list emptiness follows fresh startup or
+proper prior disposal, not the allocation helper alone.
+
+The definition-usage catalog is also empty on the admitted cleared **resource**
+route. RunLevel loads resources first; `0x4d7379` records the resource level at
+`0x6317cc`, and `0x46ce24` sets the current game level before LoadWorldFile.
+`0x472650` compares them, causing definition Add's branch at `0x50da05` to
+return without catalog insertion. `0x50dc20` uses exact-name lookup and only
+marks an existing entry. `Control Tower` therefore misses; it must not create
+a used-name entry. An alternate non-resource route requires the entire ordered
+parse/recursive definition catalog, not a synthetic singleton.
+
+`RetailWorld110InitialConstruction.CreateWithControlTower(seed)` now constructs
+the first Tower's bounded Core state after the actual 1,481 pines. It uses the
+existing registry Actor owner with exact float current/old poses and movement
+scheduling state, the live spatial index, shared RNG and event pool, actual
+segment/AI reader owners, and distinct named, all-Thing, Unit, faction, effect
+and occupancy memberships. The factory explicitly selects the fresh successful
+resource route and preloaded materialized geometry. Renderer/cache allocation,
+remaining Building/Feature initialization, damage, frame delivery, world reset
+and playable session construction remain open. Legacy registry mutation,
+restore and canonical hashing reject this incomplete state before silently
+losing the added owners or float words. No retail runtime or full parity claim
+follows from the focused Core tests.
 
 The following bodies were independently read from the pristine executable:
 
@@ -461,6 +569,21 @@ The following bodies were independently read from the pristine executable:
 | Animation-name lookup `[0x4aa630,0x4aa673)` | `43c4d775c8ec52976fcc9489baeea2e90773313c36f42f6ea873aa3133b0d149` |
 | Thing animation wrapper `[0x4f44a0,0x4f4528)` | `ebebf118cf20136f6ef013d2e2592771c9a6f4b13174bd766acb9033388ddab1` |
 | Animation SetAnim `[0x404860,0x4048ba)` | `e643d3cc227058c6ae6a12af074b84a832da215fa2454b763a42dd2deb8019d7` |
+| Segment controller Init `[0x444660,0x44493c)` | `132b3b463a23a4472c75b311b1a0f4be4f7c12bf2c3d9071cb633e6a9faaa877` |
+| Segment node traversal `[0x444c10,0x444ef8)` | `323510d8d9dd2d27a2df360948b09c92302dc2a3ebe09b30f0a1f50b4a86e29b` |
+| Segment creation `[0x4449c0,0x444bcd)` | `f538fc0c2e48a0b7fc25af510334b178def1b758608dc072b36e957ad0bfeefa` |
+| Segment scale `[0x442870,0x442884)` | `1a6ed815a122f0cf6945e94930bfda6cc696820b4f96d3c2c30cead0bce5f41e` |
+| Core scale `[0x443590,0x4435bb)` | `566fe30c70e8b9db39d7ad1a541dd62f1f8255185f64d9d111a55d5cf6790464` |
+| Subtree health `[0x442900,0x44295b)` | `d04a75d129e94c85f4f9017fd0b37e9d1d32eec7f755bb1e7c9f6ea6d632a96e` |
+| Shared AI `[0x4fe710,0x4fea24)` | `2eadfbd3a63747b453291d5b7584cb973c6b5bc239e755cfa329ccf3b16dfd1d` |
+| CRTMesh Init `[0x4dc370,0x4dc94e)` | `2bbe733893b0700b92657f7ff7573febd365e1699a45b0de2489933bd3fff99e` |
+| Ground-seat wrapper `[0x4dfd10,0x4dfd3f)` | `8a224c880eeda14c2d1cc976c56bef647c920003f2aa1e3f656005c8ca4647aa` |
+| Occupancy insertion/gate `[0x4bc480,0x4bc506)` | `f5b0cd6f44378e7f8be4fccef80cb6f94166e41a32270cca717f4bb98e90fc0e` |
+| Grid Init `[0x4bc260,0x4bc2ce)` | `abb98c31ee861738a1eefc084949f42870f91b65dca3d911758a5e65bd5d3a6f` |
+| World construction `[0x50a9c0,0x50ab5f)` | `2d698e3eb59a2375e2ec376d90777361d06cafa7083d49cbe0d5dbd693192d84` |
+| World shutdown `[0x50ada0,0x50af6d)` | `e1789c52f92f7a0a5a02e82150269a8363aeee822fc7c4e850f1d24d680d8281` |
+| Catalog MarkUsed `[0x50dc20,0x50dca1)` | `30d10d0e220e0d4c288ff9ea6c6f2d7d15040f261a87b996b9b964fd54a644ac` |
+| Resource-level equality `[0x472650,0x472662)` | `f6f7faa01acf005fbc37835f9e581515749f9e0d029cd0f33cb414e902cbb6a5` |
 
 ### Four landing-craft turret children
 

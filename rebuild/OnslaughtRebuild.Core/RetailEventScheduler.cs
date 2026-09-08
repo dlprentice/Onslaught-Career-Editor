@@ -665,6 +665,9 @@ public sealed class RetailEventScheduler
     /// <summary>The int16 event number a live event carries.</summary>
     public short EventNumOf(int handle) => _pool[handle].EventNum;
 
+    /// <summary>The actual owner identity bound to a live admission.</summary>
+    public int ListenerOf(int handle) => _pool[handle].Listener;
+
     /// <summary><c>CScheduledEvent::GetReuse</c>.</summary>
     public bool ReuseOf(int handle) => _pool[handle].Reuse;
 

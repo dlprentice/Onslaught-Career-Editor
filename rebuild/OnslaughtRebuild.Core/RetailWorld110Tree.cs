@@ -6,17 +6,7 @@ namespace OnslaughtRebuild.Core;
 public sealed record RetailWorld110TreeMesh(int Variant, string MeshName, string SourceSha256,
     int MeshRadiusFloatBits, IReadOnlyList<int> GlobalBoundingBoxWords)
 {
-    public float SpatialRadius
-    {
-        get
-        {
-            double x = Math.Abs((double)BitConverter.Int32BitsToSingle(GlobalBoundingBoxWords[0])) +
-                BitConverter.Int32BitsToSingle(GlobalBoundingBoxWords[4]);
-            double y = Math.Abs((double)BitConverter.Int32BitsToSingle(GlobalBoundingBoxWords[1])) +
-                BitConverter.Int32BitsToSingle(GlobalBoundingBoxWords[5]);
-            return (float)Math.Sqrt(y * y + x * x); // 492bd0..492beb, one final store.
-        }
-    }
+    public float SpatialRadius => RetailMapWho.MeshSpatialRadius(GlobalBoundingBoxWords);
 }
 
 /// <summary>
@@ -44,9 +34,8 @@ public sealed class RetailWorld110Tree : IRetailMapWhoOwner
         // draw. FISTP rounds this first draw; 32 is a legal stored result.
         InitialRotationSelector = checked((int)Math.Round(
             (random.Next() % 65536) / 2048.0, map.IntegerRounding));
-        int x = HeightCoordinate(placement.PositionXFloatBits);
-        int y = HeightCoordinate(placement.PositionYFloatBits);
-        float height = (float)((double)terrain.SampleHeightUnitsAtFixed(x, y) * terrain.HeightScale);
+        float height = RetailWorldTerrain.SampleRetailHeight(terrain,
+            new(placement.PositionXFloatBits, placement.PositionYFloatBits, 0));
         float z = height > terrain.WaterLevel ? terrain.WaterLevel : height;
         PositionFloatBits = new(placement.PositionXFloatBits, placement.PositionYFloatBits,
             BitConverter.SingleToInt32Bits(z));
@@ -99,13 +88,4 @@ public sealed class RetailWorld110Tree : IRetailMapWhoOwner
         CollisionReady = true; // 426a20: sets400 only, no scan, RNG or reschedule.
     }
 
-    private static int HeightCoordinate(int bits)
-    {
-        // 47eb80 uses the bit pattern of this biased float, not an integer
-        // cast. Under the admitted nearest-store arithmetic all actual pine
-        // XY words agree with floor(x*256), including fractional placements.
-        double coordinate = BitConverter.Int32BitsToSingle(bits);
-        float biased = (float)((coordinate - BitConverter.Int32BitsToSingle(0x3afffeb0)) + 49152.0);
-        return unchecked(BitConverter.SingleToInt32Bits(biased) - 0x47400000);
-    }
 }

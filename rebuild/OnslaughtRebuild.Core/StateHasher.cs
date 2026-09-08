@@ -465,6 +465,8 @@ public static class StateHasher
             ArgumentNullException.ThrowIfNull(item);
             ArgumentNullException.ThrowIfNull(item.State);
             ThingActorBaseStateSnapshot state = item.State;
+            if (state.RetailPoses is not null || state.RetailMotion is not null)
+                throw new NotSupportedException("Retail actor construction has no admitted canonical hash schema yet.");
             writer.Write(item.ActorId.Value);
             writer.Write((ushort)state.Flags);
             WriteVector(writer, state.CurrentPose.PositionMillimeters);

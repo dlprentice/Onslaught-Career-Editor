@@ -38,6 +38,20 @@ public sealed record ThingActorPoseSnapshot(
     Level100FloatBasis3Bits BasisFloatBits);
 
 /// <summary>
+/// Meaningful retail float words. Unmeasured fourth vector words and matrix
+/// padding are not manufactured. These poses belong to the same Actor owner
+/// as its compatibility view; they are not a second mutable actor registry.
+/// </summary>
+public sealed record RetailActorPoseSnapshot(
+    Level100FloatVector3Bits PositionFloatBits,
+    Level100FloatBasis3Bits BasisFloatBits);
+
+public sealed record RetailActorPosePair(
+    RetailActorPoseSnapshot Current, RetailActorPoseSnapshot Old);
+
+public sealed record RetailActorMotionSnapshot(int LastMoveTimeFloatBits, int MoveCountdown);
+
+/// <summary>
 /// Immutable presentation-safe projection of the reusable Thing/Actor state.
 /// </summary>
 public sealed record ThingActorBaseStateSnapshot(
@@ -51,6 +65,14 @@ public sealed record ThingActorBaseStateSnapshot(
     int LastTimeInWaterFloatBits,
     int LastTimeOnObjectFloatBits)
 {
+    /// <summary>
+    /// Exact construction state, when present. CurrentPose/OldPose are then
+    /// derived compatibility views. Legacy restore and canonical hashing do
+    /// not support this incomplete retail construction state.
+    /// </summary>
+    public RetailActorPosePair? RetailPoses { get; init; }
+    public RetailActorMotionSnapshot? RetailMotion { get; init; }
+
     public bool IsInvisible => (Flags & ThingActorFlags.Invisible) != 0;
 
     public bool IsDying => (Flags & ThingActorFlags.Dying) != 0;
@@ -117,6 +139,8 @@ public sealed class ThingActorBaseState
     private readonly ThingBaseState _thing;
     private ThingActorPoseSnapshot _currentPose;
     private ThingActorPoseSnapshot _oldPose;
+    private RetailActorPosePair? _retailPoses;
+    private RetailActorMotionSnapshot? _retailMotion;
     private SimVector3 _velocity;
     private SimVector3 _angularVelocity;
     private int _lastTimeOnGroundFloatBits;
@@ -143,6 +167,8 @@ public sealed class ThingActorBaseState
     public ThingActorBaseState(ThingActorBaseStateSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        if (snapshot.RetailPoses is not null || snapshot.RetailMotion is not null)
+            throw new NotSupportedException("Retail actor construction has no admitted restore contract yet.");
         ThingActorFlags knownFlags =
             ThingActorFlags.DeclaredShutdown |
             ThingActorFlags.Dying |
@@ -176,14 +202,65 @@ public sealed class ThingActorBaseState
 
     public ThingActorBaseStateSnapshot Snapshot => new(
         _thing.Flags,
-        _currentPose,
-        _oldPose,
+        _retailPoses is null ? _currentPose : ProjectRetailPose(_retailPoses.Current),
+        _retailPoses is null ? _oldPose : ProjectRetailPose(_retailPoses.Old),
         _velocity,
         _angularVelocity,
         _thing.TypeMask,
         _lastTimeOnGroundFloatBits,
         _lastTimeInWaterFloatBits,
-        _lastTimeOnObjectFloatBits);
+        _lastTimeOnObjectFloatBits) { RetailPoses = _retailPoses, RetailMotion = _retailMotion };
+
+    internal RetailActorPosePair RetailPoses => _retailPoses ??
+        throw new InvalidOperationException("Retail actor initialization has not begun.");
+    internal bool HasRetailConstruction => _retailPoses is not null;
+
+    /// <summary>Begins the supported stationary Actor initialization route.</summary>
+    internal void BeginRetailInitialization(RetailActorPoseSnapshot current,
+        RetailActorPoseSnapshot old, uint specificTypeMask)
+    {
+        if (_retailPoses is not null || _velocity != SimVector3.Zero || _angularVelocity != SimVector3.Zero)
+            throw new InvalidOperationException("Retail initialization requires a fresh stationary Actor allocation.");
+        ValidateRetailPose(current);
+        ValidateRetailPose(old);
+        _retailPoses = new(current, old);
+        _thing.SetThingType(specificTypeMask);
+        _thing.AddFlags(ThingActorFlags.InMapWho);
+    }
+
+    internal void SetRetailPosition(Level100FloatVector3Bits position)
+    {
+        ValidateRetailPosition(position);
+        RetailActorPosePair poses = RetailPoses;
+        _retailPoses = poses with { Current = poses.Current with { PositionFloatBits = position } };
+    }
+
+    internal void TeleportRetailPosition(Level100FloatVector3Bits position)
+    {
+        ValidateRetailPosition(position);
+        RetailActorPosePair poses = RetailPoses;
+        _retailPoses = new(poses.Current with { PositionFloatBits = position },
+            poses.Old with { PositionFloatBits = position });
+    }
+
+    // CActor::StickToGround copies position only; old orientation survives.
+    internal void CopyRetailPositionToOld()
+    {
+        RetailActorPosePair poses = RetailPoses;
+        _retailPoses = poses with
+        {
+            Old = poses.Old with { PositionFloatBits = poses.Current.PositionFloatBits }
+        };
+    }
+
+    internal void AddPublishedType(uint mask) => _thing.AddType(mask);
+    internal void AddPublicationFlags(ThingActorFlags flags) => _thing.AddFlags(flags);
+
+    internal void SetRetailMotion(int lastMoveTimeFloatBits, int moveCountdown)
+    {
+        _ = RetailPoses;
+        _retailMotion = new(ValidateEventTime(lastMoveTimeFloatBits), moveCountdown);
+    }
 
     /// <summary>
     /// Retail <c>0x00401470</c>, source inline
@@ -215,6 +292,7 @@ public sealed class ThingActorBaseState
     /// </summary>
     public void AdvancePose(ThingActorPoseSnapshot pose)
     {
+        RequireMillimeterMode();
         ValidatePose(pose, nameof(pose));
         _oldPose = _currentPose;
         _currentPose = pose;
@@ -226,6 +304,7 @@ public sealed class ThingActorBaseState
     /// </summary>
     public void UpdateCurrentPose(ThingActorPoseSnapshot pose)
     {
+        RequireMillimeterMode();
         ValidatePose(pose, nameof(pose));
         _currentPose = pose;
     }
@@ -236,26 +315,40 @@ public sealed class ThingActorBaseState
     /// </summary>
     public void ResetPose(ThingActorPoseSnapshot pose)
     {
+        RequireMillimeterMode();
         ValidatePose(pose, nameof(pose));
         _currentPose = pose;
         _oldPose = pose;
     }
 
-    public void SetVelocity(SimVector3 velocity) => _velocity = velocity;
+    public void SetVelocity(SimVector3 velocity)
+    {
+        RequireMillimeterMode();
+        _velocity = velocity;
+    }
 
-    public void AddVelocity(SimVector3 velocity) => _velocity = new SimVector3(
-        checked(_velocity.X + velocity.X),
-        checked(_velocity.Y + velocity.Y),
-        checked(_velocity.Z + velocity.Z));
+    public void AddVelocity(SimVector3 velocity)
+    {
+        RequireMillimeterMode();
+        _velocity = new SimVector3(checked(_velocity.X + velocity.X),
+            checked(_velocity.Y + velocity.Y), checked(_velocity.Z + velocity.Z));
+    }
 
     /// <summary>
     /// Retail <c>0x00401580</c>, source inline <c>CActor::Stop</c>. Only the
     /// linear <c>mVelocity</c> vector is zeroed.
     /// </summary>
-    public void Stop() => _velocity = SimVector3.Zero;
+    public void Stop()
+    {
+        RequireMillimeterMode();
+        _velocity = SimVector3.Zero;
+    }
 
-    public void SetAngularVelocity(SimVector3 angularVelocity) =>
+    public void SetAngularVelocity(SimVector3 angularVelocity)
+    {
+        RequireMillimeterMode();
         _angularVelocity = angularVelocity;
+    }
 
     /// <summary>
     /// Retail <c>0x004f3470</c> (CThing), source-only CComplexThing lineage
@@ -293,6 +386,47 @@ public sealed class ThingActorBaseState
 
     private static bool IsFiniteFloatBits(int bits) =>
         float.IsFinite(BitConverter.Int32BitsToSingle(bits));
+
+    private void RequireMillimeterMode()
+    {
+        if (_retailPoses is not null)
+            throw new NotSupportedException("Millimetre motion cannot overwrite authoritative retail float poses.");
+    }
+
+    private static void ValidateRetailPosition(Level100FloatVector3Bits position)
+    {
+        if (!IsFiniteFloatBits(position.X) || !IsFiniteFloatBits(position.Y) || !IsFiniteFloatBits(position.Z))
+            throw new ArgumentException("Retail position must contain finite float words.", nameof(position));
+        // Every admitted position must remain readable through the existing
+        // registry view. Check before mutating either authoritative pose.
+        _ = ProjectRetailPosition(position);
+    }
+
+    private static void ValidateRetailPose(RetailActorPoseSnapshot pose)
+    {
+        ArgumentNullException.ThrowIfNull(pose);
+        ValidateRetailPosition(pose.PositionFloatBits);
+        if (!HasFiniteBasis(pose.BasisFloatBits))
+            throw new ArgumentException("Retail basis must contain finite float words.", nameof(pose));
+    }
+
+    private static ThingActorPoseSnapshot ProjectRetailPose(RetailActorPoseSnapshot pose)
+    {
+        Level100FloatBasis3Bits b = pose.BasisFloatBits;
+        // Existing Core datum and P*B*P axis permutation; raw state stays retail.
+        return new(ProjectRetailPosition(pose.PositionFloatBits),
+            new(b.Row0X, b.Row0Z, b.Row0Y, b.Row2X, b.Row2Z, b.Row2Y,
+                b.Row1X, b.Row1Z, b.Row1Y));
+    }
+
+    private static SimVector3 ProjectRetailPosition(Level100FloatVector3Bits p)
+    {
+        static int Millimeters(double value) => checked((int)Math.Round(value * 1000,
+            MidpointRounding.AwayFromZero));
+        return new(Millimeters((double)BitConverter.Int32BitsToSingle(p.X) - 288.6875),
+            Millimeters(-10.0 - BitConverter.Int32BitsToSingle(p.Z)),
+            Millimeters((double)BitConverter.Int32BitsToSingle(p.Y) - 243.25));
+    }
 
     private static bool HasFiniteBasis(Level100FloatBasis3Bits basis) =>
         new[]
