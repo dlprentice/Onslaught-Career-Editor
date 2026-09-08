@@ -59,6 +59,7 @@ Emit the twin from the instrument + allowlist:
 from __future__ import annotations
 
 import difflib
+import os
 import hashlib
 import io
 import json
@@ -165,6 +166,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # refused CURRENT COMMENT MISMATCH before writes. Independent full inventory
 # comparison found only the five name/display-signature/comment rows changed,
 # with all other function rows unchanged and program delta only commentsSha256.
+# first-training-keyboard-boundary is granted 2026-09-08 for the decoded,
+# previously unowned 211-byte body at 0x0051feb0, with default name/prototype.
+# Isolated apply and separate readback preserved every old function and all
+# instructions/references; overlap and clipped-return controls refused writes.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -179,6 +184,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort-round-dual-owner",
     "name-cohort-battleengine-set-collision-shape",
     "first-training-semantic-corrections",
+    "first-training-keyboard-boundary",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -429,6 +435,7 @@ FROZEN_COLUMNS = [
 ]
 
 VERBS = [
+    "CREATE_FUNCTION",
     "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REMOVE_STALE_BOOKMARK",
     "SET_BODY", "SET_NAME", "SET_PROTOTYPE", "SET_DATA_POINTER",
     "SET_COMMENT", "SET_REPEATABLE_COMMENT",
@@ -437,6 +444,7 @@ VERBS = [
 # The only Ghidra mutation calls the framework may contain, and how many times.
 # Anything else is an unauthorized verb.
 AUTHORIZED_MUTATION_CALLS = {
+    ".createFunction(": 1, # CREATE_FUNCTION only, explicit decoded body
     ".setBody(": 1,
     ".setName(": 2,            # Function.setName and Symbol.setName
     ".updateFunction(": 1,
@@ -461,7 +469,6 @@ FORBIDDEN_MUTATION_CALLS = [
     ".removeData(",
     ".clearListing(",
     ".setBytes(",
-    ".createFunction(",
     ".removeFunction(",
     ".addMemoryReference(",
     ".setPrimary(",
@@ -598,6 +605,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort-round-dual-owner",\n'
         '        "name-cohort-battleengine-set-collision-shape",\n'
         '        "first-training-semantic-corrections",\n'
+        '        "first-training-keyboard-boundary",\n'
         "    };\n",
     ),
     (
@@ -1448,6 +1456,167 @@ class NegativeControlTests(unittest.TestCase):
                        'out.add("namespace")'):
             self.assertTrue(banned not in block, banned)
 
+
+
+class CreateFunctionTests(unittest.TestCase):
+    def test_creation_is_standalone_and_existing_columns_stay_frozen(self):
+        source = BASE.read_text(encoding="utf-8")
+        for field in ("creationRanges", "creationBodySha256"):
+            self.assertIn(f'owner.put("col.{field}", V_CREATE_FUNCTION);', source)
+            self.assertIn(f'requireBinding(spec, "col.{field}", V_CREATE_FUNCTION);', source)
+        self.assertIn('if (verbs.size() != 1)', source)
+        mutable = source.split('static Set<String> mutableColumnsFor(', 1)[1].split('static final Pattern', 1)[0]
+        self.assertNotIn('V_CREATE_FUNCTION', mutable)
+        self.assertIn('if (!expectedEntries.equals(postFrozen.keySet()))', source)
+        self.assertIn('!addedSyms.equals(expectedAdded)', source)
+        self.assertIn('!preCreationCode.equals(creationCodeDigest())', source)
+        self.assertLess(source.index('gateCreationRow(row, readback, allProposed);'),
+                        source.index('writesAttempted = true;'))
+        self.assertEqual(source.count('.createFunction('), 1)
+        self.assertIn('fm.createFunction(null, row.entry, row.proposed, SourceType.DEFAULT);', source)
+
+    def test_executed_creation_gates_and_java_api_compatibility(self):
+        # Compile both real scripts and exercise the production gate with interface
+        # doubles. No Ghidra application or project is opened, or database created.
+        install = Path.home() / ".local/opt/ghidra_12.1.3_PUBLIC"
+        jars = sorted(install.glob("Ghidra/**/lib/*.jar"))
+        javac, java = shutil.which("javac"), shutil.which("java")
+        if not jars or not javac or not java:
+            self.skipTest("Pinned Ghidra API jars and Java required for creation gate probe")
+        program = r"""
+import java.lang.reflect.*;
+import java.util.*;
+import java.security.*;
+import ghidra.program.model.address.*;
+import ghidra.program.model.listing.*;
+import ghidra.program.model.mem.*;
+import ghidra.program.model.symbol.*;
+import ghidra.program.model.data.*;
+class CreationGateProbe {
+    static String scenario;
+    static AddressSpace space = new GenericAddressSpace("ram",32,AddressSpace.TYPE_RAM,0);
+    static Address a(long n) { return space.getAddress(n); }
+    static AddressSet body() { return new AddressSet(a(0x1000),a(0x1003)); }
+    interface Call { Object get(String name, Object[] args) throws Throwable; }
+    @SuppressWarnings("unchecked") static <T> T mock(Class<T> type, Call call) {
+        return (T)Proxy.newProxyInstance(type.getClassLoader(),new Class[]{type},(p,m,args)-> {
+            Object got=call.get(m.getName(),args);
+            if(got!=null) return got;
+            if(m.getReturnType()==boolean.class) return false;
+            if(m.getReturnType()==int.class) return 0;
+            if(m.getReturnType()==long.class) return 0L;
+            return null;
+        });
+    }
+    static <T> T iterator(Class<T> type, List<?> values) {
+        Iterator<?> it=values.iterator();
+        return mock(type,(n,args)->n.equals("hasNext")?it.hasNext():n.equals("next")?it.next():null);
+    }
+    static Instruction instruction(long start,long end) {
+        return mock(Instruction.class,(n,args)->switch(n) {
+            case "getMinAddress","getAddress" -> a(start);
+            case "getMaxAddress" -> a(end);
+            case "getFallThrough" -> scenario.equals("escape")?a(0x1004):null;
+            case "getFlows" -> new Address[0];
+            case "getFlowType" -> RefType.TERMINATOR;
+            default -> null;
+        });
+    }
+    static Function function() {
+        return mock(Function.class,(n,args)->switch(n) {
+            case "getEntryPoint" -> a(0x1000);
+            case "getBody" -> body();
+            case "getName" -> scenario.equals("bad-name")?"Wrong":"FUN_00001000";
+            case "getSymbol" -> mock(Symbol.class,(k,x)->k.equals("getSource")?SourceType.DEFAULT:null);
+            case "getSignatureSource" -> SourceType.DEFAULT;
+            case "getReturnType" -> mock(DataType.class,(k,x)->k.equals("getName")?"undefined":null);
+            case "getCallingConventionName" -> scenario.equals("bad-abi")?"__cdecl":"unknown";
+            case "getLocalVariables" -> new Variable[0];
+            case "getTags" -> Set.of();
+            case "getParentNamespace" -> mock(Namespace.class,(k,x)->k.equals("isGlobal")?true:null);
+            default -> null;
+        });
+    }
+    static Program program(boolean post) {
+        Listing listing=mock(Listing.class,(n,args)->switch(n) {
+            case "getInstructions" -> iterator(InstructionIterator.class,
+                scenario.equals("gap")?List.of(instruction(0x1000,0x1001)):
+                List.of(instruction(0x1000,0x1001),instruction(0x1002,scenario.equals("cut")?0x1004:0x1003)));
+            case "getDefinedDataContaining" -> scenario.equals("data")?mock(Data.class,(k,x)->null):null;
+            case "getComment" -> scenario.equals("comment")?"existing":null;
+            default -> null;
+        });
+        Memory memory=mock(Memory.class,(n,args)->switch(n) {
+            case "getByte" -> (byte)0x90;
+            case "getBlock" -> mock(MemoryBlock.class,(k,x)->k.equals("getName")?".text":k.equals("isExecute")?true:null);
+            default -> null;
+        });
+        FunctionManager manager=mock(FunctionManager.class,(n,args)->
+            (n.equals("getFunctionAt")||n.equals("getFunctionContaining"))
+            && (post||scenario.equals("owned"))?function():null);
+        ReferenceManager refs=mock(ReferenceManager.class,(n,args)->n.equals("getReferencesTo")?
+            iterator(ReferenceIterator.class,scenario.equals("interior")&&args[0].equals(a(0x1002))?
+                List.of(mock(Reference.class,(k,x)->switch(k){
+                    case "getFromAddress" -> a(0x2000);
+                    case "getReferenceType" -> RefType.UNCONDITIONAL_JUMP;
+                    default -> null;
+                })):List.of()):null);
+        SymbolTable symbols=mock(SymbolTable.class,(n,args)->n.equals("getSymbols")?
+            (scenario.equals("symbol")?new Symbol[]{mock(Symbol.class,(k,x)->null)}:new Symbol[0]):null);
+        return mock(Program.class,(n,args)->switch(n) {
+            case "getAddressFactory" -> new DefaultAddressFactory(new AddressSpace[]{space},space);
+            case "getListing" -> listing;
+            case "getMemory" -> memory;
+            case "getFunctionManager" -> manager;
+            case "getReferenceManager" -> refs;
+            case "getSymbolTable" -> symbols;
+            default -> null;
+        });
+    }
+    static Field field(Class<?> c,String n) throws Exception {
+        for(;c!=null;c=c.getSuperclass())try {Field f=c.getDeclaredField(n);f.setAccessible(true);return f;}
+            catch(NoSuchFieldException ex){}
+        throw new NoSuchFieldException(n);
+    }
+    @SuppressWarnings("unchecked") static void check(String name,boolean post,boolean pass) throws Exception {
+        scenario=name;
+        GhidraApplyCohortManifest script=new GhidraApplyCohortManifest();
+        field(script.getClass(),"currentProgram").set(script,program(post));
+        Class<?> rowClass=Class.forName("GhidraApplyCohortManifest$Row");
+        Constructor<?> ctor=rowClass.getDeclaredConstructor();ctor.setAccessible(true);
+        Object row=ctor.newInstance();
+        field(rowClass,"entry").set(row,a(0x1000));
+        field(rowClass,"liveKind").set(row,"FUNCTION");
+        field(rowClass,"addrText").set(row,"0x00001000");
+        Map<String,String> cells=(Map<String,String>)field(rowClass,"cells").get(row);
+        cells.put("creationRanges",scenario.equals("disjoint")?"1000-1001;1003-1003":"1000-1003");
+        byte[] raw={(byte)0x90,(byte)0x90,(byte)0x90,(byte)0x90};
+        cells.put("creationBodySha256",scenario.equals("hash")?"00":HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw)));
+        Method gate=script.getClass().getDeclaredMethod("gateCreationRow",rowClass,boolean.class,AddressSet.class);
+        gate.setAccessible(true);
+        gate.invoke(script,row,post,scenario.equals("overlap")?body():new AddressSet());
+        List<?> failures=(List<?>)field(script.getClass(),"failures").get(script);
+        if(failures.isEmpty()!=pass)throw new AssertionError(name+" "+failures);
+    }
+    public static void main(String[] args) throws Exception {
+        check("valid",false,true);check("valid",true,true);
+        for(String n:List.of("owned","data","gap","cut","escape","interior","symbol","comment","hash","disjoint","overlap"))check(n,false,false);
+        check("bad-name",true,false);check("bad-abi",true,false);
+        System.out.println("creation gates PASS: valid PRE/POST and 13 negatives");
+    }
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="bea-creation-gates-", dir="/var/tmp") as scratch:
+            probe = Path(scratch) / "CreationGateProbe.java"
+            probe.write_text(program, encoding="utf-8")
+            cp = os.pathsep.join(str(p) for p in jars)
+            compiled = subprocess.run([javac, "-proc:none", "-cp", cp, "-d", scratch,
+                                       str(BASE), str(LIVE), str(probe)], capture_output=True, text=True)
+            self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
+            result = subprocess.run([java, "-cp", scratch + os.pathsep + cp, "CreationGateProbe"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("13 negatives", result.stdout)
 
 
 class CommentCohortTests(unittest.TestCase):

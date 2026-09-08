@@ -1,7 +1,7 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
@@ -33,7 +33,7 @@ Battle Engine collision-shape name refresh against the tracked tree, live
 maintainer project, and verified POST backup: all reproduce `745c00ad…` at 19
 files and 187,517,829 bytes. The tracked checkpoint is fixed at `db.18634`
 until an explicitly scoped checkpoint refresh. The working owner has since
-received the five corrections below; never synchronize the two homes automatically.
+received the first-training corrections below; never synchronize the two homes automatically.
 Re-inspect the selected working owner before every mutation.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
@@ -157,7 +157,7 @@ the sealed content-addressed package at
 `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`; restore
 from it to a new path before opening anything.
 
-**First-training corrections (2026-09-07).** The working project now measures
+**First-training corrections (2026-09-07).** After this cohort the working project measured
 `db.18636`: 18 payload files, 118,967,156 bytes, inventory SHA-256
 `40abc51047b99c98171c475e41df109843b43ec8d62453f094fc3176ac932df4`.
 Its main database is 68,665,344 bytes, SHA-256
@@ -189,6 +189,43 @@ working PRE export, which was byte-identical to that export. No checkpoint reope
 or runtime-parity result is claimed. Current documentation names compose the
 frozen August 31 table with the five-row manifest through
 `tools/re_function_doc_names_check.py`; historical explicit-table consumers stay frozen.
+
+**First-training keyboard boundary (2026-09-08).** The working project now
+measures `db.18637`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+`92f271aaa7070b8a321be330458c0983f494ae8b907c83b76a80dca3c6ef2980`.
+Its main database is 68,665,344 bytes, SHA-256
+`16eb1a51eea34c68f703e4e351848c1b4ef9aa0cd1271a37cc79f0ae30936fa3`.
+The [manifest](../../tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv)
+and [spec](../../tools/cohort-specs/first-training-keyboard-boundary.spec.tsv)
+create exactly one default function, `FUN_0051feb0`, over existing instructions
+at `[0x0051feb0,0x0051ff83)`: 211 bytes, 73 instructions, pristine body SHA-256
+`c69d375fab72143d7a3d6fcc01aa0f5a792404853818e05231bca532875c7d8b`.
+All branches stay inside this body, no other function/data owns it, and external
+references target its entry. The former gap/padding classification missed the
+physical keyboard callback. The function retains a default undefined prototype:
+caller stack cleanup and AL use do not yet establish exact argument types or a
+source-compatible declaration.
+
+The shared framework's new bounded `CREATE_FUNCTION` verb passed isolated
+rehearsal, separate readback and controls rejecting existing ownership and a
+clipped final return before writes. Independent review and the full live export
+confirmed all 8,329 prior function rows unchanged; only the default function and
+its symbol were added. The full program export changes only the function count
+to 8,330. No instruction, byte, data unit, reference or existing metadata changed.
+Live and separately reopened rehearsal exports agree exactly. Evidence is under
+`local-lab/ghidra-first-training-20260907-v1/keyboard-boundary/`;
+`live-readback.json` is 2,274 bytes, SHA-256
+`f374306294f2c68bf4ff10e1dc13ad3d848e5ca3d7b956157422db10062a3a06`.
+
+The restore-proven September 7 POST above matched live exactly and served as
+this cohort's PRE. The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-08-first-training-keyboard/post-working/`.
+It was hash-compared, restored elsewhere and opened read-only successfully;
+`post-working-restore.json` is 5,711 bytes, SHA-256
+`ac3ea68ba3e9bfa5c98e05cdb574d5184805bfeb480c012d4d56ab8ee9aa3d16`.
+The tracked payload still matches `745c00ad…`; checkpoint refresh remains
+excluded. The current-name checker composes the frozen table, five-name manifest
+and this one-function manifest without rewriting historical tables or consumers.
 
 Related (not this folder):
 

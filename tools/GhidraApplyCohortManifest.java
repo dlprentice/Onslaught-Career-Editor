@@ -33,6 +33,7 @@
 //   SET_REPEATABLE_COMMENT Function.setRepeatableComment
 //                          Current/proposed values are canonical UTF-8 Base64;
 //                          '-' means null. Each value is bounded to 16 KiB.
+//   CREATE_FUNCTION        absent, contiguous decoded body; default metadata only
 //   SET_BODY               Function.setBody
 //   DISASSEMBLE_BOUNDED    Disassembler.disassemble(seeds, admitted, true)
 //   CLEAR_BOUNDED          Listing.clearCodeUnits inside the admitted ranges
@@ -223,13 +224,14 @@ public class GhidraApplyCohortManifest extends GhidraScript {
     static final String V_SET_PROTOTYPE = "SET_PROTOTYPE";
     static final String V_SET_COMMENT = "SET_COMMENT";
     static final String V_SET_REPEATABLE_COMMENT = "SET_REPEATABLE_COMMENT";
+    static final String V_CREATE_FUNCTION = "CREATE_FUNCTION";
     static final String V_SET_BODY = "SET_BODY";
     static final String V_SET_DATA_POINTER = "SET_DATA_POINTER";
     static final String V_DISASSEMBLE = "DISASSEMBLE_BOUNDED";
     static final String V_CLEAR = "CLEAR_BOUNDED";
     static final String V_BOOKMARK = "REMOVE_STALE_BOOKMARK";
     static final List<String> KNOWN_VERBS = Arrays.asList(
-        V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_SET_NAME,
+        V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_CREATE_FUNCTION, V_SET_NAME,
         V_SET_PROTOTYPE, V_SET_DATA_POINTER, V_SET_COMMENT, V_SET_REPEATABLE_COMMENT);
 
     /** The frozen per-function collateral column list.  Compiled in, never
@@ -381,7 +383,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.addr", "col.currentName", "col.proposedName", "col.liveKind",
         "col.currentRanges", "col.proposedRanges", "col.subtype",
         "col.terminatorVa", "col.terminatorBytes", "col.deltaBytes",
-        "col.byteProof",
+        "col.byteProof", "col.creationRanges", "col.creationBodySha256",
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
@@ -1560,6 +1562,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             row.liveKind = row.cells.containsKey("liveKind")
                     ? row.get("liveKind") : "FUNCTION";
 
+            if (verbs.contains(V_CREATE_FUNCTION)) {
+                gateCreationRow(row, readback, allProposed);
+                continue;
+            }
             if ("SYMBOL:Label".equals(row.liveKind)) {
                 if (fn != null) {
                     fail(row, "is a function, but the manifest says SYMBOL:Label");
@@ -1782,6 +1788,8 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         List<String> preSyms = symbolCensus();
         List<String> preDefinedData = definedDataCensus();
         String preMemory = memoryDigest();
+        String preCreationCode = verbs.contains(V_CREATE_FUNCTION)
+            ? creationCodeDigest() : null;
         List<String> preRefsInAdmitted = referencesFromWithin(admitted);
         List<String> preInstrStarts = instructionStartsIn(admitted);
         println("COHORT_PRE frozenDigest=" + digestOfMap(preFrozen)
@@ -1919,6 +1927,19 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                     relax);
             }
 
+            // CREATE_FUNCTION never disassembles or alters existing functions.
+            if (verbs.contains(V_CREATE_FUNCTION) && failures.isEmpty()) {
+                for (Row row : rows) {
+                    try {
+                        fm.createFunction(null, row.entry, row.proposed, SourceType.DEFAULT);
+                        gateCreationRow(row, true, new AddressSet());
+                        row.verdict = row.gateFailures.isEmpty() ? "APPLIED" : "APPLY_MISMATCH";
+                    } catch (Exception exc) {
+                        fail(row, "CREATE_FUNCTION threw " + exc);
+                    }
+                }
+            }
+
             // -- PHASE C: setBody --------------------------------------------
             if (verbs.contains(V_SET_BODY) && failures.isEmpty()) {
                 for (Row row : rows) {
@@ -2024,6 +2045,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             }
 
             // -- POST gates --------------------------------------------------
+            if (verbs.contains(V_CREATE_FUNCTION)
+                    && !preCreationCode.equals(creationCodeDigest())) {
+                fail("CREATE_FUNCTION changed instruction/reference census");
+            }
             gatePostRows(rows, spec, verbs, fm, readback);
             if (verbs.contains(V_SET_NAME)) {
                 gateNamePost(rows, preOtherHolders);
@@ -2076,6 +2101,15 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         // non-declared verb owns is a refusal: it is the only way a cohort
         // could ask for a mutation it did not declare.
         Map<String, String> owner = new LinkedHashMap<>();
+        owner.put("col.creationRanges", V_CREATE_FUNCTION);
+        owner.put("col.creationBodySha256", V_CREATE_FUNCTION);
+        if (verbs.contains(V_CREATE_FUNCTION)) {
+            if (verbs.size() != 1) {
+                fail("CREATE_FUNCTION must be the only verb");
+            }
+            requireBinding(spec, "col.creationRanges", V_CREATE_FUNCTION);
+            requireBinding(spec, "col.creationBodySha256", V_CREATE_FUNCTION);
+        }
         owner.put("col.currentCommentBase64", V_SET_COMMENT);
         owner.put("col.proposedCommentBase64", V_SET_COMMENT);
         owner.put("col.currentRepeatableCommentBase64", V_SET_REPEATABLE_COMMENT);
@@ -2847,6 +2881,140 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         notes.add("bookmarksRemoved=" + removed.size() + " " + removed);
     }
 
+    /** Creation is deliberately limited to one contiguous, already decoded body.
+     *  Ranges use the framework's inclusive endpoints, not half-open notation. */
+    private void gateCreationRow(Row row, boolean post, AddressSet allProposed) {
+        try {
+            row.proposed = parseRanges(row.get("creationRanges"));
+            if (!"FUNCTION".equals(row.liveKind) || row.proposed == null
+                    || row.proposed.getNumAddressRanges() != 1
+                    || !row.proposed.getMinAddress().equals(row.entry)
+                    || row.proposed.getNumAddresses() > 65536) {
+                fail(row, "CREATE_FUNCTION invalid contiguous body/entry");
+                return;
+            }
+            if (allProposed.intersects(row.proposed)) {
+                fail(row, "CREATE_FUNCTION overlapping proposed bodies");
+            }
+            allProposed.add(row.proposed);
+            Listing listing = currentProgram.getListing();
+            FunctionManager fm = currentProgram.getFunctionManager();
+            MessageDigest bytes = MessageDigest.getInstance("SHA-256");
+            AddressIterator addresses = row.proposed.getAddresses(true);
+            while (addresses.hasNext()) {
+                Address at = addresses.next();
+                MemoryBlock block = currentProgram.getMemory().getBlock(at);
+                if (block == null || !".text".equals(block.getName()) || !block.isExecute()) {
+                    fail(row, "CREATE_FUNCTION outside executable .text");
+                    return;
+                }
+                bytes.update(currentProgram.getMemory().getByte(at));
+                Function owner = fm.getFunctionContaining(at);
+                if ((!post && owner != null) || (post && (owner == null
+                        || !owner.getEntryPoint().equals(row.entry)))) {
+                    fail(row, "CREATE_FUNCTION unexpected body ownership at " + at);
+                    return;
+                }
+                if (listing.getDefinedDataContaining(at) != null) {
+                    fail(row, "CREATE_FUNCTION defined data at " + at);
+                    return;
+                }
+                for (java.util.Iterator<Reference> refs = currentProgram.getReferenceManager()
+                        .getReferencesTo(at); refs.hasNext();) {
+                    Reference ref = refs.next();
+                    if (!at.equals(row.entry) && ref.getReferenceType().isFlow()
+                            && !row.proposed.contains(ref.getFromAddress())) {
+                        fail(row, "CREATE_FUNCTION external interior flow at " + at);
+                    }
+                }
+            }
+            if (!hex(bytes.digest()).equals(row.get("creationBodySha256"))) {
+                fail(row, "CREATE_FUNCTION source byte hash mismatch");
+            }
+            if (!instructionCoverage(row.proposed).hasSameAddresses(row.proposed)) {
+                fail(row, "CREATE_FUNCTION body is not instruction-aligned decoded code");
+            }
+            InstructionIterator instructions = listing.getInstructions(row.proposed, true);
+            while (instructions.hasNext()) {
+                Instruction instruction = instructions.next();
+                if (instruction.getFlowType().isJump() && instruction.getFlowType().isComputed()) {
+                    fail(row, "CREATE_FUNCTION unresolved computed jump");
+                }
+                Address fallThrough = instruction.getFallThrough();
+                if (fallThrough != null && !row.proposed.contains(fallThrough)) {
+                    fail(row, "CREATE_FUNCTION fallthrough escapes body");
+                }
+                for (Address target : instruction.getFlows()) {
+                    if (!instruction.getFlowType().isCall()
+                            && (!row.proposed.contains(target)
+                                || listing.getInstructionAt(target) == null)) {
+                        fail(row, "CREATE_FUNCTION jump escapes decoded body");
+                    }
+                }
+            }
+            Function f = fm.getFunctionAt(row.entry);
+            if (!post) {
+                for (Symbol symbol : currentProgram.getSymbolTable().getSymbols(row.entry)) {
+                    if (!symbol.isDynamic()) {
+                        fail(row, "CREATE_FUNCTION entry has stored symbol");
+                    }
+                }
+                if (f != null || listing.getComment(CodeUnit.PLATE_COMMENT, row.entry) != null
+                        || listing.getComment(CodeUnit.REPEATABLE_COMMENT, row.entry) != null) {
+                    fail(row, "CREATE_FUNCTION entry is not absent/default");
+                }
+            } else {
+                if (f == null || !f.getBody().hasSameAddresses(row.proposed)
+                        || !f.getName().equals("FUN_" + row.entry.toString())
+                        || f.getSymbol().getSource() != SourceType.DEFAULT
+                        || f.getSignatureSource() != SourceType.DEFAULT
+                        || !"undefined".equals(f.getReturnType().getName())
+                        || !"unknown".equals(f.getCallingConventionName())
+                        || f.getParameterCount() != 0 || f.getLocalVariables().length != 0
+                        || f.hasVarArgs() || f.hasCustomVariableStorage()
+                        || f.isThunk() || f.isExternal() || f.hasNoReturn()
+                        || f.getComment() != null || f.getRepeatableComment() != null
+                        || !f.getTags().isEmpty()
+                        || !f.getParentNamespace().isGlobal()) {
+                    fail(row, "CREATE_FUNCTION non-default POST function");
+                }
+                if (f != null) {
+                    row.targetName = f.getName();
+                    row.postRanges = rangesText(f.getBody());
+                    row.postBytes = f.getBody().getNumAddresses();
+                }
+            }
+        } catch (Exception exc) {
+            fail(row, "CREATE_FUNCTION gate threw " + exc);
+        }
+    }
+
+    /** No classification is authorized by creation, even outside its target. */
+    private String creationCodeDigest() throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        InstructionIterator instructions = currentProgram.getListing().getInstructions(true);
+        while (instructions.hasNext()) {
+            Instruction i = instructions.next();
+            digest.update((i.getMinAddress() + ":" + i.getMaxAddress() + ":"
+                + i.toString() + ":" + i.getFlowType() + ":" + i.getFallThrough()
+                + ":" + i.getFlowOverride() + ":" + i.isLengthOverridden() + ":" + i.getParsedLength()
+                + "\n").getBytes(StandardCharsets.UTF_8));
+        }
+        List<String> references = new ArrayList<>();
+        ReferenceManager manager = currentProgram.getReferenceManager();
+        AddressIterator sources = manager.getReferenceSourceIterator(currentProgram.getMemory(), true);
+        while (sources.hasNext()) {
+            for (Reference ref : manager.getReferencesFrom(sources.next())) {
+                references.add(ref.getFromAddress() + ":" + ref.getToAddress() + ":"
+                    + ref.getReferenceType() + ":" + ref.getOperandIndex() + ":"
+                    + ref.getSource() + ":" + ref.isPrimary() + ":" + ref.getSymbolID());
+            }
+        }
+        Collections.sort(references);
+        digest.update(digestOfList(references).getBytes(StandardCharsets.UTF_8));
+        return hex(digest.digest());
+    }
+
     /** Canonical encoding avoids TSV escaping and preserves null distinctly.
      * Empty strings and NUL are refused because Ghidra may normalize them. */
     static String decodeComment(String encoded) throws Exception {
@@ -3117,7 +3285,13 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             List<String> preDefinedData, String preMemory, AddressSet admitted,
             List<String> removedBookmarks, boolean relaxed) throws Exception {
         TreeMap<String, String> postFrozen = frozenCensus();
-        if (!preFrozen.keySet().equals(postFrozen.keySet())) {
+        Set<String> expectedEntries = new LinkedHashSet<>(preFrozen.keySet());
+        if (verbs.contains(V_CREATE_FUNCTION)) {
+            for (Row row : rows) {
+                expectedEntries.add(String.format(Locale.ROOT, "%08x", row.addr));
+            }
+        }
+        if (!expectedEntries.equals(postFrozen.keySet())) {
             Set<String> created = new LinkedHashSet<>(postFrozen.keySet());
             created.removeAll(preFrozen.keySet());
             Set<String> destroyed = new LinkedHashSet<>(preFrozen.keySet());
@@ -3187,7 +3361,18 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         addedSyms.removeAll(preSyms);
         Set<String> removedSyms = new LinkedHashSet<>(preSyms);
         removedSyms.removeAll(postSyms);
-        if (verbs.contains(V_SET_DATA_POINTER)) {
+        if (verbs.contains(V_CREATE_FUNCTION)) {
+            Set<String> expectedAdded = new LinkedHashSet<>();
+            for (Row row : rows) {
+                String a = String.format(Locale.ROOT, "%08x", row.addr);
+                expectedAdded.add(a + "\tFUN_" + a + "\tFUN_" + a
+                    + "\tFunction\tGlobal\tDEFAULT\ttrue\tfalse");
+            }
+            if (!removedSyms.isEmpty() || !addedSyms.equals(expectedAdded)) {
+                fail("CREATE_FUNCTION unexpected symbol delta: added=" + addedSyms
+                    + " removed=" + removedSyms);
+            }
+        } else if (verbs.contains(V_SET_DATA_POINTER)) {
             if (!removedSyms.isEmpty()) {
                 fail("SET_DATA_POINTER removed non-dynamic symbols: "
                     + removedSyms);

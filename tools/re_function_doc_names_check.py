@@ -82,6 +82,8 @@ DEFAULT_TABLE = (
 CURRENT_NAME_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv"
 CURRENT_NAME_OVERLAY_SHA256 = "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf"
 CURRENT_NAME_OVERLAY_ROWS = 5
+CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
+CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 BASELINE_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
@@ -425,6 +427,44 @@ def apply_current_name_overlay(
                      table.text_lo, table.text_hi, f"{table.source} + {manifest}", table.comments)
 
 
+def apply_current_creation_overlay(
+    table: NameTable, manifest: Path = CURRENT_CREATION_OVERLAY, *,
+    expected_sha256: str = CURRENT_CREATION_OVERLAY_SHA256,
+) -> NameTable:
+    """Compose one pinned default-function admission, leaving old rows intact."""
+    if sha256_file(manifest) != expected_sha256:
+        raise ValueError("current creation overlay SHA-256 differs")
+    with manifest.open(encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if reader.fieldnames != ["entry", "bodyRanges", "bodySha256"]:
+            raise ValueError("current creation overlay columns differ")
+        rows = list(reader)
+    if len(rows) != 1:
+        raise ValueError("current creation overlay row count differs")
+    row = rows[0]
+    address = row["entry"]
+    if re.fullmatch(r"0x[0-9a-f]{8}", address or "") is None or address in table.entry:
+        raise ValueError("current creation overlay entry is invalid or already present")
+    if (re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{8}", row["bodyRanges"] or "") is None
+            or re.fullmatch(r"[0-9a-f]{64}", row["bodySha256"] or "") is None
+            or None in row):
+        raise ValueError("current creation overlay malformed body")
+    lo, hi = (int(part, 16) for part in row["bodyRanges"].split("-"))
+    if lo != int(address, 16) or hi < lo or not table.in_text(lo) or not table.in_text(hi):
+        raise ValueError("current creation overlay invalid body bounds")
+    if any(lo <= old_hi and old_lo <= hi for old_lo, old_hi in table.geometry.values()):
+        raise ValueError("current creation overlay overlaps existing geometry")
+    name = "FUN_" + address[2:]
+    if name in table.entry.values():
+        raise ValueError("current creation overlay default name already present")
+    entry, geometry = dict(table.entry), dict(table.geometry)
+    entry[address], geometry[address] = name, (lo, hi)
+    spans = sorted((start, end, entry[key]) for key, (start, end) in geometry.items())
+    return NameTable(entry, geometry, [span[0] for span in spans],
+                     [span[1] for span in spans], [span[2] for span in spans],
+                     table.text_lo, table.text_hi, f"{table.source} + {manifest}", table.comments)
+
+
 def _cells(line: str) -> list[str]:
     body = line.strip()
     if body.startswith("|"):
@@ -677,7 +717,7 @@ def run(
         else:
             table = load_table(table_path)
         if use_current_overlay:
-            table = apply_current_name_overlay(table)
+            table = apply_current_creation_overlay(apply_current_name_overlay(table))
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
         return 2
@@ -1141,6 +1181,37 @@ def _self_test() -> int:
             overlay.write_text(overlay_header + changed, encoding="utf-8")
             expect_error(label, message, lambda: apply_current_name_overlay(load_table(current), overlay,
                 expected_sha256=sha256_file(overlay), expected_rows=count))
+
+        creation = base / "creation.tsv"
+        creation_header = "entry\tbodyRanges\tbodySha256\n"
+        creation_row = "0x00401500\t00401500-0040150f\t" + "a" * 64 + "\n"
+        creation.write_text(creation_header + creation_row, encoding="utf-8")
+        created = apply_current_creation_overlay(composed, creation,
+                    expected_sha256=sha256_file(creation))
+        ok = (created.lookup_entry("0x00401500") == "FUN_00401500"
+              and created.lookup_containing(0x0040150f) == "FUN_00401500"
+              and created.lookup_containing(0x00401510) is None
+              and created.lookup_entry("0x00402000") == "CThing__Delta"
+              and composed.lookup_entry("0x00401500") is None
+              and all(created.geometry[k] == v for k, v in composed.geometry.items())
+              and load_table(current).lookup_entry("0x00401500") is None)
+        failures += not ok
+        print(f"  [{'ok ' if ok else 'FAIL'}] creation composes exact bounds and keeps historical table untouched")
+        expect_error("creation exact hash required", "SHA-256 differs",
+            lambda: apply_current_creation_overlay(composed, creation, expected_sha256="0" * 64))
+        for label, changed, message in (
+            ("creation duplicate rows", creation_row * 2, "row count"),
+            ("creation existing entry", creation_row.replace("0x00401500", "0x00402000"), "already present"),
+            ("creation overlap", creation_row.replace("00401500-0040150f", "00401500-00402000"), "overlaps"),
+            ("creation mismatched start", creation_row.replace("00401500-0040150f", "00401501-0040150f"), "bounds"),
+            ("creation reversed bounds", creation_row.replace("00401500-0040150f", "00401500-004014ff"), "bounds"),
+            ("creation outside text", creation_row.replace("00401500-0040150f", "00401500-ffffffff"), "bounds"),
+            ("creation malformed body", creation_row.replace("00401500-0040150f", "00401500"), "malformed"),
+            ("creation malformed hash", creation_row.replace("a" * 64, "bad"), "malformed"),
+        ):
+            creation.write_text(creation_header + changed, encoding="utf-8")
+            expect_error(label, message, lambda: apply_current_creation_overlay(composed, creation,
+                         expected_sha256=sha256_file(creation)))
 
         moved = base / "moved.tsv"
         moved.write_text(

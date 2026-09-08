@@ -1,0 +1,44 @@
+# One default function from an existing contiguous instruction body; no semantic name/prototype.
+# PRE and separately reopened POST measured on Linux on 2026-09-08.
+cohortId	first-training-keyboard-boundary
+cohortTitle	Default function boundary for first-training physical keyboard callback
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+verb	CREATE_FUNCTION
+applierSha256	dc8416c24976d61d2d8ff15219028eeb0f8f0b231ae838490ed27bf6ce787e4d
+applierSha256	c5b8f5d4914bacda18645d8313b7d71a895d44c81672a5ebdf047721ebb334ed
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2300
+preFunctionNameDigest	5af6d79b342744b6ce8551659fa7bec3797adeb76118600abccc69b5788f94a3
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	811afe31d9e52f3107bd66b6505bac4487f743c7e89d283582ca0d142e4b56e3
+postFunctions	8330
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2300
+postFunctionNameDigest	1e1bacbbc0a3e7a61a4b312770b4605a1383ffcc01ebc094e683a5dbc54d304d
+postFunctionBodyDigest	0918a924668f6dced88681160bebe1b47135d717fc4de844e452043f823f8cd9
+postFrozenDigest	69a41afd812292385ddb4830d6af9feba5ae28063e6a8e1666aa955a37d605d8
+manifestSha256	8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a
+manifestBytes	122
+manifestRows	1
+manifestColumns	3
+manifestHeaderPipe	entry|bodyRanges|bodySha256
+col.addr	entry
+col.creationRanges	bodyRanges
+col.creationBodySha256	bodySha256
+unique	addr
+expectedTargetsChanged	0
+expectedFunctionsUntouched	8329
+expectedSymbolsAdded	1
+expectedSymbolsRemoved	0
