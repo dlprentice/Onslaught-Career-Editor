@@ -1,7 +1,9 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-08-18 (CallEventId5 wrapper vs inner)
+Last updated: 2026-09-08 (isolated Unit Euler execution; other rows retain their earlier evidence)
+Summary: script-bearing Thing contracts and related Unit movement ownership,
+including the bounded angle-update and matrix arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
@@ -10,8 +12,9 @@ Evidence: MEASURED — every byte below was re-read from the pristine specimen a
 file offset VA − 0x400000 with `tools/disasm_va.py`; whole-image scans by
 `tools/call_xref_scan.py`. Architecture from pinned GPL
 `references/Onslaught/thing.cpp` / `thing.h` (lines cited). Function names are
-the live Ghidra name table (db.18627 lineage); the byte contracts below are
-independent of the names.
+the dated Ghidra readbacks; current name authority remains in
+`developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+The byte contracts below are independent of the names.
 
 ## Shape
 
@@ -61,12 +64,60 @@ These thing-event numbers are **not** the IScript `HandleMessage`
 | `0x0047c970` | `CGroundUnit__UpdateLinkedEffectsByHeightClearance` | `83ec68 53 55 8be9 56 57 8b4500 ff5060 … d9854c010000 d80d408c5d00` | Nine inbound `E8` (Boat/Cannon/GV/Infantry/Mech/Mine/Sentinel/WarspiteDome). Reads `owner+0x14c/+0x150/+0x154`, `fmul 0.4f` (`0x005d8c40`) into `[esp+0x38/+0x3c/+0x40]`. At `0x0047ccc3` adds that vector into `mVelocity` (`+0x7c/+0x80/+0x84`) `edi` times then `fmul [esp+0x10]`. Then `E8` `0x0047cd94` → `CUnit__UpdateMotionAttachmentsAndEffects`. HIGH on the `+0x14c`→`+0x7c` add. Table name is a label. |
 | `0x004fa8d0` | `CUnit__UpdateMotionAttachmentsAndEffects` | `81eca8000000 53 55 8be9 56 57 8b8d08020000 85c9 7417 … ff500c` | Slot 66 of `CUnit` `0x005df998`. If `[this+0x208]` live and (`[this+0x214]` live or `TF_DYING`), `call [guide.vtable+0xc]` = VFunc03. Then `0x004fa800`, then `CActor__Move` `0x004015e0` (`E8` `0x004fa91b`). Does **not** itself read `+0x14c`. If slot 76 returns nonzero, compares `+0x114` vs `+0x120` as three floats and on mismatch `call [vtable+0x134]` (`0x004fa4b0`). HIGH on the order. |
 | `0x004015e0` | `CActor__Move` | `83ec30 a1d02f6700 53 8bd9 55 56 8d6b1c 8983d8000000` | `lea ebp,[this+0x1c]` (`mPos`). `fadd [this+0x7c]` / `[+0x80]` / `[+0x84]` into `mPos` XYZ (`0x0040175a..0x00401775`). Matches `actor.cpp:58` / `114`. HIGH on the add. |
-| `0x004fa4b0` | `CUnit__SmoothEulerTowardTargetAndBuildMatrix` | `8b01 83ec38 56 8b742440 57 8b7c2448 ff5060 d906 d81f … f3a5 5f 5e 83c438 c21000` | Slot 77 (`+0x134`) of `CUnit` / `CRadar` / `CSubmarine`. `ret 0x10` — four args: current*, desired*, rate*, `FMatrix*`. Slot 66 passes `+0x114`, `+0x120`, `+0x12c`, `mOrientation`. Smooths current XYZ toward desired (X/Z unwrap via `±π/2` / `2π` / `±π`; Y no wrap). Step scaled by `vtable[+0x60]()` and `0.1f` (`0x005d85c0`), capped by `rate[i]`. Then sin/cos of the three current angles; `rep movsd` 12 dwords into arg3. One `E8` `0x00428c21` (`CComponent__MaybeSmoothVectorTowardTarget`). HIGH. |
+| `0x004fa4b0` | `CUnit__SmoothEulerTowardTargetAndBuildMatrix` | `8b01 83ec38 56 8b742440 57 8b7c2448 ff5060 d906 d81f … f3a5 5f 5e 83c438 c21000` | Slot 77 (`+0x134`) of `CUnit` / `CRadar` / `CSubmarine`. `ret 0x10` — four args: current*, desired*, rate*, `FMatrix*`. Slot 66 passes `+0x114`, `+0x120`, `+0x12c`, `mOrientation`. Smooths current XYZ toward desired (X/Z unwrap via `±π/2` / `2π` / `±π`; Y no wrap). Step scaled by `vtable[+0x60]()` and `0.1f` (`0x005d85c0`), capped by a float store of `rate[i] * multiplier`. Then sin/cos of the three current angles; `rep movsd` copies nine meaningful words and three unwritten padding words into arg3. One `E8` `0x00428c21` (`CComponent__MaybeSmoothVectorTowardTarget`). HIGH. |
 | `0x004de700` | `Return1f` | `d90568855d00 c3` | Slot 24 (`+0x60`) of `CUnit` `0x005df998` / `CRadar` `0x005dd788` / `CSubmarine` `0x005e1490` (re-read dwords `00 e7 4d 00`). Zero-arg; `ECX` unused; zero `E8`; zero inbound `E8`/`E9`. `fld dword [0x005d8568]` (`00 00 80 3f` = `1.0f`); bare `ret`. HIGH. Child `t_416de69b` REPORT.md independently reproduced. Do not promote a CUnit-owned name — this is a folded stub. |
 | `0x0050e940` | `CGroundUnit__ReturnFloat005d85bc_0050e940` | `d905bc855d00 c3` | Slot 24 of `CGroundVehicle` `0x005e297c` is **not** `Return1f`. Same shape; `[0x005d85bc]` = `00 00 80 40` = `4.0f`. HIGH on these bytes. Subclass override, not the CUnit answer. |
 | `0x005333b0` | `IScript__Constructor` | `c706d4925d00 8d4e28 e85b24fbff … c706084f5e00 894608 894e0c 897168 … 897e24 … c20800` | `ret 8`; args `(thing, eventObj)`. Installs `CMonitor` vptr `0x005d92d4` then IScript vptr `0x005e4f08`. `CSPtrSet__Init` at `+0x28`. `[this+8]=[this+0x10]=thing`; `[this+0xc]=eventObj`; `[eventObj+0x68]=this`. Zeroes `+0x14` / `+0x18` / `+0x1c` / `+0x24` / `+0x38`. HIGH. Only `E8` is `SetScript` `0x004f42a8`. |
 | `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CConsole__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
 | `0x00535c50` | `IScript__SetScript` | `8b442404 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
+
+### Unit Euler update: isolated execution, September 8
+
+Pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`:
+the complete half-open body `0x004fa4b0..0x004fa7ff` is 847 bytes, SHA-256
+`3cfa2696dd4a9092812c0ea179a4e5f7bde29612cd9f5723312a417122fce9fc`.
+Its constant span `0x005d85c0..0x005d85ec` is 44 bytes, SHA-256
+`12f15b616e7383bee36c61feaa35e9bf36973b86f17979a41ee8924a1ad51b69`.
+
+The private ELF32 probe executes those unchanged bytes at their retail virtual
+addresses, supplying only the virtual move-multiplier return. Nineteen finite
+cases ran at controlled PC24/RN and PC53/RN. The probe copies the three updated
+angles and nine meaningful matrix words; it excludes the three unwritten
+padding words copied by retail. Private files `unit-euler-native-probe.s`,
+`unit-euler-native-probe.py`, `unit-euler-native-probe` and
+`unit-euler-native-final-20260908.log` are in
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+No game frame, initialization, resource, RNG or live gameplay FPU was sampled.
+
+The update uses retained yaw/pitch/roll, not matrix-derived integer angles:
+
+- Equal components skip every update/store; yaw and roll also skip wrapping.
+  Equal `-0/+0` therefore preserves current `0x80000000`.
+- Yaw/roll adjust a temporary desired value across strict opposite `±π/2`
+  boundaries. Direction separately uses the original difference against `+π`.
+  Pitch never wraps. Updated yaw/roll are stored before at most one `±2π`
+  correction. Generic normalized error does not reproduce these branches.
+- The cap is a float store of `multiplier × rate`. Calculated step is ordered
+  `abs(current − adjustedDesired) × multiplier × 0x3dcccccd`; it is replaced by
+  the cap only when greater and otherwise stays on the x87 stack through addition.
+  The subnormal case current word 1, desired word 6 produces word 2; prematurely
+  storing the step produces word 1.
+  From zero toward `0.1f` with unit rate/multiplier, retail produces
+  `0x3c23d70b`; division by ten would produce `0x3c23d70a`.
+
+Matrix construction stores yaw sine/cosine and roll/pitch cosines as float32,
+but retains roll/pitch sines. The product at `0x004fa784` is stored **without
+popping**: M02 uses the retained product, while M12 reloads the stored copy.
+For equal Euler words `(3f333333,3f8ccccd,becccccd)`, controlled PC24 produces
+M02 `3e6c827e`; PC53 produces `3e6c8280`. Neither `Math.Sin/Cos` equivalence nor
+the live game's control word follows from these measurements.
+
+`rebuild/OnslaughtRebuild.Core/RetailUnitEuler.cs` carries only the finite PC24
+angle-update prefix. Its 19 native-output cases pass; the matrix and creation/
+movement transaction are still unported. The current Level 100 Plane mover
+remains an approximation and no replay fingerprint changes from this primitive.
 
 ### `HandleEvent` arms (byte-exact)
 

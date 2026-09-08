@@ -3,7 +3,8 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
-/// Round admitted geometry and segment-threshold operations to 24 significand bits, ties to even.
+/// Round admitted geometry, segment-threshold and Unit Euler operations to
+/// 24 significand bits, ties to even.
 /// The double carrier retains the exponent range needed between the measured
 /// float-input geometry operations; a float cast represents a separate store.
 /// The segment threshold additionally uses retail's binary64 0.3 coefficient.

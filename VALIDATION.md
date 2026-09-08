@@ -241,6 +241,18 @@ at tick 9191 with hull 8545 and identical full state/pose traces; their new stat
 hash is `7ddb32258aff65782bd232ba49c9d33a0b3c6c806f766c81f4271e48311c1ea8`.
 No driver changes or live player acceptance are involved.
 
+The finite Unit Euler update passed **19/19** native-output cases, then
+**32/32** with adjacent PC24 mesh-pose arithmetic checks
+(`unit-euler-core-final-20260908.log` in the same directory). Expected words
+come from isolated execution of the unchanged retail routine under controlled
+PC24; its PC53 comparison is also retained in `unit-euler-native-final-20260908.log`.
+Coverage includes strict angle boundaries, pitch without wrapping, one-pass
+normalization, multiplier four, signed zero, the float coefficient and a
+subnormal step retained until the final store. Review replaced one initial
+coefficient example that did not distinguish multiplication from division.
+This primitive does not yet replace aircraft movement or its matrix builder;
+no new full-route run or replay fingerprint is claimed for it.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

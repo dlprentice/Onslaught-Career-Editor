@@ -352,33 +352,16 @@ public sealed partial class Level100ActorMechanics
     //                                              which returns
     //                                              record[+0xb4]).
     //
-    // Two consequences decide this reconstruction, and both were reached by
-    // refuting an earlier reading of mine:
+    // This remains a compatibility approximation: integer yaw/pitch are
+    // recovered from the projected basis, roll is discarded, and constant
+    // speed advances along the NEW heading. Retail retains Euler, drive and
+    // velocity fields, moves the Actor BEFORE smoothing, and applies its
+    // friction/gravity/clamp sequence. Plane's move multiplier is 1.0;
+    // GroundVehicle's is 4.0, separate from the guide's hardcoded *4.
     //
-    // 1. The guide's own `* 4.0` (DAT_005d85bc) is NOT the plane's move
-    //    multiplier. CPlane's slot 24 (0x004de700) returns 1.0
-    //    (DAT_005d8568); CGroundVehicle's (0x0050e940) returns 4.0. The 4.0 in
-    //    the guide is a hardcoded constant that happens to match the ground
-    //    class. The plane's actual speed comes from the slot-111 clamp, and
-    //    because that clamp is `record[+0xb4] * (1/GAME_FR)` per base tick,
-    //    the steady-state ground track is exactly CUnitAirVelocity units per
-    //    second. `Level100ActorMechanics` therefore steps a plane at
-    //    speed/RetailBaseTicksPerSecond and does not model the buffer.
-    //
-    // 2. MM = 1.0 means a plane takes a full move on EVERY released base tick,
-    //    where a ground vehicle takes one every fourth. That is why a plane
-    //    has no FullGuideBaseTicks phase here.
-    //
-    // Deliberately NOT modelled, because the bytes do not settle them:
-    //  - the roll term the guide writes to unit+0x128;
-    //  - the +/-60 degree (0x3F860A92) pitch bias the guide takes at
-    //    0x004023ea from `guide+0x2c`, because `guide+0x2c` is a
-    //    CGenericActiveReader wrapper and its +0x24 is not shown to be the
-    //    target's world Z. Read as a world Z its sign contradicts the
-    //    clearance branch three instructions later, so one of the two readings
-    //    is wrong and nothing here picks between them;
-    //  - the near-ground friction (DAT_005d8600 = 0.95) and gravity paths,
-    //    which the clamp dominates in level flight.
+    // RetailUnitEuler now implements the measured PC24 angle-update prefix.
+    // It cannot be substituted here until creation-owned raw state, guide
+    // outputs and native matrix arithmetic replace this whole transaction.
     private void AdvancePlane(
         ActorState state,
         Level100ActorMotionDefinition motion)
@@ -589,16 +572,10 @@ public sealed partial class Level100ActorMechanics
     }
 
     /// <summary>
-    /// One axis of <c>CUnit__SmoothEulerTowardTargetAndBuildMatrix</c>
-    /// (<c>0x004fa4b0</c>): the step is
-    /// <c>min(|error| * MM * 0.1, MM * maxStep)</c> where <c>MM</c> is vtable
-    /// slot 24 - <b>1.0</b> for CPlane (<c>0x004de700</c>, <c>DAT_005d8568</c>)
-    /// against 4.0 for CGroundVehicle - <c>0.1</c> is <c>DAT_005d85c0</c>, and
-    /// <c>maxStep</c> is <c>record[+0xb8] * 0.3333333</c>
-    /// (<c>DAT_005d8608</c>), written every tick by
-    /// <c>CUnit__UpdateMotionAndTrailEffects</c> at <c>0x00402fbf</c>. With
-    /// MM = 1 both factors are the identity, so this is exactly
-    /// <c>min(|error| / 10, AirTurnRate / 3)</c>.
+    /// Integer approximation retained by the existing Plane mover. Generic
+    /// normalized error and division by ten are not retail's separate yaw/roll
+    /// branches, unwrapped pitch, float coefficient or ordered stores. The raw
+    /// finite angle operation is <see cref="RetailUnitEuler.Smooth"/>.
     /// </summary>
     private static int PlaneEulerStep(int current, int desired, int maximumStep)
     {

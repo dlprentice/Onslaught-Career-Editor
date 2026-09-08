@@ -69,6 +69,15 @@ this correction. The quarter-turn offset and renderer checks in
 `ThingActorBaseStateTests` and the materializer's `Level100FloatGeometryTests`
 test coordinate consistency, not live retail Euler arithmetic or flight parity.
 
+`RetailUnitEuler.Smooth` carries the finite PC24 angle-update prefix using
+retained retail yaw/pitch/roll words. Nineteen cases match isolated execution
+of the unchanged retail routine, including wrap boundaries, signed zero and
+subnormal retained steps. This primitive is not yet the Level 100 mover:
+creation-owned angles, matrix/trig behavior, drive and movement order remain
+integration requirements. The isolated PC24/PC53 matrix results differ, so
+neither ordinary float trig nor a live gameplay control word is inferred from
+the prefix tests. See the existing [Unit function evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
+
 ## What Core may not do
 
 Core simulation truth must be independent of presentation and environment.
