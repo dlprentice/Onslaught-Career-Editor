@@ -187,6 +187,8 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/air-contact-shutdown.manifest.tsv":
+        "d97fee5bddfd289cda7f9d2be43d6b388043f688205bc27303f961235ee73da4",
     "tools/cohort-specs/segment-controller-ownership.manifest.tsv":
         "467f5235b71bfd301407b4c806aaec66a31dbe120551ba9bb9a1061886ee3585",
     "tools/cohort-specs/bounds-contract-comments.manifest.tsv":

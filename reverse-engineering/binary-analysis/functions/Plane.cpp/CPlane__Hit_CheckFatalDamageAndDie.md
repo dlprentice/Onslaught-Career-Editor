@@ -1,18 +1,19 @@
 # CPlane Hit And Animation Helpers
 
-Status: active static function note; saved hit label is provisional
+Status: active static function note; reviewed contact role names
 Last updated: 2026-09-08
 Summary: contact-triggered Plane shutdown and retained animation helpers; the
 hit body does not inspect life or require fatal damage.
 
-> Source File: Plane.cpp | Binary: BEA.exe
+> Source File: Plane.cpp absent from the pinned partial source | Binary: BEA.exe
 > Wave: 485 | Evidence: saved Ghidra metadata, decompile, xrefs, vtable/RTTI rows, instruction rows, raw-caller rows, tags, and focused probe
 
 ## Functions
 
 | Address | Name | Saved signature |
 | --- | --- | --- |
-| `0x004d1f10` | `CPlane__Hit_CheckFatalDamageAndDie` | `void __thiscall CPlane__Hit_CheckFatalDamageAndDie(void * this, void * hit_thing, void * hit_context)` |
+| `0x004d1f10` | `CPlane__Hit_RequestShutdownOnQualifiedContact` | `void __thiscall CPlane__Hit_RequestShutdownOnQualifiedContact(void * this, void * hit_thing, void * hit_context)` |
+| `0x00403ba0` | `AirContact__Hit_RequestShutdownOnDyingContact` | `void __thiscall AirContact__Hit_RequestShutdownOnDyingContact(void * this, void * otherThing, void * collisionReport)` |
 | `0x004d1f90` | `CPlane__PlayWingOpenAnimationOnce` | `void __fastcall CPlane__PlayWingOpenAnimationOnce(void * this)` |
 | `0x004d1fd0` | `CPlane__PlayWingCloseAnimationOnce` | `void __fastcall CPlane__PlayWingCloseAnimationOnce(void * this)` |
 | `0x004d2010` | `CPlane__UpdateAttackLaunchAnimationState` | `int __fastcall CPlane__UpdateAttackLaunchAnimationState(void * this)` |
@@ -21,9 +22,9 @@ hit body does not inspect life or require fatal damage.
 
 - September 8 re-read pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
   2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-  The current `CheckFatalDamageAndDie` label is misleading: this body reads no
-  life/damage value and its main arm does not require `TF_DYING`. The label and
-  saved signatures above are retained metadata, not recovered source names.
+  The former fatal-damage label was misleading: this body reads no life/damage
+  value and its main arm does not require `TF_DYING`. The reviewed labels above
+  describe measured roles, not recovered source method names.
 - `CPlane` vtable `0x005e1930` slot 39 points to `0x004d1f10`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-39 hit handlers.
 - The main arm requires `this+0x164->0x11c == 0`. `hit_thing+0x34` is the
   **type mask**, not the flag word. Same-allegiance AirUnit (`0x400`) contact
@@ -37,8 +38,12 @@ hit body does not inspect life or require fatal damage.
   hit helper independently requires profile `+0x11c == 0`, self `TF_DYING`, and
   other Unit/raw-mask contact before profile-drop/AddShutdownEvent. It has no
   friendly-air exemption, so that exemption is not a whole-call veto. Its
-  own unconditional tail is `0x004fcc30`. The saved `CThing__Hit_TriggerDieOnUnitOrTypeMask02100000`
-  name does not establish the inheritance owner.
+  own unconditional tail is `0x004fcc30`. The former CThing prefix did not
+  establish its owner. Strict RTTI binds this shared handler to slot 39 of
+  CDiveBomber (`0x005e123c`) and CGroundAttackAircraft (`0x005e2bcc`). Those
+  classes inherit through CSmallAirUnit into CAirUnit, but CAirUnit's own table
+  (`0x005e3778`) uses `0x004fcc30` for slot 39. The exact declaring class remains
+  unproved, so its corrected name retains only the air-contact role.
 - `0x004d1f90` checks `this+0x27c == 1`, resolves `wingopen` string `0x00624420`, calls `CMesh__FindAnimationIndexByName`, dispatches `this` vfunc `+0xf0`, and sets `this+0x27c = 2`.
 - `0x004d1fd0` checks `this+0x27c == 4`, resolves `wingclose` string `0x0062442c`, calls `CMesh__FindAnimationIndexByName`, dispatches `this` vfunc `+0xf0`, and sets `this+0x27c = 3`.
 - `CPlane` vtable `0x005e1930` slot 59 points to `0x004d2010`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-59 animation handlers.
@@ -57,4 +62,6 @@ The re-read complete bodies, with half-open extents, are:
 Static retail-byte contracts establish the bounded gates above. The pinned
 source has no `Plane.cpp`. Full actor layout, collision delivery, dying motion,
 animation behavior, the retained raw caller boundaries, native runtime behavior
-and rebuild parity remain open. No Ghidra database was opened or renamed here.
+and rebuild parity remain open. The two names and nonrepeatable comments were
+corrected through the [air-contact cohort](../../../ghidra/README.md#air-contact-shutdown-correction-2026-09-08).
+Both ABI shapes, tags and bodies were preserved; the tracked checkpoint was not refreshed.

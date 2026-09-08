@@ -180,6 +180,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # segment-controller-ownership: exact four names/comments/tag sets, 2026-09-08.
 # Isolated apply and separate full readback changed only the declared fields;
 # 8,326 other rows, all ABI/body metadata and non-comment program metrics held.
+# air-contact-shutdown: two names/comments, independently reviewed after
+# isolated apply/readback on 2026-09-08; 8,328 other rows and frozen fields held.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -198,6 +200,7 @@ LIVE_GRANTED_COHORTS = [
     "mesh-bounding-box-metadata",
     "bounds-contract-comments",
     "segment-controller-ownership",
+    "air-contact-shutdown",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -622,6 +625,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "mesh-bounding-box-metadata",\n'
         '        "bounds-contract-comments",\n'
         '        "segment-controller-ownership",\n'
+        '        "air-contact-shutdown",\n'
         "    };\n",
     ),
     (

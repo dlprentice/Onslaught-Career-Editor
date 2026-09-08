@@ -258,6 +258,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "mesh-bounding-box-metadata",
         "bounds-contract-comments",
         "segment-controller-ownership",
+        "air-contact-shutdown",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

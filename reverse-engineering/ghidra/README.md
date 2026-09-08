@@ -328,6 +328,39 @@ It was copied, hash-compared, restored elsewhere and opened read-only successful
 `9aa80129d73e9d0cf5eca20a23972cd45a6f9c5cc6a3417e9bd6c243f63b25e5`.
 The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
 
+## Air-contact shutdown correction (2026-09-08)
+
+The working project now measures `db.18641`: 18 payload files, 118,967,156 bytes,
+canonical inventory SHA-256
+`00b7454c77b3afbe329f613d5bda15d117f3e132bb5e3bd25748214f2df562f1`.
+Its main database is 68,665,344 bytes, SHA-256
+`7b090c03af8297d3ac1fc479058bb7784ad79d43f9e79938e39d082d5e21f6ca`.
+The [manifest](../../tools/cohort-specs/air-contact-shutdown.manifest.tsv) and
+[spec](../../tools/cohort-specs/air-contact-shutdown.spec.tsv) correct exactly
+the names and nonrepeatable comments at `0x00403ba0` and `0x004d1f10`.
+The [Plane contact evidence](../binary-analysis/functions/Plane.cpp/CPlane__Hit_CheckFatalDamageAndDie.md)
+distinguishes contact-triggered shutdown from fatal damage and leaves the shared
+handler's declaring class uncertain. These are analyst role names.
+
+Fresh PRE identity, isolated apply, independent review, sealed checks, live
+dry/apply and separate readback passed. Exactly two function rows changed;
+8,328 stayed identical. Bodies, ABI, tags and repeatable comments remained
+unchanged. Program metadata changes only its comment digest. Full live exports
+equal the separately reopened rehearsal POST. Framework derivation/comment
+checks passed 11/11. Evidence is under
+`local-lab/ghidra-first-training-20260907-v1/air-contact-shutdown/`;
+`live-readback.json` is 2,283 bytes, SHA-256
+`f8d23d4bb32ed9b535594494080979ffaa4f74db43c9dc24eea15f3c72f2ce43`.
+
+The restore-proven segment-controller POST matched live and served as PRE.
+The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-08-air-contact-shutdown/post-working/`.
+It was copied, hash-compared, restored elsewhere and opened read-only successfully.
+`post-working-restore.json` is 5,724 bytes, SHA-256
+`5d30061c04776b960ff8e3a0c03aa6cb27cdcd638f84b22a7dbfd104dac59a21`.
+The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
+Current documentation names additionally compose this exact two-row manifest.
+
 Related (not this folder):
 
 | Role | Path |
