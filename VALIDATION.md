@@ -139,6 +139,17 @@ and restoring the schema reproduces the complete v6 payload exactly. Logs are
 poses/eligibility remain explicit; this does not validate the segment lifecycle
 or connect the report to Simulation's explosion path.
 
+The Warehouse immediate core2 cascade passed **40/40** contact tests and
+**4/4** cold-start/pointer-route checks. Four causal expectations first failed
+against the old single-part break. The correction preserves reverse child-list
+order, leaves queued chimney parts unchanged, rejects a short event buffer before
+mutation, and preserves component health/eligibility through snapshots and hashes.
+Logs are `warehouse-cascade-red-behavior-20260908.log`,
+`warehouse-cascade-final-20260908.log` and `warehouse-cascade-routes-20260908.log`
+in the Linux run directory above. The snapshot test uses a component serialization
+envelope, not a complete matching-registry runtime restore. Queued lifecycle,
+debris rendering and native controller notification order remain open.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

@@ -545,7 +545,9 @@ public sealed class Level100DestructionState
     /// the shared explosion resolver, even where existing tutorial tests pass.
     /// </summary>
     public const uint MechBulletDamageBits = 0x3DA5E354;
-    public const int MaximumEventsPerHit = 8;
+    // The admitted Warehouse has 28 parts. Reserve one detach per part plus
+    // impact, direct damage and the two existing threshold/terminal projections.
+    public const int MaximumEventsPerHit = 28 + 4;
 
     private const uint WarehouseTerminalFractionBits = 0x3E99999A;
     private const uint WarehouseHalfFractionBits = 0x3F000000;
@@ -915,14 +917,20 @@ public sealed class Level100DestructionState
             hit.SurfacePoint));
         if (remaining <= 0)
         {
-            _partActivity[hit.PartIndex] = 0;
-            writer.Add(new Level100DestructionEvent(
-                Level100DestructionEventKind.SegmentDetached,
-                Level100DestructionEffectKind.None,
-                ActorId,
-                hit.PartIndex,
-                0,
-                hit.SurfacePoint));
+            DetachWarehouseSegment(hit.PartIndex, hit, ref writer);
+            // In the pinned Warehouse, core2 (part 1) is the only damageable
+            // Core and all its direct children are Extra segments. Common
+            // Core break invokes those children synchronously, in reverse
+            // authored order because construction inserts at the list head.
+            // Retail Extras queue their own children; those events remain
+            // unimplemented here, so do not walk descendants synchronously.
+            // Other meshes' positive-health Core collapse is not modeled here.
+            if (hit.PartIndex == 1)
+            {
+                ReadOnlySpan<int> children = _definition.PartArray[1].FloatGeometry.Children.Span;
+                for (int index = children.Length - 1; index >= 0; index--)
+                    DetachWarehouseSegment(children[index], hit, ref writer);
+            }
         }
 
         float activeInitial = SumActiveInitialHealth(0);
@@ -946,6 +954,26 @@ public sealed class Level100DestructionState
         {
             SetTerminal(hit, ref writer);
         }
+    }
+
+    private void DetachWarehouseSegment(
+        int partIndex,
+        in Level100ContactHit cause,
+        ref EventWriter writer)
+    {
+        if (_partActivity[partIndex] == 0)
+            return;
+        _currentHealthBits[partIndex] = 0;
+        _partActivity[partIndex] = 0;
+        // A collateral common break zeros health without another damage call.
+        // Position is the cause anchor, not a measured debris emission point.
+        writer.Add(new Level100DestructionEvent(
+            Level100DestructionEventKind.SegmentDetached,
+            Level100DestructionEffectKind.None,
+            ActorId,
+            partIndex,
+            0,
+            cause.SurfacePoint));
     }
 
     private void SetTerminal(

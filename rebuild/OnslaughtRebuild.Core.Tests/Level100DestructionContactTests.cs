@@ -389,7 +389,7 @@ public sealed class Level100DestructionContactTests
     }
 
     [Fact]
-    public void WarehouseUsesExtentWeightsAndDetachesOnlyTheHitSegment()
+    public void WarehouseUsesExtentWeightsAndDetachesALeafSegment()
     {
         Level100ContactDefinition warehouse =
             Level100ContactCatalog.Instance.GetDefinition("Warehouse");
@@ -445,12 +445,123 @@ public sealed class Level100DestructionContactTests
 
         Assert.True(state.Terminal);
         Assert.Equal(0, state.ContactPartActivity.Span[1]);
-        Assert.Equal(1, state.ContactPartActivity.Span[2]);
+        Assert.Equal(0, state.ContactPartActivity.Span[2]);
         Assert.Contains(
             events.AsSpan(0, terminalCount).ToArray(),
             item => item.Kind == Level100DestructionEventKind.Terminal &&
                 item.EffectKind ==
                     Level100DestructionEffectKind.FacilityDestroyed);
+    }
+
+    [Fact]
+    public void WarehouseLethalCoreBreaksImmediateChildrenInSegmentListOrder()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var before = state.CaptureSnapshot();
+        var events = new Level100DestructionEvent[32];
+        Level100ContactHit hit = Hit(102, 1);
+        int count = state.ApplyRoundHit(hit, state.GetCurrentSegmentHealthBits(1),
+            Level100DestructionEffectKind.PulseImpact, events);
+
+        Assert.Equal(25, count);
+        Level100DestructionEvent[] detached = events[..count]
+            .Where(item => item.Kind == Level100DestructionEventKind.SegmentDetached).ToArray();
+        // Native construction pushes authored children onto the head of the
+        // segment list. These are immediate children; chimney events are queued.
+        Assert.Equal(new[] { 1, 26, 23, 21, 18, 17, 16, 15, 14, 13, 12,
+            11, 10, 9, 8, 7, 6, 5, 4, 3, 2 }, detached.Select(item => item.PartIndex));
+        Assert.All(detached, item =>
+        {
+            Assert.Equal(Level100DestructionEffectKind.None, item.EffectKind);
+            Assert.Equal(hit.SurfacePoint, item.Position); // cause anchor, not debris origin
+            Assert.Equal(0u, state.GetCurrentSegmentHealthBits(item.PartIndex));
+            Assert.Equal(0, state.ContactPartActivity.Span[item.PartIndex]);
+        });
+        Assert.Equal(1, Assert.Single(events[..count],
+            item => item.Kind == Level100DestructionEventKind.SegmentDamaged).PartIndex);
+        int[] surviving = [0, 19, 20, 22, 24, 25, 27];
+        Assert.Equal(surviving, Enumerable.Range(0, warehouse.PartCount)
+            .Where(index => state.ContactPartActivity.Span[index] != 0));
+        foreach (int index in surviving)
+            Assert.Equal(before.CurrentHealthBits.Span[index], state.GetCurrentSegmentHealthBits(index));
+    }
+
+    [Fact]
+    public void WarehouseExtraBreakDoesNotImmediatelyPropagateToChimneys()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var before = state.CaptureSnapshot();
+        var events = new Level100DestructionEvent[Level100DestructionState.MaximumEventsPerHit];
+        int count = state.ApplyRoundHit(Hit(102, 18), state.GetCurrentSegmentHealthBits(18),
+            Level100DestructionEffectKind.PulseImpact, events);
+        Assert.Equal(18, Assert.Single(events[..count],
+            item => item.Kind == Level100DestructionEventKind.SegmentDetached).PartIndex);
+        foreach (int index in new[] { 19, 20 })
+        {
+            Assert.Equal(1, state.ContactPartActivity.Span[index]);
+            Assert.Equal(before.CurrentHealthBits.Span[index], state.GetCurrentSegmentHealthBits(index));
+        }
+    }
+
+    [Fact]
+    public void WarehouseCascadeRejectsShortEventBufferBeforeChangingState()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var before = state.CaptureSnapshot();
+        var events = new Level100DestructionEvent[31];
+        Assert.Throws<ArgumentException>(() => state.ApplyRoundHit(Hit(102, 1),
+            state.GetCurrentSegmentHealthBits(1), Level100DestructionEffectKind.PulseImpact, events));
+        var after = state.CaptureSnapshot();
+        Assert.Equal(before.CurrentHealthBits.ToArray(), after.CurrentHealthBits.ToArray());
+        Assert.Equal(before.PartActivity.ToArray(), after.PartActivity.ToArray());
+        Assert.Equal(before.Terminal, after.Terminal);
+        Assert.Equal(before.BelowHalfReported, after.BelowHalfReported);
+        Assert.All(events, item => Assert.Equal(default, item));
+    }
+
+    [Fact]
+    public void WarehouseCascadeSnapshotRestoresHealthEligibilityAndHash()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var events = new Level100DestructionEvent[32];
+        int count = state.ApplyRoundHit(Hit(102, 1), state.GetCurrentSegmentHealthBits(1),
+            Level100DestructionEffectKind.PulseImpact, events);
+        var snapshot = state.CaptureSnapshot();
+        var restored = new Level100DestructionState(102, warehouse);
+        restored.Restore(snapshot);
+        Assert.Equal(0, restored.ContactPartActivity.Span[2]);
+        Assert.Equal(1, restored.ContactPartActivity.Span[0]); // zero health is still eligible
+        Assert.Equal(snapshot.CurrentHealthBits.ToArray(), restored.CaptureSnapshot().CurrentHealthBits.ToArray());
+        Assert.Equal(snapshot.PartActivity.ToArray(), restored.ContactPartActivity.ToArray());
+        WorldSnapshot original = new Simulation(0x100u, Level100TestActorDefinitions.Create()).Snapshot with
+        {
+            Level100Destruction = new([snapshot]),
+            Level100DestructionEvents = events[..count],
+        };
+        Assert.Equal(StateHasher.ComputeHex(original), StateHasher.ComputeHex(original with
+        {
+            Level100Destruction = new([restored.CaptureSnapshot()]),
+        }));
+        foreach (bool changeHealth in new[] { true, false })
+        {
+            uint[] health = snapshot.CurrentHealthBits.ToArray();
+            byte[] activity = snapshot.PartActivity.ToArray();
+            if (changeHealth) health[2] = 0x3f800000;
+            else activity[2] = 1;
+            // Change one collateral field only, retaining terminal state and
+            // every event; neither array may disappear from canonical hashing.
+            var altered = new Level100DestructionSnapshot(snapshot.ActorId, snapshot.DefinitionName,
+                snapshot.CurrentLifeBits, snapshot.Terminal, snapshot.BelowHalfReported,
+                snapshot.InitialHealthBits.ToArray(), health, activity);
+            Assert.NotEqual(StateHasher.ComputeHex(original), StateHasher.ComputeHex(original with
+            {
+                Level100Destruction = new([altered]),
+            }));
+        }
     }
 
     [Fact]

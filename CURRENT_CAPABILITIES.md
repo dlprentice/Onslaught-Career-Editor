@@ -563,10 +563,10 @@ Two further isolated repetitions then removed the Warehouse objective
 after exactly twelve normal hits along one fixed center-aim attack line and
 repeated the released player-off,
 Vulcan-message, Pulse-off/Vulcan-on handoff. That observation remains a bounded
-runtime comparison. Core has extent-weighted 28-segment health, but its break
-and queued-collapse lifecycle remains incomplete. A lethal main-core hit must
-disable attached parts synchronously and queue the chimney breaks; the current
-implementation clears only the hit part. Godot
+runtime comparison. Core has extent-weighted 28-segment health and now disables
+the main core's 20 direct Extra children in the native list order when that core
+breaks. The six queued chimney breaks, pending-collapse state and debris effects
+remain unfinished. Godot
 removes each completed objective and radar marker,
 uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded

@@ -496,12 +496,21 @@ collapse state at `+0x4c`, excluded from active-value sums while still collision
 eligible. Missing renderer/mesh suppresses child propagation after the current
 segment's latch changes.
 
-The current destruction state clears only the hit part, suppresses damage at
-terminal/inactive/zero-health gates, and reports final death immediately. It
-does not yet own these queued collapse states or the native frozen-report
-consumer. The existing test expecting part 2 to remain active after lethal
-part 1 describes that implementation and contradicts the loaded retail cascade;
-it must change with the lifecycle correction, not serve as a retail oracle.
+The current destruction state now implements that synchronous core2 cascade.
+Native construction traverses authored children forward and inserts each at the
+head of the segment list; the resulting detach order is **1, 26, 23, 21, 18,
+17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2**. Each newly broken
+part loses health and eligibility. Collateral breaks emit informational detach
+events without synthetic damage calls; their position is the causing hit's
+anchor, not a debris origin. The caller reserves 32 events before any mutation.
+Snapshot fields already preserve the affected health/activity words.
+
+This correction is bounded to the admitted Warehouse's only damageable Core
+and its direct Extra children. Queued child events/RNG, positive-health Core
+collapse, amount/time writes and the native frozen-report consumer remain
+unimplemented. Terminal/inactive/zero-health damage gates and immediate final
+death are still approximations. The existing threshold/terminal event projection
+order is not claimed to match native controller notification order.
 Relevant freshly checked half-open body pins are:
 
 | Contract | Range | SHA-256 |
@@ -513,6 +522,10 @@ Relevant freshly checked half-open body pins are:
 | Core break/pending collapse | `00443660–004436c5` | `8bf6a7196af14602e2e873e9e1806a47cb97d49e503b349c95e2d86b8385f0c2` |
 | Extra damage | `00443890–004439ba` | `d1931190e5ca78fec9571aea05c415192948f33ed8875687fa05961f2dd6b976` |
 | Extra break wrapper | `004439c0–004439e4` | `608b9ec2c64dd44d4dbd9dde02c7371429851499239aa2fbf8a3411e6f69778c` |
+| Create and attach child | `00444e2a–00444e55` | `ecd06bf007b22253f7b3052f44659b848769e085f7218568125542070130005b` |
+| Forward authored-child traversal | `00444e7f–00444ea8` | `2fe8bcdd770916d8e465606c5c8e130b0a29c8ec207176003b30bc49fe5514f5` |
+| Segment child-list attachment | `00442700–00442710` | `b40beed727fdc4831bb2e956f6688ee8dbd1eef70ae99db9a2fb0f59661ab531` |
+| List-head insertion | `004e5afa–004e5b1c` | `bfac642227179444912f054936f1dda88188ba687b80ee450d71ec978fa468de` |
 
 The selected Warehouse mesh has 28 parts, including six geometry references.
 All parts have one HPOS/HORI hierarchy frame and 101 zero VHFM entries, but only
