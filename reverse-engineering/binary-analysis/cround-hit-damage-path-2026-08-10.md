@@ -403,12 +403,47 @@ the canonical snapshot/hash. Simulation drains the START lane after controller
 input and before actor/mission callbacks only when its event clock advanced.
 
 This corrects the lifetime in the existing quantized contact/renderer path. It
-does not integrate retail MapWho or the spatial explosion scan. The current
-ground mechanics still stop non-Alive velocity; dying movement/pose remains a
-separate mismatch. The Drone's immediate-terminal shortcut also remains: its
+does not integrate retail MapWho or the spatial explosion scan. Ground pending
+movement now retains the full/lite cadence described below. The Drone's
+immediate-terminal shortcut remains: its
 CAirUnit path can later request shutdown below negative maximum life or on
 permitted contact, and its script's Died event has a different tutorial role.
 No new live retail/Godot death, audio, motion or visual parity is claimed.
+
+### Ground movement during the shutdown interval
+
+The same pristine specimen shows that `TF_DYING` does not cancel scheduled
+movement. `CActor::HandleEvent` dispatches event 3001 to the inlined lite move:
+copy current position to old position, add retained XYZ velocity, and conditionally
+clip terrain. It leaves old orientation and velocity unchanged. Event 3000 calls
+the full Move. Ground's dying guide then invokes `0x004fcf00`, which zeros drive
+and velocity before Actor Move captures the full old pose. With multiplier four,
+there can be up to three intervening translations before that stop. Unit's full
+guide condition admits active **or dying**, so deactivation does not cancel this
+pending phase. Source correspondence: `references/Onslaught/actor.cpp:53–70,
+211–257`; Ground/Unit guide bodies are retail evidence.
+
+Ground vtable `0x005e297c` slot 44 returns ClipToGround=1; slot 48 returns
+COfGHeight=0.1. At Core's existing projection this is
+`Y = max(candidateY, terrainY + 100 mm)`, including equality, not a snap down
+from above terrain. The clamp does not replace velocity with displacement.
+
+| Re-read half-open extent | SHA-256 |
+| --- | --- |
+| Actor HandleEvent `0x004019e0..0x00401b4f` | `6df8c9bbe75b4713fc62568f31317e25b13be3d521edf1e0446cce36282cc15f` |
+| Ground dying guide arm `0x0047d750..0x0047d778` | `29a46d1dd4b9c38e62943c5ac655ab3626fcfbfc675db6efda8e2a13305aeaf0` |
+| Stop body `0x004fcf00..0x004fcf91` | `38d23e2ced9026efcc64bf4ea99cef9db99acf2c9226c5d98bf1cb410b4f404c` |
+| Full Actor Move `0x004015e0..0x004018fa` | `083c7a029afed634fa4108036a3057355e7dc3b78f8716f5d6588d49f8505a23` |
+| COfG getter `0x0050e960..0x0050e967` | `78049bb48824b378995b546473c06510309e220b0017366478095dfe024c02bd` |
+
+`Level100ActorMechanics` now preserves that cadence, lite position-only capture,
+retained velocity and conditional clamp until removal, without waypoint steering
+or completion. Its initial full-update phase alignment and Alive velocity still
+use the existing quantized model; Alive vertical velocity is currently terrain
+displacement. Native float velocity, contact timestamps, full tilt/bob, water
+callbacks and spatial registration remain open. The focused four-phase test
+first failed against the immediate-stop implementation; restore, deactivation
+and Tank/Truck clamp controls are deterministic checks, not a retail playthrough.
 
 ### Warehouse segmented explosion report
 

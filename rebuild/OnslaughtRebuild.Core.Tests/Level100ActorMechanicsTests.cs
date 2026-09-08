@@ -166,6 +166,115 @@ public sealed class Level100ActorMechanicsTests
                 .AngularVelocityMicroRadiansPerTick);
     }
 
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, true)]
+    [InlineData(3, true)]
+    [InlineData(1, false)]
+    public void DyingGroundVehicleRetainsLiteMovementUntilNextFullUpdate(int phase, bool active)
+    {
+        // CActor::HandleEvent (retail 0x004019e0), actor.cpp:53-70, 211-257:
+        // dying does not cancel LF_MOVE. Only the next full Ground guide
+        // invokes the velocity reset; lite updates copy old position only.
+        var definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId target = actors.GetThingRef("Target Tank 2")!.Value;
+        var mechanics = new Level100ActorMechanics(actors, definitions);
+        mechanics.ApplyCommand(Command(1, target,
+            Level100ActorScriptCommandKind.FollowWaypointWait,
+            argument: "Target Tank Path 1"));
+        mechanics = new Level100ActorMechanics(actors, definitions, mechanics.Snapshot with
+        {
+            Actors = mechanics.Snapshot.Actors.Select(item => item with
+                { GroundFullGuideBaseTickPhase = phase }).ToArray(),
+        });
+        actors.SetPose(target, actors.GetPose(target) with
+        {
+            PositionMillimeters = new SimVector3(2000, 100000, 2000),
+            BasisFloatBits = IdentityBasis(),
+        });
+        actors.AdvancePose(target, actors.GetPose(target) with
+        {
+            PositionMillimeters = new SimVector3(2010, 100010, 2020),
+            BasisFloatBits = IdentityBasis() with
+                { Row0X = unchecked((int)0xbf800000), Row2Z = unchecked((int)0xbf800000) },
+            LinearVelocityMillimetersPerTick = new SimVector3(3, -2, 5),
+            AngularVelocityMicroRadiansPerTick = new SimVector3(4, 5, 6),
+        });
+        actors.SetHealth(target, 0);
+        Assert.True(actors.ReportGroundUnitDied(target));
+        if (!active) actors.Deactivate(target);
+
+        for (int tick = 0; tick < 5; tick++)
+        {
+            var before = actors.GetBaseState(target);
+            SimVector3 velocity = phase == 0 ? SimVector3.Zero : before.Velocity;
+            Assert.Empty(mechanics.AdvanceTick());
+            var after = actors.GetBaseState(target);
+            Assert.Equal(before.CurrentPose.PositionMillimeters, after.OldPose.PositionMillimeters);
+            Assert.Equal(phase == 0 ? before.CurrentPose.BasisFloatBits : before.OldPose.BasisFloatBits,
+                after.OldPose.BasisFloatBits);
+            Assert.Equal(before.CurrentPose.BasisFloatBits, after.CurrentPose.BasisFloatBits);
+            Assert.Equal(new SimVector3(
+                before.CurrentPose.PositionMillimeters.X + velocity.X,
+                before.CurrentPose.PositionMillimeters.Y + velocity.Y,
+                before.CurrentPose.PositionMillimeters.Z + velocity.Z), after.CurrentPose.PositionMillimeters);
+            Assert.Equal(velocity, after.Velocity);
+            Assert.Equal(SimVector3.Zero, after.AngularVelocity);
+            phase = (phase + 1) % 4;
+            Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors).GroundFullGuideBaseTickPhase);
+
+            // Restore while the cadence is still in flight; no new death or
+            // waypoint command may be needed to finish its remaining ticks.
+            if (tick == 0)
+            {
+                actors = new Level100ActorRegistry(definitions, actors.Snapshot);
+                mechanics = new Level100ActorMechanics(actors, definitions, mechanics.Snapshot);
+            }
+        }
+
+        actors.ShutdownGroundUnit(target);
+        var removed = actors.GetBaseState(target);
+        Assert.Empty(mechanics.AdvanceTick());
+        Assert.Equal(removed, actors.GetBaseState(target));
+        Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors).GroundFullGuideBaseTickPhase);
+    }
+
+    [Theory]
+    [InlineData("Target Tank", "TargetTank1")]
+    [InlineData("Target Truck", "TargetTruck1")]
+    public void DyingGroundLiteClampPreservesRetainedVelocity(string definition, string script)
+    {
+        var definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId target = Assert.Single(actors.SpawnThing(
+            actors.GetThingRef("Tank Factory")!.Value, definition, "SpawnerA", 1, script));
+        var mechanics = new Level100ActorMechanics(actors, definitions);
+        mechanics.ApplyCommand(Command(1, target, Level100ActorScriptCommandKind.SetAIState));
+        mechanics = new Level100ActorMechanics(actors, definitions, mechanics.Snapshot with
+        {
+            Actors = mechanics.Snapshot.Actors.Select(item => item with
+                { GroundFullGuideBaseTickPhase = 1 }).ToArray(),
+        });
+        int support = Level100Terrain.Instance.SampleGroundElevationMillimeters(new SimVector2(2000, 2000)) + 100;
+        var velocity = new SimVector3(0, -7, 0);
+        actors.SetPose(target, actors.GetPose(target) with
+        {
+            PositionMillimeters = new SimVector3(2000, support, 2000),
+            LinearVelocityMillimetersPerTick = velocity,
+        });
+        actors.SetHealth(target, 0);
+        actors.ReportGroundUnitDied(target);
+
+        Assert.Empty(mechanics.AdvanceTick());
+
+        var after = actors.GetBaseState(target);
+        Assert.Equal(new SimVector3(2000, support, 2000), after.CurrentPose.PositionMillimeters);
+        Assert.Equal(after.CurrentPose.PositionMillimeters, after.OldPose.PositionMillimeters);
+        Assert.Equal(velocity, after.Velocity); // Clamping is not a velocity write.
+    }
+
     [Fact]
     public void GroundVehicle_CoreVelocityMatchesEachTickAndSumsToNormalSpeed()
     {

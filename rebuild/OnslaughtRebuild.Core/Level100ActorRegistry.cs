@@ -1228,6 +1228,16 @@ public sealed class Level100ActorRegistry
         actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
     }
 
+    // LF_MOVE preserves old orientation and retained velocity, even when its
+    // terrain clamp changes the displacement. Angular velocity here is the
+    // compatibility view's reported turn on this update.
+    internal void AdvanceLowFidelityPosition(Level100ActorId actorId, SimVector3 position)
+    {
+        Actor actor = RequireMutable(actorId);
+        actor.BaseState.AdvanceLowFidelityPosition(position);
+        actor.BaseState.SetAngularVelocity(SimVector3.Zero);
+    }
+
     /// <summary>
     /// Same-tick synchronization after <see cref="AdvancePose"/> has already
     /// captured old pose, or a velocity/orientation-only update.
@@ -1505,13 +1515,15 @@ public sealed class Level100ActorRegistry
     /// one fire.
     /// </para>
     /// <para>
-    /// <b>The one term retail does not have.</b> A <c>GroundVehicle</c> keeps
+    /// <b>Ground support.</b> A <c>GroundVehicle</c> keeps
     /// <c>ground + CoreGroundOriginOffsetMillimeters</c> as its terrain
     /// support, which is the same expression
     /// <see cref="Level100ActorMechanics"/> applies on every base tick once
     /// the actor starts following a waypoint, so it does not jump the moment
-    /// it is first commanded to move. That offset is a Core pivot convention,
-    /// not a retail placement rule, and it is deliberately NOT applied to the
+    /// it is first commanded to move. During movement retail does have the
+    /// 0.1-unit support term: vtable 0x005e297c slot 48 -> 0x0050e960.
+    /// Applying it at initial seating remains a separate Core placement
+    /// convention; it is deliberately NOT applied to the
     /// water support or to any other class — the renderer's own seat at
     /// <c>Level100StaticWorldAsset.Load</c> spells the unoffset
     /// <c>max(authored, terrain, water)</c>, and Core and the renderer must

@@ -369,9 +369,13 @@ blasts, Large effects and precise float motion/expiry remain open. Tank/Truck
 death now retires the script immediately while retaining collision/render
 activation until the retail half-second shutdown bucket. Further accepted damage
 still lowers life; death callbacks and the timer remain one-shot. Pending
-shutdown order/timing survive restore and canonical hashing. Dying ground motion
-and the Drone's different shutdown conditions remain incomplete. These changes have not had a live
-desktop playthrough; focused results are in [VALIDATION.md](VALIDATION.md).
+shutdown order/timing survive restore and canonical hashing. Pending ground
+motion now preserves the four-update cadence: retained velocity on intervening
+updates, then the full-update stop, with distinct old-position/old-orientation
+rules and conditional terrain support. Native float velocity, surface contact
+times, terrain tilt/bob and the Drone's different shutdown/motion conditions
+remain incomplete. These changes have not had a live desktop playthrough;
+focused results are in [VALIDATION.md](VALIDATION.md).
 
 World 110 now prepares the four landing-craft turret constructor inputs from
 real owner identities and the shared `Component`/1 mesh attachment. The

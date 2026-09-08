@@ -180,6 +180,19 @@ smoke passed **1/1** (`ground-shutdown-client-20260908.log`). The intermediate f
 immediate-removal expectations and their corrections. These are deterministic
 tests and static-byte contracts, not a native retail/Godot death playthrough.
 
+Pending ground movement passed **83/83** focused mechanics, base-state,
+contact and tutorial-progression tests (`ground-dying-motion-final-20260908.log`
+in the same directory). All four cadence positions first failed against the
+immediate-stop implementation (`ground-dying-motion-red-behavior-20260908.log`).
+The final selection covers retained lite velocity, full-update stop, distinct
+old position/orientation, mid-phase restore, deactivated pending actors and
+Tank/Truck terrain clamping without a velocity rewrite. The earlier `red` log
+records a corrected test literal compilation error, not a behavioral result.
+Native float motion, initial cadence alignment and full surface behavior remain
+open. The subsequent cold-start/pointer/handoff selection passed **5/5**
+(`ground-dying-motion-routes-20260908.log`) without driver or fingerprint changes.
+These results do not establish live play parity.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

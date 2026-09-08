@@ -302,6 +302,18 @@ public sealed class ThingActorBaseState
     }
 
     /// <summary>
+    /// Source <c>CActor::LowFidelityMove</c> (actor.cpp:53-70): capture only
+    /// old position. Old orientation stays at the preceding full update.
+    /// The caller supplies the translated, conditionally clipped position.
+    /// </summary>
+    public void AdvanceLowFidelityPosition(SimVector3 position)
+    {
+        RequireMillimeterMode();
+        _oldPose = _oldPose with { PositionMillimeters = _currentPose.PositionMillimeters };
+        _currentPose = _currentPose with { PositionMillimeters = position };
+    }
+
+    /// <summary>
     /// Update current pose without starting another movement transition. A
     /// later phase of the same tick uses this after old pose was captured.
     /// </summary>

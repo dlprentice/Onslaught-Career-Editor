@@ -261,16 +261,19 @@ public sealed partial class Level100ActorMechanics
             if (motion?.MotionClass ==
                 Level100ActorMotionClass.GroundVehicle)
             {
-                if (actor.Active &&
-                    actor.Lifecycle ==
-                    Level100ActorLifecycle.Alive)
+                if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown ||
+                    (actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive))
                 {
                     bool fullGuideUpdate =
                         state.GroundFullGuideBaseTickPhase == 0;
                     state.GroundFullGuideBaseTickPhase =
                         (state.GroundFullGuideBaseTickPhase + 1) %
                         motion.FullGuideBaseTicks!.Value;
-                    if (state.Intent ==
+                    if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown)
+                    {
+                        AdvanceDyingGroundVehicle(state, motion, fullGuideUpdate);
+                    }
+                    else if (state.Intent ==
                         Level100ActorCommandIntent.FollowingWaypoint)
                     {
                         AdvanceGroundVehicle(
@@ -672,6 +675,38 @@ public sealed partial class Level100ActorMechanics
             bit >>= 2;
         }
         return checked((int)root);
+    }
+
+    private void AdvanceDyingGroundVehicle(
+        ActorState state, Level100ActorMotionDefinition motion, bool fullUpdate)
+    {
+        // Retail Ground guide 0x0047d750 -> 0x004fcf00 stops velocity on
+        // full MOVE only. Actor LF_MOVE retains velocity and old orientation
+        // between those calls (actor.cpp:53-70, 211-257). No waypoint update.
+        Level100ActorPoseSnapshot pose = _actors.GetPose(state.ActorId);
+        SimVector3 velocity = fullUpdate ? SimVector3.Zero : pose.LinearVelocityMillimetersPerTick;
+        int x = checked(pose.PositionMillimeters.X + velocity.X);
+        int z = checked(pose.PositionMillimeters.Z + velocity.Z);
+        int y = Math.Max(checked(pose.PositionMillimeters.Y + velocity.Y),
+            checked(Level100Terrain.Instance.SampleGroundElevationMillimeters(new SimVector2(x, z)) +
+                motion.CoreGroundOriginOffsetMillimeters!.Value));
+        var position = new SimVector3(x, y, z);
+        if (fullUpdate)
+        {
+            _actors.AdvancePose(state.ActorId, pose with
+            {
+                PositionMillimeters = position,
+                LinearVelocityMillimetersPerTick = SimVector3.Zero,
+                AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
+            });
+        }
+        else
+        {
+            _actors.AdvanceLowFidelityPosition(state.ActorId, position);
+        }
+        // This is the existing millimetre motion projection. Native float
+        // velocity, contact timestamps, full terrain tilt/bob and water
+        // callbacks remain separate contracts, not inferred from this clamp.
     }
 
     private void AdvanceGroundVehicle(
