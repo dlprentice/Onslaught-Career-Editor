@@ -313,6 +313,13 @@ complete collision response and world load/reset remain unmeasured. Exact body
 hashes and implementation limits are in the same World110 evidence owner above.
 The payload stays ignored; no retail executable/decompiler body was added to Core.
 
+`RetailMapWho.SortAfterLoad()` implements the separately measured PostLoad
+operation at `0x4926e0`: layers 4 through 1, original-tail stop marker, preceding
+tree entries moved to the tail without replacing owners or the shared cursor.
+The 383-byte body hashes to
+`c8ced3c72ed01dc9539205197a096397950ea4cb3f58f757698c01b61fd63c37` in the
+same pristine specimen. It is not invoked prematurely during tree construction.
+
 The controlled decoder mutation swapped type-28 amount and mode while leaving
 the embedded bytes and hash valid. The exact squad fact failed with expected
 amounts `(5, 5, 3, 5, 4)` and actual `(0, 0, 0, 0, 0)`; byte-for-byte source

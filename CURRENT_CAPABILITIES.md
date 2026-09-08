@@ -370,6 +370,16 @@ unchanged. This prefix explicitly assumes nearest/53-bit arithmetic and takes
 an incoming RNG seed; it does not establish the retail load's FP environment,
 final tree yaw, full collision response or a playable World110.
 
+The spatial index also implements retail's later PostLoad sort, preserving its
+original-tail stop rule and leaving layer 0 untouched. It is not called during
+the incomplete tree prefix. The expanded selection passed **73/73 Core facts**;
+an intentional layer-0 defect failed the relevant fact and restoration passed.
+Static RE now identifies the first three Buildings' render/animation path and
+the six Features' profile, geometry and occupancy requirements. These ordinary
+objects remain uninitialized in Core. The
+[World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
+links their shared contracts and retains the unresolved startup FP/seed boundary.
+
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu
 (New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`

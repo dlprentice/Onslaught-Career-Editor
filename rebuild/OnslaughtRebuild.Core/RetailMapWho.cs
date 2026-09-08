@@ -6,6 +6,7 @@ public interface IRetailMapWhoOwner
 {
     int Identity { get; }
     Level100FloatVector3Bits PositionFloatBits { get; }
+    uint ThingTypeMask { get; }
 }
 
 public readonly record struct RetailMapWhoSector(int X, int Y, int Layer);
@@ -14,8 +15,9 @@ public readonly record struct RetailMapWhoSector(int X, int Y, int Layer);
 /// Mutable, owner-bound sector lists. Pristine 74154bfa…7750:
 /// Init 4919b0, radius 491c50, add/remove 491cd0/491d20, shared cursor
 /// 491d80/491d90, coordinate conversion 492670, update 492ca0.
-/// Initial collision traversal is 480a30/480e10. Radius/line queries,
-/// later PostLoad Sort and moved-sector collision effects are not implemented.
+/// Initial collision traversal is 480a30/480e10. Radius/line queries
+/// and moved-sector collision effects are not implemented. Sort 4926e0 is
+/// exposed for the later PostLoad phase, not run during object construction.
 /// </summary>
 public sealed class RetailMapWho
 {
@@ -123,6 +125,41 @@ public sealed class RetailMapWho
     }
 
     public Entry? NextInSector() => _cursor = _cursor?.Next;
+
+    /// <summary>
+    /// Retail PostLoad (call at 46d23a) sorts layers 4 through 1. Each sector's
+    /// original tail is a stop marker and is never examined; preceding trees
+    /// move to the current tail. An all-tree [A,B,C] becomes [C,A,B], so this
+    /// is neither a stable partition nor an idempotent operation. Entries,
+    /// owner state and the shared query cursor survive the relinking.
+    /// </summary>
+    public void SortAfterLoad()
+    {
+        for (int layer = 4; layer >= 1; layer--)
+            for (int x = 0; x < (4 << layer); x++)
+                for (int y = 0; y < (4 << layer); y++)
+                {
+                    Entry? current = _heads[layer][Index(new(x, y, layer))];
+                    if (current is null) continue;
+                    Entry originalTail = current;
+                    while (originalTail.Next is not null) originalTail = originalTail.Next;
+                    Entry tail = originalTail;
+                    while (current is not null && !ReferenceEquals(current, originalTail) &&
+                           current.Next is not null)
+                    {
+                        Entry next = current.Next;
+                        if ((current.Owner.ThingTypeMask & 0x02000000) != 0)
+                        {
+                            Unlink(current);
+                            current.Next = null;
+                            current.Previous = tail;
+                            tail.Next = current;
+                            tail = current;
+                        }
+                        current = next;
+                    }
+                }
+    }
 
     /// <summary>
     /// Walks actual lists, including the caller entry. The collision owner must

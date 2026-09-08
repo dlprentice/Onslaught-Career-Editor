@@ -68,7 +68,7 @@ are not a completed session or a reason to claim 100→110 play.
 
 The complete static Actor/base and Unit initialization order is now recorded in
 the existing [Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
-and [World-110 owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+and [Unit owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Init.md).
 Implementing that order still requires actual render/mesh state, collision and
 publication effects, and recursive child initialization; static body closure
 does not complete those runtime objects.
@@ -86,7 +86,12 @@ seed and uses a stated nearest/53-bit arithmetic assumption. It shares object/
 reader identity allocation with subsequent detached player shells. Actual retail
 FP/seed state, final tree orientation, complete collision response and ordinary
 actor initialization remain open. The first lander/child collision exclusions
-and separate Unit/animation/AI listeners are recorded in the World-110 owner.
+and separate Unit/animation/AI listeners are recorded in the
+[World-110 owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md),
+along with the first three Buildings' render/animation route and the Feature
+contract. PostLoad spatial sorting is implemented separately and awaits the
+complete load sequence. Startup RE narrows the seed/FP witnesses without claiming
+those runtime values were measured.
 Next, connect ordinary object Init to these shared spatial, event and RNG owners;
 do not restore an empty-peer adapter or call the world playable.
 The old test-only Simulation route that ran Level100 Setup under a World110

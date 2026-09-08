@@ -184,8 +184,17 @@ and shared cursor. Initial scans visit descending layers, X-outer/Y-inner 3×3
 neighbors, with child slots (0,0),(1,0),(0,1),(1,1) recursively visited before
 parent entries only at the starting layer. Every list uses the shared cursor
 and reads its successor after the callback. Nested queries or list mutations
-therefore affect continuation; a captured array is not equivalent. Later
-PostLoad Sort, radius/line queries and movement collision effects remain open.
+therefore affect continuation; a captured array is not equivalent.
+
+The later PostLoad call at `0x46d23a` reaches Sort `0x4926e0` after player Init.
+`RetailMapWho.SortAfterLoad()` now implements that separate operation: layers
+4 down to 1, X-outer/Y-inner, leaving layer 0 untouched. Each sector's original
+tail is an excluded stop marker. Preceding entries with type bit `0x02000000`
+move to the current tail, continuing through their captured old successor.
+An all-tree `[A,B,C]` therefore becomes `[C,A,B]`; calling again rotates again.
+The operation preserves entries, registration, counts and the shared query
+cursor. It is not called during the incomplete tree-construction prefix.
+Radius/line queries and movement collision effects remain open.
 
 **Numerical admission:** the factory takes the incoming shared RNG state
 explicitly and currently selects binary64 arithmetic, nearest float32 stores
@@ -197,6 +206,40 @@ actual placements differ among floor/nearest/ceiling. The first pine maps to
 integer-rounding parameter tests that particular law; it is not a complete
 alternative x87 environment. Capture the control word and seed at the first
 Tree Init when desktop/runtime work is available.
+
+The startup path now narrows those unknowns. `CGame::InitRestartLoop` calls
+the seed setter with 123456 at `0x46c7eb`, then publishes the stream at
+`Game+0x304` (`0x8a9d9c`) at `0x46c80d`. The setter writes both current state
+`+0` and reset seed `+4`. This is **not** proof of 123456 at the first pine:
+first entry subsequently loads resources and initializes resource consumers;
+retries skip that one-off phase but still initialize restart textures. Both
+routes pass loading-screen callbacks that can pump Windows messages. The
+transitive resource/cache and message/device-reset leaves remain unclosed.
+The 35 ordinary BSWD allocations do not call their class Init at this point;
+the procedural-tree draws use a separate stack-local stream and World110's
+procedural count is zero. Message-box portrait draws also use a separate stream.
+
+CRT startup requests precision 53 through `0x560cb1`, passing
+`(0x10000,0x30000)` to `0x56947e`; its mask preserves incoming rounding control.
+The compiled executable then uses **Direct3D9**, despite the pinned source's
+D3D8 names: `0x5290ba` passes SDK version 31 to imported `Direct3DCreate9`.
+Device mode flags are `0x50/0x40/0x80/0x20`, with only optional `0x100` added
+before CreateDevice at `0x52b2d6`; `FPU_PRESERVE` is absent. Microsoft's
+[device-creation contract](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dcreate)
+specifies single precision and nearest rounding without that flag. That API
+contract makes carrying the CRT's precision forward unjustified; it does not
+measure this installation's Proton/device behavior. CreateDevice and Reset
+(`0x52b28d`, resize `0x52b781`) remain external boundaries. The inspected
+application load path does not reassert a standing control word. Temporary CRT
+conversion/math and texture-parser changes restore their caller's state.
+
+The decisive future witness is the first BSWD pine at `0x4f6080`, reached from
+the explicit-tree call `0x50ced8` (return `0x50cedb`): capture the raw x87 control
+word and current RNG state: first read the stream pointer stored at
+`0x8a9d9c`, then the signed dword at that pointer. At entry ECX is the Tree and
+`[ESP+4]` its initializer. Recheck the current stream immediately before the
+draw at `0x4f61a2`; stream `+4` is only the original seed. No such runtime
+capture was taken in this pass.
 
 The random selector also does **not** establish final standing yaw. Init leaves
 the matrix cache dirty. The first normal matrix query replaces the selector
@@ -216,10 +259,15 @@ No Ghidra database or retail process was opened.
 | MapWho Init `[0x4919b0,0x491c4b)` | 667 | `633606b81f640cd5c00a308dfa8f73ebf0d7b81cdd2b7dc90c3116b4505e9288` |
 | Radius layer `[0x491c50,0x491ccf)` | 127 | `162737eb8441c675a372b5e8a8659b03e7dc5155a2f1699ad08d52c28bf621a9` |
 | World-to-sector `[0x492670,0x4926dd)` | 109 | `dbda2072298393de6f225842734bc10876e06f635994f1db94e6cb82c98b6ea8` |
+| PostLoad sort `[0x4926e0,0x49285f)` | 383 | `c8ced3c72ed01dc9539205197a096397950ea4cb3f58f757698c01b61fd63c37` |
 | Entry Init `[0x492ba0,0x492c58)` | 184 | `1f4a1f596520e4f7d5e42e5bac52cb848cde7c91a42e5a5bbf8450a5779ce7ec` |
 | Persistent Init `[0x4269b0,0x4269f6)` | 70 | `bd4cf3f803c5d5a661b2d81ef96d1c2753a6ba4be722a4d1c6673ea96dedddd4` |
 | Readiness handler `[0x426a20,0x426a38)` | 24 | `0cf29c9c31fba213a38f5dfb2e4dbb21d7526f4d19fdbbcd5a64dca9ab82ea9b` |
 | Normal dirty matrix prefix `[0x4f6560,0x4f660c)` | 172 | `58de33539f7bf79083e77324ef79faf75bcb2310b4f60dd27e1fd63ac5501fa5` |
+| Restart seed/publication `[0x46c7e4,0x46c813)` | 47 | `f5ce72eafe33d332c4dde6ec0d9ca9489e4e61455ea507320ea9cc7ac0e7de58` |
+| Seed setter `[0x4de8c0,0x4de8ce)` | 14 | `7a4a171d93d770e2cafccfdbab191902d861d6ec69da0155ef41d121b426448d` |
+| Startup precision request `[0x560cb1,0x560cc3)` | 18 | `38dcf78aa3dab9d5e661a8e7fbaabcbab0399decb645b9d088bed196a65eef42` |
+| Device environment `[0x52af00,0x52b754)` | 2,132 | `bf98f3c6884486a9f4d40fed2a60d1b21641ea622fa85eb2aaeddc99a1a60379` |
 
 Pinned GPL source `thing.cpp:27-89`, `InitThing.cpp:68-86`,
 `InitThing.h:76-109,360-369`, and `engine.h:22` supply the base lifecycle,
@@ -262,8 +310,6 @@ values, completed constructors or a new campaign promotion.
 | Owner and export wave | Pristine range | Bytes | Raw SHA-256 |
 | --- | --- | ---: | --- |
 | Unit constructor, W007 | `[0x004f7e90,0x004f8133)` | 675 | `2cab5cde89e806bd13d6a24f625f47bf2a532aa2ea367ef0ae5d4253d12a80f6` |
-| Unit Init, W007 | `[0x004f86d0,0x004f91f2)` | 2,850 | `dc3c02ae147e701c9840db77698dd0277501cab30f94f897179c06c762f7b7fd` |
-| Unit fire-control refresh, W008 | `[0x004fb280,0x004fb3cd)` | 333 | `5b5e4bf168556d656135d5fb780e330347a7df11c1c953d2e969f4193ceb1f85` |
 | Weapon constructor, W008 | `[0x00505e00,0x00505f61)` | 353 | `13bb0ee57dc0d0c3fa34baa3b2f8dd18af2c041fbda58673a697dea0c44ad048` |
 | Weapon's shared Init slot, W003 | `[0x0044a830,0x0044a848)` | 24 | `f6ee4512a39314c5f69effe255c5a64d8d957845a0b3afe94b11afbd4d1b08a7` |
 | Attached-spawner constructor, W007 | `[0x004e37f0,0x004e39e6)` | 502 | `f1571f003e3cce18a002afcc109d48864fc6371d4d4d4c97668907392aa4930b` |
@@ -271,8 +317,8 @@ values, completed constructors or a new campaign promotion.
 | BasedOn profile copy, W002 | `[0x00433390,0x00433cd4)` | 2,372 | `f41c3a1dd0d000032b4868bbdda3a3d5811ba94be54fa4c23250ce3669193cb5` |
 
 Exports are under `local-lab/ghidra-fullpass-2026-07-23/exports/`, in the named
-wave's `decompile/` and `instructions.tsv`. The full Unit Init and fire-control
-bodies account for 914 matching instruction rows. The pinned GPL source remains
+wave's `decompile/` and `instructions.tsv`. The Unit Init owner carries that
+body and fire-control evidence. The pinned GPL source remains
 `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`; it contains `InitThing.h`,
 `InitThing.cpp` and `actor.cpp`, but no `Unit.cpp` or `Unit.h`. Source describes
 common initializer fields; it does not supply the missing Unit implementation.
@@ -281,20 +327,9 @@ The independently owned base contract is
 
 ### Profile and object state are distinct
 
-Unit Init begins by copying initializer `+0x3b4` (`mSpawnedBy`) into its
-collision initializer `+0x6c`, copying initializer `+0x3bc` into Unit `+0x164`
-(profile), and clearing Unit `+0x224` (the later fire-control gate). It does
-not build a profile from the actor's display name or its numeric class ID.
-
-| Profile field | Input consumed by Unit Init |
-| --- | --- |
-| `+0x2c`, `+0xe0` | Mesh name and internal behavior selector; selector 7 skips this body's mesh creation, relying on the calling class's render state. |
-| `+0x3c` | Ordered weapon tuples: definition index, raw creation flags, mapped gun tag. |
-| `+0x4c` | Ordered attached-spawner tuples: definition index, raw creation flags, mapped spawner tag. |
-| `+0x5c` | Ordered component tuples: component-definition index and attachment index. |
-| `+0xc0` | Raw life word copied to Unit `+0xf8` before Actor Init. |
-| `+0xbc` | Turret-turn scalar; strictly greater than zero enables weapon-part inspection. |
-| `+0x18`, `+0x1c` | Non-null gates for enumerating `Dust` and `Vent` attachment positions and allocating effect links. |
+[Unit Init](../binary-analysis/functions/Unit.cpp/CUnit__Init.md) owns the
+initializer/profile field mapping. The materialized actor projection supplies
+selected authored fields, not the resolved retail profile and its child lists.
 
 The exact physics input remains `data/default physics.dat`, 175,603 bytes,
 SHA-256 `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
@@ -329,89 +364,14 @@ such list entries. General inherited-list behavior must preserve this boundary
 rather than silently applying conventional inheritance. Reproducing the path
 with a controlled profile in a disposable runtime copy remains a future check.
 
-### Actual call and publication order
+### Shared initializer contract
 
-1. With a profile and selector other than 7, create render type 1 and initialize
-   it from the profile mesh name. Then walk weapon uses in list order.
-   `CreateWeaponByIndex` (`0x0050f6d0`) creates a plain `CWeapon`, whose table
-   `0x005dfc94` slot `+0x0c` points to the 24-byte shared initializer above.
-   That initializer copies owner Unit, literal 1, and gun tag into weapon
-   `+0x08/+0x0c/+0x10`; Unit also writes tag `+0xac`. The weapon constructor
-   selects mode zero through the real weapon/mode definition lists. When mesh
-   and positive turret-turn scalar permit, inspect the selected `GunA` through
-   `GunI` part chain: turret markers set weapon `+0x94`; barrel markers set
-   weapon `+0x98`, Unit `+0x224`, barrel pointer `+0x220`, and reference angle
-   `+0xf4`. Append each created weapon to Unit `+0x17c` only after these steps.
-2. Walk attached spawners. The factory at `0x0050f970` allocates a `0x3f8`
-   object using the attached-spawner constructor above. At Unit call
-   `0x004f8a74`, embedded initializer `object+0x10` invokes Copy
-   (`0x0048dbe0`), **not** standalone `CSpawnerThing::Init`. Override the
-   copied initializer's target `+0xa4`, orientation type `+0x60` and roll
-   `+0x4c` to zero; set active `+0x3ac` to one; clear script and name; retain
-   copied spawn script. Set owner `object+0x3d4` and tag `+0x3e8`, then append
-   to Unit `+0x18c`. This creates no immediate output unit. The constructor
-   also resolves the spawn definition and can force its shared definition
-   field `+0x10` to one when `IsSpawnTypeAllowed` rejects the selected class.
-3. Copy profile life, then call Actor Init at `0x004f8b38`. Base initialization
-   can publish, bind scripts, construct collision state and change pose
-   before returning. Its movement scheduling consumes the shared RNG before
-   the remaining Unit work. Script binding queues `INIT_SCRIPT` 2001; it does
-   not execute the script's Init/Ready body inline. If initializer orientation
-   type is Euler, Unit
-   then copies its three authored angles into both `+0x114..+0x11c` and
-   `+0x120..+0x128`; do not substitute these for the base's final pose.
-4. Walk component uses. Create the actual component class through
-   `0x0050fa40`, allocate a distinct reader and bind it to that child, obtain
-   attachment position/orientation through owner virtual `+0x160`, then build
-   a fresh component initializer with the selected profile, allegiance,
-   active/attach words and spawn script. Call child virtual Init at
-   `0x004f8d6c` before linking child back to its parent through `0x00428b50`
-   and appending the reader to Unit `+0x19c`. This is recursive initialization,
-   not an extra authored World110 row or a mere child-ID assignment.
-5. With a profile, allocate the primary effect link and enumerate nonzero
-   `Dust`/`Vent` attachment positions under their profile gates. Then insert
-   this Unit at the head of global list `0x008550d0` (`0x004f8fad`), and only
-   afterward copy allegiance to Unit `+0x138`. This Unit-specific publication
-   is separate from the earlier base Thing publication.
-6. Scan mesh parts. An exact lowercase `turret` match causes a four-word copy
-   from **mesh part index 2**, regardless of which index matched, into Unit
-   `+0x1f8..+0x204` (`0x004f9037` proves the fixed index). Notify an existing
-   squad reader via virtual `+0x110`; initialize an existing destructible
-   segments controller (`0x00444660`); mark the profile name used; increment
-   the counter indexed by profile behavior for allegiance 0 or 1 only.
-7. Call fire-control refresh at `0x004f90ce`, then scan all non-null mesh parts
-   case-insensitively for `nexus` and `weakpoint`, setting `+0x228/+0x22c`.
-   Clear `+0x230/+0x234/+0x238/+0x23c/+0x240/+0x244/+0x248`. If the squad
-   reader is null, append allegiance 1 or 6 to list `0x008550c0`, then allegiance
-   0 or 6 to `0x008550b0`. Finally request event 4003 at `-1.0f`, priority zero,
-   null data and null reusable event (`0x004f91d8`). No active-state test
-   guards this final request. Actual delivery belongs to the event manager.
-
-### Conditional draw and completion barrier
-
-Unit Init contains no direct RNG call. Its fire-control helper runs only when
-Unit `+0x224 != 0` and flags `+0x2c` bit `0x04` is clear. With no AI target,
-it restores angle `+0xec` from `+0xf4` only when deadline `+0x20c < now`.
-With a target, an eligible weapon profile can invoke the ballistic solver;
-the target arm sets that deadline to `now + 10.0f`. For finite angles the
-clamp is **-pi/2 to +pi**, with bits `0xbfc90fdb` and `0x40490fdb`; the stale
-export comment claiming symmetric bounds is not the contract.
-
-The enabled helper takes one shared RNG draw, uses the signed remainder by
-65,536, multiplies by float word `0x35cccccd` (`0.1f / 65536`), adds the current
-event time, and stores the resulting absolute time to float32 at
-`0x004fb3bd` before calling `AddEvent_AtTime` for event 4001. Init passes null
-reuse. Disabled gates take neither draw nor event. Actor, child initialization
-and callbacks happen earlier, so this is not a total per-unit RNG count.
-
-The next connected step needs four concrete dependencies: real profile and
-weapon-mode resolution preserving ordered repeated values; the actual mesh
-part/attachment and render state; the base Actor/Thing script, collision and
-world-publication transaction; and actual child-component Init plus any
-present destructible-segments controller. Those results feed the Unit tail,
-faction lists and shared scheduler in the order above. A headless leaf test
-can falsify tuple order, raw flags, life/angle transfers and conditional event
-arguments; it cannot establish the initial world's complete actor/RNG state.
+The complete call order and conditional fire-control draw now live in
+[the Unit Init owner](../binary-analysis/functions/Unit.cpp/CUnit__Init.md).
+That owner distinguishes the attached-spawner copy from standalone Init,
+recursive child publication, Thing versus Unit list publication, and the
+unconditional final event 4003. These laws are still required when connecting
+World110's actual profile and mesh inputs to its spatial/event/RNG owners.
 
 The Unit constructor explicitly initializes readers, lists and many scalar
 fields, but it does not establish zero for every byte of the object. In
@@ -419,6 +379,88 @@ particular, fourth vector words copied through temporary storage into
 `+0x158/+0x204` are not admitted as zero. These findings do not upgrade the
 existing direct-actor projection to completed Unit instances. The connected
 Component-input calculation below stops before child Init.
+
+### First three Buildings and the following Features
+
+The first three BSWD rows are Control Tower (active 1, life 100), Forseti
+Pulse Tank Factory (active 0, life 150) and Forseti Repair Pad (active 1,
+life 80), all allegiance 0. Their authored active flag is separate from the
+career-existence gate. Row 3 is a cannon, and rows 4–9 are the six icebergs.
+The [Feature Init owner](../binary-analysis/functions/CFeature.cpp/CFeature__Init.md)
+now records the iceberg profiles, actual mesh/collision bounds and occupancy
+contract. It does not claim those six can initialize before earlier eligible rows.
+
+The normal Building wrapper is primary-table `0x5d8eb4` slot 9,
+`CBuilding__VFunc_9_00417190`. It sets initializer collision kinds to 2 and
+ORs mask `0x08000020`; `init+0x8c` receives `(profile+0x13c == 0)`. It creates
+the destructible-segment controller at Building `+0x178` and its motion
+controller at Thing `+0x70`, then calls shared Unit Init at `0x41727d`.
+After Unit returns, a segment count of zero destroys and clears those controllers.
+The subsequent order is:
+
+1. Look up `closed`, calling SetAnimMode(index,1,1) only when the result is not -1.
+2. Set `+0x254=3`, `+0x25c=0`; look up `notshut`, again conditionally set
+   animation, and set `+0x260` to whether that lookup succeeded.
+3. Set `+0x264=3`, `+0x268=-100.0f`; call virtual `+0x48 → 0x4dfd10`.
+4. Create AI through `0x417390` and store it at `+0x13c`. The exact profile
+   name `Forseti Repair Pad` selects the repair-pad subtype; the other two
+   use the shared Unit AI constructor. This stage is not an inline AI tick.
+5. Look up `Idle`, then call SetAnimMode(index,1,1) **even when the index is -1**.
+   Finally add occupancy through `0x50b010` before returning.
+
+These profiles use Unit render selector 7. That arm defers render creation to
+the class-specific hook in Thing Init; it does not supply an empty mesh.
+Building's hook at `0x4176c0` formats profile `+0x2c/+0x30` using `%s.msh`
+and creates type 4, CRTBuilding (`0x5de9c0`). It never reads meshNumber.
+Field ID 9 supplies the primary name; the secondary default is the literal
+`m-b-rubble`. These three profiles have no BasedOn entry. The fields containing
+`FB Idle` and `FB Health Pad Idle` are sound names, not animation names.
+
+The pinned World110 archive has external MESH records at inflated offsets
+928476, 928809 and 929142 for health pad, tank factory and control tower.
+Each MESH payload is 325 bytes (excluding its eight-byte header), with nested
+PMSH/PMS2, a 300-byte name buffer, resource IDs 321/322/323, zero skip word and
+trailing byte 1. Their payload SHA-256 values in that order are
+`3cebda1b624516a6c347e9a14af6359a0ebb2addd1756c4f52d63895f30fb7b3`,
+`eb1f150346e846cff132ef71a7aad94d69789522b414d7f8fba2ddd56b3fe320`,
+and `0b06574f593d5426aa92920b766ccd5979a73a462e0467c12c4732729953e7d0`.
+The exact resolved loose inputs were read under Steam's installed
+`data/resources/meshes/`:
+
+| Primary mesh | Bytes | Parts | SHA-256 |
+| --- | ---: | ---: | --- |
+| `m_fb_control_tower.msh.aya` | 100,554 | 39 | `86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91` |
+| `m_fb_tank_factory.msh.aya` | 85,819 | 29 | `a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de` |
+| `m_fb_health_pad.msh.aya` | 29,608 | 20 | `4ec6cb1d589c866acfa292232ca4f850967faea899c2f082329bff78e647ab44` |
+
+All three CMSH headers contain zero animation entries. CRTBuilding's animation
+getter selects its primary mesh `+0x14`, not the separate rubble mesh `+0x54`.
+For this resolved state, `closed`, `notshut` and `Idle` each return -1.
+The two guarded calls are skipped and `+0x260` becomes zero. The final Idle
+call still enters the animation wrapper: index/mode -1, frame 0, force-loop 1,
+fallback increment 1.0f. A null existing Thing animation owner causes allocation
+and a request for its own event 3000 at -1. Neither Unit Init nor the AI stage
+directly writes that owner or calls SetAnim; preceding collision, component
+and destructible callbacks must still be excluded before claiming exactly one
+new owner/event for each Building. No unconditional event census is inferred.
+
+These are static contracts for the exact input selection. Segment destruction,
+the virtual `0x4dfd10` effect, complete AI/spawner initialization, real collision
+peers and occupancy remain integration work. There is no direct shared-RNG call
+in the Building wrapper; its transitive Unit/Actor/AI/callback behavior owns the
+actual stream consumption. The three Buildings are not implemented yet.
+
+The following bodies were independently read from the pristine executable:
+
+| Half-open body | SHA-256 |
+| --- | --- |
+| Building Init `[0x417190,0x41738f)` | `65207cd6b266935d9e926acdbbcb642497c6af05b0fff94107c1acb9a89a4f0e` |
+| Building AI factory `[0x417390,0x417477)` | `fb90d2ee6c9d523b076a24a232bb095077f9f979415ca6028a88a97292baa51f` |
+| Building render hook `[0x4176c0,0x417861)` | `05910be7ad16f846d9b221f9c1d2bd63ea58427eeae9628e96e8810ee789cbc9` |
+| CRTBuilding Init `[0x4db8f0,0x4db952)` | `df1435dbcc29251451d2918ee1a2e586718d31d47fd3a64f210b6de73cc0191a` |
+| Animation-name lookup `[0x4aa630,0x4aa673)` | `43c4d775c8ec52976fcc9489baeea2e90773313c36f42f6ea873aa3133b0d149` |
+| Thing animation wrapper `[0x4f44a0,0x4f4528)` | `ebebf118cf20136f6ef013d2e2592771c9a6f4b13174bd766acb9033388ddab1` |
+| Animation SetAnim `[0x404860,0x4048ba)` | `e643d3cc227058c6ae6a12af074b84a832da215fa2454b763a42dd2deb8019d7` |
 
 ### Four landing-craft turret children
 

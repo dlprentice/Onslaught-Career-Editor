@@ -10,9 +10,92 @@ public sealed class RetailMapWhoTests
     {
         public int Identity { get; } = identity;
         public Level100FloatVector3Bits PositionFloatBits { get; set; } = Position(x, y);
+        public uint ThingTypeMask { get; set; } = ThingActorTypeMasks.Thing;
     }
     private static Level100FloatVector3Bits Position(float x, float y) =>
         new(BitConverter.SingleToInt32Bits(x), BitConverter.SingleToInt32Bits(y), 0);
+
+    private static int[] SectorOwners(RetailMapWho map, RetailMapWhoSector sector)
+    {
+        var owners = new List<int>();
+        for (var entry = map.FirstInSector(sector); entry is not null; entry = map.NextInSector())
+            owners.Add(entry.Owner.Identity);
+        return owners.ToArray();
+    }
+
+    [Fact]
+    public void SortAfterLoad_RotatesAnAllTreeSectorAndPreservesTheSharedCursor()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        var first = map.Add(new Thing(1, 20, 20) { ThingTypeMask = 0x02800021 }, 1);
+        map.Add(new Thing(2, 20, 20) { ThingTypeMask = 0x02800021 }, 1);
+        var third = map.Add(new Thing(3, 20, 20) { ThingTypeMask = 0x02800021 }, 1);
+        Assert.Same(third, map.FirstInSector(first.Sector));
+        map.SortAfterLoad();
+        Assert.Equal(2, map.NextInSector()!.Owner.Identity); // Still follows entry3.
+        Assert.Equal(new[] { 1, 3, 2 }, SectorOwners(map, first.Sector));
+        map.SortAfterLoad();
+        Assert.Equal(new[] { 2, 1, 3 }, SectorOwners(map, first.Sector));
+        Assert.Equal(3, map.Count);
+    }
+
+    [Fact]
+    public void SortAfterLoad_KeepsOriginalTailAheadOfMovedTreesAndRepairsBothLinks()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        var entries = new Dictionary<int, RetailMapWho.Entry>();
+        for (int id = 5; id >= 1; id--)
+            entries[id] = map.Add(new Thing(id, 20, 20)
+                { ThingTypeMask = id % 2 != 0 ? 0x02000001u : 0x80000003u }, 1);
+        var sector = entries[1].Sector;
+        map.SortAfterLoad();
+        Assert.Equal(new[] { 2, 4, 5, 1, 3 }, SectorOwners(map, sector));
+        Assert.All(entries.Values, entry =>
+        {
+            Assert.True(entry.IsRegistered);
+            Assert.Equal(sector, entry.Sector);
+        });
+        // These operations use the repaired Previous pointers as well as Next.
+        map.Remove(entries[4]);
+        Assert.True(map.UpdatePosition(entries[1], Position(100, 100)));
+        Assert.Equal(new[] { 2, 5, 3 }, SectorOwners(map, sector));
+        Assert.Equal(new[] { 1 }, SectorOwners(map, entries[1].Sector));
+        Assert.Equal(4, map.Count);
+    }
+
+    [Fact]
+    public void SortAfterLoad_VisitsFourFinerLayersAndLeavesLayerZeroUntouched()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        float[] radii = [32, 16, 8, 4, 1];
+        var sectors = new RetailMapWhoSector[5];
+        for (int layer = 0; layer < 5; layer++)
+            for (int offset = 1; offset <= 2; offset++)
+                sectors[layer] = map.Add(new Thing(layer * 2 + offset, 20, 20)
+                    { ThingTypeMask = 0x02000001 }, radii[layer]).Sector;
+        map.SortAfterLoad();
+        Assert.Equal(new[] { 2, 1 }, SectorOwners(map, sectors[0]));
+        for (int layer = 1; layer < 5; layer++)
+        {
+            Assert.Equal(layer, sectors[layer].Layer);
+            Assert.Equal(new[] { layer * 2 + 1, layer * 2 + 2 }, SectorOwners(map, sectors[layer]));
+        }
+        Assert.Equal(10, map.Count);
+    }
+
+    [Fact]
+    public void SortAfterLoad_PreservesEmptySingletonAndNonTreeSectors()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        map.SortAfterLoad();
+        var single = map.Add(new Thing(1, 100, 100) { ThingTypeMask = 0x02000001 }, 1);
+        var ordinary = map.Add(new Thing(2, 20, 20) { ThingTypeMask = 0x20 }, 1);
+        map.Add(new Thing(3, 20, 20), 1);
+        map.SortAfterLoad();
+        Assert.Equal(new[] { 1 }, SectorOwners(map, single.Sector));
+        Assert.Equal(new[] { 3, 2 }, SectorOwners(map, ordinary.Sector));
+        Assert.Equal(3, map.Count);
+    }
 
     [Fact]
     public void IntegerRounding_IsExplicitAndChangesAnActualPineSector()

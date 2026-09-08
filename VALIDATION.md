@@ -143,6 +143,17 @@ assumptions and a supplied incoming seed. They do not measure the retail load's
 control word/seed, final tree orientation, full collision responses, transition
 reset or World110 play. No desktop, Ghidra or broad runtime campaign was used.
 
+The subsequent PostLoad sort change passed **73/73 selected Core facts, zero
+skipped**, including the unchanged World100 forty-step hash. Four additional
+MapWho facts cover original-tail rotation, mixed entries and repaired links,
+the four finer layers, the preserved shared cursor and unchanged empty/single/
+ordinary sectors. Intentionally including layer 0 failed its exact order check
+(expected `[2,1]`, actual `[1,2]`); source restoration returned that fact to green.
+Logs are `mapwho-postload-core.log`, `mapwho-postload-mutation.log` and
+`mapwho-postload-restored.log` in the same existing Linux run directory.
+Sort remains separate from the incomplete world-load sequence. Building,
+Feature and startup findings in this pass are static evidence, not live checks.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content
