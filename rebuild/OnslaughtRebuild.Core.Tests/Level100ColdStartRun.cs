@@ -271,18 +271,9 @@ internal sealed class Level100ColdStartRun
     }
 
     private static InteractiveSession CreateSession() =>
-        // FirstFlightGame.CreateSession (:844-845) is
-        //   new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions())
-        // and InteractiveSession has no tutorial-progress parameter, so the
-        // shipping client can construct only the `default` cold first career.
-        // A control that wants the returning-player slots has to build the
-        // Simulation itself, which is exactly the gap this run reports.
-        //
-        // The definition set is the suite's, not the Godot manifest's, because
-        // the manifest loader is a Godot type. Every other Level 100 measurement
-        // in this project uses this same set, so the comparison against the
-        // direct-host baseline is like for like.
-        new InteractiveSession(SimulationSeed, Level100TestActorDefinitions.Create());
+        // Same hash-checked decoder, actor data and cold career as
+        // FirstFlightGame.CreateSession; the decoder has no Godot dependency.
+        new InteractiveSession(SimulationSeed, Level100TestActorDefinitions.LoadMaterialized());
 
     /// <summary><c>FirstFlightGame.SimulationSeed</c> (:13), ASCII "ONSL".</summary>
     internal const uint SimulationSeed = 0x4F4E534Cu;

@@ -430,7 +430,8 @@ internal sealed class Level100ChainAutopilot
         uint seed = 1u,
         bool quantizeLookToIntegerMousePixels = false,
         Level100LookPerturbation? lookPerturbation = null,
-        bool horizontalOnlyZoneHandoff = false)
+        bool horizontalOnlyZoneHandoff = false,
+        Level100ActorDefinitionSet? actorDefinitions = null)
     {
         // The seed is snapshot and hash material only - the released gameplay
         // RNG is `ReleasedRandomSeed`, reseeded to 123456 at level start - but a
@@ -438,7 +439,7 @@ internal sealed class Level100ChainAutopilot
         // state hashes differ for a reason that is not the thing being measured.
         var simulation = new Simulation(
             seed,
-            Level100TestActorDefinitions.Create(),
+            actorDefinitions ?? Level100TestActorDefinitions.Create(),
             progress);
         Level100ChainAutopilot driver = CreateOn(
             new Level100DirectChainHost(

@@ -215,6 +215,17 @@ negative-zero words in their authored Trainer basis; the prior mismatch and
 the correction are retained in `actor-basis-waypoints-20260908.log` and
 `actor-basis-waypoints-final-20260908.log`.
 
+The subsequent cold-start harness correction passed **4/4**
+(`cold-shipping-definitions-initial-20260908.log` in the same directory).
+Both client and direct pointer control now use the production manifest decoder
+and assert its definition identity and 44 authored actors. The unchanged driver
+clears 22 targets, keeps abort false, completes primary objective 4 and reaches
+Won; complete state and pose-trace equality remain required. Spawned Tank 1 is
+selected by target group/ordinal and verified definition/script/owner, replacing
+the reduced fixture's allocation-dependent name. The separate returning and
+negative controls remain synthetic. This is a deterministic regression, not
+player-observable live acceptance.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

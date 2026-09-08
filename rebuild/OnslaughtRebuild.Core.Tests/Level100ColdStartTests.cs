@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.TestSupport;
 using Xunit.Abstractions;
 
 namespace OnslaughtRebuild.Core.Tests;
@@ -44,7 +45,8 @@ public sealed class Level100ClientPointerQuantisedRunFixture
             default,
             quantizeLookToClientPointerPath: true,
             seed: Level100ColdStartRun.SimulationSeed,
-            quantizeLookToIntegerMousePixels: true);
+            quantizeLookToIntegerMousePixels: true,
+            actorDefinitions: Level100TestActorDefinitions.LoadMaterialized());
         Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
     }
 }
@@ -79,6 +81,12 @@ public sealed class Level100ColdStartTests
     [Fact]
     public void ColdStart_VisitsEveryReleasedStageInOrder()
     {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        Assert.Equal(44, definitions.Actors.Count);
+        Assert.Equal(definitions.IdentitySha256,
+            _coldStart.Run.Final.Level100Actors.DefinitionSetIdentitySha256);
+        Assert.Equal(definitions.IdentitySha256,
+            _quantised.Driver.Snapshot.Level100Actors.DefinitionSetIdentitySha256);
         foreach (ColdStartStage stage in _coldStart.Run.Stages)
         {
             _output.WriteLine(stage.ToString());
@@ -184,7 +192,7 @@ public sealed class Level100ColdStartTests
 
         foreach (string name in new[]
         {
-            "Target Tank 2", "Target Tank 3", "Target Warehouse", "Target Tank #23",
+            "Target Tank 2", "Target Tank 3", "Target Warehouse",
         })
         {
             Assert.Equal(
@@ -192,6 +200,12 @@ public sealed class Level100ColdStartTests
                 final.Level100Actors.Actors
                     .Single(actor => actor.Name == name).Lifecycle);
         }
+        Level100ActorSnapshot firstTank = Assert.Single(final.Level100Actors.Actors,
+            actor => actor.TargetGroup == Level100MissionTargetGroup.StaticTargets && actor.TargetOrdinal == 1);
+        Assert.Equal("Target Tank", firstTank.DefinitionName);
+        Assert.Equal("TargetTank1", firstTank.ScriptName);
+        Assert.NotNull(firstTank.SpawnOwnerId);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, firstTank.Lifecycle);
 
         // Reported before it is asserted, so a beat-9 move prints its numbers
         // instead of only its first tripped assertion. That ordering cost a
@@ -279,14 +293,9 @@ public sealed class Level100ColdStartTests
         // `BattleEngine.cpp:1259-1262` and is now pinned two ways by
         // `Level100FerryLandingTests`.
         //
-        // THIS IS THE ACCEPTANCE TEST IN `GOAL.md`, WITH BOTH OF ITS
-        // QUALIFIERS. The career is the COLD first career - all four
-        // `SLOT_TUTORIAL_*` unsaved, which is the only career the shipping
-        // client can start - and the input travels through the client's own
-        // `InteractiveSession`, restricted to stick positions a whole retail
-        // mouse pixel can produce. It is still not a claim that a human can do
-        // this: what the driver READS is omniscient, and `GOAL.md` demotes the
-        // driven run to an acceptance test for exactly that reason.
+        // Cold career and shipping definitions, with whole-pixel input through
+        // InteractiveSession. The driver reads privileged simulation state;
+        // this regression is not GOAL.md's player-observable live acceptance.
         Assert.Equal(Level100MissionOutcome.Won, _coldStart.Outcome);
         Assert.Equal(
             Level100MissionFailureReason.None,

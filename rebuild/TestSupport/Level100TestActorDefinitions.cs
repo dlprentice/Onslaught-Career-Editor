@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.Client;
 
 namespace OnslaughtRebuild.TestSupport;
 
 internal static class Level100TestActorDefinitions
 {
+    internal static Level100ActorDefinitionSet LoadMaterialized() =>
+        Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Level100", "StaticWorld",
+            "level100-static-world.json")));
+
     internal static Level100ActorDefinitionSet Create()
     {
         var actors = new List<Level100ActorDefinition>();
