@@ -150,6 +150,15 @@ in the Linux run directory above. The snapshot test uses a component serializati
 envelope, not a complete matching-registry runtime restore. Queued lifecycle,
 debris rendering and native controller notification order remain open.
 
+The subsequent subtree-sum and threshold correction passed **55/55** focused
+contact/pose tests and **5/5** cold-start/pointer/handoff checks. Both new behavioral discriminators first failed: an actual
+part-data leaf sequence emitted the wrong sum word, and a synthetic equality
+state terminated early. A native x87 PC24/RN probe separately passed **2/2**
+coefficient checks without executing game code. Logs are
+`warehouse-sums-{red,green,routes}-20260908.log` and `warehouse-threshold-x87-probe.log`
+in the same Linux directory. The leaf calls use supplied lethal amounts; the
+boundary state is artificial. Neither is native player acceptance.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

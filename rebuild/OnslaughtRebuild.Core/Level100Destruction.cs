@@ -549,7 +549,6 @@ public sealed class Level100DestructionState
     // impact, direct damage and the two existing threshold/terminal projections.
     public const int MaximumEventsPerHit = 28 + 4;
 
-    private const uint WarehouseTerminalFractionBits = 0x3E99999A;
     private const uint WarehouseHalfFractionBits = 0x3F000000;
     private const uint WarehouseCoreMultiplierBits = 0x40A00000;
 
@@ -948,8 +947,9 @@ public sealed class Level100DestructionState
                 hit.SurfacePoint));
         }
 
-        float terminalThreshold = totalInitial *
-            FromBits(WarehouseTerminalFractionBits);
+        // Under the admitted PC24 model, the direct controller multiplies its
+        // float total by binary64 0.3 and retains a double for comparison.
+        double terminalThreshold = RetailFloat24.Multiply(totalInitial, 0.3d);
         if (CoreChildrenDestroyed() || activeInitial < terminalThreshold)
         {
             SetTerminal(hit, ref writer);
@@ -1039,14 +1039,11 @@ public sealed class Level100DestructionState
         float sum = _initialHealthBits[parent] == 0
             ? 0
             : FromBits(_initialHealthBits[parent]);
-        Level100ContactPart[] parts = _definition.PartArray;
-        for (int index = 0; index < parts.Length; index++)
-        {
-            if (parts[index].Parent == parent)
-            {
-                sum += SumInitialHealth(index);
-            }
-        }
+        // Segment children were inserted at the list head. Keep the native
+        // recursive addition/store order, which differs after partial damage.
+        ReadOnlySpan<int> children = _definition.PartArray[parent].FloatGeometry.Children.Span;
+        for (int index = children.Length - 1; index >= 0; index--)
+            sum += SumInitialHealth(children[index]);
         return sum;
     }
 
@@ -1055,14 +1052,9 @@ public sealed class Level100DestructionState
         float sum = _currentHealthBits[parent] == 0
             ? 0
             : FromBits(_currentHealthBits[parent]);
-        Level100ContactPart[] parts = _definition.PartArray;
-        for (int index = 0; index < parts.Length; index++)
-        {
-            if (parts[index].Parent == parent)
-            {
-                sum += SumCurrentHealth(index);
-            }
-        }
+        ReadOnlySpan<int> children = _definition.PartArray[parent].FloatGeometry.Children.Span;
+        for (int index = children.Length - 1; index >= 0; index--)
+            sum += SumCurrentHealth(children[index]);
         return sum;
     }
 
@@ -1072,14 +1064,9 @@ public sealed class Level100DestructionState
             _currentHealthBits[parent] != 0
             ? FromBits(_initialHealthBits[parent])
             : 0;
-        Level100ContactPart[] parts = _definition.PartArray;
-        for (int index = 0; index < parts.Length; index++)
-        {
-            if (parts[index].Parent == parent)
-            {
-                sum += SumActiveInitialHealth(index);
-            }
-        }
+        ReadOnlySpan<int> children = _definition.PartArray[parent].FloatGeometry.Children.Span;
+        for (int index = children.Length - 1; index >= 0; index--)
+            sum += SumActiveInitialHealth(children[index]);
         return sum;
     }
 

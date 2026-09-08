@@ -3,9 +3,10 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
-/// Round individual geometry operations to 24 significand bits, ties to even.
+/// Round admitted geometry and segment-threshold operations to 24 significand bits, ties to even.
 /// The double carrier retains the exponent range needed between the measured
 /// float-input geometry operations; a float cast represents a separate store.
+/// The segment threshold additionally uses retail's binary64 0.3 coefficient.
 /// This models the device-creation precision intent, not a measured live FPU.
 /// </summary>
 internal static class RetailFloat24
@@ -18,7 +19,7 @@ internal static class RetailFloat24
     private static double Round(double value)
     {
         if (!double.IsFinite(value))
-            throw new ArgumentOutOfRangeException(nameof(value), "Geometry arithmetic must remain finite.");
+            throw new ArgumentOutOfRangeException(nameof(value), "Retail arithmetic must remain finite.");
         if (value == 0) return value; // Preserve the arithmetic operation's zero sign.
         int exponent = Math.ILogB(value);
         double significand = Math.ScaleB(value, 23 - exponent);

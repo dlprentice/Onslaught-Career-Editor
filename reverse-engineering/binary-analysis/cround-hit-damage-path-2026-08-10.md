@@ -505,6 +505,30 @@ events without synthetic damage calls; their position is the causing hit's
 anchor, not a debris origin. The caller reserves 32 events before any mutation.
 Snapshot fields already preserve the affected health/activity words.
 
+The subtree sums also follow that reverse child-list order, with a float32
+store after each addition. `0x00442900` sums current health and supplies the
+initial cached total; `0x00442890` sums initial values for enabled, non-collapsing
+segments whose current health is nonzero. The admitted initial total remains
+`0x42821ded`. Initialization's divisor uses forward construction order and is
+unchanged; do not reverse that separate accumulation.
+
+A focused fixture applies supplied lethal amounts to real leaf parts in this
+order: **17, 9, 14, 15, 7, 13, 19, 3, 25, 12, 10, 16, 4, 27, 8, 11, 5**.
+Its first below-half event carries `0x4200da7d`; the old ascending sum produced
+`0x4200da7c`. Core2 survives and no queued-child behavior is required. These are
+component calls with real part data, not observed player shots or projectile
+collision acceptance.
+
+The direct controller's multiply at `0x00444072` reads binary64 `0.3` at
+`0x005db0a0` (bytes `33 33 33 33 33 33 d3 3f`), stores a double and uses strict
+less-than. Under the admitted PC24 model the real initial total produces
+threshold `0x419c23e9`; the former float32 coefficient produced `0x419c23ea`.
+A synthetic restored state at exact equality now survives; it does not establish
+an authored damage route at that boundary. A separate native x87 probe confirmed
+both coefficient results under explicitly selected PC24/RN, restored its own
+control word and executed no game code. Actual gameplay precision remains
+unmeasured. The half coefficient is exact `0.5` and remains unchanged.
+
 This correction is bounded to the admitted Warehouse's only damageable Core
 and its direct Extra children. Queued child events/RNG, positive-health Core
 collapse, amount/time writes and the native frozen-report consumer remain
@@ -526,6 +550,12 @@ Relevant freshly checked half-open body pins are:
 | Forward authored-child traversal | `00444e7f–00444ea8` | `2fe8bcdd770916d8e465606c5c8e130b0a29c8ec207176003b30bc49fe5514f5` |
 | Segment child-list attachment | `00442700–00442710` | `b40beed727fdc4831bb2e956f6688ee8dbd1eef70ae99db9a2fb0f59661ab531` |
 | List-head insertion | `004e5afa–004e5b1c` | `bfac642227179444912f054936f1dda88188ba687b80ee450d71ec978fa468de` |
+| Extra/base health initialization | `00442870–00442884` | `1a6ed815a122f0cf6945e94930bfda6cc696820b4f96d3c2c30cead0bce5f41e` |
+| Core health initialization | `00443590–004435bb` | `566fe30c70e8b9db39d7ad1a541dd62f1f8255185f64d9d111a55d5cf6790464` |
+| Active initial-value sum | `00442890–004428fb` | `6edfd5544bf96509f88287c6e954d7cb5470ddc953cb1d5fbe3ddb192b752e93` |
+| Current-health sum / initial cached total | `00442900–0044295b` | `d04a75d129e94c85f4f9017fd0b37e9d1d32eec7f755bb1e7c9f6ea6d632a96e` |
+| Complete controller initialization | `00444660–0044493c` | `132b3b463a23a4472c75b311b1a0f4be4f7c12bf2c3d9071cb633e6a9faaa877` |
+| Direct core/30% decision | `00444063–0044409b` | `2f8f9ec66065a616bb81ad26df5674ab2dd5752137e38235647b8f66315d1a6a` |
 
 The selected Warehouse mesh has 28 parts, including six geometry references.
 All parts have one HPOS/HORI hierarchy frame and 101 zero VHFM entries, but only

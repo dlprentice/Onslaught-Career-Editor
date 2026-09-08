@@ -565,6 +565,54 @@ public sealed class Level100DestructionContactTests
     }
 
     [Fact]
+    public void WarehouseBelowHalfEventSumsRemainingLeavesInNativeListOrder()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var events = new Level100DestructionEvent[Level100DestructionState.MaximumEventsPerHit];
+        int[] leafHits = [17, 9, 14, 15, 7, 13, 19, 3, 25, 12, 10, 16, 4, 27, 8, 11, 5];
+        for (int index = 0; index < leafHits.Length; index++)
+        {
+            int part = leafHits[index];
+            Assert.True(warehouse.Parts[part].FloatGeometry.Children.IsEmpty);
+            int count = state.ApplyRoundHit(Hit(102, part), state.GetCurrentSegmentHealthBits(part),
+                Level100DestructionEffectKind.PulseImpact, events);
+            Assert.False(state.Terminal);
+            Assert.Equal(1, state.ContactPartActivity.Span[1]);
+            if (index < leafHits.Length - 1)
+                Assert.DoesNotContain(events[..count], item =>
+                    item.Kind == Level100DestructionEventKind.ActiveSubtreeBelowHalf);
+            else
+                Assert.Equal(0x4200da7du, Assert.Single(events[..count], item =>
+                    item.Kind == Level100DestructionEventKind.ActiveSubtreeBelowHalf).RemainingHealthBits);
+        }
+    }
+
+    [Fact]
+    public void WarehouseDoesNotTerminateAtExactNativeThirtyPercentBoundary()
+    {
+        var warehouse = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var state = new Level100DestructionState(102, warehouse);
+        var initial = new uint[warehouse.PartCount];
+        var health = new uint[warehouse.PartCount];
+        var activity = new byte[warehouse.PartCount];
+        // Synthetic boundary state: retain the real cached initial total
+        // 0x42821ded, but put precisely its PC24 * binary64(0.3) threshold
+        // in the surviving core. This is not an authored retail damage route.
+        initial[1] = 0x419c23e9;
+        initial[2] = 0x423629e6;
+        health[1] = 0x3f800000;
+        activity[0] = activity[1] = 1;
+        state.Restore(new Level100DestructionSnapshot(102, warehouse.Name,
+            warehouse.MaximumLifeBits, false, false, initial, health, activity));
+        var events = new Level100DestructionEvent[Level100DestructionState.MaximumEventsPerHit];
+        int count = state.ApplyRoundHit(Hit(102, 1), 0,
+            Level100DestructionEffectKind.PulseImpact, events);
+        Assert.False(state.Terminal); // strict less-than; equality survives
+        Assert.DoesNotContain(events[..count], item => item.Kind == Level100DestructionEventKind.Terminal);
+    }
+
+    [Fact]
     public void WarehouseAlsoTerminatesBelowThirtyPercentWithCoreIntact()
     {
         Level100ContactDefinition warehouse =
