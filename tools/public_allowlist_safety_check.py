@@ -182,10 +182,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Exact reviewed text, not an extension/root exemption. The first manifest
 # contains ten canonical UTF-8 comments (7,696 decoded bytes); the BBOX manifest
 # contains two (1,575 bytes); bounds comments contain four (2,114 bytes).
+# Segment-controller ownership contains eight analytic comments (4,705 bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/segment-controller-ownership.manifest.tsv":
+        "467f5235b71bfd301407b4c806aaec66a31dbe120551ba9bb9a1061886ee3585",
     "tools/cohort-specs/bounds-contract-comments.manifest.tsv":
         "b74cdb6a1ed2dff28b2a4946bbfc4453bada7a0afa6c625982c8cd618bbb479c",
     "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv":

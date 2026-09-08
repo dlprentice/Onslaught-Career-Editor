@@ -1,11 +1,9 @@
-# CUnitAI__CanUseIndexedSegmentEntry
+# CDestructableSegmentsController__CanUseIndexedSegmentEntry
 
 > Address: `0x00444f20`
 
-Status: active static function note — current saved Ghidra name retained for
-identity checking, but the byte-proved receiver is a
-`CDestructableSegmentsController`, not a `CUnitAI`
-Last updated: 2026-08-22
+Status: active static function note — corrected controller ownership
+Last updated: 2026-09-08
 Source File: none — the reference drop has no `DestructableSegmentsController.cpp`
 source body (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -14,15 +12,16 @@ Summary: a controller-owned indexed-entry predicate used by the destroyable-
 segments motion bridge. It resolves either the directly indexed segment or
 an owner-mesh alias, normally returns whether segment field `+0x38` is zero,
 and adds one core/30%-health veto for a narrow direct-segment state. The
-saved `CUnitAI__` prefix is disproved by constructor and caller dataflow;
-`CDestructableSegmentsController__CanUseIndexedSegmentEntry` is the
-byte-supported rename candidate. 237 bytes; every load-bearing claim below
-was re-read from the pristine specimen this wake.
-Evidence: MEASURED — pristine SHA verified before capstone whole-body
+former `CUnitAI__` prefix is disproved by constructor and caller dataflow.
+The current name is an analyst role label, not a recovered source method name.
+Evidence: MEASURED on 2026-08-22 — pristine SHA verified before capstone whole-body
 instruction decoding, raw body/helper hashing, whole-`.text` rel32 scans,
 image-wide imm32 censuses, caller and constructor dataflow, and constant
-reads. W003 plates were consulted only after the independent byte read. No
-`FUN_*` was a first gate; no Ghidra mutation or Core change was made.
+reads. W003 plates were consulted only after the independent byte read. That
+dated investigation made no Ghidra or Core change. The September 8
+[ownership cohort](../../../../tools/cohort-specs/segment-controller-ownership.manifest.tsv)
+corrects four names/comments/tags after fresh body/constructor checks; it leaves
+signature shapes and boundaries unchanged.
 
 ## Contract (byte-exact)
 
@@ -34,14 +33,13 @@ conditional branches stay inside the body. Signature shape is
 `bool __thiscall ...(void *controller, int entryIndex)`: ECX is saved as
 ESI, the one stack dword is saved as EBX, and every exit is `ret 4`.
 
-The current saved symbol is intentionally preserved in the title so the
-tracked name table can detect future drift. It is not treated as owner
-proof.
+The title follows the corrected working symbol. The stable filename and frozen
+packet/table names retain provenance; neither supplies ownership proof.
 
 ## Receiver ownership (byte-proved correction)
 
 The sole caller is
-`CDestructableSegmentsMotionController__VFunc_UpdateUnitAIIndexedEntryFlag`
+`CDestructableSegmentsMotionController__VFunc_UpdateIndexedSegmentFlag`
 at `0x00494fc2`. That caller executes:
 
 ```
@@ -63,7 +61,7 @@ the caller body `0x00494fa0`–`0x00494fe0` is 65 bytes, SHA-256
 Inside this body, the same receiver is independently used with the proved
 controller layout: array `+0x4`, root `+0xc`, owner `+0x10`, cached metric
 `+0x18`, and mode field `+0x24`. This closes W003's owner question:
-`CUnitAI__` is a stale prefix, not merely an uncertain one.
+the former `CUnitAI__` prefix was incorrect.
 
 ## Predicate law (byte-exact)
 

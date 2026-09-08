@@ -3,7 +3,7 @@
 > Address: `0x004e6660`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — `Unit.cpp` has no source body in `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -58,7 +58,8 @@ was run in the 2026-08-22 continuation: a whole-function capstone census
 for an x87 `[reg+0x88]` operand in a body that also references global time
 `0x00672fd0` returned zero candidates. That negative heuristic is not an
 exhaustive proof of no reader. The `+0x88` load inside
-`CUnitAI__CanUseIndexedSegmentEntry 0x00444f20` is separately disproved as
+`CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20` (formerly
+`CUnitAI__CanUseIndexedSegmentEntry`) is separately disproved as
 the cooldown: it supplies an integer alias index immediately consumed by
 the controller segment array.
 

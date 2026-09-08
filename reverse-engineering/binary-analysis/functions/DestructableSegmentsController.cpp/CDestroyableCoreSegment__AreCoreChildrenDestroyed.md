@@ -3,7 +3,7 @@
 > Address: `0x004433f0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — the reference drop has no `DestroyableSegment.cpp` source
 body (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -58,7 +58,7 @@ Exactly **three** inbound rel32 image-wide, zero imm32:
 | --- | --- | --- |
 | `0x00444066` | [`CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold`](CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold.md) | post-damage callback gate |
 | `0x004443f9` | `CDestructableSegmentsController__TriggerCoreCascadeIfEligible 0x004443f0` | cascade eligibility |
-| `0x00444fc5` | `CUnitAI__CanUseIndexedSegmentEntry 0x00444f20` | AI eligibility |
+| `0x00444fc5` | `CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20` | indexed-segment eligibility |
 
 ## Pinned-source status
 

@@ -3,7 +3,7 @@
 > Address: `0x00442890`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — the reference drop has no `DestroyableSegment.cpp` source
 body (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -68,7 +68,7 @@ name table):
 | `0x004444fa` | `SetSegmentFields0C10ByName 0x004444b0` | metric refresh after field writes |
 | `0x004445f5` | `SetSegmentActiveFlagByName 0x004445b0` | metric refresh after flag writes |
 | `0x0044464c` | `SetAllSegmentsActiveFlagAndRefreshMetric 0x00444620` | bulk refresh row of the segments contract |
-| `0x00444fdf` | `CUnitAI__CanUseIndexedSegmentEntry 0x00444f20` | AI eligibility |
+| `0x00444fdf` | `CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20` | indexed-segment eligibility |
 
 ## Pinned-source status
 

@@ -342,7 +342,9 @@ The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
 and a bounding-box reader mislabeled as a material loader. Two follow-up
 comments now record its caller correctly and the shipped AABB-distance quirk,
-with separate full readback and verified PRE/POST recovery;
+with separate full readback and verified PRE/POST recovery. Four further
+labels/comments/tag sets now assign segment-controller helpers and their motion
+bridges to the correct owner, removing the disproved UnitAI classification;
 the [checkpoint/working owner](reverse-engineering/ghidra/README.md) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
 cursor, character, width and unique-name rules. Its software keyboard and caret

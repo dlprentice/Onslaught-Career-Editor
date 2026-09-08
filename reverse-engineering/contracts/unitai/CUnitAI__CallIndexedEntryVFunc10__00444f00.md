@@ -1,13 +1,22 @@
-# CUnitAI__CallIndexedEntryVFunc10
+# CDestructableSegmentsController__CallIndexedEntryVFunc10
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
-Summary: specimen-bound static function contract for `CUnitAI__CallIndexedEntryVFunc10` at `0x00444f00`; unknown semantics and runtime limits remain explicit.
+Status: active static contract — corrected ownership with retained packet evidence
+Last updated: 2026-09-08
+Summary: specimen-bound static function contract for `CDestructableSegmentsController__CallIndexedEntryVFunc10` at `0x00444f00`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no crosswalk row in lane brief) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00444f00`
+
+The September 8 [ownership cohort](../../../tools/cohort-specs/segment-controller-ownership.manifest.tsv)
+corrects the current receiver to `CDestructableSegmentsController`, established
+by Building allocation and the motion-controller constructor/caller chain.
+The controller's first field is integer 1, not a vtable pointer; motion-controller
+RTTI and the controller's own source coordinates provide distinct evidence.
+This role name is analyst-authored. The packet names, prototype text, grades and
+runtime limitations below retain their August 22 meaning; they do not describe
+the corrected current ownership. No signature shape or boundary changed.
 
 ## Identity
 - Body `[0x00444f00,0x00444f1a]`, 27 bytes. Raw pristine-body SHA-256 `243b46342bcd6f5be8758b893a0fdf04b367274bd7d93cf75cdf9bd504fe4d67`; closure range SHA-256 `6e5b196106a13bc6f4c702fe2d76ca4a494b7d8e2a1b1a141a36c1dddde5617b`; packet range-plus-bytes SHA-256 `c9c987fb15debe87d7a982a77e3d07e7d485d45e7e968d2821d912a81b624c44`. All three use the same exact inclusive range; no padding or tail bytes are included.

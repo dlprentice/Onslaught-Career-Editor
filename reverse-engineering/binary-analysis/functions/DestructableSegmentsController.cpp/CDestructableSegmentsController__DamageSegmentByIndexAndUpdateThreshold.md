@@ -3,7 +3,7 @@
 > Address: `0x00444030`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — the reference drop has no `DestructableSegmentsController.cpp`
 or `DestroyableSegment.cpp` source body (checked 2026-08-22 against the
 main-tree `references/Onslaught/` inventory; the debug-path name survives only
@@ -139,7 +139,7 @@ Named siblings that call the same helpers (from the xref-site ownership
 scan, context only — none reaches this body): `ApplyRandomDamageBurstAndUpdateThreshold 0x00444160`,
 `GetCurrentSubtreeHealthIfAnyActive 0x00444330`,
 `TriggerCoreCascadeIfEligible 0x004443f0`,
-`CUnitAI__CanUseIndexedSegmentEntry 0x00444f20`.
+`CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20`.
 
 ## Pinned-source status
 

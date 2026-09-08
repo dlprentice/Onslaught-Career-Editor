@@ -93,6 +93,9 @@ CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS = CURRENT_NAME_OVERLAY_COLUMNS + (
     "callingConvention", "returnType", "paramSpec", "arity", "arityBytes",
     "currentTags", "proposedTags",
 )
+CURRENT_SEGMENT_CONTROLLER_OVERLAY = REPO_ROOT / "tools/cohort-specs/segment-controller-ownership.manifest.tsv"
+CURRENT_SEGMENT_CONTROLLER_OVERLAY_SHA256 = "467f5235b71bfd301407b4c806aaec66a31dbe120551ba9bb9a1061886ee3585"
+CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS = CURRENT_NAME_OVERLAY_COLUMNS + ("currentTags", "proposedTags")
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 BASELINE_TABLE = (
@@ -732,6 +735,11 @@ def run(
                 table, CURRENT_BOUNDING_BOX_OVERLAY,
                 expected_sha256=CURRENT_BOUNDING_BOX_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SEGMENT_CONTROLLER_OVERLAY,
+                expected_sha256=CURRENT_SEGMENT_CONTROLLER_OVERLAY_SHA256,
+                expected_rows=4, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

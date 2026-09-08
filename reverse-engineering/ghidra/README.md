@@ -262,7 +262,7 @@ historical tables and explicit-table consumers remain unchanged. The adjacent
 stream-loader comment was outside this cohort; the follow-up below corrects it.
 No runtime-parity result is claimed.
 
-**Bounds contract comments (2026-09-08).** The working project now measures
+**Bounds contract comments (2026-09-08).** After this cohort the working project measured
 `db.18639`: 18 payload files, 118,967,156 bytes, inventory SHA-256
 `fdafa7bdb0966e6fe11840285d45db0981a58e701ce64f13620f73106bf62a3a`.
 Its main database is 68,665,344 bytes, SHA-256
@@ -293,6 +293,40 @@ It was copied, hash-compared, restored elsewhere and opened read-only successful
 `cfc4a9e9aebe0bd3144368f7bc6045244fde63370558f302ae17315ca24f662c`.
 The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
 Current-name projection is unchanged by this comment-only cohort.
+
+**Segment-controller ownership (2026-09-08).** The working project now measures
+`db.18640`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+`6d9e0cccc25aae89a0096ea58d758ca12cd5dba854c7cdab589cb547529106f2`.
+Its main database is 68,665,344 bytes, SHA-256
+`9f8b93ca89aef4f80897edf75d8b62d267e8840d631932d5f890ac2e260ed047`.
+The [manifest](../../tools/cohort-specs/segment-controller-ownership.manifest.tsv)
+and [spec](../../tools/cohort-specs/segment-controller-ownership.spec.tsv) correct
+four names, nonrepeatable comments and exact tag sets at `0x00444f00`,
+`0x00444f20`, `0x00494fa0` and `0x00494ff0`. The first two belong to the
+segments controller; the latter two are its motion-controller bridges. The
+[receiver evidence](../binary-analysis/functions/DestructableSegmentsController.cpp/CUnitAI__CanUseIndexedSegmentEntry.md)
+refutes the old UnitAI classification. These are analyst role names; original
+source method names and runtime parity remain unproven.
+
+Fresh PRE identity, isolated apply, independent review, sealed readback,
+live dry/apply and separate readback passed. All 8,326 other function rows
+remain identical; each target retains its signature shape, parameters, body
+and repeatable comment. The program export changes only its comment digest.
+The full live exports equal the separately reopened rehearsal POST. The current
+name/extent projection also matches all 8,330 live rows without changing frozen
+tables. Framework derivation/comment checks passed 11/11. An initial unprefixed
+address draft was refused before writes and remains in the private evidence.
+Evidence root: `local-lab/ghidra-first-training-20260907-v1/segment-controller-ownership/`.
+`live-readback.json` is 2,211 bytes, SHA-256
+`2541d9f6fe5885c2f086ad6d0414173d0712950fdc202e45a39faeb5d89ebff9`.
+
+The restore-proven bounds-comment POST above matched live and served as PRE.
+The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-08-segment-controller-ownership/post-working/`.
+It was copied, hash-compared, restored elsewhere and opened read-only successfully.
+`post-working-restore.json` is 5,738 bytes, SHA-256
+`9aa80129d73e9d0cf5eca20a23972cd45a6f9c5cc6a3417e9bd6c243f63b25e5`.
+The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
 
 Related (not this folder):
 

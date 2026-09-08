@@ -177,6 +177,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # stale-tag input refused before writes. No body/type/convention change.
 # bounds-contract-comments: 2026-09-08 exact two-comment cohort; isolated apply,
 # separate readback and independent byte/text review passed. Names/bodies frozen.
+# segment-controller-ownership: exact four names/comments/tag sets, 2026-09-08.
+# Isolated apply and separate full readback changed only the declared fields;
+# 8,326 other rows, all ABI/body metadata and non-comment program metrics held.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -194,6 +197,7 @@ LIVE_GRANTED_COHORTS = [
     "first-training-keyboard-boundary",
     "mesh-bounding-box-metadata",
     "bounds-contract-comments",
+    "segment-controller-ownership",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -617,6 +621,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "first-training-keyboard-boundary",\n'
         '        "mesh-bounding-box-metadata",\n'
         '        "bounds-contract-comments",\n'
+        '        "segment-controller-ownership",\n'
         "    };\n",
     ),
     (

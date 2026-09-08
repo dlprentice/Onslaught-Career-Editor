@@ -1,9 +1,9 @@
-# CDestructableSegmentsMotionController__VFunc_UpdateUnitAIIndexedEntryFlag
+# CDestructableSegmentsMotionController__VFunc_UpdateIndexedSegmentFlag
 
 > Address: `0x00494FA0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — no destroyable-segments motion-controller body survives
 in `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine
 specimen `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -13,11 +13,13 @@ an output flags dword. A live `entryState+0xa4` sets the bit immediately.
 Otherwise it passes `entryState+0x88` to the controller-owned indexed-segment
 predicate at `0x00444f20`: predicate TRUE clears bit 0; predicate FALSE sets
 it. Every other output bit is preserved.
-Evidence: MEASURED — pristine SHA verified before complete capstone body
+Evidence: MEASURED on 2026-08-22 — pristine SHA verified before complete capstone body
 decode and hash, whole-`.text` rel32 scan, image-wide imm32/vtable census,
 constructor/vtable cross-check, and callee/branch-polarity read. The predicate
 receiver proof is owned by the preceding note and is cross-linked rather than
-restated as new evidence. No Ghidra or rebuild owner changed.
+restated as new evidence. That dated pass changed neither Ghidra nor Core.
+The September 8 ownership cohort corrects the working names/comments/tags
+after fresh body/constructor checks and excludes signature or boundary changes.
 
 ## Contract (byte-exact)
 
@@ -36,8 +38,8 @@ Let `flags = *outFlags` and `index = entryState[+0x88]`.
 1. Load `[entryState+0xa4]`. When nonzero, execute
    `*outFlags = flags | 1` and return.
 2. Otherwise load the segments-controller receiver from
-   `[motionController+0x0c]`, push `index`, and call the current saved symbol
-   `CUnitAI__CanUseIndexedSegmentEntry 0x00444f20`.
+   `[motionController+0x0c]`, push `index`, and call the corrected symbol
+   `CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20`.
 3. If the predicate returns zero, execute `*outFlags = flags | 1` and
    return.
 4. If the predicate returns nonzero, execute
@@ -55,9 +57,8 @@ The prior predicate note byte-proves the receiver chain:
 segments-controller argument at `[motionController+0x0c]`; the Building and
 HiveBoss construction paths obtain that argument from their owning unit's
 `+0x178`. Therefore the call at `0x00494fc2` passes a
-`CDestructableSegmentsController`, not a CUnitAI object. The callee's current
-saved `CUnitAI__` prefix remains a tracked stale identity and is not treated
-as ownership evidence here.
+`CDestructableSegmentsController`, not a CUnitAI object. The callee's former
+`CUnitAI__` prefix was incorrect and is corrected in the working project.
 
 This body does not touch `[unit+0x88]`. Its `+0x88` load is from the explicit
 `entryState` argument and is immediately consumed as the integer segment
@@ -69,14 +70,14 @@ The sole direct call is:
 
 | Site | Callee / role |
 | --- | --- |
-| `0x00494fc2` | `CUnitAI__CanUseIndexedSegmentEntry 0x00444f20` — current saved name; controller-owned indexed-entry predicate |
+| `0x00494fc2` | `CDestructableSegmentsController__CanUseIndexedSegmentEntry 0x00444f20` — controller-owned indexed-entry predicate |
 
 There are **zero inbound rel32** sites. Exactly two image-wide imm32 dwords
 point to this body, both vtable entries:
 
 | Entry | Static table interpretation |
 | --- | --- |
-| `0x005dc294` | slot 6 of controller vtable `0x005dc27c` installed by `CDestructableSegmentsMotionController__Ctor`; the same dword is slot 17 when the overlapping `CMCBuggy` table is viewed from `0x005dc250` |
+| `0x005dc294` | slot 6 of controller vtable `0x005dc27c` installed by `CDestructableSegmentsMotionController__Ctor`; the older `CMCBuggy` slot-17 interpretation crossed into this adjacent table and is rejected |
 | `0x005dc3a0` | slot 6 of `CMCHiveBoss` table `0x005dc388` |
 
 The dual data-only ownership explains why no direct caller exists and why the
@@ -94,9 +95,8 @@ ordinary named call target.
 
 ## Pinned-source and rebuild status
 
-No source body exists in the pinned drop. The rebuild has no per-part segment
-controller or this motion bridge, so no Core behavior or focused test was
-invented. A future implementation must preserve the short-circuit, predicate
+No source body exists in the pinned drop. Core now has bounded per-part Warehouse state and supplied-eligibility bounds
+queries, but does not execute this complete motion bridge. A future implementation must preserve the short-circuit, predicate
 polarity, and read-modify-write preservation of bits 1–31.
 
 ## Cheapest falsifier
