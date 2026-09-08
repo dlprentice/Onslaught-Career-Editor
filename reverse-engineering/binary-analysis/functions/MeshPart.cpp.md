@@ -16,8 +16,9 @@ Each row below carries **measured** facts only: the exact entry address, the
 current Ghidra name, body size, callee-popped argument count from `ret imm`, the
 `__FILE__`/`__LINE__` coordinates the compiler emitted inside the body, and the
 heaviest direct callees. A current saved name is not itself a behavior proof.
-The September 8 BBOX reading below contradicts the material-loader name at
-`0x004B3180`; that saved metadata still needs a separately scoped correction.
+The September 8 BBOX reading below corrected the material-loader name at
+`0x004B3180` in the working project through the
+[bounded metadata cohort](../../ghidra/README.md). The tracked checkpoint stays unchanged.
 
 Argument counts are callee-popped stack arguments; `this` travels in ECX and is
 not counted.
@@ -31,7 +32,7 @@ not counted.
 | `0x004AFBB0` | `CMeshPart__LoadVerticesWithBones` | 3139 | 7 | 1174, 1176, 1178, 1221, 1223, 1262, 1353 | `CDXMemBuffer__Read` ×17, `CDXMemoryManager__Alloc` ×8 |
 | `0x004B1A40` | `CMeshPart__CacheFrameData` | 750 | 0 | 1815 | `CDXMemoryManager__Alloc` ×2, `sprintf`, `DebugTrace` |
 | `0x004B27A0` | `CMeshPart__LoadFromStream` | 2514 | 0 | 2425, 2431, 2442, 2446, 2452, 2602, 2742 | `CChunkReader__GetNext` ×19, `CChunkReader__Read` ×18 |
-| `0x004B3180` | `CMeshPart__LoadMaterial` | 109 | 0 | 2857 | `CChunkReader__Read` ×4, `CChunkReader__GetNext` |
+| `0x004B3180` | `BoundingBox__ReadChunk_004b3180` | 109 | 0 | 2857 | `CChunkReader__Read` ×4, `CChunkReader__GetNext` |
 | `0x004B31F0` | `CMeshPart__OptimizePolygons` | 2418 | 0 | 2893, 2895 | `sprintf` ×3, `DebugTrace` ×3 |
 | `0x004B3B70` | `CMeshPart__Clone` | 1751 | 0 | 3135, 3160, 3180, 3188, 3199, 3212 | `CDXMemoryManager__Alloc` ×11, `CMeshPart__Init`, `CMeshPart__AllocateGeometry` |
 | `0x004B4250` | `CMeshPart__Merge` | 2139 | 1 | 3243, 3246, 3249 | `CDXMemoryManager__Alloc` ×3, `Vec3__DivideInPlaceByScalar` ×3 |
@@ -49,7 +50,7 @@ Two evidence joins worth keeping:
   `CMeshPart__AllocateGeometry`, proving that cloning performs explicit
   initialization and geometry allocation. Whether it also copies raw buffers
   is not settled by the call list.
-- `LoadFromStream` and the BBOX reader currently named `LoadMaterial` are the only chunk-reader consumers here,
+- `LoadFromStream` and the BBOX reader are the only chunk-reader consumers here,
   and `LoadVerticesAndTriangles` and `LoadVerticesWithBones` read through
   `CDXMemBuffer` instead — two distinct input paths into the same object.
 
@@ -72,11 +73,12 @@ mesh BBOX payload is the same 40-byte layout. The
 [round/contact geometry owner](../cround-hit-damage-path-2026-08-10.md#serialized-geometry-and-terminal-target-tank-behavior)
 records the complete loader/getter body pins and raw Level 100 inputs.
 
-This supports a bounding-box read/reuse contract. The saved `LoadMaterial` name,
-`existing_material` parameter name and material tag are misleading; the current
-two-argument `__cdecl` shape is consistent with the bytes. Original source name
-and class ownership remain unproven because `MeshPart.cpp` is absent from the
-pinned drop. No live mesh-load observation or Ghidra mutation is claimed here.
+This supports a bounding-box read/reuse contract. The working project now uses
+`BoundingBox__ReadChunk_004b3180`, parameter `existing_box`, a `bounding-box` tag
+and a measured-contract comment. The two-argument `__cdecl` shape, parameter
+types/storage/comments and all other function rows were preserved. Original
+source name and class ownership remain unproven because `MeshPart.cpp` is absent
+from the pinned drop. No live mesh-load observation is claimed.
 
 ## Counting note
 
@@ -89,6 +91,9 @@ allocation-site density, not as a function count.
 
 - The BBOX reader has the bounded static contract above. Callees and line
   numbers alone do not establish the other ten functions' complete behavior.
+- The saved `CMeshPart__LoadFromStream` comment still describes this helper as
+  a material loader. It was outside the one-function correction and remains
+  misleading; use the address-bound contract above.
 - The bone-weighted vertex path at seven arguments is the widest interface here
   and the natural first target.
 

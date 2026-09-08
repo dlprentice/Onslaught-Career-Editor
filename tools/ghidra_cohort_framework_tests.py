@@ -170,6 +170,11 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # previously unowned 211-byte body at 0x0051feb0, with default name/prototype.
 # Isolated apply and separate readback preserved every old function and all
 # instructions/references; overlap and clipped-return controls refused writes.
+# mesh-bounding-box-metadata is granted 2026-09-08 for one name, one parameter
+# name, non-repeatable comment and material->bounding-box tag correction at
+# 0x004b3180. Reopened rehearsal preserved all other function rows, individual
+# parameter/return metadata, and program metrics except the comment digest;
+# stale-tag input refused before writes. No body/type/convention change.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -185,6 +190,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort-battleengine-set-collision-shape",
     "first-training-semantic-corrections",
     "first-training-keyboard-boundary",
+    "mesh-bounding-box-metadata",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -438,7 +444,7 @@ VERBS = [
     "CREATE_FUNCTION",
     "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REMOVE_STALE_BOOKMARK",
     "SET_BODY", "SET_NAME", "SET_PROTOTYPE", "SET_DATA_POINTER",
-    "SET_COMMENT", "SET_REPEATABLE_COMMENT",
+    "SET_COMMENT", "SET_REPEATABLE_COMMENT", "SET_TAGS",
 ]
 
 # The only Ghidra mutation calls the framework may contain, and how many times.
@@ -451,6 +457,8 @@ AUTHORIZED_MUTATION_CALLS = {
     ".createData(": 1,       # SET_DATA_POINTER: type one slot as a pointer
     ".createLabel(": 1,      # SET_DATA_POINTER: class-identity label
     ".setVarArgs(": 1,
+    ".addTag(": 1,
+    ".removeTag(": 1,
     ".setComment(": 1,
     ".setRepeatableComment(": 1,
     ".removeBookmark(": 1,
@@ -461,8 +469,6 @@ AUTHORIZED_MUTATION_CALLS = {
 }
 
 FORBIDDEN_MUTATION_CALLS = [
-    ".addTag(",
-    ".removeTag(",
     ".setCallingConvention(",
     ".setReturnType(",
     ".setCustomVariableStorage(",
@@ -606,6 +612,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort-battleengine-set-collision-shape",\n'
         '        "first-training-semantic-corrections",\n'
         '        "first-training-keyboard-boundary",\n'
+        '        "mesh-bounding-box-metadata",\n'
         "    };\n",
     ),
     (
@@ -1451,8 +1458,9 @@ class NegativeControlTests(unittest.TestCase):
     def test_a_widened_mutable_column_set_would_be_caught(self) -> None:
         block = self.base.split("static Set<String> mutableColumnsFor(", 1)[1]
         block = block.split("\n    }", 1)[0]
-        for banned in ('out.add("tags")',
-                       'out.add("callingConvention")',
+        self.assertEqual(block.count('out.add("tags")'), 1)
+        self.assertIn('out.add("tags")', block.split('if (verbs.contains(V_SET_TAGS)) {', 1)[1].split('}', 1)[0])
+        for banned in ('out.add("callingConvention")',
                        'out.add("namespace")'):
             self.assertTrue(banned not in block, banned)
 
@@ -1598,7 +1606,61 @@ class CreationGateProbe {
         List<?> failures=(List<?>)field(script.getClass(),"failures").get(script);
         if(failures.isEmpty()!=pass)throw new AssertionError(name+" "+failures);
     }
+    static void tagChecks() throws Exception {
+        for (String key : List.of("currentTags", "proposedTags"))
+            if (!GhidraApplyCohortManifest.KNOWN_SPEC_KEYS.contains("col." + key)) throw new AssertionError(key);
+        if(!GhidraApplyCohortManifest.mutableColumnsFor(Set.of("SET_TAGS"),false).equals(Set.of("tags")))
+            throw new AssertionError("tag collateral unlock");
+        for(String bad:List.of("", "b;a", "a;a", "a;", "a b", "a\t", "-;a")) {
+            try { GhidraApplyCohortManifest.decodeTags(bad); throw new AssertionError("accepted "+bad); }
+            catch(IllegalArgumentException expected) {}
+        }
+        SortedSet<String> live=new TreeSet<>(List.of("keep","material"));
+        List<String> mutations=new ArrayList<>();
+        Function f=mock(Function.class,(n,args)-> {
+            if(n.equals("getTags")) {
+                Set<FunctionTag> out=new HashSet<>();
+                for(String tag:live) out.add(mock(FunctionTag.class,(method,a)->method.equals("getName")?tag:null));
+                return out;
+            }
+            if(n.equals("addTag")) { mutations.add("add:"+args[0]);return live.add((String)args[0]); }
+            if(n.equals("removeTag")) { mutations.add("remove:"+args[0]);live.remove((String)args[0]);return null; }
+            return null;
+        });
+        Class<?> rc=Class.forName("GhidraApplyCohortManifest$Row");
+        Constructor<?> ctor=rc.getDeclaredConstructor();ctor.setAccessible(true);
+        Method gate=GhidraApplyCohortManifest.class.getDeclaredMethod("gateTags",rc,Function.class,Set.class,boolean.class);
+        gate.setAccessible(true);
+        for(String scenario:List.of("valid","stale","malformed","noop","label","unsupported-live")) {
+            GhidraApplyCohortManifest script=new GhidraApplyCohortManifest();Object row=ctor.newInstance();
+            field(rc,"liveKind").set(row,scenario.equals("label")?"SYMBOL:Label":"FUNCTION");
+            field(rc,"addrText").set(row,"0x1000");
+            @SuppressWarnings("unchecked") Map<String,String> cells=(Map<String,String>)field(rc,"cells").get(row);
+            cells.put("currentTags",scenario.equals("stale")?"keep":"keep;material");
+            cells.put("proposedTags",scenario.equals("malformed")?"keep;bounding-box":
+                scenario.equals("noop")?"keep;material":"bounding-box;keep");
+            if(scenario.equals("unsupported-live")) live.add("x;y");
+            gate.invoke(script,row,f,Set.of("SET_TAGS"),false);
+            List<?> failures=(List<?>)field(script.getClass(),"failures").get(script);
+            if(failures.isEmpty()!=scenario.equals("valid"))throw new AssertionError(scenario+failures);
+            if(!mutations.isEmpty())throw new AssertionError("gate mutated");
+            live.remove("x;y");
+        }
+        GhidraApplyCohortManifest.replaceTags(f,"bounding-box;keep");
+        if(!mutations.equals(List.of("remove:material","add:bounding-box")))throw new AssertionError(mutations);
+        if(!live.equals(Set.of("bounding-box","keep")))throw new AssertionError(live);
+        GhidraApplyCohortManifest post=new GhidraApplyCohortManifest();Object row=ctor.newInstance();
+        field(rc,"liveKind").set(row,"FUNCTION");field(rc,"addrText").set(row,"0x1000");
+        @SuppressWarnings("unchecked") Map<String,String> cells=(Map<String,String>)field(rc,"cells").get(row);
+        cells.put("currentTags","keep;material");cells.put("proposedTags","bounding-box;keep");
+        gate.invoke(post,row,f,Set.of("SET_TAGS"),true);
+        if(!((List<?>)field(post.getClass(),"failures").get(post)).isEmpty())throw new AssertionError("POST tags");
+        GhidraApplyCohortManifest.replaceTags(f,"-");
+        if(!live.isEmpty())throw new AssertionError("empty set");
+        System.out.println("tag gates PASS: replacement, preservation, POST, empty and stale/malformed controls");
+    }
     public static void main(String[] args) throws Exception {
+        tagChecks();
         check("valid",false,true);check("valid",true,true);
         for(String n:List.of("owned","data","gap","cut","escape","interior","symbol","comment","hash","disjoint","overlap"))check(n,false,false);
         check("bad-name",true,false);check("bad-abi",true,false);
@@ -1617,6 +1679,7 @@ class CreationGateProbe {
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("13 negatives", result.stdout)
+            self.assertIn("tag gates PASS", result.stdout)
 
 
 class CommentCohortTests(unittest.TestCase):
@@ -1654,7 +1717,8 @@ class CommentCohortTests(unittest.TestCase):
             self.skipTest("Java is needed to execute the production comment gates")
         source = BASE.read_text(encoding="utf-8")
         helpers = source.split('    static String decodeComment(', 1)[1]
-        helpers = '    static String decodeComment(' + helpers.split('    private void gatePostRows(', 1)[0]
+        helpers = '    static String decodeComment(' + helpers.split('    static SortedSet<String> decodeTags(', 1)[0]
+        helpers += '    private void gateComments(' + source.split('    private void gateComments(', 1)[1].split('    private void gatePostRows(', 1)[0]
         program = r"""
 import java.util.*;
 import java.nio.*;

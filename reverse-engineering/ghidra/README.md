@@ -190,8 +190,8 @@ or runtime-parity result is claimed. Current documentation names compose the
 frozen August 31 table with the five-row manifest through
 `tools/re_function_doc_names_check.py`; historical explicit-table consumers stay frozen.
 
-**First-training keyboard boundary (2026-09-08).** The working project now
-measures `db.18637`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+**First-training keyboard boundary (2026-09-08).** After this cohort the working project
+measured `db.18637`: 18 payload files, 118,967,156 bytes, inventory SHA-256
 `92f271aaa7070b8a321be330458c0983f494ae8b907c83b76a80dca3c6ef2980`.
 Its main database is 68,665,344 bytes, SHA-256
 `16eb1a51eea34c68f703e4e351848c1b4ef9aa0cd1271a37cc79f0ae30936fa3`.
@@ -226,6 +226,41 @@ It was hash-compared, restored elsewhere and opened read-only successfully;
 The tracked payload still matches `745c00ad…`; checkpoint refresh remains
 excluded. The current-name checker composes the frozen table, five-name manifest
 and this one-function manifest without rewriting historical tables or consumers.
+
+**Bounding-box reader metadata (2026-09-08).** The working project now measures
+`db.18638`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+`9da943a8b4ac1d0b3abc383e19a187bf2a77ce85945aa2bb1bf7dfbf34ca2c60`.
+Its main database is 68,665,344 bytes, SHA-256
+`dd70a143d8ed72214c7ec178bc2fc78ab8a71dfa09a4b4debcb7f3fb821cca6f`.
+The [manifest](../../tools/cohort-specs/mesh-bounding-box-metadata.manifest.tsv)
+and [spec](../../tools/cohort-specs/mesh-bounding-box-metadata.spec.tsv) correct
+exactly `0x004b3180`: role name `BoundingBox__ReadChunk_004b3180`, destination
+parameter `existing_box`, measured-contract comment, and `material` tag replaced
+by `bounding-box`. The [MeshPart evidence](../binary-analysis/functions/MeshPart.cpp.md#bbox-reader-correction)
+does not recover its original source name or class.
+
+The isolated rehearsal, independent review, stale-tag rejection before writes,
+sealed checks, live apply and separate-process readback passed. All 8,329 other
+function rows remain identical; bodies, instructions, data and references are
+unchanged. The only program-export change is the comment digest. The separate
+return/parameter export preserves types, storage, source and comments exactly,
+changing only the declared destination name. Live function, program and
+parameter exports equal the reopened rehearsal POST byte-for-byte. Evidence is
+under `local-lab/ghidra-first-training-20260907-v1/bounding-box/`;
+`live-readback.json` is 2,413 bytes, SHA-256
+`d6b4e7f489ce2e9636f2e17d383331d45738d90217d49c94fe1ed6a4ef46079e`.
+
+The restore-proven keyboard POST above matched live and served as PRE. The new
+independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-08-mesh-bounding-box/post-working/`.
+It was hash-compared, restored elsewhere and opened read-only successfully;
+`post-working-restore.json` is 5,695 bytes, SHA-256
+`10fa53f348631ed705120f56d3d5655827663474b0a3719ad4a528a291ec230d`.
+The tracked payload still matches `745c00ad…`; its refresh remains excluded.
+The current-name checker additionally composes this exact one-row manifest;
+historical tables and explicit-table consumers remain unchanged. The adjacent
+stream-loader comment still contains the old material interpretation and is
+outside this cohort. No runtime-parity result is claimed.
 
 Related (not this folder):
 

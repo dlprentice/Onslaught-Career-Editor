@@ -179,13 +179,16 @@ TEXT_ALLOW_EXACT = {
 
 PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 
-# Exact reviewed text, not an extension/root exemption. This immutable Ghidra
-# manifest contains ten canonical UTF-8 comments (7,696 decoded bytes), with no
-# control, secret or payload findings. Encoding preserves exact PRE/POST text;
+# Exact reviewed text, not an extension/root exemption. The first manifest
+# contains ten canonical UTF-8 comments (7,696 decoded bytes); the BBOX manifest
+# contains two (1,575 bytes), with no control, secret or payload findings.
+# Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
     "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv":
         "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf",
+    "tools/cohort-specs/mesh-bounding-box-metadata.manifest.tsv":
+        "3ab12852fe992be1789eb1f24f57cf0052d6b3706286f22bdf057a1aef485749",
 }
 
 CDB_PROMPT_RE = re.compile(r"(?m)^\s*\d+:\d+>\s+")

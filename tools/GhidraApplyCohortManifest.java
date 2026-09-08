@@ -29,6 +29,7 @@
 //   SET_NAME               Function.setName / Symbol.setName
 //   SET_PROTOTYPE          Function.updateFunction (DYNAMIC_STORAGE_FORMAL_PARAMS)
 //                          plus Function.setVarArgs, MANIFEST-DRIVEN (see below)
+//   SET_TAGS               Exact function tag membership; never deletes global tags
 //   SET_COMMENT            Function.setComment (non-repeatable function comment)
 //   SET_REPEATABLE_COMMENT Function.setRepeatableComment
 //                          Current/proposed values are canonical UTF-8 Base64;
@@ -196,6 +197,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -222,6 +224,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
     // ----------------------------------------------------------------- verbs
     static final String V_SET_NAME = "SET_NAME";
     static final String V_SET_PROTOTYPE = "SET_PROTOTYPE";
+    static final String V_SET_TAGS = "SET_TAGS";
     static final String V_SET_COMMENT = "SET_COMMENT";
     static final String V_SET_REPEATABLE_COMMENT = "SET_REPEATABLE_COMMENT";
     static final String V_CREATE_FUNCTION = "CREATE_FUNCTION";
@@ -232,7 +235,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
     static final String V_BOOKMARK = "REMOVE_STALE_BOOKMARK";
     static final List<String> KNOWN_VERBS = Arrays.asList(
         V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_CREATE_FUNCTION, V_SET_NAME,
-        V_SET_PROTOTYPE, V_SET_DATA_POINTER, V_SET_COMMENT, V_SET_REPEATABLE_COMMENT);
+        V_SET_PROTOTYPE, V_SET_DATA_POINTER, V_SET_TAGS, V_SET_COMMENT, V_SET_REPEATABLE_COMMENT);
 
     /** The frozen per-function collateral column list.  Compiled in, never
      *  spec-supplied: a spec cannot widen it, and every column not claimed by a
@@ -267,6 +270,9 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             // cohort never declares SET_NAME.  Non-target functions can still
             // never move it under any verb.
             out.add("symbolSource");
+        }
+        if (verbs.contains(V_SET_TAGS)) {
+            out.add("tags");
         }
         if (verbs.contains(V_SET_COMMENT)) {
             out.add("commentSha");
@@ -389,6 +395,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
         "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
         "col.proposedLabel",
+        "col.currentTags", "col.proposedTags",
         "col.currentCommentBase64", "col.proposedCommentBase64",
         "col.currentRepeatableCommentBase64", "col.proposedRepeatableCommentBase64",
         "unique", "constant", "enum", "enumPrefix", "forbidToken", "noCycle",
@@ -1687,6 +1694,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                         + "] actual [" + row.targetName + "]");
                 }
             }
+            gateTags(row, fn, verbs, readback);
             gateComments(row, fn, verbs, readback);
             if (verbs.contains(V_SET_PROTOTYPE) && fn != null) {
                 gatePrototypeRow(row, fn, readback);
@@ -1984,6 +1992,18 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 }
             }
 
+            if (verbs.contains(V_SET_TAGS) && failures.isEmpty()) {
+                for (Row row : rows) {
+                    try {
+                        replaceTags(fm.getFunctionAt(row.entry), row.get("proposedTags"));
+                        row.verdict = "APPLIED";
+                    } catch (Exception exc) {
+                        row.verdict = "APPLY_THREW:" + exc.getClass().getSimpleName();
+                        fail(row, "tag update threw " + exc.getClass().getSimpleName());
+                    }
+                }
+            }
+
             // Comment updates run only after every row's exact PRE was checked.
             if ((verbs.contains(V_SET_COMMENT) || verbs.contains(V_SET_REPEATABLE_COMMENT))
                     && failures.isEmpty()) {
@@ -2109,6 +2129,12 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             }
             requireBinding(spec, "col.creationRanges", V_CREATE_FUNCTION);
             requireBinding(spec, "col.creationBodySha256", V_CREATE_FUNCTION);
+        }
+        owner.put("col.currentTags", V_SET_TAGS);
+        owner.put("col.proposedTags", V_SET_TAGS);
+        if (verbs.contains(V_SET_TAGS)) {
+            requireBinding(spec, "col.currentTags", V_SET_TAGS);
+            requireBinding(spec, "col.proposedTags", V_SET_TAGS);
         }
         owner.put("col.currentCommentBase64", V_SET_COMMENT);
         owner.put("col.proposedCommentBase64", V_SET_COMMENT);
@@ -3039,6 +3065,56 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         return text;
     }
 
+    // Canonical sorted semicolon-separated names; "-" is the empty set.
+    // Restricted alphabet makes serialization injective; reject unsupported names.
+    static SortedSet<String> decodeTags(String text) {
+        SortedSet<String> tags = new TreeSet<>();
+        if ("-".equals(text)) return tags;
+        if (text == null || text.isEmpty()) throw new IllegalArgumentException("empty tag encoding");
+        for (String tag : text.split(";", -1)) {
+            if (!tag.matches("[A-Za-z0-9_][A-Za-z0-9_.:-]*") || !tags.add(tag))
+                throw new IllegalArgumentException("unsupported or duplicate tag");
+        }
+        if (!String.join(";", tags).equals(text)) throw new IllegalArgumentException("unsorted tags");
+        return tags;
+    }
+
+    private static SortedSet<String> functionTags(Function f) {
+        SortedSet<String> tags = new TreeSet<>();
+        for (FunctionTag tag : f.getTags()) {
+            String name = tag.getName();
+            if (!name.matches("[A-Za-z0-9_][A-Za-z0-9_.:-]*"))
+                throw new IllegalArgumentException("unsupported existing tag");
+            tags.add(name);
+        }
+        // Validate existing names too: no ambiguous/current unsupported encoding.
+        return decodeTags(tags.isEmpty() ? "-" : String.join(";", tags));
+    }
+
+    static void replaceTags(Function f, String proposed) {
+        SortedSet<String> after = decodeTags(proposed);
+        SortedSet<String> before = functionTags(f);
+        for (String tag : before) if (!after.contains(tag)) f.removeTag(tag);
+        for (String tag : after) if (!before.contains(tag)) f.addTag(tag);
+    }
+
+    private void gateTags(Row row, Function f, Set<String> verbs, boolean post) {
+        if (!verbs.contains(V_SET_TAGS)) return;
+        if (f == null || !"FUNCTION".equals(row.liveKind)) {
+            fail(row, "TAGS REQUIRE FUNCTION ENTRY");
+            return;
+        }
+        try {
+            SortedSet<String> before = decodeTags(row.get("currentTags"));
+            SortedSet<String> after = decodeTags(row.get("proposedTags"));
+            if (before.equals(after)) fail(row, "TAGS NO-OP");
+            if (!(post ? after : before).equals(functionTags(f)))
+                fail(row, (post ? "POST" : "CURRENT") + " TAGS MISMATCH");
+        } catch (Exception exc) {
+            fail(row, "TAGS ENCODING " + exc.getClass().getSimpleName());
+        }
+    }
+
     private void gateComments(Row row, Function f, Set<String> verbs, boolean post) {
         for (String verb : Arrays.asList(V_SET_COMMENT, V_SET_REPEATABLE_COMMENT)) {
             if (!verbs.contains(verb)) {
@@ -3082,6 +3158,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 }
             }
             Function f = fm.getFunctionAt(row.entry);
+            gateTags(row, f, verbs, true);
             gateComments(row, f, verbs, true);
             if (f == null) {
                 continue;
@@ -3203,6 +3280,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 }
             }
             Function f = fm.getFunctionAt(row.entry);
+            gateTags(row, f, verbs, true);
             gateComments(row, f, verbs, true);
             if (f == null) {
                 continue;

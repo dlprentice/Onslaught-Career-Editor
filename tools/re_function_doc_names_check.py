@@ -82,6 +82,17 @@ DEFAULT_TABLE = (
 CURRENT_NAME_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv"
 CURRENT_NAME_OVERLAY_SHA256 = "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf"
 CURRENT_NAME_OVERLAY_ROWS = 5
+CURRENT_NAME_OVERLAY_COLUMNS = (
+    "addr", "liveKind", "currentName", "proposedName", "currentCommentBase64",
+    "proposedCommentBase64", "bodyStart", "bodyEndExclusive", "bodySha256",
+)
+CURRENT_BOUNDING_BOX_OVERLAY = REPO_ROOT / "tools/cohort-specs/mesh-bounding-box-metadata.manifest.tsv"
+CURRENT_BOUNDING_BOX_OVERLAY_SHA256 = "3ab12852fe992be1789eb1f24f57cf0052d6b3706286f22bdf057a1aef485749"
+CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS = CURRENT_NAME_OVERLAY_COLUMNS + (
+    "currentSignature", "currentSignatureSha256", "proposedSignature",
+    "callingConvention", "returnType", "paramSpec", "arity", "arityBytes",
+    "currentTags", "proposedTags",
+)
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 BASELINE_TABLE = (
@@ -391,15 +402,14 @@ def apply_current_name_overlay(
     table: NameTable, manifest: Path = CURRENT_NAME_OVERLAY, *,
     expected_sha256: str = CURRENT_NAME_OVERLAY_SHA256,
     expected_rows: int = CURRENT_NAME_OVERLAY_ROWS,
+    expected_columns: tuple[str, ...] = CURRENT_NAME_OVERLAY_COLUMNS,
 ) -> NameTable:
     """Compose the sealed name-only delta without rewriting dated geometry."""
     if sha256_file(manifest) != expected_sha256:
         raise ValueError("current name overlay SHA-256 differs")
     with manifest.open(encoding="utf-8", newline="") as stream:
         reader = csv.DictReader(stream, delimiter="\t")
-        if reader.fieldnames != ["addr", "liveKind", "currentName", "proposedName",
-                                "currentCommentBase64", "proposedCommentBase64",
-                                "bodyStart", "bodyEndExclusive", "bodySha256"]:
+        if tuple(reader.fieldnames or ()) != expected_columns:
             raise ValueError("current name overlay columns differ")
         rows = list(reader)
     if len(rows) != expected_rows:
@@ -718,6 +728,11 @@ def run(
             table = load_table(table_path)
         if use_current_overlay:
             table = apply_current_creation_overlay(apply_current_name_overlay(table))
+            table = apply_current_name_overlay(
+                table, CURRENT_BOUNDING_BOX_OVERLAY,
+                expected_sha256=CURRENT_BOUNDING_BOX_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS,
+            )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
         return 2
@@ -1167,6 +1182,18 @@ def _self_test() -> int:
               and load_table(current).lookup_entry("0x00402000") == "CThing__Gamma")
         failures += not ok
         print(f"  [{'ok ' if ok else 'FAIL'}] overlay updates entry and containment; historical table stays exact")
+        metadata_overlay = base / "metadata-overlay.tsv"
+        metadata_overlay.write_text(overlay_header.rstrip("\n") + "\textraMetadata\n" +
+            overlay_row.rstrip("\n") + "\tretained-by-cohort\n", encoding="utf-8")
+        expect_error("extra overlay columns need an explicit schema", "columns differ",
+            lambda: apply_current_name_overlay(load_table(current), metadata_overlay,
+                expected_sha256=sha256_file(metadata_overlay), expected_rows=1))
+        metadata_composed = apply_current_name_overlay(load_table(current), metadata_overlay,
+            expected_sha256=sha256_file(metadata_overlay), expected_rows=1,
+            expected_columns=CURRENT_NAME_OVERLAY_COLUMNS + ("extraMetadata",))
+        ok = metadata_composed.entry == composed.entry and metadata_composed.geometry == composed.geometry
+        failures += not ok
+        print(f"  [{'ok ' if ok else 'FAIL'}] pinned metadata schema projects only the name and preserves geometry")
         expect_error("overlay exact hash required", "SHA-256 differs",
             lambda: apply_current_name_overlay(load_table(current), overlay,
                 expected_sha256="0" * 64, expected_rows=1))
