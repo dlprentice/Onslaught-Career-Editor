@@ -60,6 +60,34 @@ public sealed class Level100AbortNoCrabRunFixture
     }
 }
 
+public sealed class Level100ChainAimTests
+{
+    [Theory]
+    [InlineData(0, SimActions.Fire)]
+    [InlineData(259, SimActions.None)]
+    public void WaveTwoFireGateUsesTheSteeringReticleOrigin(
+        int aimHeightAboveCamera, SimActions expected)
+    {
+        WorldSnapshot state = new Simulation(
+            0xA100u, Level100TestActorDefinitions.Create()).Snapshot with
+        {
+            PlayerPosition = SimVector2.Zero,
+            PlayerElevationMillimeters = 10_000,
+            FacingYawMicroRad = 0,
+            FacingPitchMicroRad = 0,
+        };
+        var aim = new SimVector3(0, 10_000 + aimHeightAboveCamera, 1_000);
+        double slant = Math.Sqrt(1_000_000d +
+            ((double)aimHeightAboveCamera * aimHeightAboveCamera));
+
+        // At one metre the unchanged tolerance is 0.15 radians. The level
+        // point lies on the reticle; the raised point is about 0.253 radians
+        // above it. Production launch owns physical-emitter convergence.
+        Assert.Equal(expected,
+            Level100ChainAutopilot.WaveTwoFireGate(state, aim, slant, 10_000));
+    }
+}
+
 public sealed class Level100FullChainTests
     : IClassFixture<Level100ChainRunFixture>,
       IClassFixture<Level100AbortControlRunFixture>,

@@ -285,6 +285,16 @@ That check passed separately: each control's 67 damage events matched 67 named
 round hits (`living-plane-turn-{old-cap-control,causal-receipts}-20260908.log`).
 Existing finite-cylinder contact tests and both full-combat requirements remain.
 
+The test pilot's reticle-origin correction then passed **2/2** focused cases
+that had both failed with its fictitious muzzle-height offset
+(`reticle-fire-gate-{red,focused}-20260908.log`). The affected route selection
+passed **6/8** (`reticle-fire-gate-routes-20260908.log`): returning combat still
+aborts after five final-wave kills; cold combat now aborts with none. Both cold
+adapters match at Won/tick 7194/hull 7050, hash
+`53a682fd6693ccee442655189df25c7ff524cb646e1fe88d2e2be0b60b146b76`.
+This fixes the driver's stated geometry, not the unfinished combat route.
+Simulation code, steering gains and full-combat assertions were unchanged.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

@@ -2401,7 +2401,7 @@ internal sealed class Level100ChainAutopilot
     /// cadence is gated by its stored ready time, so a shot taken while
     /// the nose sweeps past during a missile break is free.
     /// </summary>
-    private static SimActions WaveTwoFireGate(
+    internal static SimActions WaveTwoFireGate(
         WorldSnapshot state,
         SimVector3 aim,
         double slant,
@@ -2411,23 +2411,11 @@ internal sealed class Level100ChainAutopilot
 
         // Controller Fire precedes actor/mission events and player Move.
         // Test the retained pose; this update's look and movement have not yet
-        // changed the emitter. The former one-tick prediction compensated for
-        // Simulation's reversed phase order and is now an aiming error.
-        double muzzleX = state.PlayerPosition.X;
-        double muzzleZ = state.PlayerPosition.Z;
-        double muzzleY = state.PlayerElevationMillimeters +
-            SimulationConstants.PulseCannonEmitterUpMillimeters;
-        double deltaX = (double)aim.X - muzzleX;
-        double deltaY = (double)aim.Y - muzzleY;
-        double deltaZ = (double)aim.Z - muzzleZ;
-        double horizontal = Math.Max(
-            1.0, Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ)));
-
-        double yawError = NormalizeRadians(
-            Math.Atan2(-deltaX, deltaZ) -
-            (state.FacingYawMicroRad / 1_000_000d));
-        double pitchError = -Math.Atan2(deltaY, horizontal) -
-            (state.FacingPitchMicroRad / 1_000_000d);
+        // changed the pose. Steering and this gate use the same camera ray;
+        // production launch handles the transformed emitter and convergence.
+        double horizontal = Horizontal(state, aim);
+        double yawError = YawErrorTo(state, aim.X, aim.Z);
+        double pitchError = PitchErrorTo(state, aim, horizontal);
 
         return altitude >= 6_000 &&
             slant is > 800 and < 55_000 &&

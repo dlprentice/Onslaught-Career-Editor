@@ -336,7 +336,10 @@ The smoke exercised movement, four fire inputs, retry and return; its mission
 was still Running. It is development footage, not a completed player tutorial,
 retail comparison or performance benchmark. Logs and raw recordings are in
 `local-data/first-flight/progress-video-20260908-a/`. Godot reported four leaked
-ObjectDB instances at exit; that lifecycle warning remains unresolved.
+ObjectDB instances at exit; that lifecycle warning remains unresolved. The
+labelled 50-second preview is `onslaught-progress-2026-09-08-final.mp4` in that
+directory; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
+show the production source at `5fc65256`; the preview uses edited excerpts.
 
 **September 7 source and RE progress.** The
 [Actor/base contract](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
@@ -704,8 +707,11 @@ it to one third only while dying; the former mover applied that reduction to
 living aircraft too. Both materialized aircraft first failed a discriminating
 test, then passed with the full rate. The affected mechanics/Euler selection
 passes 34 checks and the repeated FirstFlight tape passes, but complete cold
-combat currently fails: both input adapters reach `Won` at tick 7260 with hull
-2750 through the low-health abort after only one final-wave kill. Their complete
+combat currently fails. A separate correction makes the test pilot's firing
+check use the same camera origin as its steering; its former fictitious muzzle
+height both refused an aligned shot and accepted an off-reticle shot. After
+that correction, both cold input adapters reach `Won` at tick 7194 with hull
+7050 through the low-health abort without a final-wave kill. Their complete
 state and pose traces still match. The six-kill/no-abort assertions remain;
 neither a winning terminal state nor input-adapter equality closes this gap.
 

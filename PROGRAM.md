@@ -29,8 +29,9 @@ faithful Godot game that the community can play and inspect, with Windows as the
 primary audience and native Linux support. Keep a later enhanced version separate
 from retail defaults. Native execution of selected original routines supports RE;
 building a second complete port is not an additional active deliverable.
-Prepare a short development video from the actual Godot renderer with a stated
-revision, input route and known limitations. An isolated display may render it
+The first actual Godot development video is recorded in
+[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#reconstruction), with its
+revision, input route and known limitations. An isolated display may render footage
 without controlling David's desktop; a synthetic demonstration is not a player
 acceptance run. Keep the existing capture/launcher owners rather than creating a
 separate presentation or test framework.
