@@ -114,10 +114,62 @@ For equal Euler words `(3f333333,3f8ccccd,becccccd)`, controlled PC24 produces
 M02 `3e6c827e`; PC53 produces `3e6c8280`. Neither `Math.Sin/Cos` equivalence nor
 the live game's control word follows from these measurements.
 
-`rebuild/OnslaughtRebuild.Core/RetailUnitEuler.cs` carries only the finite PC24
-angle-update prefix. Its 19 native-output cases pass; the matrix and creation/
-movement transaction are still unported. The current Level 100 Plane mover
-remains an approximation and no replay fingerprint changes from this primitive.
+`rebuild/OnslaughtRebuild.Core/RetailUnitEuler.cs` carries the finite PC24
+angle update and matrix operation order. Matrix construction uses managed
+double sine/cosine for the retained transcendental results, with the measured
+PC24 operations and separate float stores. This is provisional outside its
+finite native comparisons; general x87 trig equivalence is not established.
+The creation/movement transaction remains unported, so the current Level 100
+Plane mover and its replay fingerprint are unchanged by this primitive.
+
+### Copied-retail Plane observation, September 8
+
+The installed Linux Steam `BEA.exe` matched the pristine identity above before
+copying. A fresh copy of its data and six selected executable/options/DLL inputs
+ran through the installed Proton Experimental Wine loader on an authenticated,
+TCP-disabled private Xvfb display, with software OpenGL requested. The required
+three VKD3D DLLs came from that existing Proton installation into the private
+prefix. This used WineD3D, not the normal Steam container/DXVK launch route.
+Proton's installed version was `experimental-11.0-20260903c-x86_64`.
+
+Launch arguments were `-forcewindowed -nosound -nomusic -skipfmv -level 100`.
+Level 100 rendered successfully; this development entry bypasses the frontend
+and is not a cold-start or player-input acceptance run. No desktop input,
+desktop capture, Ghidra opening or game-code patch was used.
+
+Hardware breakpoints were installed **after** Wine exec'd its i386 preloader.
+Earlier pre-exec attempts yielded no samples. The accepted `observe-f` receipt
+contains one AirGuide constructor exit (`0x004021e7`), twelve clearance-cache
+entries (`0x004028e0`) and twelve Plane Euler entries (`0x004fa4b0`). Both
+complete constructor/Euler bodies matched the pinned pristine bytes in live
+memory. All 25 samples read x87 control word **`0x007f`**, PC24/RN, on the
+same thread. This establishes those calls on this backend, not all gameplay
+sites, Steam-default behavior or Windows precision.
+
+The one authored Trainer receiver had position `(265.5, 392.5, -15)`, current
+and desired Euler words `(40490fdb, 00000000, 00000000)`, zero velocity/drive,
+all three caps `3d32b8c2`, normal state zero and motion gate one. Its initial
+guide cache X/Y words were zero. Static constructor bytes do not write those
+two cache fields; this one observed allocation does not establish zero as a
+general initialization rule. At the first cache entry the owner had already
+updated orientation but had not translated, consistent with the initial
+movement preceding the first clearance event.
+
+The existing unchanged-byte native oracle reproduced **eleven consecutive
+live Euler and nine-word basis transitions** using the twelve captured inputs
+and the measured Plane multiplier getter (`0x004de700`, returning `1.0f`).
+The managed matrix matches all nineteen original and twelve live-input native
+outputs. Focused Core checks passed **50/50**: nineteen angle cases and those
+thirty-one matrix cases. These comparisons exclude matrix padding and do not
+establish an entire aircraft trajectory or universal trig equivalence.
+
+Private launch/debugger scripts, `observe-f/observations.jsonl`, live identity
+checks and `euler-comparison.log` are in
+`local-data/retail-runtime/aircraft-20260908-a/`. The copied executable and real
+options file retained their input hashes after the run. Each owned prefix and
+display was stopped and its temporary authority cookie removed. The separate
+Core test log is `unit-euler-live-matrix-20260908.log` under the existing
+`local-data/test-runs/linux-route-20260906-af1sa_l9/` owner.
 
 ### `HandleEvent` arms (byte-exact)
 

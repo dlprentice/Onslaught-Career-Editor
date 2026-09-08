@@ -341,6 +341,20 @@ labelled 50-second preview is `onslaught-progress-2026-09-08-final.mp4` in that
 directory; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
 show the production source at `5fc65256`; the preview uses edited excerpts.
 
+**September 8 copied-retail observation.** A pristine-identity retail copy also
+reached and rendered Level 100 through installed Proton Experimental Wine and
+WineD3D on the private display. Its `-level 100` entry bypassed the frontend;
+audio was disabled. Hardware breakpoints captured twenty-five Plane/guide calls
+with live PC24/RN arithmetic. The existing native routine probe reproduced
+eleven consecutive observed Euler/basis transitions. Core now carries the
+matrix operation order as well as angle smoothing, with **50/50** focused tests
+passing. Managed trig remains provisional outside the finite comparisons, and
+this primitive is still separate from the production aircraft mover. Private
+inputs, scripts and receipts are in `local-data/retail-runtime/aircraft-20260908-a/`;
+the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
+records the exact route and limits. This does not reproduce a player tutorial,
+the normal Steam/DXVK launch path or Windows behavior.
+
 **September 7 source and RE progress.** The
 [Actor/base contract](reverse-engineering/binary-analysis/functions/Actor.cpp.md)
 and [Unit construction order](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
@@ -376,7 +390,8 @@ The Warehouse bounds-report builder preserves original part identity, reference
 geometry, cached-transpose arithmetic and the first-six contact order. It still
 requires supplied poses and break-latch eligibility; it is not yet connected to
 the production explosion path. Geometry operations follow the measured device
-setup's PC24/RN intent, with the actual gameplay control word still unmeasured.
+setup's PC24/RN intent; the later copied-retail sample above confirms that mode
+for its Plane/guide calls, not the entire explosion path or other backends.
 Direct Morph/Charge/Fire/ChangeWeapon/Zoom now precede actor and mission
 callbacks, using the retained launch pose. Full axis/event ordering, spatial
 blasts, Large effects and precise float motion/expiry remain open. Tank/Truck

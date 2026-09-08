@@ -250,8 +250,16 @@ Coverage includes strict angle boundaries, pitch without wrapping, one-pass
 normalization, multiplier four, signed zero, the float coefficient and a
 subnormal step retained until the final store. Review replaced one initial
 coefficient example that did not distinguish multiplication from division.
-This primitive does not yet replace aircraft movement or its matrix builder;
-no new full-route run or replay fingerprint is claimed for it.
+The subsequent matrix implementation passed **50/50** focused Core cases:
+nineteen angle updates and thirty-one matrix outputs
+(`unit-euler-live-matrix-20260908.log`). Twelve additional inputs came from
+actual Plane calls in the private copied-game WineD3D run; the unchanged native
+oracle also matched eleven consecutive live Euler/basis transitions. Its
+constructor/cache/Euler samples all read PC24/RN. The exact private route and
+receipts are in the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
+Managed trig remains provisional outside those finite cases. This primitive
+does not yet replace aircraft movement; no new full-route result or replay
+fingerprint is claimed for it.
 
 The living-Plane turn-rate correction passed **34/34** mechanics/Euler checks
 and **1/1** repeated Client FirstFlight check. Both aircraft first failed at

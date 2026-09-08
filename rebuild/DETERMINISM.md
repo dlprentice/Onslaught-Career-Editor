@@ -2,10 +2,11 @@
 
 Status: active — the contract a contributor breaks first
 Last updated: 2026-09-08
-Evidence: SOURCE — constants and behaviors cited against
+Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
-the 20 Hz migration evidence. Precision setup below is direct static byte evidence.
+the 20 Hz migration evidence. Precision setup is static byte evidence; the
+September 8 Plane control-word sample below is a separate runtime observation.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Summary: what "deterministic" means in this rebuild, what is enforced, and
@@ -30,8 +31,10 @@ what a contributor must do when a change legitimately moves the trace hash.
 The mesh-pose and passive sphere/bounds primitives use 24-significand-bit,
 round-to-nearest-even operations with explicit float32 stores. `RetailFloat24`
 retains a double carrier between operations: x87 precision control does not
-reduce its exponent range to float32. This bounded geometry model is based on
-device-creation intent; the live gameplay control word remains unmeasured.
+reduce its exponent range to float32. This bounded geometry model follows
+device-creation intent. September 8 also measured PC24/RN at twenty-five
+Plane/guide calls on the private WineD3D route described below; other sites
+and rendering backends remain unmeasured.
 
 Fresh September 8 inspection of pristine `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, found:
@@ -55,8 +58,8 @@ Pinned `d3dapp.cpp:337–341` enables preservation only for `_DEBUG`, but that
 source drop uses Direct3D 8; it does not establish the retail API or runtime.
 Startup precision alone therefore cannot justify 53-bit gameplay arithmetic.
 The focused Core tests and a separate native x87 PC24 probe distinguish root
-rounding, cancellation, signed zero and retained exponent range. They do not
-sample the game, driver or Proton control word. These primitives are not yet
+rounding, cancellation, signed zero and retained exponent range. Those isolated
+tests do not themselves sample the game or driver. These primitives are not yet
 connected to the spatial explosion scan; no whole-simulation precision claim
 or replay fingerprint change follows from this correction.
 
@@ -69,14 +72,23 @@ this correction. The quarter-turn offset and renderer checks in
 `ThingActorBaseStateTests` and the materializer's `Level100FloatGeometryTests`
 test coordinate consistency, not live retail Euler arithmetic or flight parity.
 
-`RetailUnitEuler.Smooth` carries the finite PC24 angle-update prefix using
-retained retail yaw/pitch/roll words. Nineteen cases match isolated execution
-of the unchanged retail routine, including wrap boundaries, signed zero and
-subnormal retained steps. This primitive is not yet the Level 100 mover:
-creation-owned angles, matrix/trig behavior, drive and movement order remain
-integration requirements. The isolated PC24/PC53 matrix results differ, so
-neither ordinary float trig nor a live gameplay control word is inferred from
-the prefix tests. See the existing [Unit function evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
+`RetailUnitEuler.Smooth` carries the finite PC24 angle update using retained
+retail yaw/pitch/roll words. Nineteen cases match isolated execution of the
+unchanged retail routine, including wrap boundaries, signed zero and subnormal
+retained steps. `BuildBasis` follows its matrix arithmetic/store order using
+managed double trig, matching thirty-one finite native outputs. General x87
+transcendental equivalence and cross-host trig identity remain unestablished.
+The primitive is not yet the Level 100 mover: creation-owned raw state, guide
+timing, drive, contact and movement order still require integration.
+
+A copied pristine game running through installed Proton Experimental Wine,
+WineD3D and a private Xvfb display reached Level 100 with `-level 100`, without
+desktop control. One constructor, twelve cache and twelve Plane Euler samples
+read control word `0x007f`; the live constructor/Euler bodies matched pristine
+bytes. The native oracle also reproduced eleven consecutive live Euler/basis
+transitions. This is a bounded backend observation, not Steam-default, Windows,
+cold-start acceptance or a whole-simulation precision claim. See the existing
+[Unit function evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
 
 ## What Core may not do
 

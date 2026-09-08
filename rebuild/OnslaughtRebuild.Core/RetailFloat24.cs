@@ -8,7 +8,8 @@ namespace OnslaughtRebuild.Core;
 /// The double carrier retains the exponent range needed between the measured
 /// float-input geometry operations; a float cast represents a separate store.
 /// The segment threshold additionally uses retail's binary64 0.3 coefficient.
-/// This models the device-creation precision intent, not a measured live FPU.
+/// PC24/RN also matches the bounded September 8 copied-retail Plane observation
+/// under WineD3D. Other call sites and rendering backends remain unmeasured.
 /// </summary>
 internal static class RetailFloat24
 {

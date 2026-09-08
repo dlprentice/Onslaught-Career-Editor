@@ -35,6 +35,11 @@ revision, input route and known limitations. An isolated display may render foot
 without controlling David's desktop; a synthetic demonstration is not a player
 acceptance run. Keep the existing capture/launcher owners rather than creating a
 separate presentation or test framework.
+The same isolation now supports a copied-retail WineD3D observation, including
+measured Plane control words and Euler transitions. Its development `-level`
+entry does not close the player route; use these observations to replace the
+remaining approximate aircraft transaction, with limits recorded in the existing
+[Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
 
 David's September 7 priority is startup, menus and complete Level 100 parity.
 Audit the actual Ghidra database in bounded cohorts against pristine bytes and
