@@ -28,9 +28,15 @@ internal sealed class ThingBaseState(uint lineage, uint specificTypeMask,
 
     public bool StartDieProcess()
     {
+        if (!MarkDying()) return false;
+        DeclareShutdown();
+        return true;
+    }
+
+    public bool MarkDying()
+    {
         if ((Flags & ThingActorFlags.Dying) != 0) return false;
         Flags |= ThingActorFlags.Dying;
-        DeclareShutdown();
         return true;
     }
 }

@@ -778,6 +778,8 @@ public enum Level100ActorLifecycle
     Alive = 0,
     StartedDying = 1,
     Destroyed = 2,
+    // The script received died(), but physical shutdown has not run yet.
+    DiedAwaitingShutdown = 3,
 }
 
 public enum Level100ActorFactKind
@@ -1341,6 +1343,32 @@ public sealed class Level100ActorRegistry
         return true;
     }
 
+    internal bool ReportGroundUnitDied(Level100ActorId actorId)
+    {
+        Actor actor = RequireMutable(actorId);
+        if (actor.Lifecycle != Level100ActorLifecycle.Alive) return false;
+        if (!actor.BaseState.MarkUnitDying())
+            throw new InvalidOperationException("Ground-unit dying state diverged.");
+        // 0x004fd140 -> 0x004fd040: StartedDying, then Died and script
+        // deletion, then the delayed SHUTDOWN. Neither body sets bit 0.
+        actor.Lifecycle = Level100ActorLifecycle.DiedAwaitingShutdown;
+        EnqueueFact(Level100ActorFactKind.StartedDying, actorId, null, 0);
+        EnqueueFact(Level100ActorFactKind.Died, actorId, null, 0);
+        return true;
+    }
+
+    internal void ShutdownGroundUnit(Level100ActorId actorId)
+    {
+        Actor actor = RequireMutable(actorId);
+        if (actor.Lifecycle != Level100ActorLifecycle.DiedAwaitingShutdown)
+            throw new InvalidOperationException("Ground-unit shutdown has no pending death.");
+        // Event 2000 calls Shutdown/delete directly. Do not invent another
+        // AddShutdownEvent or set TF_DECLARED_SHUTDOWN on this path.
+        actor.Lifecycle = Level100ActorLifecycle.Destroyed;
+        actor.Active = false;
+        actor.IsObjective = false;
+    }
+
     public bool BeginTriggerDispatch(
         Level100ActorId actorId,
         Level100MissionJetModeState entryJetModeState)
@@ -1606,10 +1634,14 @@ public sealed class Level100ActorRegistry
                 (actor.BaseState.Snapshot.IsDying ||
                  actor.BaseState.Snapshot.IsShuttingDown)) ||
             (actor.Lifecycle == Level100ActorLifecycle.StartedDying &&
+                !actor.BaseState.Snapshot.IsDying) ||
+            (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown &&
                 (!actor.BaseState.Snapshot.IsDying ||
-                 !actor.BaseState.Snapshot.IsShuttingDown)) ||
+                 actor.BaseState.Snapshot.IsShuttingDown || actor.Health != 0 ||
+                 actor.DefinitionName is not ("Target Tank" or "Target Truck"))) ||
             (actor.Lifecycle == Level100ActorLifecycle.Destroyed &&
-                !actor.BaseState.Snapshot.IsShuttingDown) ||
+                !actor.BaseState.Snapshot.IsShuttingDown &&
+                !actor.BaseState.Snapshot.IsDying) ||
             (actor.Lifecycle == Level100ActorLifecycle.Destroyed &&
                 (actor.Active || actor.IsObjective)) ||
             !Enum.IsDefined(actor.TargetGroup) ||

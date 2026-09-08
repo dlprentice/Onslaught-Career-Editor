@@ -1,5 +1,10 @@
 # CPlane Hit And Animation Helpers
 
+Status: active static function note; saved hit label is provisional
+Last updated: 2026-09-08
+Summary: contact-triggered Plane shutdown and retained animation helpers; the
+hit body does not inspect life or require fatal damage.
+
 > Source File: Plane.cpp | Binary: BEA.exe
 > Wave: 485 | Evidence: saved Ghidra metadata, decompile, xrefs, vtable/RTTI rows, instruction rows, raw-caller rows, tags, and focused probe
 
@@ -14,10 +19,26 @@
 
 ## Evidence
 
+- September 8 re-read pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+  2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+  The current `CheckFatalDamageAndDie` label is misleading: this body reads no
+  life/damage value and its main arm does not require `TF_DYING`. The label and
+  saved signatures above are retained metadata, not recovered source names.
 - `CPlane` vtable `0x005e1930` slot 39 points to `0x004d1f10`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-39 hit handlers.
-- `0x004d1f10` reads `this+0x164->0x11c`, hit flags at `hit_thing+0x34`, and compares `hit_thing+0x138` against `this+0x138`.
-- The selected fatal path may call `hit_thing` vfunc `+0x194`, then calls `CExplosionInitThing__ctor_like_004fd230`, then dispatches `this` vfunc `+0x38`.
-- `0x004d1f10` always tails to `CThing__Hit_TriggerDieOnUnitOrTypeMask02100000(this, hit_thing, hit_context)` and ends with `RET 0x8`.
+- The main arm requires `this+0x164->0x11c == 0`. `hit_thing+0x34` is the
+  **type mask**, not the flag word. Same-allegiance AirUnit (`0x400`) contact
+  skips this arm unless the other object is a BattleEngine (`0x8`). Otherwise
+  other Unit (`0x10`) or raw mask `0x02100000` contact qualifies.
+- A qualifying Unit first receives virtual `+0x194(this)`. Then the plane
+  calls `CUnit__SpawnProfileDropPickup` (`0x004fd230`) and its own virtual
+  `+0x38` (AddShutdownEvent). The previous constructor label for `0x004fd230`
+  was wrong. This arm does not itself mark `TF_DYING`.
+- Every path then calls `0x00403ba0` and returns with `RET 0x8`. That inherited
+  hit helper independently requires profile `+0x11c == 0`, self `TF_DYING`, and
+  other Unit/raw-mask contact before profile-drop/AddShutdownEvent. It has no
+  friendly-air exemption, so that exemption is not a whole-call veto. Its
+  own unconditional tail is `0x004fcc30`. The saved `CThing__Hit_TriggerDieOnUnitOrTypeMask02100000`
+  name does not establish the inheritance owner.
 - `0x004d1f90` checks `this+0x27c == 1`, resolves `wingopen` string `0x00624420`, calls `CMesh__FindAnimationIndexByName`, dispatches `this` vfunc `+0xf0`, and sets `this+0x27c = 2`.
 - `0x004d1fd0` checks `this+0x27c == 4`, resolves `wingclose` string `0x0062442c`, calls `CMesh__FindAnimationIndexByName`, dispatches `this` vfunc `+0xf0`, and sets `this+0x27c = 3`.
 - `CPlane` vtable `0x005e1930` slot 59 points to `0x004d2010`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-59 animation handlers.
@@ -26,4 +47,14 @@
 
 ## Boundary
 
-Static retail-binary evidence only. The current Stuart source snapshot does not contain a `Plane.cpp` or `CPlane` source body. Exact CPlane layout, hit/death behavior, animation-state semantics, raw caller boundaries, source body identity, runtime behavior, BEA launch behavior, game patching, and rebuild parity remain unproven.
+The re-read complete bodies, with half-open extents, are:
+
+| Body | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `0x004d1f10..0x004d1f81` | 113 | `70d2d7d13cc1cb5ac40bc5c8d54cb8552742240bf7733c9ec44cf248ec5685ca` |
+| `0x00403ba0..0x00403bec` | 76 | `e7e8b6987a232be7149a3d849871561ee2454b5cc9614bd03e94af9328b49638` |
+
+Static retail-byte contracts establish the bounded gates above. The pinned
+source has no `Plane.cpp`. Full actor layout, collision delivery, dying motion,
+animation behavior, the retained raw caller boundaries, native runtime behavior
+and rebuild parity remain open. No Ghidra database was opened or renamed here.

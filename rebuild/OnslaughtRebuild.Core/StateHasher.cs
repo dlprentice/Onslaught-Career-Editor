@@ -24,12 +24,18 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            bool usesEventClockSchema = state.RetailEventFrameCount !=
+            bool usesGroundShutdownSchema = state.Level100Destruction.PendingShutdowns.Count != 0 ||
+                state.Level100Actors.Actors.Any(actor =>
+                    actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown);
+            bool usesEventClockSchema = usesGroundShutdownSchema || state.RetailEventFrameCount !=
                 unchecked((uint)state.Level100Mission.Tick);
             bool usesPlayerWeaponSchema = usesEventClockSchema || state.Level100PlayerWeaponState !=
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 46: ordered ground-unit shutdown admissions, exact due words
+            // and delivery frames. Includes all earlier optional fields.
+            //
             // 45: event-manager frame count when it cannot be recovered from
             // the already-hashed mission tick. Paused terminal updates can
             // advance the latter while the weapon clock remains frozen. All
@@ -118,7 +124,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -234,6 +240,17 @@ public static class StateHasher
                 writer,
                 state.Level100Destruction,
                 state.Level100DestructionEvents);
+            if (usesGroundShutdownSchema)
+            {
+                writer.Write(state.Level100Destruction.PendingShutdowns.Count);
+                foreach (Level100GroundShutdownSnapshot pending in state.Level100Destruction.PendingShutdowns)
+                {
+                    writer.Write(pending.ActorId);
+                    writer.Write(pending.AdmissionFrame);
+                    writer.Write(pending.DeliveryFrame);
+                    writer.Write(pending.DueTimeBits);
+                }
+            }
             writer.Write(state.Level100WeaponFireEvents.Count);
             foreach (Level100WeaponFireEvent fireEvent in state.Level100WeaponFireEvents)
             {

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-08 (first-training Ghidra, input order and contact geometry).
+Last updated: 2026-09-08 (first-training Ghidra, input order, contact geometry and ground-target shutdown).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -365,7 +365,12 @@ the production explosion path. Geometry operations follow the measured device
 setup's PC24/RN intent, with the actual gameplay control word still unmeasured.
 Direct Morph/Charge/Fire/ChangeWeapon/Zoom now precede actor and mission
 callbacks, using the retained launch pose. Full axis/event ordering, spatial
-blasts, Large effects and precise float motion/expiry remain open. These changes have not had a live
+blasts, Large effects and precise float motion/expiry remain open. Tank/Truck
+death now retires the script immediately while retaining collision/render
+activation until the retail half-second shutdown bucket. Further accepted damage
+still lowers life; death callbacks and the timer remain one-shot. Pending
+shutdown order/timing survive restore and canonical hashing. Dying ground motion
+and the Drone's different shutdown conditions remain incomplete. These changes have not had a live
 desktop playthrough; focused results are in [VALIDATION.md](VALIDATION.md).
 
 World 110 now prepares the four landing-craft turret constructor inputs from
@@ -608,8 +613,9 @@ health, the `5.0` core multiplier, core-child/strict-30% terminal tests, and
 `Hit`/dying/died facts consumed by the released mission scripts. Segment and
 typed effect state is deterministic and hashed. Godot consumes the ordered
 Pulse-impact and terminal effect events, including their existing audio and
-target-destruction presentation. It still removes the complete target at
-terminal; completed-break versus pending-collapse state and delayed child events
+target-destruction presentation. Tank/Truck meshes remain until their scheduled
+physical shutdown. Warehouse and Drone still use whole-target terminal removal;
+completed-break versus pending-collapse state and delayed child events
 remain incomplete. Detached Warehouse parts, rubble, and retail-random secondary debris
 are not yet presented.
 Walker acceleration now follows Core's

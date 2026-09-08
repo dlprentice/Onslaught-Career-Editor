@@ -174,7 +174,6 @@ public sealed class ThingActorBaseState
             ThingActorFlags.Dying |
             ThingActorFlags.Invisible;
         if ((snapshot.Flags & ~knownFlags) != 0 ||
-            (snapshot.IsDying && !snapshot.IsShuttingDown) ||
             snapshot.CurrentPose is null ||
             snapshot.OldPose is null ||
             !HasFiniteBasis(snapshot.CurrentPose.BasisFloatBits) ||
@@ -276,7 +275,7 @@ public sealed class ThingActorBaseState
 
     /// <summary>
     /// Retail <c>0x004f3760</c>, source <c>CThing::AddShutdownEvent</c>:
-    /// set <c>TF_DECLARED_SHUTDOWN</c> once. Scheduling remains outside Core.
+    /// set <c>TF_DECLARED_SHUTDOWN</c> once. The caller owns scheduling.
     /// </summary>
     public bool DeclareShutdown() => _thing.DeclareShutdown();
 
@@ -285,6 +284,10 @@ public sealed class ThingActorBaseState
     /// set <c>TF_DYING</c> once, then declare shutdown.
     /// </summary>
     public bool StartDieProcess() => _thing.StartDieProcess();
+
+    // CUnit's override at 0x004fd140 marks TF_DYING without calling the
+    // CThing default AddShutdownEvent. Its subclass owns eventual shutdown.
+    internal bool MarkUnitDying() => _thing.MarkDying();
 
     /// <summary>
     /// The source/retail <c>CActor::Move</c> ordering: capture current pose as

@@ -216,7 +216,6 @@ reverse-engineering/binary-analysis/functions/PauseMenu.cpp/CSimpleGameMenu__dto
 reverse-engineering/binary-analysis/functions/PauseMenu.cpp/CSimpleGameMenu__scalar_deleting_dtor.md
 reverse-engineering/binary-analysis/functions/PauseMenu.cpp/PauseMenu__Init.md
 reverse-engineering/binary-analysis/functions/Plane.cpp/CPlaneAI__scalar_deleting_dtor.md
-reverse-engineering/binary-analysis/functions/Plane.cpp/CPlane__Hit_CheckFatalDamageAndDie.md
 reverse-engineering/binary-analysis/functions/Plane.cpp/CPlane__Init.md
 reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__BeginScene.md
 reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen.md

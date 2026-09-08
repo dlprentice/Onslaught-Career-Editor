@@ -351,7 +351,7 @@ public sealed class RetailEventScheduler
         int reuseHandle = -1) => AddEvent(
             eventNum,
             listener,
-            (float)((double)timeFromNow + (double)_time),
+            RelativeDueTime(_time, timeFromNow),
             priority,
             data,
             reuseHandle);
@@ -392,7 +392,7 @@ public sealed class RetailEventScheduler
         int offsetBuffer;
         RetailEventPlacement placement;
 
-        if ((double)_time + (double)ImmediateWindow >= (double)time)
+        if (IsImmediate(_time, time))
         {
             placement = RetailEventPlacement.ImmediateBucket;
             offsetBuffer = _currentBufferNum;
@@ -412,10 +412,7 @@ public sealed class RetailEventScheduler
                     RetailEventPlacement.RejectedTooFarAhead, -1, -1, -1, nextTimeBits);
             }
 
-            double delay =
-                (((double)time - (double)_time) - (double)DelayBias) *
-                (double)GameFrameRate;
-            offsetBuffer = (int)Math.Floor(delay);
+            offsetBuffer = DelayBufferOffset(_time, time);
 
             if (offsetBuffer >= OverflowBucketThreshold)
             {
@@ -549,6 +546,17 @@ public sealed class RetailEventScheduler
     /// </summary>
     internal static float TimeAtFrameCount(uint frameCount) =>
         (float)((double)frameCount * (double)ClockTick);
+
+    // Shared by the pool and the sparse Level100 ground-shutdown owner.
+    // Preserve the scheduler's existing bounded arithmetic contract.
+    internal static float RelativeDueTime(float now, float delay) =>
+        (float)((double)now + delay);
+
+    internal static bool IsImmediate(float now, float due) =>
+        (double)now + ImmediateWindow >= due;
+
+    internal static int DelayBufferOffset(float now, float due) =>
+        (int)Math.Floor((((double)due - now) - DelayBias) * GameFrameRate);
 
     /// <summary>
     /// <c>CEventManager::Flush</c> — <c>eventmanager.cpp:311-411</c>,

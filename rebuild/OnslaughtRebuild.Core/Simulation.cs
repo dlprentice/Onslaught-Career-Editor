@@ -374,7 +374,8 @@ public sealed class Simulation
         // the update that delivers PAUSE_GAME advances the clock; subsequent
         // paused UI updates do not. The existing nominal terminal-event timing
         // remains a separate limitation, as does full event priority below.
-        if (!_level100Mission.GameplayPaused)
+        bool eventManagerAdvanced = !_level100Mission.GameplayPaused;
+        if (eventManagerAdvanced)
         {
             _retailEventFrameCount = unchecked(_retailEventFrameCount + 1);
         }
@@ -401,6 +402,12 @@ public sealed class Simulation
         TryFire(controllerInput);
         TryChangeWeapon(controllerInput);
         TryChangeZoom(controllerInput);
+
+        // START_OF_FRAME shutdown follows synchronous controller Flush and
+        // precedes actor/mission callbacks and Move. Paused UI updates do
+        // not advance or drain this ring lane.
+        if (eventManagerAdvanced)
+            _level100Destruction.FlushStartOfFrame(_retailEventFrameCount);
 
         // Read the pan state BEFORE AdvanceOpeningCamera consumes it. On the
         // tick the player skips, that call sets _level100OpeningTicksRemaining
@@ -4004,14 +4011,15 @@ public sealed class Simulation
             // Large applies its configured direct amount through the common
             // sweep; a spatial blast cannot be replaced with another fixed 4.
             bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
-                ? _level100Destruction.TryApplyPulseSweep(start, end, out _)
+                ? _level100Destruction.TryApplyPulseSweep(start, end, out _, _retailEventFrameCount)
                 : _level100Destruction.TryApplyRoundSweep(
                     start,
                     end,
                     projectile.ContactRadiusMillimeters,
                     projectile.DamageBits,
                     impactEffectKind,
-                    out _);
+                    out _,
+                    _retailEventFrameCount);
             if (hit)
             {
                 DrainAndDispatchLevel100ActorFacts();

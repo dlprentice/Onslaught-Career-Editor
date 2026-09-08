@@ -48,7 +48,9 @@ public sealed class Level100TutorialProgressionTests
     public void PulseCannonRun_DestroysEveryAuthoredStaticTarget()
     {
         var driver = Level100PlayerDriver.Create();
-        driver.Run(9_000);
+        driver.Run(9_000, state => state.Level100Actors.Actors
+            .Where(actor => actor.Name is "Target Tank 2" or "Target Tank 3" or "Target Warehouse")
+            .All(actor => actor.Lifecycle == Level100ActorLifecycle.Destroyed));
         foreach (string line in driver.Report)
         {
             _output.WriteLine(line);
@@ -64,12 +66,18 @@ public sealed class Level100TutorialProgressionTests
 
         Assert.Equal(
             4,
-            driver.ImpactsByActor[final.Level100Actors.Actors
+            driver.ImpactsAtTerminalByActor[final.Level100Actors.Actors
                 .Single(item => item.Name == "Target Tank 2").ActorId.Value]);
         Assert.Equal(
             4,
-            driver.ImpactsByActor[final.Level100Actors.Actors
+            driver.ImpactsAtTerminalByActor[final.Level100Actors.Actors
                 .Single(item => item.Name == "Target Tank 3").ActorId.Value]);
+        foreach (string name in new[] { "Target Tank 2", "Target Tank 3" })
+        {
+            int id = final.Level100Actors.Actors.Single(actor => actor.Name == name).ActorId.Value;
+            // In-flight rounds can still hit during the ground shutdown delay.
+            Assert.True(driver.ImpactsByActor[id] > driver.ImpactsAtTerminalByActor[id]);
+        }
     }
 
     /// <summary>
@@ -297,7 +305,7 @@ public sealed class Level100TutorialProgressionTests
         var start = new SimVector3(4_000, 9_000, -3_000);
         var end = new SimVector3(4_000, 6_100, -3_000);
         int hits = 0;
-        while (registry.GetActor(truckId).Lifecycle != Level100ActorLifecycle.Destroyed &&
+        while (registry.GetActor(truckId).Lifecycle == Level100ActorLifecycle.Alive &&
                hits < 1_000)
         {
             Assert.True(runtime.TryApplyRoundSweep(
@@ -317,6 +325,9 @@ public sealed class Level100TutorialProgressionTests
         // thirty-eighth carries it terminal - the count the note in
         // Level100DestructionState already predicts.
         Assert.Equal(38, hits);
+        Assert.True(registry.GetActor(truckId).Active);
+        Assert.Equal(Level100ActorLifecycle.DiedAwaitingShutdown, registry.GetActor(truckId).Lifecycle);
+        runtime.FlushStartOfFrame(Assert.Single(runtime.Snapshot.PendingShutdowns).DeliveryFrame);
         Level100ActorSnapshot destroyed = registry.GetActor(truckId);
         Assert.Equal(Level100ActorLifecycle.Destroyed, destroyed.Lifecycle);
         Assert.Equal(0, destroyed.Health);
@@ -653,12 +664,15 @@ internal sealed class Level100PlayerDriver
     private readonly Simulation _simulation;
     private readonly List<string> _events = [];
     private readonly SortedDictionary<int, int> _impactsByActor = [];
+    private readonly SortedDictionary<int, int> _impactsAtTerminalByActor = [];
 
     private Level100PlayerDriver(Simulation simulation) => _simulation = simulation;
 
     internal IReadOnlyList<string> Report => _events;
 
     internal IReadOnlyDictionary<int, int> ImpactsByActor => _impactsByActor;
+
+    internal IReadOnlyDictionary<int, int> ImpactsAtTerminalByActor => _impactsAtTerminalByActor;
 
     internal WorldSnapshot Snapshot => _simulation.Snapshot;
 
@@ -701,13 +715,14 @@ internal sealed class Level100PlayerDriver
     /// <summary>One player-input tick, for a caller driving by hand.</summary>
     internal WorldSnapshot Step(SimInput input) => _simulation.Step(input);
 
-    internal void Run(int maximumTicks)
+    internal void Run(int maximumTicks, Func<WorldSnapshot, bool>? stopWhen = null)
     {
         string? lastNavigation = null;
         int lastDestroyed = -1;
         for (int tick = 0; tick < maximumTicks; tick++)
         {
             WorldSnapshot state = _simulation.Snapshot;
+            if (stopWhen?.Invoke(state) == true) break;
             if (state.Level100Mission.Outcome != Level100MissionOutcome.Running)
             {
                 _events.Add($"t{state.Tick} outcome {state.Level100Mission.Outcome}");
@@ -732,6 +747,8 @@ internal sealed class Level100PlayerDriver
             WorldSnapshot next = _simulation.Step(NextInput(state));
             foreach (Level100DestructionEvent destruction in next.Level100DestructionEvents)
             {
+                if (destruction.Kind == Level100DestructionEventKind.Terminal)
+                    _impactsAtTerminalByActor.Add(destruction.ActorId, _impactsByActor[destruction.ActorId]);
                 if (destruction.Kind is not (
                         Level100DestructionEventKind.PulseImpact or
                         Level100DestructionEventKind.VulcanImpact))

@@ -80,8 +80,15 @@ public sealed class Level100DestructionSnapshot
 
 }
 
+public sealed record Level100GroundShutdownSnapshot(
+    int ActorId, uint AdmissionFrame, uint DeliveryFrame, uint DueTimeBits);
+
 public sealed record Level100DestructionRuntimeSnapshot(
-    IReadOnlyList<Level100DestructionSnapshot> Actors);
+    IReadOnlyList<Level100DestructionSnapshot> Actors)
+{
+    // FIFO insertion order, including equal-time admissions.
+    public IReadOnlyList<Level100GroundShutdownSnapshot> PendingShutdowns { get; init; } = [];
+}
 
 /// <summary>
 /// Segment/contact mechanics attached to actors owned by the native registry.
@@ -94,6 +101,7 @@ public sealed class Level100DestructionRuntime
     private readonly Level100ActorRegistry _registry;
     private readonly SortedDictionary<int, Level100DestructionState> _states = [];
     private readonly List<Level100DestructionEvent> _events = [];
+    private readonly List<Level100GroundShutdownSnapshot> _pendingShutdowns = [];
     private Level100ContactActor[] _contactActors = [];
     private readonly Level100DestructionEvent[] _hitEvents =
         new Level100DestructionEvent[
@@ -140,13 +148,28 @@ public sealed class Level100DestructionRuntime
                 "The destruction snapshot omits a registered destructible actor.",
                 nameof(snapshot));
         }
+        ArgumentNullException.ThrowIfNull(snapshot.PendingShutdowns);
+        foreach (Level100GroundShutdownSnapshot pending in snapshot.PendingShutdowns)
+        {
+            if (pending is null ||
+                !_states.TryGetValue(pending.ActorId, out Level100DestructionState? state) ||
+                state.Definition.Kind != Level100DefinitionKind.TargetTank ||
+                !state.Terminal ||
+                _pendingShutdowns.Any(item => item.ActorId == pending.ActorId) ||
+                pending != GroundShutdownAt(pending.ActorId, pending.AdmissionFrame))
+                throw new ArgumentException("Invalid pending ground-unit shutdown.", nameof(snapshot));
+            _pendingShutdowns.Add(pending);
+        }
         ValidateRegistryInvariants();
     }
 
     public Level100DestructionRuntimeSnapshot Snapshot => new(
         Array.AsReadOnly(_states.Values
             .Select(state => state.CaptureSnapshot())
-            .ToArray()));
+            .ToArray()))
+    {
+        PendingShutdowns = Array.AsReadOnly(_pendingShutdowns.ToArray()),
+    };
 
     public IReadOnlyList<Level100DestructionEvent> Events =>
         Array.AsReadOnly(_events.ToArray());
@@ -161,6 +184,34 @@ public sealed class Level100DestructionRuntime
     {
         _events.Clear();
         SynchronizeActors(requireInitialState: false);
+    }
+
+    internal void FlushStartOfFrame(uint eventFrameCount)
+    {
+        // CEventManager drains the selected ring bucket without comparing
+        // mTime with each stored due time. Only call when the manager advanced.
+        for (int i = 0; i < _pendingShutdowns.Count;)
+        {
+            Level100GroundShutdownSnapshot pending = _pendingShutdowns[i];
+            if (pending.DeliveryFrame != eventFrameCount) { i++; continue; }
+            _registry.ShutdownGroundUnit(new Level100ActorId(pending.ActorId));
+            _pendingShutdowns.RemoveAt(i);
+        }
+    }
+
+    private static Level100GroundShutdownSnapshot GroundShutdownAt(int actorId, uint frame)
+    {
+        // GroundVehicle slot112 returns 0.5f (0x0050e890); 0x004fd11f
+        // stores managerTime+delay before AddEvent(2000, unit, ..., START).
+        float now = RetailEventScheduler.TimeAtFrameCount(frame);
+        float due = RetailEventScheduler.RelativeDueTime(now, 0.5f);
+        bool immediate = RetailEventScheduler.IsImmediate(now, due);
+        int offset = immediate ? 0 : RetailEventScheduler.DelayBufferOffset(now, due);
+        if (!immediate && (due > RetailEventScheduler.MaximumTime ||
+            offset >= RetailEventScheduler.OverflowBucketThreshold))
+            throw new NotSupportedException("Ground shutdown is outside the admitted ring lifetime.");
+        return new(actorId, frame, unchecked(frame + (uint)offset + 1),
+            BitConverter.SingleToUInt32Bits(due));
     }
 
     internal void ValidateExternalFacts(
@@ -209,13 +260,14 @@ public sealed class Level100DestructionRuntime
 
     /// <summary>
     /// Retains the existing Medium pulse damage stages. Large uses
-    /// <see cref="TryApplyRoundSweep(SimVector3, SimVector3, int, uint, Level100DestructionEffectKind, out Level100ContactHit)"/>
+    /// <see cref="TryApplyRoundSweep(SimVector3, SimVector3, int, uint, Level100DestructionEffectKind, out Level100ContactHit, uint)"/>
     /// with its own radius and direct damage while its spatial blast is open.
     /// </summary>
     public bool TryApplyPulseSweep(
         SimVector3 start,
         SimVector3 end,
-        out Level100ContactHit hit) =>
+        out Level100ContactHit hit,
+        uint eventFrameCount = 0) =>
         TryApplyRoundSweep(
             start,
             end,
@@ -223,6 +275,7 @@ public sealed class Level100DestructionRuntime
             Level100DestructionState.PulseDamageBits,
             Level100DestructionEffectKind.PulseImpact,
             preservePulseDamageStages: true,
+            eventFrameCount,
             out hit);
 
     /// <summary>
@@ -234,7 +287,8 @@ public sealed class Level100DestructionRuntime
         int contactRadiusMillimeters,
         uint damageBits,
         Level100DestructionEffectKind impactEffectKind,
-        out Level100ContactHit hit) =>
+        out Level100ContactHit hit,
+        uint eventFrameCount = 0) =>
         TryApplyRoundSweep(
             start,
             end,
@@ -242,6 +296,7 @@ public sealed class Level100DestructionRuntime
             damageBits,
             impactEffectKind,
             preservePulseDamageStages: false,
+            eventFrameCount,
             out hit);
 
     private bool TryApplyRoundSweep(
@@ -251,6 +306,7 @@ public sealed class Level100DestructionRuntime
         uint damageBits,
         Level100DestructionEffectKind impactEffectKind,
         bool preservePulseDamageStages,
+        uint eventFrameCount,
         out Level100ContactHit hit)
     {
         SynchronizeActors(requireInitialState: false);
@@ -357,8 +413,19 @@ public sealed class Level100DestructionRuntime
         _registry.SetHealth(actorId, destruction.RegistryHealth);
         if (destruction.Terminal)
         {
-            _registry.ReportStartedDying(actorId);
-            _registry.ReportDied(actorId);
+            if (destruction.Definition.Kind == Level100DefinitionKind.TargetTank)
+            {
+                if (_registry.GetActor(actorId).Lifecycle == Level100ActorLifecycle.Alive)
+                {
+                    Level100GroundShutdownSnapshot pending = GroundShutdownAt(hit.ActorId, eventFrameCount);
+                    if (_registry.ReportGroundUnitDied(actorId)) _pendingShutdowns.Add(pending);
+                }
+            }
+            else
+            {
+                _registry.ReportStartedDying(actorId);
+                _registry.ReportDied(actorId);
+            }
         }
         ValidateRegistryInvariant(
             _registry.GetActor(actorId),
@@ -457,16 +524,19 @@ public sealed class Level100DestructionRuntime
         }
     }
 
-    private static void ValidateRegistryInvariant(
+    private void ValidateRegistryInvariant(
         Level100ActorSnapshot actor,
         Level100DestructionState destruction)
     {
+        bool pending = _pendingShutdowns.Any(item => item.ActorId == actor.ActorId.Value);
         Level100ActorLifecycle expectedLifecycle = destruction.Terminal
-            ? Level100ActorLifecycle.Destroyed
+            ? pending ? Level100ActorLifecycle.DiedAwaitingShutdown : Level100ActorLifecycle.Destroyed
             : Level100ActorLifecycle.Alive;
         if (actor.Health != destruction.RegistryHealth ||
             actor.Lifecycle != expectedLifecycle ||
-            (destruction.Terminal && actor.Active))
+            (destruction.Terminal && !pending && actor.Active) ||
+            (pending && (!destruction.Terminal ||
+                destruction.Definition.Kind != Level100DefinitionKind.TargetTank)))
         {
             throw new InvalidDataException(
                 $"Level 100 actor {actor.ActorId.Value} registry and segmented " +
@@ -699,7 +769,7 @@ public sealed class Level100DestructionState
         writer.Add(CreateRoundImpactEvent(
             hit,
             Level100DestructionEffectKind.PulseImpact));
-        if (_terminal)
+        if (_terminal && _definition.Kind != Level100DefinitionKind.TargetTank)
         {
             return writer.Count;
         }
@@ -728,7 +798,7 @@ public sealed class Level100DestructionState
         var writer = new EventWriter(events);
         writer.Add(CreateRoundImpactEvent(hit, impactEffectKind));
 
-        if (_terminal)
+        if (_terminal && _definition.Kind != Level100DefinitionKind.TargetTank)
         {
             return writer.Count;
         }
@@ -859,8 +929,8 @@ public sealed class Level100DestructionState
     /// <c>CUnitLife</c> rather than per-segment health:
     /// <c>Target Tank</c>/<c>Target Truck</c> (behaviour class 3) and
     /// <c>Target Drone</c> (behaviour class 9). The damage arithmetic is
-    /// identical for all three - only the life bits, mesh and destruction
-    /// record differ, and all three of those are carried per definition.
+    /// shared before death; shutdown lifetimes differ by subclass. Life bits,
+    /// mesh and destruction record are carried per definition.
     /// </summary>
     private static bool IsWholeBodyLife(Level100DefinitionKind kind) =>
         kind is Level100DefinitionKind.TargetTank or

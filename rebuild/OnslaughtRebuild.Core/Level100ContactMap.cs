@@ -171,10 +171,12 @@ public enum Level100DefinitionKind : byte
     /// The released air-unit whole-body-life class. <c>Target Drone</c>'s
     /// <c>Unit</c> record (<c>default physics.dat</c> sha256
     /// <c>e1fb3ded...ada14</c>, record @0x24e76, name string @0x24e7e) carries
-    /// behaviour class 9 in field 8 - <c>CFighterBehaviourType</c> by RTTI,
-    /// the class whose vtable is 0x005e1930 - and field 3 <c>CUnitLife</c> 1.0
-    /// (0x3F800000). It takes damage exactly as <see cref="TargetTank"/> does
-    /// (one whole-body life, no per-segment health), but it is a different
+    /// behaviour value 9 in field 8 and field 3 <c>CUnitLife</c> 1.0
+    /// (0x3F800000). The created actor is <c>CPlane</c>: vtable 0x005e1930,
+    /// COL 0x00617930, type descriptor 0x0063d5a8. The configuration's
+    /// <c>CFighterBehaviourType</c> is not that runtime actor class.
+    /// It has whole-body life and no per-segment health like
+    /// <see cref="TargetTank"/>, but its dying/shutdown path is a different
     /// released class: its field set
     /// {2,3,6,7,8,9,10,11,12,14,21,22,23,36,39,55} does not match the ground
     /// set {1,3,5,8,9,10,11,23,46,48}, so it is not folded into

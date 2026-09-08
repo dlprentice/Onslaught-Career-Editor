@@ -204,8 +204,10 @@ public sealed class ThingActorBaseStateTests
         {
             Flags = ThingActorFlags.Dying,
         };
-        Assert.Throws<ArgumentException>(() =>
-            new ThingActorBaseState(dyingWithoutShutdown));
+        // CUnit's override marks TF_DYING without CThing's immediate
+        // AddShutdownEvent/TF_DECLARED_SHUTDOWN path.
+        Assert.Equal(dyingWithoutShutdown,
+            new ThingActorBaseState(dyingWithoutShutdown).Snapshot);
 
         ThingActorBaseStateSnapshot missingActorLineage = snapshot with
         {

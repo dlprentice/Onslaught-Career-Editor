@@ -3,7 +3,7 @@
 > Address: `0x004FD040`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -14,10 +14,12 @@ attached-script teardown, obtains a virtual delay, and schedules thing-event
 `0x07d0` (`SHUTDOWN`) against the same Unit. For the proved CComponent,
 CGillMHead, and CPod vtables the delay virtual is exactly `0.05f`, so that event
 is queued for `CEventManager::mTime + 0.05f` and fires on the next 20 Hz update.
-Evidence: MEASURED — pristine identity, complete-body decode/hash, whole-`.text`
-rel32 census, image-wide operand census, exact vtable/constant reads, current
-8,329-row name table, and the already-pinned manager/thing dispatch owners. No
-Ghidra or rebuild owner changed.
+The training Tank/Truck override returns `0.5f` and uses the tenth later bucket.
+Evidence: MEASURED — original August 22 pristine identity, complete-body decode/hash, whole-`.text`
+rel32 census, image-wide operand census, exact vtable/constant reads, the
+dated name table, and the already-pinned manager/thing dispatch owners.
+September 8 re-read the exact Ground bodies/vtable and shared shutdown owners;
+Core now consumes that bounded lifetime. Neither static pass opened Ghidra.
 
 ## Contract (byte-exact)
 
@@ -82,6 +84,42 @@ virtual delay: both queue event 2000 at the current fixed manager time plus one
 20 Hz tick.
 
 ## Dispatch meaning for this event 2000
+
+### Training Tank/Truck delay and ownership
+
+September 8 re-read the pristine specimen named above. `Target Tank` and
+`Target Truck` use serialized behavior 3 / internal selector 2, `CGroundVehicle`
+vtable `0x005e297c`. Its slots 0/2/14/50/71/112 contain
+`0x004f9820 / 0x004f95d0 / 0x004f43d0 / 0x0041b590 / 0x00405db0 / 0x0050e890`.
+Slot 50 calls `0x0047ce80`, which calls the existing Unit mark at `0x004fd140`,
+then clears `unit+0x25c`. On a fresh mark it calls this teardown/queue helper.
+Slot 112 loads `0.5f` from `0x005d85ec` (`00 00 00 3f`).
+
+| Complete half-open body | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `0x0041b590..0x0041b5ac` | 28 | `770d9c9db07cc84bbd2321dfedd4d54cc6eebe979511c876a7ad9c8f38eea4e4` |
+| `0x0047ce80..0x0047ce9f` | 31 | `1ae96b29c60955a4c845319c4eca0e60f471bebea0da8c84550bdd9968bded2c` |
+| `0x0050e890..0x0050e897` | 7 | `e891c085690bd0d6409f6c6ad8aba0048642e83c1f90fffbb02d057cd8056c15` |
+
+StartedDying (script event 5) therefore precedes synchronous Died (event 3),
+script deletion, then the queue call. This path sets `TF_DYING` but never
+`TF_DECLARED_SHUTDOWN`. The Ground shutdown event follows the same dispatch
+chain below and deletes the physical object directly, without another
+AddShutdownEvent/NEXT_FRAME stage.
+
+The absolute event goes to the ring offset
+`floor(((stored_due - manager_time) - 0.001f) * 20)`, normally 9 here. Since
+AdvanceTime moves the old current bucket into the ready slot, delivery is on
+the tenth subsequent unpaused update. Ring Flush does not compare each due
+time. At admission frame 13, stored due is `0x3f933334`; frame 23's clock is
+`0x3f933333`, yet that frame drains the shutdown bucket. A `time >= due`
+replacement would be late. This is static scheduler arithmetic, not a newly
+observed retail death. The existing scheduler precision boundary still applies.
+
+The Ground result does not apply to `Target Drone`: its CPlane/CAirUnit dying
+path has later life/movement/contact conditions and no fixed half-second timer.
+
+### Shared Unit dispatch
 
 The numeric ID alone is overloaded elsewhere. This tuple targets a CUnit
 subclass, which makes its meaning provable:

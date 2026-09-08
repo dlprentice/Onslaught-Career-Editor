@@ -3,12 +3,12 @@
 > Address: `0x00403690`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-08
 Source File: none — `AirUnit.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Summary: the shared slot-50 destruction body for the nine RTTI-backed air-unit
+Summary: the shared slot-50 StartedDying body for the nine RTTI-backed air-unit
 classes listed below. It delegates the one-shot TF_DYING transition to
 `CUnit__MarkDestroyedAndCleanupLinks`; a 0 result returns 0 without air-unit
 work. On a fresh transition it releases child units, drains the two pointer sets
@@ -20,6 +20,12 @@ aligned-imm32 census, strict MSVC RTTI/vtable readback, and complete outbound-
 call classification. No Ghidra or rebuild owner changed.
 
 ## Contract (byte-exact)
+
+September 8 reproduced the body identity below and clarified its lifetime:
+this is the one-shot dying transition, not physical destruction. The delegated
+Unit mark delivers StartedDying; this air body performs no Died callback,
+shutdown scheduling or collision unlink. It leaves the actor alive in the world
+for the separate movement/contact shutdown triggers.
 
 Body `0x00403690`–`0x00403723` inclusive through the complete plain `ret`,
 **148 bytes / 56 instructions**, raw SHA-256
@@ -58,6 +64,31 @@ fresh-transition arm.
 The current Tier-3 name at `0x004cb0b0` is intentionally retained. Older saved
 names proposed handle-state semantics, but the current name table demoted that
 claim; this note pins only the argument and call order visible here.
+
+## Later Drone shutdown boundary
+
+The admitted `Target Drone` is a CPlane (`0x005e1930`, COL `0x00617930`, type
+descriptor `0x0063d5a8`, `.?AVCPlane@@`), distinct from its configuration field
+type. Plane Move calls the shared air Move after its own dying branch. Air Move
+first performs shared Unit/Actor movement, then tests stored life below zero
+and strictly below negative profile maximum life, with profile `+0x11c == 0`,
+before profile-drop and virtual AddShutdownEvent. Equality with negative maximum
+life survives this check. This is a Move-phase decision, not the damage tail.
+
+| Re-read half-open extent | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Air Move `0x00402fa0..0x0040364c` | 1708 | `15b1267923260b84c6cbe1731add1d17f27e2b7eb84815806aa7e362ef6ff69e` |
+| Life-test slice `0x004034ee..0x00403539` | 75 | `6341a6bb330de695f57eee1e2547208d0d19d718c75aaf0dc8b48cd2e1cc9c3c` |
+| Plane Move `0x004d1cd0..0x004d1f05` | 565 | `049e2d26e948b444190073c335fb7d233aefa75893870e86ebf33f15d4f5e72f` |
+
+[Plane Hit](../Plane.cpp/CPlane__Hit_CheckFatalDamageAndDie.md) can also request
+shutdown through its separate type/contact gates. AddShutdownEvent is then the
+source-shaped `CComplexThing` path: synchronous Died and script deletion,
+`TF_DECLARED_SHUTDOWN`, and NEXT_FRAME removal. It is not the Ground timer.
+The two Drone scripts clear their objective in StartedDying and post the
+tutorial's destroyed event from Died, so combining those phases changes mission
+timing. Current Core still uses an immediate-terminal Drone approximation;
+full dying motion/contact and spatial explosion delivery remain missing.
 
 ## Outbound calls
 

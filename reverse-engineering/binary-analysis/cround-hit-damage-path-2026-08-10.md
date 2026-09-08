@@ -383,6 +383,33 @@ The second call can lower stored life again but cannot dispatch death twice.
 The scanner also continues to other eligible receivers; the original target is
 neither guaranteed first nor unique.
 
+The September 8 [Unit teardown readback](functions/Unit.cpp/CUnit__ResetDeploymentGraphAndScheduleEvent.md#training-tanktruck-delay-and-ownership)
+also binds the Tank/Truck script and physical lifetimes. Their StartedDying and
+Died callbacks run immediately, then the script is deleted; the object remains
+collision-eligible until SHUTDOWN 2000's START_OF_FRAME ring bucket. All five
+admitted Tank/Truck scripts begin Died with `UnsetObjective`, so their objective
+clears before physical removal. Generic native objective removal occurs later
+in `CComplexThing::Shutdown`, at `0x004f41da..0x004f41eb`.
+
+`Level100DestructionRuntime` now carries that Tank/Truck interval through sparse
+ordered shutdown records, sharing `RetailEventScheduler`'s existing clock,
+relative-time and bucket arithmetic. `DiedAwaitingShutdown` preserves physical
+activation while allowing script teardown/restore. Further accepted whole-body
+damage lowers native life without repeating death notification or rearming the
+timer. The original CThing default still declares shutdown; the Unit path only
+marks dying, and its eventual delete does not invent that flag. Pending actor
+identity, admission frame, due word, delivery frame and insertion order enter
+the canonical snapshot/hash. Simulation drains the START lane after controller
+input and before actor/mission callbacks only when its event clock advanced.
+
+This corrects the lifetime in the existing quantized contact/renderer path. It
+does not integrate retail MapWho or the spatial explosion scan. The current
+ground mechanics still stop non-Alive velocity; dying movement/pose remains a
+separate mismatch. The Drone's immediate-terminal shortcut also remains: its
+CAirUnit path can later request shutdown below negative maximum life or on
+permitted contact, and its script's Died event has a different tutorial role.
+No new live retail/Godot death, audio, motion or visual parity is claimed.
+
 ### Warehouse segmented explosion report
 
 The September 8 pristine review closes the static carrier but not any particular

@@ -487,7 +487,9 @@ public sealed class Level100ActorScriptRuntime
         // instance, and the binding set can no longer be an exact equality.
         // The two halves it still has to satisfy are: nothing in `_instances`
         // that is not a scripted actor, and an instance for every scripted
-        // actor that has not died. `Destroyed` with an instance is permitted
+        // actor that has not died. A ground unit's DiedAwaitingShutdown phase
+        // has already dispatched died() even though collision remains live.
+        // `Destroyed` with an instance is permitted
         // only because the registry sets the lifecycle when it enqueues the
         // `Died` fact and the teardown happens when that fact is dispatched.
         var scriptedActorIds = _actors.Snapshot.Actors
@@ -496,7 +498,8 @@ public sealed class Level100ActorScriptRuntime
             .ToHashSet();
         int[] undestroyedScriptedActorIds = _actors.Snapshot.Actors
             .Where(actor => actor.ScriptName is not null &&
-                actor.Lifecycle != Level100ActorLifecycle.Destroyed)
+                actor.Lifecycle is Level100ActorLifecycle.Alive or
+                    Level100ActorLifecycle.StartedDying)
             .Select(actor => actor.ActorId.Value)
             .ToArray();
         if (_setup is null || !_setup.Initialized ||

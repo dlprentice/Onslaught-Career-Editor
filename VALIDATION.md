@@ -159,6 +159,27 @@ coefficient checks without executing game code. Logs are
 in the same Linux directory. The leaf calls use supplied lethal amounts; the
 boundary state is artificial. Neither is native player acceptance.
 
+The Tank/Truck shutdown correction passed **123/123** focused Core checks:
+contact/lifetime, Thing/Actor state, existing event scheduler, actor scripts,
+tutorial progression and the established loss/pause-clock scenario. Four
+behavioral expectations first failed against immediate removal/terminal damage
+discard. Tests cover the frame-13 due-word discriminator (delivery at frame 23
+even though the clock is below due), ring wrap, repeat damage without renewed
+death/timer, immediate script teardown/objective clearing, pending restore/hash,
+equal-time insertion order and visible zero-health target projection. The pause
+timer test directly repeats BeginTick without advancing the manager; the loss
+scenario separately exercises Simulation's paused clock. The input-only static
+target run now measures four impacts **at death**, separately from accepted
+post-death impacts, and stops after its three target objectives instead of
+continuing through unrelated exercises. No driving commands were retuned.
+Logs are `ground-shutdown-{red,green-initial,green,integration,final}-20260908.log`
+in the same Linux directory. The subsequent cold-start/pointer/handoff selection
+passed **5/5** (`ground-shutdown-routes-20260908.log`), with the same input drivers
+and full-client/direct-control equality requirements. The Client first-flight
+smoke passed **1/1** (`ground-shutdown-client-20260908.log`). The intermediate failures preserve obsolete
+immediate-removal expectations and their corrections. These are deterministic
+tests and static-byte contracts, not a native retail/Godot death playthrough.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

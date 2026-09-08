@@ -838,8 +838,12 @@ public sealed class Level100DestructionContactTests
         Assert.Equal(authored.MeshBinding, destroyed.MeshBinding);
         Assert.Equal(pose, destroyed.Pose);
         Assert.Equal(0, destroyed.Health);
-        Assert.False(destroyed.Active);
-        Assert.Equal(Level100ActorLifecycle.Destroyed, destroyed.Lifecycle);
+        // Ground vehicles notify the script immediately but retain their
+        // physical actor until the queued SHUTDOWN reaches its frame bucket.
+        Assert.True(destroyed.Active);
+        Assert.NotEqual(Level100ActorLifecycle.Destroyed, destroyed.Lifecycle);
+        Assert.True(registry.GetBaseState(actorId).IsDying);
+        Assert.False(registry.GetBaseState(actorId).IsShuttingDown);
         Assert.Equal(
             new[]
             {
@@ -868,6 +872,193 @@ public sealed class Level100DestructionContactTests
                 Level100Destruction = runtime.Snapshot,
                 Level100DestructionEvents = runtime.Events,
             }));
+    }
+
+    [Theory]
+    [InlineData("Target Tank")]
+    [InlineData("Target Truck")]
+    public void DyingGroundTargetStillLosesLifeWithoutASecondDeath(string definitionName)
+    {
+        // Component calls supply damage; this is not a recorded player shot.
+        var state = new Level100DestructionState(203,
+            Level100ContactCatalog.Instance.GetDefinition(definitionName));
+        var events = new Level100DestructionEvent[Level100DestructionState.MaximumEventsPerHit];
+        state.ApplyRoundHit(Hit(203, 0), 0x41000000,
+            Level100DestructionEffectKind.PulseImpact, events);
+        Assert.True(state.Terminal);
+        float life = state.CurrentLife;
+        int count = state.ApplyRoundHit(Hit(203, 0), 0x3f800000,
+            Level100DestructionEffectKind.PulseImpact, events);
+        Assert.Equal(life - 1f, state.CurrentLife);
+        Assert.DoesNotContain(events.Take(count), item =>
+            item.Kind == Level100DestructionEventKind.Terminal);
+    }
+
+    [Theory]
+    [InlineData(13u)]
+    [InlineData(198u)]
+    [InlineData(3999u)]
+    public void GroundShutdownUsesRingBucketAfterTenAdvancesEvenBeforeStoredDueTime(uint frame)
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        Level100ActorId id = registry.GetThingRef("Target Tank 2")!.Value;
+        PositionGroundTarget(registry, id);
+        var scheduler = new RetailEventScheduler();
+        for (uint i = 0; i < frame; i++) scheduler.Update();
+        RetailEventAdmission admission = scheduler.AddEventTimeFromNow(0.5f, 2000, id.Value);
+
+        Assert.True(runtime.TryApplyRoundSweep(GroundStart, GroundEnd, 200, 0x41000000,
+            Level100DestructionEffectKind.PulseImpact, out var hit, frame));
+        Assert.Equal(id.Value, hit.ActorId);
+        Level100GroundShutdownSnapshot pending = Assert.Single(runtime.Snapshot.PendingShutdowns);
+        Assert.Equal(frame + 10, pending.DeliveryFrame);
+        Assert.Equal(admission.DueTimeBits, pending.DueTimeBits);
+        registry.DrainFacts();
+        Assert.True(runtime.TryApplyRoundSweep(GroundStart, GroundEnd, 200, 0x3f800000,
+            Level100DestructionEffectKind.PulseImpact, out hit, frame + 1));
+        Assert.Equal(id.Value, hit.ActorId);
+        Assert.Equal(pending, Assert.Single(runtime.Snapshot.PendingShutdowns));
+        Assert.DoesNotContain(registry.DrainFacts(), fact => fact.Kind is
+            Level100ActorFactKind.StartedDying or Level100ActorFactKind.Died);
+
+        // BeginTick clears presentation events even during a paused UI update;
+        // it must not move the scheduler or consume the pending shutdown.
+        for (int i = 0; i < 30; i++) runtime.BeginTick();
+        Assert.Equal(pending, Assert.Single(runtime.Snapshot.PendingShutdowns));
+        for (int i = 1; i < 10; i++)
+        {
+            Assert.Empty(scheduler.Update());
+            runtime.FlushStartOfFrame(frame + (uint)i);
+            Assert.True(registry.GetActor(id).Active);
+        }
+        WorldSnapshot envelope = new Simulation(0x100u, definitions).Snapshot;
+        var before = envelope with { Level100Actors = registry.Snapshot };
+        Assert.True(OnslaughtRebuild.Client.Level100TargetPresentation.Project(
+            before.Targets.Single(target => target.ActorId == id)).Visible);
+
+        Assert.Single(scheduler.Update());
+        if (frame == 13)
+        {
+            Assert.Equal(0x3f933334u, pending.DueTimeBits);
+            Assert.Equal(0x3f933333u, BitConverter.SingleToUInt32Bits(scheduler.Time));
+            Assert.True(scheduler.Time < admission.DueTime);
+        }
+        runtime.FlushStartOfFrame(frame + 10);
+        Assert.Empty(runtime.Snapshot.PendingShutdowns);
+        Assert.False(registry.GetActor(id).Active);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, registry.GetActor(id).Lifecycle);
+        Assert.False(registry.GetBaseState(id).IsShuttingDown);
+        Assert.Empty(registry.DrainFacts()); // no duplicate died notification
+        Assert.False(OnslaughtRebuild.Client.Level100TargetPresentation.Project(
+            (before with { Level100Actors = registry.Snapshot }).Targets.Single(target => target.ActorId == id)).Visible);
+    }
+
+    [Fact]
+    public void GroundDeathDeletesScriptImmediatelyAndRestoresPendingPhysicalShutdown()
+    {
+        var definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        Level100ActorId id = registry.GetThingRef("Target Tank 2")!.Value;
+        Level100ActorId player = registry.GetThingRef("Player 1")!.Value;
+        var scripts = new Level100ActorScriptRuntime(registry, player);
+        scripts.InitializeReleasedScripts();
+        PositionGroundTarget(registry, id);
+        registry.Activate(id);
+        registry.SetObjective(id, true);
+        Assert.True(runtime.TryApplyRoundSweep(GroundStart, GroundEnd, 200, 0x41000000,
+            Level100DestructionEffectKind.PulseImpact, out var hit, 13));
+        Assert.Equal(id.Value, hit.ActorId);
+        Assert.True(registry.GetActor(id).IsObjective); // native shutdown has not cleared it
+        foreach (var fact in registry.DrainFacts()) scripts.DispatchFact(fact);
+        Assert.False(registry.GetActor(id).IsObjective); // the actual Died script clears it
+        Assert.True(registry.GetActor(id).Active);
+        Assert.DoesNotContain(scripts.Snapshot.Instances, item => item.ActorId == id);
+
+        var restoredRegistry = new Level100ActorRegistry(definitions, registry.Snapshot);
+        var restored = new Level100DestructionRuntime(restoredRegistry, runtime.Snapshot);
+        var restoredScripts = new Level100ActorScriptRuntime(restoredRegistry, player, scripts.Snapshot);
+        Assert.DoesNotContain(restoredScripts.Snapshot.Instances, item => item.ActorId == id);
+        WorldSnapshot envelope = new Simulation(0x100u, definitions).Snapshot with
+        {
+            Level100Actors = registry.Snapshot,
+            Level100Destruction = runtime.Snapshot,
+            RetailEventFrameCount = 13,
+        };
+        string expectedHash = StateHasher.ComputeHex(envelope);
+        Assert.Equal(expectedHash, StateHasher.ComputeHex(envelope with
+        {
+            Level100Actors = restoredRegistry.Snapshot,
+            Level100Destruction = restored.Snapshot,
+        }));
+        var pending = Assert.Single(runtime.Snapshot.PendingShutdowns);
+        foreach (var changed in new[]
+        {
+            pending with { AdmissionFrame = 14 },
+            pending with { DeliveryFrame = 24 },
+            pending with { DueTimeBits = pending.DueTimeBits + 1 },
+        })
+        {
+            var invalid = runtime.Snapshot with { PendingShutdowns = [changed] };
+            Assert.NotEqual(expectedHash, StateHasher.ComputeHex(envelope with { Level100Destruction = invalid }));
+            Assert.Throws<ArgumentException>(() => new Level100DestructionRuntime(restoredRegistry, invalid));
+        }
+        Assert.Throws<InvalidDataException>(() => new Level100DestructionRuntime(restoredRegistry,
+            runtime.Snapshot with { PendingShutdowns = [] }));
+        restored.FlushStartOfFrame(22);
+        Assert.True(restoredRegistry.GetActor(id).Active);
+        restored.FlushStartOfFrame(23);
+        Assert.False(restoredRegistry.GetActor(id).Active);
+    }
+
+    private static readonly SimVector3 GroundStart = new(1_000, 5_000, 2_000);
+    private static readonly SimVector3 GroundEnd = new(1_000, 2_000, 2_000);
+
+    private static void PositionGroundTarget(Level100ActorRegistry registry, Level100ActorId id) =>
+        registry.SetPose(id, new Level100ActorPoseSnapshot(new SimVector3(1_000, 3_000, 2_000),
+            IdentityFloatBasis(), SimVector3.Zero, SimVector3.Zero));
+
+    [Fact]
+    public void EqualTimeGroundShutdownsPreserveInsertionOrderThroughRestoreAndHash()
+    {
+        var definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        var ids = registry.Snapshot.Actors.Where(actor => actor.DefinitionName == "Target Tank")
+            .OrderByDescending(actor => actor.ActorId.Value).Take(2).Select(actor => actor.ActorId).ToArray();
+        Assert.Equal(2, ids.Length);
+        foreach (var id in ids)
+        {
+            PositionGroundTarget(registry, id);
+            registry.Activate(id);
+            Assert.True(runtime.TryApplyRoundSweep(GroundStart, GroundEnd, 200, 0x41000000,
+                Level100DestructionEffectKind.PulseImpact, out var hit, 198));
+            Assert.Equal(id.Value, hit.ActorId);
+            // Keep the next ray clear without changing activity/lifetime.
+            registry.SetPose(id, registry.GetPose(id) with { PositionMillimeters = new(90_000, 3_000, 90_000) });
+        }
+        Assert.Equal(ids.Select(id => id.Value), runtime.Snapshot.PendingShutdowns.Select(item => item.ActorId));
+        var restoredRegistry = new Level100ActorRegistry(definitions, registry.Snapshot);
+        var restored = new Level100DestructionRuntime(restoredRegistry, runtime.Snapshot);
+        Assert.Equal(runtime.Snapshot.PendingShutdowns, restored.Snapshot.PendingShutdowns);
+        WorldSnapshot envelope = new Simulation(0x100u, definitions).Snapshot with
+        {
+            Level100Actors = registry.Snapshot,
+            Level100Destruction = runtime.Snapshot,
+            RetailEventFrameCount = 198,
+        };
+        Assert.NotEqual(StateHasher.ComputeHex(envelope), StateHasher.ComputeHex(envelope with
+        {
+            Level100Destruction = runtime.Snapshot with
+            { PendingShutdowns = runtime.Snapshot.PendingShutdowns.Reverse().ToArray() },
+        }));
+        restored.FlushStartOfFrame(208);
+        Assert.Empty(restored.Snapshot.PendingShutdowns);
+        Assert.All(ids, id => Assert.False(restoredRegistry.GetActor(id).Active));
+        // A fresh runtime after reset has no inherited timers.
+        Assert.Empty(new Level100DestructionRuntime(new Level100ActorRegistry(definitions)).Snapshot.PendingShutdowns);
     }
 
     [Fact]
@@ -1057,10 +1248,10 @@ public sealed class Level100DestructionContactTests
         Assert.Equal(expectedHealth, actor.Health);
         Assert.Equal(
             hitCount == 4
-                ? Level100ActorLifecycle.Destroyed
+                ? Level100ActorLifecycle.DiedAwaitingShutdown
                 : Level100ActorLifecycle.Alive,
             actor.Lifecycle);
-        Assert.Equal(hitCount != 4, actor.Active);
+        Assert.True(actor.Active);
 
         Level100ActorRegistrySnapshot registrySnapshot = registry.Snapshot;
         Level100DestructionRuntimeSnapshot destructionSnapshot = runtime.Snapshot;
@@ -1103,6 +1294,13 @@ public sealed class Level100DestructionContactTests
                         : item)
                     .ToArray(),
             };
+        if (hitCount == 4)
+        {
+            // A death-notified ground actor must project zero registry life.
+            Assert.Throws<ArgumentException>(() => new Level100ActorRegistry(
+                definitions, mismatchedSnapshot));
+            return;
+        }
         var mismatchedRegistry = new Level100ActorRegistry(
             definitions,
             mismatchedSnapshot);
