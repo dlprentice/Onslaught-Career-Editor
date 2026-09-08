@@ -7,8 +7,9 @@ immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
 September 7 extension records ordered Unit/child initialization and prepares the
 four landing-craft turret inputs from the measured attachment calculation. It
-also retains both explicit-tree tables and constructs the base pine prefix
-with owned spatial membership and readiness events under explicit FP/seed assumptions.
+also retains both explicit-tree tables and constructs the base pines followed
+by the first three Buildings, SAT turret and six Features, with shared spatial
+membership, RNG and undelivered events under explicit FP/seed/resource assumptions.
 Evidence: MEASURED serialized data plus SOURCE-INFORMED field semantics — the
 hash-pinned retail archive and RLWD reproduce every offset, record digest, raw
 word, common field, and tail; pinned `InitThing` source names the version-50
@@ -122,10 +123,15 @@ their pine stream hashes to
 Each record is raw float X, raw float Y and integer variant, with no serialized
 Z. Actual variants are 0–3. Table endpoints are not payload endpoints.
 
-The existing `level110-initial-actors.json` includes both tables and four
-exact mesh input records under `onslaught.world110-initial-actors.v4`:
-157,121 bytes, SHA-256
-`ab47754b2fc547ae88685477b5408907d7598c45f117a05ffa367ae19809e9c8`.
+The existing `level110-initial-actors.json` includes both tables, four tree-mesh
+records and eight initial-actor meshes under `onslaught.world110-initial-actors.v7`:
+234,999 bytes, SHA-256
+`7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578`.
+The actor meshes retain original parts, complete CPOS/CORI word arrays and
+animation metadata; the payload also carries ordered Unit attachments, weapon
+modes, ground defaults and iceberg profiles. Vertex/index data remains outside
+this bounded input projection. Cached-track padding is retained as input, not
+fabricated as meaningful geometric state.
 The materializer shares one ordered tree reader with Level100's render/shadow
 projection and waypoint parser, and one global-BBOX reader with its pine renderer.
 Core retains read-only groups, raw XY, variants, record digests and offsets.
@@ -454,6 +460,24 @@ Desired/minimum/maximum kinds are 1/2/2, response 2, fixed-transform/delayed fla
 are `0x0a9` after clearing readiness. Collision readiness uses the **relative**
 `AddEventTimeFromNow(-1,3000,collision)` overload.
 
+The primary sphere uses BBOX radius and a separately rounded radius squared.
+Buildings carry type bit `0x100`, so `0x4f3ac0` takes its `0x80100` branch and
+transforms the **complete** BBOX centre through the Actor basis. For each row,
+the dot order is `(m2*z + m1*y) + m0*x`. The X dot stays wide through position
+addition; Y/Z dots store float before translation. Centre-to-owner subtraction
+then introduces another float store. Under the declared arithmetic, before
+the later Building seating call:
+
+| Building | Sphere centre XYZ words | Owner-relative offset XYZ words |
+| --- | --- | --- |
+| Tower | `4389adc3,4378a8eb,c1869d02` | `bd244000,be461400,c0e741bc` |
+| Factory | `43952e43,4384db91,c155cd15` | `bee6f400,3db91000,c04e4c30` |
+| Repair pad | `436648de,437dc484,c11b7067` | `3d0de000,3c908000,bea119a0` |
+
+SAT and the six Features take the simpler current-X/Y branch described below.
+Applying that branch to Buildings was caught during the shared-owner review
+and corrected; the focused test carries these independent word oracles.
+
 Under the declared nearest/53-bit arithmetic, Tower, factory and repair pad
 occupy sectors `(17,15,3)`, `(9,8,2)`, `(14,15,3)`. Their prior candidate sets
 contain 15 pines, 647 pines plus Tower, and 24 pines respectively. Authored Z is
@@ -610,7 +634,7 @@ scheduling state, the live spatial index, shared RNG and event pool, actual
 segment/AI reader owners, and distinct named, all-Thing, Unit, big-Thing, faction,
 effect and occupancy memberships. These factories explicitly select the fresh successful
 resource route and preloaded materialized geometry. Renderer/cache allocation,
-remaining Building/Feature initialization, damage, frame delivery, world reset
+remaining ordinary actor initialization, damage, frame delivery, world reset
 and playable session construction remain open. Legacy registry mutation,
 restore and canonical hashing reject this incomplete state before silently
 losing the added owners or float words. No retail runtime or full parity claim
@@ -651,6 +675,75 @@ The following bodies were independently read from the pristine executable:
 | Weapon-definition defaults `[0x42f5f0,0x42f6f1)` | `375cd9b34597b47133c1d9d36baf3ed9485aada34599d7b7336de470a598554a` |
 | Weapon mode binding `[0x434610,0x43474e)` | `ecfd6e6e0ecc67d77ce2b674393bc09cdebe84e4b9710183de8384d3eca80db1` |
 | AdjustAim assignment `[0x4349c0,0x434a76)` | `bed083f4ac64065496f7d1991d1580717f00c0fecf26e7f18dec2fce21383d97` |
+
+### SAT Cannon and the six Features on the same prefix
+
+`CreateThroughInitialIcebergs(seed)` extends those same world owners through
+BSWD rows 3–9. `RetailWorld110Actor` shares Actor pose/spatial/collision/event
+initialization; `RetailWorld110Unit` shares attachments, effects, Unit/faction
+publication and event 4003. Building retains its segment and late-grounding
+steps. The prefix does not skip the turret to initialize Features alone.
+
+Row 3 is inactive `Turret 03`, profile `SAT Turret`, allegiance 0, selector 4.
+The profile has no extra motion/AI-jitter/fire-control overrides, so those
+constructor-zero gates add no events or draws. GroundUnit copies zero profile
+`+c8` to object `+100/+104`, and zero `+d0` to `+108`. Its common collision
+mask is `0x20`, desired/minimum/maximum kinds 1/0/2, response 2 and force-OBB
+one: flags are `0x2a1` after readiness is cleared. Final type is `0xc0840233`.
+Actual sector `(31,32,4)` visits only the preceding Health Pad; the mask rejects
+it before pair dispatch. Ground clamps both poses to `0xc1199926`.
+
+Unit constructs `SAT Launcher` / `GunA` / raw flags `0x400` before Actor Init.
+Weapon and mode source ordinals are 88 and 50; slot 0 selects mode 50 and the
+remaining slots are -1. Constructor defaults retain charge rate 2, consumption
+1, store/zoom zero and AdjustAim one. The new weapon remains active despite its
+inactive Unit. It uses the same charge/selection owners and effect-list nodes
+as the repair weapon. No barrel/part inspection or fire-control event is enabled.
+
+The exact mesh `m_ft_sam.msh.aya` hashes to
+`9a82f27454863c19c05a8cdedcc99cc05300aed75b8e54467a980c94bf5ba4a2`:
+16 parts, 21 virtual frames and four 36-byte CAMD records. `Inactive` has
+**mode ID 1003**, physical index 3, zero start/end/delta/rate. SetAnim retains
+frame zero, force-loop one and fallback increment one. Metadata lookup does
+not evaluate a pose or deliver the animation event.
+Unlike Building, Cannon creates animation **before** its AI. It then creates
+a TerrainGuide with a direct owner and copied current XYZ, shared AI with
+three null reader cells, and MCCannon with its render-interface owner and
+two `-999.0f` words. It finally joins occupancy; water flag is zero here.
+It does not execute Building's later position-copy/ground-seating call.
+
+The [Feature owner](../binary-analysis/functions/CFeature.cpp/CFeature__Init.md)
+records the six actual clamps, sectors, rejected-peer counts and sphere words.
+Each Feature adds one Actor draw and two events, with no Unit/weapon/AI/animation
+owners. The combined prefix has **1,491 spatial entries, 1,513 pending events,
+four Units, 64 segments, eight empty effect nodes and ten occupancy members**.
+Named and Unit lists contain only the first four actors. Big-list tail order
+is factory, then BSWD Features 4/5/6/8. Actor draw count is ten after the 1,481
+tree draws. SAT's five events are collision, Actor, Unit4003, animation, AI;
+Features append collision then Actor events to the same immediate FIFO bucket.
+
+The six `RetailWorld110CannonFeatureConstructionTests` check these connected
+states and reject legacy damage, restore, hashing and premature frame delivery.
+Mutating water assignment into Teleport destroys old signed zero; inverting
+the centre type branch changes Building spheres. Both tests fail on those
+mutations and pass after exact source restoration. Full CRTMesh/resource
+caches, eligible collision responses, remaining actors, frame delivery,
+reset and Godot play remain open. These are static calculations and headless
+reconstruction tests, not observed retail initialization.
+
+Additional directly checked pristine body identities (half-open):
+
+| Body | SHA-256 |
+| --- | --- |
+| Cannon Init `[0x41b1a0,0x41b368)` | `85bb4fc1f8bba293eb95ba71cb28380df0fdf94614a992657b940bc2d617feb5` |
+| GroundUnit Init `[0x47c730,0x47c8ab)` | `02c4246e1e7a27c2d16f0c43627d7a46d12b953d77abef56c9df6324fb1d3a0f` |
+| Animation constructor `[0x4046d0,0x40474d)` | `e3cd9b697b3fe781735a31d3a2d806ac323f83b333445367a4e6669253dd2c64` |
+| Mesh mode lookup `[0x4aa7e0,0x4aa81f)` | `7152c64d81cf5a035f0cb54729e9664d6e0e6794eaf24ae71bd1e7b3c703eec9` |
+| TerrainGuide constructor `[0x4f1ec0,0x4f1ed9)` | `20bb858b5f57581a82405b23e3f36d6724f0cf26724d2f6b5e0de5a81479b8d5` |
+| Guide constructor `[0x47e290,0x47e2cb)` | `59f53bccf7bee5d886e54bd386e1e5592dddc20bc791c477c9dc856d53fe79ca` |
+| MCCannon constructor `[0x495230,0x495256)` | `45485edf63565f13723daa9477c1772e3c0eb55f4ae5223eb4da698766b88621` |
+| Common collision Init `[0x426150,0x4262d5)` | `43029935f903d983eb6dbefee073f84f651a89790f9f13307ad1e20c08cf5c3c` |
+| Centre calculation `[0x4f3ac0,0x4f3c4a)` | `e2c40c5f3d055e4fe205c461a79fe8147122666a5d4fc8c6b1c8bb30f6b4284b` |
 
 ### Four landing-craft turret children
 

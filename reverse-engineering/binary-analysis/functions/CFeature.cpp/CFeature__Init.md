@@ -6,7 +6,8 @@ Status: active static construction contract
 Last updated: 2026-09-07
 Summary: Feature initialization, its Actor lineage, three distinct mesh radii,
 collision/publication order and the actual World110 iceberg inputs. The six
-icebergs are not implemented runtime objects or an independent load prefix.
+icebergs now have bounded Core initialization after the preceding Buildings and
+SAT Cannon; they are not an independent or playable load prefix.
 Evidence: MEASURED — pristine body/vtable/RTTI reads, retained instruction
 comparisons and four exact mesh reads; no Ghidra or game process was opened.
 `CFeature.cpp` is absent from the pinned GPL source drop.
@@ -129,10 +130,45 @@ fresh construction prefix can retain real membership with readiness false,
 provided preceding constructors/callbacks are shown not to activate it.
 This is not permission to omit the eventual occupancy/shadow effects.
 
-Remaining integration includes exact Feature profile/mesh admission, shared
-Actor pose/state, big-object ownership, collision listeners and the common
-world RNG/scheduler. CRTMesh's complete resource/pose/imposter effects and
-later Feature movement/death remain open. `0x44cc10` first delegates movement
+`RetailWorld110Feature` now uses the shared `RetailWorld110Actor` owner in
+`CreateThroughInitialIcebergs(seed)`, following all four preceding ordinary
+objects and the real 1,481 pines. The v7 actor input admits the four profiles,
+mesh bounds and full CPOS/CORI word arrays. All six actual terrain samples
+are `0x3f947c52`, above authored zero, so the ground teleport does not run.
+The common water clamp changes **current** Z to `0xc10d70a4`, while old Z
+remains its authored signed zero:
+
+| BSWD ordinal | Variant | Old Z | MapWho sector | Rejected prior peers |
+| ---: | ---: | --- | --- | ---: |
+| 4 | 1 | `80000000` | `(7,4,2)` | 94 pines |
+| 5 | 2 | `80000000` | `(11,5,2)` | 0 |
+| 6 | 3 | `00000000` | `(10,5,2)` | 1: Feature 5 |
+| 7 | 4 | `00000000` | `(23,10,3)` | 2: Features 6 then 5 |
+| 8 | 2 | `80000000` | `(3,9,2)` | 0 |
+| 9 | 4 | `80000000` | `(9,22,3)` | 0 |
+
+Every visited prior peer fails the Feature's own `0x20` mask before mutual
+filtering or pair dispatch. Each Actor consumes one shared draw and requests
+one 3000 event after its collision owner's relative readiness request.
+All twelve requests remain undelivered. No Unit membership, weapon/effect,
+AI, animation or sound owner is created. Occupancy is prepended but inactive.
+Current and old XY/bases survive; direct Euler retains negative zero in
+row0Y and row2X. These are input-specific static calculations, checked by
+`RetailWorld110CannonFeatureConstructionTests`, under the stated nearest/53-bit
+and fresh/preloaded-resource assumptions.
+
+| Variant | Sphere radius² | Initial centre Z | Stored owner-relative Z |
+| ---: | --- | --- | --- |
+| 1 | `42aa5c86` | `c13a0cba` | `c0327058` |
+| 2 | `428ff314` | `c1367be7` | `c0242d0c` |
+| 3 | `428f5717` | `c13c35da` | `c03b14d8` |
+| 4 | `4244a3ab` | `c1392ace` | `c02ee8a8` |
+
+Stored offsets for variants 1/2/4 differ from raw BBOX centre Z because both
+rounding stages matter. The common collision state retains flags `0xa9`, the
+sphere and its mesh binding; actual renderer caches and secondary geometry
+evaluation remain unfinished. CRTMesh's complete resource/pose/imposter effects
+and later Feature movement/death remain open. `0x44cc10` first delegates movement
 to Actor; Feature's Dying-only transition differs from the common shutdown
 transition and is not supported by the current Actor snapshot invariant.
 Static invincibility does not establish generic Feature lifecycle parity.

@@ -365,15 +365,22 @@ faction, effect and inactive occupancy memberships retain their actual insertion
 rules. The inactive factory owns an active attached-spawner template, with no
 spawned tank. The repair pad owns its actual weapon definition/mode, shared
 charge/selection state and two empty effect nodes; no firing/healing is implemented.
-The latest focused selection passed **174/174 Core facts and 13/13 materializer
+The same Actor/Unit implementation now constructs the next SAT turret and six
+icebergs in authored order. SAT retains its inactive animation (mode 1003,
+physical index 3), weapon and guide/AI owners. Features keep authored old Z
+while current Z is clamped to water. Collision spheres use the correct
+type-dependent centre calculation and bind the actual materialized mesh.
+This prefix has 1,491 spatial owners, 1,513 undelivered events and four Units;
+the six Features create no Unit, weapon, AI or animation owners.
+The latest focused selection passed **183/183 Core facts and 14/14 materializer
 checks**, with the World100 forty-step hash unchanged; [VALIDATION.md](VALIDATION.md)
 records the checks and controlled failures.
 
 These factories take an incoming RNG seed and explicitly assume nearest/53-bit
-arithmetic; the Building factories select a fresh resource route with preloaded
+arithmetic; the ordinary-actor factories select a fresh resource route with preloaded
 geometry. Renderer/resource caches, remaining actors, frame delivery, damage,
 reset and playable World110 remain unfinished. Legacy mutation, restore and
-hashing reject the incomplete Building state. Simulation rejects World110 before
+hashing reject the incomplete initialized Actor state. Simulation rejects World110 before
 Level100 Setup; direct World110 mission instruments remain supported. The
 [World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
 retains the contracts and unresolved startup FP/seed boundary.

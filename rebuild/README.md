@@ -232,9 +232,14 @@ prepares its attached Sabre template without spawning; the repair weapon uses
 shared charge/selection state and two empty effect nodes without firing.
 Their AI has real reader cells and the separate world memberships retain their
 insertion rules. `CreateWithControlTower(seed)` stops the same path after one Building.
+`CreateThroughInitialIcebergs(seed)` continues in authored order through the
+inactive SAT turret and six Features. Shared Actor/Unit initialization retains
+the SAT weapon and inactive animation, Feature current/old pose differences,
+type-dependent collision spheres and mesh bindings. The complete prefix has
+1,491 spatial owners and 1,513 pending events; no event is delivered.
 Renderer/resource caches, full collision response, remaining ordinary actors
 and frame delivery are unfinished; legacy mutation, restore and hashing reject
-the incomplete Building state.
+the incomplete initialized Actor state.
 Simulation now explicitly rejects World110 before the Level100 setup path.
 This stage does not initialize all actor classes, publish a complete world,
 run squads/spawners or construct a playable session. The Godot host therefore

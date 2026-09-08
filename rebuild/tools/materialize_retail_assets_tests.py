@@ -214,8 +214,8 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         )
         cls.configurations = (game / materializer.BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
         cls.pine_meshes = materializer._read_pine_meshes(game)
-        cls.building_meshes = tuple(materializer._read_exact(game / path, digest)
-            for _, path, digest, _ in materializer.WORLD110_BUILDING_MESHES)
+        cls.initial_meshes = tuple(materializer._read_exact(game / path, digest)
+            for _, path, digest, _ in materializer.WORLD110_INITIAL_MESHES)
         cls.landing_craft_mesh = materializer._read_exact(
             game / materializer.WORLD110_LANDING_CRAFT_MESH,
             materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
@@ -240,7 +240,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_artifact_reproduces_and_contains_its_own_unit_rows(self) -> None:
         data = materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.building_meshes)
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes)
         self.assertEqual(materializer.WORLD110_INITIAL_ACTORS_SHA256,
                          materializer._sha256(data))
         document = json.loads(data)
@@ -266,7 +266,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual(legacy, materializer._parse_static_world(self.raw_world)[0])
 
     def test_control_tower_keeps_source_parts_and_duplicate_emitter_bindings(self):
-        mesh = materializer._world110_building_mesh(self.building_meshes[0], 0)
+        mesh = materializer._world110_initial_mesh(self.initial_meshes[0], 0)
         self.assertEqual(39, len(mesh["parts"]))
         self.assertEqual(["CORE01", "CORE02", "core4", "CORE03", "CORE05", "CORE06", "core7", "CORE08"],
                          [part["name"] for part in mesh["parts"] if part["name"].startswith(("core", "CORE"))])
@@ -276,20 +276,20 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual([7,26,27,28,29,34,35,36,37,38], [entry["partOrdinal"] for entry in mesh["emitters"]])
         self.assertEqual(0x416d5d81, mesh["meshRadiusFloatBits"])
         self.assertEqual([0x20202020, 0x20202020], [mesh["globalBoundingBoxWords"][i] for i in (3,7)])
-        changed = bytearray(self.building_meshes[0])
+        changed = bytearray(self.initial_meshes[0])
         changed[-1] ^= 1
-        with self.assertRaisesRegex(RuntimeError, "building mesh identity"):
-            materializer._world110_building_mesh(bytes(changed), 0)
+        with self.assertRaisesRegex(RuntimeError, "initial mesh identity"):
+            materializer._world110_initial_mesh(bytes(changed), 0)
 
-    def test_three_building_meshes_and_raw_unit_uses_preserve_source_order(self):
+    def test_three_initial_meshes_and_raw_unit_uses_preserve_source_order(self):
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.building_meshes))
-        self.assertEqual("onslaught.world110-initial-actors.v6", document["schema"])
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes))
+        self.assertEqual("onslaught.world110-initial-actors.v7", document["schema"])
         self.assertNotIn("controlTowerMesh", document)
-        meshes = document["buildingMeshes"]
+        meshes = document["initialMeshes"]
         self.assertEqual(["fb_control_tower.msh", "fb_tank_factory.msh", "fb_health_pad.msh"],
-                         [mesh["meshName"] for mesh in meshes])
-        self.assertEqual([39, 29, 20], [len(mesh["parts"]) for mesh in meshes])
+                         [mesh["meshName"] for mesh in meshes[:3]])
+        self.assertEqual([39, 29, 20], [len(mesh["parts"]) for mesh in meshes[:3]])
         self.assertEqual([5, 6, 8, 9, 11, 12, 13, 14, 15, 16],
                          [binding["partOrdinal"] for binding in meshes[1]["emitters"]])
         self.assertEqual(["_Health Pad Mesh FOR", "GunB"],
@@ -302,21 +302,21 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
                  "rawCreationFlags": 0x24100}]},
             {"actorDefinitionIdentity": "wres:bswd:0002", "spawnerUses": [], "weaponUses": [
                 {"definitionName": "Repair Pad", "tagName": "GunB", "rawCreationFlags": 8}]},
-        ], document["buildingUnitUses"])
-        for index, source in enumerate(self.building_meshes):
+        ], document["initialUnitUses"][:3])
+        for index, source in enumerate(self.initial_meshes):
             changed = bytearray(source)
             changed[-1] ^= 1
-            with self.subTest(index=index), self.assertRaisesRegex(RuntimeError, "building mesh identity"):
-                materializer._world110_building_mesh(bytes(changed), index)
-        with self.assertRaisesRegex(RuntimeError, "building mesh count"):
+            with self.subTest(index=index), self.assertRaisesRegex(RuntimeError, "initial mesh identity"):
+                materializer._world110_initial_mesh(bytes(changed), index)
+        with self.assertRaisesRegex(RuntimeError, "initial mesh count"):
             materializer._world110_initial_actor_bytes(
                 self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes,
-                self.building_meshes[:2])
+                self.initial_meshes[:2])
 
     def test_building_definitions_resolve_authored_modes_and_spawner_target(self):
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.building_meshes))
-        weapon, = document["buildingWeaponDefinitions"]
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes))
+        weapon = document["weaponDefinitions"][0]
         self.assertEqual(("Repair Pad", 13), (weapon["definitionName"], weapon["typeOrdinal"]))
         self.assertEqual([11, -1, -1, -1, -1], weapon["chargeSlots"])
         self.assertEqual((0x40000000, 0x3f800000, 0, 0, 0),
@@ -330,14 +330,55 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         actual_mode = [record for record in stream if record.record_type == 3][mode["typeOrdinal"]]
         self.assertEqual(actual_mode.fields,
                          tuple((field["fieldId"], bytes.fromhex(field["rawHex"])) for field in mode["fields"]))
-        spawner, = document["buildingSpawnerDefinitions"]
+        spawner, = document["spawnerDefinitions"]
         self.assertEqual("AV-14B Sabre Pulse Tank", spawner["targetUnitDefinitionName"])
         self.assertEqual(2, spawner["targetUnitBehaviourSelector"])
         self.assertEqual([1, 3, 2, 12, 11, 7], [field["fieldId"] for field in spawner["fields"]])
 
+    def test_sat_and_features_keep_animation_modes_caches_and_actual_profiles(self):
+        from cmsh_static_preview import inflate_aya, parse_cmsh_stream
+        document = json.loads(materializer._world110_initial_actor_bytes(
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes))
+        meshes = document["initialMeshes"]
+        self.assertEqual(["ft_sam.msh", "iceberg1.msh", "iceberg2.msh", "iceberg3.msh", "iceberg4.msh"],
+                         [mesh["meshName"] for mesh in meshes[3:]])
+        self.assertEqual([181, 46, 101, 21, 101, 101, 101, 101],
+                         [mesh["frameCount"] for mesh in meshes])
+        self.assertEqual([0, 0, 0, 4, 0, 0, 0, 0], [mesh["numberOfAnimations"] for mesh in meshes])
+        self.assertEqual([1000, 1001, 1002, 1003], [animation["modeId"] for animation in meshes[3]["animations"]])
+        self.assertEqual({"name": "Inactive", "sourceOrdinal": 3, "modeId": 1003,
+                          "startFrame": 0, "endFrame": 0, "frameDelta": 0, "incrementFloatBits": 0},
+                         meshes[3]["animations"][3])
+        self.assertEqual([8, 2, 6, 5, 4, 3, 7, 1],
+                         [binding["selector"] for binding in meshes[3]["emitters"][:8]])
+        for source, mesh in zip(self.initial_meshes, meshes):
+            parsed = parse_cmsh_stream(inflate_aya(source))
+            for original, part in zip(parsed.file_parts(), mesh["parts"]):
+                for key, raw in (("cachedPositionWords", original.track.cached_position_bytes),
+                                 ("cachedOrientationWords", original.track.cached_orientation_bytes)):
+                    self.assertEqual(raw, struct.pack(f"<{len(part[key])}i", *part[key]))
+        self.assertEqual((84, 252), tuple(len(meshes[3]["parts"][1][key]) for key in
+                                         ("cachedPositionWords", "cachedOrientationWords")))
+        self.assertEqual({"actorDefinitionIdentity": "wres:bswd:0003", "spawnerUses": [],
+                          "weaponUses": [{"definitionName": "SAT Launcher", "tagName": "GunA",
+                                          "rawCreationFlags": 1024}]}, document["initialUnitUses"][3])
+        ground, = document["groundUnitDefinitions"]
+        self.assertEqual(("SAT Turret", 0, 0),
+                         (ground["definitionName"], ground["fieldC8FloatBits"], ground["fieldD0FloatBits"]))
+        self.assertEqual([11, 9, 8, 47, 3, 23, 7, 21, 10],
+                         [field["fieldId"] for field in ground["fields"]])
+        weapon = document["weaponDefinitions"][1]
+        self.assertEqual(("SAT Launcher", 88, 1), (weapon["definitionName"], weapon["typeOrdinal"], weapon["adjustAimWord"]))
+        self.assertEqual([50, -1, -1, -1, -1], weapon["chargeSlots"])
+        self.assertEqual(8, sum(field["fieldId"] == 8 for field in weapon["selectedMode"]["fields"]))
+        self.assertEqual(["Iceberg 1", "Iceberg 2", "Iceberg 3", "Iceberg 4"],
+                         [profile["definitionName"] for profile in document["featureDefinitions"]])
+        self.assertTrue(all(profile["invincibleWord"] == 1 and profile["profileWord18"] == 0
+                            for profile in document["featureDefinitions"]))
+
     def test_real110_tree_tables_retain_repeated_data_and_retail_skip_branches(self):
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.building_meshes))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes))
         base, level = document["treeTables"]
         self.assertEqual(["BSWD", "RLWD"], [base["sourceChunk"], level["sourceChunk"]])
         self.assertEqual((2709, 29549, 18327, 45167),
@@ -394,7 +435,7 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
 
     def test_real110_component_queries_keep_mesh_cache_and_constructor_zero_signs(self) -> None:
         document = json.loads(materializer._world110_initial_actor_bytes(
-            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.building_meshes))
+            self.raw_world, self.physics, self.landing_craft_mesh, self.pine_meshes, self.initial_meshes))
         attachment = document["componentAttachment"]
         self.assertEqual((20, 1, 31),
                          (attachment["emitterTag"], attachment["selector"], attachment["partOrdinal"]))
@@ -414,12 +455,12 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
     def test_changed_component_mesh_is_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "mesh identity changed"):
             materializer._world110_initial_actor_bytes(self.raw_world, self.physics, b"wrong mesh",
-                                                       self.pine_meshes, self.building_meshes)
+                                                       self.pine_meshes, self.initial_meshes)
 
     def test_changed_physics_is_rejected_before_construction(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "physics source identity"):
             materializer._world110_initial_actor_bytes(
-                self.raw_world, b"wrong physics", self.landing_craft_mesh, self.pine_meshes, self.building_meshes)
+                self.raw_world, b"wrong physics", self.landing_craft_mesh, self.pine_meshes, self.initial_meshes)
 
 
 class MeshEmitterMaterializationTests(unittest.TestCase):

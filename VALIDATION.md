@@ -185,6 +185,23 @@ same Linux run directory. Only the ignored 175,671-byte v6 actor input was
 regenerated. These are construction checks; they establish neither tank
 spawning, repair firing, rendered World110 nor runtime parity.
 
+The extension through SAT and all six icebergs passed **183/183 focused Core
+facts** and **14/14 World110 materializer checks**, zero skipped. This adds six
+connected-construction facts and the three existing attachment-pose checks to
+the prior selection. It covers authored order, mixed world memberships, SAT's
+mode-ID/index distinction and shared weapon state, Feature current/old poses,
+collision spheres and distinct rounding stores, 1,513 pending events and the
+1,491-draw stream. The World100 forty-step hash remains unchanged.
+Two controlled mutations failed their exact facts: water Teleport overwrote
+authored old Z; an inverted centre branch lost Building BBOX transformations.
+Source was restored byte-for-byte before the full focused selection passed again.
+Logs are `initial-icebergs-core.log`, `initial-icebergs-restored.log`,
+`initial-icebergs-materializer.log`, `initial-icebergs-water-mutation.log` and
+`initial-icebergs-centre-mutation.log` in the same Linux run directory.
+Only the ignored 234,999-byte v7 actor input was published. This remains
+headless construction evidence under explicit numerical/resource assumptions;
+no retail/Godot runtime, Ghidra database or desktop was opened.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content

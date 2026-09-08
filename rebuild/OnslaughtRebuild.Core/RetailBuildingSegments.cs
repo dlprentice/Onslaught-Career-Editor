@@ -2,17 +2,6 @@
 
 namespace OnslaughtRebuild.Core;
 
-/// <summary>Original mesh nodes, before reference-part geometry expansion.</summary>
-public sealed record RetailBuildingMeshPart(string Name, int Type, int? Reference,
-    int? Parent, IReadOnlyList<int> Children, int? Nmic, int NumNmic, int IsNmic,
-    Level100FloatVector3Bits HalfExtentFloatBits);
-
-public sealed record RetailBuildingEmitter(string Name, int Selector, int? PartOrdinal);
-
-public sealed record RetailBuildingMesh(string Name, string SourceSha256,
-    int RadiusFloatBits, IReadOnlyList<int> GlobalBoundingBoxWords,
-    IReadOnlyList<RetailBuildingMeshPart> Parts, IReadOnlyList<RetailBuildingEmitter> Emitters);
-
 public enum RetailBuildingSegmentKind { Core, Swap, Extra, X1 }
 
 /// <summary>
@@ -78,7 +67,7 @@ public sealed class RetailBuildingSegment
 /// </summary>
 public sealed class RetailBuildingSegments
 {
-    internal RetailBuildingSegments(RetailBuildingMesh mesh, float life,
+    internal RetailBuildingSegments(RetailInitialMesh mesh, float life,
         Func<int> allocateIdentity, Action<RetailBuildingSegment> publish)
     {
         var allocated = new List<RetailBuildingSegment>();
@@ -90,8 +79,8 @@ public sealed class RetailBuildingSegments
 
         void Visit(int ordinal, RetailBuildingSegment? parent)
         {
-            RetailBuildingMeshPart part = mesh.Parts[ordinal];
-            RetailBuildingMeshPart? geometry = part.Type switch
+            RetailInitialMeshPart part = mesh.Parts[ordinal];
+            RetailInitialMeshPart? geometry = part.Type switch
             {
                 1 or 3 => part,
                 6 when part.Reference.HasValue => mesh.Parts[part.Reference.Value],

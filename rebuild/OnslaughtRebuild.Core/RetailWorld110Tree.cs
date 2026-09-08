@@ -16,7 +16,7 @@ public sealed record RetailWorld110TreeMesh(int Variant, string MeshName, string
 /// in retail float words; millimetre and renderer transforms are not truth.
 /// Falling, shutdown and matrix evaluation remain outside this prefix.
 /// </summary>
-public sealed class RetailWorld110Tree : IRetailMapWhoOwner
+public sealed class RetailWorld110Tree : IRetailInitialCollisionOwner
 {
     private readonly ThingBaseState _thing = new(ThingActorTypeMasks.Thing,
         0x02000020, ThingActorFlags.InMapWho);
@@ -65,6 +65,7 @@ public sealed class RetailWorld110Tree : IRetailMapWhoOwner
     public uint ThingTypeMask => _thing.TypeMask;
     public ThingActorFlags Flags => _thing.Flags;
     public uint CollisionMask => 0x20;
+    uint IRetailInitialCollisionOwner.CollisionExclusionMask => CollisionMask;
     public int CollisionMaximumKind => 1;
     public int CollisionRadiusFloatBits => 0x3e4ccccd;
     public int CollisionRadiusSquaredFloatBits => 0x3d23d70b;

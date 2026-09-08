@@ -24,20 +24,29 @@ public readonly record struct RetailUnitAttachmentPose(
     {
         ReadOnlySpan<double> a = Components(parent.BasisFloatBits);
         ReadOnlySpan<double> b = Components(local.BasisFloatBits);
-        ReadOnlySpan<double> p = [Read(local.PositionFloatBits.X),
-            Read(local.PositionFloatBits.Y), Read(local.PositionFloatBits.Z)];
-        double x = PointDot(a, p, 0);
-        double y = PointDot(a, p, 1);
-        double z = PointDot(a, p, 2);
-        var position = new Level100FloatVector3Bits(
-            Store(x + Read(parent.PositionFloatBits.X)),
-            // Retail spills Y/Z dots before translation. X stays wide.
-            Store((double)(float)y + Read(parent.PositionFloatBits.Y)),
-            Store((double)(float)z + Read(parent.PositionFloatBits.Z)));
+        Level100FloatVector3Bits position = TransformPosition(parent, local.PositionFloatBits);
         return new(position, new(
             Product(a, b, 0, 0, 1, 0, 2), Product(a, b, 0, 1, 2, 1, 0), Product(a, b, 0, 2, 2, 1, 0),
             Product(a, b, 1, 0, 2, 1, 0), Product(a, b, 1, 1, 0, 2, 1), Product(a, b, 1, 2, 0, 2, 1),
             Product(a, b, 2, 0, 2, 1, 0), Product(a, b, 2, 1, 0, 2, 1), Product(a, b, 2, 2, 2, 1, 0)));
+    }
+
+    /// <summary>
+    /// Point transform shared by Unit attachment and Thing centre 0x004f3ac0.
+    /// Both keep the X dot wide and spill Y/Z dots before translation.
+    /// </summary>
+    internal static Level100FloatVector3Bits TransformPosition(
+        RetailUnitAttachmentPose parent, Level100FloatVector3Bits local)
+    {
+        ReadOnlySpan<double> a = Components(parent.BasisFloatBits);
+        ReadOnlySpan<double> p = [Read(local.X), Read(local.Y), Read(local.Z)];
+        double x = PointDot(a, p, 0);
+        double y = PointDot(a, p, 1);
+        double z = PointDot(a, p, 2);
+        return new(
+            Store(x + Read(parent.PositionFloatBits.X)),
+            Store((double)(float)y + Read(parent.PositionFloatBits.Y)),
+            Store((double)(float)z + Read(parent.PositionFloatBits.Z)));
     }
 
     /// <summary>

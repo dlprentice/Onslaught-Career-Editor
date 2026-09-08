@@ -5,10 +5,11 @@ namespace OnslaughtRebuild.Core;
 public sealed record RetailPhysicsFieldInput(int FieldId, string RawHex);
 public sealed record RetailUnitConstructionUse(string DefinitionName, string TagName, uint RawCreationFlags)
 {
-    // The two admitted 5115b0 mappings. These are not mesh emitter selectors
+    // The admitted 5115b0 mappings. These are not mesh emitter selectors
     // or the target unit's behavior selector.
     public int TagIndex => TagName switch
     {
+        "GunA" => 1,
         "GunB" => 2,
         "SpawnerA" => 10,
         _ => throw new NotSupportedException("Unadmitted Unit attachment tag.")
@@ -42,13 +43,13 @@ public sealed record RetailEffectLink(object Owner, int? OwnerOffset, RetailEffe
 /// </summary>
 public sealed class RetailUnitWeapon
 {
-    internal RetailUnitWeapon(RetailWorld110Building owner, RetailUnitConstructionUse use,
+    internal RetailUnitWeapon(RetailWorld110Unit owner, RetailUnitConstructionUse use,
         RetailUnitWeaponDefinition definition)
     {
-        if (use.DefinitionName != definition.DefinitionName || use.TagName != "GunB" ||
-            use.RawCreationFlags != 8 || definition.ChargeSlots.Count != RetailWeaponChargeTable.LevelCount ||
+        if (use.DefinitionName != definition.DefinitionName || use.TagName is not ("GunA" or "GunB") ||
+            definition.ChargeSlots.Count != RetailWeaponChargeTable.LevelCount ||
             definition.ChargeSlots[0] != definition.SelectedMode.TypeOrdinal)
-            throw new NotSupportedException("Unadmitted Building weapon constructor inputs.");
+            throw new NotSupportedException("Unadmitted Unit weapon constructor inputs.");
         Identity = owner.World.AllocateObjectIdentity();
         Owner = owner;
         Use = use;
@@ -72,7 +73,7 @@ public sealed class RetailUnitWeapon
     }
 
     public int Identity { get; }
-    public RetailWorld110Building Owner { get; }
+    public RetailWorld110Unit Owner { get; }
     public RetailUnitConstructionUse Use { get; }
     public RetailUnitWeaponDefinition Definition { get; }
     public RetailUnitWeaponModeInput CurrentMode => Definition.SelectedMode;
@@ -125,7 +126,7 @@ public sealed record RetailAttachedSpawnerInit(RetailWorld110InitialActorInput C
 /// </summary>
 public sealed class RetailUnitAttachedSpawner
 {
-    internal RetailUnitAttachedSpawner(RetailWorld110Building owner, RetailUnitConstructionUse use,
+    internal RetailUnitAttachedSpawner(RetailWorld110Unit owner, RetailUnitConstructionUse use,
         RetailUnitSpawnerDefinition definition)
     {
         if (use.DefinitionName != definition.DefinitionName || use.TagName != "SpawnerA" ||
@@ -138,7 +139,7 @@ public sealed class RetailUnitAttachedSpawner
         Initializer = new(owner.Input);
     }
     public int Identity { get; }
-    public RetailWorld110Building Owner { get; }
+    public RetailWorld110Unit Owner { get; }
     public RetailUnitConstructionUse Use { get; }
     public RetailUnitSpawnerDefinition Definition { get; }
     public RetailAttachedSpawnerInit Initializer { get; }

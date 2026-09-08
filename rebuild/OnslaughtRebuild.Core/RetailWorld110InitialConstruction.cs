@@ -83,7 +83,7 @@ public sealed record RetailWorld110TreeTableInput(
 public sealed class RetailWorld110InitialConstruction
 {
     public const string MaterializedAssetSha256 =
-        "5ef08128e6bf0ab2fe59bd036871d4700b95d2330257a285b06dc11ff7110f97";
+        "7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578";
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level110.level110-initial-actors.json";
@@ -93,10 +93,11 @@ public sealed class RetailWorld110InitialConstruction
     internal sealed record Inputs(IReadOnlyList<RetailWorld110InitialActorInput> Actors,
         RetailUnitAttachmentPose LocalAttachment, IReadOnlyList<AttachmentUse> AttachmentUses,
         IReadOnlyList<RetailWorld110TreeTableInput> TreeTables,
-        IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes, IReadOnlyList<RetailBuildingMesh> BuildingMeshes,
-        IReadOnlyList<RetailUnitConstructionUses> BuildingUnitUses,
-        IReadOnlyList<RetailUnitWeaponDefinition> BuildingWeaponDefinitions,
-        IReadOnlyList<RetailUnitSpawnerDefinition> BuildingSpawnerDefinitions);
+        IReadOnlyList<RetailWorld110TreeMesh> TreeMeshes, IReadOnlyList<RetailInitialMesh> InitialMeshes,
+        IReadOnlyList<RetailUnitConstructionUses> InitialUnitUses,
+        IReadOnlyList<RetailUnitWeaponDefinition> WeaponDefinitions,
+        IReadOnlyList<RetailUnitSpawnerDefinition> SpawnerDefinitions,
+        IReadOnlyList<RetailFeatureDefinition> FeatureDefinitions, IReadOnlyList<RetailGroundUnitDefinition> GroundUnitDefinitions);
 
     private static readonly Lazy<Inputs> s_inputs =
         new(LoadEmbedded);
@@ -104,13 +105,14 @@ public sealed class RetailWorld110InitialConstruction
     private int _nextObjectIdentity = 1;
     private readonly Dictionary<int, RetailWorld110Tree> _treeListeners = [];
     private readonly LinkedList<IRetailMapWhoOwner> _initializedThings = [];
-    private readonly LinkedList<RetailWorld110Building> _namedBuildings = [];
-    private readonly LinkedList<RetailWorld110Building> _units = [];
-    private readonly List<RetailWorld110Building> _bigThings = [];
+    private readonly LinkedList<RetailWorld110Actor> _namedActors = [];
+    private readonly LinkedList<RetailWorld110Unit> _units = [];
+    private readonly List<RetailWorld110Actor> _bigThings = [];
     private readonly List<RetailWorld110Building> _buildings = [];
+    private readonly List<RetailWorld110Actor> _initialActors = [];
     private readonly LinkedList<RetailBuildingSegment> _segments = [];
-    private readonly LinkedList<RetailWorld110Building> _occupancyCandidates = [];
-    private readonly List<RetailWorld110Building>[] _factions = [[], []];
+    private readonly LinkedList<RetailWorld110Actor> _occupancyCandidates = [];
+    private readonly List<RetailWorld110Unit>[] _factions = [[], []];
     private readonly int[,] _unitCounts = new int[2, 26];
     // On the fresh resource-loaded route, 50d9e0 skips definition-catalog Add.
     // MarkUsed50dc20 can only set an existing exact-name entry; misses stay empty.
@@ -159,7 +161,7 @@ public sealed class RetailWorld110InitialConstruction
     public static RetailWorld110InitialConstruction CreateWithControlTower(int randomSeedAtFirstTree)
     {
         var world = new RetailWorld110InitialConstruction(randomSeedAtFirstTree);
-        world.InitializeBuildings(1);
+        world.InitializeInitialActors(1);
         return world;
     }
 
@@ -171,11 +173,19 @@ public sealed class RetailWorld110InitialConstruction
     public static RetailWorld110InitialConstruction CreateWithInitialBuildings(int randomSeedAtFirstTree)
     {
         var world = new RetailWorld110InitialConstruction(randomSeedAtFirstTree);
-        world.InitializeBuildings(3);
+        world.InitializeInitialActors(3);
         return world;
     }
 
-    private void InitializeBuildings(int count)
+    /// <summary>Ordered prefix through the first Cannon and all six iceberg Features.</summary>
+    public static RetailWorld110InitialConstruction CreateThroughInitialIcebergs(int randomSeedAtFirstTree)
+    {
+        var world = new RetailWorld110InitialConstruction(randomSeedAtFirstTree);
+        world.InitializeInitialActors(10);
+        return world;
+    }
+
+    private void InitializeInitialActors(int count)
     {
         Inputs inputs = s_inputs.Value;
         for (int index = 0; index < count; index++)
@@ -183,9 +193,25 @@ public sealed class RetailWorld110InitialConstruction
             RetailWorld110InitialActorInput input = ActorInputs[index];
             Level100ActorId actorId = Actors.Snapshot.Actors.Single(
                 actor => actor.DefinitionIdentity == input.Actor.DefinitionIdentity).ActorId;
-            _buildings.Add(new(this, actorId, input, inputs.BuildingMeshes[index],
-                inputs.BuildingUnitUses[index], inputs.BuildingWeaponDefinitions,
-                inputs.BuildingSpawnerDefinitions, _events!));
+            string meshName = input.Actor.MeshBinding!;
+            if (!meshName.EndsWith(".msh", StringComparison.Ordinal)) meshName += ".msh";
+            RetailInitialMesh mesh = inputs.InitialMeshes.Single(mesh => mesh.Name == meshName);
+            RetailWorld110Actor actor;
+            if (index < 3)
+            {
+                var building = new RetailWorld110Building(this, actorId, input, mesh,
+                    inputs.InitialUnitUses[index], inputs.WeaponDefinitions, inputs.SpawnerDefinitions);
+                _buildings.Add(building);
+                actor = building;
+            }
+            else if (index == 3)
+                actor = new RetailWorld110Cannon(this, actorId, input, mesh, inputs.InitialUnitUses[index],
+                    inputs.WeaponDefinitions, inputs.SpawnerDefinitions,
+                    inputs.GroundUnitDefinitions.Single(definition => definition.DefinitionName == input.Actor.DefinitionName));
+            else
+                actor = new RetailWorld110Feature(this, actorId, input, mesh,
+                    inputs.FeatureDefinitions.Single(definition => definition.DefinitionName == input.Actor.DefinitionName));
+            _initialActors.Add(actor);
         }
     }
 
@@ -222,18 +248,19 @@ public sealed class RetailWorld110InitialConstruction
         get { foreach (var thing in _initializedThings) if (thing is RetailWorld110Tree tree) yield return tree; }
     }
     public IEnumerable<IRetailMapWhoOwner> InitializedThingsNewestFirst => Enumerate(_initializedThings);
-    public IEnumerable<RetailWorld110Building> NamedBuildingsNewestFirst => Enumerate(_namedBuildings);
-    public IEnumerable<RetailWorld110Building> UnitsNewestFirst => Enumerate(_units);
+    public IEnumerable<RetailWorld110Actor> NamedActorsNewestFirst => Enumerate(_namedActors);
+    public IEnumerable<RetailWorld110Unit> UnitsNewestFirst => Enumerate(_units);
     public IEnumerable<RetailBuildingSegment> SegmentsNewestFirst => Enumerate(_segments);
-    public IEnumerable<RetailWorld110Building> OccupancyCandidatesNewestFirst => Enumerate(_occupancyCandidates);
+    public IEnumerable<RetailWorld110Actor> OccupancyCandidatesNewestFirst => Enumerate(_occupancyCandidates);
     public IReadOnlyList<RetailWorld110Building> Buildings => _buildings.AsReadOnly();
-    public IEnumerable<RetailWorld110Building> BigThingsOldestFirst => Enumerate(_bigThings);
+    public IReadOnlyList<RetailWorld110Actor> InitializedActors => _initialActors.AsReadOnly();
+    public IEnumerable<RetailWorld110Actor> BigThingsOldestFirst => Enumerate(_bigThings);
     public RetailWorld110Building? ControlTower => _buildings.FirstOrDefault();
     public RetailEffectLink? EffectHead { get; private set; }
     public bool OccupancyActive => false;
     public IReadOnlyList<IReadOnlyList<byte>> OccupancyBitplanes { get; private set; } = [];
     public IReadOnlyList<int> OccupancySlopeThresholdFloatBits { get; private set; } = [];
-    public IReadOnlyList<RetailWorld110Building> FactionUnits(int allegiance) => _factions[allegiance].AsReadOnly();
+    public IReadOnlyList<RetailWorld110Unit> FactionUnits(int allegiance) => _factions[allegiance].AsReadOnly();
     public int UnitCount(int allegiance, int selector) => _unitCounts[allegiance, selector];
     public int WorldMeshCatalogCount => _worldMeshUsage.Count;
     public bool IsUnitDefinitionUsed(string name) => _worldMeshUsage.TryGetValue(name, out bool used) && used;
@@ -264,18 +291,18 @@ public sealed class RetailWorld110InitialConstruction
         .Where(group => group.CallsTreeInit).Sum(group => group.Placements.Count) - Trees.Count;
 
     internal int AllocateObjectIdentity() => checked(_nextObjectIdentity++);
-    internal void PublishNamedBuilding(RetailWorld110Building building) => _namedBuildings.AddFirst(building);
+    internal void PublishNamedActor(RetailWorld110Actor actor) => _namedActors.AddFirst(actor);
     internal void PublishInitializedThing(IRetailMapWhoOwner thing) => _initializedThings.AddFirst(thing);
-    internal void PublishUnit(RetailWorld110Building unit) => _units.AddFirst(unit);
-    internal void PublishBigThing(RetailWorld110Building unit) => _bigThings.Add(unit);
+    internal void PublishUnit(RetailWorld110Unit unit) => _units.AddFirst(unit);
+    internal void PublishBigThing(RetailWorld110Actor actor) => _bigThings.Add(actor);
     internal void PublishSegment(RetailBuildingSegment segment) => _segments.AddFirst(segment);
-    internal void PublishFactionUnit(RetailWorld110Building unit) => _factions[unit.Allegiance].Add(unit);
+    internal void PublishFactionUnit(RetailWorld110Unit unit) => _factions[unit.Allegiance].Add(unit);
     internal void IncrementUnitCount(int allegiance, int selector) => _unitCounts[allegiance, selector]++;
     internal void MarkUnitDefinitionUsed(string name)
     {
         if (_worldMeshUsage.ContainsKey(name)) _worldMeshUsage[name] = true;
     }
-    internal void PublishOccupancyCandidate(RetailWorld110Building building) => _occupancyCandidates.AddFirst(building);
+    internal void PublishOccupancyCandidate(RetailWorld110Actor actor) => _occupancyCandidates.AddFirst(actor);
     internal RetailEffectLink AddEffectLink(object owner, int? ownerOffset) =>
         EffectHead = new(owner, ownerOffset, EffectHead);
 
@@ -390,7 +417,7 @@ public sealed class RetailWorld110InitialConstruction
 
         using JsonDocument document = JsonDocument.Parse(source);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v6" ||
+        if (root.GetProperty("schema").GetString() != "onslaught.world110-initial-actors.v7" ||
             root.GetProperty("worldNumber").GetInt32() != 110 ||
             root.GetProperty("archiveSha256").GetString() != RetailWorld110LevelActors.SourceArchiveSha256)
         {
@@ -479,11 +506,11 @@ public sealed class RetailWorld110InitialConstruction
                 mesh.GetProperty("meshRadiusFloatBits").GetInt32(),
                 Array.AsReadOnly(mesh.GetProperty("globalBoundingBoxWords").EnumerateArray()
                     .Select(word => word.GetInt32()).ToArray()))).ToArray();
-        var buildingMeshes = root.GetProperty("buildingMeshes").EnumerateArray().Select(DecodeBuildingMesh).ToArray();
-        var buildingUses = root.GetProperty("buildingUnitUses").EnumerateArray().Select(use =>
+        var initialMeshes = root.GetProperty("initialMeshes").EnumerateArray().Select(DecodeInitialMesh).ToArray();
+        var unitUses = root.GetProperty("initialUnitUses").EnumerateArray().Select(use =>
             new RetailUnitConstructionUses(use.GetProperty("actorDefinitionIdentity").GetString()!,
                 DecodeUnitUses(use.GetProperty("weaponUses")), DecodeUnitUses(use.GetProperty("spawnerUses")))).ToArray();
-        var weapons = root.GetProperty("buildingWeaponDefinitions").EnumerateArray().Select(weapon =>
+        var weapons = root.GetProperty("weaponDefinitions").EnumerateArray().Select(weapon =>
         {
             JsonElement mode = weapon.GetProperty("selectedMode");
             return new RetailUnitWeaponDefinition(weapon.GetProperty("definitionName").GetString()!,
@@ -495,14 +522,23 @@ public sealed class RetailWorld110InitialConstruction
                 new(mode.GetProperty("definitionName").GetString()!, mode.GetProperty("typeOrdinal").GetInt32(),
                     DecodePhysicsFields(mode.GetProperty("fields"))));
         }).ToArray();
-        var spawners = root.GetProperty("buildingSpawnerDefinitions").EnumerateArray().Select(spawner =>
+        var spawners = root.GetProperty("spawnerDefinitions").EnumerateArray().Select(spawner =>
             new RetailUnitSpawnerDefinition(spawner.GetProperty("definitionName").GetString()!,
                 spawner.GetProperty("targetUnitDefinitionName").GetString()!,
                 spawner.GetProperty("targetUnitBehaviourSelector").GetInt32(),
                 DecodePhysicsFields(spawner.GetProperty("fields")))).ToArray();
+        var features = root.GetProperty("featureDefinitions").EnumerateArray().Select(feature =>
+            new RetailFeatureDefinition(feature.GetProperty("definitionName").GetString()!,
+                feature.GetProperty("meshName").GetString()!, feature.GetProperty("invincibleWord").GetInt32(),
+                feature.GetProperty("profileWord18").GetInt32(), DecodePhysicsFields(feature.GetProperty("fields")))).ToArray();
+        var ground = root.GetProperty("groundUnitDefinitions").EnumerateArray().Select(unit =>
+            new RetailGroundUnitDefinition(unit.GetProperty("definitionName").GetString()!,
+                unit.GetProperty("fieldC8FloatBits").GetInt32(), unit.GetProperty("fieldD0FloatBits").GetInt32(),
+                DecodePhysicsFields(unit.GetProperty("fields")))).ToArray();
         return new(Array.AsReadOnly(rows.ToArray()), localAttachment, Array.AsReadOnly(uses),
-            Array.AsReadOnly(treeTables.ToArray()), Array.AsReadOnly(treeMeshes), Array.AsReadOnly(buildingMeshes),
-            Array.AsReadOnly(buildingUses), Array.AsReadOnly(weapons), Array.AsReadOnly(spawners));
+            Array.AsReadOnly(treeTables.ToArray()), Array.AsReadOnly(treeMeshes), Array.AsReadOnly(initialMeshes),
+            Array.AsReadOnly(unitUses), Array.AsReadOnly(weapons), Array.AsReadOnly(spawners),
+            Array.AsReadOnly(features), Array.AsReadOnly(ground));
     }
 
     private static IReadOnlyList<RetailPhysicsFieldInput> DecodePhysicsFields(JsonElement fields) =>
@@ -514,22 +550,31 @@ public sealed class RetailWorld110InitialConstruction
             use.GetProperty("definitionName").GetString()!, use.GetProperty("tagName").GetString()!,
             use.GetProperty("rawCreationFlags").GetUInt32())).ToArray());
 
-    private static RetailBuildingMesh DecodeBuildingMesh(JsonElement element)
+    private static RetailInitialMesh DecodeInitialMesh(JsonElement element)
     {
         var parts = element.GetProperty("parts").EnumerateArray().Select(part =>
-            new RetailBuildingMeshPart(part.GetProperty("name").GetString()!, part.GetProperty("type").GetInt32(),
+            new RetailInitialMeshPart(part.GetProperty("name").GetString()!, part.GetProperty("type").GetInt32(),
                 OptionalInt(part.GetProperty("reference")), OptionalInt(part.GetProperty("parent")),
                 Array.AsReadOnly(part.GetProperty("children").EnumerateArray().Select(value => value.GetInt32()).ToArray()),
                 OptionalInt(part.GetProperty("nmic")), part.GetProperty("numNmic").GetInt32(),
-                part.GetProperty("isNmic").GetInt32(), VectorBits(part.GetProperty("halfExtentFloatBits")))).ToArray();
+                part.GetProperty("isNmic").GetInt32(), VectorBits(part.GetProperty("halfExtentFloatBits")),
+                Words(part.GetProperty("cachedPositionWords")), Words(part.GetProperty("cachedOrientationWords")))).ToArray();
         var emitters = element.GetProperty("emitters").EnumerateArray().Select(emitter =>
-            new RetailBuildingEmitter(emitter.GetProperty("name").GetString()!,
+            new RetailInitialMeshEmitter(emitter.GetProperty("name").GetString()!,
                 emitter.GetProperty("selector").GetInt32(), OptionalInt(emitter.GetProperty("partOrdinal")))).ToArray();
         return new(element.GetProperty("meshName").GetString()!,
             element.GetProperty("sourceSha256").GetString()!, element.GetProperty("meshRadiusFloatBits").GetInt32(),
             Array.AsReadOnly(element.GetProperty("globalBoundingBoxWords").EnumerateArray()
-                .Select(word => word.GetInt32()).ToArray()), Array.AsReadOnly(parts), Array.AsReadOnly(emitters));
+                .Select(word => word.GetInt32()).ToArray()), Array.AsReadOnly(parts), Array.AsReadOnly(emitters), element.GetProperty("frameCount").GetInt32(),
+            Array.AsReadOnly(element.GetProperty("animations").EnumerateArray().Select(animation =>
+                new RetailMeshAnimationInput(animation.GetProperty("sourceOrdinal").GetInt32(),
+                    animation.GetProperty("name").GetString()!, animation.GetProperty("modeId").GetInt32(),
+                    animation.GetProperty("startFrame").GetInt32(), animation.GetProperty("endFrame").GetInt32(),
+                    animation.GetProperty("frameDelta").GetInt32(), animation.GetProperty("incrementFloatBits").GetInt32())).ToArray()));
     }
+
+    private static IReadOnlyList<int> Words(JsonElement values) =>
+        Array.AsReadOnly(values.EnumerateArray().Select(value => value.GetInt32()).ToArray());
 
     private static int? OptionalInt(JsonElement value) =>
         value.ValueKind == JsonValueKind.Null ? null : value.GetInt32();

@@ -291,21 +291,31 @@ WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
     "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
 )
 LEVEL110_INITIAL_ACTORS = CORE_ASSETS / "Level110/level110-initial-actors.json"
-WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v6"
+WORLD110_INITIAL_ACTORS_SCHEMA = "onslaught.world110-initial-actors.v7"
 WORLD110_INITIAL_ACTORS_SHA256 = (
-    "5ef08128e6bf0ab2fe59bd036871d4700b95d2330257a285b06dc11ff7110f97"
+    "7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578"
 )
 WORLD110_LANDING_CRAFT_MESH = "data/resources/meshes/m_m_dropship.msh.aya"
 WORLD110_LANDING_CRAFT_MESH_SHA256 = (
     "f586cc84f577e441eba425d5c95dbca3e057d063229bf5c2999227157704424b"
 )
-WORLD110_BUILDING_MESHES = (
+WORLD110_INITIAL_MESHES = (
     ("fb_control_tower.msh", "data/resources/meshes/m_fb_control_tower.msh.aya",
      "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91", 39),
     ("fb_tank_factory.msh", "data/resources/meshes/m_fb_tank_factory.msh.aya",
      "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de", 29),
     ("fb_health_pad.msh", "data/resources/meshes/m_fb_health_pad.msh.aya",
      "4ec6cb1d589c866acfa292232ca4f850967faea899c2f082329bff78e647ab44", 20),
+    ("ft_sam.msh", "data/resources/meshes/m_ft_sam.msh.aya",
+     "9a82f27454863c19c05a8cdedcc99cc05300aed75b8e54467a980c94bf5ba4a2", 16),
+    ("iceberg1.msh", "data/resources/meshes/m_iceberg1.msh.aya",
+     "fdbbd6d91748a7130b3a0137e417fb5e984266e046f6731c6b9beb4ac222c7c5", 1),
+    ("iceberg2.msh", "data/resources/meshes/m_iceberg2.msh.aya",
+     "4824acec58949d555fed44caaaff238b29ee7ef44e1b4d23469bce50224b5d1e", 1),
+    ("iceberg3.msh", "data/resources/meshes/m_iceberg3.msh.aya",
+     "6148c199d29e39e7bfa971eabdf8c837a787c6bcf004def3a3fd032f7a1f3530", 1),
+    ("iceberg4.msh", "data/resources/meshes/m_iceberg4.msh.aya",
+     "3add5f0cb80a954e029016a1f9a9825888f3e88b0d049260216e3a1231408347", 1),
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -3548,25 +3558,54 @@ def _world110_component_attachment(rows, physics, mesh_data: bytes) -> dict[str,
     }
 
 
-def _world110_building_mesh(source: bytes, index: int) -> dict[str, object]:
-    """The actual Init geometry, not rendered/expanded reference-part copies."""
+def _world110_initial_mesh(source: bytes, index: int) -> dict[str, object]:
+    """Original mesh metadata and complete CPOS/CORI word arrays.
+
+    Cached positions use four words per stored pose; orientations use twelve.
+    Retain stale fourth words and every cached pose rather than flattening an
+    animated part. Collision geometry is bound by source hash, not exported.
+    """
     from cmsh_static_preview import inflate_aya, parse_cmsh_stream
-    mesh_name, _, source_hash, part_count = WORLD110_BUILDING_MESHES[index]
+    mesh_name, _, source_hash, part_count = WORLD110_INITIAL_MESHES[index]
     if _sha256(source) != source_hash:
-        raise RuntimeError(f"world 110 building mesh identity changed: {mesh_name}")
+        raise RuntimeError(f"world 110 initial mesh identity changed: {mesh_name}")
     parsed = parse_cmsh_stream(inflate_aya(source))
     parts = parsed.file_parts()
-    if len(parts) != part_count or struct.unpack_from("<I", parsed.raw_header, 0x14)[0] != 0:
-        raise RuntimeError("building part/animation profile changed")
+    if len(parts) != part_count or struct.unpack_from("<I", parsed.raw_header, 0x14)[0] != (4 if index == 3 else 0):
+        raise RuntimeError("initial mesh part/animation profile changed")
     boxes = [sibling.raw_payload for sibling in parsed.siblings if sibling.tag == b"BBOX"]
     if len(boxes) != 1 or len(boxes[0]) != 48 or boxes[0][:8] != b"BBOX\x28\0\0\0":
-        raise RuntimeError("building global bounding box changed")
+        raise RuntimeError("initial mesh global bounding box changed")
+    animation_chunks = [sibling.raw_payload for sibling in parsed.siblings if sibling.tag == b"CAMD"]
+    animation_count = struct.unpack_from("<I", parsed.raw_header, 0x14)[0]
+    if len(animation_chunks) != int(animation_count > 0):
+        raise RuntimeError("world 110 animation table count changed")
+    animation_data = animation_chunks[0] if animation_chunks else b""
+    if len(animation_data) != animation_count * 36:
+        raise RuntimeError("world 110 animation table layout changed")
+    animations = []
+    for ordinal in range(animation_count):
+        record = animation_data[ordinal * 36:(ordinal + 1) * 36]
+        mode, start, end, delta, increment = struct.unpack_from("<5i", record, 16)
+        animations.append({"sourceOrdinal": ordinal, "name": record[:16].split(b"\0", 1)[0].decode("ascii"),
+                           "modeId": mode, "startFrame": start, "endFrame": end,
+                           "frameDelta": delta, "incrementFloatBits": increment})
+    frame_counts = {len(part.track.frame_map) for part in parts if part.track is not None}
+    if len(frame_counts) != 1 or any(part.track is None for part in parts):
+        raise RuntimeError("world 110 initial mesh frame profile changed")
     return {
+        "frameCount": frame_counts.pop(),
+        "animations": animations,
+        "numberOfAnimations": struct.unpack_from("<I", parsed.raw_header, 0x14)[0],
         "meshName": mesh_name,
         "sourceSha256": source_hash,
         "meshRadiusFloatBits": struct.unpack_from("<i", parsed.raw_header, 0x164)[0],
         "globalBoundingBoxWords": list(struct.unpack_from("<10i", boxes[0], 8)),
         "parts": [{
+            "cachedPositionWords": list(struct.unpack(f"<{len(part.track.cached_position_bytes) // 4}i",
+                                                       part.track.cached_position_bytes)),
+            "cachedOrientationWords": list(struct.unpack(f"<{len(part.track.cached_orientation_bytes) // 4}i",
+                                                          part.track.cached_orientation_bytes)),
             "name": part.raw_cmsp[0xdc:0xfc].split(b"\0", 1)[0].decode("ascii"),
             "type": part.part_type,
             "reference": part.reference, "parent": part.parent,
@@ -3581,15 +3620,15 @@ def _world110_building_mesh(source: bytes, index: int) -> dict[str, object]:
     }
 
 
-def _world110_building_unit_uses(rows, physics) -> list[dict[str, object]]:
-    """Ordered raw Unit field 7/18 tuples for the three admitted buildings."""
+def _world110_initial_unit_uses(rows, physics) -> list[dict[str, object]]:
+    """Ordered raw Unit field 7/18 tuples for the first four admitted Units."""
     result = []
-    for index, row in enumerate(rows[:3]):
+    for index, row in enumerate(rows[:4]):
         actor = row["actor"]
         if (actor["definitionIdentity"] != f"wres:bswd:{index:04d}"
-                or actor["meshBinding"] + ".msh" != WORLD110_BUILDING_MESHES[index][0]
+                or actor["meshBinding"].removesuffix(".msh") + ".msh" != WORLD110_INITIAL_MESHES[index][0]
                 or row["serializedThingType"] != 8):
-            raise RuntimeError("world 110 building Unit profile changed")
+            raise RuntimeError("world 110 initial Unit profile changed")
         fields = _physics_record(physics, 1, actor["definitionName"])
         record = {"actorDefinitionIdentity": actor["definitionIdentity"]}
         for field_id, key in ((7, "weaponUses"), (18, "spawnerUses")):
@@ -3598,7 +3637,7 @@ def _world110_building_unit_uses(rows, physics) -> list[dict[str, object]]:
                 definition_end = raw.index(0)
                 tag_end = raw.index(0, definition_end + 1)
                 if len(raw) != tag_end + 5:
-                    raise RuntimeError("world 110 building Unit use layout changed")
+                    raise RuntimeError("world 110 initial Unit use layout changed")
                 uses.append({
                     "definitionName": raw[:definition_end].decode("ascii"),
                     "tagName": raw[definition_end + 1:tag_end].decode("ascii"),
@@ -3609,12 +3648,12 @@ def _world110_building_unit_uses(rows, physics) -> list[dict[str, object]]:
     return result
 
 
-def _world110_building_definitions(uses, physics_data: bytes, physics):
+def _world110_initial_unit_definitions(uses, physics_data: bytes, physics):
     """Bounded authored profiles and released type-2 constructor defaults.
 
     CWeaponStatement__Create 0x0042f5f0 supplies absent fields; 0x00434610
     resolves slot names in type-3 source order and 0x004349c0 applies ID 7.
-    This admits the actual Repair Pad profile, not a generic weapon parser.
+    This admits Repair Pad and SAT Launcher, not a generic weapon parser.
     """
     stream = _physics_record_stream(physics_data)
     weapon_records = [record for record in stream if record.record_type == 2]
@@ -3623,43 +3662,45 @@ def _world110_building_definitions(uses, physics_data: bytes, physics):
         for record in uses for use in record["weaponUses"]))
     spawner_names = list(dict.fromkeys(use["definitionName"]
         for record in uses for use in record["spawnerUses"]))
-    if weapon_names != ["Repair Pad"] or spawner_names != ["Sabre Factory Spawner"]:
-        raise RuntimeError("world 110 building definition admission changed")
+    if weapon_names != ["Repair Pad", "SAT Launcher"] or spawner_names != ["Sabre Factory Spawner"]:
+        raise RuntimeError("world 110 initial Unit definition admission changed")
 
     def raw_fields(record):
         return [{"fieldId": field_id, "rawHex": raw.hex()} for field_id, raw in record.fields]
 
-    weapon = physics[(2, weapon_names[0])][0]
-    if [field_id for field_id, _ in weapon.fields] != [1, 7]:
-        raise RuntimeError("world 110 Repair Pad weapon field profile changed")
-    fields = _physics_record(physics, 2, weapon.name)
-    slots = [-1] * 5
-    for raw in fields.values(1):
-        if len(raw) < 6 or raw[-1] != 0 or b"\0" in raw[4:-1]:
-            raise RuntimeError("world 110 weapon charge slot layout changed")
-        slot = struct.unpack_from("<i", raw)[0]
-        if not 0 <= slot < 5:
-            raise RuntimeError("world 110 weapon charge slot index changed")
-        name = raw[4:-1].decode("ascii")
-        slots[slot] = next((index for index, mode in enumerate(mode_records)
-                            if mode.name == name), -1)
-        if slots[slot] == -1:
-            raise RuntimeError("world 110 weapon charge mode is absent")
-    if slots[0] < 0:
-        raise RuntimeError("world 110 weapon initial mode is absent")
-    mode = mode_records[slots[0]]
-    adjust_aim = struct.unpack("<f", fields[7])[0]
-    weapons = [{
-        "definitionName": weapon.name,
-        "typeOrdinal": weapon_records.index(weapon),
-        "chargeRateFloatBits": 0x40000000,
-        "chargeSlots": slots,
-        "consumptionFloatBits": 0x3f800000,
-        "ammoStore": 0, "zoomMode": 0, "adjustAimWord": int(adjust_aim != 0),
-        "fields": raw_fields(weapon),
-        "selectedMode": {"definitionName": mode.name, "typeOrdinal": slots[0],
-                         "fields": raw_fields(mode)},
-    }]
+    weapons = []
+    for name in weapon_names:
+        weapon = physics[(2, name)][0]
+        if [field_id for field_id, _ in weapon.fields] != ([1, 7] if name == "Repair Pad" else [1]):
+            raise RuntimeError("world 110 initial weapon field profile changed")
+        fields = _physics_record(physics, 2, weapon.name)
+        slots = [-1] * 5
+        for raw in fields.values(1):
+            if len(raw) < 6 or raw[-1] != 0 or b"\0" in raw[4:-1]:
+                raise RuntimeError("world 110 weapon charge slot layout changed")
+            slot = struct.unpack_from("<i", raw)[0]
+            if not 0 <= slot < 5:
+                raise RuntimeError("world 110 weapon charge slot index changed")
+            name = raw[4:-1].decode("ascii")
+            slots[slot] = next((index for index, mode in enumerate(mode_records)
+                                if mode.name == name), -1)
+            if slots[slot] == -1:
+                raise RuntimeError("world 110 weapon charge mode is absent")
+        if slots[0] < 0:
+            raise RuntimeError("world 110 weapon initial mode is absent")
+        mode = mode_records[slots[0]]
+        adjust_aim = struct.unpack("<f", fields.get(7, struct.pack("<f", 1.0)))[0]
+        weapons.append({
+            "definitionName": weapon.name,
+            "typeOrdinal": weapon_records.index(weapon),
+            "chargeRateFloatBits": 0x40000000,
+            "chargeSlots": slots,
+            "consumptionFloatBits": 0x3f800000,
+            "ammoStore": 0, "zoomMode": 0, "adjustAimWord": int(adjust_aim != 0),
+            "fields": raw_fields(weapon),
+            "selectedMode": {"definitionName": mode.name, "typeOrdinal": slots[0],
+                             "fields": raw_fields(mode)},
+        })
     spawners = []
     for name in spawner_names:
         fields = _physics_record(physics, 5, name)
@@ -3672,9 +3713,44 @@ def _world110_building_definitions(uses, physics_data: bytes, physics):
     return weapons, spawners
 
 
+def _world110_ground_unit_definitions(physics):
+    """SAT's absent movement overrides retain the 0x0042efd0 zero defaults."""
+    record = physics[(1, "SAT Turret")][0]
+    if [field_id for field_id, _ in record.fields] != [11, 9, 8, 47, 3, 23, 7, 21, 10]:
+        raise RuntimeError("world 110 SAT ground Unit field profile changed")
+    return [{
+        "definitionName": record.name, "fieldC8FloatBits": 0, "fieldD0FloatBits": 0,
+        "fields": [{"fieldId": field_id, "rawHex": raw.hex()} for field_id, raw in record.fields],
+    }]
+
+
+def _world110_feature_definitions(rows, physics):
+    """The four authored iceberg profiles used by BSWD objects 4 through 9."""
+    features = rows[4:10]
+    if [row["actor"]["definitionName"] for row in features] != [
+            "Iceberg 1", "Iceberg 2", "Iceberg 3", "Iceberg 4", "Iceberg 2", "Iceberg 4"]:
+        raise RuntimeError("world 110 initial Feature order changed")
+    definitions = []
+    for index in range(4):
+        name = f"Iceberg {index + 1}"
+        fields = _physics_record(physics, 8, name)
+        record = physics[(8, name)][0]
+        mesh_name = _definition_string(fields, 2)
+        if ([field_id for field_id, _ in record.fields] != [2, 4]
+                or mesh_name != WORLD110_INITIAL_MESHES[index + 4][0]
+                or fields[4] != struct.pack("<f", 1.0)):
+            raise RuntimeError("world 110 iceberg Feature profile changed")
+        definitions.append({
+            "definitionName": name, "meshName": mesh_name,
+            "invincibleWord": 1, "profileWord18": 0,
+            "fields": [{"fieldId": field_id, "rawHex": raw.hex()} for field_id, raw in record.fields],
+        })
+    return definitions
+
+
 def _world110_initial_actor_bytes(
     raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes,
-    pine_meshes: tuple[bytes, ...], building_meshes: tuple[bytes, ...],
+    pine_meshes: tuple[bytes, ...], initial_meshes: tuple[bytes, ...],
 ) -> bytes:
     """Authored BSWD/type-8 RLWD actors, before unresolved class initialization.
 
@@ -3781,10 +3857,10 @@ def _world110_initial_actor_bytes(
         })
     if len(rows) != 43:
         raise RuntimeError("world 110 direct initial actor count changed")
-    if len(building_meshes) != len(WORLD110_BUILDING_MESHES):
-        raise RuntimeError("world 110 building mesh count changed")
-    building_uses = _world110_building_unit_uses(rows, physics)
-    weapons, spawners = _world110_building_definitions(building_uses, physics_data, physics)
+    if len(initial_meshes) != len(WORLD110_INITIAL_MESHES):
+        raise RuntimeError("world 110 initial mesh count changed")
+    unit_uses = _world110_initial_unit_uses(rows, physics)
+    weapons, spawners = _world110_initial_unit_definitions(unit_uses, physics_data, physics)
     return (json.dumps({
         "schema": WORLD110_INITIAL_ACTORS_SCHEMA,
         "worldNumber": 110,
@@ -3795,11 +3871,13 @@ def _world110_initial_actor_bytes(
         "rows": rows,
         "treeTables": tree_tables,
         "treeMeshes": _world110_tree_mesh_inputs(pine_meshes),
-        "buildingMeshes": [_world110_building_mesh(source, index)
-                           for index, source in enumerate(building_meshes)],
-        "buildingUnitUses": building_uses,
-        "buildingWeaponDefinitions": weapons,
-        "buildingSpawnerDefinitions": spawners,
+        "initialMeshes": [_world110_initial_mesh(source, index)
+                           for index, source in enumerate(initial_meshes)],
+        "initialUnitUses": unit_uses,
+        "weaponDefinitions": weapons,
+        "spawnerDefinitions": spawners,
+        "featureDefinitions": _world110_feature_definitions(rows, physics),
+        "groundUnitDefinitions": _world110_ground_unit_definitions(physics),
         "componentAttachment": _world110_component_attachment(rows, physics, landing_craft_mesh),
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -5645,7 +5723,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
                             WORLD110_LANDING_CRAFT_MESH_SHA256),
                 _read_pine_meshes(game_root),
                 tuple(_read_exact(game_root / path, digest)
-                      for _, path, digest, _ in WORLD110_BUILDING_MESHES),
+                      for _, path, digest, _ in WORLD110_INITIAL_MESHES),
             )
             actor_hash = _sha256(actor_data)
             if actor_hash != WORLD110_INITIAL_ACTORS_SHA256:

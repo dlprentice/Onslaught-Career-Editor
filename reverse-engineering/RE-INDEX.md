@@ -765,6 +765,13 @@ different failure modes and only the first was being tested.)*
   claim holds — but "no symbols, nothing was missed" was an over-generalisation
   from it. The RTTI owners and `__FILE__` translation-unit names that the 2026-07
   naming waves are built on come from exactly this material.
+  A bounded September 7 recheck of the Linux Steam install counted 5,505 files
+  (700,066,953 bytes) and found no loose `.pdb/.dbg/.sym/.map`, implementation,
+  object/library or project files; `textlist.h` was the sole header candidate.
+  The selected 2,506,752-byte `BEA.exe` matched pristine `74154bfa…7750`, with
+  zero PE debug-directory RVA/size and COFF symbol pointer/count. This was a
+  filename/metadata and selected-file check, not a new archive-content audit;
+  it does not negate the embedded RTTI and source-path evidence above.
 - [Retail capture provenance — what the reference screenshots actually show](binary-analysis/retail-capture-provenance-2026-07-25.md)
   — 2026-07-25. The frontend/HUD reference captures were taken from a **safe copy
   of the installed `BEA.exe`, not from pristine retail**. Anything that binary

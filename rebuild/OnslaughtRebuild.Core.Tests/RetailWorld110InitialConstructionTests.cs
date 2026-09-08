@@ -36,7 +36,7 @@ public sealed class RetailWorld110InitialConstructionTests
         Assert.Equal(int.MinValue, tower.ActorState.RetailPoses.Current.BasisFloatBits.Row2X);
         Assert.Same(tower, world.InitializedThingsNewestFirst.First());
         Assert.Equal(world.Trees.Reverse(), world.InitializedThingsNewestFirst.Skip(1));
-        Assert.Same(tower, Assert.Single(world.NamedBuildingsNewestFirst));
+        Assert.Same(tower, Assert.Single(world.NamedActorsNewestFirst));
         Assert.Same(tower, Assert.Single(world.UnitsNewestFirst));
         Assert.Same(tower, Assert.Single(world.FactionUnits(0)));
         Assert.Empty(world.FactionUnits(1));
@@ -174,7 +174,7 @@ public sealed class RetailWorld110InitialConstructionTests
         Assert.Equal(43, world.Actors.Snapshot.Actors.Count);
         Assert.Equal(buildings.Reverse(), world.InitializedThingsNewestFirst.Take(3));
         Assert.Equal(world.Trees.Reverse(), world.InitializedThingsNewestFirst.Skip(3));
-        Assert.Equal(buildings.Reverse(), world.NamedBuildingsNewestFirst);
+        Assert.Equal(buildings.Reverse(), world.NamedActorsNewestFirst);
         Assert.Equal(buildings.Reverse(), world.UnitsNewestFirst);
         Assert.Equal(buildings.Reverse(), world.OccupancyCandidatesNewestFirst);
         Assert.Equal(buildings, world.FactionUnits(0));
@@ -325,7 +325,7 @@ public sealed class RetailWorld110InitialConstructionTests
         Assert.Equal(0x1c, weapon.Effect1C.OwnerOffset);
         for (var link = world.EffectHead; link is not null; link = link.Next) Assert.False(link.HasEffect);
         Assert.Empty(repair.Spawners);
-        Assert.Equal(new[] { RetailBuildingAiKind.Warspite, RetailBuildingAiKind.Warspite, RetailBuildingAiKind.RepairPad },
+        Assert.Equal(new[] { RetailUnitAiKind.Warspite, RetailUnitAiKind.Warspite, RetailUnitAiKind.RepairPad },
             world.Buildings.Select(building => building.Ai.Kind));
         Assert.Equal(new[] { 0,0,1 }, world.Buildings.Select(building => building.RepairAiFlagWord));
     }

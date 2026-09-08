@@ -320,11 +320,18 @@ float poses, graph/scales, AI reader cells, 15 event admissions, world membershi
 the factory's private spawner Init and the repair weapon's empty effect links.
 Weapon/mode/spawner records and resolved constructor defaults are materialized
 locally; no definition ordinal is hardcoded into the Core constructor.
-The v6 materialized actor payload is 175,671 bytes with
-SHA-256 `5ef08128e6bf0ab2fe59bd036871d4700b95d2330257a285b06dc11ff7110f97`.
+Shared `RetailWorld110Actor` and `RetailWorld110Unit` now carry that transaction
+through SAT Cannon initialization and the six following Features in authored order.
+The materializer retains SAT's CAMD mode IDs, ordered weapon/mode records,
+ground-profile defaults and each iceberg profile, plus full original CPOS/CORI
+word arrays. It does not export vertex/index geometry or treat padding as state.
+The v7 materialized actor payload is 234,999 bytes with
+SHA-256 `7bed85c501cd1e8fbc7e26280d60d9da000d184a92eabf48440f8adf4f75a578`.
+The collision centre uses the type-selected retail branch and explicit float
+stores; the transformed branch shares the existing attachment point arithmetic.
 The source mesh, static body pins and fresh resource-route assumptions belong
 to the same RE owner. Renderer/cache allocation, frame delivery, damage and
-complete load/reset, spawning and repair fire remain unimplemented. The focused tests are reconstruction
+complete load/reset, spawning and weapon fire remain unimplemented. The focused tests are reconstruction
 checks with declared arithmetic assumptions, not observed retail play.
 
 `RetailMapWho.SortAfterLoad()` implements the separately measured PostLoad
