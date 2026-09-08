@@ -429,6 +429,37 @@ signed distance into `report+0xac[i]`, and stops at six contacts. Referenced
 geometry does not replace the selected part's identity. This is an ordered
 multi-part report, not the direct projectile's single selected triangle/part.
 
+`Level100ContactMechanics.CollectWarehouseSphereBounds` now builds this bounded
+report from explicitly supplied world poses and collision eligibility. It
+retains flat part-array order and one-hop geometry references: helper
+`[0x004b0cd0,0x004b0cf1)` (SHA-256
+`d3b0e22449bfccbd528321fe66a3bdc2cae1d3ee88454e7921dd8cb356c6d9f1`)
+returns self for types 1/3 and the reference for type 6; the scanner then
+requires resolved type exactly 1. Vertex count, preview `Collidable`, health
+and BBOX word 8 are not this gate. The original context selects both cache
+index and report identity; reference geometry supplies only the bounds.
+All 28 Warehouse contexts pass that initial type gate. Its Core/Extra variant
+methods both point to `0x005019c0` (`33 c0 c3`, return zero), so no context hop
+is needed. Contact schema v7 preserves original CMSP `+0xa0/+0xa4` words as
+`NumNmicWord/IsNmicWord`; both are zero in every Warehouse part. The helper
+rejects NMIC input rather than inferring a general controller contract.
+
+The local query uses `F(currentCentre - displacement)`, then subtracts the
+selected cached part position and multiplies by the cached transpose. Every
+dot accumulates Z, then Y, then X. X/Y offsets are stored float32; the Z dot
+retains the unspilled Z subtraction while the other dots reload its float32
+store. Displacement is rotated separately, even when zero. This is implemented
+by `RetailMeshPartPose.ToLocalSphereQuery`; it does not reinterpret the native
+motion record as start/end positions. Initial stores
+`[0x004ac755,0x004ac786)` hash to
+`6db022dbfe0c094cb10dfab93083d302dbaf6abd51e4f8cc6c9885974f9825ec`,
+conversion `[0x004ac8e5,0x004ac9ce)` to
+`a8aa3320d32ff7b32536ed1c6511d048abac2d4f89a384196583f46a222dc4af`,
+and cache transpose `[0x004ad736,0x004ad7c8)` to
+`17c635569be56ffdd2958e150d00ddece35d54e7c5905bd1fa6a79bf8266d107`.
+These operations still require an actual pose/cache owner before Simulation
+integration; their synthetic tests supply poses deliberately.
+
 The segmented `CExplosion::Hit` block `[0x0044bfd3,0x0044bfef)` (SHA-256
 `1690f50a8e02b7fd17600eb6def858e6f138d1ff50c847ce9203bb5a077a98f9`)
 selects the report part and stores `maximumRadius + report.distance[i]` as a
@@ -446,9 +477,46 @@ threshold check. Part `-1` therefore cannot stand in for aggregate Warehouse
 damage. The current combined Pulse amount assigned to one direct-hit part is
 still an approximation that this separate report operation must replace.
 
+Collision eligibility is the segment's completed-break latch at `+0x38`,
+distinct from damage enablement at `+0x1c`. The constructor clears that latch;
+common break sets it, zeros health and marks the controller dirty. Building's
+controller configuration makes eligibility equal to `segment+0x38 == 0`.
+Initial core1 remains eligible despite zero health. A new scan must use the
+updated latches, while an already assembled explosion report keeps all its
+stored rows: native damage can still write amount/time on a broken segment,
+with the latch preventing another damage-triggered break.
+
+With the normal loaded Warehouse renderer/mesh, lethal core2 (part 1) damage
+immediately breaks parts **1, 2–18, 21, 23 and 26** through child propagation.
+Parts **0, 19, 20, 22, 24, 25 and 27** remain eligible at that return boundary.
+The six Extra chimney children receive queued event 3000 instead; each queued
+child's delay calculation consumes a random draw. This is not a total count
+of break/effect randomness. A positive-health Core can also enter a pending
+collapse state at `+0x4c`, excluded from active-value sums while still collision
+eligible. Missing renderer/mesh suppresses child propagation after the current
+segment's latch changes.
+
+The current destruction state clears only the hit part, suppresses damage at
+terminal/inactive/zero-health gates, and reports final death immediately. It
+does not yet own these queued collapse states or the native frozen-report
+consumer. The existing test expecting part 2 to remain active after lethal
+part 1 describes that implementation and contradicts the loaded retail cascade;
+it must change with the lifecycle correction, not serve as a retail oracle.
+Relevant freshly checked half-open body pins are:
+
+| Contract | Range | SHA-256 |
+| --- | --- | --- |
+| Segment initialization | `004425a0–0044263b` | `ba2dee042119b14a7f6d0850cd1de30c373f172c872b3b577cc0cc05d818bae1` |
+| Common break | `00442b20–00442d36` | `aa4d76922ceba24f3fc1bad7ca135cff2b10c7649debb9ce4be05e683a7dcb41` |
+| Child propagation | `004429a0–00442a7a` | `8b88d419553578bddd55b859eec026460a0f928be78218dec76cd0b56e41321d` |
+| Core damage | `004435f0–00443656` | `f219422051b4dcb5bc04a24c47be6abf901ec94baa1e7c454c3be1049baafe5b` |
+| Core break/pending collapse | `00443660–004436c5` | `8bf6a7196af14602e2e873e9e1806a47cb97d49e503b349c95e2d86b8385f0c2` |
+| Extra damage | `00443890–004439ba` | `d1931190e5ca78fec9571aea05c415192948f33ed8875687fa05961f2dd6b976` |
+| Extra break wrapper | `004439c0–004439e4` | `608b9ec2c64dd44d4dbd9dde02c7371429851499239aa2fbf8a3411e6f69778c` |
+
 The selected Warehouse mesh has 28 parts, including six geometry references.
 All parts have one HPOS/HORI hierarchy frame and 101 zero VHFM entries, but only
-ten have a CORI cache record. Contact schema v6 preserves all these original
+ten have a CORI cache record. The contact asset preserves all these original
 records separately from the resolved, quantized preview. An absent CORI is not
 an identity matrix. The normal collision path uses the animation-aware runtime
 pose cache: collision-volume `+0x1c` is the ignore-animation flag, distinct from

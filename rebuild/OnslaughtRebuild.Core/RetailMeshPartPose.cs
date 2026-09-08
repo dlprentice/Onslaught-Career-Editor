@@ -53,6 +53,39 @@ public static class RetailMeshPartPose
             Product(a, b, 2, 0, 0, 1, 2), Product(a, b, 2, 1, 0, 1, 2), Product(a, b, 2, 2, 2, 0, 1)));
     }
 
+    /// <summary>
+    /// Convert a sphere's current centre/displacement through an already selected
+    /// part pose, in common retail world coordinates and units. The collision
+    /// cache uses the transpose, not a general inverse.
+    /// Cache selection and refresh remain the caller's responsibility.
+    /// </summary>
+    public static (Level100FloatVector3Bits Position, Level100FloatVector3Bits Displacement)
+        ToLocalSphereQuery(RetailUnitAttachmentPose part, Level100FloatVector3Bits currentCenter,
+            Level100FloatVector3Bits displacement)
+    {
+        // Pristine [4ac8e5,4ac9ce): a8aa3320d32ff7b32536ed1c6511d048abac2d4f89a384196583f46a222dc4af.
+        // Initial centre-minus-displacement stores precede the part subtraction.
+        double dx = Read(displacement.X), dy = Read(displacement.Y), dz = Read(displacement.Z);
+        double bx = (float)RetailFloat24.Subtract(Read(currentCenter.X), dx);
+        double by = (float)RetailFloat24.Subtract(Read(currentCenter.Y), dy);
+        double bz = (float)RetailFloat24.Subtract(Read(currentCenter.Z), dz);
+        double x = (float)RetailFloat24.Subtract(bx, Read(part.PositionFloatBits.X));
+        double y = (float)RetailFloat24.Subtract(by, Read(part.PositionFloatBits.Y));
+        double wideZ = RetailFloat24.Subtract(bz, Read(part.PositionFloatBits.Z));
+        double z = (float)wideZ;
+        ReadOnlySpan<double> a = Components(part.BasisFloatBits);
+        return (new(TransposeDot(a, 0, x, y, z), TransposeDot(a, 1, x, y, z),
+                TransposeDot(a, 2, x, y, wideZ)),
+            new(TransposeDot(a, 0, dx, dy, dz), TransposeDot(a, 1, dx, dy, dz),
+                TransposeDot(a, 2, dx, dy, dz)));
+    }
+
+    private static int TransposeDot(ReadOnlySpan<double> a, int column,
+        double x, double y, double z) => Store(RetailFloat24.Add(
+            RetailFloat24.Add(RetailFloat24.Multiply(z, a[6 + column]),
+                RetailFloat24.Multiply(y, a[3 + column])),
+            RetailFloat24.Multiply(x, a[column])));
+
     private static Level100FloatVector3Bits Position(RetailUnitAttachmentPose parent,
         Level100FloatVector3Bits local, ReadOnlySpan<double> a,
         int x0, int x1, int x2, int y0, int y1, int y2)

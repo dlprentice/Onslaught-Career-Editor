@@ -256,7 +256,7 @@ public sealed class Level100ContactPart
 /// </summary>
 public sealed record Level100ContactPartFloatGeometry(
     uint SourceId, int SourceType, int? Reference, int? Parent,
-    ReadOnlyMemory<int> Children, int? Nmic,
+    ReadOnlyMemory<int> Children, int? Nmic, uint NumNmicWord, uint IsNmicWord,
     ReadOnlyMemory<uint> BoundingBoxWords, ReadOnlyMemory<uint> CmspTransformWords,
     uint Cmsp118Word, uint PositionCacheInheritanceWord, uint OrientationCacheInheritanceWord,
     ReadOnlyMemory<int>? FrameMap,
@@ -268,6 +268,9 @@ public sealed record Level100ContactPartFloatGeometry(
 public sealed record Level100ContactFloatGeometry(
     uint BoundingBoxOriginXFloatBits, uint BoundingBoxOriginYFloatBits, uint BoundingBoxOriginZFloatBits,
     uint BoundingBoxRadiusFloatBits, uint MeshRenderRadiusFloatBits, uint PrimaryRadiusScaleFloatBits);
+
+/// <summary>One stored passive mesh-report row, independent of later part activity.</summary>
+public readonly record struct Level100PartBoundsContact(int PartIndex, int SignedDistanceFloatBits);
 
 public sealed class Level100ContactDefinition
 {
@@ -352,7 +355,7 @@ public sealed class Level100ContactCatalog
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json";
     private const string SourceSha256 =
-        "255F5EE66F7DA8DCDD88E3E2E36B8D0CE48D68EE27DAD29CB7ED524867B2E201";
+        "F793060ABF3CD958DE26A63100C5362A72BF606B5D5CE9E0B2E67A7698B72681";
     // Retained historical source identity; SourceSha256 verifies the complete asset.
     private const string StaticSourceAggregateSha256 =
         "8D85C9BFBE366C815E00D3900D8D29B71A33BEF7A60CDDFCE9ED6AC558E06B4C";
@@ -423,7 +426,7 @@ public sealed class Level100ContactCatalog
             throw new InvalidDataException("The Level 100 contact asset is empty.");
         if (!StringComparer.Ordinal.Equals(
                 document.Schema,
-                "onslaught.level100-contact-owners.v6") ||
+                "onslaught.level100-contact-owners.v7") ||
             document.DefinitionCount != 24 ||
             document.InstanceCount != 33 ||
             document.PartCount != 362 ||
@@ -868,6 +871,7 @@ public sealed class Level100ContactCatalog
             throw new InvalidDataException("Level 100 has invalid original part records.");
         }
         return new(row.SourceId, row.SourceType, row.Reference, row.Parent, row.Children, row.Nmic,
+            row.NumNmicWord, row.IsNmicWord,
             row.BoundingBoxWords, row.CmspTransformWords, row.Cmsp118Word,
             row.PositionCacheInheritanceWord, row.OrientationCacheInheritanceWord,
             row.FrameMap is null ? (ReadOnlyMemory<int>?)null : new ReadOnlyMemory<int>(row.FrameMap),
@@ -887,6 +891,8 @@ public sealed class Level100ContactCatalog
         public int? Parent { get; set; }
         public int[] Children { get; set; } = [];
         public int? Nmic { get; set; }
+        public uint NumNmicWord { get; set; }
+        public uint IsNmicWord { get; set; }
         public uint[] BoundingBoxWords { get; set; } = [];
         public uint[] CmspTransformWords { get; set; } = [];
         public uint Cmsp118Word { get; set; }
@@ -928,6 +934,59 @@ public static class Level100ContactMechanics
     private const double AxisScale = Level100Basis3.Scale;
     private const double RetailTriangleEpsilonMillimeters = 10.0;
     private const double GeometryEpsilon = 1e-9;
+
+    /// <summary>
+    /// Build the passive bounds report for the admitted Warehouse, in original
+    /// part order. Caller supplies selected world poses and collision eligibility
+    /// (the completed-break latch), not health or the preview's Collidable flag.
+    /// This does not refresh caches, run segment controllers or apply damage.
+    /// </summary>
+    public static int CollectWarehouseSphereBounds(
+        Level100ContactDefinition definition,
+        ReadOnlySpan<RetailUnitAttachmentPose> partPoses,
+        ReadOnlySpan<byte> partActivity,
+        Level100FloatVector3Bits currentCenter,
+        Level100FloatVector3Bits displacement,
+        int radiusFloatBits,
+        Span<Level100PartBoundsContact> contacts)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        if (definition.Kind != Level100DefinitionKind.Warehouse ||
+            partPoses.Length != definition.PartCount || partActivity.Length != definition.PartCount ||
+            contacts.Length < 6)
+            throw new ArgumentException("Warehouse bounds require one explicit pose/activity per part and six report slots.");
+
+        // This admitted Warehouse has only Core/Extra segments; both variant
+        // methods return zero. General controller/NMIC selection is excluded.
+        for (int i = 0; i < definition.PartCount; i++)
+        {
+            var raw = definition.Parts[i].FloatGeometry;
+            if (raw.NumNmicWord != 0 || raw.IsNmicWord != 0 || raw.Nmic is not null || partActivity[i] > 1)
+                throw new ArgumentException("Warehouse controller input exceeds the admitted no-NMIC contract.");
+        }
+
+        int count = 0;
+        for (int i = 0; i < definition.PartCount; i++)
+        {
+            var context = definition.Parts[i].FloatGeometry;
+            var geometry = context.SourceType is 1 or 3 ? context :
+                context.SourceType == 6 && context.Reference is int reference &&
+                (uint)reference < (uint)definition.PartCount ? definition.Parts[reference].FloatGeometry : null;
+            if (geometry is null || geometry.SourceType != 1 || partActivity[i] == 0) continue;
+
+            // Geometry references supply BBOX data, but keep the original
+            // context's cache index and report identity. No recursive ref chase.
+            var query = RetailMeshPartPose.ToLocalSphereQuery(partPoses[i], currentCenter, displacement);
+            ReadOnlySpan<uint> box = geometry.BoundingBoxWords.Span;
+            if (!TryPassiveSphereBounds(query.Position, query.Displacement, radiusFloatBits,
+                new(unchecked((int)box[0]), unchecked((int)box[1]), unchecked((int)box[2])),
+                new(unchecked((int)box[4]), unchecked((int)box[5]), unchecked((int)box[6])), out int distance)) continue;
+
+            contacts[count++] = new(unchecked((int)context.SourceId), distance);
+            if (count == 6) return count; // Retail stops before considering a seventh contact.
+        }
+        return count;
+    }
 
     /// <summary>
     /// Passive sphere/part-bounds arm of retail 0x004ac140. Inputs are already

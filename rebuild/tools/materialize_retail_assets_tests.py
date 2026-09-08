@@ -159,6 +159,7 @@ class Level100FloatGeometryTests(unittest.TestCase):
                           (-0.0, 2.0, 3.0), (0x7fc01234, 17, 19), 0xffffffff)
         cmsp = bytearray(0x13c)
         struct.pack_into("<I", cmsp, 0x88, 9)
+        struct.pack_into("<II", cmsp, 0xa0, 7, 0xffffffff)
         struct.pack_into("<III", cmsp, 0x118, 1, 0, 1)
         source = SimpleNamespace(raw_cmsp=bytes(cmsp), part_type=6,
             reference=3, parent=2, children=(), nmic=None,
@@ -177,6 +178,8 @@ class Level100FloatGeometryTests(unittest.TestCase):
         self.assertIsNone(actual["cachedOrientationWords"])
         self.assertEqual([0, 0], actual["frameMap"])
         self.assertEqual(1, actual["cmsp118Word"])
+        self.assertEqual(7, actual["numNmicWord"])
+        self.assertEqual(0xffffffff, actual["isNmicWord"])
         preview = SimpleNamespace(transform=pose,
             bounding_box=_BoundingBox((1.0, 2.0, 3.0), (4.0, 5.0, 6.0), 1, 9.0),
             vertices=(), groups=(), name="referencing part", parent=2, reference=3, part_type=6)

@@ -67,6 +67,60 @@ public sealed class Level100DestructionContactTests
         new(FloatBits(x), FloatBits(y), FloatBits(z));
 
     [Fact]
+    public void WarehouseReportKeepsFirstSixContactsBeforeACloserSeventh()
+    {
+        var definition = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        var poses = new RetailUnitAttachmentPose[definition.PartCount];
+        Array.Fill(poses, BoundsPose(default));
+        for (int i = 0; i < 6; i++) poses[i] = BoundsPose(FloatVector(100, 0, 0));
+        var seventhBox = definition.Parts[6].FloatGeometry.BoundingBoxWords.Span;
+        poses[6] = BoundsPose(FloatVector(-WordFloat(seventhBox[0]), -WordFloat(seventhBox[1]), -WordFloat(seventhBox[2])));
+        var activity = Enumerable.Repeat((byte)1, definition.PartCount).ToArray();
+        Span<Level100PartBoundsContact> report = stackalloc Level100PartBoundsContact[6];
+        int count = Level100ContactMechanics.CollectWarehouseSphereBounds(definition, poses, activity,
+            default, default, FloatBits(1_000), report);
+        Assert.Equal(6, count);
+        Assert.Equal(new[] { 0, 1, 2, 3, 4, 5 }, report.ToArray().Select(row => row.PartIndex));
+        Assert.Equal(0u, new Level100DestructionState(42, definition).GetCurrentSegmentHealthBits(0));
+
+        Array.Clear(activity);
+        activity[6] = 1;
+        Span<Level100PartBoundsContact> later = stackalloc Level100PartBoundsContact[6];
+        Assert.Equal(1, Level100ContactMechanics.CollectWarehouseSphereBounds(definition, poses, activity,
+            default, default, FloatBits(1_000), later));
+        Assert.Equal(6, later[0].PartIndex);
+        float closer = BitConverter.Int32BitsToSingle(later[0].SignedDistanceFloatBits);
+        Assert.All(report.ToArray(), row => Assert.True(BitConverter.Int32BitsToSingle(row.SignedDistanceFloatBits) > closer));
+        Assert.Equal(new[] { 0, 1, 2, 3, 4, 5 }, report.ToArray().Select(row => row.PartIndex));
+    }
+
+    [Fact]
+    public void WarehouseReferenceKeepsItsPoseAndIdentityWithSourceBounds()
+    {
+        var definition = Level100ContactCatalog.Instance.GetDefinition("Warehouse");
+        Assert.Equal(14, definition.Parts[15].FloatGeometry.Reference);
+        var emptyBox = definition.Parts[15].FloatGeometry.BoundingBoxWords.Span;
+        foreach (int word in new[] { 0, 1, 2, 4, 5, 6, 8, 9 }) Assert.Equal(0u, emptyBox[word]);
+        // Padding words 3/7 are retained opaque; empty geometry does not zero them.
+        var box = definition.Parts[14].FloatGeometry.BoundingBoxWords.Span;
+        Assert.True(WordFloat(box[4]) > 0);
+        var inside = FloatVector(WordFloat(box[0]) + WordFloat(box[4]) * 0.5f, WordFloat(box[1]), WordFloat(box[2]));
+        var poses = new RetailUnitAttachmentPose[definition.PartCount];
+        Array.Fill(poses, BoundsPose(FloatVector(1_000_000, 1_000_000, 1_000_000)));
+        poses[15] = BoundsPose(default);
+        var activity = new byte[definition.PartCount];
+        activity[15] = 1; // Referenced context 14 is inactive and has a different pose.
+        Span<Level100PartBoundsContact> report = stackalloc Level100PartBoundsContact[6];
+        Assert.Equal(1, Level100ContactMechanics.CollectWarehouseSphereBounds(definition, poses, activity,
+            inside, default, 0, report));
+        Assert.Equal(new Level100PartBoundsContact(15, 0), report[0]);
+    }
+
+    private static float WordFloat(uint bits) => BitConverter.Int32BitsToSingle(unchecked((int)bits));
+    private static RetailUnitAttachmentPose BoundsPose(Level100FloatVector3Bits position) =>
+        new(position, new(0x3f800000, 0, 0, 0, 0x3f800000, 0, 0, 0, 0x3f800000));
+
+    [Fact]
     public void WarehouseRetainsOriginalPartRecordsWithoutSelectingRuntimePose()
     {
         var parts = Level100ContactCatalog.Instance.GetDefinition("Warehouse").Parts;
@@ -80,6 +134,8 @@ public sealed class Level100DestructionContactTests
         {
             var raw = part.FloatGeometry;
             Assert.Equal((uint)part.Index, raw.SourceId);
+            Assert.Equal(0u, raw.NumNmicWord);
+            Assert.Equal(0u, raw.IsNmicWord);
             Assert.Equal(1u, raw.Cmsp118Word);
             Assert.Equal(0u, raw.PositionCacheInheritanceWord);
             Assert.Equal(raw.CachedOrientationWords.HasValue ? 0u : 1u,

@@ -19,6 +19,45 @@ public sealed class RetailMeshPartPoseTests
             RetailMeshPartPose.InterpolateSingleFrame(frame));
     }
 
+    [Fact]
+    public void LocalSphereQueryUsesCachedTransposeAndCurrentCenterMinusMotion()
+    {
+        // Synthetic nonorthogonal matrix distinguishes the cached transpose
+        // from both a forward transform and a general matrix inverse.
+        var part = new RetailUnitAttachmentPose(Vector(10, 20, 30),
+            Identity with { Row0Y = BitConverter.SingleToInt32Bits(2) });
+        var query = RetailMeshPartPose.ToLocalSphereQuery(part, Vector(14, 25, 36), Vector(1, 2, 3));
+        Assert.Equal(Vector(3, 9, 3), query.Position);
+        Assert.Equal(Vector(1, 4, 3), query.Displacement);
+    }
+
+    [Fact]
+    public void LocalSphereQueryRoundsCurrentCenterBeforeSubtractingPartPosition()
+    {
+        var part = new RetailUnitAttachmentPose(Vector(16_777_216, 0, 0), Identity);
+        var query = RetailMeshPartPose.ToLocalSphereQuery(part, part.PositionFloatBits, Vector(-1, 0, 0));
+        Assert.Equal(default(Level100FloatVector3Bits), query.Position);
+        Assert.Equal(Vector(-1, 0, 0), query.Displacement);
+    }
+
+    [Fact]
+    public void LocalSphereQueryAccumulatesZThenYThenX()
+    {
+        var part = new RetailUnitAttachmentPose(default, Ones);
+        var query = RetailMeshPartPose.ToLocalSphereQuery(part, Vector(1, -33_554_432, 33_554_432), default);
+        Assert.Equal(Vector(1, 1, 1), query.Position);
+    }
+
+    [Fact]
+    public void StationarySphereStillRotatesSignedZeroDisplacement()
+    {
+        int minusOne = I(0xbf800000);
+        var part = new RetailUnitAttachmentPose(default,
+            new(minusOne, minusOne, minusOne, minusOne, minusOne, minusOne, minusOne, minusOne, minusOne));
+        var query = RetailMeshPartPose.ToLocalSphereQuery(part, default, default);
+        Assert.Equal(new Level100FloatVector3Bits(int.MinValue, int.MinValue, int.MinValue), query.Displacement);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -135,4 +174,6 @@ public sealed class RetailMeshPartPoseTests
     }
 
     private static int I(uint bits) => unchecked((int)bits);
+    private static Level100FloatVector3Bits Vector(float x, float y, float z) => new(
+        BitConverter.SingleToInt32Bits(x), BitConverter.SingleToInt32Bits(y), BitConverter.SingleToInt32Bits(z));
 }

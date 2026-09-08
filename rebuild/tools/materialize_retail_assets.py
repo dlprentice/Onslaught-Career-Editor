@@ -628,7 +628,7 @@ LEVEL100_CONTACT_ASSET = (
     CORE_ASSETS / "Level100/level100-contact-owners.json"
 )
 LEVEL100_CONTACT_ASSET_SHA256 = (
-    "255f5ee66f7da8dcdd88e3e2e36b8d0ce48d68ee27dad29cb7ed524867b2e201"
+    "f793060abf3cd958de26a63100c5362a72bf606b5d5ce9e0b2e67a7698b72681"
 )
 # Retained historical identity for the 24 contact-source meshes. This generator
 # emits the literal; its recipe is not recomputed here. The complete generated
@@ -4124,6 +4124,8 @@ def _contact_part_float_geometry(part) -> dict[str, object]:
         "parent": part.parent,
         "children": list(part.children),
         "nmic": part.nmic,
+        "numNmicWord": struct.unpack_from("<I", part.raw_cmsp, 0xa0)[0],
+        "isNmicWord": struct.unpack_from("<I", part.raw_cmsp, 0xa4)[0],
         "boundingBoxWords": words(struct.pack("<3fI3fIIf", *box.center,
             box.pad_words[0], *box.half_extents, box.pad_words[1], box.valid, box.radius)),
         "cmspTransformWords": words(part.raw_cmsp[:0x80]),
@@ -4463,7 +4465,7 @@ def _level100_contact_asset(
                 struct.unpack("<f", round_fields[12])[0], 1_000
             ),
         },
-        "schema": "onslaught.level100-contact-owners.v6",
+        "schema": "onslaught.level100-contact-owners.v7",
         "staticMeshCount": len(parsed_static),
         "staticSourceAggregateSha256": (
             LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256

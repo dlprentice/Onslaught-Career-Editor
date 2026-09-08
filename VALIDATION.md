@@ -126,6 +126,19 @@ the bounded arithmetic model, not live gameplay precision or an integrated
 spatial explosion scan. The preceding 33-test bounds run used the now-superseded
 53-bit assumption and is retained as a dated result only.
 
+Warehouse report construction and local sphere conversion then passed **49/49**
+focused contact/pose tests; the materializer passed **74/74**. Tests exercise
+the cached transpose, Z/Y/X accumulation, stored centre subtraction, signed zero,
+reference geometry with a separate pose/identity, and the first-six cap before
+a closer seventh contact. Initial test assumptions about root preview eligibility
+and empty BBOX padding were corrected from the actual retained words.
+Contact schema v7 adds only original `NumNmic/IsNmic` words; removing those fields
+and restoring the schema reproduces the complete v6 payload exactly. Logs are
+`warehouse-bounds-report-final-20260908.log` and
+`contact-v7-materializer-20260908.log` in the same directory. Caller-supplied
+poses/eligibility remain explicit; this does not validate the segment lifecycle
+or connect the report to Simulation's explosion path.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

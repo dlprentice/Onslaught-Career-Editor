@@ -340,7 +340,8 @@ source/static progress, not a new live playthrough or parity result.
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
-and a bounding-box reader mislabeled as a material loader,
+and a bounding-box reader mislabeled as a material loader. Two follow-up
+comments now record its caller correctly and the shipped AABB-distance quirk,
 with separate full readback and verified PRE/POST recovery;
 the [checkpoint/working owner](reverse-engineering/ghidra/README.md) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
@@ -354,7 +355,12 @@ readiness, including level reset and gameplay pause. Large now uses its authored
 speed 20, nominal lifetime 7 seconds, contact radius 0.20 and direct damage 8;
 its zero aim spread preserves the two retail scatter random draws.
 Contact inputs preserve the original serialized BBOX/render-radius float words
-and per-part hierarchy/cache records, retaining absent caches explicitly.
+and per-part hierarchy/cache/NMIC records, retaining absent caches explicitly.
+The Warehouse bounds-report builder preserves original part identity, reference
+geometry, cached-transpose arithmetic and the first-six contact order. It still
+requires supplied poses and break-latch eligibility; it is not yet connected to
+the production explosion path. Geometry operations follow the measured device
+setup's PC24/RN intent, with the actual gameplay control word still unmeasured.
 Direct Morph/Charge/Fire/ChangeWeapon/Zoom now precede actor and mission
 callbacks, using the retained launch pose. Full axis/event ordering, spatial
 blasts, Large effects and precise float motion/expiry remain open. These changes have not had a live
@@ -557,8 +563,10 @@ Two further isolated repetitions then removed the Warehouse objective
 after exactly twelve normal hits along one fixed center-aim attack line and
 repeated the released player-off,
 Vulcan-message, Pulse-off/Vulcan-on handoff. That observation remains a bounded
-runtime comparison; Core now uses the released object's 28-segment controller
-rules rather than encoding twelve hits as generic Warehouse health. Godot
+runtime comparison. Core has extent-weighted 28-segment health, but its break
+and queued-collapse lifecycle remains incomplete. A lethal main-core hit must
+disable attached parts synchronously and queue the chimney breaks; the current
+implementation clears only the hit part. Godot
 removes each completed objective and radar marker,
 uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded
@@ -593,13 +601,14 @@ hash-verified mesh binding, active state, full three-dimensional pose/basis and
 velocity. The released medium-pulse swept sphere uses BBOX only for broadphase
 and deterministically millimetre-quantized projected mesh
 topology for contact. Target Tanks retain their four-hit direct
-path; Warehouse contacts now drive the evidenced extent-weighted 28-segment
-state, `5.0` core multiplier, core-child/strict-30% terminal tests, and
+path; Warehouse contacts drive extent-weighted 28-segment
+health, the `5.0` core multiplier, core-child/strict-30% terminal tests, and
 `Hit`/dying/died facts consumed by the released mission scripts. Segment and
 typed effect state is deterministic and hashed. Godot consumes the ordered
 Pulse-impact and terminal effect events, including their existing audio and
 target-destruction presentation. It still removes the complete target at
-terminal; detached Warehouse parts, rubble, and retail-random secondary debris
+terminal; completed-break versus pending-collapse state and delayed child events
+remain incomplete. Detached Warehouse parts, rubble, and retail-random secondary debris
 are not yet presented.
 Walker acceleration now follows Core's
 continuous body yaw; the bounded projectile path shares its yaw and vertical
@@ -609,9 +618,7 @@ yet reproduce Steam's dynamic 1/2/4-step terrain patch topology, steep-slope or
 wire the available actor contact path into walker movement beyond those two
 observed facility envelopes, exact toe-normal alignment or CMC body sway,
 resolved Warehouse rubble trajectories,
-mesh-part damage variation, retail-random secondary particles/debris, the
-three moving truck targets, Vulcan firing, the rest of
-the mission, AI, the
+mesh-part damage variation, retail-random secondary particles/debris, AI, the
 remaining weapon roster, facility destruction,
 the inactive optional advanced-water path and dynamic scene reflection/refraction,
 jet-to-walker presentation, Steam's dynamic
@@ -916,8 +923,10 @@ The Level 100 reconstruction
 now preserves the two ordered whole-body stores for Target Tank/Drone rather
 than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the
 terminal `-0.2 -> -1.2` pair through the production client envelope. Warehouse
-still uses its independently observed aggregate because the explosion call's
-segmented mesh part is unresolved. This advances semantic understanding and a
+still uses the old aggregate approximation. The separate ordered part/distance
+report is now implemented with supplied poses and eligibility, but actual cache
+selection, queued segment lifecycle and spatial-scan integration remain open.
+This advances semantic understanding and a
 bounded rebuild path without retroactively claiming that the Gen10 runtime
 instrument inferred the name or types.
 
