@@ -2373,12 +2373,14 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(128f, 408f, 403f, 44f), DevSelectFieldBorder);
         DrawRect(new Rect2(129f, 409f, 401f, 42f), DevSelectPanelFill);
 
-        float nameWidth = MeasureText(_session.GameName, DevSelectRowScale);
+        float nameWidth = Math.Max(0, _session.GameName.Sum(character =>
+            _glyphWidths[RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: false)] + 1) - 1) * DevSelectRowScale;
         var nameOrigin = new Vector2(329.5f - (nameWidth * 0.5f), DevSelectNameTop);
-        DrawRect(
-            new Rect2(nameOrigin.X - 4f, 415f, nameWidth + 8f, 31f),
-            DevSelectNameHighlight);
-        DrawText(_session.GameName, nameOrigin, DevSelectRowScale, ReleasedTitleText);
+        if (_session.GameNameIsFresh)
+            DrawRect(new Rect2(nameOrigin.X - 4f, 415f, nameWidth + 8f, 31f), DevSelectNameHighlight);
+        DrawAtlasText(_titleFont, _glyphWidths, GlyphCellSize, GlyphColumns,
+            _session.GameName, nameOrigin, DevSelectRowScale, DevSelectRowScale, ReleasedTitleText,
+            dropShadow: true, retailNameGlyphs: true);
 
         // Page chevrons. FE_Arrow points right and its artwork occupies only
         // (16,12)-(46,52) of the 64x64 texture, exactly as DrawLanguageSelector
@@ -3588,7 +3590,8 @@ public sealed partial class RetailFrontendFlow : Control
 
         // New-career FEP_DEVSELECT is editable; Load mode mirrors the selected
         // injected save name and RetailFrontendSession rejects edits.
-        if (_session.Screen == RetailFrontendScreen.DevSelect)
+        if (_session.Screen == RetailFrontendScreen.DevSelect &&
+            _session.CareerPageMode == RetailFrontendCareerPageMode.New)
         {
             if (IsKey(key, Key.Backspace))
             {
@@ -3599,10 +3602,18 @@ public sealed partial class RetailFrontendFlow : Control
                 return true;
             }
 
-            char typed = (char)key.Unicode;
-            if (typed is >= ' ' and <= '~' && _session.AppendGameNameCharacter(typed))
+            if (IsKey(key, Key.Left) || IsKey(key, Key.Up) || IsKey(key, Key.Right) || IsKey(key, Key.Down))
             {
+                _session.MoveGameNameCursor(IsKey(key, Key.Right) || IsKey(key, Key.Down));
                 QueueRedraw();
+                return true;
+            }
+            if (IsKey(key, Key.Home) || IsKey(key, Key.End) || IsKey(key, Key.Delete)) return true;
+            if (key.Unicode >= 32)
+            {
+                if (key.Unicode <= char.MaxValue &&
+                    _session.AppendGameNameCharacter((char)key.Unicode, MeasureGameNameExtent(_session.GameName)))
+                    QueueRedraw();
                 return true;
             }
         }
@@ -4085,12 +4096,13 @@ public sealed partial class RetailFrontendFlow : Control
         float scaleX,
         float scaleY,
         Color color,
-        bool dropShadow)
+        bool dropShadow,
+        bool retailNameGlyphs = false)
     {
         float x = position.X;
         foreach (char character in text)
         {
-            int glyph = GlyphIndex(character);
+            int glyph = retailNameGlyphs ? RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: false) : GlyphIndex(character);
             float glyphWidth = widths[glyph] * scaleX;
             var source = new Rect2(
                 (glyph % columns) * cellSize,
@@ -4178,6 +4190,17 @@ public sealed partial class RetailFrontendFlow : Control
             1f,
             color,
             dropShadow: false);
+
+    private int MeasureGameNameExtent(string text)
+    {
+        int width = 0;
+        foreach (char character in text)
+        {
+            int glyph = RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: true);
+            width += _font22Widths[glyph] + 1;
+        }
+        return width;
+    }
 
     private float MeasureFont22Text(string text, float scaleX)
     {

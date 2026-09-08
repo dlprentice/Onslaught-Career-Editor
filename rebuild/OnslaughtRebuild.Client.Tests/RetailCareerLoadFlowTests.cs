@@ -8,6 +8,35 @@ namespace OnslaughtRebuild.Client.Tests;
 public sealed class RetailCareerLoadFlowTests
 {
     [Fact]
+    public void NewCareerSeedsFirstCaseSensitiveUnusedNameAndStopsAt4096()
+    {
+        RetailCareerSave career = ReadGoldCareer();
+        var frontend = new RetailFrontendSession([
+            new(0, "BEA 1", career), new(1, "bea 2", career), new(2, "BEA 3", career)]);
+        frontend.Confirm();
+        frontend.Confirm();
+        Assert.Equal("BEA 2", frontend.GameName);
+        var full = new RetailFrontendSession(Enumerable.Range(1, 4096)
+            .Select(index => new RetailCareerDescriptor(index, $"BEA {index}", career)));
+        full.Confirm();
+        full.Confirm();
+        Assert.Equal("BEA 4096", full.GameName);
+        Assert.True(full.GameNameIsFresh);
+    }
+
+    [Fact]
+    public void LoadPageKeepsDefaultResetAndCannotEditCursor()
+    {
+        var frontend = new RetailFrontendSession([new(0, "BEA 1", ReadGoldCareer())]);
+        EnterLoadGame(frontend);
+        Assert.Equal("BEA 1", frontend.GameName);
+        Assert.False(frontend.MoveGameNameCursor(false));
+        Assert.False(frontend.AppendGameNameCharacter('X', 0));
+        Assert.False(frontend.RemoveGameNameCharacter());
+        Assert.Equal(RetailFrontendSession.DefaultGameName.Length, frontend.GameNameCursor);
+    }
+
+    [Fact]
     public void LoadGame_PreservesInjectedCareerOrderAndMovesSelection()
     {
         RetailCareerSave career = ReadGoldCareer();
@@ -89,7 +118,7 @@ public sealed class RetailCareerLoadFlowTests
         EnterLoadGame(frontend);
         Assert.True(frontend.MoveNext());
 
-        Assert.False(frontend.AppendGameNameCharacter('X'));
+        Assert.False(frontend.AppendGameNameCharacter('X', 0));
         Assert.False(frontend.RemoveGameNameCharacter());
         Assert.Equal("ONLY SLOT", frontend.GameName);
     }

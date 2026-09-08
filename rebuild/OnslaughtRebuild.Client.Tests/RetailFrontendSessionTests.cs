@@ -99,17 +99,17 @@ public sealed class RetailFrontendSessionTests
         RetailFrontendSession frontend = AtDevSelect();
 
         Assert.True(frontend.RemoveGameNameCharacter());
-        Assert.Equal("BEA ", frontend.GameName);
-        Assert.True(frontend.AppendGameNameCharacter('2'));
-        Assert.Equal("BEA 2", frontend.GameName);
-        Assert.False(frontend.AppendGameNameCharacter('\n'));
+        Assert.Equal(string.Empty, frontend.GameName);
+        Assert.True(frontend.AppendGameNameCharacter('2', 0));
+        Assert.Equal("2", frontend.GameName);
+        Assert.False(frontend.AppendGameNameCharacter('\n', 0));
 
         while (frontend.GameName.Length < RetailFrontendSession.MaxGameNameLength)
         {
-            Assert.True(frontend.AppendGameNameCharacter('x'));
+            Assert.True(frontend.AppendGameNameCharacter('x', 0));
         }
 
-        Assert.False(frontend.AppendGameNameCharacter('x'));
+        Assert.False(frontend.AppendGameNameCharacter('x', 0));
         Assert.Equal(RetailFrontendSession.MaxGameNameLength, frontend.GameName.Length);
 
         while (frontend.RemoveGameNameCharacter())
@@ -120,15 +120,90 @@ public sealed class RetailFrontendSessionTests
     }
 
     [Fact]
+    public void FreshNameReplacementAndCursorEditsPreserveSuffix()
+    {
+        var frontend = AtDevSelect();
+        Assert.True(frontend.AppendGameNameCharacter('A', 1000));
+        Assert.Equal("A", frontend.GameName);
+        Assert.False(frontend.GameNameIsFresh);
+        Assert.True(frontend.AppendGameNameCharacter('C', 10));
+        Assert.True(frontend.MoveGameNameCursor(false));
+        Assert.True(frontend.AppendGameNameCharacter('B', 20));
+        Assert.Equal("ABC", frontend.GameName);
+        Assert.Equal(2, frontend.GameNameCursor);
+        Assert.True(frontend.RemoveGameNameCharacter());
+        Assert.Equal("AC", frontend.GameName);
+        Assert.Equal(1, frontend.GameNameCursor);
+    }
+
+    [Fact]
+    public void WidthGateMeasuresExistingNameAndMovementEndsFreshSelection()
+    {
+        var frontend = AtDevSelect();
+        Assert.True(frontend.MoveGameNameCursor(true));
+        Assert.False(frontend.GameNameIsFresh);
+        Assert.False(frontend.AppendGameNameCharacter('A', 384));
+        Assert.Equal("BEA 1", frontend.GameName);
+        Assert.True(frontend.AppendGameNameCharacter('A', 383));
+        Assert.Equal("BEA 1A", frontend.GameName);
+        Assert.True(frontend.MoveGameNameCursor(false));
+        Assert.True(frontend.RemoveGameNameCharacter());
+        Assert.Equal("BEA A", frontend.GameName);
+    }
+
+    [Theory]
+    [InlineData('$', -1)]
+    [InlineData('@', -1)]
+    [InlineData('[', -1)]
+    [InlineData('~', -1)]
+    [InlineData('A', 33)]
+    [InlineData('á', 96)]
+    [InlineData('ß', 146)]
+    [InlineData('’', 7)]
+    [InlineData('–', 13)]
+    public void PhysicalGlyphAcceptanceUsesRetailRemap(char character, int expected)
+    {
+        Assert.Equal(expected, RetailFrontendSession.GameNameGlyphIndex(character));
+        var frontend = AtDevSelect();
+        Assert.Equal(expected >= 0, frontend.AppendGameNameCharacter(character, 0));
+        if (expected < 0) Assert.True(frontend.GameNameIsFresh);
+    }
+
+    [Theory]
+    [InlineData('á', 96)]
+    [InlineData('ß', 146)]
+    [InlineData('¡', 136)]
+    [InlineData('¿', 137)]
+    [InlineData('’', 7)]
+    [InlineData('–', 13)]
+    [InlineData('$', 145)]
+    [InlineData('漢', 145)]
+    public void SmallNameFontUsesItsGlyphRemapAndFallback(char character, int expected)
+    {
+        Assert.Equal(expected, RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: false));
+    }
+
+    [Fact]
+    public void Font0SwapsInvertedPunctuationButSmallNameFontDoesNot()
+    {
+        Assert.Equal(137, RetailFrontendSession.GameNameRenderGlyphIndex('¡', true));
+        Assert.Equal(136, RetailFrontendSession.GameNameRenderGlyphIndex('¿', true));
+        Assert.Equal(136, RetailFrontendSession.GameNameRenderGlyphIndex('¡', false));
+        Assert.Equal(137, RetailFrontendSession.GameNameRenderGlyphIndex('¿', false));
+        Assert.Equal(7, RetailFrontendSession.GameNameRenderGlyphIndex('’', true));
+        Assert.Equal(13, RetailFrontendSession.GameNameRenderGlyphIndex('–', true));
+    }
+
+    [Fact]
     public void DevSelectNameEditsDoNotEscapeThePage()
     {
         var frontend = new RetailFrontendSession();
-        Assert.False(frontend.AppendGameNameCharacter('x'));
+        Assert.False(frontend.AppendGameNameCharacter('x', 0));
         Assert.False(frontend.RemoveGameNameCharacter());
         Assert.False(frontend.SelectCareerIndex(0));
 
         RetailFrontendSession devSelect = AtDevSelect();
-        Assert.True(devSelect.AppendGameNameCharacter('x'));
+        Assert.True(devSelect.AppendGameNameCharacter('x', 0));
         Assert.Equal(RetailFrontendSignal.PageChanged, devSelect.Back());
         Assert.Equal(RetailFrontendScreen.MainMenu, devSelect.Screen);
         Assert.Equal(RetailFrontendSession.DefaultGameName, devSelect.GameName);

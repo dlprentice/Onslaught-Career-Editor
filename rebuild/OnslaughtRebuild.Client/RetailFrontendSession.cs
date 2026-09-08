@@ -59,8 +59,11 @@ public sealed class RetailFrontendSession
     /// </summary>
     public const string DefaultGameName = "BEA 1";
 
-    /// <summary>Retail's name field is bounded; 20 is this lane's bound.</summary>
-    public const int MaxGameNameLength = 20;
+    /// <summary>520cc0 checks the existing UTF-16 length before editing.</summary>
+    public const int MaxGameNameLength = 31;
+    public const int GameNameWidthLimit = 384;
+    public int GameNameCursor { get; private set; } = DefaultGameName.Length;
+    public bool GameNameIsFresh { get; private set; } = true;
 
     private bool _level100LaunchPending;
     private RetailCareerDescriptor? _activeLoadedCareer;
@@ -181,36 +184,96 @@ public sealed class RetailFrontendSession
 
         SelectedCareerIndex = index;
         _gameName = CareerNames[index];
+        GameNameCursor = Math.Min(_gameName.Length, MaxGameNameLength);
+        GameNameIsFresh = true;
         return true;
     }
 
-    /// <summary>Types one character into the name field.</summary>
-    public bool AppendGameNameCharacter(char character)
+    // Charset/remap inputs 5db5fc/5db738; font0 is CDXBitmapFont.
+    private const string ExtendedNameGlyphs = "áàâäçéèêëíìîïóòôöœñúùûüÁÀÄÂÇÉÈÍÌÑÓÒÖÜÚÙŒ¡¿©®™«»ºª\u001fßÊËÎÏÔÛ┐┌";
+
+    public static int GameNameGlyphIndex(char character)
+    {
+        character = character switch { '\u2019' => '\'', '\u2013' => '-', _ => character };
+        if ("$@[\\]^_{|}~\u007f".Contains(character)) return -1;
+        if (character is >= ' ' and <= '\u007f') return character - ' ';
+        int index = ExtendedNameGlyphs.IndexOf(character);
+        return index < 0 || character == '\u001f' ? -1 : index + 96;
+    }
+
+    /// <summary>Bitmap-font remap. Font0 sets+168; Font13PS leaves it zero. Both leave+16c zero.</summary>
+    public static int GameNameRenderGlyphIndex(char character, bool swapInvertedPunctuation)
+    {
+        char mapped = swapInvertedPunctuation
+            ? character switch { '¡' => '¿', '¿' => '¡', _ => character }
+            : character;
+        int glyph = GameNameGlyphIndex(mapped);
+        return glyph < 0 ? 145 : glyph;
+    }
+
+    /// <summary>Physical character event; width is the current font0 extent, including trailing spacing.</summary>
+    public bool AppendGameNameCharacter(char character, int currentTextWidth)
     {
         if (Screen != RetailFrontendScreen.DevSelect ||
             CareerPageMode != RetailFrontendCareerPageMode.New ||
-            _gameName.Length >= MaxGameNameLength ||
-            character is < ' ' or > '~')
-        {
+            GameNameGlyphIndex(character) < 0 || _gameName.Length >= MaxGameNameLength)
             return false;
+        if (GameNameIsFresh)
+        {
+            _gameName = string.Empty;
+            GameNameCursor = 0;
+            GameNameIsFresh = false;
+            currentTextWidth = 0;
         }
-
-        _gameName += character;
+        if (currentTextWidth >= GameNameWidthLimit) return false;
+        _gameName = _gameName.Insert(GameNameCursor, character.ToString());
+        GameNameCursor++;
         return true;
     }
 
-    /// <summary>Backspaces one character out of the name field.</summary>
+    public bool MoveGameNameCursor(bool right)
+    {
+        if (Screen != RetailFrontendScreen.DevSelect || CareerPageMode != RetailFrontendCareerPageMode.New)
+            return false;
+        bool changed = GameNameIsFresh;
+        GameNameIsFresh = false;
+        int next = Math.Clamp(GameNameCursor + (right ? 1 : -1), 0, Math.Min(_gameName.Length, 31));
+        changed |= next != GameNameCursor;
+        GameNameCursor = next;
+        return changed;
+    }
+
     public bool RemoveGameNameCharacter()
     {
-        if (Screen != RetailFrontendScreen.DevSelect ||
-            CareerPageMode != RetailFrontendCareerPageMode.New ||
-            _gameName.Length == 0)
-        {
+        if (Screen != RetailFrontendScreen.DevSelect || CareerPageMode != RetailFrontendCareerPageMode.New)
             return false;
+        if (GameNameIsFresh)
+        {
+            _gameName = string.Empty;
+            GameNameCursor = 0;
+            GameNameIsFresh = false;
+            return true;
         }
-
-        _gameName = _gameName[..^1];
+        if (GameNameCursor == 0) return false;
+        _gameName = _gameName.Remove(--GameNameCursor, 1);
         return true;
+    }
+
+    private void ResetGameName()
+    {
+        _gameName = DefaultGameName;
+        GameNameCursor = _gameName.Length;
+        GameNameIsFresh = true;
+    }
+
+    private void SeedGameName()
+    {
+        int suffix = 1;
+        // 51fff0 checks candidates1..4095; candidate4096 is the unchecked cap.
+        while (suffix < 4096 && CareerNames.Contains($"BEA {suffix}", StringComparer.Ordinal)) suffix++;
+        _gameName = $"BEA {suffix}";
+        GameNameCursor = Math.Min(_gameName.Length, MaxGameNameLength);
+        GameNameIsFresh = true;
     }
 
     public bool MovePrevious()
@@ -387,7 +450,7 @@ public sealed class RetailFrontendSession
                     _selectedCareerLoadRequest = null;
                     SelectedWorldNumber = RetailWorldCatalog.RootWorldNumber;
                     SelectedCareerIndex = -1;
-                    _gameName = DefaultGameName;
+                    SeedGameName();
                     return RetailFrontendSignal.PageChanged;
                 }
 
@@ -402,7 +465,7 @@ public sealed class RetailFrontendSession
                     _activeLoadedCareer = null;
                     _selectedCareerLoadRequest = null;
                     SelectedCareerIndex = -1;
-                    _gameName = DefaultGameName;
+                    ResetGameName();
                     return RetailFrontendSignal.PageChanged;
                 }
 
@@ -497,7 +560,7 @@ public sealed class RetailFrontendSession
             _activeLoadedCareer = null;
             _selectedCareerLoadRequest = null;
             SelectedCareerIndex = -1;
-            _gameName = DefaultGameName;
+            ResetGameName();
             return RetailFrontendSignal.PageChanged;
         }
 
@@ -745,7 +808,7 @@ public sealed class RetailFrontendSession
         _selectedCareerLoadRequest = null;
         _selectedConfigurationIndex = 0;
         Debriefing = null;
-        _gameName = DefaultGameName;
+        ResetGameName();
         _level100LaunchPending = false;
         // Leaving the level ends CGame's restart loop. The next entry runs
         // RestartLoopRunLevel afresh, which sets mFirstTimeRound TRUE again

@@ -174,7 +174,7 @@ internal sealed class RetailFrontendHarness
     internal bool SendCharacter(char character) =>
         AcceptsInput() &&
         _session.Screen == RetailFrontendScreen.DevSelect &&
-        _session.AppendGameNameCharacter(character);
+        _session.AppendGameNameCharacter(character, 0); // Explicit unmeasured short-name test extent.
 
     /// <summary>
     /// A left mouse button press at a 640x480 design-stage point.
