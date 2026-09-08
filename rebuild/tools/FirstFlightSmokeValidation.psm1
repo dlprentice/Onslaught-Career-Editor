@@ -158,11 +158,11 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
     # Shared 2,148-step tape expectation from InteractiveSessionTests. The
-    # controller phase now precedes callbacks and Move, so releases use retained
-    # emitter poses. Two identical in-process input runs reproduce this hash
-    # with the existing gameplay assertions intact. Native Godot/Windows
+    # signed actor bases and Air Trainer profile life are now part of the
+    # materialized definition identity. Two identical in-process input runs
+    # reproduce this hash with the existing gameplay assertions intact. Native Godot/Windows
     # execution of this updated retained gate remains pending.
-    Assert-SmokeValue 'stateHash' '4b225ba60ede77c1b00810fb3abdf225c376aadf348820355b47752f71a4ab04' $report.stateHash
+    Assert-SmokeValue 'stateHash' '2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

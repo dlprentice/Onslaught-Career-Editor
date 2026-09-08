@@ -212,10 +212,15 @@ file name, so both pinned generated payloads are byte-unchanged:
 subsequently moved to `97E3B3BF…0C27`, by the 2026-08-01 vertical-datum correction
 in `_actor_pose` and nothing else — 54 leaves, all of them an actor's or a
 spawn's `initialPose.positionMillimeters[1]`.
-The September 8 signed basis conversion moves it to `EE834981…D552`:
+The September 8 signed basis conversion moved it to `EE834981…D552`:
 237 projected-basis words change from +0 to -0, with all raw retail fields,
-positions and other content unchanged. Both current materializer and decoder
-enforce the new identity; historical receipts retain their original pins.
+positions and other content unchanged. The subsequent Trainer-life correction
+moves it to `D6D3F9ED…D493` (164,780 bytes): only the authored Flyby and spawned
+AirTrainer `initialHealth` fields change from 0 to 3000. Both read Air Trainer's
+physics field 3 (`0x40400000`, 3.0), which Unit Init copies to instance life.
+The materializer and decoder enforce this identity; historical receipts retain
+their original pins. Initial life does not establish aircraft vulnerability or
+complete damage/death behavior.
 
 MEASURED from each mesh's own `MSHT`/`TEXB` records: `m_FA_F24_training.msh.aya`
 names `meshtex\f_pulsetank_training.tga` and `meshtex\Chrome3.tga` with TEXB

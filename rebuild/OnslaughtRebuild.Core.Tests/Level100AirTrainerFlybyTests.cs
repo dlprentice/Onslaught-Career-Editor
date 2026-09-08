@@ -51,7 +51,7 @@ public sealed class Level100AirTrainerFlybyTests
     /// <summary>
     /// The Air Trainer's authored initial pose, from the hash-pinned manifest
     /// <c>level100-static-world.json</c> (sha256
-    /// <c>EE834981…D552</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
+    /// <c>D6D3F9ED…D493</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
     /// fixture parks every non-static actor at the origin, which is fine for
     /// the tests that only need an actor to exist and useless for a test about
     /// a flight path, so this one is stated here and cross-checked against the

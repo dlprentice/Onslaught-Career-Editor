@@ -185,7 +185,8 @@ public sealed class Level100AmbientAircraftTests
             Assert.Equal(Level100MissionTargetGroup.None, actor.TargetGroup);
             Assert.Equal(0, actor.TargetOrdinal);
             Assert.False(actor.IsObjective);
-            Assert.Equal(0, actor.Health);
+            // The Trainer's positive profile life does not make it a mission target.
+            Assert.Equal(actor.DefinitionName == "Air Trainer" ? 3_000 : 0, actor.Health);
         }
 
         int[] ambientIds = ambient

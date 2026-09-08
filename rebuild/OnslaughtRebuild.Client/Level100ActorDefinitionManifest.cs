@@ -16,10 +16,12 @@ public static class Level100ActorDefinitionManifest
     // Schema v14 retains authored waypoint coordinates and Core's up-positive
     // position datum. The signed retail-to-Core basis correction on 2026-09-08
     // changes only 237 +0 words to -0 across 44 actors and 10 spawns; raw retail
-    // transforms, positions, paths and source identities are unchanged.
+    // transforms, positions, paths and source identities are unchanged. The
+    // subsequent Trainer-life correction sets the two initialHealth fields
+    // to 3000 from their physics profile; no other manifest field changes.
     // Definition identity hashes those exact words, so replay pins move too.
     public const string ExpectedManifestSha256 =
-        "EE834981471BEED4BB6DF0A6B803B0805ED54740529FFDDC17DCCEDF07FBD552";
+        "D6D3F9EDB7C13CF367C9F8A393CEC5D2DB91A6E6F55F106B931ACF1E28E6D493";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =

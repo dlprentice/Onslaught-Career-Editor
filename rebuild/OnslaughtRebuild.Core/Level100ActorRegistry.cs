@@ -1570,19 +1570,11 @@ public sealed class Level100ActorRegistry
     }
 
     /// <summary>
-    /// Released <c>CUnit::Init</c> takes a unit's life from its <c>Unit</c>
-    /// record's <c>CUnitLife</c> field (physics value id 3, record +0xc0), not
-    /// from the level file. The materialized spawn manifest carries the same
-    /// number for the two ground targets and carries <c>0</c> for the air
-    /// units, which nothing ever filled in. Rather than change a manifest whose
-    /// SHA-256 is pinned in a tree this work does not own
-    /// (rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:16),
-    /// Core takes the released value from the contact catalog - the same
-    /// physics record, decoded once - whenever the definition has one. For
-    /// Target Tank (6.0), Target Truck (3.0) and Warehouse (50.0) this is
-    /// exactly the value already in the manifest, so nothing moves; for
-    /// Target Drone (1.0) it replaces a 0 that would otherwise make the actor
-    /// spawn with no life to lose.
+    /// Contact-backed non-static definitions use their catalog maximum life,
+    /// including legacy Target Drone spawn definitions that still carry zero.
+    /// Air Trainer has no such fallback; the materializer now supplies its
+    /// profile life directly. This does not establish generic Unit
+    /// initialization or vulnerability.
     /// </summary>
     private static int ReleasedInitialHealth(
         string definitionName,

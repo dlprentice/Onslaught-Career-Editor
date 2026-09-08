@@ -72,6 +72,15 @@ The shared Air Trainer/Target Drone mesh `m_FA_F24_training.msh.aya` is
 `48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5`:
 12 parts, 11 CEMT bindings and no CAMD animation modes.
 
+Shared Unit Init copies profile `+0xc0` to instance life `+0xf8` at
+`0x004f8b29..0x004f8b35`, before Actor Init at `0x004f8b38`. No immortality
+branch bypasses this assignment. Air Trainer's explicit physics field 3 is
+`0x40400000` (3.0) in `default physics.dat`, 175,603 bytes, SHA-256
+`e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
+The rebuild now supplies 3000 milli-life to both the authored Flyby and spawned
+AirTrainer. Damage separately gates on Unit `+0x15c`; positive initial life
+does not establish vulnerability, contact eligibility or death behavior.
+
 Missing `launch` mode does not eliminate animation construction. Plane Init
 passes the lookup result `-1` to virtual `+0xf0`. The setter at `0x004f44a0`
 allocates an animation owner when `this+0x6c` is null; its constructor queues
@@ -100,6 +109,7 @@ Re-read body identities use half-open ranges:
 | Body | Range | SHA-256 |
 | --- | --- | --- |
 | Plane Init | `0x004d19d0..0x004d1c07` | `f297eb3687986960d06f2ed1b03e45b137a9ca2fd34a56472e390b36ee302a2a` |
+| Unit profile-life copy through Actor Init call | `0x004f8b1c..0x004f8b3d` | `eb4c2062969daa04280b0025d405c0372f694103dfa2e452961d08aa6cfa4f24` |
 | Script SpawnThing | `0x00536cd0..0x005371e0` | `cd7c8f28d7c21ce976f405baffde1f7eb9727d6822f3e1c38536eb92a798eb5e` |
 | InitThing constructor | `0x0048dcf0..0x0048ddd0` | `7c9cb28a5a8f66ea786f9943ce904e982a41581e5a433de3754ee9b9996c59ef` |
 | Persistent collision Init | `0x004269b0..0x004269f6` | `bd4cf3f803c5d5a661b2d81ef96d1c2753a6ba4be722a4d1c6673ea96dedddd4` |

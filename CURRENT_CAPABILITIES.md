@@ -684,7 +684,10 @@ complete state hash and pose trace. These are the two comparable inputs in
 [the cold-start tests](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
 The September 8 signed-basis correction is separately covered by exact tilted-offset/renderer
 tests, real materialization and focused Client checks; it does not establish
-native flight or visual parity.
+native flight or visual parity. The authored Flyby and spawned AirTrainer now
+start with their physics profile's 3000 milli-life, including restore and render
+projection checks. The shipping-data cold-start route still passes after that
+correction. Aircraft vulnerability and complete damage/death behavior remain open.
 
 The separate returning-career driver retains reduced fixture definitions. It
 also clears all 22 targets without the

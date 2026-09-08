@@ -226,6 +226,21 @@ the reduced fixture's allocation-dependent name. The separate returning and
 negative controls remain synthetic. This is a deterministic regression, not
 player-observable live acceptance.
 
+The Air Trainer initial-life correction passed **22/22** focused Core checks,
+**6/6** materialized Client checks and **76/76** materializer checks. Both
+authored and spawned creation first failed with zero life, then supplied the
+physics profile's 3000 milli-life and retained it through snapshot restoration.
+The ambient Trainer remains outside mission targets despite its positive life.
+Materialization reproduced **389 exact files**; exactly two manifest leaves
+change, both `initialHealth`. Logs are `trainer-life-red-20260908.log`,
+`trainer-life-{core,client-final,python,materialize}-20260908.log` in the same
+directory. Initial health does not close aircraft damage or death behavior.
+The shipping-data cold-start selection then passed **4/4**
+(`trainer-life-cold-start-20260908.log`). Both input adapters still reach Won
+at tick 9191 with hull 8545 and identical full state/pose traces; their new state
+hash is `7ddb32258aff65782bd232ba49c9d33a0b3c6c806f766c81f4271e48311c1ea8`.
+No driver changes or live player acceptance are involved.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing
@@ -236,10 +251,11 @@ unquantized cold fixture issued different commands and lost to water; it was
 retired as an invalid adapter-comparison requirement. The separate returning,
 naive and trigger-disabled controls remain.
 
-The repeated FirstFlight fingerprint is now
-`4b225ba60ede77c1b00810fb3abdf225c376aadf348820355b47752f71a4ab04`.
-Its retained Windows-launcher expectation was updated for the same tape, without
-Windows execution. Logs are `controller-phase-final-focused-20260908.log`,
+After the signed-basis and Trainer-life corrections, the repeated FirstFlight
+fingerprint is `2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365`
+(`trainer-life-client-final-20260908.log`). Its retained Windows-launcher
+expectation was updated for the same tape, without Windows execution. The
+earlier controller-phase logs are `controller-phase-final-focused-20260908.log`,
 `controller-phase-final-smoke-20260908.log` and
 `controller-phase-final-consolidated-routes-20260908.log` in the Linux directory
 above. These are in-process regression results, not desktop tutorial acceptance

@@ -585,9 +585,10 @@ STATIC_WORLD_ANIMATED_MESHES = {
 # Reproducibility pin for the v14 manifest: authored waypoint coordinates,
 # up-positive Core positions, and signed retail-to-Core bases. The 2026-09-08
 # Q*B*inverse(Q) correction changes 237 +0 words to -0 across 44 actors and
-# 10 spawns. Raw transforms, positions, paths and all other fields are unchanged.
+# 10 spawns. The subsequent Trainer-life correction changes only the authored
+# Flyby and AirTrainer spawn initialHealth from 0 to 3000, from physics field3.
 # Keep this pin aligned with Level100ActorDefinitionManifest.ExpectedManifestSha256.
-STATIC_WORLD_MANIFEST_SHA256 = "ee834981471beed4bb6df0a6b803b0805ed54740529ffddc17dccedf07fbd552"
+STATIC_WORLD_MANIFEST_SHA256 = "d6d3f9edb7c13cf367c9f8a393cec5d2db91a6e6f55f106b931acf1e28e6d493"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -3857,8 +3858,14 @@ def _build_actor_definition_set(
     objects: list[dict[str, object]],
     level_actors: list[dict[str, object]],
     emitters_by_mesh: dict[str, dict[str, dict[str, object]]],
+    physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     actor_definitions: list[dict[str, object]] = []
+    trainer_life = _physics_record(physics, 1, "Air Trainer").get(3)
+    if trainer_life != struct.pack("<I", 0x40400000):
+        raise RuntimeError("Level 100 Air Trainer life field changed")
+    # Unit Init copies profile+c0 into life+f8 before Actor Init (004f8b29).
+    trainer_health = _round_away_from_zero(struct.unpack("<f", trainer_life)[0] * 1000)
 
     def add_actor(
         *,
@@ -3932,7 +3939,7 @@ def _build_actor_definition_set(
         12: ("Target Tank 3", "m_f_pulsetank_training.msh.aya", "StaticTargets", 3, 6_000),
         # The authored actor is the distinct Flyby instance. Airfield later spawns
         # the AirTrainer mission actor through SpawnerB.
-        40: ("Air Trainer", "m_FA_F24_training.msh.aya", "None", 0, 0),
+        40: ("Air Trainer", "m_FA_F24_training.msh.aya", "None", 0, trainer_health),
     }
     physical_actor_ordinals = {
         0, 9, 11, 12, 13, 14, 15, 16, 19, 21, 40,
@@ -4054,6 +4061,8 @@ def _build_actor_definition_set(
                     if definition_name == "Target Tank"
                     else 3_000
                     if definition_name == "Target Truck"
+                    else trainer_health
+                    if definition_name == "Air Trainer"
                     else 0
                 ),
                 "initialPose": _spawn_pose(owner, emitter),
@@ -4568,16 +4577,17 @@ def _materialize_static_world(
         or set(emitters_by_mesh["fb_aircraft_factory"]) != {"SpawnerA", "SpawnerB"}
     ):
         raise RuntimeError("Level 100 authored spawner emitters changed")
-    actor_definitions, spawn_definitions = _build_actor_definition_set(
-        objects,
-        level_actors,
-        emitters_by_mesh,
-    )
     physics = _physics_records(
         _read_exact(
             game_root / PHYSICS_DEFINITIONS,
             PHYSICS_DEFINITIONS_SHA256,
         )
+    )
+    actor_definitions, spawn_definitions = _build_actor_definition_set(
+        objects,
+        level_actors,
+        emitters_by_mesh,
+        physics,
     )
     motion_definitions = _level100_actor_motion_definitions(physics)
 

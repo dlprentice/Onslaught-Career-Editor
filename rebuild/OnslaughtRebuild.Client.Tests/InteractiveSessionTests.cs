@@ -1797,9 +1797,9 @@ public sealed class InteractiveSessionTests
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
             CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
         Assert.True(
-            // Signed retail-to-Core basis conversion retains -0 in the
-            // materialized definitions and therefore their hashed identity.
-            finalStateHash == "5a8403628e52ea241a2a4c518f4bf1a965d96ce0c572888bf77babcffb54f5e0",
+            // Air Trainer initial life now comes from its physics profile;
+            // actor state and the materialized definition identity both change.
+            finalStateHash == "2727cca4bc50075fafdee6b8509d6472a1ff57c818b596d3e0e914323d35e365",
             $"First-flight final state hash: {finalStateHash}");
     }
 

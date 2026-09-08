@@ -7,6 +7,33 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100ActorRegistryTests
 {
+    [Theory]
+    [InlineData(false, "Flyby")]
+    [InlineData(true, "AirTrainer")]
+    public void MaterializedAirTrainer_StartsWithItsPhysicsProfileLife(bool spawn, string script)
+    {
+        // Retail physics type1 Air Trainer field3 is 0x40400000 (3.0).
+        // Both instances must carry that life without a destruction-catalog fallback.
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var registry = new Level100ActorRegistry(definitions);
+        Level100ActorId id = spawn
+            ? Assert.Single(registry.SpawnThing(registry.GetThingRef("Airfield")!.Value,
+                "Air Trainer", "SpawnerB", 1, script))
+            : registry.GetThingRef("Air Trainer")!.Value;
+        Level100ActorSnapshot actor = registry.GetActor(id);
+        Assert.Equal("Air Trainer", actor.DefinitionName);
+        Assert.Equal(script, actor.ScriptName);
+        Assert.Equal(3_000, actor.Health);
+        Assert.Equal(Level100ActorLifecycle.Alive, actor.Lifecycle);
+        Assert.True(actor.Active);
+        Assert.Equal(spawn, actor.SpawnOwnerId is not null);
+        int suppliedHealth = spawn
+            ? definitions.Spawns.Single(item => item.DefinitionName == "Air Trainer").InitialHealth
+            : definitions.Actors.Single(item => item.Name == "Air Trainer").InitialHealth;
+        Assert.Equal(3_000, suppliedHealth);
+        Assert.Equal(actor, new Level100ActorRegistry(definitions, registry.Snapshot).GetActor(id));
+    }
+
     [Fact]
     public void ReleasedRegistry_ConsumesBaseStateAndPreservesLeafMaskCompatibility()
     {
