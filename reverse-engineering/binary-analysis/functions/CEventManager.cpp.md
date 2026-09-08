@@ -167,9 +167,25 @@ measured from the pristine specimen named above. At frame 9, the result is
 `0x3ee66667`; division by 20 incorrectly gives `0x3ee66666`. The update that
 delivers gameplay pause advances this counter; following paused updates freeze
 it. Focused `SimulationTests.RetailEventClock_*` and canonical-hash checks cover
-those boundaries and reset independently of replay time. The simulation still
-has nominal terminal-event timing and incomplete controller-before-event
-dispatch ordering; this wiring does not establish complete scheduler parity.
+those boundaries and reset independently of replay time.
+
+The subsequent direct-controller correction moves Morph, Charge, Fire,
+ChangeWeapon, ZoomIn and ZoomOut ahead of actor/mission events, in that order.
+The shipped row initializer `[0x005142c4,0x00514350)` has SHA-256
+`c0abfe7983230cddf9804aee2043992a15fff5b25f5aa45df1002e9be3da3ca9`;
+the game-loop prefix `[0x0046eb37,0x0046ebd3)` has SHA-256
+`e4bcf364ef8b1f4e4b987edc38000ed9819fbc1927088d0237d8c8da7244a539`.
+The pinned `Controller.cpp:148-164,443-487` and `Player.cpp:319-398` establish
+synchronous button dispatch. A later unlock, disable or morph-completion event
+cannot retroactively change the earlier button's eligibility. Shots consume
+the retained emitter before movement. `SimulationTests.Controller*` exercises
+those causal boundaries; the disable case uses an isolated authored callback,
+not a player-acceptance route. The test driver's old post-Move aim prediction
+was removed to match the corrected launch phase.
+
+Full axis/controller dispatch, actor/event priority, nominal terminal-event
+timing and the natural pan boundary's later movement projection remain open.
+This is not complete scheduler or player-experience parity.
 
 ### `AddEvent_TimeFromNow` consumers (24 direct call sites, whole-image scan)
 

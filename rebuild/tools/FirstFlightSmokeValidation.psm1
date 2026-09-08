@@ -157,113 +157,12 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7.1-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
-    # REPINNED 2026-07-31 BY THE 30 Hz -> 20 Hz CORE MIGRATION (WORKSTREAM 4).
-    # Two independent native Godot runs produced byte-identical reports at this
-    # value, and it also matches the in-process scenario pinned by
-    # InteractiveSessionTests, which is an independent implementation of the
-    # same tape through a different host.
-    #
-    # FIELD-LEVEL ACCOUNTING - which fields moved and why. FOUR independent
-    # causes, any one of which alone would move this hash, so do not attribute
-    # it to a single one:
-    #   1. StateHasher version 32 -> 33. A hashed literal.
-    #   2. Level100ActorMechanicsSnapshot.RetailBaseTickAccumulatorThirtieths
-    #      was DELETED. It was the 20-of-every-30 base-tick accumulator, which
-    #      is the identity at 20 Hz. Four bytes leave every hashed tick.
-    #   3. StateHasher hashes state.Tick first, and the tape's terminal tick is
-    #      2148 where it was 3228 - within 0.2 s of the same simulated time.
-    #   4. Every trajectory is re-integrated against the reconverted constants
-    #      (retentions now the shipped floats verbatim, gravity now the shipped
-    #      0.01/0.002/0.005, input impulses reconverted under the damped-input
-    #      rule).
-    #
-    # The report fields that MOVED with it, all re-derived rather than nudged:
-    #   tick / level100MissionTick / totalSteps  3228 -> 2148
-    #   retailLevel100TerrainVertexCount         34398 -> 34499
-    #   retailLevel100TerrainTriangleCount       33308 -> 33476
-    # The fields that did NOT move, and are the evidence the tape still proves
-    # what it proved: targetsDestroyed 0, mode Walker, outcome Running,
-    # terminal None, the six script-gate booleans, fireHeldTicksSampled 4, all
-    # five edge counters 0, cappedFrameCount 0, droppedElapsedTicks 0,
-    # level100DeliveredHelpCount 1, level100ObjectiveMarkerCount 4, the
-    # thirteen delivered message ids and their speakers,
-    # targetVisualCount 9, openingPanActive false, and the whole retail-geometry
-    # block.
-    # REPINNED AGAIN 2026-08-01 by the VERTICAL DATUM (#154) and the
-    # LOOK-RESPONSE TABLE (#161).
-    # d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3
-    # -> e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16.
-    #
-    # PROTOCOL SATISFIED BEFORE PINNING: two native Godot runs produced
-    # BYTE-IDENTICAL reports - sha256
-    # a71fd60ad692e695abe42250135d2cf90b3838bc02d3c1ff35739e27a4b59a24,
-    # 3,859 bytes, all 86 fields equal - and the value also matches the
-    # in-process scenario pinned by InteractiveSessionTests, which is an
-    # independent implementation of the same tape through a different host.
-    #
-    # FIELD-LEVEL ACCOUNTING: stateHash is the ONLY field that moved. Every
-    # other field this gate pins is unchanged and re-asserted below - tick /
-    # level100MissionTick / totalSteps 2148, targetsDestroyed 0, mode Walker,
-    # outcome Running, terminal None, targetVisualCount 9, the thirteen
-    # delivered message ids and their speakers, level100DeliveredHelpCount 1,
-    # level100ObjectiveMarkerCount 4, fireHeldTicksSampled 4, four release edges,
-    # the other four edge counters 0, cappedFrameCount 0, droppedElapsedTicks 0, openingPanActive
-    # false, and the whole retail-geometry block including
-    # retailLevel100TerrainVertexCount 34499 and TriangleCount 33476.
-    #
-    # WHY IT MOVED, and it is two causes rather than one:
-    #   1. #154. StateHasher hashes every actor pose and the definition-set
-    #      identity. The datum correction moved 54 manifest leaves - the
-    #      vertical of all 44 actors and all 10 spawns - and the general
-    #      CThing::Init support clamp in Level100ActorRegistry.SeatOnGround now
-    #      seats every class rather than ground vehicles alone. The tape's own
-    #      behaviour did not change: it is walker-only, destroys nothing, and
-    #      every pinned schedule field above is identical.
-    #   2. #161. The look table is now one entry per representable input, which
-    #      changes 187 of the 1,001 responses by one permille each. Measured
-    #      alone on 2026-07-31 it did NOT move this hash - the tape's probe
-    #      points are all on entries the two tables agree about - so this is
-    #      #154's move with #161 riding along, not a sum of two.
-    # StateHasher v36 adds current and desired zoom after v35's selected
-    # Walker/Jet slots and Twin Vulcan reload countdown. This tape stays at
-    # unzoomed 1000/1000, so the move is structural; the in-process canonical
-    # tape independently measures the exact repin and native remains the host
-    # check.
-    # MOVED TWICE since that pin, and this file missed both: the shipped
-    # walker-yaw/contact batch e7aa7548 and the exact player weapon-scatter
-    # contract 383d5b3e each changed the canonical byte stream, and
-    # InteractiveSessionTests.cs pins the current hash c33268c1... (44/44 green
-    # on current main). The native smoke's observed hash equals that pin, so
-    # this is a sync to the already-landed deterministic state, not a re-pin of
-    # a regression.
-    # MOVED 2026-08-19 by the Level 100 TargetZone hit() contract e633b511
-    # (merged as 9d399278). Unlike the two misses noted above, this file did
-    # NOT lag behind InteractiveSessionTests.cs: both pins went stale together
-    # at that merge and are repinned together here. git bisect over rebuild/
-    # (good 383d5b3e, bad 75ecbd2e) names e633b511 exactly - TriggerEntered
-    # moved from TryMarkTriggerDispatchReady to MarkTriggerEventDispatched,
-    # TriggerEntryJetModeState defaults to NotInJetMode on dispatch, and the
-    # actor-script Pause wait-stop flag was added. All three are serialized by
-    # StateHasher, so the canonical byte stream moved. Every other field below
-    # is unchanged, which is the evidence the tape still proves what it proved.
-    # CAVEAT for whoever repins next: the two-byte-identical-native-reports
-    # protocol described above no longer holds. Two consecutive runs measured
-    # 2026-08-19 agree on stateHash and on 84 of 86 fields, but the report is
-    # not byte-identical - level100PlayingMessageId and
-    # level100VoiceStartedMessageIds track which tutorial voice line is playing
-    # at an arbitrary wall moment. That is presentation timing, not simulation
-    # state, and it is why identical-report-sha is no longer an available gate.
-    # MOVED 2026-08-23 by StateHasher v42, which serializes the reusable
-    # Thing/Actor base state. InteractiveSessionTests moved with that structural
-    # change, but this native gate did not. Two consecutive 2026-08-27 native
-    # runs now reproduce 78925d85... and match the independent in-process tape;
-    # their report hashes differ only because the wall-clock voice fields above
-    # sampled different playback positions. The debriefing landing that exposed
-    # the stale pin changes no Core state, smoke tape, or StateHasher owner.
-    # 2026-09-07: schema 44 includes raw weapon charge/readiness words. Two
-    # identical materialized Client input runs reproduced this hash. Native
-    # Godot/Windows execution of this changed gate remains pending.
-    Assert-SmokeValue 'stateHash' '739a0fe8992ee2e2384436db21cbf1fec1194cecdac2f5abcb746f22996b6ed1' $report.stateHash
+    # Shared 2,148-step tape expectation from InteractiveSessionTests. The
+    # controller phase now precedes callbacks and Move, so releases use retained
+    # emitter poses. Two identical in-process input runs reproduce this hash
+    # with the existing gameplay assertions intact. Native Godot/Windows
+    # execution of this updated retained gate remains pending.
+    Assert-SmokeValue 'stateHash' '4b225ba60ede77c1b00810fb3abdf225c376aadf348820355b47752f71a4ab04' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

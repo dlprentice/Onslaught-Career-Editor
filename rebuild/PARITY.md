@@ -263,7 +263,11 @@ Its zero inaccuracy still consumes both scatter random draws, checked by
 `SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder`.
 `SimulationTests.PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits`
 and the `PulseRadius_*` / `PulseMeshContact_*` checks cover those bounded changes.
-Spatial blasts, float motion/expiry and full controller/event ordering remain
+Direct Morph/Charge/Fire/ChangeWeapon/Zoom button calls now precede actor and
+mission callbacks, in the shipped order. Enable/disable and morph-completion
+regressions prevent a later callback from changing an earlier button result;
+combined movement/fire uses the retained launch pose. Full axis/event dispatch,
+spatial blasts and float motion/expiry remain
 open in the [round owner](../reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md).
 ReadyToCharge is pinned by
 `SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`;

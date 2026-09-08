@@ -1301,6 +1301,142 @@ public sealed class SimulationTests
         Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
     }
 
+    [Theory]
+    [InlineData(SimActions.Fire)]
+    [InlineData(SimActions.ChargeWeapon)]
+    public void ControllerWeaponInput_PrecedesTheAuthoredEnableCallback(SimActions action)
+    {
+        Simulation simulation = CreateFiringRangeBeforeWeaponEnable();
+        Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
+        Assert.True(simulation.Snapshot.Level100PlayerActive);
+
+        WorldSnapshot enabled = simulation.Step(new SimInput(0, 0, action));
+        Assert.True(enabled.Level100PulseCannonEnabled);
+        Assert.Empty(enabled.Level100WeaponFireEvents);
+        Assert.Empty(enabled.Projectiles);
+        Assert.Equal(0u, enabled.Level100PlayerWeaponState.PulseChargeBits);
+
+        WorldSnapshot next = simulation.Step(new SimInput(0, 0, action));
+        if (action == SimActions.Fire)
+        {
+            Assert.Equal(Level100PlayerWeapon.PulseCannonPod,
+                Assert.Single(next.Level100WeaponFireEvents).Weapon);
+            Assert.Single(next.Projectiles);
+        }
+        else
+        {
+            Assert.Equal(0x41200000u, next.Level100PlayerWeaponState.PulseChargeBits);
+        }
+    }
+
+    [Fact]
+    public void ControllerFireAndMove_UseTheRetainedEmitterBeforeMovement()
+    {
+        Simulation stationary = CreateFiringRangeExerciseSimulation();
+        Simulation moving = CreateFiringRangeExerciseSimulation();
+        WorldSnapshot before = moving.Snapshot;
+
+        ProjectileSnapshot stationaryRound = Assert.Single(
+            stationary.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
+        WorldSnapshot moved = moving.Step(new SimInput(1, 1, SimActions.Fire, LookX: 1));
+        ProjectileSnapshot movingRound = Assert.Single(moved.Projectiles);
+
+        Assert.NotEqual(before.PlayerPosition, moved.PlayerPosition);
+        Assert.NotEqual(before.FacingYawMicroRad, moved.FacingYawMicroRad);
+        Assert.Equal(stationaryRound.Position, movingRound.Position);
+        Assert.Equal(stationaryRound.ElevationMillimeters, movingRound.ElevationMillimeters);
+        Assert.Equal(stationaryRound.Velocity, movingRound.Velocity);
+        Assert.Equal(stationaryRound.VerticalVelocityMillimetersPerTick,
+            movingRound.VerticalVelocityMillimetersPerTick);
+    }
+
+    [Fact]
+    public void ControllerFire_PrecedesTheAuthoredDisableCallback()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        Assert.True(simulation.Snapshot.Level100PulseCannonEnabled);
+
+        // Isolate dispatch order with the existing mission-input seam. This
+        // executes LevelScript's real Abort Airborne Drones handler, including
+        // all four DisableWeapon calls; it is not a player-acceptance route.
+        WorldSnapshot disabled = simulation.Step(new SimInput(0, 0, SimActions.Fire),
+            [new Level100MissionInputFact(Level100MissionInput.AbortAirborneDrones)]);
+
+        Assert.Equal(Level100PlayerWeapon.PulseCannonPod,
+            Assert.Single(disabled.Level100WeaponFireEvents).Weapon);
+        Assert.Single(disabled.Projectiles);
+        Assert.False(disabled.Level100PulseCannonEnabled);
+        Assert.False(disabled.Level100VulcanCannonEnabled);
+        Assert.False(disabled.Level100MechVulcanCannonEnabled);
+        Assert.False(disabled.Level100MissilePodEnabled);
+        Assert.Empty(simulation.Step(new SimInput(0, 0, SimActions.Fire))
+            .Level100WeaponFireEvents);
+    }
+
+    [Fact]
+    public void ControllerMorph_BlocksLaterButtonsAndCompletionCannotReopenTheSameInput()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        simulation.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+
+        WorldSnapshot started = simulation.Step(new SimInput(0, 0,
+            SimActions.ToggleMode | SimActions.ChargeWeapon |
+            SimActions.Fire | SimActions.ChangeWeapon));
+        Assert.Equal(VehicleTransition.WalkerToJet, started.Transition);
+        Assert.Equal(SimulationConstants.WalkerToJetTransitionTicks,
+            started.TransformTicksRemaining);
+        Assert.Equal(0u, started.Level100PlayerWeaponState.PulseChargeBits);
+        Assert.Empty(started.Level100WeaponFireEvents);
+        Assert.Equal(Level100MissionWeapon.PulseCannonPod,
+            started.Level100WalkerSelectedWeapon);
+
+        for (int tick = 0; simulation.Snapshot.TransformTicksRemaining > 1; tick++)
+        {
+            Assert.True(tick < 100);
+            simulation.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot completed = simulation.Step(new SimInput(0, 0,
+            SimActions.ChargeWeapon | SimActions.Fire | SimActions.ChangeWeapon));
+        Assert.Equal(VehicleMode.Jet, completed.Mode);
+        Assert.Equal(VehicleTransition.None, completed.Transition);
+        Assert.Empty(completed.Level100WeaponFireEvents);
+        Assert.Equal(Level100MissionWeapon.MechVulcanCannon,
+            completed.Level100JetSelectedWeapon);
+        Assert.Equal(Level100PlayerWeapon.MechVulcanCannon,
+            Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire))
+                .Level100WeaponFireEvents).Weapon);
+    }
+
+    [Fact]
+    public void ControllerZoomRequests_FollowShippedOrderAndCannotUseLaterMorphCompletion()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        WorldSnapshot both = simulation.Step(new SimInput(0, 0,
+            SimActions.ZoomIn | SimActions.ZoomOut));
+        // ZoomOut row 14 follows ZoomIn row 13.
+        Assert.Equal(SimulationConstants.ZoomOutPermille, both.DesiredZoomPermille);
+        Assert.Equal(SimulationConstants.ZoomOutPermille, both.ZoomPermille);
+
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(simulation, state => state.Mode == VehicleMode.Jet, 100);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(simulation, state => state.TransformTicksRemaining == 1, 100);
+
+        WorldSnapshot completed = simulation.Step(new SimInput(0, 0, SimActions.ZoomIn));
+        Assert.Equal(VehicleMode.Walker, completed.Mode);
+        Assert.Equal(VehicleTransition.None, completed.Transition);
+        Assert.Equal(SimulationConstants.ZoomOutPermille, completed.DesiredZoomPermille);
+        Assert.Equal(SimulationConstants.ZoomOutPermille, completed.ZoomPermille);
+
+        WorldSnapshot next = simulation.Step(new SimInput(0, 0, SimActions.ZoomIn));
+        Assert.Equal(SimulationConstants.ZoomInPermille, next.DesiredZoomPermille);
+        Assert.Equal(SimulationConstants.ZoomOutPermille -
+            SimulationConstants.ZoomStepPermillePerTick, next.ZoomPermille);
+    }
+
     /// <summary>
     /// Retail does not launch an adjustable weapon parallel to the centre-screen
     /// ray. <c>CBattleEngine::GetLaunchPosition</c> traces from the current camera
@@ -1591,14 +1727,15 @@ public sealed class SimulationTests
             pulseRandom,
             SimulationConstants.PulseCannonInaccuracyMicroRadians);
 
+        WorldSnapshot pulseBefore = pulse.Snapshot;
         WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         Assert.Equal(
             pulseRandom.Seed,
             pulseShot.Level100ActorMechanics.ReleasedRandomSeed);
         AssertDirection(
             Assert.Single(pulseShot.Projectiles),
-            pulseShot.FacingYawMicroRad,
-            pulseShot.FacingPitchMicroRad,
+            pulseBefore.FacingYawMicroRad,
+            pulseBefore.FacingPitchMicroRad,
             pulseOffset);
 
         Simulation chargedPulse = CreateFiringRangeExerciseSimulation();
@@ -1613,12 +1750,13 @@ public sealed class SimulationTests
         chargedRandom.Next();
         chargedRandom.Next();
         Assert.NotEqual(chargedSeed, chargedRandom.Seed);
+        WorldSnapshot chargedBefore = chargedPulse.Snapshot;
         WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot chargedRound = Assert.Single(chargedShot.Projectiles);
         Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge, chargedRound.Kind);
         Assert.Equal(chargedRandom.Seed, chargedShot.Level100ActorMechanics.ReleasedRandomSeed);
-        AssertDirection(chargedRound, chargedShot.FacingYawMicroRad,
-            chargedShot.FacingPitchMicroRad, (0, 0));
+        AssertDirection(chargedRound, chargedBefore.FacingYawMicroRad,
+            chargedBefore.FacingPitchMicroRad, (0, 0));
 
         Simulation jet = CreatePlayingSimulation();
         jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
@@ -1642,6 +1780,9 @@ public sealed class SimulationTests
                 SimulationConstants.PlayerVulcanInaccuracyMicroRadians))
             .ToArray();
 
+        // Controller Fire samples the retained emitter. Jet Move changes the
+        // facing later in this same update, after the round already exists.
+        WorldSnapshot jetBefore = jet.Snapshot;
         WorldSnapshot jetShot = jet.Step(new SimInput(0, 0, SimActions.Fire));
         Assert.Equal(jetRandom.Seed, jetShot.Level100ActorMechanics.ReleasedRandomSeed);
         ProjectileSnapshot[] rounds = jetShot.Projectiles.OrderBy(item => item.Id).ToArray();
@@ -1650,8 +1791,8 @@ public sealed class SimulationTests
         {
             AssertDirection(
                 rounds[index],
-                jetShot.FacingYawMicroRad,
-                jetShot.FacingPitchMicroRad,
+                jetBefore.FacingYawMicroRad,
+                jetBefore.FacingPitchMicroRad,
                 jetOffsets[index]);
         }
         Assert.NotEqual(rounds[0].Velocity, rounds[1].Velocity);
@@ -2149,6 +2290,24 @@ public sealed class SimulationTests
         DriveIntoTrigger(simulation, Level100MissionTrigger.FiringRange);
         AdvanceUntil(simulation, state => state.Level100FiringRangeTargetsActive, 100);
         AdvanceUntil(simulation, state => state.Level100PulseCannonEnabled, 100);
+        return simulation;
+    }
+
+    private static Simulation CreateFiringRangeBeforeWeaponEnable()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        AdvanceUntilNavigation(simulation, "Target Zone 1", 500);
+        DriveIntoTrigger(simulation, Level100MissionTrigger.TargetZone1);
+        AdvanceUntilNavigation(simulation, "Firing Range", 100);
+        DriveIntoTrigger(simulation, Level100MissionTrigger.FiringRange);
+        AdvanceUntil(simulation, state => state.Level100FiringRangeTargetsActive, 100);
+        Level100ScriptContinuationSnapshot enable = Assert.Single(
+            simulation.Snapshot.Level100Mission.Continuations,
+            item => item.Execution.EventName == "Reached Firing Range" &&
+                item.WaitKind == Level100ScriptWaitKind.Pause);
+        while (simulation.Snapshot.Level100Mission.Tick + 1 < enable.DueTick)
+            simulation.Step(SimInput.Idle);
+        Assert.Equal(enable.DueTick - 1, simulation.Snapshot.Level100Mission.Tick);
         return simulation;
     }
 

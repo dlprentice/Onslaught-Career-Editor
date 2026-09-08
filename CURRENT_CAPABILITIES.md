@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-08 (first-training Ghidra, clock and projectile corrections).
+Last updated: 2026-09-08 (first-training Ghidra, input order and contact geometry).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -339,7 +339,8 @@ the regression failed before repair and all 32 affected tests passed. This is
 source/static progress, not a new live playthrough or parity result.
 
 The first-training review corrected five misleading Ghidra names/comments in
-the working database, followed by the missing physical-keyboard function boundary,
+the working database, followed by the missing physical-keyboard function boundary
+and a bounding-box reader mislabeled as a material loader,
 with separate full readback and verified PRE/POST recovery;
 the [checkpoint/working owner](reverse-engineering/ghidra/README.md) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
@@ -352,9 +353,11 @@ September 8 connected the shared retail event-clock calculation to weapon
 readiness, including level reset and gameplay pause. Large now uses its authored
 speed 20, nominal lifetime 7 seconds, contact radius 0.20 and direct damage 8;
 its zero aim spread preserves the two retail scatter random draws.
-Contact inputs preserve the original serialized BBOX/render-radius float words.
-Spatial blasts, Large effects, precise float motion/expiry and complete
-controller/event ordering remain open. These changes have not had a live
+Contact inputs preserve the original serialized BBOX/render-radius float words
+and per-part hierarchy/cache records, retaining absent caches explicitly.
+Direct Morph/Charge/Fire/ChangeWeapon/Zoom now precede actor and mission
+callbacks, using the retained launch pose. Full axis/event ordering, spatial
+blasts, Large effects and precise float motion/expiry remain open. These changes have not had a live
 desktop playthrough; focused results are in [VALIDATION.md](VALIDATION.md).
 
 World 110 now prepares the four landing-craft turret constructor inputs from
@@ -645,70 +648,41 @@ burst for a noise floor. The current reasons stay with the plan. Options ink-mas
 comparison measures text placement only. The main menu's recovered 50-frame
 transition does not settle these gaps.
 
-**The current outcome comes from four distinct deterministic runs; combining
-them would claim a client or human path that does not exist.**
+**September 8 deterministic tutorial results.** The cold-start client/Core
+harness visits startup, logo, montage, splash, click-to-start, main menu, New
+Game, level select, briefing, configuration, loading and gameplay. Its corrected
+controller phase fires before actor movement and mission callbacks. The test
+driver now aims from that retained launch pose instead of compensating for the
+former reversed phase order.
 
-The cold-start client/Core harness visits startup, logo, montage, splash,
-click-to-start, main menu, New Game, level select, briefing, configuration
-select, loading, and gameplay in released order. Driven through the client input
-adapter, that same cold first career **reaches `Won`**, through
-`event("Reached Target Zone 4")` and with failure reason `None`. The current
-2026-08-13 measurement destroys **all 22 targets**, including all six second-wave
-drones; the sub-40% abort remains false and primary objective 4 is `Complete`.
-It reaches `Won` at t9899 with 14,163 hull and state hash
-`17c8cb7c0f3d42966cb08ae6ab5fb0561b0d56f9d5504c80203697f8802ed405`.
+The client route destroys all 22 targets, including all six final-wave drones,
+keeps the abort false, completes primary objective 4 and reaches `Won` through
+`Reached Target Zone 4`. The measured endpoint is tick 8406, hull 10,494, hash
+`1ae4204dd6bbfe514ea8ec8b2938ab7d2491016cc39bb515895fc598c285e767`.
+The direct-Core control uses the same pointer-quantized commands and matches the
+complete state hash and pose trace. These are the two comparable inputs in
+[the cold-start tests](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
 
-A second, direct-Core cold run applies the same pointer/integer-pixel
-quantisation as the client path. It has the same terminal outcome and tick,
-state hash, and pose trace as the client/input-adapter run, so nothing in that
-result is evidence of an additional frontend or `InteractiveSession` defect. A
-third, **unquantised** direct-Core cold-career control also reaches **`Won`**
-and does the whole job: **all 22 destroyed**, all six wave-2 drones, the abort
-poll never fired, objective 4 `Complete`; its current measured endpoint is
-t8636 with 9,800 hull. All three results are asserted by
-[`rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
+The separate returning-career driver also clears all 22 targets without the
+abort, completes objective 4 and wins, at tick 7621 with hull 10,468. Its
+[full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs)
+retain the independent naive and trigger-disabled controls. The retired
+unquantized cold control used different commands and lost to water after two
+final-wave kills; forcing both different bot trajectories to win was not a
+client-adapter correctness contract. No steering gains or production water
+rules were changed to recover that outcome.
 
-A fourth, returning-player direct-Core run reaches `Won` with the four
-`SLOT_TUTORIAL_*` values already saved; it does not traverse the frontend or
-client adapter. It destroys all 22 targets, clears all six wave-2 drones without
-the abort, completes objective 4, and reaches `Won` at t6855 with 15,868 hull.
-Those endpoint values are direct assertions, not log-only measurements. That evidence is
-[`rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs).
-None of these is a human or automated native-Godot end-to-end proof.
-The synthetic driver reads exact actor health, poses and sampled terrain visibility.
-Its quantized commands use the player-input surface, but its perception remains
-omniscient; see `Level100ChainAutopilot.cs`. Human playability and whether the
-reconstructed tutorial is easier than retail remain unmeasured.
+These are synthetic in-process regressions. The driver reads exact health,
+poses and terrain visibility; its commands cross the player-input surface but
+its perception is omniscient. They do not establish human/native-Godot
+playability or retail equality. The complete desktop route remains pending.
 
-**Beat 9's kill count is trajectory-sensitive and these figures are the
-2026-08-13 values.**
-The `WaterLoss` that used to end the cold runs was fixed by the ferry
-hand-off clearance term; the wave-2 counts then moved again when the vertical
-datum (#154) and the look-response table (#161) landed, each of which flipped
-one career and not the other. `Level100ChainAutopilot.ErrorPole` carries the
-measurement showing single-term changes moving this count between 0 and 6. Read
-the counts as the value at the commit that wrote them, and the `Won` outcomes
-and the Target Zone 4 dispatch as the stable claims.
-
-**There is no remaining ferry loss.** `NavigateToZone` used to leave jet mode
-within 20 m of the target volume regardless of what was underneath, and on the
-ferry to Target Zone 4 that point is open water, so the run ditched. An altitude
-term on the hand-off — `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters` —
-fixed it, and [`Level100FerryLandingTests`](rebuild/OnslaughtRebuild.Core.Tests/Level100FerryLandingTests.cs)
-now measures **20/20 `Won` and zero `WaterLoss`** across a twenty-run
-one-permille sweep. Its horizontal-only adverse arm also reaches `Won` 20/20,
-so it no longer proves the old drowning outcome; it proves the mechanism instead:
-all 20 adverse Target Zone 4 hand-offs are above the permitted cruise tier while
-all 20 fixed hand-offs are at or below it. **The water rule itself was not
-touched**: it is a byte-faithful port of `BattleEngine.cpp`
-:1259-1262, pinned at water + 200 mm two independent ways in the same file. A
-naive water-landing *guard* remains **tried and measured worse** and is
-deliberately not restored.
-
-The returning-player terminal tick and hull are pinned by assertions. The cold
-client and unquantised-control endpoint values above are recorded by the tests
-and remain re-measurable; the client/quantised direct equality of tick, complete
-state hash, and pose trace is asserted.
+The retained [ferry oracle](rebuild/OnslaughtRebuild.Core.Tests/Level100FerryLandingTests.cs)
+checks hand-off altitude and the released water threshold; its older sweep
+results in [VALIDATION.md](VALIDATION.md) are dated evidence, not a new sweep
+following these controller changes. Exact bot endpoint values are sensitive to
+input and mechanics. Current claims come from their owning focused tests, not
+from old trajectories copied into this page.
 
 The current source tree and release packages do not include retail game assets
 or their conversions, other than two registered screenshots used for the app's

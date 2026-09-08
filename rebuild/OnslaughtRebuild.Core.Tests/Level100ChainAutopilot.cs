@@ -494,10 +494,9 @@ internal sealed class Level100ChainAutopilot
     /// about.</para>
     ///
     /// <para>The only difference is <see cref="SimActions.Fire"/> in beat 9.
-    /// Firing does not steer this airframe - <c>Simulation.TryFire</c> runs
-    /// after <c>UpdateMovement</c> and touches no motion state - so this is
-    /// the same sortie, flown by the same controller, that simply never shoots
-    /// anything down.</para>
+    /// <c>Simulation.TryFire</c> precedes <c>UpdateMovement</c> and does not
+    /// directly change motion state. This uses the same controller with its
+    /// shots suppressed; later shared-RNG and world outcomes can differ.</para>
     /// </summary>
     internal static Level100ChainAutopilot CreateWithWaveTwoTriggerHeldShut()
     {
@@ -2343,7 +2342,7 @@ internal sealed class Level100ChainAutopilot
                 _waveTwoTriggerHeldShut
                     ? SimActions.None
                     : WaveTwoFireGate(
-                        state, aim, slant, altitude, yawError, breakLookX, lookYAltitude),
+                        state, aim, slant, altitude),
                 0,
                 0,
                 breakLookX,
@@ -2372,7 +2371,7 @@ internal sealed class Level100ChainAutopilot
 
         SimActions actions = overWater || _waveTwoTriggerHeldShut
             ? SimActions.None
-            : WaveTwoFireGate(state, aim, slant, altitude, yawError, lookX, lookY);
+            : WaveTwoFireGate(state, aim, slant, altitude);
         return new SimInput(
             (sbyte)WaveTwoCrab(state),
             throttle,
@@ -2418,37 +2417,24 @@ internal sealed class Level100ChainAutopilot
     /// <summary>
     /// Pull the trigger whenever the reticle is genuinely on a drone, whatever
     /// the aeroplane is doing. The `Mech Air Bullet` costs no energy and the
-    /// cadence is gated by <c>MechVulcanReloadTicks</c>, so a shot taken while
+    /// cadence is gated by its stored ready time, so a shot taken while
     /// the nose sweeps past during a missile break is free.
     /// </summary>
     private static SimActions WaveTwoFireGate(
         WorldSnapshot state,
         SimVector3 aim,
         double slant,
-        int altitude,
-        double targetYawError,
-        short lookX,
-        short lookY)
+        int altitude)
     {
         double tolerance = FireTolerance(slant);
 
-        // The gate is tested against the pose the round will ACTUALLY be
-        // launched from and along, not the one in the snapshot the driver is
-        // reading. `Simulation.Step` runs `UpdateMovement` - and inside it
-        // `UpdateJetOrientation` - at line 188, and `TryFire` at line 192, so
-        // by the time `LaunchWalkerRound` reads `_facingYawMicroRad` and
-        // `PlayerPosition` both have already advanced by this tick's input.
-        //
-        // Measured on the baseline run: the nose moves up to 0.07 rad in that
-        // one tick, which is half of the whole tolerance at 15 m, and the
-        // muzzle moves up to 400 mm. Not one of the 76 wave-2 rounds the
-        // baseline fired passed within 500 mm of a drone measured on the swept
-        // segment, and the median miss was 1,198 mm - a systematic bias, not
-        // scatter.
-        double muzzleX = state.PlayerPosition.X + state.PlayerVelocity.X;
-        double muzzleZ = state.PlayerPosition.Z + state.PlayerVelocity.Z;
+        // Controller Fire precedes actor/mission events and player Move.
+        // Test the retained pose; this update's look and movement have not yet
+        // changed the emitter. The former one-tick prediction compensated for
+        // Simulation's reversed phase order and is now an aiming error.
+        double muzzleX = state.PlayerPosition.X;
+        double muzzleZ = state.PlayerPosition.Z;
         double muzzleY = state.PlayerElevationMillimeters +
-            state.PlayerVerticalVelocityMillimetersPerTick +
             SimulationConstants.PulseCannonEmitterUpMillimeters;
         double deltaX = (double)aim.X - muzzleX;
         double deltaY = (double)aim.Y - muzzleY;
@@ -2458,17 +2444,9 @@ internal sealed class Level100ChainAutopilot
 
         double yawError = NormalizeRadians(
             Math.Atan2(-deltaX, deltaZ) -
-            PredictedAngle(
-                state.FacingYawMicroRad,
-                state.WalkerYawVelocityMicroRadPerTick,
-                lookX,
-                SimulationConstants.JetYawInputMicroRadPerTick));
+            (state.FacingYawMicroRad / 1_000_000d));
         double pitchError = -Math.Atan2(deltaY, horizontal) -
-            PredictedAngle(
-                state.FacingPitchMicroRad,
-                state.WalkerPitchVelocityMicroRadPerTick,
-                lookY,
-                SimulationConstants.JetPitchInputMicroRadPerTick);
+            (state.FacingPitchMicroRad / 1_000_000d);
 
         return altitude >= 6_000 &&
             slant is > 800 and < 55_000 &&
@@ -2666,43 +2644,12 @@ internal sealed class Level100ChainAutopilot
     }
 
     /// <summary>
-    /// The attitude the airframe will hold on the tick a look command is
-    /// issued, for a command that has already been chosen. The forward half of
-    /// the recurrence <see cref="RateCommand"/> inverts.
-    /// </summary>
-    private static double PredictedAngle(
-        int angleMicroRad,
-        int velocityMicroRadPerTick,
-        short command,
-        int fullScaleMicroRadPerTick)
-    {
-        double velocity = (AttitudeRetain * velocityMicroRadPerTick) +
-            (fullScaleMicroRadPerTick * LookAxisResponse.Apply(command) / 1_000d);
-        return (angleMicroRad + velocity) / 1_000_000d;
-    }
-
-    /// <summary>
     /// Where the reticle goes on a wave-2 drone.
     ///
-    /// <para>Three corrections to the shared <see cref="AimPoint"/>, and the
-    /// shared one is deliberately left alone because it is exact for the
-    /// ground targets of beats 3-5 and moving it would move those beats.</para>
-    ///
-    /// <list type="number">
-    ///   <item><description><b>The muzzle has already moved.</b>
-    ///   <c>Simulation.Step</c> runs <c>UpdateMovement</c> before
-    ///   <c>TryFire</c>, so the round leaves from the snapshot position plus
-    ///   one tick of player velocity - up to 400 mm on this
-    ///   airframe.</description></item>
-    ///   <item><description><b>So has the drone.</b>
-    ///   <c>AdvanceLevel100ActorMechanics</c> is the first thing the same step
-    ///   does.</description></item>
-    ///   <item><description><b>The lead has to be three-dimensional.</b>
-    ///   <see cref="AimPoint"/> leads in the horizontal plane only, which is
-    ///   exact for a tank and wrong for a drone that is climbing, and it takes
-    ///   the flight time from the horizontal range rather than the slant
-    ///   range.</description></item>
-    /// </list>
+    /// <para>Start from the retained player and drone poses: controller Fire
+    /// runs before either Move. Lead the drone through the bullet's flight
+    /// time in three dimensions, using slant range. The shared ground-target
+    /// <see cref="AimPoint"/> remains unchanged.</para>
     ///
     /// <para>The round is the jet's <c>Mech Air Bullet</c> at
     /// <c>CRoundVelocity</c> 60.0, not the walker Pulse round's 35.0; the
@@ -2717,14 +2664,13 @@ internal sealed class Level100ChainAutopilot
         SimVector3 position = target.Pose.PositionMillimeters;
         SimVector3 velocity = target.Pose.LinearVelocityMillimetersPerTick;
 
-        double muzzleX = state.PlayerPosition.X + state.PlayerVelocity.X;
-        double muzzleY = state.PlayerElevationMillimeters +
-            state.PlayerVerticalVelocityMillimetersPerTick;
-        double muzzleZ = state.PlayerPosition.Z + state.PlayerVelocity.Z;
+        double muzzleX = state.PlayerPosition.X;
+        double muzzleY = state.PlayerElevationMillimeters;
+        double muzzleZ = state.PlayerPosition.Z;
 
-        double droneX = position.X + velocity.X;
-        double droneY = position.Y + velocity.Y;
-        double droneZ = position.Z + velocity.Z;
+        double droneX = position.X;
+        double droneY = position.Y;
+        double droneZ = position.Z;
 
         double flightTicks = 0;
         for (int iteration = 0; iteration < 3; iteration++)

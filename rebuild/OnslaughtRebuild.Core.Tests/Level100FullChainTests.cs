@@ -411,8 +411,11 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        Assert.Equal(6_992, final.Tick);
-        Assert.Equal(9_900, final.Hull);
+        // Current deterministic readings after controller-before-event firing
+        // and the driver's matching retained-pose gate. These are in-process
+        // fixture expectations; the semantic completion contract is above.
+        Assert.Equal(7_621, final.Tick);
+        Assert.Equal(10_468, final.Hull);
     }
 
     /// <summary>

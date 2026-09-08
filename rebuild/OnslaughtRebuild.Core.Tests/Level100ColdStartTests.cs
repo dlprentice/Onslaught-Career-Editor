@@ -9,7 +9,7 @@ namespace OnslaughtRebuild.Core.Tests;
 /// The deterministic in-process reconstruction path, once: cold start,
 /// frontend, Level 100, played through the client's own player-input surface.
 ///
-/// <para>It takes about six seconds, so it is paid for once.</para>
+/// <para>The complete route is shared by the tests below.</para>
 /// </summary>
 public sealed class Level100ColdStartRunFixture
 {
@@ -25,39 +25,12 @@ public sealed class Level100ColdStartRunFixture
 }
 
 /// <summary>
-/// The control that separates the two things the joined run changes at once.
-///
-/// <para>The joined run differs from
-/// <c>Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone</c> in
-/// exactly two ways: it is a <b>cold first career</b> rather than a returning
-/// player with all four tutorial slots saved, and its input travels through
-/// <c>OnslaughtRebuild.Client.InteractiveSession</c> rather than into
-/// <c>Simulation.Step</c>. This fixture holds the first constant and removes
-/// the second, so a divergence is attributed rather than guessed at.</para>
-/// </summary>
-public sealed class Level100ColdCareerDirectRunFixture
-{
-    internal Level100ChainAutopilot Driver { get; }
-
-    internal Level100MissionOutcome Outcome { get; }
-
-    public Level100ColdCareerDirectRunFixture()
-    {
-        Driver = Level100ChainAutopilot.Create(default);
-        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
-    }
-}
-
-/// <summary>
 /// The instrument check for <see cref="Level100InteractiveChainHost"/>.
 ///
 /// <para>Same cold career, same seed as the client's, straight into
-/// <c>Simulation.Step</c> — with ONLY the analogue-look quantisation the
-/// client's pointer path imposes applied on the way in. If this run's pose
-/// trace equals the client run's, the host's inverse of the pointer laws is
-/// exact and the whole-pixel quantum is the whole of what the client costs. If
-/// it does not, the joined run's divergence is this driver's arithmetic and
-/// every number taken from it is suspect.</para>
+/// <c>Simulation.Step</c> with the same whole-pixel look commands the client
+/// can deliver. Complete state and pose-trace equality check the adapter
+/// without requiring a different analogue command stream to win as well.</para>
 /// </summary>
 public sealed class Level100ClientPointerQuantisedRunFixture
 {
@@ -78,23 +51,19 @@ public sealed class Level100ClientPointerQuantisedRunFixture
 
 public sealed class Level100ColdStartTests
     : IClassFixture<Level100ColdStartRunFixture>,
-      IClassFixture<Level100ColdCareerDirectRunFixture>,
       IClassFixture<Level100ClientPointerQuantisedRunFixture>
 {
     private readonly ITestOutputHelper _output;
     private readonly Level100ColdStartRunFixture _coldStart;
-    private readonly Level100ColdCareerDirectRunFixture _control;
     private readonly Level100ClientPointerQuantisedRunFixture _quantised;
 
     public Level100ColdStartTests(
         ITestOutputHelper output,
         Level100ColdStartRunFixture coldStart,
-        Level100ColdCareerDirectRunFixture control,
         Level100ClientPointerQuantisedRunFixture quantised)
     {
         _output = output;
         _coldStart = coldStart;
-        _control = control;
         _quantised = quantised;
     }
 
@@ -146,42 +115,22 @@ public sealed class Level100ColdStartTests
     }
 
     /// <summary>
-    /// Startup through the tutorial as one deterministic in-process run, and
-    /// the honest current result.
+    /// Startup through the tutorial through the client's player-input surface.
+    /// The client and the direct Core control use the same deliverable mouse
+    /// commands. Both must destroy all 22 targets, avoid the low-hull abort,
+    /// complete objective 4, and win through the final trigger.
     ///
-    /// <para>The client/input-adapter path destroys all 22 targets, including
-    /// all six second-wave drones, never takes the sub-40 % hull abort, completes
-    /// primary objective 4, and reaches <see cref="Level100MissionOutcome.Won"/>
-    /// through <c>event("Reached Target Zone 4")</c>. The measured current run
-    /// wins at t9303 with 14,594 hull. The unquantised direct-Core control also
-    /// clears all 22 and wins, at t8039 with 4,929 hull.</para>
-    ///
-    /// <para>This supersedes the 2026-08-01 two-kill/abort trajectory. That
-    /// earlier branch was real for the then-current direct-hull shortcut, but
-    /// it was not a stable statement about the client adapter or mission: the
-    /// retail-derived shield/life damage funnel changed the resources and
-    /// survival path before beat 9. These assertions are re-derived from the
-    /// current run, not tuned to recover a preferred outcome.</para>
-    ///
-    /// <para><b>This run used to end <see cref="Level100MissionOutcome.Lost"/>
-    /// with <see cref="Level100MissionFailureReason.WaterLoss"/> at tick
-    /// 17,699</b>, on the ferry flight home, with every target in the level
-    /// already destroyed. See the terminal-state comment in the body for what
-    /// that was and what changed.</para>
-    ///
-    /// <para>This is not a human or native-Godot playthrough. It pins the
-    /// deterministic regression truth of this omniscient synthetic test driver.
-    /// It does not establish a frontend defect or released water-navigation
-    /// behavior. A naive water guard was already tried and measured worse; see
-    /// the ignored local evidence named in <c>developer_state.json</c> before
-    /// changing that behavior.</para>
+    /// <para>This omniscient in-process driver does not establish a human or
+    /// native-Godot playthrough. Arbitrary different analogue command streams
+    /// are not adapter controls; the independent returning-career, abort and
+    /// naive-driver scenarios remain in <see cref="Level100FullChainTests"/>.</para>
     /// </summary>
     [Fact]
     public void ColdStart_PlaysLevel100ThroughThePlayerInputSurface()
     {
         Level100ColdStartRun run = _coldStart.Run;
         WorldSnapshot final = run.Final;
-        WorldSnapshot controlFinal = _control.Driver.Snapshot;
+        WorldSnapshot controlFinal = _quantised.Driver.Snapshot;
 
         _output.WriteLine(
             "analogue look commands = {0}; unreachable through the client's " +
@@ -198,25 +147,18 @@ public sealed class Level100ColdStartTests
             final.Level100Mission.FailureReason,
             StateHasher.ComputeHex(final));
         _output.WriteLine(
-            "CONTROL outcome={0} tick={1} hull={2} reason={3} hash={4}",
-            _control.Outcome,
+            "POINTER CONTROL outcome={0} tick={1} hull={2} reason={3} hash={4}",
+            _quantised.Outcome,
             controlFinal.Tick,
             controlFinal.Hull,
             controlFinal.Level100Mission.FailureReason,
             StateHasher.ComputeHex(controlFinal));
         _output.WriteLine(
             "first divergent tick = {0}",
-            FirstDivergentTick(run.Driver!, _control.Driver));
+            FirstDivergentTick(run.Driver!, _quantised.Driver));
         _output.WriteLine(string.Empty);
         _output.WriteLine("--- client (through InteractiveSession) ---");
         foreach (string line in run.Driver!.Report)
-        {
-            _output.WriteLine(line);
-        }
-
-        _output.WriteLine(string.Empty);
-        _output.WriteLine("--- control (straight into Core) ---");
-        foreach (string line in _control.Driver.Report)
         {
             _output.WriteLine(line);
         }
@@ -265,7 +207,7 @@ public sealed class Level100ColdStartTests
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
         _output.WriteLine(
-            "CONTROL beats: air2={0} aborted={1} objective4={2}",
+            "POINTER CONTROL beats: air2={0} aborted={1} objective4={2}",
             controlFinal.Level100Actors.Actors.Count(actor =>
                 actor.TargetGroup == Level100MissionTargetGroup.AirborneTargets2 &&
                 actor.Lifecycle == Level100ActorLifecycle.Destroyed),
@@ -291,7 +233,7 @@ public sealed class Level100ColdStartTests
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
 
-        // The unquantised control independently clears the same wave and branch.
+        // The same-input direct Core control clears the same wave and branch.
         Assert.Equal(
             6,
             controlFinal.Level100Actors.Actors.Count(actor =>
@@ -356,24 +298,9 @@ public sealed class Level100ColdStartTests
             "Target Zone 4 never dispatched, so `Won` did not come from " +
             "`event(\"Reached Target Zone 4\")`.");
 
-        // AND THE CONTROL: the same cold first career driven unquantised
-        // straight into `Simulation.Step` also reaches `Won`. The
-        // pointer-quantised direct run matches the client run exactly; see the
-        // next test.
-        //
-        // THE CONTROL IS WHERE THE 20 Hz MIGRATION SHOWED FIRST, and it was
-        // not a host defect. Immediately after the migration this arm ended
-        // `Lost` / `PlayerDeath` at t6877 with hull 0 while the client arm
-        // still reached `Won` at t7177 - which reads like a divergence between
-        // the two drivers, and is not one: QUANTISED matched CLIENT bit for
-        // bit, so both hosts were exact. Both arms were losing beat 9 onto the
-        // released sub-40 % abort with one kill between them, and the control
-        // simply ran out of hull first because the unquantised look axis puts
-        // it on a slightly different trajectory. The cause was three
-        // rate-denominated constants in the DRIVER that the migration did not
-        // move; see `Level100ChainAutopilot.ErrorPole` for the arithmetic and
-        // the four-way measurement that attributes it.
-        Assert.Equal(Level100MissionOutcome.Won, _control.Outcome);
+        // The direct control uses the same deliverable inputs. The next test
+        // also requires complete state-hash and pose-trace equality.
+        Assert.Equal(Level100MissionOutcome.Won, _quantised.Outcome);
         Assert.Equal(
             Level100MissionFailureReason.None,
             controlFinal.Level100Mission.FailureReason);
@@ -386,18 +313,16 @@ public sealed class Level100ColdStartTests
             actor.Lifecycle == Level100ActorLifecycle.Destroyed);
 
     /// <summary>
-    /// The joined run is the direct run plus exactly one thing: the analogue
-    /// look quantisation the client's pointer path imposes.
+    /// The joined client route and direct Core control consume the same
+    /// deliverable commands.
     ///
     /// <para>Both runs are the same cold career on the same seed. One goes
     /// through <c>InteractiveSession</c>; the other goes straight into
     /// <c>Simulation.Step</c> with the look axes passed through
     /// <see cref="Level100InteractiveChainHost.DeliverablePermille"/> and
-    /// nothing else changed. <b>Equal traces mean the pointer inverse in
-    /// <see cref="Level100InteractiveChainHost"/> is exact</b>, which is what
-    /// entitles anyone to read the joined run's divergence from the unquantised
-    /// control as the measured effect of pointer quantisation, not as an
-    /// additional <c>InteractiveSession</c> or frontend defect.</para>
+    /// nothing else changed. Equal complete hashes and pose traces establish
+    /// that <see cref="Level100InteractiveChainHost"/> delivers that input
+    /// faithfully; they make no outcome claim for different commands.</para>
     /// </summary>
     [Fact]
     public void ClientRoute_IsTheDirectRoutePlusPointerQuantisationAndNothingElse()

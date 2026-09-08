@@ -373,7 +373,7 @@ public sealed class Simulation
         // controller Flush and event Flush, unless already paused. Therefore
         // the update that delivers PAUSE_GAME advances the clock; subsequent
         // paused UI updates do not. The existing nominal terminal-event timing
-        // remains a separate limitation, as does this Step's dispatch order.
+        // remains a separate limitation, as does full event priority below.
         if (!_level100Mission.GameplayPaused)
         {
             _retailEventFrameCount = unchecked(_retailEventFrameCount + 1);
@@ -382,6 +382,25 @@ public sealed class Simulation
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
         _level100Destruction.BeginTick();
+
+        // game.cpp:1922-1933 and pristine 0x0046EB5D/0x0046EB98/0x0046EBCE:
+        // AdvanceTime -> controller Flush -> event Flush. These button calls
+        // are synchronous, so they consume power, panning, weapon flags and
+        // the retained emitter before any actor/mission callback or Move.
+        // The shipped initializer at 0x005142C4-0x00514350 orders rows 9-14 as
+        // Morph, Charge, Fire, ChangeWeapon, ZoomIn, ZoomOut. A callback cannot
+        // retroactively authorize a button that was already refused.
+        bool transitionWasActive = _transition != VehicleTransition.None;
+        SimInput controllerInput = !_level100Mission.GameplayPaused &&
+            _level100Mission.Outcome == Level100MissionOutcome.Running &&
+            Level100PlayerActive && _level100OpeningTicksRemaining == 0
+            ? input
+            : SimInput.Idle;
+        TryToggleMode(controllerInput);
+        TryChargeWeapon(controllerInput);
+        TryFire(controllerInput);
+        TryChangeWeapon(controllerInput);
+        TryChangeZoom(controllerInput);
 
         // Read the pan state BEFORE AdvanceOpeningCamera consumes it. On the
         // tick the player skips, that call sets _level100OpeningTicksRemaining
@@ -417,26 +436,12 @@ public sealed class Simulation
             _level100Actors.GetLifecycle(_level100PlayerActorId) ==
                 Level100ActorLifecycle.Alive;
 
-        // Three independent released gates, not one restated three ways.
-        //
-        //   Outcome == Running        - the level is still being played.
-        //   Level100PlayerActive      - the SCRIPT's player.Deactivate() /
-        //                               player.Activate() pair, retail Battle
-        //                               Engine power at +0x580.
-        //   OpeningTicksRemaining     - GAME.GetGameState() < GAME_STATE_PLAYING
-        //   / skippedThePanThisTick     at Player.cpp:319.
-        //
-        // The last two are NOT redundant, even though the cold career's windows
-        // overlap. On a COLD first career the shipped init() runs
-        // player.Deactivate() (LevelScript.msl:51-52) and does not Activate
-        // until TUTORIAL_TECHNICIAN_01 clears at ~t996, so the player is
-        // inactive for the whole 180-tick pan and the activation gate alone
-        // would look sufficient. On a RETURNING career -
-        // GetSlot(SLOT_TUTORIAL_1) == TRUE, Level100TutorialProgress.
-        // Introduction - init() takes the other branch, never Deactivates, and
-        // the player is ACTIVE from tick 0. There the pan gate is the only
-        // thing holding the player still through the released fly-in.
-        // Level100SkipPanningTests asserts exactly that separation.
+        // Movement retains its later projection. Power and panning are distinct
+        // gates: LevelScript's returning-career branch never deactivates the
+        // player, so only panning suppresses its early input. The cold career
+        // remains inactive until the introduction callback. Skip suppression is
+        // covered separately by Level100SkipPanningTests; full axis/controller
+        // and Move dispatch parity is outside this direct-button correction.
         SimInput playerInput = _level100Mission.Outcome == Level100MissionOutcome.Running &&
             Level100PlayerActive &&
             _level100OpeningTicksRemaining == 0 &&
@@ -444,21 +449,31 @@ public sealed class Simulation
             ? input
             : SimInput.Idle;
 
-        AdvanceTransition();
+        // BECOME_JET/BECOME_WALKER complete in the later event phase. An existing
+        // transition still blocked the controller above on its final tick; a
+        // transition started by that controller retains its full first tick.
+        if (transitionWasActive)
+        {
+            AdvanceTransition();
+        }
         UpdateAugmentState();
 
-        if (_fireCooldownTicksRemaining > 0)
+        // These counters only project nominal reload duration; stored float
+        // ready times own eligibility. Do not shorten a value stamped by a
+        // successful volley in this update's earlier controller phase.
+        if (_fireCooldownTicksRemaining > 0 && !_weaponFireEvents.Any(
+            item => item.Weapon != Level100PlayerWeapon.MechTwinVulcanCannon))
         {
             _fireCooldownTicksRemaining--;
         }
 
-        if (_twinVulcanReloadTicksRemaining > 0)
+        if (_twinVulcanReloadTicksRemaining > 0 && !_weaponFireEvents.Any(
+            item => item.Weapon == Level100PlayerWeapon.MechTwinVulcanCannon))
         {
             _twinVulcanReloadTicksRemaining--;
         }
 
-        TryToggleMode(playerInput);
-        UpdateZoom(playerInput);
+        UpdateZoom();
         UpdateMovement(playerInput);
         UpdateWalkerHydraulicCue();
         UpdateWalkerFeet();
@@ -469,9 +484,6 @@ public sealed class Simulation
         SyncLevel100PlayerState();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
-        TryChargeWeapon(playerInput);
-        TryFire(playerInput);
-        TryChangeWeapon(playerInput);
         UpdateProjectiles();
         SyncLevel100PlayerState();
 
@@ -539,16 +551,12 @@ public sealed class Simulation
     /// live. <see cref="Step"/> now reads the pan state before this call runs.
     /// </para>
     /// <para>
-    /// <b>Still open, and deliberately not claimed:</b> the tick on which the
-    /// pan ends NATURALLY. There <c>StartPlayingState</c> is reached from
-    /// <c>FINISHED_PANNING</c> (<c>game.cpp:3051-3055</c>), which is the game's
-    /// own update rather than the controller dispatch, and the drop does not
-    /// establish whether that update runs before or after
-    /// <c>CController::DoMappings</c> within a frame. Core therefore leaves
-    /// that tick accepting input, exactly as it did before, rather than
-    /// extending the skip-tick rule to it on an argument. Only the skip tick is
-    /// proven, because there the state change happens <em>inside</em>
-    /// <c>ReceiveButtonAction</c>, below rows 0-15.
+    /// Direct controller calls now precede the event phase
+    /// (<c>game.cpp:1922-1933</c>, pristine <c>0x0046EB5D-0x0046EBCE</c>), so
+    /// they also see the pan still active on its natural final update. The
+    /// existing movement projection remains later and still accepts input on
+    /// that natural boundary. Full pan-camera/event and movement dispatch
+    /// parity remains open; only the direct button phase is corrected here.
     /// </para>
     /// <para>
     /// <c>GotoControlView()</c> (<c>Player.cpp:72-83</c>) is the camera half
@@ -1237,7 +1245,7 @@ public sealed class Simulation
         EmitFlightEvent(AquilaFlightEvents.JetToWalkerStarted);
     }
 
-    private void UpdateZoom(SimInput input)
+    private void TryChangeZoom(SimInput input)
     {
         // The pristine default physics.dat (175,603 bytes, sha256
         // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14)
@@ -1250,12 +1258,17 @@ public sealed class Simulation
             {
                 _desiredZoomPermille = SimulationConstants.ZoomInPermille;
             }
-            else if (input.HasAction(SimActions.ZoomOut))
+            if (input.HasAction(SimActions.ZoomOut))
             {
                 _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
             }
         }
+    }
 
+    private void UpdateZoom()
+    {
+        // Desired zoom is set by controller rows 13/14; interpolation remains
+        // in the later BattleEngine Move owner (BattleEngine.cpp:1435-1479).
         if (_zoomPermille < _desiredZoomPermille)
         {
             _zoomPermille = Math.Min(

@@ -113,6 +113,25 @@ Warehouse hierarchy inputs, signed zero and distinct matrix/store ordering.
 Those results were captured in the task transcript. They do not establish
 runtime cache/controller execution or the live FPU state.
 
+The direct-controller phase correction passed **23/23** focused Core checks,
+then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
+tests. Causal regressions first reproduced firing on the unlock update, losing
+a shot before the disable callback and using the moved emitter. The corrected
+cold pointer route clears all targets without abort and exactly matches its
+same-input direct-Core control's state hash and pose trace. The former
+unquantized cold fixture issued different commands and lost to water; it was
+retired as an invalid adapter-comparison requirement. The separate returning,
+naive and trigger-disabled controls remain.
+
+The repeated FirstFlight fingerprint is now
+`4b225ba60ede77c1b00810fb3abdf225c376aadf348820355b47752f71a4ab04`.
+Its retained Windows-launcher expectation was updated for the same tape, without
+Windows execution. Logs are `controller-phase-final-focused-20260908.log`,
+`controller-phase-final-smoke-20260908.log` and
+`controller-phase-final-consolidated-routes-20260908.log` in the Linux directory
+above. These are in-process regression results, not desktop tutorial acceptance
+or a new broad-suite/ferry sweep. Full axis and event-priority parity remain open.
+
 The World 110 integration review exposed a setter/restore mismatch: script
 assignment still used the World 100 list. The new focused regression failed
 before repair, then **24/24** affected construction/registry tests passed.
