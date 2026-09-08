@@ -113,6 +113,19 @@ Warehouse hierarchy inputs, signed zero and distinct matrix/store ordering.
 Those results were captured in the task transcript. They do not establish
 runtime cache/controller execution or the live FPU state.
 
+The subsequent passive-bounds and geometry precision correction passed **43/43**
+focused contact/pose tests. Eight new expectations first failed under the old
+53-bit model. The corrected model rounds each operation to 24 significand bits,
+retains intermediate exponent range and preserves the shipped three-axis bounds
+quirk. A separate native x87 PC24/RN probe passed **9/9** synthetic arithmetic
+checks, including a tangency decision and cancellation outside float32's
+exponent range; it restored its process control word and did not run the game.
+Logs are `geometry-pc24-{red,green}-20260908.log` and
+`geometry-pc24-x87-probe.log` in the Linux run directory above. These establish
+the bounded arithmetic model, not live gameplay precision or an integrated
+spatial explosion scan. The preceding 33-test bounds run used the now-superseded
+53-bit assumption and is retained as a dated result only.
+
 The direct-controller phase correction passed **23/23** focused Core checks,
 then **1/1** Client FirstFlight smoke and **5/5** final cold/returning-route
 tests. Causal regressions first reproduced firing on the unlock update, losing

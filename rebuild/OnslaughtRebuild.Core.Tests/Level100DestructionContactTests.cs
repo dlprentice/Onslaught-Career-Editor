@@ -8,6 +8,65 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class Level100DestructionContactTests
 {
     [Fact]
+    public void PassiveBoundsPreserveRetailThreeAxisDistanceQuirk()
+    {
+        // Synthetic discriminator: conventional sqrt(1+1+9) rejects radius3;
+        // shipped FADD gives sqrt(1+1+6), which accepts. No runtime shot claim.
+        Assert.True(Level100ContactMechanics.TryPassiveSphereBounds(
+            FloatVector(2, 2, 4), default, FloatBits(3), default, FloatVector(1, 1, 1), out int distance));
+        Assert.Equal(unchecked((int)0xbe2fb0d0), distance); // PC24 sqrt rounds before subtraction
+        Assert.True(Math.Sqrt(11) > 3);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0, 1, -1)]
+    [InlineData(2, 0, 0, 1, 0)]
+    [InlineData(0, -2, 0, 1, 0)]
+    [InlineData(0, 0, 2, 1, 0)]
+    [InlineData(4, 5, 0, 5, 0)]
+    [InlineData(4, 0, 5, 5, 0)]
+    [InlineData(0, 4, 5, 5, 0)]
+    public void PassiveBoundsIncludeFaceAndTwoAxisTangency(float x, float y, float z, float radius, float expected)
+    {
+        Assert.True(Level100ContactMechanics.TryPassiveSphereBounds(
+            FloatVector(x, y, z), default, FloatBits(radius), default, FloatVector(1, 1, 1), out int distance));
+        Assert.Equal(FloatBits(expected), distance);
+    }
+
+    [Fact]
+    public void PassiveBoundsAxisGateRejectsBeforeThreeAxisShortcut()
+    {
+        Assert.False(Level100ContactMechanics.TryPassiveSphereBounds(
+            FloatVector(2, 2, 4.5f), default, FloatBits(3), default, FloatVector(1, 1, 1), out _));
+    }
+
+    [Fact]
+    public void PassiveBoundsDisplacementRoundsRegisterXAndSpilledYEndpoints()
+    {
+        var origin = FloatVector(16_777_216, 16_777_216, 0);
+        Assert.True(Level100ContactMechanics.TryPassiveSphereBounds(
+            origin, FloatVector(1, 0, 0), 0, origin, default, out int xDistance));
+        Assert.True(Level100ContactMechanics.TryPassiveSphereBounds(
+            origin, FloatVector(0, 1, 0), 0, origin, default, out int yDistance));
+        Assert.Equal(0, xDistance);
+        Assert.Equal(0, yDistance);
+    }
+
+    [Fact]
+    public void PassiveBoundsRoundsSquareRootBeforeRadiusComparison()
+    {
+        // F32 sqrt(8) is slightly below the exact root. PC24 rounds FSQRT
+        // to that same word, so tangency is accepted; a 53-bit root rejects.
+        Assert.True(Level100ContactMechanics.TryPassiveSphereBounds(
+            FloatVector(3, 3, 0), default, 0x403504f3, default, FloatVector(1, 1, 1), out int distance));
+        Assert.Equal(0, distance);
+    }
+
+    private static int FloatBits(float value) => BitConverter.SingleToInt32Bits(value);
+    private static Level100FloatVector3Bits FloatVector(float x, float y, float z) =>
+        new(FloatBits(x), FloatBits(y), FloatBits(z));
+
+    [Fact]
     public void WarehouseRetainsOriginalPartRecordsWithoutSelectingRuntimePose()
     {
         var parts = Level100ContactCatalog.Instance.GetDefinition("Warehouse").Parts;

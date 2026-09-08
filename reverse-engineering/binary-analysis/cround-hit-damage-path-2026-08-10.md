@@ -394,6 +394,34 @@ eligible part in ascending native order. Passive bounds testing calls
 `Geometry__DistanceOutsideAabb` at `0x00479770`, subtracts the effective sphere
 radius and stores the accepted signed distance at report `+0xc4`.
 
+That distance helper has a shipped corner quirk: with all three axes outside,
+`0x004798a4` is `dc c0` (`FADD ST0,ST0`). It computes
+`sqrt((gapY*gapY + gapX*gapX) + (gapZ+gapZ))`, not the Euclidean three-square
+formula. The two-axis arms do square both gaps. Each gap is stored float32
+before these expressions, but its positive/inside classification uses the
+unspilled subtraction. The helper `[0x00479770,0x004798ca)` is 346 bytes,
+SHA-256 `709e7fe8806057eb4b0549d8a4d1039d36c14249dd2c0ac0bf906ccf9d8e2d44`.
+
+The passive prefix `[0x004ac140,0x004ac31a)` is 474 bytes, SHA-256
+`920e1728a21e98800ed01a5aabbd8eb0c4876e9d4206ad4311cb0dc3f8ab8180`.
+It recomputes displacement from `position + displacement - position`, keeping
+X wide but storing Y/Z endpoints first. It enlarges radius by half the resulting
+displacement length, tests the shifted midpoint against each box axis, then
+accepts only a nonpositive signed distance before storing that distance.
+`Level100ContactMechanics.TryPassiveSphereBounds` implements this bounded
+already-local-space operation with per-instruction 24-bit/RN rounding, including
+the corner quirk. [Device creation](../../rebuild/DETERMINISM.md#retail-geometry-precision)
+supports that precision intent; actual gameplay FPU state remains unmeasured.
+It does not select poses, parts or neighboring actors.
+The synthetic point `(2,2,4)`, zero displacement, origin zero, half-extents
+`(1,1,1)` and radius `3` distinguishes the shipped acceptance through `sqrt(8)-3`
+from conventional rejection through `sqrt(11)-3`. This is a numerical regression,
+not an observed Warehouse shot. A second discriminator at `(3,3,0)` with the
+same box and radius bits `0x403504f3` accepts after the PC24 square root rounds
+to that radius; the previous 53-bit root incorrectly rejected it under this
+model. Active/future collision branches and live FPU
+equivalence remain open.
+
 The append block `[0x004aca40,0x004acada)` (SHA-256
 `f9b60939e01e50726de01de7e5f107c6314a7a9e18f552161edd276e0d321f28`)
 copies the selected part-context `+0x88` into `report+0x68[i]`, copies that
@@ -429,8 +457,8 @@ normal-cache branch evaluates the hierarchy through `0x004b5330` and then applie
 the owner pose. It does not simply read the serialized CPOS/CORI values.
 
 The original [mesh pose arithmetic](../../rebuild/OnslaughtRebuild.Core/RetailMeshPartPose.cs)
-implements the bounded, single-frame normal-cache composition under an explicit
-53-bit round-to-nearest assumption. Hierarchy and owner matrix products have
+implements the bounded, single-frame normal-cache composition with per-operation
+24-bit round-to-nearest-even arithmetic. Hierarchy and owner matrix products have
 different accumulation orders. Both retain the X position dot through
 translation, while Y/Z dots receive float32 stores first. Initial interpolation
 still adds positive zero and can normalize negative zero. The half-open pins are

@@ -1,11 +1,13 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 Evidence: SOURCE — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
-the 20 Hz migration evidence.
+the 20 Hz migration evidence. Precision setup below is direct static byte evidence.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Summary: what "deterministic" means in this rebuild, what is enforced, and
 what a contributor must do when a change legitimately moves the trace hash.
 
@@ -22,6 +24,41 @@ what a contributor must do when a change legitimately moves the trace hash.
 - The prior 30 Hz step was migrated out in the 20 Hz work; constants that
   carry a tick-rate derivation are verbatim retail values where retail fixed
   them (e.g. the landing-thruster factor is retail's 0.975 exactly).
+
+## Retail geometry precision
+
+The mesh-pose and passive sphere/bounds primitives use 24-significand-bit,
+round-to-nearest-even operations with explicit float32 stores. `RetailFloat24`
+retains a double carrier between operations: x87 precision control does not
+reduce its exponent range to float32. This bounded geometry model is based on
+device-creation intent; the live gameplay control word remains unmeasured.
+
+Fresh September 8 inspection of pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, found:
+
+- Startup requests 53-bit precision through `0x00560cb1`, without changing
+  rounding control. `[0x00560cb1,0x00560cc3)` hashes to
+  `38dcf78aa3dab9d5e661a8e7fbaabcbab0399decb645b9d088bed196a65eef42`;
+  the control-word mapper `[0x00569449,0x005695af)` hashes to
+  `da7de6a1ae9b07904d40360b02191a2cdc51ff80da00eaabf02926bbc1ac8820`.
+- The retail import is `d3d9.dll!Direct3DCreate9`. Enumerated device flags are
+  `0x50`, `0x40`, `0x80` or `0x20`; device creation optionally adds `0x100`.
+  The call at `0x0052b2d6` omits FPU preservation. Enumeration
+  `[0x00529350,0x0052a6f2)` hashes to
+  `a8374027bde940888504ac4b3a1a1a701baacc01629cbbce08ab83d560d3a8dc`;
+  call setup `[0x0052b296,0x0052b2dd)` hashes to
+  `5d1e6f9214f99860e35ec513fb9ba5dbdcb5a9907832448db1c4ff05341c3685`.
+  Microsoft documents single-precision/RN initialization when preservation is
+  omitted ([D3DCREATE](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dcreate)).
+
+Pinned `d3dapp.cpp:337–341` enables preservation only for `_DEBUG`, but that
+source drop uses Direct3D 8; it does not establish the retail API or runtime.
+Startup precision alone therefore cannot justify 53-bit gameplay arithmetic.
+The focused Core tests and a separate native x87 PC24 probe distinguish root
+rounding, cancellation, signed zero and retained exponent range. They do not
+sample the game, driver or Proton control word. These primitives are not yet
+connected to the spatial explosion scan; no whole-simulation precision claim
+or replay fingerprint change follows from this correction.
 
 ## What Core may not do
 

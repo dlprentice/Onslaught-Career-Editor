@@ -3,8 +3,9 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
-/// Normal-cache, single-frame mesh pose arithmetic. Double intermediates model
-/// the declared 53-bit, round-to-nearest contract; float stores are explicit.
+/// Normal-cache, single-frame mesh pose arithmetic. Each operation rounds to
+/// 24 significand bits, ties to even; float stores are separate. This is the
+/// device-creation precision intent, pending a live control-word measurement.
 /// Does not select frames, refresh caches, run controllers or model early ticks.
 /// </summary>
 public static class RetailMeshPartPose
@@ -60,19 +61,24 @@ public static class RetailMeshPartPose
         double x = Dot(a, p, 0, x0, x1, x2);
         double y = Dot(a, p, 1, y0, y1, y2);
         double z = Dot(a, p, 2, 0, 1, 2);
-        return new(Store(x + Read(parent.PositionFloatBits.X)),
-            Store((double)(float)y + Read(parent.PositionFloatBits.Y)),
-            Store((double)(float)z + Read(parent.PositionFloatBits.Z)));
+        return new(Store(RetailFloat24.Add(x, Read(parent.PositionFloatBits.X))),
+            Store(RetailFloat24.Add((float)y, Read(parent.PositionFloatBits.Y))),
+            Store(RetailFloat24.Add((float)z, Read(parent.PositionFloatBits.Z))));
     }
 
     private static double Dot(ReadOnlySpan<double> a, ReadOnlySpan<double> p,
         int row, int k0, int k1, int k2) =>
-        (a[row * 3 + k0] * p[k0] + a[row * 3 + k1] * p[k1]) + a[row * 3 + k2] * p[k2];
+        RetailFloat24.Add(RetailFloat24.Add(
+            RetailFloat24.Multiply(a[row * 3 + k0], p[k0]),
+            RetailFloat24.Multiply(a[row * 3 + k1], p[k1])),
+            RetailFloat24.Multiply(a[row * 3 + k2], p[k2]));
 
     private static int Product(ReadOnlySpan<double> a, ReadOnlySpan<double> b,
         int row, int column, int k0, int k1, int k2) => Store(
-            (a[row * 3 + k0] * b[k0 * 3 + column] + a[row * 3 + k1] * b[k1 * 3 + column])
-            + a[row * 3 + k2] * b[k2 * 3 + column]);
+            RetailFloat24.Add(RetailFloat24.Add(
+                RetailFloat24.Multiply(a[row * 3 + k0], b[k0 * 3 + column]),
+                RetailFloat24.Multiply(a[row * 3 + k1], b[k1 * 3 + column])),
+                RetailFloat24.Multiply(a[row * 3 + k2], b[k2 * 3 + column])));
 
     private static double[] Components(Level100FloatBasis3Bits b) =>
     [
@@ -81,7 +87,7 @@ public static class RetailMeshPartPose
         Read(b.Row2X), Read(b.Row2Y), Read(b.Row2Z)
     ];
 
-    private static int Initial(int bits) => Store(Read(bits) + 0.0);
+    private static int Initial(int bits) => Store(RetailFloat24.Add(Read(bits), 0.0));
     private static int Store(double value) => BitConverter.SingleToInt32Bits((float)value);
     private static double Read(int bits)
     {

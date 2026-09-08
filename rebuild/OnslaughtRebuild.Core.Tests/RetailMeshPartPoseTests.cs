@@ -22,17 +22,17 @@ public sealed class RetailMeshPartPoseTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void TranslationSpillsYAndZBeforeAddingOwnerOrParent(bool owner)
+    public void TranslationRoundsRegisterAdditionBeforeAddingOwnerOrParent(bool owner)
     {
-        // Synthetic arithmetic discriminator, not a retail capture: preserving
-        // 1 + 2^-24 until subtracting 1 differs from storing that tie first.
+        // Synthetic PC24 discriminator: the arithmetic instruction rounds
+        // 1 + 2^-24 before subtracting 1, even without a float store.
         int halfUlp = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, -24));
         int minusOne = BitConverter.SingleToInt32Bits(-1);
         var parent = new RetailUnitAttachmentPose(new(minusOne, minusOne, minusOne), Ones);
         var local = new RetailUnitAttachmentPose(new(One, halfUlp, 0), Identity);
         var result = owner ? RetailMeshPartPose.ApplyOwner(parent, local)
             : RetailMeshPartPose.ComposeHierarchy(parent, local);
-        Assert.Equal(new Level100FloatVector3Bits(halfUlp, 0, 0), result.PositionFloatBits);
+        Assert.Equal(default(Level100FloatVector3Bits), result.PositionFloatBits);
     }
 
     [Theory]
@@ -40,10 +40,11 @@ public sealed class RetailMeshPartPoseTests
     [InlineData(true)]
     public void HierarchyAndOwnerHaveDistinctMeasuredMatrixOrders(bool negativeMiddle)
     {
-        // Synthetic 53-bit cancellation probe: the pair summed first changes
-        // whether the surviving unit is lost at 2^54. No orthonormality claim.
-        int large = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, 54));
-        int negative = BitConverter.SingleToInt32Bits(-MathF.ScaleB(1, 54));
+        // Synthetic PC24 cancellation probe: the pair summed first changes
+        // whether the surviving unit is lost at either sign of 2^25.
+        // The negative side of 2^24 still has unit spacing. No orthonormality claim.
+        int large = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, 25));
+        int negative = BitConverter.SingleToInt32Bits(-MathF.ScaleB(1, 25));
         int middle = negativeMiddle ? negative : One;
         int last = negativeMiddle ? One : negative;
         var local = new RetailUnitAttachmentPose(default, new(
@@ -57,6 +58,37 @@ public sealed class RetailMeshPartPoseTests
             : new Level100FloatBasis3Bits(0, 0, 0, 0, 0, One, 0, 0, One);
         Assert.Equal(hierarchy, RetailMeshPartPose.ComposeHierarchy(parent, local).BasisFloatBits);
         Assert.Equal(owner, RetailMeshPartPose.ApplyOwner(parent, local).BasisFloatBits);
+    }
+
+    [Fact]
+    public void OwnerRoundsProductsBeforeAdding()
+    {
+        // (1+2^-23)*(1-2^-23) rounds to 1 at PC24, before subtracting 1.
+        var owner = new RetailUnitAttachmentPose(default,
+            Identity with { Row0X = I(0xbf800000), Row0Y = 0x3f800001 });
+        var local = new RetailUnitAttachmentPose(new(One, 0x3f7ffffe, 0), Identity);
+        Assert.Equal(0, RetailMeshPartPose.ApplyOwner(owner, local).PositionFloatBits.X);
+    }
+
+    [Fact]
+    public void IntermediateProductsRetainExponentRangeUntilFloatStore()
+    {
+        // PC24 controls significand width, not x87's wider exponent range.
+        // These synthetic products overflow ordinary float before cancelling.
+        int large = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, 100));
+        int factor = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, 40));
+        var owner = new RetailUnitAttachmentPose(default,
+            Identity with { Row0X = large, Row0Y = large ^ int.MinValue, Row0Z = One });
+        var local = new RetailUnitAttachmentPose(new(factor, factor, One), Identity);
+        Assert.Equal(One, RetailMeshPartPose.ApplyOwner(owner, local).PositionFloatBits.X);
+
+        // Each 2^-150 term is below the float subnormal range; retaining both
+        // until their sum is stored yields the smallest positive float.
+        int small = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, -100));
+        int tinyFactor = BitConverter.SingleToInt32Bits(MathF.ScaleB(1, -50));
+        owner = new(default, Identity with { Row0X = small, Row0Y = small, Row0Z = 0 });
+        local = new(new(tinyFactor, tinyFactor, 0), Identity);
+        Assert.Equal(1, RetailMeshPartPose.ApplyOwner(owner, local).PositionFloatBits.X);
     }
 
     [Fact]

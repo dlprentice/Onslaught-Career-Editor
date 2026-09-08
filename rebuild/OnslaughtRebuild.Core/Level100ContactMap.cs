@@ -929,6 +929,107 @@ public static class Level100ContactMechanics
     private const double RetailTriangleEpsilonMillimeters = 10.0;
     private const double GeometryEpsilon = 1e-9;
 
+    /// <summary>
+    /// Passive sphere/part-bounds arm of retail 0x004ac140. Inputs are already
+    /// in the selected part's local space; no pose, activity or candidate selection
+    /// is performed. Operations round to 24 significand bits, ties to even,
+    /// following device-creation intent; the live FPU state remains unmeasured.
+    /// Inputs and stored intermediates must stay finite.
+    /// </summary>
+    public static bool TryPassiveSphereBounds(
+        Level100FloatVector3Bits position,
+        Level100FloatVector3Bits relativeDisplacement,
+        int radiusFloatBits,
+        Level100FloatVector3Bits boxOrigin,
+        Level100FloatVector3Bits boxHalfExtents,
+        out int signedDistanceFloatBits)
+    {
+        // Pristine 74154bfa…7750; cround-hit-damage-path-2026-08-10.md owns pins.
+        // [4ac140,4ac31a): 920e1728a21e98800ed01a5aabbd8eb0c4876e9d4206ad4311cb0dc3f8ab8180.
+        // X remains in the register stack; Y/Z endpoints spill before subtraction.
+        // Register operations still round at PC24; stores also bound exponents.
+        double px = ReadBoundsFloat(position.X), py = ReadBoundsFloat(position.Y), pz = ReadBoundsFloat(position.Z);
+        double dx = RetailFloat24.Subtract(RetailFloat24.Add(px, ReadBoundsFloat(relativeDisplacement.X)), px);
+        double dy = RetailFloat24.Subtract(BoundsFloat(RetailFloat24.Add(py, ReadBoundsFloat(relativeDisplacement.Y))), py);
+        double dz = RetailFloat24.Subtract(BoundsFloat(RetailFloat24.Add(pz, ReadBoundsFloat(relativeDisplacement.Z))), pz);
+        double radius = ReadBoundsFloat(radiusFloatBits);
+        double hx = ReadBoundsFloat(boxHalfExtents.X), hy = ReadBoundsFloat(boxHalfExtents.Y), hz = ReadBoundsFloat(boxHalfExtents.Z);
+        if (radius < 0 || hx < 0 || hy < 0 || hz < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(radiusFloatBits), "Bounds radius and half extents must be nonnegative.");
+        }
+        double lengthSquared = RetailFloat24.Add(
+            RetailFloat24.Add(RetailFloat24.Multiply(dz, dz), RetailFloat24.Multiply(dy, dy)),
+            RetailFloat24.Multiply(dx, dx));
+        double effectiveRadius = BoundsFloat(RetailFloat24.Add(
+            RetailFloat24.Multiply(RetailFloat24.Sqrt(lengthSquared), 0.5), radius));
+        double mx = BoundsFloat(RetailFloat24.Add(RetailFloat24.Multiply(dx, 0.5), px));
+        double my = BoundsFloat(RetailFloat24.Add(BoundsFloat(RetailFloat24.Multiply(BoundsFloat(dy), 0.5)), py));
+        double mz = BoundsFloat(RetailFloat24.Add(BoundsFloat(RetailFloat24.Multiply(BoundsFloat(dz), 0.5)), pz));
+        double qx = BoundsFloat(RetailFloat24.Subtract(mx, ReadBoundsFloat(boxOrigin.X)));
+        double qy = BoundsFloat(RetailFloat24.Subtract(my, ReadBoundsFloat(boxOrigin.Y)));
+        double qz = BoundsFloat(RetailFloat24.Subtract(mz, ReadBoundsFloat(boxOrigin.Z)));
+        if (!double.IsFinite(effectiveRadius) || !double.IsFinite(qx) ||
+            !double.IsFinite(qy) || !double.IsFinite(qz))
+        {
+            throw new ArgumentOutOfRangeException(nameof(position), "Bounds inputs must keep intermediate float stores finite.");
+        }
+        signedDistanceFloatBits = 0;
+        if (RetailFloat24.Subtract(qx, effectiveRadius) > hx || RetailFloat24.Add(qx, effectiveRadius) < -hx ||
+            RetailFloat24.Subtract(qy, effectiveRadius) > hy || RetailFloat24.Add(qy, effectiveRadius) < -hy ||
+            RetailFloat24.Subtract(qz, effectiveRadius) > hz || RetailFloat24.Add(qz, effectiveRadius) < -hz)
+        {
+            return false;
+        }
+
+        // Compare before the accepted report's float store.
+        double distance = RetailFloat24.Subtract(RetailDistanceOutsideBounds(qx, qy, qz, hx, hy, hz), effectiveRadius);
+        if (!(distance <= 0))
+        {
+            return false;
+        }
+        signedDistanceFloatBits = BitConverter.SingleToInt32Bits((float)distance);
+        return true;
+    }
+
+    private static double RetailDistanceOutsideBounds(double x, double y, double z,
+        double hx, double hy, double hz)
+    {
+        // [479770,4798ca): 709e7fe8806057eb4b0549d8a4d1039d36c14249dd2c0ac0bf906ccf9d8e2d44.
+        double gx = RetailFloat24.Subtract(Math.Abs(x), Math.Abs(hx));
+        double gy = RetailFloat24.Subtract(Math.Abs(y), Math.Abs(hy));
+        double gz = RetailFloat24.Subtract(Math.Abs(z), Math.Abs(hz));
+        int outside = (gx > 0 ? 1 : 0) | (gy > 0 ? 2 : 0) | (gz > 0 ? 4 : 0);
+        x = BoundsFloat(gx); y = BoundsFloat(gy); z = BoundsFloat(gz);
+        return outside switch
+        {
+            0 => 0,
+            1 => x,
+            2 => y,
+            4 => z,
+            3 => RetailFloat24.Sqrt(RetailFloat24.Add(RetailFloat24.Multiply(y, y), RetailFloat24.Multiply(x, x))),
+            5 => RetailFloat24.Sqrt(RetailFloat24.Add(RetailFloat24.Multiply(z, z), RetailFloat24.Multiply(x, x))),
+            6 => RetailFloat24.Sqrt(RetailFloat24.Add(RetailFloat24.Multiply(z, z), RetailFloat24.Multiply(y, y))),
+            // Shipped 0x004798a4 is DC C0 (FADD ST0,ST0), not a square.
+            7 => RetailFloat24.Sqrt(RetailFloat24.Add(
+                RetailFloat24.Add(RetailFloat24.Multiply(y, y), RetailFloat24.Multiply(x, x)),
+                RetailFloat24.Add(z, z))),
+            _ => throw new InvalidOperationException("Invalid bounds classification."),
+        };
+    }
+
+    private static double BoundsFloat(double value) => (float)value;
+
+    private static double ReadBoundsFloat(int bits)
+    {
+        float value = BitConverter.Int32BitsToSingle(bits);
+        if (!float.IsFinite(value))
+        {
+            throw new ArgumentOutOfRangeException(nameof(bits), "Bounds inputs must be finite.");
+        }
+        return value;
+    }
+
     public static bool TrySweepPulse(
         Level100Vector3 start,
         Level100Vector3 end,
