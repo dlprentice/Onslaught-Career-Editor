@@ -1065,10 +1065,18 @@ public sealed class Level100ActorRegistry
         return Require(actorId).BaseState;
     }
 
+    internal ThingActorBaseState GetPlaneState(Level100ActorId actorId)
+    {
+        Actor actor = Require(actorId);
+        if (!IsAdmittedPlane(actor.DefinitionName) || !actor.BaseState.HasRetailPlaneMotion)
+            throw new InvalidOperationException("The actor has no admitted Level100 Plane state.");
+        return actor.BaseState;
+    }
+
     private Actor RequireMutable(Level100ActorId actorId)
     {
         Actor actor = Require(actorId);
-        if (actor.BaseState.HasRetailConstruction)
+        if (actor.BaseState.HasRetailConstruction && !actor.BaseState.HasRetailPlaneMotion)
             throw new NotSupportedException("Retail construction needs its complete world lifecycle before legacy actor mutation.");
         return actor;
     }
@@ -1100,7 +1108,8 @@ public sealed class Level100ActorRegistry
         string definitionName,
         string spawnerName,
         int count,
-        string scriptName)
+        string scriptName,
+        int eventTimeFloatBits = 0)
     {
         Actor owner = Require(ownerId);
         ArgumentException.ThrowIfNullOrEmpty(definitionName);
@@ -1118,10 +1127,15 @@ public sealed class Level100ActorRegistry
                 $"{definitionName}/{count}.");
         }
 
-        int ordinal = AllocateMissionOrdinal(definition);
-        Level100ActorId actorId = AllocateId();
         Level100ActorPoseSnapshot pose =
             SeatOnGround(definitionName, definition.InitialPose);
+        // Validate the complete raw creation before consuming identity or
+        // mission ordinal. InitialPose is only a compatibility projection.
+        ThingActorBaseState baseState = IsAdmittedPlane(definitionName)
+            ? CreateSpawnedPlaneState(owner, definition, eventTimeFloatBits)
+            : CreateBaseState(pose, definition.ThingTypeMask);
+        int ordinal = AllocateMissionOrdinal(definition);
+        Level100ActorId actorId = AllocateId();
         _actors.Add(actorId.Value, new Actor
         {
             ActorId = actorId,
@@ -1136,7 +1150,7 @@ public sealed class Level100ActorRegistry
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = ReleasedInitialHealth(definitionName, definition.InitialHealth),
-            BaseState = CreateBaseState(pose, definition.ThingTypeMask),
+            BaseState = baseState,
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = ordinal,
         });
@@ -1593,7 +1607,7 @@ public sealed class Level100ActorRegistry
             MidpointRounding.AwayFromZero));
     }
 
-    private static Actor CreateActor(
+    private Actor CreateActor(
         Level100ActorId actorId,
         Level100ActorDefinition definition,
         Level100ActorPoseSnapshot pose) =>
@@ -1609,17 +1623,107 @@ public sealed class Level100ActorRegistry
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = definition.InitialHealth,
-            BaseState = CreateBaseState(pose, definition.ThingTypeMask),
+            BaseState = IsAdmittedPlane(definition.DefinitionName)
+                ? CreateAuthoredPlaneState(definition)
+                : CreateBaseState(pose, definition.ThingTypeMask),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = definition.TargetOrdinal,
             Trigger = definition.Trigger,
         };
+
+    private bool IsAdmittedPlane(string? definitionName) =>
+        _definitions.WorldNumber == 100 && _initializeSupport &&
+        definitionName is "Air Trainer" or "Target Drone" &&
+        _definitions.FindMotionDefinition(definitionName)?.MotionClass == Level100ActorMotionClass.Plane;
+
+    private ThingActorBaseState CreateAuthoredPlaneState(Level100ActorDefinition definition)
+    {
+        if (definition.InitialPose.LinearVelocityMillimetersPerTick != SimVector3.Zero ||
+            definition.InitialPose.AngularVelocityMicroRadiansPerTick != SimVector3.Zero)
+            throw new NotSupportedException("Selected Plane construction requires the admitted zero initial velocity.");
+        Level100AuthoredTransform input = definition.AuthoredTransform;
+        return CreatePlaneState(input.RetailPositionFloatBits,
+            input.RetailEulerFloatBits, definition.ThingTypeMask, 0);
+    }
+
+    private ThingActorBaseState CreateSpawnedPlaneState(Actor owner,
+        Level100SpawnDefinition definition, int eventTimeFloatBits)
+    {
+        // The selected Airfield remains an immutable seated owner. Do not
+        // reverse its rounded public pose into a purported retail transform.
+        Level100ActorDefinition input = _definitions.GetActorDefinition(owner.DefinitionIdentity);
+        if (owner.SpawnOwnerId is not null || !owner.IsStatic ||
+            owner.DefinitionName != "Forseti Light Fighter Airfield" ||
+            definition.SpawnerName is not ("SpawnerA" or "SpawnerB") ||
+            ToLevel100Pose(owner.BaseState.Snapshot) != SeatOnGround(input.DefinitionName, input.InitialPose))
+            throw new NotSupportedException("Plane spawning requires the unchanged authored Airfield pose.");
+        var parent = new RetailUnitAttachmentPose(
+            SeatRetailPosition(input.AuthoredTransform.RetailPositionFloatBits),
+            RetailUnitEuler.BuildBasis(input.AuthoredTransform.RetailEulerFloatBits));
+        Level100SpawnerTransform local = definition.AuthoredEmitterTransform;
+        // 4b4ef2..4b50bb supplies the PC24 owner/cache product. This admits
+        // the supplied emitter as the selected cached frame; it does not
+        // implement animation/frame selection or a moving spawn owner.
+        RetailUnitAttachmentPose emitter = RetailMeshPartPose.ApplyOwner(parent,
+            new(local.LocalPositionFloatBits, local.LocalBasisFloatBits));
+        Level100FloatVector3Bits position = emitter.PositionFloatBits;
+        if (BitConverter.Int32BitsToSingle(position.X) == 0 &&
+            BitConverter.Int32BitsToSingle(position.Y) == 0 &&
+            BitConverter.Int32BitsToSingle(position.Z) == 0)
+            throw new NotSupportedException("The zero-emitter owner fallback is outside the selected Airfield route.");
+        Level100FloatVector3Bits euler = RetailPlaneMotion.EulerFromSpawnerBasis(emitter.BasisFloatBits);
+        return CreatePlaneState(position, euler, definition.ThingTypeMask, eventTimeFloatBits);
+    }
+
+    private Level100FloatVector3Bits SeatRetailPosition(Level100FloatVector3Bits position)
+    {
+        float height = RetailWorldTerrain.SampleRetailHeight(_terrain.Heightfield, position);
+        float z = BitConverter.Int32BitsToSingle(position.Z);
+        // Retail Z points down. Strict comparisons retain the authored zero
+        // word when neither clamp acts, unlike unconditional min/negation.
+        if (z > height) position = position with { Z = BitConverter.SingleToInt32Bits(height) };
+        if (BitConverter.Int32BitsToSingle(position.Z) > _terrain.Heightfield.WaterLevel)
+            position = position with { Z = BitConverter.SingleToInt32Bits(_terrain.Heightfield.WaterLevel) };
+        return position;
+    }
+
+    private ThingActorBaseState CreatePlaneState(Level100FloatVector3Bits position,
+        Level100FloatVector3Bits euler, uint specificTypeMask, int eventTimeFloatBits)
+    {
+        // Pristine 74154bfa…7750: Actor [401255,40131a) and ComplexThing
+        // [4f4008,4f40cd) use the same trig/arithmetic/stores as Unit's
+        // [4fa724,4fa7f1) suffix. Preserve its signed zeros rather than the
+        // materializer's simpler yaw projection. Managed trig remains bounded.
+        var pose = new RetailActorPoseSnapshot(position, RetailUnitEuler.BuildBasis(euler));
+        var state = new ThingActorBaseState(new(SimVector3.Zero, pose.BasisFloatBits),
+            SimVector3.Zero, SimVector3.Zero, specificTypeMask);
+        state.BeginRetailPlane(pose, RetailPlaneMotion.CreateInitial(pose, euler),
+            eventTimeFloatBits, specificTypeMask);
+        // Unit seating happens after Actor Init: the ground arm teleports
+        // both positions; the later water clamp changes current position only.
+        float ground = RetailWorldTerrain.SampleRetailHeight(_terrain.Heightfield, position);
+        if (BitConverter.Int32BitsToSingle(position.Z) > ground)
+        {
+            position = position with { Z = BitConverter.SingleToInt32Bits(ground) };
+            state.TeleportRetailPosition(position);
+        }
+        if (BitConverter.Int32BitsToSingle(position.Z) > _terrain.Heightfield.WaterLevel)
+            state.SetRetailPosition(position with { Z = BitConverter.SingleToInt32Bits(_terrain.Heightfield.WaterLevel) });
+        return state;
+    }
 
     private void ValidateRestoredActor(
         Actor actor,
         Level100ActorSnapshot source,
         Level100ActorRegistrySnapshot snapshot)
     {
+        if (IsAdmittedPlane(source.DefinitionName) && !actor.BaseState.HasRetailPlaneMotion)
+            throw new ArgumentException("Selected Plane snapshots require their creation-owned raw state.", nameof(snapshot));
+        if (actor.BaseState.HasRetailPlaneMotion &&
+            (_definitions.WorldNumber != 100 || !_initializeSupport ||
+             source.DefinitionName is not ("Air Trainer" or "Target Drone") ||
+             _definitions.FindMotionDefinition(source.DefinitionName)?.MotionClass != Level100ActorMotionClass.Plane))
+            throw new NotSupportedException("Raw Plane motion is admitted only for the selected Level100 aircraft definitions.");
         if (source.Pose is null ||
             !HasFinitePose(source.Pose) ||
             actor.Health < 0 ||

@@ -622,7 +622,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         // The round's own frame, from its (yaw, pitch): forward is the third
-        // basis column and up is the second, matching BuildPlaneBasis.
+        // basis column and up is the second in the Core pose projection.
         (int yawSin, int yawCos) = FixedSinCos(round.YawMicroRadians);
         (int pitchSin, int pitchCos) = FixedSinCos(round.PitchMicroRadians);
         long rightX = yawCos;

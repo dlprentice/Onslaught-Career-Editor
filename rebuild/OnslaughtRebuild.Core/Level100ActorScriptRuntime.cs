@@ -90,6 +90,8 @@ public sealed class Level100ActorScriptRuntime
 {
     private readonly Level100ActorRegistry _actors;
     private readonly Level100ActorId _playerActorId;
+    private readonly Action<Level100ActorId>? _afterSpawn;
+    private readonly Func<int>? _eventTimeFloatBits;
     private readonly SortedDictionary<int, Instance> _instances = [];
     private readonly List<Level100ActorScriptEventPosted> _postedEvents = [];
     private readonly List<Level100ActorScriptCommand> _commands = [];
@@ -106,10 +108,20 @@ public sealed class Level100ActorScriptRuntime
 
     public Level100ActorScriptRuntime(
         Level100ActorRegistry actors,
-        Level100ActorId playerActorId)
+        Level100ActorId playerActorId) : this(actors, playerActorId, null, null)
+    {
+    }
+
+    public Level100ActorScriptRuntime(
+        Level100ActorRegistry actors,
+        Level100ActorId playerActorId,
+        Action<Level100ActorId>? afterSpawn,
+        Func<int>? eventTimeFloatBits)
     {
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _playerActorId = ValidatePlayer(playerActorId);
+        _afterSpawn = afterSpawn;
+        _eventTimeFloatBits = eventTimeFloatBits;
     }
 
     public Level100ActorScriptRuntime(
@@ -120,6 +132,16 @@ public sealed class Level100ActorScriptRuntime
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _playerActorId = ValidatePlayer(playerActorId);
         Restore(snapshot ?? throw new ArgumentNullException(nameof(snapshot)));
+    }
+
+    public Level100ActorScriptRuntime(
+        Level100ActorRegistry actors,
+        Level100ActorId playerActorId,
+        Level100ActorScriptRuntimeSnapshot snapshot,
+        Action<Level100ActorId>? afterSpawn,
+        Func<int>? eventTimeFloatBits)
+        : this(actors, playerActorId, snapshot)
+    {
     }
 
     public Level100ActorScriptRuntimeSnapshot Snapshot => new(
@@ -973,9 +995,13 @@ public sealed class Level100ActorScriptRuntime
                     arguments[0].AsString(),
                     arguments[1].AsString(),
                     arguments[2].AsInteger(),
-                    arguments[3].AsString());
+                    arguments[3].AsString(),
+                    _eventTimeFloatBits?.Invoke() ?? 0);
                 foreach (Level100ActorId actorId in spawned)
                 {
+                    // Physical/guide/destruction admission precedes the new
+                    // script's initializer, just as for mission-owned spawns.
+                    _afterSpawn?.Invoke(actorId);
                     Attach(actorId, arguments[3].AsString());
                     Instance spawnedInstance = RequireInstance(actorId);
                     InitializeInstance(spawnedInstance);

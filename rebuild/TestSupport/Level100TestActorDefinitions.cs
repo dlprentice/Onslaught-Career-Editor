@@ -7,6 +7,31 @@ namespace OnslaughtRebuild.TestSupport;
 
 internal static class Level100TestActorDefinitions
 {
+    // Artificial envelope for testing older hash formats in isolation. This
+    // deliberately removes the optional aircraft extension; it is not an
+    // alternate playable world or an admitted registry-restore snapshot.
+    internal static WorldSnapshot LegacyHashEnvelope(WorldSnapshot state) => state with
+    {
+        Level100Actors = state.Level100Actors with
+        {
+            BaseStates = state.Level100Actors.BaseStates.Select(item => item.State.RetailPlane is null ? item : item with
+            {
+                State = item.State with
+                {
+                    RetailPlane = null, RetailPoses = null, RetailMotion = null,
+                    Flags = item.State.Flags & ~ThingActorFlags.InMapWho,
+                },
+            }).ToArray(),
+        },
+        Level100ActorMechanics = state.Level100ActorMechanics with
+        {
+            PlaneEvents = null,
+            Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with { PlaneGuide = null }).ToArray(),
+        },
+    };
+
+    private static readonly Lazy<Level100ActorDefinitionSet> s_materialized = new(LoadMaterialized);
+
     internal static Level100ActorDefinitionSet LoadMaterialized() =>
         Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(Path.Combine(
             AppContext.BaseDirectory, "Assets", "Level100", "StaticWorld",
@@ -29,7 +54,15 @@ internal static class Level100TestActorDefinitions
             int health = 0,
             bool active = true,
             bool isStatic = true,
-            uint thingTypeMask = 0) => actors.Add(new Level100ActorDefinition(
+            uint thingTypeMask = 0)
+        {
+            // These creation inputs are now consumed as raw retail state.
+            // Keep fixture identity/script policy, but do not invent zero
+            // transforms for the authored Plane or its immutable spawn owner.
+            Level100ActorDefinition? released = name is "Airfield" or "Air Trainer"
+                ? s_materialized.Value.Actors.Single(item => item.Name == name)
+                : null;
+            actors.Add(new Level100ActorDefinition(
                 actors.Count,
                 identity,
                 name,
@@ -39,12 +72,13 @@ internal static class Level100TestActorDefinitions
                 thingTypeMask,
                 isStatic,
                 active,
-                health,
-                AuthoredTransform(),
-                pose,
+                released?.InitialHealth ?? health,
+                released?.AuthoredTransform ?? AuthoredTransform(),
+                released?.InitialPose ?? pose,
                 group,
                 ordinal,
                 trigger));
+        }
 
         Add("test:control-tower", "Control Tower", "Control Tower", "Facilities", "fb_control_tower", Pose(-13_290, -760, 5_603));
         Add("test:tank-factory", "Tank Factory", "Forseti Pulse Tank Factory", "TankFactory", "fb_tank_factory", Pose(10_125, 0, 22_375, 1_789_434));
@@ -131,7 +165,13 @@ internal static class Level100TestActorDefinitions
             string? mesh,
             Level100MissionTargetGroup group,
             int fixedOrdinal,
-            int maximum) => spawns.Add(new Level100SpawnDefinition(
+            int maximum)
+        {
+            Level100SpawnDefinition? released = ownerIdentity == "test:airfield"
+                ? s_materialized.Value.Spawns.Single(item =>
+                    item.DefinitionName == definition && item.SpawnerName == spawner && item.ScriptName == script)
+                : null;
+            spawns.Add(new Level100SpawnDefinition(
                 spawns.Count,
                 $"test:spawn:{ownerIdentity}:{definition}:{spawner}:{script}",
                 ownerIdentity,
@@ -141,31 +181,23 @@ internal static class Level100TestActorDefinitions
                 mesh,
                 0,
                 true,
-                definition switch
+                released?.InitialHealth ?? (definition switch
                 {
                     "Target Tank" => SimulationConstants.Level100TargetTankLife,
                     "Target Truck" => SimulationConstants.Level100TrainingTruckLife,
                     _ => 0,
-                },
-                ownerIdentity == "test:tank-factory"
-                    ? TankFactorySpawnerPose()
-                    : Pose(46_216, -6_133, 14_450),
-                ownerIdentity == "test:tank-factory"
-                    ? new Level100SpawnerTransform(
+                }),
+                released?.InitialPose ?? TankFactorySpawnerPose(),
+                released?.AuthoredEmitterTransform ?? new Level100SpawnerTransform(
                         new Level100FloatVector3Bits(
                             1_042_393_533,
                             1_088_031_702,
                             -1_107_199_288),
-                        IdentityBasis())
-                    : new Level100SpawnerTransform(
-                        new Level100FloatVector3Bits(
-                            -1_110_748_774,
-                            1_066_854_716,
-                            -1_060_880_958),
                         IdentityBasis()),
                 group,
                 fixedOrdinal,
                 maximum));
+        }
     }
 
     private static Level100ActorPoseSnapshot Pose(int x, int y, int z, int yaw = 0) => new(

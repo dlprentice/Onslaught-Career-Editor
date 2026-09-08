@@ -15,7 +15,7 @@ public readonly record struct RetailMapWhoSector(int X, int Y, int Layer);
 /// Mutable, owner-bound sector lists. Pristine 74154bfa…7750:
 /// Init 4919b0, radius 491c50, add/remove 491cd0/491d20, shared cursor
 /// 491d80/491d90, coordinate conversion 492670, update 492ca0.
-/// Initial collision traversal is 480a30/480e10. Radius/line queries
+/// Initial collision traversal is 480a30/480e10. Line queries
 /// and moved-sector collision effects are not implemented. Sort 4926e0 is
 /// exposed for the later PostLoad phase, not run during object construction.
 /// </summary>
@@ -41,6 +41,9 @@ public sealed class RetailMapWho
         .Select(layer => new Entry?[(4 << layer) * (4 << layer)]).ToArray();
     private readonly Dictionary<int, Entry> _entries = [];
     private Entry? _cursor;
+    private readonly (int XLow, int XHigh, int YLow, int YHigh)[] _radiusBounds = new (int, int, int, int)[5];
+    private int _radiusLayer, _radiusX, _radiusY;
+    private bool _radiusActive;
 
     /// <summary>
     /// FISTP's integer rounding must be selected explicitly. This does not
@@ -189,6 +192,94 @@ public sealed class RetailMapWho
                     var sector = new RetailMapWhoSector(x, y, layer);
                     if (InBounds(sector)) Visit(sector, layer == initialLayer, visit);
                 }
+        }
+    }
+
+    /// <summary>
+    /// PC24/RN rectangular radius traversal: layers 4..0, ascending Y then X,
+    /// then actual cell links. No distance, Z, type or liveness filtering.
+    /// Query rounding is nearest-even independently of membership rounding.
+    /// </summary>
+    public void VisitRadius(Level100FloatVector3Bits center, int radiusFloatBits, Action<Entry> visit)
+    {
+        ArgumentNullException.ThrowIfNull(visit);
+        for (Entry? entry = FirstInRadius(center, radiusFloatBits); entry is not null; entry = NextInRadius())
+            visit(entry);
+    }
+
+    /// <summary>
+    /// Shared radius cursor, pristine74154bfa…7750. Setup [491df0,491e92)
+    /// SHA256 7c56dc514b2a8581049166d94635ed6a98c9a8e090258eab435f35e7750815b1;
+    /// First [491ea0,49201a) a9a7cddb2d1525c99ff4e0d18413e997b5bcef0f0ddf59acdc4401048f8f991f;
+    /// Next [492020,49210b) 83af29f512f604e432ab9730d03619919d32eac61d0aeb50902691eb4b2f7226.
+    /// Nested radius queries replace the outer query; sector queries replace its
+    /// entry cursor. An invalid first cell advances the pre-existing cursor.
+    /// </summary>
+    public Entry? FirstInRadius(Level100FloatVector3Bits center, int radiusFloatBits)
+    {
+        double x = BitConverter.Int32BitsToSingle(center.X);
+        double y = BitConverter.Int32BitsToSingle(center.Y);
+        double radius = BitConverter.Int32BitsToSingle(radiusFloatBits);
+        if (!double.IsFinite(x) || !double.IsFinite(y) || !double.IsFinite(radius) || radius < 0)
+            throw new ArgumentOutOfRangeException(nameof(center), "Query XY and radius must be finite, radius nonnegative.");
+        static int Coordinate(double value, int shift)
+        {
+            // FISTP64 followed by the low signed word, not saturating int conversion.
+            double rounded = Math.Round(value, MidpointRounding.ToEven);
+            if (rounded < long.MinValue || rounded >= 9223372036854775808.0)
+                throw new ArgumentOutOfRangeException(nameof(center), "Query exceeds the admitted FISTP64 domain.");
+            int coordinate = unchecked((int)checked((long)rounded)) >> shift;
+            // Native current-cell counters are signed 16-bit. Admit only
+            // ranges whose inclusive traversal cannot wrap those counters.
+            if (coordinate < short.MinValue || coordinate >= short.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(center), "Query exceeds the admitted cell-counter domain.");
+            return coordinate;
+        }
+        // Validate every layer before invoking a callback.
+        Span<(int XLow, int XHigh, int YLow, int YHigh)> bounds = stackalloc (int, int, int, int)[5];
+        for (int layer = 4; layer >= 0; layer--)
+        {
+            int shift = 7 - layer;
+            double half = RetailFloat24.Multiply(1 << shift, 0.5);
+            bounds[layer] = (
+                Coordinate(RetailFloat24.Subtract(RetailFloat24.Subtract(x, radius), half), shift),
+                Coordinate(RetailFloat24.Add(RetailFloat24.Add(x, radius), half), shift),
+                Coordinate(RetailFloat24.Subtract(RetailFloat24.Subtract(y, radius), half), shift),
+                Coordinate(RetailFloat24.Add(RetailFloat24.Add(half, radius), y), shift));
+        }
+        bounds.CopyTo(_radiusBounds);
+        _radiusLayer = 4;
+        _radiusX = _radiusBounds[4].XLow;
+        _radiusY = _radiusBounds[4].YLow;
+        _radiusActive = true;
+        var first = new RetailMapWhoSector(_radiusX, _radiusY, _radiusLayer);
+        if (InBounds(first) && FirstInSector(first) is { } entry) return entry;
+        return NextInRadius();
+    }
+
+    public Entry? NextInRadius()
+    {
+        if (!_radiusActive) return null;
+        if (NextInSector() is { } next) return next;
+        while (true)
+        {
+            var bounds = _radiusBounds[_radiusLayer];
+            if (++_radiusX > bounds.XHigh)
+            {
+                if (++_radiusY > bounds.YHigh)
+                {
+                    if (--_radiusLayer < 0)
+                    {
+                        _radiusActive = false;
+                        return null;
+                    }
+                    bounds = _radiusBounds[_radiusLayer];
+                    _radiusY = bounds.YLow;
+                }
+                _radiusX = bounds.XLow;
+            }
+            var sector = new RetailMapWhoSector(_radiusX, _radiusY, _radiusLayer);
+            if (InBounds(sector) && FirstInSector(sector) is { } entry) return entry;
         }
     }
 

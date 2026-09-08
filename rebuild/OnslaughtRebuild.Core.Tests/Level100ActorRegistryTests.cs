@@ -166,12 +166,14 @@ public sealed class Level100ActorRegistryTests
         Assert.Equal(12, targetZone1.Value);
         Assert.Null(registry.GetThingRef("Not In Level 100"));
 
-        Level100ActorId trainer = Assert.Single(registry.SpawnThing(
-            airfield,
-            "Air Trainer",
-            "SpawnerB",
+        // The integer setup/reset contract belongs to a non-raw actor.
+        // Aircraft have separate complete raw-state creation/restore tests.
+        Level100ActorId target = Assert.Single(registry.SpawnThing(
+            tankFactory,
+            "Target Truck",
+            "SpawnerA",
             1,
-            "AirTrainer"));
+            "TargetTruck1"));
         var pose = new Level100ActorPoseSnapshot(
             new SimVector3(1, 2, 3),
             new Level100FloatBasis3Bits(
@@ -180,30 +182,30 @@ public sealed class Level100ActorRegistryTests
                 0, 0, BitConverter.SingleToInt32Bits(1f)),
             new SimVector3(7, 8, 9),
             new SimVector3(10, 11, 12));
-        registry.SetPose(trainer, pose);
-        registry.SetHealth(trainer, 321);
-        registry.Deactivate(trainer);
-        registry.SetObjective(trainer, true);
-        registry.ReportHit(trainer, tankFactory);
-        Assert.True(registry.ReportStartedDying(trainer));
-        Assert.True(registry.ReportDied(trainer));
-        Assert.False(registry.ReportDied(trainer));
+        registry.SetPose(target, pose);
+        registry.SetHealth(target, 321);
+        registry.Deactivate(target);
+        registry.SetObjective(target, true);
+        registry.ReportHit(target, tankFactory);
+        Assert.True(registry.ReportStartedDying(target));
+        Assert.True(registry.ReportDied(target));
+        Assert.False(registry.ReportDied(target));
 
         Level100ActorRegistrySnapshot snapshot = registry.Snapshot;
-        Level100ActorSnapshot actor = snapshot.Actors.Single(item => item.ActorId == trainer);
+        Level100ActorSnapshot actor = snapshot.Actors.Single(item => item.ActorId == target);
         Assert.Equal(definitions.IdentitySha256, snapshot.DefinitionSetIdentitySha256);
-        Assert.Equal(definitions.Actors.Count + 1, trainer.Value);
-        Assert.Equal("Air Trainer", actor.DefinitionName);
-        Assert.Equal("AirTrainer", actor.ScriptName);
-        Assert.Equal(airfield, actor.SpawnOwnerId);
-        Assert.Equal("SpawnerB", actor.SpawnerName);
+        Assert.Equal(definitions.Actors.Count + 1, target.Value);
+        Assert.Equal("Target Truck", actor.DefinitionName);
+        Assert.Equal("TargetTruck1", actor.ScriptName);
+        Assert.Equal(tankFactory, actor.SpawnOwnerId);
+        Assert.Equal("SpawnerA", actor.SpawnerName);
         Assert.Equal(pose, actor.Pose);
         Assert.Equal(321, actor.Health);
         Assert.Equal(Level100ActorLifecycle.Destroyed, actor.Lifecycle);
         Assert.False(actor.Active);
         Assert.False(actor.IsObjective);
-        Assert.Throws<InvalidOperationException>(() => registry.Activate(trainer));
-        Assert.Throws<InvalidOperationException>(() => registry.SetObjective(trainer, true));
+        Assert.Throws<InvalidOperationException>(() => registry.Activate(target));
+        Assert.Throws<InvalidOperationException>(() => registry.SetObjective(target, true));
         Assert.Equal(
             [
                 Level100ActorFactKind.Hit,
@@ -222,7 +224,7 @@ public sealed class Level100ActorRegistryTests
         Level100ActorRegistrySnapshot impossibleLifecycle = snapshot with
         {
             Actors = snapshot.Actors
-                .Select(item => item.ActorId == trainer
+                .Select(item => item.ActorId == target
                     ? item with { Active = true, IsObjective = true }
                     : item)
                 .ToArray(),
@@ -417,7 +419,7 @@ public sealed class Level100ActorRegistryTests
     }
 
     [Fact]
-    public void SpawnThing_UsesAuthoredPoseAndKeepsDuplicateNamesOnDistinctIds()
+    public void SpawnThing_ComposesRetainedEmitterAndKeepsDistinctIds()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
         var registry = new Level100ActorRegistry(definitions);
@@ -437,24 +439,23 @@ public sealed class Level100ActorRegistryTests
         Assert.Equal(3, actors.Distinct().Count());
         Assert.Null(registry.GetThingRef("AirborneDrone1"));
 
-        // Re-derived 2026-08-01, when SeatOnGround stopped being ground-vehicle
-        // only and became the general CThing::Init support clamp. The authored
-        // spawn vertical is -6133; the terrain sample at the emitter's own
-        // (46216, 14450) is 0, which is above both it and the water plane at
-        // -1160, so Init seats it at 0. EVERYTHING ELSE about the pose is still
-        // the authored pose verbatim, and that is asserted separately rather
-        // than folded into one comparison, so a basis or velocity that moved
-        // could not hide behind the vertical.
-        Level100ActorPoseSnapshot seated = authored.InitialPose with
-        {
-            PositionMillimeters = authored.InitialPose.PositionMillimeters with
-            {
-                Y = 0,
-            },
-        };
-        Assert.Equal(-6_133, authored.InitialPose.PositionMillimeters.Y);
+        // Script SpawnThing uses the current seated owner's emitter. The
+        // retained CEMT local Z is -6.1325388f; it is not the child's absolute
+        // Core elevation. InitialPose predates this native composition.
+        Assert.Equal(unchecked((int)0xc0c43dc2),
+            authored.AuthoredEmitterTransform.LocalPositionFloatBits.Z);
+        Level100ActorPoseSnapshot seated = registry.GetActor(actors[0]).Pose;
+        Assert.Equal(authored.InitialPose.PositionMillimeters.X, seated.PositionMillimeters.X);
+        Assert.Equal(authored.InitialPose.PositionMillimeters.Z, seated.PositionMillimeters.Z);
+        Assert.InRange(seated.PositionMillimeters.Y - registry.GetActor(airfield).Pose.PositionMillimeters.Y,
+            6_132, 6_134);
+        Assert.Equal(SimVector3.Zero, seated.LinearVelocityMillimetersPerTick);
+        Assert.Equal(SimVector3.Zero, seated.AngularVelocityMicroRadiansPerTick);
         Assert.All(actors, actorId =>
-            Assert.Equal(seated, registry.GetActor(actorId).Pose));
+        {
+            Assert.Equal(seated, registry.GetActor(actorId).Pose);
+            Assert.Equal(0x40060a92, registry.GetBaseState(actorId).RetailPlane!.CurrentEuler.X);
+        });
         Assert.DoesNotContain(registry.Snapshot.Actors, actor => actor.Pose is null);
     }
 

@@ -257,9 +257,12 @@ actual Plane calls in the private copied-game WineD3D run; the unchanged native
 oracle also matched eleven consecutive live Euler/basis transitions. Its
 constructor/cache/Euler samples all read PC24/RN. The exact private route and
 receipts are in the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
-Managed trig remains provisional outside those finite cases. This primitive
-does not yet replace aircraft movement; no new full-route result or replay
-fingerprint is claimed for it.
+Managed trig remains provisional outside those finite cases. The subsequent
+`observe-plane-motion-a` run supplied 32 complete Move transactions (128 boundary
+samples); `managed-plane-comparison.log` records 352 matching grouped compiled-Core
+comparisons. The live mover now uses the ordered raw free-flight transaction.
+Guide/controller observations supplied to that comparison do not validate the
+whole production event, avoidance, contact or effect graph.
 
 The living-Plane turn-rate correction passed **34/34** mechanics/Euler checks
 and **1/1** repeated Client FirstFlight check. Both aircraft first failed at

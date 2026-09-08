@@ -24,7 +24,25 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            bool usesGroundShutdownSchema = state.Level100Destruction.PendingShutdowns.Count != 0 ||
+            if (state.Level100Actors.BaseStates.Any(item => item.State.RetailPlane is null &&
+                    (item.State.RetailPoses is not null || item.State.RetailMotion is not null)))
+                throw new NotSupportedException("Incomplete retail construction has no admitted hash schema.");
+            bool usesPlaneMotionSchema = state.Level100Actors.BaseStates.Any(item => item.State.RetailPlane is not null) ||
+                state.Level100ActorMechanics.PlaneEvents is not null ||
+                state.Level100ActorMechanics.Actors.Any(actor => actor.PlaneGuide is not null);
+            if (usesPlaneMotionSchema && state.Level100Mission.WorldNumber != 100)
+                throw new NotSupportedException("Raw Plane motion does not admit incomplete world construction.");
+            if (usesPlaneMotionSchema)
+            {
+                int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
+                    .Select(item => item.ActorId.Value).Order().ToArray();
+                int[] guidedActors = state.Level100ActorMechanics.Actors.Where(actor => actor.PlaneGuide is not null)
+                    .Select(actor => actor.ActorId.Value).Order().ToArray();
+                if (!rawActors.SequenceEqual(guidedActors) || state.Level100ActorMechanics.PlaneEvents is not { } events ||
+                    events.FrameCount != state.RetailEventFrameCount)
+                    throw new ArgumentException("Aircraft pose, guide and event clock ownership is incomplete.", nameof(state));
+            }
+            bool usesGroundShutdownSchema = usesPlaneMotionSchema || state.Level100Destruction.PendingShutdowns.Count != 0 ||
                 state.Level100Actors.Actors.Any(actor =>
                     actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown);
             bool usesEventClockSchema = usesGroundShutdownSchema || state.RetailEventFrameCount !=
@@ -33,6 +51,11 @@ public static class StateHasher
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 47: admitted raw Plane state, including both poses, movement
+            // time, velocity, retained angles/rates, next drive and bank flag,
+            // guide cache and ordered event pool. Includes all earlier fields.
+            // Other incomplete raw construction still fails closed.
+            //
             // 46: ordered ground-unit shutdown admissions, exact due words
             // and delivery frames. Includes all earlier optional fields.
             //
@@ -124,7 +147,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -235,7 +258,7 @@ public static class StateHasher
                 state.Level100Mission,
                 usesWorldMissionSchema);
             WriteLevel100Events(writer, state.Level100MissionEvents);
-            WriteLevel100ActorRegistry(writer, state.Level100Actors);
+            WriteLevel100ActorRegistry(writer, state.Level100Actors, usesPlaneMotionSchema);
             WriteLevel100Destruction(
                 writer,
                 state.Level100Destruction,
@@ -260,7 +283,7 @@ public static class StateHasher
             }
             WriteLevel100ActorScripts(writer, state.Level100ActorScripts);
             WriteLevel100ActorScriptCommands(writer, state.Level100ActorScriptCommands);
-            WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics);
+            WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics, usesPlaneMotionSchema);
             writer.Write(state.NextProjectileId);
 
             ProjectileSnapshot[] projectiles = state.Projectiles
@@ -383,7 +406,8 @@ public static class StateHasher
 
     private static void WriteLevel100ActorMechanics(
         BinaryWriter writer,
-        Level100ActorMechanicsSnapshot mechanics)
+        Level100ActorMechanicsSnapshot mechanics,
+        bool includePlaneMotion)
     {
         ArgumentNullException.ThrowIfNull(mechanics);
         ArgumentNullException.ThrowIfNull(mechanics.Actors);
@@ -405,6 +429,20 @@ public static class StateHasher
             writer.Write(actor.WaypointCommandScalar);
             writer.Write(actor.WaitForWaypointCompletion);
             writer.Write(actor.GroundFullGuideBaseTickPhase);
+            if (includePlaneMotion)
+            {
+                writer.Write(actor.PlaneGuide is not null);
+                if (actor.PlaneGuide is { } guide)
+                {
+                    WriteRawVector(writer, guide.Destination);
+                    writer.Write(guide.Mode);
+                    writer.Write(guide.ClearanceFloatBits);
+                    writer.Write(guide.ClearanceCellX);
+                    writer.Write(guide.ClearanceCellY);
+                    writer.Write(guide.ControllerState);
+                    writer.Write(guide.SpeedMode);
+                }
+            }
         }
 
         // Actor armament. The released gameplay random stream is part of the
@@ -448,11 +486,36 @@ public static class StateHasher
             writer.Write(round.ElapsedBaseTicks);
             writer.Write(round.Locked);
         }
+        if (includePlaneMotion) WriteAircraftEvents(writer, mechanics.PlaneEvents!);
+    }
+
+    private static void WriteAircraftEvents(BinaryWriter writer, RetailEventSchedulerSnapshot events)
+    {
+        writer.Write(events.Float24Arithmetic);
+        writer.Write(events.TimeBits); writer.Write(events.FrameCount);
+        writer.Write(events.CurrentBufferNum); writer.Write(events.ReadyToFlushBuffer);
+        writer.Write(events.LiveEvents); writer.Write(events.TotalProcessed);
+        writer.Write(events.ProcessedThisUpdate); writer.Write(events.Valid); writer.Write(events.FreeList);
+        writer.Write(events.Slots.Count);
+        foreach (RetailEventSlotSnapshot slot in events.Slots)
+        {
+            writer.Write(slot.Handle); writer.Write(slot.NextFree); writer.Write(slot.EventNum);
+            writer.Write(slot.Listener); writer.Write(slot.Data); writer.Write(slot.TimeBits); writer.Write(slot.Reuse);
+        }
+        writer.Write(events.Lanes.Count);
+        foreach (RetailEventLaneSnapshot lane in events.Lanes)
+        {
+            writer.Write(lane.LaneIndex); writer.Write(lane.Handles.Count);
+            foreach (int handle in lane.Handles) writer.Write(handle);
+        }
+        writer.Write(events.Overflow.Count);
+        foreach (int handle in events.Overflow) writer.Write(handle);
     }
 
     private static void WriteLevel100ActorRegistry(
         BinaryWriter writer,
-        Level100ActorRegistrySnapshot registry)
+        Level100ActorRegistrySnapshot registry,
+        bool includePlaneMotion)
     {
         ArgumentNullException.ThrowIfNull(registry);
         writer.Write(registry.DefinitionSetIdentitySha256);
@@ -513,7 +576,7 @@ public static class StateHasher
             ArgumentNullException.ThrowIfNull(item);
             ArgumentNullException.ThrowIfNull(item.State);
             ThingActorBaseStateSnapshot state = item.State;
-            if (state.RetailPoses is not null || state.RetailMotion is not null)
+            if ((state.RetailPoses is not null || state.RetailMotion is not null) && state.RetailPlane is null)
                 throw new NotSupportedException("Retail actor construction has no admitted canonical hash schema yet.");
             writer.Write(item.ActorId.Value);
             writer.Write((ushort)state.Flags);
@@ -527,6 +590,35 @@ public static class StateHasher
             writer.Write(state.LastTimeOnGroundFloatBits);
             writer.Write(state.LastTimeInWaterFloatBits);
             writer.Write(state.LastTimeOnObjectFloatBits);
+            if (includePlaneMotion)
+            {
+                writer.Write(state.RetailPlane is not null);
+                if (state.RetailPlane is { } plane)
+                {
+                    Level100ActorSnapshot actor = actors.Single(value => value.ActorId == item.ActorId);
+                    if (actor.DefinitionName is not ("Air Trainer" or "Target Drone"))
+                        throw new NotSupportedException("Raw Plane hashing requires an admitted aircraft definition.");
+                    _ = new ThingActorBaseState(state);
+                    if (actor.Pose.PositionMillimeters != state.CurrentPose.PositionMillimeters ||
+                        actor.Pose.BasisFloatBits != state.CurrentPose.BasisFloatBits ||
+                        actor.Pose.LinearVelocityMillimetersPerTick != state.Velocity ||
+                        actor.Pose.AngularVelocityMicroRadiansPerTick != state.AngularVelocity)
+                        throw new ArgumentException("Aircraft projection conflicts with its raw owner.", nameof(registry));
+                    foreach (RetailActorPoseSnapshot pose in new[] { state.RetailPoses!.Current, state.RetailPoses.Old })
+                    {
+                        WriteRawVector(writer, pose.PositionFloatBits);
+                        WriteBasis(writer, pose.BasisFloatBits);
+                    }
+                    writer.Write(state.RetailMotion!.LastMoveTimeFloatBits);
+                    writer.Write(state.RetailMotion.MoveCountdown);
+                    WriteRawVector(writer, plane.Velocity);
+                    WriteRawVector(writer, plane.Drive);
+                    WriteRawVector(writer, plane.CurrentEuler);
+                    WriteRawVector(writer, plane.DesiredEuler);
+                    WriteRawVector(writer, plane.EulerRates);
+                    writer.Write(plane.BankFlagFloatBits);
+                }
+            }
         }
 
         Level100ActorFactSnapshot[] pendingFacts = registry.PendingFacts
@@ -541,6 +633,13 @@ public static class StateHasher
             WriteNullableActorId(writer, fact.OtherActorId);
             writer.Write(fact.OtherThingTypeMask);
         }
+    }
+
+    private static void WriteRawVector(BinaryWriter writer, Level100FloatVector3Bits value)
+    {
+        writer.Write(value.X);
+        writer.Write(value.Y);
+        writer.Write(value.Z);
     }
 
     private static void WriteLevel100Destruction(

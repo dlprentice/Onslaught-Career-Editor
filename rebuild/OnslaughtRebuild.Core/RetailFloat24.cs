@@ -16,6 +16,7 @@ internal static class RetailFloat24
     public static double Add(double left, double right) => Round(left + right);
     public static double Subtract(double left, double right) => Round(left - right);
     public static double Multiply(double left, double right) => Round(left * right);
+    public static double Divide(double left, double right) => Round(left / right);
     public static double Sqrt(double value) => Round(Math.Sqrt(value));
 
     private static double Round(double value)

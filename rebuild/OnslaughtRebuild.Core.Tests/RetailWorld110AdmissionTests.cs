@@ -280,7 +280,8 @@ public sealed class RetailWorld110AdmissionTests
 
         // Synthetic hash envelope only; all World110 script execution above
         // is through the direct mission owner, not an unsupported Simulation.
-        WorldSnapshot envelope = new Simulation(1, Level100TestActorDefinitions.Create()).Snapshot;
+        WorldSnapshot envelope = Level100TestActorDefinitions.LegacyHashEnvelope(
+            new Simulation(1, Level100TestActorDefinitions.Create()).Snapshot);
         string failedHash = StateHasher.ComputeHex(envelope with { Level100Mission = before });
         string completeHash = StateHasher.ComputeHex(envelope with { Level100Mission = after });
         string repeatHash = StateHasher.ComputeHex(

@@ -49,6 +49,16 @@ row to the table below.
 
 These are exceptions to record precisely, not templates for loose porting.
 
+The September 8 Level100 aircraft update replaces the integer, constant-speed
+Plane mover with retained raw pose/Euler/drive/velocity and the measured living
+free-flight operation order. Its 32-call copied-retail comparison supplies
+observed guide inputs; it does not close full aircraft parity. Production now
+schedules the clearance cache and preserves its state through restore/hash,
+but common AI/controller callbacks, avoidance memberships/readers, contacts,
+effects and dying flight remain open. The
+[Unit evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
+separates those boundaries from the measured arithmetic.
+
 ## Carried retail contracts — entity, owner, implementation, test
 
 Recorded 2026-08-17, with the Pulse Cannon increment, end-level countdown,

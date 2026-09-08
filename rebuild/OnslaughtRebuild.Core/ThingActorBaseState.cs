@@ -66,12 +66,13 @@ public sealed record ThingActorBaseStateSnapshot(
     int LastTimeOnObjectFloatBits)
 {
     /// <summary>
-    /// Exact construction state, when present. CurrentPose/OldPose are then
-    /// derived compatibility views. Legacy restore and canonical hashing do
-    /// not support this incomplete retail construction state.
+    /// Exact state, when present. CurrentPose/OldPose are derived compatibility
+    /// views. Only the admitted Plane motion slice supports raw restore/hash;
+    /// the separate incomplete world-construction route remains unsupported.
     /// </summary>
     public RetailActorPosePair? RetailPoses { get; init; }
     public RetailActorMotionSnapshot? RetailMotion { get; init; }
+    public RetailPlaneMotionSnapshot? RetailPlane { get; init; }
 
     public bool IsInvisible => (Flags & ThingActorFlags.Invisible) != 0;
 
@@ -141,6 +142,7 @@ public sealed class ThingActorBaseState
     private ThingActorPoseSnapshot _oldPose;
     private RetailActorPosePair? _retailPoses;
     private RetailActorMotionSnapshot? _retailMotion;
+    private RetailPlaneMotionSnapshot? _retailPlane;
     private SimVector3 _velocity;
     private SimVector3 _angularVelocity;
     private int _lastTimeOnGroundFloatBits;
@@ -167,12 +169,28 @@ public sealed class ThingActorBaseState
     public ThingActorBaseState(ThingActorBaseStateSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        if (snapshot.RetailPoses is not null || snapshot.RetailMotion is not null)
+        if ((snapshot.RetailPoses is not null || snapshot.RetailMotion is not null) &&
+            snapshot.RetailPlane is null)
             throw new NotSupportedException("Retail actor construction has no admitted restore contract yet.");
+        if (snapshot.RetailPlane is not null)
+        {
+            if (snapshot.RetailPoses is null || snapshot.RetailMotion is null)
+                throw new ArgumentException("Plane motion requires complete Actor poses and movement state.", nameof(snapshot));
+            ValidateRetailPose(snapshot.RetailPoses.Current);
+            ValidateRetailPose(snapshot.RetailPoses.Old);
+            ValidatePlaneMotion(snapshot.RetailPlane);
+            _ = ValidateEventTime(snapshot.RetailMotion.LastMoveTimeFloatBits);
+            if (snapshot.RetailMotion.MoveCountdown < 0 ||
+                ProjectRetailPose(snapshot.RetailPoses.Current) != snapshot.CurrentPose ||
+                ProjectRetailPose(snapshot.RetailPoses.Old) != snapshot.OldPose ||
+                ProjectRetailVector(snapshot.RetailPlane.Velocity) != snapshot.Velocity)
+                throw new ArgumentException("Plane compatibility fields disagree with retained raw state.", nameof(snapshot));
+        }
         ThingActorFlags knownFlags =
             ThingActorFlags.DeclaredShutdown |
             ThingActorFlags.Dying |
             ThingActorFlags.Invisible;
+        if (snapshot.RetailPlane is not null) knownFlags |= ThingActorFlags.InMapWho;
         if ((snapshot.Flags & ~knownFlags) != 0 ||
             snapshot.CurrentPose is null ||
             snapshot.OldPose is null ||
@@ -194,6 +212,9 @@ public sealed class ThingActorBaseState
         _oldPose = snapshot.OldPose;
         _velocity = snapshot.Velocity;
         _angularVelocity = snapshot.AngularVelocity;
+        _retailPoses = snapshot.RetailPoses;
+        _retailMotion = snapshot.RetailMotion;
+        _retailPlane = snapshot.RetailPlane;
         _lastTimeOnGroundFloatBits = snapshot.LastTimeOnGroundFloatBits;
         _lastTimeInWaterFloatBits = snapshot.LastTimeInWaterFloatBits;
         _lastTimeOnObjectFloatBits = snapshot.LastTimeOnObjectFloatBits;
@@ -203,16 +224,62 @@ public sealed class ThingActorBaseState
         _thing.Flags,
         _retailPoses is null ? _currentPose : ProjectRetailPose(_retailPoses.Current),
         _retailPoses is null ? _oldPose : ProjectRetailPose(_retailPoses.Old),
-        _velocity,
+        _retailPlane is null ? _velocity : ProjectRetailVector(_retailPlane.Velocity),
         _angularVelocity,
         _thing.TypeMask,
         _lastTimeOnGroundFloatBits,
         _lastTimeInWaterFloatBits,
-        _lastTimeOnObjectFloatBits) { RetailPoses = _retailPoses, RetailMotion = _retailMotion };
+        _lastTimeOnObjectFloatBits)
+        { RetailPoses = _retailPoses, RetailMotion = _retailMotion, RetailPlane = _retailPlane };
 
     internal RetailActorPosePair RetailPoses => _retailPoses ??
         throw new InvalidOperationException("Retail actor initialization has not begun.");
     internal bool HasRetailConstruction => _retailPoses is not null;
+    internal bool HasRetailPlaneMotion => _retailPlane is not null;
+
+    /// <summary>
+    /// Creation admission with complete retained inputs. Does not infer angles
+    /// from a matrix or admit any guide cache, controller, event or RNG state.
+    /// </summary>
+    internal void BeginRetailPlane(RetailActorPoseSnapshot pose,
+        RetailPlaneMotionSnapshot motion, int eventTimeFloatBits, uint specificTypeMask)
+    {
+        ValidatePlaneMotion(motion);
+        _ = ProjectRetailVector(motion.Velocity);
+        _ = ValidateEventTime(eventTimeFloatBits);
+        BeginRetailInitialization(pose, pose, specificTypeMask);
+        _retailPlane = motion;
+        _retailMotion = new(eventTimeFloatBits, 1);
+    }
+
+    /// <summary>
+    /// Commit the complete move after its guide/contact phases. All inputs are
+    /// checked before either current or old state changes. The pre-move raw
+    /// pose becomes old even when the translation is zero.
+    /// </summary>
+    internal void CommitRetailPlaneMove(RetailActorPoseSnapshot pose,
+        RetailPlaneMotionSnapshot motion, int eventTimeFloatBits)
+    {
+        RetailPlaneMotionSnapshot previous = _retailPlane ??
+            throw new InvalidOperationException("Plane motion has not been admitted.");
+        ValidateRetailPose(pose);
+        ValidatePlaneMotion(motion);
+        _ = ProjectRetailVector(motion.Velocity);
+        _ = ValidateEventTime(eventTimeFloatBits);
+        SimVector3 angular = ProjectPlaneAngularDelta(previous.CurrentEuler, motion.CurrentEuler);
+        _retailPoses = new(pose, RetailPoses.Current);
+        _retailPlane = motion;
+        _retailMotion = new(eventTimeFloatBits, _retailMotion!.MoveCountdown);
+        _angularVelocity = angular;
+    }
+
+    // CUnit Stop through guide 47e3d0 clears drive, not Air velocity.
+    internal void ClearRetailPlaneDrive()
+    {
+        RetailPlaneMotionSnapshot motion = _retailPlane ??
+            throw new InvalidOperationException("Plane motion has not been admitted.");
+        _retailPlane = motion with { Drive = default };
+    }
 
     /// <summary>Begins the supported stationary Actor initialization route.</summary>
     internal void BeginRetailInitialization(RetailActorPoseSnapshot current,
@@ -402,6 +469,35 @@ public sealed class ThingActorBaseState
     private static bool IsFiniteFloatBits(int bits) =>
         float.IsFinite(BitConverter.Int32BitsToSingle(bits));
 
+    private static void ValidatePlaneMotion(RetailPlaneMotionSnapshot motion)
+    {
+        ArgumentNullException.ThrowIfNull(motion);
+        static bool Finite(Level100FloatVector3Bits v) =>
+            IsFiniteFloatBits(v.X) && IsFiniteFloatBits(v.Y) && IsFiniteFloatBits(v.Z);
+        if (!Finite(motion.Velocity) || !Finite(motion.Drive) ||
+            !Finite(motion.CurrentEuler) || !Finite(motion.DesiredEuler) || !Finite(motion.EulerRates) ||
+            BitConverter.Int32BitsToSingle(motion.EulerRates.X) < 0 ||
+            BitConverter.Int32BitsToSingle(motion.EulerRates.Y) < 0 ||
+            BitConverter.Int32BitsToSingle(motion.EulerRates.Z) < 0 ||
+            motion.BankFlagFloatBits is not (0 or 0x3f800000))
+            throw new ArgumentException("Plane motion requires finite words, nonnegative rates and a boolean bank word.", nameof(motion));
+    }
+
+    private static SimVector3 ProjectPlaneAngularDelta(
+        Level100FloatVector3Bits before, Level100FloatVector3Bits after)
+    {
+        static int Delta(int oldBits, int newBits, bool wrap)
+        {
+            double delta = (double)BitConverter.Int32BitsToSingle(newBits) - BitConverter.Int32BitsToSingle(oldBits);
+            double pi = BitConverter.Int32BitsToSingle(0x40490fdb);
+            if (wrap && delta > pi) delta -= pi * 2;
+            else if (wrap && delta < -pi) delta += pi * 2;
+            return checked((int)Math.Round(delta * 1_000_000, MidpointRounding.AwayFromZero));
+        }
+        return new(checked(-Delta(before.Y, after.Y, false)),
+            Delta(before.X, after.X, true), Delta(before.Z, after.Z, true));
+    }
+
     private void RequireMillimeterMode()
     {
         if (_retailPoses is not null)
@@ -443,6 +539,13 @@ public sealed class ThingActorBaseState
         return new(Millimeters((double)BitConverter.Int32BitsToSingle(p.X) - 288.6875),
             Millimeters(-10.0 - BitConverter.Int32BitsToSingle(p.Z)),
             Millimeters((double)BitConverter.Int32BitsToSingle(p.Y) - 243.25));
+    }
+
+    private static SimVector3 ProjectRetailVector(Level100FloatVector3Bits v)
+    {
+        static int Millimeters(int bits, int sign = 1) => checked((int)Math.Round(
+            (double)BitConverter.Int32BitsToSingle(bits) * sign * 1000, MidpointRounding.AwayFromZero));
+        return new(Millimeters(v.X), Millimeters(v.Z, -1), Millimeters(v.Y));
     }
 
     private static bool HasFiniteBasis(Level100FloatBasis3Bits basis) =>

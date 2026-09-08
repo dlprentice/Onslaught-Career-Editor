@@ -78,8 +78,20 @@ unchanged retail routine, including wrap boundaries, signed zero and subnormal
 retained steps. `BuildBasis` follows its matrix arithmetic/store order using
 managed double trig, matching thirty-one finite native outputs. General x87
 transcendental equivalence and cross-host trig identity remain unestablished.
-The primitive is not yet the Level 100 mover: creation-owned raw state, guide
-timing, drive, contact and movement order still require integration.
+The Level100 mover now retains raw creation/Euler/drive/velocity state and
+uses this update after Actor translation. Its living free-flight arithmetic
+matched 32 consecutive copied-retail Moves across 352 grouped comparisons,
+with observed guide inputs supplied explicitly. Move and clearance/avoidance
+cadence use the existing scheduler; its ordered pool plus guide cache are
+included in schema 47. Earlier formats remain available for snapshots without
+this extension. Restoring raw Plane motion requires the matching guide and
+event state; a millimeter pose cannot reconstruct them.
+
+The production script/weapon target bridge, missing avoidance candidate stream,
+contact response, complete event/RNG order and effects remain partial. The
+two unwritten native clearance-cache coordinates use the observed zero startup
+allocation as an explicit deterministic seed. These boundaries preclude an
+entire-trajectory or whole-game numerical parity claim.
 
 A copied pristine game running through installed Proton Experimental Wine,
 WineD3D and a private Xvfb display reached Level 100 with `-level 100`, without

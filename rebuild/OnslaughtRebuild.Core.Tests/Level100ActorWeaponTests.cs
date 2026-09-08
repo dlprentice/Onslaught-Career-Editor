@@ -122,6 +122,7 @@ public sealed class Level100ActorWeaponTests
             "SpawnerA",
             1,
             "AirborneDrone2").Single();
+        mechanics.RegisterSpawnedActor(droneId);
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,
@@ -224,6 +225,7 @@ public sealed class Level100ActorWeaponTests
             "SpawnerA",
             1,
             "AirborneDrone2").Single();
+        mechanics.RegisterSpawnedActor(droneId);
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,
@@ -443,6 +445,7 @@ public sealed class Level100ActorWeaponTests
                 "SpawnerA",
                 1,
                 "AirborneDrone2").Single();
+            mechanics.RegisterSpawnedActor(droneId);
             mechanics.ApplyCommand(new Level100ActorScriptCommand(
                 1,
                 0,
@@ -460,9 +463,12 @@ public sealed class Level100ActorWeaponTests
 
         Level100ActorMechanicsSnapshot idle = Advance(0);
         Assert.Empty(idle.ActorRounds);
-        Assert.Equal(
-            SimulationConstants.Level100ReleasedRandomInitialSeed,
-            idle.ReleasedRandomSeed);
+        // Actor Init consumes Next()%1 at creation, even before the first
+        // movement/guide callback: one authored Trainer, then the spawned Drone.
+        var creationRandom = new Level100ReleasedRandom();
+        creationRandom.Next();
+        creationRandom.Next();
+        Assert.Equal(creationRandom.Seed, idle.ReleasedRandomSeed);
 
         Level100ActorMechanicsSnapshot flown = Advance(30 * 120);
         Level100ActorMechanicsSnapshot repeat = Advance(30 * 120);
@@ -504,6 +510,7 @@ public sealed class Level100ActorWeaponTests
             "SpawnerA",
             1,
             "AirborneDrone2").Single();
+        mechanics.RegisterSpawnedActor(droneId);
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,

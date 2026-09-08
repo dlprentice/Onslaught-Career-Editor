@@ -5,8 +5,8 @@ namespace OnslaughtRebuild.Core;
 /// <summary>
 /// The finite PC24/RN angle update and matrix operation order of Unit 0x004fa4b0.
 /// XYZ are retained retail yaw, pitch and roll words, not angles recovered
-/// from a projected matrix. Actor integration remains separate: this does not
-/// replace the approximate Level 100 Plane mover yet.
+/// from a projected matrix. RetailPlaneMotion owns its ordered integration
+/// into the living full Move path.
 /// </summary>
 /// <remarks>
 /// The pinned partial source lacks Unit.cpp. The pristine 74154bfa…7750

@@ -325,8 +325,9 @@ public sealed class RetailWorld110InitialObjectSeedAdmissionTests
             state = root.Step(new SimInput(0, 1));
         }
 
+        // Creation-owned raw Plane motion/guide/events select schema 47.
         Assert.Equal(
-            "b8a1c8bc9150dfd02d83c7866f619b9601fcbd34615b1b59d014d49193a11216",
+            "5e6421669c3e01da364f66048aa5d6e1523eff60b9f9ab14b44b8fcf58bcaa54",
             StateHasher.ComputeHex(state));
     }
 

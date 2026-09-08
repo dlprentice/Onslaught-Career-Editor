@@ -378,6 +378,7 @@ public sealed class Simulation
         if (eventManagerAdvanced)
         {
             _retailEventFrameCount = unchecked(_retailEventFrameCount + 1);
+            _level100ActorMechanics.AdvanceEventClock(_retailEventFrameCount);
         }
 
         _level100MissionEvents.Clear();
@@ -784,10 +785,11 @@ public sealed class Simulation
                         spawn.DefinitionName,
                         spawn.SpawnerName,
                         spawn.Count,
-                        spawn.ScriptName);
+                        spawn.ScriptName,
+                        BitConverter.SingleToInt32Bits(EngineTimeSeconds));
                     foreach (Level100ActorId actorId in spawned)
                     {
-                        _level100Destruction.RegisterActor(actorId);
+                        RegisterSpawnedLevel100Actor(actorId);
                         _level100ActorScripts.AttachAndInitializeSpawnedActor(
                             actorId,
                             spawn.ScriptName);
@@ -913,10 +915,11 @@ public sealed class Simulation
             spawn.DefinitionName,
             spawn.SpawnerName,
             spawn.Count,
-            spawn.ScriptName);
+            spawn.ScriptName,
+            BitConverter.SingleToInt32Bits(EngineTimeSeconds));
         foreach (Level100ActorId actorId in spawned)
         {
-            _level100Destruction.RegisterActor(actorId);
+            RegisterSpawnedLevel100Actor(actorId);
             _level100ActorScripts.AttachAndInitializeSpawnedActor(
                 actorId,
                 spawn.ScriptName);
@@ -930,6 +933,12 @@ public sealed class Simulation
             _level100ActorScripts.DispatchFact(fact);
             PumpLevel100EventBus();
         }
+    }
+
+    private void RegisterSpawnedLevel100Actor(Level100ActorId actorId)
+    {
+        _level100ActorMechanics.RegisterSpawnedActor(actorId);
+        _level100Destruction.RegisterActor(actorId);
     }
 
     private void PumpLevel100EventBus()
@@ -976,7 +985,7 @@ public sealed class Simulation
     private void AdvanceLevel100ActorMechanics()
     {
         IReadOnlyList<Level100ActorMechanicsWaitCompletion> completions =
-            _level100ActorMechanics.AdvanceTick();
+            _level100ActorMechanics.AdvanceTick(_retailEventFrameCount);
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(
@@ -4168,7 +4177,9 @@ public sealed class Simulation
         BuildWalkerFeet();
         _level100ActorScripts = new Level100ActorScriptRuntime(
             _level100Actors,
-            _level100PlayerActorId);
+            _level100PlayerActorId,
+            RegisterSpawnedLevel100Actor,
+            () => BitConverter.SingleToInt32Bits(EngineTimeSeconds));
         _level100ActorScripts.InitializeReleasedScripts();
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();

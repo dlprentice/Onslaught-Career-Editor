@@ -1,7 +1,8 @@
 # CHeightField__GetHeightSamplePacked16
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-08
+Summary: integer packed-height lookup, including its asymmetric mask-edge index.
 Source File: HeightField.cpp (absent from the pinned GPL
 `references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -21,6 +22,30 @@ database was not opened. Table name is a research label.
 `0x0047ea20`–`0x0047eaf2` is 211 bytes, SHA-256
 `a08365f3e96f7ad423c6e3853e8f1a4b0690e6d15cfa94b82ce85cb7420d32e6`.
 Zero `E8`, zero `E9`.
+
+September 8 integration re-read the body for AirGuide's 9×9 integer scan.
+With X in EDX and Y on the stack, let `mx=X&0x3ffe00` and
+`my=Y&0x3ffe00`. The signed-short element indices are:
+
+| Branch | Element index |
+| --- | --- |
+| `(mx|my)==0` | `81*(64*((X>>3)&63)+((Y>>3)&63))+9*(Y&7)+(X&7)` |
+| `mx==512 && my==512` | `331775` |
+| `mx==512` | `326600+81*((Y>>8)&63)+9*(Y&7)` |
+| `my==512` | `5175+5184*((X>>3)&63)+(X&7)` |
+| Other | return zero without reading the table |
+
+The X-edge arm really shifts Y by **8**, not 3. Mask comparisons also admit
+coordinate aliases such as 513 and 768; this is not a conventional clamped
+513×513 array lookup. `Level100Terrain.SampleAirGuideHeightUnits` preserves
+these branches, separately from the continuous terrain sampler. AirGuide
+`[004028e0,004029de)` (SHA-256
+`2b6abd803ff6ea38899902a74a663d295cf709427f6d210335137ecd967336df`)
+rounds owner X/Y to nearest-even, visits Y outer/X inner in steps of 5 from
+−20 through +20, and retains minimum clearance above ground or water. Its
+initial minimum is float word `497423f0` (999999), not FLT_MAX. The focused
+`RetailPlaneMotionTests` cover edge aliases, the finite ceiling and the first
+observed 6.16-unit clearance; this does not independently validate scheduling.
 
 EAX is a 16-bit word, or 0:
 

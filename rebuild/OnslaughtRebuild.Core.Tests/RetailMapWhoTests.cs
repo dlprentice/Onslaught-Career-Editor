@@ -6,6 +6,85 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class RetailMapWhoTests
 {
+    private static int[] RadiusOwners(RetailMapWho map, float x, float y, float radius)
+    {
+        var seen = new List<int>();
+        map.VisitRadius(Position(x, y), BitConverter.SingleToInt32Bits(radius), entry => seen.Add(entry.Owner.Identity));
+        return seen.ToArray();
+    }
+
+    [Fact]
+    public void RadiusQuery_VisitsLayersThenYThenXThenActualLinksWithoutRadialOrZFilter()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        map.Add(new Thing(1, 18, 18), 1);
+        map.Add(new Thing(2, 26, 18), 1);
+        map.Add(new Thing(3, 18, 26), 1);
+        map.Add(new Thing(4, 26, 26) { PositionFloatBits = Position(26, 26) with { Z = int.MaxValue } }, 1);
+        map.Add(new Thing(5, 18, 18) { ThingTypeMask = 0 }, 1);
+        map.Add(new Thing(6, 20, 20), 4);
+        map.Add(new Thing(7, 20, 20), 8);
+        map.Add(new Thing(8, 20, 20), 16);
+        map.Add(new Thing(9, 20, 20), 32);
+        Assert.Equal(new[] { 5, 1, 2, 3, 4, 6, 7, 8, 9 }, RadiusOwners(map, 20, 20, 8));
+        // (26,26) is outside radius8 but inside the rectangular cell coverage.
+    }
+
+    [Fact]
+    public void RadiusQuery_RoundsBoundsBeforeShiftAndSkipsOutsideCells()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        map.Add(new Thing(1, 1, 1), 1);
+        map.Add(new Thing(2, 8, 1), 1);
+        Assert.Equal(new[] { 1 }, RadiusOwners(map, 3.499f, 1, 0));
+        Assert.Equal(new[] { 1, 2 }, RadiusOwners(map, 3.5f, 1, 0)); // 7.5 -> 8
+        // PC24 rounds x+radius to3.5 before adding half4; a double-only
+        // expression remains below7.5 and misses cell1.
+        Assert.Equal(new[] { 1, 2 }, RadiusOwners(map, MathF.BitDecrement(3.5f), 1,
+            BitConverter.Int32BitsToSingle(0x34000000)));
+        Assert.Equal(new[] { 1, 2 }, RadiusOwners(map, 11.499f, 1, 0));
+        Assert.Equal(new[] { 2 }, RadiusOwners(map, 11.5f, 1, 0)); // lower7.5 ->8
+        Assert.Empty(RadiusOwners(map, -1000, -1000, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => RadiusOwners(map, float.MaxValue, 1, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => RadiusOwners(map, 1, 1, -1));
+    }
+
+    [Fact]
+    public void RadiusQuery_UsesSharedCursorAndLiveMembership()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        var a = map.Add(new Thing(1, 20, 20), 1);
+        var b = map.Add(new Thing(2, 20, 20), 1);
+        map.Add(new Thing(3, 20, 20), 1);
+        var far = map.Add(new Thing(4, 400, 400), 1);
+        var seen = new List<int>();
+        map.VisitRadius(Position(20, 20), 0, entry =>
+        {
+            seen.Add(entry.Owner.Identity);
+            if (entry.Owner.Identity == 3) map.Remove(b);
+        });
+        Assert.Equal(new[] { 3, 1 }, seen);
+        seen.Clear();
+        map.VisitRadius(Position(20, 20), 0, entry =>
+        {
+            seen.Add(entry.Owner.Identity);
+            if (entry.Owner.Identity == 3) Assert.Same(far, map.FirstInRadius(Position(400, 400), 0));
+        });
+        Assert.Equal(new[] { 3 }, seen); // Nested radius replaced bounds as well as cursor.
+        Assert.Null(map.NextInSector()); // Exhausted query has null cursor.
+    }
+
+    [Fact]
+    public void RadiusQuery_InvalidInitialCellAdvancesPreviousSectorCursor()
+    {
+        var map = new RetailMapWho(MidpointRounding.ToEven);
+        var a = map.Add(new Thing(1, 400, 400), 1);
+        var b = map.Add(new Thing(2, 400, 400), 1);
+        Assert.Same(b, map.FirstInSector(b.Sector));
+        Assert.Same(a, map.FirstInRadius(Position(0, 0), 0));
+        Assert.Null(map.NextInRadius());
+    }
+
     private sealed class Thing(int identity, float x, float y) : IRetailMapWhoOwner
     {
         public int Identity { get; } = identity;

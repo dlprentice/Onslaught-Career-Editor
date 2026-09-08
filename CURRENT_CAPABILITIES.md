@@ -359,8 +359,16 @@ audio was disabled. Hardware breakpoints captured twenty-five Plane/guide calls
 with live PC24/RN arithmetic. The existing native routine probe reproduced
 eleven consecutive observed Euler/basis transitions. Core now carries the
 matrix operation order as well as angle smoothing, with **50/50** focused tests
-passing. Managed trig remains provisional outside the finite comparisons, and
-this primitive is still separate from the production aircraft mover. Private
+passing. A subsequent 128-sample run captured 32 consecutive Moves; compiled
+Core arithmetic matched 352 grouped comparisons with the observed guide inputs.
+The production mover now retains raw creation/pose/Euler/drive/velocity state,
+translates before smoothing, preserves bank, and schedules its clearance cache.
+Spawned aircraft use the seated Airfield and distinct raw emitters. Snapshot,
+restore and schema 47 include the guide and ordered aircraft callbacks.
+Managed trig remains provisional outside the finite comparisons. Native
+controller approach/retreat and weapon-support callbacks, the complete avoidance
+candidate stream, contacts, effects and dying flight remain unfinished; the
+current target bridge still pursues during Move. Private
 inputs, scripts and receipts are in `local-data/retail-runtime/aircraft-20260908-a/`;
 the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
 records the exact route and limits. This does not reproduce a player tutorial,

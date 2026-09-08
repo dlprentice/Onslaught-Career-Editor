@@ -171,6 +171,71 @@ display was stopped and its temporary authority cookie removed. The separate
 Core test log is `unit-euler-live-matrix-20260908.log` under the existing
 `local-data/test-runs/linux-route-20260906-af1sa_l9/` owner.
 
+A second bounded run, `observe-plane-motion-a`, captured **32 consecutive
+living authored-Trainer Moves** at four boundaries per call: Plane entry
+`0x004d1cd0`, Guide entry `0x00402280`, Unit Euler entry `0x004fa4b0`, and
+Plane exit `0x004d1efd`. All 128 samples used the same owner/thread and control
+word `0x007f`. `observations.jsonl` is 201,256 bytes, SHA-256
+`8646c4f0d52b421cfcdf1daf86b5e15374540876c810e5b7c659a0d1efa96120`.
+The six live bodies matched pristine before sampling:
+
+| Half-open body | SHA-256 |
+| --- | --- |
+| Guide `00402280..004026a3` | `f0b8a93f873609f61f457633ad1ea6e350f0727b03f534184ca8124393b97b55` |
+| Air `00402fa0..0040364c` | `15b1267923260b84c6cbe1731add1d17f27e2b7eb84815806aa7e362ef6ff69e` |
+| Unit `004fa8d0..004fb264` | `2f2dfe0e12adc623380755ddec800c90bd611fd884e9bca61818a90897c58d5f` |
+| Actor `004015e0..004018fa` | `083c7a029afed634fa4108036a3057355e7dc3b78f8716f5d6588d49f8505a23` |
+| Euler `004fa4b0..004fa7ff` | `3cfa2696dd4a9092812c0ea179a4e5f7bde29612cd9f5723312a417122fce9fc` |
+| Plane `004d1cd0..004d1f05` | `049e2d26e948b444190073c335fb7d233aefa75893870e86ebf33f15d4f5e72f` |
+
+The compiled Core arithmetic matched **352 grouped comparisons** across all
+32 calls: integrated velocity, next drive, desired/current Euler, bank flag,
+translation, old pose, new basis and final aligned velocity. This comparison
+supplied the observed guide destination/cache, mode, controller state and
+speed mode; it did not reconstruct the callback/random stream. The retained
+log is `managed-plane-comparison.log` beside the private launch scripts.
+The first Move does not translate. Its Guide writes the next drive; the
+second Move's cap is the stored-float product `9.2f * 0.05f`, not division
+by twenty. Air consumes old drive before Guide; Actor translates before
+Unit smoothing; Plane aligns velocity to the new forward column afterward.
+The final observed position words are `4384b1b6,43bd21ff,c17d37c4`.
+
+No captured contact timestamp changed and the avoidance reader was null.
+This bounds the comparison to the living free-flight branch; it does not
+prove absent MapWho effects, complete death/trail/audio behavior or arbitrary
+managed/x87 trig equivalence. The copied executable and real options retained
+their input hashes; the owned Wine prefix/private display stopped cleanly.
+
+The production Level100 mover now uses `RetailPlaneMotion` with creation-owned
+raw Actor state and the existing `RetailEventScheduler` for Move and Guide
+events 2000/2001. Script waypoints supply full raw XYZ. Ground-clearance cache
+refresh uses the native integer lookup and callback cadence, including the
+draw on an unchanged cell. The observed zero cache-coordinate allocation is
+the explicitly selected deterministic startup seed, not an inferred native
+constructor store. Frame/pool/guide state survives snapshot, restore and hash.
+
+Remaining controller inputs are material: script `SetAIState` writes Unit
+`+0x210`, whereas Guide reads controller `+0x20`. The native Plane controller
+`[004d21c0,004d248c)` retains approach/retreat hysteresis and schedules its own
+callbacks; the current script/weapon bridge still refreshes an attacked
+target during Move. The common `004fef40` callback can consume zero or one
+direct random draw depending on its readiness/support arm, with further
+effects in callees; adding an unconditional draw would be incorrect.
+Plane profiles Air Trainer/Target Drone keep `+0x120=0`, excluding the optional
+player-distance detour. Battle Engine's Level100 radius is `0.4f`, and its
+ground-mode aim point adds `0.76f` to retail Z; jet aim uses its origin. These
+virtual inputs and common AI calls still need production integration.
+
+Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
+and a monitored identity whose current Z is read during movement. Its only
+candidate exclusions are null, self and ammunition type bit 4; dying or
+inactive registered Things remain eligible. It minimizes float-stored
+`((dz²+dx²)+dy²)-candidateRadius²-ownerRadius²` below strict `225f`, preserving
+the first exact tie. `RetailMapWho` now carries the native rectangular iterator,
+but Level100 does not yet supply its complete memberships/radii/reader lifetime.
+The live mover therefore still has no avoidance input; an Active actor-ID scan
+would not close that gap.
+
 ### `HandleEvent` arms (byte-exact)
 
 `edi` = event, `esi` = this, `word [edi+4]` = event number.

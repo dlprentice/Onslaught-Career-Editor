@@ -52,9 +52,8 @@ public sealed class Level100AirTrainerFlybyTests
     /// The Air Trainer's authored initial pose, from the hash-pinned manifest
     /// <c>level100-static-world.json</c> (sha256
     /// <c>D6D3F9ED…D493</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
-    /// fixture parks every non-static actor at the origin, which is fine for
-    /// the tests that only need an actor to exist and useless for a test about
-    /// a flight path, so this one is stated here and cross-checked against the
+    /// fixture now admits this transform at creation. This test asserts it
+    /// instead of overwriting the retained state. It is cross-checked against the
     /// manifest by
     /// <see cref="Level100WaypointFixtureTests.ManifestAirTrainer_IsAuthoredWhereTheseTestsPutIt"/>.
     /// </summary>
@@ -105,53 +104,11 @@ public sealed class Level100AirTrainerFlybyTests
     /// band, rather than descending toward the ground-level node.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <b>What this test does NOT say, and why.</b> The recorded defect for
-    /// #146 read "flies its authored route backwards, beginning with a dive
-    /// into the ground", and the second half of that is <i>not</i> what the
-    /// simulation does. It was read off the DATA — the serialized head, node
-    /// 43, is the only <c>Flyby Path</c> node at ground level — and never
-    /// measured. A Level 100 plane's pitch does not come from its waypoint at
-    /// all: <c>Level100ActorMechanics.TryGetPlaneGuideTarget</c> hands the
-    /// guide the node's X and Z only, and <c>PlaneDesiredPitch</c> is a pure
-    /// function of terrain clearance, which is the released
-    /// <c>CAirGuide::VFunc03</c> clearance band at <c>0x0040240d</c>. So the
-    /// aircraft never steers at node 43's altitude in either order, and the
-    /// wrong order does not produce a dive.
-    /// </para>
-    /// <para>
-    /// <b>What the measurement did turn up, and it is now FIXED.</b> The
-    /// aircraft used to start BELOW the terrain, by 3,840 mm, in both orders —
-    /// its Core Y of −15,000 mm sat under a terrain sample of −11,160 mm at its
-    /// own authored X/Z. That was the vertical-datum defect: the producer
-    /// carried retail's z-DOWN altitude verbatim into Core's y-UP frame, so the
-    /// two ambient aircraft (the only actors with a non-zero authored altitude)
-    /// were placed underground. It was never the ordering bug — it was
-    /// identical either side of the traversal fix — and it was deliberately not
-    /// papered over here with a clamp.
-    /// </para>
-    /// <para>
-    /// Task #154 repaired it at the producer on 2026-08-01. The authored retail
-    /// Z is unchanged at −15.0; it is now converted into Core's datum,
-    /// <c>(-10.0 - (-15.0)) * 1000 = +5000</c>, so the aircraft starts
-    /// <b>16,160 mm ABOVE</b> the same −11,160 mm terrain sample and is inside
-    /// the released clearance band from its first tick. The clearance at spawn
-    /// is still pinned below, at its new value, for the same reason it was
-    /// pinned at the old one: so that a datum move is visible here rather than
-    /// silent. The same underground-then-climb-out shape was measured for the
-    /// SPAWNED Air Trainer on 2026-07-26
-    /// (<c>local-lab/PLANE-MOTION-AND-ACTOR-WEAPONS-2026-07-26.md</c> §2.3: spawn
-    /// clearance −6,133 mm, climbing out by t150) and has the same cause. That
-    /// section is also why the "dive" reading above cannot be right:
-    /// <i>"There is no altitude hold and no setpoint"</i> - the clearance band
-    /// is the only altitude authority a plane has.
-    /// </para>
-    /// <para>
-    /// What is asserted, therefore, is the part that is about flight: after the
-    /// released climb response lifts it out, the aircraft clears the terrain for
-    /// the whole remainder of the first leg and is inside the level band, so
-    /// nothing in the corrected route flies it into the deck.
-    /// </para>
+    /// Native guide pitch reads the complete waypoint XYZ before its cached
+    /// clearance/avoidance overrides. The former horizontal-only steering
+    /// explanation was an approximation, not a retail altitude contract.
+    /// These assertions measure the resulting route rather than a fixed-speed
+    /// or no-roll model.
     /// </remarks>
     [Fact]
     public void AirTrainer_ClearsTheGroundOnceAirborneAlongTheFirstLeg()
@@ -320,13 +277,8 @@ public sealed class Level100AirTrainerFlybyTests
                 break;
             }
 
-            actors.SetPose(
-                trainer,
-                actors.GetActor(trainer).Pose with
-                {
-                    PositionMillimeters =
-                        path.ChainPoint(before.WaypointPointIndex).PositionMillimeters,
-                });
+            Level100FloatVector4Bits point = path.ChainPoint(before.WaypointPointIndex).RetailComponentsFloatBits;
+            actors.GetPlaneState(trainer).TeleportRetailPosition(new(point.X, point.Y, point.Z));
             completions.AddRange(mechanics.AdvanceTick());
 
             Level100ActorCommandIntentSnapshot after = State();
@@ -404,15 +356,13 @@ public sealed class Level100AirTrainerFlybyTests
         long arrivalRadius = definitions
             .GetMotionDefinition("Air Trainer").ArrivalRadiusMillimeters;
 
-        actors.SetPose(
-            trainer,
-            actors.GetActor(trainer).Pose with
-            {
-                PositionMillimeters = AuthoredAirTrainerPosition,
-                BasisFloatBits = AuthoredAirTrainerBasis,
-                LinearVelocityMillimetersPerTick = SimVector3.Zero,
-                AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
-            });
+        Assert.Equal(AuthoredAirTrainerPosition, actors.GetPose(trainer).PositionMillimeters);
+        ThingActorBaseStateSnapshot initial = actors.GetPlaneState(trainer).Snapshot;
+        Assert.Equal(definitions.Actors.Single(actor => actor.Name == "Air Trainer")
+            .AuthoredTransform.RetailEulerFloatBits, initial.RetailPlane!.CurrentEuler);
+        Assert.Equal(initial.RetailPlane.CurrentEuler, initial.RetailPlane.DesiredEuler);
+        Assert.Equal(default, initial.RetailPlane.Velocity);
+        Assert.Equal(default, initial.RetailPlane.Drive);
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,

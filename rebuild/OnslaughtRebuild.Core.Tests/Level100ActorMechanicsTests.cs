@@ -20,13 +20,11 @@ public sealed class Level100ActorMechanicsTests
         Level100ActorId plane = Assert.Single(actors.SpawnThing(
             actors.GetThingRef("Airfield")!.Value, definition, "SpawnerB", 1, script));
         Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
-        actors.SetPose(plane, actors.GetPose(plane) with
-        {
-            PositionMillimeters = new SimVector3(0, 70_000, 0),
-            BasisFloatBits = IdentityBasis(),
-            LinearVelocityMillimetersPerTick = SimVector3.Zero,
-            AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
-        });
+        ThingActorBaseState physical = actors.GetPlaneState(plane);
+        var rawPose = new RetailActorPoseSnapshot(
+            Level100ActorMechanics.RetailPositionFromProjection(new(0, 70_000, 0)),
+            RetailUnitEuler.BuildBasis(default));
+        physical.CommitRetailPlaneMove(rawPose, RetailPlaneMotion.CreateInitial(rawPose, default), 0);
         actors.SetPose(player, actors.GetPose(player) with
         {
             PositionMillimeters = new SimVector3(100_000, 70_000, 0),
@@ -39,11 +37,13 @@ public sealed class Level100ActorMechanicsTests
 
         Assert.Empty(mechanics.AdvanceTick());
 
-        // Both errors exceed the easing threshold, exposing the cap. Retail
+        // All three errors exceed the easing threshold, exposing the cap. Retail
         // field 6 is 0x3d32b8c2 (0.04363323 rad) for both profiles. This checks
-        // its microradian projection, not the remaining native transaction.
-        Assert.Equal(new SimVector3(-43_633, -43_633, 0),
+        // its microradian projection. The first guide starts with zero cached
+        // clearance and commands climb; bank is retained instead of discarded.
+        Assert.Equal(new SimVector3(43_633, -43_633, -43_633),
             actors.GetPose(plane).AngularVelocityMicroRadiansPerTick);
+        Assert.Equal(rawPose.PositionFloatBits, physical.Snapshot.RetailPoses!.Current.PositionFloatBits);
     }
 
     [Fact]
@@ -225,8 +225,8 @@ public sealed class Level100ActorMechanicsTests
             argument: "Target Tank Path 1"));
         mechanics = new Level100ActorMechanics(actors, definitions, mechanics.Snapshot with
         {
-            Actors = mechanics.Snapshot.Actors.Select(item => item with
-                { GroundFullGuideBaseTickPhase = phase }).ToArray(),
+            Actors = mechanics.Snapshot.Actors.Select(item => item.ActorId == target ? item with
+                { GroundFullGuideBaseTickPhase = phase } : item).ToArray(),
         });
         actors.SetPose(target, actors.GetPose(target) with
         {
@@ -262,7 +262,7 @@ public sealed class Level100ActorMechanicsTests
             Assert.Equal(velocity, after.Velocity);
             Assert.Equal(SimVector3.Zero, after.AngularVelocity);
             phase = (phase + 1) % 4;
-            Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors).GroundFullGuideBaseTickPhase);
+            Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == target).GroundFullGuideBaseTickPhase);
 
             // Restore while the cadence is still in flight; no new death or
             // waypoint command may be needed to finish its remaining ticks.
@@ -277,7 +277,7 @@ public sealed class Level100ActorMechanicsTests
         var removed = actors.GetBaseState(target);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(removed, actors.GetBaseState(target));
-        Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors).GroundFullGuideBaseTickPhase);
+        Assert.Equal(phase, Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == target).GroundFullGuideBaseTickPhase);
     }
 
     [Theory]
@@ -293,8 +293,8 @@ public sealed class Level100ActorMechanicsTests
         mechanics.ApplyCommand(Command(1, target, Level100ActorScriptCommandKind.SetAIState));
         mechanics = new Level100ActorMechanics(actors, definitions, mechanics.Snapshot with
         {
-            Actors = mechanics.Snapshot.Actors.Select(item => item with
-                { GroundFullGuideBaseTickPhase = 1 }).ToArray(),
+            Actors = mechanics.Snapshot.Actors.Select(item => item.ActorId == target ? item with
+                { GroundFullGuideBaseTickPhase = 1 } : item).ToArray(),
         });
         int support = Level100Terrain.Instance.SampleGroundElevationMillimeters(new SimVector2(2000, 2000)) + 100;
         var velocity = new SimVector3(0, -7, 0);
@@ -460,7 +460,7 @@ public sealed class Level100ActorMechanicsTests
                 targetActorId: player),
         ]);
         Level100ActorCommandIntentSnapshot attacking =
-            Assert.Single(mechanics.Snapshot.Actors);
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == target);
         Assert.Equal(3, attacking.AiState);
         Assert.Equal(2, attacking.Allegiance);
         Assert.True(attacking.HasAllegianceOverride);
@@ -513,7 +513,7 @@ public sealed class Level100ActorMechanicsTests
             argument: "Target Tank Path 2",
             scalar: 17));
         Level100ActorCommandIntentSnapshot following =
-            Assert.Single(mechanics.Snapshot.Actors);
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == target);
         Assert.Equal(
             Level100ActorCommandIntent.FollowingWaypoint,
             following.Intent);
@@ -649,12 +649,12 @@ public sealed class Level100ActorMechanicsTests
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             0,
-            Assert.Single(mechanics.Snapshot.Actors)
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
                 .WaypointPointIndex);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             0,
-            Assert.Single(mechanics.Snapshot.Actors)
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
                 .WaypointPointIndex);
         Assert.Equal(pose, actors.GetActor(transporter).Pose);
 
@@ -672,7 +672,7 @@ public sealed class Level100ActorMechanicsTests
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             1,
-            Assert.Single(mechanics.Snapshot.Actors)
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
                 .WaypointPointIndex);
 
         // ...and it stops there. Under the aliased table both of the base ticks
@@ -683,12 +683,12 @@ public sealed class Level100ActorMechanicsTests
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             1,
-            Assert.Single(mechanics.Snapshot.Actors)
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
                 .WaypointPointIndex);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             1,
-            Assert.Single(mechanics.Snapshot.Actors)
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
                 .WaypointPointIndex);
 
         // Dropship movement is not implemented - the class identity and radius

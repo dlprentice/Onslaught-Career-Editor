@@ -32,14 +32,13 @@ public sealed class SimulationTests
     }
 
     /// <summary>
-    /// The root-world canonical byte stream must stay on schema 42 so the
-    /// independently measured 40-step control hash remains byte-identical.
-    /// A non-root mission selects schema 43 and binds the world stamp plus all
+    /// The living Plane's raw state, guide and callbacks select schema 47.
+    /// Legacy mission-only envelopes still select schema 43 and bind all
     /// ten secondary slots; changing the native-88 text dword must therefore
     /// change the world hash even when every older field is equal.
     /// </summary>
     [Fact]
-    public void CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState()
+    public void CanonicalHash_BindsRawPlaneStateAndWorld110SecondaryState()
     {
         var root = new Simulation(
             1,
@@ -51,10 +50,13 @@ public sealed class SimulationTests
             rootState = root.Step(new SimInput(0, 1));
         }
 
-        Assert.Equal(
-            "b8a1c8bc9150dfd02d83c7866f619b9601fcbd34615b1b59d014d49193a11216",
-            StateHasher.ComputeHex(rootState));
-        Assert.Equal(42, CanonicalSchemaVersion(rootState));
+        var repeat = new Simulation(1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
+        for (int tick = 0; tick < 40; tick++) repeat.Step(new SimInput(0, 1));
+        string hash = StateHasher.ComputeHex(rootState);
+        Assert.Equal(hash, StateHasher.ComputeHex(repeat.Snapshot));
+        // Changes with creation-owned raw aircraft and its event/guide state.
+        Assert.True(hash == "5e6421669c3e01da364f66048aa5d6e1523eff60b9f9ab14b44b8fcf58bcaa54", $"Plane hash: {hash}");
+        Assert.Equal(47, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
         var world110 = new Level100Mission(actors, actors.GetThingRef("Player 1")!.Value,
@@ -62,7 +64,7 @@ public sealed class SimulationTests
         Level100MissionSnapshot mission = world110.Snapshot;
         // A synthetic hash envelope around the real mission-program result.
         // No World110 Simulation or actor lifecycle is executed by this check.
-        WorldSnapshot state = rootState with
+        WorldSnapshot state = Level100TestActorDefinitions.LegacyHashEnvelope(rootState) with
         {
             Level100Mission = mission,
             RetailEventFrameCount = 0,
@@ -131,7 +133,7 @@ public sealed class SimulationTests
         var simulation = new Simulation(
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
         simulation.Step(SimInput.Idle);
-        WorldSnapshot baseline = simulation.Snapshot;
+        WorldSnapshot baseline = Level100TestActorDefinitions.LegacyHashEnvelope(simulation.Snapshot);
         Assert.Equal(1, baseline.Level100Mission.Tick);
         Assert.Equal(1u, baseline.RetailEventFrameCount);
         Assert.Equal(42, CanonicalSchemaVersion(baseline));
@@ -1567,7 +1569,8 @@ public sealed class SimulationTests
         Assert.Equal(paused.RetailEventFrameCount, held.RetailEventFrameCount);
         Assert.Equal(paused.Level100Mission.Tick + 1, held.Level100Mission.Tick);
         Assert.Equal(pausedTimeBits, BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds));
-        Assert.Equal(45, CanonicalSchemaVersion(held));
+        Assert.Equal(47, CanonicalSchemaVersion(held));
+        Assert.Equal(held.RetailEventFrameCount, held.Level100ActorMechanics.PlaneEvents!.FrameCount);
         Assert.Equal(0x3dcccb3b, MixBits(held));
 
         static int MixBits(WorldSnapshot snapshot) => BitConverter.SingleToInt32Bits(
@@ -2045,7 +2048,9 @@ public sealed class SimulationTests
             .Single(actor => actor.ActorId == target.ActorId.Value);
         Assert.Equal(remainingLife, destruction.CurrentLifeBits);
         Assert.Equal(terminal, destruction.Terminal);
-        Assert.Equal(terminal ? Level100ActorLifecycle.Destroyed : Level100ActorLifecycle.Alive,
+        // The existing Ground Unit death owner retains it until its scheduled
+        // shutdown; damage terminal is not immediate destruction.
+        Assert.Equal(terminal ? Level100ActorLifecycle.DiedAwaitingShutdown : Level100ActorLifecycle.Alive,
             state.Level100Actors.Actors.Single(actor => actor.ActorId == target.ActorId).Lifecycle);
     }
 

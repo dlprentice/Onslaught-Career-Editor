@@ -13,6 +13,145 @@ namespace OnslaughtRebuild.Core.Tests;
 /// </summary>
 public sealed class RetailEventSchedulerTests
 {
+    [Fact]
+    public void Float24Mode_ChangesImmediateBoundaryAndSurvivesRestore()
+    {
+        var legacy = new RetailEventScheduler();
+        var selected = new RetailEventScheduler(useFloat24Arithmetic: true);
+        for (int i = 0; i < 9; i++) { legacy.AdvanceTime(); selected.AdvanceTime(); }
+        // now=0x3ee66667. Adding stored0.051 gives a PC53 sum below
+        // due0x3f00418a, but PC24 rounds UP exactly to that due word.
+        float due = BitConverter.Int32BitsToSingle(0x3f00418a);
+        Assert.Equal(RetailEventPlacement.DelayedBucket, legacy.AddEvent(1, 1, due).Placement);
+        var restored = new RetailEventScheduler(selected.Snapshot);
+        Assert.True(selected.Snapshot.Float24Arithmetic);
+        Assert.True(restored.Float24Arithmetic);
+        Assert.False(new RetailEventScheduler(legacy.Snapshot).Float24Arithmetic);
+        Assert.Equal(RetailEventPlacement.ImmediateBucket, selected.AddEvent(1, 1, due).Placement);
+        Assert.Equal(RetailEventPlacement.ImmediateBucket, restored.AddEvent(1, 1, due).Placement);
+        Assert.Equal(selected.Update(), restored.Update());
+        selected.Init();
+        Assert.True(selected.Float24Arithmetic);
+    }
+
+    [Fact]
+    public void Float24Mode_RoundsEachDelayOperationBeforeFloor()
+    {
+        float due = BitConverter.Int32BitsToSingle(0x3e9a1cac);
+        // At time0, (due-stored0.001)*20 is5.999999979976565 in PC53.
+        // PC24 subtraction/multiplication produce exactly6, so floor differs.
+        var legacy = new RetailEventScheduler();
+        var selected = new RetailEventScheduler(useFloat24Arithmetic: true);
+        Assert.Equal(5, legacy.AddEvent(1, 1, due).BufferIndex);
+        Assert.Equal(6, selected.AddEvent(1, 1, due).BufferIndex);
+        var restored = new RetailEventScheduler(selected.Snapshot);
+        for (int i = 0; i < 6; i++) Assert.Empty(restored.Update());
+        Assert.Equal(1, Assert.Single(restored.Update()).EventNum);
+        // The same stored due word must be used by both relative admissions.
+        Assert.Equal(6, new RetailEventScheduler(true).AddEventTimeFromNow(due, 1, 1).BufferIndex);
+        var owned = new RetailEventScheduler(true);
+        int handle = owned.PrepareOwnedEvent(1, 1, due);
+        Assert.Equal(6, owned.AddOwnedEvent(handle).BufferIndex);
+    }
+
+    [Fact]
+    public void Snapshot_RetainsSparseFreeListAndOwnedUnfiledEvents()
+    {
+        var original = new RetailEventScheduler();
+        Assert.Empty(original.Snapshot.Slots);
+        int owned = original.PrepareOwnedEvent(71, 12, 0.25f, data: 99);
+        int spare = original.PrepareOwnedEvent(72, 13, 0.5f);
+        original.FreeEvent(spare);
+        var restored = new RetailEventScheduler(original.Snapshot);
+        Assert.Equal(2, restored.Snapshot.Slots.Count);
+        Assert.Equal(original.GetNextFreeEvent(), restored.GetNextFreeEvent());
+        Assert.Equal(original.AddOwnedEvent(owned), restored.AddOwnedEvent(owned));
+        for (int i = 0; i < 8; i++) Assert.Equal(original.Update(), restored.Update());
+        Assert.Equal(original.FreeListHead, restored.FreeListHead);
+        Assert.Equal(original.Snapshot.Slots, restored.Snapshot.Slots);
+    }
+
+    [Fact]
+    public void Snapshot_ContinuesRearmingWithSameHandleAndRetainedData()
+    {
+        var original = new RetailEventScheduler();
+        int handle = original.AddEvent(42, 11, -1, data: 91).Handle;
+        static void Rearm(RetailEventScheduler scheduler, RetailEventDispatch dispatch) =>
+            scheduler.AddEvent(dispatch.EventNum, 999, -1, reuseHandle: dispatch.Handle);
+        original.Update(Rearm);
+        var restored = new RetailEventScheduler(original.Snapshot);
+        for (int i = 0; i < 5; i++)
+        {
+            Assert.Equal(original.Update(Rearm), restored.Update(Rearm));
+            Assert.Equal(handle, Assert.Single(restored.Snapshot.Slots).Handle);
+            Assert.Equal(91, Assert.Single(restored.Snapshot.Slots).Data);
+            Assert.Equal(11, restored.ListenerOf(handle));
+        }
+        Assert.Equal(original.FreeListHead, restored.FreeListHead);
+    }
+
+    [Fact]
+    public void Snapshot_ContinuesOverflowTieOrderAndClearedListeners()
+    {
+        var original = new RetailEventScheduler();
+        original.AddEvent(1, 11, 10f);
+        int cleared = original.AddEvent(2, 12, 10f).Handle;
+        original.AddEvent(3, 13, 10f);
+        original.ClearListener(cleared);
+        var restored = new RetailEventScheduler(original.Snapshot);
+        var seen = new List<int>();
+        for (int i = 0; i < 202; i++)
+        {
+            var expected = original.Update().ToArray();
+            var actual = restored.Update().ToArray();
+            Assert.Equal(expected, actual);
+            seen.AddRange(actual.Select(item => item.EventNum));
+        }
+        Assert.Equal(new[] { 1, 3 }, seen);
+        Assert.Equal(3u, restored.TotalEventsProcessed);
+        Assert.Equal(original.Snapshot.Slots, restored.Snapshot.Slots);
+        Assert.Equal(original.GetNextFreeEvent(), restored.GetNextFreeEvent());
+    }
+
+    [Fact]
+    public void Snapshot_RejectsActiveAndInterruptedFlushUntilInit()
+    {
+        var scheduler = new RetailEventScheduler();
+        scheduler.AddEvent(1, 1, -1);
+        Assert.Throws<InvalidOperationException>(() => scheduler.Update((owner, _) =>
+        {
+            Assert.Throws<InvalidOperationException>(() => owner.Snapshot);
+            throw new InvalidOperationException("interrupted");
+        }));
+        Assert.Throws<InvalidOperationException>(() => scheduler.Snapshot);
+        Assert.Throws<InvalidOperationException>(() => scheduler.Flush());
+        scheduler.Init();
+        Assert.Empty(scheduler.Snapshot.Slots);
+        Assert.Empty(scheduler.Snapshot.Lanes);
+    }
+
+    [Fact]
+    public void Restore_RejectsCyclesQueueOverlapRangesAndNoncanonicalSlots()
+    {
+        var scheduler = new RetailEventScheduler();
+        var empty = scheduler.Snapshot;
+        Assert.Throws<ArgumentException>(() => new RetailEventScheduler(empty with
+        { Slots = new[] { new RetailEventSlotSnapshot(0, 0, 0, 0, 0, 0, false) } }));
+        Assert.Throws<ArgumentException>(() => new RetailEventScheduler(empty with
+        { Slots = new[] { new RetailEventSlotSnapshot(0, 1, 0, 0, 0, 0, false) } }));
+        Assert.Throws<ArgumentException>(() => new RetailEventScheduler(empty with
+        { FreeList = RetailEventScheduler.MaxEvents }));
+        scheduler.AddEvent(1, 1, -1);
+        var pending = scheduler.Snapshot;
+        Assert.Throws<ArgumentException>(() => new RetailEventScheduler(pending with { FreeList = 0 }));
+        Assert.Throws<ArgumentException>(() => new RetailEventScheduler(pending with { Overflow = new[] { 0 } }));
+        scheduler.Shutdown();
+        var restored = new RetailEventScheduler(scheduler.Snapshot);
+        Assert.False(restored.IsValid);
+        Assert.Equal(scheduler.TotalEvents, restored.TotalEvents);
+        Assert.Equal(scheduler.Snapshot.Slots, restored.Snapshot.Slots);
+    }
+
     private const int Listener = 1;
     private const int SecondListener = 2;
 

@@ -25,7 +25,10 @@ public sealed record Level100ActorCommandIntentSnapshot(
     int WaypointPointIndex,
     int WaypointCommandScalar,
     bool WaitForWaypointCompletion,
-    int GroundFullGuideBaseTickPhase);
+    int GroundFullGuideBaseTickPhase)
+{
+    public Level100PlaneGuideSnapshot? PlaneGuide { get; init; }
+}
 
 public sealed record Level100ActorMechanicsSnapshot(
     long LastConsumedCommandSequence,
@@ -33,7 +36,10 @@ public sealed record Level100ActorMechanicsSnapshot(
     int ReleasedRandomSeed,
     int NextActorRoundId,
     IReadOnlyList<Level100ActorWeaponSnapshot> ActorWeapons,
-    IReadOnlyList<Level100ActorRoundSnapshot> ActorRounds);
+    IReadOnlyList<Level100ActorRoundSnapshot> ActorRounds)
+{
+    public RetailEventSchedulerSnapshot? PlaneEvents { get; init; }
+}
 
 public sealed record Level100ActorMechanicsWaitCompletion(
     Level100ActorId ActorId,
@@ -95,6 +101,7 @@ public sealed partial class Level100ActorMechanics
         internal int WaypointCommandScalar { get; set; }
         internal bool WaitForWaypointCompletion { get; set; }
         internal int GroundFullGuideBaseTickPhase { get; set; }
+        internal Level100PlaneGuideSnapshot? PlaneGuide { get; set; }
     }
 
     private readonly Level100ActorRegistry _actors;
@@ -109,6 +116,7 @@ public sealed partial class Level100ActorMechanics
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
         ValidateDefinitionIdentity();
+        InitializePlanes();
     }
 
     public Level100ActorMechanics(
@@ -130,6 +138,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         _lastConsumedCommandSequence = snapshot.LastConsumedCommandSequence;
+        _states.Clear(); // Restore retained state; do not replay creation RNG/events.
         foreach (Level100ActorCommandIntentSnapshot source in snapshot.Actors)
         {
             ValidateSnapshotState(source, snapshot);
@@ -142,6 +151,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         RestoreArmament(snapshot);
+        RestorePlaneEvents(snapshot);
     }
 
     public Level100ActorMechanicsSnapshot Snapshot => new(
@@ -150,7 +160,7 @@ public sealed partial class Level100ActorMechanics
         _releasedRandom.Seed,
         _nextActorRoundId,
         SnapshotActorWeapons(),
-        SnapshotActorRounds());
+        SnapshotActorRounds()) { PlaneEvents = _planeEvents?.Snapshot };
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>
         kind is
@@ -179,8 +189,18 @@ public sealed partial class Level100ActorMechanics
     /// One Core tick, which is one released base tick - see the class remarks
     /// for the accumulator this replaced.
     /// </summary>
-    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick() =>
-        AdvanceRetailBaseTick();
+    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick()
+    {
+        _planeEvents?.AdvanceTime();
+        return AdvanceRetailBaseTick();
+    }
+
+    internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount)
+    {
+        if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
+            throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
+        return AdvanceRetailBaseTick();
+    }
 
     private void ConsumeCommand(
         Level100ActorScriptCommand command,
@@ -211,8 +231,13 @@ public sealed partial class Level100ActorMechanics
                     BeginWaypoint(command);
                     break;
                 case Level100ActorScriptCommandKind.SetAIState:
-                    RequireState(command).AiState = command.Scalar;
+                {
+                    ActorState state = RequireState(command);
+                    state.AiState = command.Scalar;
+                    if (command.Scalar == 1 && state.TargetActorId.HasValue)
+                        SetStoppedIntent(state); // Clears controller target; guide destination survives.
                     break;
+                }
                 case Level100ActorScriptCommandKind.SetAllegiance:
                 {
                     ActorState state = RequireState(command);
@@ -239,25 +264,12 @@ public sealed partial class Level100ActorMechanics
         AdvanceRetailBaseTick()
     {
         var completions = new List<Level100ActorMechanicsWaitCompletion>();
+        _planeEvents?.Flush(DispatchPlaneEvent);
         foreach (ActorState state in _states.Values)
         {
             Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);
             Level100ActorMotionDefinition? motion =
                 _definitions.FindMotionDefinition(actor.DefinitionName);
-            if (motion?.MotionClass == Level100ActorMotionClass.Plane)
-            {
-                if (actor.Active &&
-                    actor.Lifecycle == Level100ActorLifecycle.Alive)
-                {
-                    AdvancePlane(state, motion);
-                }
-                else
-                {
-                    ZeroActorVelocity(state.ActorId);
-                }
-                actor = _actors.GetActor(state.ActorId);
-            }
-
             if (motion?.MotionClass ==
                 Level100ActorMotionClass.GroundVehicle)
             {
@@ -314,290 +326,6 @@ public sealed partial class Level100ActorMechanics
         AdvanceActorWeapons();
 
         return Array.AsReadOnly(completions.ToArray());
-    }
-
-    // ------------------------------------------------------------------
-    // Plane (released behaviour class 9, CFighterBehaviourType -> CPlane,
-    // vtable 0x005e1930).
-    //
-    // Decoded read-only from the pristine BEA.exe, sha256
-    // 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750, and
-    // written up in local-lab/PLANE-MOTION-AND-ACTOR-WEAPONS-2026-07-26.md.
-    // CAirGuide slot 3 (0x00402280) produces desired Euler at Unit+0x120
-    // and drive at +0x14c. Unit 0x004fa4b0 smooths current Euler toward it.
-    // CAirUnit Init 0x00402b0c copies profile+0xb8 unchanged into all three
-    // maximum steps. CAirUnit__UpdateMotionAndTrailEffects (0x00402fa0)
-    // reduces those rates by float 1/3 ONLY in its TF_DYING arm; the living
-    // aircraft handled here retain the full initialized rate.
-    //
-    // This remains a compatibility approximation: integer yaw/pitch are
-    // recovered from the projected basis, roll is discarded, and constant
-    // speed advances along the NEW heading. Retail retains Euler, drive and
-    // velocity fields, moves the Actor BEFORE smoothing, and applies its
-    // friction/gravity/clamp sequence. Plane's move multiplier is 1.0;
-    // GroundVehicle's is 4.0, separate from the guide's hardcoded *4.
-    //
-    // RetailUnitEuler now implements the measured PC24 angle-update prefix.
-    // It cannot be substituted here until creation-owned raw state, guide
-    // outputs and native matrix arithmetic replace this whole transaction.
-    private void AdvancePlane(
-        ActorState state,
-        Level100ActorMotionDefinition motion)
-    {
-        Level100ActorPoseSnapshot pose = _actors.GetPose(state.ActorId);
-        if (!TryGetPlaneGuideTarget(state, out SimVector2 guideTarget))
-        {
-            _actors.StopMotion(state.ActorId);
-            return;
-        }
-
-        int forwardX = FloatBitsToQ30(pose.BasisFloatBits.Row0Z);
-        int forwardY = FloatBitsToQ30(pose.BasisFloatBits.Row1Z);
-        int forwardZ = FloatBitsToQ30(pose.BasisFloatBits.Row2Z);
-        int horizontal = Q30Hypotenuse(forwardX, forwardZ);
-        int currentYaw = FixedAtan2(-forwardX, forwardZ);
-        int currentPitch = FixedAtan2(forwardY, horizontal);
-
-        int desiredYaw = PlaneDesiredYaw(pose, guideTarget, currentYaw);
-        int desiredPitch = PlaneDesiredPitch(pose);
-
-        int maximumStep = ScalePositiveFloatBits(
-            SimulationConstants.Level100PlaneAirTurnRateFloatBits,
-            1_000_000);
-        int nextYaw = NormalizeMicroRad(
-            currentYaw + PlaneEulerStep(currentYaw, desiredYaw, maximumStep));
-        int nextPitch = NormalizeMicroRad(
-            currentPitch +
-            PlaneEulerStep(currentPitch, desiredPitch, maximumStep));
-
-        int speedPerBaseTick = DivideRoundNearest(
-            PlaneAirSpeedMillimetersPerSecond(motion.DefinitionName),
-            RetailBaseTicksPerSecond);
-        (int yawSin, int yawCos) = FixedSinCos(nextYaw);
-        (int pitchSin, int pitchCos) = FixedSinCos(nextPitch);
-        var velocity = new SimVector3(
-            DivideRoundNearest(
-                (long)-MultiplyFixed(yawSin, pitchCos) * speedPerBaseTick,
-                FixedTrigScale),
-            DivideRoundNearest(
-                (long)pitchSin * speedPerBaseTick,
-                FixedTrigScale),
-            DivideRoundNearest(
-                (long)MultiplyFixed(yawCos, pitchCos) * speedPerBaseTick,
-                FixedTrigScale));
-        var nextPosition = new SimVector3(
-            checked(pose.PositionMillimeters.X + velocity.X),
-            checked(pose.PositionMillimeters.Y + velocity.Y),
-            checked(pose.PositionMillimeters.Z + velocity.Z));
-        _actors.AdvancePose(
-            state.ActorId,
-            pose with
-            {
-                PositionMillimeters = nextPosition,
-                BasisFloatBits = BuildPlaneBasis(nextYaw, nextPitch),
-                LinearVelocityMillimetersPerTick = velocity,
-                AngularVelocityMicroRadiansPerTick = new SimVector3(
-                    NormalizeMicroRad(nextPitch - currentPitch),
-                    NormalizeMicroRad(nextYaw - currentYaw),
-                    0),
-            });
-    }
-
-    /// <summary>
-    /// The released air guide steers at whatever <c>guide+0x8..0x10</c> holds:
-    /// the current waypoint point while following a path, and the attacked
-    /// thing's position while attacking. Only those two are produced by the
-    /// Level 100 scripts (<c>AirborneDrone1.msl</c> follows
-    /// <c>Drone Path 1</c>; <c>AirborneDrone2.msl</c> and
-    /// <c>AirTrainer.msl</c> call <c>Attack(player)</c>).
-    /// </summary>
-    private bool TryGetPlaneGuideTarget(
-        ActorState state,
-        out SimVector2 target)
-    {
-        switch (state.Intent)
-        {
-            case Level100ActorCommandIntent.FollowingWaypoint
-                when state.WaypointPath is not null:
-            {
-                Level100WaypointPathDefinition path =
-                    _definitions.GetWaypointPath(state.WaypointPath);
-                Level100WaypointPointDefinition point =
-                    path.ChainPoint(state.WaypointPointIndex);
-                target = new SimVector2(
-                    point.PositionMillimeters.X,
-                    point.PositionMillimeters.Z);
-                return true;
-            }
-
-            case Level100ActorCommandIntent.Attacking
-                when state.TargetActorId.HasValue:
-            {
-                Level100ActorPoseSnapshot targetPose =
-                    _actors.GetPose(state.TargetActorId.Value);
-                target = new SimVector2(
-                    targetPose.PositionMillimeters.X,
-                    targetPose.PositionMillimeters.Z);
-                return true;
-            }
-
-            default:
-                target = default;
-                return false;
-        }
-    }
-
-    /// <summary>
-    /// Desired yaw toward the guide target, with the released map-edge
-    /// turn-back at <c>0x0040246a</c>: a 10.0-unit margin against the
-    /// 512.0-unit map (<c>DAT_005d85cc</c> = 10.0, <c>DAT_005d85c4</c> =
-    /// 502.0) overrides the target heading outright. The four commanded
-    /// headings there are <c>-pi/2</c>, <c>+pi/2</c>, <c>0</c> and <c>pi</c>
-    /// in the released retail X/Y frame; they are expressed here as "steer
-    /// back toward the interior along the violated axis", which is the same
-    /// four headings in Core's X/Z frame without importing the retail axis
-    /// convention.
-    /// </summary>
-    private static int PlaneDesiredYaw(
-        Level100ActorPoseSnapshot pose,
-        SimVector2 target,
-        int currentYaw)
-    {
-        int margin = SimulationConstants.Level100PlaneMapEdgeMarginMillimeters;
-        if (pose.PositionMillimeters.X <
-            Level100Terrain.MinimumRelativeXMillimeters + margin)
-        {
-            return FixedAtan2(-1 << 30, 0);
-        }
-        if (pose.PositionMillimeters.X >
-            Level100Terrain.MaximumRelativeXMillimeters - margin)
-        {
-            return FixedAtan2(1 << 30, 0);
-        }
-        if (pose.PositionMillimeters.Z <
-            Level100Terrain.MinimumRelativeZMillimeters + margin)
-        {
-            return 0;
-        }
-        if (pose.PositionMillimeters.Z >
-            Level100Terrain.MaximumRelativeZMillimeters - margin)
-        {
-            return PiMicroRad;
-        }
-
-        long deltaX = (long)target.X - pose.PositionMillimeters.X;
-        long deltaZ = (long)target.Z - pose.PositionMillimeters.Z;
-        return deltaX == 0 && deltaZ == 0
-            ? currentYaw
-            : FixedAtan2(-deltaX, deltaZ);
-    }
-
-    /// <summary>
-    /// The released clearance band at <c>0x0040240d</c>. Retail Z is down and
-    /// its commands are <c>-pi/4</c> to climb and <c>+pi/4</c> to dive; Core Y
-    /// is up, so the signs are inverted here and only here.
-    /// </summary>
-    private static int PlaneDesiredPitch(Level100ActorPoseSnapshot pose)
-    {
-        int clearance = PlaneMinimumGroundClearanceMillimeters(pose);
-        int pitch = SimulationConstants.Level100PlaneClearancePitchMicroRadians;
-        if (clearance <
-            SimulationConstants.Level100PlaneClimbClearanceMillimeters)
-        {
-            return pitch;
-        }
-        if (clearance >
-            SimulationConstants.Level100PlaneDiveClearanceMillimeters)
-        {
-            return -pitch;
-        }
-        return 0;
-    }
-
-    /// <summary>
-    /// <c>CAirGuide__UpdateGroundClearanceCache</c> (<c>0x004028e0</c>) keeps
-    /// the minimum height above terrain over the owner's rounded position
-    /// +/-20 released units sampled in steps of 5 - a 41x41 unit box, 81
-    /// samples. One released unit is 1000 Core millimetres.
-    /// </summary>
-    private static int PlaneMinimumGroundClearanceMillimeters(
-        Level100ActorPoseSnapshot pose)
-    {
-        int radius =
-            SimulationConstants.Level100PlaneClearanceSampleRadiusMillimeters;
-        int step =
-            SimulationConstants.Level100PlaneClearanceSampleStepMillimeters;
-        int minimum = int.MaxValue;
-        for (int offsetZ = -radius; offsetZ <= radius; offsetZ += step)
-        {
-            for (int offsetX = -radius; offsetX <= radius; offsetX += step)
-            {
-                int ground =
-                    Level100Terrain.Instance.SampleGroundElevationMillimeters(
-                        new SimVector2(
-                            pose.PositionMillimeters.X + offsetX,
-                            pose.PositionMillimeters.Z + offsetZ));
-                int clearance = pose.PositionMillimeters.Y - ground;
-                if (clearance < minimum)
-                {
-                    minimum = clearance;
-                }
-            }
-        }
-        return minimum;
-    }
-
-    /// <summary>
-    /// Integer approximation retained by the existing Plane mover. Generic
-    /// normalized error and division by ten are not retail's separate yaw/roll
-    /// branches, unwrapped pitch, float coefficient or ordered stores. The raw
-    /// finite angle operation is <see cref="RetailUnitEuler.Smooth"/>.
-    /// </summary>
-    private static int PlaneEulerStep(int current, int desired, int maximumStep)
-    {
-        int error = NormalizeMicroRad(desired - current);
-        if (error == 0)
-        {
-            return 0;
-        }
-        int eased = DivideRoundNearest(Math.Abs((long)error), 10);
-        return Math.Sign(error) * Math.Min(eased, maximumStep);
-    }
-
-    private static int PlaneAirSpeedMillimetersPerSecond(string definitionName) =>
-        definitionName switch
-        {
-            "Target Drone" =>
-                SimulationConstants
-                    .Level100TargetDroneAirSpeedMillimetersPerSecond,
-            "Air Trainer" =>
-                SimulationConstants
-                    .Level100AirTrainerAirSpeedMillimetersPerSecond,
-            _ => throw new InvalidDataException(
-                $"Level 100 plane '{definitionName}' has no released " +
-                "CUnitAirVelocity in SimulationConstants."),
-        };
-
-    /// <summary>
-    /// The rotation whose third column is the released facing axis the guide
-    /// multiplies by speed. It matches the ground convention exactly at pitch
-    /// zero, so <see cref="FixedAtan2"/> on
-    /// <c>(-Row0Z, Row2Z)</c> still reads yaw.
-    /// </summary>
-    private static Level100FloatBasis3Bits BuildPlaneBasis(int yaw, int pitch)
-    {
-        (int sinYaw, int cosYaw) = FixedSinCos(yaw);
-        (int sinPitch, int cosPitch) = FixedSinCos(pitch);
-        return new Level100FloatBasis3Bits(
-            Q30ToFloatBits(cosYaw),
-            Q30ToFloatBits(MultiplyFixed(sinYaw, sinPitch)),
-            Q30ToFloatBits(-MultiplyFixed(sinYaw, cosPitch)),
-            0,
-            Q30ToFloatBits(cosPitch),
-            Q30ToFloatBits(sinPitch),
-            Q30ToFloatBits(sinYaw),
-            Q30ToFloatBits(-MultiplyFixed(cosYaw, sinPitch)),
-            Q30ToFloatBits(MultiplyFixed(cosYaw, cosPitch)));
     }
 
     private static int Q30Hypotenuse(int left, int right)
@@ -820,6 +548,7 @@ public sealed partial class Level100ActorMechanics
 
         if (++state.WaypointPointIndex < path.TargetChainNodeIndices.Count)
         {
+            SetPlaneWaypointDestination(state);
             return;
         }
 
@@ -834,6 +563,7 @@ public sealed partial class Level100ActorMechanics
         if (path.IsClosed)
         {
             state.WaypointPointIndex = 0;
+            SetPlaneWaypointDestination(state);
             return;
         }
 
@@ -871,6 +601,7 @@ public sealed partial class Level100ActorMechanics
         state.WaitForWaypointCompletion =
             command.Kind ==
             Level100ActorScriptCommandKind.FollowWaypointWait;
+        SetPlaneWaypointDestination(state);
     }
 
     private void BeginAttack(Level100ActorScriptCommand command)
@@ -883,7 +614,7 @@ public sealed partial class Level100ActorMechanics
         ClearWaypoint(state);
         state.Intent = Level100ActorCommandIntent.Attacking;
         state.TargetActorId = target;
-        ZeroActorVelocity(state.ActorId);
+        if (state.PlaneGuide is null) ZeroActorVelocity(state.ActorId);
         ArmActorWeapons(state);
     }
 
@@ -917,6 +648,9 @@ public sealed partial class Level100ActorMechanics
             return state;
         }
 
+        if (_actors.GetBaseState(actorId).RetailPlane is not null)
+            throw new InvalidOperationException("Raw aircraft mechanics must be registered before its script initializer.");
+
         state = new ActorState
         {
             ActorId = actorId,
@@ -928,7 +662,13 @@ public sealed partial class Level100ActorMechanics
 
     private void ZeroActorVelocity(Level100ActorId actorId)
     {
-        _actors.StopMotion(actorId);
+        if (_states.TryGetValue(actorId.Value, out ActorState? state) && state.PlaneGuide is { } guide)
+        {
+            ThingActorBaseState actor = _actors.GetPlaneState(actorId);
+            state.PlaneGuide = guide with { Mode = 0, Destination = actor.Snapshot.RetailPoses!.Current.PositionFloatBits };
+            actor.ClearRetailPlaneDrive();
+        }
+        else _actors.StopMotion(actorId);
     }
 
     private static void SetStoppedIntent(ActorState state)
@@ -972,6 +712,7 @@ public sealed partial class Level100ActorMechanics
                     source.GroundFullGuideBaseTickPhase <
                     motion.FullGuideBaseTicks!.Value
                 : source.GroundFullGuideBaseTickPhase == 0;
+        ValidatePlaneGuide(source);
         if (source.ActorId.Value <= 0 ||
             !Enum.IsDefined(source.Intent) ||
             source.WaypointPointIndex < 0 ||
@@ -1045,7 +786,7 @@ public sealed partial class Level100ActorMechanics
             state.WaypointPointIndex,
             state.WaypointCommandScalar,
             state.WaitForWaypointCompletion,
-            state.GroundFullGuideBaseTickPhase);
+            state.GroundFullGuideBaseTickPhase) { PlaneGuide = state.PlaneGuide };
 
     private static ActorState Restore(
         Level100ActorCommandIntentSnapshot source) => new()
@@ -1063,6 +804,7 @@ public sealed partial class Level100ActorMechanics
                 source.WaitForWaypointCompletion,
             GroundFullGuideBaseTickPhase =
                 source.GroundFullGuideBaseTickPhase,
+            PlaneGuide = source.PlaneGuide,
         };
 
     private static Level100FloatBasis3Bits RotateBasisAroundCoreY(

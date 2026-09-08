@@ -101,6 +101,19 @@ public readonly record struct RetailEventDispatch(
     RetailEventPriority Priority,
     bool FromOverflow);
 
+/// <summary>Pool words differing from the deterministic Init baseline.</summary>
+public sealed record RetailEventSlotSnapshot(int Handle, int NextFree, short EventNum,
+    int Listener, int Data, uint TimeBits, bool Reuse);
+public sealed record RetailEventLaneSnapshot(int LaneIndex, IReadOnlyList<int> Handles);
+public sealed record RetailEventSchedulerSnapshot(uint TimeBits, uint FrameCount,
+    int CurrentBufferNum, int ReadyToFlushBuffer, int LiveEvents, uint TotalProcessed,
+    uint ProcessedThisUpdate, bool Valid, int FreeList,
+    IReadOnlyList<RetailEventSlotSnapshot> Slots,
+    IReadOnlyList<RetailEventLaneSnapshot> Lanes, IReadOnlyList<int> Overflow)
+{
+    public bool Float24Arithmetic { get; init; }
+}
+
 /// <summary>
 /// The released <c>CEventManager</c> scheduling core: bucket routing, the frame
 /// clock, the flush order, and the free-list recycler. Nothing here reads a
@@ -156,9 +169,10 @@ public readonly record struct RetailEventDispatch(
 /// stack: there is no float store between <c>time - mTime</c>,
 /// <c>- 0.001f</c>, <c>* 20.0f</c> and <c>floor</c>, so the arithmetic runs at
 /// the x87 precision control, not at float. This implementation uses
-/// <c>double</c> for exactly those intermediates, which reproduces the Win32
+/// <c>double</c> by default for those intermediates, which reproduces the Win32
 /// CRT default of 53-bit precision control; this static body does not establish
-/// the control word of every runtime caller. The immediate-negative arm rounds
+/// the control word of every runtime caller. Explicit PC24 mode instead rounds
+/// each arithmetic operation through RetailFloat24. The immediate-negative arm rounds
 /// <c>mTime + 0.0001f</c> with <c>fstp dword</c> at <c>0x0044B3DF</c>.
 /// The relative-time overload also rounds its sum before this body is called.
 /// </para>
@@ -229,10 +243,108 @@ public sealed class RetailEventScheduler
     private uint _totalProcessed;
     private uint _processedThisUpdate;
     private bool _valid;
+    private readonly SortedSet<int> _changedSlots = [];
+    private bool _flushing;
+    private bool _interruptedFlush;
+
+    /// <summary>Capture only between complete flushes; callbacks are not continuations.</summary>
+    public RetailEventSchedulerSnapshot Snapshot
+    {
+        get
+        {
+            if (_flushing || _interruptedFlush)
+                throw new InvalidOperationException("Cannot capture an active or interrupted Flush.");
+            return new(BitConverter.SingleToUInt32Bits(_time), _frameCount,
+                _currentBufferNum, _readyToFlushBuffer, _liveEvents, _totalProcessed,
+                _processedThisUpdate, _valid, _freeList,
+                Array.AsReadOnly(_changedSlots.Select(SlotSnapshot).ToArray()),
+                Array.AsReadOnly(Enumerable.Range(0, _ring.Length)
+                    .Where(index => _ring[index].Count != 0)
+                    .Select(index => new RetailEventLaneSnapshot(index, Array.AsReadOnly(_ring[index].ToArray())))
+                    .ToArray()),
+                Array.AsReadOnly(_overflow.ToArray())) { Float24Arithmetic = Float24Arithmetic };
+        }
+    }
+
+    public RetailEventScheduler(RetailEventSchedulerSnapshot snapshot) : this()
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        Float24Arithmetic = snapshot.Float24Arithmetic;
+        static bool Handle(int value) => value >= -1 && value < MaxEvents;
+        if (!Handle(snapshot.FreeList) ||
+            (uint)snapshot.CurrentBufferNum >= EventListBuffers ||
+            (uint)snapshot.ReadyToFlushBuffer >= EventListBuffers ||
+            snapshot.LiveEvents < 0 || snapshot.LiveEvents > MaxEvents ||
+            snapshot.TimeBits != BitConverter.SingleToUInt32Bits(TimeAtFrameCount(snapshot.FrameCount)) ||
+            snapshot.Slots is null || snapshot.Lanes is null || snapshot.Overflow is null)
+            throw new ArgumentException("Invalid scheduler snapshot.", nameof(snapshot));
+        int previous = -1;
+        foreach (RetailEventSlotSnapshot slot in snapshot.Slots)
+        {
+            if (slot is null || slot.Handle <= previous || !Handle(slot.Handle) ||
+                !Handle(slot.NextFree))
+                throw new ArgumentException("Invalid or noncanonical pool slot.", nameof(snapshot));
+            previous = slot.Handle;
+            _pool[slot.Handle] = new PooledEvent { NextFree = slot.NextFree,
+                EventNum = slot.EventNum, Listener = slot.Listener, Data = slot.Data,
+                TimeBits = slot.TimeBits, Reuse = slot.Reuse };
+            TrackSlot(slot.Handle);
+            if (!_changedSlots.Contains(slot.Handle))
+                throw new ArgumentException("Baseline pool slots must be omitted.", nameof(snapshot));
+        }
+        var queued = new HashSet<int>();
+        void Queue(int handle, List<int> destination)
+        {
+            if (handle < 0 || !Handle(handle) || !queued.Add(handle))
+                throw new ArgumentException("Invalid or multiply queued handle.", nameof(snapshot));
+            destination.Add(handle);
+        }
+        previous = -1;
+        foreach (RetailEventLaneSnapshot lane in snapshot.Lanes)
+        {
+            if (lane is null || lane.LaneIndex <= previous ||
+                (uint)lane.LaneIndex >= _ring.Length || lane.Handles is null || lane.Handles.Count == 0)
+                throw new ArgumentException("Invalid or noncanonical lane.", nameof(snapshot));
+            previous = lane.LaneIndex;
+            foreach (int handle in lane.Handles) Queue(handle, _ring[lane.LaneIndex]);
+        }
+        foreach (int handle in snapshot.Overflow) Queue(handle, _overflow);
+        var free = new HashSet<int>();
+        for (int handle = snapshot.FreeList; handle != -1; handle = _pool[handle].NextFree)
+            if (!free.Add(handle) || queued.Contains(handle))
+                throw new ArgumentException("Free-list cycle or queued ownership overlap.", nameof(snapshot));
+        if (snapshot.Valid ? snapshot.LiveEvents != queued.Count : queued.Count != 0)
+            throw new ArgumentException("Scheduler event count disagrees with queue ownership.", nameof(snapshot));
+        _freeList = snapshot.FreeList;
+        _time = BitConverter.UInt32BitsToSingle(snapshot.TimeBits);
+        _frameCount = snapshot.FrameCount;
+        _currentBufferNum = snapshot.CurrentBufferNum;
+        _readyToFlushBuffer = snapshot.ReadyToFlushBuffer;
+        _liveEvents = snapshot.LiveEvents;
+        _totalProcessed = snapshot.TotalProcessed;
+        _processedThisUpdate = snapshot.ProcessedThisUpdate;
+        _valid = snapshot.Valid;
+    }
+
+    private RetailEventSlotSnapshot SlotSnapshot(int handle)
+    {
+        PooledEvent slot = _pool[handle];
+        return new(handle, slot.NextFree, slot.EventNum, slot.Listener, slot.Data, slot.TimeBits, slot.Reuse);
+    }
+
+    private void TrackSlot(int handle)
+    {
+        PooledEvent slot = _pool[handle];
+        bool initial = slot.NextFree == (handle == MaxEvents - 1 ? -1 : handle + 1) &&
+            slot.EventNum == 0 && slot.Listener == 0 && slot.Data == 0 && slot.TimeBits == 0 && !slot.Reuse;
+        if (initial) _changedSlots.Remove(handle);
+        else _changedSlots.Add(handle);
+    }
 
     /// <summary>Builds an initialised manager, as <c>CEventManager::Init</c> leaves one.</summary>
-    public RetailEventScheduler()
+    public RetailEventScheduler(bool useFloat24Arithmetic = false)
     {
+        Float24Arithmetic = useFloat24Arithmetic;
         for (int i = 0; i < _ring.Length; i++)
         {
             _ring[i] = [];
@@ -243,6 +355,9 @@ public sealed class RetailEventScheduler
 
     /// <summary><c>mTime</c>.</summary>
     public float Time => _time;
+
+    /// <summary>Explicit PC24/RN routing arithmetic; default remains PC53.</summary>
+    public bool Float24Arithmetic { get; }
 
     /// <summary><c>mFrameCount</c>.</summary>
     public uint FrameCount => _frameCount;
@@ -276,6 +391,9 @@ public sealed class RetailEventScheduler
     /// </summary>
     public void Init()
     {
+        if (_flushing) throw new InvalidOperationException("Cannot reset during Flush.");
+        _interruptedFlush = false;
+        _changedSlots.Clear();
         _time = 0.0f;
         _currentBufferNum = 0;
         _frameCount = 0;
@@ -351,7 +469,7 @@ public sealed class RetailEventScheduler
         int reuseHandle = -1) => AddEvent(
             eventNum,
             listener,
-            RelativeDueTime(_time, timeFromNow),
+            StoredSum(_time, timeFromNow),
             priority,
             data,
             reuseHandle);
@@ -392,7 +510,7 @@ public sealed class RetailEventScheduler
         int offsetBuffer;
         RetailEventPlacement placement;
 
-        if (IsImmediate(_time, time))
+        if (Float24Arithmetic ? RetailFloat24.Add(_time, ImmediateWindow) >= time : IsImmediate(_time, time))
         {
             placement = RetailEventPlacement.ImmediateBucket;
             offsetBuffer = _currentBufferNum;
@@ -401,7 +519,7 @@ public sealed class RetailEventScheduler
                 // fld mTime / fadd 0.0001f / fstp dword: this one IS rounded to
                 // float before it is stored as the due time.
                 nextTimeBits = BitConverter.SingleToUInt32Bits(
-                    (float)((double)_time + (double)ImmediateFloor));
+                    StoredSum(_time, ImmediateFloor));
             }
         }
         else
@@ -412,7 +530,10 @@ public sealed class RetailEventScheduler
                     RetailEventPlacement.RejectedTooFarAhead, -1, -1, -1, nextTimeBits);
             }
 
-            offsetBuffer = DelayBufferOffset(_time, time);
+            offsetBuffer = Float24Arithmetic
+                ? (int)Math.Floor(RetailFloat24.Multiply(
+                    RetailFloat24.Subtract(RetailFloat24.Subtract(time, _time), DelayBias), GameFrameRate))
+                : DelayBufferOffset(_time, time);
 
             if (offsetBuffer >= OverflowBucketThreshold)
             {
@@ -475,7 +596,11 @@ public sealed class RetailEventScheduler
     /// between filing and flushing; it is the only way a filed event can have a
     /// null listener, since <see cref="AddEvent"/> refuses one outright.
     /// </summary>
-    public void ClearListener(int handle) => _pool[handle].Listener = 0;
+    public void ClearListener(int handle)
+    {
+        _pool[handle].Listener = 0;
+        TrackSlot(handle);
+    }
 
     /// <summary>
     /// <c>CEventManager::AddEvent(CScheduledEvent*)</c> —
@@ -496,7 +621,7 @@ public sealed class RetailEventScheduler
         RetailEventAdmission admission = AddEvent(
             owned.EventNum,
             owned.Listener,
-            (float)((double)_time + (double)BitConverter.UInt32BitsToSingle(owned.TimeBits)),
+            StoredSum(_time, BitConverter.UInt32BitsToSingle(owned.TimeBits)),
             RetailEventPriority.StartOfFrame,
             owned.Data);
         FreeEvent(handle);
@@ -546,6 +671,12 @@ public sealed class RetailEventScheduler
     /// </summary>
     internal static float TimeAtFrameCount(uint frameCount) =>
         (float)((double)frameCount * (double)ClockTick);
+
+    // Relative and NEXT_FRAME additions have their own final F32 store.
+    // Delay routing instead retains each PC24 result until floor's F64 argument.
+    private float StoredSum(float left, float right) => Float24Arithmetic
+        ? (float)RetailFloat24.Add(left, right)
+        : RelativeDueTime(left, right);
 
     // Shared by the pool and the sparse Level100 ground-shutdown owner.
     // Preserve the scheduler's existing bounded arithmetic contract.
@@ -601,6 +732,17 @@ public sealed class RetailEventScheduler
     public IReadOnlyList<RetailEventDispatch> Flush(
         Action<RetailEventScheduler, RetailEventDispatch>? handler = null)
     {
+        if (_flushing || _interruptedFlush)
+            throw new InvalidOperationException("Cannot resume an active or interrupted Flush.");
+        _flushing = true;
+        try { return FlushCore(handler); }
+        catch { _interruptedFlush = true; throw; }
+        finally { _flushing = false; }
+    }
+
+    private IReadOnlyList<RetailEventDispatch> FlushCore(
+        Action<RetailEventScheduler, RetailEventDispatch>? handler)
+    {
         uint previous = _totalProcessed;
         int ready = _readyToFlushBuffer;
         _overflowCursor = 0;
@@ -613,6 +755,7 @@ public sealed class RetailEventScheduler
             {
                 int handle = slot[i];
                 _pool[handle].Reuse = false;
+                TrackSlot(handle);
                 if (_pool[handle].Listener != 0)
                 {
                     Dispatch(handler, handle, (RetailEventPriority)lane, fromOverflow: false);
@@ -628,6 +771,7 @@ public sealed class RetailEventScheduler
         {
             int handle = _overflow[_overflowCursor];
             _pool[handle].Reuse = false;
+            TrackSlot(handle);
             _overflowCursor++;
             if (_pool[handle].Listener != 0)
             {
@@ -728,6 +872,7 @@ public sealed class RetailEventScheduler
         _pool[handle].Data = 0;
         _pool[handle].Listener = 0;
         _freeList = handle;
+        TrackSlot(handle);
     }
 
     private int Acquire(
@@ -747,6 +892,7 @@ public sealed class RetailEventScheduler
                 reused.Data = data;
             }
 
+            TrackSlot(reuseHandle);
             return reuseHandle;
         }
 
@@ -764,6 +910,7 @@ public sealed class RetailEventScheduler
         fresh.Data = data;
         fresh.Reuse = false;
         fresh.NextFree = -1;
+        TrackSlot(handle);
         return handle;
     }
 

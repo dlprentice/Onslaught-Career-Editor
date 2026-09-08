@@ -502,12 +502,16 @@ public sealed class Level100FullChainTests
             driver.MechanicsAtAbort
                 .Where(actor =>
                     actor.AiState == SimulationConstants.ReleasedAiStateOff &&
-                    actor.Intent == Level100ActorCommandIntent.Attacking)
+                    driver.RoundLaunches.Any(launch => launch.Tick <= abortTick &&
+                        launch.OwnerActorId == actor.ActorId.Value))
                 .ToArray();
         _output.WriteLine(
-            $"abort at t{abortTick}; AI_OFF and attacking: " +
+            $"abort at t{abortTick}; AI_OFF owners that fired before abort: " +
             string.Join(", ", silenced.Select(actor => actor.ActorId.Value)));
         Assert.NotEmpty(silenced);
+        // Retail SetAIState(1), 0x4fdcb0, also clears the controller's target
+        // reader and attack flag. Its post-abort intent is no longer Attacking.
+        Assert.All(silenced, actor => Assert.Null(actor.TargetActorId));
 
         // Every round that was ever launched by an AI_OFF owner after the
         // abort. The released gate makes this set empty.

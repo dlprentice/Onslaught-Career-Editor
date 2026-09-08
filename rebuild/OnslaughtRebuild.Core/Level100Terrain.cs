@@ -258,6 +258,26 @@ public sealed class Level100Terrain
     }
 
     /// <summary>
+    /// Released integer lookup 47ea20 used by the AirGuide clearance scan.
+    /// Its mask aliases 512..1023 to edge arms and ignores high bits. The X
+    /// edge really shifts Y by EIGHT; this is distinct from a regular lattice
+    /// sample or a clamp. The signed interpretation belongs to this consumer.
+    /// </summary>
+    public int SampleAirGuideHeightUnits(int retailX, int retailY)
+    {
+        int xMask = retailX & 0x3ffe00, yMask = retailY & 0x3ffe00;
+        int index;
+        if ((xMask | yMask) == 0)
+            index = 81 * (64 * ((retailX >> 3) & 63) + ((retailY >> 3) & 63)) +
+                9 * (retailY & 7) + (retailX & 7);
+        else if (xMask == 512 && yMask == 512) index = 331775;
+        else if (xMask == 512) index = 326600 + 81 * ((retailY >> 8) & 63) + 9 * (retailY & 7);
+        else if (yMask == 512) index = 5175 + 5184 * ((retailX >> 3) & 63) + (retailX & 7);
+        else return 0;
+        return _heightSamples[index];
+    }
+
+    /// <summary>
     /// Returns the released PC patch-complexity score for one 8x8 terrain
     /// tile. Steam evaluates the missing midpoint error at 2-, 4-, and 8-unit
     /// subdivisions, retains the greatest integer average, applies the HFLD
