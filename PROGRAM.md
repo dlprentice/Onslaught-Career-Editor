@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -23,6 +23,17 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 David retains desktop control until he explicitly releases it. Prioritize
 RE and rebuild source/headless work meanwhile; live retail/rebuild playthroughs
 and the Save Lab UI workflow remain pending.
+
+David delegated project and companion direction on September 8. Prioritize a
+faithful Godot game that the community can play and inspect, with Windows as the
+primary audience and native Linux support. Keep a later enhanced version separate
+from retail defaults. Native execution of selected original routines supports RE;
+building a second complete port is not an additional active deliverable.
+Prepare a short development video from the actual Godot renderer with a stated
+revision, input route and known limitations. An isolated display may render it
+without controlling David's desktop; a synthetic demonstration is not a player
+acceptance run. Keep the existing capture/launcher owners rather than creating a
+separate presentation or test framework.
 
 David's September 7 priority is startup, menus and complete Level 100 parity.
 Audit the actual Ghidra database in bounded cohorts against pristine bytes and
@@ -142,6 +153,13 @@ September 6. Retain the existing WinUI/AppCore source and tests as migration mat
 the merged v1.0.12 source cut and its open Windows acceptance are historical status,
 not a queued WinUI release. [README.RELEASE.md](README.RELEASE.md) retains that artifact's
 procedure. The active phase begins with the portable AppCore-backed Save Lab workflow.
+
+The companion's product direction is a focused cross-platform front door:
+locate retail data, launch the rebuild, manage careers and recovery copies, and
+explain optional patches before applying them. Finish useful end-to-end workflows
+before migrating secondary catalogs or maintainer UI. Reuse one AppCore
+implementation of file safety and save correctness. Windows and Linux packaging
+are both targets; Linux checks do not establish Windows runtime acceptance.
 
 Convert the companion while preserving careers,
 saves, safe copies, patching, media and related toolkit capabilities. Acceptance:

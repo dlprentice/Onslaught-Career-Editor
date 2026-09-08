@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete; scoped development active
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 Summary: the three outcomes, acceptance criteria, evidence rules, and full retail RE mandate.
 
 This is the maintainer's statement of what is wanted. Measurements can correct
@@ -23,6 +23,19 @@ Execution history remains in Git and the existing evidence owners.
 These outcomes are coequal. RE supplies behavior to the rebuild and toolkit;
 their missing capabilities expose the next retail questions. A task's focus
 does not demote either of the other outcomes.
+
+David delegated project and companion direction on September 8. The faithful
+Godot game is the delivery priority, with Windows as the primary audience and
+native Linux support retained. A later improved version will build on the
+faithful baseline with its changes kept separate; improvements must not silently
+alter retail defaults. RE should produce executable contracts and resolve
+playable defects while preserving its full-retail mandate.
+
+A second complete native port is not a prerequisite or a fourth active lane.
+Use isolated native execution of original routines when it gives the Godot
+implementation a useful behavioral oracle. Deliver tangible, reproducible
+gameplay slices and clearly labelled progress footage alongside the code.
+Videos demonstrate implemented behavior; they do not replace parity acceptance.
 
 David selected Godot to replace the WinUI 3 companion on September 6. The existing
 WinUI implementation remains migration material and portable AppCore code is being
@@ -106,10 +119,11 @@ plus fresh inspection governs database identity and structural state.
   reserved fields, and unknown bytes; do not synthesize `.bes` saves.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation,
   filesystem, clock, process, network, and GPU APIs.
-- Ghidra promotion requires the owning procedure: exact identity, recoverable
-  off-volume backup, isolated rehearsal, independent refutation, dry run, apply,
-  separate readback, non-target comparison, POST backup, and byte-verified checkpoint
-  refresh. The hold still applies; access alone does not authorize mutation.
+- Ghidra promotion follows the current Linux owner procedure: exact cohort and
+  identity, independent restore-proven PRE recovery, isolated rehearsal and review,
+  scoped apply, separate readback, collateral comparison and verified POST recovery.
+  Declare whether tracked-checkpoint refresh is included; it is not automatic.
+  The historical development hold is lifted, and evidence protections remain.
 - Preserve unique evidence and unrelated changes. Follow [AGENTS.md](AGENTS.md)
   for current storage, publication, and scoped cleanup rules; retired Windows
   quarantine scripts and deleted Recovery paths are not operational routes.
