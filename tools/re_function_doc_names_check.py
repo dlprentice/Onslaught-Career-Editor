@@ -61,6 +61,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import csv
 import hashlib
 import os
 import re
@@ -78,6 +79,9 @@ DEFAULT_TABLE = (
     / "binary-analysis"
     / "ghidra-function-name-table-2026-08-31.tsv"
 )
+CURRENT_NAME_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv"
+CURRENT_NAME_OVERLAY_SHA256 = "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf"
+CURRENT_NAME_OVERLAY_ROWS = 5
 BASELINE_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
@@ -381,6 +385,46 @@ def validate_current_table_contract(
     return current
 
 
+def apply_current_name_overlay(
+    table: NameTable, manifest: Path = CURRENT_NAME_OVERLAY, *,
+    expected_sha256: str = CURRENT_NAME_OVERLAY_SHA256,
+    expected_rows: int = CURRENT_NAME_OVERLAY_ROWS,
+) -> NameTable:
+    """Compose the sealed name-only delta without rewriting dated geometry."""
+    if sha256_file(manifest) != expected_sha256:
+        raise ValueError("current name overlay SHA-256 differs")
+    with manifest.open(encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if reader.fieldnames != ["addr", "liveKind", "currentName", "proposedName",
+                                "currentCommentBase64", "proposedCommentBase64",
+                                "bodyStart", "bodyEndExclusive", "bodySha256"]:
+            raise ValueError("current name overlay columns differ")
+        rows = list(reader)
+    if len(rows) != expected_rows:
+        raise ValueError("current name overlay row count differs")
+    entry = dict(table.entry)
+    seen = set()
+    proposed_names = set()
+    for row in rows:
+        address = row["addr"]
+        proposed = row["proposedName"]
+        if address in seen or address not in table.entry:
+            raise ValueError("current name overlay duplicate or missing address")
+        if (row["liveKind"] != "FUNCTION" or row["currentName"] != table.entry[address]
+                or proposed == row["currentName"] or proposed in proposed_names
+                or re.fullmatch(SYMBOL, proposed) is None or proposed in table.entry.values()):
+            raise ValueError("current name overlay stale or invalid name")
+        if table.geometry[address] != (int(row["bodyStart"], 16), int(row["bodyEndExclusive"], 16) - 1):
+            raise ValueError("current name overlay body geometry differs")
+        seen.add(address)
+        proposed_names.add(proposed)
+        entry[address] = proposed
+    spans = sorted((lo, hi, entry[address]) for address, (lo, hi) in table.geometry.items())
+    return NameTable(entry, dict(table.geometry), [span[0] for span in spans],
+                     [span[1] for span in spans], [span[2] for span in spans],
+                     table.text_lo, table.text_hi, f"{table.source} + {manifest}", table.comments)
+
+
 def _cells(line: str) -> list[str]:
     body = line.strip()
     if body.startswith("|"):
@@ -614,6 +658,7 @@ def run(
     strict: bool,
     report_path: Path | None,
     current_claim_docs: tuple[Path, ...] = (),
+    use_current_overlay: bool = False,
 ) -> int:
     if not doc_root.is_dir():
         print(f"UNAVAILABLE: document root not found: {doc_root}", file=sys.stderr)
@@ -631,6 +676,8 @@ def run(
             table = validate_current_table_contract(table_path)
         else:
             table = load_table(table_path)
+        if use_current_overlay:
+            table = apply_current_name_overlay(table)
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
         return 2
@@ -1068,6 +1115,33 @@ def _self_test() -> int:
         failures += 0 if ok else 1
         print(f"  [{status}] complete table contract accepts exact geometry + one rename")
 
+        overlay = base / "overlay.tsv"
+        overlay_header = "addr\tliveKind\tcurrentName\tproposedName\tcurrentCommentBase64\tproposedCommentBase64\tbodyStart\tbodyEndExclusive\tbodySha256\n"
+        overlay_row = "0x00402000\tFUNCTION\tCThing__Gamma\tCThing__Delta\t-\tYQ==\t0x00402000\t0x00402100\t" + "0" * 64 + "\n"
+        overlay.write_text(overlay_header + overlay_row, encoding="utf-8")
+        composed = apply_current_name_overlay(load_table(current), overlay,
+                    expected_sha256=sha256_file(overlay), expected_rows=1)
+        ok = (composed.lookup_entry("0x00402000") == "CThing__Delta"
+              and composed.lookup_containing(0x00402001) == "CThing__Delta"
+              and composed.geometry == load_table(current).geometry
+              and load_table(current).lookup_entry("0x00402000") == "CThing__Gamma")
+        failures += not ok
+        print(f"  [{'ok ' if ok else 'FAIL'}] overlay updates entry and containment; historical table stays exact")
+        expect_error("overlay exact hash required", "SHA-256 differs",
+            lambda: apply_current_name_overlay(load_table(current), overlay,
+                expected_sha256="0" * 64, expected_rows=1))
+        for label, changed, count, message in (
+            ("stale overlay name", overlay_row.replace("CThing__Gamma", "CThing__Old"), 1, "stale or invalid"),
+            ("duplicate overlay address", overlay_row * 2, 2, "duplicate or missing"),
+            ("absent overlay address", overlay_row.replace("0x00402000", "0x00403000"), 1, "duplicate or missing"),
+            ("changed overlay bounds", overlay_row.replace("0x00402100", "0x004020ff"), 1, "body geometry"),
+            ("invalid overlay name", overlay_row.replace("CThing__Delta", "bad name"), 1, "stale or invalid"),
+            ("overlay count mismatch", overlay_row, 2, "row count"),
+        ):
+            overlay.write_text(overlay_header + changed, encoding="utf-8")
+            expect_error(label, message, lambda: apply_current_name_overlay(load_table(current), overlay,
+                expected_sha256=sha256_file(overlay), expected_rows=count))
+
         moved = base / "moved.tsv"
         moved.write_text(
             current.read_text(encoding="utf-8").replace("0x004020ff", "0x004020fe"),
@@ -1142,7 +1216,8 @@ def _self_test() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--docs", type=Path, default=DEFAULT_DOC_ROOT)
-    parser.add_argument("--table", type=Path, default=DEFAULT_TABLE)
+    parser.add_argument("--table", type=Path, default=None,
+                        help="explicit historical table; default composes the pinned current overlay")
     parser.add_argument(
         "--include-prose",
         action="store_true",
@@ -1162,11 +1237,12 @@ def main(argv: list[str] | None = None) -> int:
         return _self_test()
     return run(
         args.docs,
-        args.table,
+        args.table if args.table is not None else DEFAULT_TABLE,
         args.include_prose,
         args.strict,
         args.report,
         CURRENT_CLAIM_DOCS,
+        use_current_overlay=args.table is None,
     )
 
 

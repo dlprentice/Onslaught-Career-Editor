@@ -1,7 +1,7 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-05
+Last updated: 2026-09-07
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
@@ -32,9 +32,9 @@ newline**, one row per payload file as
 Battle Engine collision-shape name refresh against the tracked tree, live
 maintainer project, and verified POST backup: all reproduce `745c00ad…` at 19
 files and 187,517,829 bytes. The tracked checkpoint is fixed at `db.18634`
-until an authorized semantic promotion. The sole mutable Linux owner was
-measured at `db.18635` during activation; re-inspect it before a separately
-authorized mutation and never overlap ceremonies.
+until an explicitly scoped checkpoint refresh. The working owner has since
+received the five corrections below; never synchronize the two homes automatically.
+Re-inspect the selected working owner before every mutation.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
 described the 2026-08-14 HUD route demotion while its `db` and payload pins had
@@ -138,12 +138,12 @@ readback is
 and the tracked-snapshot reopen receipt beside it is 5,795 bytes, SHA-256
 `300f30085b8ffdae99d8b82850821d0671305002bb1fec97298d14809621e3f5`.
 
-**Linux activation status (2026-08-31).** OpenJDK 21.0.12.1 is installed at
+**Linux activation evidence (2026-08-31).** OpenJDK 21.0.12.1 is installed at
 `/usr/lib/jvm/java-21-openjdk`, and the verified Ghidra 12.1.3 PUBLIC runtime is
 installed at `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` (5,218 files,
 905,553,502 bytes, inventory SHA-256
 `636e51e4d487f64fcfcc4f9516181708827aedd25f2b9ca133c53977519c066b`).
-The sole mutable PC project is now
+At activation, the sole mutable PC project became
 `local-lab/ghidra-projects/BEA/`: Ghidra 12.1.3 `db.18635`, owner `xsniper80`,
 18 files / 118,934,388 bytes, inventory
 `4320a3500a559da663562046fe3f87a519c9482c3ce8c36d36d80b8e87ee225e`.
@@ -151,11 +151,44 @@ It was activated only after a restore-open-verified Archive A PRE, explicit
 writable open, separate-process readback, exact full semantic comparison, and a
 restore-open-verified POST. PRE and POST agree byte-for-byte across all 8,329
 internal function rows and all program metrics; the storage migration changed
-no reviewed semantics. Therefore this tracked tree remains the reviewed
-`db.18634` checkpoint until a future semantic promotion. External recovery is
+no reviewed semantics. This tracked tree remains the reviewed
+`db.18634` checkpoint. Historical recovery is
 the sealed content-addressed package at
 `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`; restore
 from it to a new path before opening anything.
+
+**First-training corrections (2026-09-07).** The working project now measures
+`db.18636`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+`40abc51047b99c98171c475e41df109843b43ec8d62453f094fc3176ac932df4`.
+Its main database is 68,665,344 bytes, SHA-256
+`213d1f864708a8c3da88f107aa94a163c7faa171f9ff52ab95b61023704e6104`.
+The immutable [manifest](../../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv)
+and [spec](../../tools/cohort-specs/first-training-semantic-corrections.spec.tsv)
+correct exactly five names and their nonrepeatable comments: Battle Engine charge
+dispatch, Jet charge dispatch, weapon charge readiness, weapon fire, and the bitmap
+font glyph gate. Source/body evidence and unresolved type/behavior limits are in
+each comment. No function boundary, prototype, tag or repeatable comment changed.
+
+The isolated rehearsal and separate live readback agree byte-for-byte over all
+8,329 function rows and program metrics. Exactly five rows changed names/comments;
+8,324 stayed unchanged, and only the program-wide comment digest moved. A stale
+comment negative control was rejected before writes. Evidence is in
+`local-lab/ghidra-first-training-20260907-v1/`: `live-readback.json` is 2,329 bytes,
+SHA-256 `18e87726fc587bd4244ab8b65d923eae142807cdc2a086f239770495a23e516f`.
+Both PRE and POST under
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-07-first-training-semantics/`
+were copied, hash-compared, restored elsewhere and opened read-only successfully;
+the POST restore receipt is 5,676 bytes, SHA-256
+`9157c8aca6d1cdb3edb779c3ddf3def082f98d06702d695df9e0cb4a06cdb74c`.
+
+The tracked project payload remains the exact `745c00ad…` checkpoint above.
+This cohort deliberately excludes its refresh. A read-only checkpoint-copy open
+was refused by its historical `david` owner; comparison instead used its retained
+activation export, tied to the freshly matching checkpoint payload, and the fresh
+working PRE export, which was byte-identical to that export. No checkpoint reopen
+or runtime-parity result is claimed. Current documentation names compose the
+frozen August 31 table with the five-row manifest through
+`tools/re_function_doc_names_check.py`; historical explicit-table consumers stay frozen.
 
 Related (not this folder):
 
@@ -164,7 +197,7 @@ Related (not this folder):
 | Expedition ops (ignored repo-local lab) | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout (runbook, state, corrections) |
 | Wave discovery notes (tracked) | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` |
 | Isolated Xbox oracle evidence | `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/` in the canonical checkout (exports/receipts remain; project databases are restored only through the sealed external catalog, not used as PC live owners) |
-| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` in the canonical checkout (`db.18635`, Ghidra 12.1.3, owner `xsniper80`) |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` in the canonical checkout (Ghidra 12.1.3, owner `xsniper80`; measured version above) |
 | Linux activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout (completion receipt, PRE/POST semantic exports, logs) |
 | Xbox promotion evidence | `reverse-engineering/binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md` (1,166 instruction-local source maps per build; no whole-function transfer) |
 
@@ -230,14 +263,14 @@ letters speculatively:
 | Installed Ghidra runtime | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` — verified PUBLIC 12.1.3 inventory `636e51e4…066b` |
 | Headless entry | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC/support/analyzeHeadless` |
 | Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; `db.18634`; preserve in place) |
-| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` (`db.18635`; sole writable owner) |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` (sole writable owner; latest measured state above) |
 | Activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` (ignored completion receipt and semantic PRE/POST) |
 | External recovery | `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` (sealed package; restore elsewhere before opening) |
+| First-training correction recovery | `/srv/archive-a/onslaught-ghidra-cold/2026-09-07-first-training-semantics/` (verified working PRE and POST; restore elsewhere before opening) |
 | Dated copies of both homes | `/srv/archive-a/onslaught-ghidra-cold/2026-09-04/` (checkpoint and mutable project stored separately) |
-| Same-drive cold mirror pending reconciliation | `/srv/archive-b/onslaught-ghidra-cold-mirror/` (B also holds the live repository; this is not drive-failure protection) |
 
-The former Samsung raw snapshot, Archive A Windows `source/` tree, and
-Recovery reconciliation folder have been deleted. Their old receipts are
+The former Samsung raw snapshot, Archive A Windows `source/` tree, Recovery
+reconciliation folder and verified redundant B cold mirror have been deleted. Their old receipts are
 history, not additional surviving database copies. Keep Archive A's independent cold
 recovery and David's explicit historical-project retention holds. Reconcile proven redundant
 copies under the approved storage plan with exact-path/hash records; do not ask again solely
@@ -254,7 +287,9 @@ and scripts under `tools/` for automation only after the selected project and
 ceremony gate permit them. Do not assume a Ghidra MCP
 extension is installed or required. A mutation/promotion plan must explicitly cover its
 cohort, live apply and tracked refresh; those approved steps do not need separate permission
-requests. The current development hold still applies. Default inspection is read-only on a
+requests. David resumed scoped development on September 6 and explicitly requested
+a Ghidra quality/correction pass on September 7; the historical blanket development
+hold no longer applies. Default inspection is read-only on a
 disposable copy, never an automatic live open or checkpoint synchronization.
 
 ## Promotion-tool status

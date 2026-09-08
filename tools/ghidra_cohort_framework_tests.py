@@ -62,6 +62,8 @@ import difflib
 import hashlib
 import io
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -156,6 +158,13 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # UpdateWeaponEffect label. Fresh db.18633 replica census/identity/dry/apply/
 # readback PASS (1 row, 8328 untouched, columnsMoved={name=1}). This grant is
 # SET_NAME only and is not authority for a prototype, boundary, or other field.
+# first-training-semantic-corrections is granted 2026-09-07 for exactly five
+# names and non-repeatable comments; signatures, other metadata and the tracked
+# checkpoint stay unchanged. local-lab/ghidra-first-training-20260907-v1/
+# sealed-dry.json and sealed-readback.json passed; stale-comment-negative.json
+# refused CURRENT COMMENT MISMATCH before writes. Independent full inventory
+# comparison found only the five name/display-signature/comment rows changed,
+# with all other function rows unchanged and program delta only commentsSha256.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -169,6 +178,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort-cockpit-dual-owner",
     "name-cohort-round-dual-owner",
     "name-cohort-battleengine-set-collision-shape",
+    "first-training-semantic-corrections",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -421,6 +431,7 @@ FROZEN_COLUMNS = [
 VERBS = [
     "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REMOVE_STALE_BOOKMARK",
     "SET_BODY", "SET_NAME", "SET_PROTOTYPE", "SET_DATA_POINTER",
+    "SET_COMMENT", "SET_REPEATABLE_COMMENT",
 ]
 
 # The only Ghidra mutation calls the framework may contain, and how many times.
@@ -432,6 +443,8 @@ AUTHORIZED_MUTATION_CALLS = {
     ".createData(": 1,       # SET_DATA_POINTER: type one slot as a pointer
     ".createLabel(": 1,      # SET_DATA_POINTER: class-identity label
     ".setVarArgs(": 1,
+    ".setComment(": 1,
+    ".setRepeatableComment(": 1,
     ".removeBookmark(": 1,
     ".disassemble(": 2,        # bounded phase 1, and the escape fault injector
     ".clearCodeUnits(": 5,     # resync, precedent, extraclear, clearescape,
@@ -440,8 +453,6 @@ AUTHORIZED_MUTATION_CALLS = {
 }
 
 FORBIDDEN_MUTATION_CALLS = [
-    ".setComment(",
-    ".setRepeatableComment(",
     ".addTag(",
     ".removeTag(",
     ".setCallingConvention(",
@@ -558,6 +569,9 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         "    // can never satisfy it.\n"
         "    static final String REQUIRED_LIVE_PROJECT_DIR =\n"
         r'        "c:\\users\\david\\ghidra\\projects\\bea.rep";' "\n"
+        "    // Linux uses file identity so the protected bind mount is equivalent.\n"
+        "    static final String REQUIRED_LINUX_LIVE_PROJECT_DIR =\n"
+        '        "/srv/archive-b/Onslaught-Career-Editor/local-lab/ghidra-projects/BEA/BEA.rep";\n'
         "    // The tracked repository snapshot stays forbidden and is still checked\n"
         "    // first, exactly as the rehearsal framework checked its forbidden markers.\n"
         "    static final String[] FORBIDDEN_PATH_MARKERS = {\n"
@@ -567,6 +581,9 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         "    // Cohorts the maintainer has authorized for a live apply, one entry per\n"
         "    // completed per-cohort grant.  A cohort id absent from this list can never\n"
         "    // reach live, whatever its spec declares.\n"
+        "    // First-training grant: five names + non-repeatable comments only;\n"
+        "    // sealed-dry/readback PASS and stale-comment-negative refusal in\n"
+        "    // local-lab/ghidra-first-training-20260907-v1.\n"
         "    static final String[] LIVE_AUTHORIZED_COHORTS = {\n"
         '        "boundary-cohort41", "name-cohort160", "abi-cohort294",\n'
         '        "tentacle-chain-a", "tentacle-chain-b",\n'
@@ -580,6 +597,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort-cockpit-dual-owner",\n'
         '        "name-cohort-round-dual-owner",\n'
         '        "name-cohort-battleengine-set-collision-shape",\n'
+        '        "first-training-semantic-corrections",\n'
         "    };\n",
     ),
     (
@@ -590,7 +608,19 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         "                + projectPath);\n"
         "            return;\n"
         "        }\n",
-        "        if (!lower.equals(REQUIRED_LIVE_PROJECT_DIR)) {\n"
+        "        boolean liveProject = false;\n"
+        "        try {\n"
+        "            if (File.separatorChar == '\\\\') {\n"
+        "                liveProject = lower.equals(REQUIRED_LIVE_PROJECT_DIR);\n"
+        "            } else {\n"
+        "                liveProject = Files.isSameFile(Paths.get(projectPath),\n"
+        "                    Paths.get(REQUIRED_LINUX_LIVE_PROJECT_DIR));\n"
+        "            }\n"
+        "        } catch (java.io.IOException exc) {\n"
+        "            // Missing or inaccessible identity cannot authorize an open.\n"
+        "            liveProject = false;\n"
+        "        }\n"
+        "        if (!liveProject) {\n"
         '            println("COHORT_REFUSE reason=project_is_not_the_live_maintainer_project"\n'
         '                + " path=" + projectPath);\n'
         "            return;\n"
@@ -1413,11 +1443,101 @@ class NegativeControlTests(unittest.TestCase):
     def test_a_widened_mutable_column_set_would_be_caught(self) -> None:
         block = self.base.split("static Set<String> mutableColumnsFor(", 1)[1]
         block = block.split("\n    }", 1)[0]
-        for banned in ('out.add("commentSha")', 'out.add("tags")',
+        for banned in ('out.add("tags")',
                        'out.add("callingConvention")',
                        'out.add("namespace")'):
             self.assertTrue(banned not in block, banned)
 
+
+
+class CommentCohortTests(unittest.TestCase):
+    def test_comment_verbs_bind_before_and_after_and_freeze_other_axes(self):
+        source = BASE.read_text(encoding="utf-8")
+        for suffix, verb, frozen in (("CommentBase64", "V_SET_COMMENT", "commentSha"),
+                                    ("RepeatableCommentBase64", "V_SET_REPEATABLE_COMMENT", "repeatableCommentSha")):
+            for prefix in ("current", "proposed"):
+                self.assertIn(f'owner.put("col.{prefix}{suffix}", {verb});', source)
+                self.assertIn(f'requireBinding(spec, "col.{prefix}{suffix}", {verb});', source)
+            self.assertIn(f'if (verbs.contains({verb})) {{\n            out.add("{frozen}");', source)
+        self.assertLess(source.index('gateComments(row, fn, verbs, readback);'),
+                        source.index('f.setComment('))
+        self.assertEqual(2, source.count('gateComments(row, f, verbs, true);'))
+        self.assertIn('if (!isTarget)', source)
+        self.assertIn('!mutableColumns.contains(column)', source)
+
+    def test_linux_live_route_requires_same_file_and_keeps_windows_route(self):
+        source = LIVE.read_text(encoding="utf-8")
+        self.assertIn('"/srv/archive-b/Onslaught-Career-Editor/local-lab/ghidra-projects/BEA/BEA.rep"', source)
+        self.assertIn('Files.isSameFile(Paths.get(projectPath),', source)
+        self.assertIn('Paths.get(REQUIRED_LINUX_LIVE_PROJECT_DIR)', source)
+        self.assertIn("if (File.separatorChar == '\\\\')", source)
+        self.assertIn('lower.equals(REQUIRED_LIVE_PROJECT_DIR)', source)
+        self.assertIn('catch (java.io.IOException exc)', source)
+        self.assertLess(source.index('for (String marker : FORBIDDEN_PATH_MARKERS)'),
+                        source.index('Files.isSameFile('))
+        self.assertIn('if (!liveProject)', source)
+
+    def test_executed_comment_decoder_and_exact_state_gates(self):
+        # Execute the production helper methods with tiny Function/Row stand-ins;
+        # no Ghidra project or application is opened.
+        java = shutil.which("java")
+        if java is None:
+            self.skipTest("Java is needed to execute the production comment gates")
+        source = BASE.read_text(encoding="utf-8")
+        helpers = source.split('    static String decodeComment(', 1)[1]
+        helpers = '    static String decodeComment(' + helpers.split('    private void gatePostRows(', 1)[0]
+        program = r"""
+import java.util.*;
+import java.nio.*;
+import java.nio.charset.*;
+class CommentGateProbe {
+    static final String V_SET_COMMENT = "SET_COMMENT";
+    static final String V_SET_REPEATABLE_COMMENT = "SET_REPEATABLE_COMMENT";
+    List<String> failures = new ArrayList<>();
+    static class Row {
+        String liveKind = "FUNCTION";
+        Map<String,String> fields = new HashMap<>();
+        String get(String key) { return fields.getOrDefault(key, ""); }
+    }
+    record Function(String comment, String repeatable) {
+        String getComment() { return comment; }
+        String getRepeatableComment() { return repeatable; }
+    }
+    void fail(Row row, String text) { failures.add(text); }
+    static void check(boolean ok) { if (!ok) throw new AssertionError(); }
+    static String encode(String value) { return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8)); }
+    public static void main(String[] args) throws Exception {
+        check(decodeComment("-") == null);
+        String text = "line one\nline two\tπ";
+        check(text.equals(decodeComment(encode(text))));
+        check(decodeComment(encode("x".repeat(16384))).length() == 16384);
+        for (String invalid : List.of("", "YQ", "YQ==\n", "YR==", "AA==", "/w==", encode("x".repeat(16385)))) {
+            boolean refused = false;
+            try { decodeComment(invalid); } catch (Exception expected) { refused = true; }
+            check(refused);
+        }
+        for (String verb : List.of(V_SET_COMMENT, V_SET_REPEATABLE_COMMENT)) {
+            String suffix = verb.equals(V_SET_COMMENT) ? "CommentBase64" : "RepeatableCommentBase64";
+            Row row = new Row(); row.fields.put("current" + suffix, "-"); row.fields.put("proposed" + suffix, encode(text));
+            CommentGateProbe probe = new CommentGateProbe();
+            probe.gateComments(row, new Function(null, null), Set.of(verb), false); check(probe.failures.isEmpty());
+            probe.gateComments(row, new Function("stale", "stale"), Set.of(verb), false); check(probe.failures.size() == 1);
+            probe.failures.clear();
+            probe.gateComments(row, new Function(text, text), Set.of(verb), true); check(probe.failures.isEmpty());
+            probe.gateComments(row, new Function(null, null), Set.of(verb), true); check(probe.failures.size() == 1);
+            probe.failures.clear(); row.fields.put("current" + suffix, encode(text));
+            probe.gateComments(row, new Function(text, text), Set.of(verb), false); check(probe.failures.size() == 1);
+            probe.failures.clear(); row.liveKind = "SYMBOL:Label";
+            probe.gateComments(row, new Function(text, text), Set.of(verb), false); check(probe.failures.size() == 1);
+            probe.failures.clear(); probe.gateComments(row, null, Set.of(), false); check(probe.failures.isEmpty());
+        }
+    }
+""" + helpers + "}\n"
+        with tempfile.TemporaryDirectory(prefix="bea-comment-gates-", dir="/var/tmp" if Path("/var/tmp").is_dir() else None) as scratch:
+            script = Path(scratch) / "CommentGateProbe.java"
+            script.write_text(program, encoding="utf-8")
+            result = subprocess.run([java, str(script)], capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
 class VarargsAuthorityVerdictTests(unittest.TestCase):
     """Historical db.18623 replay and db.18627 live receipts stay distinct.

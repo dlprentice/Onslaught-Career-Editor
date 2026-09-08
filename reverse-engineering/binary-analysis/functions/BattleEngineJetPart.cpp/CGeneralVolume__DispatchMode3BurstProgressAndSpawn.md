@@ -1,7 +1,8 @@
-# CGeneralVolume__DispatchMode3BurstProgressAndSpawn
+# CBattleEngineJetPart__ChargeWeapon
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-07
+Summary: current source-and-byte-backed identity with the earlier bounded analysis retained.
 Source File: none under this table name | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -18,7 +19,23 @@ invent a Core owner.
 
 > Address: `0x00411bf0`
 
-## Contract
+## Current semantic correction
+
+The current name is `CBattleEngineJetPart__ChargeWeapon`. The parent dispatcher
+passes the Battle Engine's jet-part pointer. Pinned GPL source
+`references/Onslaught/BattleEngineJetPart.cpp:659-700` names the matching selected
+weapon, readiness, ammo/heat, overheat and fire-fallback control flow. The
+`CGeneralVolume` label and target-range interpretation were misleading.
+The prototype and its calling-convention spelling are unchanged; this is a
+static semantic correction, not measured runtime charge parity.
+
+The exact five-row name/comment change is pinned in
+[`first-training-semantic-corrections.manifest.tsv`](../../../../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv).
+Its comments bind the pristine specimen and half-open body hashes. The dated
+analysis below records the previous narrower assessment; its reservations
+about this rename are superseded, while unrelated limits remain.
+
+## Historical August 19 contract
 
 Incoming-ECX `thiscall`. First insn `sub esp, 8`. `esi = ecx`.
 Seven bare `ret` (`0x00411c48`, `0x00411d13`, `0x00411da6`,
@@ -123,4 +140,4 @@ Siblings: `CBattleEngineWalkerPart__ChargeWeapon` /
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00411bf0` | `CGeneralVolume__DispatchMode3BurstProgressAndSpawn` | `83ec08 5355568bf1 … 5f5e5d5b83c408c3` (632 B) | incoming-ECX thiscall; bare ret ×7; 632 B; 6 E8 / 1 E9 / 5 unique E8; 1 inbound JMP. HIGH on ABI, range-gate E8, `[+0x9c]` gate, two ProjectileBurst tails, unique inbound. Mapping `PARTIAL_CONTRACT`. **Not** on table rename, ReadyToCharge, or rebuild parity. |
+| `0x00411bf0` | `CBattleEngineJetPart__ChargeWeapon` | `83ec08 5355568bf1 … 5f5e5d5b83c408c3` (632 B) | incoming-ECX thiscall; bare ret ×7; 632 B; 6 E8 / 1 E9 / 5 unique E8; 1 inbound JMP. HIGH on ABI, range-gate E8, `[+0x9c]` gate, two ProjectileBurst tails, unique inbound. Mapping `PARTIAL_CONTRACT`. **Not** on table rename, ReadyToCharge, or rebuild parity. |

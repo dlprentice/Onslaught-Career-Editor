@@ -41,6 +41,10 @@
 //   SET_NAME               Function.setName / Symbol.setName
 //   SET_PROTOTYPE          Function.updateFunction (DYNAMIC_STORAGE_FORMAL_PARAMS)
 //                          plus Function.setVarArgs, MANIFEST-DRIVEN (see below)
+//   SET_COMMENT            Function.setComment (non-repeatable function comment)
+//   SET_REPEATABLE_COMMENT Function.setRepeatableComment
+//                          Current/proposed values are canonical UTF-8 Base64;
+//                          '-' means null. Each value is bounded to 16 KiB.
 //   SET_BODY               Function.setBody
 //   DISASSEMBLE_BOUNDED    Disassembler.disassemble(seeds, admitted, true)
 //   CLEAR_BOUNDED          Listing.clearCodeUnits inside the admitted ranges
@@ -182,6 +186,10 @@ import ghidra.program.model.symbol.SymbolIterator;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.CodingErrorAction;
+import java.nio.ByteBuffer;
+import java.util.Base64;
+import java.util.Objects;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -214,6 +222,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     // can never satisfy it.
     static final String REQUIRED_LIVE_PROJECT_DIR =
         "c:\\users\\david\\ghidra\\projects\\bea.rep";
+    // Linux uses file identity so the protected bind mount is equivalent.
+    static final String REQUIRED_LINUX_LIVE_PROJECT_DIR =
+        "/srv/archive-b/Onslaught-Career-Editor/local-lab/ghidra-projects/BEA/BEA.rep";
     // The tracked repository snapshot stays forbidden and is still checked
     // first, exactly as the rehearsal framework checked its forbidden markers.
     static final String[] FORBIDDEN_PATH_MARKERS = {
@@ -223,6 +234,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     // Cohorts the maintainer has authorized for a live apply, one entry per
     // completed per-cohort grant.  A cohort id absent from this list can never
     // reach live, whatever its spec declares.
+    // First-training grant: five names + non-repeatable comments only;
+    // sealed-dry/readback PASS and stale-comment-negative refusal in
+    // local-lab/ghidra-first-training-20260907-v1.
     static final String[] LIVE_AUTHORIZED_COHORTS = {
         "boundary-cohort41", "name-cohort160", "abi-cohort294",
         "tentacle-chain-a", "tentacle-chain-b",
@@ -236,6 +250,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "name-cohort-cockpit-dual-owner",
         "name-cohort-round-dual-owner",
         "name-cohort-battleengine-set-collision-shape",
+        "first-training-semantic-corrections",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
@@ -248,6 +263,8 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     // ----------------------------------------------------------------- verbs
     static final String V_SET_NAME = "SET_NAME";
     static final String V_SET_PROTOTYPE = "SET_PROTOTYPE";
+    static final String V_SET_COMMENT = "SET_COMMENT";
+    static final String V_SET_REPEATABLE_COMMENT = "SET_REPEATABLE_COMMENT";
     static final String V_SET_BODY = "SET_BODY";
     static final String V_SET_DATA_POINTER = "SET_DATA_POINTER";
     static final String V_DISASSEMBLE = "DISASSEMBLE_BOUNDED";
@@ -255,7 +272,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     static final String V_BOOKMARK = "REMOVE_STALE_BOOKMARK";
     static final List<String> KNOWN_VERBS = Arrays.asList(
         V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_SET_NAME,
-        V_SET_PROTOTYPE, V_SET_DATA_POINTER);
+        V_SET_PROTOTYPE, V_SET_DATA_POINTER, V_SET_COMMENT, V_SET_REPEATABLE_COMMENT);
 
     /** The frozen per-function collateral column list.  Compiled in, never
      *  spec-supplied: a spec cannot widen it, and every column not claimed by a
@@ -290,6 +307,12 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             // cohort never declares SET_NAME.  Non-target functions can still
             // never move it under any verb.
             out.add("symbolSource");
+        }
+        if (verbs.contains(V_SET_COMMENT)) {
+            out.add("commentSha");
+        }
+        if (verbs.contains(V_SET_REPEATABLE_COMMENT)) {
+            out.add("repeatableCommentSha");
         }
         if (verbs.contains(V_SET_BODY)) {
             out.add("rangeSpec");
@@ -406,6 +429,8 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
         "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
         "col.proposedLabel",
+        "col.currentCommentBase64", "col.proposedCommentBase64",
+        "col.currentRepeatableCommentBase64", "col.proposedRepeatableCommentBase64",
         "unique", "constant", "enum", "enumPrefix", "forbidToken", "noCycle",
         "expectedTargetsChanged", "expectedSymbolsAdded",
         "expectedSymbolsRemoved", "expectedFunctionsUntouched",
@@ -1226,7 +1251,19 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 return;
             }
         }
-        if (!lower.equals(REQUIRED_LIVE_PROJECT_DIR)) {
+        boolean liveProject = false;
+        try {
+            if (File.separatorChar == '\\') {
+                liveProject = lower.equals(REQUIRED_LIVE_PROJECT_DIR);
+            } else {
+                liveProject = Files.isSameFile(Paths.get(projectPath),
+                    Paths.get(REQUIRED_LINUX_LIVE_PROJECT_DIR));
+            }
+        } catch (java.io.IOException exc) {
+            // Missing or inaccessible identity cannot authorize an open.
+            liveProject = false;
+        }
+        if (!liveProject) {
             println("COHORT_REFUSE reason=project_is_not_the_live_maintainer_project"
                 + " path=" + projectPath);
             return;
@@ -1706,6 +1743,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                         + "] actual [" + row.targetName + "]");
                 }
             }
+            gateComments(row, fn, verbs, readback);
             if (verbs.contains(V_SET_PROTOTYPE) && fn != null) {
                 gatePrototypeRow(row, fn, readback);
             }
@@ -1987,6 +2025,26 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 }
             }
 
+            // Comment updates run only after every row's exact PRE was checked.
+            if ((verbs.contains(V_SET_COMMENT) || verbs.contains(V_SET_REPEATABLE_COMMENT))
+                    && failures.isEmpty()) {
+                for (Row row : rows) {
+                    try {
+                        Function f = fm.getFunctionAt(row.entry);
+                        if (verbs.contains(V_SET_COMMENT)) {
+                            f.setComment(decodeComment(row.get("proposedCommentBase64")));
+                        }
+                        if (verbs.contains(V_SET_REPEATABLE_COMMENT)) {
+                            f.setRepeatableComment(decodeComment(row.get("proposedRepeatableCommentBase64")));
+                        }
+                        row.verdict = "APPLIED";
+                    } catch (Exception exc) {
+                        row.verdict = "APPLY_THREW:" + exc.getClass().getSimpleName();
+                        fail(row, "comment update threw " + exc.getClass().getSimpleName());
+                    }
+                }
+            }
+
             // -- PHASE E: setPrototype ---------------------------------------
             if (verbs.contains(V_SET_PROTOTYPE) && failures.isEmpty()) {
                 for (Row row : rows) {
@@ -2080,6 +2138,10 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         // non-declared verb owns is a refusal: it is the only way a cohort
         // could ask for a mutation it did not declare.
         Map<String, String> owner = new LinkedHashMap<>();
+        owner.put("col.currentCommentBase64", V_SET_COMMENT);
+        owner.put("col.proposedCommentBase64", V_SET_COMMENT);
+        owner.put("col.currentRepeatableCommentBase64", V_SET_REPEATABLE_COMMENT);
+        owner.put("col.proposedRepeatableCommentBase64", V_SET_REPEATABLE_COMMENT);
         owner.put("col.currentName", V_SET_NAME);
         owner.put("col.proposedName", V_SET_NAME);
         owner.put("col.currentRanges", V_SET_BODY);
@@ -2109,6 +2171,14 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             }
         }
         // required bindings for each declared verb
+        if (verbs.contains(V_SET_COMMENT)) {
+            requireBinding(spec, "col.currentCommentBase64", V_SET_COMMENT);
+            requireBinding(spec, "col.proposedCommentBase64", V_SET_COMMENT);
+        }
+        if (verbs.contains(V_SET_REPEATABLE_COMMENT)) {
+            requireBinding(spec, "col.currentRepeatableCommentBase64", V_SET_REPEATABLE_COMMENT);
+            requireBinding(spec, "col.proposedRepeatableCommentBase64", V_SET_REPEATABLE_COMMENT);
+        }
         if (verbs.contains(V_SET_NAME)) {
             requireBinding(spec, "col.currentName", V_SET_NAME);
             requireBinding(spec, "col.proposedName", V_SET_NAME);
@@ -2839,6 +2909,57 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         notes.add("bookmarksRemoved=" + removed.size() + " " + removed);
     }
 
+    /** Canonical encoding avoids TSV escaping and preserves null distinctly.
+     * Empty strings and NUL are refused because Ghidra may normalize them. */
+    static String decodeComment(String encoded) throws Exception {
+        if ("-".equals(encoded)) {
+            return null;
+        }
+        if (encoded.length() > 21848) {
+            throw new IllegalArgumentException("comment exceeds encoded limit");
+        }
+        byte[] raw = Base64.getDecoder().decode(encoded);
+        if (raw.length == 0 || raw.length > 16384
+                || !Base64.getEncoder().encodeToString(raw).equals(encoded)) {
+            throw new IllegalArgumentException("comment is empty, oversized or noncanonical");
+        }
+        String text = StandardCharsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(raw)).toString();
+        if (text.indexOf('\0') >= 0) {
+            throw new IllegalArgumentException("comment contains NUL");
+        }
+        return text;
+    }
+
+    private void gateComments(Row row, Function f, Set<String> verbs, boolean post) {
+        for (String verb : Arrays.asList(V_SET_COMMENT, V_SET_REPEATABLE_COMMENT)) {
+            if (!verbs.contains(verb)) {
+                continue;
+            }
+            if (f == null || !"FUNCTION".equals(row.liveKind)) {
+                fail(row, "COMMENT REQUIRES FUNCTION ENTRY");
+                continue;
+            }
+            boolean repeatable = V_SET_REPEATABLE_COMMENT.equals(verb);
+            String suffix = repeatable ? "RepeatableCommentBase64" : "CommentBase64";
+            try {
+                String before = decodeComment(row.get("current" + suffix));
+                String after = decodeComment(row.get("proposed" + suffix));
+                if (Objects.equals(before, after)) {
+                    fail(row, "COMMENT NO-OP " + verb);
+                }
+                String actual = repeatable ? f.getRepeatableComment() : f.getComment();
+                if (!Objects.equals(post ? after : before, actual)) {
+                    fail(row, (post ? "POST/READBACK" : "CURRENT") + " COMMENT MISMATCH " + verb);
+                }
+            } catch (Exception exc) {
+                fail(row, "COMMENT ENCODING " + verb + " " + exc.getClass().getSimpleName());
+            }
+        }
+    }
+
     private void gatePostRows(List<Row> rows, Spec spec, Set<String> verbs,
             FunctionManager fm, boolean readback) throws Exception {
         for (Row row : rows) {
@@ -2855,6 +2976,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 }
             }
             Function f = fm.getFunctionAt(row.entry);
+            gateComments(row, f, verbs, true);
             if (f == null) {
                 continue;
             }
@@ -2975,6 +3097,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 }
             }
             Function f = fm.getFunctionAt(row.entry);
+            gateComments(row, f, verbs, true);
             if (f == null) {
                 continue;
             }

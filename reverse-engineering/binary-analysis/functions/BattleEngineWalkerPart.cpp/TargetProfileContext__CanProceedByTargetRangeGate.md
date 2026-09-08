@@ -1,7 +1,8 @@
-# TargetProfileContext__CanProceedByTargetRangeGate
+# CWeapon__ReadyToCharge
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-07
+Summary: current source-and-byte-backed identity with the earlier bounded analysis retained.
 Source File: none in the pinned GPL drop | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -17,7 +18,25 @@ ResetConfiguration. Did not equate this table name to source
 
 > Address: `0x0050a080`
 
-## Contract
+## Current semantic correction
+
+The current name is `CWeapon__ReadyToCharge`. The walker/jet caller pairing
+matches `ReadyToCharge` in pinned GPL source
+`references/Onslaught/BattleEngineWalkerPart.cpp:525` and
+`references/Onslaught/BattleEngineJetPart.cpp:665`. With no mode at `+0xa0`, it
+returns true. Otherwise event-manager time at `0x00672fd0` must be strictly
+greater than weapon `+0x64`; equality and unordered comparisons refuse.
+This is a weapon time gate, not a target-range predicate. The existing
+prototype and parameter typing remain unchanged; runtime timing and full
+weapon parity remain unmeasured.
+
+The exact five-row name/comment change is pinned in
+[`first-training-semantic-corrections.manifest.tsv`](../../../../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv).
+Its comments bind the pristine specimen and half-open body hashes. The dated
+analysis below records the previous narrower assessment; its reservations
+about this rename are superseded, while unrelated limits remain.
+
+## Historical August 19 contract
 
 Incoming-ECX `thiscall`. First insn `mov eax, [ecx+0xa0]`. Two
 bare `ret` (`0x0050a09c`, `0x0050a0a2`). Body
@@ -86,4 +105,4 @@ ResetConfiguration stays unpinned.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0050a080` | `TargetProfileContext__CanProceedByTargetRangeGate` | `8b81a0000000 … 33c0 c3 b801000000 c3` (35 B) | incoming-ECX thiscall; bare ret ×2; 35 B; 0 E8 / 0 E9; 2 inbound CALL. HIGH on ABI, unique inbound pair, `mTime` fcomp. Mapping `PARTIAL_CONTRACT`. **Not** on `[+0xa0]`/`[+0x64]` names, ReadyToCharge rename, or rebuild parity. |
+| `0x0050a080` | `CWeapon__ReadyToCharge` | `8b81a0000000 … 33c0 c3 b801000000 c3` (35 B) | incoming-ECX thiscall; bare ret ×2; 35 B; 0 E8 / 0 E9; 2 inbound CALL. HIGH on ABI, unique inbound pair, `mTime` fcomp. Mapping `PARTIAL_CONTRACT`. **Not** on `[+0xa0]`/`[+0x64]` names, ReadyToCharge rename, or rebuild parity. |

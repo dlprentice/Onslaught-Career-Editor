@@ -179,6 +179,15 @@ TEXT_ALLOW_EXACT = {
 
 PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 
+# Exact reviewed text, not an extension/root exemption. This immutable Ghidra
+# manifest contains ten canonical UTF-8 comments (7,696 decoded bytes), with no
+# control, secret or payload findings. Encoding preserves exact PRE/POST text;
+# changing any byte removes the long-Base64 allowance. All other checks remain.
+REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv":
+        "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf",
+}
+
 CDB_PROMPT_RE = re.compile(r"(?m)^\s*\d+:\d+>\s+")
 REGISTER_DUMP_RE = re.compile(
     r"(?im)\b(?:eax|ebx|ecx|edx|esi|edi|eip|esp|rax|rbx|rcx|rdx|rsi|rdi|rip|rsp)=[0-9a-f`]{4,}\b"
@@ -469,6 +478,9 @@ def content_signature_findings(path: str, text: str) -> list[Finding]:
         findings.append(Finding(path, "deny-embedded-png-header", "png header/base64 marker"))
     if EMBEDDED_JPEG_RE.search(text):
         findings.append(Finding(path, "deny-embedded-jpeg-header", "jpeg header/base64 marker"))
+    if (REVIEWED_ENCODED_COMMENTS_SHA256.get(path) ==
+            hashlib.sha256(text.encode("utf-8")).hexdigest()):
+        return findings
     for match in BASE64_TOKEN_RE.finditer(text):
         token = match.group(0)
         if "0x" in token.lower():
@@ -488,7 +500,7 @@ def text_findings(root: Path, path: str) -> list[Finding]:
         return []
     full_path = root / path
     try:
-        text = full_path.read_text(encoding="utf-8", errors="replace")
+        text = full_path.read_bytes().decode("utf-8", errors="replace")
     except OSError as exc:
         return [Finding(path, "read-error", str(exc))]
 
@@ -563,6 +575,36 @@ def check_payload_root(root: Path) -> list[Finding]:
 
 
 def run_self_test() -> int:
+    # A reviewed encoding allows only the exact path/content. Secret scanning
+    # still runs on that same file; no general TSV or Base64 exemption exists.
+    with tempfile.TemporaryDirectory() as tmp:
+        import base64
+        root = Path(tmp)
+        path = "reviewed-comments.tsv"
+        value = base64.b64encode(("Reviewed text only. " * 64).encode()).decode() + "\n"
+        REVIEWED_ENCODED_COMMENTS_SHA256[path] = hashlib.sha256(value.encode()).hexdigest()
+        try:
+            (root / path).write_text(value, encoding="utf-8")
+            if text_findings(root, path):
+                print("Public payload safety self-test: FAIL - exact reviewed comments rejected")
+                return 1
+            for candidate_path, candidate_text in (
+                (path, value + "changed\n"),
+                (path, value.replace("\n", "\r\n")),
+                ("unreviewed.tsv", value),
+            ):
+                (root / candidate_path).write_bytes(candidate_text.encode())
+                if not any(f.label == "deny-large-base64-blob" for f in text_findings(root, candidate_path)):
+                    print("Public payload safety self-test: FAIL - encoded comment guard widened")
+                    return 1
+            secret_text = value + "ghp" + "_" + "testfixturevalue000000000000\n"
+            REVIEWED_ENCODED_COMMENTS_SHA256[path] = hashlib.sha256(secret_text.encode()).hexdigest()
+            (root / path).write_text(secret_text, encoding="utf-8")
+            if not any(f.label == "deny-github-token" for f in text_findings(root, path)):
+                print("Public payload safety self-test: FAIL - reviewed comments bypassed secret check")
+                return 1
+        finally:
+            del REVIEWED_ENCODED_COMMENTS_SHA256[path]
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)

@@ -3,7 +3,7 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-31 (current saved-name reconciliation; synthesis retained).
+Last updated: 2026-09-07 (five-function semantic name/comment correction).
 Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
@@ -24,6 +24,21 @@ Specimen: `BEA.exe.original.backup`, 2,506,752 bytes, MD5
 (`local-lab/safe-copy-bea-pristine/`, read-only). Runtime observations name the
 separate force-windowed copied target and hash when used. The installed retail
 executable is locally patched and is never the static specimen.
+
+The current name oracle composes the frozen August 31 projection with the
+hash-pinned [five-row semantic cohort](../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv).
+It changes names and non-repeatable comments for the Battle Engine charge
+dispatcher, JetPart charge method, Weapon readiness/fire methods and a
+bitmap-font glyph predicate. The font name states a supported receiver role;
+its original declaration owner remains unproven. These corrections preserve
+signatures and geometry and establish no new runtime or whole-game parity.
+The frozen campaign authority and dated projections remain unchanged.
+
+<!-- ghidra-current-name: 0x00409ef0 CBattleEngine__ChargeWeapon -->
+<!-- ghidra-current-name: 0x00411bf0 CBattleEngineJetPart__ChargeWeapon -->
+<!-- ghidra-current-name: 0x0050a080 CWeapon__ReadyToCharge -->
+<!-- ghidra-current-name: 0x00506010 CWeapon__Fire -->
+<!-- ghidra-current-name: 0x00465dd0 BitmapFont__AcceptsGlyph_00465dd0 -->
 
 A separate noncanonical scratch pass now covers all 41 paired JetPart/WalkerPart
 weapon-state bodies (6,941 exact body bytes): 38 previously opaque rows have

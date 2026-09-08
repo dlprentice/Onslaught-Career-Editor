@@ -70,9 +70,11 @@ do not use Claude Code during this phase.
   complete-RE verification only through `current_re_authority.verify`.
 - Ghidra has exactly two homes on this laptop plus one cold copy: the tracked checkpoint
   `reverse-engineering/ghidra/` (`db.18634`, never opened for writing), the working project
-  `local-lab/ghidra-projects/BEA/BEA.gpr` (Ghidra 12.1.3, `db.18635`, the only writable one), and
-  `/srv/archive-a/onslaught-ghidra-cold/` (a dated rsync of both plus Codex's consolidated package; restore a
-  copy, never open it in place). Necessary semantic work must have an exact mutation plan; its
+  `local-lab/ghidra-projects/BEA/BEA.gpr` (Ghidra 12.1.3, the only writable one), and
+  `/srv/archive-a/onslaught-ghidra-cold/` (dated copies, verified cohort PRE/POST backups and the sealed
+  historical package; restore a copy, never open it in place). Read the measured working version and
+  latest correction in `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+  Necessary semantic work must have an exact mutation plan; its
   declared cohort proceeds through the promotion gate in `reverse-engineering/ghidra/README.md` without
   another permission request for each ordinary gate. An open Ghidra MCP connection is access, not permission
   to invent a different mutation scope.

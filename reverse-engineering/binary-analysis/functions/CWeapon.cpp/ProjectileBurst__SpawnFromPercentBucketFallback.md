@@ -1,7 +1,8 @@
-# ProjectileBurst__SpawnFromPercentBucketFallback
+# CWeapon__Fire
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-07
+Summary: current source-and-byte-backed identity with the earlier bounded analysis retained.
 Source File: none in the pinned GPL drop | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -16,7 +17,23 @@ Did not invent a Core owner.
 
 > Address: `0x00506010`
 
-## Contract
+## Current semantic correction
+
+The current name is `CWeapon__Fire`. The selected-weapon receiver connects the
+source-backed walker/jet fire and charge callers. Charge at `+0x60` is converted
+and cleared before subsequent refusal checks; division by 100 selects the
+weapon definition's charge slot, rather than an arbitrary percentage API.
+A resolved mode requires current event-manager time strictly greater than
+`+0x64`; refusal does not restore cleared charge. Exact signatures, full firing
+outcomes, stealth semantics and runtime parity are outside this correction.
+
+The exact five-row name/comment change is pinned in
+[`first-training-semantic-corrections.manifest.tsv`](../../../../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv).
+Its comments bind the pristine specimen and half-open body hashes. The dated
+analysis below records the previous narrower assessment; its reservations
+about this rename are superseded, while unrelated limits remain.
+
+## Historical August 19 contract
 
 Incoming-ECX `thiscall`. First insn `sub esp, 8`. `esi = ecx`.
 Two bare `ret` (`0x005060fd`, `0x005061e8`). Body
@@ -110,4 +127,4 @@ tails. Next named:
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00506010` | `ProjectileBurst__SpawnFromPercentBucketFallback` | `83ec08 53568bf1 b81f85eb51 … b801000000 5b83c408c3` (473 B) | incoming-ECX thiscall; bare ret ×2; 473 B; 6 E8 / 0 E9 / 5 unique E8; 10 inbound. HIGH on ABI, `[+0x60]=0`, `/100` magic, unique ten-site xref. Mapping `PARTIAL_CONTRACT`. **Not** on callee identities, the four non-BEA caller names, or rebuild parity. |
+| `0x00506010` | `CWeapon__Fire` | `83ec08 53568bf1 b81f85eb51 … b801000000 5b83c408c3` (473 B) | incoming-ECX thiscall; bare ret ×2; 473 B; 6 E8 / 0 E9 / 5 unique E8; 10 inbound. HIGH on ABI, `[+0x60]=0`, `/100` magic, unique ten-site xref. Mapping `PARTIAL_CONTRACT`. **Not** on callee identities, the four non-BEA caller names, or rebuild parity. |
