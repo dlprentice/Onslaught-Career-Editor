@@ -1,7 +1,7 @@
 # Game binaries contract — DLLs and helper executable
 
 Status: active static identity/ABI census
-Date: 2026-08-22
+Last updated: 2026-09-07
 Verdict: all five non-main PE files have exact identities, version/import/export
 censuses, and bounded evidence-based roles; invocation/load-time behavior stays
 open.
@@ -26,11 +26,11 @@ all **five** non-main PE files:
 - `vorbis.dll`
 - `zlib.dll`
 
-No separate launcher executable exists in that measured root. All five inputs
-came from `local-lab\safe-copy-bea-pristine\`; the live Steam tree and its
-intentionally patched `BEA.exe` were not used. Presence in the safe copy and
-agreement with the tracked census do not independently prove a Steam-depot hash
-or Authenticode provenance.
+No separate launcher executable exists in that measured root. The August 22
+five-file census used `local-lab/safe-copy-bea-pristine/`, not the installed
+game. The September 7 follow-up below independently inspected the Linux Steam
+`zlib.dll` and `BEA.exe`. Neither pass establishes Steam-depot or Authenticode
+provenance.
 
 ## Identity, version, imports, and exports
 
@@ -102,6 +102,26 @@ IAT slots and are used by `CDXMemBuffer` paths. Separate in-image texture
 inflate machinery also exists, so the exact implementation used by each AYA or
 texture path must be established per call chain rather than flattened into one
 “zlib decoder.”
+
+The September 7 Linux Steam follow-up found an additional retained aid that
+the export-only census omitted: **715 COFF records**, including auxiliaries,
+at file offset `0xbe00`. The 18-byte record table ends at `0xf046`; its
+2,317-byte string table ends exactly at the 63,827-byte file boundary `0xf953`.
+Walking primary records while skipping their declared auxiliaries yields
+**123 defined function symbols**, including **33 static functions**, and
+**22 FILE records**. Examples include `_longest_match`, `_fill_window`,
+`_deflate_slow`, `_build_tree`, `_huft_build` and source names `deflate.c`,
+`trees.c`, `inflate.c`, `inffast.c`. These give compression-library internals
+beyond the 68 exported entries; they are not game-engine symbols or evidence
+that every codec function is understood.
+
+This follow-up read the exact installed
+`~/.local/share/Steam/steamapps/common/Battle Engine Aquila/zlib.dll` and
+reproduced the SHA-256 in the table. Independent PE/COFF parsing checked record,
+auxiliary and string-table bounds in memory. The selected installed `BEA.exe`
+also reproduced pristine `74154bfa…7750`; its export/debug directories and
+COFF symbol pointer/count are zero. Neither executable was launched, and no
+whole-install hash pass or new archive unpacking was performed.
 
 ## ABI join to `BEA.exe`
 

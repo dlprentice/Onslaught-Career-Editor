@@ -1,23 +1,37 @@
 # The installed Battle Engine Aquila corpus has a complete aggregate map, but not atom-level semantics
 
-Status: active reconnaissance baseline for one current live-installation snapshot
-Date: 2026-07-28
-Verdict: **The current installation has a complete aggregate census and full-file
-SHA-256 pass for the snapshot identified below, plus structural surveys of its
-major container, media, script, localization, executable, and configuration
-families. The repository has deep, evidence-backed understanding of
-saves/options, the executable, frontend, Aquila, and the Level 100 opening
-slice, but it does not yet have atom-level semantic coverage of all 5,515
-installed files. This document is the measured map from which that work must
-proceed; it is not the unpublished per-file ledger and is not a claim that the
-remaining semantics are solved.**
+Status: active reference — July 28 Windows snapshot with dated follow-up notes
+Last updated: 2026-09-07
+Verdict: the July 28 snapshot had a complete aggregate census and full-file
+SHA-256 pass for 5,515 files, plus structural surveys. Those historical
+identities and coverage assessments do not select the current Linux inputs or
+establish complete semantics. The September 7 follow-up below is bounded
+filename/PE inspection, not a repeat of that full survey.
 Evidence: MEASURED — read-only recursive enumeration of the requested
 installation, logical-byte rollups, SHA-256 of all 5,515 files, a canonical
 manifest digest, aggregate extension/naming-family analysis, bounded framing or
 metadata probes across every AYA/Ogg/VID/localization file, and direct inspection
 of current repository parsers, consumers, evidence documents, and tests. Corpus
 measurements, measured repository state, source-backed ownership, and
-inferences are distinguished below.
+inferences are distinguished below. This paragraph describes the July survey.
+
+## September 7 Linux follow-up
+
+The actual `~/.local/share/Steam/steamapps/common/Battle Engine Aquila/` tree
+contains 5,505 file paths in the new read-only enumeration. A filename search
+found no standalone PDB/DBG/MAP/SYM/LIB/OBJ or C/C++ source files; the sole H/HPP
+candidate is the previously known `data/MissionScripts/text/textlist.h`.
+The selected `BEA.exe` reproduces pristine SHA-256 `74154bfa…7750` and has zero
+PE export/debug directories and COFF symbol pointer/count. The patched-game
+and 5,515-file descriptions below belong to the dated Windows snapshot.
+
+A fresh PE/COFF inspection found retained internal names in installed
+`zlib.dll`: 123 defined functions, including 33 static functions, and 22 FILE
+records. [The binary owner](asset-formats/game-binaries.md) records exact file
+identity and table bounds. This fills an omission in the earlier export census;
+it supplies codec evidence, not game symbols. No complete archive reparse or
+whole-install hash pass was performed, and embedded-resource completeness
+remains unproven.
 
 ---
 
