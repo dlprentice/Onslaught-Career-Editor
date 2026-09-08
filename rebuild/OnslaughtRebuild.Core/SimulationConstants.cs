@@ -646,6 +646,14 @@ public static class SimulationConstants
     // `Mech Pulse Bolt Large` @0xacda; Fire selects that identity when
     // FullyCharged. Large's authored 20/7/0.20/8.0 scalars are not this arm.
     public const int ProjectileLifetimeTicks = 6 * TicksPerSecond;
+    // Same hash-pinned physics.dat, Round "Mech Pulse Bolt Large" @0xACDA:
+    // field 3 = 0x41A00000 (20 units/second), field 1 = 0x40E00000
+    // (7 seconds), field 12 = 0x3E4CCCCD (0.20 units). These project to
+    // Core's 20 Hz millimeter motion/contact units; they do not establish
+    // float motion, terminal event timing, or Large's presentation parity.
+    public const int LargePulseSpeedPerTick = 1_000;
+    public const int LargePulseLifetimeTicks = 7 * TicksPerSecond;
+    public const int LargePulseContactRadiusMillimeters = 200;
     // Mech Twin Vulcan Cannon, read out of data/default physics.dat
     // (sha256 e1fb3ded...b1a2321e1d6a9ba1542c74ada14, 175,603 bytes, 777
     // statements) with the value-id map established in

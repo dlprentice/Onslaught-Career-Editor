@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-07 (native Linux Godot, live recording/replay and first Save Lab service).
+Last updated: 2026-09-08 (first-training Ghidra, clock and projectile corrections).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -339,16 +339,22 @@ the regression failed before repair and all 32 affected tests passed. This is
 source/static progress, not a new live playthrough or parity result.
 
 The first-training review corrected five misleading Ghidra names/comments in
-the working database, with separate full readback and verified PRE/POST recovery;
+the working database, followed by the missing physical-keyboard function boundary,
+with separate full readback and verified PRE/POST recovery;
 the [checkpoint/working owner](reverse-engineering/ghidra/README.md) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
 cursor, character, width and unique-name rules. Its software keyboard and caret
 geometry remain incomplete. Held Vulcan input now reaches Fire; Pulse release
 clears charge before refusal, and per-weapon float readiness replaces integer
 countdowns as the gate. The charged mode uses its 0.5-second reload. Focused
-checks passed (43 frontend, 68 Core and five input/weapon Client tests), but
-the clock remains a tick/20 approximation and Large launch/contact and spatial
-explosions remain open. These changes have not had a live desktop playthrough.
+checks passed (43 frontend, 68 Core and five input/weapon Client tests).
+September 8 connected the shared retail event-clock calculation to weapon
+readiness, including level reset and gameplay pause. Large now uses its authored
+speed 20, nominal lifetime 7 seconds, contact radius 0.20 and direct damage 8.
+Contact inputs preserve the original serialized BBOX/render-radius float words.
+Spatial blasts, Large scatter/effects, precise float motion/expiry and complete
+controller/event ordering remain open. These changes have not had a live
+desktop playthrough; focused results are in [VALIDATION.md](VALIDATION.md).
 
 World 110 now prepares the four landing-craft turret constructor inputs from
 real owner identities and the shared `Component`/1 mesh attachment. The
@@ -538,9 +544,9 @@ first active charge bucket `10`, round speed `35`, movement `1.75` per released
 20 Hz update, starting life `6`, direct-contact total damage `1.8`, and
 destruction/objective removal on shot four; one separate glancing hit removed
 `1.0`. These are observations of those shots, not a universal same-target
-damage rule. The September 7 source review found that Core still applies a
-fixed Medium explosion stage and gives the charged Large projectile Medium
-movement/contact parameters. The [round/explosion contract](reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md)
+damage rule. Core still applies a fixed Medium explosion stage. The September 8
+correction gives charged Large its own movement/contact scalars and direct
+damage, without inventing a fixed Large blast. The [round/explosion contract](reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md)
 requires a spatial neighbor scan and distance falloff, including eligible dying
 receivers. That production gap remains open.
 Two further isolated repetitions then removed the Warehouse objective

@@ -628,7 +628,7 @@ LEVEL100_CONTACT_ASSET = (
     CORE_ASSETS / "Level100/level100-contact-owners.json"
 )
 LEVEL100_CONTACT_ASSET_SHA256 = (
-    "c45e89d14ad7abd9bed37d388453018c4f5c5e37e10f3b8307bec16c81d524f2"
+    "ced815d60bddb37f8706e4de41b3a53721dc78562867ca4b6ebb6f8a5d5a0003"
 )
 # Aggregate of the 24 collision-bearing facility meshes only. The accepted
 # static-world aggregate above additionally owns the four tree meshes.
@@ -4190,6 +4190,29 @@ def _contact_part_records(parsed) -> list[dict[str, object]]:
     return records
 
 
+def _level100_definition_float_geometry(parsed, serialized_behavior: int) -> dict[str, object]:
+    """Untransformed CMSH inputs, not rounded world-instance sphere values."""
+    boxes = [sibling.raw_payload for sibling in parsed.siblings if sibling.tag == b"BBOX"]
+    if len(boxes) != 1 or len(boxes[0]) != 48 or boxes[0][:8] != b"BBOX\x28\0\0\0":
+        raise RuntimeError("Level 100 target global bounding box changed")
+    words = struct.unpack_from("<10I", boxes[0], 8)
+    radius = struct.unpack_from("<I", parsed.raw_header, 0x164)[0]
+    if serialized_behavior not in (3, 8, 9):
+        raise RuntimeError("unadmitted Level 100 primary radius class")
+    values = [struct.unpack("<f", struct.pack("<I", word))[0]
+              for word in (*words[:3], words[9], radius)]
+    if not all(math.isfinite(value) for value in values) or min(values[3:]) <= 0:
+        raise RuntimeError("invalid Level 100 target float geometry")
+    return {
+        "boundingBoxOriginFloatBits": list(words[:3]),
+        "boundingBoxRadiusFloatBits": words[9],
+        "meshRenderRadiusFloatBits": radius,
+        # Pristine47c8e0 (GroundVehicle slot35): float store, then multiply
+        # by float word3f4ccccd at5d85f8. Plane/Building use the base sphere.
+        "primaryRadiusScaleFloatBits": 0x3f4ccccd if serialized_behavior == 3 else 0x3f800000,
+    }
+
+
 def _level100_contact_asset(
     objects: list[dict[str, object]],
     mesh_inputs: dict[str, tuple[Path, bytes, dict]],
@@ -4344,6 +4367,8 @@ def _level100_contact_asset(
                 "maximumLifeBits": struct.unpack("<I", fields[3])[0],
                 "mesh": source_name,
                 "parts": _contact_part_records(parsed),
+                "floatGeometry": _level100_definition_float_geometry(
+                    parsed, struct.unpack("<i", fields[8])[0]),
             }
         )
         target_source_hashes[definition] = expected_hash
@@ -4398,7 +4423,7 @@ def _level100_contact_asset(
                 struct.unpack("<f", round_fields[12])[0], 1_000
             ),
         },
-        "schema": "onslaught.level100-contact-owners.v4",
+        "schema": "onslaught.level100-contact-owners.v5",
         "staticMeshCount": len(parsed_static),
         "staticSourceAggregateSha256": (
             LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256

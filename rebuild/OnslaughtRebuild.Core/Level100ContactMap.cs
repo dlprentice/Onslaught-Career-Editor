@@ -243,6 +243,11 @@ public sealed class Level100ContactPart
     public ReadOnlyMemory<int> Triangles { get; }
 }
 
+/// <summary>Original untransformed mesh words. Instance transforms and centre rounding are separate.</summary>
+public sealed record Level100ContactFloatGeometry(
+    uint BoundingBoxOriginXFloatBits, uint BoundingBoxOriginYFloatBits, uint BoundingBoxOriginZFloatBits,
+    uint BoundingBoxRadiusFloatBits, uint MeshRenderRadiusFloatBits, uint PrimaryRadiusScaleFloatBits);
+
 public sealed class Level100ContactDefinition
 {
     private readonly Level100ContactPart[] _parts;
@@ -256,8 +261,10 @@ public sealed class Level100ContactDefinition
         string? destructionParticleDescriptor,
         string? destructionWaterParticleDescriptor,
         string? destructionSoundDescriptor,
-        Level100ContactPart[] parts)
+        Level100ContactPart[] parts,
+        Level100ContactFloatGeometry? floatGeometry = null)
     {
+        FloatGeometry = floatGeometry;
         Name = name;
         Mesh = mesh;
         Kind = kind;
@@ -269,6 +276,8 @@ public sealed class Level100ContactDefinition
         _parts = parts;
         Parts = Array.AsReadOnly(parts);
     }
+
+    public Level100ContactFloatGeometry? FloatGeometry { get; }
 
     public string Name { get; }
 
@@ -322,7 +331,7 @@ public sealed class Level100ContactCatalog
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json";
     private const string SourceSha256 =
-        "C45E89D14AD7ABD9BED37D388453018C4F5C5E37E10F3B8307BEC16C81D524F2";
+        "CED815D60BDDB37F8706E4DE41B3A53721DC78562867CA4B6EBB6F8A5D5A0003";
     private const string StaticSourceAggregateSha256 =
         "8D85C9BFBE366C815E00D3900D8D29B71A33BEF7A60CDDFCE9ED6AC558E06B4C";
     private const string TargetTankSourceSha256 =
@@ -392,7 +401,7 @@ public sealed class Level100ContactCatalog
             throw new InvalidDataException("The Level 100 contact asset is empty.");
         if (!StringComparer.Ordinal.Equals(
                 document.Schema,
-                "onslaught.level100-contact-owners.v4") ||
+                "onslaught.level100-contact-owners.v5") ||
             document.DefinitionCount != 24 ||
             document.InstanceCount != 33 ||
             document.PartCount != 362 ||
@@ -499,7 +508,8 @@ public sealed class Level100ContactCatalog
                     row.DestructionParticleDescriptor,
                     row.DestructionWaterParticleDescriptor,
                     row.DestructionSoundDescriptor,
-                    parts)))
+                    parts,
+                    ReadFloatGeometry(row.FloatGeometry, kind))))
             {
                 throw new InvalidDataException(
                     "Level 100 has a duplicate target definition.");
@@ -513,6 +523,25 @@ public sealed class Level100ContactCatalog
                 "Level 100 decoded part ownership changed.");
         }
         return new Level100ContactCatalog(definitions, pulse);
+    }
+
+    private static Level100ContactFloatGeometry ReadFloatGeometry(FloatGeometryRow? row, Level100DefinitionKind kind)
+    {
+        uint expectedScale = kind == Level100DefinitionKind.TargetTank ? 0x3f4ccccdu : 0x3f800000u;
+        if (row is null || row.BoundingBoxOriginFloatBits.Length != 3 ||
+            row.PrimaryRadiusScaleFloatBits != expectedScale ||
+            row.BoundingBoxOriginFloatBits.Any(bits => !float.IsFinite(BitConverter.Int32BitsToSingle((int)bits))) ||
+            !IsPositiveFinite(row.BoundingBoxRadiusFloatBits) || !IsPositiveFinite(row.MeshRenderRadiusFloatBits))
+            throw new InvalidDataException("Level 100 original float geometry is missing or invalid.");
+        return new(row.BoundingBoxOriginFloatBits[0], row.BoundingBoxOriginFloatBits[1],
+            row.BoundingBoxOriginFloatBits[2], row.BoundingBoxRadiusFloatBits,
+            row.MeshRenderRadiusFloatBits, row.PrimaryRadiusScaleFloatBits);
+    }
+
+    private static bool IsPositiveFinite(uint bits)
+    {
+        float value = BitConverter.Int32BitsToSingle((int)bits);
+        return float.IsFinite(value) && value > 0;
     }
 
     private static Level100PulseRoundContract ReadPulse(PulseRoundRow row)
@@ -753,8 +782,17 @@ public sealed class Level100ContactCatalog
         public PartRow[] Parts { get; set; } = [];
     }
 
+    private sealed class FloatGeometryRow
+    {
+        public uint[] BoundingBoxOriginFloatBits { get; set; } = [];
+        public uint BoundingBoxRadiusFloatBits { get; set; }
+        public uint MeshRenderRadiusFloatBits { get; set; }
+        public uint PrimaryRadiusScaleFloatBits { get; set; }
+    }
+
     private sealed class TargetDefinitionRow
     {
+        public FloatGeometryRow? FloatGeometry { get; set; }
         public string Definition { get; set; } = string.Empty;
         public string Mesh { get; set; } = string.Empty;
         public string DestructionPhysicsDefinition { get; set; } = string.Empty;

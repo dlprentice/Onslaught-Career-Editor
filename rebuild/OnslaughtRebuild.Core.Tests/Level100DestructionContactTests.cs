@@ -7,6 +7,18 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100DestructionContactTests
 {
+    [Theory]
+    [InlineData("Target Tank", 0x3d30cb70u, 0xbe24c554u, 0xbec4d063u, 0x3fab28c8u, 0x3fc487a7u, 0x3f4ccccdu)]
+    [InlineData("Target Truck", 0xbb8d5d80u, 0xbd4d6660u, 0xbef307e4u, 0x3fcfd61cu, 0x3fe83ed3u, 0x3f4ccccdu)]
+    [InlineData("Target Drone", 0xbba22500u, 0x3ea56398u, 0xbcd78710u, 0x3fc26850u, 0x3fe9f832u, 0x3f800000u)]
+    [InlineData("Warehouse", 0x3cf5e900u, 0x400739e3u, 0xbff19379u, 0x40f2bef5u, 0x41088ddeu, 0x3f800000u)]
+    public void CatalogRetainsRawFloatGeometryApartFromQuantizedParts(string name,
+        uint x, uint y, uint z, uint bboxRadius, uint renderRadius, uint primaryScale)
+    {
+        Assert.Equal(new Level100ContactFloatGeometry(x, y, z, bboxRadius, renderRadius, primaryScale),
+            Level100ContactCatalog.Instance.GetDefinition(name).FloatGeometry);
+    }
+
     [Fact]
     public void CatalogRetainsExactLevel100DefinitionsWithoutCreatingActors()
     {

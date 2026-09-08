@@ -1,7 +1,7 @@
 # CEventManager / CScheduledEvent function map
 
 Status: active function map — bounded AddEvent runtime insertion candidate added
-Last updated: 2026-08-24 (timed insertion C2 candidate; canonical Generation 32 unchanged pending review)
+Last updated: 2026-09-08 (shared weapon clock and controller-loop correction; frozen campaign unchanged)
 Source File: `C:\dev\ONSLAUGHT2\EventManager.cpp` (SEH `__FILE__` pointer `0x005d250c` in `Init`; see the map below) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen at
 file offset VA − 0x400000. The rebuild already owns one of these laws
@@ -31,7 +31,8 @@ a REBUILD_READY row): the event number is a 16-bit word.
   `0.05f` (`3d4ccccd`, `CLOCK_TICK`; its neighbour `0x005d857c` is `20.0f`,
   `GAME_FR`), and the opcode is `fmul` (`d8 /1`), not a subtract: no epoch
   offset, `time = frame × 0.05f`. The rebuild's `RetailEventScheduler` already
-  carries this law; the carry step is a focused parity test, not new code.
+  carries this law. On September 8, Simulation's weapon clock was connected to
+  that shared calculation instead of dividing its absolute replay tick by 20.
 - The 200 divisor: the `idiv esi, 0xc8` dividend is `(old mCurrentBufferNum +
   1)` sign-extended by `cdq`, so `edx = (old + 1) % 200` reaches `+0x10` (the
   ring rotation) and the quotient is discarded; the previous slot is saved to
@@ -148,13 +149,27 @@ register-computed calls are outside that scan's reach.
 | `CGame__InitRestartLoop` | `0x0046c587` | `Init` (`0x0044b060`) |
 | `CFrontEnd__Process` | `0x00466bfe` | `Update` (`0x0044b5c0`) — the combined AdvanceTime + Flush path, once per frontend frame |
 | `CGame__Update` | `0x0046eb5d` | `AdvanceTime` (`0x0044b600`) — early in the frame |
-| `CGame__Update` | `0x0046ebce` | `Flush` (`0x0044b640`) — late in the frame, after the `[esi+0x29c]` object-update loop (which ends `cmp ebp,eax; jl` at `0x0046ebaa` and makes virtual calls through `call [eax+8]` at `0x0046eb9a`) |
+| `CGame__Update` | `0x0046ebce` | `Flush` (`0x0044b640`) — after the `[esi+0x29c]` controller Flush loop (virtual `call [eax+8]` starts at `0x0046eb98`; source `game.cpp:1909–1933`) |
 | `IScript__PlayCharMessageWait` | `0x00537703` | `GetNextFreeEvent` (`0x0044b2a0`) |
 | `IScript__PlayPCharMessageWait` | `0x005379ff` | `GetNextFreeEvent` (`0x0044b2a0`) |
 
 So the frontend drives the scheduler with the combined `Update`, while
 `CGame__Update` drives it with the split pair and runs gameplay between the
 clock advance and the dispatch.
+
+The September 8 weapon-clock correction uses the manager's own unsigned frame
+count, reset by `InitRestartLoop`, and the stored result of
+`frameCount * 0.05f`. `AdvanceTime` zero-extends the counter before `fild` at
+`0x0044b624`, multiplies the stored float at `0x0044b62a`, then stores time at
+`0x0044b630`. Its complete 59-byte body SHA-256 is
+`792dab29b0913762b0e507a7e3bd8110cb30b3ec1a4138b9ece1ddd86196f6c8`,
+measured from the pristine specimen named above. At frame 9, the result is
+`0x3ee66667`; division by 20 incorrectly gives `0x3ee66666`. The update that
+delivers gameplay pause advances this counter; following paused updates freeze
+it. Focused `SimulationTests.RetailEventClock_*` and canonical-hash checks cover
+those boundaries and reset independently of replay time. The simulation still
+has nominal terminal-event timing and incomplete controller-before-event
+dispatch ordering; this wiring does not establish complete scheduler parity.
 
 ### `AddEvent_TimeFromNow` consumers (24 direct call sites, whole-image scan)
 

@@ -152,6 +152,34 @@ def _world110_initial_object_fixture(
     return reader, objects
 
 
+class Level100FloatGeometryTests(unittest.TestCase):
+    def test_stored_float_words_are_preserved_without_instance_rounding(self):
+        # A synthetic parser result keeps this tools suite independent of an
+        # installed game. Core's materialized-catalog test checks all four real
+        # meshes separately. Adjacent float words must not be recomputed.
+        origin = [0xbba22500, 0x3ea56398, 0xbcd78710]
+        box = b"BBOX\x28\0\0\0" + struct.pack(
+            "<10I", *origin, 0, 0, 0, 0, 0, 0, 0x3fc26850)
+        header = bytearray(0x174)
+        struct.pack_into("<I", header, 0x164, 0x3fe9f832)
+        parsed = SimpleNamespace(
+            siblings=[SimpleNamespace(tag=b"BBOX", raw_payload=box)],
+            raw_header=bytes(header))
+        for behavior, scale in ((3, 0x3f4ccccd), (8, 0x3f800000), (9, 0x3f800000)):
+            with self.subTest(behavior=behavior):
+                self.assertEqual({
+                    "boundingBoxOriginFloatBits": origin,
+                    "boundingBoxRadiusFloatBits": 0x3fc26850,
+                    "meshRenderRadiusFloatBits": 0x3fe9f832,
+                    "primaryRadiusScaleFloatBits": scale,
+                }, materializer._level100_definition_float_geometry(parsed, behavior))
+        with self.assertRaisesRegex(RuntimeError, "unadmitted"):
+            materializer._level100_definition_float_geometry(parsed, 999)
+        with self.assertRaisesRegex(RuntimeError, "bounding box"):
+            materializer._level100_definition_float_geometry(
+                SimpleNamespace(siblings=[], raw_header=parsed.raw_header), 3)
+
+
 class ExplicitTreeGroupTests(unittest.TestCase):
     @staticmethod
     def table(first=None) -> bytes:

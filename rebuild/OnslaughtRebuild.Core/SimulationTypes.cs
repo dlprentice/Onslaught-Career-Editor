@@ -627,6 +627,13 @@ public sealed record WorldSnapshot(
     IReadOnlyList<ProjectileSnapshot> Projectiles,
     IReadOnlyList<WalkerFootContactSnapshot> WalkerFeet)
 {
+    /// <summary>
+    /// The level event-manager frame count. It resets with the level and
+    /// freezes during gameplay pause, even while replay and terminal UI ticks
+    /// continue. The shared scheduler law derives the stored time from it.
+    /// </summary>
+    public uint RetailEventFrameCount { get; init; }
+
     public Level100PlayerWeaponStateSnapshot Level100PlayerWeaponState { get; init; } =
         Level100PlayerWeaponStateSnapshot.Initial;
 

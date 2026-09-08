@@ -234,7 +234,7 @@ public sealed class InteractiveSessionTests
             FrameAdvanceResult frame = session.AdvanceFrameTicks(OneCoreStepTicks);
             Assert.True(session.LastConsumedInput!.Value.HasAction(SimActions.ChargeWeapon));
             Assert.False(session.LastConsumedInput!.Value.HasAction(SimActions.Fire));
-            float now = (float)(frame.CurrentSnapshot.Tick / 20d);
+            float now = (float)((double)frame.CurrentSnapshot.RetailEventFrameCount * (double)0.05f);
             if (now > expectedReady)
             {
                 Level100WeaponFireEvent fired = Assert.Single(frame.Level100WeaponFireEvents);

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-07 (native Linux Godot and first Save Lab workflow).
+Last updated: 2026-09-08 (first-training clock, contacts and Ghidra corrections).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -82,6 +82,19 @@ visible launch or Windows execution followed these changes. The shared Ghidra
 cohort framework passed **88** focused tests; its actual isolated rehearsal,
 stale-comment refusal, live apply, separate readback and PRE/POST restore probes
 are recorded by the [Ghidra owner](reverse-engineering/ghidra/README.md).
+
+September 8 focused checks passed **46/46 Core and 8/8 Client** for the shared
+retail clock, reset/pause behavior, readiness boundaries and canonical state;
+**73/73 materializer and 22/22 contact tests** for raw serialized geometry; and
+**38/38 Core and 4/4 Client** for Large Pulse launch/contact and affected weapons.
+These selections overlap and are not a new total-suite census. The existing
+forty-step and FirstFlight fingerprints held without repinning. Logs share the
+Linux run directory above: `retail-clock-{core,client}-20260908.log`,
+`contact-float-geometry-materializer.log`, and `large-pulse-{core,client}-20260908.log`.
+The contact schema is v5; conditional canonical schema 45 retains an event frame
+count when pause makes it differ from the already-hashed mission tick. The
+checks do not establish a complete spatial blast, exact motion/expiry, event
+dispatch ordering or a live playthrough.
 
 The World 110 integration review exposed a setter/restore mismatch: script
 assignment still used the World 100 list. The new focused regression failed

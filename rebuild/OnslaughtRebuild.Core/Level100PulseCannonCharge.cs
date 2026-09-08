@@ -28,10 +28,11 @@ namespace OnslaughtRebuild.Core;
 /// Tap-fire at charge 0 stays level 0 / Medium.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> The energy-store add of
-/// <c>CWeaponConsumption</c> 0x40800000 = 4.0, overheat-to-fire, and Large's
-/// authored velocity/life/radius/damage (20 / 7 / 0.20 / 8.0) remain
-/// the next ChargeWeapon arms.
+/// <see cref="Simulation"/> projects Large's authored velocity/life/radius
+/// and direct damage (20 / 7 / 0.20 / 8.0) through its existing motion and
+/// contact owners. The spatial blast, zero-inaccuracy mode, Large effects,
+/// energy-store add of <c>CWeaponConsumption</c> 0x40800000 = 4.0, and
+/// overheat-to-fire remain open.
 /// </para>
 /// </remarks>
 public static class Level100PulseCannonCharge

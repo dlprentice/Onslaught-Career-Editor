@@ -18,17 +18,21 @@ public sealed class RetailEventSchedulerTests
 
     // Pins: mTime = (float)(mFrameCount * CLOCK_TICK) with a SINGLE rounding to
     // float, from the fild/fmul/fstp at 0x0044B5E4-0x0044B5F0 and CLOCK_TICK
-    // 0x3D4CCCCD at 0x005D8578. Frame 1 is the load-bearing case: 0.05f is not
-    // representable, so a scheduler that accumulated +0.05f per frame instead
-    // of multiplying would agree here and drift later, which frames 3 and 121
-    // catch. Does NOT pin what a real frame count reaches, nor the x87
+    // 0x3D4CCCCD at 0x005D8578. Frame 9 first distinguishes the stored-float
+    // multiplier from division by 20 (which gives 0x3EE66666). Later frames
+    // also catch repeated-addition drift. Does NOT pin what a real frame
+    // count reaches, nor the x87
     // precision control - below 2^24 the exact product fits a 53-bit
     // significand, so the control cannot matter for any of these.
     [Theory]
+    [InlineData(0u, 0x00000000u)]
     [InlineData(1u, 0x3D4CCCCDu)]
     [InlineData(2u, 0x3DCCCCCDu)]
     [InlineData(3u, 0x3E19999Au)]
+    [InlineData(9u, 0x3EE66667u)]
+    [InlineData(13u, 0x3F266667u)]
     [InlineData(20u, 0x3F800000u)]
+    [InlineData(21u, 0x3F866667u)]
     [InlineData(120u, 0x40C00000u)]
     [InlineData(121u, 0x40C1999Au)]
     [InlineData(20_000u, 0x447A0000u)]

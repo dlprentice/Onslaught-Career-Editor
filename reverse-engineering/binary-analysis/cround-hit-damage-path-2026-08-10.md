@@ -1,7 +1,7 @@
 # `CRound::Hit`, configured explosion creation, and `CExplosion::Hit`
 
 Status: active, bounded semantic contract
-Last updated: 2026-08-28
+Last updated: 2026-09-08
 Evidence: MEASURED — pristine retail bytes, strict RTTI/vtables, exact data
 records, dated static exports, replicated runtime carriers, and independent
 PC-demo normalized bodies; SOURCE — pinned `CThing`/init layouts and virtual
@@ -10,9 +10,9 @@ Verdict: direct-round damage byte-provably precedes the synchronous small-
 explosion neighbor scan, but the explosion is spatial rather than bound to the
 original receiver. Its configured damage is a radial maximum, not an
 unconditional second call. The PC MapWho traversal/filter chain, four modeled
-Level 100 target geometries, and the terminal Target Tank's continued
-eligibility with part `-1` are now statically closed. Natural receiver order,
-per-shot falloff bits, expanding-radius timing, and broader parity remain open.
+Level 100 serialized geometry inputs, and the terminal Target Tank's continued
+eligibility with part `-1` have bounded static contracts. Live resource selection,
+receiver order, per-shot falloff bits, expanding-radius timing, and broader parity remain open.
 Specimen: pristine Steam `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -334,25 +334,40 @@ outer-overlap comparison is strict, while the selected `CSphere` predicate and
 the later radial-damage test admit equality. Enumeration or mutual-mask success
 alone therefore proves neither a collision callback nor damage.
 
-### Exact modeled target radii and terminal Target Tank behavior
+### Serialized geometry and terminal Target Tank behavior
 
-For normal live renders, retained Level 100 CMSH streams and pristine dispatch
-close both geometries used by the four modeled destructibles. The primary
-sphere controls collision admission; the distinct render radius is returned by
-virtual `GetRadius` and is subtracted from owner-position distance for damage:
+The September 8 materializer review corrected this section's previous claim of
+exact normal-live radii. Its August 27 input note had recomputed geometry from
+part corners through the alternate `CMesh::Load` path and explicitly left live
+returned words open. Those static estimates differ by one float step from some
+stored CMSH words; they are not observed instance values. The raw inputs are:
 
-| Definition | Primary centre rule | Primary radius bits/value | Render radius bits/value |
-|---|---|---:|---:|
-| Target Tank | owner-relative Z `0xBEC4D062`, X/Y zero | `0x3F88ED6D` / 1.069745660 | `0x3FC487A7` / 1.535389781 |
-| Target Truck | owner-relative Z `0xBEF307E4`, X/Y zero | `0x3FA644E3` / 1.298977256 | `0x3FE83ED3` / 1.814417243 |
-| Target Drone | owner-relative Z `0xBCD78710`, X/Y zero | `0x3FC2684F` / 1.518808246 | `0x3FE9F831` / 1.827886701 |
-| Warehouse | actor-basis-rotated full BBOX origin | `0x40F2BEF5` / 7.585810184 | `0x41088DDF` / 8.534636498 |
+| Definition | BBOX origin X / Y / Z words | BBOX radius word | Mesh render-radius word |
+|---|---|---|---|
+| Target Tank | `3D30CB70 / BE24C554 / BEC4D063` | `3FAB28C8` | `3FC487A7` |
+| Target Truck | `BB8D5D80 / BD4D6660 / BEF307E4` | `3FCFD61C` | `3FE83ED3` |
+| Target Drone | `BBA22500 / 3EA56398 / BCD78710` | `3FC26850` | `3FE9F832` |
+| Warehouse | `3CF5E900 / 400739E3 / BFF19379` | `40F2BEF5` | `41088DDE` |
 
-Ground Vehicle multiplies the loaded BBOX radius by exact `0.8f`; Plane and
-Building retain the full BBOX radius. Falloff never substitutes that primary
-radius: it uses target owner position and the rightmost render value. The
-current quantized contact catalog does not carry these definition-level float
-bits and cannot reconstruct them exactly from quantized parts.
+The serialized-resource path at `0x004AAB90` reads the CMSH header and global
+BBOX, while `0x004DC370` copies resource `+0x164` into renderer `+0x20` with
+integer stores at `0x004DC571/0x004DC579`. The four-byte getter
+`[0x004DCAF0,0x004DCAF4)` returns that field unchanged (body SHA-256
+`c1585f87b231917fb748c8cb8dc459d10a157139bd48fb142b516af0fef2c3ae`).
+The distinct slot-17 path at `0x004F3940` reads BBOX radius through `0x004DE060`.
+The inherited GroundUnit sphere installer `[0x0047C8E0,0x0047C964)` stores that
+returned float, multiplies by stored `0.8f` (`3F4CCCCD` at `0x005D85F8`), then
+stores the sphere radius; body SHA-256
+`555aa25b26f25bf13d9f563aa6362576330a6b077f0b152c6550b11429db0304`.
+Plane and Building use the base sphere without that multiplier. This is the
+checked initialization path, not a new live resource-selection observation.
+
+Contact schema v5 now preserves these raw words and the separate class scale in
+`Level100ContactDefinition.FloatGeometry`. Instance position/basis and centre
+rounding remain separate work. The primary sphere controls collision admission;
+falloff uses owner-position distance minus the distinct virtual render radius.
+Reconstructing either from quantized parts or copying the old estimate table
+would discard the original input.
 
 A direct Target Tank hit that first crosses life below zero sets `TF_DYING`
 and queues delayed shutdown for manager time plus exact `0.5f`; it does not
@@ -428,16 +443,26 @@ aggregate approximation:
   pulse-specific owner rather than the generic one-damage round path.
 
 The tests that pin an unconditional first/terminal pair are approximation
-tests, not retail parity proof. The smallest supported correction begins in
-the existing retail-asset materializer: carry the exact global BBOX origin,
-class-selected primary radius, and render-radius bits into each target
-definition instead of deriving them from quantized parts. Runtime then owns a
-distinct synchronous explosion at
+tests, not retail parity proof. Contact schema v5 now carries the original
+global BBOX origin/radius, class scale and render-radius bits into each target
+definition. The remaining runtime correction needs a distinct synchronous explosion at
 `round.position - normalize(velocity)*0.1`, primary-volume admission, and
 per-candidate falloff after the direct `0.8` call. Target Tank is proven
 nonsegmented on this path. Warehouse keeps the independently observed aggregate
 fallback until its controller/report behavior is closed; that fallback must
 not be generalized to whole-body actors.
+
+The September 8 Large correction separately reads the `Mech Pulse Bolt Large`
+record `[0xacda,0xad9b)` from the same pinned physics input (193 bytes, SHA-256
+`834147fb4e48235c950ae189c0bd2002567c267705d65e81e5496ee6d91c71e6`).
+Its speed/life/contact radius/direct damage are `20 / 7 / 0.20 / 8`.
+Simulation projects those values through its existing millimeter motion and
+swept contact owner. It applies one direct `8.0f` store, without the Medium
+second stage or an unconditional Large `4.0f` addition. Production contact
+checks distinguish 70 mm and 200 mm terrain clearance and observe target life
+`6 -> -2` with one direct damage stage. The separate Large explosion has radius
+1 and maximum damage 4; its spatial application, zero-inaccuracy mode,
+sound/effects, float motion and strict expiry remain open.
 
 ## Remaining evidence boundary
 

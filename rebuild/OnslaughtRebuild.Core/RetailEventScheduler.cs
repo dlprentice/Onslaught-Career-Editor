@@ -537,9 +537,18 @@ public sealed class RetailEventScheduler
     {
         _frameCount++;
         _readyToFlushBuffer = _currentBufferNum;
-        _time = (float)((double)_frameCount * (double)ClockTick);
+        _time = TimeAtFrameCount(_frameCount);
         _currentBufferNum = (_currentBufferNum + 1) % EventListBuffers;
     }
+
+    /// <summary>
+    /// The stored clock word from <see cref="AdvanceTime"/>. Shared with
+    /// Simulation's level clock while its mission dispatch is still separate
+    /// from this event pool. This is multiplication by the stored 0.05f,
+    /// not division by 20 and not repeated addition.
+    /// </summary>
+    internal static float TimeAtFrameCount(uint frameCount) =>
+        (float)((double)frameCount * (double)ClockTick);
 
     /// <summary>
     /// <c>CEventManager::Flush</c> — <c>eventmanager.cpp:311-411</c>,

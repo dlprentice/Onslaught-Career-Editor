@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-07 (partial World 110 construction boundaries; no new runtime-parity claim).
+Last updated: 2026-09-08 (first-training clock and charged projectile wiring; no new runtime-parity claim).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -255,7 +255,15 @@ increment until engine time is strictly greater than the Fire-stamped
 `now + CWeaponReloadTime` (0.1 s on `Mech Pulse Cannon Charged`), and Fire at
 FullyCharged selects `Mech Pulse Cannon Charged 2` @`0x135b3` /
 `Mech Pulse Bolt Large` @`0xacda` of `default physics.dat` (`e1fb3ded…ada14`);
-tap-fire at charge 0 stays Medium. ReadyToCharge is pinned by
+tap-fire at charge 0 stays Medium. The September 8 wiring uses
+`RetailEventScheduler.TimeAtFrameCount` for the level's stored clock, including
+reset and gameplay pause. Large now projects its authored speed 20, lifetime 7,
+radius 0.20 and direct damage 8 through the existing motion/contact owners.
+`SimulationTests.PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits`
+and the `PulseRadius_*` / `PulseMeshContact_*` checks cover those bounded changes.
+Spatial blasts, float motion/expiry and full controller/event ordering remain
+open in the [round owner](../reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md).
+ReadyToCharge is pinned by
 `SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`;
 Charged-2 / Large fire is pinned by
 `SimulationTests.ChargedPulseRelease_ClearsChargeUsesItsReloadAndNextTapSelectsMedium` and

@@ -24,10 +24,19 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            bool usesPlayerWeaponSchema = state.Level100PlayerWeaponState !=
+            bool usesEventClockSchema = state.RetailEventFrameCount !=
+                unchecked((uint)state.Level100Mission.Tick);
+            bool usesPlayerWeaponSchema = usesEventClockSchema || state.Level100PlayerWeaponState !=
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 45: event-manager frame count when it cannot be recovered from
+            // the already-hashed mission tick. Paused terminal updates can
+            // advance the latter while the weapon clock remains frozen. All
+            // differing counts select this schema, including zero. A count
+            // equal to mission time adds no independent state and retains the
+            // old layout. Schema 45 includes all schema-44 fields.
+            //
             // 44: raw Pulse charge and all four retained weapon ready times.
             // Any non-constructor word selects this extension, including an
             // expired timestamp or signed-zero charge. Only the true initial
@@ -109,8 +118,12 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
+            if (usesEventClockSchema)
+            {
+                writer.Write(state.RetailEventFrameCount);
+            }
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
             writer.Write(state.InitialLevel100TutorialProgress.PulseCannon);

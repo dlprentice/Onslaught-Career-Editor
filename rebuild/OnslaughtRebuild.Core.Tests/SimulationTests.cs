@@ -62,7 +62,11 @@ public sealed class SimulationTests
         Level100MissionSnapshot mission = world110.Snapshot;
         // A synthetic hash envelope around the real mission-program result.
         // No World110 Simulation or actor lifecycle is executed by this check.
-        WorldSnapshot state = rootState with { Level100Mission = mission };
+        WorldSnapshot state = rootState with
+        {
+            Level100Mission = mission,
+            RetailEventFrameCount = 0,
+        };
         RetailSecondaryObjectiveSnapshot[] changedObjectives =
             mission.SecondaryObjectives
                 .Select((item, index) => index == 1
@@ -87,6 +91,90 @@ public sealed class SimulationTests
         const int magicLength = 23; // "ONSLAUGHT-REBUILD-STATE"
         return System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(
             canonical.AsSpan(magicLength, sizeof(int)));
+    }
+
+    [Fact]
+    public void RetailEventClock_UsesStoredFloatMultiplierAndRestartsWithoutRewindingReplay()
+    {
+        var simulation = new Simulation(
+            1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
+        Assert.Equal(0u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+
+        for (int tick = 0; tick < 9; tick++)
+            simulation.Step(SimInput.Idle);
+
+        // Pristine 0x0044B624/0x0044B62A/0x0044B630: zero-extended integer
+        // FILD, multiply stored 0x3D4CCCCD, one FSTP dword. Division by 20
+        // instead produces 0x3EE66666 here; repeated addition also diverges.
+        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x3ee66667u,
+            BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+
+        WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
+        Assert.Equal(10, reset.Tick);
+        Assert.Equal(0, reset.Level100Mission.Tick);
+        Assert.Equal(0u, reset.RetailEventFrameCount);
+        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+
+        for (int tick = 0; tick < 9; tick++)
+            simulation.Step(SimInput.Idle);
+        Assert.Equal(19, simulation.Snapshot.Tick);
+        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x3ee66667u,
+            BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+    }
+
+    [Fact]
+    public void CanonicalHash_BindsEveryClockCountThatDiffersFromMissionTime()
+    {
+        var simulation = new Simulation(
+            1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
+        simulation.Step(SimInput.Idle);
+        WorldSnapshot baseline = simulation.Snapshot;
+        Assert.Equal(1, baseline.Level100Mission.Tick);
+        Assert.Equal(1u, baseline.RetailEventFrameCount);
+        Assert.Equal(42, CanonicalSchemaVersion(baseline));
+        string baselineHash = StateHasher.ComputeHex(baseline);
+        var hashes = new HashSet<string>();
+        foreach (uint count in new[] { 0u, 2u, uint.MaxValue })
+        {
+            WorldSnapshot changed = baseline with { RetailEventFrameCount = count };
+            Assert.Equal(45, CanonicalSchemaVersion(changed));
+            string hash = StateHasher.ComputeHex(changed);
+            Assert.NotEqual(baselineHash, hash);
+            Assert.True(hashes.Add(hash));
+        }
+    }
+
+    [Fact]
+    public void RetailEventClock_CanPassVulcanReadyInOneTickThenLandOnEquality()
+    {
+        var simulation = new Simulation(
+            1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
+        for (int tick = 0; tick < 20; tick++)
+            simulation.Step(SimInput.Idle);
+
+        // Compose the actual level clock with an isolated configured weapon.
+        // This is not a claim that the tutorial enables Jet input at frame 20.
+        var weapons = new Level100PlayerWeaponRuntime();
+        weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
+            simulation.EngineTimeSeconds);
+        Assert.Equal(0x3f800000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(0x3f866666u, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+
+        simulation.Step(SimInput.Idle);
+        Assert.Equal(0x3f866667u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.True(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
+            simulation.EngineTimeSeconds, out _));
+        weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
+            simulation.EngineTimeSeconds);
+        Assert.Equal(0x3f8ccccdu, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+
+        simulation.Step(SimInput.Idle);
+        Assert.Equal(0x3f8ccccdu, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.False(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
+            simulation.EngineTimeSeconds, out _));
     }
 
     [Fact]
@@ -1331,10 +1419,19 @@ public sealed class SimulationTests
             actorScriptTickAtDeclaration +
                 Level100MissionTiming.DeathPauseDelayTicks - 1,
             paused.Level100ActorScripts.Tick);
+        // AdvanceTime precedes the event Flush that delivers PAUSE_GAME,
+        // unlike actor-script work which this nominal terminal tick skips.
+        Assert.Equal(advancing.RetailEventFrameCount + 1, paused.RetailEventFrameCount);
+        Assert.Equal((uint)paused.Level100Mission.Tick, paused.RetailEventFrameCount);
         Assert.Equal(0x3dcccb3b, MixBits(paused));
 
+        uint pausedTimeBits = BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds);
         WorldSnapshot held = death.Step(SimInput.Idle);
         Assert.Equal(paused.Level100ActorScripts.Tick, held.Level100ActorScripts.Tick);
+        Assert.Equal(paused.RetailEventFrameCount, held.RetailEventFrameCount);
+        Assert.Equal(paused.Level100Mission.Tick + 1, held.Level100Mission.Tick);
+        Assert.Equal(pausedTimeBits, BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds));
+        Assert.Equal(45, CanonicalSchemaVersion(held));
         Assert.Equal(0x3dcccb3b, MixBits(held));
 
         static int MixBits(WorldSnapshot snapshot) => BitConverter.SingleToInt32Bits(
@@ -1348,7 +1445,7 @@ public sealed class SimulationTests
     public void PlayerWeaponReloads_UseStoredFloatTimesAndRefuseEquality()
     {
         Simulation pulse = CreateFiringRangeExerciseSimulation();
-        AlignNextStepToWholeSecond(pulse);
+        AlignNextShotToEquality(pulse, 0.1f, 2);
 
         WorldSnapshot pulseFirst = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(pulseFirst, Level100PlayerWeapon.PulseCannonPod, 1);
@@ -1365,7 +1462,7 @@ public sealed class SimulationTests
         Assert.Empty(pulseEquality.Level100WeaponFireEvents);
         Assert.Equal(0, pulseEquality.FireCooldownTicksRemaining);
         Assert.Equal(pulseFirst.Level100PlayerWeaponState.PulseReadyAtTimeBits,
-            BitConverter.SingleToUInt32Bits((float)(pulseEquality.Tick / 20d)));
+            BitConverter.SingleToUInt32Bits(pulse.EngineTimeSeconds));
         WorldSnapshot pulseSecond = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(pulseSecond, Level100PlayerWeapon.PulseCannonPod, 1);
         Assert.Equal(2, pulseSecond.FireCooldownTicksRemaining);
@@ -1382,7 +1479,7 @@ public sealed class SimulationTests
             jet.Step(SimInput.Idle);
         }
 
-        AlignNextStepToWholeSecond(jet);
+        AlignNextShotToEquality(jet, 0.05f, 1);
         WorldSnapshot jetFirst = jet.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
         AssertWeaponFire(
             jetFirst,
@@ -1398,7 +1495,7 @@ public sealed class SimulationTests
         Assert.Empty(jetEquality.Level100WeaponFireEvents);
         Assert.Equal(0, jetEquality.FireCooldownTicksRemaining);
         Assert.Equal(jetFirst.Level100PlayerWeaponState.MechVulcanReadyAtTimeBits,
-            BitConverter.SingleToUInt32Bits((float)(jetEquality.Tick / 20d)));
+            BitConverter.SingleToUInt32Bits(jet.EngineTimeSeconds));
         WorldSnapshot jetSecond = jet.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
         AssertWeaponFire(
             jetSecond,
@@ -1406,10 +1503,20 @@ public sealed class SimulationTests
             SimulationConstants.MechVulcanVolleySize);
         Assert.Equal(1, jetSecond.FireCooldownTicksRemaining);
 
-        static void AlignNextStepToWholeSecond(Simulation simulation)
+        static void AlignNextShotToEquality(Simulation simulation, float reload, uint delay)
         {
-            while ((simulation.Snapshot.Tick + 1) % SimulationConstants.TicksPerSecond != 0)
+            // A nominal delay of one/two ticks can land below, at, or above
+            // the separately stored ready word. Choose a real equality; a
+            // whole-second shot alone does not guarantee that relationship.
+            for (int step = 0; ; step++)
+            {
+                Assert.True(step < 20, "No equality boundary within twenty frames.");
+                uint next = simulation.Snapshot.RetailEventFrameCount + 1;
+                float ready = (float)((double)RetailEventScheduler.TimeAtFrameCount(next) + reload);
+                if (ready == RetailEventScheduler.TimeAtFrameCount(next + delay))
+                    return;
                 simulation.Step(SimInput.Idle);
+            }
         }
 
         static void AssertWeaponFire(
@@ -1451,7 +1558,7 @@ public sealed class SimulationTests
             Assert.False(input.HasAction(SimActions.Fire));
             int previousNextId = jet.Snapshot.NextProjectileId;
             WorldSnapshot fired = jet.Step(input);
-            float now = (float)(fired.Tick / 20d);
+            float now = RetailEventScheduler.TimeAtFrameCount(fired.RetailEventFrameCount);
             if (now > expectedReady)
             {
                 Level100WeaponFireEvent volley = Assert.Single(fired.Level100WeaponFireEvents);
@@ -1618,7 +1725,7 @@ public sealed class SimulationTests
             expectedActorId = 0;
         }
 
-        simulation.QueueVulcanRoundForContactMeasurement(
+        simulation.QueueRoundForContactMeasurement(
             projectileKind,
             start,
             end);
@@ -1635,8 +1742,11 @@ public sealed class SimulationTests
         Assert.Empty(result.Projectiles);
     }
 
-    [Fact]
-    public void PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits()
+    [Theory]
+    [InlineData(Level100ProjectileKind.MechPulseBoltMedium, 1_750, 120)]
+    [InlineData(Level100ProjectileKind.MechPulseBoltLarge, 1_000, 140)]
+    public void PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits(
+        Level100ProjectileKind expectedKind, int speedPerTick, int lifetimeTicks)
     {
         Simulation simulation = CreateFiringRangeExerciseSimulation();
         TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == 1);
@@ -1645,12 +1755,16 @@ public sealed class SimulationTests
         {
             simulation.Step(new SimInput(0, 0, LookY: -1));
         }
+        if (expectedKind == Level100ProjectileKind.MechPulseBoltLarge)
+        {
+            for (int tick = 0; tick < 10; tick++)
+                simulation.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        }
 
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
-        Assert.Equal(Level100ProjectileKind.MechPulseBoltMedium, projectile.Kind);
-        Assert.Equal(120, SimulationConstants.ProjectileLifetimeTicks);
-        Assert.Equal(119, projectile.RemainingTicks);
+        Assert.Equal(expectedKind, projectile.Kind);
+        Assert.Equal(lifetimeTicks - 1, projectile.RemainingTicks);
         Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);
         Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
         long speedSquared =
@@ -1658,7 +1772,9 @@ public sealed class SimulationTests
             ((long)projectile.Velocity.Z * projectile.Velocity.Z) +
             ((long)projectile.VerticalVelocityMillimetersPerTick *
                 projectile.VerticalVelocityMillimetersPerTick);
-        Assert.InRange(speedSquared, (long)1_749 * 1_749, (long)1_751 * 1_751);
+        Assert.InRange(speedSquared,
+            (long)(speedPerTick - 1) * (speedPerTick - 1),
+            (long)(speedPerTick + 1) * (speedPerTick + 1));
         double yaw = fired.FacingYawMicroRad / 1_000_000d;
         double pitch = fired.FacingPitchMicroRad / 1_000_000d;
         double emitterForwardPlane =
@@ -1694,11 +1810,11 @@ public sealed class SimulationTests
 
         int firstElevation = projectile.ElevationMillimeters;
         projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
-        Assert.Equal(118, projectile.RemainingTicks);
+        Assert.Equal(lifetimeTicks - 2, projectile.RemainingTicks);
         Assert.Equal(
             firstElevation + projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
-        for (int remaining = 117; remaining >= 1; remaining--)
+        for (int remaining = lifetimeTicks - 3; remaining >= 1; remaining--)
         {
             projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
             Assert.Equal(remaining, projectile.RemainingTicks);
@@ -1708,6 +1824,69 @@ public sealed class SimulationTests
         Assert.Equal(
             SimulationConstants.Level100TargetTankLife,
             simulation.Snapshot.Targets.Single(item => item.Id == 1).Hull);
+    }
+
+    [Theory]
+    [InlineData(Level100ProjectileKind.MechPulseBoltMedium, false)]
+    [InlineData(Level100ProjectileKind.MechPulseBoltLarge, true)]
+    public void PulseRadius_ReachesProductionTerrainSweepWithoutFallingBackToMedium(
+        Level100ProjectileKind kind, bool touchesTerrain)
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.Create());
+        // Existing retained terrain at (0,0) is 211 mm high. This horizontal
+        // segment is 189 mm above it: the Medium 70 mm sphere misses, while
+        // the Large 200 mm sphere contacts. No impact event is injected.
+        simulation.QueueRoundForContactMeasurement(kind,
+            new SimVector3(0, 400, 0), new SimVector3(10, 400, 0));
+        WorldSnapshot state = simulation.Step(SimInput.Idle);
+
+        if (touchesTerrain)
+        {
+            Assert.Empty(state.Projectiles);
+            Level100DestructionEvent impact = Assert.Single(state.Level100DestructionEvents);
+            Assert.Equal(Level100DestructionEventKind.PulseImpact, impact.Kind);
+            Assert.Equal(0, impact.ActorId);
+            Assert.Equal(-1, impact.PartIndex);
+        }
+        else
+        {
+            Assert.Single(state.Projectiles);
+            Assert.Empty(state.Level100DestructionEvents);
+        }
+    }
+
+    [Theory]
+    [InlineData(Level100ProjectileKind.MechPulseBoltMedium, 0x40866666u, 2, false)]
+    [InlineData(Level100ProjectileKind.MechPulseBoltLarge, 0xc0000000u, 1, true)]
+    public void PulseMeshContact_AppliesLargeDirectEightWithoutAMediumOrFixedLargeBlast(
+        Level100ProjectileKind kind, uint remainingLife, int damageStages, bool terminal)
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.Create());
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank 2");
+        SimVector3 position = target.Pose.PositionMillimeters;
+        // The existing contact seam only supplies a real swept segment. The
+        // production projectile update selects the mesh, damage and lifecycle.
+        simulation.QueueRoundForContactMeasurement(kind,
+            position with { Y = position.Y + 2_000 },
+            position with { Y = position.Y - 1_000 });
+        WorldSnapshot state = simulation.Step(SimInput.Idle);
+
+        Assert.Empty(state.Projectiles);
+        Level100DestructionEvent impact = Assert.Single(state.Level100DestructionEvents,
+            item => item.Kind == Level100DestructionEventKind.PulseImpact);
+        Assert.Equal(target.ActorId.Value, impact.ActorId);
+        Assert.True(impact.PartIndex >= 0);
+        Level100DestructionEvent[] stages = state.Level100DestructionEvents
+            .Where(item => item.Kind == Level100DestructionEventKind.SegmentDamaged).ToArray();
+        Assert.Equal(damageStages, stages.Length);
+        Assert.Equal(remainingLife, stages[^1].RemainingHealthBits);
+        Level100DestructionSnapshot destruction = state.Level100Destruction.Actors
+            .Single(actor => actor.ActorId == target.ActorId.Value);
+        Assert.Equal(remainingLife, destruction.CurrentLifeBits);
+        Assert.Equal(terminal, destruction.Terminal);
+        Assert.Equal(terminal ? Level100ActorLifecycle.Destroyed : Level100ActorLifecycle.Alive,
+            state.Level100Actors.Actors.Single(actor => actor.ActorId == target.ActorId).Lifecycle);
     }
 
     [Fact]
@@ -1797,7 +1976,7 @@ public sealed class SimulationTests
             Level100ProjectileKind.MechPulseBoltLarge,
             Assert.Single(chargedFired.Projectiles).Kind);
         Assert.Equal(0u, chargedFired.Level100PlayerWeaponState.PulseChargeBits);
-        float ready = (float)((double)(float)(chargedFired.Tick / 20d) + 0.5d);
+        float ready = (float)((double)charged.EngineTimeSeconds + 0.5d);
         Assert.Equal(BitConverter.SingleToUInt32Bits(ready),
             chargedFired.Level100PlayerWeaponState.PulseReadyAtTimeBits);
 
@@ -1806,7 +1985,7 @@ public sealed class SimulationTests
         {
             nextTap = charged.Step(new SimInput(0, 0, SimActions.Fire));
             Assert.Equal(0u, nextTap.Level100PlayerWeaponState.PulseChargeBits);
-            if ((float)(nextTap.Tick / 20d) <= ready)
+            if (charged.EngineTimeSeconds <= ready)
                 Assert.Empty(nextTap.Level100WeaponFireEvents);
             Assert.True(nextTap.Tick <= chargedFired.Tick + 11);
         }
@@ -1831,18 +2010,21 @@ public sealed class SimulationTests
 
         // ReadyToCharge at 0x0050A080 is `now > weapon+0x64` (`test ah, 0x41`
         // / jz). Fire stamps +0x64 = now + CWeaponReloadTime 0.1 s, so the
-        // equality tick (exactly 0.1 s / two 20 Hz updates later) is still
-        // blocked. Fire has the same ordered strict comparison.
-        simulation.Step(charge);
-        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
-        Assert.Equal(1, simulation.Snapshot.FireCooldownTicksRemaining);
-
-        simulation.Step(charge);
-        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
-        Assert.Equal(0, simulation.Snapshot.FireCooldownTicksRemaining);
-
-        simulation.Step(charge);
-        Assert.Equal(0x41200000u, simulation.Level100PulseCannonChargeBits);
+        // equality word is still blocked, but the two-update clock word is
+        // not always equal to the separately rounded ready time.
+        float ready = BitConverter.UInt32BitsToSingle(
+            fired.Level100PlayerWeaponState.PulseReadyAtTimeBits);
+        for (int step = 0; ; step++)
+        {
+            Assert.True(step < 3, "Pulse charge remained blocked beyond its reload.");
+            simulation.Step(charge);
+            if (simulation.EngineTimeSeconds > ready)
+            {
+                Assert.Equal(0x41200000u, simulation.Level100PulseCannonChargeBits);
+                break;
+            }
+            Assert.Equal(0u, simulation.Level100PulseCannonChargeBits);
+        }
     }
 
     [Fact]
@@ -1978,9 +2160,11 @@ public sealed class SimulationTests
             Level100MissionTiming.FailureCountdownTicks,
             snapshot.Level100Mission.TerminalTicksRemaining);
         int actorScriptTickAtLoss = snapshot.Level100ActorScripts.Tick;
+        uint clockAtLoss = snapshot.RetailEventFrameCount;
         for (int tick = 0; tick < Level100MissionTiming.FailureCountdownTicks; tick++)
         {
             snapshot = simulation.Step(SimInput.Idle);
+            Assert.Equal(clockAtLoss, snapshot.RetailEventFrameCount);
             hashes.Add(StateHasher.ComputeHex(snapshot));
         }
         Assert.Equal(actorScriptTickAtLoss, snapshot.Level100ActorScripts.Tick);

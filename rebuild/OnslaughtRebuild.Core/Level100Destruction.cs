@@ -207,6 +207,11 @@ public sealed class Level100DestructionRuntime
         _registry.ReportDied(actorId);
     }
 
+    /// <summary>
+    /// Retains the existing Medium pulse damage stages. Large uses
+    /// <see cref="TryApplyRoundSweep(SimVector3, SimVector3, int, uint, Level100DestructionEffectKind, out Level100ContactHit)"/>
+    /// with its own radius and direct damage while its spatial blast is open.
+    /// </summary>
     public bool TryApplyPulseSweep(
         SimVector3 start,
         SimVector3 end,
@@ -520,6 +525,11 @@ public sealed class Level100DestructionState
 {
     public const uint PulseDirectDamageBits = 0x3F4CCCCD;
     public const uint PulseExplosionDamageBits = 0x3F800000;
+    // Round "Mech Pulse Bolt Large" @0xACDA, field 2 in the same pinned
+    // physics.dat as SimulationConstants: 8.0f. CRound::Hit forwards this
+    // direct amount from roundData+0x1C. Its separate explosion maximum 4.0
+    // must not be added without the actual spatial scan and falloff.
+    public const uint LargePulseDirectDamageBits = 0x41000000;
 
     /// <summary>
     /// Legacy combined Medium amount: direct <c>0.8</c> plus explosion maximum

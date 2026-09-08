@@ -24,11 +24,26 @@ public sealed class Simulation
         public int ElevationMillimeters { get; set; }
         public required int VerticalVelocityMillimetersPerTick { get; init; }
         public int RemainingTicks { get; set; }
-        // Per-round contact and damage. The pulse and the Twin Vulcan's Mech
-        // Bullet are different released rounds, so a projectile carries its
-        // own narrowphase radius and damage rather than assuming the pulse.
-        public required int ContactRadiusMillimeters { get; init; }
-        public required uint DamageBits { get; init; }
+        // Immutable Kind is already in the snapshot/hash. It owns these
+        // configured parameters for both launch and sweep, so no separate
+        // mutable or unhashed radius/damage copy can drift from the round.
+        public int ContactRadiusMillimeters => Kind switch
+        {
+            Level100ProjectileKind.MechPulseBoltLarge =>
+                SimulationConstants.LargePulseContactRadiusMillimeters,
+            Level100ProjectileKind.MechPulseBoltMedium or
+                Level100ProjectileKind.MechBullet or Level100ProjectileKind.MechAirBullet =>
+                Level100ContactMechanics.PulseRadiusMillimeters,
+            _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
+        };
+        public uint DamageBits => Kind switch
+        {
+            Level100ProjectileKind.MechPulseBoltMedium => Level100DestructionState.PulseDamageBits,
+            Level100ProjectileKind.MechPulseBoltLarge => Level100DestructionState.LargePulseDirectDamageBits,
+            Level100ProjectileKind.MechBullet => Level100DestructionState.MechBulletDamageBits,
+            Level100ProjectileKind.MechAirBullet => SimulationConstants.MechAirBulletDamageBits,
+            _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
+        };
     }
 
     private sealed class MutableWalkerFoot
@@ -60,6 +75,7 @@ public sealed class Simulation
     private Level100DestructionRuntime _level100Destruction = null!;
     private Level100ActorId _level100PlayerActorId;
     private int _tick;
+    private uint _retailEventFrameCount;
     private int _nextProjectileId;
     private VehicleMode _mode;
     private VehicleTransition _transition;
@@ -218,11 +234,13 @@ public sealed class Simulation
     internal int Level100FlightModeFlag => _flightModeFlag;
 
     /// <summary>
-    /// Core's stand-in for <c>DAT_00672FD0</c>: seconds at the current tick,
-    /// after <see cref="Step"/> has already incremented <c>_tick</c>.
+    /// The level's stored event-manager clock at <c>DAT_00672FD0</c>, using
+    /// <c>CEventManager::AdvanceTime</c> (0x0044B600) through its shared Core
+    /// calculation. InitRestartLoop resets this clock; the replay tick does
+    /// not reset. This does not claim full controller/event dispatch parity.
     /// </summary>
-    private float EngineTimeSeconds =>
-        (float)((double)_tick / SimulationConstants.TicksPerSecond);
+    internal float EngineTimeSeconds =>
+        RetailEventScheduler.TimeAtFrameCount(_retailEventFrameCount);
 
 
     /// <summary>
@@ -266,7 +284,7 @@ public sealed class Simulation
     }
 
     /// <summary>
-    /// Causal-probe seam for the two released Vulcan round kinds. It queues one
+    /// Causal-probe seam for supported released player round kinds. It queues one
     /// round across a caller-supplied contact segment; the next normal
     /// <see cref="Step"/> still owns movement, contact selection, impact-kind
     /// routing, event production and removal.
@@ -276,25 +294,23 @@ public sealed class Simulation
     /// <c>UpdateProjectiles</c> kind switch can be falsified without replacing
     /// it with a manually injected destruction effect.
     /// </remarks>
-    internal void QueueVulcanRoundForContactMeasurement(
+    internal void QueueRoundForContactMeasurement(
         Level100ProjectileKind kind,
         SimVector3 start,
         SimVector3 end)
     {
-        uint damageBits = kind switch
+        if (kind is not (Level100ProjectileKind.MechPulseBoltMedium or
+            Level100ProjectileKind.MechPulseBoltLarge or
+            Level100ProjectileKind.MechBullet or Level100ProjectileKind.MechAirBullet))
         {
-            Level100ProjectileKind.MechBullet =>
-                Level100DestructionState.MechBulletDamageBits,
-            Level100ProjectileKind.MechAirBullet =>
-                SimulationConstants.MechAirBulletDamageBits,
-            _ => throw new ArgumentOutOfRangeException(
+            throw new ArgumentOutOfRangeException(
                 nameof(kind),
-                "The Vulcan contact probe accepts only released Vulcan rounds."),
-        };
+                "The contact probe accepts only supported released player rounds.");
+        }
         if (start == end)
         {
             throw new ArgumentException(
-                "The Vulcan contact probe requires a non-empty sweep.",
+                "The contact probe requires a non-empty sweep.",
                 nameof(end));
         }
 
@@ -309,9 +325,6 @@ public sealed class Simulation
             ElevationMillimeters = start.Y,
             VerticalVelocityMillimetersPerTick = checked(end.Y - start.Y),
             RemainingTicks = 2,
-            ContactRadiusMillimeters =
-                Level100ContactMechanics.PulseRadiusMillimeters,
-            DamageBits = damageBits,
         });
     }
 
@@ -354,6 +367,16 @@ public sealed class Simulation
         {
             ResetDynamicState();
             return CreateSnapshot();
+        }
+
+        // CGame::Update (0x0046EB37-0x0046EBCE) advances the manager before
+        // controller Flush and event Flush, unless already paused. Therefore
+        // the update that delivers PAUSE_GAME advances the clock; subsequent
+        // paused UI updates do not. The existing nominal terminal-event timing
+        // remains a separate limitation, as does this Step's dispatch order.
+        if (!_level100Mission.GameplayPaused)
+        {
+            _retailEventFrameCount = unchecked(_retailEventFrameCount + 1);
         }
 
         _level100MissionEvents.Clear();
@@ -3577,8 +3600,6 @@ public sealed class Simulation
                     Level100ProjectileKind.MechAirBullet,
                     SimulationConstants.MechAirBulletSpeedPerTick,
                     SimulationConstants.MechAirBulletLifetimeTicks,
-                    Level100ContactMechanics.PulseRadiusMillimeters,
-                    SimulationConstants.MechAirBulletDamageBits,
                     yawInaccuracy,
                     pitchInaccuracy);
             }
@@ -3607,15 +3628,16 @@ public sealed class Simulation
             (int yawInaccuracy, int pitchInaccuracy) =
                 _level100ActorMechanics.NextWeaponInaccuracy(
                     SimulationConstants.PulseCannonInaccuracyMicroRadians);
+            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
             LaunchWalkerRound(
-                // Large identity/reload is selected, but its speed/life/radius
-                // and spatial explosion are still the older Medium projection.
-                // This is not a charged-projectile parity claim.
+                // Large now carries its own physical scalars. Its spatial
+                // blast, authored zero inaccuracy, launch sound and impact
+                // presentation remain open; this is not complete parity.
                 pulseRound,
-                SimulationConstants.ProjectileSpeedPerTick,
-                SimulationConstants.ProjectileLifetimeTicks,
-                Level100ContactMechanics.PulseRadiusMillimeters,
-                Level100DestructionState.PulseDamageBits,
+                largePulse ? SimulationConstants.LargePulseSpeedPerTick :
+                    SimulationConstants.ProjectileSpeedPerTick,
+                largePulse ? SimulationConstants.LargePulseLifetimeTicks :
+                    SimulationConstants.ProjectileLifetimeTicks,
                 yawInaccuracy,
                 pitchInaccuracy);
             return;
@@ -3655,8 +3677,6 @@ public sealed class Simulation
                 Level100ProjectileKind.MechBullet,
                 SimulationConstants.MechBulletSpeedPerTick,
                 SimulationConstants.MechBulletLifetimeTicks,
-                Level100ContactMechanics.PulseRadiusMillimeters,
-                Level100DestructionState.MechBulletDamageBits,
                 yawInaccuracy,
                 pitchInaccuracy);
         }
@@ -3703,8 +3723,6 @@ public sealed class Simulation
         Level100ProjectileKind kind,
         int speedPerTick,
         int lifetimeTicks,
-        int contactRadiusMillimeters,
-        uint damageBits,
         int yawInaccuracyMicroRadians,
         int pitchInaccuracyMicroRadians)
     {
@@ -3771,8 +3789,6 @@ public sealed class Simulation
             ElevationMillimeters = emitter.Y,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = lifetimeTicks,
-            ContactRadiusMillimeters = contactRadiusMillimeters,
-            DamageBits = damageBits,
         });
     }
 
@@ -3957,6 +3973,8 @@ public sealed class Simulation
                 Level100ProjectileKind.MechPulseBoltMedium =>
                     Level100DestructionEffectKind.PulseImpact,
                 Level100ProjectileKind.MechPulseBoltLarge =>
+                    // Retained Medium presentation placeholder; Large's
+                    // actual effect/audio assets are not admitted here.
                     Level100DestructionEffectKind.PulseImpact,
                 Level100ProjectileKind.MechBullet or
                     Level100ProjectileKind.MechAirBullet =>
@@ -3965,9 +3983,10 @@ public sealed class Simulation
                     $"Projectile {projectile.Id} has unsupported impact kind " +
                     $"{projectile.Kind}."),
             };
-            bool hit = projectile.Kind is
-                Level100ProjectileKind.MechPulseBoltMedium or
-                Level100ProjectileKind.MechPulseBoltLarge
+            // Only Medium retains the older fixed second damage stage.
+            // Large applies its configured direct amount through the common
+            // sweep; a spatial blast cannot be replaced with another fixed 4.
+            bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
                 ? _level100Destruction.TryApplyPulseSweep(start, end, out _)
                 : _level100Destruction.TryApplyRoundSweep(
                     start,
@@ -3990,6 +4009,7 @@ public sealed class Simulation
 
     private void ResetDynamicState()
     {
+        _retailEventFrameCount = 0;
         _nextProjectileId = 1;
         _reticleLaunchAnglesTick = int.MinValue;
         _mode = VehicleMode.Walker;
@@ -4247,6 +4267,7 @@ public sealed class Simulation
             Array.AsReadOnly(projectiles),
             Array.AsReadOnly(walkerFeet))
         {
+            RetailEventFrameCount = _retailEventFrameCount,
             Level100PlayerWeaponState = _level100PlayerWeapons.Snapshot,
         };
     }
