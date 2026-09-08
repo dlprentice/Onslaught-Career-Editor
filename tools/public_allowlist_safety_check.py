@@ -181,10 +181,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 
 # Exact reviewed text, not an extension/root exemption. The first manifest
 # contains ten canonical UTF-8 comments (7,696 decoded bytes); the BBOX manifest
-# contains two (1,575 bytes), with no control, secret or payload findings.
+# contains two (1,575 bytes); bounds comments contain four (2,114 bytes).
+# All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/bounds-contract-comments.manifest.tsv":
+        "b74cdb6a1ed2dff28b2a4946bbfc4453bada7a0afa6c625982c8cd618bbb479c",
     "tools/cohort-specs/first-training-semantic-corrections.manifest.tsv":
         "b8b1999ee60f6ff9ece0466eba783d93891f47b7272c72ec27b71718adf6feaf",
     "tools/cohort-specs/mesh-bounding-box-metadata.manifest.tsv":

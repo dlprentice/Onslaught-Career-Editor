@@ -79,6 +79,10 @@ and a measured-contract comment. The two-argument `__cdecl` shape, parameter
 types/storage/comments and all other function rows were preserved. Original
 source name and class ownership remain unproven because `MeshPart.cpp` is absent
 from the pinned drop. No live mesh-load observation is claimed.
+The subsequent [bounds-comment cohort](../../../tools/cohort-specs/bounds-contract-comments.manifest.tsv)
+also corrected `CMeshPart__LoadFromStream`'s saved comment to identify this BBOX
+call at `0x004b2cf1` and its store at part `+0xfc`. That follow-up changes no
+name, signature, tag or body.
 
 ## Counting note
 
@@ -91,9 +95,6 @@ allocation-site density, not as a function count.
 
 - The BBOX reader has the bounded static contract above. Callees and line
   numbers alone do not establish the other ten functions' complete behavior.
-- The saved `CMeshPart__LoadFromStream` comment still describes this helper as
-  a material loader. It was outside the one-function correction and remains
-  misleading; use the address-bound contract above.
 - The bone-weighted vertex path at seven arguments is the widest interface here
   and the natural first target.
 

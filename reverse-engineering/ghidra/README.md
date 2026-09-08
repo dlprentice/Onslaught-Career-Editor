@@ -227,7 +227,7 @@ The tracked payload still matches `745c00ad…`; checkpoint refresh remains
 excluded. The current-name checker composes the frozen table, five-name manifest
 and this one-function manifest without rewriting historical tables or consumers.
 
-**Bounding-box reader metadata (2026-09-08).** The working project now measures
+**Bounding-box reader metadata (2026-09-08).** After this cohort the working project measured
 `db.18638`: 18 payload files, 118,967,156 bytes, inventory SHA-256
 `9da943a8b4ac1d0b3abc383e19a187bf2a77ce85945aa2bb1bf7dfbf34ca2c60`.
 Its main database is 68,665,344 bytes, SHA-256
@@ -259,8 +259,40 @@ It was hash-compared, restored elsewhere and opened read-only successfully;
 The tracked payload still matches `745c00ad…`; its refresh remains excluded.
 The current-name checker additionally composes this exact one-row manifest;
 historical tables and explicit-table consumers remain unchanged. The adjacent
-stream-loader comment still contains the old material interpretation and is
-outside this cohort. No runtime-parity result is claimed.
+stream-loader comment was outside this cohort; the follow-up below corrects it.
+No runtime-parity result is claimed.
+
+**Bounds contract comments (2026-09-08).** The working project now measures
+`db.18639`: 18 payload files, 118,967,156 bytes, inventory SHA-256
+`fdafa7bdb0966e6fe11840285d45db0981a58e701ce64f13620f73106bf62a3a`.
+Its main database is 68,665,344 bytes, SHA-256
+`0169f476474d907bd17d96159d05b0ff1e06d5e2664a30503626e00fcf9d6c38`.
+The [manifest](../../tools/cohort-specs/bounds-contract-comments.manifest.tsv)
+and [spec](../../tools/cohort-specs/bounds-contract-comments.spec.tsv) change only
+two nonrepeatable comments. `0x00479770` now records the shipped all-three-axes
+distance branch's doubled Z term. `0x004b27a0` now identifies its BBOX helper
+call and returned pointer store, replacing the old material interpretation.
+Names, prototypes, tags, repeatable comments, bodies, bytes and references are
+unchanged. These static corrections establish neither original source identity
+nor runtime parity.
+
+Fresh PRE identity, isolated apply, independent review, sealed checks, live
+apply and separate readback passed. Exactly two comment rows moved; all 8,328
+other function rows remain identical. Only the program comment digest changed.
+The complete live function/program exports equal the separately reopened
+rehearsal POST. Evidence is under
+`local-lab/ghidra-first-training-20260907-v1/bounds-comments/`:
+`live-readback.json` is 2,259 bytes, SHA-256
+`cbade41628461d9c366e47671a9c3b73fd74f146324780f6a02ab28fb442bf4f`.
+
+The restore-proven BBOX POST above matched live and served as PRE. The new
+independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-08-bounds-contract-comments/post-working/`.
+It was copied, hash-compared, restored elsewhere and opened read-only successfully;
+`post-working-restore.json` is 5,708 bytes, SHA-256
+`cfc4a9e9aebe0bd3144368f7bc6045244fde63370558f302ae17315ca24f662c`.
+The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
+Current-name projection is unchanged by this comment-only cohort.
 
 Related (not this folder):
 

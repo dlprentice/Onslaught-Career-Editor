@@ -175,6 +175,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # 0x004b3180. Reopened rehearsal preserved all other function rows, individual
 # parameter/return metadata, and program metrics except the comment digest;
 # stale-tag input refused before writes. No body/type/convention change.
+# bounds-contract-comments: 2026-09-08 exact two-comment cohort; isolated apply,
+# separate readback and independent byte/text review passed. Names/bodies frozen.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -191,6 +193,7 @@ LIVE_GRANTED_COHORTS = [
     "first-training-semantic-corrections",
     "first-training-keyboard-boundary",
     "mesh-bounding-box-metadata",
+    "bounds-contract-comments",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -613,6 +616,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "first-training-semantic-corrections",\n'
         '        "first-training-keyboard-boundary",\n'
         '        "mesh-bounding-box-metadata",\n'
+        '        "bounds-contract-comments",\n'
         "    };\n",
     ),
     (

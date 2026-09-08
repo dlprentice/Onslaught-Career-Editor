@@ -1,0 +1,46 @@
+# Exactly two nonrepeatable comments. PRE and separate rehearsal POST measured 2026-09-08.
+# Names, prototypes, tags, bodies, instructions, references and checkpoint payload are frozen.
+cohortId	bounds-contract-comments
+cohortTitle	Correct passive AABB distance and mesh-part BBOX caller comments
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+verb	SET_COMMENT
+applierSha256	1e61645c25eb8b06e328a06084ff8d3d8c0ac61087bd8a635734b4741b7699c1
+applierSha256	856bf45e11e8d9e7298bc661aab2e6555196163f7532c58fe79d00977b4b8987
+preFunctions	8330
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2300
+preFunctionNameDigest	22c3ea7e6277eabd69f5ca89db28fd4c9c7357774d302dc881744ce467e20a5d
+preFunctionBodyDigest	0918a924668f6dced88681160bebe1b47135d717fc4de844e452043f823f8cd9
+preFrozenDigest	e0536360b3cc60883cb54fd05b847514286716f0a30526ea5e404f21d3f79e67
+postFunctions	8330
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2300
+postFunctionNameDigest	22c3ea7e6277eabd69f5ca89db28fd4c9c7357774d302dc881744ce467e20a5d
+postFunctionBodyDigest	0918a924668f6dced88681160bebe1b47135d717fc4de844e452043f823f8cd9
+postFrozenDigest	850da9560b294a30cfe70891302b3852e3550c964b2bdac31d6c18b008f7dcd9
+manifestSha256	b74cdb6a1ed2dff28b2a4946bbfc4453bada7a0afa6c625982c8cd618bbb479c
+manifestBytes	3129
+manifestRows	2
+manifestColumns	7
+manifestHeaderPipe	addr|liveKind|currentCommentBase64|proposedCommentBase64|bodyStart|bodyEndExclusive|bodySha256
+col.addr	addr
+col.liveKind	liveKind
+col.currentCommentBase64	currentCommentBase64
+col.proposedCommentBase64	proposedCommentBase64
+unique	addr
+enum	liveKind=FUNCTION
+expectedTargetsChanged	2
+expectedFunctionsUntouched	8328
+expectedSymbolsAdded	0
+expectedSymbolsRemoved	0

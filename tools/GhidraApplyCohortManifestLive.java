@@ -256,6 +256,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "first-training-semantic-corrections",
         "first-training-keyboard-boundary",
         "mesh-bounding-box-metadata",
+        "bounds-contract-comments",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
