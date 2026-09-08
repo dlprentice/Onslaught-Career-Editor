@@ -306,10 +306,9 @@ public static class RetailWeaponCharge
     /// <remarks>
     /// <c>mov eax,[ecx+0xA0] / test eax,eax / jz ret1</c> then
     /// <c>fld [0x00672FD0] / fcomp [ecx+0x64] / fnstsw ax / test ah,0x41 / jz
-    /// ret1 / xor eax,eax</c>. Returns false only when the +0xA0 field is
-    /// non-zero <b>and</b> engine time is ordered-less-or-equal to +0x64.
-    /// Equality is not ready: that is why Charge stays blocked on the tick
-    /// Fire is already allowed again.
+    /// ret1 / xor eax,eax</c>. With a non-null mode, engine time must be
+    /// ordered-greater than +0x64. Equality and unordered comparisons refuse
+    /// both Charge and Fire; Fire uses the same test at <c>0x005060E5</c>.
     /// </remarks>
     public static bool ReadyToCharge(RetailWeaponChargeTable weapon, float now)
     {
@@ -323,9 +322,13 @@ public static class RetailWeaponCharge
             return true;
         }
 
-        // test ah, 0x41 / jz ret1: C0|C3 clear means ST > mem (now > ready).
-        // Unordered sets both bits and returns not-ready, matching `now > ready`
-        // in C# (NaN comparisons are false).
-        return now > weapon.ReadyAtTime;
+        return ReadyTimeElapsed(now, weapon.ReadyAtTime);
     }
+
+    /// <summary>
+    /// The ordered strict comparison shared by Fire and ReadyToCharge after
+    /// a current mode is resolved. <c>test ah,0x41 / jz</c> accepts only
+    /// C0|C3 clear; NaN, equality and earlier time all refuse.
+    /// </summary>
+    public static bool ReadyTimeElapsed(float now, float readyAt) => now > readyAt;
 }

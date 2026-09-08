@@ -68,6 +68,21 @@ UI write/reopen flow remains pending. Startup logo/montage audio decoded with
 format/length readback; native playback of those new tracks remains pending.
 These are bounded results, not a new broad Core, Windows or full parity receipt.
 
+September 7 first-training corrections passed **43/43** Client tests selected by
+`RetailFrontendSessionTests|RetailCareerLoadFlowTests`, then **68/68** focused
+weapon Core tests and **5/5** Client input/smoke tests. The latter include held
+Twin Vulcan input, Pulse hold/release/tap, release latching, destruction-event
+aggregation and `FirstFlightSmokeScenario_ReachesFiringRangeAndCompletesWaypoint`.
+The Jet check composes actual Client button samples with the existing isolated
+flight fixture; it is not a complete flight playthrough. Two materialized smoke
+input runs reproduced the new weapon-state hash before its focused and retained
+Windows-launcher pins changed. Test output is retained in this task's transcript,
+not a newly claimed log file. Native Godot built without warnings/errors; no
+visible launch or Windows execution followed these changes. The shared Ghidra
+cohort framework passed **88** focused tests; its actual isolated rehearsal,
+stale-comment refusal, live apply, separate readback and PRE/POST restore probes
+are recorded by the [Ghidra owner](reverse-engineering/ghidra/README.md).
+
 The World 110 integration review exposed a setter/restore mismatch: script
 assignment still used the World 100 list. The new focused regression failed
 before repair, then **24/24** affected construction/registry tests passed.

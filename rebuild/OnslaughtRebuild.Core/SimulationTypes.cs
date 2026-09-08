@@ -529,6 +529,23 @@ public sealed record Level100TriggerActorSnapshot(
     bool IsObjective,
     bool Reached);
 
+/// <summary>
+/// Future-affecting player weapon state: raw Pulse charge and each configured
+/// weapon's stored +0x64 ready time. Integer countdowns are only projections.
+/// Initial float words are +0 charge and the CWeapon constructor's -200 ready
+/// time; even an expired or non-selected weapon retains its stored word.
+/// </summary>
+public readonly record struct Level100PlayerWeaponStateSnapshot(
+    uint PulseChargeBits,
+    uint PulseReadyAtTimeBits,
+    uint TwinVulcanReadyAtTimeBits,
+    uint MechVulcanReadyAtTimeBits,
+    uint MissilePodReadyAtTimeBits)
+{
+    public static Level100PlayerWeaponStateSnapshot Initial => new(
+        0, 0xc3480000, 0xc3480000, 0xc3480000, 0xc3480000);
+}
+
 public sealed record WorldSnapshot(
     int Tick,
     uint Seed,
@@ -610,6 +627,9 @@ public sealed record WorldSnapshot(
     IReadOnlyList<ProjectileSnapshot> Projectiles,
     IReadOnlyList<WalkerFootContactSnapshot> WalkerFeet)
 {
+    public Level100PlayerWeaponStateSnapshot Level100PlayerWeaponState { get; init; } =
+        Level100PlayerWeaponStateSnapshot.Initial;
+
     public bool Level100PlayerControlEnabled =>
         Level100PlayerActive && Level100OpeningTicksRemaining == 0;
 

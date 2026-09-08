@@ -29,8 +29,7 @@ namespace OnslaughtRebuild.Core;
 /// </para>
 /// <para>
 /// <b>Not established here.</b> The energy-store add of
-/// <c>CWeaponConsumption</c> 0x40800000 = 4.0, overheat-to-fire,
-/// Charged 2's <c>CWeaponReloadTime</c> 0x3f000000 = 0.5 s, and Large's
+/// <c>CWeaponConsumption</c> 0x40800000 = 4.0, overheat-to-fire, and Large's
 /// authored velocity/life/radius/damage (20 / 7 / 0.20 / 8.0) remain
 /// the next ChargeWeapon arms.
 /// </para>
@@ -51,6 +50,13 @@ public static class Level100PulseCannonCharge
 
     /// <summary>The same dword as a float — exactly 0.1 seconds.</summary>
     public const float ReloadTime = 0.1f;
+
+    /// <summary>
+    /// <c>CWeaponReloadTime</c> 0x3f000000 in <c>Mech Pulse Cannon Charged 2</c>
+    /// @0x135b3: shared Fire uses the sampled mode's 0.5-second reload.
+    /// This establishes readiness only, not Large's launch/contact behavior.
+    /// </summary>
+    public const float ChargedReloadTime = 0.5f;
 
     /// <summary>
     /// A rest-state Pulse Cannon Pod: rate 10.0, levels 0 and 1 present,

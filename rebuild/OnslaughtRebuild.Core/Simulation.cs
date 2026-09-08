@@ -3521,15 +3521,24 @@ public sealed class Simulation
             return;
         }
 
+        FireCurrentWeapon();
+    }
+
+    private void FireCurrentWeapon()
+    {
+        // Both a release and the held non-chargeable arm reach CWeapon::Fire.
+        // Sampling/clearing charge precedes readiness and the remaining
+        // bounded resource/launch checks; integer countdowns are not gates.
+        if (!_level100PlayerWeapons.TryPrepareFire(
+            _mode, _transition, EngineTimeSeconds, out Level100ProjectileKind pulseRound))
+        {
+            return;
+        }
+
         if (_mode == VehicleMode.Jet)
         {
             Level100MissionWeapon selected =
                 _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Jet);
-            if (!_level100PlayerWeapons.IsActive(selected))
-            {
-                return;
-            }
-
             // Missile Pod selection is now represented exactly, but its
             // released launch/round law is not. Do not synthesize a shot.
             if (selected == Level100MissionWeapon.MissilePod)
@@ -3545,11 +3554,6 @@ public sealed class Simulation
             // Aquila Prototype's JetPart owns Mech Vulcan Cannon followed by Missile
             // Pod. ResetConfiguration selects slot zero and jet fire never
             // routes through the walker-only primary Pulse Cannon.
-            if (_fireCooldownTicksRemaining != 0)
-            {
-                return;
-            }
-
             EmitFlightEvent(
                 AquilaFlightEvents.JetWeaponFireRequested,
                 AquilaJetWeapon.MechVulcanCannon);
@@ -3557,18 +3561,11 @@ public sealed class Simulation
                 Level100PlayerWeapon.MechVulcanCannon,
                 SimulationConstants.MechVulcanVolleySize);
             _fireCooldownTicksRemaining = SimulationConstants.MechVulcanReloadTicks;
+            _level100PlayerWeapons.StampReadyAt(selected, EngineTimeSeconds);
 
-            // The jet weapon now actually launches. Until this change the jet
-            // branch emitted a presentation event and nothing else, so the
-            // player had no working weapon at all during beats 7 and 9 - the
-            // LevelScript disables both walker weapons there, which is what
-            // TUTORIAL_THROTTLE_MOD is teaching. `Mech Vulcan Cannon` fires
-            // CWeaponVolleySize 2 `Mech Air Bullet` rounds; see
-            // SimulationConstants for the shipped record and for the two
-            // CWeaponLaunchSequence muzzle offsets that are read but not
-            // modelled. Energy is not spent here because the jet weapon's
-            // consumption field has no decoded value-id, and inventing one
-            // would be an unproven behaviour claim.
+            // Mech Vulcan Cannon fires two Mech Air Bullet rounds. The two
+            // authored muzzle offsets remain unmodelled. Jet ammo/heat stores
+            // are also open; no invented energy cost is spent here.
             for (int round = 0;
                  round < SimulationConstants.MechVulcanVolleySize;
                  round++)
@@ -3590,22 +3587,20 @@ public sealed class Simulation
 
         Level100MissionWeapon walkerSelected =
             _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Walker);
-        if (!_level100PlayerWeapons.IsActive(walkerSelected))
-        {
-            return;
-        }
-
         if (walkerSelected == Level100MissionWeapon.PulseCannonPod)
         {
-            if (_fireCooldownTicksRemaining != 0 ||
-                _energy < SimulationConstants.FireEnergyCost)
+            if (_energy < SimulationConstants.FireEnergyCost)
             {
                 return;
             }
 
             _energy -= SimulationConstants.FireEnergyCost;
-            _fireCooldownTicksRemaining = SimulationConstants.PulseCannonReloadTicks;
-            _level100PlayerWeapons.StampPulseReadyAt(EngineTimeSeconds);
+            // Legacy countdown is a nominal-duration projection. Raw stored
+            // per-weapon float time above owns the strict readiness decision.
+            _fireCooldownTicksRemaining = pulseRound == Level100ProjectileKind.MechPulseBoltLarge
+                ? (int)(Level100PulseCannonCharge.ChargedReloadTime * SimulationConstants.TicksPerSecond)
+                : SimulationConstants.PulseCannonReloadTicks;
+            _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds, pulseRound);
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
@@ -3613,7 +3608,10 @@ public sealed class Simulation
                 _level100ActorMechanics.NextWeaponInaccuracy(
                     SimulationConstants.PulseCannonInaccuracyMicroRadians);
             LaunchWalkerRound(
-                _level100PlayerWeapons.PulseFireRound,
+                // Large identity/reload is selected, but its speed/life/radius
+                // and spatial explosion are still the older Medium projection.
+                // This is not a charged-projectile parity claim.
+                pulseRound,
                 SimulationConstants.ProjectileSpeedPerTick,
                 SimulationConstants.ProjectileLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
@@ -3636,15 +3634,15 @@ public sealed class Simulation
             throw new InvalidOperationException(
                 $"Unsupported Level 100 walker weapon {walkerSelected}.");
         }
-        if (_twinVulcanReloadTicksRemaining > 0 ||
-            _energy < SimulationConstants.TwinVulcanFireEnergyCost)
+        if (_energy < SimulationConstants.TwinVulcanFireEnergyCost)
         {
             return;
         }
 
         _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
-        _twinVulcanReloadTicksRemaining +=
+        _twinVulcanReloadTicksRemaining =
             SimulationConstants.TwinVulcanReloadTicks;
+        _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds);
         EmitWeaponFireEvent(
             Level100PlayerWeapon.MechTwinVulcanCannon,
             SimulationConstants.TwinVulcanVolleySize);
@@ -3672,9 +3670,12 @@ public sealed class Simulation
             return;
         }
 
-        // Row 10 of the shipped table, before Fire (row 11). ReadyToCharge
-        // at 0x0050A080 refuses the increment until now > last fire + reload.
-        _level100PlayerWeapons.AdvanceCharge(_mode, _transition, EngineTimeSeconds);
+        // Row 10 precedes release row 11. Both part wrappers call FireWeapon
+        // while a ready non-chargeable weapon is held. Pulse instead charges.
+        if (_level100PlayerWeapons.AdvanceCharge(_mode, _transition, EngineTimeSeconds))
+        {
+            FireCurrentWeapon();
+        }
     }
 
     private void TryChangeWeapon(SimInput input)
@@ -4244,7 +4245,10 @@ public sealed class Simulation
             _level100ActorMechanics.Snapshot,
             _nextProjectileId,
             Array.AsReadOnly(projectiles),
-            Array.AsReadOnly(walkerFeet));
+            Array.AsReadOnly(walkerFeet))
+        {
+            Level100PlayerWeaponState = _level100PlayerWeapons.Snapshot,
+        };
     }
 
 }

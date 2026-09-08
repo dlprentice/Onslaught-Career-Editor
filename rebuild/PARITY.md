@@ -258,7 +258,7 @@ FullyCharged selects `Mech Pulse Cannon Charged 2` @`0x135b3` /
 tap-fire at charge 0 stays Medium. ReadyToCharge is pinned by
 `SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`;
 Charged-2 / Large fire is pinned by
-`SimulationTests.FireAtFullyCharged_LaunchesMechPulseBoltLarge` and
+`SimulationTests.ChargedPulseRelease_ClearsChargeUsesItsReloadAndNextTapSelectsMedium` and
 `Level100PulseCannonChargeTests.FireAtFullyCharged_SelectsCharged2LargeBolt`,
 `RetailIScriptInJetMode.Evaluate` and actor-script `RetailIScriptWaitStop.Stop`
 are reached from TargetZone2/3/4 `hit()` (Simulation no longer treats

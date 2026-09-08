@@ -260,7 +260,10 @@ function Test-FirstFlightSmokeEvidence {
     # their report hashes differ only because the wall-clock voice fields above
     # sampled different playback positions. The debriefing landing that exposed
     # the stale pin changes no Core state, smoke tape, or StateHasher owner.
-    Assert-SmokeValue 'stateHash' '78925d85570ed1e0930728292b585042fc3b164ebdf978233efa3f0e5d625123' $report.stateHash
+    # 2026-09-07: schema 44 includes raw weapon charge/readiness words. Two
+    # identical materialized Client input runs reproduced this hash. Native
+    # Godot/Windows execution of this changed gate remains pending.
+    Assert-SmokeValue 'stateHash' '739a0fe8992ee2e2384436db21cbf1fec1194cecdac2f5abcb746f22996b6ed1' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

@@ -5,7 +5,8 @@ namespace OnslaughtRebuild.Core;
 /// <summary>
 /// The released Level 100 player's configured weapon slots, active flags and
 /// current selection. Charge is the Pulse Cannon Pod accumulator advanced by
-/// held <see cref="SimActions.ChargeWeapon"/>. Heat, ammo stores, and launch
+/// held <see cref="SimActions.ChargeWeapon"/>. Each weapon retains its own
+/// float ready time. Heat, ammo stores, and complete launch/contact behavior
 /// remain open. Selections are base slots: Walker slot zero may resolve to
 /// the augmented weapon at runtime. Manual cycling is bounded to the active
 /// flag represented here. The released heat/store eligibility test remains an
@@ -20,14 +21,27 @@ internal sealed class Level100PlayerWeaponRuntime
     private int _walkerSelection;
     private int _jetSelection;
     private RetailWeaponChargeTable _pulseCharge = Level100PulseCannonCharge.CreatePod();
+    private float _twinVulcanReadyAt;
+    private float _mechVulcanReadyAt;
+    private float _missilePodReadyAt;
+
+    // CWeapon constructor's +0x64 store at 0x00505e6e, also used by the admitted Unit
+    // attachment constructor. Configured Level 100 weapons have a mode.
+    private const float InitialReadyAt = -200f;
+    // Both released Vulcan modes carry CWeaponReloadTime 0x3d4ccccd.
+    private const float VulcanReloadTime = 0.05f;
 
     internal Level100PlayerWeaponRuntime() => ResetConfiguration();
 
     internal uint PulseCannonChargeBits =>
         BitConverter.SingleToUInt32Bits(_pulseCharge.Charge);
 
-    internal Level100ProjectileKind PulseFireRound =>
-        Level100PulseCannonCharge.SelectFireRound(_pulseCharge);
+    internal Level100PlayerWeaponStateSnapshot Snapshot => new(
+        PulseCannonChargeBits,
+        BitConverter.SingleToUInt32Bits(_pulseCharge.ReadyAtTime),
+        BitConverter.SingleToUInt32Bits(_twinVulcanReadyAt),
+        BitConverter.SingleToUInt32Bits(_mechVulcanReadyAt),
+        BitConverter.SingleToUInt32Bits(_missilePodReadyAt));
 
     internal Level100MissionWeapon WalkerSelectedWeapon =>
         WeaponAt(VehicleMode.Walker, _walkerSelection);
@@ -44,26 +58,106 @@ internal sealed class Level100PlayerWeaponRuntime
         _walkerSelection = 0;
         _jetSelection = 0;
         _pulseCharge = Level100PulseCannonCharge.CreatePod();
+        _pulseCharge.ReadyAtTime = InitialReadyAt;
+        _twinVulcanReadyAt = InitialReadyAt;
+        _mechVulcanReadyAt = InitialReadyAt;
+        _missilePodReadyAt = InitialReadyAt;
     }
 
     /// <summary>
-    /// The increment arm of <c>CBattleEngineWalkerPart::ChargeWeapon</c> at
-    /// <c>0x00413CF0</c> for Level 100's Pulse Cannon Pod. Store spend and
-    /// overheat-to-fire are not modelled.
+    /// The held-input arm of Walker <c>0x00413CF0</c> and Jet
+    /// <c>0x00411BF0</c>. Returns a Fire request for the two non-chargeable
+    /// Vulcans; the caller uses the same Fire wrapper as a release. The Pulse
+    /// increment is bounded here: store spend and overheat-to-fire remain open.
     /// </summary>
-    internal void AdvanceCharge(VehicleMode mode, VehicleTransition transition, float now)
+    internal bool AdvanceCharge(VehicleMode mode, VehicleTransition transition, float now)
     {
-        if (mode != VehicleMode.Walker ||
-            transition != VehicleTransition.None ||
-            WalkerSelectedWeapon != Level100MissionWeapon.PulseCannonPod ||
-            !_pulseCannonActive ||
-            !RetailWeaponCharge.ReadyToCharge(_pulseCharge, now) ||
-            RetailWeaponCharge.FullyCharged(_pulseCharge))
+        Level100MissionWeapon selected = GetCurrentWeapon(mode);
+        if (transition != VehicleTransition.None || !IsActive(selected) ||
+            !ReadyToFire(selected, now))
         {
-            return;
+            return false;
         }
 
-        RetailWeaponCharge.Charge(_pulseCharge);
+        if (selected is Level100MissionWeapon.MechTwinVulcanCannon or
+            Level100MissionWeapon.MechVulcanCannon)
+        {
+            return true;
+        }
+
+        if (selected == Level100MissionWeapon.PulseCannonPod &&
+            !RetailWeaponCharge.FullyCharged(_pulseCharge))
+        {
+            RetailWeaponCharge.Charge(_pulseCharge);
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Shared Fire <c>0x00506010</c> samples charge, clears +0x60, selects its
+    /// mode, then checks now &gt; +0x64. A refused Pulse release still loses its
+    /// charge. This does not claim the subsequent ammo/launch effects.
+    /// </summary>
+    internal bool TryPrepareFire(VehicleMode mode, VehicleTransition transition,
+        float now, out Level100ProjectileKind pulseRound)
+    {
+        pulseRound = Level100ProjectileKind.MechPulseBoltMedium;
+        Level100MissionWeapon selected = GetCurrentWeapon(mode);
+        if (transition != VehicleTransition.None || !IsActive(selected))
+        {
+            return false;
+        }
+
+        if (selected == Level100MissionWeapon.PulseCannonPod)
+        {
+            pulseRound = Level100PulseCannonCharge.SelectFireRound(_pulseCharge);
+            RetailWeaponCharge.LoseCharge(_pulseCharge);
+        }
+        return ReadyToFire(selected, now);
+    }
+
+    internal bool ReadyToFire(Level100MissionWeapon weapon, float now) =>
+        RetailWeaponCharge.ReadyTimeElapsed(now, weapon switch
+        {
+            Level100MissionWeapon.PulseCannonPod => _pulseCharge.ReadyAtTime,
+            Level100MissionWeapon.MechTwinVulcanCannon => _twinVulcanReadyAt,
+            Level100MissionWeapon.MechVulcanCannon => _mechVulcanReadyAt,
+            Level100MissionWeapon.MissilePod => _missilePodReadyAt,
+            _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+        });
+
+    /// <summary>
+    /// Fire's <c>fld now / fadd mode+0x38 / fstp weapon+0x64</c> at
+    /// <c>0x0050611A..0x00506132</c>. One float store follows the addition.
+    /// </summary>
+    internal void StampReadyAt(Level100MissionWeapon weapon, float now,
+        Level100ProjectileKind pulseRound = Level100ProjectileKind.MechPulseBoltMedium)
+    {
+        float reload = weapon switch
+        {
+            Level100MissionWeapon.PulseCannonPod => pulseRound switch
+            {
+                Level100ProjectileKind.MechPulseBoltMedium => Level100PulseCannonCharge.ReloadTime,
+                Level100ProjectileKind.MechPulseBoltLarge => Level100PulseCannonCharge.ChargedReloadTime,
+                _ => throw new ArgumentOutOfRangeException(nameof(pulseRound)),
+            },
+            Level100MissionWeapon.MechTwinVulcanCannon or
+                Level100MissionWeapon.MechVulcanCannon => VulcanReloadTime,
+            _ => throw new NotSupportedException("The Missile Pod launch is not admitted."),
+        };
+        float readyAt = (float)((double)now + (double)reload);
+        switch (weapon)
+        {
+            case Level100MissionWeapon.PulseCannonPod:
+                _pulseCharge.ReadyAtTime = readyAt;
+                break;
+            case Level100MissionWeapon.MechTwinVulcanCannon:
+                _twinVulcanReadyAt = readyAt;
+                break;
+            case Level100MissionWeapon.MechVulcanCannon:
+                _mechVulcanReadyAt = readyAt;
+                break;
+        }
     }
 
     /// <summary>
@@ -79,16 +173,6 @@ internal sealed class Level100PlayerWeaponRuntime
         {
             RetailWeaponCharge.LoseCharge(_pulseCharge);
         }
-    }
-
-    /// <summary>
-    /// Fire's store of <c>now + CWeaponReloadTime</c> into <c>weapon+0x64</c>.
-    /// ReadyToCharge stays false until engine time is strictly greater.
-    /// </summary>
-    internal void StampPulseReadyAt(float now)
-    {
-        _pulseCharge.ReadyAtTime =
-            (float)((double)now + (double)Level100PulseCannonCharge.ReloadTime);
     }
 
     internal Level100MissionWeapon GetCurrentWeapon(VehicleMode mode) => mode switch
@@ -184,7 +268,10 @@ internal sealed class Level100PlayerWeaponRuntime
                 // ChangeWeapon's aftermath: LoseCharge on the newly selected
                 // weapon. Level 100 only accumulates charge on the Pulse
                 // Cannon Pod; resetting that table matches the store of +0.0f.
-                RetailWeaponCharge.LoseCharge(_pulseCharge);
+                if (WeaponAt(mode, candidate) == Level100MissionWeapon.PulseCannonPod)
+                {
+                    RetailWeaponCharge.LoseCharge(_pulseCharge);
+                }
                 return true;
             }
 

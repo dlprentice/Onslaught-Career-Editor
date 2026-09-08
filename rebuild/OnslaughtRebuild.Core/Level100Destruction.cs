@@ -522,44 +522,17 @@ public sealed class Level100DestructionState
     public const uint PulseExplosionDamageBits = 0x3F800000;
 
     /// <summary>
-    /// Exact aggregate of the medium pulse's direct <c>0.8</c> round damage
-    /// and immediate-radius <c>1.0</c> explosion damage. Retail sends these as
-    /// two ordered slot-40 calls; this aggregate remains the bounded Warehouse
-    /// fallback until the explosion call's segmented mesh-part identity is
-    /// measured.
+    /// Legacy combined Medium amount: direct <c>0.8</c> plus explosion maximum
+    /// <c>1.0</c>. The actual explosion uses a separate spatial scan and falloff;
+    /// this fallback is not a general retail damage contract.
     /// </summary>
     public const uint PulseDamageBits = 0x3FE66666;
     /// <summary>
-    /// Mech Bullet applies the same round-damage + explosion-damage sum that
-    /// the measured 1.8 medium-pulse value decomposes into: byte-read
-    /// <c>CRoundDamage 0.08</c> on <c>Mech Bullet</c> plus
-    /// <c>CExplosionDamage 0.001</c> on <c>Mech Bullet Hit</c>. The addition
-    /// order is now statically closed for configured direct-round plus
-    /// immediate-explosion hits by the CRound/CExplosion chain. Runtime
-    /// reachability of both stages for Mech Bullet, its exact second mesh part,
-    /// and its gates remain unobserved. The aggregate was originally selected
-    /// as the only survivor of three candidate models against the two recorded
-    /// pulse contact measurements (total 1.8, glancing 1.0); see
-    /// reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
-    /// section 6.2. Level 100 progression is insensitive to the ambiguity: a
-    /// 6.0-life Target Tank takes 75 bullets under the sum model (0.081) and
-    /// 76 under round-only (0.08) — one bullet apart, which no tutorial beat
-    /// can distinguish. Only the explosion-only model (0.001) differs
-    /// materially, needing about six thousand, and it is already killed by the
-    /// pulse measurements.
-    ///
-    /// <para><b>Corrected 2026-07-29.</b> This comment previously read "takes
-    /// 75 bullets under both the sum (0.081) and round-only (0.08) models, and
-    /// a 3.0-life Target Truck takes 38 under both". The tank half was wrong
-    /// and its own test says so: <c>Level100TutorialProgressionTests</c>
-    /// <c>MechBullet_NeedsTheSameOrderOfHitsUnderBothSurvivingDamageModels</c>
-    /// is a Theory pinning <c>(MechBulletDamageBits, 75)</c> and
-    /// <c>(0x3DA3D70Au, 76)</c>, and that test's own summary says the models
-    /// "differ by a single bullet out of seventy-five". The conclusion the
-    /// paragraph draws is unaffected — one bullet is still indistinguishable —
-    /// but the stated number was not what the code computes. The truck figure
-    /// is left as written because nothing here measures it; treat it as
-    /// unverified rather than confirmed.</para>
+    /// Legacy Mech Bullet approximation: configured direct damage <c>0.08</c>
+    /// plus explosion maximum <c>0.001</c>. The round/explosion contract
+    /// requires separate spatial eligibility and falloff; Pulse observations
+    /// do not prove a fixed combined Mech Bullet amount. This remains pending
+    /// the shared explosion resolver, even where existing tutorial tests pass.
     /// </summary>
     public const uint MechBulletDamageBits = 0x3DA5E354;
     public const int MaximumEventsPerHit = 8;
@@ -689,18 +662,18 @@ public sealed class Level100DestructionState
     }
 
     /// <summary>
-    /// Applies the proven medium-pulse damage to a factual narrowphase hit.
+    /// Applies the legacy Medium-pulse approximation to a factual narrowphase hit.
+    /// The spatial explosion scan and falloff are not implemented here.
     /// The caller retains actor activation and mission consequence ownership.
     /// </summary>
     public int ApplyPulseHit(
         in Level100ContactHit hit,
         Span<Level100DestructionEvent> events)
     {
-        // The exact second-call mesh part remains unresolved for segmented
-        // facilities. Preserve the independently observed Warehouse aggregate
-        // rather than asserting that its explosion damages the direct-hit
-        // segment. Whole-body Target Tank/Drone life is independent of that
-        // part identity, so the two proved retail calls can be retained here.
+        // This preserves old contact behavior until the separate explosion
+        // resolver is implemented. The configured direct damage and radial
+        // maximum cannot in general be combined or assigned to this receiver.
+        // See cround-hit-damage-path-2026-08-10.md, corrected August 28.
         if (!IsWholeBodyLife(_definition.Kind))
         {
             return ApplyRoundHit(
@@ -720,12 +693,10 @@ public sealed class Level100DestructionState
             return writer.Count;
         }
 
-        // CRound::Hit 0x004D8AE0 sends CRoundDamage first. Its mode-3 impact
-        // path then creates an already-live small explosion, and
-        // CExplosion::Hit 0x0044BF10 synchronously sends CExplosionDamage to
-        // the same receiver. Keep both stored remainders: on the terminal
-        // fourth Target Tank hit retail retains -0.2 before the explosion and
-        // -1.2 afterward rather than replacing the pair with one 1.8 call.
+        // TODO: replace this unconditional second call with the released
+        // synchronous neighbor scan and per-receiver falloff. Particular
+        // retained shots observed 0.8 then 1.0; they do not establish this
+        // result for every hit or justify applying the same shortcut to Large.
         ApplyWholeBodyDamage(hit, PulseDirectDamageBits, ref writer);
         ApplyWholeBodyDamage(hit, PulseExplosionDamageBits, ref writer);
         return writer.Count;

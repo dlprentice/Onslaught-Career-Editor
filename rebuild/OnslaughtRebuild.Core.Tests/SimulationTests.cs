@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Core.Tests;
@@ -1344,9 +1345,10 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void PlayerWeaponReloadsUseAuthoredPerModeCadence()
+    public void PlayerWeaponReloads_UseStoredFloatTimesAndRefuseEquality()
     {
         Simulation pulse = CreateFiringRangeExerciseSimulation();
+        AlignNextStepToWholeSecond(pulse);
 
         WorldSnapshot pulseFirst = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(pulseFirst, Level100PlayerWeapon.PulseCannonPod, 1);
@@ -1359,6 +1361,11 @@ public sealed class SimulationTests
         WorldSnapshot pulseBlocked = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         Assert.Empty(pulseBlocked.Level100WeaponFireEvents);
         Assert.Equal(1, pulseBlocked.FireCooldownTicksRemaining);
+        WorldSnapshot pulseEquality = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Empty(pulseEquality.Level100WeaponFireEvents);
+        Assert.Equal(0, pulseEquality.FireCooldownTicksRemaining);
+        Assert.Equal(pulseFirst.Level100PlayerWeaponState.PulseReadyAtTimeBits,
+            BitConverter.SingleToUInt32Bits((float)(pulseEquality.Tick / 20d)));
         WorldSnapshot pulseSecond = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(pulseSecond, Level100PlayerWeapon.PulseCannonPod, 1);
         Assert.Equal(2, pulseSecond.FireCooldownTicksRemaining);
@@ -1375,7 +1382,8 @@ public sealed class SimulationTests
             jet.Step(SimInput.Idle);
         }
 
-        WorldSnapshot jetFirst = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        AlignNextStepToWholeSecond(jet);
+        WorldSnapshot jetFirst = jet.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
         AssertWeaponFire(
             jetFirst,
             Level100PlayerWeapon.MechVulcanCannon,
@@ -1386,12 +1394,23 @@ public sealed class SimulationTests
                 Level100ProjectileKind.MechAirBullet,
                 projectile.Kind));
         Assert.Equal(1, jetFirst.FireCooldownTicksRemaining);
-        WorldSnapshot jetSecond = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        WorldSnapshot jetEquality = jet.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        Assert.Empty(jetEquality.Level100WeaponFireEvents);
+        Assert.Equal(0, jetEquality.FireCooldownTicksRemaining);
+        Assert.Equal(jetFirst.Level100PlayerWeaponState.MechVulcanReadyAtTimeBits,
+            BitConverter.SingleToUInt32Bits((float)(jetEquality.Tick / 20d)));
+        WorldSnapshot jetSecond = jet.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
         AssertWeaponFire(
             jetSecond,
             Level100PlayerWeapon.MechVulcanCannon,
             SimulationConstants.MechVulcanVolleySize);
         Assert.Equal(1, jetSecond.FireCooldownTicksRemaining);
+
+        static void AlignNextStepToWholeSecond(Simulation simulation)
+        {
+            while ((simulation.Snapshot.Tick + 1) % SimulationConstants.TicksPerSecond != 0)
+                simulation.Step(SimInput.Idle);
+        }
 
         static void AssertWeaponFire(
             WorldSnapshot snapshot,
@@ -1402,6 +1421,57 @@ public sealed class SimulationTests
             Assert.Equal(weapon, fired.Weapon);
             Assert.Equal(roundCount, fired.RoundCount);
         }
+    }
+
+    [Fact]
+    public void HeldJetVulcanButton_ClientSampledInputRepeatsRealVolleysWithoutRelease()
+    {
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        for (int step = 0; jet.Snapshot.Mode != VehicleMode.Jet ||
+            jet.Snapshot.Transition != VehicleTransition.None; step++)
+        {
+            Assert.True(step < 100);
+            jet.Step(SimInput.Idle);
+        }
+
+        // Compose the production physical-input sampler with the existing
+        // isolated flight fixture. No Fire action is manufactured here, and
+        // no claim is made that this setup completes the earlier exercises.
+        var inputSampler = new InteractiveSession(1u, Level100TestActorDefinitions.Create());
+        inputSampler.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        float expectedReady = -200f;
+        int volleys = 0;
+        for (int step = 0; step < 20; step++)
+        {
+            Assert.Equal(1, inputSampler.AdvanceFrameTicks(500_000).StepsAdvanced);
+            SimInput input = inputSampler.LastConsumedInput!.Value;
+            Assert.True(input.HasAction(SimActions.ChargeWeapon));
+            Assert.False(input.HasAction(SimActions.Fire));
+            int previousNextId = jet.Snapshot.NextProjectileId;
+            WorldSnapshot fired = jet.Step(input);
+            float now = (float)(fired.Tick / 20d);
+            if (now > expectedReady)
+            {
+                Level100WeaponFireEvent volley = Assert.Single(fired.Level100WeaponFireEvents);
+                Assert.Equal(Level100PlayerWeapon.MechVulcanCannon, volley.Weapon);
+                Assert.Equal(2, volley.RoundCount);
+                Assert.Equal(previousNextId + 2, fired.NextProjectileId);
+                expectedReady = (float)((double)now + (double)0.05f);
+                volleys++;
+            }
+            else
+            {
+                Assert.Empty(fired.Level100WeaponFireEvents);
+                Assert.Equal(previousNextId, fired.NextProjectileId);
+            }
+            Assert.Equal(BitConverter.SingleToUInt32Bits(expectedReady),
+                fired.Level100PlayerWeaponState.MechVulcanReadyAtTimeBits);
+        }
+        Assert.InRange(volleys, 9, 20);
+        Assert.Equal(20, inputSampler.Metrics.FireHeldTicksSampled);
+        Assert.Equal(0, inputSampler.Metrics.FirePulseEdgesConsumed);
     }
 
     [Fact]
@@ -1677,6 +1747,7 @@ public sealed class SimulationTests
         }
 
         Assert.Equal(0x42C80000u, simulation.Level100PulseCannonChargeBits);
+        Assert.Equal(0x42C80000u, simulation.Snapshot.Level100PlayerWeaponState.PulseChargeBits);
         simulation.Step(charge);
         Assert.Equal(0x42C80000u, simulation.Level100PulseCannonChargeBits);
     }
@@ -1704,7 +1775,7 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void FireAtFullyCharged_LaunchesMechPulseBoltLarge()
+    public void ChargedPulseRelease_ClearsChargeUsesItsReloadAndNextTapSelectsMedium()
     {
         Simulation tap = CreateFiringRangeExerciseSimulation();
         WorldSnapshot tapFired = tap.Step(new SimInput(0, 0, SimActions.Fire));
@@ -1725,6 +1796,23 @@ public sealed class SimulationTests
         Assert.Equal(
             Level100ProjectileKind.MechPulseBoltLarge,
             Assert.Single(chargedFired.Projectiles).Kind);
+        Assert.Equal(0u, chargedFired.Level100PlayerWeaponState.PulseChargeBits);
+        float ready = (float)((double)(float)(chargedFired.Tick / 20d) + 0.5d);
+        Assert.Equal(BitConverter.SingleToUInt32Bits(ready),
+            chargedFired.Level100PlayerWeaponState.PulseReadyAtTimeBits);
+
+        WorldSnapshot nextTap;
+        do
+        {
+            nextTap = charged.Step(new SimInput(0, 0, SimActions.Fire));
+            Assert.Equal(0u, nextTap.Level100PlayerWeaponState.PulseChargeBits);
+            if ((float)(nextTap.Tick / 20d) <= ready)
+                Assert.Empty(nextTap.Level100WeaponFireEvents);
+            Assert.True(nextTap.Tick <= chargedFired.Tick + 11);
+        }
+        while (nextTap.Level100WeaponFireEvents.Count == 0);
+        Assert.Equal(Level100ProjectileKind.MechPulseBoltMedium,
+            nextTap.Projectiles.MaxBy(projectile => projectile.Id)!.Kind);
     }
 
     [Fact]
@@ -1744,7 +1832,7 @@ public sealed class SimulationTests
         // ReadyToCharge at 0x0050A080 is `now > weapon+0x64` (`test ah, 0x41`
         // / jz). Fire stamps +0x64 = now + CWeaponReloadTime 0.1 s, so the
         // equality tick (exactly 0.1 s / two 20 Hz updates later) is still
-        // blocked. Fire itself is already allowed on that tick; Charge is not.
+        // blocked. Fire has the same ordered strict comparison.
         simulation.Step(charge);
         Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
         Assert.Equal(1, simulation.Snapshot.FireCooldownTicksRemaining);

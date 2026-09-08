@@ -184,7 +184,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void GunAction_FiresOnceOnReleaseAndDoesNotRepeatWhileHeld()
+    public void GunReleaseEdge_IsLatchedOnceWhileHeldTicksRemainSeparate()
     {
         InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
@@ -214,6 +214,81 @@ public sealed class InteractiveSessionTests
         session.AdvanceFrameTicks(500_000);
 
         Assert.Equal(2, session.Metrics.FirePulseEdgesConsumed);
+    }
+
+    [Fact]
+    public void HeldTwinVulcanButton_RepeatsVolleysThroughChargeActionWithoutReleaseEdges()
+    {
+        InteractiveSession session = CreateTwinVulcanSessionForWeaponChecks();
+        long releaseEdges = session.Metrics.FirePulseEdgesConsumed;
+        long heldTicks = session.Metrics.FireHeldTicksSampled;
+        float expectedReady = -200f;
+        int volleys = 0;
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+
+        // One physical press, sampled through twenty Core updates. No queued
+        // Fire pulses or injected actions stand in for the held button.
+        for (int step = 0; step < 20; step++)
+        {
+            int previousNextId = session.CurrentSnapshot.NextProjectileId;
+            FrameAdvanceResult frame = session.AdvanceFrameTicks(OneCoreStepTicks);
+            Assert.True(session.LastConsumedInput!.Value.HasAction(SimActions.ChargeWeapon));
+            Assert.False(session.LastConsumedInput!.Value.HasAction(SimActions.Fire));
+            float now = (float)(frame.CurrentSnapshot.Tick / 20d);
+            if (now > expectedReady)
+            {
+                Level100WeaponFireEvent fired = Assert.Single(frame.Level100WeaponFireEvents);
+                Assert.Equal(Level100PlayerWeapon.MechTwinVulcanCannon, fired.Weapon);
+                Assert.Equal(4, fired.RoundCount);
+                Assert.Equal(previousNextId + 4, frame.CurrentSnapshot.NextProjectileId);
+                expectedReady = (float)((double)now + (double)0.05f);
+                volleys++;
+            }
+            else
+            {
+                Assert.Empty(frame.Level100WeaponFireEvents);
+                Assert.Equal(previousNextId, frame.CurrentSnapshot.NextProjectileId);
+            }
+            uint storedReady = frame.CurrentSnapshot.Level100PlayerWeaponState.TwinVulcanReadyAtTimeBits;
+            Assert.Equal(BitConverter.SingleToUInt32Bits(expectedReady), storedReady);
+        }
+
+        Assert.InRange(volleys, 9, 20);
+        Assert.Equal(releaseEdges, session.Metrics.FirePulseEdgesConsumed);
+        Assert.Equal(heldTicks + 20, session.Metrics.FireHeldTicksSampled);
+    }
+
+    [Fact]
+    public void PhysicalPulseHoldReleaseThenTap_ClearsChargeAndReturnsToMedium()
+    {
+        InteractiveSession session = CreateFiringRangeSessionForWeaponChecks();
+        long releaseEdges = session.Metrics.FirePulseEdgesConsumed;
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        for (int step = 0; step < 10; step++)
+            Assert.Empty(session.AdvanceFrameTicks(OneCoreStepTicks).Level100WeaponFireEvents);
+        Assert.Equal(0x42c80000u, session.CurrentSnapshot.Level100PlayerWeaponState.PulseChargeBits);
+
+        session.ObserveInput(InteractiveInput.Idle);
+        FrameAdvanceResult release = session.AdvanceFrameTicks(OneCoreStepTicks);
+        Assert.Single(release.Level100WeaponFireEvents);
+        Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge,
+            release.CurrentSnapshot.Projectiles.MaxBy(projectile => projectile.Id)!.Kind);
+        Assert.Equal(0u, release.CurrentSnapshot.Level100PlayerWeaponState.PulseChargeBits);
+        float ready = BitConverter.UInt32BitsToSingle(
+            release.CurrentSnapshot.Level100PlayerWeaponState.PulseReadyAtTimeBits);
+        while ((float)((session.CurrentSnapshot.Tick + 1) / 20d) <= ready)
+            session.AdvanceFrameTicks(OneCoreStepTicks);
+
+        // A fresh physical tap between samples leaves a release edge and no
+        // held charge tick, so it must use level zero after the earlier clear.
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        session.ObserveInput(InteractiveInput.Idle);
+        FrameAdvanceResult tap = session.AdvanceFrameTicks(OneCoreStepTicks);
+        Assert.Single(tap.Level100WeaponFireEvents);
+        Assert.Equal(Level100ProjectileKind.MechPulseBoltMedium,
+            tap.CurrentSnapshot.Projectiles.MaxBy(projectile => projectile.Id)!.Kind);
+        Assert.Equal(0u, tap.CurrentSnapshot.Level100PlayerWeaponState.PulseChargeBits);
+        Assert.Equal(releaseEdges + 2, session.Metrics.FirePulseEdgesConsumed);
     }
 
     [Fact]
@@ -2003,9 +2078,15 @@ public sealed class InteractiveSessionTests
         // a retained contact timestamp moves the hash and that identical runs
         // repeat exactly. No native Godot run is claimed for this Core-only
         // structural repin.
+        // MOVED 2026-09-07 by schema 44: Pulse charge clearing and the retained
+        // per-weapon ready-time words are now canonical state. The same four
+        // tap releases preserve the semantic checks above; the repeat below
+        // verifies the new in-process checksum without claiming live timing.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
+        Assert.Equal(finalStateHash, StateHasher.ComputeHex(
+            CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
         Assert.Equal(
-            "78925d85570ed1e0930728292b585042fc3b164ebdf978233efa3f0e5d625123",
+            "739a0fe8992ee2e2384436db21cbf1fec1194cecdac2f5abcb746f22996b6ed1",
             finalStateHash);
     }
 
@@ -2114,6 +2195,93 @@ public sealed class InteractiveSessionTests
 
         Assert.True(session.CurrentSnapshot.Level100PlayerControlEnabled);
         return session;
+    }
+
+    private static InteractiveSession CreateFiringRangeSessionForWeaponChecks(
+        Level100ActorDefinitionSet? definitions = null)
+    {
+        var session = new InteractiveSession(Seed, definitions ?? ActorDefinitions);
+        while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
+        {
+            session.ObserveInput(FirstFlightSmokeScenario.GetInputForTick(session.CurrentSnapshot.Tick));
+            session.AdvanceFrameTicks(OneCoreStepTicks);
+        }
+        session.ObserveInput(InteractiveInput.Idle);
+        Assert.True(session.CurrentSnapshot.Level100PulseCannonEnabled);
+        return session;
+    }
+
+    private static InteractiveSession CreateTwinVulcanSessionForWeaponChecks()
+    {
+        InteractiveSession session = CreateFiringRangeSessionForWeaponChecks();
+        // Focused input fixture: pose prior targets at the muzzle and shoot
+        // their real contact meshes so their scripts select/enable the guns.
+        // Pose facts make this preparation distinct from tutorial acceptance.
+        CompleteGroup(Level100MissionTargetGroup.StaticTargets, 4);
+        AdvanceUntil(state => state.Level100VulcanCannonEnabled &&
+            state.Level100WalkerSelectedWeapon == Level100MissionWeapon.MechTwinVulcanCannon);
+        return session;
+
+        void CompleteGroup(Level100MissionTargetGroup group, int count)
+        {
+            AdvanceUntil(state => state.Level100Actors.Actors.Count(actor =>
+                actor.TargetGroup == group && actor.Active && actor.IsObjective) == count);
+            Level100ActorId[] targets = session.CurrentSnapshot.Level100Actors.Actors
+                .Where(actor => actor.TargetGroup == group && actor.Active && actor.IsObjective)
+                .Select(actor => actor.ActorId).ToArray();
+            foreach (Level100ActorId targetId in targets)
+            {
+                int attempts = 0;
+                while (session.CurrentSnapshot.Level100Actors.Actors.Single(actor =>
+                    actor.ActorId == targetId).Lifecycle != Level100ActorLifecycle.Destroyed)
+                {
+                    WorldSnapshot state = session.CurrentSnapshot;
+                    Assert.Equal(Level100MissionOutcome.Running, state.Level100Mission.Outcome);
+                    Assert.True(attempts++ < 250, $"Contact fixture failed to destroy actor {targetId}.");
+                    Level100DestructionSnapshot destruction = state.Level100Destruction.Actors.Single(
+                        actor => actor.ActorId == targetId.Value);
+                    Level100ContactDefinition definition = Level100ContactCatalog.Instance
+                        .GetDefinition(destruction.DefinitionName);
+                    Level100ContactPart part = definition.Parts.First(part =>
+                        part.Collidable && destruction.PartActivity.Span[part.Index] != 0 &&
+                        (definition.Kind != Level100DefinitionKind.Warehouse ||
+                            destruction.CurrentHealthBits.Span[part.Index] != 0));
+                    ReadOnlySpan<int> vertices = part.VerticesMillimeters.Span;
+                    ReadOnlySpan<int> triangle = part.Triangles.Span;
+                    int a = triangle[0] * 3, b = triangle[1] * 3, c = triangle[2] * 3;
+                    int x = definition.Kind == Level100DefinitionKind.Warehouse
+                        ? (vertices[a] + vertices[b] + vertices[c]) / 3 : part.Center.X;
+                    int y = definition.Kind == Level100DefinitionKind.Warehouse
+                        ? (vertices[a + 1] + vertices[b + 1] + vertices[c + 1]) / 3 : part.Center.Y;
+                    int z = definition.Kind == Level100DefinitionKind.Warehouse
+                        ? (vertices[a + 2] + vertices[b + 2] + vertices[c + 2]) / 3 : part.Center.Z;
+                    Level100ActorPoseSnapshot tankAtMuzzle = PlaceTargetCenterAtPulseEmitter(state);
+                    SimVector3 tankOrigin = tankAtMuzzle.PositionMillimeters;
+                    var contactPose = tankAtMuzzle with
+                    {
+                        PositionMillimeters = new SimVector3(
+                            tankOrigin.X + 43 - x,
+                            tankOrigin.Y + 275 + z,
+                            tankOrigin.Z - 228 - y),
+                    };
+                    session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+                    session.ObserveInput(InteractiveInput.Idle);
+                    session.AdvanceFrameTicks(OneCoreStepTicks,
+                        [new Level100ActorPoseFact(targetId, contactPose)]);
+                }
+            }
+        }
+
+        void AdvanceUntil(Func<WorldSnapshot, bool> condition)
+        {
+            for (int step = 0; !condition(session.CurrentSnapshot) && step < 2_000; step++)
+            {
+                Assert.Equal(Level100MissionOutcome.Running, session.CurrentSnapshot.Level100Mission.Outcome);
+                Assert.Equal(1, session.AdvanceFrameTicks(OneCoreStepTicks).StepsAdvanced);
+            }
+            Assert.True(condition(session.CurrentSnapshot),
+                $"Weapon fixture setup stalled at tick {session.CurrentSnapshot.Tick}.");
+        }
     }
 
     private static Level100ActorPoseSnapshot PlaceTargetCenterAtPulseEmitter(

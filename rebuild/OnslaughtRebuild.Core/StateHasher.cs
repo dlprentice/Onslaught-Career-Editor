@@ -24,7 +24,16 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            bool usesWorldMissionSchema = UsesWorldMissionSchema(state.Level100Mission);
+            bool usesPlayerWeaponSchema = state.Level100PlayerWeaponState !=
+                Level100PlayerWeaponStateSnapshot.Initial;
+            bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
+                UsesWorldMissionSchema(state.Level100Mission);
+            // 44: raw Pulse charge and all four retained weapon ready times.
+            // Any non-constructor word selects this extension, including an
+            // expired timestamp or signed-zero charge. Only the true initial
+            // state keeps the older layout. Schema 44 includes the complete
+            // schema-43 mission fields even for a default world-100 mission.
+            //
             // 43: the multi-world mission extension. It records the requested
             // career world and all ten retail secondary-objective slots. The
             // schema is selected for every non-root mission, and for any root
@@ -100,7 +109,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -181,6 +190,15 @@ public static class StateHasher
             writer.Write(state.JetStallTicks);
             writer.Write(state.FireCooldownTicksRemaining);
             writer.Write(state.TwinVulcanReloadTicksRemaining);
+            if (usesPlayerWeaponSchema)
+            {
+                Level100PlayerWeaponStateSnapshot weapons = state.Level100PlayerWeaponState;
+                writer.Write(weapons.PulseChargeBits);
+                writer.Write(weapons.PulseReadyAtTimeBits);
+                writer.Write(weapons.TwinVulcanReadyAtTimeBits);
+                writer.Write(weapons.MechVulcanReadyAtTimeBits);
+                writer.Write(weapons.MissilePodReadyAtTimeBits);
+            }
             writer.Write(state.Level100OpeningTicksRemaining);
             writer.Write(state.Level100PlayerActive);
             writer.Write(state.Level100FlightEnabled);

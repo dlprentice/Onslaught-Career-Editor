@@ -24,6 +24,13 @@ David retains desktop control until he explicitly releases it. Prioritize
 RE and rebuild source/headless work meanwhile; live retail/rebuild playthroughs
 and the Save Lab UI workflow remain pending.
 
+David's September 7 priority is startup, menus and complete Level 100 parity.
+Audit the actual Ghidra database in bounded cohorts against pristine bytes and
+pinned source, correct misleading names/comments/signatures or boundaries when
+proved, and carry recovered contracts into production code. Existing pipelines,
+tests and agent reports are fallible inputs. Further World 110 expansion is
+paused until this first route is established; its completed source stays useful.
+
 1. Establish native Linux Godot build, launch, real input, audio, pause/focus,
    capture and live tape recording/replay using the installed pinned tools.
 2. Complete the cold first-career Level 100 tutorial through player input and
