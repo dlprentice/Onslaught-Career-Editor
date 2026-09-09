@@ -128,10 +128,8 @@ public sealed class Level100ActorScriptRuntime
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
         Level100ActorScriptRuntimeSnapshot snapshot)
+        : this(actors, playerActorId, snapshot, null, null)
     {
-        _actors = actors ?? throw new ArgumentNullException(nameof(actors));
-        _playerActorId = ValidatePlayer(playerActorId);
-        Restore(snapshot ?? throw new ArgumentNullException(nameof(snapshot)));
     }
 
     public Level100ActorScriptRuntime(
@@ -140,8 +138,11 @@ public sealed class Level100ActorScriptRuntime
         Level100ActorScriptRuntimeSnapshot snapshot,
         Action<Level100ActorId>? afterSpawn,
         Func<int>? eventTimeFloatBits)
-        : this(actors, playerActorId, snapshot)
+        : this(actors, playerActorId, afterSpawn, eventTimeFloatBits)
     {
+        // Restore the suspended executions once; do not replay initialization.
+        // Future SpawnThing calls still need the caller's admission hook and clock.
+        Restore(snapshot ?? throw new ArgumentNullException(nameof(snapshot)));
     }
 
     public Level100ActorScriptRuntimeSnapshot Snapshot => new(
