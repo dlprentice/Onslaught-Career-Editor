@@ -636,6 +636,11 @@ public sealed class RetailEventScheduler
     public IReadOnlyList<RetailEventDispatch> Update(
         Action<RetailEventScheduler, RetailEventDispatch>? handler = null)
     {
+        // Apply the reconstruction's existing Flush admission rule before
+        // advancing time. A rejected nested/retry Update must not rotate the
+        // queue or change the clock that the outer callback is still using.
+        if (_flushing || _interruptedFlush)
+            throw new InvalidOperationException("Cannot resume an active or interrupted Flush.");
         AdvanceTime();
         return Flush(handler);
     }
