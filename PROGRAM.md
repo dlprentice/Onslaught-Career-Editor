@@ -263,6 +263,10 @@ Completed preparation scope:
   seed stages under `local-data/recovered/seed-staging/` and fourteen historical
   validation files under `local-data/test-runs/retained-lab-records/`: another
   126 files / 68,827,682 bytes, with unchanged hashes and recorded metadata.
+  The existing migration queue and local-data owner map record exact paths.
+- [x] Close the bounded lab-root and tool reviews, retaining failed attempts,
+  distinct staging trees and all frozen contents. Review findings and their
+  reproduced resolutions live under `local-lab/reviews/preparation-20260906/`.
 - [x] Close the independent follow-up findings: refuse unregistered packet replacement
   and output inside a bind-aliased project; explicitly report the four Windows-only
   tools suites as skipped on Linux. Retire three superseded tracked roadmap/signoff
