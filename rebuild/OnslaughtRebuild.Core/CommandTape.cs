@@ -313,7 +313,9 @@ public static class CommandTapeCodec
     public static CommandTape Deserialize(string json)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        CommandTape tape = JsonSerializer.Deserialize<CommandTape>(json, s_options)
+        using JsonDocument document = JsonDocument.Parse(json);
+        ValidateUniqueMembers(document.RootElement);
+        CommandTape tape = document.RootElement.Deserialize<CommandTape>(s_options)
             ?? throw new InvalidDataException("Command tape JSON did not contain a document.");
         if (string.Equals(
                 tape.SchemaVersion,
@@ -325,7 +327,7 @@ public static class CommandTapeCodec
             // under the current rules upgrades it exactly, with no field
             // re-meaning. Reject a document that only CLAIMS v4 while carrying
             // any v5-only member; its schema identity and field set disagree.
-            ValidatePreviousFieldSet(json);
+            ValidatePreviousFieldSet(document.RootElement);
             tape = tape with { SchemaVersion = CommandTape.CurrentSchemaVersion };
         }
 
@@ -340,10 +342,32 @@ public static class CommandTapeCodec
         return JsonSerializer.Serialize(tape, s_options).ReplaceLineEndings("\n") + "\n";
     }
 
-    private static void ValidatePreviousFieldSet(string json)
+    private static void ValidateUniqueMembers(JsonElement element)
     {
-        using JsonDocument document = JsonDocument.Parse(json);
-        if (!document.RootElement.TryGetProperty("spans", out JsonElement spans) ||
+        // Deserialization and TryGetProperty can select the last occurrence.
+        // Reject ambiguity before either can discard a span, action, schema
+        // declaration or expected hash. Property.Name is already unescaped;
+        // comparison stays ordinal and case-sensitive like the codec itself.
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                    throw new InvalidDataException($"Duplicate command tape JSON member '{property.Name}'.");
+                ValidateUniqueMembers(property.Value);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement item in element.EnumerateArray())
+                ValidateUniqueMembers(item);
+        }
+    }
+
+    private static void ValidatePreviousFieldSet(JsonElement root)
+    {
+        if (!root.TryGetProperty("spans", out JsonElement spans) ||
             spans.ValueKind != JsonValueKind.Array)
         {
             return;
