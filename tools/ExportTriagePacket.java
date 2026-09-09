@@ -433,7 +433,7 @@ public class ExportTriagePacket extends GhidraScript {
                     dataAddress.getOffset() >= 0 ? hex(dataAddress) : "",
                     Integer.toString(data.getLength()),
                     sha256(value.getBytes(StandardCharsets.UTF_8)),
-                    json(clean(value)),
+                    json(value),
                     referrerArray.toString()});
             }
         }

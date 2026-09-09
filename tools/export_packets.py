@@ -41,6 +41,7 @@ import subprocess
 import shlex
 import tempfile
 import shutil
+import stat
 import sys
 import time
 from pathlib import Path
@@ -221,7 +222,89 @@ def verified_run(output_root: Path) -> tuple[dict, dict]:
                 or body.get("executableSha256") != EXPECTED_IMAGE_SHA256
                 or body.get("requestedVa") != name[7:-5]):
             raise DriverError(f"packet identity/schema mismatch: {packet}")
+        strings = body.get("stringRefs", [])
+        if not isinstance(strings, list):
+            raise DriverError(f"invalid string rows: {packet}")
+        for row in strings:
+            if not isinstance(row, dict) or not isinstance(row.get("value"), str):
+                raise DriverError(f"invalid string value: {packet}")
+            try:
+                value_digest = hashlib.sha256(row["value"].encode("utf-8")).hexdigest()
+            except UnicodeError as error:
+                raise DriverError(f"invalid UTF-8 string value: {packet}") from error
+            if row.get("valueUtf8Sha256") != value_digest:
+                raise DriverError(f"string value/hash mismatch: {packet}")
     return ready, manifest
+
+
+def _plain_file_fingerprint(path: Path) -> tuple[int, int, str] | None:
+    """Read a stable regular-file identity and digest, never a named symlink."""
+    try:
+        named = path.lstat()
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISREG(named.st_mode):
+        raise DriverError(f"output is not a plain file: {path}")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    with os.fdopen(descriptor, "rb") as stream:
+        opened = os.fstat(stream.fileno())
+        if (not stat.S_ISREG(opened.st_mode)
+                or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino)):
+            raise DriverError(f"output changed identity while opening: {path}")
+        digest = hashlib.sha256()
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+        after = os.fstat(stream.fileno())
+    current = path.lstat()
+    if (not stat.S_ISREG(current.st_mode)
+            or (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino)
+            or (opened.st_size, opened.st_mtime_ns) != (after.st_size, after.st_mtime_ns)):
+        raise DriverError(f"output changed while fingerprinting: {path}")
+    return opened.st_dev, opened.st_ino, digest.hexdigest()
+
+
+def _recover_publication(
+    attempted: list[Path],
+    fingerprints: dict[Path, tuple[int, int, str]],
+    displaced: Path,
+    rollback: Path,
+) -> list[str]:
+    """Retain displaced entries and never replace a concurrent writer's output."""
+    errors: list[str] = []
+    for path in reversed(attempted):
+        try:
+            current = _plain_file_fingerprint(path)
+            if current is not None:
+                if current != fingerprints[path]:
+                    errors.append(f"{path}: changed output left untouched")
+                    continue
+                # Move before deciding what may be retired: a file can change
+                # between the comparison above and this rename. The private
+                # capture is kept on every failure, never unlinked by name.
+                captured = rollback / path.name
+                path.rename(captured)
+                try:
+                    matches = _plain_file_fingerprint(captured) == fingerprints[path]
+                except (DriverError, OSError):
+                    matches = False
+                if not matches:
+                    try:
+                        os.link(captured, path, follow_symlinks=False)
+                    except OSError as error:
+                        errors.append(f"{path}: changed entry retained at {captured}: {error}")
+                    else:
+                        errors.append(f"{path}: changed entry restored without replacement")
+                    continue
+            original = displaced / path.name
+            if os.path.lexists(original):
+                # A newly created destination wins this race. Never use replace
+                # or unlink to force recovery over an unowned directory entry.
+                os.link(original, path, follow_symlinks=False)
+        except (DriverError, OSError) as error:
+            errors.append(f"{path}: {error}")
+    return errors
 
 
 def run(args: argparse.Namespace) -> int:
@@ -320,8 +403,11 @@ def run(args: argparse.Namespace) -> int:
     staged_output.mkdir()
     (stage / "addresses.txt").write_text("\n".join(todo) + "\n", encoding="utf-8")
     started = time.monotonic()
-    published: list[Path] = []
+    attempted: list[Path] = []
+    fingerprints: dict[Path, tuple[int, int, str]] = {}
     previous = stage / "previous"
+    displaced = stage / "displaced"
+    rollback = stage / "rollback"
     try:
         completed = subprocess.run(invocation(stage), capture_output=True, text=True,
                                    timeout=args.timeout)
@@ -366,27 +452,41 @@ def run(args: argparse.Namespace) -> int:
                 shutil.copy2(path, backup)
                 if sha256_file(backup) != before[path]:
                     raise DriverError(f"original changed while preserving publication recovery: {path}")
-        # Keep the old bytes recoverable until the complete public set verifies.
+        displaced.mkdir()
+        rollback.mkdir()
         for path in destinations:
-            (staged_output / path.name).replace(path)
-            published.append(path)
+            payload = staged_output / path.name
+            fingerprint = _plain_file_fingerprint(payload)
+            if fingerprint is None:
+                raise DriverError(f"staged output disappeared: {payload}")
+            fingerprints[path] = fingerprint
+            attempted.append(path)
+            if before[path] is not None:
+                # Preserve the actual displaced entry, not only an earlier
+                # copy: another writer may have replaced it since preflight.
+                current = _plain_file_fingerprint(path)
+                if current is None or current[2] != before[path]:
+                    raise DriverError(f"output changed before replacement: {path}")
+                retired = displaced / path.name
+                path.rename(retired)
+                retired_fingerprint = _plain_file_fingerprint(retired)
+                if retired_fingerprint is None or retired_fingerprint[2] != before[path]:
+                    raise DriverError(f"output changed before replacement: {path}")
+            # Publication is CREATE_NEW even after an explicit recut. A file
+            # appearing after preflight is never silently overwritten.
+            os.link(payload, path, follow_symlinks=False)
         verified_run(output_root)  # READY was published last.
     except (DriverError, OSError, json.JSONDecodeError, subprocess.TimeoutExpired) as error:
-        recovery_errors = []
-        for path in published:
-            try:
-                if before[path] is None:
-                    path.unlink()
-                else:
-                    restore = stage / ("restore-" + path.name)
-                    os.link(previous / path.name, restore)
-                    os.replace(restore, path)
-            except OSError as recovery_error:
-                recovery_errors.append(f"{path}: {recovery_error}")
-        detail = "\nRecovery needs attention; original bytes remain under previous/: " + "; ".join(recovery_errors) if recovery_errors else ""
+        recovery_errors = _recover_publication(attempted, fingerprints, displaced, rollback)
+        detail = "\nRecovery needs attention; retained files are inside the run directory: " + "; ".join(recovery_errors) if recovery_errors else ""
         raise DriverError(f"{error}{detail}\nIncomplete export retained for review: {stage}") from error
     else:
-        shutil.rmtree(stage)
+        if any(before[path] is not None for path in attempted):
+            # Successful replacement is not permission to destroy old evidence.
+            # Keep both verified recovery copies and the actual displaced files.
+            print(f"Publication recovery retained: {stage}")
+        else:
+            shutil.rmtree(stage)
     print(f"PACKETS_OK wrote={len(todo)} skipped={len(skipped)} "
           f"elapsed={time.monotonic() - started:.0f}s out={output_root}")
     return 0

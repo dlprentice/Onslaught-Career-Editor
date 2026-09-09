@@ -10,7 +10,7 @@ the driver's real contracts against it:
   * the -readOnly -noanalysis flags are present on the composed command
   * the READY receipt and per-packet image hash are verified after the run
   * a re-run skips matching-image packets and never relaunches headless
-  * --force removes and re-cuts; a foreign-image packet refuses instead
+  * --force preserves original packets and re-cuts; a foreign-image packet refuses instead
   * the driver refuses the live project by default
   * the tracked 5-VA list parses to exactly the named VAs
   * the Java exporter's static contract holds (usage arity, -readOnly
@@ -33,7 +33,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from unittest import mock
+from unittest import SkipTest, mock
 
 TOOL = Path(__file__).resolve().parent / "export_packets.py"
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -544,21 +544,18 @@ def test_publication_failure_restores_original_packets(root: Path) -> None:
     spec = importlib.util.spec_from_file_location("export_packets_publication", TOOL)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    original_replace = Path.replace
     replaced = 0
 
-    def fail_second_packet(path: Path, target: Path) -> Path:
+    def fail_second_packet(_source: Path, target: Path) -> None:
         nonlocal replaced
-        if path.name.startswith("packet-") and Path(target).parent == out:
+        if target.name.startswith("packet-"):
             replaced += 1
             if replaced == 2:
                 raise OSError("injected second publication failure")
-        return original_replace(path, target)
 
-    output = io.StringIO()
-    with mock.patch.object(Path, "replace", fail_second_packet), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
-        code = module.main([str(vas), str(out), "--force", "--ghidra", str(fake),
-                            "--project-root", str(root / "proj"), "--closure-tsv", str(closure)])
+    code, captured = _run_with_publication_hook(root, out, vas, fake,
+                                               fail_second_packet, force=True)
+    output = io.StringIO(captured)
     assert code == 1 and replaced == 2, output.getvalue()
     assert "injected second publication failure" in output.getvalue()
     assert output_bytes(out) == before
@@ -693,14 +690,324 @@ def test_closure_tsv_join_when_present(root: Path) -> None:
     assert body["campaignGrade"]["gradeAfter"] == "C1_CANDIDATE_PARTIAL"
 
 
+def _run_with_publication_hook(root: Path, out: Path, vas: Path, fake: Path,
+                               hook, *, force: bool = False) -> tuple[int, str]:
+    """Interrupt the real publication syscall, not the fake exporter's output."""
+    spec = importlib.util.spec_from_file_location("export_packets_race", TOOL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    replace = Path.replace
+    link = os.link
+
+    def intercept(source, destination) -> None:
+        source, destination = Path(source), Path(destination)
+        if source.parent.name == "packets" and destination.parent == out:
+            hook(source, destination)
+
+    def replace_with_hook(source, destination):
+        intercept(source, destination)
+        return replace(source, destination)
+
+    def link_with_hook(source, destination, *args, **kwargs):
+        intercept(source, destination)
+        return link(source, destination, *args, **kwargs)
+
+    closure = root / "empty-closure.tsv"
+    closure.touch()
+    output = io.StringIO()
+    with mock.patch.object(Path, "replace", replace_with_hook), \
+         mock.patch.object(os, "link", link_with_hook), \
+         contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+        code = module.main([str(vas), str(out), "--ghidra", str(fake),
+                            "--project-root", str(root / "proj"),
+                            "--closure-tsv", str(closure), *(["--force"] if force else [])])
+    return code, output.getvalue()
+
+
+def test_publication_refuses_a_file_created_after_preflight(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    victim = out / f"packet-{EXPECTED_VAS[0]}.json"
+    foreign = b"unique evidence from another writer"
+    injected = False
+
+    def collide(_source, destination):
+        nonlocal injected
+        if destination == victim and not injected:
+            injected = True
+            with victim.open("xb") as stream:
+                stream.write(foreign)
+
+    code, output = _run_with_publication_hook(root, out, vas, fake, collide)
+    assert injected, "publication boundary was not exercised"
+    assert victim.read_bytes() == foreign, "late-created evidence was overwritten"
+    assert code == 1, output
+    assert not (out / "triage-ready.json").exists()
+
+
+def _rollback_replacement_case(root: Path, *, existing: bool) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:2])
+    victim = out / f"packet-{EXPECTED_VAS[0]}.json"
+    second = out / f"packet-{EXPECTED_VAS[1]}.json"
+    original = b"original evidence before explicit recut"
+    if existing:
+        victim.write_bytes(original)
+    foreign = b"replacement created after first publication"
+    injected = False
+
+    def fail_after_foreign_replacement(_source, destination):
+        nonlocal injected
+        if destination == second and not injected:
+            injected = True
+            assert victim.is_file(), "first packet was not published"
+            replacement = root / "foreign-replacement"
+            replacement.write_bytes(foreign)
+            os.replace(replacement, victim)
+            raise OSError("injected later publication failure")
+
+    code, output = _run_with_publication_hook(root, out, vas, fake,
+                                             fail_after_foreign_replacement, force=existing)
+    assert injected, "second publication boundary was not exercised"
+    assert code == 1 and "injected later publication failure" in output, output
+    assert victim.is_file() and victim.read_bytes() == foreign, "rollback destroyed foreign evidence"
+    assert not (out / "triage-ready.json").exists()
+    if existing:
+        backups = list(out.glob(".triage-*/previous/" + victim.name))
+        assert len(backups) == 1 and backups[0].read_bytes() == original
+
+
+def test_rollback_preserves_a_replacement_of_a_new_packet(root: Path) -> None:
+    _rollback_replacement_case(root, existing=False)
+
+
+def test_rollback_preserves_a_replacement_of_a_recut_packet(root: Path) -> None:
+    _rollback_replacement_case(root, existing=True)
+
+
+def test_successful_recut_retains_original_evidence(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    victim = out / f"packet-{EXPECTED_VAS[0]}.json"
+    original = b"unique old packet explicitly selected for replacement"
+    victim.write_bytes(original)
+    code, output = run_driver(["--force"], root, fake, vas, out)
+    assert code == 0, output
+    backups = list(out.glob(".triage-*/previous/" + victim.name))
+    assert len(backups) == 1 and backups[0].read_bytes() == original, "successful recut discarded recovery bytes"
+    assert json.loads(victim.read_text())["executableSha256"] == IMAGE
+
+
+def test_java_string_rows_preserve_the_value_bound_by_the_digest(root: Path) -> None:
+    """Compile the actual formatting/row methods against a tiny in-memory API fixture.
+
+    This exercises Java serialization, not Ghidra loading or retail memory.
+    """
+    import base64
+    import shutil
+    from unittest import SkipTest
+
+    javac, java_command = shutil.which("javac"), shutil.which("java")
+    if not javac or not java_command:
+        raise SkipTest("JDK required for the isolated Java string-row contract")
+    source = (REPO_ROOT / "tools/ExportTriagePacket.java").read_text(encoding="utf-8")
+
+    def method(signature: str) -> str:
+        start = source.index(signature)
+        end = source.index("\n    }\n", start) + len("\n    }\n")
+        return source[start:end]
+
+    methods = "\n".join(method(signature) for signature in (
+        "    private static String clean(String value)",
+        "    private static String json(String value)",
+        "    private static String hex(Address address)",
+        "    private static String hex(byte[] value)",
+        "    private static String sha256(byte[] raw)",
+        "    private TreeMap<String, String[]> stringRows(Function function)",
+    ))
+    # Only the Ghidra object-access surface is substituted. The production
+    # string-row body, escaping and hashing methods above are copied unchanged.
+    fixture = r'''
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.*;
+public class ExportStringProbe {
+    static final List<Data> data = new ArrayList<>();
+    final Program currentProgram = new Program();
+    final Monitor monitor = new Monitor();
+    record Address(long offset) {
+        long getOffset() { return offset; }
+        public String toString() { return String.format(Locale.ROOT, "%08x", offset); }
+    }
+    record Data(Address address, String value) {
+        boolean isDefined() { return true; }
+        Address getAddress() { return address; }
+        int getLength() { return value.getBytes(StandardCharsets.UTF_8).length + 1; }
+    }
+    record Reference(Address address) {
+        Address getToAddress() { return address; }
+        Address getFromAddress() { return address; }
+    }
+    record StringDataInstance(String value) {
+        static StringDataInstance getStringDataInstance(Data item) {
+            return new StringDataInstance(item.value());
+        }
+        String getStringValue() { return value; }
+    }
+    static class Function {
+        Object getBody() { return null; }
+        Address getEntryPoint() { return new Address(0x401000); }
+    }
+    static class Instruction {
+        Reference[] getReferencesFrom() {
+            List<Reference> references = new ArrayList<>();
+            for (Data item : data) references.add(new Reference(item.address()));
+            if (!data.isEmpty()) references.add(new Reference(data.get(0).address()));
+            return references.toArray(Reference[]::new);
+        }
+    }
+    static class InstructionIterator {
+        boolean delivered;
+        boolean hasNext() { return !delivered; }
+        Instruction next() { delivered = true; return new Instruction(); }
+    }
+    static class ReferenceIterator {
+        boolean hasNext() { return false; }
+        Reference next() { throw new NoSuchElementException(); }
+    }
+    static class Listing {
+        InstructionIterator getInstructions(Object body, boolean forward) {
+            return new InstructionIterator();
+        }
+        Data getDataAt(Address address) {
+            return data.stream().filter(item -> item.address().equals(address)).findFirst().orElse(null);
+        }
+    }
+    static class References {
+        ReferenceIterator getReferencesTo(Address address) { return new ReferenceIterator(); }
+    }
+    static class Functions {
+        Function getFunctionContaining(Address address) { return null; }
+    }
+    static class Program {
+        Listing getListing() { return new Listing(); }
+        References getReferenceManager() { return new References(); }
+        Functions getFunctionManager() { return new Functions(); }
+    }
+    static class Monitor { void checkCancelled() {} }
+    public static void main(String[] args) throws Exception {
+        for (int i = 0; i < args.length; i++) {
+            String value = new String(Base64.getDecoder().decode(args[i]), StandardCharsets.UTF_8);
+            data.add(new Data(new Address(0x600000L + i * 0x100), value));
+        }
+        for (String[] row : new ExportStringProbe().stringRows(new Function()).values()) {
+            System.out.println(row[2] + "\t" + row[3]);
+        }
+    }
+'''
+    probe = root / "ExportStringProbe.java"
+    probe.write_text(fixture + methods + "\n}\n", encoding="utf-8")
+    values = ["plain", r"C:\games\aquila", "line one\nline two", "left\tright",
+              'quoted "text" and \\ slash', "\0snowman \u2603 rocket \U0001f680"]
+    subprocess.run([javac, "-encoding", "UTF-8", "-d", str(root), str(probe)],
+                   capture_output=True, text=True, check=True, timeout=60)
+    result = subprocess.run([java_command, "-cp", str(root), "ExportStringProbe",
+                             *(base64.b64encode(value.encode("utf-8")).decode("ascii") for value in values)],
+                            capture_output=True, text=True, check=True, timeout=60)
+    rows = result.stdout.splitlines()
+    assert len(rows) == len(values), result.stdout
+    for original, row in zip(values, rows):
+        digest, encoded_value = row.split("\t", 1)
+        decoded = json.loads(encoded_value)
+        assert decoded == original, f"Java string value changed: {original!r} -> {decoded!r}"
+        assert digest == hashlib.sha256(decoded.encode("utf-8")).hexdigest(), "string value/hash mismatch"
+
+
+def _rewrite_fake_string_rows(root: Path, fake: Path, rows) -> None:
+    inner = root / "fake-headless-inner.py"
+    source = inner.read_text().replace('"stringRefs": [],', f'"stringRefs": {rows!r},')
+    inner.write_text(source)
+    if os.name != "nt":
+        fake.write_text(f"#!{sys.executable}\n" + source)
+
+
+def test_export_refuses_string_text_that_disagrees_with_its_digest(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    original = "radio\nmessage\tpath\\name"
+    rows = [{"value": original.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", " "),
+             "valueUtf8Sha256": hashlib.sha256(original.encode("utf-8")).hexdigest()}]
+    _rewrite_fake_string_rows(root, fake, rows)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "string value/hash mismatch" in output, output
+    assert not (out / "triage-ready.json").exists()
+    assert not (out / f"packet-{EXPECTED_VAS[0]}.json").exists()
+
+
+def test_export_accepts_exact_string_text_and_digest(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    value = 'radio\nmessage\tpath\\name "quoted" \u2603'
+    rows = [{"value": value, "valueUtf8Sha256": hashlib.sha256(value.encode("utf-8")).hexdigest()}]
+    _rewrite_fake_string_rows(root, fake, rows)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    body = json.loads((out / f"packet-{EXPECTED_VAS[0]}.json").read_text())
+    assert body["stringRefs"] == rows
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0 and "SKIP all 1" in output, output
+
+
+def test_skip_refuses_legacy_escaped_string_values_even_with_valid_packet_hashes(root: Path) -> None:
+    fake = write_fake_headless(root)
+    make_project(root)
+    out = make_output(root)
+    vas = write_va_list(root, EXPECTED_VAS[:1])
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 0, output
+    packet = out / f"packet-{EXPECTED_VAS[0]}.json"
+    body = json.loads(packet.read_text())
+    raw_value = "line\nbreak"
+    body["stringRefs"] = [{"value": r"line\nbreak",
+                            "valueUtf8Sha256": hashlib.sha256(raw_value.encode("utf-8")).hexdigest()}]
+    packet.write_text(json.dumps(body))
+    manifest_path = out / "run-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["packets"][packet.name]["sha256"] = hashlib.sha256(packet.read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest))
+    ready_path = out / "triage-ready.json"
+    ready = json.loads(ready_path.read_text())
+    ready["manifest"]["sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    ready_path.write_text(json.dumps(ready))
+    before = output_bytes(out)
+    code, output = run_driver([], root, fake, vas, out)
+    assert code == 1 and "string value/hash mismatch" in output, output
+    assert output_bytes(out) == before
+    assert len((root / "headless-calls.jsonl").read_text().splitlines()) == 1
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
+    skipped = 0
     for test in tests:
         root = Path(tempfile.mkdtemp(prefix="p4-packets-"))
         try:
             test(root)
             print(f"PASS {test.__name__}")
+        except SkipTest as exc:
+            skipped += 1
+            print(f"SKIP {test.__name__}: {exc}")
         except AssertionError as exc:
             failed += 1
             print(f"FAIL {test.__name__}: {exc}")
@@ -711,7 +1018,7 @@ def main() -> int:
             import shutil
 
             shutil.rmtree(root, ignore_errors=True)
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
+    print(f"\n{len(tests) - failed - skipped}/{len(tests)} passed; {skipped} skipped")
     return 1 if failed else 0
 
 
