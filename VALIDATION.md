@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-08 (first-training clock, contacts and Ghidra corrections).
+Last updated: 2026-09-09 (remote source-review checks recorded; not executed).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -525,3 +525,57 @@ receipt or establish Windows/Godot runtime acceptance.
 Do not add a new test during cleanup unless implementation behavior changed,
 the regression is consequential, and no focused existing check covers it. Do
 not fix unrelated failures discovered outside the changed contract.
+
+## Remote source review — 2026-09-09 (execution pending)
+
+This section records pending verification, not a passing receipt. Source changes
+are on `codex/onslaught-remote-integration-20260908`, following `82af1a41`.
+Native-command and Python probes returned `TransportTimeoutError` without program
+output; no compiler, test suite, Godot, Ghidra or retail program ran in this pass.
+GitHub commit diffs were inspected and branch updates were read back separately.
+Those checks establish source/publication state, not executable correctness.
+
+| Source change | Added cases declared in source | Required verification |
+| --- | ---: | --- |
+| `f9d2e6dd`: FirstFlight launch admission | 14 | Existing `FirstFlightLaunchOptionsTests`, including legal repeated careers and capture with recording; reject smoke/capture conflicts and duplicate output arguments before file-opening adapters. |
+| `752f913e`: command-tape JSON admission | 30 | `CommandTapeJsonAdmissionTests`, then existing replay/recorder/headless checks. Test duplicate decoded names, hidden schema/command/hash replacements, escaped keys, strict v4 migration, invalid roots and unchanged canonical identities for valid v4/v5 inputs. |
+| `e8178614`: scheduler Update guard | 8 | `RetailEventSchedulerUpdateGuardTests` and existing `RetailEventSchedulerTests`. Test caught/uncaught nesting, interrupted retries, ring wrap, PC24/default arithmetic, retained rearm state, subsequent delivery/recycling and Init recovery. |
+
+The 52 additional cases are an authored count, not runner discovery or passes.
+Existing tests were retained. No tape schema, serializer output, scenario fixture,
+golden fingerprint, normal scheduling arithmetic or gameplay constant was changed.
+The scheduler guard is a reconstruction API correction; it adds no retail contract
+grade or Ghidra correction. Microsoft's documented last-definition behavior for
+[JsonElement.TryGetProperty](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.trygetproperty?view=net-8.0)
+supports the JSON ambiguity analysis; the fix uses .NET 8 enumeration APIs rather
+than adding a newer-framework duplicate-property option.
+
+On a functioning host, first prepare the existing admitted retail inputs and
+perform the pinned project restore without changing locks, targets or engine.
+The test projects reference Core's materialized resources even when an individual
+fixture only checks parsing. With that setup already successful, run from the
+repository root (these commands were NOT executed remotely):
+
+```bash
+dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj --no-restore --nologo --filter 'FullyQualifiedName~FirstFlightLaunchOptionsTests'
+dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --no-restore --nologo --filter 'FullyQualifiedName~CommandTapeJsonAdmissionTests|FullyQualifiedName~RetailEventSchedulerUpdateGuardTests'
+dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --no-restore --nologo --filter 'FullyQualifiedName~RetailEventSchedulerTests|FullyQualifiedName~ReplayTests|FullyQualifiedName~HeadlessApplicationTests'
+npm run test:docs
+npm run test:safety
+```
+
+Require nonempty runner discovery and preserve failures. Inspect the new negative
+cases against the pre-fix implementations in an isolated review worktree when
+establishing regression evidence; source reasoning alone is not a red/green run.
+Broaden to affected Client/recording integration as results warrant. A native
+Godot launch/capture check is still separate from argument-parser unit tests.
+
+Review the full remote branch from the `13577577` feature baseline, not just these
+three commits. Earlier `3654eb73` fixed actor-script restoration but still needs
+`RestoreDuringHangarPausePreservesNativeSpawnAdmissionAndCurrentClock` executed.
+`CanonicalHash_BindsRawPlaneStateAndWorld110SecondaryState` remains an unresolved
+baseline diagnosis, not permission to replace its expected hash. Earlier remote
+launcher/exporter commits contain dated test reports; this pass did not rerun them.
+The proposed Python smoke report/log gate remains unpublished and unverified.
+Record actual commands, outcomes and output locations here before integration;
+do not transform these pending entries or historical receipts into claimed passes.

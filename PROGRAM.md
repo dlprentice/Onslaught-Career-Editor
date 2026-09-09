@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-08
+Last updated: 2026-09-09 (remote source-review handoff; execution pending)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -17,6 +17,35 @@ validation in [VALIDATION.md](VALIDATION.md), and database state in
 queue revisions remain in Git and existing evidence owners; do not recreate a diary here.
 
 ## Open work
+
+### Remote source review — pending Codex execution and integration
+
+David authorized source-only continuation on
+`codex/onslaught-remote-integration-20260908` while the remote execution service
+returns `TransportTimeoutError`. GitHub reads, scoped commits and branch updates
+work; no new C# compilation, test execution, Godot run or Ghidra opening is claimed.
+This branch is reviewable work, not a merge into `codex/linux-playable-slices` or `main`.
+
+| Change | Commit | Review disposition |
+| --- | --- | --- |
+| Launch admission: reject competing smoke/capture drivers, repeated report/tape destinations and null entries | `f9d2e6dd` | Source-reviewed; regression tests added, not run. Existing recording/capture and repeated career-selection behavior retained. |
+| Replay JSON: reject duplicate decoded members before deserialization and v4 migration | `752f913e` | Source-reviewed; malformed-input and valid canonical-identity controls added, not run. No writer/schema or golden-hash change. |
+| Scheduler: reject nested or interrupted Update before advancing the clock/ring | `e8178614` | Source-reviewed; reentrancy, retry, wrap and recovery cases added, not run. Reconstruction API fix, not newly measured retail behavior. |
+
+Codex should review the complete branch difference from
+`135775772a126af48b9930a8fcfd4140000a4af9` to the freshly resolved remote tip;
+`82af1a4193cdc7c4b4e697861f8450d263628ad5` separates the three earlier remote
+commits from this source-only pass. The earlier actor-script restore correction
+`3654eb73` still needs its owning C# regression executed. Earlier launcher/exporter
+commits carry dated test records, not current-host reruns. Exact pending checks
+are in [VALIDATION.md](VALIDATION.md#remote-source-review--2026-09-09-execution-pending).
+Do not integrate based only on these source reviews.
+
+The previously discussed Linux smoke report/log validation repair remains
+unpublished; an engine's zero exit alone still must not be treated as proof that
+smoke evidence passed. Preserve the unresolved forty-step canonical-hash diagnosis,
+full-combat/aircraft-controller integration, complete Ghidra audit and Save Lab UI
+acceptance. No frozen campaign authority or tracked Ghidra database changed.
 
 ### Active phase — Linux playable slices and first Save Lab workflow
 
