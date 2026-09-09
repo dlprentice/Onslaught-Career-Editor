@@ -18,13 +18,15 @@ public sealed record FirstFlightLaunchOptions(
         string? report = null, tape = null;
         foreach (string argument in arguments)
         {
+            if (argument is null)
+                throw new ArgumentException("First Flight arguments cannot contain null entries.", nameof(arguments));
             if (argument == "--smoke") smoke = true;
             else if (argument == "--skipfmv") skip = true;
             else if (argument == "--intro") intro = true;
             else if (argument.StartsWith("--report=", StringComparison.Ordinal))
-                report = argument["--report=".Length..];
+                report = ReadSingleDestination(argument, "--report=", report);
             else if (argument.StartsWith("--record-tape=", StringComparison.Ordinal))
-                tape = argument["--record-tape=".Length..];
+                tape = ReadSingleDestination(argument, "--record-tape=", tape);
             else if (argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
                      argument.StartsWith("--capture-plan=", StringComparison.Ordinal) ||
                      argument.StartsWith("--capture-size=", StringComparison.Ordinal) ||
@@ -39,6 +41,10 @@ public sealed record FirstFlightLaunchOptions(
                 throw new ArgumentException($"Unknown First Flight argument '{argument}'.");
         }
 
+        // FirstFlightGame and FrontendCaptureRig each drive the frontend and
+        // request application exit. They cannot own one run simultaneously.
+        if (smoke && capture)
+            throw new ArgumentException("Smoke mode and capture arguments cannot be used together.");
         if (smoke && (string.IsNullOrWhiteSpace(report) || !Path.IsPathFullyQualified(report)))
             throw new ArgumentException("Smoke mode requires an absolute --report path.");
         if (tape is not null &&
@@ -48,5 +54,14 @@ public sealed record FirstFlightLaunchOptions(
                 "--record-tape requires an absolute .json path outside career-save and retail storage.");
 
         return new(smoke, report, capture, skip, intro, tape);
+    }
+
+    private static string ReadSingleDestination(string argument, string prefix, string? previous)
+    {
+        // Do not silently redirect an explicit output or hide an earlier bad
+        // value behind a later one. Repeated career selections remain legal.
+        if (previous is not null)
+            throw new ArgumentException($"{prefix[..^1]} may only be specified once.");
+        return argument[prefix.Length..];
     }
 }
