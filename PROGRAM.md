@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-09 (remote source-review handoff; execution pending)
+Last updated: 2026-09-09 (remote closeout; desktop Codex continuation)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -20,10 +20,17 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ### Remote source review — pending Codex execution and integration
 
+**Remote closeout, September 9:** David explicitly ended this remote effort and
+will continue with desktop Codex. This closes the remote work period, not the
+project, full RE audit, or any outstanding acceptance gate. Fetch the current
+remote branch into the existing local repository; preserve local changes and
+unpushed commits. Review on an isolated branch/worktree before integrating.
+The older uploaded source archives are not substitutes for the final remote tip.
+
 David authorized source-only continuation on
 `codex/onslaught-remote-integration-20260908` while the remote execution service
-returns `TransportTimeoutError`. GitHub reads, scoped commits and branch updates
-work; no new C# compilation, test execution, Godot run or Ghidra opening is claimed.
+returned `TransportTimeoutError`. GitHub reads, scoped commits and branch updates
+worked; no new C# compilation, test execution, Godot run or Ghidra opening is claimed.
 This branch is reviewable work, not a merge into `codex/linux-playable-slices` or `main`.
 
 | Change | Commit | Review disposition |
@@ -46,6 +53,26 @@ unpublished; an engine's zero exit alone still must not be treated as proof that
 smoke evidence passed. Preserve the unresolved forty-step canonical-hash diagnosis,
 full-combat/aircraft-controller integration, complete Ghidra audit and Save Lab UI
 acceptance. No frozen campaign authority or tracked Ghidra database changed.
+
+**Next substantive priority: the existing Ghidra analysis and retail RE.** Resolve
+the actual local working owner and applicable newer correction manifests, then
+inventory the complete analysis and audit structural and semantic contracts in
+bounded subsystems under the existing preservation/readback workflow. Keep the
+tracked checkpoint and cold recovery untouched. Do not mistake a complete export
+for a complete semantic audit, or let another broad repository cleanup displace RE.
+
+One source-record reconciliation remains unverified: the
+[Unit movement record](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
+identifies a Plane-controller extent `[0x004d21c0, 0x004d248c)`, while the
+[Plane hit/animation note](reverse-engineering/binary-analysis/functions/Plane.cpp/CPlane__Hit_CheckFatalDamageAndDie.md)
+says caller sites `0x004d229f` and `0x004d2400` lack recovered Ghidra function
+boundaries. Both sites fall within that documented extent. This may be a manual
+body identification without a saved boundary, or stale documentation; it is not
+proof of a missing function. Inspect the actual function table and pristine
+instructions before changing a boundary or name. Preserve the separate Unit
+AI state and controller state, scheduled approach/retreat behavior, conditional
+random draws and ordered avoidance-reader dependencies recorded by those owners.
+The remote cross-read added no new byte measurement or applied database correction.
 
 ### Active phase — Linux playable slices and first Save Lab workflow
 
@@ -236,10 +263,6 @@ Completed preparation scope:
   seed stages under `local-data/recovered/seed-staging/` and fourteen historical
   validation files under `local-data/test-runs/retained-lab-records/`: another
   126 files / 68,827,682 bytes, with unchanged hashes and recorded metadata.
-  The existing migration queue and local-data owner map record exact paths.
-- [x] Close the bounded lab-root and tool reviews, retaining failed attempts,
-  distinct staging trees and all frozen contents. Review findings and their
-  reproduced resolutions live under `local-lab/reviews/preparation-20260906/`.
 - [x] Close the independent follow-up findings: refuse unregistered packet replacement
   and output inside a bind-aliased project; explicitly report the four Windows-only
   tools suites as skipped on Linux. Retire three superseded tracked roadmap/signoff
