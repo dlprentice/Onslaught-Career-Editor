@@ -62,14 +62,54 @@ def run_process(
         stdout=subprocess.PIPE if capture else None,
         stderr=subprocess.PIPE if capture else None,
     )
+    timed_out: subprocess.TimeoutExpired | None = None
     try:
         stdout, stderr = process.communicate(timeout=timeout)
         result = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
         result.check_returncode()
         return result
+    except subprocess.TimeoutExpired as error:
+        timed_out = error
+        raise
     finally:
-        # Also clean up an engine/build tool which exits but leaves workers alive.
-        _stop_owned_group(process)
+        try:
+            # Also clean up an engine/build tool which exits but leaves workers alive.
+            _stop_owned_group(process)
+            if timed_out is not None and capture:
+                try:
+                    stdout, stderr = process.communicate(timeout=1.0)
+                except subprocess.TimeoutExpired as drain_error:
+                    # An escaped descendant may still hold a pipe. Keep the
+                    # latest partial output without turning this into a hang.
+                    if drain_error.output is not None:
+                        timed_out.output = drain_error.output
+                    if drain_error.stderr is not None:
+                        timed_out.stderr = drain_error.stderr
+                    timed_out.add_note("Owned process group stopped; output drain exceeded one second.")
+                except UnicodeError:
+                    # Preserve the original byte diagnostics and timeout even
+                    # when a tool's final output is not valid text.
+                    timed_out.add_note("Owned process group stopped; final output could not be decoded.")
+                else:
+                    # communicate() normalizes text; TimeoutExpired diagnostics
+                    # remain bytes, as in subprocess's public exception contract.
+                    encoding = process.encoding or "utf-8"
+                    timed_out.output = stdout.encode(encoding) if stdout is not None else None
+                    timed_out.stderr = stderr.encode(encoding) if stderr is not None else None
+        finally:
+            for stream in (process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+
+
+def print_process_output(error: subprocess.CalledProcessError | subprocess.TimeoutExpired) -> None:
+    """Print captured diagnostics without byte-literal reprs or lost partial lines."""
+    for output in (error.output, error.stderr):
+        if output:
+            text = output.decode("utf-8", errors="replace") if isinstance(output, bytes) else output
+            print(text, file=sys.stderr, end="" if text.endswith("\n") else "\n")
+    for note in getattr(error, "__notes__", ()):
+        print(note, file=sys.stderr)
 
 
 def engine_path(requested: str) -> Path:
@@ -147,13 +187,11 @@ def companion_main(argv: list[str] | None = None) -> int:
                             cwd=COMPANION, env=env, timeout=args.timeout)
         return 0
     except subprocess.TimeoutExpired as error:
+        print_process_output(error)
         print(f"Godot process timed out after {error.timeout}s", file=sys.stderr)
         return 124
     except subprocess.CalledProcessError as error:
-        if error.stdout:
-            print(error.stdout, file=sys.stderr, end="")
-        if error.stderr:
-            print(error.stderr, file=sys.stderr, end="")
+        print_process_output(error)
         print(f"Godot process exited {error.returncode}: {error.cmd[0]}", file=sys.stderr)
         return error.returncode if error.returncode > 0 else 128 - error.returncode
     except KeyboardInterrupt:
