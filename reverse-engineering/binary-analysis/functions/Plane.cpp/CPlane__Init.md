@@ -1,7 +1,7 @@
 # CPlane__Init
 
 Status: active static function note
-Last updated: 2026-09-08
+Last updated: 2026-09-12 (shared initializer attribution)
 Summary: Plane initialization, selected training-aircraft animation ownership,
 and the script-spawn collision-delay boundary; runtime parity remains open.
 
@@ -26,8 +26,8 @@ Important instruction evidence:
 | `0x004d19fd` | Calls `CAirUnit__Init`. |
 | `0x004d1a28` | Calls `CAirGuide__ctor`. |
 | `0x004d1a49` | Stores the guide pointer at `this+0x208`. |
-| `0x004d1a6a` | Calls `CWarspite__Init`. |
-| `0x004d1a82` | Stores the CWarspite-like pointer at `this+0x13c`. |
+| `0x004d1a6a` | Calls `CUnitAI__Init`. |
+| `0x004d1a82` | Stores the CPlaneAI pointer at `this+0x13c`. |
 | `0x004d1a9c` | Pushes launch string pointer `0x006243f8`. |
 | `0x004d1b1e` | Pushes Engine string pointer `0x00622cec`. |
 | `0x004d1b9d` | Calls `CSPtrSet__AddToTail` for the `this+0x1d4` list. |
@@ -40,7 +40,7 @@ Important instruction evidence:
 
 - Marks `init_thing+0x80` before delegating to `CAirUnit__Init(this, init_thing)`.
 - Allocates a `0x30` guide component, initializes it through `CAirGuide__ctor`, and stores it at `this+0x208`.
-- Allocates a `0x64` CWarspite-like component, initializes it through `CWarspite__Init(this, init_thing)`, writes vtable pointer `0x005de73c`, and stores it at `this+0x13c`.
+- Allocates a `0x64` CPlaneAI component, initializes it through `CUnitAI__Init(this, init_thing)`, writes vtable pointer `0x005de73c`, and stores it at `this+0x13c`.
 - Looks up the `launch` animation through `CMesh__FindAnimationIndexByName` and updates launch state/timer fields at `this+0x27c` and `this+0x280`.
 - Enumerates `Engine` hardpoints, allocates 8-byte nodes, links them through `CWorldPhysicsManager__PushNodeGlobalList`, and appends them to the list at `this+0x1d4`.
 - Randomly writes `+0.8` or `-0.8` into `this+0x284`.

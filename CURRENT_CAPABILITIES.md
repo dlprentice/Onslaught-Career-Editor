@@ -420,6 +420,10 @@ ownership. Original-code initializer and exit experiments establish the earlier
 3002 phase and later script-Ready submission under explicit stubs. The live
 rebuild still needs this controller lifecycle and selected-provider firing;
 these checks do not establish a completed aircraft exit or Level 100 combat.
+The working Ghidra initializer now has its RTTI-backed CUnitAI attribution, and
+the dispatcher/exit prototypes carry the actual incoming event pointer. These
+metadata corrections preserve the unestablished return types and are backed by
+separate full readbacks and restored independent recovery.
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

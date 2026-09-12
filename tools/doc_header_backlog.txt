@@ -239,7 +239,6 @@ reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__Up
 reverse-engineering/binary-analysis/functions/Symtab.cpp.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateGuide.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateLegMotion.md
-reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateWarspite.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderheadGuide__Init.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderheadGuide__VFunc_03_004f4e40.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__BallisticAimState.md

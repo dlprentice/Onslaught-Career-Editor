@@ -192,6 +192,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # weapon-provider-semantics: five names/comments/tag sets, 2026-09-12.
 # Exact body/manifest review and isolated apply/readback preserve all ABI and
 # non-target metadata. A stale fifth-row tag set is refused before any writes.
+# unit-ai-initializer and unit-ai-event-arguments: exact September 12
+# initializer ownership and two incoming-event parameter/comment cohorts.
+# Preserve ABI outside the declared parameter changes and all program structure.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -214,6 +217,8 @@ LIVE_GRANTED_COHORTS = [
     "plane-controller-event-argument",
     "script-callback-arguments",
     "weapon-provider-semantics",
+    "unit-ai-initializer",
+    "unit-ai-event-arguments",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -642,6 +647,8 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "plane-controller-event-argument",\n'
         '        "script-callback-arguments",\n'
         '        "weapon-provider-semantics",\n'
+        '        "unit-ai-initializer",\n'
+        '        "unit-ai-event-arguments",\n'
         "    };\n",
     ),
     (

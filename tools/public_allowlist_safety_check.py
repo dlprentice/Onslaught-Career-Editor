@@ -184,10 +184,16 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # contains two (1,575 bytes); bounds comments contain four (2,114 bytes).
 # Segment-controller ownership contains eight analytic comments (4,705 bytes).
 # Weapon-provider semantics contains ten analytic comments (8,032 bytes).
+# UnitAI initializer/event arguments contain two/four analytic comments
+# (2,226/3,536 decoded bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/unit-ai-initializer.manifest.tsv":
+        "d68d041e02f0d0cfe0d6453723a5a29af08913387648650292590b8a3ed2b1d8",
+    "tools/cohort-specs/unit-ai-event-arguments.manifest.tsv":
+        "e2f73dd9b98e160c28700ec70ec6a2c1399a1cb4f011128aabf0d878503a4ec0",
     "tools/cohort-specs/weapon-provider-semantics.manifest.tsv":
         "a686f08b85288db2e43cca9f82ba5b9d91a048e7c2d50b6ca0f4b32fd7b0a804",
     "tools/cohort-specs/air-contact-shutdown.manifest.tsv":

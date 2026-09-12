@@ -68,6 +68,11 @@ waypoints now survive materialization and have an owned, hash-bound Core lookup.
 Original-code initialization/exit checks confirm that spawned aircraft first
 request controller event 3002 and submit script Ready only at the exit handoff;
 the current immediate-Ready bridge still needs that scheduled lifecycle.
+The shared initializer attribution and both dispatcher/exit event-pointer
+parameters are now corrected in the working Ghidra project with full readback
+and independent recovery. Delaying Ready alone would leave the old weapon loop
+able to fire during exit; controller scheduling and weapon ownership must be
+integrated together.
 Continue with this separate controller listener, retained aim,
 preparation/readiness phases and scheduled burst transaction,
 including terminal callbacks and next-frame round movement, before replacing

@@ -904,3 +904,54 @@ the safety gate checked **3,980 candidates**. Their logs use
 `airfield-exit-docs-20260912.log` and `airfield-exit-safety-20260912.log`.
 These are in-process reconstruction checks, not native Godot, retail runtime,
 full-combat or desktop acceptance.
+
+### UnitAI initializer and event arguments — September 12
+
+The `unit-ai-initializer` and `unit-ai-event-arguments` cohorts passed exact
+pristine body/RTTI/comment review, isolated dry/apply, separate full readback,
+sealed POST checks, live dry/apply and separate live readback. Commands and
+results are in their respective children under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
+Each `*.command.json` records the actual argv; `rehearsal-comparison.json`
+records the independent full comparison, and `live-comparison.json` confirms
+all eight live exports equal rehearsal. The first initializer dry run refused
+unprefixed addresses before any writes; its corrected run passed. No guard
+was weakened to admit that input.
+
+The initializer changes one name/display signature, nonrepeatable comment and
+tag membership; 8,329 other rows and all ABI/variable/stack metadata remain
+unchanged. The event cohort changes two function signatures/comments and only
+two explicit parameter rows: dispatcher name/type and exit parameter name.
+Its other 8,328 function rows, parameter storage/source, automatic receivers,
+provisional returns, saved stack/frame fields, types and bookmarks are preserved.
+Program metrics change only the comment digest in each cohort.
+
+The exact source project was byte-matched to the preceding independent POST
+before each apply. Both new Archive A POST copies were copied, hash-compared,
+restored elsewhere and opened read-only successfully. Each owner retains
+`source-{pre,post}.json`, `tracked-pre.json` and `post-working-restore.json`.
+The initializer's fresh PRE restore is `pre-working-restore.json`; its restored
+POST then supplies the second cohort's PRE. The reviewed tracked checkpoint
+was freshly compared and remained unchanged.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed **91/91**, no
+skips (`local-data/test-runs/linux-route-20260906-af1sa_l9/unit-ai-framework-final-20260912.log`).
+An intermediate run found two derivation failures because direct-script module
+resolution had prevented emitting the live twin; module invocation corrected
+the invocation, and the final diff adds only the two cohort IDs to that twin.
+The initial result remains `unit-ai-framework-20260912.log`. The new comment
+manifests contain six reviewed analytic comments, **5,762 decoded bytes**;
+all pass the existing content/secret guards, and only their exact file hashes
+are registered. No retail payload or database copy was added to Git.
+
+The name-checker self-test, documentation gate and `git diff --check` passed.
+All **8,330** current projected names also match the final live function export
+(`unit-ai-event-arguments/current-name-comparison.json`). The initial docs gate
+found a missing source-provenance header in the edited ThunderHead note; the
+note now has its complete header, a fresh bounded caller inspection and no
+unsupported Warspite-specific pseudocode. The header backlog shrank by one.
+The public safety check passed for **3,984 candidates**. Gate logs in the same
+test owner are `unit-ai-name-selftest-20260912.log`,
+`unit-ai-docs-{,final-}20260912.log` and `unit-ai-safety-20260912.log`.
+These checks establish the declared metadata corrections and preservation,
+not full semantic audit or runtime acceptance.

@@ -262,6 +262,8 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "plane-controller-event-argument",
         "script-callback-arguments",
         "weapon-provider-semantics",
+        "unit-ai-initializer",
+        "unit-ai-event-arguments",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

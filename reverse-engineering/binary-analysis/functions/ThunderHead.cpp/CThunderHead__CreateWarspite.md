@@ -1,106 +1,43 @@
 # CThunderHead__CreateWarspite
 
-> Address: 0x004f4830 | Size: ~112 bytes | Source: ThunderHead.cpp line 43 (source file not present in `references/Onslaught/` snapshot)
+Status: active static function note; saved caller name remains provisional
+Last updated: 2026-09-12
+Summary: ThunderHead allocates the shared CUnitAI controller; the older Warspite-specific attribution is withdrawn.
+Source File: ThunderHead.cpp line 43, absent from the pinned partial source | Binary: BEA.exe
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
-## Name corrections — 2026-07-28
+| Address | Current saved name | Saved signature |
+| --- | --- | --- |
+| `0x004f4830` | `CThunderHead__CreateWarspite` | `void __thiscall CThunderHead__CreateWarspite(void * this, void * init_context)` |
 
-Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
-2026-07-27 headless export of the live maintainer Ghidra project. The evidence
-grade, and the limits of what a corrected name does and does not establish, are
-stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
-Old cell text is quoted below rather than deleted, so a reader who remembers the
-withdrawn label can tell it was corrected and not lost.
+The saved caller name remains unchanged by the initializer correction. Its
+older `warspite`/`mWarspite` aliases were inferred labels, not recovered fields
+or proof of a CWarspite object. The callee is now correctly saved as
+`CUnitAI__Init`; see the [shared initializer correction](../../../ghidra/README.md#unitai-initializer-and-event-arguments-2026-09-12).
 
-| Address | Superseded label | Current name | Correction |
-| --- | --- | --- | --- |
-| `0x005490e0` | `MemoryManager_Alloc` | `CDXMemoryManager__Alloc` | label replaced |
+## Instruction-backed behavior
 
-Where a row's **suffix** moved rather than only its class prefix, the behavioural
-text beside it in this note was written for the old name. This sweep corrected
-names against the export and re-derived no behaviour, so read any such gloss as
-unverified against the new name until it is re-measured.
+Fresh inspection of `[0x004f4830,0x004f4897)` found:
 
----
+- The caller preserves its ECX receiver in ESI and submits allocation size
+  `0x60`, pool `0x16`, source-string pointer `0x00633240` and line `0x2b` to
+  `CDXMemoryManager__Alloc` at call site `0x004f4859`.
+- If allocation succeeds, `0x004f486e..0x004f4876` pushes the original
+  `init_context`, then the owner ESI, and puts the allocation in ECX before
+  calling `CUnitAI__Init` at `0x004fe710`.
+- The caller performs no subclass-vtable overwrite. It stores the returned
+  pointer at owner `+0x13c` (`0x004f4883`); allocation failure stores zero.
+- The original SEH chain is restored and `0x004f4894` executes `RET4`.
 
-## Summary
+The initializer's table is independently identified by RTTI as CUnitAI. These
+instructions therefore support shared-controller allocation, not the old
+Warspite-specific classification. They do not establish complete ThunderHead
+behavior, a source-compatible object layout or runtime combat parity.
 
-Creates a CWarspite AI controller for the ThunderHead mech's combat behavior. The Warspite system handles state machine AI including fighting, waypoint following, and target acquisition. Stores the result at `this+0x13c`.
+## Retained history
 
-## Status
-
-- **Signature Set:** Yes (Wave519 headless postscript + read-back verified, 2026-05-18)
-- **Evidence Grade:** Static retail Ghidra evidence only
-
-## Signature
-
-```c
-void __thiscall CThunderHead__CreateWarspite(void * this, void * init_context);
-```
-
-## Wave519 Read-Back
-
-`CThunderHead` vtable `0x005e11b0` slot 2 points here. Instruction read-back confirms `RET 0x4`, so the saved signature has `this` plus one explicit `init_context` argument. The body allocates a `0x60`-byte pool-`0x16` Warspite-style component from the `ThunderHead.cpp` line `0x2b` debug path, calls `CWarspite__Init`, and stores the returned component or NULL at `this+0x13c`.
-
-## Decompiled Code
-
-```c
-void __thiscall CThunderHead__CreateWarspite(CThunderHead *this, void *init_context)
-{
-    int warspite;
-
-    // Allocate Warspite struct (96 bytes, pool ID 0x16)
-    warspite = MemoryManager_Alloc(0x60, 0x16, "ThunderHead.cpp", 0x2b);
-
-    if (warspite != 0) {
-        // Initialize Warspite AI controller
-        warspite = CWarspite__Init(this, init_context);
-    } else {
-        warspite = 0;
-    }
-
-    this->mWarspite = warspite;
-}
-```
-
-## Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| this (ECX) | CThunderHead* | ThunderHead instance |
-| init_context | void * | Context/configuration pointer passed through to `CWarspite__Init` |
-
-## Key Constants
-
-| Value | Meaning |
-|-------|---------|
-| 0x60 (96) | Warspite struct size |
-| 0x16 (22) | Memory pool ID for Warspite |
-| 0x2b (43) | Source line number |
-
-## Called Functions
-
-| Address | Name | Purpose |
-|---------|------|---------|
-| 0x005490e0 | CDXMemoryManager__Alloc | Allocates memory from pool |
-| 0x004fe710 | CWarspite__Init | Initializes AI controller state machine |
-
-## Object Field Written
-
-- `this+0x13c`: Pointer to allocated CWarspite struct (or NULL if allocation failed)
-
-## Notes
-
-- CWarspite is a reusable AI controller also used by naval units
-- The AI state machine supports:
-  - Fighting mode (combat engagement)
-  - Waypoint following (navigation)
-  - Custom target acquisition
-- See Warspite.cpp documentation for full AI state machine details
-- Pool ID 0x16 matches Warspite allocations elsewhere in codebase
-
-## Claim Boundary
-
-Static retail evidence only. Exact Warspite semantics, concrete ThunderHead/Warspite layouts, runtime combat AI behavior, BEA patching, and rebuild parity remain unproven.
-
----
-*Discovered via Ghidra xref analysis (Dec 2025)*
+Wave519 reported the saved caller signature and slot-2 ownership in ThunderHead
+table `0x005e11b0` on May 18. The September 12 caller inspection above is fresh;
+that wider vtable census was not rerun. Earlier illustrative pseudocode and
+unsupported Warspite-specific behavior claims remain recoverable from Git.

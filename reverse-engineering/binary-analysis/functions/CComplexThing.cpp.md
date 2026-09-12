@@ -281,7 +281,7 @@ Selector, animation frame and list ordinal are separate values.
 
 `IScript` SpawnThing writes its current source owner to initializer `+3b4` at
 `00536fb3`, and SpawnerA/B map to `+3b8=15/16`. The shared initializer at
-`004fe710` constructs RTTI CUnitAI despite its saved CWarspite name. Plane Init
+`004fe710` constructs RTTI CUnitAI; its saved name is now `CUnitAI__Init`. Plane Init
 then installs CPlaneAI and stores the separate listener at Unit `+13c`.
 For these spawns the controller starts at `+20=2`, index `+30=1`, and deadline
 `+44=float32(NOW+10)`, requesting event 3002 at NOW with null reuse. It does
@@ -296,16 +296,19 @@ the index at strict squared distance below `6.25f` for owner type bit `0x400`
 (`0.5625f` otherwise), and requests GoTo mode 1. Continuation draws once
 directly and submits 3002 with incoming-event reuse at the float32 store of
 `rand16*float32(0.1/65536) + NOW + 0.1f`, preserving that order.
-The terminal arm invokes the real `004febe0` state-1 transition, submitting
-a new controller 3000 at NOW before a new **Plane-owned** script event 2003
-at NEXT_FRAME. A missing/dying spawning owner first permits a separate
-owner-kind-1 death path; a dying spawner does not unconditionally terminate.
+Normal completion invokes the real `004febe0` state-1 helper. When controller
+state is not already 1, it submits a new controller 3000 at NOW; the already-1
+branch reports the redundant transition and submits none. If the Plane owns
+a script, completion then submits a new **Plane-owned** event 2003 at NEXT_FRAME.
+A missing/dying spawning owner first permits a separate owner-kind-1 death
+path that bypasses normal completion; a dying spawner does not unconditionally terminate.
 
 Private `plane-controller-init-20260912.py` passed 18 cases and
 `plane-controller-exit-20260912.py` passed 26. They execute unchanged bodies,
 check all 100 synthetic receiver bytes, preserved registers and stack state;
 the initializer also checks the original SEH push/pop against private FS memory.
-The exit probe executes the real state-1 helper. SetReader, scene virtuals,
+The exit probe executes the real state-1 helper from state 2 in all 26 cases;
+the already-1 guard above is separate static instruction evidence. SetReader, scene virtuals,
 terrain, random values and AddEvent remain explicit stubs: event **submission
 order and reuse arguments** are established, not complete dispatch or arrival
 time. Independent reviewers checked the retained ELF load mappings and outputs.

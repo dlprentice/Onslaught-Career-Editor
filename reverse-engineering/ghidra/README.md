@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[weapon provider semantics](#weapon-provider-semantics-2026-09-12);
+[UnitAI initializer and event arguments](#unitai-initializer-and-event-arguments-2026-09-12);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -467,6 +467,42 @@ Copy, separate restore and read-only reopen passed without file mismatches;
 `post-working-restore.json` is 5,787 bytes, SHA-256
 `67305bd0ab9c89eb59860df956837d60e901032bbe6870b5cfa4722a842ee7f9`.
 The tracked checkpoint was freshly hash-compared and remains unchanged.
+
+## UnitAI initializer and event arguments (2026-09-12)
+
+Two sequential, independently preserved cohorts correct three existing rows:
+
+| Cohort | Exact change |
+| --- | --- |
+| [Initializer manifest](../../tools/cohort-specs/unit-ai-initializer.manifest.tsv), [spec](../../tools/cohort-specs/unit-ai-initializer.spec.tsv) | `004fe710`: `CWarspite__Init` → `CUnitAI__Init`, nonrepeatable comment and one tag substitution. RTTI identifies the shared base; its ABI is unchanged. |
+| [Event-argument manifest](../../tools/cohort-specs/unit-ai-event-arguments.manifest.tsv), [spec](../../tools/cohort-specs/unit-ai-event-arguments.spec.tsv) | `004ff330`: integer argument → opaque event pointer named `eventRecord`; `004ffbb0`: existing pointer renamed from `candidate` to `eventRecord`. Both nonrepeatable comments corrected; names, tags and provisional `int` returns retained. |
+
+The initializer produced working `db.18645`; the event-argument cohort produced
+`db.18646`. The final working payload has 18 files, 118,983,540 bytes, inventory
+SHA-256 `9d8a4d34275898513705a1aed5205ba58cab70112d4b17c45cc0d756ffe43b7e`.
+Its main database is 68,681,728 bytes, SHA-256
+`0f945c759cb0e993c45c22c229dc99d5a5b1b86e5aee8b8bcee7b616f58ec626`.
+
+Exact body/RTTI/comment review, isolated apply, separate full comparison, sealed
+readback, live dry/apply and separate live readback passed for each cohort.
+All eight live exports match the corresponding rehearsal. The initializer
+preserves 8,329 other rows and every ABI field; the event cohort preserves 8,328
+other rows and changes only two explicit parameter rows. Types, bookmarks,
+saved stack/frame data and program structure remain unchanged. At program
+scope only the comment digest moves. No runtime-parity or recovered-source-name
+claim follows from these metadata corrections.
+
+Evidence owners are the `unit-ai-initializer/` and `unit-ai-event-arguments/`
+children of `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
+Each contains the exact commands, manifests, full exports, comparison and
+recovery receipts. The preceding weapon-provider POST was freshly restored
+and matched initializer PRE. New independent POST copies are
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-12-unit-ai-initializer/post-working/`
+and `/srv/archive-a/onslaught-ghidra-cold/2026-09-12-unit-ai-event-arguments/post-working/`.
+Both were hash-compared, restored elsewhere and reopened read-only; the first
+then served as the second cohort's matching PRE. The tracked checkpoint stayed
+byte-identical throughout. Current name projection composes the initializer
+manifest; dated tables remain frozen.
 
 Related (not this folder):
 

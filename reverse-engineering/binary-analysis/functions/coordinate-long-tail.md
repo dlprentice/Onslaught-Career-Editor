@@ -1,7 +1,8 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-08-13
+Last updated: 2026-09-12 (shared initializer callee name)
+Summary: the retained source-coordinate long-tail map with current initializer naming.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The PC-native source-coordinate instrument covers 827 functions. The largest
@@ -71,7 +72,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x00417190` | `CBuilding__VFunc_9_00417190` | 439 | ? | 50–51 | `CDXMemoryManager__Alloc` x2; `CMesh__FindAnimationIndexByName` x2 |
-| `0x00417390` | `CBuilding__CreateRepairPadAI` | 231 | 1 | 100–104 | `CDXMemoryManager__Alloc` x2; `CWarspite__Init` x2 |
+| `0x00417390` | `CBuilding__CreateRepairPadAI` | 231 | 1 | 100–104 | `CDXMemoryManager__Alloc` x2; `CUnitAI__Init` x2 |
 
 ### `bytesprite.cpp` (1)
 
@@ -107,7 +108,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00427DD0` | `CComponent__CreateWeaponComponent` | 439 | 1 | 92–99 | `CDXMemoryManager__Alloc` x4; `CWarspite__Init` x4 |
+| `0x00427DD0` | `CComponent__CreateWeaponComponent` | 439 | 1 | 92–99 | `CDXMemoryManager__Alloc` x4; `CUnitAI__Init` x4 |
 
 ### `console.cpp` (3)
 
