@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-08 (first-training clock and charged projectile wiring; no new runtime-parity claim).
+Last updated: 2026-09-12 (bounded Unit weapon selector; no new gameplay-parity claim).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -133,6 +133,8 @@ Owner paths are relative to the repository root; test names are relative to
 
 | Retail entity | Anchor, and what the bytes say | Owner | Implementation | Test | Cases | Mutation that was killed |
 |---|---|---|---|---|---|---|
+| Unit weapon-provider selection, bounded nonballistic route | `004fb840..004fbc8b`; `004fbc42..004fbc4b` admits only strictly greater scores, retaining linked-list order. Original-code probe uses empty spawner lists and current modes with nonnull nonballistic projectiles. | `rebuild/OnslaughtRebuild.Core/RetailWeaponSelection.cs` | `RetailUnitWeaponSelection.Select` (not yet wired to actor firing) | `RetailUnitWeaponSelectionTests.EqualScoresRetainAttachmentOrder` | 2 | `>` to `>=` makes both attachment orders fail; exact restoration and final 117/117 in `local-data/test-runs/linux-route-20260906-af1sa_l9/provider-last-wins-20260912.trx` and `provider-final-20260912.trx` |
+| Unit provider raw distance, PC24/RN | `004fb89f..004fb8ea`; original vector `(0.1f,0.1f,1.1f)` produces `3f8df578`, widened arithmetic `3f8df579`. This isolated environment does not establish all retail backends. | `rebuild/OnslaughtRebuild.Core/RetailWeaponSelection.cs` | `RetailUnitWeaponSelection.RawDistance` | `RetailUnitWeaponSelectionTests.RawDistanceMatchesOriginalPc24Observations` | 4 | Widened double norm fails the fourth case; first three survived. Exact restoration and final 117/117 in the same owner's `provider-wide-distance-discriminator-20260912.trx`, `provider-mutations-20260912.results.json` and `provider-final-20260912.trx` |
 | `CBattleEngineJetPart::GetFriction` slow-flight gate | `0x00411B39` `d81dd88b5d00` = `fcomp dword ptr [0x005D8BD8]`; that dword is `00 00 c0 3f` = `1.5f`; `test ah,1` at `0x00411B41` | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `Simulation.JetFrictionNumerator` | `RetailJetFrictionTests.CoreLadder_GatesTheInterpolatedArmAtOnePointFive` | 1 | gate back to `1_000` (retail 1.0) |
 | `CBattleEngineJetPart::GetFriction` ladder | `0x00411AA0`; `0x005D8CC4`=0.99f, `0x005D8B9C`=0.98f, `0x005D8568`=1.0f, `0x005D8CC0`=3.0f, `0x005D8574`=0.01f; source `BattleEngineJetPart.cpp:609-635` | `rebuild/OnslaughtRebuild.Core/RetailJetFriction.cs` | `RetailJetFriction.GetFriction` | `RetailJetFrictionTests.GetFriction_GatesTheInterpolatedArmAtOnePointFive` | 4 | `SlowFlightSpeed` written as `1.0f` |
 | `CCareer::SetSlot` | `0x004214EB` `cmp eax,0x100` / `jge`, over a store indexed `sar edx,5` into `[esi+edx*4+0x2408]` — a 1024-bit array reachable only to 256 | `rebuild/OnslaughtRebuild.Core/RetailCareerProgress.cs` | `RetailCareerSlots.SetSlot` | `RetailCareerProgressTests.Slots_GuardStopsAt256WhileTheStoreHolds1024` | 1 | guard raised to the store's real 1024 |

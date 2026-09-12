@@ -3,6 +3,146 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
+/// Ordered CUnit weapon-list input for the finite, current-mode, nonballistic
+/// selection route. Float words remain unscaled; identity is the attachment's
+/// identity, not its position in this list or a weapon-kind enum.
+/// </summary>
+public readonly record struct RetailUnitWeaponSelectionCandidate(
+    int Identity,
+    int ActiveWord,
+    uint TargetMask,
+    int BurstCounter,
+    int BurstSize,
+    int ReadyAtTimeFloatBits,
+    int MinimumRangeFloatBits,
+    int MaximumRangeFloatBits,
+    int MinimumTargetHeightFloatBits,
+    int MaximumTargetHeightFloatBits,
+    bool HasCurrentMode = true,
+    bool UsesBallisticArc = false,
+    bool HasProjectileDefinition = true);
+
+/// <summary>CUnit +140 and the identity held by its +144 spawner reader.</summary>
+public readonly record struct RetailUnitAttackSelection(int? WeaponIdentity, int? SpawnerIdentity);
+
+/// <summary>
+/// Weapon-only route of pristine 74154bfa…7750 at [004fb840,004fbc8b).
+/// Empty spawner lists and nonnull modes with nonnull nonballistic projectile
+/// definitions are explicit admissions.
+/// This selects a provider; it does not establish that the provider can fire.
+/// </summary>
+/// <remarks>
+/// The September 12 isolated ELF32 experiment runs this body and nine original
+/// helper bodies at their retail addresses. Terrain sampling and clearing the
+/// monitored spawner reader are explicit stubs. PC24/RN matches the bounded
+/// copied-retail Plane observation. Common-AI invocation, reference lifetime,
+/// null-mode catalog lookup, ballistic range and spawners remain separate.
+/// </remarks>
+public static class RetailUnitWeaponSelection
+{
+    public static RetailUnitAttackSelection Select(
+        IReadOnlyList<RetailUnitWeaponSelectionCandidate> weapons,
+        int spawnerCount,
+        RetailUnitAttackSelection previous,
+        Level100FloatVector3Bits ownerPosition,
+        Level100FloatVector3Bits? targetPosition,
+        uint targetMask,
+        int terrainHeightFloatBits,
+        int waterHeightFloatBits,
+        int nowFloatBits)
+    {
+        ArgumentNullException.ThrowIfNull(weapons);
+        if (spawnerCount != 0)
+            throw new NotSupportedException("Unit spawner selection is not admitted by this weapon-only route.");
+
+        // Admission is separate from the native early returns. Do not silently
+        // model a missing mode or a ballistic helper as a constant-range mode.
+        foreach (RetailUnitWeaponSelectionCandidate weapon in weapons)
+        {
+            if (!weapon.HasCurrentMode || weapon.UsesBallisticArc || !weapon.HasProjectileDefinition)
+                throw new NotSupportedException("Unit selection requires a current mode and nonballistic projectile definition.");
+        }
+
+        // 50a290 uses a signed counter and does not require an active weapon.
+        foreach (RetailUnitWeaponSelectionCandidate weapon in weapons)
+            if (weapon.BurstCounter != 0 && weapon.BurstCounter < weapon.BurstSize)
+                return previous;
+        if (targetPosition is not { } target)
+            return previous;
+
+        float distance = RawDistance(ownerPosition, target);
+        float now = Read(nowFloatBits);
+        var selected = new RetailUnitAttackSelection(null, null);
+        float bestScore = -1;
+        foreach (RetailUnitWeaponSelectionCandidate weapon in weapons)
+        {
+            float? score = Score(weapon, target, targetMask, distance,
+                terrainHeightFloatBits, waterHeightFloatBits, now);
+            // A tie retains the earlier attachment. No hard range rejection.
+            if (score is { } value && value > bestScore)
+            {
+                bestScore = value;
+                selected = new(weapon.Identity, null);
+            }
+        }
+        return selected;
+    }
+
+    internal static float RawDistance(Level100FloatVector3Bits owner, Level100FloatVector3Bits target)
+    {
+        double x = RetailFloat24.Subtract(Read(target.X), Read(owner.X));
+        double y = RetailFloat24.Subtract(Read(target.Y), Read(owner.Y));
+        // The Z difference spills before the norm; X and Y stay on x87.
+        float z = Store(RetailFloat24.Subtract(Read(target.Z), Read(owner.Z)));
+        double xy = RetailFloat24.Add(RetailFloat24.Multiply(x, x), RetailFloat24.Multiply(y, y));
+        return Store(RetailFloat24.Sqrt(RetailFloat24.Add(xy, RetailFloat24.Multiply(z, z))));
+    }
+
+    internal static float? Score(RetailUnitWeaponSelectionCandidate weapon,
+        Level100FloatVector3Bits target, uint targetMask, float distance,
+        int terrainHeightFloatBits, int waterHeightFloatBits, float now)
+    {
+        if (weapon.ActiveWord == 0 || (weapon.TargetMask & targetMask) == 0)
+            return null;
+        double height = RetailFloat24.Subtract(
+            Math.Min(Read(terrainHeightFloatBits), Read(waterHeightFloatBits)), Read(target.Z));
+        if (!(height > Read(weapon.MinimumTargetHeightFloatBits)) ||
+            !(height < Read(weapon.MaximumTargetHeightFloatBits)))
+            return null;
+
+        double score = (weapon.TargetMask & targetMask & 0x80000) != 0 ? 2_000_000 : 0;
+        float minimum = Read(weapon.MinimumRangeFloatBits);
+        float maximum = Read(weapon.MaximumRangeFloatBits);
+        if (minimum > distance)
+            score = RetailFloat24.Add(RetailFloat24.Subtract(minimum, distance), score);
+        else if (maximum < distance)
+            score = RetailFloat24.Add(RetailFloat24.Subtract(distance, maximum), score);
+        else
+            score = RetailFloat24.Add(score, 1_000_000);
+        float stored = Store(score);
+        if (RetailWeaponCharge.ReadyTimeElapsed(now, Read(weapon.ReadyAtTimeFloatBits)))
+            stored = Store(RetailFloat24.Add(stored, 1_000_000));
+        return stored;
+    }
+
+    private static float Read(int bits)
+    {
+        float value = BitConverter.Int32BitsToSingle(bits);
+        if (!float.IsFinite(value))
+            throw new NotSupportedException("Unit selection requires finite float inputs.");
+        return value;
+    }
+
+    private static float Store(double value)
+    {
+        float stored = (float)value;
+        if (!float.IsFinite(stored))
+            throw new NotSupportedException("Unit selection exceeded its finite float-store domain.");
+        return stored;
+    }
+}
+
+/// <summary>
 /// One mounted weapon, reduced to the four words the selection laws read.
 /// </summary>
 /// <remarks>

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (remote integration validated; Ghidra audit resumed)
+Last updated: 2026-09-12 (remote integration validated; original-code weapon selection carried)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -60,6 +60,11 @@ count from script arguments. The remaining default signatures need per-body
 review; shared cleanup is not permission to assign one prototype wholesale. Aircraft integration must preserve separate Unit
 AI/controller state and the scheduled selected-provider/common-AI chain;
 retiming the current per-Move target refresh alone would omit real behavior.
+The bounded weapon selector now matches isolated original-code cases and has
+focused Core coverage. It is not yet wired to actor firing. Continue with the
+retained aim, preparation/readiness phases and scheduled burst transaction,
+including terminal callbacks and next-frame round movement, before replacing
+the old all-slots loop. Details remain in the controller evidence owner above.
 Keep conditional random draws, ordered avoidance candidates and monitored
 reference lifetime. The remaining controls-remap boundary is a candidate for
 its own instruction-bounded correction. No broad cleanup, unreviewed bulk

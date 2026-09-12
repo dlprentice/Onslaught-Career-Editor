@@ -37,9 +37,10 @@ internal readonly record struct Level100ActorRoundImpactReceipt(
 /// <c>OID__CanFireAtTarget_BallisticArcA</c> @<c>0x00507ab0</c>.</para>
 ///
 /// <para><b>Not modelled, and why.</b> The target-height window
-/// (<c>CWeaponMinTargetHeight</c>/<c>MaxTargetHeight</c>) is unconditional
-/// under the shipped defaults for both drone weapons, so it is omitted rather
-/// than invented. The line-of-sight trace through
+/// (<c>CWeaponMinTargetHeight</c>/<c>MaxTargetHeight</c>) is a broad but finite
+/// strict window, -10 &lt; height &lt; 10000 for these modes. It is still absent
+/// from this approximate firing loop; the separately recovered provider selector
+/// carries it without claiming controller/fire integration. The line-of-sight trace through
 /// <c>CWorld__FindFirstThingToHitLine</c> runs only when the caller supplies a
 /// trace context, and which callers do is unread; it is omitted. Muzzle
 /// offsets are omitted because neither drone weapon mode carries a

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (remote corrections executed and integrated; aircraft follow-up).
+Last updated: 2026-09-12 (remote corrections integrated; original-code weapon selection).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -731,3 +731,44 @@ cohort and no engine build/playthrough was needed. Command arrays, full exports,
 negative control and recovery receipts are under
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/script-callback-arguments/`;
 `script-callback-framework-20260912.log` is in the existing Linux test owner.
+
+### Bounded Unit weapon selector — September 12
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/provider-selection-20260912.py`
+passed **37** isolated original-code selection/reader cases. It executes ten
+unchanged routine bodies plus three constants from the verified pristine
+specimen at their original addresses. Its `.inputs.bin`, `.outputs.bin` and
+`.results.json` stay private beside the script. Empty spawner lists, current
+modes and nonnull nonballistic projectiles are admitted; terrain sampling and
+reader clearing are stubs. This is not a retail playthrough or complete firing
+acceptance. The script asserts 21 winning-score words and the new PC24
+distance discriminator; other retained distances are observations. Independent
+read-only review checked the initial 35-case artifact's actual ELF load mappings,
+retained inputs/outputs and instruction-derived arithmetic; it did not rerun it.
+
+The new `RetailUnitWeaponSelectionTests` passed **44/44**. With existing
+`RetailWeaponSelectionTests` and `RetailWeaponChargeTests`, the final Core
+filter passed **117/117**, zero skips:
+
+```bash
+dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --no-restore --nologo --filter 'FullyQualifiedName~RetailUnitWeaponSelectionTests|FullyQualifiedName~RetailWeaponSelectionTests|FullyQualifiedName~RetailWeaponChargeTests'
+```
+
+Negative controls used the same project and `--filter` with the exact owning
+method. Last-wins selection failed **2/2** `EqualScoresRetainAttachmentOrder`
+cases. Widened distance arithmetic initially survived **3/3**
+`RawDistanceMatchesOriginalPc24Observations` cases. The original routine then
+confirmed `(0.1f,0.1f,1.1f)` distance `3f8df578`, where the widened norm gives
+`3f8df579`; adding this case made the mutation fail **1/4**. Source bytes were
+restored exactly and the final 117-case run rebuilt the correct implementation.
+The initial survivor is retained, not counted as a successful negative control.
+Commands, TRX files, logs and restoration hash are under the same owner in
+`provider-{last-wins,wide-distance,wide-distance-discriminator,final}-20260912.*`
+and `provider-mutations-20260912.results.json`.
+
+This additive selector does not yet change the actor firing loop. No gameplay
+hash, scheduler behavior or combat assertion changed; no broad combat rerun,
+desktop control or new Ghidra mutation was needed for this step.
+`git diff --check`, `npm run test:docs` and `npm run test:safety` passed;
+the public-payload check examined 3,978 candidates. The npm logs use the
+`provider-{docs,safety}-20260912.log` names in the same private owner.

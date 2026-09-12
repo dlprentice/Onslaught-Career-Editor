@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (isolated Plane controller execution; other rows retain their earlier evidence)
+Last updated: 2026-09-12 (isolated Plane controller and weapon selection; other rows retain their earlier evidence)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -297,10 +297,43 @@ SHA-256 `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
 Its ordered field-7 records give Air Trainer the trainer launcher, and Target
 Drone the Vulcan followed by the drone launcher; their use flags are `20400h`.
 The existing all-slots hard-range check is not this selection algorithm.
-Before production integration, falsify first-wins ties, exact range/height
-endpoints, reload equality, burst/null-target preservation and selectable
-out-of-range candidates against the original body. This static finding does
-not establish actual candidate state, firing cadence or live combat parity.
+The private `provider-selection-20260912.py` now executes the unchanged
+selector and nine helper bodies at their retail addresses. Its 37 cases cover
+those boundaries, including an inactive, mask-incompatible weapon whose burst
+still locks selection. Terrain sampling and monitored-reader clearing are
+explicit stubs; inputs use empty spawner lists, current modes and nonnull
+nonballistic projectiles. Core's `RetailUnitWeaponSelection` carries this
+bounded algorithm with existing PC24 arithmetic and strict readiness comparison.
+For `(0.1f,0.1f,1.1f)`, native distance is `3f8df578`; a widened norm gives
+`3f8df579`. The first three distance examples did not distinguish that wrong
+implementation; the added original-code case does. Exact tests, negative
+controls and limits are in [VALIDATION.md](../../../VALIDATION.md#bounded-unit-weapon-selector--september-12).
+The selector is not yet called by the approximate actor firing loop. Actual
+candidate state, preparation/fire/burst ownership and live combat remain open.
+
+The next transaction must retain these static distinctions. Unit readiness
+`004fc000` reads selected weapon `+140`, prepared flag `+1e8` and weapon
+readiness. Fire `004fc080` marks its own success before calling `00506010`,
+ignores that callee's returned EAX, invokes virtual `+15c`, then clears
+`+1ec/+1e8`; refusal paths clear those two flags too. Phase completion
+`004fa800` uses `due <= NOW` for phase 1 but `due < NOW` for phase 2.
+Burst continuation `[00506930,005069f0)` checks event 5001, owner dying state,
+mode lookup and the signed emitted count. It does not recheck AI state, active
+state, attack intent, target liveness, selection or reload. After a shot it
+increments the count and schedules another event with reuse zero, including
+the terminal no-shot callback; that callback does not clear the emitted count.
+Current countdown/intent cancellation is not this event ownership.
+
+For profile `+19c==0`, common-controller preparation writes the target virtual
+`+168` result into controller `+34` at `004ff24b..004ff262`. The later ready
+arm at `004ff19a` passes that retained vector to `004fb650`, then consumes its
+direct random draw at `004ff1aa`. Re-aiming from the current quantized target
+position on every burst shot changes this ownership. A successful selected
+Round initializer calls Actor Init at `004d867b`; Actor Init draws at
+`0040135d` before testing its movement flag. This adds a draw beyond the two
+scatter samples, but does not prove exactly three launch draws: factory,
+resource and round/muzzle-effect paths still need closure. Do not substitute
+a guessed total or omit the resulting Actor movement-event admission.
 
 Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
 and a monitored identity whose current Z is read during movement. Its only

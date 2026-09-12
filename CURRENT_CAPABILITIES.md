@@ -398,6 +398,14 @@ named-but-untyped script callbacks remain explicit next work. See the
 [execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
 and [Ghidra owner](reverse-engineering/ghidra/README.md#plane-controller-event-argument-2026-09-12).
 
+The bounded nonballistic Unit weapon selector now has original-code execution
+evidence and passing Core cases, including a distance example that detects
+incorrect widened arithmetic. Selection preserves burst locks, first-wins
+ties and retail's unusual out-of-range scoring. It is not yet connected to
+actor firing: retained aim, preparation phases and burst-event ownership must
+be integrated together. [Validation](VALIDATION.md#bounded-unit-weapon-selector--september-12)
+records the exact stubs, exclusions and negative controls.
+
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
 and a bounding-box reader mislabeled as a material loader. Two follow-up
