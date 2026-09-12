@@ -1,9 +1,9 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-12 (unused Windows VM retired; platform boundaries retained)
-Summary: what the project is, the rules that protect the evidence and the user's files, where things live on this
-Linux laptop, which commands work here, and the gotchas that have already cost data.
+Last updated: 2026-09-12 (conditional reference routing; preservation and phase boundaries retained)
+Summary: active development authority, evidence and data protections, task-specific reference routing,
+and proportional completion checks.
 
 Read this before changing anything. Read `~/AGENTS.md`, `~/Projects/AGENTS.md` and
 `~/Projects/game-dev/AGENTS.md` explicitly when automatic discovery stops at this Git root;
@@ -109,52 +109,36 @@ do not use Claude Code during this phase.
 - Root commands use `python` (3.14) and forward-slash paths; Windows-only scripts fail fast here through
   `tools/require_windows_host.py`. Drive letters in old receipts are history, not routing.
 
-## Layout
+## Reference routing
 
-| Path | What it is |
-| --- | --- |
-| `companion/OnslaughtToolkit.Godot/` | MIT Godot companion, currently the first Save Lab workflow. References AppCore only; no rebuild or retail dependency. |
-| `OnslaughtCareerEditor.AppCore/`, `.WinUI/`, `.Cli/` and their `*.Tests/` | Shared correctness code targets .NET 8 and 10; Save Lab has a Linux create-new-copy transaction. WinUI and the Windows-targeted maintainer CLI remain migration material (`CLI.md`). The full legacy suite retains Windows dependencies. |
-| `rebuild/` | GPL reconstruction: deterministic 20 Hz `Core`, `Client`, `Headless` tape replay, native Godot renderer, and retail materializer. Read `rebuild/README.md`, `PROVENANCE.md`, `DETERMINISM.md` and `PARITY.md` before touching it. |
-| `reverse-engineering/` | Promoted, specimen-bound evidence. Start at `RE-INDEX.md`; `ghidra/` is the tracked checkpoint; `REVIEW-PROTOCOL.md` governs external reviews; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
-| `tools/` | About 550 files: RE and campaign tooling, Ghidra scripts (`*.java`, replayable `cohort-specs/`), documentation and safety gates, asset export, release helpers. `tools/README.md` says what each is for. |
-| `references/` | Submodules `Onslaught` (Stuart Gillam's GPL source) and `AYAResourceExtractor`, David's forks pinned at `5352a81` and `53b10b0` (`ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in `tools/aya_extractor_source_audit.py`); `git submodule update --init --recursive` once. Source references, not proof of retail behavior; keep them pinned. |
-| `lore/`, `lore-book/`, `patches/`, `roadmap/`, `release/` | Canonical lore library (`lore/_index.md`), its reading guide, the patch catalog, the public roadmap, release readiness. |
-| `developer_state.json` | Current owner pointers and required compatibility data. `current_re_authority` is the only live selector; `_history` recovers retired execution diaries from an exact Git object. Retained dated fields are provenance, not a task queue or authorization. |
-| Root `*.md` | `README.MD` (product and lanes), `PROJECT-INDEX.md` (code ownership), `VALIDATION.md` (which gate for which change), `DOCUMENTATION.md` (the header standard), `CONTRIBUTING.md`, `SECURITY.md`, `LOCAL_LAB_OVERLAY.md`, `README.RELEASE.md`. A new tracked `.md` needs `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block. |
-| `local-lab/` (ignored) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
-| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages. The unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. Its own `AGENTS.md` owns the exact map. |
-| `.artifacts/` (ignored) | Legacy validation, screenshot and publish output. It can contain unique evidence, so ignored does not mean disposable. Keep existing coupled tool paths; use `local-data/` for new general-purpose outputs and the numbered queue for retirement. |
+Read the relevant owner for the task, rather than every lane's references:
 
-## Commands
-
-`package.json` scripts are the command authority and [`VALIDATION.md`](VALIDATION.md) maps each kind of change to
-the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `dotnet` is the 10.0 SDK named in
-`global.json`; the rebuild also uses the pinned .NET 8 SDK from `~/.local/opt/game-pipeline`.
-
-| Task | Command |
-| --- | --- |
-| Docs gate: links, headers, function names, authority pointers | `npm run test:docs` (about 2 s) |
-| Public payload boundary | `npm run test:safety` (about 20 s) |
-| Default Linux companion gate | `npm test` (Save Lab and launcher tests; no visible app) |
-| Native companion build/run | `npm run build:companion-godot`; `npm run run:companion-godot` (also `npm run build` / `npm run dev`) |
-| Native rebuild build/run/smoke/capture | `npm run build:rebuild-godot`; `npm run run:rebuild-godot`; `npm run test:rebuild-godot-smoke`; `npm run capture:rebuild-godot`. Runtime commands need the desktop. |
-| One tools suite | `python tools/<name>_tests.py`; the function-name check alone is `python tools/re_function_doc_names_check.py --strict` |
-| Rebuild Core tests | `npm run test:rebuild-core` (materializes first; the August 31 broad run took 34 min; its three Linux assertion failures were corrected and the affected class passed 22/22 on September 6 — see `VALIDATION.md`); `npm run test:rebuild-ferry-sweep` for the excluded ferry oracle |
-| Rebuild Client tests | `npm run test:rebuild-client` |
-| Materialize retail inputs | `npm run prepare:rebuild-assets` discovers Linux Steam libraries and writes canonical `local-lab/rebuild-godot/`; `-- --game-root "/absolute/game/root"` selects another supported installation |
-| Headless replay | `npm run run:rebuild-headless -- <args>` |
-| Complete-RE verification | the command in `developer_state.json` → `current_re_authority.verify` (`tools/re_campaign_gen32_host_attestation.py` on this host; receipts go to `local-data/host-attestations/`) |
-| Ghidra | `ghidraRun` (12.1.3, OpenJDK 21) on `local-lab/ghidra-projects/BEA/BEA.gpr` only; headless scripts are `tools/*.java` |
-| Retained Windows lanes: `test:winui`, `test:appcore`, `test:ui`, `test:cli`, `release:winui-zip` | Windows-only; no Windows validation host is provisioned here. Historical rebuild PowerShell launchers have explicit `:windows` aliases and need toolchain revalidation. These are not Linux prerequisites. |
+- Source layout and dependencies: [PROJECT-INDEX.md](PROJECT-INDEX.md). Setup and command reference:
+  [README.MD](README.MD#build-and-run). [package.json](package.json) owns command definitions;
+  [VALIDATION.md](VALIDATION.md) selects the applicable gate.
+- Rebuild setup, assembly ownership and runtime modes: [rebuild/README.md](rebuild/README.md).
+  Consult [PROVENANCE.md](rebuild/PROVENANCE.md) when admitting evidence, porting source or handling assets;
+  [DETERMINISM.md](rebuild/DETERMINISM.md) for simulation, fixed-step, snapshot or trace changes;
+  [PARITY.md](rebuild/PARITY.md) when carrying retail behavior contracts or assessing parity claims.
+- Retail evidence: [RE-INDEX.md](reverse-engineering/RE-INDEX.md); Ghidra mutation:
+  [the promotion gate](reverse-engineering/ghidra/README.md); reviews:
+  [REVIEW-PROTOCOL.md](reverse-engineering/REVIEW-PROTOCOL.md).
+- Ignored evidence and data: read the applicable `local-lab/AGENTS.md` or `local-data/AGENTS.md`
+  when working there, and relevant index sections when locating evidence or checking retention/recovery.
+  [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) owns canonical-lab routing for clones/worktrees.
+- Documentation headers: [DOCUMENTATION.md](DOCUMENTATION.md); contributions:
+  [CONTRIBUTING.md](CONTRIBUTING.md); security: [SECURITY.md](SECURITY.md);
+  retained Windows release procedures: [README.RELEASE.md](README.RELEASE.md).
 
 ## Definition of done
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`;
-   anything that adds files → `npm run test:safety`; a tool → its own `_tests.py`; Core or Client → the matching
-   `test:rebuild-*`. Start with the suite you touched; the full `tools/run_tool_tests.py` is expensive and is
-   appropriate only when the affected scope requires it. Documentation-only edits do not require engine builds.
-2. A new or edited tracked `.md` has the header fields and no volatile generation numbers, and is not added to
+   anything that adds files → `npm run test:safety`; tool changes → affected cases in the corresponding
+   `_tests.py`; Core or Client → affected tests in the matching project, using `VALIDATION.md`.
+   Run broader suites, including the expensive `tools/run_tool_tests.py`, only when affected scope requires
+   them. Documentation-only edits do not require game, Core/Client, companion or legacy tool suites.
+2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`), and `Summary:` (or `Verdict:`)
+   in its header block, has no volatile generation numbers, and is not added to
    `tools/doc_header_backlog.txt`.
 3. Evidence claims name their specimen, capture or test; anything unproven is written as an open question.
 4. Review `git status`, preserve unrelated changes, and stage only the scoped tracked paths, never

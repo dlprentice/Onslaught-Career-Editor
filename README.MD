@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-12 (unused Windows VM retired; native development unchanged).
+Last updated: 2026-09-12 (command reference consolidated from the agent guide).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -113,9 +113,10 @@ Linux development does not depend on one, and Linux tests do not certify Windows
 
 Common requirements:
 
-- .NET 10 SDK with the .NET 8 targeting/runtime support used by the rebuild
-- Node.js 26.x with npm 11.19.x (the mise-managed versions pinned by `game_pipeline_shared`)
-- Python 3 available as `python`
+- .NET 10 SDK named in `global.json`, plus the rebuild's pinned .NET 8 SDK from
+  `~/.local/opt/game-pipeline`
+- Node.js 26.7 and npm 11.19 from mise
+- Python 3.14 available as `python`; root commands use forward-slash paths
 - Godot 4.7.2 .NET with its bundled C# packages; AppCore dependencies restored
   into the local NuGet cache
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
@@ -146,6 +147,23 @@ Root [`package.json`](package.json) is the command authority. See
 [`VALIDATION.md`](VALIDATION.md) for proportional command selection and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution boundaries.
 
+Additional command routes, selected for the affected task:
+
+| Task | Command or owner |
+| --- | --- |
+| Explicit companion build/run aliases | `npm run build:companion-godot`; `npm run run:companion-godot` (the same routes as `build` / `dev`) |
+| Native rebuild smoke/capture | `npm run test:rebuild-godot-smoke`; `npm run capture:rebuild-godot`. Runtime commands require desktop availability under [AGENTS.md](AGENTS.md). |
+| Focused tools checks | Affected cases in `python tools/<name>_tests.py`; function-name check alone: `python tools/re_function_doc_names_check.py --strict` |
+| Rebuild Core / Client | Select affected tests using [VALIDATION.md](VALIDATION.md). Full commands: `npm run test:rebuild-core` (materializes first), `npm run test:rebuild-client`; `npm run test:rebuild-ferry-sweep` covers the excluded ferry oracle. |
+| Headless replay | `npm run run:rebuild-headless -- <args>` |
+| Complete-RE verification | Only the command selected by `developer_state.json` → `current_re_authority.verify`; the host attestor is `tools/re_campaign_gen32_host_attestation.py`, with receipts in `local-data/host-attestations/`. |
+| Authorized Ghidra work | `ghidraRun` (12.1.3, OpenJDK 21) on `local-lab/ghidra-projects/BEA/BEA.gpr` only; headless scripts live in `tools/*.java`. Follow the [promotion gate](reverse-engineering/ghidra/README.md) for the declared cohort. |
+
+The docs gate checks links, headers, function names and authority pointers;
+`test:safety` checks the public payload boundary. [VALIDATION.md](VALIDATION.md)
+retains suite timings and historical Core failure/correction receipts. Select
+commands for the change; this reference does not require every suite for each edit.
+
 The retail-backed Core/Client/headless lanes also need ignored local inputs.
 On Linux, `prepare:rebuild-assets` selects the canonical checkout's real
 `local-lab/rebuild-godot` staging owner. A genuinely fresh canonical clone has
@@ -166,7 +184,10 @@ The launchers put scratch, logs and engine user data under canonical
 `npm test` runs the supported Save Lab and launcher checks without opening a window.
 Core/Client changes use their focused test projects, as mapped in `VALIDATION.md`.
 
-The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`.
+The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`;
+`test:appcore`, `test:ui`, `test:cli` and `release:winui-zip` also retain Windows
+dependencies. `tools/require_windows_host.py` makes Windows-only scripts fail fast
+on Linux; they are not Linux prerequisites.
 Historical Windows rebuild launchers have explicit `:windows` aliases; their
 older engine manifest needs revalidation against the current managed SDK before
 new Windows acceptance. This phase does not activate the VM.

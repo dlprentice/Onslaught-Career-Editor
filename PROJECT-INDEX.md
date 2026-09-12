@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-12 (unused Windows VM retired)
+Last updated: 2026-09-12 (repository layout consolidated from the agent guide)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -116,16 +116,18 @@ implementations.
 | Path | Authority |
 | --- | --- |
 | [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot toolkit presentation; AppCore owns correctness. `tools/godot_host.py` supplies the shared installed-engine build/process support used by both Godot lanes. |
-| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
-| `local-lab/` | Ignored machine-local evidence, retail inputs, captures and frozen proof graphs. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns routing, and `local-lab/INDEX.md` maps the retained corpus. |
-| `local-data/` | The real ignored repository child for operational outputs, host binding, staged VM state and preserved recovery packages; its `AGENTS.md` owns the internal map. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
+| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. `ghidra/` holds the tracked checkpoint; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
+| `local-lab/` | Ignored machine-local evidence: retail safe copies, campaign generations, captures, reviewer reports, frozen proof graphs, the working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
+| `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
+| `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and use the migration deletion queue for authorized retirement. |
 | [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance, determinism, and parity contracts are subtree-owned. |
-| [`tools/`](tools/README.md) | Focused extraction, validation, Ghidra, asset, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
+| [`tools/`](tools/README.md) | Focused extraction, campaign/RE validation, documentation and safety gates, Ghidra (`*.java`, replayable `cohort-specs/`), asset export, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
 | `OnslaughtCareerEditor.*.Tests/` | Product, adapter, safety, and native UI verification next to the source solution. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
-| [`references/`](references/) | Pinned external source references and submodules. Preserve their own licences and provenance. |
+| [`references/`](references/) | David's forks of Stuart Gillam's GPL `Onslaught` source and `AYAResourceExtractor`, pinned at `5352a81` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
+| [`developer_state.json`](developer_state.json) | Current owner pointers and required compatibility data. `current_re_authority` is the only live selector; `_history` recovers retired execution diaries from an exact Git object. Retained dated fields are provenance, not a task queue or authorization. |
 | [`release/`](README.RELEASE.md) | Retained WinUI packaging, notice and signoff inputs; it does not own deployment automation. |
 | [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility. [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
 
@@ -173,12 +175,17 @@ Update this index when one of these stable source contracts changes:
 
 Do not add volatile file counts, campaign counts, coverage percentages, current
 task status, or capability claims here. Those values belong to measured owners.
-For a map-only change, compare navigation and project references, then run:
+For a map-only change, compare the affected row with its named source owner, then use the docs gate.
+Navigation/project-reference searches below apply when those relationships change; reachability checks
+apply when adding/removing document routes, not every wording edit:
 
 ```bash
+# Navigation or assembly-dependency changes:
 rg -n 'Tag="|_pageByTag' OnslaughtCareerEditor.WinUI/MainWindow.xaml OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs
 rg -n '<ProjectReference' -g '*.csproj' -g '!references/**'
+# Documentation changes:
 git diff --check
 npm run test:docs
+# Added/removed documentation routes:
 python tools/md_reachability_check.py
 ```
