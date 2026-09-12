@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[Plane-controller event argument](#plane-controller-event-argument-2026-09-12);
+[script callback arguments](#script-callback-arguments-2026-09-12);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -398,6 +398,39 @@ its copy and separate restore/reopen passed with no file mismatch.
 The tracked checkpoint's two retained main database files were freshly
 hash-matched before and after; neither was opened or refreshed. Names did not
 change, so the existing documentation-name projection remains valid.
+
+## Script callback arguments (2026-09-12)
+
+The working project measures `db.18643`: 18 payload files,
+118,967,156 bytes, inventory SHA-256
+`dd3c65b9a3c014b97320fbcba63145d81c6ba0c8f03b9baf5c006c5483ee0b59`.
+Its main database is 68,665,344 bytes, SHA-256
+`32e5f75743396b79b2e4afb388061dfceb9348bed0351ca2dc2c0a2594bc3dea`.
+The [manifest](../../tools/cohort-specs/script-callback-arguments.manifest.tsv)
+and [spec](../../tools/cohort-specs/script-callback-arguments.spec.tsv)
+correct only the prototypes of `SetSpawnScript` (`00535ca0`) and
+`IScript__SetAIState` (`005361a0`). The [script owner](../binary-analysis/functions/IScript.cpp.md#native-callback-transport--september-12-static-audit)
+binds ECX plus arguments/count/output stack slots to the retail dispatcher.
+Return types remain `undefined`. Native `RET 0ch` and declared parameter size
+12 are separate from saved stack-purge values, which remain UNKNOWN.
+
+Isolated and sealed apply/readback, independent raw and metadata review,
+stale-second-row refusal before any write, live apply and separate readback
+passed. Exactly eight parameter rows were added; all 8,328 other function
+rows, non-target variables, all program metrics, types, bookmarks and saved
+purge metadata stayed unchanged. Full live exports equal the sealed rehearsal.
+Evidence is under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/script-callback-arguments/`.
+`live-readback.json` is 2,414 bytes, SHA-256
+`714542c62200d7fe126ebdba26eeb84c86bdc09c34a37e5f7a87ddcd82a08213`.
+
+The preceding Plane-argument POST was restore-proven and matched PRE.
+The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-12-script-callback-arguments/post-working/`.
+Copy, separate restore and read-only reopen passed with no file mismatch.
+`post-working-restore.json` is 5,821 bytes, SHA-256
+`6cecf1ad5379b50332f8ea0d8ae68805b1e8d4731e460a7e77231f882b36a962`.
+Both retained main files in the tracked checkpoint still match their hashes;
+no checkpoint was opened or refreshed. Names and their projection are unchanged.
 
 Related (not this folder):
 

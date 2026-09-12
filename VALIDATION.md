@@ -707,3 +707,25 @@ under `local-data/test-runs/linux-route-20260906-af1sa_l9/` and
 bindings and a missing packet output directory were refused; corrected
 invocations and their outputs are retained separately. No failed invocation
 is counted as a successful export or mutation.
+
+### Two native script callback signatures — September 12
+
+`SetSpawnScript` and `IScript__SetAIState` passed exact raw dispatcher/body
+review, isolated and sealed apply/separate-readback, independent full metadata
+comparison, live dry/apply/separate-readback, and independently restored POST
+recovery. A stale signature in the second manifest row was rejected in actual
+apply mode before either row was written. All 8,328 non-target function rows,
+all program metrics/types/bookmarks, and the entire saved stack-purge export
+remained identical. Exactly eight parameter rows were added; the unknown
+return rows stayed byte-identical. Native `RET 0ch`, declared parameter size
+12 and saved UNKNOWN purge are recorded as separate facts.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` again discovered 91:
+**85 passed, six existing skips**, including the production Java column probe.
+Its tiny temporary source file now uses the platform temporary directory,
+removing a Linux-only test-path assumption. The applier's only further change
+is the independently reviewed two-row live grant. No C# code changed in this
+cohort and no engine build/playthrough was needed. Command arrays, full exports,
+negative control and recovery receipts are under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/script-callback-arguments/`;
+`script-callback-framework-20260912.log` is in the existing Linux test owner.

@@ -260,6 +260,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "segment-controller-ownership",
         "air-contact-shutdown",
         "plane-controller-event-argument",
+        "script-callback-arguments",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

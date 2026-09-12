@@ -64,7 +64,7 @@ result pointer**. The second slot is not a state or clock pointer, despite
 some older parameter labels. `0052eb92` consumes the output pointer; an unused
 EAX does not by itself prove the callback's return type.
 
-Two named functions still have default, parameterless saved signatures:
+Two named functions had default, parameterless saved signatures:
 
 | Entry | Body, half-open | SHA-256 |
 | --- | --- | --- |
@@ -75,10 +75,14 @@ Both preserve ECX as the script receiver, read the first native stack argument,
 convert `arguments[0]` through its datatype virtual method, and end with
 `RET 0ch`. Neither body reads argument count or output result. Their registry
 initializers write zero receiver adjustment at `005321b4` and `005307dd`.
-These are candidates for a separate exact prototype correction; no callback
-signature changed in this audit. The 85 default named callback bodies all end
-in `RET 0ch`, but that cleanup alone does not prove identical receiver use or
-semantic types across the family.
+The [two-function correction](../../ghidra/README.md#script-callback-arguments-2026-09-12)
+now represents ECX `void *this`, `void *arguments` at stack `+4`,
+`int argumentCount` at `+8` and `void *outResult` at `+0c`. Unknown return types,
+names, bodies, comments and tags remain unchanged. The saved stack-purge field
+remains UNKNOWN; native `RET 0ch` and declared parameter size 12 are distinct.
+The initial audit found 85 default named callbacks ending in `RET 0ch`;
+83 remain outside this correction. That cleanup alone does not prove identical
+receiver use or semantic types across the family.
 
 `SetAIState` dispatches Thing slot `+d8h`. On Plane/Unit this reaches `004fdcb0`
 and writes Unit `+210h`; state 1 also clears its controller target reader.

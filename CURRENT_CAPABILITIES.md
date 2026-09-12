@@ -389,7 +389,9 @@ September 12 reviewed and executed the complete incoming remote checkpoint:
 focused Core passed 150/150 and Client passed 907 with two existing capture
 skips. Full-combat and Save Lab UI acceptance remain open. The resumed Ghidra
 audit corrected one missing Plane-controller event argument, with isolated and
-live readback and verified off-drive recovery. It also refuted a stale
+live readback and verified off-drive recovery. Two script callback prototypes were then
+corrected through the same gate, preserving unknown return and purge metadata.
+The audit also refuted a stale
 missing-boundary note. The complete analysis inventory is available, but its
 semantic audit is incomplete; the controller's decompiler stack artifact and
 named-but-untyped script callbacks remain explicit next work. See the

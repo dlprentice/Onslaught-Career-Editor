@@ -274,6 +274,34 @@ current Core round loop follows scheduler Flush. Moving launches into that
 Flush without changing round admission would move newborn rounds on their
 birth tick, bypassing their next-frame movement contract.
 
+The selected-provider helper `[004fb840,004fbc8b)` is 1,099 bytes, SHA-256
+`8cafb4818c878d1be88a5b30a47375ad1190949cb836110e27a17fb4040106df`.
+The September 12 static review distinguishes these finite-input rules:
+
+- Any in-progress weapon burst preserves the current selection. A null target
+  also preserves it. Otherwise weapon `+140` and spawner reader `+144` clear,
+  and scoring visits spawners before weapons in linked-list order.
+- A weapon must be active and mask-compatible, with target height strictly
+  between mode `+6c/+70`. Height is `min(terrain,water)-targetZ`.
+  Distance uses raw three-dimensional positions, without aim offsets or radii.
+- The weapon score starts at zero, or 2,000,000 for the shared `80000h` mask.
+  Inclusive minimum/maximum range adds 1,000,000; an out-of-range candidate
+  instead adds its positive distance outside the interval. It is not rejected
+  solely for being out of range. Readiness adds another 1,000,000, with the
+  separate float stores at `004fbc21` and `004fbc3a`. The raw constant at
+  `005db290` is `49742400`. Only a strictly greater score replaces selection;
+  ties preserve the first candidate.
+
+The installed `data/default physics.dat` was freshly hashed: 175,603 bytes,
+SHA-256 `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
+Its ordered field-7 records give Air Trainer the trainer launcher, and Target
+Drone the Vulcan followed by the drone launcher; their use flags are `20400h`.
+The existing all-slots hard-range check is not this selection algorithm.
+Before production integration, falsify first-wins ties, exact range/height
+endpoints, reload equality, burst/null-target preservation and selectable
+out-of-range candidates against the original body. This static finding does
+not establish actual candidate state, firing cadence or live combat parity.
+
 Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
 and a monitored identity whose current Z is read during movement. Its only
 candidate exclusions are null, self and ammunition type bit 4; dying or

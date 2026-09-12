@@ -55,8 +55,9 @@ artifact is explicit in the [controller evidence](reverse-engineering/binary-ana
 
 Continue structural and semantic RE through the existing owners. The
 [script callback audit](reverse-engineering/binary-analysis/functions/IScript.cpp.md#native-callback-transport--september-12-static-audit)
-identifies missing callback arguments and distinguishes the native argument
-count from script arguments. Aircraft integration must preserve separate Unit
+corrected two missing callback prototypes and distinguishes the native argument
+count from script arguments. The remaining default signatures need per-body
+review; shared cleanup is not permission to assign one prototype wholesale. Aircraft integration must preserve separate Unit
 AI/controller state and the scheduled selected-provider/common-AI chain;
 retiming the current per-Move target refresh alone would omit real behavior.
 Keep conditional random draws, ordered avoidance candidates and monitored

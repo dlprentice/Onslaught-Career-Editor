@@ -186,6 +186,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # apply/readback, full metadata comparison and independent raw-byte review
 # passed; stale/blank/absent PRE bindings and wrong-verb/readback controls
 # refused. The decompiler stack-expression artifact is explicitly unresolved.
+# script-callback-arguments: two prototypes, 2026-09-12. Raw dispatcher/body
+# review, isolated apply/readback and stale-second-row refusal passed. Exactly
+# eight argument rows added; unknown saved return and stack purge preserved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -206,6 +209,7 @@ LIVE_GRANTED_COHORTS = [
     "segment-controller-ownership",
     "air-contact-shutdown",
     "plane-controller-event-argument",
+    "script-callback-arguments",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -632,6 +636,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "segment-controller-ownership",\n'
         '        "air-contact-shutdown",\n'
         '        "plane-controller-event-argument",\n'
+        '        "script-callback-arguments",\n'
         "    };\n",
     ),
     (
@@ -1509,11 +1514,11 @@ class CallingConventionFieldTests(unittest.TestCase):
         java = shutil.which("java")
         if java is None:
             self.skipTest("Java required for the production collateral-column probe")
-        with tempfile.TemporaryDirectory(prefix="bea-convention-columns-", dir="/var/tmp") as scratch:
-            path=Path(scratch)/"ConventionColumns.java"
+        with tempfile.TemporaryDirectory(prefix="bea-convention-columns-") as scratch:
+            path = Path(scratch) / "ConventionColumns.java"
             path.write_text(program, encoding="utf-8")
-            result=subprocess.run([java, str(path)], capture_output=True, text=True, timeout=30)
-            self.assertEqual(0, result.returncode, result.stdout+result.stderr)
+            result = subprocess.run([java, str(path)], capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
 
 class CreateFunctionTests(unittest.TestCase):
