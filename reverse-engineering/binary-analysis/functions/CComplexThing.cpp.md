@@ -1,9 +1,9 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-08 (isolated Unit Euler execution; other rows retain their earlier evidence)
+Last updated: 2026-09-12 (isolated Plane controller execution; other rows retain their earlier evidence)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
-including the bounded angle-update and matrix arithmetic evidence.
+including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
@@ -225,6 +225,29 @@ Plane profiles Air Trainer/Target Drone keep `+0x120=0`, excluding the optional
 player-distance detour. Battle Engine's Level100 radius is `0.4f`, and its
 ground-mode aim point adds `0.76f` to retail Z; jet aim uses its origin. These
 virtual inputs and common AI calls still need production integration.
+
+The September 12 isolated ELF32 probe executes the unchanged 716-byte Plane
+controller at its retail address, with all six referenced constant words
+verified against the pristine specimen above. Parent re-execution passed
+**11/11** cases: strict 70/25 separation boundaries and adjacent floats,
+initial retreat even when setting the approach latch, classifier 0/1/2,
+signed zero, call order and event due time under PC24/RN. Reflection preserves
+the native subtractions: for each component `P=1`, `Aim=33554432`, the result
+is `cc000000`, whereas simplifying to `2P-Aim` gives `cbffffff`.
+The body hash is `9a6baa321ef93f4dc6385441a425428ee0ea13904f5dd9394201698d7f605c93`.
+Private `plane-controller-20260912.py`, its inputs/outputs/results and
+`plane-controller-parent-20260912.log` are under the existing Linux test owner
+named above. Common Update, aim, radii, range classification, random draw and
+event admission are explicit stubs; this does not validate their live inputs
+or establish an aircraft gameplay trajectory.
+
+The remaining weapon integration is consequential. Static inspection of
+`004fc000` requires the selected `Unit+140` provider, `+1e8` readiness and the
+weapon's strict `NOW > +64` gate. `004fbcb0` prepares that provider;
+`004fc080` fires only that provider on a later ready invocation and clears
+`+1ec/+1e8`. The existing every-tick/all-slots weapon loop is therefore not
+an implementation of this callback chain. Selected-provider retention,
+readiness, burst callbacks and common AI effects still need runtime ownership.
 
 Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
 and a monitored identity whose current Z is read during movement. Its only

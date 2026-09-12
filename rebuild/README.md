@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-07 (native Linux route, live tape recording and partial World 110 construction).
+Last updated: 2026-09-12 (unused Windows VM retired; native Linux routes unchanged).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -193,7 +193,8 @@ controls/audio/tutorial parity remains unverified.
 Historical Windows PowerShell launchers remain under `tools/`, with explicit
 `run:rebuild-godot:windows` and `test:rebuild-godot-smoke:windows` aliases. Their
 4.7.1 engine manifest needs revalidation against the current 4.7.2 managed SDK
-before new Windows acceptance. The staged Windows VM remains inactive.
+before new Windows acceptance. The unused Windows VM staging was retired on September 12;
+Windows acceptance would need a separately provided Windows environment. Linux development continues natively.
 
 Controls:
 

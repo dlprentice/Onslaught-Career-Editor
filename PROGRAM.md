@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-09 (remote closeout; desktop Codex continuation)
+Last updated: 2026-09-12 (remote integration validated; Ghidra audit resumed)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -18,41 +18,30 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ## Open work
 
-### Remote source review — pending Codex execution and integration
+### Remote checkpoint integrated on Linux — September 12
 
-**Remote closeout, September 9:** David explicitly ended this remote effort and
-will continue with desktop Codex. This closes the remote work period, not the
-project, full RE audit, or any outstanding acceptance gate. Fetch the current
-remote branch into the existing local repository; preserve local changes and
-unpushed commits. Review on an isolated branch/worktree before integrating.
-The older uploaded source archives are not substitutes for the final remote tip.
+The complete remote difference from `135775772a126af48b9930a8fcfd4140000a4af9`
+to `f6ad243f45e115ddc906a0d9dd79490d34d97171` was fetched and reviewed in
+an isolated repo-local worktree. All six code/tool corrections are retained,
+including the independently duplicated actor-script restore fix. The newer
+Windows-staging retirement and local aircraft follow-up were preserved.
+No main merge, release, desktop control or CI run was involved.
 
-David authorized source-only continuation on
-`codex/onslaught-remote-integration-20260908` while the remote execution service
-returned `TransportTimeoutError`. GitHub reads, scoped commits and branch updates
-worked; no new C# compilation, test execution, Godot run or Ghidra opening is claimed.
-This branch is reviewable work, not a merge into `codex/linux-playable-slices` or `main`.
+The incoming C# changes now compile and their owning tests pass. The final
+focused Core selection passed 150/150; Client passed 907 with two existing
+capture-dependent skips. All 52 added admission/guard cases ran. Negative
+controls against the previous implementations failed as expected. Python
+launcher/exporter checks passed, and the updated Java packet exporter compiled
+and produced 14 verified packets from a read-only Ghidra copy. Exact commands,
+limits and private logs are in [VALIDATION.md](VALIDATION.md#remote-source-review--2026-09-09-execution-pending).
 
-| Change | Commit | Review disposition |
-| --- | --- | --- |
-| Launch admission: reject competing smoke/capture drivers, repeated report/tape destinations and null entries | `f9d2e6dd` | Source-reviewed; regression tests added, not run. Existing recording/capture and repeated career-selection behavior retained. |
-| Replay JSON: reject duplicate decoded members before deserialization and v4 migration | `752f913e` | Source-reviewed; malformed-input and valid canonical-identity controls added, not run. No writer/schema or golden-hash change. |
-| Scheduler: reject nested or interrupted Update before advancing the clock/ring | `e8178614` | Source-reviewed; reentrancy, retry, wrap and recovery cases added, not run. Reconstruction API fix, not newly measured retail behavior. |
-
-Codex should review the complete branch difference from
-`135775772a126af48b9930a8fcfd4140000a4af9` to the freshly resolved remote tip;
-`82af1a4193cdc7c4b4e697861f8450d263628ad5` separates the three earlier remote
-commits from this source-only pass. The earlier actor-script restore correction
-`3654eb73` still needs its owning C# regression executed. Earlier launcher/exporter
-commits carry dated test records, not current-host reruns. Exact pending checks
-are in [VALIDATION.md](VALIDATION.md#remote-source-review--2026-09-09-execution-pending).
-Do not integrate based only on these source reviews.
-
-The previously discussed Linux smoke report/log validation repair remains
-unpublished; an engine's zero exit alone still must not be treated as proof that
-smoke evidence passed. Preserve the unresolved forty-step canonical-hash diagnosis,
-full-combat/aircraft-controller integration, complete Ghidra audit and Save Lab UI
-acceptance. No frozen campaign authority or tracked Ghidra database changed.
+The unpublished smoke suggestion was reproduced independently: closing a
+smoke run could return zero before the completion report existed. The Linux
+launcher now requires that completed lifecycle report and retains timeout
+diagnostics. This bounded check does not replace gameplay, visual or audio
+acceptance. The forty-step hash difference was isolated to the new arithmetic
+mode byte; the separate older Headless fingerprint now checks its current
+bounded Walker state. Full-combat and Save Lab UI acceptance remain open.
 
 **Next substantive priority: the existing Ghidra analysis and retail RE.** Resolve
 the actual local working owner and applicable newer correction manifests, then
@@ -295,7 +284,8 @@ few proven Archive A duplicates. The current checkout/lab/data stay on B, with
 independent Ghidra cold recovery on A; this is not a whole-lab backup. Other
 graveyard material and historical ignored non-lab recovery remain unresolved.
 The migration queue owns those receipts; this development phase does not reopen
-external cleanup or backup work. The VM remains inactive. Native Linux Godot now
+external cleanup or backup work. David separately retired the never-built Windows VM
+staging on September 12; no Windows validation host is provisioned. Native Linux Godot now
 runs, while complete runtime acceptance and the P7/P8/P10/P11 gaps remain open.
 
 ## Completed items

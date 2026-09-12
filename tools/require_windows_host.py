@@ -11,8 +11,10 @@ def main() -> int:
     if os.name == "nt":
         return 0
     print(
-        "This command requires Windows. Run it inside the configured isolated "
-        "Windows VM; Linux static checks are not native WinUI or Windows-runtime evidence.",
+        "This command requires Windows. No Windows validation host is provisioned here; "
+        "the unused VM staging was retired. Use a separately provided Windows host "
+        "for an authorized Windows-specific check; Linux static checks are "
+        "not native WinUI or Windows-runtime evidence.",
         file=sys.stderr,
     )
     return 2

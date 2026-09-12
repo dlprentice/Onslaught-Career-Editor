@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import signal
 import subprocess
@@ -16,7 +17,7 @@ import materialize_retail_assets as materializer
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-from godot_host import ENGINE_VERSION, build_project, engine_path as _engine_path, run_process
+from godot_host import ENGINE_VERSION, build_project, engine_path as _engine_path, print_process_output, run_process
 PROJECT = Path("rebuild/OnslaughtRebuild.Godot")
 PREPARATION_TIMEOUT = 1200
 
@@ -80,6 +81,28 @@ def _runtime_command(
         command.append(f"--capture-dir={output}")
     command.extend(user_args)
     return command
+
+
+def _validate_smoke_completion(output: Path) -> None:
+    # Window closure can exit zero before CompleteSmoke writes its report.
+    # Require the completed lifecycle; this is not a pixel/audio parity gate.
+    report = json.loads((output / "first-flight-smoke.json").read_text(encoding="utf-8"))
+    if not isinstance(report, dict):
+        raise RuntimeError("smoke report must be an object")
+    for name, expected in (
+        ("schemaVersion", "onslaught-first-flight-smoke.v17"),
+        ("exitReason", "smoke-complete"),
+        ("finalFrontendScreen", "MainMenu"),
+    ):
+        if report.get(name) != expected:
+            raise RuntimeError(f"smoke completion failed: {name}")
+    for name in (
+        "coldClickToStart", "coldMainMenu", "coldGameplay", "retryRequested",
+        "retryGameplayActivated", "retrySessionFresh", "returnToMainMenuRequested",
+        "returnedToMainMenu", "worldReleasedAtMainMenu",
+    ):
+        if report.get(name) is not True:
+            raise RuntimeError(f"smoke completion failed: {name}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -155,15 +178,15 @@ def main(argv: list[str] | None = None) -> int:
             if timeout is None:
                 timeout = {"smoke": 75, "capture": 300}.get(args.mode)
             run_process(command, cwd=project, env=env, timeout=timeout)
+            if args.mode == "smoke":
+                _validate_smoke_completion(output)
             return 0
     except subprocess.TimeoutExpired as error:
+        print_process_output(error)
         print(f"First Flight timed out after {error.timeout}s: {error.cmd[0]}", file=sys.stderr)
         return 124
     except subprocess.CalledProcessError as error:
-        if error.stdout:
-            print(error.stdout, file=sys.stderr, end="")
-        if error.stderr:
-            print(error.stderr, file=sys.stderr, end="")
+        print_process_output(error)
         print(f"First Flight process exited {error.returncode}: {error.cmd[0]}", file=sys.stderr)
         return error.returncode if error.returncode > 0 else 128 - error.returncode
     except KeyboardInterrupt:

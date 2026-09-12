@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-07
+Last updated: 2026-09-12 (unused Windows VM retired)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -53,7 +53,8 @@ The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
 Host boundary: Linux owns native Godot, Core/Client/headless execution and the
 portable Save Lab service. The full legacy AppCore suite, WinUI and CLI retain
-Windows path/process/media behavior. The Windows VM remains staged and inactive.
+Windows path/process/media behavior. The never-built Windows VM was retired;
+no Windows validation host is currently provisioned here.
 [`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
 runtime checks and unfinished acceptance.
 

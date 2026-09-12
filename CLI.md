@@ -7,7 +7,7 @@
   pages, not from recollection. The `lore` verbs joined on 2026-08-23 and the `media`
   verbs joined the same day; their envelopes and exit codes below were produced the
   same way, against this build.
-- **Last updated:** 2026-09-06
+- **Last updated:** 2026-09-12 (unused VM retired; Windows-only contract retained)
 - **Summary:** the envelope, the exit codes, the whole verb surface, and one session
   that works start to finish.
 
@@ -15,8 +15,8 @@
 the WinUI app calls. It is not a second product lane and is not shipped in the release
 ZIP — it exists so that anything the GUI can do can also be done, scripted, and asserted
 on by something that is not a person sitting at the machine.
-The project targets `net10.0-windows` and runs only inside the activated isolated
-Windows VM. Omarchy can inspect its source and shared AppCore contracts, but a
+The project targets `net10.0-windows` and requires a Windows validation host;
+none is provisioned here after retirement of the unused VM staging. Omarchy can inspect its source and shared AppCore contracts, but a
 Linux build or static read is not CLI runtime evidence. The guarded root gate is
 `npm run test:cli`.
 

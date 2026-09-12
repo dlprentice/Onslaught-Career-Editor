@@ -5,16 +5,33 @@
 from __future__ import annotations
 
 import json
+import io
 import os
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest import mock
 
 import first_flight as launcher
+
+COMPLETED_SMOKE = {
+    "schemaVersion": "onslaught-first-flight-smoke.v17",
+    "exitReason": "smoke-complete",
+    "finalFrontendScreen": "MainMenu",
+    "coldClickToStart": True,
+    "coldMainMenu": True,
+    "coldGameplay": True,
+    "retryRequested": True,
+    "retryGameplayActivated": True,
+    "retrySessionFresh": True,
+    "returnToMainMenuRequested": True,
+    "returnedToMainMenu": True,
+    "worldReleasedAtMainMenu": True,
+}
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "Linux process-group launcher")
@@ -48,6 +65,10 @@ class LauncherTests(unittest.TestCase):
             "'data': os.environ['XDG_DATA_HOME'], 'cache': os.environ['XDG_CACHE_HOME'], "
             "'unrelated': os.environ['FAKE_UNRELATED']}) + '\\n')\n"
             "if pathlib.Path(sys.argv[0]).name == 'godot-mono':\n"
+            "    report = os.environ.get('FAKE_SMOKE_REPORT')\n"
+            "    for arg in sys.argv:\n"
+            "        if arg.startswith('--report=') and report is not None:\n"
+            "            pathlib.Path(arg.split('=', 1)[1]).write_text(report)\n"
             "    raise SystemExit(int(os.environ.get('FAKE_ENGINE_EXIT', '0')))\n"
         )
         self.engine = self.root / "engine/godot-mono"
@@ -139,7 +160,8 @@ class LauncherTests(unittest.TestCase):
 
     def test_smoke_and_capture_receive_fresh_outputs_and_bounded_timeout(self) -> None:
         real_run = launcher.run_process
-        with mock.patch.object(launcher, "run_process", wraps=real_run) as run:
+        with mock.patch.object(launcher, "run_process", wraps=real_run) as run, \
+             mock.patch.dict(os.environ, {"FAKE_SMOKE_REPORT": json.dumps(COMPLETED_SMOKE)}):
             self.assertEqual(0, self.invoke("smoke", "--no-build"))
             self.assertEqual(75, run.call_args.kwargs["timeout"])
             self.assertEqual(0, self.invoke("capture", "--no-build", "--", "--capture-plan=mainmenu"))
@@ -150,6 +172,33 @@ class LauncherTests(unittest.TestCase):
         self.assertNotEqual(Path(report).parent, Path(capture))
         self.assertTrue(Path(capture).is_relative_to(self.canonical / "local-data"))
         self.assertIn("--capture-plan=mainmenu", engine_calls[1])
+
+    def test_zero_exit_without_smoke_completion_is_failure(self) -> None:
+        invalid = [None, "{", "[]", "{}"]
+        invalid.extend(json.dumps(COMPLETED_SMOKE | {key: value}) for key, value in (
+            ("schemaVersion", "old"), ("exitReason", "window-closed"),
+            ("finalFrontendScreen", "Gameplay"), ("retrySessionFresh", False),
+            ("worldReleasedAtMainMenu", 1),
+        ))
+        for payload in invalid:
+            with self.subTest(payload=payload), mock.patch.dict(os.environ):
+                os.environ.pop("FAKE_SMOKE_REPORT", None)
+                if payload is not None:
+                    os.environ["FAKE_SMOKE_REPORT"] = payload
+                self.assertEqual(2, self.invoke("smoke", "--no-build", "--no-prepare"))
+
+    def test_native_smoke_failure_is_not_replaced_by_missing_report_error(self) -> None:
+        with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "17"}):
+            self.assertEqual(17, self.invoke("smoke", "--no-build", "--no-prepare"))
+
+    def test_captured_version_timeout_retains_diagnostics(self) -> None:
+        error = subprocess.TimeoutExpired([str(self.engine), "--version"], 30,
+                                          output=b"version stalled\n", stderr=b"detail\n")
+        output = io.StringIO()
+        with mock.patch.object(launcher, "run_process", side_effect=error), redirect_stderr(output):
+            self.assertEqual(124, self.invoke("smoke", "--no-build", "--no-prepare"))
+        self.assertIn("version stalled\n", output.getvalue())
+        self.assertIn("detail\n", output.getvalue())
 
     def _descendant_command(self, *, exit_early: bool = False) -> tuple[list[str], Path]:
         pid_path = self.root / "descendant.pid"

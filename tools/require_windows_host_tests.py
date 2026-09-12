@@ -21,14 +21,16 @@ class RequireWindowsHostTests(unittest.TestCase):
             self.assertEqual(0, require_windows_host.main())
         self.assertEqual("", error.getvalue())
 
-    def test_non_windows_host_fails_with_vm_route(self) -> None:
+    def test_non_windows_host_fails_without_advertising_retired_vm(self) -> None:
         error = io.StringIO()
         with (
             mock.patch.object(require_windows_host.os, "name", "posix"),
             contextlib.redirect_stderr(error),
         ):
             self.assertEqual(2, require_windows_host.main())
-        self.assertIn("configured isolated Windows VM", error.getvalue())
+        self.assertIn("No Windows validation host is provisioned here", error.getvalue())
+        self.assertIn("unused VM staging was retired", error.getvalue())
+        self.assertNotIn("configured isolated Windows VM", error.getvalue())
         self.assertIn("not native WinUI", error.getvalue())
 
 

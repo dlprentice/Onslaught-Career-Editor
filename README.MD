@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-07 (native Linux Godot route and first companion workflow).
+Last updated: 2026-09-12 (unused Windows VM retired; native development unchanged).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -107,8 +107,9 @@ The engineering host is Omarchy Linux. Native Godot build/run routes use the
 installed pinned Godot 4.7.2 .NET engine. The rebuild's synthetic native smoke
 and a live session's two deterministic replays passed; full tutorial acceptance
 is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
-and the Windows-targeted CLI retain Windows dependencies. The evaluation VM
-under ignored `local-data/windows-vm/` remains inactive.
+and the Windows-targeted CLI retain Windows dependencies. The never-built evaluation
+VM and installer media were retired on September 12. No Windows host is provisioned;
+Linux development does not depend on one, and Linux tests do not certify Windows behavior.
 
 Common requirements:
 

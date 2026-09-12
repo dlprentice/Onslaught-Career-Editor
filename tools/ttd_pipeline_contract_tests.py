@@ -248,7 +248,7 @@ class TtdPipelineContractTests(unittest.TestCase):
         self.assertIn("Refusing retired -TraceRoot", recorder)
         self.assertIn("Windows-only", recorder)
         self.assertIn(
-            "isolated Windows VM is staged but not activated",
+            "unused Windows VM staging was retired",
             recorder,
         )
         self.assertIn("-TraceRoot must be an explicit absolute path", recorder)

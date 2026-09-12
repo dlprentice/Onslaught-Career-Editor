@@ -56,17 +56,41 @@ public sealed class HeadlessApplicationTests
     {
         // Owns the first-flight.v1.json fingerprint (838 ticks, seed
         // 2836905711) for this revision, per rebuild/DETERMINISM.md: a
-        // behavior change that legitimately moves Core's trace must re-pin
-        // these two values in the same commit as the behavior change. The
-        // bcda0aa7 change moved this fingerprint through StateHasher v42's
-        // ordered BaseStates projection plus AdvancePose/UpdateCurrentPose
-        // old-pose retention; this correction records that deliberate re-pin.
-        // native Godot smoke pins the 2148-tick rendered path separately.
+        // revision fingerprint includes accumulated changes since schema42,
+        // including raw aircraft motion and ordered guide/events in schema47.
+        // This old tape covers opening and a short Walker move/turn; its
+        // name does not establish flight acceptance. Check that bounded state
+        // before accepting a new fingerprint.
+        // Native Godot smoke pins the 2148-tick rendered path separately.
+        const string expectedTrace = "0d835c29ff14cc6069cbf2dae7859bbf164ead0ca5112736cf8df0a597c91518";
+        const string expectedState = "5edc89006a783cfeef63369c20cb524e56014c96d314b36f34b11e0bcf1c9239";
+        CommandTape tape = CommandTapeCodec.Deserialize(File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json")));
+        var definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var initial = new Simulation(tape.Seed, definitions).Snapshot;
+        ReplayResult replay = ReplayRunner.Run(tape, definitions);
+        WorldSnapshot state = replay.FinalState;
+        Assert.Equal(838, state.Tick);
+        Assert.True(state.Level100PlayerActive);
+        Assert.False(state.Level100FlightEnabled);
+        Assert.NotEqual(initial.PlayerPosition, state.PlayerPosition);
+        Assert.Equal(VehicleMode.Walker, state.Mode);
+        Assert.Equal(initial.Hull, state.Hull);
+        Assert.Empty(state.Projectiles);
+        Assert.Equal(0, state.TargetsDestroyed);
+        Assert.Equal(Level100MissionOutcome.Running, state.Level100Mission.Outcome);
+        Level100ActorId trainer = state.Level100Actors.Actors.Single(actor => actor.Name == "Air Trainer").ActorId;
+        Assert.NotNull(state.Level100Actors.BaseStates.Single(actor => actor.ActorId == trainer).State.RetailPlane);
+        Assert.Contains(state.Level100ActorMechanics.Actors, actor => actor.ActorId == trainer && actor.PlaneGuide is not null);
+        Assert.True(state.Level100ActorMechanics.PlaneEvents!.Float24Arithmetic);
+        Assert.Equal(838u, state.Level100ActorMechanics.PlaneEvents.FrameCount);
+        Assert.Equal(expectedState, replay.FinalStateHash);
+        Assert.Equal(expectedTrace, replay.TraceHash);
         using var output = new StringWriter();
         using var error = new StringWriter();
 
         int exitCode = HeadlessApplication.Run(
-            ["--expect", "14417c11ba4ecccdaa51bca9df93f805cba0368fcb520fd4d18899a5348e3831", "--repeat", "2"],
+            ["--expect", expectedTrace, "--repeat", "2"],
             output,
             error);
 
@@ -76,10 +100,10 @@ public sealed class HeadlessApplicationTests
         Assert.True(result.RootElement.GetProperty("traceHashChecked").GetBoolean());
         Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
         Assert.Equal(
-            "14417c11ba4ecccdaa51bca9df93f805cba0368fcb520fd4d18899a5348e3831",
+            expectedTrace,
             result.RootElement.GetProperty("traceHash").GetString());
         Assert.Equal(
-            "546e71d41159503bbcb43eaa75444b158dd313cbd2fc5d6762d288ee4e6627b5",
+            expectedState,
             result.RootElement.GetProperty("finalStateHash").GetString());
         Assert.Equal(string.Empty, error.ToString());
     }

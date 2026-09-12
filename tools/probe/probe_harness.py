@@ -49,7 +49,7 @@ apart -- see ``diagnose``.
 LIVE EXECUTION is Windows-only.  On the Omarchy host this file can parse and
 author manifests, exercise ``--dry-run`` interlocks, and run its portable fake-
 launcher self-tests, but it must not stage or launch the copied retail game.
-The isolated Windows VM is staged but not activated, so there is currently no
+The unused Windows VM staging was retired, so there is currently no
 admitted live-probe route.  A real launcher fails closed before staging.
 
 RECORDING is optional and delegated.  ``tools/ttd_record.ps1`` already owns TTD
@@ -60,7 +60,7 @@ owned trace root.  There is deliberately no inherited ``G:`` default.
 Usage
 -----
     python tools/probe/probe_harness.py probes.json --dry-run
-    # Windows guest only, after VM activation and trace-root qualification:
+    # Separately provided Windows host only, after trace-root qualification:
     python tools/probe/probe_harness.py probes.json --out local-lab/probe-runs
     python tools/probe/probe_harness.py probes.json --only console-smoke
 
@@ -174,7 +174,7 @@ class ProbeError(Exception):
 
 _LIVE_WINDOWS_ONLY = (
     "Live copied-game probes are Windows-only and currently blocked: the "
-    "isolated Windows VM is staged but not activated. Omarchy may parse "
+    "unused Windows VM staging was retired. Omarchy may parse "
     "manifests, run --dry-run, and execute the portable self-tests; it must "
     "not stage or launch BEA.exe."
 )

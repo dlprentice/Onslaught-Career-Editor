@@ -4,7 +4,7 @@ Status: integrated — the three stages below were built in separate lanes and
 merged here; on 2026-08-02 the original nine-launch integration was followed by
 six replicated Mission-logger launches and seven Mission VM-trace/control
 launches, all unattended.
-Last updated: 2026-09-06 (Linux fixture path and operational-ledger routing; no new runtime probe).
+Last updated: 2026-09-12 (unused VM retired; no new runtime probe).
 Summary: author a probe that makes specific engine behaviour fire, run it
 unattended and record it, then put the result through a stage that tries to kill
 it. Authoring, running and refuting are three separate programs with three
@@ -35,8 +35,9 @@ path is absent; no twin, symlink, bind mount, or read-only substitute exists.
 A fresh clone or child worktree does not receive ignored content, so worktrees
 must use the canonical absolute path or `BEA_LOCAL_LAB`.
 Portable authoring, static refutation, and offline tests can run on Omarchy.
-Executing the copied game and recording TTD traces remain Windows-only and are
-blocked until the isolated Windows VM is activated and provisioned.
+This harness's live copied-game execution and TTD recording remain Windows-only.
+The unused Windows VM was retired; no Windows capture host is provisioned. These
+historical routes are not prerequisites for current native Linux development.
 
 | stage | program | tests |
 |---|---|---|
@@ -46,8 +47,8 @@ blocked until the isolated Windows VM is activated and provisioned.
 
 ## What still needs a human
 
-Once the Windows VM is active, TTD recording needs one elevated PowerShell
-window left open. Console-only copied-game execution also belongs in that guest;
+If a Windows capture environment is separately authorized and provided, TTD recording
+needs one elevated PowerShell window left open. This harness's console-only copied-game execution also belongs on Windows;
 archive-only authoring, static refutation, and offline tests need neither
 elevation nor a human on Omarchy. Choosing what to probe next, and reading a
 receipt whose oracle was satisfied for the wrong reason, are both still
@@ -443,8 +444,8 @@ receipt. `--strict-autoexec` makes inert ones fatal too.
 none of it — not its interlocks, not its drive policy, not its elevation
 refusal, not its receipt deferral. It needs the maintainer's elevated window.
 
-**The harness does not need it.** Once the Windows VM is activated, a
-console-only probe without `record` can run there with zero human involvement,
+**The harness does not need it.** On a separately provided Windows host, a
+console-only probe without `record` can run with zero human involvement,
 which is the whole point of the console route. It is not a native Omarchy game
 execution path.
 

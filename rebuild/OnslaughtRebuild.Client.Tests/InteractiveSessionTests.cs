@@ -1388,22 +1388,25 @@ public sealed class InteractiveSessionTests
             "SpawnerB",
             1,
             "AirTrainer"));
-        // Re-derived 2026-08-01 by task #154. The manifest's authored spawn
-        // vertical moved -6133 -> -3867 with the datum correction, and
-        // Level100ActorRegistry.SeatOnGround now applies the general
-        // CThing::Init support clamp instead of the ground-vehicle-only one, so
-        // the spawn is seated on the terrain sample at the emitter's own
-        // (46216, 14450), which is 0. Everything else about the pose is still
-        // the authored pose verbatim; the two are asserted separately so a
-        // basis or velocity that moved could not hide behind the vertical.
+        // Compose the emitter against the seated Airfield, preserving its
+        // height above the owner. The older precomputed manifest pose used an
+        // unseated owner; clamping that child to terrain loses the emitter.
+        // Raw construction also normalizes the matrix's Row1X zero sign.
         Assert.Equal(-3_867, trainer.InitialPose.PositionMillimeters.Y);
+        int ownerY = registry.GetActor(registry.GetThingRef("Airfield")!.Value).Pose.PositionMillimeters.Y;
+        int emitterHeight = checked((int)Math.Round(
+            -BitConverter.Int32BitsToSingle(trainer.AuthoredEmitterTransform.LocalPositionFloatBits.Z) * 1_000.0,
+            MidpointRounding.AwayFromZero));
+        Level100ActorPoseSnapshot spawnedPose = registry.GetActor(trainerId).Pose;
+        Assert.InRange(spawnedPose.PositionMillimeters.Y - ownerY, emitterHeight - 1, emitterHeight + 1);
         Assert.Equal(
             trainer.InitialPose with
             {
                 PositionMillimeters =
-                    trainer.InitialPose.PositionMillimeters with { Y = 0 },
+                    trainer.InitialPose.PositionMillimeters with { Y = spawnedPose.PositionMillimeters.Y },
+                BasisFloatBits = trainer.InitialPose.BasisFloatBits with { Row1X = 0 },
             },
-            registry.GetActor(trainerId).Pose);
+            spawnedPose);
         Assert.DoesNotContain(registry.Snapshot.Actors, actor => actor.Pose is null);
     }
 
@@ -1797,8 +1800,10 @@ public sealed class InteractiveSessionTests
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
             CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
         Assert.True(
-            // Living aircraft now retain their full initialized turn rate.
-            finalStateHash == "bc5d99c7f1fbd5e2bf86363e5309e5aa77f0ad132241ef08a9e61b15d75b3dfd",
+            // Raw aircraft creation, motion and PC24 event state supersede
+            // the prior integer mover's fingerprint. All gameplay assertions
+            // and the independent input repeat above remain required.
+            finalStateHash == "107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
             $"First-flight final state hash: {finalStateHash}");
     }
 

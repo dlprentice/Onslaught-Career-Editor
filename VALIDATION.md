@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-09 (remote source-review checks recorded; not executed).
+Last updated: 2026-09-12 (remote corrections executed and integrated; aircraft follow-up).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -17,8 +17,10 @@ need an available desktop. Source and headless tests alone do not establish nati
 input, audio, focus or full tutorial behavior.
 
 The retained WinUI default is `npm run test:winui`. The full legacy AppCore suite,
-WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated; the evaluation
-VM is inactive. Historical Windows rebuild launchers use explicit `:windows` aliases
+WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated. The unused
+evaluation VM was retired; no Windows host is provisioned here. The Windows entries
+below require a separately provided Windows validation host, not a Linux prerequisite
+or an instruction to recreate the VM. Historical rebuild launchers use explicit `:windows` aliases
 and need their older engine manifest revalidated against the current managed SDK.
 No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
 run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
@@ -29,16 +31,16 @@ are not replaced by the focused portable results below.
 | Documentation or deletion only | `git diff --check`, `npm run test:docs`, and the affected generator/reference check |
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
-| WinUI behavior or copy | In the Windows VM, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
+| WinUI behavior or copy | On Windows, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
 | Save, options, copied-target, or patch safety | Save Lab changes use `test:save-lab`, including the real baseline, original/unselected-byte preservation and Linux publication guards. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
-| CLI | In the Windows VM, `npm run test:cli` and the relevant AppCore test |
-| Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture in the Windows VM unless that exact fixture has been demonstrated platform-neutral |
+| CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
+| Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
-| Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore runs only in the VM. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
+| Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` and `build:rebuild-godot` build without a visible app. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
-| Portable ZIP inputs or layout | In the Windows VM, `npm run release:winui-zip` |
+| Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
 | Campaign ledger / generation TSVs | The externally pinned frozen bootstrap in `current_re_authority.verify`; a generation number, matching ledgers, self-derived pins, integrity-only success, or candidate reducer is not authority |
 | Tracked evidence register or current authority pointer | `python ./tools/re_evidence_register_export.py --state developer_state.json --check-header-only` for the portable header gate; on the maintainer host, omit `--check-header-only` and use `--check` for literal-pinned full replay plus byte equality |
@@ -486,6 +488,52 @@ Only the ignored 234,999-byte v7 actor input was published. This remains
 headless construction evidence under explicit numerical/resource assumptions;
 no retail/Godot runtime, Ghidra database or desktop was opened.
 
+### Aircraft integration follow-up — September 12
+
+`npm run test:rebuild-core` built successfully and finished with **1,354 passed,
+8 failed, zero skipped**. Six failures exposed outdated component fixtures or
+fingerprints after raw aircraft construction; the other two are the still-failing
+cold and returning full-combat routes. This is not a passing broad-suite receipt.
+The follow-up filter covering `Level100DestructionContactTests`, the weapon-state
+hash variants, both direct-spawn drone cases, `HeadlessApplicationTests`, the
+Hangar restore regression and the forty-step hash passed **78/78**. Logs are
+`plane-integration-core-20260912.log` and
+`plane-integration-focused-20260912.log` under
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+
+Actor-script restore now retains spawn admission and event-clock callbacks;
+`RestoreDuringHangarPausePreservesNativeSpawnAdmissionAndCurrentClock` passed
+through the native Hangar Pause/SpawnThing continuation. Standalone spawn
+fixtures now invoke the same creation owner as production. Component-only
+ground-death snapshots use the existing legacy hash envelope instead of claiming
+an aircraft event clock they never advanced. Their lifetime, ordering and restore
+assertions remain; full raw-aircraft restore has its own tests.
+
+The forty-step golden-hash diagnosis is byte-exact, not a repeatability inference.
+The current 41,057-byte canonical state hashes to `f121a469…f55b8`.
+Flipping only `PlaneEvents.Float24Arithmetic` changes byte 40,798; removing that
+one mode byte exactly reproduces the former `5e642166…caa54` fingerprint.
+The ignored `hash-cause-20260912/` probe and `hash-cause-20260912.log` preserve
+the command source and both full hashes. The mode is future-affecting state:
+aircraft now use measured PC24 scheduling, while legacy scheduler callers retain
+their default arithmetic. This diagnoses the missed pin update in the raw-plane
+commit without treating the former state as a restorable current snapshot.
+
+The compiled Headless first-flight tape replayed twice for 838 ticks with no
+divergence: trace `0d835c29…591518`, final state `5edc8900…c9239`.
+This is a revision fingerprint after accumulated changes since schema 42,
+including raw aircraft motion and scheduler state. The test checks the bounded
+startup state: the player has activated and moved in Walker mode, has no flight
+permission, projectiles or kills, and the running mission retains raw Trainer
+state and its PC24 scheduler. Direct replay measured activation at tick 665;
+an older test comment's 996-tick value was not current. Despite its historical
+name this tape does not exercise player flight. The forty-step byte-isolation proof above does
+not explain every intervening change to this separate tape. The JSON and stderr log are
+`plane-first-flight-replay-20260912.*` in the same directory. No assertion on
+combat completion, native input, audio or rendering is weakened by these updates.
+The cold and returning full-combat runs still reach Won through the low-health
+abort, with objective 4 failed and no final-wave kills; they remain failures.
+
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content
@@ -528,7 +576,8 @@ not fix unrelated failures discovered outside the changed contract.
 
 ## Remote source review — 2026-09-09 (execution pending)
 
-This section records pending verification, not a passing receipt. Source changes
+The following is the September 9 remote handoff record; its host execution is
+recorded below. At remote closeout it was pending verification. Source changes
 are on `codex/onslaught-remote-integration-20260908`, following `82af1a41`.
 Native-command and Python probes returned `TransportTimeoutError` without program
 output; no compiler, test suite, Godot, Ghidra or retail program ran in this pass.
@@ -579,3 +628,49 @@ launcher/exporter commits contain dated test reports; this pass did not rerun th
 The proposed Python smoke report/log gate remains unpublished and unverified.
 Record actual commands, outcomes and output locations here before integration;
 do not transform these pending entries or historical receipts into claimed passes.
+
+### Linux execution of the remote checkpoint — September 12
+
+Reviewed the complete `13577577..f6ad243f` difference in
+`.worktrees/remote-review-20260912`, preserving `031c975d` Windows retirement
+and `31e9b437` local aircraft follow-up. Locked Core/Client restore succeeded
+without target or dependency-lock changes. The integrated Core filter passed
+**150/150**: new JSON/scheduler fixtures, existing scheduler/replay/recorder,
+Headless, Hangar restore, forty-step canonical hash and raw Plane creation.
+The new source's initial bounded Core selection passed **118/118**. The full
+Client suite initially passed 905 with two failures and two existing skips;
+after fixing the old spawn-pose expectation and the pre-raw-aircraft smoke
+fingerprint, it passed **907, zero failed, two skipped**. Both failures preceded
+the remote fixes. Emitter height remains above its seated Airfield; the
+2,148-step smoke's gameplay assertions and independent input repeat still pass.
+No flight/combat assertion or gameplay constant was relaxed.
+
+All 52 new remote cases executed successfully. With the original four C#
+implementations temporarily substituted in the isolated worktree, the selected
+Core controls failed **29/39** and Client launch controls failed **13/23**.
+Incoming source was restored byte-for-byte before the final passing runs.
+Commands and results are in `remote-core-*.log` and `remote-client-*.log` under
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`. Core filters select
+`CommandTapeJsonAdmissionTests`, `RetailEventSchedulerUpdateGuardTests`,
+`RetailEventSchedulerTests`, `ReplayTests`, `CommandTapeRecorderTests`,
+`HeadlessApplicationTests`, the named Hangar/canonical-hash regressions, and
+`Level100RawPlaneCreationTests`; no empty selection is counted as a pass.
+
+`python tools/godot_host_tests.py` passed **10/10**;
+`python tools/export_packets_tests.py` passed **32/32**. First Flight initially
+passed its 11 existing tests, but a new fake-engine control reproduced exit zero
+with no report. `python rebuild/tools/first_flight_tests.py` now passes **14/14**,
+including missing/malformed/incomplete completion reports, normal completion,
+retained nonzero exit and captured timeout diagnostics. These are fake-tool
+results. The new gate checks the completed smoke lifecycle; it does not port
+or claim the entire retained Windows report/log validator. Logs are
+`remote-godot-host-20260912.log`, `remote-export-packets-20260912.log`, and
+`remote-smoke-completion-{red,green}-20260912.log` in the same owner.
+
+Ghidra 12.1.3 compiled the changed packet exporter and exported 14 selected
+functions from a verified read-only replica. The full 8,330-row function export
+and program metrics matched the retained working POST exactly; the designated
+working payload remained unchanged. Private outputs are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
+This verifies exporter execution and preserved structural state, not a complete
+semantic audit, retail run, or native Godot acceptance.
