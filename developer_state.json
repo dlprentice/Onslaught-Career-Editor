@@ -1419,7 +1419,7 @@
       "local-data/AGENTS.md",
       "VALIDATION.md"
     ],
-    "rule": "Current Linux host and storage routing belongs to these owners. Historical Windows paths, firewall rules and drive-space notes are not fallback destinations. The Windows evaluation VM is staged, not active."
+    "rule": "Current Linux host and storage routing belongs to these owners. Historical Windows paths, firewall rules and drive-space notes are not fallback destinations. David retired the never-built Windows evaluation VM and installer media on 2026-09-12 (migration Batch 27). No local Windows validation host is provisioned; Linux development continues, but Linux results do not establish Windows runtime behavior."
   },
   "_RECURSIVE_RE_CAMPAIGN_2026_08_02": {
     "_read_this_first": "Current active focus: recursively account for retail functions and .text residuals, prove inputs/outputs/state contracts, and carry sufficiently proven behavior into rebuild code/tests. Re-run the named verifiers before relying on this block; developer_state is awareness, not authority.",

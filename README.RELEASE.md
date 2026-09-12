@@ -1,7 +1,7 @@
 # WinUI release candidate
 
 Status: retained WinUI reference — superseded as the planned companion release lane
-Last updated: 2026-09-06 (Godot companion direction; candidate shape unchanged).
+Last updated: 2026-09-12 (unused VM retired; retained Windows candidate shape unchanged).
 Summary: what a candidate ZIP contains, what it explicitly does not claim, and
 which steps remain separately authorized.
 
@@ -32,7 +32,8 @@ a verified recovery copy; development and validation use copied targets.
 
 ## Build and verify a local candidate
 
-Run the release gate only inside the activated isolated Windows VM. The WinUI
+Run this retained release gate only on a separately provided Windows validation host;
+the unused local VM staging was retired and no Windows host is provisioned here. The WinUI
 publish, launch, and UI-probe stages are Windows-only; Omarchy deliberately
 refuses this root command before any candidate is produced.
 

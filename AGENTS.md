@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-07
+Last updated: 2026-09-12 (unused Windows VM retired; platform boundaries retained)
 Summary: what the project is, the rules that protect the evidence and the user's files, where things live on this
 Linux laptop, which commands work here, and the gotchas that have already cost data.
 
@@ -30,8 +30,9 @@ Linux owns development and native Godot execution. The rebuild now has Linux bui
 commands, and the companion has a native Save Lab shell backed by portable AppCore. The complete player
 walkthrough and Save Lab UI write/reopen acceptance remain unfinished; read `CURRENT_CAPABILITIES.md`.
 The full legacy AppCore suite, WinUI, Windows-targeted CLI and portable ZIP retain Windows dependencies.
-The evaluation VM is staged under `local-data/windows-vm/` and remains inactive. Linux evidence does not
-establish Windows behavior. While David uses the desktop, continue code/RE and noninteractive checks;
+David retired the never-built Windows VM and its installer media on September 12. No local Windows
+validation environment is provisioned; Linux evidence does not establish Windows behavior.
+While David uses the desktop, continue code/RE and noninteractive checks;
 wait for him to announce availability before resuming live input or visible launches.
 
 David resumed scoped development on September 6 after accepting the baseline and
@@ -40,7 +41,7 @@ the complete player-input Level 100 route, targeted RE, the first Godot Save Lab
 workflow, and real World 110 construction/transition. Refactor and consolidate where
 these deliverables require it; keep the three standing outcomes. The former storage
 hold is retained as history in `developer_state.json`; it does not block this phase.
-The Windows VM remains inactive. Ghidra changes still require the preservation workflow
+Do not recreate Windows VM staging without a new Windows-validation task. Ghidra changes still require the preservation workflow
 and an exact declared cohort. External archive reconciliation and historical recovery
 investigation remain outside this repository's development scope. Use native subagents;
 do not use Claude Code during this phase.
@@ -122,7 +123,7 @@ do not use Claude Code during this phase.
 | `developer_state.json` | Current owner pointers and required compatibility data. `current_re_authority` is the only live selector; `_history` recovers retired execution diaries from an exact Git object. Retained dated fields are provenance, not a task queue or authorization. |
 | Root `*.md` | `README.MD` (product and lanes), `PROJECT-INDEX.md` (code ownership), `VALIDATION.md` (which gate for which change), `DOCUMENTATION.md` (the header standard), `CONTRIBUTING.md`, `SECURITY.md`, `LOCAL_LAB_OVERLAY.md`, `README.RELEASE.md`. A new tracked `.md` needs `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block. |
 | `local-lab/` (ignored) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
-| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/`, current retail/media inputs, staged VM data, operational outputs and grouped `recovered/` packages. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. Its own `AGENTS.md` owns the exact map. |
+| `local-data/` (ignored) | Machine-local data that is not lab evidence: `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages. The unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. Its own `AGENTS.md` owns the exact map. |
 | `.artifacts/` (ignored) | Legacy validation, screenshot and publish output. It can contain unique evidence, so ignored does not mean disposable. Keep existing coupled tool paths; use `local-data/` for new general-purpose outputs and the numbered queue for retirement. |
 
 ## Commands
@@ -145,7 +146,7 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 | Headless replay | `npm run run:rebuild-headless -- <args>` |
 | Complete-RE verification | the command in `developer_state.json` → `current_re_authority.verify` (`tools/re_campaign_gen32_host_attestation.py` on this host; receipts go to `local-data/host-attestations/`) |
 | Ghidra | `ghidraRun` (12.1.3, OpenJDK 21) on `local-lab/ghidra-projects/BEA/BEA.gpr` only; headless scripts are `tools/*.java` |
-| Retained Windows lanes: `test:winui`, `test:appcore`, `test:ui`, `test:cli`, `release:winui-zip` | Windows-only; the VM remains inactive. Historical rebuild PowerShell launchers have explicit `:windows` aliases and need toolchain revalidation. |
+| Retained Windows lanes: `test:winui`, `test:appcore`, `test:ui`, `test:cli`, `release:winui-zip` | Windows-only; no Windows validation host is provisioned here. Historical rebuild PowerShell launchers have explicit `:windows` aliases and need toolchain revalidation. These are not Linux prerequisites. |
 
 ## Definition of done
 

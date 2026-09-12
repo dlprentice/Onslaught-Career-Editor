@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 if (-not $IsWindows) {
-    throw 'The currently admitted controlled Godot build is Windows-only. Run it inside the configured isolated Windows VM; use the Linux Core/Client/headless gates on Omarchy.'
+    throw 'This historical launcher is Windows-only, and no Windows validation host is provisioned here. Use npm run build:rebuild-godot on Omarchy; a Windows result requires a separately provided Windows host.'
 }
 
 $materializeArguments = @(

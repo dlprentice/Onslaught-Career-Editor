@@ -631,7 +631,7 @@ if ($HashOnly) {
 # ---------------------------------------------------------------- interlock 1-3
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
     Fail ("TTD recording and copied-game execution are Windows-only. The " +
-          "isolated Windows VM is staged but not activated; this Omarchy host " +
+          "unused Windows VM staging was retired; this Omarchy host " +
           "may inspect or repair existing receipts but must not record.")
 }
 if ([string]::IsNullOrWhiteSpace($TraceRoot)) {

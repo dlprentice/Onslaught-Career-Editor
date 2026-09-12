@@ -1302,7 +1302,7 @@ class DryRunTests(HarnessCase):
         )
         self.assertEqual(receipt["verdict"], "ERROR")
         self.assertIn("Windows-only", receipt["failure"])
-        self.assertIn("VM is staged but not activated", receipt["failure"])
+        self.assertIn("unused Windows VM staging was retired", receipt["failure"])
         self.assertNotIn("staging", receipt)
         self.assertFalse(self.scratch.exists())
 

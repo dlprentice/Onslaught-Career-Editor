@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 if (-not $IsWindows) {
-    throw 'The currently admitted Godot toolchain is Windows-only. Run this command inside the configured isolated Windows VM; the Linux toolchain requires a separate verified manifest and smoke route.'
+    throw 'This historical toolchain setup is Windows-only, and no Windows validation host is provisioned here. Omarchy uses the existing pinned Linux toolchain through npm run build:rebuild-godot; Windows toolchain acceptance is separate.'
 }
 
 Import-Module (Join-Path $PSScriptRoot 'GodotToolchain.psm1') -Force

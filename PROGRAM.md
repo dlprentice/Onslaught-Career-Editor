@@ -239,7 +239,8 @@ few proven Archive A duplicates. The current checkout/lab/data stay on B, with
 independent Ghidra cold recovery on A; this is not a whole-lab backup. Other
 graveyard material and historical ignored non-lab recovery remain unresolved.
 The migration queue owns those receipts; this development phase does not reopen
-external cleanup or backup work. The VM remains inactive. Native Linux Godot now
+external cleanup or backup work. David separately retired the never-built Windows VM
+staging on September 12; no Windows validation host is provisioned. Native Linux Godot now
 runs, while complete runtime acceptance and the P7/P8/P10/P11 gaps remain open.
 
 ## Completed items

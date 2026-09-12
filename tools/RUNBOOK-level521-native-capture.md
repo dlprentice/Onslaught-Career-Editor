@@ -1,5 +1,5 @@
 Status: blocked historical runbook — do not execute on the Omarchy host.
-Last updated: 2026-08-31 (Linux migration routing; historical measurements and
+Last updated: 2026-09-12 (unused VM retired; historical measurements and
 commands retained as provenance, no current capture owner designated).
 Evidence: MEASURED — the reachability table in the appendix is read from the
 shipped `data/MissionScripts/level521` scripts (`ResearchCentre.msl:28`,
@@ -12,8 +12,8 @@ timings after the cascade and the "13 of 17 in ten minutes" yield, which depend
 on whether `Pause(n)` is wall-clock or frame-driven under TTD; that is
 unmeasured and is why take 2 was sized at 300 s rather than tight.
 Summary: preserved instructions and evidence for a historical level-521 TTD
-session. Copied-game execution and TTD recording are Windows-only. The isolated
-Windows VM is staged but not activated, and no guest-owned trace destination
+session. This copied-game harness and TTD recorder are Windows-only. The unused
+Windows VM was retired, and no Windows capture environment or trace destination
 has completed qualification.
 
 # Historical runbook: capture the level-521 script natives
@@ -21,8 +21,8 @@ has completed qualification.
 > [!WARNING]
 > **CURRENT ROUTE: BLOCKED.** Do not run these commands on Omarchy, reinterpret
 > `G:` as a Linux path, or create a replacement destination by analogy. Live
-> copied-game execution and TTD recording wait for activation of the isolated
-> Windows VM, its own checkout and copied specimen, and an explicitly supplied,
+> copied-game execution through this harness and TTD recording would require a separately
+> provided Windows capture environment, its own checkout and copied specimen, and an explicitly supplied,
 > validated guest `TraceRoot`. The procedure below remains verbatim enough to
 > preserve what was measured on Windows; it is not an executable current
 > front door. Offline reading and analysis of already-recorded evidence remain

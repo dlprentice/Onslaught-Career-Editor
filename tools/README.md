@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-07
+Last updated: 2026-09-12 (unused Windows VM retired; TTD platform limits retained)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports retail research, the Godot rebuild, the Godot companion and retained toolkit
@@ -800,11 +800,12 @@ tool's own documentation, not here.
   world archive, then records one resumable opening trace per level from a
   single elevated shell.
   **Standing caveat: TTD recording is Windows-only and requires an elevated
-  token.** The current Omarchy host cannot record, and the prepared Windows VM
-  is not yet activated. The old 75 raw recordings were deliberately retired;
+  token.** This Windows-only recorder cannot run natively on Omarchy, and the unused
+  Windows VM staging was retired. No Windows capture environment is provisioned.
+  The old 75 raw recordings were deliberately retired;
   retained extracts cannot be replayed to answer new questions. New recording
-  is outside the current preparation task. Once separately resumed and provisioned with TTD, start an
-  unattended campaign from one elevated guest shell; the manual attach helper
+  is not authorized by this cleanup. If separately resumed with a qualified Windows
+  environment and TTD, start an unattended campaign from one elevated Windows shell; the manual attach helper
   raises UAC for an individual capture.
 - `ttd_coverage_index.py` (P5) — the offline cross-trace query root over the
   retained exec-coverage receipts. `build` walks an explicitly supplied

@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-09-07
+Last updated: 2026-09-12 (unused VM retired; platform-specific checks retained)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -34,7 +34,8 @@ npm run test:safety
 `npm test` runs Linux Save Lab and launcher tests without opening a window;
 `npm run dev` launches the Godot companion. The rebuild also has native Linux
 runtime commands. The full legacy AppCore suite, CLI/WinUI and packaging retain
-Windows guards. The evaluation VM is staged and inactive. Native workflow checks
+Windows guards. The unused evaluation VM was retired; Windows checks need a separately
+provided Windows host and are not prerequisites for native Linux work. Native workflow checks
 are separate from build, static or headless evidence.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
@@ -126,9 +127,10 @@ npm run test:safety
 npm run test:rebuild-core
 ```
 
-Inside the Windows VM, add `npm run test:ui`, `npm run test:safe-copy`, or the
-native Godot smoke when the corresponding primary workflow, rendering, input,
-launch, or clean-exit path changed. Do not run a root aggregate merely for
+For an authorized Windows-specific change, use a separately provided Windows host
+for `npm run test:ui` or `npm run test:safe-copy`. Run the native Godot smoke on the
+platform being validated when its rendering, input, launch, or clean-exit path changed.
+No Windows host is currently provisioned here. Do not run a root aggregate merely for
 ceremony.
 
 The retained WinUI artifact's procedure is in
