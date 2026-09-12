@@ -392,8 +392,8 @@ audit corrected one missing Plane-controller event argument, with isolated and
 live readback and verified off-drive recovery. Two script callback prototypes were then
 corrected through the same gate, preserving unknown return and purge metadata.
 The audit also refuted a stale
-missing-boundary note. The complete analysis inventory is available, but its
-semantic audit is incomplete; the controller's decompiler stack artifact and
+missing-boundary note. The internal-function inventory is available, but the
+wider semantic audit is incomplete; the controller's decompiler stack artifact and
 named-but-untyped script callbacks remain explicit next work. See the
 [execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
 and [Ghidra owner](reverse-engineering/ghidra/README.md#plane-controller-event-argument-2026-09-12).

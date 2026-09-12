@@ -693,7 +693,9 @@ rehearsal. Exactly one of 8,330 function rows changed. All other function and
 variable rows, all program metrics and the complete saved stack-purge export
 stayed identical. The POST recovery copy on Archive A passed a separate
 restore/reopen with no missing, extra, size-different or hash-different file.
-This does not certify every decompiled expression: the spurious return-address
+The function/variable exports cover internal functions; external/import
+semantics are not certified by these comparisons. This does not certify every
+decompiled expression: the spurious return-address
 and vector-local artifacts persist and are documented in the controller owner.
 
 `python -m unittest tools.ghidra_cohort_framework_tests` discovered **91 tests:

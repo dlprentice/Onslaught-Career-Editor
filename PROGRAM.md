@@ -44,7 +44,7 @@ mode byte; the separate older Headless fingerprint now checks its current
 bounded Walker state. Full-combat and Save Lab UI acceptance remain open.
 
 **The executable-backed Ghidra audit is active.** Initial read-only exports covered
-8,330 function rows, 32,688 return/parameter/local rows, 410 types, 2,300
+8,330 internal-function rows, 32,688 return/parameter/local rows, 410 types, 2,300
 bookmarks, actual body ranges, direct calls and saved analysis options.
 They establish an inventory of existing analysis, not complete semantic review.
 The first exact correction restores the Plane controller's incoming event
