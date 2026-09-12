@@ -987,12 +987,14 @@ public sealed class Level100DestructionContactTests
             Level100Destruction = runtime.Snapshot,
             RetailEventFrameCount = 13,
         };
+        // This component-only envelope supplies no aircraft event clock.
+        envelope = Level100TestActorDefinitions.LegacyHashEnvelope(envelope);
         string expectedHash = StateHasher.ComputeHex(envelope);
-        Assert.Equal(expectedHash, StateHasher.ComputeHex(envelope with
+        Assert.Equal(expectedHash, StateHasher.ComputeHex(Level100TestActorDefinitions.LegacyHashEnvelope(envelope with
         {
             Level100Actors = restoredRegistry.Snapshot,
             Level100Destruction = restored.Snapshot,
-        }));
+        })));
         var pending = Assert.Single(runtime.Snapshot.PendingShutdowns);
         foreach (var changed in new[]
         {
@@ -1049,6 +1051,7 @@ public sealed class Level100DestructionContactTests
             Level100Destruction = runtime.Snapshot,
             RetailEventFrameCount = 198,
         };
+        envelope = Level100TestActorDefinitions.LegacyHashEnvelope(envelope);
         Assert.NotEqual(StateHasher.ComputeHex(envelope), StateHasher.ComputeHex(envelope with
         {
             Level100Destruction = runtime.Snapshot with

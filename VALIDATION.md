@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (unused VM retired; Windows validation still requires Windows).
+Last updated: 2026-09-12 (aircraft integration checks; unused Windows VM retired).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -487,6 +487,52 @@ Logs are `initial-icebergs-core.log`, `initial-icebergs-restored.log`,
 Only the ignored 234,999-byte v7 actor input was published. This remains
 headless construction evidence under explicit numerical/resource assumptions;
 no retail/Godot runtime, Ghidra database or desktop was opened.
+
+### Aircraft integration follow-up — September 12
+
+`npm run test:rebuild-core` built successfully and finished with **1,354 passed,
+8 failed, zero skipped**. Six failures exposed outdated component fixtures or
+fingerprints after raw aircraft construction; the other two are the still-failing
+cold and returning full-combat routes. This is not a passing broad-suite receipt.
+The follow-up filter covering `Level100DestructionContactTests`, the weapon-state
+hash variants, both direct-spawn drone cases, `HeadlessApplicationTests`, the
+Hangar restore regression and the forty-step hash passed **78/78**. Logs are
+`plane-integration-core-20260912.log` and
+`plane-integration-focused-20260912.log` under
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+
+Actor-script restore now retains spawn admission and event-clock callbacks;
+`RestoreDuringHangarPausePreservesNativeSpawnAdmissionAndCurrentClock` passed
+through the native Hangar Pause/SpawnThing continuation. Standalone spawn
+fixtures now invoke the same creation owner as production. Component-only
+ground-death snapshots use the existing legacy hash envelope instead of claiming
+an aircraft event clock they never advanced. Their lifetime, ordering and restore
+assertions remain; full raw-aircraft restore has its own tests.
+
+The forty-step golden-hash diagnosis is byte-exact, not a repeatability inference.
+The current 41,057-byte canonical state hashes to `f121a469…f55b8`.
+Flipping only `PlaneEvents.Float24Arithmetic` changes byte 40,798; removing that
+one mode byte exactly reproduces the former `5e642166…caa54` fingerprint.
+The ignored `hash-cause-20260912/` probe and `hash-cause-20260912.log` preserve
+the command source and both full hashes. The mode is future-affecting state:
+aircraft now use measured PC24 scheduling, while legacy scheduler callers retain
+their default arithmetic. This diagnoses the missed pin update in the raw-plane
+commit without treating the former state as a restorable current snapshot.
+
+The compiled Headless first-flight tape replayed twice for 838 ticks with no
+divergence: trace `0d835c29…591518`, final state `5edc8900…c9239`.
+This is a revision fingerprint after accumulated changes since schema 42,
+including raw aircraft motion and scheduler state. The test checks the bounded
+startup state: the player has activated and moved in Walker mode, has no flight
+permission, projectiles or kills, and the running mission retains raw Trainer
+state and its PC24 scheduler. Direct replay measured activation at tick 665;
+an older test comment's 996-tick value was not current. Despite its historical
+name this tape does not exercise player flight. The forty-step byte-isolation proof above does
+not explain every intervening change to this separate tape. The JSON and stderr log are
+`plane-first-flight-replay-20260912.*` in the same directory. No assertion on
+combat completion, native input, audio or rendering is weakened by these updates.
+The cold and returning full-combat runs still reach Won through the low-health
+abort, with objective 4 failed and no final-wave kills; they remain failures.
 
 New general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and

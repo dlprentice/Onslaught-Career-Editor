@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-08 (first-training Ghidra, input order, contact geometry and ground-target shutdown).
+Last updated: 2026-09-12 (raw aircraft integration, restore and tutorial limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -738,20 +738,24 @@ remain open.
 
 Living Planes now retain their full initialized air turn rate. Retail reduces
 it to one third only while dying; the former mover applied that reduction to
-living aircraft too. Both materialized aircraft first failed a discriminating
-test, then passed with the full rate. The affected mechanics/Euler selection
-passes 34 checks and the repeated FirstFlight tape passes, but complete cold
-combat currently fails. A separate correction makes the test pilot's firing
-check use the same camera origin as its steering; its former fictitious muzzle
-height both refused an aligned shot and accepted an off-reticle shot. After
-that correction, both cold input adapters reach `Won` at tick 7194 with hull
-7050 through the low-health abort without a final-wave kill. Their complete
-state and pose traces still match. The six-kill/no-abort assertions remain;
-neither a winning terminal state nor input-adapter equality closes this gap.
+living aircraft too. The replacement raw free-flight mover retains that rate,
+old/current pose, drive, velocity and the ordered guide callbacks. Restored
+actor scripts keep the spawn-registration and clock hooks; the pending Hangar
+spawn regression first failed without those hooks, then passed with them.
+Aircraft event arithmetic and its mode are retained in schema 47.
+
+Complete cold combat still fails. The September 12 Core run reaches `Won` at
+tick 8327 with hull 2450 through the low-health abort, with no final-wave kills.
+Both cold input adapters match throughout, including hash
+`52eddfffb1d54632b3a76ffa1c5bfed31544f57f215b88804b716791a17ef461`.
+The six-kill/no-abort assertions remain. The camera-origin firing correction
+is retained; its earlier tick-7194/hull-7050 result predates raw free flight.
+Neither a winning terminal state nor input-adapter equality closes this gap.
 
 The separate returning-career driver retains reduced fixture definitions. It
-now takes the abort after five final-wave kills and reaches `Won` at tick 6331
-with hull 6750. Its earlier 22-target result at tick 7621 preceded the same
+now reaches `Won` at tick 5317 with hull 7350, after the abort at tick 5024
+and no final-wave kills. Its previous five-kill result at tick 6331/hull 6750
+predates raw free flight; the earlier 22-target result also predates the
 turn-rate correction. The
 [full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs)
 retain the independent naive and trigger-disabled controls. The retired

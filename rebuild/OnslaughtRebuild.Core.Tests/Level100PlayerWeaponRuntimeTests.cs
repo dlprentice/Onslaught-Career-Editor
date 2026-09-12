@@ -112,13 +112,16 @@ public sealed class Level100PlayerWeaponRuntimeTests
         Assert.Equal(0u, weapons.PulseCannonChargeBits);
     }
 
-    [Fact]
-    public void StateHash_RecordsEveryNonInitialWeaponWordIncludingExpiredAndSignedZero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StateHash_RecordsEveryNonInitialWeaponWordIncludingExpiredAndSignedZero(bool legacyEnvelope)
     {
         WorldSnapshot initial = new Simulation(0x1234u, Level100TestActorDefinitions.Create()).Snapshot;
+        if (legacyEnvelope) initial = Level100TestActorDefinitions.LegacyHashEnvelope(initial);
         Assert.Equal(Level100PlayerWeaponStateSnapshot.Initial, initial.Level100PlayerWeaponState);
         const int schemaOffset = 23; // ASCII ONSLAUGHT-REBUILD-STATE.
-        Assert.Equal(42, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(initial), schemaOffset));
+        Assert.Equal(legacyEnvelope ? 42 : 47, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(initial), schemaOffset));
         string baseline = StateHasher.ComputeHex(initial);
         Level100PlayerWeaponStateSnapshot weapons = initial.Level100PlayerWeaponState;
         Level100PlayerWeaponStateSnapshot[] variants =
@@ -133,7 +136,7 @@ public sealed class Level100PlayerWeaponRuntimeTests
         foreach (Level100PlayerWeaponStateSnapshot variant in variants)
         {
             WorldSnapshot changed = initial with { Level100PlayerWeaponState = variant };
-            Assert.Equal(44, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(changed), schemaOffset));
+            Assert.Equal(legacyEnvelope ? 44 : 47, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(changed), schemaOffset));
             Assert.NotEqual(baseline, StateHasher.ComputeHex(changed));
         }
         Assert.Equal(variants.Length, variants.Select(variant => StateHasher.ComputeHex(

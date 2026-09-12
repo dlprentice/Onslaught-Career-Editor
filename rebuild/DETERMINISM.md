@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-08
+Last updated: 2026-09-12
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -82,9 +82,10 @@ The Level100 mover now retains raw creation/Euler/drive/velocity state and
 uses this update after Actor translation. Its living free-flight arithmetic
 matched 32 consecutive copied-retail Moves across 352 grouped comparisons,
 with observed guide inputs supplied explicitly. Move and clearance/avoidance
-cadence use the existing scheduler; its ordered pool plus guide cache are
-included in schema 47. Earlier formats remain available for snapshots without
-this extension. Restoring raw Plane motion requires the matching guide and
+cadence use the existing scheduler with explicit PC24 routing arithmetic;
+its mode, ordered pool and guide cache are included in schema 47. Aircraft
+restore rejects the scheduler's legacy PC53 mode. Earlier formats remain
+available for snapshots without this extension. Restoring raw Plane motion requires the matching guide and
 event state; a millimeter pose cannot reconstruct them.
 
 The production script/weapon target bridge, missing avoidance candidate stream,

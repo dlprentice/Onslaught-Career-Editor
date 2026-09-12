@@ -414,6 +414,8 @@ public sealed class Level100TutorialProgressionTests
             "SpawnerB",
             1,
             "AirborneDrone1").Single();
+        mechanics.RegisterSpawnedActor(droneId);
+        runtime.RegisterActor(droneId);
         Level100ActorSnapshot spawned = registry.GetActor(droneId);
         Assert.Equal("Target Drone", spawned.DefinitionName);
         Assert.Equal("m_FA_F24_training.msh.aya", spawned.MeshBinding);
@@ -464,7 +466,7 @@ public sealed class Level100TutorialProgressionTests
         SimVector3 flown = registry.GetPose(droneId).PositionMillimeters;
         Assert.NotEqual(origin, flown);
 
-        // Ground track per released base tick is CUnitAirVelocity / 20 -
+        // Travel per released base tick is CUnitAirVelocity * stored0.05 -
         // 5.5 u/s is 275 mm. The measurement is taken over a straight stretch
         // so the turn does not shorten it.
         int[] speeds = new int[20];
@@ -567,6 +569,7 @@ public sealed class Level100TutorialProgressionTests
             "SpawnerA",
             1,
             "AirborneDrone2").Single();
+        mechanics.RegisterSpawnedActor(droneId);
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,

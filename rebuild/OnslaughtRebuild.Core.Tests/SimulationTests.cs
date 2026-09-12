@@ -54,8 +54,9 @@ public sealed class SimulationTests
         for (int tick = 0; tick < 40; tick++) repeat.Step(new SimInput(0, 1));
         string hash = StateHasher.ComputeHex(rootState);
         Assert.Equal(hash, StateHasher.ComputeHex(repeat.Snapshot));
-        // Changes with creation-owned raw aircraft and its event/guide state.
-        Assert.True(hash == "5e6421669c3e01da364f66048aa5d6e1523eff60b9f9ab14b44b8fcf58bcaa54", $"Plane hash: {hash}");
+        // The prior 5e642166 fingerprint omitted the scheduler's PC24 mode
+        // byte. Removing only that byte reproduces it (VALIDATION.md).
+        Assert.Equal("f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8", hash);
         Assert.Equal(47, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
