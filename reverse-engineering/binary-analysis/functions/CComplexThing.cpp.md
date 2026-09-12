@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (isolated Plane controller and weapon selection; other rows retain their earlier evidence)
+Last updated: 2026-09-12 (weapon provider metadata and isolated preparation/fire phases; other rows retain their earlier evidence)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -276,6 +276,20 @@ birth tick, bypassing their next-frame movement contract.
 
 The selected-provider helper `[004fb840,004fbc8b)` is 1,099 bytes, SHA-256
 `8cafb4818c878d1be88a5b30a47375ad1190949cb836110e27a17fb4040106df`.
+The working database now carries these descriptive corrections, with the
+existing ABI and function boundaries preserved:
+
+| Address | Current Ghidra name |
+| --- | --- |
+| `0x004fb840` | CUnit__SelectAttackProvider |
+| `0x00509f70` | CWeapon__IsReadyToFire |
+| `0x0050a0b0` | CWeapon__GetActiveTargetMaskIntersection |
+| `0x0050a0d0` | CWeapon__GetTargetMaskIntersection |
+| `0x0050a290` | CWeapon__HasIncompleteBurst |
+
+The old squad/support, expired-range and target-timeout descriptions were
+misleading. [The exact correction](../../ghidra/README.md#weapon-provider-semantics-2026-09-12)
+replaces those comments and semantic tags while retaining provenance tags.
 The September 12 static review distinguishes these finite-input rules:
 
 - Any in-progress weapon burst preserves the current selection. A null target
@@ -324,6 +338,21 @@ increments the count and schedules another event with reuse zero, including
 the terminal no-shot callback; that callback does not clear the emitted count.
 Current countdown/intent cancellation is not this event ownership.
 
+The unchanged-code `weapon-phases-20260912.py` experiment confirms the selected
+current-mode Unit path across 26 synthetic cases and 32 calls. It executes seven
+original bodies, including preparation, readiness, fire, phase completion and
+the real post-fire callback with its empty-effect helper. Weapon Fire and the
+waiting-animation callback are explicit stubs. It confirms strict readiness,
+zero-delay preparation, the unequal phase-1/phase-2 deadlines, and clearing both
+request/prepared flags on refused fire. A zero or negative Weapon Fire result
+still leaves Unit Fire returning one; that result denotes an accepted attempt,
+not a projectile. On canceled phase 1, `004fa8a1` invokes the post callback,
+which can set phase 2 and a new deadline; `004fa8a7` then clears the phase again
+while retaining that deadline. These bounded observations do not establish
+effects, spawners, deployment, phase-3 pose restoration or gameplay acceptance.
+[Validation](../../../VALIDATION.md#unit-weapon-preparation-and-fire-phases--september-12)
+owns the command, outputs and review limits.
+
 For profile `+19c==0`, common-controller preparation writes the target virtual
 `+168` result into controller `+34` at `004ff24b..004ff262`. The later ready
 arm at `004ff19a` passes that retained vector to `004fb650`, then consumes its
@@ -331,9 +360,21 @@ direct random draw at `004ff1aa`. Re-aiming from the current quantized target
 position on every burst shot changes this ownership. A successful selected
 Round initializer calls Actor Init at `004d867b`; Actor Init draws at
 `0040135d` before testing its movement flag. This adds a draw beyond the two
-scatter samples, but does not prove exactly three launch draws: factory,
-resource and round/muzzle-effect paths still need closure. Do not substitute
-a guessed total or omit the resulting Actor movement-event admission.
+scatter calls at `00506e0a/00506e3e`, but does not prove an exhaustive total.
+Before Actor's draw, renderer registration `005164b0` can call a resolved
+renderer initializer at `0051654c`; the selected live registry remains an
+open dependency. Do not substitute a guessed total or omit the resulting
+Actor movement-event admission.
+
+Particle and sound randomness use separate CRT state: `0055dbfe` updates
+thread-data `+14` with `state * 0x343fd + 0x269ec3`, whereas shared gameplay
+`004de8d0` updates its ECX receiver. Sprite initialization calls the CRT at
+`004c0acb`; sound selection calls it at `004e196b` and conditionally at
+`004e19c4` for pitch. These calls must not advance the gameplay stream.
+Timeline initialization `[004c2620,004c263a)` only clears counters and stores
+lifetime; its children belong to later updates. These are static call-path
+findings, with effect/resource admission and actual renderer selection still
+requiring observation.
 
 Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
 and a monitored identity whose current Z is read during movement. Its only

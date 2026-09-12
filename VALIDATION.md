@@ -772,3 +772,60 @@ desktop control or new Ghidra mutation was needed for this step.
 `git diff --check`, `npm run test:docs` and `npm run test:safety` passed;
 the public-payload check examined 3,978 candidates. The npm logs use the
 `provider-{docs,safety}-20260912.log` names in the same private owner.
+
+### Weapon provider Ghidra correction — September 12
+
+The five-row `weapon-provider-semantics` manifest passed pristine-body and
+independent semantic review, isolated dry/apply/separate-readback, full metadata
+comparison, final-spec review, sealed rehearsal, live dry/apply/separate-readback
+and independent POST recovery. All 8,325 non-target function rows and target
+ABI/bodies/repeatable comments remained unchanged. All variables, types,
+bookmarks, saved stack metadata and Plane-depth exports held. The only changed
+program metric is `commentsSha256`; all eight live exports equal sealed POST.
+
+A deliberately stale tag set in the fifth row was rejected in actual apply
+mode before any row was written. Its separate function/program export matches
+PRE byte-for-byte. PRE and POST recovery were restored to new local paths and
+opened read-only; the tracked checkpoint was freshly hash-compared and preserved.
+Exact command arrays, manifests, exports, control and recovery receipts are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/weapon-provider-semantics/`.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed **91/91**,
+with no skips on this invocation. Its production-Java and exact live-twin
+derivation checks passed; no framework gate changed. The live twin adds only
+this reviewed cohort to its allowlist. Output is
+`local-data/test-runs/linux-route-20260906-af1sa_l9/weapon-provider-framework-20260912.log`.
+
+The documentation gate, name-checker self-test and `git diff --check` passed;
+all 8,330 projected current names also match the live export. The first payload
+check refused the encoded comment manifest. Its ten decoded analytic comments
+(8,032 bytes) passed the existing content/secret guards and independent review;
+the existing exact-path/hash register now admits only that reviewed file.
+The final safety check passed for **3,980 candidates**. The initial refusal and
+final pass remain separate `weapon-provider-safety-20260912.log` and
+`weapon-provider-safety-final-20260912.log` files in the same test owner;
+docs and name self-test logs use the matching `weapon-provider-` prefix.
+
+### Unit weapon preparation and fire phases — September 12
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/weapon-phases-20260912.py`
+passed **26 synthetic cases / 32 calls**. Seven unchanged routine bodies and
+one constant execute at their original addresses, checked through actual ELF
+load mappings against the pristine specimen. The `.inputs.bin`, `.outputs.bin`
+and `.results.json` remain private beside the script. Every case checks return
+values where meaningful, phase/deadline/request/prepared words, call counts,
+balanced x87 stack/control word, and that no other input bytes changed.
+
+Cases distinguish strict reload readiness, zero/positive/negative preparation
+delay, phase-1 completion at equality versus phase-2 completion after equality,
+fire refusal clearing flags, and accepted Unit fire despite zero/negative
+Weapon Fire returns. A canceled phase-1 case confirms that the outer completion
+clears the phase after the real post callback set phase 2, retaining its deadline.
+Independent read-only review checked all retained cases, ELF mappings, stubs
+and instruction ordering; the reviewer did not rerun the executable.
+
+Inputs use a current-mode weapon, empty spawner list, no deploy prerequisite
+and no preparation/post effects. Weapon Fire and waiting animation are stubs;
+the post callback and its empty-effect helper execute original code. These
+checks establish no projectile, effects, phase-3 pose restoration, player route
+or combat acceptance. No desktop control or C# runtime change was involved.

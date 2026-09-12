@@ -183,10 +183,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # contains ten canonical UTF-8 comments (7,696 decoded bytes); the BBOX manifest
 # contains two (1,575 bytes); bounds comments contain four (2,114 bytes).
 # Segment-controller ownership contains eight analytic comments (4,705 bytes).
+# Weapon-provider semantics contains ten analytic comments (8,032 bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/weapon-provider-semantics.manifest.tsv":
+        "a686f08b85288db2e43cca9f82ba5b9d91a048e7c2d50b6ca0f4b32fd7b0a804",
     "tools/cohort-specs/air-contact-shutdown.manifest.tsv":
         "d97fee5bddfd289cda7f9d2be43d6b388043f688205bc27303f961235ee73da4",
     "tools/cohort-specs/segment-controller-ownership.manifest.tsv":

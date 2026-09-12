@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[script callback arguments](#script-callback-arguments-2026-09-12);
+[weapon provider semantics](#weapon-provider-semantics-2026-09-12);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -401,7 +401,7 @@ change, so the existing documentation-name projection remains valid.
 
 ## Script callback arguments (2026-09-12)
 
-The working project measures `db.18643`: 18 payload files,
+After this cohort the working project measured `db.18643`: 18 payload files,
 118,967,156 bytes, inventory SHA-256
 `dd3c65b9a3c014b97320fbcba63145d81c6ba0c8f03b9baf5c006c5483ee0b59`.
 Its main database is 68,665,344 bytes, SHA-256
@@ -431,6 +431,42 @@ Copy, separate restore and read-only reopen passed with no file mismatch.
 `6cecf1ad5379b50332f8ea0d8ae68805b1e8d4731e460a7e77231f882b36a962`.
 Both retained main files in the tracked checkpoint still match their hashes;
 no checkpoint was opened or refreshed. Names and their projection are unchanged.
+
+## Weapon provider semantics (2026-09-12)
+
+The working project measures `db.18644`: 18 payload files,
+118,983,540 bytes, inventory SHA-256
+`bfb9caa7054ee25558de39906045c0dde3270e80db37d3425d0ba330bfa24294`.
+Its main database is 68,681,728 bytes, SHA-256
+`632465da170914893e24e026284ae05a7ecfa4b46a651ebf2808c1343f3ba4a7`.
+The [manifest](../../tools/cohort-specs/weapon-provider-semantics.manifest.tsv)
+and [spec](../../tools/cohort-specs/weapon-provider-semantics.spec.tsv) correct
+five descriptive names, nonrepeatable comments and semantic tag sets:
+the Unit attack-provider selector, Weapon readiness, two raw mask intersections
+and the incomplete-burst predicate. The [Unit evidence](../binary-analysis/functions/CComplexThing.cpp.md)
+separates static ownership from bounded original-code execution. These are
+descriptive corrections, not recovered original source spellings.
+
+Exact manifest and independent full-metadata review, isolated and sealed
+apply/readback, stale-fifth-row refusal, live dry/apply and separate readback
+passed. All 8,325 non-target rows remain identical. Target signatures change
+only their displayed function names; bodies, ABI, variables, types, bookmarks,
+repeatable comments and saved stack metadata remain unchanged. Only the
+program-wide comment digest changes. All eight live exports equal the sealed
+rehearsal. The current-name checker composes this manifest with its prior
+overlays; frozen name tables remain unchanged.
+
+Evidence is under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/weapon-provider-semantics/`.
+`live-readback.json` is 2,319 bytes, SHA-256
+`c49d8928fa1efd9fcbe250b9523ab0e2d68fca20d75ec1f45d1a73d54c066448`.
+The preceding script-callback POST matched PRE and was freshly restored and
+reopened read-only. New independent POST recovery is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-12-weapon-provider-semantics/post-working/`.
+Copy, separate restore and read-only reopen passed without file mismatches;
+`post-working-restore.json` is 5,787 bytes, SHA-256
+`67305bd0ab9c89eb59860df956837d60e901032bbe6870b5cfa4722a842ee7f9`.
+The tracked checkpoint was freshly hash-compared and remains unchanged.
 
 Related (not this folder):
 

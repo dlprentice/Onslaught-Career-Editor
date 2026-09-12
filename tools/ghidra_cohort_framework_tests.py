@@ -189,6 +189,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # script-callback-arguments: two prototypes, 2026-09-12. Raw dispatcher/body
 # review, isolated apply/readback and stale-second-row refusal passed. Exactly
 # eight argument rows added; unknown saved return and stack purge preserved.
+# weapon-provider-semantics: five names/comments/tag sets, 2026-09-12.
+# Exact body/manifest review and isolated apply/readback preserve all ABI and
+# non-target metadata. A stale fifth-row tag set is refused before any writes.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -210,6 +213,7 @@ LIVE_GRANTED_COHORTS = [
     "air-contact-shutdown",
     "plane-controller-event-argument",
     "script-callback-arguments",
+    "weapon-provider-semantics",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -637,6 +641,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "air-contact-shutdown",\n'
         '        "plane-controller-event-argument",\n'
         '        "script-callback-arguments",\n'
+        '        "weapon-provider-semantics",\n'
         "    };\n",
     ),
     (

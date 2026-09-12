@@ -61,7 +61,9 @@ review; shared cleanup is not permission to assign one prototype wholesale. Airc
 AI/controller state and the scheduled selected-provider/common-AI chain;
 retiming the current per-Move target refresh alone would omit real behavior.
 The bounded weapon selector now matches isolated original-code cases and has
-focused Core coverage. It is not yet wired to actor firing. Continue with the
+focused Core coverage. Original-code Unit preparation/fire phase experiments
+also passed, and five misleading provider/helper names were corrected in Ghidra.
+The recovered contracts are not yet wired to actor firing. Continue with the
 retained aim, preparation/readiness phases and scheduled burst transaction,
 including terminal callbacks and next-frame round movement, before replacing
 the old all-slots loop. Details remain in the controller evidence owner above.

@@ -391,6 +391,9 @@ skips. Full-combat and Save Lab UI acceptance remain open. The resumed Ghidra
 audit corrected one missing Plane-controller event argument, with isolated and
 live readback and verified off-drive recovery. Two script callback prototypes were then
 corrected through the same gate, preserving unknown return and purge metadata.
+Five further names/comments/tag sets now identify the Unit provider selector
+and its Weapon readiness, mask and burst helpers correctly, with all bodies,
+ABI and non-target metadata preserved and independently restored recovery.
 The audit also refuted a stale
 missing-boundary note. The internal-function inventory is available, but the
 wider semantic audit is incomplete; the controller's decompiler stack artifact and
@@ -405,6 +408,10 @@ ties and retail's unusual out-of-range scoring. It is not yet connected to
 actor firing: retained aim, preparation phases and burst-event ownership must
 be integrated together. [Validation](VALIDATION.md#bounded-unit-weapon-selector--september-12)
 records the exact stubs, exclusions and negative controls.
+An additional unchanged-code phase experiment covers preparation, readiness,
+fire and post-fire state across 26 synthetic cases. It establishes bounded
+state transitions and the ignored Weapon Fire return, not projectile creation
+or combat acceptance; the actor firing loop still needs their integration.
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
