@@ -19,9 +19,11 @@ public static class Level100ActorDefinitionManifest
     // transforms, positions, paths and source identities are unchanged. The
     // subsequent Trainer-life correction sets the two initialHealth fields
     // to 3000 from their physics profile; no other manifest field changes.
+    // September 12 adds only the four Airfield spawn rows' selected exit
+    // waypoints: CEMT selector1 plus constant CPOS/inherited CORI model words.
     // Definition identity hashes those exact words, so replay pins move too.
     public const string ExpectedManifestSha256 =
-        "D6D3F9EDB7C13CF367C9F8A393CEC5D2DB91A6E6F55F106B931ACF1E28E6D493";
+        "52A17547C8A91A8BAE9ABE3DF291C02BA1A106BBF39E10C71642A0F32FD34879";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =
@@ -151,7 +153,9 @@ public static class Level100ActorDefinitionManifest
                 DecodeEmitterTransform(source.AuthoredEmitterTransform),
                 ParseEnum<Level100MissionTargetGroup>(source.TargetGroup, "target group"),
                 source.FixedTargetOrdinal,
-                source.MaximumGroupActors);
+                source.MaximumGroupActors,
+                source.SpawnerExitWaypoints?.Select(point => new Level100SpawnerExitPoint(
+                    point.Selector, DecodeEmitterTransform(point.ModelTransform))).ToArray());
         }
 
         var waypointPaths =
@@ -367,6 +371,7 @@ public static class Level100ActorDefinitionManifest
     {
         public bool Active { get; init; }
         public EmitterTransform AuthoredEmitterTransform { get; init; } = new();
+        public SpawnerExitPoint[]? SpawnerExitWaypoints { get; init; }
         public int AuthoredOrder { get; init; }
         public string DefinitionIdentity { get; init; } = string.Empty;
         public string DefinitionName { get; init; } = string.Empty;
@@ -380,6 +385,12 @@ public static class Level100ActorDefinitionManifest
         public string SpawnerName { get; init; } = string.Empty;
         public string TargetGroup { get; init; } = string.Empty;
         public uint ThingTypeMask { get; init; }
+    }
+
+    private sealed record SpawnerExitPoint
+    {
+        public int Selector { get; init; }
+        public EmitterTransform ModelTransform { get; init; } = new();
     }
 
     private sealed record WaypointPath

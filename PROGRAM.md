@@ -63,8 +63,13 @@ retiming the current per-Move target refresh alone would omit real behavior.
 The bounded weapon selector now matches isolated original-code cases and has
 focused Core coverage. Original-code Unit preparation/fire phase experiments
 also passed, and five misleading provider/helper names were corrected in Ghidra.
-The recovered contracts are not yet wired to actor firing. Continue with the
-retained aim, preparation/readiness phases and scheduled burst transaction,
+The recovered contracts are not yet wired to actor firing. The Airfield exit
+waypoints now survive materialization and have an owned, hash-bound Core lookup.
+Original-code initialization/exit checks confirm that spawned aircraft first
+request controller event 3002 and submit script Ready only at the exit handoff;
+the current immediate-Ready bridge still needs that scheduled lifecycle.
+Continue with this separate controller listener, retained aim,
+preparation/readiness phases and scheduled burst transaction,
 including terminal callbacks and next-frame round movement, before replacing
 the old all-slots loop. Details remain in the controller evidence owner above.
 Keep conditional random draws, ordered avoidance candidates and monitored

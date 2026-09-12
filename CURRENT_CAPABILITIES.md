@@ -413,6 +413,14 @@ fire and post-fire state across 26 synthetic cases. It establishes bounded
 state transitions and the ignored Weapon Fire return, not projectile creation
 or combat acceptance; the actor firing loop still needs their integration.
 
+The Airfield's two exit waypoint inputs now reach Core with their exact CEMT
+selectors, model positions and inherited orientations. The bounded lookup
+matches independent calculated world-pose words and preserves definition/hash
+ownership. Original-code initializer and exit experiments establish the earlier
+3002 phase and later script-Ready submission under explicit stubs. The live
+rebuild still needs this controller lifecycle and selected-provider firing;
+these checks do not establish a completed aircraft exit or Level 100 combat.
+
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
 and a bounding-box reader mislabeled as a material loader. Two follow-up

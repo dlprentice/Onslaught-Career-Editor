@@ -9,6 +9,7 @@ import unittest
 import zlib
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -572,6 +573,81 @@ class MeshEmitterMaterializationTests(unittest.TestCase):
             MeshEmitterBinding("SpawnerA", 1, None),))
         with self.assertRaisesRegex(RuntimeError, "has no mesh part"):
             materializer._mesh_emitters(parsed)
+
+
+class AirfieldExitMaterializationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        try:
+            game = materializer._resolve_game_root(None)
+        except RuntimeError as error:
+            raise unittest.SkipTest("Airfield exit tests require local retail input") from error
+        from cmsh_static_preview import inflate_aya, parse_cmsh_stream
+        data = materializer._read_exact(
+            game / "data/resources/meshes/m_fb_aircraft_factory.msh.aya",
+            "23219fc98eba73c19c83b3ae07ea92fa750d8f71362ccedfc1bfdec474629899")
+        cls.parsed = parse_cmsh_stream(inflate_aya(data))
+
+    def with_bindings(self, bindings):
+        return SimpleNamespace(file_parts=self.parsed.file_parts, siblings=self.parsed.siblings,
+                               emitter_bindings=lambda: tuple(bindings))
+
+    def test_real_exit_points_keep_selectors_and_differ_from_launch_emitters(self):
+        paths = materializer._airfield_exit_waypoints(self.parsed)
+        launches = materializer._mesh_emitters(self.parsed)
+        for key, words in (("SpawnerA", (0xbd300b66, 0xc19bb698, 0xc0c3f46a)),
+                           ("SpawnerB", (0xbe164340, 0x4199149c, 0xc0c3f46a))):
+            self.assertEqual([1], [point["selector"] for point in paths[key]])
+            point = paths[key][0]["modelTransform"]
+            self.assertEqual(list(words), [value & 0xffffffff for value in point["localPositionFloatBits"]])
+            self.assertEqual([0x3f800000,0,0,0,0x3f800000,0,0,0,0x3f800000], point["localBasisFloatBits"])
+            self.assertNotEqual([materializer._float_bits(value) for value in launches[key]["position"]],
+                                point["localPositionFloatBits"])
+
+    def test_case_insensitive_query_matches_the_shipped_lowercase_names(self):
+        bindings = [replace(item, name=item.name.upper()) for item in self.parsed.emitter_bindings()]
+        self.assertEqual(materializer._airfield_exit_waypoints(self.parsed),
+                         materializer._airfield_exit_waypoints(self.with_bindings(bindings)))
+
+    def test_changed_or_ambiguous_selector_is_not_a_list_index(self):
+        bindings = self.parsed.emitter_bindings()
+        chosen = next(item for item in bindings if item.name.lower() == "waypointa")
+        for changed, message in (
+            ([replace(item, selector=2) if item == chosen else item for item in bindings], "selector changed"),
+            ([*bindings, replace(chosen, name="WaypointA")], "ambiguous"),
+            ([item for item in bindings if item != chosen], "incomplete"),
+            ([replace(item, part_ordinal=None) if item == chosen else item for item in bindings], "no mesh part"),
+        ):
+            with self.subTest(message=message), self.assertRaisesRegex(RuntimeError, message):
+                materializer._airfield_exit_waypoints(self.with_bindings(changed))
+
+    def test_changing_an_exit_ancestor_cannot_be_flattened_to_frame_zero(self):
+        parts = list(self.parsed.file_parts())
+        parts[13] = replace(parts[13], track=replace(parts[13].track, frame_map=(1,) * 101))
+        changed = SimpleNamespace(file_parts=lambda: parts, siblings=self.parsed.siblings,
+                                  emitter_bindings=self.parsed.emitter_bindings)
+        with self.assertRaisesRegex(RuntimeError, "constant pose"):
+            materializer._airfield_exit_waypoints(changed)
+
+    def test_changed_cached_position_is_not_replaced_by_preview_geometry(self):
+        parts = list(self.parsed.file_parts())
+        raw = bytearray(parts[18].track.cached_position_bytes)
+        raw[0] ^= 1
+        parts[18] = replace(parts[18], track=replace(parts[18].track, cached_position_bytes=bytes(raw)))
+        changed = SimpleNamespace(file_parts=lambda: parts, siblings=self.parsed.siblings,
+                                  emitter_bindings=self.parsed.emitter_bindings)
+        with self.assertRaisesRegex(RuntimeError, "disagrees with its cache"):
+            materializer._airfield_exit_waypoints(changed)
+
+    def test_missing_orientation_requires_the_declared_inheritance_flag(self):
+        parts = list(self.parsed.file_parts())
+        raw = bytearray(parts[18].raw_cmsp)
+        struct.pack_into("<I", raw, 0x120, 0)
+        parts[18] = replace(parts[18], raw_cmsp=bytes(raw))
+        changed = SimpleNamespace(file_parts=lambda: parts, siblings=self.parsed.siblings,
+                                  emitter_bindings=self.parsed.emitter_bindings)
+        with self.assertRaisesRegex(RuntimeError, "model-pose cache changed"):
+            materializer._airfield_exit_waypoints(changed)
 
 
 class PhysicsDefinitionTests(unittest.TestCase):

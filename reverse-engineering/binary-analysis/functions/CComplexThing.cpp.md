@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (weapon provider metadata and isolated preparation/fire phases; other rows retain their earlier evidence)
+Last updated: 2026-09-12 (aircraft spawner initialization, exit inputs and event handoff; other rows retain their earlier evidence)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -261,6 +261,86 @@ Private `plane-controller-20260912.py`, its inputs/outputs/results and
 named above. Common Update, aim, radii, range classification, random draw and
 event admission are explicit stubs; this does not validate their live inputs
 or establish an aircraft gameplay trajectory.
+
+The separate `plane-controller-scheduling-20260912.py` continuation passes
+18 cases, retaining the original 11-case artifacts. Supplied common-return
+delays 0, -10 and 100000 do not affect the Plane's own due time. Its dying-owner
+branch makes no calls. A null target clears hysteresis; a nonzero slot-5 return
+bypasses the direct recurrence, while zero reaches the waiting/scheduling arm.
+The incoming event is forwarded unchanged. This verifies supplied-return and
+branch behavior, not absence of side effects inside the stubbed common Update
+or slot 5.
+
+### Aircraft spawner exit and script readiness — September 12
+
+The compiled LevelScript at IP423 spawns Air Trainer from Airfield/SpawnerB
+with selector 1; Hangar's drone calls use SpawnerB or alternate SpawnerA/B,
+also selector 1. The shipped `.msl` files under `data/MissionScripts/level100/`
+and the admitted `.mso.bin` objects in Core's Level100 script assets agree.
+Selector, animation frame and list ordinal are separate values.
+
+`IScript` SpawnThing writes its current source owner to initializer `+3b4` at
+`00536fb3`, and SpawnerA/B map to `+3b8=15/16`. The shared initializer at
+`004fe710` constructs RTTI CUnitAI despite its saved CWarspite name. Plane Init
+then installs CPlaneAI and stores the separate listener at Unit `+13c`.
+For these spawns the controller starts at `+20=2`, index `+30=1`, and deadline
+`+44=float32(NOW+10)`, requesting event 3002 at NOW with null reuse. It does
+not request script Ready during this constructor. Unit AI state `+210` starts
+at zero independently. Both selected profiles inherit Sweeping `+19c=0`,
+excluding the constructor's optional four direct random draws.
+
+The original event-3002 callback `004ffbb0` queries the spawning owner's
+`+160(tag,index,position,basis)`. Deadline comparison is strict; an all-zero
+position terminates the exit. It clamps Z to terrain minus `0.1f`, increments
+the index at strict squared distance below `6.25f` for owner type bit `0x400`
+(`0.5625f` otherwise), and requests GoTo mode 1. Continuation draws once
+directly and submits 3002 with incoming-event reuse at the float32 store of
+`rand16*float32(0.1/65536) + NOW + 0.1f`, preserving that order.
+The terminal arm invokes the real `004febe0` state-1 transition, submitting
+a new controller 3000 at NOW before a new **Plane-owned** script event 2003
+at NEXT_FRAME. A missing/dying spawning owner first permits a separate
+owner-kind-1 death path; a dying spawner does not unconditionally terminate.
+
+Private `plane-controller-init-20260912.py` passed 18 cases and
+`plane-controller-exit-20260912.py` passed 26. They execute unchanged bodies,
+check all 100 synthetic receiver bytes, preserved registers and stack state;
+the initializer also checks the original SEH push/pop against private FS memory.
+The exit probe executes the real state-1 helper. SetReader, scene virtuals,
+terrain, random values and AddEvent remain explicit stubs: event **submission
+order and reuse arguments** are established, not complete dispatch or arrival
+time. Independent reviewers checked the retained ELF load mappings and outputs.
+The three body hashes, in address order, are:
+
+| Range | SHA-256 |
+| --- | --- |
+| `004fe710..004fea24` | `2eadfbd3a63747b453291d5b7584cb973c6b5bc239e755cfa329ccf3b16dfd1d` |
+| `004febe0..004fec5b` | `cd1eee4e958eaf9ef083c911b6bdf5f2383d6cdacb4e54916009562f0d448181` |
+| `004ffbb0..004ffdca` | `76ba731fe0d45a277013a54c9526266b1dbb5f0e2f697630ae1dc9d4c3057a20` |
+
+The Airfield is CBuilding, whose `+184` capability returns 1. Attachment tags
+15/16 explicitly bypass the Unit/profile cache and query case-insensitive
+**WaypointA/B**, with exact CEMT selector matching. They are not SpawnerA/B's
+launch transforms. The selected aircraft-factory mesh has only selector 1:
+WaypointA is part 18 and WaypointB is part 12, with no selector 2. Both points
+own CPOS; CORI inherits through flag `+120` to root part 0. Native
+`004b1149..004b1169` follows the first flag-zero ancestor independently of
+the `+11c` position owner. All relevant chains have one hierarchy pose and
+101 zero frame-map entries. This closes constant stored-cache interpretation;
+the separate render cache and arbitrary animation remain outside it.
+
+The materializer now carries these exit selectors/model transforms into the
+four Airfield spawn definitions. Core owns/hashes them and exposes the bounded
+seated-owner lookup through `GetPlaneSpawnerExitPoint`. The selected mesh is
+86,028 bytes, SHA-256
+`23219fc98eba73c19c83b3ae07ea92fa750d8f71362ccedfc1bfdec474629899`;
+its inflated hash is `893b5b0141d66394a6e19506be82c38c720f000a476391174862ef6864f33276`.
+Exact calculated world-pose checks use independent PC24 composition and HFLD
+inputs, not observed live cache words. Controller scheduling, delayed script
+Ready, common AI/provider firing and their snapshot lifecycle remain unwired.
+The [validation record](../../../VALIDATION.md#aircraft-spawner-exit-inputs--september-12)
+owns commands, output paths and the isolated definition-identity hash change.
+
+### Remaining selected-provider integration
 
 The remaining weapon integration is consequential. Static inspection of
 `004fc000` requires the selected `Unit+140` provider, `+1e8` readiness and the

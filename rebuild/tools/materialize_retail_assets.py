@@ -588,7 +588,7 @@ STATIC_WORLD_ANIMATED_MESHES = {
 # 10 spawns. The subsequent Trainer-life correction changes only the authored
 # Flyby and AirTrainer spawn initialHealth from 0 to 3000, from physics field3.
 # Keep this pin aligned with Level100ActorDefinitionManifest.ExpectedManifestSha256.
-STATIC_WORLD_MANIFEST_SHA256 = "d6d3f9edb7c13cf367c9f8a393cec5d2db91a6e6f55f106b931acf1e28e6d493"
+STATIC_WORLD_MANIFEST_SHA256 = "52a17547c8a91a8bae9abe3df291c02ba1a106bbf39e10c71642a0f32fd34879"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -3386,6 +3386,68 @@ def _mesh_emitters(parsed) -> dict[str, dict[str, object]]:
     return result
 
 
+def _airfield_exit_waypoints(parsed) -> dict[str, list[dict[str, object]]]:
+    """Selected constant model-space exit poses, distinct from launch emitters.
+
+    Unit attachment tags 15/16 query WaypointA/B case-insensitively and retain
+    the exact CEMT selector. The selected mesh has one point per exit, at 1.
+    These are CPOS/CORI model inputs; the Core owner applies its seated pose.
+    This does not flatten an animated or controller-dependent attachment.
+    """
+    if any(sibling.tag in (b"PMSH", b"PMS2") for sibling in parsed.siblings):
+        raise RuntimeError("Airfield exit lookup requires the admitted single mesh")
+    parts = parsed.file_parts()
+    result = {"SpawnerA": [], "SpawnerB": []}
+    for binding in parsed.emitter_bindings():
+        if binding.name.casefold() not in ("waypointa", "waypointb"):
+            continue
+        if binding.part_ordinal is None:
+            raise RuntimeError("Airfield exit waypoint has no mesh part")
+        if binding.selector != 1:
+            raise RuntimeError("Airfield exit waypoint selector changed")
+        key = "Spawner" + binding.name[-1].upper()
+        if result[key]:
+            raise RuntimeError("Airfield exit waypoint binding is ambiguous")
+        part = parts[binding.part_ordinal]
+        ancestor_index, visited = binding.part_ordinal, set()
+        while True:
+            ancestor = parts[ancestor_index]
+            if (ancestor_index in visited or ancestor.track is None
+                    or ancestor.track.frame_map != (0,) * 101
+                    or len(ancestor.track.hierarchy) != 1):
+                raise RuntimeError("Airfield exit hierarchy is not the admitted constant pose")
+            visited.add(ancestor_index)
+            if ancestor.parent is None:
+                break
+            ancestor_index = ancestor.parent
+        track = part.track
+        # 004b1129..004b1169 resolves the two cache owners independently.
+        # Selected exit points own CPOS but inherit CORI through +0x120.
+        orientation_owner = part
+        while struct.unpack_from("<I", orientation_owner.raw_cmsp, 0x120)[0]:
+            if orientation_owner.parent is None:
+                raise RuntimeError("Airfield exit orientation cache has no owner")
+            orientation_owner = parts[orientation_owner.parent]
+        if (struct.unpack_from("<I", part.raw_cmsp, 0x11c)[0]
+                or len(track.cached_position_bytes) != 16
+                or len(orientation_owner.track.cached_orientation_bytes) != 48):
+            raise RuntimeError("Airfield exit model-pose cache changed")
+        position = list(struct.unpack("<4i", track.cached_position_bytes)[:3])
+        padded_basis = struct.unpack("<12i", orientation_owner.track.cached_orientation_bytes)
+        basis = [padded_basis[index] for index in (0, 1, 2, 4, 5, 6, 8, 9, 10)]
+        if (position != [_float_bits(value) for value in part.transform.position]
+                or basis != [_float_bits(value) for row in part.transform.rows for value in row]):
+            raise RuntimeError("Airfield exit model transform disagrees with its cache")
+        result[key].append({
+            "selector": binding.selector,
+            "modelTransform": {"localPositionFloatBits": position,
+                               "localBasisFloatBits": basis},
+        })
+    if any(len(points) != 1 for points in result.values()):
+        raise RuntimeError("Airfield exit waypoint set is incomplete")
+    return result
+
+
 def _spawn_pose(
     owner: dict[str, object],
     emitter: dict[str, object],
@@ -3859,6 +3921,7 @@ def _build_actor_definition_set(
     level_actors: list[dict[str, object]],
     emitters_by_mesh: dict[str, dict[str, dict[str, object]]],
     physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
+    airfield_exit_waypoints: dict[str, list[dict[str, object]]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     actor_definitions: list[dict[str, object]] = []
     trainer_life = _physics_record(physics, 1, "Air Trainer").get(3)
@@ -4071,6 +4134,8 @@ def _build_actor_definition_set(
                 "ownerDefinitionIdentity": owner_identity[owner_name],
                 "scriptName": script_name,
                 "spawnerName": spawner_name,
+                **({"spawnerExitWaypoints": airfield_exit_waypoints[spawner_name]}
+                   if owner_name == "Airfield" else {}),
                 "targetGroup": target_group,
                 "thingTypeMask": 0,
             }
@@ -4588,6 +4653,7 @@ def _materialize_static_world(
         level_actors,
         emitters_by_mesh,
         physics,
+        _airfield_exit_waypoints(parse_cmsh_stream(inflate_aya(mesh_inputs["fb_aircraft_factory"][1]))),
     )
     motion_definitions = _level100_actor_motion_definitions(physics)
 

@@ -1759,9 +1759,8 @@ public sealed class InteractiveSessionTests
         Assert.Equal(2_148, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
-        var session = new InteractiveSession(
-            Seed,
-            LoadMaterializedActorDefinitions());
+        Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+        var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
         {
             session.ObserveInput(
@@ -1798,12 +1797,24 @@ public sealed class InteractiveSessionTests
         // expectation; no native Godot or Windows execution is claimed here.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
-            CreateFiringRangeSessionForWeaponChecks(LoadMaterializedActorDefinitions()).CurrentSnapshot));
+            CreateFiringRangeSessionForWeaponChecks(definitions).CurrentSnapshot));
+        // Exit waypoints are admitted inputs; the controller does not yet
+        // consume them. Removing only their definition identity must recover
+        // the fingerprint of the previous route and the independent run below.
+        var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
+            definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
+            definitions.WaypointPaths, definitions.MotionDefinitions);
+        WorldSnapshot priorState = CreateFiringRangeSessionForWeaponChecks(priorDefinitions).CurrentSnapshot;
+        WorldSnapshot priorIdentityOnly = session.CurrentSnapshot with
+        {
+            Level100Actors = session.CurrentSnapshot.Level100Actors with
+            { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
+        };
+        Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
+        Assert.Equal("107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+            StateHasher.ComputeHex(priorIdentityOnly));
         Assert.True(
-            // Raw aircraft creation, motion and PC24 event state supersede
-            // the prior integer mover's fingerprint. All gameplay assertions
-            // and the independent input repeat above remain required.
-            finalStateHash == "107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+            finalStateHash == "2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de",
             $"First-flight final state hash: {finalStateHash}");
     }
 

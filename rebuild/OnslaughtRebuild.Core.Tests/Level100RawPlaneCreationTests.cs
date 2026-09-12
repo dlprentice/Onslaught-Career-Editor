@@ -7,6 +7,85 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100RawPlaneCreationTests
 {
+    [Theory]
+    [InlineData("SpawnerA")]
+    [InlineData("SpawnerB")]
+    public void ExitPointUsesItsOwnSelectorAndSeatedOwner(string spawner)
+    {
+        var definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var registry = new Level100ActorRegistry(definitions);
+        Level100ActorId airfield = registry.GetThingRef("Airfield")!.Value;
+        Level100ActorId plane = Assert.Single(registry.SpawnThing(airfield,
+            "Target Drone", spawner, 1, "AirborneDrone2"));
+        RetailUnitAttachmentPose exit = registry.GetPlaneSpawnerExitPoint(plane, 1)!.Value;
+        // Independent PC24 calculation from the shipped CEMT/CPOS/CORI and
+        // HFLD samples. Seated owner Z=c11d3775; this is an arithmetic/input
+        // comparison, not a captured retail cached-world pose.
+        Assert.Equal(spawner == "SpawnerA"
+            ? W(0x43b06060, 0x438608f1, 0xc17f31aa)
+            : W(0x439fb03f, 0x4378ae2e, 0xc17f31aa), exit.PositionFloatBits);
+        Assert.Equal(new Level100FloatBasis3Bits(
+            unchecked((int)0xbf000001), unchecked((int)0xbf5db3d7), 0,
+            0x3f5db3d7, unchecked((int)0xbf000001), 0,
+            0, 0, 0x3f800000), exit.BasisFloatBits);
+        Assert.Null(registry.GetPlaneSpawnerExitPoint(plane, 0));
+        Assert.Null(registry.GetPlaneSpawnerExitPoint(plane, 2));
+        Assert.NotEqual(registry.GetBaseState(plane).RetailPoses!.Current.PositionFloatBits,
+            exit.PositionFloatBits);
+        Assert.Equal(exit, new Level100ActorRegistry(definitions, registry.Snapshot)
+            .GetPlaneSpawnerExitPoint(plane, 1));
+        Assert.Throws<NotSupportedException>(() => registry.GetPlaneSpawnerExitPoint(airfield, 1));
+    }
+
+    [Fact]
+    public void ExitInputIsOwnedAndBoundToDefinitionIdentity()
+    {
+        var original = Level100TestActorDefinitions.LoadMaterialized();
+        Level100SpawnDefinition source = original.Spawns.First(item => item.SpawnerExitWaypoints is not null);
+        Level100SpawnerExitPoint point = Assert.Single(source.SpawnerExitWaypoints!);
+        var callerOwned = new List<Level100SpawnerExitPoint> { point };
+        Level100ActorDefinitionSet With(IReadOnlyList<Level100SpawnerExitPoint>? points) => new(
+            original.Actors, original.Spawns.Select(item => item == source
+                ? item with { SpawnerExitWaypoints = points } : item), original.WaypointPaths, original.MotionDefinitions);
+        Level100ActorDefinitionSet owned = With(callerOwned);
+        callerOwned.Clear();
+        Assert.Equal(original.IdentitySha256, owned.IdentitySha256);
+        Assert.Single(owned.Spawns.Single(item => item.DefinitionIdentity == source.DefinitionIdentity).SpawnerExitWaypoints!);
+        foreach (Level100ActorDefinitionSet changed in new[]
+        {
+            With(null), With([point with { Selector = 2 }]),
+            With([point with { ModelTransform = point.ModelTransform with
+            { LocalPositionFloatBits = point.ModelTransform.LocalPositionFloatBits with
+                { X = point.ModelTransform.LocalPositionFloatBits.X ^ 1 } } }]),
+            With([point with { ModelTransform = point.ModelTransform with
+            { LocalBasisFloatBits = point.ModelTransform.LocalBasisFloatBits with { Row0Y = int.MinValue } } }]),
+        })
+        {
+            Assert.NotEqual(original.IdentitySha256, changed.IdentitySha256);
+            Assert.Throws<ArgumentException>(() => new Level100ActorRegistry(changed,
+                new Level100ActorRegistry(original).Snapshot));
+        }
+        Assert.Throws<ArgumentException>(() => With([]));
+        Assert.Throws<ArgumentException>(() => With([point, point]));
+        Assert.Throws<ArgumentException>(() => With([point with { Selector = 0 }]));
+        Assert.Throws<ArgumentException>(() => With([point with { ModelTransform = point.ModelTransform with
+        { LocalPositionFloatBits = new(0x7f800000, 0, 0) } }]));
+    }
+
+    [Fact]
+    public void LegacyMissingExitInputIsNotAMissingSelector()
+    {
+        var source = Level100TestActorDefinitions.LoadMaterialized();
+        var legacy = new Level100ActorDefinitionSet(source.Actors,
+            source.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
+            source.WaypointPaths, source.MotionDefinitions);
+        var registry = new Level100ActorRegistry(legacy);
+        Level100ActorId id = Assert.Single(registry.SpawnThing(registry.GetThingRef("Airfield")!.Value,
+            "Air Trainer", "SpawnerB", 1, "AirTrainer"));
+        Assert.Throws<NotSupportedException>(() => registry.GetPlaneSpawnerExitPoint(id, 1));
+        Assert.Throws<NotSupportedException>(() => registry.GetPlaneSpawnerExitPoint(id, 2));
+    }
+
     [Fact]
     public void AuthoredTrainerHasCompleteRawStateBeforeAnyCommand()
     {

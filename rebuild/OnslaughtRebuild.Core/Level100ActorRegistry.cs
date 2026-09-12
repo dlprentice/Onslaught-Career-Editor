@@ -46,6 +46,10 @@ public sealed record Level100SpawnerTransform(
     Level100FloatVector3Bits LocalPositionFloatBits,
     Level100FloatBasis3Bits LocalBasisFloatBits);
 
+/// <summary>One authored WaypointA/B CEMT selector and its constant model pose.</summary>
+public sealed record Level100SpawnerExitPoint(
+    int Selector, Level100SpawnerTransform ModelTransform);
+
 public sealed record Level100AuthoredTransform(
     Level100FloatVector3Bits RetailPositionFloatBits,
     Level100FloatVector3Bits RetailEulerFloatBits,
@@ -89,7 +93,8 @@ public sealed record Level100SpawnDefinition(
     Level100SpawnerTransform AuthoredEmitterTransform,
     Level100MissionTargetGroup TargetGroup,
     int FixedTargetOrdinal,
-    int MaximumGroupActors);
+    int MaximumGroupActors,
+    IReadOnlyList<Level100SpawnerExitPoint>? SpawnerExitWaypoints = null);
 
 public sealed record Level100WaypointPointDefinition(
     int NodeIndex,
@@ -285,6 +290,13 @@ public sealed class Level100ActorDefinitionSet
             Level100SpawnDefinition definition = spawnArray[index] ??
                 throw new ArgumentException("Level 100 spawn definitions cannot contain null.", nameof(spawns));
             ValidateSpawnDefinition(definition, index);
+            if (definition.SpawnerExitWaypoints is { } exitPoints)
+            {
+                // Own the collection before hashing; caller mutation must not
+                // change the admitted model inputs beneath a saved identity.
+                definition = definition with { SpawnerExitWaypoints = Array.AsReadOnly(exitPoints.ToArray()) };
+                spawnArray[index] = definition;
+            }
             if (!_actorsByIdentity.ContainsKey(definition.OwnerDefinitionIdentity))
             {
                 throw new ArgumentException(
@@ -496,6 +508,12 @@ public sealed class Level100ActorDefinitionSet
             throw new ArgumentException(
                 $"Invalid Level 100 spawn definition at authored order {expectedOrder}.");
         }
+        if (definition.SpawnerExitWaypoints is { } points &&
+            (definition.SpawnerName is not ("SpawnerA" or "SpawnerB") ||
+             points.Count == 0 || points.Any(point => point is null || point.Selector <= 0 ||
+                 point.ModelTransform is null || !HasFiniteEmitterTransform(point.ModelTransform)) ||
+             points.Select(point => point.Selector).Distinct().Count() != points.Count))
+            throw new ArgumentException("Invalid or ambiguous spawner exit waypoint input.");
     }
 
     private static bool HasFiniteEmitterTransform(Level100SpawnerTransform transform)
@@ -609,7 +627,10 @@ public sealed class Level100ActorDefinitionSet
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_identityMagic);
-            writer.Write(6);
+            bool hasSpawnerExits = spawns.Any(spawn => spawn.SpawnerExitWaypoints is not null);
+            // Existing definition sets without this recovered input retain
+            // format 6. Format 7 binds exact selectors and raw model words.
+            writer.Write(hasSpawnerExits ? 7 : 6);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -655,6 +676,20 @@ public sealed class Level100ActorDefinitionSet
                 writer.Write((int)spawn.TargetGroup);
                 writer.Write(spawn.FixedTargetOrdinal);
                 writer.Write(spawn.MaximumGroupActors);
+                if (hasSpawnerExits)
+                {
+                    writer.Write(spawn.SpawnerExitWaypoints is not null);
+                    if (spawn.SpawnerExitWaypoints is { } points)
+                    {
+                        writer.Write(points.Count);
+                        foreach (Level100SpawnerExitPoint point in points)
+                        {
+                            writer.Write(point.Selector);
+                            WriteVector(writer, point.ModelTransform.LocalPositionFloatBits);
+                            WriteBasis(writer, point.ModelTransform.LocalBasisFloatBits);
+                        }
+                    }
+                }
             }
 
             writer.Write(waypointPaths.Count);
@@ -1649,17 +1684,7 @@ public sealed class Level100ActorRegistry
     private ThingActorBaseState CreateSpawnedPlaneState(Actor owner,
         Level100SpawnDefinition definition, int eventTimeFloatBits)
     {
-        // The selected Airfield remains an immutable seated owner. Do not
-        // reverse its rounded public pose into a purported retail transform.
-        Level100ActorDefinition input = _definitions.GetActorDefinition(owner.DefinitionIdentity);
-        if (owner.SpawnOwnerId is not null || !owner.IsStatic ||
-            owner.DefinitionName != "Forseti Light Fighter Airfield" ||
-            definition.SpawnerName is not ("SpawnerA" or "SpawnerB") ||
-            ToLevel100Pose(owner.BaseState.Snapshot) != SeatOnGround(input.DefinitionName, input.InitialPose))
-            throw new NotSupportedException("Plane spawning requires the unchanged authored Airfield pose.");
-        var parent = new RetailUnitAttachmentPose(
-            SeatRetailPosition(input.AuthoredTransform.RetailPositionFloatBits),
-            RetailUnitEuler.BuildBasis(input.AuthoredTransform.RetailEulerFloatBits));
+        RetailUnitAttachmentPose parent = GetAirfieldSpawnOwnerPose(owner, definition);
         Level100SpawnerTransform local = definition.AuthoredEmitterTransform;
         // 4b4ef2..4b50bb supplies the PC24 owner/cache product. This admits
         // the supplied emitter as the selected cached frame; it does not
@@ -1673,6 +1698,41 @@ public sealed class Level100ActorRegistry
             throw new NotSupportedException("The zero-emitter owner fallback is outside the selected Airfield route.");
         Level100FloatVector3Bits euler = RetailPlaneMotion.EulerFromSpawnerBasis(emitter.BasisFloatBits);
         return CreatePlaneState(position, euler, definition.ThingTypeMask, eventTimeFloatBits);
+    }
+
+    /// <summary>
+    /// Resolve the selected constant Airfield exit model pose by its exact
+    /// CEMT selector and apply the seated owner. Null means no such selector;
+    /// absent recovered input is rejected. The controller's terrain clamp,
+    /// arrival test and event/Ready delivery remain separate operations.
+    /// </summary>
+    public RetailUnitAttachmentPose? GetPlaneSpawnerExitPoint(Level100ActorId actorId, int selector)
+    {
+        Actor actor = Require(actorId);
+        if (actor.SpawnOwnerId is not { } ownerId || !IsAdmittedPlane(actor.DefinitionName))
+            throw new NotSupportedException("Exit-point lookup requires an admitted spawned Plane.");
+        Level100SpawnDefinition definition = _definitions.GetSpawnDefinition(actor.DefinitionIdentity);
+        IReadOnlyList<Level100SpawnerExitPoint> points = definition.SpawnerExitWaypoints ??
+            throw new NotSupportedException("This spawn definition has no recovered exit input.");
+        RetailUnitAttachmentPose parent = GetAirfieldSpawnOwnerPose(Require(ownerId), definition);
+        Level100SpawnerExitPoint? point = points.FirstOrDefault(item => item.Selector == selector);
+        return point is null ? null : RetailMeshPartPose.ApplyOwner(parent,
+            new(point.ModelTransform.LocalPositionFloatBits, point.ModelTransform.LocalBasisFloatBits));
+    }
+
+    private RetailUnitAttachmentPose GetAirfieldSpawnOwnerPose(Actor owner, Level100SpawnDefinition definition)
+    {
+        // The selected Airfield remains an immutable seated owner. Do not
+        // reverse its rounded public pose into a purported retail transform.
+        Level100ActorDefinition input = _definitions.GetActorDefinition(owner.DefinitionIdentity);
+        if (owner.SpawnOwnerId is not null || !owner.IsStatic ||
+            owner.DefinitionName != "Forseti Light Fighter Airfield" ||
+            definition.SpawnerName is not ("SpawnerA" or "SpawnerB") ||
+            ToLevel100Pose(owner.BaseState.Snapshot) != SeatOnGround(input.DefinitionName, input.InitialPose))
+            throw new NotSupportedException("Plane spawning requires the unchanged authored Airfield pose.");
+        return new RetailUnitAttachmentPose(
+            SeatRetailPosition(input.AuthoredTransform.RetailPositionFloatBits),
+            RetailUnitEuler.BuildBasis(input.AuthoredTransform.RetailEulerFloatBits));
     }
 
     private Level100FloatVector3Bits SeatRetailPosition(Level100FloatVector3Bits position)

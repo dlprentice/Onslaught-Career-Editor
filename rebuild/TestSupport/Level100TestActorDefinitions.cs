@@ -196,7 +196,8 @@ internal static class Level100TestActorDefinitions
                         IdentityBasis()),
                 group,
                 fixedOrdinal,
-                maximum));
+                maximum,
+                released?.SpawnerExitWaypoints));
         }
     }
 

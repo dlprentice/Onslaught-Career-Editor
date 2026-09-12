@@ -829,3 +829,78 @@ and no preparation/post effects. Weapon Fire and waiting animation are stubs;
 the post callback and its empty-effect helper execute original code. These
 checks establish no projectile, effects, phase-3 pose restoration, player route
 or combat acceptance. No desktop control or C# runtime change was involved.
+
+### Aircraft spawner exit inputs — September 12
+
+All output below uses the existing private owner
+`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+The unchanged-code scripts `plane-controller-init-20260912.py` and
+`plane-controller-exit-20260912.py` passed **18** and **26** synthetic cases.
+Their original bodies/constants were checked in ELF load mappings; the first
+executes the native SEH chain push/pop against private FS memory, and the
+second executes the real state-1 transition helper. Full synthetic receiver
+bytes, ABI, call order and event arguments are checked. The separate
+`plane-controller-scheduling-20260912.py` passed **18** cases, extending the
+retained eleven-case probe with supplied common-return, dying-owner,
+missing-target and event-reuse controls. Inputs, outputs and JSON results remain
+beside each script. Read-only reviewers checked the code and retained records;
+they did not rerun them. Scene/reader/terrain/RNG/AddEvent stubs do not establish
+actual event delivery, total transitive randomness or a completed exit.
+
+Actual static-world materialization regenerated **66 outputs** in
+`local-lab/rebuild-godot/airfield-exit-20260912-y8_etv9r/`.
+Only `level100-static-world.json` changed: four Airfield spawn rows gained
+`spawnerExitWaypoints`. Its 165,541 bytes exactly match a separately composed
+expected document; deleting just those four added fields recovers the old
+document. The other 65 outputs are byte-identical. PRE, expected, regeneration
+log and publication receipt are `airfield-exit-manifest-{pre,expected}-20260912.json`
+and `airfield-exit-materialize-20260912.{log,results.json}`. The new manifest hash
+is `52a17547c8a91a8bae9abe3df291c02ba1a106bbf39e10c71642a0f32fd34879`.
+The first extraction attempt refused missing CORI on the waypoint parts;
+native cache-owner inspection then established their declared root inheritance.
+No default orientation or launch transform was substituted.
+
+`npm run prepare:rebuild-assets` accepted **389 exact files** after publication
+(`airfield-exit-assets-ready-20260912.log`).
+`python -m unittest materialize_retail_assets_tests`, from `rebuild/tools`,
+passed **82/82**, with no skips (`airfield-exit-materializer-final-20260912.log`).
+The selected Core run uses `dotnet test` with `--no-restore --nologo`, the Core
+test project and filter
+`FullyQualifiedName~Level100RawPlaneCreationTests|FullyQualifiedName~Level100ActorRegistryTests|FullyQualifiedName~Level100ActorPlaneRuntimeTests|FullyQualifiedName~SimulationTests|FullyQualifiedName~RetailMeshPartPoseTests|FullyQualifiedName~Level100ActorScriptRuntimeTests`.
+It passed **113/113**, no skips; exact results and logs are
+`airfield-exit-core-final-20260912.{trx,log}`. Coverage includes exit selectors,
+independently calculated A/B pose words, input ownership, restore rejection,
+legacy missing-input distinction, raw Plane creation and existing script flow.
+The calculated pose cases are not retail observations.
+
+The initial Core run passed 27 cases and failed its old canonical-hash pin.
+The cause check then restored only the old definition identity and compared
+**every canonical byte** with a forty-step run lacking the new exit inputs;
+that comparison and the old `f121a469…` fingerprint passed before the deliberately
+unchanged final pin failed. The final test retains those assertions and pins
+`5a71982008e1a30f1684030e562fd45580cde149a3bcd3c3a4649201d4bb2750`.
+Initial/cause results remain `airfield-exit-core-20260912.{trx,log}` and
+`airfield-exit-hash-cause-20260912.{trx,log}`. Definition format 7 binds exit
+selectors/model words; sets with no recovered exit inputs retain format 6.
+No gameplay constant, scheduled aircraft behavior or combat assertion changed.
+
+The complete Client suite then passed **907**, with its two existing capture
+skips and no failures (`airfield-exit-client-complete-20260912.{trx,log}`).
+It used `dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj`
+with `--no-restore --nologo`, the same results directory and no filter.
+The first run had 906 passes and one old First Flight hash failure
+(`airfield-exit-client-20260912.{trx,log}`). The corrected test runs the complete
+2,148-step input route with and without the exit definitions and recovers the
+old `107e827d…` hash by changing only the definition identity. All route
+assertions remain required; the new pin is
+`2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de`.
+A test-only intermediate compile failure attempted to call Core's internal
+canonical-byte helper from Client tests; the final comparison uses the public
+state hash, without widening that API (`airfield-exit-client-final-20260912.log`).
+The Core test above retains its direct complete-byte comparison.
+
+`git diff --check`, `npm run test:docs` and `npm run test:safety` passed;
+the safety gate checked **3,980 candidates**. Their logs use
+`airfield-exit-docs-20260912.log` and `airfield-exit-safety-20260912.log`.
+These are in-process reconstruction checks, not native Godot, retail runtime,
+full-combat or desktop acceptance.
