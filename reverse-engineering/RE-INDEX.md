@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-06 (natural-Damage summary and retained-evidence routing)
+Last updated: 2026-09-12 (working-state routing and structural audit)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -9,14 +9,15 @@ Select complete-RE campaign authority only through `developer_state.json` →
 grades, verify command, and next-valid generation. Select the preserved tracked
 Ghidra checkpoint and sole mutable Linux owner through
 [`ghidra/README.md`](ghidra/README.md). The mutable PC project is
-`local-lab/ghidra-projects/BEA/` at `db.18635`; Generation 73 is a projection
-oracle only, and dated generation or
+`local-lab/ghidra-projects/BEA/`; its latest measured state and correction are in
+`developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or
 re-ground a campaign from a number copied out of this index.
 
-**Measure that version; do not quote it.** The sole mutable project was measured
-at `db.18635` during Linux activation. Re-inspect it before any separately
-authorized mutation, and never run overlapping ceremonies. Opening a project
+**Measure that version; do not quote it.** Linux activation was followed by
+semantic corrections. Re-inspect the working owner before an authorized
+mutation, and never run overlapping mutations. Opening a project
 without `-readOnly` can roll its database version even when a script refused and
 wrote nothing. The reviewed tracked checkpoint remains fixed at `db.18634`
 until an authorized semantic promotion; argue checkpoint-versus-working-copy

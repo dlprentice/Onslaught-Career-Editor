@@ -1,7 +1,7 @@
 # CPlane Hit And Animation Helpers
 
 Status: active static function note; reviewed contact role names
-Last updated: 2026-09-08
+Last updated: 2026-09-12 (caller-boundary reconciliation; contact findings unchanged)
 Summary: contact-triggered Plane shutdown and retained animation helpers; the
 hit body does not inspect life or require fatal damage.
 
@@ -48,7 +48,7 @@ hit body does not inspect life or require fatal damage.
 - `0x004d1fd0` checks `this+0x27c == 4`, resolves `wingclose` string `0x0062442c`, calls `CMesh__FindAnimationIndexByName`, dispatches `this` vfunc `+0xf0`, and sets `this+0x27c = 3`.
 - `CPlane` vtable `0x005e1930` slot 59 points to `0x004d2010`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-59 animation handlers.
 - `0x004d2010` checks the linked object at `this+0x8` through vfunc `+0x58`, then advances `this+0x27c` from `2` to `4` by playing `attack` string `0x00624438` or from `3` to `1` by playing `launch` string `0x006243f8`.
-- Raw caller instruction rows show `0x004d229f` and `0x004d2400` call the wing-open/wing-close helpers after loading `[ESI+0x8]` into `ECX`; those caller regions still have no recovered Ghidra function boundary.
+- Raw caller instruction rows show `0x004d229f` and `0x004d2400` call the wing-open/wing-close helpers after loading `[ESI+0x8]` into `ECX`. The September 12 full working-project export confirms both sites already belong to `CPlaneAI__VFunc_9_004d21c0`, with saved body `[0x004d21c0,0x004d248c)`. The previous missing-boundary statement was stale; no boundary repair is required. The fresh table matches the preceding air-contact POST across all 8,330 rows. Evidence: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/functions.tsv`, plus the specimen-bound [controller record](../CComplexThing.cpp.md).
 
 ## Boundary
 
@@ -61,7 +61,7 @@ The re-read complete bodies, with half-open extents, are:
 
 Static retail-byte contracts establish the bounded gates above. The pinned
 source has no `Plane.cpp`. Full actor layout, collision delivery, dying motion,
-animation behavior, the retained raw caller boundaries, native runtime behavior
+animation behavior, native runtime behavior
 and rebuild parity remain open. The two names and nonrepeatable comments were
 corrected through the [air-contact cohort](../../../ghidra/README.md#air-contact-shutdown-correction-2026-09-08).
 Both ABI shapes, tags and bodies were preserved; the tracked checkpoint was not refreshed.

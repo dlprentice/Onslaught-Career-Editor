@@ -252,10 +252,11 @@ public class GhidraApplyCohortManifest extends GhidraScript {
     /** Which frozen columns each verb is allowed to move, and only on its own
      *  target rows.  Compiled in for the same reason.
      *
-     *  varArgsDeclared is the ONE spec-dependent input: it says the spec bound
+     *  varArgsDeclared says the spec bound
      *  col.varArgs, i.e. the cohort declared varargs as an axis it is changing.
      *  It can only ever UNLOCK the single `varArgs` column for target rows; a
-     *  spec cannot add a column to FROZEN_COLUMNS or unlock any other one. */
+     *  spec cannot add a column to FROZEN_COLUMNS. The overload below separately
+     *  admits a calling-convention transition with an explicit PRE binding. */
     static Set<String> mutableColumnsFor(Set<String> verbs, boolean varArgsDeclared) {
         Set<String> out = new LinkedHashSet<>();
         if (verbs.contains(V_SET_NAME)) {
@@ -298,6 +299,17 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             if (varArgsDeclared) {
                 out.add("varArgs");
             }
+        }
+        return out;
+    }
+
+    static Set<String> mutableColumnsFor(Set<String> verbs, boolean varArgsDeclared,
+            boolean currentConventionDeclared) {
+        Set<String> out = mutableColumnsFor(verbs, varArgsDeclared);
+        // Historical specs keep conventions frozen. A transition must bind
+        // the exact PRE convention as well as the existing proposed field.
+        if (verbs.contains(V_SET_PROTOTYPE) && currentConventionDeclared) {
+            out.add("callingConvention");
         }
         return out;
     }
@@ -391,7 +403,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.terminatorVa", "col.terminatorBytes", "col.deltaBytes",
         "col.byteProof", "col.creationRanges", "col.creationBodySha256",
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
-        "col.proposedSignature", "col.callingConvention", "col.returnType",
+        "col.proposedSignature", "col.callingConvention", "col.currentCallingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
         "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
         "col.proposedLabel",
@@ -1252,7 +1264,8 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         // is a refusal, so a name cohort is structurally unable to touch a body.
         checkVerbColumnBinding(spec, verbs);
         boolean varArgsDeclared = spec.has("col.varArgs");
-        Set<String> mutableColumns = mutableColumnsFor(verbs, varArgsDeclared);
+        Set<String> mutableColumns = mutableColumnsFor(verbs, varArgsDeclared,
+            spec.has("col.currentCallingConvention"));
         println("COHORT_GATE spec=ok cohort=" + cohortId + " sha256=" + spec.sha256
             + " verbs=" + verbs + " mutableColumns=" + mutableColumns);
         println("COHORT_GATE varargsPolicy=MANIFEST_DRIVEN_DEFAULT_PRESERVE"
@@ -2151,6 +2164,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         owner.put("col.currentSignature", V_SET_PROTOTYPE);
         owner.put("col.currentSignatureSha256", V_SET_PROTOTYPE);
         owner.put("col.proposedSignature", V_SET_PROTOTYPE);
+        owner.put("col.currentCallingConvention", V_SET_PROTOTYPE);
         owner.put("col.returnType", V_SET_PROTOTYPE);
         owner.put("col.paramSpec", V_SET_PROTOTYPE);
         owner.put("col.arity", V_SET_PROTOTYPE);
@@ -2383,10 +2397,16 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                     + row.get("currentSignatureSha256") + "] actual [" + got + "]");
             }
         }
+        boolean currentConventionDeclared = row.cells.containsKey("currentCallingConvention");
+        if (currentConventionDeclared && row.get("currentCallingConvention").isEmpty()) {
+            fail(row, "CURRENT calling convention binding is empty");
+        }
+        String expectedConvention = !readback && currentConventionDeclared
+            ? row.get("currentCallingConvention") : row.get("callingConvention");
         if (row.cells.containsKey("callingConvention")
-                && !row.get("callingConvention").equals(f.getCallingConventionName())) {
+                && !expectedConvention.equals(f.getCallingConventionName())) {
             fail(row, "CURRENT calling convention expected ["
-                + row.get("callingConvention") + "] actual ["
+                + expectedConvention + "] actual ["
                 + f.getCallingConventionName() + "]");
         }
         if (f.hasCustomVariableStorage()) {

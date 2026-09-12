@@ -182,6 +182,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # 8,326 other rows, all ABI/body metadata and non-comment program metrics held.
 # air-contact-shutdown: two names/comments, independently reviewed after
 # isolated apply/readback on 2026-09-08; 8,328 other rows and frozen fields held.
+# plane-controller-event-argument: one signature only, 2026-09-12. Isolated
+# apply/readback, full metadata comparison and independent raw-byte review
+# passed; stale/blank/absent PRE bindings and wrong-verb/readback controls
+# refused. The decompiler stack-expression artifact is explicitly unresolved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -201,6 +205,7 @@ LIVE_GRANTED_COHORTS = [
     "bounds-contract-comments",
     "segment-controller-ownership",
     "air-contact-shutdown",
+    "plane-controller-event-argument",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -626,6 +631,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "bounds-contract-comments",\n'
         '        "segment-controller-ownership",\n'
         '        "air-contact-shutdown",\n'
+        '        "plane-controller-event-argument",\n'
         "    };\n",
     ),
     (
@@ -1477,6 +1483,37 @@ class NegativeControlTests(unittest.TestCase):
                        'out.add("namespace")'):
             self.assertTrue(banned not in block, banned)
 
+
+
+class CallingConventionFieldTests(unittest.TestCase):
+    def test_transition_unlocks_only_the_explicit_prototype_axis(self):
+        source = BASE.read_text(encoding="utf-8")
+        constants = "static final String V_SET_NAME" + source.split(
+            "static final String V_SET_NAME", 1)[1].split("static final List<String> KNOWN_VERBS", 1)[0]
+        methods = "static Set<String> mutableColumnsFor(" + source.split(
+            "static Set<String> mutableColumnsFor(", 1)[1].split("static final Pattern LEGAL_NAME", 1)[0]
+        program = "import java.util.*; class ConventionColumns {\n" + constants + methods + r"""
+ public static void main(String[] args) {
+  Set<String> prototype=Set.of(V_SET_PROTOTYPE);
+  Set<String> legacy=mutableColumnsFor(prototype,false);
+  if(legacy.contains("callingConvention") || legacy.contains("varArgs")) throw new AssertionError("legacy widened");
+  if(!legacy.equals(mutableColumnsFor(prototype,false,false))) throw new AssertionError("absent binding changed");
+  Set<String> expected=new HashSet<>(legacy);expected.add("callingConvention");
+  if(!expected.equals(mutableColumnsFor(prototype,false,true))) throw new AssertionError("wrong transition axes");
+  if(!Set.of("tags").equals(mutableColumnsFor(Set.of(V_SET_TAGS),false,true))) throw new AssertionError("undeclared verb widened");
+  expected.add("varArgs");
+  if(!expected.equals(mutableColumnsFor(prototype,true,true))) throw new AssertionError("independent axes lost");
+ }
+}
+"""
+        java = shutil.which("java")
+        if java is None:
+            self.skipTest("Java required for the production collateral-column probe")
+        with tempfile.TemporaryDirectory(prefix="bea-convention-columns-", dir="/var/tmp") as scratch:
+            path=Path(scratch)/"ConventionColumns.java"
+            path.write_text(program, encoding="utf-8")
+            result=subprocess.run([java, str(path)], capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stdout+result.stderr)
 
 
 class CreateFunctionTests(unittest.TestCase):

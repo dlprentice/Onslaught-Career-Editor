@@ -674,3 +674,36 @@ working payload remained unchanged. Private outputs are in
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
 This verifies exporter execution and preserved structural state, not a complete
 semantic audit, retail run, or native Godot acceptance.
+
+### Plane-controller prototype and structural audit — September 12
+
+The selected pristine executable was freshly hashed to the identity in the
+[Ghidra owner](reverse-engineering/ghidra/README.md#plane-controller-event-argument-2026-09-12).
+The reviewed checkpoint was inspected by file hashes only. The existing
+Archive A working PRE was freshly copied, compared and reopened read-only.
+The one-function manifest then passed isolated census/dry/apply and a separate
+readback, independent raw-byte review, a sealed dry/apply/readback, and the
+same live dry/apply/separate-readback sequence. Every headless invocation used
+`-process BEA.exe -noanalysis`; only the declared isolated/live apply steps
+omitted `-readOnly`. Exact live command arrays and receipts are retained in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/plane-event-argument/`.
+
+Full live function/program/variable/type/bookmark exports equal the sealed
+rehearsal. Exactly one of 8,330 function rows changed. All other function and
+variable rows, all program metrics and the complete saved stack-purge export
+stayed identical. The POST recovery copy on Archive A passed a separate
+restore/reopen with no missing, extra, size-different or hash-different file.
+This does not certify every decompiled expression: the spurious return-address
+and vector-local artifacts persist and are documented in the controller owner.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` discovered **91 tests:
+85 passed, six existing skips**. The new test executes the production Java
+column-policy method. Five actual Ghidra refusal cases exercise stale, empty
+and absent current-convention bindings, an undeclared prototype verb and
+readback against PRE; a sixth runs the stale binding in actual apply mode.
+All refuse without writes. Logs are `plane-argument-framework-*-20260912.log`
+under `local-data/test-runs/linux-route-20260906-af1sa_l9/` and
+`negative-controls/*.json` under the cohort owner. Initial incomplete census
+bindings and a missing packet output directory were refused; corrected
+invocations and their outputs are retained separately. No failed invocation
+is counted as a successful export or mutation.

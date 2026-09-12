@@ -1,13 +1,15 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-08
+Last updated: 2026-09-12
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
-untracked.
+untracked. The latest working correction is the
+[Plane-controller event argument](#plane-controller-event-argument-2026-09-12);
+`developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
   `name-cohort-battleengine-set-collision-shape` SET_NAME)
@@ -360,6 +362,42 @@ It was copied, hash-compared, restored elsewhere and opened read-only successful
 `5d30061c04776b960ff8e3a0c03aa6cb27cdcd638f84b22a7dbfd104dac59a21`.
 The tracked checkpoint still matches `745c00ad…`; its refresh remains excluded.
 Current documentation names additionally compose this exact two-row manifest.
+
+## Plane-controller event argument (2026-09-12)
+
+The working project measures `db.18642`: 18 payload files,
+118,967,156 bytes, canonical inventory SHA-256
+`b0e2c584d854ecfba7be36d9273f9bb9cb78f34d7545f41616bd425f5c70aca4`.
+Its main database is 68,665,344 bytes, SHA-256
+`c947c9d9e0c460242f0e2d49df189796f81a0c32dc5acc133a767f8b45d2344e`.
+The [manifest](../../tools/cohort-specs/plane-controller-event-argument.manifest.tsv)
+and [spec](../../tools/cohort-specs/plane-controller-event-argument.spec.tsv)
+correct the existing function at `0x004d21c0` to an ECX receiver and one
+stack event argument. The return remains `undefined`; name, body, comments
+and tags are unchanged. Both disputed wing-helper call sites were already
+inside its saved body, so the old missing-boundary note was corrected.
+
+Fresh PRE identity, isolated apply/readback, independent review, refusal
+controls, sealed rehearsal, live apply and separate readback passed.
+All 8,329 other function rows, all program metrics, non-target variable rows,
+type/bookmark definitions and all saved stack-purge metadata stayed identical.
+Full live exports equal the sealed rehearsal. The decompiler still emits
+incorrect return-address/local-vector expressions; the [controller evidence](../binary-analysis/functions/CComplexThing.cpp.md)
+records this separate analysis limit. A corrected prototype is not a complete
+semantic audit or a runtime-parity claim.
+
+Evidence is under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/plane-event-argument/`.
+`live-readback.json` is 2,431 bytes, SHA-256
+`bff707a4e950aaf2faa126225999a737cae51faba769c738c4fffb07b795d439`.
+The preceding air-contact POST was freshly restore-proven and matched PRE.
+The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-12-plane-controller-event-argument/post-working/`;
+its copy and separate restore/reopen passed with no file mismatch.
+`post-working-restore.json` is 5,817 bytes, SHA-256
+`1d87e5fc25c6098b44e29f35ebdaf40d0768524263a49f2704107fde584a46d8`.
+The tracked checkpoint's two retained main database files were freshly
+hash-matched before and after; neither was opened or refreshed. Names did not
+change, so the existing documentation-name projection remains valid.
 
 Related (not this folder):
 

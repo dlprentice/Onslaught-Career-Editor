@@ -226,6 +226,27 @@ player-distance detour. Battle Engine's Level100 radius is `0.4f`, and its
 ground-mode aim point adds `0.76f` to retail Z; jet aim uses its origin. These
 virtual inputs and common AI calls still need production integration.
 
+The September 12 working-project export confirms the controller's saved body
+already contains wing-helper calls `004d229f` and `004d2400`; the old Plane
+note's missing-boundary statement was stale. The actual ABI passes the receiver
+in ECX and one event pointer at entry stack offset `+4`: dispatcher
+`004ff420–004ff425` pushes the event and calls vtable slot `+24h`, while
+`004d244b` reloads that argument after the `34h` local allocation and three
+saved registers. `004d2453` forwards it for event reuse; `004d2489` is `RET 4`.
+The [one-function prototype correction](../../../tools/cohort-specs/plane-controller-event-argument.manifest.tsv)
+preserves the unknown return type, existing name, body, comments and tags.
+
+The reopened decompiler still invents `unaff_retaddr` in that event call.
+Its local-vector expressions also disagree across the indirect output-pointer
+call at `004d22ae`: raw `004d22a7` and `004d22ba` use the same `[esp+10h]`
+location before the push and after the callee returns. A missing four-byte
+cleanup in indirect-call analysis is a candidate explanation, not an applied
+correction. The read-only depth probe reports unknown depth after the first
+indirect call, no explicit stack-depth overrides, and unchanged saved purge
+metadata. Do not translate the decompiled locals as if this artifact were fixed.
+Fresh exports, raw disassembly, prototype receipts and the private depth probe
+are under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
+
 The September 12 isolated ELF32 probe executes the unchanged 716-byte Plane
 controller at its retail address, with all six referenced constant words
 verified against the pristine specimen above. Parent re-execution passed
@@ -248,6 +269,10 @@ weapon's strict `NOW > +64` gate. `004fbcb0` prepares that provider;
 `+1ec/+1e8`. The existing every-tick/all-slots weapon loop is therefore not
 an implementation of this callback chain. Selected-provider retention,
 readiness, burst callbacks and common AI effects still need runtime ownership.
+When wiring Fire into scheduler callbacks, preserve round admission order: the
+current Core round loop follows scheduler Flush. Moving launches into that
+Flush without changing round admission would move newborn rounds on their
+birth tick, bypassing their next-frame movement contract.
 
 Avoidance callback `004027c0` requires the actual ordered MapWho radius stream
 and a monitored identity whose current Z is read during movement. Its only

@@ -385,6 +385,17 @@ now captures the overflow visit count before overflow callbacks, matching retail
 the regression failed before repair and all 32 affected tests passed. This is
 source/static progress, not a new live playthrough or parity result.
 
+September 12 reviewed and executed the complete incoming remote checkpoint:
+focused Core passed 150/150 and Client passed 907 with two existing capture
+skips. Full-combat and Save Lab UI acceptance remain open. The resumed Ghidra
+audit corrected one missing Plane-controller event argument, with isolated and
+live readback and verified off-drive recovery. It also refuted a stale
+missing-boundary note. The complete analysis inventory is available, but its
+semantic audit is incomplete; the controller's decompiler stack artifact and
+named-but-untyped script callbacks remain explicit next work. See the
+[execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
+and [Ghidra owner](reverse-engineering/ghidra/README.md#plane-controller-event-argument-2026-09-12).
+
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary
 and a bounding-box reader mislabeled as a material loader. Two follow-up

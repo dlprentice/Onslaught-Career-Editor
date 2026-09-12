@@ -43,25 +43,26 @@ acceptance. The forty-step hash difference was isolated to the new arithmetic
 mode byte; the separate older Headless fingerprint now checks its current
 bounded Walker state. Full-combat and Save Lab UI acceptance remain open.
 
-**Next substantive priority: the existing Ghidra analysis and retail RE.** Resolve
-the actual local working owner and applicable newer correction manifests, then
-inventory the complete analysis and audit structural and semantic contracts in
-bounded subsystems under the existing preservation/readback workflow. Keep the
-tracked checkpoint and cold recovery untouched. Do not mistake a complete export
-for a complete semantic audit, or let another broad repository cleanup displace RE.
+**The executable-backed Ghidra audit is active.** Initial read-only exports covered
+8,330 function rows, 32,688 return/parameter/local rows, 410 types, 2,300
+bookmarks, actual body ranges, direct calls and saved analysis options.
+They establish an inventory of existing analysis, not complete semantic review.
+The first exact correction restores the Plane controller's incoming event
+argument, with full readback and independently restored recovery. Its old
+missing-boundary question was stale documentation: both call sites already
+belong to the saved function. The decompiler's remaining stack-expression
+artifact is explicit in the [controller evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
 
-One source-record reconciliation remains unverified: the
-[Unit movement record](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
-identifies a Plane-controller extent `[0x004d21c0, 0x004d248c)`, while the
-[Plane hit/animation note](reverse-engineering/binary-analysis/functions/Plane.cpp/CPlane__Hit_CheckFatalDamageAndDie.md)
-says caller sites `0x004d229f` and `0x004d2400` lack recovered Ghidra function
-boundaries. Both sites fall within that documented extent. This may be a manual
-body identification without a saved boundary, or stale documentation; it is not
-proof of a missing function. Inspect the actual function table and pristine
-instructions before changing a boundary or name. Preserve the separate Unit
-AI state and controller state, scheduled approach/retreat behavior, conditional
-random draws and ordered avoidance-reader dependencies recorded by those owners.
-The remote cross-read added no new byte measurement or applied database correction.
+Continue structural and semantic RE through the existing owners. The
+[script callback audit](reverse-engineering/binary-analysis/functions/IScript.cpp.md#native-callback-transport--september-12-static-audit)
+identifies missing callback arguments and distinguishes the native argument
+count from script arguments. Aircraft integration must preserve separate Unit
+AI/controller state and the scheduled selected-provider/common-AI chain;
+retiming the current per-Move target refresh alone would omit real behavior.
+Keep conditional random draws, ordered avoidance candidates and monitored
+reference lifetime. The remaining controls-remap boundary is a candidate for
+its own instruction-bounded correction. No broad cleanup, unreviewed bulk
+prototype assignment or new campaign is needed to pursue these findings.
 
 ### Active phase — Linux playable slices and first Save Lab workflow
 

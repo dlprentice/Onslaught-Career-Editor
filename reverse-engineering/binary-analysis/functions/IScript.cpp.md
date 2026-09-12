@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-07 (finite asin correction; other contracts retain their dated evidence)
+Last updated: 2026-09-12 (native callback ABI audit; other contracts retain their dated evidence)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -50,6 +50,45 @@ post side of the same chain — `IScript__PostEvent` (`0x005383c0`) cloning the
 name value into a `CPostEventData` and scheduling event `0x7d0` against the
 `CScriptEventNB` singleton — is byte-closed in
 [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) and not repeated here.
+
+## Native callback transport — September 12 static audit
+
+Fresh pristine-byte inspection distinguishes native callback arguments from
+script-language arguments. `CInstructionOP_CALL__ExecuteCall` (`0052ea40`)
+reads the instruction's argument-count byte at `0052ea50`. At
+`0052eb36–0052eb39`, ECX becomes the IScript context plus the descriptor's
+receiver adjustment; `0052eb49–0052eb54` pushes the output-pointer address,
+argument count, and argument-array address `0089c300`, then calls the handler.
+Physical stack arguments are therefore **arguments, argument count, output
+result pointer**. The second slot is not a state or clock pointer, despite
+some older parameter labels. `0052eb92` consumes the output pointer; an unused
+EAX does not by itself prove the callback's return type.
+
+Two named functions still have default, parameterless saved signatures:
+
+| Entry | Body, half-open | SHA-256 |
+| --- | --- | --- |
+| `SetSpawnScript`, `00535ca0` | `00535ca0..00535cc3`, 35 bytes | `e1769d90a5e9840c56d01dcf51d1b5a40f76172ce36835ba649ee4d4499e522c` |
+| `IScript__SetAIState`, `005361a0` | `005361a0..005361c3`, 35 bytes | `6bfaa1e10e690acaeaca84cb607d07dbd06d4aa8afc2ca22ccb09bf70cfa5880` |
+
+Both preserve ECX as the script receiver, read the first native stack argument,
+convert `arguments[0]` through its datatype virtual method, and end with
+`RET 0ch`. Neither body reads argument count or output result. Their registry
+initializers write zero receiver adjustment at `005321b4` and `005307dd`.
+These are candidates for a separate exact prototype correction; no callback
+signature changed in this audit. The 85 default named callback bodies all end
+in `RET 0ch`, but that cleanup alone does not prove identical receiver use or
+semantic types across the family.
+
+`SetAIState` dispatches Thing slot `+d8h`. On Plane/Unit this reaches `004fdcb0`
+and writes Unit `+210h`; state 1 also clears its controller target reader.
+It does not write controller `+20h`, enqueue an event, or consume RNG.
+`FollowWaypoint` instead schedules event 2000 to the **IScript recipient**;
+its script `arguments[1]` is separate from the native argument-count slot.
+Matching event numbers do not identify the same recipient or callback.
+Saved tables are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`;
+these instruction findings do not establish a new runtime or rebuild result.
 
 ## Functions
 
