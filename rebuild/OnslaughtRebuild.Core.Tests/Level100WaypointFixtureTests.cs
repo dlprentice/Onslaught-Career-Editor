@@ -163,9 +163,15 @@ public sealed class Level100WaypointFixtureTests
         Level100ActorDefinitionSet manifest = Manifest();
         Level100ActorDefinitionSet fixture = Level100TestActorDefinitions.Create();
 
-        // Every field is a scalar, so the generated record equality is the
-        // whole comparison here.
-        Assert.Equal(manifest.MotionDefinitions, fixture.MotionDefinitions);
+        Assert.Equal(manifest.MotionDefinitions.Count, fixture.MotionDefinitions.Count);
+        foreach (Level100ActorMotionDefinition expected in manifest.MotionDefinitions)
+        {
+            Level100ActorMotionDefinition actual = fixture.GetMotionDefinition(expected.DefinitionName);
+            Assert.Equal(expected with { WeaponMounts = null }, actual with { WeaponMounts = null });
+            Assert.Equal(expected.WeaponMounts is null, actual.WeaponMounts is null);
+            if (expected.WeaponMounts is { } mounts)
+                Assert.Equal(mounts, actual.WeaponMounts!);
+        }
     }
 
     /// <summary>

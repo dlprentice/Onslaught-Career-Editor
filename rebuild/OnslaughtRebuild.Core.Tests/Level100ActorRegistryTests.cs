@@ -321,6 +321,104 @@ public sealed class Level100ActorRegistryTests
     }
 
     [Fact]
+    public void AircraftWeaponMounts_KeepReleasedUseOrderSelectorsAndRawModelWords()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var trainer = Assert.Single(definitions.GetMotionDefinition("Air Trainer").WeaponMounts!);
+        var drone = definitions.GetMotionDefinition("Target Drone").WeaponMounts!;
+        Assert.Equal(new RetailUnitConstructionUse("Forseti Missile Trainer Launcher", "GunB", 0x20400), trainer.Use);
+        Assert.Equal(new[] { "Drone Vulcan Cannon", "Forseti Drone Missile Launcher" },
+            drone.Select(mount => mount.Use.DefinitionName));
+        Assert.Equal(new[] { "GunA", "GunB" }, drone.Select(mount => mount.Use.TagName));
+        Assert.All(drone.Append(trainer), mount =>
+        {
+            Assert.Equal(1, mount.Selector);
+            Assert.Equal(0x20400u, mount.Use.RawCreationFlags);
+            Assert.Equal(new Level100FloatBasis3Bits(0x3f800000, unchecked((int)0xa818719e), 0,
+                0x2818719e, 0x3f800000, 0, 0, 0, 0x3f800000), mount.ModelPose.BasisFloatBits);
+        });
+        Assert.Equal(new Level100FloatVector3Bits(unchecked((int)0xbd60ceb4), 0x3f6a3a59,
+            unchecked((int)0xbd4d3bb0)), drone[0].ModelPose.PositionFloatBits);
+        Assert.Equal(new Level100FloatVector3Bits(unchecked((int)0xbb7ae95a), 0x3f5b84b4,
+            0x3d88c1bf), drone[1].ModelPose.PositionFloatBits);
+        Assert.Equal(trainer.ModelPose, drone[1].ModelPose);
+    }
+
+    [Fact]
+    public void DefinitionIdentity_OwnsWeaponMountCollectionsInBothViews()
+    {
+        Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();
+        var supplied = original.GetMotionDefinition("Target Drone").WeaponMounts!.ToList();
+        var expected = supplied.ToArray();
+        Level100ActorDefinitionSet owned = WithDroneMounts(original, supplied);
+        string identity = owned.IdentitySha256;
+        supplied.Clear();
+        var byName = owned.GetMotionDefinition("Target Drone");
+        Assert.Same(byName, owned.MotionDefinitions.Single(item => item.DefinitionName == "Target Drone"));
+        Assert.Equal(expected, byName.WeaponMounts!);
+        Assert.Equal(identity, owned.IdentitySha256);
+        var view = Assert.IsAssignableFrom<IList<Level100ActorWeaponMountDefinition>>(byName.WeaponMounts);
+        Assert.Throws<NotSupportedException>(() => view[0] = expected[1]);
+    }
+
+    [Fact]
+    public void DefinitionIdentity_BindsEveryWeaponUseAndPoseInputAndRejectsCrossSetRestore()
+    {
+        Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();
+        var mounts = original.GetMotionDefinition("Target Drone").WeaponMounts!;
+        var first = mounts[0];
+        var changedFirst = new[]
+        {
+            first with { Use = first.Use with { DefinitionName = "Another weapon" } },
+            first with { Use = first.Use with { TagName = "GunB" } },
+            first with { Use = first.Use with { RawCreationFlags = first.Use.RawCreationFlags ^ 0x80000000 } },
+            first with { Selector = 2 },
+            first with { ModelPose = first.ModelPose with { PositionFloatBits = first.ModelPose.PositionFloatBits with
+                { X = first.ModelPose.PositionFloatBits.X ^ 1 } } },
+            first with { ModelPose = first.ModelPose with { BasisFloatBits = first.ModelPose.BasisFloatBits with
+                { Row0Z = int.MinValue } } }, // +0 and -0 must remain distinct.
+        };
+        var snapshot = new Level100ActorRegistry(original).Snapshot;
+        foreach (var changed in changedFirst)
+        {
+            Level100ActorDefinitionSet candidate = WithDroneMounts(original, [changed, mounts[1]]);
+            Assert.NotEqual(original.IdentitySha256, candidate.IdentitySha256);
+            Assert.Throws<ArgumentException>(() => new Level100ActorRegistry(candidate, snapshot));
+        }
+        Assert.NotEqual(original.IdentitySha256, WithDroneMounts(original, mounts.Reverse().ToArray()).IdentitySha256);
+        Assert.NotEqual(original.IdentitySha256, WithDroneMounts(original, [first]).IdentitySha256);
+        var unavailable = WithDroneMounts(original, null);
+        var empty = WithDroneMounts(original, []);
+        Assert.Null(unavailable.GetMotionDefinition("Target Drone").WeaponMounts);
+        Assert.Empty(empty.GetMotionDefinition("Target Drone").WeaponMounts!);
+        Assert.NotEqual(unavailable.IdentitySha256, empty.IdentitySha256);
+    }
+
+    [Fact]
+    public void WeaponMountAdmission_RejectsMalformedBindingsAndNonfinitePoseWords()
+    {
+        Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();
+        var first = original.GetMotionDefinition("Target Drone").WeaponMounts![0];
+        foreach (var changed in new[]
+        {
+            null!, first with { Use = null! }, first with { Selector = 0 },
+            first with { Use = first.Use with { TagName = "SpawnerA" } },
+            first with { Use = first.Use with { DefinitionName = "" } },
+            first with { ModelPose = first.ModelPose with { PositionFloatBits = first.ModelPose.PositionFloatBits with
+                { X = 0x7fc00000 } } },
+            first with { ModelPose = first.ModelPose with { BasisFloatBits = first.ModelPose.BasisFloatBits with
+                { Row2Y = 0x7f800000 } } },
+        })
+            Assert.Throws<ArgumentException>(() => WithDroneMounts(original, [changed]));
+    }
+
+    private static Level100ActorDefinitionSet WithDroneMounts(Level100ActorDefinitionSet original,
+        IReadOnlyList<Level100ActorWeaponMountDefinition>? mounts) => new(
+            original.Actors, original.Spawns, original.WaypointPaths,
+            original.MotionDefinitions.Select(definition => definition.DefinitionName == "Target Drone"
+                ? definition with { WeaponMounts = mounts } : definition));
+
+    [Fact]
     public void DefinitionIdentity_OwnsAuthoredDataAndRejectsCrossSetRestore()
     {
         Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();

@@ -21,9 +21,11 @@ public static class Level100ActorDefinitionManifest
     // to 3000 from their physics profile; no other manifest field changes.
     // September 12 adds only the four Airfield spawn rows' selected exit
     // waypoints: CEMT selector1 plus constant CPOS/inherited CORI model words.
+    // Aircraft profiles additionally carry ordered field7 weapon uses and
+    // GunA/B selector1 model poses; live muzzle/cache state remains separate.
     // Definition identity hashes those exact words, so replay pins move too.
     public const string ExpectedManifestSha256 =
-        "52A17547C8A91A8BAE9ABE3DF291C02BA1A106BBF39E10C71642A0F32FD34879";
+        "17D6112A96D548FB546999B79D3980D173CE5BB0A6F0DA4573EAE28FC5B62C09";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =
@@ -217,7 +219,14 @@ public static class Level100ActorDefinitionManifest
                 source.MaximumSpeedFloatBits,
                 source.MaximumTurnRadiansPerBaseTickFloatBits,
                 source.FullGuideBaseTicks,
-                source.CoreGroundOriginOffsetMillimeters);
+                source.CoreGroundOriginOffsetMillimeters,
+                source.WeaponMounts?.Select(mount => new Level100ActorWeaponMountDefinition(
+                    mount.Use ?? throw new InvalidDataException("An aircraft weapon use is missing."),
+                    mount.Selector,
+                    new RetailUnitAttachmentPose(
+                        DecodeFloatVector(mount.ModelTransform.LocalPositionFloatBits, "weapon model position"),
+                        DecodeBasis(mount.ModelTransform.LocalBasisFloatBits, "weapon model basis"))))
+                    .ToArray());
         }
 
         return new Level100ActorDefinitionSet(
@@ -346,6 +355,14 @@ public static class Level100ActorDefinitionManifest
         public int? MaximumTurnRadiansPerBaseTickFloatBits { get; init; }
         public string MotionClass { get; init; } = string.Empty;
         public int SteamClassVtableAddress { get; init; }
+        public WeaponMount[]? WeaponMounts { get; init; }
+    }
+
+    private sealed record WeaponMount
+    {
+        public RetailUnitConstructionUse? Use { get; init; }
+        public int Selector { get; init; }
+        public EmitterTransform ModelTransform { get; init; } = new();
     }
 
     private sealed record ActorDefinition

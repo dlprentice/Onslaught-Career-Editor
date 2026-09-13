@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (scheduled aircraft exit, targeted Ready and restore; full combat remains open).
+Last updated: 2026-09-12 (aircraft weapon model inputs admitted; live muzzle and firing integration remain open).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -441,6 +441,15 @@ selection, target aim, Weapon Fire and acquisition are controlled stubs.
 The existing firing loop still omits the selected weapon mounts and the
 non-seeking round's B-feasibility line query. Neither this experiment nor the
 metadata correction advances full-combat or player acceptance.
+Ordered aircraft weapon uses and exact GunA/GunB selector1 model poses now
+reach Core through the materializer and Client decoder. Immutable ownership
+and definition identity retain the raw flags, order and twelve pose words;
+the earlier GunA/2 binding cannot be selected accidentally. This adds required
+firing input without changing simulation behavior. An eight-case unchanged
+MainLoop-fragment experiment also shows that its supplied model-time fraction
+need not equal one under PC24 arithmetic. Live attachment/cache composition and
+the firing loop's use of these inputs remain open; this adds no player-route
+acceptance. See the [focused evidence](VALIDATION.md#aircraft-weapon-model-inputs-and-model-time-fraction--september-12).
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

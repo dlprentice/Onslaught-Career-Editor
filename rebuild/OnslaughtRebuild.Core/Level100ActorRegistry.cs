@@ -204,8 +204,10 @@ public enum Level100ActorMotionClass
 
 /// <summary>
 /// Exact released class/radius data and the class-specific Unit fields consumed
-/// by the bounded Level 100 mechanics owner. Nullable fields are deliberately
-/// absent for classes whose motion is not implemented.
+/// by the bounded Level 100 mechanics owner, shared by authored and spawned
+/// instances of each Unit profile. Null weapon mounts mean unavailable input;
+/// an empty collection is an admitted profile with no weapons. Model poses
+/// alone do not determine live muzzle poses or runtime cache state.
 /// </summary>
 public sealed record Level100ActorMotionDefinition(
     int AuthoredOrder,
@@ -218,7 +220,14 @@ public sealed record Level100ActorMotionDefinition(
     int? MaximumSpeedFloatBits,
     int? MaximumTurnRadiansPerBaseTickFloatBits,
     int? FullGuideBaseTicks,
-    int? CoreGroundOriginOffsetMillimeters);
+    int? CoreGroundOriginOffsetMillimeters,
+    IReadOnlyList<Level100ActorWeaponMountDefinition>? WeaponMounts = null);
+
+/// <summary>One ordered Unit weapon use and its exact selected model pose.</summary>
+public sealed record Level100ActorWeaponMountDefinition(
+    RetailUnitConstructionUse Use,
+    int Selector,
+    RetailUnitAttachmentPose ModelPose);
 
 /// <summary>
 /// Immutable, scenario-supplied Level 100 actor definitions. The product
@@ -377,7 +386,10 @@ public sealed class Level100ActorDefinitionSet
                 throw new ArgumentException(
                     "Level 100 motion definitions cannot contain null.",
                     nameof(motionDefinitions));
+            if (definition.WeaponMounts is { } mounts)
+                definition = definition with { WeaponMounts = Array.AsReadOnly(mounts.ToArray()) };
             ValidateMotionDefinition(definition, index);
+            motionDefinitionArray[index] = definition;
             if (!actorArray.Any(actor =>
                     StringComparer.Ordinal.Equals(
                         actor.DefinitionName,
@@ -615,6 +627,16 @@ public sealed class Level100ActorDefinitionSet
             throw new ArgumentException(
                 $"Invalid Level 100 motion definition at authored order {expectedOrder}.");
         }
+        if (definition.WeaponMounts is { } mounts &&
+            (definition.MotionClass != Level100ActorMotionClass.Plane ||
+             mounts.Any(mount => mount is null || mount.Use is null ||
+                 string.IsNullOrWhiteSpace(mount.Use.DefinitionName) ||
+                 mount.Use.TagName is not ("GunA" or "GunB") || mount.Selector <= 0 ||
+                 !HasFiniteBasis(mount.ModelPose.BasisFloatBits) ||
+                 !new[] { mount.ModelPose.PositionFloatBits.X, mount.ModelPose.PositionFloatBits.Y,
+                     mount.ModelPose.PositionFloatBits.Z }
+                     .All(word => float.IsFinite(BitConverter.Int32BitsToSingle(word))))))
+            throw new ArgumentException("Invalid aircraft weapon mount input.");
     }
 
     private static string ComputeIdentity(
@@ -628,9 +650,10 @@ public sealed class Level100ActorDefinitionSet
         {
             writer.Write(s_identityMagic);
             bool hasSpawnerExits = spawns.Any(spawn => spawn.SpawnerExitWaypoints is not null);
-            // Existing definition sets without this recovered input retain
-            // format 6. Format 7 binds exact selectors and raw model words.
-            writer.Write(hasSpawnerExits ? 7 : 6);
+            bool hasWeaponMounts = motionDefinitions.Any(definition => definition.WeaponMounts is not null);
+            // Formats 6/7 remain byte-exact without mount input. Format 8
+            // includes the format-7 exit fields even when all exits are null.
+            writer.Write(hasWeaponMounts ? 8 : hasSpawnerExits ? 7 : 6);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -676,7 +699,7 @@ public sealed class Level100ActorDefinitionSet
                 writer.Write((int)spawn.TargetGroup);
                 writer.Write(spawn.FixedTargetOrdinal);
                 writer.Write(spawn.MaximumGroupActors);
-                if (hasSpawnerExits)
+                if (hasSpawnerExits || hasWeaponMounts)
                 {
                     writer.Write(spawn.SpawnerExitWaypoints is not null);
                     if (spawn.SpawnerExitWaypoints is { } points)
@@ -742,6 +765,23 @@ public sealed class Level100ActorDefinitionSet
                 WriteNullableInt(
                     writer,
                     definition.CoreGroundOriginOffsetMillimeters);
+                if (hasWeaponMounts)
+                {
+                    writer.Write(definition.WeaponMounts is not null);
+                    if (definition.WeaponMounts is { } mounts)
+                    {
+                        writer.Write(mounts.Count);
+                        foreach (Level100ActorWeaponMountDefinition mount in mounts)
+                        {
+                            writer.Write(mount.Use.DefinitionName);
+                            writer.Write(mount.Use.TagName);
+                            writer.Write(mount.Use.RawCreationFlags);
+                            writer.Write(mount.Selector);
+                            WriteVector(writer, mount.ModelPose.PositionFloatBits);
+                            WriteBasis(writer, mount.ModelPose.BasisFloatBits);
+                        }
+                    }
+                }
             }
         }
 

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (exit comment correction and common-controller/Unit-phase composition).
+Last updated: 2026-09-12 (aircraft weapon model inputs, causal replay identity checks and model-time fragment).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -805,6 +805,90 @@ The final safety check passed for **3,980 candidates**. The initial refusal and
 final pass remain separate `weapon-provider-safety-20260912.log` and
 `weapon-provider-safety-final-20260912.log` files in the same test owner;
 docs and name self-test logs use the matching `weapon-provider-` prefix.
+
+### Aircraft weapon model inputs and model-time fraction — September 12
+
+`npm run prepare:rebuild-assets` materialized **389 exact files**. The new
+166,705-byte static-world manifest has SHA-256
+`17d6112a96d548fb546999b79d3980d173ce5bb0a6f0da4573eae28fc5b62c09`.
+It equals the independently projected update byte-for-byte. Removing only
+the two aircraft profiles' `weaponMounts` and the corresponding provenance
+entry recovers every previous JSON field. The prior 165,541-byte manifest and
+expected update are retained as `aircraft-mount-input-pre-20260912.json` and
+`aircraft-mount-input-expected-20260912.json` in
+`local-data/test-runs/linux-route-20260906-af1sa_l9/` (the owner below).
+The aircraft mesh remains separately hash-pinned; the static-mesh aggregate
+and animation manifest were not widened to imply different source coverage.
+
+`python rebuild/tools/materialize_retail_assets_tests.py` passed **90/90**;
+the initial selected aircraft/Airfield/physics gate passed **17/17**. Tests
+retain the legitimate earlier GunA/2, exact selector1, ordered uses/raw flags,
+CPOS/CORI words, padding exclusion, cache ownership and constant ancestors.
+Malformed tuples and ambiguous/missing bindings are rejected.
+
+`TMPDIR=/var/tmp dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --no-restore --nologo`
+passed **135/135** with the exact filter
+`FullyQualifiedName~Level100ActorRegistryTests|FullyQualifiedName~Level100WaypointFixtureTests|FullyQualifiedName~SimulationTests|FullyQualifiedName~HeadlessApplicationTests|FullyQualifiedName~RetailWorld110InitialObjectSeedAdmissionTests|FullyQualifiedName~RetailWorld110LevelActorsTests`.
+The final log/TRX stem is `aircraft-mount-core-final-20260912`; all logs and
+TRX files use the owner above. New cases cover both immutable lookup views,
+raw-word/use/order identity, nonfinite rejection and cross-definition restore.
+
+`TMPDIR=/var/tmp dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj --no-restore --nologo`
+passed **907 tests**, with the same two existing capture skips (header-font
+retail glyph runs and the captured-water envelope). The final log/TRX stem
+is `aircraft-mount-client-final-20260912`. Both final dotnet invocations used
+`--results-directory local-data/test-runs/linux-route-20260906-af1sa_l9`, a
+named TRX logger and `console;verbosity=minimal`. No engine or visible launch
+was part of these checks.
+`npm run test:docs`, `git diff --check` and `npm run test:safety` passed;
+the safety gate checked 3,986 candidates. Their logs use the same owner and
+`aircraft-mount-docs-20260912` / `aircraft-mount-safety-20260912` stems.
+
+Definition format 8 adds model input; these runs retain world-state schema 47.
+The 838-step Headless route compares **complete canonical bytes each tick**
+against an independently stepped format-7 run after replacing only the new
+definition identity. Both format-7 and older format-6 state/trace fingerprints
+are recovered; the final `--expect` and two-repeat application checks pass.
+The Client 2,148-step route uses the public canonical hash each step for the
+same counterfactual, retaining both historical fingerprints and its existing
+gameplay assertions. This proves input-identity causation on those routes,
+not retail parity or full combat. Current fingerprints are owned by the tests:
+
+| Route | State SHA-256 | Trace SHA-256 |
+| --- | --- | --- |
+| Core 40 steps | `0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d` | — |
+| Headless 838 steps | `69bd64ac4b2f344c1300d64e6619931f57dc06d768dbd70a5f1b816aedb1f59a` | `0872e009a2fb254927a3014d539ae1039332ad5eb8bd8af38a6e77cc86575ec9` |
+| Client 2,148 steps | `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e` | — |
+
+Initial Core execution passed 131/135: two current pins required this causal
+check, and two World110 isolation tests carried an already-old duplicate
+fingerprint. Those isolation tests now compare complete before/after-admission
+bytes; `SimulationTests` retains the golden owner. Initial Client compilation
+rejected an internal canonical-byte helper; the existing public hash API now
+checks each step without widening Core's public surface. Subsequent focused
+Client execution reached only its expected old-pin failure after all causal
+checks passed. These initial logs remain separate from final results. The
+retained Windows smoke validator's older `bc5d…` pin was not repinned from a
+Linux in-process result; its native route still requires separate validation.
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/plane-model-fraction-20260912.py`
+passed **8/8 synthetic cases**. The selected pristine executable was freshly
+hash-checked against `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The actual ELF load mapping contains unchanged `[0046ef40,0046efd5)`:
+149 bytes, SHA-256 `72fba6a65a6d45e0104ea275f634c1cbb5e3beca98aefd36f489a0bd33b3e356`.
+The appended return is outside this range. Supplied base times 0, 256, 65,536
+and 1,048,576 use frame-length word `3d4ccccd`, each under PC24/RN and PC53/RN.
+At 256 the respective fraction words are `3f7ff000` and `3f800000`, despite
+identical stored frame time. Source, ELF, input/output, log and result JSON
+share the script stem. The 2,099-byte result JSON has SHA-256
+`07dca8819e7ecb20e01c8f1bb19b60cbe45d334ce6088f79b835564d0fa9aa28`.
+Both 8,192-byte I/O files and all receiver writes were independently reconciled
+against the saved cases. Stack/register checks, x87 TOP/invalid checks and
+control-word readback pass; precision status flags are expected. No complete
+MainLoop, CGame update, attachment query, renderer or desktop ran. This is a
+counterexample to simplifying the supplied fraction calculation, not an
+observation of ambient precision/time across retail play. Live muzzle/cache
+composition and selected-provider firing remain open. Ghidra is unchanged.
 
 ### Common controller and Unit weapon composition — September 12
 

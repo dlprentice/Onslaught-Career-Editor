@@ -352,7 +352,8 @@ internal static class Level100TestActorDefinitions
             null,
             null,
             null,
-            null),
+            null,
+            s_materialized.Value.GetMotionDefinition("Air Trainer").WeaponMounts),
         new Level100ActorMotionDefinition(
             3,
             "Target Drone",
@@ -364,7 +365,8 @@ internal static class Level100TestActorDefinitions
             null,
             null,
             null,
-            null),
+            null,
+            s_materialized.Value.GetMotionDefinition("Target Drone").WeaponMounts),
         new Level100ActorMotionDefinition(
             4,
             "U-17 Highside Transporter",

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (exit metadata corrected; common controller/weapon phases measured, integration remains open)
+Last updated: 2026-09-12 (aircraft weapon model inputs admitted; runtime cache and firing integration remain open)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -82,8 +82,10 @@ same preservation gate. A composed original-code experiment passes 21 cases:
 slot-4 refresh precedes readiness, preparation can select twice, and an already
 ready weapon can fire despite newly failed feasibility. Pending preparation
 retains its earlier aim point. These contracts still need production integration.
-Admit the selected GunA/GunB attachment transforms and B feasibility's real
-line query alongside retained aim, preparation/readiness and scheduled bursts,
+The selected GunA/GunB selector1 model transforms and ordered Unit weapon uses
+now reach Core as immutable inputs. Complete their live attachment/cache
+evaluation and B feasibility's real line query alongside retained aim,
+preparation/readiness and scheduled bursts,
 including terminal callbacks and next-frame round movement, before replacing
 the old all-slots loop. Details remain in the controller evidence owner above.
 Keep conditional random draws, ordered avoidance candidates and monitored

@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (aircraft exit/GoTo composition, collision-ignore identity and bounded Core lifecycle)
+Last updated: 2026-09-12 (aircraft weapon model inputs and original model-time fraction experiment)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -523,10 +523,70 @@ nonnull Unit hit and allegiance equal to the target's, not necessarily the
 target itself. The same hash-pinned physics file has Forseti Missile Seek 3;
 Blaster omits Seek and inheritance, with the default Round `+48` cleared at
 `0043010e`. The selected missile therefore bypasses this query; the drone's
-Vulcan/Blaster needs it. Actual mount transforms and collision results remain
-inputs to recover, not permission to substitute centre launch or constant LOS.
+Vulcan/Blaster needs it. The model mount inputs below are recovered; live pose
+evaluation and collision results remain required before replacing centre launch.
 The [composition validation](../../../VALIDATION.md#common-controller-and-unit-weapon-composition--september-12)
 records raw body identities and the private static receipt.
+
+#### Selected aircraft weapon mounts and runtime pose inputs
+
+The selected Steam mesh `data/resources/meshes/m_FA_F24_training.msh.aya` is
+26,677 bytes, SHA-256 `48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5`.
+The already-pinned physics input supplies ordered field-7 uses: Air Trainer
+has Forseti Missile Trainer Launcher/GunB; Target Drone has Drone Vulcan
+Cannon/GunA then Forseti Drone Missile Launcher/GunB. All carry raw flags
+`00020400`. Unit initialization supplies emitter selector **1**, separately
+from the tag index. Lookup `004aa820` compares names case-insensitively and
+selectors exactly. The mesh's earlier GunA/2 is a distinct, valid binding.
+
+| Binding | Part ordinal | CPOS meaningful XYZ words |
+| --- | --- | --- |
+| GunA/1 | 3 | `bd60ceb4 3f6a3a59 bd4d3bb0` |
+| GunB/1 | 4 | `bb7ae95a 3f5b84b4 3d88c1bf` |
+
+Both meaningful CORI bases are `3f800000 a818719e 00000000 / 2818719e
+3f800000 00000000 / 00000000 00000000 3f800000`. Each selected gun and root
+ancestor has one hierarchy pose and 64 zero frame-map entries. The selected
+guns own both caches (`CMSP+118/+11c/+120 = 1/0/0`); meaningful cached words
+equal the parser's model transforms. Padding is excluded. Part-local HPOS
+differs from model-space CPOS, and the mesh's Trail parts are animated.
+
+These ordered uses, selectors and twelve meaningful model words now flow
+through the existing materializer and Client decoder into immutable
+`Level100ActorMotionDefinition.WeaponMounts`, shared by authored and spawned
+instances. Definition identity format 8 binds them, with formats 6/7 retained
+when mounts are unavailable. This is input admission; the firing loop does
+not yet consume live muzzle poses.
+
+Read-only instruction review separates three runtime paths:
+
+- Unit `004fc4e0` can use a profile-owned local pose keyed only by tag/selector,
+  then compose it with current Unit position/basis. Eligibility includes
+  `Unit+110==0`, nonnull profile and profile `+1a0==0`. Its cold miss requests
+  skip-controller/force-refresh flags `(1,1)`. Unit event4003 recomputes `+110`
+  using camera distance; it is not a permanent constructor property.
+- Its fallback requests flags `(0,1)` through `004fc6e0`, renderer `004dd160`
+  and evaluator `004b4de0`. A render-cache path can reuse the same integer-frame
+  stamp despite force-refresh. It uses Actor render getters `00401be0/00401c50`,
+  which interpolate old/current pose using global `008a9e44`.
+- Without that render cache, `004b0fb0` has a separate direct-evaluator cache.
+  Position accumulation/store order differs across these paths. Constant
+  gun/root hierarchy data does not prove equal live results or justify replacing
+  interpolation with a current-pose copy. Motion-controller and hierarchy
+  evaluation beyond the selected null-controller case remain unexecuted here.
+
+The unchanged MainLoop fragment `[0046ef40,0046efd5)` computes the model-time
+fraction before calling game update. The private eight-case experiment executes
+its 149 original bytes, SHA-256
+`72fba6a65a6d45e0104ea275f634c1cbb5e3beca98aefd36f489a0bd33b3e356`.
+At supplied base time 256 and frame-length word `3d4ccccd`, PC24/RN yields
+`3f7ff000`, while PC53/RN yields `3f800000`. Both store the same frame-time
+word `43800666`: native FST retains the arithmetic intermediate. This falsifies
+a literal-one replacement for all supplied model-time/precision states, without
+establishing the states encountered throughout retail MainLoop. No game update,
+attachment query or renderer runs in this experiment. Full native attachment
+composition, including cache lifetime, remains the next falsifier; see
+[validation](../../../VALIDATION.md#aircraft-weapon-model-inputs-and-model-time-fraction--september-12).
 
 For profile `+19c==0`, common-controller preparation writes the target virtual
 `+168` result into controller `+34` at `004ff24b..004ff262`. The later ready

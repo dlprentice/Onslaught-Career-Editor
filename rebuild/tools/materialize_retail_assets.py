@@ -588,7 +588,7 @@ STATIC_WORLD_ANIMATED_MESHES = {
 # 10 spawns. The subsequent Trainer-life correction changes only the authored
 # Flyby and AirTrainer spawn initialHealth from 0 to 3000, from physics field3.
 # Keep this pin aligned with Level100ActorDefinitionManifest.ExpectedManifestSha256.
-STATIC_WORLD_MANIFEST_SHA256 = "52a17547c8a91a8bae9abe3df291c02ba1a106bbf39e10c71642a0f32fd34879"
+STATIC_WORLD_MANIFEST_SHA256 = "17d6112a96d548fb546999b79d3980d173ce5bb0a6f0da4573eae28fc5b62c09"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -1194,6 +1194,7 @@ def _definition_string(
 
 def _level100_actor_motion_definitions(
     physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
+    aircraft_mesh,
 ) -> list[dict[str, object]]:
     # Released PC IScript waypoint completion, `0x00538470`, computes horizontal
     # distance and arrives only when `distance < radius`. For `mThingType &
@@ -1241,16 +1242,10 @@ def _level100_actor_motion_definitions(
             }
         )
 
-    # Air-unit motion scalars. These are NOT emitted into the manifest, because
-    # `Level100ActorMotionDefinition` reaches the Core loader through
-    # `rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:142`,
-    # which constructs the record positionally with eleven arguments and is
-    # owned by another tree; `InteractiveSessionTests.cs:730-741` additionally
-    # pins every non-GroundVehicle motion scalar to null. So the values live in
-    # `SimulationConstants.Level100Plane*` in Core with these offsets cited, and
-    # this guard is what keeps the two from drifting: if the shipped bytes ever
-    # change, materialization fails here rather than Core silently carrying a
-    # stale number.
+    # Air-unit motion scalars remain in SimulationConstants.Level100Plane*.
+    # The manifest's ground-motion fields stay null for these classes. Guard
+    # the released words here so those constants cannot silently drift from
+    # the selected input. Ordered weapon uses/model poses are admitted below.
     #
     # id 2 = CUnitAirVelocity (unit record +0xb4), id 6 = CUnitAirTurnRate
     # (+0xb8), id 23 = CUnitMaxTargetRange (+0x158); see
@@ -1283,6 +1278,7 @@ def _level100_actor_motion_definitions(
                 "maximumTurnRadiansPerBaseTickFloatBits": None,
                 "motionClass": "Plane",
                 "steamClassVtableAddress": 0x005E1930,
+                "weaponMounts": _aircraft_weapon_mounts(aircraft_mesh, fields),
             }
         )
 
@@ -3448,6 +3444,82 @@ def _airfield_exit_waypoints(parsed) -> dict[str, list[dict[str, object]]]:
     return result
 
 
+def _unit_construction_use(raw: bytes) -> dict[str, object]:
+    """One ordered Unit field 7/18 tuple; preserve its raw creation flags."""
+    try:
+        definition_end = raw.index(0)
+        tag_end = raw.index(0, definition_end + 1)
+        if not definition_end or tag_end == definition_end + 1 or len(raw) != tag_end + 5:
+            raise ValueError("invalid field length")
+        return {
+            "definitionName": raw[:definition_end].decode("ascii"),
+            "tagName": raw[definition_end + 1:tag_end].decode("ascii"),
+            "rawCreationFlags": struct.unpack_from("<I", raw, tag_end + 1)[0],
+        }
+    except (ValueError, UnicodeError) as error:
+        raise RuntimeError("Unit construction use layout changed") from error
+
+
+def _aircraft_weapon_mounts(parsed, fields: _PhysicsFields) -> list[dict[str, object]]:
+    """Selected constant model inputs, not a replacement for live muzzle queries.
+
+    Unit 004f8858 supplies selector1; 004fc6e0 maps GunA/B tags and
+    004aa820 matches case-insensitive names plus the exact selector. The
+    selected mesh also has GunA/2 before GunA/1. Its Trail animation does not
+    change the admitted gun/root tracks. Renderer/profile cache state and
+    Actor interpolation remain runtime inputs (CComplexThing.cpp.md).
+    """
+    if (_definition_string(fields, 9).casefold() != "fa_f24_training.msh"
+            or any(sibling.tag in (b"PMSH", b"PMS2") for sibling in parsed.siblings)):
+        raise RuntimeError("Aircraft weapon lookup requires the admitted single mesh")
+    parts = parsed.file_parts()
+    bindings = parsed.emitter_bindings()
+    result = []
+    for raw in fields.values(7):
+        use = _unit_construction_use(raw)
+        if use["tagName"] not in ("GunA", "GunB"):
+            raise RuntimeError("Aircraft weapon attachment tag is not admitted")
+        matches = [binding for binding in bindings
+                   if binding.name.casefold() == use["tagName"].casefold()
+                   and binding.selector == 1]
+        if len(matches) != 1:
+            raise RuntimeError("Aircraft weapon selector1 binding is missing or ambiguous")
+        binding = matches[0]
+        if binding.part_ordinal is None:
+            raise RuntimeError("Aircraft weapon binding has no mesh part")
+        part = parts[binding.part_ordinal]
+        ancestor_index, visited = binding.part_ordinal, set()
+        while True:
+            ancestor = parts[ancestor_index]
+            if (ancestor_index in visited or ancestor.track is None
+                    or ancestor.track.frame_map != (0,) * 64
+                    or len(ancestor.track.hierarchy) != 1):
+                raise RuntimeError("Aircraft weapon hierarchy is not the admitted constant pose")
+            visited.add(ancestor_index)
+            if ancestor.parent is None:
+                break
+            ancestor_index = ancestor.parent
+        track = part.track
+        if (part.part_type != 5 or len(part.raw_cmsp) < 0x124
+                or struct.unpack_from("<3I", part.raw_cmsp, 0x118) != (1, 0, 0)
+                or len(track.cached_position_bytes) != 16
+                or len(track.cached_orientation_bytes) != 48):
+            raise RuntimeError("Aircraft weapon model-pose cache changed")
+        position = list(struct.unpack("<4i", track.cached_position_bytes)[:3])
+        padded_basis = struct.unpack("<12i", track.cached_orientation_bytes)
+        basis = [padded_basis[index] for index in (0, 1, 2, 4, 5, 6, 8, 9, 10)]
+        if (position != [_float_bits(value) for value in part.transform.position]
+                or basis != [_float_bits(value) for row in part.transform.rows for value in row]):
+            raise RuntimeError("Aircraft weapon model transform disagrees with its cache")
+        result.append({
+            "use": use,
+            "selector": binding.selector,
+            "modelTransform": {"localPositionFloatBits": position,
+                               "localBasisFloatBits": basis},
+        })
+    return result
+
+
 def _spawn_pose(
     owner: dict[str, object],
     emitter: dict[str, object],
@@ -3666,18 +3738,7 @@ def _world110_initial_unit_uses(rows, physics) -> list[dict[str, object]]:
         fields = _physics_record(physics, 1, actor["definitionName"])
         record = {"actorDefinitionIdentity": actor["definitionIdentity"]}
         for field_id, key in ((7, "weaponUses"), (18, "spawnerUses")):
-            uses = []
-            for raw in fields.values(field_id):
-                definition_end = raw.index(0)
-                tag_end = raw.index(0, definition_end + 1)
-                if len(raw) != tag_end + 5:
-                    raise RuntimeError("world 110 initial Unit use layout changed")
-                uses.append({
-                    "definitionName": raw[:definition_end].decode("ascii"),
-                    "tagName": raw[definition_end + 1:tag_end].decode("ascii"),
-                    "rawCreationFlags": struct.unpack_from("<I", raw, tag_end + 1)[0],
-                })
-            record[key] = uses
+            record[key] = [_unit_construction_use(raw) for raw in fields.values(field_id)]
         result.append(record)
     return result
 
@@ -4655,7 +4716,12 @@ def _materialize_static_world(
         physics,
         _airfield_exit_waypoints(parse_cmsh_stream(inflate_aya(mesh_inputs["fb_aircraft_factory"][1]))),
     )
-    motion_definitions = _level100_actor_motion_definitions(physics)
+    _, aircraft_source, aircraft_hash = next(
+        item for item in DIRECT_ASSETS
+        if item[1] == "data/resources/meshes/m_FA_F24_training.msh.aya")
+    aircraft_mesh = parse_cmsh_stream(inflate_aya(
+        _read_exact(game_root / aircraft_source, aircraft_hash)))
+    motion_definitions = _level100_actor_motion_definitions(physics, aircraft_mesh)
 
     pine_views = _pine_imposter_views(raw_level)
     pine_centers = [
@@ -4842,6 +4908,11 @@ def _materialize_static_world(
             "compiledScripts": "100_res_PC.aya WRES/WRLD/RLWD ordered Level 100 object code",
             "levelWorld": "100_res_PC.aya WRES/WRLD/RLWD v50 initial actors 0..44",
             "motionDefinitions": "exact default physics.dat Unit fields plus canonical Steam class/radius dispatch",
+            "weaponMounts": {
+                "mesh": aircraft_source,
+                "meshSha256": aircraft_hash,
+                "inputs": "ordered Unit field7 uses; GunA/B selector1 meaningful CPOS/CORI model words; live cache/interpolation remains runtime state",
+            },
             "spawnerTransforms": "exact CEMT named emitter part transforms from the released Tank Factory and Airfield meshes",
             "startupSpawn": "TankFactory compiled initializer plus exact SpawnerA CEMT transform; no settled target pose is pre-seeded",
         },

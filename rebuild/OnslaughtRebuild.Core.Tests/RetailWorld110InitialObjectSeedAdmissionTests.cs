@@ -310,25 +310,28 @@ public sealed class RetailWorld110InitialObjectSeedAdmissionTests
     [Fact]
     public void StandaloneAdmissionDoesNotChangeTheWorld100CanonicalHash()
     {
+        byte[] before = RunWorld100();
         _ = RetailWorldInitialObjectSeedAdmission.World110;
-        var root = new Simulation(
-            1,
-            Level100TestActorDefinitions.Create(),
-            new Level100TutorialProgress(
-                Introduction: true,
-                PulseCannon: true,
-                VulcanCannon: true,
-                StatusBars: true));
-        WorldSnapshot state = root.Snapshot;
-        for (int tick = 0; tick < 40; tick++)
-        {
-            state = root.Step(new SimInput(0, 1));
-        }
+        Assert.Equal(before, RunWorld100());
 
-        // Creation-owned raw Plane motion/guide/events select schema 47.
-        Assert.Equal(
-            "f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8",
-            StateHasher.ComputeHex(state));
+        static byte[] RunWorld100()
+        {
+            var root = new Simulation(
+                1,
+                Level100TestActorDefinitions.Create(),
+                new Level100TutorialProgress(
+                    Introduction: true,
+                    PulseCannon: true,
+                    VulcanCannon: true,
+                    StatusBars: true));
+            WorldSnapshot state = root.Snapshot;
+            for (int tick = 0; tick < 40; tick++)
+                state = root.Step(new SimInput(0, 1));
+
+            // SimulationTests owns the golden fingerprint. This assertion
+            // compares complete current state on both sides of admission.
+            return StateHasher.GetCanonicalBytes(state);
+        }
     }
 
     private static string Describe(RetailWorldInitialObjectSeed row) =>

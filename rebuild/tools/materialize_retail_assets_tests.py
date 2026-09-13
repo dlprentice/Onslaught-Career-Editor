@@ -650,6 +650,112 @@ class AirfieldExitMaterializationTests(unittest.TestCase):
             materializer._airfield_exit_waypoints(changed)
 
 
+class AircraftWeaponMountMaterializationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        try:
+            game = materializer._resolve_game_root(None)
+        except RuntimeError as error:
+            raise unittest.SkipTest("Aircraft mount tests require local retail input") from error
+        from cmsh_static_preview import inflate_aya, parse_cmsh_stream
+        data = materializer._read_exact(
+            game / "data/resources/meshes/m_FA_F24_training.msh.aya",
+            "48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5")
+        cls.parsed = parse_cmsh_stream(inflate_aya(data))
+        cls.physics = materializer._physics_records(materializer._read_exact(
+            game / materializer.PHYSICS_DEFINITIONS, materializer.PHYSICS_DEFINITIONS_SHA256))
+        cls.fields = materializer._physics_record(cls.physics, 1, "Target Drone")
+
+    def changed_mesh(self, *, bindings=None, parts=None):
+        return SimpleNamespace(
+            file_parts=self.parsed.file_parts if parts is None else lambda: parts,
+            emitter_bindings=self.parsed.emitter_bindings if bindings is None else lambda: bindings,
+            siblings=self.parsed.siblings)
+
+    def test_selected_model_words_and_ordered_uses_reach_motion_definitions(self):
+        rows = materializer._level100_actor_motion_definitions(self.physics, self.parsed)
+        self.assertEqual(5, len(rows))
+        trainer, drone = [row["weaponMounts"] for row in rows if "weaponMounts" in row]
+        self.assertEqual(["Forseti Missile Trainer Launcher"], [m["use"]["definitionName"] for m in trainer])
+        self.assertEqual(["Drone Vulcan Cannon", "Forseti Drone Missile Launcher"],
+                         [m["use"]["definitionName"] for m in drone])
+        self.assertEqual(["GunA", "GunB"], [m["use"]["tagName"] for m in drone])
+        for mount, words in zip(drone, ((0xbd60ceb4, 0x3f6a3a59, 0xbd4d3bb0),
+                                       (0xbb7ae95a, 0x3f5b84b4, 0x3d88c1bf))):
+            self.assertEqual(1, mount["selector"])
+            self.assertEqual(0x20400, mount["use"]["rawCreationFlags"])
+            pose = mount["modelTransform"]
+            self.assertEqual(list(words), [v & 0xffffffff for v in pose["localPositionFloatBits"]])
+            self.assertEqual([0x3f800000, 0xa818719e, 0, 0x2818719e, 0x3f800000, 0, 0, 0, 0x3f800000],
+                             [v & 0xffffffff for v in pose["localBasisFloatBits"]])
+        self.assertEqual(trainer[0]["modelTransform"], drone[1]["modelTransform"])
+
+    def test_exact_selector_allows_the_legitimate_earlier_guna2_and_case_variants(self):
+        bindings = self.parsed.emitter_bindings()
+        guns = [b for b in bindings if b.name.casefold() == "guna"]
+        self.assertEqual([2, 1], [b.selector for b in guns])
+        changed = [replace(b, name=b.name.upper()) for b in reversed(bindings)]
+        self.assertEqual(materializer._aircraft_weapon_mounts(self.parsed, self.fields),
+                         materializer._aircraft_weapon_mounts(self.changed_mesh(bindings=changed), self.fields))
+
+    def test_missing_ambiguous_and_unbound_selector1_are_rejected(self):
+        bindings = self.parsed.emitter_bindings()
+        chosen = next(b for b in bindings if b.name == "GunA" and b.selector == 1)
+        for changed, message in (
+            ([b for b in bindings if b != chosen], "missing or ambiguous"),
+            ([*bindings, replace(chosen, name="GUNA")], "missing or ambiguous"),
+            ([replace(b, part_ordinal=None) if b == chosen else b for b in bindings], "no mesh part"),
+        ):
+            with self.subTest(message=message), self.assertRaisesRegex(RuntimeError, message):
+                materializer._aircraft_weapon_mounts(self.changed_mesh(bindings=changed), self.fields)
+
+    def test_animated_ancestor_cannot_be_flattened_to_its_first_frame(self):
+        parts = list(self.parsed.file_parts())
+        parts[0] = replace(parts[0], track=replace(parts[0].track, frame_map=(1,) * 64))
+        with self.assertRaisesRegex(RuntimeError, "constant pose"):
+            materializer._aircraft_weapon_mounts(self.changed_mesh(parts=parts), self.fields)
+
+    def test_changed_cache_word_or_ownership_is_rejected(self):
+        for offset in (None, 0x11c, 0x120):
+            parts = list(self.parsed.file_parts())
+            if offset is None:
+                raw = bytearray(parts[3].track.cached_position_bytes)
+                raw[0] ^= 1
+                parts[3] = replace(parts[3], track=replace(parts[3].track, cached_position_bytes=bytes(raw)))
+            else:
+                raw = bytearray(parts[3].raw_cmsp)
+                struct.pack_into("<I", raw, offset, 1)
+                parts[3] = replace(parts[3], raw_cmsp=bytes(raw))
+            with self.subTest(offset=offset), self.assertRaisesRegex(RuntimeError, "cache"):
+                materializer._aircraft_weapon_mounts(self.changed_mesh(parts=parts), self.fields)
+
+    def test_padding_is_not_promoted_into_meaningful_pose_words(self):
+        parts = list(self.parsed.file_parts())
+        track = parts[3].track
+        position, basis = bytearray(track.cached_position_bytes), bytearray(track.cached_orientation_bytes)
+        struct.pack_into("<I", position, 12, 0xdeadbeef)
+        for offset in (12, 28, 44):
+            struct.pack_into("<I", basis, offset, 0xffffffff)
+        parts[3] = replace(parts[3], track=replace(track, cached_position_bytes=bytes(position),
+                                                  cached_orientation_bytes=bytes(basis)))
+        self.assertEqual(materializer._aircraft_weapon_mounts(self.parsed, self.fields),
+                         materializer._aircraft_weapon_mounts(self.changed_mesh(parts=parts), self.fields))
+
+    def test_use_order_and_unknown_flags_are_preserved(self):
+        uses = list(reversed(self.fields.values(7)))
+        uses[0] = uses[0][:-4] + struct.pack("<I", 0x80020401)
+        fields = materializer._PhysicsFields(((9, self.fields[9]), *((7, raw) for raw in uses)))
+        mounts = materializer._aircraft_weapon_mounts(self.parsed, fields)
+        self.assertEqual(["GunB", "GunA"], [m["use"]["tagName"] for m in mounts])
+        self.assertEqual(0x80020401, mounts[0]["use"]["rawCreationFlags"])
+
+    def test_unit_use_requires_two_nonempty_names_and_one_flags_word(self):
+        for raw in (b"name", b"\0GunA\0\0\0\0\0", b"name\0\0\0\0\0\0",
+                    b"name\0GunA\0\0\0\0", b"name\0GunA\0\0\0\0\0extra"):
+            with self.subTest(raw=raw), self.assertRaisesRegex(RuntimeError, "use layout"):
+                materializer._unit_construction_use(raw)
+
+
 class PhysicsDefinitionTests(unittest.TestCase):
     def test_ordered_stream_preserves_duplicate_records_and_fields(self) -> None:
         records = [

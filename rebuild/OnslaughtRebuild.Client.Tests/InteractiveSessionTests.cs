@@ -1760,6 +1760,10 @@ public sealed class InteractiveSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+        var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
+            definitions.Spawns, definitions.WaypointPaths,
+            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }));
+        var priorSession = new InteractiveSession(Seed, priorDefinitions);
         var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
         {
@@ -1767,6 +1771,12 @@ public sealed class InteractiveSessionTests
                 FirstFlightSmokeScenario.GetInputForTick(session.CurrentSnapshot.Tick));
             FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
             Assert.Equal(1, result.StepsAdvanced);
+            priorSession.ObserveInput(FirstFlightSmokeScenario.GetInputForTick(priorSession.CurrentSnapshot.Tick));
+            Assert.Equal(1, priorSession.AdvanceFrameTicks(500_000).StepsAdvanced);
+            Assert.Equal(StateHasher.ComputeHex(priorSession.CurrentSnapshot),
+                StateHasher.ComputeHex(session.CurrentSnapshot with
+                { Level100Actors = session.CurrentSnapshot.Level100Actors with
+                    { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 } }));
         }
 
         TargetSnapshot firstTarget = session.CurrentSnapshot.Targets.Single(target => target.Id == 1);
@@ -1798,23 +1808,26 @@ public sealed class InteractiveSessionTests
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(finalStateHash, StateHasher.ComputeHex(
             CreateFiringRangeSessionForWeaponChecks(definitions).CurrentSnapshot));
-        // Exit waypoints are admitted inputs; the controller does not yet
-        // consume them. Removing only their definition identity must recover
-        // the fingerprint of the previous route and the independent run below.
-        var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
+        // The mount-only identity substitution above checks every step. Retain
+        // both older definition formats' fingerprints without changing input.
+        var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            definitions.WaypointPaths, definitions.MotionDefinitions);
-        WorldSnapshot priorState = CreateFiringRangeSessionForWeaponChecks(priorDefinitions).CurrentSnapshot;
+            definitions.WaypointPaths, priorDefinitions.MotionDefinitions);
+        WorldSnapshot priorState = priorSession.CurrentSnapshot;
         WorldSnapshot priorIdentityOnly = session.CurrentSnapshot with
         {
             Level100Actors = session.CurrentSnapshot.Level100Actors with
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+        Assert.Equal("2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de",
             StateHasher.ComputeHex(priorIdentityOnly));
+        Assert.Equal("107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+            StateHasher.ComputeHex(session.CurrentSnapshot with
+            { Level100Actors = session.CurrentSnapshot.Level100Actors with
+                { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de",
+            finalStateHash == "53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e",
             $"First-flight final state hash: {finalStateHash}");
     }
 

@@ -54,13 +54,15 @@ public sealed class SimulationTests
         for (int tick = 0; tick < 40; tick++) repeat.Step(new SimInput(0, 1));
         string hash = StateHasher.ComputeHex(rootState);
         Assert.Equal(hash, StateHasher.ComputeHex(repeat.Snapshot));
-        // The recovered exit inputs change only definition identity until
-        // the controller owner consumes them. Verify that boundary against
-        // the previous complete canonical bytes before changing its pin.
+        // Mount admission changes only definition identity. Keep the prior
+        // format-7 run and the older format-6 fingerprint as independent checks.
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
+            definitions.Spawns, definitions.WaypointPaths,
+            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }));
+        var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            definitions.WaypointPaths, definitions.MotionDefinitions);
+            definitions.WaypointPaths, priorDefinitions.MotionDefinitions);
         var prior = new Simulation(1, priorDefinitions, CompletedTutorialSlots);
         for (int tick = 0; tick < 40; tick++) prior.Step(new SimInput(0, 1));
         WorldSnapshot priorIdentityOnly = rootState with
@@ -69,9 +71,13 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8",
+        Assert.Equal("5a71982008e1a30f1684030e562fd45580cde149a3bcd3c3a4649201d4bb2750",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("5a71982008e1a30f1684030e562fd45580cde149a3bcd3c3a4649201d4bb2750", hash);
+        Assert.Equal("f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8",
+            StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
+                { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
+        Assert.True(hash == "0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d",
+            $"Canonical state hash: {hash}");
         Assert.Equal(47, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
