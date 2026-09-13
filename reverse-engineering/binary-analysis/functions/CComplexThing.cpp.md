@@ -584,9 +584,20 @@ At supplied base time 256 and frame-length word `3d4ccccd`, PC24/RN yields
 word `43800666`: native FST retains the arithmetic intermediate. This falsifies
 a literal-one replacement for all supplied model-time/precision states, without
 establishing the states encountered throughout retail MainLoop. No game update,
-attachment query or renderer runs in this experiment. Full native attachment
-composition, including cache lifetime, remains the next falsifier; see
+attachment query or renderer runs in this fraction experiment; see
 [validation](../../../VALIDATION.md#aircraft-weapon-model-inputs-and-model-time-fraction--september-12).
+
+The subsequent unchanged attachment composition passes **27 cases / 33 calls**
+through the actual Unit/routing/lookup/getter/math bodies with synthetic
+receivers and warm caches. It confirms current versus interpolated pose,
+different accumulation order, and a direct-cache hit that retains an earlier
+world pose within the same frame. Advancing the frame or selecting another
+part invalidates that observed reuse. The exact receiver distinction is
+`R=Unit+8`: animation is primary `Unit+6c`, not basis word `Unit+64`.
+The [Unit attachment owner](Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
+records these controls and limits. These supplied comparisons are now executed;
+native cache population, camera-latch lifecycle and production firing integration
+remain open. No full combat, player acceptance or Ghidra mutation is implied.
 
 For profile `+19c==0`, common-controller preparation writes the target virtual
 `+168` result into controller `+34` at `004ff24b..004ff262`. The later ready

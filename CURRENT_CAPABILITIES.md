@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (aircraft weapon model inputs admitted; live muzzle and firing integration remain open).
+Last updated: 2026-09-12 (native aircraft attachment composition measured; live cache and firing integration remain open).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -447,9 +447,13 @@ and definition identity retain the raw flags, order and twelve pose words;
 the earlier GunA/2 binding cannot be selected accidentally. This adds required
 firing input without changing simulation behavior. An eight-case unchanged
 MainLoop-fragment experiment also shows that its supplied model-time fraction
-need not equal one under PC24 arithmetic. Live attachment/cache composition and
-the firing loop's use of these inputs remain open; this adds no player-route
-acceptance. See the [focused evidence](VALIDATION.md#aircraft-weapon-model-inputs-and-model-time-fraction--september-12).
+need not equal one under PC24 arithmetic. The follow-up unchanged attachment
+composition passes 27 cases / 33 calls through native Unit/mesh/getter/math
+bodies with synthetic receivers and warm caches. It distinguishes current from
+interpolated pose, arithmetic order and direct-cache reuse within a frame.
+The firing loop's use of these paths, cache population and camera-latch lifetime
+remain open; this adds no player-route acceptance. See the
+[focused evidence](VALIDATION.md#aircraft-attachment-composition--september-12).
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

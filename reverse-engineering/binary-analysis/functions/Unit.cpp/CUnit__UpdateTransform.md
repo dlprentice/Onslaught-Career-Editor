@@ -1,10 +1,10 @@
 # CUnit__UpdateTransform
 
-Status: bounded static contract with a connected World110 implementation
-Last updated: 2026-09-07
-Summary: profile attachment caching, exact float-store order, mesh lookup and
-the four landing-craft Component constructor inputs. Retail execution and
-complete child initialization remain unvalidated.
+Status: bounded static and isolated original-code contract; World110 arithmetic implemented
+Last updated: 2026-09-12
+Summary: profile attachment caching, exact arithmetic, mesh lookup and isolated
+aircraft pose/cache observations. Live firing integration, cache population
+and complete child initialization remain unvalidated.
 Source File: Unit.cpp (implementation absent from the pinned partial source); Binary: BEA.exe
 
 > Address: 0x004fc4e0 | Source: Unit.cpp
@@ -83,10 +83,73 @@ in these orders; each component has one final float32 store:
 | 1 | 2,1,0 | 0,2,1 | 0,2,1 |
 | 2 | 2,1,0 | 0,2,1 | 2,1,0 |
 
-Those helpers do not select an x87 precision control. Core declares 53-bit,
-round-to-nearest intermediates and explicit float32 stores. That is not a
-claim about every retail runtime caller. Copied vector/matrix padding includes
-unwritten temporary words; only XYZ and nine basis components are admitted.
+Those helpers do not select an x87 precision control. Core's existing
+`RetailUnitAttachmentPose.Transform` declares 53-bit, round-to-nearest
+intermediates and explicit float32 stores for its World110 inputs. That is not
+an aircraft precision contract. Copied vector/matrix padding includes unwritten
+temporary words; only XYZ and nine basis components are admitted.
+
+## Isolated aircraft attachment composition
+
+The September 12 private `plane-attachment-paths-20260912.py` executes the
+unchanged Unit helper through its real routing, list/mesh lookup, renderer
+dispatch, Actor getters and arithmetic leaves: **27 cases / 33 calls**.
+The same pristine specimen above and the aircraft mesh pinned in
+[CComplexThing.cpp.md](../CComplexThing.cpp.md#selected-aircraft-weapon-mounts-and-runtime-pose-inputs)
+supply the code and selected CPOS/CORI words. Receiver objects, current/old
+poses, time fraction and warm caches are controlled inputs; native loading
+and cache population are not executed. The synthetic table retains the three
+relevant records in their relative order from the eleven-emitter mesh.
+Exact command and artifact identities
+are in [VALIDATION.md](../../../../VALIDATION.md#aircraft-attachment-composition--september-12).
+
+The construction chain at `004f8792` and `004d6a34/004d6a41` establishes
+renderer receiver `R = primary Unit U + 8`, stored at `RTMesh+8` and passed
+by `004dd1c7`. Getter `004014d0` reads `R+64`, so the animation pointer is
+primary **U+6c**; `U+64` is current-basis M22. Getter `004014f0` reads `R+68`,
+the primary `U+70` motion pointer. These cases supply a nonnull animation
+owner with mode `-1` and a null motion controller. Each selected gun owns one
+cached pose (`CMSP+118=1`); its 64 frame-map entries are not the cache count.
+
+The experiment separates three paths over the same selected mount:
+
+| Path | Controlled admission | World-pose source |
+| --- | --- | --- |
+| Shared profile | Eligible Unit/profile, matching 72-byte entry reached through an 8-byte list node | Current Unit position/basis on every query |
+| Renderer cache | Ineligible profile arm, nonnull render cache, matching integer-frame stamp greater than one | Local cached part at its actual ordinal, composed with interpolated Actor pose |
+| Direct evaluation | Ineligible profile arm, null render cache, animation mode -1, null motion, owned single-pose caches | Local CPOS/CORI evaluation and interpolated Actor pose, unless the direct world cache hits |
+
+For identity bases, old origin `(0,0,0)`, current origin `(1,0,0)`, GunA/1
+and supplied PC24 fraction `3f7ff000`, the shared path returns X `3f71f315`;
+both fallback paths return `3f71e315`, exactly `2^-12` lower. That fraction
+comes from the separately executed MainLoop-fragment control at base time 256;
+this experiment supplies it directly. It does not observe an in-game camera
+latch or claim all retail frames encounter this state.
+
+With old=current and fraction one, a synthetic first basis row
+`(1,1/16,2^-25)` independently distinguishes accumulation order: shared and
+direct PC24 X are `3b16ba50`, renderer-cache X is `3b16ba4a`. Under PC53 all
+three produce `3b16ba4a` for this control. A separate tiny-current-basis case
+also shows that fraction one does not make subtract/scale/add interpolation
+bit-identical to copying the current basis.
+
+The direct cache stores the render receiver, part pointer, model-frame index
+and integer game frame. After current X changes from 1 to 2 within frame 100,
+a repeated GunA/1 query returns the previous world pose. Advancing to frame
+101 recomputes it. Querying GunB/1 between GunA/1 queries evicts that selected
+part and causes recomputation even within frame 100. Shared-profile and warm
+renderer-cache queries instead reflect the changed current pose on both calls.
+Saved cache keys and all twelve meaningful cached words match these outputs;
+the other two paths leave the separately reset direct cache untouched.
+
+These results require cache ownership in the firing reconstruction, beyond
+the immutable mount inputs already admitted to Core. Shared-cache misses,
+renderer-cache population, recursive/animated hierarchy, nonnull motion,
+camera-latch lifecycle and complete weapon/round delivery remain open. The
+controls vary actor translation only along X; they do not establish arbitrary
+transform arithmetic or every Y/Z interpolation spill boundary. A warm
+cache experiment cannot justify assuming every local record was populated
+correctly. No Ghidra project, game process or desktop was opened.
 
 ## Four World110 Component inputs
 

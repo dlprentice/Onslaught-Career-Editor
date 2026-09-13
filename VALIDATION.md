@@ -887,8 +887,61 @@ against the saved cases. Stack/register checks, x87 TOP/invalid checks and
 control-word readback pass; precision status flags are expected. No complete
 MainLoop, CGame update, attachment query, renderer or desktop ran. This is a
 counterexample to simplifying the supplied fraction calculation, not an
-observation of ambient precision/time across retail play. Live muzzle/cache
-composition and selected-provider firing remain open. Ghidra is unchanged.
+observation of ambient precision/time across retail play. The separate bounded
+attachment composition below extends this evidence; production firing remains
+open. Ghidra is unchanged.
+
+### Aircraft attachment composition — September 12
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/plane-attachment-paths-20260912.py`
+passed **27 synthetic cases / 33 calls**, including the follow-up assertions
+over saved direct-cache keys and all meaningful cached pose words. It executes
+unchanged Unit `004fc4e0` with native tag routing, list/mesh lookup, renderer
+dispatch/refresh entry, direct evaluator, Actor getters and math. The ELF's
+actual load mappings contain **21 unchanged routine bodies**, the jump table,
+GunA/GunB strings, constants and selected Plane vtables; each is compared with
+PE-mapped pristine bytes. The executable was freshly verified as 2,506,752 bytes,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The exact aircraft mesh is freshly checked against the separate pin in the
+model-input section above. The synthetic emitter table retains the three
+relevant records from the eleven-emitter mesh: GunA/2 before GunA/1, with
+GunB/1 following; renderer-cache entries use actual part ordinals.
+
+All source, ELF, assembly/object, I/O, log and result artifacts share that
+private script stem. The script is 18,183 bytes, SHA-256
+`8515aef582c6027c3720dd30b26a26dd3468aae49d9ecd5ae08cb3355da8cff5`.
+The 26,556-byte result JSON has SHA-256
+`badc59208887ea105562992486736c3945ab0c7b53ef3c6ae98ff621b1f057dc`.
+Both I/O files are 552,960 bytes: input SHA-256
+`732b7454bb3c5ef8e07ba6cff400e93560e96fd39a7611deb369654597d4d83f`,
+output SHA-256 `49af51a963700de475ec46d3b2ebbc8b3c9b5693baaf739f2e8008ad9c9e8323`.
+The stronger cache assertions leave these observed I/O/result bytes unchanged.
+Independent read-only review reconciled all 25 mapped ranges, all 27 input
+graphs, 33 output records and exact cache transitions against the saved artifacts;
+it did not rerun the experiment. The ELF SHA-256 is
+`1a49e3830627e92980a0a2c4a05f7a0ef3bd77ebe4cdd932af7617c03ec947d0`.
+
+Predictions cover all twelve meaningful position/basis words. Tests preserve
+the stack and nonvolatile registers, read back explicit PC24/PC53 control words,
+reject x87 stack/invalid faults and check every arena byte outside the declared
+output/current-X/profile-cursor writes. Fourth-word padding is not a meaningful
+pose claim. The direct-cache snapshots bind the actual receiver/part, model
+frame zero and supplied integer frame; other paths leave that cache zero.
+
+The [Unit evidence owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
+records the causal comparisons: supplied fraction below one changes fallback
+pose; a synthetic basis distinguishes accumulation order; same-frame direct
+reuse survives current-pose changes but not a frame advance or selected-part
+change. This experiment prepopulates the two warm caches and supplies native
+one-pose records through synthetic objects. It does not execute the loader,
+cache population, animated/recursive hierarchy, nonnull motion, camera state,
+complete game or weapon/round delivery. Unexpected selected-boundary calls
+are rejection sentinels, never replacement pose implementations. No desktop
+control or Ghidra opening occurred; the firing approximation is unchanged.
+Actor translation varies only along X; these fixtures do not claim arbitrary
+3D arithmetic or independently establish every Y/Z interpolation spill.
+`npm run test:docs` and `git diff --check` passed for the existing evidence-owner
+updates; the docs log is `plane-attachment-docs-20260912.log` in the same owner.
 
 ### Common controller and Unit weapon composition — September 12
 
