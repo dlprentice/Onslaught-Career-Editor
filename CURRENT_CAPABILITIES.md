@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (raw aircraft integration, restore and tutorial limits).
+Last updated: 2026-09-12 (scheduled aircraft exit, targeted Ready and restore; full combat remains open).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -416,10 +416,18 @@ or combat acceptance; the actor firing loop still needs their integration.
 The Airfield's two exit waypoint inputs now reach Core with their exact CEMT
 selectors, model positions and inherited orientations. The bounded lookup
 matches independent calculated world-pose words and preserves definition/hash
-ownership. Original-code initializer and exit experiments establish the earlier
-3002 phase and later script-Ready submission under explicit stubs. The live
-rebuild still needs this controller lifecycle and selected-provider firing;
-these checks do not establish a completed aircraft exit or Level 100 combat.
+ownership. Core now runs the earlier 3002 exit phase, including both altitude
+clamps, strict arrival/deadline checks, event reuse and delayed targeted Ready.
+Restore retains the exit and pending handoff without repeating Init or Ready.
+Completion clears collision-ignore state while preserving the guide; loss of
+the spawner marks the Plane dying without declaring immediate shutdown.
+New bursts wait for normal control, while a pending burst can continue and its
+new round first moves on the following tick. An unchanged-code exit/GoTo/guide
+experiment passed 26 synthetic cases; these and the Core checks are recorded in
+[validation](VALIDATION.md#aircraft-exit-lifecycle-integration--september-12).
+Normal control still hands back to the existing approximate target/weapon loop.
+Selected-provider firing, dying flight, contacts, avoidance and complete world
+event/RNG order remain open; no full-combat or player-route acceptance is claimed.
 The working Ghidra initializer now has its RTTI-backed CUnitAI attribution, and
 the dispatcher/exit prototypes carry the actual incoming event pointer. These
 metadata corrections preserve the unestablished return types and are backed by
@@ -784,19 +792,23 @@ actor scripts keep the spawn-registration and clock hooks; the pending Hangar
 spawn regression first failed without those hooks, then passed with them.
 Aircraft event arithmetic and its mode are retained in schema 47.
 
-Complete cold combat still fails. The September 12 Core run reaches `Won` at
-tick 8327 with hull 2450 through the low-health abort, with no final-wave kills.
-Both cold input adapters match throughout, including hash
-`52eddfffb1d54632b3a76ffa1c5bfed31544f57f215b88804b716791a17ef461`.
+Complete cold combat still fails. After the September 12 exit integration,
+the shipping-manifest route reaches `Won` at tick 8141 with hull 4400 through
+the low-health abort at tick 7805, with one of six final-wave kills. Both cold
+input adapters match throughout, including hash
+`b163d10bbd55bf1f183cad36c146f41c5cfa8016ff4a1480a05ab3b5faf6dc30`.
 The six-kill/no-abort assertions remain. The camera-origin firing correction
 is retained; its earlier tick-7194/hull-7050 result predates raw free flight.
 Neither a winning terminal state nor input-adapter equality closes this gap.
 
-The separate returning-career driver retains reduced fixture definitions. It
-now reaches `Won` at tick 5317 with hull 7350, after the abort at tick 5024
-and no final-wave kills. Its previous five-kill result at tick 6331/hull 6750
-predates raw free flight; the earlier 22-target result also predates the
-turn-rate correction. The
+The separate returning-career driver retains reduced fixture definitions.
+After the exit integration it reaches `Won` at tick 5588 with hull 11450,
+destroys all 22 targets including all six final drones, deals their full 6000
+damage and completes objective 4 without abort. The repeated run and three
+related combat/accounting checks pass. Its earlier zero-kill abort is superseded
+for this driver; the shipping-manifest cold route above remains failing.
+The changed exit timing and random consumption do not isolate which part of
+the correction affected each shot. The
 [full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs)
 retain the independent naive and trigger-disabled controls. The retired
 unquantized cold control used different commands and lost to water after two

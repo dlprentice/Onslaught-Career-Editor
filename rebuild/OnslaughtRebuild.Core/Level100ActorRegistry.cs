@@ -1402,6 +1402,21 @@ public sealed class Level100ActorRegistry
         return true;
     }
 
+    internal bool ReportPlaneStartedDying(Level100ActorId actorId)
+    {
+        Actor actor = RequireMutable(actorId);
+        if (actor.BaseState.Snapshot.RetailPlane is null)
+            throw new InvalidOperationException("Plane death requires an admitted raw Plane.");
+        if (actor.Lifecycle != Level100ActorLifecycle.Alive) return false;
+        // AirUnit 0x00403690 calls CUnit 0x004fd140, whose override marks
+        // TF_DYING without the base CThing's immediate shutdown declaration.
+        if (!actor.BaseState.MarkUnitDying())
+            throw new InvalidOperationException("Plane dying state diverged.");
+        actor.Lifecycle = Level100ActorLifecycle.StartedDying;
+        EnqueueFact(Level100ActorFactKind.StartedDying, actorId, null, 0);
+        return true;
+    }
+
     internal bool ReportGroundUnitDied(Level100ActorId actorId)
     {
         Actor actor = RequireMutable(actorId);

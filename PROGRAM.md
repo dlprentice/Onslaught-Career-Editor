@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (remote integration validated; original-code weapon selection carried)
+Last updated: 2026-09-12 (scheduled aircraft exit and Ready integrated; normal combat control remains partial)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -63,17 +63,22 @@ retiming the current per-Move target refresh alone would omit real behavior.
 The bounded weapon selector now matches isolated original-code cases and has
 focused Core coverage. Original-code Unit preparation/fire phase experiments
 also passed, and five misleading provider/helper names were corrected in Ghidra.
-The recovered contracts are not yet wired to actor firing. The Airfield exit
-waypoints now survive materialization and have an owned, hash-bound Core lookup.
-Original-code initialization/exit checks confirm that spawned aircraft first
-request controller event 3002 and submit script Ready only at the exit handoff;
-the current immediate-Ready bridge still needs that scheduled lifecycle.
+The recovered provider contracts are not yet wired to actor firing. Core now
+executes the separate aircraft exit listener, retains its owner/selector/deadline,
+and submits script Ready at the scheduled handoff. New bursts wait for normal
+control; pending bursts retain their continuation. Exit completion clears the
+collision-ignore pointer and preserves guide state. Spawner loss marks the
+Plane dying without declaring immediate shutdown. These are bounded source
+and in-process checks, not full aircraft or tutorial acceptance.
+The reduced-fixture returning driver again clears all 22 targets without
+abort. The cold shipping-manifest route still aborts after one final-wave kill;
+its client and direct-Core inputs agree. Preserve that failed completion gate
+while replacing the remaining approximate combat owners.
 The shared initializer attribution and both dispatcher/exit event-pointer
 parameters are now corrected in the working Ghidra project with full readback
-and independent recovery. Delaying Ready alone would leave the old weapon loop
-able to fire during exit; controller scheduling and weapon ownership must be
-integrated together.
-Continue with this separate controller listener, retained aim,
+and independent recovery. The exit comment's older “owner-kind” wording still
+needs a scoped Ghidra correction: the virtual actually reads GetVulnerable.
+Continue beyond the exit handoff with retained aim,
 preparation/readiness phases and scheduled burst transaction,
 including terminal callbacks and next-frame round movement, before replacing
 the old all-slots loop. Details remain in the controller evidence owner above.

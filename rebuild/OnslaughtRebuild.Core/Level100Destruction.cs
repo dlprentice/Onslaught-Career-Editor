@@ -252,6 +252,16 @@ public sealed class Level100DestructionRuntime
         _registry.ReportStartedDying(actorId);
     }
 
+    /// <summary>
+    /// AirUnit +c8 (00403690) starts dying after a vulnerable aircraft loses
+    /// its spawner. This does not destroy its segments or issue Died/Shutdown.
+    /// Attached-child and particle-link teardown are not yet represented.
+    /// </summary>
+    internal void StartPlaneDeathAfterSpawnerLoss(Level100ActorId actorId)
+    {
+        _registry.ReportPlaneStartedDying(actorId);
+    }
+
     internal void ReportExternalDied(Level100ActorId actorId)
     {
         RejectOwnedExternalMutation(actorId);
@@ -532,8 +542,11 @@ public sealed class Level100DestructionRuntime
         Level100ActorLifecycle expectedLifecycle = destruction.Terminal
             ? pending ? Level100ActorLifecycle.DiedAwaitingShutdown : Level100ActorLifecycle.Destroyed
             : Level100ActorLifecycle.Alive;
+        bool dyingPlane = !destruction.Terminal && actor.Lifecycle == Level100ActorLifecycle.StartedDying &&
+            destruction.Definition.Kind == Level100DefinitionKind.TargetDrone &&
+            _registry.GetBaseState(actor.ActorId).RetailPlane is not null;
         if (actor.Health != destruction.RegistryHealth ||
-            actor.Lifecycle != expectedLifecycle ||
+            actor.Lifecycle != expectedLifecycle && !dyingPlane ||
             (destruction.Terminal && !pending && actor.Active) ||
             (pending && (!destruction.Terminal ||
                 destruction.Definition.Kind != Level100DefinitionKind.TargetTank)))

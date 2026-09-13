@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-12 (bounded Unit weapon selector; no new gameplay-parity claim).
+Last updated: 2026-09-12 (bounded aircraft exit/Ready lifecycle; no new gameplay-parity claim).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -55,7 +55,11 @@ free-flight operation order. Its 32-call copied-retail comparison supplies
 observed guide inputs; it does not close full aircraft parity. Production now
 schedules the clearance cache and preserves its state through restore/hash,
 but common AI/controller callbacks, avoidance memberships/readers, contacts,
-effects and dying flight remain open. The
+effects and dying flight remain open. The September 12 update adds the
+spawned controller's exit and scheduled Ready handoff, including separate
+monitored/collision-ignore ownership and both altitude clamps. Original-code
+experiments and in-process restore/ordering tests support this prefix; normal
+control still resumes the older approximate script/weapon bridge. The
 [Unit evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
 separates those boundaries from the measured arithmetic.
 

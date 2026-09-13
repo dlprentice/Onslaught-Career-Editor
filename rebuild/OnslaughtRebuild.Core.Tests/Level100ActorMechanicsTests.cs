@@ -31,11 +31,12 @@ public sealed class Level100ActorMechanicsTests
         });
         Assert.True(actors.GetActor(plane).Active);
         Assert.Equal(Level100ActorLifecycle.Alive, actors.GetActor(plane).Lifecycle);
-        var mechanics = new Level100ActorMechanics(actors, definitions);
-        mechanics.ApplyCommand(Command(1, plane,
-            Level100ActorScriptCommandKind.Attack, targetActorId: player));
-
-        Assert.Empty(mechanics.AdvanceTick());
+        // Controlled normal-guide input isolates the rate cap. A newly
+        // spawned Plane now follows its exit before accepting Attack control.
+        var guide = new RetailPlaneGuideInput(Level100ActorMechanics.RetailPositionFromProjection(
+            actors.GetPose(player).PositionMillimeters), 1, 0, 1, 0, null);
+        RetailPlaneMotion.AdvanceFreeFlight(physical, guide,
+            definition == "Air Trainer" ? 0x41133333 : 0x40b00000, 0x3d4ccccd);
 
         // All three errors exceed the easing threshold, exposing the cap. Retail
         // field 6 is 0x3d32b8c2 (0.04363323 rad) for both profiles. This checks

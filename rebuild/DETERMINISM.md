@@ -88,6 +88,17 @@ restore rejects the scheduler's legacy PC53 mode. Earlier formats remain
 available for snapshots without this extension. Restoring raw Plane motion requires the matching guide and
 event state; a millimeter pose cannot reconstruct them.
 
+Spawned Planes additionally use schema 48 for the monitored spawning owner,
+separate raw collision-ignore identity, attachment tag, exit selector/deadline
+and explicit handoff to the existing normal-control approximation. Controller
+listeners use negative actor IDs; existing positive Actor/Guide listener IDs
+stay stable. Exit and pending Ready delivery restore without rerunning Init.
+Omitting every exit record is rejected rather than silently selecting schema 47.
+Scenes with no spawned Plane retain schema 47 bytes. The recorded 838-step
+Headless fingerprint changed only because of the earlier exit-input definition
+identity; its test compares every tick's canonical bytes after substituting
+only the previous identity and recovers the previous complete trace.
+
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The
 two unwritten native clearance-cache coordinates use the observed zero startup

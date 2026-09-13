@@ -26,7 +26,8 @@ internal static class Level100TestActorDefinitions
         Level100ActorMechanics = state.Level100ActorMechanics with
         {
             PlaneEvents = null,
-            Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with { PlaneGuide = null }).ToArray(),
+            Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with
+                { PlaneGuide = null, PlaneSpawnerExit = null }).ToArray(),
         },
     };
 

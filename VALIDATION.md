@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (remote corrections integrated; original-code weapon selection).
+Last updated: 2026-09-12 (aircraft exit/Ready integration and original-code GoTo composition).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -955,3 +955,103 @@ test owner are `unit-ai-name-selftest-20260912.log`,
 `unit-ai-docs-{,final-}20260912.log` and `unit-ai-safety-20260912.log`.
 These checks establish the declared metadata corrections and preservation,
 not full semantic audit or runtime acceptance.
+
+### Aircraft exit lifecycle integration — September 12
+
+Outputs below remain in `local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/plane-controller-exit-goto-20260912.py`
+passed **26/26** synthetic cases with unchanged exit, transition, AirUnit GoTo
+and Guide GoTo bodies at their retail addresses. The input executable was
+verified as 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The script, native ELF, inputs, outputs and `.results.json` retain body/constant
+load-map checks, all controller words, ABI and x87 state. Separate CST/guide
+receivers distinguish collision-ignore clearing from unchanged guide state;
+the real GoTo adds its second altitude clamp after the exit arrival comparison.
+Terrain, scene queries, vulnerability, StartDying, RNG and event admission are
+stubs. The reviewer inspected the code and recorded results without rerunning
+them. This is original-code experiment evidence, not a live game observation.
+
+`plane-exit-static-boundaries-20260912.log` records bounded pristine disassembly
+of the death path, vulnerability getter, collision-ignore write and MinAltitude
+default/field setter. It also records the freshly verified physics input and
+all 25 hash-pinned Level100 script objects: 1,925 instructions, no native-32
+SetVulnerable call. The [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#aircraft-spawner-exit-and-script-readiness--september-12)
+owns the interpretation. No Ghidra database was opened or changed for this step.
+
+The final affected Core run passed **317/317**, no skips
+(`plane-exit-core-final-20260912.{log,trx}`). It uses
+`dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj`
+with `--no-restore --nologo --filter` selecting `Level100ActorPlaneRuntimeTests`,
+`Level100ActorMechanicsTests`, `Level100ActorWeaponTests`,
+`Level100DestructionContactTests`, `Level100RawPlaneCreationTests`,
+`Level100ActorRegistryTests`, `Level100ActorScriptRuntimeTests`, `SimulationTests`,
+`ReplayTests`, `HeadlessApplicationTests`, `RetailEventSchedulerTests` and
+`RetailEventSchedulerUpdateGuardTests` by `FullyQualifiedName~` joined with `|`.
+The log preserves the exact argv. The complete Client suite passed **907**, with
+the same two capture-dependent skips and no failures
+(`plane-exit-client-final-20260912.{log,trx}`); it uses the Client test project
+with `--no-restore --nologo` and no filter. The existing forty-step and 2,148-step
+fingerprints still pass unchanged.
+
+The narrower **22/22** lifecycle selection is retained as
+`plane-exit-lifecycle-focused-v3-20260912.{log,trx}`. It covers both restore
+boundaries, targeted Ready while Init is paused, strict arrival/deadline edges,
+both altitude clamps, distinct owner lifetimes, deleted listeners, hash/admission
+guards, burst suppression/continuation and next-tick round movement. Before the
+repair, both spawner-loss variants failed because generic StartDieProcess also
+set DeclaredShutdown (`plane-exit-unit-death-red-20260912.{log,trx}`). The narrow
+Unit transition now retains Dying, StartedDying notification, health/parts and
+Move recurrence without manufacturing Died/Shutdown. Initial compilation and
+the earlier 16/19-case results remain under `plane-exit-lifecycle-*`; the first
+compile failure was nullable attachment access and was corrected with `.Value`.
+
+The first adjacent selection passed 314 and failed three cases
+(`plane-exit-core-affected-20260912.{log,trx}`). Two rate-cap fixtures supplied
+Attack immediately after spawn; they now supply controlled normal-guide input
+directly to the same production mover, retaining all original expected values.
+The remaining Headless pin had missed the preceding exit-input materialization.
+`plane-exit-legacy-fixtures-cause-20260912.{log,trx}` passes the two rate checks
+and fails only the deliberately unchanged pin after proving that substituting
+only the previous definition identity recovers every prior canonical byte across
+all 838 ticks, including the previous complete trace. The final test retains
+that proof. Its current trace is
+`2da46d641e2187ead860869dd25b5abdf54f59aa5bac8830f7e661babe000309`,
+final state `6ec3dfbbfd2351f824e4bab7685503e8e014a57f9e6990ad2c13a78dfc44ad4d`.
+The direct `dotnet rebuild/OnslaughtRebuild.Headless/bin/Debug/net8.0/OnslaughtRebuild.Headless.dll --repeat 2`
+result is `plane-exit-headless-observed-20260912.json` with no replay divergence.
+
+The two full-combat drivers ran with their existing completion requirements
+(`plane-exit-combat-boundary-20260912.{log,trx}`). The returning-career driver,
+using its reduced fixture definitions, destroyed all 22 targets, damaged and
+killed all six final drones for 6000 damage, completed objective 4 and reached
+Won without abort at tick 5588/hull 11450. Its first run passed those assertions
+and failed only the old exact tick 7621 pin. Those reconstruction endpoint
+readings were updated; no driver commands, steering/damage constants or semantic
+completion requirement changed. Exit scheduling, its RNG consumption and delayed
+Ready all changed, so this result does not isolate one contributor to each shot.
+The repeated returning run and existing causal-damage, abort-silencing and
+weapon-event checks then passed **4/4**, no skips
+(`plane-exit-returning-combat-final-20260912.{log,trx}`). This uses the same Core
+command with a four-method `FullyQualifiedName~` filter recorded in that log.
+
+The cold shipping-manifest route **still fails** the original six-kill assertion:
+one final-wave kill, objective 4 Failed, abort at tick 7805 and Won at tick 8141
+with hull 4400. Its client and pointer-quantized Core control have no divergent
+tick and the same final hash
+`b163d10bbd55bf1f183cad36c146f41c5cfa8016ff4a1480a05ab3b5faf6dc30`.
+That failure remains visible; it was not repinned or weakened. Both drivers
+read internal state and are in-process reconstruction instruments, not player
+or retail acceptance. The earlier broad Core run remains a dated failing receipt.
+
+`git diff --check`, the docs gate and public safety gate passed; the latter
+checked 3984 candidates. Logs are `plane-exit-docs-20260912.log` and
+`plane-exit-safety-20260912.log`; the final documentation refresh uses
+`plane-exit-docs-final-20260912.log`.
+
+This closes the selected exit prefix through scheduled Ready and handoff to the
+existing approximate normal-control bridge. It does not close provider/common-AI
+execution, complete dying flight, contacts, avoidance, full event/RNG order,
+or the player-input tutorial and Save Lab UI acceptance routes. No desktop
+control, visible launch, asset regeneration or gameplay-constant adjustment was
+used. Schema 48 binds spawned exit ownership; unspawned schema 47 stays intact.

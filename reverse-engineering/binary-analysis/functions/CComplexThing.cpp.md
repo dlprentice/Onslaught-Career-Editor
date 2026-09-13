@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (aircraft spawner initialization, exit inputs and event handoff; other rows retain their earlier evidence)
+Last updated: 2026-09-12 (aircraft exit/GoTo composition, collision-ignore identity and bounded Core lifecycle)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -293,15 +293,43 @@ The original event-3002 callback `004ffbb0` queries the spawning owner's
 `+160(tag,index,position,basis)`. Deadline comparison is strict; an all-zero
 position terminates the exit. It clamps Z to terrain minus `0.1f`, increments
 the index at strict squared distance below `6.25f` for owner type bit `0x400`
-(`0.5625f` otherwise), and requests GoTo mode 1. Continuation draws once
+(`0.5625f` otherwise), and requests GoTo with override TRUE. Arrival uses raw
+XYZ float deltas and the PC24 sum `(Z² + Y²) + X²`; the old selector's point
+is still sent on the incrementing update. Continuation draws once
 directly and submits 3002 with incoming-event reuse at the float32 store of
 `rand16*float32(0.1/65536) + NOW + 0.1f`, preserving that order.
 Normal completion invokes the real `004febe0` state-1 helper. When controller
 state is not already 1, it submits a new controller 3000 at NOW; the already-1
 branch reports the redundant transition and submits none. If the Plane owns
 a script, completion then submits a new **Plane-owned** event 2003 at NEXT_FRAME.
-A missing/dying spawning owner first permits a separate owner-kind-1 death
-path that bypasses normal completion; a dying spawner does not unconditionally terminate.
+A missing/dying spawning owner first checks **GetVulnerable == 1**, not an
+owner-kind discriminator. Plane slot `+e4` selects `00405e40`, which reads
+Unit `+15c`; the selected constructors initialize it to 1. None of the admitted
+Level100 object programs sets vulnerability. AirUnit `00403690` calls Unit
+`004fd140`: mark TF_DYING and notify StartedDying, without the base CThing's
+immediate shutdown declaration. Child/particle/provider cleanup and complete
+dying flight remain separate work. This path bypasses Ready and normal handoff.
+The working Ghidra exit comment's older “owner-kind” phrase awaits its own
+preserved correction; do not rewrite the frozen correction manifest.
+
+The terminal write at `004ffd87` clears **CST +20**, reached through
+Unit `+38`: it is the raw collision-ignore pointer, as corroborated by
+`thing.h:248`, `InitThing.h:97` and the constructor copy at `0042619a`.
+It is not the AirGuide's clearance or mode. The controller's monitored
+spawning-owner reader at `+28` survives StartedDying; it is invalidated by
+the spawner's shutdown/delete reader chain. These two identities have separate
+lifetimes, including when a deleted spawner leaves the raw CST value retained.
+
+AirUnit GoTo `[00403a90,00403b52)` applies a **second** altitude clamp after
+the exit arrival comparison: RN-rounded target X/Y select the integer terrain
+sample `0047ea20`; height is multiplied by the world scale, limited by water,
+then reduced by profile MinAltitude. Guide `[0047e2d0,0047e30f)` receives the
+four-word point and TRUE override, allowing it to set mode 1 while controller
+state remains 2. The profile default store at `0042f0e9` sets `+15c=4.0f`;
+the field-42 factory at `004321b1` and setter `00432be0` identify the override.
+Air Trainer row 601 and Target Drone row 660 inherit Base Air Unit row 570;
+all three omit field 42 in the exact 175,603-byte physics input identified
+below. Core therefore uses 4.0f for this admitted pair only.
 
 Private `plane-controller-init-20260912.py` passed 18 cases and
 `plane-controller-exit-20260912.py` passed 26. They execute unchanged bodies,
@@ -319,6 +347,19 @@ The three body hashes, in address order, are:
 | `004fe710..004fea24` | `2eadfbd3a63747b453291d5b7584cb973c6b5bc239e755cfa329ccf3b16dfd1d` |
 | `004febe0..004fec5b` | `cd1eee4e958eaf9ef083c911b6bdf5f2383d6cdacb4e54916009562f0d448181` |
 | `004ffbb0..004ffdca` | `76ba731fe0d45a277013a54c9526266b1dbb5f0e2f697630ae1dc9d4c3057a20` |
+
+The later private `plane-controller-exit-goto-20260912.py` passed **26/26**
+cases with the same unchanged exit/transition and actual GoTo/Guide bodies.
+Its CST and guide are distinct receivers: completion clears only CST-ignore,
+while guide mode, destination and clearance survive. The added body hashes are
+`1254c7668761e7053297ebe62104d681018df8c5d5228bdc35abb5b0f4f663ba`
+(GoTo, 194 bytes) and
+`af5c2fb30c7f793d22d559118bca26416965260210cf615e98e2414e3eaf53b5`
+(Guide, 63 bytes). Integer/interpolated terrain, scene queries, vulnerability,
+StartDying, RNG and event admission remain controlled stubs. This composition
+tests both clamps and their order, not a live arrival time or full world dispatch.
+The earlier probe's synthetic `guide` variable named the CST receiver;
+its raw write observation was valid, but that variable did not identify its type.
 
 The Airfield is CBuilding, whose `+184` capability returns 1. Attachment tags
 15/16 explicitly bypass the Unit/profile cache and query case-insensitive
@@ -338,10 +379,20 @@ seated-owner lookup through `GetPlaneSpawnerExitPoint`. The selected mesh is
 `23219fc98eba73c19c83b3ae07ea92fa750d8f71362ccedfc1bfdec474629899`;
 its inflated hash is `893b5b0141d66394a6e19506be82c38c720f000a476391174862ef6864f33276`.
 Exact calculated world-pose checks use independent PC24 composition and HFLD
-inputs, not observed live cache words. Controller scheduling, delayed script
-Ready, common AI/provider firing and their snapshot lifecycle remain unwired.
+inputs, not observed live cache words. Core now owns the separate 3002 exit
+listener and both retained owner identities, selector/deadline, normal callback
+and targeted script Ready delivery. It defers script destination/target control
+and new burst requests until handoff, without canceling an already pending burst.
+The next normal callback explicitly resumes the pre-existing approximate
+target/weapon bridge; it does not implement common AI/provider selection,
+readiness, hysteresis or recurring normal 3000/3001 work. Ready's script commands
+settle inside callback dispatch, and restore retains this ordering. Spawner-loss
+death preserves health/parts and Move recurrence, but actual dying motion and
+transitive teardown are still absent. These are in-process implementation
+checks, not an observed retail exit or complete combat acceptance.
 The [validation record](../../../VALIDATION.md#aircraft-spawner-exit-inputs--september-12)
-owns commands, output paths and the isolated definition-identity hash change.
+owns earlier input receipts; the [lifecycle record](../../../VALIDATION.md#aircraft-exit-lifecycle-integration--september-12)
+owns the new checks, private output paths and remaining limits.
 
 ### Remaining selected-provider integration
 

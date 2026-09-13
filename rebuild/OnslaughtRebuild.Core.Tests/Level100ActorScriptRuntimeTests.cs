@@ -9,6 +9,42 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class Level100ActorScriptRuntimeTests
 {
     [Fact]
+    public void ReadyTargetsOneSpawnWithoutResumingOrRepeatingItsPausedInit()
+    {
+        var definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var actors = new Level100ActorRegistry(definitions);
+        var scripts = new Level100ActorScriptRuntime(actors, actors.GetThingRef("Player 1")!.Value);
+        Level100ActorId Spawn()
+        {
+            var id = Assert.Single(actors.SpawnThing(actors.GetThingRef("Airfield")!.Value,
+                "Target Drone", "SpawnerB", 1, "AirborneDrone1"));
+            scripts.AttachAndInitializeSpawnedActor(id, "AirborneDrone1");
+            return id;
+        }
+        Level100ActorId first = Spawn(), second = Spawn();
+        Assert.Empty(scripts.DrainCommands()); // Ready must not run at attachment.
+        var before = scripts.Snapshot;
+        Assert.All(before.Instances, instance => Assert.Single(instance.Continuations));
+        scripts.DispatchReady(first);
+        Level100ActorScriptCommand command = Assert.Single(scripts.DrainCommands());
+        Assert.Equal(first, command.ActorId);
+        Assert.Equal(Level100ActorScriptCommandKind.FollowWaypoint, command.Kind);
+        Assert.Equal("Drone Path 1", command.Argument);
+        for (int i = 0; i < before.Instances.Count; i++)
+            Assert.Equal(JsonSerializer.Serialize(before.Instances[i].Continuations),
+                JsonSerializer.Serialize(scripts.Snapshot.Instances[i].Continuations));
+
+        actors.ReportDied(first);
+        foreach (var fact in actors.DrainFacts()) scripts.DispatchFact(fact);
+        scripts.DrainCommands();
+        scripts.DispatchReady(first); // Deleted script is not recreated.
+        scripts.DispatchReady(new Level100ActorId(123456)); // Absent recipient is harmless.
+        Assert.Empty(scripts.DrainCommands());
+        scripts.DispatchReady(second);
+        Assert.Equal(second, Assert.Single(scripts.DrainCommands()).ActorId);
+    }
+
+    [Fact]
     public void RestoreDuringHangarPausePreservesNativeSpawnAdmissionAndCurrentClock()
     {
         // This isolates the shipped Hangar callback and its real Pause/
@@ -85,7 +121,8 @@ public sealed class Level100ActorScriptRuntimeTests
             motion.AdvanceEventClock(eventFrame);
             runtime.AdvanceTick();
             motion.ConsumeCommands(runtime.DrainCommands());
-            foreach (Level100ActorMechanicsWaitCompletion completion in motion.AdvanceTick(eventFrame))
+            foreach (Level100ActorMechanicsWaitCompletion completion in motion.AdvanceTick(eventFrame, id =>
+                { runtime.DispatchReady(id); motion.ConsumeCommands(runtime.DrainCommands()); }))
                 Assert.True(runtime.CompleteMechanicsWait(completion.ActorId, completion.WaitKind, completion.Argument));
             motion.ConsumeCommands(runtime.DrainCommands());
         }

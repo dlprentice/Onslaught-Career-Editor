@@ -985,7 +985,16 @@ public sealed class Simulation
     private void AdvanceLevel100ActorMechanics()
     {
         IReadOnlyList<Level100ActorMechanicsWaitCompletion> completions =
-            _level100ActorMechanics.AdvanceTick(_retailEventFrameCount);
+            _level100ActorMechanics.AdvanceTick(_retailEventFrameCount, actorId =>
+            {
+                _level100ActorScripts.DispatchReady(actorId);
+                // Ready's commands must settle before the next queued callback.
+                PumpLevel100EventBus();
+            }, actorId =>
+            {
+                _level100Destruction.StartPlaneDeathAfterSpawnerLoss(actorId);
+                DrainAndDispatchLevel100ActorFacts();
+            });
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(

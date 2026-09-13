@@ -28,6 +28,7 @@ public sealed record Level100ActorCommandIntentSnapshot(
     int GroundFullGuideBaseTickPhase)
 {
     public Level100PlaneGuideSnapshot? PlaneGuide { get; init; }
+    public Level100PlaneSpawnerExitSnapshot? PlaneSpawnerExit { get; init; }
 }
 
 public sealed record Level100ActorMechanicsSnapshot(
@@ -102,6 +103,7 @@ public sealed partial class Level100ActorMechanics
         internal bool WaitForWaypointCompletion { get; set; }
         internal int GroundFullGuideBaseTickPhase { get; set; }
         internal Level100PlaneGuideSnapshot? PlaneGuide { get; set; }
+        internal Level100PlaneSpawnerExitSnapshot? PlaneSpawnerExit { get; set; }
     }
 
     private readonly Level100ActorRegistry _actors;
@@ -111,19 +113,24 @@ public sealed partial class Level100ActorMechanics
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
-        Level100ActorDefinitionSet definitions)
+        Level100ActorDefinitionSet definitions) : this(actors, definitions, initializePlanes: true)
+    {
+    }
+
+    private Level100ActorMechanics(Level100ActorRegistry actors,
+        Level100ActorDefinitionSet definitions, bool initializePlanes)
     {
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
         ValidateDefinitionIdentity();
-        InitializePlanes();
+        if (initializePlanes) InitializePlanes();
     }
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
         Level100ActorDefinitionSet definitions,
         Level100ActorMechanicsSnapshot snapshot)
-        : this(actors, definitions)
+        : this(actors, definitions, initializePlanes: false)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(snapshot.Actors);
@@ -189,17 +196,21 @@ public sealed partial class Level100ActorMechanics
     /// One Core tick, which is one released base tick - see the class remarks
     /// for the accumulator this replaced.
     /// </summary>
-    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick()
+    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(
+        Action<Level100ActorId>? dispatchReady = null,
+        Action<Level100ActorId>? startPlaneDeath = null)
     {
         _planeEvents?.AdvanceTime();
-        return AdvanceRetailBaseTick();
+        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
     }
 
-    internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount)
+    internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount,
+        Action<Level100ActorId>? dispatchReady = null,
+        Action<Level100ActorId>? startPlaneDeath = null)
     {
         if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
             throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
-        return AdvanceRetailBaseTick();
+        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
     }
 
     private void ConsumeCommand(
@@ -261,10 +272,11 @@ public sealed partial class Level100ActorMechanics
     }
 
     private IReadOnlyList<Level100ActorMechanicsWaitCompletion>
-        AdvanceRetailBaseTick()
+        AdvanceRetailBaseTick(Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath)
     {
         var completions = new List<Level100ActorMechanicsWaitCompletion>();
-        _planeEvents?.Flush(DispatchPlaneEvent);
+        InvalidatePlaneReferences();
+        _planeEvents?.Flush((events, item) => DispatchPlaneEvent(events, item, dispatchReady, startPlaneDeath));
         foreach (ActorState state in _states.Values)
         {
             Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);
@@ -307,6 +319,7 @@ public sealed partial class Level100ActorMechanics
 
             if (state.Intent !=
                     Level100ActorCommandIntent.FollowingWaypoint ||
+                !PlaneScriptControlAvailable(state) ||
                 motion is null ||
                 !actor.Active ||
                 actor.Lifecycle != Level100ActorLifecycle.Alive)
@@ -786,7 +799,8 @@ public sealed partial class Level100ActorMechanics
             state.WaypointPointIndex,
             state.WaypointCommandScalar,
             state.WaitForWaypointCompletion,
-            state.GroundFullGuideBaseTickPhase) { PlaneGuide = state.PlaneGuide };
+            state.GroundFullGuideBaseTickPhase)
+        { PlaneGuide = state.PlaneGuide, PlaneSpawnerExit = state.PlaneSpawnerExit };
 
     private static ActorState Restore(
         Level100ActorCommandIntentSnapshot source) => new()
@@ -805,6 +819,7 @@ public sealed partial class Level100ActorMechanics
             GroundFullGuideBaseTickPhase =
                 source.GroundFullGuideBaseTickPhase,
             PlaneGuide = source.PlaneGuide,
+            PlaneSpawnerExit = source.PlaneSpawnerExit,
         };
 
     private static Level100FloatBasis3Bits RotateBasisAroundCoreY(

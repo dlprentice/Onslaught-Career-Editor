@@ -291,7 +291,15 @@ public sealed class Level100ActorScriptRuntime
         Attach(actorId, scriptName);
         Instance instance = RequireInstance(actorId);
         InitializeInstance(instance);
-        RunReadyAfterSpawn(instance);
+        RunImmediateReadyForLegacySpawn(instance);
+    }
+
+    /// <summary>Plane-owned event 2003 delivers builtin 6 to this script only.</summary>
+    internal void DispatchReady(Level100ActorId actorId)
+    {
+        if (!_instances.TryGetValue(actorId.Value, out Instance? instance)) return;
+        RunBuiltIn(instance, 6, null);
+        PumpEvents(instance);
     }
 
     public void PublishEvent(string eventName)
@@ -1006,7 +1014,7 @@ public sealed class Level100ActorScriptRuntime
                     Attach(actorId, arguments[3].AsString());
                     Instance spawnedInstance = RequireInstance(actorId);
                     InitializeInstance(spawnedInstance);
-                    RunReadyAfterSpawn(spawnedInstance);
+                    RunImmediateReadyForLegacySpawn(spawnedInstance);
                 }
                 return NativeResult.Void;
             case 4: // Pause — IScript__Pause 0x00537c70
@@ -1353,8 +1361,13 @@ public sealed class Level100ActorScriptRuntime
             ? instance
             : throw new KeyNotFoundException($"Actor {actorId} has no Level 100 script instance.");
 
-    private void RunReadyAfterSpawn(Instance instance) =>
-        RunBuiltIn(instance, 6, null);
+    private void RunImmediateReadyForLegacySpawn(Instance instance)
+    {
+        // Admitted raw Planes receive Ready only through their scheduled exit
+        // handoff. Other retained actor classes still use the older bridge.
+        if (_actors.GetBaseState(instance.ActorId).RetailPlane is null)
+            RunBuiltIn(instance, 6, null);
+    }
 
     private long NextSequence() => _nextSequence++;
 

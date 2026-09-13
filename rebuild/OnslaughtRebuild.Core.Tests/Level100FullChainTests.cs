@@ -390,11 +390,12 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        // Current deterministic readings after controller-before-event firing
-        // and the driver's matching retained-pose gate. These are in-process
-        // fixture expectations; the semantic completion contract is above.
-        Assert.Equal(7_621, final.Tick);
-        Assert.Equal(10_468, final.Hull);
+        // September 12 readings after the recovered exit callbacks, their
+        // RNG draws and delayed Ready replace immediate normal control. The
+        // driver, damage constants and all combat assertions above are intact.
+        // These are reconstruction fixture readings, not retail timing/hull.
+        Assert.Equal(5_588, final.Tick);
+        Assert.Equal(11_450, final.Hull);
     }
 
     /// <summary>

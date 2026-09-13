@@ -15,13 +15,13 @@ internal readonly record struct Level100ActorRoundImpactReceipt(
     int? RoundId);
 
 /// <summary>
-/// Actor-owned weapons and rounds, on the released 20 Hz base tick.
+/// Actor-owned weapons and rounds, in the current 20 Hz firing approximation.
 ///
-/// <para><b>Provenance.</b> Every law here is read out of the pristine
-/// BEA.exe (sha256 <c>74154bfa...7750</c>) through the 2026-07-23 Ghidra full
-/// pass, and every scalar is a dword out of <c>data/default physics.dat</c>
-/// (sha256 <c>e1fb3ded...ada14</c>) or a shipped record default. The four
-/// bodies that own the behaviour are:</para>
+/// <para><b>Provenance.</b> The bounded laws below use pristine
+/// BEA.exe (sha256 <c>74154bfa...7750</c>) instruction evidence and scalar
+/// words from <c>data/default physics.dat</c> (sha256 <c>e1fb3ded...ada14</c>)
+/// or shipped record defaults. They do not establish the current all-slots
+/// loop as the native controller/provider scheduling chain. Relevant bodies:</para>
 /// <list type="bullet">
 ///   <item><c>ProjectileBurst__SpawnFromPercentBucketFallback</c>
 ///     @<c>0x00506010</c> - the reload gate and burst start.</item>
@@ -341,6 +341,12 @@ public sealed partial class Level100ActorMechanics
                 }
                 continue;
             }
+
+            // The recovered controller exit has not entered normal control
+            // yet. This prevents new requests, but is deliberately AFTER
+            // burst continuation: exit state does not cancel a queued shot.
+            // The older AI/intent cancellation above remains a separate gap.
+            if (!PlaneScriptControlAvailable(state)) continue;
 
             if (weapon.ReloadBaseTicksRemaining > 0)
             {

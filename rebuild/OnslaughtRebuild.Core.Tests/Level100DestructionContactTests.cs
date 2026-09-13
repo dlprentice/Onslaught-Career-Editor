@@ -874,6 +874,40 @@ public sealed class Level100DestructionContactTests
             }));
     }
 
+    [Fact]
+    public void SpawnerLossRetainsPlaneHealthAndPartsWithoutDeclaringShutdown()
+    {
+        var definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var registry = new Level100ActorRegistry(definitions);
+        var id = Assert.Single(registry.SpawnThing(registry.GetThingRef("Airfield")!.Value,
+            "Target Drone", "SpawnerB", 1, "AirborneDrone1"));
+        var runtime = new Level100DestructionRuntime(registry);
+        registry.DrainFacts();
+        var before = runtime.Snapshot.Actors.Single(actor => actor.ActorId == id.Value);
+        int health = registry.GetActor(id).Health;
+
+        runtime.StartPlaneDeathAfterSpawnerLoss(id);
+        Assert.Equal(Level100ActorFactKind.StartedDying, Assert.Single(registry.DrainFacts()).Kind);
+        runtime.StartPlaneDeathAfterSpawnerLoss(id);
+        Assert.Empty(registry.DrainFacts());
+        Assert.Equal(Level100ActorLifecycle.StartedDying, registry.GetActor(id).Lifecycle);
+        Assert.True(registry.GetBaseState(id).IsDying);
+        Assert.False(registry.GetBaseState(id).IsShuttingDown);
+        Assert.Equal(health, registry.GetActor(id).Health);
+        runtime.BeginTick(); // Production registry/destruction consistency check.
+        var restoredRegistry = new Level100ActorRegistry(definitions, registry.Snapshot);
+        var restored = new Level100DestructionRuntime(restoredRegistry, runtime.Snapshot);
+        restored.BeginTick();
+        var after = restored.Snapshot.Actors.Single(actor => actor.ActorId == id.Value);
+        Assert.False(after.Terminal);
+        Assert.Equal(before.CurrentLifeBits, after.CurrentLifeBits);
+        Assert.Equal(before.CurrentHealthBits.ToArray(), after.CurrentHealthBits.ToArray());
+        Assert.Equal(before.PartActivity.ToArray(), after.PartActivity.ToArray());
+        Assert.Empty(restored.Snapshot.PendingShutdowns);
+        Assert.Throws<InvalidOperationException>(() =>
+            runtime.StartPlaneDeathAfterSpawnerLoss(registry.GetThingRef("Player 1")!.Value));
+    }
+
     [Theory]
     [InlineData("Target Tank")]
     [InlineData("Target Truck")]

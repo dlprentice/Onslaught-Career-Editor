@@ -27,15 +27,23 @@ public static class StateHasher
             if (state.Level100Actors.BaseStates.Any(item => item.State.RetailPlane is null &&
                     (item.State.RetailPoses is not null || item.State.RetailMotion is not null)))
                 throw new NotSupportedException("Incomplete retail construction has no admitted hash schema.");
-            bool usesPlaneMotionSchema = state.Level100Actors.BaseStates.Any(item => item.State.RetailPlane is not null) ||
+            int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
+                .Select(item => item.ActorId.Value).Order().ToArray();
+            bool usesPlaneMotionSchema = rawActors.Length != 0 ||
                 state.Level100ActorMechanics.PlaneEvents is not null ||
-                state.Level100ActorMechanics.Actors.Any(actor => actor.PlaneGuide is not null);
+                state.Level100ActorMechanics.Actors.Any(actor => actor.PlaneGuide is not null || actor.PlaneSpawnerExit is not null);
+            int[] expectedExitOwners = state.Level100Actors.Actors.Where(actor => actor.SpawnOwnerId.HasValue &&
+                Array.BinarySearch(rawActors, actor.ActorId.Value) >= 0)
+                .Select(actor => actor.ActorId.Value).Order().ToArray();
+            int[] actualExitOwners = state.Level100ActorMechanics.Actors.Where(actor => actor.PlaneSpawnerExit is not null)
+                .Select(actor => actor.ActorId.Value).Order().ToArray();
+            if (!expectedExitOwners.SequenceEqual(actualExitOwners))
+                throw new ArgumentException("Spawned aircraft exit ownership is incomplete.", nameof(state));
+            bool usesPlaneExitSchema = expectedExitOwners.Length != 0;
             if (usesPlaneMotionSchema && state.Level100Mission.WorldNumber != 100)
                 throw new NotSupportedException("Raw Plane motion does not admit incomplete world construction.");
             if (usesPlaneMotionSchema)
             {
-                int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
-                    .Select(item => item.ActorId.Value).Order().ToArray();
                 int[] guidedActors = state.Level100ActorMechanics.Actors.Where(actor => actor.PlaneGuide is not null)
                     .Select(actor => actor.ActorId.Value).Order().ToArray();
                 if (!rawActors.SequenceEqual(guidedActors) || state.Level100ActorMechanics.PlaneEvents is not { } events ||
@@ -51,6 +59,10 @@ public static class StateHasher
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 48: retained spawning-owner reader, exit selector/deadline and
+            // explicit handoff to the existing approximate normal-control
+            // bridge. Unspawned scenes retain schema 47 byte-for-byte.
+            //
             // 47: admitted raw Plane state, including both poses, movement
             // time, velocity, retained angles/rates, next drive and bank flag,
             // guide cache and ordered event pool. Includes all earlier fields.
@@ -147,7 +159,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -283,7 +295,7 @@ public static class StateHasher
             }
             WriteLevel100ActorScripts(writer, state.Level100ActorScripts);
             WriteLevel100ActorScriptCommands(writer, state.Level100ActorScriptCommands);
-            WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics, usesPlaneMotionSchema);
+            WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics, usesPlaneMotionSchema, usesPlaneExitSchema);
             writer.Write(state.NextProjectileId);
 
             ProjectileSnapshot[] projectiles = state.Projectiles
@@ -407,7 +419,7 @@ public static class StateHasher
     private static void WriteLevel100ActorMechanics(
         BinaryWriter writer,
         Level100ActorMechanicsSnapshot mechanics,
-        bool includePlaneMotion)
+        bool includePlaneMotion, bool includePlaneExit)
     {
         ArgumentNullException.ThrowIfNull(mechanics);
         ArgumentNullException.ThrowIfNull(mechanics.Actors);
@@ -441,6 +453,19 @@ public static class StateHasher
                     writer.Write(guide.ClearanceCellY);
                     writer.Write(guide.ControllerState);
                     writer.Write(guide.SpeedMode);
+                }
+            }
+            if (includePlaneExit)
+            {
+                writer.Write(actor.PlaneSpawnerExit is not null);
+                if (actor.PlaneSpawnerExit is { } exit)
+                {
+                    WriteNullableActorId(writer, exit.SpawningOwnerId);
+                    WriteNullableActorId(writer, exit.CollisionIgnoredActorId);
+                    writer.Write(exit.AttachmentTag);
+                    writer.Write(exit.Selector);
+                    writer.Write(exit.DeadlineFloatBits);
+                    writer.Write(exit.ScriptControlResumed);
                 }
             }
         }
