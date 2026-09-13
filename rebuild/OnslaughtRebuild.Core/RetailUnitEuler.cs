@@ -58,6 +58,15 @@ public static class RetailUnitEuler
         double rollCos = Store(Math.Cos(roll)), rollSin = Math.Sin(roll);
         double pitchCos = Store(Math.Cos(pitch)), pitchSin = Math.Sin(pitch);
 
+        return CombineTrig(yawCos, yawSin, pitchCos, pitchSin, rollCos, rollSin);
+    }
+
+    // CPanCamera uses the same matrix combination, but its derived yaw/pitch
+    // stay on x87 before trig. Sharing this suffix avoids introducing Unit's
+    // float-angle input stores into that different caller.
+    internal static Level100FloatBasis3Bits CombineTrig(double yawCos, double yawSin,
+        double pitchCos, double pitchSin, double rollCos, double rollSin)
+    {
         double sineProduct = RetailFloat24.Multiply(pitchSin, rollSin);
         // 0x004fa784 stores this already-PC24 product without popping it.
         // M02 retains its exponent range; M12 reloads the float32 copy.

@@ -73,6 +73,7 @@ public sealed class Simulation
     private Level100ActorScriptRuntime _level100ActorScripts = null!;
     private Level100ActorMechanics _level100ActorMechanics = null!;
     private Level100DestructionRuntime _level100Destruction = null!;
+    private Level100CameraRuntime _level100Camera = null!;
     private Level100ActorId _level100PlayerActorId;
     private int _tick;
     private uint _retailEventFrameCount;
@@ -379,6 +380,7 @@ public sealed class Simulation
         {
             _retailEventFrameCount = unchecked(_retailEventFrameCount + 1);
             _level100ActorMechanics.AdvanceEventClock(_retailEventFrameCount);
+            _level100Camera.AdvanceEventClock(_retailEventFrameCount);
         }
 
         _level100MissionEvents.Clear();
@@ -416,6 +418,7 @@ public sealed class Simulation
         // gating on. See AdvanceOpeningCamera's remarks for the released
         // dispatch order this reproduces.
         bool skippedThePanThisTick = _level100OpeningTicksRemaining > 0 &&
+            _level100Camera.Snapshot.Pan is not null &&
             input.HasAction(SimActions.SkipPanning);
 
         // Scripted loss pauses immediately. Player-death/water loss keeps the
@@ -495,6 +498,7 @@ public sealed class Simulation
         UpdateProjectiles();
         SyncLevel100PlayerState();
 
+        _level100Camera.EndEventFrame(ReadCameraAttachment());
         return CreateSnapshot();
     }
 
@@ -567,9 +571,9 @@ public sealed class Simulation
     /// parity remains open; only the direct button phase is corrected here.
     /// </para>
     /// <para>
-    /// <c>GotoControlView()</c> (<c>Player.cpp:72-83</c>) is the camera half
-    /// and belongs to the client; Core owns only
-    /// <c>GAME.StartPlayingState()</c>.
+    /// <c>GotoControlView()</c> (<c>Player.cpp:72-83</c>) changes the Core camera
+    /// independently of StartPlayingState. Client interpolates that selected
+    /// camera's old/current poses and does not decide when the handoff occurs.
     /// </para>
     /// </remarks>
     private void AdvanceOpeningCamera(SimInput input)
@@ -577,13 +581,15 @@ public sealed class Simulation
         bool wasPanning = _level100OpeningTicksRemaining > 0;
         if (!wasPanning)
         {
+            _level100Camera.DeliverControlViewEvent(ReadCameraAttachment() is not null);
             return;
         }
 
         _level100OpeningTicksRemaining--;
 
-        if (input.HasAction(SimActions.SkipPanning))
+        if (input.HasAction(SimActions.SkipPanning) && _level100Camera.Snapshot.Pan is not null)
         {
+            _level100Camera.SkipPan(ReadCameraAttachment() is not null);
             _level100OpeningTicksRemaining = 0;
         }
 
@@ -597,7 +603,13 @@ public sealed class Simulation
             // itself rather than being handed a simulation tick.
             _level100Mission.NotifyPlayingStateStarted();
         }
+        _level100Camera.DeliverControlViewEvent(ReadCameraAttachment() is not null);
     }
+
+    private RetailActorPoseSnapshot? ReadCameraAttachment() =>
+        _level100Actors.GetLifecycle(_level100PlayerActorId) == Level100ActorLifecycle.Destroyed
+            ? null
+            : Level100CameraRuntime.FromPlayerPose(_level100Actors.GetBaseState(_level100PlayerActorId).CurrentPose);
 
     private Level100ActorPoseSnapshot PlayerPose =>
         _level100Actors.GetPose(_level100PlayerActorId);
@@ -4200,6 +4212,8 @@ public sealed class Simulation
             _worldNumber);
         SyncLevel100PlayerState();
         PumpLevel100EventBus();
+        _level100Camera = new Level100CameraRuntime(_level100PlayerActorId,
+            ReadCameraAttachment() ?? throw new InvalidOperationException("Opening camera has no Battle Engine."));
     }
 
     private WorldSnapshot CreateSnapshot()
@@ -4314,6 +4328,7 @@ public sealed class Simulation
         {
             RetailEventFrameCount = _retailEventFrameCount,
             Level100PlayerWeaponState = _level100PlayerWeapons.Snapshot,
+            Level100Camera = _level100Camera.Snapshot,
         };
     }
 

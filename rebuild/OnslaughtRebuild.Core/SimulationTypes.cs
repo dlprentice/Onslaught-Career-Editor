@@ -637,6 +637,12 @@ public sealed record WorldSnapshot(
     public Level100PlayerWeaponStateSnapshot Level100PlayerWeaponState { get; init; } =
         Level100PlayerWeaponStateSnapshot.Initial;
 
+    /// <summary>
+    /// Selected Core camera and its retained event state. Null is reserved for
+    /// legacy/synthetic envelopes; every current Level100 Simulation supplies it.
+    /// </summary>
+    public Level100CameraSnapshot? Level100Camera { get; init; }
+
     public bool Level100PlayerControlEnabled =>
         Level100PlayerActive && Level100OpeningTicksRemaining == 0;
 

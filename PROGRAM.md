@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (native aircraft cache population measured; render/camera context and firing integration remain open)
+Last updated: 2026-09-12 (unfinished camera draft preserved separately at David's requested pause)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -17,6 +17,68 @@ validation in [VALIDATION.md](VALIDATION.md), and database state in
 queue revisions remain in Git and existing evidence owners; do not recreate a diary here.
 
 ## Open work
+
+### Paused camera draft — September 12
+
+David requested a safe resume point during implementation. This branch,
+`codex/camera-core-resume-20260912`, preserves an **unfinished, uncompiled draft**
+on top of validated development commit `25db5b231ff463623688f59a4ac0ecfac9ef7f93`.
+The normal `codex/linux-playable-slices` checkout stays at that validated commit.
+Do not treat this draft as a completed integration or merge it unchanged.
+
+The draft adds `Level100CameraRuntime`, supplies it from Simulation and its
+snapshot, and extracts the shared matrix-combination suffix in `RetailUnitEuler`.
+It freezes opening offsets, advances from the event clock, models the separate
+control-view handoff, and replaces the polynomial with the native spline's
+recursive operation order. **Client/Godot still own their old camera, and
+StateHasher does not yet serialize the new camera state.** No new runtime,
+replay, arithmetic-equivalence or restoration tests have run for this draft.
+
+Resume by reviewing these changes, completing the single Core camera authority
+and replacing Client mutation with snapshot interpolation. Include all retained
+camera fields in canonical hashing, preserving explicit legacy/synthetic
+envelopes; do not blindly replace expected hashes. Test frozen offsets under
+actor rotation/translation, multiple simulation updates without rendering,
+discrete handoff at every interpolation fraction, skip ordering, missing-reader
+retention, pause/reset and camera-owner snapshot continuation. Simulation has
+no full-world restore constructor. Unit 4003, its shared RNG draw and scheduler
+restore admission are still unimplemented; render stamps are a separate input.
+
+Fresh static review of pristine `74154bfa…7750` establishes:
+
+- Player.cpp:152-213 copies orientation once; the four Level100 offsets are
+  `(0,10,-4.3)`, `(5,0,1.3)`, `(0,-9,-1.3)`, `(0,-2.5,0)` transformed by it.
+  Current Thing position is added after evaluating that frozen offset curve.
+- Camera.cpp:344-393 and native `004198d0` / `00419b00` initialize the pan
+  immediately, shadow its pose before each update, and schedule a new camera
+  2000 at end-of-frame. Missing readers hold the pose and retain recurrence.
+  Player 4000 requires a reader and current PAN view; a missing reader therefore
+  does not automatically switch to an empty first-person view. Early skip
+  deletes pan recurrence but leaves the independent player event to become a no-op.
+- Native spline bodies `00416d10..00416d99`, `00416e30..00416fb5` and
+  `00416fc0..00417099` use order 3, four points and knots `[0,0,0,1,2,2,2]`.
+  Weights recurse left first, spill its contribution before right recursion
+  when both terms exist, and return right plus stored left. XYZ accumulates
+  each of the four weighted points with per-point float stores. There is no
+  endpoint clamp: fraction exactly one yields zero offset through half-open
+  basis intervals. Ordinary handoff occurs earlier.
+- Pan yaw/pitch remain unspilled before trig. The inspected finite interior
+  of helper `0055dcb0` computes asin despite its saved Acos name; no Ghidra
+  correction was applied. Camera-site precision and managed trig remain
+  unverified, and the player is still a millimetre/microradian projection.
+  The current simulation epoch also omits retail's three-second pre-run.
+- B feasibility at `005090ea` calls world query `0050b030` using the attachment
+  and endpoint helper `0050a0e0`, not unconditional target centre. It requires
+  result 3 and a Unit of the intended target's allegiance; it can hit a different
+  same-allegiance Unit. Terrain is always traced, with a separate water-plane
+  flag. MapWho ordered line traversal, collider flags/shape dispatch and mixed
+  broad/refined ranking are missing from the current sphere sweep. Do not
+  substitute that sweep or constant success. Follow the existing controller
+  evidence owner for continued firing integration.
+
+All three reviewing subagents finished without edits or execution. No desktop
+or Ghidra database access occurred during this draft. The earlier validated
+milestones and acceptance limits below are unchanged.
 
 ### Remote checkpoint integrated on Linux — September 12
 
