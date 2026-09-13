@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[UnitAI initializer and event arguments](#unitai-initializer-and-event-arguments-2026-09-12);
+[UnitAI exit contract comment](#unitai-exit-contract-comment-2026-09-12);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -503,6 +503,37 @@ Both were hash-compared, restored elsewhere and reopened read-only; the first
 then served as the second cohort's matching PRE. The tracked checkpoint stayed
 byte-identical throughout. Current name projection composes the initializer
 manifest; dated tables remain frozen.
+
+## UnitAI exit contract comment (2026-09-12)
+
+The [manifest](../../tools/cohort-specs/unit-ai-exit-contract.manifest.tsv) and
+[spec](../../tools/cohort-specs/unit-ai-exit-contract.spec.tsv) change only the
+nonrepeatable comment at `004ffbb0`: GetVulnerable, the distinct CST collision-ignore
+pointer, and GoTo's TRUE override. Names, ABI, tags, repeatable comments and bodies
+remain unchanged. The [Unit evidence](../binary-analysis/functions/CComplexThing.cpp.md#aircraft-spawner-exit-and-script-readiness--september-12)
+owns the static and composed original-code witnesses.
+
+Working POST measures `db.18647`: 18 files, 118,983,540 bytes, inventory SHA-256
+`b14df79459f8bb857163075f63b3fcb76946f336f8dcb4f1797c89248be8086e`.
+Its main database is 68,681,728 bytes, SHA-256
+`6ca29ea137989ab18776a495c5629fbc317da98d546aa5ac28f76ab8c28073f8`.
+Isolated dry/apply, sealed separate readback and independent metadata comparison,
+then live dry/apply/readback passed. All eight live exports equal rehearsal;
+8,329 other function rows and every variable/type/bookmark/stack export hold.
+Only the target comment and program comments digest change.
+
+Evidence is in the `unit-ai-exit-contract/` child of
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/`.
+`live-readback.json` is 2,250 bytes, SHA-256
+`943858aa7cb15af1ab0c0f9d726139e341cf61f4cc7a79211d0cd5391d280736`.
+The preceding event-argument POST was freshly matched, restored and reopened as PRE.
+The new independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-12-unit-ai-exit-contract/post-working/`.
+Copy, separate restore and read-only reopen passed without file mismatches;
+`post-working-restore.json` is 5,775 bytes, SHA-256
+`af60ead07bfa8c2cd09050b79e10ada8e3849ca2ca760fd2309d150a7a260f9e`.
+The full tracked checkpoint payload still matches its recorded inventory.
+No checkpoint refresh, name-projection change or runtime-parity claim follows.
 
 Related (not this folder):
 

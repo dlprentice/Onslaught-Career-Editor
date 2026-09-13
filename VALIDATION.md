@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (aircraft exit/Ready integration and original-code GoTo composition).
+Last updated: 2026-09-12 (exit comment correction and common-controller/Unit-phase composition).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -805,6 +805,62 @@ The final safety check passed for **3,980 candidates**. The initial refusal and
 final pass remain separate `weapon-provider-safety-20260912.log` and
 `weapon-provider-safety-final-20260912.log` files in the same test owner;
 docs and name self-test logs use the matching `weapon-provider-` prefix.
+
+### Common controller and Unit weapon composition — September 12
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/plane-common-weapon-phases-20260912.py`
+passed **21/21 synthetic cases, 27 calls**, including the rerun with complete
+four-word retained/forwarded-vector assertions. It executes ten unchanged
+retail routines, including common update, slot-4 refresh and the earlier Unit
+phase bodies. The selected specimen remains 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+New raw-body identities are:
+
+| Range | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `004fef40..004ff322` | 994 | `7aca029cc9b576958d86a01282e847e6b624d29dcbc23b4ae2b89cbf8193fffe` |
+| `004ff4f0..004ff70b` | 539 | `4bf6a880bceb0db303c5adab07deb05430df97d61a8bdbe34b99cb608958f60d` |
+| `004fbc90..004fbcae` | 30 | `b5a96a9c821defad155def39a7ff2e12ac40d82fc9b1cda0aeeb0ed2f2fbee6d` |
+
+The private source, ELF, exact input/output and result JSON share that stem.
+The result JSON is 16,670 bytes, SHA-256
+`29205cbcad5ce400f9d0732fee7a16a1bc392aa5db27589561eec70e96899120`.
+The 86,016-byte inputs and 107,520-byte outputs were independently reconciled
+against all cases, call traces and final receiver snapshots. The harness also
+checks unchanged original bytes in ELF load mappings, preserved registers and
+stack, x87 stack/error conditions and PC24/RN control word `007f`.
+
+Counterexamples distinguish ready firing from the newly failed preparation
+gate, preserve the earlier aim through phase 1, expose two selection calls,
+and retain post-fire behavior when WeaponFire returns zero or negative.
+Target aim capture/application, A/B feasibility, selection, acquisition,
+reader registration, RNG, WeaponFire and waiting animation are explicit stubs;
+support/spawner membership is absent. Positive delays and clear-after-fire are
+synthetic branch cases. Phase completion is invoked directly. No real projectile,
+Plane/Move scheduling, burst delivery, automatic acquisition or geometry is tested.
+`plane-normal-static-boundaries-20260912.log` in the same owner binds the
+attachment and line-query findings to exact bytes and the freshly hashed physics
+records. [The Unit owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)
+records the consequences and remaining production work.
+
+### UnitAI exit comment correction — September 12
+
+The exact one-comment manifest passed the preserved rehearsal/live/readback/
+independent-recovery route in [Ghidra's owner](reverse-engineering/ghidra/README.md#unitai-exit-contract-comment-2026-09-12).
+Only `004ffbb0`'s nonrepeatable comment changes; all eight live exports equal
+the isolated rehearsal. The tracked checkpoint remains unchanged.
+`python -m tools.ghidra_cohort_framework_tests` passed **91/91**.
+The direct script invocation first failed to import `tools`; module invocation
+uses the existing package without changing the framework's behavior.
+The cohort receipts and exact commands are under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/unit-ai-exit-contract/`.
+No engine/runtime acceptance was inferred from these metadata and RE checks.
+The first payload gate refused the new encoded-comment manifest. Its two
+decoded analytic comments (3,509 bytes) passed control/secret/payload inspection;
+only that exact manifest path and SHA-256 were registered through the existing
+reviewed-comment mechanism. Other payload guards remain active. Final docs and
+safety receipts are `plane-common-exit-docs-final-20260912.log` and
+`plane-common-exit-safety-final-20260912.log` in the test-run owner above.
 
 ### Unit weapon preparation and fire phases — September 12
 

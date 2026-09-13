@@ -264,6 +264,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "weapon-provider-semantics",
         "unit-ai-initializer",
         "unit-ai-event-arguments",
+        "unit-ai-exit-contract",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

@@ -432,6 +432,15 @@ The working Ghidra initializer now has its RTTI-backed CUnitAI attribution, and
 the dispatcher/exit prototypes carry the actual incoming event pointer. These
 metadata corrections preserve the unestablished return types and are backed by
 separate full readbacks and restored independent recovery.
+The exit comment now distinguishes vulnerability, CST collision-ignore and
+the GoTo override. A subsequent original-code common-controller/Unit-phase
+composition passed 21 cases across 27 calls: provider refresh precedes readiness,
+preparation can select twice, pending preparation retains aim, and already-ready
+fire does not recheck the newly computed feasibility flag. Scene queries,
+selection, target aim, Weapon Fire and acquisition are controlled stubs.
+The existing firing loop still omits the selected weapon mounts and the
+non-seeking round's B-feasibility line query. Neither this experiment nor the
+metadata correction advances full-combat or player acceptance.
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

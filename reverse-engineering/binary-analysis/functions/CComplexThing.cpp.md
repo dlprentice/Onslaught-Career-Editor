@@ -309,8 +309,9 @@ Level100 object programs sets vulnerability. AirUnit `00403690` calls Unit
 `004fd140`: mark TF_DYING and notify StartedDying, without the base CThing's
 immediate shutdown declaration. Child/particle/provider cleanup and complete
 dying flight remain separate work. This path bypasses Ready and normal handoff.
-The working Ghidra exit comment's older “owner-kind” phrase awaits its own
-preserved correction; do not rewrite the frozen correction manifest.
+The working Ghidra exit comment now carries this distinction through the
+[one-comment correction](../../ghidra/README.md#unitai-exit-contract-comment-2026-09-12).
+The preceding correction manifest remains frozen.
 
 The terminal write at `004ffd87` clears **CST +20**, reached through
 Unit `+38`: it is the raw collision-ignore pointer, as corroborated by
@@ -486,6 +487,46 @@ while retaining that deadline. These bounded observations do not establish
 effects, spawners, deployment, phase-3 pose restoration or gameplay acceptance.
 [Validation](../../../VALIDATION.md#unit-weapon-preparation-and-fire-phases--september-12)
 owns the command, outputs and review limits.
+
+The later `plane-common-weapon-phases-20260912.py` composes unchanged common
+update `004fef40`, slot-4 refresh `004ff4f0`, and the Unit preparation/readiness/
+fire/phase bodies. **21 cases / 27 calls** pass, including complete four-word
+retained/forwarded aim checks, ordered call traces, preserved registers/stack,
+PC24/RN control word and unchanged receiver bytes outside declared state.
+Independent review matched all ten routine bodies and constants in the ELF's
+actual load mappings and reconciled the saved inputs/outputs.
+
+Slot 4 refreshes the selected provider and computes B feasibility into `+1c`,
+then A into `+18`. Common readiness runs afterward. A ready weapon with a
+nonnull target still attempts fire when the refreshed `+18` is zero; this
+flag gates preparation instead. The preparation arm selects a second time.
+While Unit phase `+168==1`, it retains the previously captured `+34` aim:
+changing the supplied target X through 99, 123, 456 and 789 leaves the captured
+and forwarded vector `(99,22,33,44)`. Losing feasibility clears the request
+before the separately invoked phase helper cancels preparation. These examples
+refute re-aiming every callback and applying the preparation gate to ready fire.
+
+This composition supplies synthetic target-aim capture and aim application,
+provider selection, A/B feasibility, reader registration, acquisition, RNG,
+Weapon Fire and waiting animation. Support/spawner membership is absent.
+Positive delays and clear-after-fire are controlled branch variants. It does
+not execute the Plane dispatcher/recurrence, Move scheduling, burst delivery,
+geometry or projectile creation; selected production integration remains open.
+
+The static follow-up also refutes two omissions in the old firing-loop comments.
+Unit `004f8858..004f8880` supplies the weapon attachment with owner, selector 1
+and the field-7 GunA/GunB tag; `0044a830..0044a848` stores those values.
+An absent LaunchSequence does not remove that attachment origin. In the
+nonballistic B path `00508fab..0050911b`, pitch bounds are inclusive. Round
+`+48!=0` bypasses the line query; otherwise `005090ea` requires result 3, a
+nonnull Unit hit and allegiance equal to the target's, not necessarily the
+target itself. The same hash-pinned physics file has Forseti Missile Seek 3;
+Blaster omits Seek and inheritance, with the default Round `+48` cleared at
+`0043010e`. The selected missile therefore bypasses this query; the drone's
+Vulcan/Blaster needs it. Actual mount transforms and collision results remain
+inputs to recover, not permission to substitute centre launch or constant LOS.
+The [composition validation](../../../VALIDATION.md#common-controller-and-unit-weapon-composition--september-12)
+records raw body identities and the private static receipt.
 
 For profile `+19c==0`, common-controller preparation writes the target virtual
 `+168` result into controller `+34` at `004ff24b..004ff262`. The later ready

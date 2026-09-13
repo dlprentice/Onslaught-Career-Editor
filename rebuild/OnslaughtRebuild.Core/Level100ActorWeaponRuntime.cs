@@ -40,11 +40,16 @@ internal readonly record struct Level100ActorRoundImpactReceipt(
 /// (<c>CWeaponMinTargetHeight</c>/<c>MaxTargetHeight</c>) is a broad but finite
 /// strict window, -10 &lt; height &lt; 10000 for these modes. It is still absent
 /// from this approximate firing loop; the separately recovered provider selector
-/// carries it without claiming controller/fire integration. The line-of-sight trace through
-/// <c>CWorld__FindFirstThingToHitLine</c> runs only when the caller supplies a
-/// trace context, and which callers do is unread; it is omitted. Muzzle
-/// offsets are omitted because neither drone weapon mode carries a
-/// <c>CWeaponLaunchSequence</c> node. The weapon's attached-target aim transform
+/// carries it without claiming controller/fire integration. The B feasibility
+/// path at <c>005090ea</c> performs its own world line query for the selected
+/// non-seeking Blaster, independently of A's optional trace context. It admits
+/// a Unit hit with the target's allegiance; the seeking missile skips this query.
+/// That B check is absent here. Unit initialization also supplies GunA/GunB
+/// selector 1 to the weapon attachment at <c>004f8858</c>/<c>0044a830</c>.
+/// The launch positions below still omit those mounts; an absent
+/// <c>CWeaponLaunchSequence</c> does not justify an owner-centred origin.
+/// See the September 12 common-controller evidence in CComplexThing.cpp.md.
+/// The weapon's attached-target aim transform
 /// supplies launch direction, while the unit's own facing independently passes
 /// through <c>CWeaponYawTolerance</c>. <c>CWeaponTrack</c> is absent from both
 /// modes (shipped default 0); the reconstruction therefore does not invent its

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (scheduled aircraft exit and Ready integrated; normal combat control remains partial)
+Last updated: 2026-09-12 (exit metadata corrected; common controller/weapon phases measured, integration remains open)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -76,10 +76,14 @@ its client and direct-Core inputs agree. Preserve that failed completion gate
 while replacing the remaining approximate combat owners.
 The shared initializer attribution and both dispatcher/exit event-pointer
 parameters are now corrected in the working Ghidra project with full readback
-and independent recovery. The exit comment's older “owner-kind” wording still
-needs a scoped Ghidra correction: the virtual actually reads GetVulnerable.
-Continue beyond the exit handoff with retained aim,
-preparation/readiness phases and scheduled burst transaction,
+and independent recovery. The exit comment now identifies GetVulnerable,
+the distinct CST collision-ignore pointer and TRUE GoTo override, with the
+same preservation gate. A composed original-code experiment passes 21 cases:
+slot-4 refresh precedes readiness, preparation can select twice, and an already
+ready weapon can fire despite newly failed feasibility. Pending preparation
+retains its earlier aim point. These contracts still need production integration.
+Admit the selected GunA/GunB attachment transforms and B feasibility's real
+line query alongside retained aim, preparation/readiness and scheduled bursts,
 including terminal callbacks and next-frame round movement, before replacing
 the old all-slots loop. Details remain in the controller evidence owner above.
 Keep conditional random draws, ordered avoidance candidates and monitored
