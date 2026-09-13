@@ -3,8 +3,8 @@
 Status: bounded static and isolated original-code contract; World110 arithmetic implemented
 Last updated: 2026-09-12
 Summary: profile attachment caching, exact arithmetic, mesh lookup and isolated
-aircraft pose/cache observations. Live firing integration, cache population
-and complete child initialization remain unvalidated.
+aircraft cache population and pose observations. Live firing integration,
+camera-latch ownership and complete child initialization remain unvalidated.
 Source File: Unit.cpp (implementation absent from the pinned partial source); Binary: BEA.exe
 
 > Address: 0x004fc4e0 | Source: Unit.cpp
@@ -116,7 +116,7 @@ The experiment separates three paths over the same selected mount:
 | Path | Controlled admission | World-pose source |
 | --- | --- | --- |
 | Shared profile | Eligible Unit/profile, matching 72-byte entry reached through an 8-byte list node | Current Unit position/basis on every query |
-| Renderer cache | Ineligible profile arm, nonnull render cache, matching integer-frame stamp greater than one | Local cached part at its actual ordinal, composed with interpolated Actor pose |
+| Renderer cache | Ineligible profile arm, nonnull render cache, matching render-frame stamp greater than one | Local cached part at its actual ordinal, composed with interpolated Actor pose |
 | Direct evaluation | Ineligible profile arm, null render cache, animation mode -1, null motion, owned single-pose caches | Local CPOS/CORI evaluation and interpolated Actor pose, unless the direct world cache hits |
 
 For identity bases, old origin `(0,0,0)`, current origin `(1,0,0)`, GunA/1
@@ -134,22 +134,81 @@ also shows that fraction one does not make subtract/scale/add interpolation
 bit-identical to copying the current basis.
 
 The direct cache stores the render receiver, part pointer, model-frame index
-and integer game frame. After current X changes from 1 to 2 within frame 100,
-a repeated GunA/1 query returns the previous world pose. Advancing to frame
-101 recomputes it. Querying GunB/1 between GunA/1 queries evicts that selected
-part and causes recomputation even within frame 100. Shared-profile and warm
+and render-frame stamp. After current X changes from 1 to 2 within render stamp
+100, a repeated GunA/1 query returns the previous world pose. Advancing the
+stamp to 101 recomputes it. Querying GunB/1 between GunA/1 queries evicts that
+selected part and causes recomputation even within stamp 100. Shared-profile and warm
 renderer-cache queries instead reflect the changed current pose on both calls.
 Saved cache keys and all twelve meaningful cached words match these outputs;
 the other two paths leave the separately reset direct cache untouched.
 
 These results require cache ownership in the firing reconstruction, beyond
-the immutable mount inputs already admitted to Core. Shared-cache misses,
-renderer-cache population, recursive/animated hierarchy, nonnull motion,
-camera-latch lifecycle and complete weapon/round delivery remain open. The
+the immutable mount inputs already admitted to Core. The subsequent population
+experiment below closes the selected frame-zero hierarchy path. Shared-cache
+misses, animated poses, nonnull motion, camera-latch lifecycle and complete
+weapon/round delivery remain open. The
 controls vary actor translation only along X; they do not establish arbitrary
 transform arithmetic or every Y/Z interpolation spill boundary. A warm
 cache experiment cannot justify assuming every local record was populated
 correctly. No Ghidra project, game process or desktop was opened.
+
+## Renderer-cache population and render stamp
+
+The separate private `plane-attachment-population-20260912.py` passed
+**11 cases / 17 calls** through the unchanged Unit query, now including native
+recursive population `004b4ba0` and hierarchy evaluator `004b5330`. Its fresh
+cache header and arrays are supplied in the shape initialized by CRTMesh;
+allocation and loading are not executed. The relocated graph includes all
+12 actual parts, their ordered children, complete HPOS/HORI/VHFM/CPOS/CORI
+channels and all 11 emitter bindings. Geometry is not needed by this path.
+The graph is mapped read-only, and all 32 native code/data ranges are compared
+against the same pristine specimen's bytes in the actual ELF mappings.
+Artifacts and checks are in
+[VALIDATION.md](../../../../VALIDATION.md#aircraft-renderer-cache-population--september-12).
+
+The admission is no CAMD, animation mode `-1`, null motion, and Plane's actual
+embedded virtual `+38` resolving to `00405920`, which returns one. All 12
+VHFM arrays select hierarchy pose zero at virtual frames zero and one,
+including the two Trail parts with longer tracks. Population evaluates
+HPOS/HORI through the parent hierarchy; it does not read CPOS/CORI for this
+path. The unchanged CRT floor and control-word helpers run as dependencies.
+
+Every meaningful frame-zero cached XYZ and basis word matches the stored
+CPOS/CORI for all 12 parts under both explicit PC24/RN and PC53/RN controls
+(24 part/precision comparisons). This supports the selected stationary model
+mount inputs; it does not establish arbitrary animation or equivalence of
+the different world-pose composition paths. All 12 resolved-part slots equal
+their actual ordinal and all 12 inherited-value slots equal zero. Fourth-word
+basis padding includes temporary stack contents and remains outside the pose
+claim. The existing `RetailMeshPartPose.ComposeHierarchy` operation/store
+order agrees with the inspected native hierarchy arithmetic.
+
+CRTMesh Init attempts a 28-byte cache-header allocation at `004dc58a`, then
+publishes it at `RTMesh+0c` at `004dc5b8`; its arrays use the mesh-part count.
+The initial header stamp is `-9999` and model time is `-99999.0f`.
+Successful ordinary initialization therefore supplies a cache. A null cache
+is not established here as a visibility or animation optimization.
+The selected query uses direct evaluation at unsigned render stamps zero and
+one, and the renderer cache above one. The experiment retains the supplied
+header untouched at stamps 0/1, then observes native population at 2/3.
+
+Refresh `004b4cd0` immediately returns on equal stamps, even with force set.
+For differing stamps the attachment's force flag bypasses the 30-render
+threshold. Before recursion, `004b4d2f` marks the header stamp `-9999`;
+afterward `004b4dcb/004b4dce` publish the captured entry stamp and computed
+model time. An explicit control changes only cached GunA/1 X to `-33` between
+calls: the same stamp returns that value, while the next stamp repopulates
+the original hierarchy value. This artificial cache write tests invalidation;
+it is not reported as gameplay behavior.
+
+The stamp global `008a9aac` is **CGame's render-frame number**, not its update
+counter or the event-manager frame. The
+[MainLoop owner](../game.cpp/CGame__MainLoop.md#render-stamp-and-gameplay-ordering)
+records the separate increments, repeated-render loop and pre-run updates
+without rendering. Current Core state does not yet supply this ordered render
+context or Unit 4003's current-camera latch. Those inputs and the existing
+weapon phases still need production integration. No original game loop,
+renderer/GPU, database or desktop was opened by the population experiment.
 
 ## Four World110 Component inputs
 

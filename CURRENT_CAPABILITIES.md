@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (native aircraft attachment composition measured; live cache and firing integration remain open).
+Last updated: 2026-09-12 (native aircraft cache population measured; live render/camera context and firing integration remain open).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -451,9 +451,14 @@ need not equal one under PC24 arithmetic. The follow-up unchanged attachment
 composition passes 27 cases / 33 calls through native Unit/mesh/getter/math
 bodies with synthetic receivers and warm caches. It distinguishes current from
 interpolated pose, arithmetic order and direct-cache reuse within a frame.
-The firing loop's use of these paths, cache population and camera-latch lifetime
-remain open; this adds no player-route acceptance. See the
-[focused evidence](VALIDATION.md#aircraft-attachment-composition--september-12).
+The next unchanged-code experiment passes 11 cases / 17 calls with a fresh
+renderer cache and all 12 actual mesh parts. Native frame-zero population
+matches stored CPOS/CORI under both tested precision controls. Static loop
+readback identifies the cache stamp as the separate render-frame number;
+gameplay updates and render calls need not advance together. The firing loop's
+use of these paths, ordered render context and camera-latch lifetime remain
+open; this adds no player-route acceptance. See the
+[focused evidence](VALIDATION.md#aircraft-renderer-cache-population--september-12).
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

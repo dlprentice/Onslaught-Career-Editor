@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-09-12 (aircraft weapon model inputs and original model-time fraction experiment)
+Last updated: 2026-09-12 (aircraft model inputs, native cache population and render-stamp ownership)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including the bounded angle-update, matrix and controller arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -566,7 +566,7 @@ Read-only instruction review separates three runtime paths:
   skip-controller/force-refresh flags `(1,1)`. Unit event4003 recomputes `+110`
   using camera distance; it is not a permanent constructor property.
 - Its fallback requests flags `(0,1)` through `004fc6e0`, renderer `004dd160`
-  and evaluator `004b4de0`. A render-cache path can reuse the same integer-frame
+  and evaluator `004b4de0`. A render-cache path can reuse the same render-frame
   stamp despite force-refresh. It uses Actor render getters `00401be0/00401c50`,
   which interpolate old/current pose using global `008a9e44`.
 - Without that render cache, `004b0fb0` has a separate direct-evaluator cache.
@@ -591,13 +591,18 @@ The subsequent unchanged attachment composition passes **27 cases / 33 calls**
 through the actual Unit/routing/lookup/getter/math bodies with synthetic
 receivers and warm caches. It confirms current versus interpolated pose,
 different accumulation order, and a direct-cache hit that retains an earlier
-world pose within the same frame. Advancing the frame or selecting another
+world pose within the same render stamp. Advancing the stamp or selecting another
 part invalidates that observed reuse. The exact receiver distinction is
 `R=Unit+8`: animation is primary `Unit+6c`, not basis word `Unit+64`.
 The [Unit attachment owner](Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
-records these controls and limits. These supplied comparisons are now executed;
-native cache population, camera-latch lifecycle and production firing integration
-remain open. No full combat, player acceptance or Ghidra mutation is implied.
+records these controls and limits. The subsequent
+[population experiment](Unit.cpp/CUnit__UpdateTransform.md#renderer-cache-population-and-render-stamp)
+passes 11 cases / 17 calls with the complete 12-part hierarchy. Native frame-zero
+population agrees with stored CPOS/CORI under both tested precision controls.
+The cache stamp is CGame's render-frame number, which can advance independently
+of gameplay updates. Runtime cache/render context, camera-latch lifecycle and
+production firing integration remain open. No full combat, player acceptance
+or Ghidra mutation is implied.
 
 For profile `+19c==0`, common-controller preparation writes the target virtual
 `+168` result into controller `+34` at `004ff24b..004ff262`. The later ready

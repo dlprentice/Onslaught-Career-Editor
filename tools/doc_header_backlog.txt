@@ -274,7 +274,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsRunningResources
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclareGameDrawn.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclarePlayerWon.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Pause.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__PlayMusicForCurrentLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md

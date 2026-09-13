@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (aircraft weapon model inputs, causal replay identity checks and model-time fragment).
+Last updated: 2026-09-12 (native aircraft cache population and render-stamp ownership; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -926,7 +926,9 @@ the stack and nonvolatile registers, read back explicit PC24/PC53 control words,
 reject x87 stack/invalid faults and check every arena byte outside the declared
 output/current-X/profile-cursor writes. Fourth-word padding is not a meaningful
 pose claim. The direct-cache snapshots bind the actual receiver/part, model
-frame zero and supplied integer frame; other paths leave that cache zero.
+frame zero and supplied render stamp; other paths leave that cache zero.
+The frozen probe's generic `frame` labels mean CGame's render-frame number,
+as clarified by the later MainLoop readback; it is not the event-manager tick.
 
 The [Unit evidence owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
 records the causal comparisons: supplied fraction below one changes fallback
@@ -942,6 +944,63 @@ Actor translation varies only along X; these fixtures do not claim arbitrary
 3D arithmetic or independently establish every Y/Z interpolation spill.
 `npm run test:docs` and `git diff --check` passed for the existing evidence-owner
 updates; the docs log is `plane-attachment-docs-20260912.log` in the same owner.
+
+### Aircraft renderer-cache population — September 12
+
+`python local-data/test-runs/linux-route-20260906-af1sa_l9/plane-attachment-population-20260912.py`
+passed **11 cases / 17 calls**, including strengthened per-call cache-guard
+assertions. The previous warm-cache artifacts stay unchanged. This experiment
+reuses their hash-pinned assembly and pure finite arithmetic helpers, adds the
+original recursive cache population and hierarchy evaluation, and verifies all
+**27 unchanged routine bodies plus five data ranges** in the actual ELF mappings
+against the freshly checked pristine specimen `74154bfa…e7750` above.
+The native finite-zero floor path includes its real FPU-control dependencies.
+
+The supplied cache header/arrays follow the initialized shape, with stamp
+`-9999`, model time `-99999.0f`, and 12 parts. The full relocated transform
+graph and all eleven emitter bindings are derived from the hash-checked training
+mesh `48876552…f4e6ec5`; its ELF mapping is read-only. With no CAMD, mode `-1`
+and null motion, all twelve parts select hierarchy frame zero. Every meaningful
+cached XYZ/basis word agrees with the instruction-ordered oracle and stored
+CPOS/CORI under both PC24/RN and PC53/RN: **24/24 part/precision comparisons**.
+All twelve resolved-index and inherited-value slots are also checked.
+
+Stamps 0/1 leave the supplied renderer cache untouched and use the direct path;
+2/3 populate it. A declared control changes cached GunA/1 X to `-33` between
+queries. The same stamp reuses it; the next stamp regenerates the original
+hierarchy value. This tests refresh admission, not a retail corruption scenario.
+Stack/nonvolatile-register, x87 control/TOP/invalid, per-call cache guards,
+direct-cache keys and all other arena-byte checks pass. Padding is excluded
+from numerical pose claims. The stronger guards leave observed I/O unchanged.
+
+All artifacts share the private script stem. The final script is 18,112 bytes,
+SHA-256 `c923f036dea93911404c2a0c88aa3bf02b4059b7e3c137691332532da7540c51`.
+The ELF is 156,816 bytes,
+SHA-256 `e4170ddf4a57c8ab987f4edff4d9a1e0700edcf318bd2fdc9b3f6b80d05d5d3b`.
+The 22,192-byte graph has SHA-256
+`2cb59710502b5ada9efffb9125b457100bd69a881d748c8e3b9f743faad44d1c`.
+Both I/O files are 315,392 bytes: input SHA-256
+`aae0d77c4794a5615c93173612337a28762b5d291af7893f74a7f0b602f53e73`,
+output SHA-256 `68bae66d50afceaa35a5fab531db165d0b0aab44bf9dc6c372ec13e52a1f402a`.
+The 23,067-byte result JSON has SHA-256
+`0d77a4b243d9257f196698e7169a8a34df9f6ec02d77cad5a37aaf3e47e9ea04`.
+An independent read-only review checked the 32 mappings, graph relocation,
+retained I/O and arithmetic; it did not rerun the experiment. Its comment-only
+correction records that unused zero-filled scalar fields need not fault.
+
+The [Unit owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#renderer-cache-population-and-render-stamp)
+records the result and limits. Fresh static
+[MainLoop readback](reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md#render-stamp-and-gameplay-ordering)
+identifies the stamp as **render count**, distinct from Update and event frames.
+The probes supply this context; they do not execute its real cadence. Allocation,
+loading, active motion/animation, camera-latch delivery, integrated firing and
+player acceptance remain outside the experiment. No complete game, graphics
+renderer, Ghidra or desktop ran. Production simulation behavior is unchanged.
+`npm run test:docs`, `git diff --check` and `npm run test:safety` passed
+(3,986 public candidates). The same private owner retains
+`plane-population-docs-pass-20260912.log` and
+`plane-population-safety-20260912.log`. Earlier docs logs retain the corrected
+MainLoop header/provenance findings; its one header-backlog entry was removed.
 
 ### Common controller and Unit weapon composition — September 12
 

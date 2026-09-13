@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (native aircraft attachment composition measured; cache population and firing integration remain open)
+Last updated: 2026-09-12 (native aircraft cache population measured; render/camera context and firing integration remain open)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -86,7 +86,11 @@ The selected GunA/GunB selector1 model transforms and ordered Unit weapon uses
 now reach Core as immutable inputs. An unchanged-code attachment experiment
 passes 27 cases / 33 calls, distinguishing current/interpolated pose and
 same-frame direct-cache reuse. Carry those measured paths into runtime cache
-ownership, resolve population/camera-latch lifetime, and complete B feasibility's
+ownership. Native population now passes 11 cases / 17 calls over the full
+12-part training mesh; its frame-zero poses match stored CPOS/CORI under both
+tested precision modes. The cache stamp counts renders, not gameplay updates:
+MainLoop permits multiple renders per update and pre-run updates without
+rendering. Resolve ordered render context and camera-latch lifetime, and complete B feasibility's
 real line query alongside retained aim,
 preparation/readiness and scheduled bursts,
 including terminal callbacks and next-frame round movement, before replacing
