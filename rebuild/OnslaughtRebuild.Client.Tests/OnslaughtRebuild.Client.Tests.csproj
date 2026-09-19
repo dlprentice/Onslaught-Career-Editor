@@ -213,6 +213,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Cutscene.cs"
              Link="godot-pause-source\RetailFrontendFlow.Cutscene.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Pause\PauseMenu.tscn"
+             Link="godot-pause-source\PauseMenu.tscn"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
              Link="godot-pause-source\FirstFlightPauseMenu.cs"
              CopyToOutputDirectory="PreserveNewest" />

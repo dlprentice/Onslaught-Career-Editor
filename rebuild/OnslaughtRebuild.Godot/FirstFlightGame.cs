@@ -877,9 +877,8 @@ public sealed partial class FirstFlightGame : Node3D
             _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
-        _pauseView = new FirstFlightPauseMenu();
+        _pauseView = FirstFlightPauseMenu.Create(_pauseMenu);
         AddChild(_pauseView);
-        _pauseView.Initialize(_pauseMenu);
 
         ConsumeFrameEvents(_session.AdvanceFrameTicks(0));
         _hud.UpdateFromSnapshot(
