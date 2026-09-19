@@ -1,7 +1,7 @@
 # collisionseekingthing.cpp Functions
 
 Status: active bounded static and isolated-code contracts
-Last updated: 2026-09-19 (selected projectile initialization and readiness)
+Last updated: 2026-09-19 (selected initialization, speed providers and readiness queue)
 Summary: collision-component ownership, initial-scan readiness, selected masks
 and callback ordering; real world scanning and full projectile behavior remain open.
 
@@ -247,8 +247,8 @@ maximum speeds. Neighbor centres reach the renderer getters below through
 `004d82a0 → +b4 → 004db600` (Gravity), not the nearby BounceFactor leaf at
 `004d82d0`; both selected definitions have zero gravity. Queue insertion via
 `0044b370` can still occur after an unready response returns. Those production
-maximum-speed providers and queue operations are not proved RNG-free by
-recording stubs.
+maximum-speed providers and queue operations are separate from the recording
+stubs; their later bounded analysis follows below.
 
 ### Static renderer centre boundary
 
@@ -281,8 +281,70 @@ This static closure includes the centre-provider dependency in Blaster's own
 trajectory filter. It does not validate bounding-box contents, lifetimes,
 runtime neighbor selection or modified vtables. Mesh/tree require a valid
 resource pointer at `+14`; only the Building body checks it for null.
-Neighbor maximum-speed dispatch and event queue insertion remain separate
-questions in the pre-Actor-draw path.
+Neighbor maximum-speed dispatch and event queue insertion are bounded below.
+
+### Static maximum-speed providers and linked parents
+
+Pinned `thing.h:118` identifies primary slot `+3c` as `GetMaxVelocity`: a
+movement bound, not current velocity. Pair scheduling calls the candidate's
+getter at `00480f82`, stores its result as float32, then calls the initiating
+owner at `00480f8d` and adds that stored candidate result.
+
+Strict pristine RTTI admits **62 primary CThing-compatible tables** with base
+displacement `(0,-1,0)`. The 62 secondary renderer-interface tables at object
+offset eight are excluded. Fourteen distinct speed getters cover this set:
+
+| Getter | Result / compatible owners |
+| --- | --- |
+| `00405e60` | 2.0; InfantryUnit |
+| `00405ef0` | 35.0; BattleEngine |
+| `004bfc50` | 10.0; EscapePod, Rocket, Pod |
+| `004bfc60` | zero; 29 tables including Thing, Actor, Building and Tree |
+| `004de700` | 1.0; Feature |
+| `004df510` | 18.0; Shell |
+| `004f84b0` | stored float32 0.2; Unit, GroundUnit |
+| `0050e860` | 13.0; eight aircraft/boss classes |
+| `0050e8b0` | 15.0; Carver, DiveBomber, Plane |
+| `0050e9a0` | stored float32 5.8; Warspite, GillM, ThunderHead, Mech |
+| `0050eaf0` | 3.5; Mine, Boat, GroundVehicle |
+| `0050eb90` | `float32[[this+164]+b4]`; Submarine |
+| `004d82a0` | gravity-dependent 160.0 or configuration speed; Round, Missile |
+| `0050fcd0` | null parent gives 13.0; otherwise forwards parent `+3c`; Component, Tentacle, GillMHead |
+
+The eleven constant bodies are exactly `FLD dword [constant]; RET`.
+Submarine's body only reads configuration. Round and Missile both bind
+gravity slot `+b4` to `004db600`, which has no calls: active torpedo state
+returns zero, otherwise it multiplies configuration gravity by stored `0.025f`.
+These thirteen targets introduce no RNG or further unresolved callback.
+
+The remaining getter reads Component `+26c`. A null link uses its constant;
+a non-null link tail-dispatches the parent's primary slot. The actual parent
+assignment at `00428b50` is reached from Unit Init call `004f8d7c`: ECX is the
+freshly initialized child, while the first argument is the original parent's
+primary `this`. Factory `0050fa40` creates Component/Tentacle/GillMHead with
+Unit, Thing and Monitor bases at offset zero. No renderer-interface adjustment
+occurs. Constructors/Init clear the link; parent monitor shutdown clears the
+registered reader cell. Destructors unregister it without promising to zero
+the dying object's storage. The exact `CActiveReader<T>` specialization is
+absent from the partial source; generic storage is `CMonitor*`.
+
+This closes the forwarding **type** edge on normal fresh-child construction.
+A finite, acyclic chain through these valid primary objects introduces no RNG.
+The setter has no cycle guard: fresh allocation supports ordinary tree
+construction, but unidentified alias writes, reinitialization and corrupt or
+cyclic links are not covered. A type census alone cannot establish termination.
+The current descriptive setter name has a Unit prefix; its observed receiver
+here is Component-family. No source declaration or Ghidra rename is claimed.
+
+The independent [readiness queue composition](CEventManager.cpp.md#projectile-readiness-queue--september-19)
+now executes actual insertion and later delivery, keeping the selected
+component unready during submission. It also identifies a precision-dependent
+bucket boundary and an overflow-capacity failure. This does not execute the
+pair scanner or its event-2000 receiver, and allocator/diagnostic and live-state
+limits remain explicit. Full-shot RNG is still not established.
+
+The private static receipt and complete 62-table mapping are pinned in
+[validation](../../../VALIDATION.md#projectile-readiness-queue-and-speed-dependencies--september-19).
 
 ---
 
@@ -295,7 +357,9 @@ historically built from `collisionseekingthing.cpp`.
 
 Wave1059 (`collision-seeking-round-tail-review-wave1059`, `wave1059-readback-verified`) saved function-tag normalization for the collision-seeking round tail and context rows after fresh read-back. Its historical owner labels for `0x004263f0`, `0x00426a00`, and `0x00426a20` are superseded by the hierarchy-backed lifecycle above. The pass saved `131` tags across fourteen rows with no rename, signature, comment, boundary, or executable-byte change. Queue closure remains `6246/6246 = 100.00%`; Wave911 focused progress advances to `812/1408 = 57.67%`; expanded static surface progress advances to `1140/1509 = 75.55%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-This page records public-safe allocation, ownership, and tag-normalization evidence only. It does not prove exact source bodies, concrete helper layouts, local variable names, runtime collision behavior, or rebuild parity.
+The later sections above add bounded instruction and isolated-code contracts
+to this historical allocation/ownership record. They do not recover exact
+source text or establish complete runtime collision behavior or rebuild parity.
 
 ## Observed Allocation Contexts
 

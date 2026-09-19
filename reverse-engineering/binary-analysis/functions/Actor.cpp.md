@@ -332,8 +332,11 @@ close one of those callback paths: the selected Round component reaches its
 initial scan unready, so its shared response cannot dispatch owner Hits before
 Actor's draw. A separate static check closes the candidate-filter callback set
 for ordinary Round arguments, and bounds the renderer centre getters for valid
-retail objects. Neighbor speed providers and queue operations remain distinct
-unresolved dependencies.
+retail objects. The later [speed-provider closure](collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+bounds normal finite parent chains, and the [readiness queue composition](CEventManager.cpp.md#projectile-readiness-queue--september-19)
+executes actual insertion and deferred delivery. Allocator/diagnostic paths,
+pair-scanner events, live state and other constructor effects still prevent
+an exhaustive shot RNG claim.
 
 ### Construction and proof limits
 

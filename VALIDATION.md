@@ -1426,10 +1426,57 @@ candidate-side filters; their paths for ordinary Round arguments reach no
 RNG or unresolved virtual call. This is static closure, separate from the
 20 native cases. Five compatible renderer tables additionally close the centre
 getters through four pointer-reading bodies, under the valid-object/resource
-preconditions recorded by the owner. Neighbor speed providers and queue
-operations remain open. Actual scanning, scheduler
+preconditions recorded by the owner. The next section records the subsequent
+speed/queue investigation; it is not part of these 20 controls. Actual scanning, scheduler
 cadence, geometry/damage, full Round/Actor execution and total RNG consumption
 remain outside these controls; no campaign grade or parity assertion changes.
+
+### Projectile readiness queue and speed dependencies — September 19
+
+`python -B local-data/test-runs/round-collision-dependencies-20260919/readiness_queue.py`
+passed **23 isolated original-code cases**, using 18 unchanged scheduler,
+monitor/list, finite CRT floor/control-word and readiness-handler bodies.
+The executable's load mappings contain the exact pristine bytes and constants.
+Inputs are authored initialized manager/component/event/node storage. Only the
+16-byte monitor-list allocator and selected diagnostics have recording
+replacements; other allocation, resize and floating-point exception paths
+are guarded. Private Linux TLS supports the tested FS chain; this does not
+execute Windows exception handling or take desktop control.
+
+The controls cover delayed readiness, wrong/high-word IDs, priority 2, existing
+monitor storage, already-ready state, null/invalid/empty/over-limit refusals,
+relative-clock crossings, ring wrap, computed buckets and strict overflow time.
+They also expose a one-update admission difference between controlled x87
+PC24/PC64 at one exact float boundary, with neighboring-float controls, and a
+growth-disabled overflow failure that increments the count without publishing
+the event. The [scheduler owner](reverse-engineering/binary-analysis/functions/CEventManager.cpp.md#projectile-readiness-queue--september-19)
+records inputs, ordering, ownership and limits. Live scheduler precision was
+not measured and no reconstruction implementation changed.
+
+Accepted stem:
+`local-data/test-runs/round-collision-dependencies-20260919/queue-run-nmtsnc4k/readiness_queue`.
+Receipt SHA-256:
+`5cfaf280ce4b94aa8f8b04a0d6ded98dec61bc6e00bbb017f9171f70ba72704a`;
+ELF SHA-256:
+`54ee0feceb022b22335d0bf9edd22724661556ca759ff60371eae7179a4c40c8`.
+Saved driver/assembly/build commands and per-case inputs, outputs and stderr
+sit beside the combined receipt. The earlier 17-case run remains preserved
+under `queue-run-zyh47lht/`. Compiled guards check arguments/receiver, stack,
+nonvolatile registers, x87 state and private FS-chain restoration. The driver
+asserts the snapshot observations and complete component storage; independent
+read-only review additionally checks the saved full memory regions.
+
+`python -B local-data/test-runs/round-collision-dependencies-20260919/selected_dependencies.py`
+separately binds 62 compatible primary speed-provider tables, 14 targets, 43
+complete exported bodies and the constructor candidate absent from the
+function export. Its `selected-dependencies.json` SHA-256 is
+`a3accd11b68cba11959a68406149403a1152ed8eb95f34781afaa05258afc658`.
+The [collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+records the normal parent-assignment/type closure and unresolved global
+acyclicity. The same receipt binds scheduler allocation arguments, the explicit
+20,000-event count, allocator bodies and mutex imports. No Ghidra database was
+opened or changed for these findings; no full-shot RNG, retail session,
+campaign-grade or parity completion is claimed.
 
 ### Shared math-error Ghidra correction — September 19
 

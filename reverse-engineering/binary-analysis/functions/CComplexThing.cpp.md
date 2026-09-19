@@ -949,9 +949,11 @@ inserted entry. The [selected collision initialization controls](collisionseekin
 also show that the component reaches its initial scan unready, preventing its
 shared response from dispatching owner Hits there. The candidate-side filter
 set is statically bounded for ordinary Round arguments, as are renderer centre
-getters for valid retail objects. Neighbor speed providers, queue operations,
-other constructor effects and live state still
-prevent an exhaustive total.
+getters for valid retail objects. The later [speed-provider census](collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+bounds finite parent chains, and [readiness queue controls](CEventManager.cpp.md#projectile-readiness-queue--september-19)
+separate actual insertion from later delivery. Allocator/diagnostic paths,
+pair-scanner events, other constructor effects and live state still prevent
+an exhaustive total.
 Do not omit the resulting Actor movement-event admission.
 
 Particle and sound randomness use separate CRT state: `0055dbfe` updates
