@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, aim/finite-angle caller composition and Ghidra metadata corrections; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, shared math-error ABI and Ghidra metadata corrections; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1264,6 +1264,64 @@ This is finite nonballistic caller composition with controlled providers and
 query results. No production reconstruction code or Ghidra database changes in
 this experiment; real collision, special mount handling, ballistics, unmasked
 faults, other rounding modes and live combat remain unvalidated.
+
+### Shared math-error ABI — September 19
+
+`python local-data/test-runs/math-error-abi-20260919/math_error_abi.py`
+passed **eight isolated original-code calls**. The runner rehashed the pristine
+specimen and verified the unchanged 60-byte `[00561547,00561583)` body against
+its actual ELF load mapping and the pin in the finite-angle table above.
+Only its dispatcher at `00569cc1` is replaced with a declared recording/
+mutation stub, whose jump destination is also checked. No real CRT dispatcher
+or retail process executes in this experiment.
+
+Saved stem:
+`local-data/test-runs/math-error-abi-20260919/run-6h_ig7kz/math_error_abi`.
+The exact driver, assembly, ELF, command arguments, input/output bytes, cases,
+stderr and JSON are retained. JSON SHA-256:
+`193c33a2acdbd25be284239d87e0f047c453577fa31d341e01f146c7700d1cf2`;
+ELF SHA-256:
+`226be50179ae880688d34abe03d28895da1c4928586c540bcf0f038c376562f6`.
+
+The controls distinguish binary64 midpoint rounding, upward rounding, PC24
+storage behavior, post-dispatch result replacement, EAX-independent ST0 return,
+and the saved-`027f` restoration bypass. Assertions also cover all synthetic
+input bytes, every record field including untouched second-argument fill,
+the call's return address and pointer offsets, stack canaries, zero argument
+cleanup, nonvolatile registers and x87 stack depth. Independent read-only
+review reconciled all eight binary records and checked the ELF/stub mappings;
+it did not rerun native code. Numerical scope is positive inputs near this
+single boundary with supplied masked control words. The
+[function owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
+records the contract and its remaining limits.
+
+Three disposable Ghidra model projects and their scopes, commands, logs,
+exports and comparisons are retained under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/`.
+The two return-model experiments each change only `00561547`'s prototype and
+return/parameter records: all 8,329 other function rows, target locals, existing
+types, bookmarks, stack-depth exports and program metrics remain identical.
+The seven saved parameters become six explicit inputs, removing the hidden
+pointer. Separate read-only processes reproduce each model and all six C
+exports byte-for-byte; database files remain unchanged by those readbacks.
+
+The record experiment compares the untyped pointer, typed pointer and explicit
+local-record variants. The typed pointer alone already gives a complete record
+and visible result field in the C view. The helper's high P-code is identical
+across all three stages, including its call-dependent result and later reload.
+The reopened final variant changes only the dispatcher's record-parameter type,
+the declared helper locals and three added record/pointer types; all existing
+types and unrelated rows are unchanged. Its explicit-width `char *32` is an
+extra model type, not a required live addition. An explicit local rewrite is
+also unnecessary for the demonstrated improvement.
+
+No live Ghidra project, tracked checkpoint or production implementation changed
+for these experiments. Custom-storage/type promotion remains pending the
+required exact mutation and collateral guards; the disposable models are not
+a completed live correction. Initial exploratory export/comparison failures
+were missing function ownership and comparison-format assumptions, not native
+execution failures; the retained successful readbacks and explicit comparisons
+own the results above.
 
 ### Asin-helper Ghidra correction — September 19
 

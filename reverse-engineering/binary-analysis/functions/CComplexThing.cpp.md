@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, aim providers, finite-angle composition and asin metadata)
+Last updated: 2026-09-19 (weapon query, aim providers, finite-angle composition and shared math-error ABI)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -785,6 +785,72 @@ equal directions to zero, or assuming precision modes have identical boundary
 decisions would change these measured paths. Ballistics, `weapon+98` handling,
 real attachment transforms, complete point providers, geometry and live combat
 remain outside this experiment.
+
+#### Shared unary math-error bridge
+
+The finite-angle work exposed a false saved signature at `00561547`
+(`__startOneArgErrorHandling`): its hidden output pointer and ordinary fastcall
+parameters do not describe the original instructions. The
+[bridge experiment and disposable models](../../../VALIDATION.md#shared-math-error-abi--september-19)
+establish the following entry contract. Let `H` be ESP on entry:
+
+| Location | Input |
+| --- | --- |
+| EAX | 32-bit error kind |
+| EDX | 32-bit operation identifier |
+| ECX | Operation-name pointer |
+| ST0 | Incoming extended-precision value |
+| `[H+4]` | Saved 16-bit x87 control word |
+| `[H+c]` | Original eight-byte argument |
+
+`[H+8]` is the enclosing math routine's return-address slot, not a parameter.
+The helper returns its scalar in ST0 with a bare `RET`; it does not consume
+those enclosing stack arguments. These are observed machine locations, not a
+recovered original C declaration. The experiment uses one fixed tuple of
+error kind, operation identifier, name pointer and original argument; their
+locations also follow directly from the pristine loads/stores.
+
+The helper constructs a 32-byte record: error kind at `+0`, name pointer at
+`+4`, first argument at `+8`, second argument at `+10`, and result at `+18`.
+The unary entry leaves the second-argument field uninitialized. It first stores
+ST0 as **binary64** in the result field, passes the record and saved-word pointer
+to `00569cc1`, then reloads the possibly changed result into ST0. Native
+dispatcher/adjustment instructions also establish the write path:
+`00569cc1` passes `record+18` to `005627ea`, whose overflow arm writes through
+that pointer at `005628ff`. The isolated bridge experiment substitutes a
+recording/mutating dispatcher; it does not validate that real adjustment arm.
+
+Eight original-code calls distinguish the relevant operations. Inputs immediately
+below, at and above `1 + 2^-53` reach the dispatcher as binary64 values
+`3ff0000000000000`, `3ff0000000000000` and `3ff0000000000001` under nearest-even
+rounding. Upward rounding changes the midpoint to the latter word. Supplying
+PC24 does not turn the eight-byte store into a float32 store. Replacing the
+record's result with the next double above one produces that replacement in
+ST0, including when the dispatcher returns a different EAX sentinel. Capturing
+ST0 as ten bytes prevents the harness from imposing a second double rounding.
+
+Control-word restoration is **conditional**: a saved word other than `027f`
+is loaded after dispatch; saved `027f` skips that load. A controlled dispatcher
+leaving `037f` therefore returns with `007f` when that was saved, but with
+`037f` when the saved word is `027f`. This characterizes the bridge's branch;
+it does not establish which state the real dispatcher leaves during gameplay.
+
+Disposable custom-storage models remove the invented output pointer and retain
+all six inputs plus ST0 return. Both a double-valued return and a physical
+`float10` carrier survive independent readback. Giving the dispatcher an
+observed-record pointer makes the C view show the mutable result field without
+rewriting the helper's saved local variables. Its high P-code already retained
+the call-dependent result before that type change: fragmented C was a
+presentation limitation, not proof that the dependency was lost.
+
+These prototype/type models have **not** been promoted. The existing live
+cohort tool admits dynamic storage only; explicit register/stack storage and
+record types need exact preservation checks before a live correction. The
+binary sibling at `00561530` prepares its own frame and jumps into `00561550`;
+it must not receive this entry contract by association. Sibling/outer-tail
+signatures, alternate-entry ownership, exceptional inputs and Windows exception
+delivery remain separate work. The weapon's already measured finite outcomes
+are unchanged; this finding constrains how its shared math support is modeled.
 
 #### Selected aircraft weapon mounts and runtime pose inputs
 
