@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (native aircraft cache population measured; render/camera context and firing integration remain open)
+Last updated: 2026-09-19 (dedicated RE lane paused at a preserved restart checkpoint)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -17,6 +17,30 @@ validation in [VALIDATION.md](VALIDATION.md), and database state in
 queue revisions remain in Git and existing evidence owners; do not recreate a diary here.
 
 ## Open work
+
+### Dedicated RE lane — restart checkpoint
+
+David paused this task's goal for a computer restart on September 19. Resume
+this lane after his direction; separate tasks own rebuild and companion
+implementation. The last completed RE change is `576b0e5b` on
+`codex/retail-re-20260919`: the
+[five-row debug-log metadata correction](reverse-engineering/ghidra/README.md#debug-log-metadata--september-19).
+Its separate readback and restored Archive A recovery checks passed before
+publication. The tracked checkpoint was preserved. Current database and recovery
+identities remain in `developer_state.json` →
+`current_re_authority.latestLiveGhidraState`; use those pointers rather than
+selecting a project by date or database number. No mutation is pending.
+
+The next investigation is unfinished: independently reproduce the suspected
+CLIParams ownership of `CUnitAI__InitDefaults_AutoConfigTestPath` at
+`0x004239f0`, then review the
+[parser note](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+against the documented pristine specimen and current live export. Its earlier
+BSS/windowed explanation conflicts with its final guard-default claim. The
+paused read-only review also raised trace-flag consumers, `-e3`/initializer
+ordering and `-autoconfigtest` directory/log-path side effects for verification
+before any parser experiment. These are review leads, not applied corrections
+or runtime acceptance. No initializer/parser cohort or experiment was prepared.
 
 ### Remote checkpoint integrated on Linux — September 12
 
