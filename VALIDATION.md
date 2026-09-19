@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (native aircraft cache population and render-stamp ownership; earlier validation retained).
+Last updated: 2026-09-19 (native companion gates; other lanes and dated evidence retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -9,9 +9,10 @@ Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
 
-Linux is the active development and native Godot host. `npm test` runs the
-supported Save Lab service/gate checks and both fake-tool launcher suites without
-opening a window. `npm run build` and `npm run dev` build/run the Godot companion.
+Linux is the active development and native Godot host. `npm test` runs the native
+GDScript Save Lab scene/domain, explicit file-bridge protocol/race checks and
+companion launcher tests without opening a window. `npm run build` and
+`npm run dev` build/run the standard-Godot companion. The latter opens a window.
 The rebuild has native Linux build/run/smoke/capture commands; live input checks
 need an available desktop. Source and headless tests alone do not establish native
 input, audio, focus or full tutorial behavior.
@@ -32,13 +33,14 @@ are not replaced by the focused portable results below.
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
 | WinUI behavior or copy | On Windows, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
-| Save, options, copied-target, or patch safety | Save Lab changes use `test:save-lab`, including the real baseline, original/unselected-byte preservation and Linux publication guards. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
+| Native companion scenes, save domain and safety | `npm run test:companion-godot` uses owned real-save copies, actual scene controls, independent byte diffs, protected round trips, changed/conflicting sources, protocol and publication-race cases. `test:companion-tools` checks pins/staging/exports. |
+| Retained save, options, copied-target, or patch safety | `test:save-lab` retains the C# service oracle and existing safety tests. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` and `build:rebuild-godot` build without a visible app. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` checks native scripts and packages the explicit OS helper; `export:companion-godot` cross-exports Linux/Windows packages. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
@@ -1307,3 +1309,32 @@ execution, complete dying flight, contacts, avoidance, full event/RNG order,
 or the player-input tutorial and Save Lab UI acceptance routes. No desktop
 control, visible launch, asset regeneration or gameplay-constant adjustment was
 used. Schema 48 binds spawned exit ownership; unspawned schema 47 stays intact.
+
+## Native companion migration — September 19
+
+`npm test` runs the standard-engine native scene/domain and media tests, followed
+by the explicit file bridge's **17** protocol cases (including six Linux
+transaction race/failure cases) and **12** focused launcher/package tests.
+The completed run is canonical `local-data/companion/gdscript-test-xc1i0e2n/`.
+The fixture was copied before use. Tests independently compare all 10,004 bytes,
+selected low-24-bit counts and packed/unselected bytes; source content and physical
+identity replacement, aliases, destination conflicts, failed staging and invalid
+receipts are meaningful negative cases. Test-only race hooks are absent from the
+production protocol. Shared AppCore source remains unchanged.
+
+The isolated Xvfb/llvmpipe render run at
+`local-data/companion/gdscript-render-p5wuchkj/` exercised the actual scene and
+protected publication before capturing its own viewport. It confirms rendering
+and programmatic controls; it does not claim human click-through, audio or Windows
+execution. No physical desktop was used. Engine and template identities are pinned
+in the companion's `toolchain.json`, verified against the shared installation.
+
+Use `npm run export:companion-godot -- --platform both` for standard Linux/Windows
+x86_64 packages with separate self-contained file-bridge directories and licenses.
+Package existence/inspection is cross-export evidence only. Windows execution,
+its retained guarded staging handoff and human platform acceptance remain open.
+No VM, release or hosted CI is part of this gate.
+The September 19 Linux and Windows packages were produced in canonical
+`local-data/companion/gdscript-export-pdsz2xf4/packages/`. The final scene suite
+also passed against that staged source and its packaged helper after the result
+scroll/column-label changes: `local-data/companion/gdscript-final-scene-lfre5ykz/`.

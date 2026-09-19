@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-12 (repository layout consolidated from the agent guide)
+Last updated: 2026-09-19 (native companion ownership; other lanes unchanged)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -21,7 +21,9 @@ counts here.
 ```mermaid
 flowchart LR
     W["Retained WinUI 3 shell"] --> A["AppCore"]
-    T["Godot Save Lab"] --> A
+    T["GDScript companion"] --> D["Native save domain"]
+    T --> B["Protected FileBridge"]
+    B --> S["Linked AppCore file safety"]
     C["Maintainer CLI"] --> A
     AT["AppCore tests"] --> A
     CT["CLI tests"] --> C
@@ -34,12 +36,14 @@ flowchart LR
 
 The arrows are source dependencies, not priority. Full retail reverse
 engineering, the 1:1 Godot rebuild, and the Godot toolkit companion are coequal
-project outcomes. The companion and retained Windows adapters share AppCore.
+project outcomes. The companion ports format behavior to GDScript; its explicit file bridge links
+the existing AppCore safety source. Retained Windows adapters still use AppCore.
 The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
-| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/OnslaughtToolkit.Godot.csproj) | .NET 8 Godot companion. Save Lab presentation, file selection and results; references AppCore only. |
+| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/project.godot) | Standard Godot, native GDScript scenes/domain. Uses the explicit file bridge for protected I/O. |
+| [`OnslaughtToolkit.FileBridge`](companion/OnslaughtToolkit.FileBridge/README.md) | Self-contained .NET 8 helper linking only existing file-safety source; no C# save codec or AppCore assembly dependency. |
 | [`OnslaughtCareerEditor.WinUI`](OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj) | .NET 10 WinUI 3 executable. Owns the shell, pages, interaction, and presentation; references AppCore. |
 | [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
 | [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Windows-targeted, unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
@@ -65,13 +69,16 @@ the rebuild assembly contract in detail.
 
 ## Companion route
 
-[`SaveLab.tscn`](companion/OnslaughtToolkit.Godot/SaveLab.tscn) mounts
-[`SaveLab.cs`](companion/OnslaughtToolkit.Godot/SaveLab.cs). The UI calls
-[`SaveLabService`](OnslaughtCareerEditor.AppCore/SaveLabService.cs) to open an
-immutable source snapshot and publish a supported edit to a new copy, then reopen
-it. `BesFilePatcher` owns the byte codec; `SaveLabFileTransaction` owns Linux
-descriptor-based safe publication and the existing Windows transaction adapter.
-The UI contains no second save-format implementation.
+[`SaveLab.tscn`](companion/OnslaughtToolkit.Godot/SaveLab.tscn) owns the visible
+controls and mounts [`save_lab.gd`](companion/OnslaughtToolkit.Godot/ui/save_lab.gd).
+[`career_save.gd`](companion/OnslaughtToolkit.Godot/domain/career_save.gd) owns native
+format interpretation, selected-byte previews and comparison;
+[`save_session.gd`](companion/OnslaughtToolkit.Godot/domain/save_session.gd) owns the
+opened snapshot. The explicit [FileBridge](companion/OnslaughtToolkit.FileBridge/README.md)
+links `SaveLabFileTransaction` and `FileMutationSafety` unchanged for OS protections
+that standard Godot does not expose. Old companion C# UI/project files are retained
+reference material, excluded from native staging and export. The media scene and
+native catalog perform read-only metadata inventory of explicitly selected data.
 
 ## Retained WinUI route map
 
@@ -107,15 +114,15 @@ tests rather than assuming the representative list is exhaustive.
 | Media, assets, and Goodies | `MediaCatalogService`, `AssetCatalog*`, `AssetModel*`, `Goodie*`, `FbxModelSummaryReader`, `PngHeaderReader` |
 | Lore and game text | `LoreBrowserService`, `LoreDocument*`, `CampaignLoreComposer`, `GameTextCatalog` |
 
-Keep reusable correctness here. Godot and retained WinUI own interaction and
-state display; the CLI translates envelopes. They share save, patch and safe-copy
-implementations.
+Retained WinUI and CLI keep their shared AppCore correctness. The native companion
+owns its GDScript format/domain behavior and links only the existing file-safety
+source through its bounded helper; it does not run a second C# codec.
 
 ## Repository owners
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot toolkit presentation; AppCore owns correctness. `tools/godot_host.py` supplies the shared installed-engine build/process support used by both Godot lanes. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT native Godot toolkit, GDScript domain and explicit file bridge. `tools/companion_godot.py` owns its pinned standard-engine routes; `tools/godot_host.py` retains shared process support and the legacy launcher. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. `ghidra/` holds the tracked checkpoint; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, campaign generations, captures, reviewer reports, frozen proof graphs, the working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |

@@ -1,26 +1,35 @@
 # Companion provenance and license
 
-Status: active licensing boundary.
-Last updated: 2026-09-07
-Evidence: SOURCE — the companion project reference, SaveLab.cs and the AppCore service named below.
-Summary: the Godot companion uses the repository's MIT application layer and excludes the GPL reconstruction and retail payloads.
+Status: active independent MIT application boundary
+Last updated: 2026-09-19
+Evidence: SOURCE — native scenes/domain and FileBridge project links; executed package boundaries are recorded in VALIDATION.md.
+Summary: native companion scenes and GDScript derive only from MIT application references; retail data and GPL reconstruction remain separate.
 
-`SaveLab.cs` and the project/scene files are original MIT application code under
-the repository's [`LICENSE`](../../LICENSE). The only project reference is the
-MIT [`OnslaughtCareerEditor.AppCore`](../../OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj)
-`net8.0` target. Its existing analysis and verified-copy service own the save
-format; this UI contains no save-byte offsets, decoding or patching logic.
+The scenes, theme and typed GDScript in this project are original MIT application
+code under the repository [LICENSE](../../LICENSE). Save layout facts and behavior
+were ported from the existing MIT `BesFilePatcher`, `SaveLabService` and their
+focused tests. The native parser is now the production companion owner; retained
+C# save/UI code is a development reference, excluded from native exports.
 
-Godot and its .NET SDK are MIT-licensed dependencies. AppCore's existing NuGet
-dependencies retain their own licenses. No font, icon, sound, game binary,
-texture, converted retail asset, decompiler output or user save is bundled here.
-The interface uses Godot's built-in controls and default font.
+The explicit [FileBridge](../OnslaughtToolkit.FileBridge/README.md) exception links
+`SaveLabFileTransaction.cs` and `FileMutationSafety.cs` unchanged. It performs OS
+file protection and verified publication only; it imports no C# save parser,
+AppCore assembly, Godot .NET SDK or third-party AppCore media libraries. Its
+self-contained .NET runtime remains a disclosed production dependency with its
+own MIT and third-party notices. Standard Godot retains its MIT/third-party
+licenses. The interface uses built-in controls and the default engine font.
 
-There is no reference to `rebuild/` or `references/Onslaught`. That reconstruction
-remains GPL-3.0-or-later; using Godot for both applications does not combine their
-licenses or source boundaries. The retained WinUI source is unchanged by this UI.
+No source from `rebuild/` or `references/Onslaught`, decompiler output, proprietary
+asset, font, music, executable or user save enters this application or its exports.
+Using Godot in both lanes does not combine their licensing boundaries. No retail
+payload is required to open the editor or launch the companion.
 
-The displayed save information is the result of `SaveLabSession.Analysis`.
-Verification labels report `SaveLabWriteResult` fields, followed by an explicit
-service reopen and comparison with its written SHA-256 and selected kill count.
-They are checks of that file operation, not a claim about later game behavior.
+Tests receive owned copies of the one registered
+[real-save fixture](../../tests_shared/fixtures/README.md); it is neither modified
+nor included in a package. User-selected media is inventoried locally at runtime,
+not imported into this Godot project. All captures, private inputs, test outputs
+and packages remain in ignored `local-data/`, never tracked source.
+
+Verification messages describe byte identity, file identity and an executed file
+operation. They do not assert retail gameplay acceptance, crash/power-loss survival
+or Windows execution merely from a Linux test or cross-export.

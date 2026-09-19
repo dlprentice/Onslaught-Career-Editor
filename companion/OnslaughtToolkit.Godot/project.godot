@@ -2,22 +2,19 @@
 config_version=5
 
 [application]
-config/name="Onslaught Toolkit - Save Lab"
+config/name="Onslaught Toolkit"
 run/main_scene="res://SaveLab.tscn"
-config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.8", "GL Compatibility")
 config/use_custom_user_dir=true
 config/custom_user_dir_name="OnslaughtToolkit"
 
 [display]
-window/size/viewport_width=1080
-window/size/viewport_height=860
-window/size/window_width_override=1080
-window/size/window_height_override=860
+window/size/viewport_width=1180
+window/size/viewport_height=850
+window/size/window_width_override=1180
+window/size/window_height_override=850
 window/size/resizable=true
 window/stretch/mode="canvas_items"
-
-[dotnet]
-project/assembly_name="OnslaughtToolkit.Godot"
 
 [rendering]
 renderer/rendering_method="gl_compatibility"

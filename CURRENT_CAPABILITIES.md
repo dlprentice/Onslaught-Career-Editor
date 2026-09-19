@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (native aircraft cache population measured; live render/camera context and firing integration remain open).
+Last updated: 2026-09-19 (native companion workflow; other lanes retain their stated evidence).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -20,28 +20,50 @@ re-measure before relying on one. Superseded correction narratives remain in
 Git and their dated evidence owners; they are not current operating instructions.
 
 The active preservation app is the Godot companion; retained WinUI source supplies
-migration material and AppCore owns shared file correctness. Full retail RE,
+migration material. The native companion owns GDScript save behavior and links
+existing AppCore file-safety source through its explicit helper. Full retail RE,
 the 1:1 Godot rebuild and the Godot toolkit companion remain
 coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
 ## Godot Save Lab — first workflow
 
-The MIT [Godot companion](companion/OnslaughtToolkit.Godot/README.md) opens a real
-`.bes`, explains its current values and offers one kill-category edit to a new
-copy. `SaveLabService` preserves size, packed high bits and every unselected byte;
-it verifies the original and published output. Existing outputs, source changes,
-path aliases and no-op edits are refused. The UI reopens the published copy.
-Linux publication uses held directory/file descriptors and create-new linking;
-the Windows branch reuses the existing guarded mutation owner.
+The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) now uses native
+typed GDScript and standard **Godot 4.8.dev6.official.8898c2b3d**. Its main scene,
+category-row scene, media scene and theme are editable in the Godot editor.
+It opens a protected real-career snapshot, explains identity/known/unknown data,
+previews explicitly selected counts, and writes/reopens a separate verified copy.
+Unchanged recovery copies and full byte comparison are also implemented. The
+read-only media browser inventories an explicitly selected local folder with
+bounded traversal, link skipping and partial-result reporting; it does not play media.
 
-The Linux default gate passed **24/24** AppCore Save Lab/gate tests and **14/14**
-fake-tool launcher tests. The Godot project builds with the installed 4.7.2 .NET
-engine. Its native shell and file dialog opened on September 6. **A complete
-open → edit → write → reopen flow through the visible UI is still unverified**;
-the desktop became unavailable before that check. No Windows runtime acceptance
-or broader companion feature parity is implied. Local evidence is under
-`local-data/companion/native-20260906/` and
-`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+The disclosed [FileBridge](companion/OnslaughtToolkit.FileBridge/README.md) is the
+bounded C# exception authorized after reviewing Godot's missing OS guarantees.
+It links existing safety source unchanged and bundles its runtime. Save decoding,
+edit planning, byte comparison and UI remain GDScript. There is no Godot .NET or
+C# save-codec dependency and no unchecked write fallback. Linux publication retains
+no-follow handles, physical identities, unnamed staging and no-clobber linking.
+Malformed/changed inputs and conflicting outputs are refused; uncertain publication
+never becomes a success receipt or an automatic deletion.
+
+**September 19 executed Linux evidence:** `npm test` completed the native byte
+suite, actual scene/control workflow, protected unchanged round trip, independently
+checked selected edits, reopen and comparison, missing-helper and malformed-receipt
+refusals, plus media fixture checks. All **17** protocol cases passed, including
+six transaction race/failure scenarios, and all **12** companion tooling cases
+passed. The owned fixture and logs are in canonical
+`local-data/companion/gdscript-test-xc1i0e2n/`. An isolated Xvfb/llvmpipe session
+rendered the actual scene's preview, successful publication receipt, career
+inspector, comparison and media view; captures/logs are in
+`local-data/companion/gdscript-render-p5wuchkj/`. It used no physical-desktop input
+or screen capture. These are automated scene/render checks, not human usability
+or audio acceptance. The C# shell's September 6 result remains historical.
+
+Windows cross-export and package inspection are recorded in the companion
+[validation section](VALIDATION.md#native-companion-migration--september-19).
+**Windows execution and human click-through acceptance remain pending.**
+Broader options/rank/Goodie writes, whole-game safe-copy/rescue, patching,
+playback/replacement, lore and asset workflows remain migration work; no legacy
+feature parity or retail gameplay acceptance is implied.
 
 ## Existing WinUI toolkit — migration material
 

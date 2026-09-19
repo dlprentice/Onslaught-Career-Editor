@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (native aircraft cache population measured; render/camera context and firing integration remain open)
+Last updated: 2026-09-19 (companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -234,26 +234,30 @@ The September 6 mostly idle native session passed both expected hashes across
 two replays. Recording now works; a substantial player-input tutorial recording
 and its workflow acceptance remain open.
 
-### P10 — Godot toolkit companion — FIRST WORKFLOW IN PROGRESS
+### P10 — Godot toolkit companion — NATIVE SAVE LAB IMPLEMENTED
 
-David replaced the WinUI 3 lane with a Godot companion for Linux and Windows on
-September 6. Retain the existing WinUI/AppCore source and tests as migration material;
-the merged v1.0.12 source cut and its open Windows acceptance are historical status,
-not a queued WinUI release. [README.RELEASE.md](README.RELEASE.md) retains that artifact's
-procedure. The active phase begins with the portable AppCore-backed Save Lab workflow.
+The September 19 companion lane uses standard Godot 4.8 dev6 and native GDScript
+for editable scenes, save inspection/planning, comparison and media metadata.
+Linux headless execution now covers open → explicit preview → separate verified
+copy → reopen through the actual scene and packaged helper. Byte-identical career
+recovery copies and read-only comparisons are native workflows. See the
+[companion goal/acceptance](companion/OnslaughtToolkit.Godot/README.md#migration-goal-and-acceptance)
+and [executed evidence](CURRENT_CAPABILITIES.md#godot-save-lab--first-workflow).
 
-The companion's product direction is a focused cross-platform front door:
-locate retail data, launch the rebuild, manage careers and recovery copies, and
-explain optional patches before applying them. Finish useful end-to-end workflows
-before migrating secondary catalogs or maintainer UI. Reuse one AppCore
-implementation of file safety and save correctness. Windows and Linux packaging
-are both targets; Linux checks do not establish Windows runtime acceptance.
+Godot lacks the required OS file identity/no-clobber primitives. David explicitly
+allowed unavoidable C#; the bounded self-contained FileBridge links existing file
+safety unchanged, with GDScript owning save semantics. It is disclosed and packaged,
+not a Godot .NET requirement or hidden backend. Unsupported protection fails closed.
+WinUI/AppCore and the old C# scene script remain reference material. The legacy
+[Windows release procedure](README.RELEASE.md) remains historical, not a release task.
 
-Convert the companion while preserving careers,
-saves, safe copies, patching, media and related toolkit capabilities. Acceptance:
-usable Godot workflows validated on Linux and Windows, preserved unknown save bytes
-and guarded writes, and current capability/provenance documentation. The shared engine
-does not collapse the companion and retail-parity rebuild into one outcome.
+Remaining coherent increments are broader career/options editing, whole-game
+safe-copy/rescue, catalog-backed patch preview/apply/restore, media playback and
+replacement, lore and asset views. Keep MIT application, GPL rebuild and private
+retail data separate. No unrelated launcher/store/community expansion is planned.
+Windows cross-export/package checks do not establish Windows execution; actual
+Windows acceptance and human desktop interaction remain open. The companion lane
+does not own retail RE/Ghidra contracts or the faithful rebuild's Godot migration.
 
 ### P11 — CLI parity — OPEN
 

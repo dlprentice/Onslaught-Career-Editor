@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-12 (command reference consolidated from the agent guide).
+Last updated: 2026-09-19 (native companion route; other lanes retain their stated evidence).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -12,9 +12,11 @@ companion for Linux and Windows. The companion covers real save/options files,
 safe game copies, evidence-backed patches, media, catalogs and lore.
 
 The active companion is the [Godot Save Lab](companion/OnslaughtToolkit.Godot/README.md),
-which reuses AppCore to inspect a real save and write a supported kill-count edit
-to a separate copy. Its service tests pass on Linux and its native shell opens;
-the complete UI write/reopen workflow remains to be demonstrated. The broader
+which uses editable native GDScript scenes on standard Godot 4.8 dev6 to inspect,
+preview and verify separate career copies. Its explicit self-contained file-safety
+helper preserves OS protections missing from Godot; no installed .NET is needed
+for packaged use. Linux scene/workflow checks pass; human interaction and Windows
+runtime acceptance remain separate. The broader
 WinUI toolkit stays available as migration material. The approved phase also
 advances native rebuild play and targeted retail RE; see [PROGRAM.md](PROGRAM.md).
 
@@ -103,8 +105,9 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-The engineering host is Omarchy Linux. Native Godot build/run routes use the
-installed pinned Godot 4.7.2 .NET engine. The rebuild's synthetic native smoke
+The engineering host is Omarchy Linux. The companion uses the pinned standard
+Godot 4.8 dev6 engine (`godot48`) and an explicit protected-file helper. The rebuild
+owns its independent engine migration; see its README. Its synthetic native smoke
 and a live session's two deterministic replays passed; full tutorial acceptance
 is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
 and the Windows-targeted CLI retain Windows dependencies. The never-built evaluation
@@ -117,8 +120,9 @@ Common requirements:
   `~/.local/opt/game-pipeline`
 - Node.js 26.7 and npm 11.19 from mise
 - Python 3.14 available as `python`; root commands use forward-slash paths
-- Godot 4.7.2 .NET with its bundled C# packages; AppCore dependencies restored
-  into the local NuGet cache
+- Companion: standard Godot 4.8 dev6 and matching templates from the shared pinned
+  toolchain; .NET SDK 8.0.424 only to build its self-contained file helper
+- Retained C# lanes: their declared engine/SDK and cached AppCore dependencies
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
 - Windows 10 or 11 and PowerShell 7 only for retained Windows procedures
@@ -151,7 +155,7 @@ Additional command routes, selected for the affected task:
 
 | Task | Command or owner |
 | --- | --- |
-| Explicit companion build/run aliases | `npm run build:companion-godot`; `npm run run:companion-godot` (the same routes as `build` / `dev`) |
+| Companion build/run/test/export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run export:companion-godot -- --platform both` |
 | Native rebuild smoke/capture | `npm run test:rebuild-godot-smoke`; `npm run capture:rebuild-godot`. Runtime commands require desktop availability under [AGENTS.md](AGENTS.md). |
 | Focused tools checks | Affected cases in `python tools/<name>_tests.py`; function-name check alone: `python tools/re_function_doc_names_check.py --strict` |
 | Rebuild Core / Client | Select affected tests using [VALIDATION.md](VALIDATION.md). Full commands: `npm run test:rebuild-core` (materializes first), `npm run test:rebuild-client`; `npm run test:rebuild-ferry-sweep` covers the excluded ferry oracle. |
@@ -181,7 +185,8 @@ npm run run:rebuild-godot
 The launchers put scratch, logs and engine user data under canonical
 `local-data/companion/` or `local-data/first-flight/`, including from a Git worktree.
 [`rebuild/README.md`](rebuild/README.md) documents runtime modes, input and recording.
-`npm test` runs the supported Save Lab and launcher checks without opening a window.
+`npm test` runs native Save Lab, protected-publication and companion-tooling checks
+without opening a window. `test:save-lab` retains the C# comparison oracle.
 Core/Client changes use their focused test projects, as mapped in `VALIDATION.md`.
 
 The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`;

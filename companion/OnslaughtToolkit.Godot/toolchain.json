@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "4.8.dev6.official.8898c2b3d",
+  "templateVersion": "4.8.dev6",
+  "source": "game_pipeline_shared/toolchain.linux.lock.json",
+  "sourceRevision": "fd65688d8690754f7cbeefe3072bc99f19edff39",
+  "engine": {
+    "archiveId": "godotDev48",
+    "version": "4.8-dev6",
+    "file": "Godot_v4.8-dev6_linux.x86_64.zip",
+    "archiveSha256": "d3678019d0a6501d754db36807110a02a1cfa24d49886be8d3a72d91faa80ca3",
+    "installDirectory": "toolchain/godot-4.8-dev6-standard",
+    "executable": "Godot_v4.8-dev6_linux.x86_64",
+    "executableSha256": "7343548b1af2f853618e42af6d3923be6680a71c1adcd40a9d2ee064c327445a"
+  },
+  "templates": {
+    "archiveId": "godotDev48ExportTemplates",
+    "version": "4.8-dev6",
+    "file": "Godot_v4.8-dev6_export_templates.tpz",
+    "archiveSha256": "b3cff9b3756fbcf2adefb374bdec7f1b7221fd1d17218606ab19be95f0048a06",
+    "installDirectory": "toolchain/godot-export-templates-4.8-dev6-standard",
+    "releaseFiles": {
+      "linux": "linux_release.x86_64",
+      "windows": "windows_release_x86_64.exe"
+    },
+    "fileSha256": {
+      "version.txt": "b890294ea6b31d2e41af6cdea85569d41a61fa1f5c5ab73a4c42468b99a02f0f",
+      "linux_release.x86_64": "3882af22b056e688cd94c71d827870723363422514c912fa261a5f5eb0c4913e",
+      "windows_release_x86_64.exe": "afe5a4be6d7be775d344d4d75c5d0db190f5c4c258ea88ad511620823acae00e"
+    }
+  },
+  "fileBridge": {
+    "sdkVersion": "8.0.424",
+    "runtimeVersion": "8.0.30",
+    "targetFramework": "net8.0",
+    "selfContained": true,
+    "purpose": "Explicit OS file-identity and no-replace publication boundary; Godot and save-domain code use GDScript."
+  }
+}
