@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (isolated retail weapon-query arbitration; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, aim prediction and Ghidra provider corrections; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1093,6 +1093,76 @@ rebuild implementation. The supplied integer-distance cases do not establish
 general PC24/PC53 equivalence. No desktop or production source was used.
 The [existing Unit/weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-line-query-arbitration-and-retained-result-fields)
 records the resulting contract and remaining questions.
+
+### Weapon aim point and native motion provider — September 19
+
+`python local-data/test-runs/weapon-aim-20260919-evgb1qwd/aim_endpoint.py`
+passed **21 scenarios / 42 endpoint calls**, covering PC24/RN and PC53/RN.
+The original Actor getter executes **38 times**; four prediction-disabled calls
+never request it. The pristine specimen was freshly rechecked against the
+2,506,752-byte / SHA-256 identity in the preceding query receipt.
+
+| Original range or constant | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `[0050a0e0,0050a286)` | 422 | `5b0316361a8f4c83df55ed3a827e6aed871a1876a23db88d8d00865c94d8da7f` |
+| `[00404120,00404144)` | 36 | `34f806584d1baf2f03b3711999a46c4afc77dfab5a8a4cb760f60bb0387cb1e5` |
+| Float 20 at `005d857c` | 4 | `8502957747a29907927566be940a9b39fee0a15dd471ba428eb9eedd15aa80e7` |
+
+Final saved stem:
+`local-data/test-runs/weapon-aim-20260919-evgb1qwd/run-gpiwaker/aim_endpoint`.
+The ELF, assembly, `.inputs.bin`, `.outputs.bin`, `.stderr.txt` and `.results.json`
+share it. The prior run using a motion-copy stub remains in `run-1t02_gvq`.
+Each invocation creates a fresh output directory.
+
+The harness verifies original bytes in ELF load mappings, complete endpoint
+output, untouched input bytes, return pointer, nonvolatile registers, stack
+balance, control word, x87 stack and the specified exception flags. The motion
+shim invokes the unchanged getter and separately verifies its return pointer
+and copied fourth word. Recorded calls establish the supplied provider order
+and receivers. Independent read-only review parsed the PE and ELF separately,
+reconciled every saved record and used exact-rational PC24/PC53 rounding to
+check the arithmetic. It also reviewed the original-getter extension; endpoint
+outputs and statuses match the earlier supplied-motion experiment.
+
+The cancellation control gives output words `34000000/34000000/34000000`
+under PC24, versus `34000000/34000000/34200000` under PC53. Zero-speed controls
+deliberately test original masked exceptional arithmetic: nonzero distance
+divided by zero gives positive infinity with status `04`; subsequent zero
+motion gives indefinite NaN with status `05`; zero distance and zero speed
+give indefinite NaN with status `01`. Precision flag `20` is recorded but
+excluded from the lower-five-bit exception assertion.
+
+Attachment position/orientation and target point remain explicit stubs.
+The Actor receiver is synthetic. No real lifecycle, complete target/attachment
+provider, collision, Weapon B caller or gameplay runs. Other precision modes,
+rounding modes, denormals and unmasked faults remain untested. The
+[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
+separates these observations from the static dispatch and source-unit evidence.
+
+### Aim-provider Ghidra correction — September 19
+
+The four-function [correction record](reverse-engineering/ghidra/README.md#aim-provider-metadata-correction-2026-09-19)
+owns the immutable manifest/spec and measured working/recovery identities.
+Fresh body exports matched all 731 pristine bytes, covering 239 instructions.
+Independent read-only review checked the semantic corrections and compared all
+8,330 internal function rows and 32,697 variable records. Exactly four function
+metadata rows and two return-type/storage records changed; every formal
+parameter/local and all non-target rows stayed unchanged. The only program
+metric change was `commentsSha256`; types/bookmarks/stack/Plane-depth held.
+
+The existing framework ran read-only dry, isolated apply, separate readback,
+stale-PRE refusal, sealed readback, live dry/apply/separate readback and independent
+POST restore/reopen. All nine live exports equal the reviewed rehearsal. The
+stale-PRE control reports failure with `writesAttempted=false`; headless exit zero
+alone was not treated as success. Framework checks passed **91 tests** with
+`python -m tools.ghidra_cohort_framework_tests`; the live twin differs only by the
+new exact cohort grant. Current-name projection and public-safety self-tests
+also passed. Raw commands, logs, manifests, comparisons and restore receipts are
+under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/aim-provider-semantics/`.
+
+The tracked checkpoint payload remains byte-identical. Neither the metadata
+correction nor the isolated endpoint experiment above establishes actual segment
+poses, live combat or reconstruction acceptance.
 
 ### UnitAI exit comment correction — September 12
 

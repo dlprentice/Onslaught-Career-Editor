@@ -197,6 +197,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Preserve ABI outside the declared parameter changes and all program structure.
 # unit-ai-exit-contract: one nonrepeatable exit comment, 2026-09-12.
 # Vulnerability, CST lifetime and GoTo override; names and ABI remain frozen.
+# aim-provider-semantics: four names/comments/tag sets and two native pointer
+# returns, 2026-09-19. Exact pristine-body and independent rehearsal comparison;
+# all formal parameters, locals and program structure preserved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -222,6 +225,7 @@ LIVE_GRANTED_COHORTS = [
     "unit-ai-initializer",
     "unit-ai-event-arguments",
     "unit-ai-exit-contract",
+    "aim-provider-semantics",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -653,6 +657,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "unit-ai-initializer",\n'
         '        "unit-ai-event-arguments",\n'
         '        "unit-ai-exit-contract",\n'
+        '        "aim-provider-semantics",\n'
         "    };\n",
     ),
     (

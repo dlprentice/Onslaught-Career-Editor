@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon line-query arbitration and output ownership)
+Last updated: 2026-09-19 (weapon line query, aim providers and prediction arithmetic)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -598,6 +598,61 @@ cases do not establish general agreement between the two precision settings.
 An implementation must preserve
 this mixture of proxy and contact distances and the unequal tie rules rather
 than substituting a generic nearest-sphere sweep.
+
+#### Target point providers and weapon prediction
+
+Unit and Plane primary vtables `005df998` and `005e1930` both bind `+168` to
+`004fd4d0` and `+6c` to `00404120`. These slots supply the target's aim point
+and native motion vector respectively; retrieving an aim point is not acquiring
+another target. `004fd4d0` delegates to the receiver's destructible-segments
+controller at `Unit+178`, or calls `004f3ac0` for its centre. The
+[segment-provider owner](DiveBomber.cpp/CDiveBomber__SelectTarget.md) records the
+ordered part selection and the withdrawn dive-bomber interpretation.
+
+`00404120` copies four words from `Actor+7c` to its output and returns that
+buffer in EAX. Pinned GPL `actor.h:24` calls this `GetVelocity`;
+`actor.cpp:114` and retail `00401757..00401775` add the vector directly to
+position for a Move operation. It therefore must retain its native movement
+units. It is not automatically a world-units-per-second vector, nor the separate
+last-frame displacement getter. The two aim-position providers above remain
+`void` output-buffer functions: their delegated EAX values are not consistently
+the output pointer. A concrete counterexample is `004f3ac0`'s plain-position
+fallback, which returns the copied fourth word in EAX.
+
+The complete endpoint helper `[0050a0e0,0050a286)` executes the following two
+paths. Absent weapon mode `+a0`, or mode `+b0==0`, it calls target virtual
+`+168` and copies four words from the local result. Otherwise it calls attachment
+position, target point, attachment orientation, then target `+6c`, in that order.
+Round `+50!=0` selects speed 1000; otherwise it uses round `+2c`, or zero when
+the reloaded mode or round is absent. It scales orientation words `+4/+14/+24` by that speed,
+storing each component as float. The mathematical prediction factor is:
+
+`20 × distance(attachment_position, target_point) / magnitude(scaled_orientation_column)`.
+
+The helper adds the target motion multiplied by that factor to the target
+point. This expression alone is insufficient for exact arithmetic: the distance
+and ratio retain x87 intermediates, and the X/Y motion products spill to float
+before adding the target point while Z does not. Predicted output writes XYZ
+and retains its preexisting fourth word. Both paths return the output pointer
+in EAX, with `RET 8`. Copying the target's four words in the other path does
+not prove that every real point provider initializes a meaningful fourth word.
+
+The isolated composition executes the unchanged endpoint, constant and Actor
+getter: **21 scenarios / 42 endpoint calls / 38 getter calls**, using PC24/RN
+and PC53/RN. With origin `(3.75,-1.25,-1.25)`, target
+`(-1.25,-1.25,-1.25)`, speed 80, orientation column `(1,0,0)` and each
+motion component `1+2^-23`, PC24 produces `2^-23` on every axis. PC53 produces
+`2^-23` on X/Y but `5×2^-25` on Z. This distinguishes the real store sequence
+from a uniform vector expression. Nonunit orientation, negative speed,
+override speed, zero motion and zero-distance controls also pass.
+
+With the supplied masked exception controls, zero divisors produce infinities
+or indefinite NaNs; no fallback clamp occurs. Attachment and point providers
+remain explicit stubs, and Actor state is synthetic. These results establish
+neither real attachment/segment poses nor the frequency and lifecycle of motion
+updates, the complete Weapon B caller, or live combat. Other precision/rounding
+modes and unmasked faults are untested. [Validation](../../../VALIDATION.md#weapon-aim-point-and-native-motion-provider--september-19)
+owns exact inputs, outputs, checks and independent review.
 
 #### Selected aircraft weapon mounts and runtime pose inputs
 

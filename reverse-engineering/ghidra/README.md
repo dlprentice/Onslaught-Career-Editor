@@ -1,14 +1,14 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-12
+Last updated: 2026-09-19
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[UnitAI exit contract comment](#unitai-exit-contract-comment-2026-09-12);
+[aim-provider metadata correction](#aim-provider-metadata-correction-2026-09-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -534,6 +534,51 @@ Copy, separate restore and read-only reopen passed without file mismatches;
 `af60ead07bfa8c2cd09050b79e10ada8e3849ca2ca760fd2309d150a7a260f9e`.
 The full tracked checkpoint payload still matches its recorded inventory.
 No checkpoint refresh, name-projection change or runtime-parity claim follows.
+
+## Aim-provider metadata correction (2026-09-19)
+
+The exact [manifest](../../tools/cohort-specs/aim-provider-semantics.manifest.tsv)
+and [spec](../../tools/cohort-specs/aim-provider-semantics.spec.tsv) correct these
+four function names, nonrepeatable comments and semantic tags:
+
+| Address | Previous name | Corrected name | Native return |
+| --- | --- | --- | --- |
+| `00404120` | `CAnimal__CopyVector7CToOut` | `CActor__GetVelocity` | `void *`, EAX output buffer |
+| `00445070` | `CDiveBomber__SelectTarget` | `CDestructableSegmentsController__GetAimPosition` | `void`, unchanged |
+| `004fd4d0` | `CUnit__SelectTarget` | `CUnit__GetAimPosition` | `void`, unchanged |
+| `0050a0e0` | `OID__ComputeForwardProjectedPointTowardTarget` | `CWeapon__ComputeTargetAimPoint` | `void *`, EAX output buffer |
+
+The two pointer returns express observed native output-buffer ABI, not original
+C++ pointer-return declarations. All formal parameters and locals remain intact.
+[Provider ownership and ordered part selection](../binary-analysis/functions/DiveBomber.cpp/CDiveBomber__SelectTarget.md)
+and [endpoint prediction](../binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
+own the static and isolated-execution findings and their limits.
+
+Fresh PRE matched the independent September 12 exit-contract recovery, which was
+restored and reopened read-only. Rehearsal dry/apply, separate readback and an
+independent comparison passed: exactly four of 8,330 internal function rows,
+two return records among 32,697 variable records, and only the program comment
+digest changed. Types, bookmarks, saved stack, Plane-depth and all 239 selected
+instructions remain unchanged. A stale-PRE dry control refused before writes.
+The sealed live dry/apply/separate-readback passed; all nine exports match the
+reviewed rehearsal byte-for-byte.
+
+Measured working POST is `db.18648`: 18 files / 118,983,540 bytes, inventory
+SHA-256 `2176c30bd69c5b2be5ba60beae1498491f4df4b7f4eefed75608031c6afe823b`.
+The main database is 68,681,728 bytes, SHA-256
+`16f40a8a8c3f2bd2b4260939f873d55d186456b782d1bd7493c1e77e51d41025`.
+Independent POST recovery at
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-aim-provider-semantics/post-working/`
+was copied, hash-compared, restored elsewhere and reopened read-only successfully.
+The tracked checkpoint payload is unchanged; it was not writable-opened.
+
+Receipts and exports are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/aim-provider-semantics/`.
+`live-readback.json`: 2,402 bytes, SHA-256
+`f01d3a76a8b5f147bc2a032a9af986df82093f3318218d25f49e3a512ba36e6f`.
+`post-working-restore.json`: 5,778 bytes, SHA-256
+`6fd0bc9a4ce89fd5b9958b97135a1e51fff4706cc9bb7c8c7724328a4e293883`.
+This corrects analysis metadata; it does not establish retail gameplay acceptance.
 
 Related (not this folder):
 

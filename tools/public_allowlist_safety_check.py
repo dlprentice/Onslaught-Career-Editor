@@ -187,10 +187,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # UnitAI initializer/event arguments contain two/four analytic comments
 # (2,226/3,536 decoded bytes).
 # UnitAI exit contract contains two analytic comments (3,509 decoded bytes).
+# Aim-provider semantics contains eight analytic comments (7,662 decoded bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/aim-provider-semantics.manifest.tsv":
+        "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6",
     "tools/cohort-specs/unit-ai-exit-contract.manifest.tsv":
         "3cf43cd18e2c7ad0ed62613e649642feaad0ad19e53a29d9b2c4df609fa9cf71",
     "tools/cohort-specs/unit-ai-initializer.manifest.tsv":

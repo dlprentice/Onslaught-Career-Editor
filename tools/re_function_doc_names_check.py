@@ -102,6 +102,8 @@ CURRENT_WEAPON_PROVIDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/weapon-provide
 CURRENT_WEAPON_PROVIDER_OVERLAY_SHA256 = "a686f08b85288db2e43cca9f82ba5b9d91a048e7c2d50b6ca0f4b32fd7b0a804"
 CURRENT_UNIT_AI_INITIALIZER_OVERLAY = REPO_ROOT / "tools/cohort-specs/unit-ai-initializer.manifest.tsv"
 CURRENT_UNIT_AI_INITIALIZER_OVERLAY_SHA256 = "d68d041e02f0d0cfe0d6453723a5a29af08913387648650292590b8a3ed2b1d8"
+CURRENT_AIM_PROVIDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/aim-provider-semantics.manifest.tsv"
+CURRENT_AIM_PROVIDER_OVERLAY_SHA256 = "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 BASELINE_TABLE = (
@@ -761,6 +763,11 @@ def run(
                 table, CURRENT_UNIT_AI_INITIALIZER_OVERLAY,
                 expected_sha256=CURRENT_UNIT_AI_INITIALIZER_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_AIM_PROVIDER_OVERLAY,
+                expected_sha256=CURRENT_AIM_PROVIDER_OVERLAY_SHA256,
+                expected_rows=4, expected_columns=CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
