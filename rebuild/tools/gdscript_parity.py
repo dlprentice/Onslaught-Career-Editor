@@ -43,6 +43,9 @@ CHECKS = (
     ("frontend-session", "frontend_session_checks.gd", ["constants", "glyphs", "constructors", "transitions", "ownership", "transport"], 60),
     ("career-save", "career_save_checks.gd", ["reader", "ownership", "read_only"], 30),
     ("attached-camera", "attached_camera_checks.gd", ["attached_camera"], 60),
+    ("control-response", "control_response_checks.gd", ["control_response"], 30),
+    ("audio-policy", "audio_policy_checks.gd", ["audio_policy"], 60),
+    ("mission-timing", "mission_timing_checks.gd", ["mission_timing"], 30),
 )
 
 
@@ -110,6 +113,10 @@ def main(argv: list[str] | None = None) -> int:
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessageSchedule.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptCareerSaveOracle.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptAttachedCameraOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptControlResponseOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptAudioPolicyOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100AudioCatalog.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptMissionTimingOracle.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"

@@ -205,5 +205,8 @@ File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic,
     frontend_session = GdscriptFrontendSessionOracle.Build(goldCareerContainer),
     careerSave = GdscriptCareerSaveOracle.Build(goldCareerContainer),
     attachedCamera = GdscriptAttachedCameraOracle.Build(),
+    controlResponse = GdscriptControlResponseOracle.Build(),
+    audio_policy = OnslaughtRebuild.TestSupport.GdscriptAudioPolicyOracle.BuildFixtures(),
+    missionTiming = GdscriptMissionTimingOracle.Build(),
     nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }, new JsonSerializerOptions { MaxDepth = 512 }));
 Console.WriteLine($"Oracle: {arithmetic.Count} numerical cases, {eulers.Count} generated bases, {nativeBasis.Length} native bases, {nativeSmooth.Length} native smooth fixtures, {smooth.Count} generated smooth cases, {rng.Count * 1024} RNG steps, {scaledRng.Count} scaled RNG cases, {big.Count} contact ratios, {wide.Count} wide integer pairs.");

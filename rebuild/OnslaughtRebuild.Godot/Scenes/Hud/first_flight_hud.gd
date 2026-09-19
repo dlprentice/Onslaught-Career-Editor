@@ -11,6 +11,8 @@ const TextDraw = preload("res://Scenes/Hud/hud_text_draw.gd")
 const Text = preload("res://Core/canonical_json_string.gd")
 const MessagePanel = preload("res://Client/message_panel.gd")
 const Model = preload("res://Client/hud_presentation.gd")
+const Simulation = preload("res://Core/simulation_constants.gd")
+const Timing = preload("res://Core/mission_timing.gd")
 const BATCH_SCHEMA: String = "onslaught-hud-drawing-snapshot.v1"
 @export var show_editor_illustration: bool = true:
 	set(value):
@@ -31,6 +33,16 @@ var _parts: Array[Part] = []
 var _model: Model
 var _catalog: Dictionary = {}
 var _constants: Dictionary = {}
+
+
+## Production defaults stay with the native simulation definitions. They are
+## not exported Inspector overrides and editor entry still refuses a live model.
+func configure_for_gameplay(authored_allegiance: Variant, catalog: Variant) -> Dictionary:
+	return configure_model(authored_allegiance, catalog, {
+		"maximum_energy": Simulation.MAXIMUM_ENERGY, "maximum_hull": Simulation.MAXIMUM_HULL,
+		"ticks_per_second": Simulation.TICKS_PER_SECOND,
+		"damage_flash_lifetime_ticks": Simulation.LEVEL100_DAMAGE_FLASH_LIFETIME_TICKS,
+		"message_box_allowed_tick": Timing.MESSAGE_BOX_ALLOWED_TICK})
 
 
 ## The temporary host passes one verified catalog batch and authored allegiance.

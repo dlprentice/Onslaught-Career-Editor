@@ -58,11 +58,7 @@ public sealed partial class FirstFlightHud : Node
         var allegiance = new D();
         foreach ((string definition, int value) in Level100StaticWorldAsset.LoadAuthoredAllegiance())
             allegiance[definition] = value;
-        var constants = new D { ["maximum_energy"] = SimulationConstants.MaximumEnergy,
-            ["maximum_hull"] = SimulationConstants.MaximumHull, ["ticks_per_second"] = SimulationConstants.TicksPerSecond,
-            ["damage_flash_lifetime_ticks"] = SimulationConstants.Level100DamageFlashLifetimeTicks,
-            ["message_box_allowed_tick"] = Level100MissionTiming.MessageBoxAllowedTick };
-        Require(Presentation.Call("configure_model", allegiance, verifiedCatalog, constants).AsGodotDictionary());
+        Require(Presentation.Call("configure_for_gameplay", allegiance, verifiedCatalog).AsGodotDictionary());
         Require(Presentation.Call("initialize").AsGodotDictionary());
     }
 
