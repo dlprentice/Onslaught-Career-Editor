@@ -354,6 +354,30 @@ music actions and queue ordering passed in
 These are `control-response`, `mission-timing` and `audio-policy` migration groups;
 the audio laws alone do not establish native scene playback or audible parity.
 
+The `render-interpolation` group passed in
+`local-data/test-runs/gdscript-parity-ron2r1pn/`: admission, exact basis and
+entity transforms, target projections, trail vertices and vector operations.
+Its three extreme retained-tail checks are explicitly source-derived; the
+original Int32-maximum loop was not run. The `options` and
+`invariant-number` groups passed together with the affected `strict-json`
+regression group in `local-data/test-runs/gdscript-parity-oll093em/`.
+The options check covers all four pages, controller side-effect ordering,
+binding input and detached settings. Number checks cover exact binary32
+midpoints and shortest round-trip output, plus parsing failures and whitespace.
+These are pure production-model comparisons; native options scene acceptance
+is separate.
+
+The `particle-set` and `particle-effects` groups passed together in
+`local-data/test-runs/gdscript-parity-9apnf0np/`. The reader compares all
+**1,479 descriptors** and numeric getter results, exact byte re-emission and
+unchanged input hashes for the three existing prepared files. Synthetic cases
+cover duplicate/raw names, field order and error precedence. Encoding checks
+compare every UTF-16 unit; effect checks compare every valid Unicode scalar
+for invariant casing, authored plans, ordered omissions, cycles, caps and
+detached results. The Int32-maximum lifetime refusal is source-derived, not
+an executed infinite-loop comparison; all **338 shipped emitter lifetimes**
+were checked and exclude that input. No corpus copy or original write occurs.
+
 The scheduler group additionally passed **454 checks** derived from the committed
 September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
 alongside its existing differential transcripts. The HUD model comparison also

@@ -148,6 +148,13 @@ as the existing C# tape validator does. Embedded NUL uses raw units/bytes, since
 native Godot string conversion would lose it. This is explicit representation,
 not permission to normalize replay or save data.
 
+The same exact-ratio converter now has a direct binary32 entry point.
+`Core/invariant_number.gd` preserves the existing Int32/Single grammar,
+trailing-NUL handling, signed zero, special values and invariant shortest
+round-trip output. Decimal midpoint checks distinguish one binary32 rounding
+from a binary64 intermediate. This helper does not apply locale-dependent
+Godot formatting to authored particle values or options.
+
 The resident chunk reader preserves short reads, partial live-size-word writes,
 cursor/EOF ordering, unsigned accounting and signed32 narrowing. Its result
 separates a retail short-read outcome from a terminal API failure; callers must
@@ -235,6 +242,26 @@ not turn Inspector edits into simulation configuration. New scheduler boundary
 checks also consume committed original-code evidence; see [PARITY.md](PARITY.md)
 for the unresolved live precision context. Matching a managed implementation
 does not resolve that retail question.
+
+`Client/render_interpolation.gd` keeps explicit float stores and the source
+quaternion operation order. Its checked native `acos`/`sin` path is not
+replaced with Godot's quaternion interpolation shortcut. Target projection,
+projectile position, tangent/frame construction and retained trail tails
+compare with the current Client. The Int32-maximum trail-tail case is
+source-derived and bounded; the original multi-billion-iteration loop was
+not executed. These presentation checks do not change the simulation owner.
+
+The native particle reader preserves raw UTF-16 fields, first-name lookup and
+duplicate field order. Its Latin-1 encoder preserves all 65,536 unit mappings,
+including the 295 legacy best-fit substitutions and two fallback bytes for a
+surrogate pair. Invariant lowercase preserves U+0130; the pinned Godot and
+.NET scalar maps otherwise match across the complete nonsurrogate range.
+Effect plans retain traversal order, cyclic-reference omissions, provisional
+selector allocation and the existing 256-instance reconstruction bound.
+An emitter whose lifetime is Int32 maximum returns `NonTerminatingInput`
+instead of entering the old wrapping loop. This documented refusal affects
+none of the 338 emitters in the three pinned inputs; all other finite
+schedules retain their original traversal, including omissions after the cap.
 
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:

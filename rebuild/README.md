@@ -119,6 +119,25 @@ and music policy comparisons also pass; live audio integration is still pending.
 These preserve existing behavior, including documented gaps, rather than
 establishing that every current C# rule is faithful retail behavior.
 
+`Core/invariant_number.gd` supplies exact invariant Int32 and binary32 parsing
+and shortest round-trip binary32 text. Its decimal path rounds directly to
+binary32, so parsing through a double cannot introduce an extra rounding.
+`Client/options_menu.gd`, `options_laws.gd` and `options_controller.gd`
+retain the four options pages, bindings, ordered side effects and detached
+settings. Native target projection and render interpolation also pass focused
+comparisons. These pure owners are validated; their remaining scene/host
+consumers are still being converted.
+
+`Client/particle_set.gd` retains authored descriptor/field order, duplicate
+names and byte re-emission. `particle_effect_resolver.gd` carries the existing
+effect plans, unresolved fields and reconstruction caps without inventing
+particle physics. All three prepared particle sets round-trip unchanged.
+The one explicit input-handling difference is refusal of an emitter lifetime
+of Int32 maximum: the old loop would never terminate, and none of the 338
+shipped emitters uses it. Native Latin-1 fallback and invariant name casing
+also preserve the managed reader's behavior. Live world effect consumers are
+still being converted.
+
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in
 [`tools/godot_compat/invariant_int32_format.gd`](../tools/godot_compat/invariant_int32_format.gd).

@@ -11,6 +11,21 @@ const HIDDEN_BIT: int = 1 << 52
 
 
 static func parse(token: String) -> Dictionary:
+    return _parse(token, false)
+
+
+## Direct decimal-to-float32 rounding. Parsing to double and narrowing can round
+## twice on halfway inputs, so binary data readers use the exact word result.
+static func parse_float32(token: String) -> Dictionary:
+    return _parse(token, true)
+
+
+static func _parse(token: String, single: bool) -> Dictionary:
+    var fraction_bits: int = 23 if single else 52
+    var hidden_bit: int = 1 << fraction_bits
+    var exponent_bias: int = 127 if single else 1023
+    var minimum_exponent: int = -126 if single else -1022
+    var infinity: int = 0x7f800000 if single else 0x7ff0000000000000
     var parts: Dictionary = _parts(token)
     if not parts.ok:
         return parts
@@ -18,12 +33,12 @@ static func parse(token: String) -> Dictionary:
     var negative: bool = parts.negative
     var decimal_exponent: int = parts.exponent
     if digits.is_empty():
-        return _from_word(0, negative)
+        return _from_word(0, negative, single)
     var decimal_order: int = digits.length() - 1 + decimal_exponent
-    if decimal_order > 308:
-        return _from_word(0x7ff0000000000000, negative)
-    if decimal_order < -324:
-        return _from_word(0, negative)
+    if decimal_order > (38 if single else 308):
+        return _from_word(infinity, negative, single)
+    if decimal_order < (-46 if single else -324):
+        return _from_word(0, negative, single)
     var numerator: Array[int] = Wide.from_decimal(digits).value
     var denominator: Array[int] = [1]
     if decimal_exponent >= 0:
@@ -39,10 +54,10 @@ static func parse(token: String) -> Dictionary:
         comparison = Wide.compare(_shift_left(numerator, -exponent), denominator).value
     if comparison < 0:
         exponent -= 1
-    if exponent > 1023:
-        return _from_word(0x7ff0000000000000, negative)
+    if exponent > exponent_bias:
+        return _from_word(infinity, negative, single)
 
-    var quantum: int = maxi(-1074, exponent - 52)
+    var quantum: int = maxi(minimum_exponent - fraction_bits, exponent - fraction_bits)
     if quantum >= 0:
         denominator = _shift_left(denominator, quantum)
     else:
@@ -57,15 +72,15 @@ static func parse(token: String) -> Dictionary:
     var halfway: int = Wide.compare(_shift_left(divided.remainder, 1), denominator).value
     if halfway > 0 or (halfway == 0 and (significand & 1) != 0):
         significand += 1
-    if exponent < -1022:
+    if exponent < minimum_exponent:
         # A rounded subnormal may carry directly into the smallest normal.
-        return _from_word(significand, negative)
-    if significand == (HIDDEN_BIT << 1):
+        return _from_word(significand, negative, single)
+    if significand == (hidden_bit << 1):
         significand >>= 1
         exponent += 1
-    if exponent > 1023:
-        return _from_word(0x7ff0000000000000, negative)
-    return _from_word(((exponent + 1023) << 52) | (significand - HIDDEN_BIT), negative)
+    if exponent > exponent_bias:
+        return _from_word(infinity, negative, single)
+    return _from_word(((exponent + exponent_bias) << fraction_bits) | (significand - hidden_bit), negative, single)
 
 
 static func _parts(token: String) -> Dictionary:
@@ -154,9 +169,11 @@ static func _shift_left(value: Array[int], bits: int) -> Array[int]:
     return result
 
 
-static func _from_word(word: int, negative: bool) -> Dictionary:
+static func _from_word(word: int, negative: bool, single: bool) -> Dictionary:
     if negative:
-        word |= 1 << 63
+        word |= 1 << (31 if single else 63)
+    if single:
+        return {"ok": true, "bits": word}
     var bytes := PackedByteArray()
     bytes.resize(8)
     bytes.encode_s64(0, word)

@@ -46,6 +46,11 @@ CHECKS = (
     ("control-response", "control_response_checks.gd", ["control_response"], 30),
     ("audio-policy", "audio_policy_checks.gd", ["audio_policy"], 60),
     ("mission-timing", "mission_timing_checks.gd", ["mission_timing"], 30),
+    ("render-interpolation", "render_interpolation_checks.gd", ["render_interpolation"], 60),
+    ("options", "options_checks.gd", ["numeric", "state", "controller", "ownership"], 60),
+    ("invariant-number", "invariant_number_checks.gd", ["invariant_number"], 90),
+    ("particle-set", "particle_set_checks.gd", ["cases", "contracts", "corpus", "ownership"], 90),
+    ("particle-effects", "particle_effect_checks.gd", ["particle_effects"], 90),
 )
 
 
@@ -117,6 +122,11 @@ def main(argv: list[str] | None = None) -> int:
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptAudioPolicyOracle.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100AudioCatalog.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptMissionTimingOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptRenderInterpolationOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptOptionsOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptInvariantNumberOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParticleSetOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParticleEffectOracle.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"
