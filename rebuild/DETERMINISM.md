@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-12
+Last updated: 2026-09-19 (GDScript numerical foundation; existing behavior boundaries retained)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -115,6 +115,23 @@ cold-start acceptance or a whole-simulation precision claim. See the existing
 [Unit function evidence](../reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
 
 ## What Core may not do
+
+The full GDScript migration preserves this boundary. Its deterministic modules
+live under `OnslaughtRebuild.Godot/Core/` and use explicit preloads. They do not
+become scene nodes or adopt Godot physics. Scalar arithmetic uses explicit
+PC24 rounding, float32 stores and signed32 narrowing where the existing retail
+contract requires them; built-in vector arithmetic is not a substitute.
+Unsigned wide integers use exact base-32768 limbs. Invalid public inputs return
+explicit failures in release builds, and mutation on failure follows the source
+operation order. For example, a scaled RNG result overflow consumes its draw.
+
+`npm run test:rebuild-gdscript` compares output bits, RNG state, wide-integer
+results and binary bytes with the current C# reference and existing native
+Euler fixtures. Raw signed-zero words are preserved explicitly: the initial
+Godot 4.8 dev6 feasibility probe demonstrated that a compiled `-0.0` literal
+could become positive zero and change the binary hash. These tests establish
+the bounded numerical modules, not a complete GDScript simulation. A matching
+C# result is regression evidence; retail contracts remain the parity authority.
 
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:

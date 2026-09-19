@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-19 (Godot 4.8 dev6 and production scene architecture).
+Last updated: 2026-09-19 (full GDScript migration started; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -34,6 +34,31 @@ of readiness tooling.
 - `OnslaughtRebuild.Headless` replays command tapes and verifies versioned final
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
+
+The production rebuild is migrating fully to typed GDScript. The target includes
+simulation, replay/hash and binary contracts as well as presentation. C# stays
+available as a comparison implementation while replacements are validated; a
+permanent production exception needs a demonstrated parity blocker. The MIT
+companion/AppCore has its own migration owner and remains a separate boundary.
+
+The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
+retail rounding and float stores, Unit Euler operations, the released RNG,
+wide-integer arithmetic and canonical binary writing. These scripts have no
+scene, input, filesystem or clock responsibilities. They are ordinary editable
+source in Godot's script editor; editor use and agent tooling share these files.
+The existing C# simulation still owns gameplay until its consumers are ported.
+No simulation owner or physics behavior changes merely because these modules
+have been introduced.
+
+`npm run test:rebuild-gdscript` compares the production scripts in standard
+`godot48` with the existing C# implementation and native fixtures. It includes
+the existing 31 rotation-basis and 19 smoothing fixtures without copying their
+expected words into a second maintained table. The temporary oracle requires
+the current C# test project to build and its already-prepared asset links;
+it does not prepare or write the canonical lab. Each invocation owns its
+vectors, build, logs and headless profile under `local-data/test-runs/`.
+This bounded gate does not establish full simulation, cross-host trig,
+performance or complete combat parity.
 
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
