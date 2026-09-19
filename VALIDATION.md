@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, shared math-error ABI and Ghidra metadata corrections; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, math-error ABI and round renderer registry; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1322,6 +1322,63 @@ Initial exploratory export/comparison failures
 were missing function ownership and comparison-format assumptions, not native
 execution failures; the retained successful readbacks and explicit comparisons
 own the results above.
+
+### Round renderer registry — September 19
+
+`python local-data/test-runs/round-render-registry-20260919/round_render_registry.py`
+passed **22 isolated original-code cases**. Six unchanged bodies, twelve
+file-backed strings, one PE zero-tail empty string and the controlled
+dependency trampolines were verified in the resulting ELF load mappings.
+The original constructors/default initializer produce the selected table;
+the harness supplies zeroed globals and the 47-record construction loop.
+Renderer allocation/Init are controlled stubs. No game, desktop, graphics
+context, actual renderer or Actor initializer runs.
+
+Default OID 4 yields no factory/Init calls, directly and through the common
+Round wrapper. OID 0 and a deliberately admitted OID 4 yield one of each;
+the latter's out-of-count control yields neither. Allocation failure yields
+one factory and zero Init calls. Controls also cover disabled entries,
+negative/zero global count, last-entry bounds, duplicate first-match, unused
+Init arguments and the malformed per-record counts 0/-1. Every case checks
+complete registry/receiver bytes, stack/nonvolatile preservation and owner
+forwarding; initialized objects link to the null prior head. The
+[Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission)
+records the interpretation and `DEC`/`JS` edge limitation.
+
+Saved stem:
+`local-data/test-runs/round-render-registry-20260919/run-ewi5pgxl/round_render_registry`.
+Its `.json` receipt SHA-256 is
+`e9efa780d57b2a60c6b8e7a475c23c9f7734f26e337ae88d1063186faae11e2a`;
+ELF SHA-256 is
+`1982c0ec40c09eff81c9de4d8c4cd46e6828ca138aae6ae2322ea47c2fff41f8`.
+The saved driver, assembly, exact build commands, input cases and raw output
+remain beside them. Independent read-only review parsed the PE/ELF mappings
+and all 22 saved outputs; it did not rerun the experiment.
+
+The separate command
+`python -B local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/round-render-registry/static_receipt.py`
+binds selected physics records, weapon-to-round references and all 166 shared
+return-4 pointer slots through RTTI. Its `static-receipt.json` SHA-256 is
+`44f11693cf446a54bd4a4ba4aadedd059894e4b3c82606efb703f49ca9df662c`.
+This establishes one renderer-admission boundary, not retail startup execution,
+an exhaustive projectile RNG count, full-combat acceptance or a campaign grade.
+
+The subsequent [two Ghidra cohorts](reverse-engineering/ghidra/README.md#renderer-arguments-and-shared-return-4-correction-2026-09-19)
+corrected the wrapper/registry arguments and the shared return-4 leaf's name.
+Each passed restored PRE, isolated dry/apply/separate readback, independent
+full comparison, live dry/apply/separate readback and independent POST restore.
+All nine live exports match the corresponding rehearsals byte-for-byte;
+the tracked checkpoint is unchanged. Exact commands, final sealed specs and
+recovery receipts are under the same private `round-render-registry/` owner.
+`python tools/ghidra_cohort_framework_tests.py` passed **92 tests** after the
+two live allowlist entries were generated; the base framework did not change.
+`python tools/re_function_doc_names_check.py --self-test` passed with the new
+one-row current-name overlay. Its intentional missing-table control emits
+`UNAVAILABLE`; that expected refusal is not an untested name projection.
+Documentation checks passed. The first public-payload check rejected the new
+encoded comments; all six were decoded and reviewed as analytic prose, then
+admitted by exact manifest hashes using the existing mechanism. Its unchanged
+mutation/path/secret refusal controls and the public-payload check passed.
 
 ### Shared math-error Ghidra correction — September 19
 

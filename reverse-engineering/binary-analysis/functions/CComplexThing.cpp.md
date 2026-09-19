@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, aim providers, finite-angle composition and shared math-error ABI)
+Last updated: 2026-09-19 (weapon query, math-error ABI and selected round renderer admission)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -940,9 +940,14 @@ Round initializer calls Actor Init at `004d867b`; Actor Init draws at
 `0040135d` before testing its movement flag. This adds a draw beyond the two
 scatter calls at `00506e0a/00506e3e`, but does not prove an exhaustive total.
 Before Actor's draw, renderer registration `005164b0` can call a resolved
-renderer initializer at `0051654c`; the selected live registry remains an
-open dependency. Do not substitute a guessed total or omit the resulting
-Actor movement-event admission.
+renderer initializer at `0051654c`. The
+[selected-round registry check](Actor.cpp.md#selected-round-renderer-admission)
+now closes that path under the default initialized table: Forseti Missile and
+Blaster select ordinary `CRound`, whose OID 4 has no entry. Twenty-two
+original-code controls distinguish that miss from a registered or deliberately
+inserted entry. This closes one conditional dependency; collision callbacks,
+other constructor effects and actual live state still prevent an exhaustive
+total. Do not omit the resulting Actor movement-event admission.
 
 Particle and sound randomness use separate CRT state: `0055dbfe` updates
 thread-data `+14` with `state * 0x343fd + 0x269ec3`, whereas shared gameplay

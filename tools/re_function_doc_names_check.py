@@ -106,6 +106,8 @@ CURRENT_AIM_PROVIDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/aim-provider-sema
 CURRENT_AIM_PROVIDER_OVERLAY_SHA256 = "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6"
 CURRENT_ASIN_HELPER_OVERLAY = REPO_ROOT / "tools/cohort-specs/asin-helper-semantics.manifest.tsv"
 CURRENT_ASIN_HELPER_OVERLAY_SHA256 = "e3a8567675054accd4045b91a623f0b291b23a7b56b40b220464d7160f99fe1e"
+CURRENT_SHARED_RETURN4_OVERLAY = REPO_ROOT / "tools/cohort-specs/shared-return4-leaf.manifest.tsv"
+CURRENT_SHARED_RETURN4_OVERLAY_SHA256 = "28d6914d29e3111fbc5acd967588ffb3a0440d4e8e55b0b746e1cc0480c296bd"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 BASELINE_TABLE = (
@@ -775,6 +777,11 @@ def run(
                 table, CURRENT_ASIN_HELPER_OVERLAY,
                 expected_sha256=CURRENT_ASIN_HELPER_OVERLAY_SHA256,
                 expected_rows=2, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SHARED_RETURN4_OVERLAY,
+                expected_sha256=CURRENT_SHARED_RETURN4_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

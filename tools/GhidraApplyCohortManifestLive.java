@@ -291,6 +291,8 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "aim-provider-semantics",
         "asin-helper-semantics",
         "math-error-custom-abi",
+        "render-registry-arguments",
+        "shared-return4-leaf",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

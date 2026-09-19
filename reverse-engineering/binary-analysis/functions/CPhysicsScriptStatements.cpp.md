@@ -1,14 +1,17 @@
 # CPhysicsScriptStatements.cpp function map
 
 Status: active static function map
-Last updated: 2026-08-28
+Last updated: 2026-09-19 (shared constant-return leaf ownership)
 Summary: the canonical address, registry, serialization, property-apply, copy,
 and teardown map for retail PhysicsScript definition records.
 
 This page retains the address, signature, serialization, registry, apply, and
 destructor relationships that support the PhysicsScript parser/schema and
-rebuild interface. Current metadata corrections are owned by the
-[reviewed correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json).
+rebuild interface. Current Ghidra state follows `developer_state.json` →
+`current_re_authority.latestLiveGhidraState` and the
+[Ghidra guide](../../ghidra/README.md). The
+[July correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json)
+retains its historical scope.
 
 The debug-path anchor points to a maintainer-local `CPhysicsScriptStatements.cpp`
 export. It is provenance context, not copied source and not proof of exact retail
@@ -295,7 +298,14 @@ The concrete class and spawner-policy consumer of `+0xE0` is closed in
 | `0x0043a7b0` | `CSpawnerInfinite__ApplyToSpawnerByName` | Recovered spawner infinite apply helper. |
 | `0x0043a840` | `void * __thiscall CPhysicsSpawnerValueLeaf_T3_0043a840(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper for spawner value vtables; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
 | `0x0043b1a0` | `void __thiscall CPhysicsScriptValue_T3_0043b1a0(void * this, void * memBuffer)` | Recovered shared owned-string load boundary. |
-| `0x004db8c0` | `int __fastcall CPhysicsScriptValue__GetScalarSerializedSize4(void * this)` | Recovered shared scalar serialized-size helper returning fixed size `4`. |
+| `0x004db8c0` | `int __fastcall SharedVFunc__Return4_004db8c0(void * this)` | Shared constant-return leaf; PhysicsScript serialized sizes are one caller-specific meaning. |
+
+The September 19 [166-slot ownership check](Actor.cpp.md#selected-round-renderer-admission)
+also binds this two-instruction body to Round class-ID and unrelated game,
+selector and renderer vtables. The former
+`CPhysicsScriptValue__GetScalarSerializedSize4` name overstated exclusive
+ownership. The neutral label preserves its valid serialization use; the
+existing formal prototype is unchanged because this body reads no arguments.
 
 ## Explosion Value Helpers
 

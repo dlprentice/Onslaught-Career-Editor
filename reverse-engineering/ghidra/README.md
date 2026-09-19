@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[shared math-error ABI correction](#shared-math-error-abi-correction-2026-09-19);
+[renderer arguments and shared return-4 correction](#renderer-arguments-and-shared-return-4-correction-2026-09-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -669,6 +669,73 @@ the restored bytes equal working. The tracked checkpoint remains the exact
 `f426dfc5ac9a8e93a93f0fadf52ab8e93d0a7b09d3fdcddcd915de61ec92d456`.
 `post-working-restore.json`: 5,779 bytes, SHA-256
 `c89ebc6389d77a9465759f1f174610727df56d3923bdd6577877f402d5f1a999`.
+
+## Renderer arguments and shared return-4 correction (2026-09-19)
+
+Two sequential, independently recovered cohorts correct the three functions
+used by the [selected-round registry investigation](../binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission).
+The [argument manifest](../../tools/cohort-specs/render-registry-arguments.manifest.tsv)
+and [spec](../../tools/cohort-specs/render-registry-arguments.spec.tsv) correct
+`004f35d0` to `void __thiscall CThing__InitRenderThing(void *this, void *init)`:
+ECX carries the receiver, the unused initializer occupies stack `+4`, and the
+callee purges four bytes. `005164b0` retains its existing name, return type and
+cdecl convention, with arguments `int class_id, void *render_interface`.
+Its old descriptor-table/owner-tag parameter labels described the wrong inputs.
+Both receive evidence-bound nonrepeatable comments and additive tags.
+
+The first POST measured `db.18651`: 18 files, 118,999,924 bytes, inventory SHA-256
+`122c67e9919e250b2b8515973f980e4b4dcde4c49dc1fee4e456f5e05236e8d6`.
+The main database was 68,698,112 bytes, SHA-256
+`1f4b7eb5472ee7cef522515a5e260e9c7c1f0ac7498fbdd2a1f48578cd456d36`.
+Exactly two function rows changed; 8,328 did not. The recovered initializer
+adds one parameter record; all locals and returns remain unchanged.
+
+The [leaf manifest](../../tools/cohort-specs/shared-return4-leaf.manifest.tsv)
+and [spec](../../tools/cohort-specs/shared-return4-leaf.spec.tsv) then rename
+`004db8c0` from `CPhysicsScriptValue__GetScalarSerializedSize4` to
+`SharedVFunc__Return4_004db8c0`, with contextual comment and additive tags.
+Its two instructions return 4 at 166 RTTI-resolved vtable slots, including
+Round's object ID and several unrelated meanings. The former name remains
+valid context for some PhysicsScript callers, not a unique implementation owner.
+The existing prototype/storage are preserved: a leaf that reads no arguments
+cannot distinguish thiscall from fastcall. All 8,329 other function rows and
+every variable record remain unchanged.
+
+The final working project measures `db.18652`: 18 files, 118,999,924 bytes,
+inventory SHA-256
+`4f82e35962a3db179afa71da1ee4712017b16cb89d6e87bf27d3f8c0eec98830`.
+Its main database is 68,698,112 bytes, SHA-256
+`600baa3b1fd9ef97634e047320fc70ba9e69ba3d41e8183f8634eb41ac5355d9`.
+Each cohort passed restored PRE, isolated dry/apply/separate readback,
+independent full comparison, live dry/apply/separate readback and independent
+POST restore. Each live result equals its rehearsal in all nine exports.
+Final spec pins were sealed from those measured rehearsals before live work;
+no second sealed rehearsal is claimed. Across both cohorts, types, locals,
+bookmarks, saved stack offsets, instructions, bytes and function boundaries
+are unchanged; only the comment digest moves among 29 program metrics.
+The framework implementation is unchanged; its live allowlist admits these
+two manifests, and all 92 focused framework tests passed.
+
+Independent POST copies are
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-render-registry-arguments/post-working/`
+and `/srv/archive-a/onslaught-ghidra-cold/2026-09-19-shared-return4-leaf/post-working/`.
+The verified math-error POST served as the first PRE, and the restored argument
+POST as the second. Each new cold copy was hash-compared, restored elsewhere
+and reopened read-only. The tracked checkpoint still matches `745c00ad…`;
+no refresh occurred. Evidence and commands belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/round-render-registry/`:
+
+| Receipt | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `arguments-live-readback.json` | 2,395 | `f75e3ccea72ed342fba3f76fbf06cffcfc26a543c8eef4428b92b8cc142a0386` |
+| `arguments-post-restore.json` | 5,799 | `53b5ee067709899330329813d7a1736b06417a842cfb81da3c321e30ff88679b` |
+| `leaf-live-readback.json` | 2,300 | `ce2bb08babf1602053905505f1c94ad9ed946ff3028b52c3f6df9a36f4c68d03` |
+| `leaf-post-restore.json` | 5,778 | `2c7337330c05a9d58b63026ed22072610253ec505f1acd08f2c3bd938a66df9b` |
+
+The current-name projection now includes the neutral leaf manifest. Frozen
+tables and explicit-table consumers remain unchanged. These metadata repairs
+and the 22 isolated registry cases do not establish complete shot ordering,
+renderer execution or player-observed parity.
 
 Related (not this folder):
 
