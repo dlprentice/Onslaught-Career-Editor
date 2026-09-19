@@ -216,6 +216,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Startup.tscn"
              Link="godot-pause-source\Startup.tscn"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\options_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_atlas_font.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_underlay.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Options.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Frontend.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Frontend*.tres;..\OnslaughtRebuild.Godot\Client\options_*.gd"
+             Link="godot-options-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <!-- FEP_OPTIONS lives in a partial. RetailFrontendPageFillEvidenceTests has
          to see its page renderer too, because the "the frontend is showing the
          raw D3D clear colour" reading of #147 named the options root by name. -->

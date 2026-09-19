@@ -133,6 +133,7 @@ public sealed partial class RetailFrontendFlow
             };
         }
         UpdateNativeTextures();
+        UpdateOptionsFrame();
         foreach (RetailFrontendPart part in _sceneParts.Values)
             part.QueueRedraw();
         UpdateTitleLogoReflection();
@@ -196,7 +197,6 @@ public sealed partial class RetailFrontendFlow
                 case "Loading": DrawLoading(); break;
                 case "Quit": DrawQuitConfirm(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
-                case "Options": DrawOptions(); break;
                 case "Debriefing": DrawDebriefing(); break;
                 default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");
             }

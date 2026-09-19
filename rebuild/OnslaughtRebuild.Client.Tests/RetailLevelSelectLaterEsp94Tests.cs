@@ -295,15 +295,12 @@ public sealed class RetailLevelSelectLaterEsp94Tests
         Assert.DoesNotContain("RetailLevelSelectLaterEsp94", pointerConfirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLaterEsp94", handleKey, StringComparison.Ordinal);
 
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        string dropdown = Slice(options, "private void DrawOptionDropdown");
-        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
-        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string options = NativeOptionsSource.Read("options_row.gd") + NativeOptionsSource.Read("options_presentation.gd") + NativeOptionsSource.Read("options_controller.gd");
+        string draw = options;
+        string dropdown = options;
+        string motion = options;
+        string confirm = options;
+        string cancel = options;
         Assert.DoesNotContain("RetailLevelSelectLaterEsp94", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLaterEsp94", dropdown, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLaterEsp94", motion, StringComparison.Ordinal);

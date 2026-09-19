@@ -47,16 +47,9 @@ public sealed partial class FirstFlightWorldView
                 source.GetMeta("definition").AsString(), source.GetMeta("mesh_binding").AsString());
             _level100TargetAssets.Add(binding, source.Mesh);
         }
-        foreach (TargetSnapshot target in snapshot.Targets)
-        {
-            Level100TargetVisualDescriptor descriptor = Level100TargetPresentation.Project(target);
-            string name = $"RetailLevel100TargetActor{descriptor.ActorId.Value}";
-            if (GetNodeOrNull<Node3D>(name) is Node3D node)
-            {
-                _level100Targets.Add(descriptor.ActorId, new Level100TargetVisual(descriptor.Binding, node));
-            }
-        }
+        _entityPresentation = GetNode("EntityPresentation");
         BuildPulseCannonPresentation();
+        ConfigureEntityPresentation(snapshot);
         UpdateRetailPixelCentreOffset();
     }
 

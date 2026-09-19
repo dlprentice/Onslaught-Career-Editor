@@ -108,20 +108,12 @@ public sealed class RetailOptionsApplyPulseTests
     [Fact]
     public void DrawOptionRowUsesThePulseWhenApplyIsPending()
     {
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        Assert.Contains("RetailOptionsApplyPulse.PackedColor", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailOptionsAction.Apply", draw, StringComparison.Ordinal);
-        Assert.Contains("HasPendingChanges", draw, StringComparison.Ordinal);
-        Assert.Contains("DropdownRowIsPending", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        // Numeric/model assertions above stay pinned; this guard follows the production owner.
+        string owner0 = NativeOptionsSource.Function("options_row.gd", "update_time");
+        Assert.Contains("Laws.pulse_packed_color", owner0, StringComparison.Ordinal);
+        Assert.Contains("Options.Action.APPLY", owner0, StringComparison.Ordinal);
+        Assert.Contains("_pending", owner0, StringComparison.Ordinal);
+        Assert.Contains("Laws.dropdown_row_is_pending", owner0, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string header)

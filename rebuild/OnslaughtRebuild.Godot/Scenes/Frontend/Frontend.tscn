@@ -1,10 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
 [ext_resource type="Resource" path="res://Scenes/Frontend/RetailFrontendAssets.tres" id="3"]
 
 [ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="4"]
+
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 
 [node name="Frontend" type="Control"]
 layout_mode = 3
@@ -685,23 +687,8 @@ script = ExtResource("2")
 Section = "Loading.Bar"
 SourceRect = Rect2(78, 423, 485, 25)
 
-[node name="Options" type="Control" parent="Stage"]
+[node name="Options" parent="Stage" instance=ExtResource("options_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="OptionsPanel" type="Control" parent="Stage/Options"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Options.Content"
-SourceRect = Rect2(0, 0, 640, 480)
 
 [node name="Debriefing" type="Control" parent="Stage"]
 visible = false

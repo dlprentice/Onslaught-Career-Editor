@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Trail"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+
+[node name="VulcanBullet" type="Node3D"]
+metadata/definition = "Mech Bullet / Mech Air Bullet; production visual template"
+
+[node name="ProjectileTrail" type="MeshInstance3D" parent="."]
+visible = false
+material_override = SubResource("Trail")

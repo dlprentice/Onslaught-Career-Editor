@@ -150,7 +150,6 @@ public sealed class ParticleQuadSizeConventionTests
             ["FacilityFlash"] = "Flash Building",
             ["FacilityFireball"] = "Fire Sprite Damped Long",
             ["FacilitySmoke"] = "Smoke Sprite Anim Large Building",
-            ["PulseCannonMuzzleFlash"] = "Pulse Cannon Muzzle Flash",
         };
 
         string source = ReadGodotSource("FirstFlightWorldView.cs");
@@ -296,6 +295,17 @@ public sealed class ParticleQuadSizeConventionTests
             TimeSpan.FromSeconds(5));
 
         Assert.Equal(expected.Count, sites.Count);
+
+        // Muzzle is now an actual native scene, used by the same production
+        // spawner. Its authored QuadMesh must still match the shipped radius.
+        string muzzleScene = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn"));
+        Match size = Regex.Match(muzzleScene, @"size = Vector2\((?<x>[0-9.]+), (?<y>[0-9.]+)\)");
+        Assert.True(size.Success, "The production muzzle must have an authored quad size.");
+        float radius = set.Require("Pulse Cannon Muzzle Flash").FloatWithModifier("Radius").Value;
+        float side = ParticleEffectResolver.BillboardQuadSide(radius);
+        Assert.Equal(side, float.Parse(size.Groups["x"].Value, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(side, float.Parse(size.Groups["y"].Value, System.Globalization.CultureInfo.InvariantCulture));
 
         foreach (Match site in sites)
         {

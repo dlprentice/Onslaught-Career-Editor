@@ -222,66 +222,14 @@ public sealed class RetailOptionsDropdownListCancelTests
     [Fact]
     public void HandleOptionsPointerCancelConsumesCancelAndDoesNotPileIntoClickOrMotion()
     {
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        string centered = Slice(options, "private void DrawOptionTextCentered");
-        string labelValue = Slice(options, "private void DrawLabelValueRow");
-        string valueBar = Slice(options, "private void DrawValueBarRow");
-        string dropdown = Slice(options, "private void DrawOptionDropdown");
-        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
-        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
-
-        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
-        Assert.Contains("CancelExpanded", cancel, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendAudioCue.Back", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("SelectState", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("ConfirmOptions", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("HoverState", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListClick", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListHover", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", confirm, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", motion, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", dropdown, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", centered, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", labelValue, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", valueBar, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("0x00463669", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetTextExtent", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetTextExtent", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("15.5", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("148f", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("268f", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("284f", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("304f", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("322.5", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-
-        string flow = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.cs"));
-        string main = Slice(flow, "private void DrawMainMenu()");
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", main, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetTextExtent", main, StringComparison.Ordinal);
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", quit, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", loading, StringComparison.Ordinal);
-        string click = Slice(flow, "private void DrawClickToStart()");
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", click, StringComparison.Ordinal);
-        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
-        Assert.DoesNotContain("RetailOptionsDropdownListCancel", pointerConfirm, StringComparison.Ordinal);
+        // Numeric/model assertions above stay pinned; this guard follows the production owner.
+        string owner0 = NativeOptionsSource.Function("options_controller.gd", "pointer_cancel");
+        Assert.Contains("Laws.cancel_applies(false, right_down)", owner0, StringComparison.Ordinal);
+        Assert.Contains("_menu.cancel_expanded()", owner0, StringComparison.Ordinal);
+        Assert.Contains("_audio(2)", owner0, StringComparison.Ordinal);
+        Assert.DoesNotContain("select_state", owner0, StringComparison.Ordinal);
+        Assert.DoesNotContain("_confirm", owner0, StringComparison.Ordinal);
+        Assert.DoesNotContain("hover_state", owner0, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

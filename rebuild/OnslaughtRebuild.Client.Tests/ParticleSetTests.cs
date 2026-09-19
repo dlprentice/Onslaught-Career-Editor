@@ -832,29 +832,27 @@ public sealed class ParticleSetTests
         AssertBirthColour("Mech Pulse Trail Medium", "Faint grey to black", 0.3f);
         Assert.Null(set.Require("Mech Pulse Bolt Sprite Medium").Reference("Colour_Range"));
 
-        string source = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
-        string presentation = RequireSection(
-            source,
-            "private void BuildPulseCannonPresentation()",
-            "private void SpawnPulseCannonMuzzleFlash(");
-        Assert.Contains("spark,\n            billboard: true,\n            tint: Colors.White", presentation);
-        Assert.Contains(
-            "trail,\n            billboard: false,\n            tint: new Color(0.5f, 0.5f, 0.5f)",
-            presentation);
-        Assert.Contains(
-            "halo,\n            billboard: true,\n            tint: new Color(0.25f, 0.25f, 0.25f)",
-            presentation);
-        Assert.Contains(
-            "energyTrail,\n            billboard: false,\n            tint: new Color(0.3f, 0.3f, 0.3f)",
-            presentation);
+        string scene = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn"));
+        AssertMaterial("Spark", "1, 1, 1, 1", billboard: true);
+        AssertMaterial("Trail", "0.5, 0.5, 0.5, 1", billboard: false);
+        AssertMaterial("Halo", "0.25, 0.25, 0.25, 1", billboard: true);
+        AssertMaterial("Energy", "0.3, 0.3, 0.3, 1", billboard: false);
+        string owner = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        Assert.Contains("material.albedo_texture = textures[key]", owner, StringComparison.Ordinal);
+        Assert.Contains("material.emission_texture = textures[key]", owner, StringComparison.Ordinal);
 
-        string factory = RequireSection(
-            source,
-            "private static StandardMaterial3D CreatePulseParticleMaterial(",
-            "private static StandardMaterial3D CreateEffectMaterial(");
-        Assert.Contains("AlbedoColor = tint", factory, StringComparison.Ordinal);
-        Assert.Contains("Emission = tint", factory, StringComparison.Ordinal);
+        void AssertMaterial(string id, string rgba, bool billboard)
+        {
+            string material = RequireSection(scene,
+                $"[sub_resource type=\"StandardMaterial3D\" id=\"{id}\"]", "\n[");
+            Assert.Contains("albedo_color = Color(" + rgba + ")", material, StringComparison.Ordinal);
+            Assert.Contains("emission = Color(" + rgba + ")", material, StringComparison.Ordinal);
+            foreach (string property in new[] { "transparency = 1", "blend_mode = 1", "shading_mode = 0", "cull_mode = 2", "emission_enabled = true" })
+                Assert.Contains(property, material, StringComparison.Ordinal);
+            Assert.Equal(billboard, material.Contains("billboard_mode = 1", StringComparison.Ordinal));
+        }
 
         void AssertBirthColour(string descriptorName, string rangeName, float value)
         {
@@ -956,91 +954,38 @@ public sealed class ParticleSetTests
             [2f, 3f, 4f],
             vulcanHistory.Points.Select(point => point.X).ToArray());
 
-        string source = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
-        Assert.Contains(
-            "private const float PulseBoltTrailWidthMeters = 0.08f;",
-            source,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "private const float VulcanBulletTrailWidthMeters = 0.02f;",
-            source,
-            StringComparison.Ordinal);
-
-        string update = RequireSection(
-            source,
-            "private void UpdateProjectiles(",
-            "private void BuildPulseCannonPresentation()");
-        Assert.Contains("trailHistory.Advance(", update, StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "CreatePulseBoltVisual(projectile.Id)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "CreateVulcanBulletVisual(projectile.Id)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&\n" +
-                "                    _pendingPulseCannonMuzzleFlashes > 0",
-            update,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "projectile.RemainingTicks >",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains("ToTrailVelocity(projectile)", update, StringComparison.Ordinal);
-        Assert.Contains("projectile.RemainingTicks", update, StringComparison.Ordinal);
-        Assert.Contains(
-            "trailHistory.WithRenderedHead(rendered.Position)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "ProjectileTrailWidthMeters(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains("_projectileTrails.Remove(id);", update, StringComparison.Ordinal);
-
-        string pulseVisual = RequireSection(
-            source,
-            "private Node3D CreatePulseBoltVisual(",
-            "private Node3D CreateVulcanBulletVisual(");
-        Assert.Contains("PulseBoltSprite", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("PulseBoltHalo", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("PulseBoltEnergyTrail", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("_pulseBoltTrailMaterial", pulseVisual, StringComparison.Ordinal);
-
-        string vulcanVisual = RequireSection(
-            source,
-            "private Node3D CreateVulcanBulletVisual(",
-            "private void UpdateProjectileTrail(");
-        Assert.Contains("_vulcanBulletTrailMaterial", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltSprite", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltHalo", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltEnergyTrail", vulcanVisual, StringComparison.Ordinal);
-
-        string trailUpdater = RequireSection(
-            source,
-            "private void UpdateProjectileTrail(",
-            "private static StandardMaterial3D CreatePulseParticleMaterial(");
-        Assert.Contains("Mesh.PrimitiveType.TriangleStrip", trailUpdater, StringComparison.Ordinal);
-        Assert.Contains(
-            "widthMeters * 0.5f",
-            trailUpdater,
-            StringComparison.Ordinal);
-        Assert.Contains("surface.AddVertex", trailUpdater, StringComparison.Ordinal);
+        string owner = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        Assert.Contains("PULSE_TRAIL_WIDTH_BITS: int = 0x3da3d70a", owner, StringComparison.Ordinal);
+        Assert.Contains("VULCAN_TRAIL_WIDTH_BITS: int = 0x3ca3d70a", owner, StringComparison.Ordinal);
+        Assert.Equal(0.08f, BitConverter.UInt32BitsToSingle(0x3da3d70a));
+        Assert.Equal(0.02f, BitConverter.UInt32BitsToSingle(0x3ca3d70a));
+        string update = RequireSection(owner, "func _update_projectiles(", "func _spawn_muzzle(");
+        Assert.Contains("history.advance(position, _trail_velocity(item), item.remaining_ticks)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.uses_authored_trail(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.authored_point_count(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.authored_lifetime_ticks(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("history.with_rendered_head(rendered.value.position)", update, StringComparison.Ordinal);
+        Assert.Contains("_trails.erase(id)", update, StringComparison.Ordinal);
+        Assert.Contains("_projectiles.erase(id)", update, StringComparison.Ordinal);
+        Assert.DoesNotContain("item.remaining_ticks >", update, StringComparison.Ordinal);
+        string pulseScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn"));
+        string vulcanScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanBullet.tscn"));
+        foreach (string layer in new[] { "PulseBoltSprite", "PulseBoltHalo", "PulseBoltEnergyTrail" })
+        {
+            Assert.Contains(layer, pulseScene, StringComparison.Ordinal);
+            Assert.DoesNotContain(layer, vulcanScene, StringComparison.Ordinal);
+        }
+        Assert.Contains("ProjectileTrail", pulseScene, StringComparison.Ordinal);
+        Assert.Contains("ProjectileTrail", vulcanScene, StringComparison.Ordinal);
+        string trailUpdater = RequireSection(owner, "func _update_trail(", "func _result()");
+        Assert.Contains("Mesh.PRIMITIVE_TRIANGLE_STRIP", trailUpdater, StringComparison.Ordinal);
+        Assert.Contains("width * 0.5", trailUpdater, StringComparison.Ordinal);
+        Assert.Contains("surface.add_vertex", trailUpdater, StringComparison.Ordinal);
+        string world = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        Assert.Contains("RenderEntities(previous, current, interpolationAlpha", world, StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100ProjectileTrailHistory", world, StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100RenderInterpolation.Interpolate", world, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));
@@ -1138,94 +1083,37 @@ public sealed class ParticleSetTests
             fireEvents,
             StringComparison.Ordinal);
 
-        string projectileUpdate = RequireSection(
-            worldSource,
-            "private void UpdateProjectiles(",
-            "private void BuildPulseCannonPresentation()");
-        int newProjectileBranch = projectileUpdate.IndexOf(
-            "if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))",
-            StringComparison.Ordinal);
-        int muzzleFlashSpawn = projectileUpdate.IndexOf(
-            "SpawnPulseCannonMuzzleFlash(",
-            StringComparison.Ordinal);
-        int priorStateJoin = projectileUpdate.IndexOf(
-            "Level100ProjectileVisualState? prior",
-            StringComparison.Ordinal);
+        string owner = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        string projectileUpdate = RequireSection(owner, "func _update_projectiles(", "func _spawn_muzzle(");
+        int newProjectileBranch = projectileUpdate.IndexOf("if not _projectiles.has(item.id):", StringComparison.Ordinal);
+        int muzzleFlashSpawn = projectileUpdate.IndexOf("_spawn_muzzle(_launch_position(item), item.id)", StringComparison.Ordinal);
+        int priorStateJoin = projectileUpdate.IndexOf("Interpolation.interpolate_projectile(previous.get(item.id)", StringComparison.Ordinal);
         Assert.True(newProjectileBranch >= 0);
         Assert.InRange(muzzleFlashSpawn, newProjectileBranch + 1, priorStateJoin - 1);
-        Assert.Contains(
-            "ToPulseLaunchWorld(projectile)",
-            projectileUpdate,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes--;",
-            projectileUpdate,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes = 0;",
-            projectileUpdate,
-            StringComparison.Ordinal);
-
-        string presentation = RequireSection(
-            worldSource,
-            "private void BuildPulseCannonPresentation()",
-            "private void SpawnPulseCannonMuzzleFlash(");
-        Assert.Contains(
-            "particle-alparticle5-additive.texture.aya",
-            presentation,
-            StringComparison.Ordinal);
-
-        string spawn = RequireSection(
-            worldSource,
-            "private void SpawnPulseCannonMuzzleFlash(",
-            "private void SpawnPulseImpact(");
-        Assert.Contains("CreateTimedEffect(", spawn, StringComparison.Ordinal);
-        Assert.Contains("0.5d);", spawn, StringComparison.Ordinal);
-        Assert.Contains("_pulseCannonMuzzleFlashTexture", spawn, StringComparison.Ordinal);
-        Assert.Contains("0.3f", spawn, StringComparison.Ordinal);
-        Assert.Contains("columns: 4", spawn, StringComparison.Ordinal);
-        Assert.Contains("rows: 4", spawn, StringComparison.Ordinal);
-        Assert.Contains(
-            "new Color(0.5f, 1f, 1f, 1f)",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(flash, 1f, 5f, 0.5d);",
-            spawn,
-            StringComparison.Ordinal);
-
-        string animation = RequireSection(
-            worldSource,
-            "private static void AnimatePulseCannonMuzzleFlash(",
-            "private static void AnimateTargetTankDelayedExplosion(");
-        Assert.Contains("const int startCell = 1;", animation, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 1.4d;", animation, StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            animation,
-            StringComparison.Ordinal);
-
-        string launchPosition = RequireSection(
-            worldSource,
-            "private static Vector3 ToPulseLaunchWorld(",
-            "private static Vector3 ToSpawnWorld(");
-        Assert.Contains(
-            "SimulationConstants.ProjectileLifetimeTicks - projectile.RemainingTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Velocity.X * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.VerticalVelocityMillimetersPerTick * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Velocity.Z * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
+        Assert.Contains("if item.kind == 1 and _pending_muzzles > 0:", projectileUpdate, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = _i32(_pending_muzzles - 1)", projectileUpdate, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = 0", projectileUpdate, StringComparison.Ordinal);
+        string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
+        Assert.Contains("particle-alparticle5-additive.texture.aya", presentation, StringComparison.Ordinal);
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn"));
+        Assert.Contains("wait_time = 0.5", scene, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", scene, StringComparison.Ordinal);
+        Assert.Contains("size = Vector2(0.6, 0.6)", scene, StringComparison.Ordinal);
+        Assert.Contains("albedo_color = Color(0.5, 1, 1, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_scale = Vector3(0.25, 0.25, 1)", scene, StringComparison.Ordinal);
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/pulse_muzzle_flash.gd"));
+        Assert.Contains("START_CELL: int = 1", animation, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 15", animation, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 1.4", animation, StringComparison.Ordinal);
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", animation, StringComparison.Ordinal);
+        Assert.Contains("Vector3.ONE * 5.0, 0.5", animation, StringComparison.Ordinal);
+        Assert.Contains("Engine.is_editor_hint()", animation, StringComparison.Ordinal);
+        string launchPosition = RequireSection(owner, "static func _launch_position(", "static func _trail_velocity(");
+        Assert.Contains("PULSE_LIFETIME - item.remaining_ticks", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.velocity_x * elapsed", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.vertical_velocity * elapsed", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.velocity_z * elapsed", launchPosition, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));

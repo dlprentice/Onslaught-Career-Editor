@@ -672,8 +672,6 @@ public sealed partial class RetailFrontendFlow : Control
         LoadLocalization();
         LoadTextures();
         _feBackFrames = LoadFeBackFrames(Engine.IsEditorHint() ? 1 : int.MaxValue);
-        _glyphWidths = MeasureGlyphWidths(_titleFont.GetImage(), GlyphCellSize, GlyphColumns);
-        _font22Widths = MeasureGlyphWidths(_font22.GetImage(), Font22CellSize, Font22Columns);
         InitializeOptions();
 
         _initialized = true;
@@ -3737,7 +3735,7 @@ public sealed partial class RetailFrontendFlow : Control
         // pause-menu context/tree but starts a fresh root session on each entry.
         if (_session.Screen == RetailFrontendScreen.Options)
         {
-            _options.Reset();
+            ResetOptions();
         }
 
         RequestAudioCue(RetailFrontendAudioCue.Select);
@@ -3944,29 +3942,8 @@ public sealed partial class RetailFrontendFlow : Control
             LoadTexture("Flags/flag-sp", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
         ];
         _feArrow = LoadTexture("fe-arrow", 64, 64);
-        // Retail shares one bitmap font resource between HUD and frontend, so this
-        // legitimately reaches into the Hud asset folder rather than duplicating it.
-        _titleFont = LoadTexture(
-            "font-13ps",
-            256,
-            256,
-            CuratedAyaTextureLoader.Compression.Rgba8,
-            folder: "Hud");
-        // mustbe_font22.512.tga, shared with the HUD for the same reason.
-        _font22 = LoadTexture(
-            "font-22",
-            512,
-            512,
-            CuratedAyaTextureLoader.Compression.Rgba8,
-            folder: "Hud");
-        // mustbe_SystemFont - the fixed-pitch 7x9 sheet the Controller Options
-        // bindings grid renders with. See RetailFrontendFlow.Options.cs for how it
-        // was identified.
-        _systemFont = LoadTexture(
-            "system-font",
-            256,
-            256,
-            CuratedAyaTextureLoader.Compression.Rgba8);
+        // Frontend font pages and widths are supplied once by native Options
+        // from their shared public recipes; no per-glyph language calls.
         // Must match RetailFrontendSession Steam-drawn row order (Update/icons).
         _menuIcons =
         [
@@ -3982,53 +3959,12 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static Texture2D[] LoadFeBackFrames(int maximumFrames = int.MaxValue)
     {
-        string absolute = ProjectSettings.GlobalizePath(FeBackStripPath);
-        if (!File.Exists(absolute))
-        {
-            GD.PushWarning(
-                $"FEBack strip missing at {FeBackStripPath}; main underlay uses solid fallback.");
-            return [];
-        }
-
-        byte[] strip = File.ReadAllBytes(absolute);
-        if (strip.Length == 0 || strip.Length % FeBackFrameBytes != 0)
-        {
-            throw new InvalidDataException(
-                $"FEBack strip length {strip.Length} is not a multiple of {FeBackFrameBytes}.");
-        }
-
-        int frameCount = Math.Min(strip.Length / FeBackFrameBytes, maximumFrames);
-        var frames = new Texture2D[frameCount];
-        // The flat page fill, pre-added into every frame. See DrawMainUnderlay for
-        // why baking the composite is exact rather than an approximation, and for
-        // the measurement behind FeBackUnderlayGain.
-        byte[] fill =
-        [
-            (byte)Math.Round(MainUnderlayFallback.R * 255f),
-            (byte)Math.Round(MainUnderlayFallback.G * 255f),
-            (byte)Math.Round(MainUnderlayFallback.B * 255f),
-        ];
-        for (int index = 0; index < frameCount; index++)
-        {
-            byte[] frame = new byte[FeBackFrameBytes];
-            Buffer.BlockCopy(strip, index * FeBackFrameBytes, frame, 0, FeBackFrameBytes);
-            for (int offset = 0; offset < FeBackFrameBytes; offset++)
-            {
-                int channel = offset % 3;
-                double value = fill[channel] + (FeBackUnderlayGain[channel] * frame[offset]);
-                frame[offset] = (byte)Math.Clamp(Math.Round(value), 0d, 255d);
-            }
-
-            Image image = Image.CreateFromData(
-                FeBackWidth,
-                FeBackHeight,
-                false,
-                Image.Format.Rgb8,
-                frame);
-            frames[index] = ImageTexture.CreateFromImage(image);
-        }
-
-        return frames;
+        Resource recipe = GD.Load<Resource>("res://Scenes/Frontend/FrontendUnderlay.tres");
+        Godot.Collections.Dictionary result = recipe.Call("load_frames", maximumFrames).AsGodotDictionary();
+        RequireOptionsResult(result);
+        if (result["missing"].AsBool())
+            GD.PushWarning($"FEBack strip missing at {FeBackStripPath}; main underlay uses solid fallback.");
+        return result["frames"].AsGodotArray().Select(static frame => frame.As<Texture2D>()).ToArray();
     }
 
     private Texture2D LoadTexture(

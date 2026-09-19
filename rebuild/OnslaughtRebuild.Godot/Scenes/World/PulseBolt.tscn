@@ -1,0 +1,76 @@
+[gd_scene load_steps=8 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Spark"]
+resource_local_to_scene = true
+albedo_color = Color(1, 1, 1, 1)
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+billboard_mode = 1
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+
+[sub_resource type="QuadMesh" id="SparkQuad"]
+size = Vector2(0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Halo"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.25, 0.25, 0.25, 1)
+billboard_mode = 1
+emission_enabled = true
+emission = Color(0.25, 0.25, 0.25, 1)
+
+[sub_resource type="QuadMesh" id="HaloQuad"]
+size = Vector2(0.6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="Energy"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+emission_enabled = true
+emission = Color(0.3, 0.3, 0.3, 1)
+
+[sub_resource type="CylinderMesh" id="EnergyCylinder"]
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.2
+radial_segments = 20
+
+[sub_resource type="StandardMaterial3D" id="Trail"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.5, 0.5, 0.5, 1)
+emission_enabled = true
+emission = Color(0.5, 0.5, 0.5, 1)
+
+[node name="PulseBolt" type="Node3D"]
+metadata/definition = "Mech Pulse Bolt Medium; production visual template"
+
+[node name="PulseBoltSprite" type="MeshInstance3D" parent="."]
+mesh = SubResource("SparkQuad")
+material_override = SubResource("Spark")
+
+[node name="PulseBoltHalo" type="MeshInstance3D" parent="."]
+mesh = SubResource("HaloQuad")
+material_override = SubResource("Halo")
+
+[node name="PulseBoltEnergyTrail" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0, 0.1)
+rotation = Vector3(1.5707964, 0, 0)
+mesh = SubResource("EnergyCylinder")
+material_override = SubResource("Energy")
+
+[node name="ProjectileTrail" type="MeshInstance3D" parent="."]
+visible = false
+material_override = SubResource("Trail")

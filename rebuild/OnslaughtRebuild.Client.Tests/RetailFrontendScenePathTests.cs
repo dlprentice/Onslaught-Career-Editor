@@ -159,7 +159,8 @@ public sealed class RetailFrontendScenePathTests
 
         Assert.Contains("_session.CanAcceptMainMenuRow", mainArm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", mainArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("pointer_cancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("Laws.cancel_applies(false, right_down)", NativeOptionsSource.Function("options_controller.gd", "pointer_cancel"), StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton.Set", mainArm, StringComparison.Ordinal);
     }
 
@@ -228,16 +229,18 @@ public sealed class RetailFrontendScenePathTests
         string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
         string confirm = Slice(options, "private void ConfirmOptions(");
         string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
-        string draw = Slice(options, "private void DrawOptionRow");
+        string draw = NativeOptionsSource.Function("options_row.gd", "update_time");
         string pointerCancel = Slice(flow, "private bool HandlePointerCancel(");
 
         Assert.Contains("MouseButton.Right", input, StringComparison.Ordinal);
         Assert.Contains("HandlePointerCancel", input, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryConfirmOptions", confirm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("handle_key", confirm, StringComparison.Ordinal);
+        Assert.Contains("_menu.confirm()", NativeOptionsSource.Function("options_controller.gd", "_confirm"), StringComparison.Ordinal);
+        Assert.Contains("pointer_cancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("Laws.cancel_applies(false, right_down)", NativeOptionsSource.Function("options_controller.gd", "pointer_cancel"), StringComparison.Ordinal);
         Assert.Contains("HandleOptionsPointerCancel", pointerCancel, StringComparison.Ordinal);
-        Assert.Contains("RetailOptionsApplyPulse.PackedColor", draw, StringComparison.Ordinal);
-        Assert.Contains("DropdownRowIsPending", draw, StringComparison.Ordinal);
+        Assert.Contains("Laws.pulse_packed_color", draw, StringComparison.Ordinal);
+        Assert.Contains("Laws.dropdown_row_is_pending", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendScenePath", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandlePointerConfirm("), StringComparison.Ordinal);
@@ -532,7 +535,7 @@ public sealed class RetailFrontendScenePathTests
         string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
         string pointer = Slice(flow, "private bool HandlePointerConfirm(");
         string key = Slice(flow, "private bool HandleKey(");
-        string backFromOptions = Slice(options, "private void BackFromOptions(");
+        string backFromOptions = Slice(options, "private bool ApplyOptionsResult(");
         string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
         string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
         string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");

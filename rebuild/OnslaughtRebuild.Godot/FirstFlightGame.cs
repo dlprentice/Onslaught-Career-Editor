@@ -1351,7 +1351,7 @@ public sealed partial class FirstFlightGame : Node3D
     {
         if (_frontend is not null)
         {
-            ApplyOptionsSettings(_frontend.Options.Settings);
+            ApplyOptionsSettings(_frontend.OptionsSettings);
         }
     }
 

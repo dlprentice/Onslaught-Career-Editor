@@ -211,15 +211,12 @@ public sealed class RetailLevelSelectSlidingBordersTests
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", pointerConfirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", handleKey, StringComparison.Ordinal);
 
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        string dropdown = Slice(options, "private void DrawOptionDropdown");
-        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
-        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string options = NativeOptionsSource.Read("options_row.gd") + NativeOptionsSource.Read("options_presentation.gd") + NativeOptionsSource.Read("options_controller.gd");
+        string draw = options;
+        string dropdown = options;
+        string motion = options;
+        string confirm = options;
+        string cancel = options;
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", dropdown, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", motion, StringComparison.Ordinal);

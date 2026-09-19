@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scenes/World/world_entities.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/World/PulseBolt.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/World/VulcanBullet.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://Scenes/World/PulseMuzzleFlash.tscn" id="4"]
+
+[node name="EntityPresentation" type="Node"]
+script = ExtResource("1")
+metadata/presentation_owner = "Native actor joins, pose interpolation and projectile trails; Core supplies facts"
+
+[node name="Definitions" type="Node3D" parent="."]
+visible = false
+metadata/purpose = "Actual production templates; private textures bind during explicit import only"
+
+[node name="PulseBolt" parent="Definitions" instance=ExtResource("2")]
+
+[node name="VulcanBullet" parent="Definitions" instance=ExtResource("3")]
+
+[node name="MuzzleFlash" parent="Definitions" instance=ExtResource("4")]
+
+[editable path="Definitions/PulseBolt"]
+[editable path="Definitions/VulcanBullet"]
+[editable path="Definitions/MuzzleFlash"]

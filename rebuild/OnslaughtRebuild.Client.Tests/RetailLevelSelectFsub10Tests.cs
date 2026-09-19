@@ -251,15 +251,12 @@ public sealed class RetailLevelSelectFsub10Tests
         Assert.DoesNotContain("RetailLevelSelectFsub10", pointerConfirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", handleKey, StringComparison.Ordinal);
 
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        string dropdown = Slice(options, "private void DrawOptionDropdown");
-        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
-        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string options = NativeOptionsSource.Read("options_row.gd") + NativeOptionsSource.Read("options_presentation.gd") + NativeOptionsSource.Read("options_controller.gd");
+        string draw = options;
+        string dropdown = options;
+        string motion = options;
+        string confirm = options;
+        string cancel = options;
         Assert.DoesNotContain("RetailLevelSelectFsub10", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", dropdown, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", motion, StringComparison.Ordinal);

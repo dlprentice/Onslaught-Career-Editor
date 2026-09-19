@@ -1,0 +1,13 @@
+[gd_resource type="AtlasTexture" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="1"]
+
+[sub_resource type="Texture2D" id="Atlas"]
+script = ExtResource("1")
+source_path = "res://Assets/Frontend/fe-arrow.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1
+
+[resource]
+atlas = SubResource("Atlas")
+region = Rect2(16, 12, 30, 40)

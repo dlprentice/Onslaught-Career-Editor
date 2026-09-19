@@ -9,8 +9,6 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
-    private const float PulseBoltTrailWidthMeters = 0.08f;
-    private const float VulcanBulletTrailWidthMeters = 0.02f;
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     // 2*atan(0.75), from the released binary rather than from fitting.
@@ -49,10 +47,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     // in any shader: resampling blurs exactly what it corrects, and the offset
     // moves the sky as well as the terrain.
     private const float RetailPixelCentreOffsetPixels = 0.5f;
-    // A planted or swinging Aquila foot advances a fraction of a stride per
-    // tick, so a player-relative jump beyond one stride is a stance reset
-    // rather than motion and must not be smeared.
-    private const float RetailWalkerFootTeleportMeters = 3f;
     private const float RetailAquilaAnimationHz = 20f;
     private const float RetailJetWalkToFlySeconds = 25f / RetailAquilaAnimationHz;
     private const float RetailJetFlyToWalkSeconds = 25f / RetailAquilaAnimationHz;
@@ -130,19 +124,10 @@ public sealed partial class FirstFlightWorldView : Node3D
         Level100MissionTiming.ReleasedEventFrameTicks,
         RetailNearPlane,
         RetailFarPlane);
-    private readonly Dictionary<int, Node3D> _projectiles = [];
-    private readonly Dictionary<int, Level100ProjectileTrailHistory>
-        _projectileTrails = [];
+    // Import-time mesh catalog only. All live actor/projectile identity, joins,
+    // interpolation and trail state belong to Scenes/World/world_entities.gd.
     private readonly Dictionary<Level100TargetVisualBinding, Mesh>
         _level100TargetAssets = [];
-    private readonly Dictionary<Level100ActorId, Level100TargetVisual>
-        _level100Targets = [];
-    // Per-frame scratch used to match rendered entities to their previous-tick
-    // state by stable Core identity rather than by list ordinal.
-    private readonly Dictionary<Level100ActorId, Level100TargetVisualDescriptor>
-        _previousTargetDescriptors = [];
-    private readonly Dictionary<int, Level100ProjectileVisualState>
-        _previousProjectileStates = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -156,12 +141,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _retailChrome3Texture = null!;
     private Texture2D _warehouseOverlayTexture = null!;
     private Camera3D _camera = null!;
-    private StandardMaterial3D _pulseBoltSparkMaterial = null!;
-    private StandardMaterial3D _pulseBoltTrailMaterial = null!;
-    private StandardMaterial3D _pulseBoltHaloMaterial = null!;
-    private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
-    private StandardMaterial3D _vulcanBulletTrailMaterial = null!;
-    private Texture2D _pulseCannonMuzzleFlashTexture = null!;
     private Texture2D _pulseImpactAnimatedTexture = null!;
     private Texture2D _pulseImpactShockwaveTexture = null!;
     private Texture2D _vulcanImpactSparkTexture = null!;
@@ -175,10 +154,9 @@ public sealed partial class FirstFlightWorldView : Node3D
     private VehicleTransition _previousTransition;
     private VehicleMode _previousMode = VehicleMode.Walker;
 
-    public int TargetVisualCount =>
-        _level100Targets.Values.Count(target => target.Root.Visible);
+    public int TargetVisualCount => _targetVisualCount;
 
-    public int ProjectileVisualCount => _projectiles.Count;
+    public int ProjectileVisualCount => _projectileVisualCount;
 
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
 
@@ -218,11 +196,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailLevel100ShorelineTriangleCount =>
         _level100StaticWorld.Water.ShorelineTriangleCount;
 
-    public int RetailLevel100TargetSurfaceCount =>
-        _level100Targets.Values
-            .SelectMany(target =>
-                target.Root.GetChildren().OfType<MeshInstance3D>())
-            .Sum(target => target.Mesh?.GetSurfaceCount() ?? 0);
+    public int RetailLevel100TargetSurfaceCount => _targetSurfaceCount;
 
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
 
@@ -258,10 +232,12 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildEnvironment();
         BuildLevel100StaticWorld();
         LoadSharedRetailMaterialTextures();
-        BuildLevel100Targets(snapshot);
+        BuildLevel100Targets();
         BuildPlayer();
-        BuildPulseCannonPresentation();
         BuildCamera();
+        CreateEntityPresentation();
+        BuildPulseCannonPresentation(importEntityTextures: true);
+        ConfigureEntityPresentation(snapshot);
         Render(snapshot, snapshot, 0f, 0f);
     }
 
@@ -299,16 +275,22 @@ public sealed partial class FirstFlightWorldView : Node3D
             ? new Vector3(-playerPitch, 0f, -playerRoll)
             : Vector3.Zero;
 
-        UpdateWalkerPose(previous, current, interpolationAlpha, playerYaw, resetJump);
-        UpdateAquilaTransitionPresentation(current, frameDelta);
-        _cameraState.Advance(previous, current);
-        (AttachedPanCameraViewSnapshot cameraSnapshot, EngineViewpointSnapshot selectedViewpoint) =
-            _cameraState.SampleAndBind(interpolationAlpha);
-        ShowHud = cameraSnapshot.HudVisible;
-        OpeningPanActive = cameraSnapshot.OpeningPanActive;
-        UpdatePlayerShape(current, ShowHud);
-        UpdateLevel100Targets(previous, current, interpolationAlpha);
-        UpdateProjectiles(previous, current, interpolationAlpha);
+        AttachedPanCameraViewSnapshot cameraSnapshot = default;
+        EngineViewpointSnapshot selectedViewpoint = default;
+        // One native frame batch owns feet interpolation, target joins and
+        // projectile history. Its one callback preserves the existing Aquila /
+        // camera-state stage before target/projectile presentation. The camera
+        // node itself is still updated only after trails use its prior pose.
+        RenderEntities(previous, current, interpolationAlpha, resetJump, contacts =>
+        {
+            ApplyWalkerPose(contacts, playerYaw);
+            UpdateAquilaTransitionPresentation(current, frameDelta);
+            _cameraState.Advance(previous, current);
+            (cameraSnapshot, selectedViewpoint) = _cameraState.SampleAndBind(interpolationAlpha);
+            ShowHud = cameraSnapshot.HudVisible;
+            OpeningPanActive = cameraSnapshot.OpeningPanActive;
+            UpdatePlayerShape(current, ShowHud);
+        });
         _camera.Size =
             2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
         UpdateCamera(cameraSnapshot);
@@ -430,7 +412,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             128);
     }
 
-    private void BuildLevel100Targets(WorldSnapshot snapshot)
+    private void BuildLevel100Targets()
     {
         Texture2D tankTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/target-tank.texture.aya",
@@ -561,109 +543,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             Level100TargetPresentation.TransporterBinding,
             transporterMesh);
 
-        UpdateLevel100Targets(snapshot, snapshot, 0f);
     }
-
-    private Level100TargetVisual AddLevel100Target(
-        Level100TargetVisualDescriptor descriptor)
-    {
-        if (!_level100TargetAssets.TryGetValue(
-                descriptor.Binding,
-                out Mesh? mesh))
-        {
-            throw new InvalidDataException(
-                $"Core exposed unsupported Level 100 target binding " +
-                $"'{descriptor.DefinitionName}'/" +
-                $"'{descriptor.MeshBinding}'.");
-        }
-
-        string name =
-            $"RetailLevel100TargetActor{descriptor.ActorId.Value}";
-        Node3D root = ResourceLoader.Load<PackedScene>("res://Scenes/World/ActorPresentation.tscn")
-            .Instantiate<Node3D>();
-        root.Name = name;
-        root.Transform = ToGodotTransform(descriptor);
-        root.Visible = descriptor.Visible;
-        MeshInstance3D geometry = root.GetNode<MeshInstance3D>("Geometry");
-        geometry.Mesh = mesh;
-        root.SetMeta("actor_id", descriptor.ActorId.Value);
-        root.SetMeta("definition", descriptor.DefinitionName);
-        root.SetMeta("mesh_binding", descriptor.MeshBinding);
-        AddChild(root);
-        SetEditableInstance(root, true);
-        var visual = new Level100TargetVisual(
-            descriptor.Binding,
-            root);
-        _level100Targets.Add(descriptor.ActorId, visual);
-        return visual;
-    }
-
-    private void UpdateLevel100Targets(
-        WorldSnapshot previous,
-        WorldSnapshot current,
-        float interpolationAlpha)
-    {
-        // Target actors are matched across the snapshot pair by their stable
-        // Core actor id, so an actor leaving the list cannot hand its previous
-        // pose to whichever actor takes its ordinal.
-        _previousTargetDescriptors.Clear();
-        if (!ReferenceEquals(previous, current))
-        {
-            foreach (TargetSnapshot target in previous.Targets)
-            {
-                _previousTargetDescriptors[target.ActorId] =
-                    Level100TargetPresentation.Project(target);
-            }
-        }
-
-        foreach (TargetSnapshot target in current.Targets)
-        {
-            Level100TargetVisualDescriptor descriptor =
-                Level100TargetPresentation.Project(target);
-            if (!_level100Targets.TryGetValue(
-                    descriptor.ActorId,
-                    out Level100TargetVisual? visual))
-            {
-                visual = AddLevel100Target(descriptor);
-            }
-            else if (
-                visual.Binding != descriptor.Binding)
-            {
-                throw new InvalidDataException(
-                    $"Core changed the canonical binding for Level 100 actor " +
-                    $"{descriptor.ActorId.Value}.");
-            }
-
-            Level100TargetVisualDescriptor? prior =
-                _previousTargetDescriptors.TryGetValue(
-                    descriptor.ActorId,
-                    out Level100TargetVisualDescriptor found)
-                    ? found
-                    : null;
-            visual.Root.Transform = ToGodotTransform(
-                Level100RenderInterpolation.Interpolate(
-                    prior,
-                    descriptor,
-                    interpolationAlpha));
-            visual.Root.Visible = descriptor.Visible;
-        }
-    }
-
-    private static Transform3D ToGodotTransform(
-        Level100TargetVisualDescriptor descriptor) =>
-        new(
-            new Basis(
-                ToGodotVector(descriptor.Basis.XAxis),
-                ToGodotVector(descriptor.Basis.YAxis),
-                ToGodotVector(descriptor.Basis.ZAxis)),
-            ToGodotVector(descriptor.Position));
-
-    private static Vector3 ToGodotVector(Level100RenderVector3 vector) =>
-        new(vector.X, vector.Y, vector.Z);
-
-    private sealed record Level100TargetVisual(
-        Level100TargetVisualBinding Binding,
-        Node3D Root);
 
     private void BuildPlayer()
     {
@@ -922,34 +802,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         _previousMode = snapshot.Mode;
     }
 
-    private void UpdateWalkerPose(
-        WorldSnapshot previous,
-        WorldSnapshot current,
-        float interpolationAlpha,
-        float renderedYaw,
-        bool resetJump)
+    private void ApplyWalkerPose(Vector3[] contacts, float renderedYaw)
     {
-        Vector3[] contacts = ToFootOffsets(current);
-        // The offsets are player-relative, so they are interpolated against the
-        // same pair and alpha as the player root they hang from. A reset or
-        // teleport reuses the current pose rather than smearing the legs across
-        // the world.
-        if (!resetJump &&
-            !ReferenceEquals(previous, current) &&
-            previous.WalkerFeet.Count == current.WalkerFeet.Count)
-        {
-            Vector3[] priorContacts = ToFootOffsets(previous);
-            for (int foot = 0; foot < contacts.Length; foot++)
-            {
-                contacts[foot] = ToGodotVector(
-                    Level100RenderInterpolation.InterpolatePosition(
-                        ToRenderVector(priorContacts[foot]),
-                        ToRenderVector(contacts[foot]),
-                        interpolationAlpha,
-                        RetailWalkerFootTeleportMeters));
-            }
-        }
-
         // The legs are drawn in the player root's rendered frame, so the
         // world-to-player rotation must use the interpolated yaw the root is
         // actually carrying this frame.
@@ -986,157 +840,46 @@ public sealed partial class FirstFlightWorldView : Node3D
         return contacts;
     }
 
-    private void UpdateProjectiles(
-        WorldSnapshot previous,
-        WorldSnapshot current,
-        float interpolationAlpha)
+    private void BuildPulseCannonPresentation(bool importEntityTextures = false)
     {
-        // Bolts are matched by their monotonic Core projectile id. A bolt with
-        // no previous-tick entry was created during the tick that produced
-        // `current`, so it is drawn from its derived muzzle state instead of
-        // popping in a full tick of travel ahead of the barrel.
-        _previousProjectileStates.Clear();
-        if (!ReferenceEquals(previous, current))
+        if (importEntityTextures)
         {
-            foreach (ProjectileSnapshot projectile in previous.Projectiles)
+            Texture2D spark = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/pulse-bolt-blue-spark.texture.aya",
+                64,
+                64);
+            Texture2D trail = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/pulse-bolt-blue-trail.texture.aya",
+                64,
+                64,
+                CuratedAyaTextureLoader.Compression.Dxt1);
+            Texture2D vulcanBulletTrail = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/vulcan-bullet-trail.texture.aya",
+                64,
+                64,
+                CuratedAyaTextureLoader.Compression.Dxt1);
+            Texture2D halo = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya",
+                64,
+                64,
+                CuratedAyaTextureLoader.Compression.Dxt1);
+            Texture2D energyTrail = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/mech-pulse-medium-energy-trail.texture.aya",
+                64,
+                64,
+                CuratedAyaTextureLoader.Compression.Dxt1);
+            Texture2D muzzle = CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/particle-alparticle5-additive.texture.aya",
+                128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
+            using Godot.Collections.Dictionary resources = new()
             {
-                _previousProjectileStates[projectile.Id] =
-                    ToVisualState(projectile, ToWorld(projectile));
-            }
+                ["spark"] = spark, ["pulse_trail"] = trail,
+                ["vulcan_trail"] = vulcanBulletTrail, ["halo"] = halo,
+                ["energy"] = energyTrail, ["muzzle"] = muzzle,
+            };
+            using Godot.Collections.Dictionary bound = EntityResult(
+                _entityPresentation.Call("bind_textures", resources));
         }
-
-        var activeIds = new HashSet<int>();
-        foreach (ProjectileSnapshot projectile in current.Projectiles)
-        {
-            activeIds.Add(projectile.Id);
-            if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
-            {
-                if (!Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind))
-                {
-                    throw new InvalidDataException(
-                        $"Core exposed unsupported projectile kind {projectile.Kind}.");
-                }
-                visual = projectile.Kind switch
-                {
-                    Level100ProjectileKind.MechPulseBoltMedium =>
-                        CreatePulseBoltVisual(projectile.Id),
-                    Level100ProjectileKind.MechBullet or
-                        Level100ProjectileKind.MechAirBullet =>
-                        CreateVulcanBulletVisual(projectile.Id),
-                    _ => throw new InvalidDataException(
-                        $"Core exposed unsupported projectile kind {projectile.Kind}."),
-                };
-                AddChild(visual);
-                _projectiles.Add(projectile.Id, visual);
-                _projectileTrails.Add(
-                    projectile.Id,
-                    new Level100ProjectileTrailHistory(
-                        Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind),
-                        Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)));
-                if (projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&
-                    _pendingPulseCannonMuzzleFlashes > 0)
-                {
-                    SpawnPulseCannonMuzzleFlash(
-                        ToPulseLaunchWorld(projectile),
-                        projectile.Id);
-                    _pendingPulseCannonMuzzleFlashes--;
-                }
-            }
-
-            Level100ProjectileVisualState? prior =
-                _previousProjectileStates.TryGetValue(
-                    projectile.Id,
-                    out Level100ProjectileVisualState found)
-                    ? found
-                    : null;
-            Level100ProjectileVisualState rendered =
-                Level100RenderInterpolation.Interpolate(
-                    prior,
-                    ToVisualState(projectile, ToSpawnWorld(projectile)),
-                    ToVisualState(projectile, ToWorld(projectile)),
-                    interpolationAlpha);
-
-            visual.Position = ToGodotVector(rendered.Position);
-            Vector3 direction = ToGodotVector(rendered.Direction);
-            if (!direction.IsZeroApprox())
-            {
-                visual.LookAt(visual.Position + direction.Normalized(), Vector3.Up);
-            }
-            if (_projectileTrails.TryGetValue(
-                    projectile.Id,
-                    out Level100ProjectileTrailHistory? trailHistory))
-            {
-                trailHistory.Advance(
-                    ToRenderVector(ToWorld(projectile)),
-                    ToTrailVelocity(projectile),
-                    projectile.RemainingTicks);
-                UpdateProjectileTrail(
-                    visual.GetNode<MeshInstance3D>("ProjectileTrail"),
-                    trailHistory.WithRenderedHead(rendered.Position),
-                    visual.GlobalTransform.AffineInverse(),
-                    ProjectileTrailWidthMeters(projectile.Kind));
-            }
-        }
-
-        // A released round can hit inside an aggregated frame and therefore
-        // leave no projectile in the current snapshot. Do not attach that
-        // unmatched flash to a later Vulcan round.
-        _pendingPulseCannonMuzzleFlashes = 0;
-
-        foreach (int id in _projectiles.Keys.Where(id => !activeIds.Contains(id)).ToArray())
-        {
-            _projectiles[id].QueueFree();
-            _projectiles.Remove(id);
-            _projectileTrails.Remove(id);
-        }
-    }
-
-    private void BuildPulseCannonPresentation()
-    {
-        Texture2D spark = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/pulse-bolt-blue-spark.texture.aya",
-            64,
-            64);
-        Texture2D trail = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/pulse-bolt-blue-trail.texture.aya",
-            64,
-            64,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        Texture2D vulcanBulletTrail = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/vulcan-bullet-trail.texture.aya",
-            64,
-            64,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        Texture2D halo = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya",
-            64,
-            64,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        Texture2D energyTrail = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/mech-pulse-medium-energy-trail.texture.aya",
-            64,
-            64,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        _pulseBoltSparkMaterial = CreatePulseParticleMaterial(
-            spark,
-            billboard: true,
-            tint: Colors.White);
-        _pulseBoltTrailMaterial = CreatePulseParticleMaterial(
-            trail,
-            billboard: false,
-            tint: new Color(0.5f, 0.5f, 0.5f));
-        _vulcanBulletTrailMaterial = CreatePulseParticleMaterial(
-            vulcanBulletTrail,
-            billboard: false,
-            tint: Colors.White);
-        _pulseBoltHaloMaterial = CreatePulseParticleMaterial(
-            halo,
-            billboard: true,
-            tint: new Color(0.25f, 0.25f, 0.25f));
-        _pulseBoltEnergyTrailMaterial = CreatePulseParticleMaterial(
-            energyTrail,
-            billboard: false,
-            tint: new Color(0.3f, 0.3f, 0.3f));
 
         _pulseImpactAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
@@ -1157,11 +900,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             128,
             128,
             CuratedAyaTextureLoader.Compression.Dxt1);
-        _pulseCannonMuzzleFlashTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/particle-alparticle5-additive.texture.aya",
-            128,
-            128,
-            CuratedAyaTextureLoader.Compression.Dxt1);
         _targetTankExplosionAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/target-tank-explosion-animated.texture.aya",
             256,
@@ -1171,25 +909,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Level100/Textures/target-tank-explosion-fireball.texture.aya",
             256,
             256);
-    }
-
-    private void SpawnPulseCannonMuzzleFlash(Vector3 position, int projectileId)
-    {
-        Node3D root = CreateTimedEffect(
-            $"PulseCannonMuzzleFlash{projectileId}",
-            position,
-            0.5d);
-        MeshInstance3D flash = CreateEffectSprite(
-            "PulseCannonMuzzleFlash",
-            _pulseCannonMuzzleFlashTexture,
-            0.3f,
-            columns: 4,
-            rows: 4);
-        var material = (StandardMaterial3D)flash.MaterialOverride;
-        material.AlbedoColor = new Color(0.5f, 1f, 1f, 1f);
-        root.AddChild(flash);
-        AnimatePulseCannonMuzzleFlash(root, flash);
-        AnimateScale(flash, 1f, 5f, 0.5d);
     }
 
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
@@ -1521,38 +1240,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
-    private static void AnimatePulseCannonMuzzleFlash(
-        Node root,
-        MeshInstance3D flash)
-    {
-        const int startCell = 1;
-        const int endCell = 15;
-        const int columns = 4;
-        const int rows = 4;
-        const double cellsPerTurn = 1.4d;
-        double cellIntervalSeconds =
-            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
-        var material = (StandardMaterial3D)flash.MaterialOverride;
-        material.Uv1Offset = new Vector3(
-            (startCell % columns) / (float)columns,
-            (startCell / columns) / (float)rows,
-            0f);
-
-        Tween tween = root.CreateTween();
-        for (int cell = startCell + 1; cell <= endCell; cell++)
-        {
-            int capturedCell = cell;
-            tween.TweenInterval(cellIntervalSeconds);
-            tween.TweenCallback(Callable.From(() =>
-            {
-                material.Uv1Offset = new Vector3(
-                    (capturedCell % columns) / (float)columns,
-                    (capturedCell / columns) / (float)rows,
-                    0f);
-            }));
-        }
-    }
-
     private static void AnimateTargetTankDelayedExplosion(
         Node root,
         MeshInstance3D sprite)
@@ -1697,132 +1384,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             durationSeconds);
     }
 
-    private Node3D CreatePulseBoltVisual(int id)
-    {
-        var root = new Node3D { Name = $"RetailPulseBolt{id}" };
-        root.AddChild(new MeshInstance3D
-        {
-            Name = "PulseBoltSprite",
-            Mesh = new QuadMesh { Size = new Vector2(0.5f, 0.5f) },
-            MaterialOverride = _pulseBoltSparkMaterial,
-        });
-        root.AddChild(new MeshInstance3D
-        {
-            Name = "PulseBoltHalo",
-            Mesh = new QuadMesh { Size = new Vector2(0.6f, 0.6f) },
-            MaterialOverride = _pulseBoltHaloMaterial,
-        });
-        root.AddChild(VisualPrimitives.CreateCylinder(
-            "PulseBoltEnergyTrail",
-            0.25f,
-            0.2f,
-            new Vector3(0f, 0f, 0.1f),
-            _pulseBoltEnergyTrailMaterial,
-            new Vector3(90f, 0f, 0f)));
-        root.AddChild(new MeshInstance3D
-        {
-            Name = "ProjectileTrail",
-            MaterialOverride = _pulseBoltTrailMaterial,
-            Visible = false,
-        });
-        return root;
-    }
-
-    private Node3D CreateVulcanBulletVisual(int id)
-    {
-        var root = new Node3D { Name = $"RetailVulcanBullet{id}" };
-        root.AddChild(new MeshInstance3D
-        {
-            Name = "ProjectileTrail",
-            MaterialOverride = _vulcanBulletTrailMaterial,
-            Visible = false,
-        });
-        return root;
-    }
-
-    private void UpdateProjectileTrail(
-        MeshInstance3D trail,
-        IReadOnlyList<Level100RenderVector3> points,
-        Transform3D worldToProjectile,
-        float widthMeters)
-    {
-        if (points.Count < 2)
-        {
-            trail.Visible = false;
-            return;
-        }
-
-        var surface = new SurfaceTool();
-        surface.Begin(Mesh.PrimitiveType.TriangleStrip);
-        float halfWidth = widthMeters * 0.5f;
-        for (int index = 0; index < points.Count; index++)
-        {
-            Vector3 point = ToGlobal(ToGodotVector(points[index]));
-            Vector3 neighbour = index + 1 < points.Count
-                ? ToGlobal(ToGodotVector(points[index + 1]))
-                : ToGlobal(ToGodotVector(points[index - 1]));
-            Vector3 direction = index + 1 < points.Count
-                ? neighbour - point
-                : point - neighbour;
-            if (direction.IsZeroApprox())
-            {
-                direction = Vector3.Forward;
-            }
-
-            Vector3 side = direction.Cross(_camera.GlobalPosition - point);
-            if (side.IsZeroApprox())
-            {
-                side = direction.Cross(Vector3.Up);
-            }
-            if (side.IsZeroApprox())
-            {
-                side = Vector3.Right;
-            }
-            side = side.Normalized() * halfWidth;
-
-            float u = index / (float)(points.Count - 1);
-            surface.SetUV(new Vector2(u, 0f));
-            surface.AddVertex(worldToProjectile * (point - side));
-            surface.SetUV(new Vector2(u, 1f));
-            surface.AddVertex(worldToProjectile * (point + side));
-        }
-
-        trail.Mesh = surface.Commit();
-        trail.Visible = true;
-    }
-
-    private static float ProjectileTrailWidthMeters(Level100ProjectileKind kind) =>
-        kind switch
-        {
-            Level100ProjectileKind.MechPulseBoltMedium => PulseBoltTrailWidthMeters,
-            Level100ProjectileKind.MechBullet or
-                Level100ProjectileKind.MechAirBullet => VulcanBulletTrailWidthMeters,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-        };
-
-    private static StandardMaterial3D CreatePulseParticleMaterial(
-        Texture2D texture,
-        bool billboard,
-        Color tint)
-    {
-        return new StandardMaterial3D
-        {
-            AlbedoTexture = texture,
-            AlbedoColor = tint,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
-            BillboardMode = billboard
-                ? BaseMaterial3D.BillboardModeEnum.Enabled
-                : BaseMaterial3D.BillboardModeEnum.Disabled,
-            EmissionEnabled = true,
-            Emission = tint,
-            EmissionTexture = texture,
-            EmissionEnergyMultiplier = 1f,
-        };
-    }
-
     private static StandardMaterial3D CreateEffectMaterial(
         Texture2D texture,
         bool billboard)
@@ -1839,57 +1400,6 @@ public sealed partial class FirstFlightWorldView : Node3D
                 : BaseMaterial3D.BillboardModeEnum.Disabled,
             BillboardKeepScale = billboard,
         };
-    }
-
-    private static Vector3 ToWorld(ProjectileSnapshot projectile)
-    {
-        return new Vector3(
-            projectile.Position.X * UnitsToMeters,
-            projectile.ElevationMillimeters * UnitsToMeters,
-            -projectile.Position.Z * UnitsToMeters);
-    }
-
-    private static Level100RenderVector3 ToRenderVector(Vector3 vector) =>
-        new(vector.X, vector.Y, vector.Z);
-
-    private static Level100RenderVector3 ToTrailVelocity(
-        ProjectileSnapshot projectile) =>
-        new(
-            projectile.Velocity.X * UnitsToMeters,
-            projectile.VerticalVelocityMillimetersPerTick * UnitsToMeters,
-            -projectile.Velocity.Z * UnitsToMeters);
-
-    private static Level100ProjectileVisualState ToVisualState(
-        ProjectileSnapshot projectile,
-        Vector3 position) =>
-        new(
-            ToRenderVector(position),
-            new Level100RenderVector3(
-                projectile.Velocity.X,
-                projectile.VerticalVelocityMillimetersPerTick,
-                -projectile.Velocity.Z));
-
-    private static Vector3 ToPulseLaunchWorld(ProjectileSnapshot projectile)
-    {
-        int elapsedTicks =
-            SimulationConstants.ProjectileLifetimeTicks - projectile.RemainingTicks;
-        return new Vector3(
-            (projectile.Position.X - (projectile.Velocity.X * elapsedTicks)) *
-                UnitsToMeters,
-            (projectile.ElevationMillimeters -
-                (projectile.VerticalVelocityMillimetersPerTick * elapsedTicks)) *
-                UnitsToMeters,
-            -(projectile.Position.Z - (projectile.Velocity.Z * elapsedTicks)) *
-                UnitsToMeters);
-    }
-
-    private static Vector3 ToSpawnWorld(ProjectileSnapshot projectile)
-    {
-        return new Vector3(
-            (projectile.Position.X - projectile.Velocity.X) * UnitsToMeters,
-            (projectile.ElevationMillimeters -
-                projectile.VerticalVelocityMillimetersPerTick) * UnitsToMeters,
-            -(projectile.Position.Z - projectile.Velocity.Z) * UnitsToMeters);
     }
 
     private void UpdateCamera(AttachedPanCameraViewSnapshot cameraSnapshot)

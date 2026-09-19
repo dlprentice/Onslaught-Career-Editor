@@ -41,7 +41,6 @@ namespace OnslaughtRebuild.Client.Tests;
 public sealed class RetailFrontendPageFillEvidenceTests
 {
     private static readonly string FlowSource = ReadGodotSource("RetailFrontendFlow.cs");
-    private static readonly string OptionsSource = ReadGodotSource("RetailFrontendFlow.Options.cs");
 
     private static string ReadGodotSource(string fileName) =>
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", fileName));
@@ -93,8 +92,18 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [InlineData("DrawOptions")]
     public void EveryFrontendPageRendererCompositesTheUnderlay(string renderer)
     {
-        string source = renderer == "DrawOptions" ? OptionsSource : FlowSource;
-        Assert.Contains("DrawMainUnderlay(", MethodBody(source, renderer), StringComparison.Ordinal);
+        if (renderer == "DrawOptions")
+        {
+            string scene = NativeOptionsSource.Read("Options.tscn");
+            int clear = scene.IndexOf("[node name=\"Clear\"", StringComparison.Ordinal);
+            int darkener = scene.IndexOf("[node name=\"Darkener\"", StringComparison.Ordinal);
+            int video = scene.IndexOf("[node name=\"Video\"", StringComparison.Ordinal);
+            Assert.True(clear >= 0 && darkener > clear && video > darkener);
+            Assert.Contains("_frames[Underlay.frame_index", NativeOptionsSource.Function("options_presentation.gd", "set_frame"), StringComparison.Ordinal);
+            Assert.Contains("underlay.load_frames(1)", NativeOptionsSource.Read("options_presentation.gd"), StringComparison.Ordinal);
+            return;
+        }
+        Assert.Contains("DrawMainUnderlay(", MethodBody(FlowSource, renderer), StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -126,19 +135,11 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [InlineData(2, 0.2290, 0.2467)]
     public void FeBackUnderlayGainStaysInsideTheMeasuredPerFrameBand(int channel, double low, double high)
     {
-        Match match = Regex.Match(
-            FlowSource,
-            @"FeBackUnderlayGain\s*=\s*\[(?<values>[^\]]+)\]",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(5));
-        Assert.True(match.Success, "FeBackUnderlayGain declaration was not found.");
-
-        double[] gains =
-        [
-            .. match.Groups["values"].Value
-                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => double.Parse(v.TrimEnd('f'), CultureInfo.InvariantCulture)),
-        ];
+        string native = NativeOptionsSource.Function("frontend_underlay.gd", "composite_tables");
+        Match match = Regex.Match(native, @"var gain: Array\[float\] = \[(?<values>[^\]]+)\]", RegexOptions.None, TimeSpan.FromSeconds(5));
+        Assert.True(match.Success, "The production native gain declaration was not found.");
+        double[] gains = Regex.Matches(match.Groups["values"].Value, @"F\.value\((?<value>[0-9.]+)\)", RegexOptions.None, TimeSpan.FromSeconds(5))
+            .Select(m => double.Parse(m.Groups["value"].Value, CultureInfo.InvariantCulture)).ToArray();
 
         Assert.Equal(3, gains.Length);
         Assert.InRange(gains[channel], low, high);

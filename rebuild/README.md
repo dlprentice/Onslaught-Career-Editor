@@ -41,6 +41,47 @@ available as a comparison implementation while replacements are validated; a
 permanent production exception needs a demonstrated parity blocker. The MIT
 companion/AppCore has its own migration owner and remains a separate boundary.
 
+### Restart checkpoint — 2026-09-19
+
+The user paused the conversion for a machine restart. Continue only when resumed,
+in `.worktrees/godot-editor-48-20260919` on
+`codex/godot-editor-48-20260919`. Inspect its status and newer committed peer work
+first; preserve the separate uncommitted companion changes. Do not reset or
+switch the canonical checkout or another worktree.
+
+The last validated full runtime source milestone is `5515fa77` (native production
+audio). Its bounded smoke retained the existing 2,148-step hash and ordered
+messages. The later pure terrain port at `bf1b829e` passed 45,681 comparisons;
+its receipt is `local-data/test-runs/gdscript-parity-7uz9cc9v/`. Neither result
+validates the subsequent integration drafts saved in this checkpoint:
+
+- Native options/frontend resources and host wiring are complete file drafts,
+  but have not been parsed, compiled or run. Start with the supported .NET build,
+  then `res://Scenes/Frontend/Tests/options_scene_checks.gd` in standard Godot and
+  the editor using owned profiles (marker `OPTIONS_SCENE_CHECKS`). The actual
+  frontend settings/audio/back handoff check and exact native/C# FEBack table
+  and font comparisons still need to be written. Run affected Client guards
+  and frontend smoke after resolving first-pass failures.
+- Native actor/projectile/muzzle scenes and their batched world bridge are also
+  uncompiled and untested. Run `res://Scenes/World/entity_scene_checks.gd`
+  (marker `ENTITY_SCENE_CHECKS`), then the .NET
+  `res://Scenes/World/EntityBridgeChecks.tscn` (marker `ENTITY_BRIDGE_CHECKS`).
+  Reimport private Level 100 before the existing world/camera checks and smoke:
+  the saved private scene predates `EntityPresentation.tscn`. Check numerical
+  transforms/trails and preservation of private scene overrides explicitly.
+- `Scenes/World/SunSprite.tscn`, `sun_recipe.gd` and `sun_sprite.gd` are an
+  unintegrated prototype. Existing C# Sun code still owns production. Before
+  wiring it in, verify editor availability of the parser dependencies, public
+  versus private serialization of decoded resources, and exact float/terrain
+  line-of-sight behavior against the unchanged implementation. No Sun bridge
+  or differential scene checks have been added yet.
+
+The drafts received whitespace and public-payload checks, not runtime acceptance.
+Resume with canonical `BEA_LOCAL_LAB` routing and fresh owned outputs under this
+worktree's `local-data/`; remain headless or use an isolated owned display.
+The full rebuild still requires .NET, and full combat completion remains open.
+The validated module descriptions below retain their individual evidence scope.
+
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
 wide-integer arithmetic, canonical binary writing, the complete state serializer,
