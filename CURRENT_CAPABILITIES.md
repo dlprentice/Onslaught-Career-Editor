@@ -319,10 +319,11 @@ editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
 
 The full GDScript conversion is underway. Startup playback/cache admission,
-pause UI and HUD state/drawing/catalog now run from native scripts and the same
-production scenes. Numerical, parsing, replay/hash, career, input and camera
-foundations have focused differential checks. The remaining live simulation,
-frontend/world host and other adapters still require .NET; this is not yet a
+pause UI, HUD state/drawing/catalog, frontend session and live camera state now
+run from native scripts and the same production scenes. Numerical, parsing,
+replay/hash, career, input, mission timing and audio policy foundations have
+focused differential checks. The remaining live simulation, frontend/world
+drawing host and other adapters still require .NET; this is not yet a
 standard-engine-only game. See the [rebuild guide](rebuild/README.md) for the
 current boundary and [validation receipts](VALIDATION.md) for executed checks.
 

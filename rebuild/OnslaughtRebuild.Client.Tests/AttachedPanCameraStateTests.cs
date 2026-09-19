@@ -197,11 +197,11 @@ public sealed class AttachedPanCameraStateTests
     public void FirstFlightWorldView_ConsumesTheClientCameraSnapshotSeam()
     {
         string source = File.ReadAllText(Path.Combine(
-            LocateGodotDirectory(),
+            AppContext.BaseDirectory, "godot-effects-source",
             "FirstFlightWorldView.cs"));
 
         Assert.Contains(
-            "private readonly AttachedPanCameraState _cameraState = new(",
+            "private readonly GdCameraState _cameraState = new(",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -209,9 +209,11 @@ public sealed class AttachedPanCameraStateTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "AttachedPanCameraViewSnapshot cameraSnapshot =\n            _cameraState.Sample(interpolationAlpha);",
+            "_cameraState.SampleAndBind(interpolationAlpha);",
             source,
             StringComparison.Ordinal);
+        Assert.DoesNotContain("new AttachedPanCameraState(", source, StringComparison.Ordinal);
+        Assert.Contains("if (what == NotificationPredelete) _cameraState.Dispose();", source, StringComparison.Ordinal);
         Assert.Contains(
             "ShowHud = cameraSnapshot.HudVisible;",
             source,
@@ -263,22 +265,4 @@ public sealed class AttachedPanCameraStateTests
                     new Level100RenderVector3(1f, 0f, 0f))
                 : null);
 
-    private static string LocateGodotDirectory()
-    {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            string candidate = Path.Combine(
-                directory.FullName,
-                "OnslaughtRebuild.Godot");
-            if (File.Exists(Path.Combine(candidate, "FirstFlightWorldView.cs")))
-            {
-                return candidate;
-            }
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
-    }
 }

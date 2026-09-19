@@ -82,7 +82,8 @@ public sealed partial class RetailFrontendFlow
     {
         // Construct only the frontend's in-memory navigation model. No host
         // events, input polling, career files, playback or game session runs.
-        _session = new RetailFrontendSession();
+        _session?.Dispose();
+        _session = new GdFrontendSession();
         _clickPulseTimer = 5d;
         _clickPageSeconds = 5d;
         _animationSeconds = 0d;

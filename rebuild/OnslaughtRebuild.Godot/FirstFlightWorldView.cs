@@ -125,10 +125,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         new Vector3(-0.03870098f, 0.99919593f, 0.01047720f),
         new Vector3(-0.02999347f, -0.01164191f, 0.99948227f));
 
-    private readonly AttachedPanCameraState _cameraState = new(
+    private readonly GdCameraState _cameraState = new(
         SimulationConstants.Level100OpeningPanTicks,
-        Level100MissionTiming.ReleasedEventFrameTicks);
-    private readonly Level100EngineViewpointState _engineViewpointState = new(
+        Level100MissionTiming.ReleasedEventFrameTicks,
         RetailNearPlane,
         RetailFarPlane);
     private readonly Dictionary<int, Node3D> _projectiles = [];
@@ -237,6 +236,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool OpeningPanActive { get; private set; }
 
+    public override void _Notification(int what)
+    {
+        // Reparenting/removing a live world is not a camera reset. Release its
+        // sole native state only when the owning node is actually destroyed.
+        if (what == NotificationPredelete) _cameraState.Dispose();
+    }
+
     public void Initialize(WorldSnapshot snapshot)
     {
         BindProductionScene(snapshot);
@@ -296,10 +302,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdateWalkerPose(previous, current, interpolationAlpha, playerYaw, resetJump);
         UpdateAquilaTransitionPresentation(current, frameDelta);
         _cameraState.Advance(previous, current);
-        AttachedPanCameraViewSnapshot cameraSnapshot =
-            _cameraState.Sample(interpolationAlpha);
-        EngineViewpointSnapshot selectedViewpoint =
-            _engineViewpointState.Bind(cameraSnapshot);
+        (AttachedPanCameraViewSnapshot cameraSnapshot, EngineViewpointSnapshot selectedViewpoint) =
+            _cameraState.SampleAndBind(interpolationAlpha);
         ShowHud = cameraSnapshot.HudVisible;
         OpeningPanActive = cameraSnapshot.OpeningPanActive;
         UpdatePlayerShape(current, ShowHud);
@@ -724,7 +728,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void BuildCamera()
     {
         EngineViewpointSnapshot selectedViewpoint =
-            _engineViewpointState.SelectedSnapshot;
+            _cameraState.SelectedSnapshot;
         _camera = new Camera3D
         {
             Name = "RetailOpeningAndFirstPersonCamera",

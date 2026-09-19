@@ -321,6 +321,47 @@ fixtures include every opening tick, varied raw poses and live simulation
 snapshot pairs. This preserves the committed camera contract; the separately
 preserved camera draft remains unfinished and was not integrated by this port.
 
+The actual frontend then switched to the native session/path owners and passed
+**967 scene checks** covering original career-selection identity, transitions,
+loading/retry, cached display transport and disposal. The actual world camera
+passed **849 bridge/scene checks**, including exact pose words and hashes,
+frozen entry, reparenting and final disposal. The private world round-trip passed
+**23,864 assertions** over saved geometry, textures, placements and runtime
+bindings. Its importer now explicitly disposes four temporary PackedScene
+wrappers: the first reimport reported unsafe retained references and aborted at
+shutdown; the corrected reimport and world checks exited cleanly. Logs are in
+`local-data/test-runs/gdscript-native-front-camera-5clstjzh/`.
+
+That same invocation passed **93 existing Client tests**, **1,487 actual HUD
+host checks**, **174 standard-engine HUD scene checks** and the frontend's ten
+authored-page checks. The frozen editor checks passed for frontend and HUD
+(**170 HUD checks**); their scripted shutdown still reports the same previously
+measured editor-owned allocations, including 205 objects. Runtime checks are
+clean. The supported headless smoke again completed **2,148 steps**, retry and
+return to the main menu with unchanged `53c1cc64…` state identity and 13 delivered
+message IDs. Its `smoke/first-flight-smoke.json` still says `Running` / `None`,
+not full combat completion. No physical input or audible playback was exercised.
+
+Native control response and all **200 numeric simulation constants**, eight
+positions and foot phases passed exact comparisons in
+`local-data/test-runs/gdscript-parity-dhfq_7q2/control-response-fixed.json`.
+The control probes include 6,174 raw axes across four normalizers, the complete
+look table and signed-boundary admission. Native mission timing passed the
+existing fade, pause, terminal, message and trigger laws in
+`local-data/test-runs/gdscript-parity-9j8h7yxm/`. Native audio recipes, arithmetic,
+music actions and queue ordering passed in
+`local-data/test-runs/gdscript-parity-jfd_jga6/audio-policy-fixed.json`.
+These are `control-response`, `mission-timing` and `audio-policy` migration groups;
+the audio laws alone do not establish native scene playback or audible parity.
+
+The scheduler group additionally passed **454 checks** derived from the committed
+September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
+alongside its existing differential transcripts. The HUD model comparison also
+passed after adopting native default constants. Both reports are in
+`local-data/test-runs/gdscript-native-front-camera-5clstjzh/`. The scheduler checks
+cover delivery only, not the native component flag write, monitored allocation,
+or a measured live precision mode.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state

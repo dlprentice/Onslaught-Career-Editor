@@ -699,8 +699,7 @@ public sealed partial class RetailFrontendFlow
             return;
         }
 
-        if (!RetailFrontendScenePath.TryBackPage(
-                _session,
+        if (!_session.TryBackPage(
                 startupMediaActive: false,
                 out RetailFrontendSignal frontend))
         {

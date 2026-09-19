@@ -583,7 +583,7 @@ public sealed partial class RetailFrontendFlow : Control
     private int _mainTransitionCount;
     private int _mainTransitionTime;
 
-    private RetailFrontendSession _session = new();
+    private GdFrontendSession _session = null!;
     private readonly Dictionary<RetailFrontendMenuItemKind, string> _menuText = [];
 
     private Texture2D _clickBackground = null!;
@@ -667,7 +667,8 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         ArgumentNullException.ThrowIfNull(careerDescriptors);
-        _session = new RetailFrontendSession(careerDescriptors);
+        _session?.Dispose();
+        _session = new GdFrontendSession(careerDescriptors);
         LoadLocalization();
         LoadTextures();
         _feBackFrames = LoadFeBackFrames(Engine.IsEditorHint() ? 1 : int.MaxValue);
@@ -676,6 +677,12 @@ public sealed partial class RetailFrontendFlow : Control
         InitializeOptions();
 
         _initialized = true;
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPredelete)
+            _session?.Dispose();
     }
 
     public void MarkLevel100Ready()
@@ -718,7 +725,7 @@ public sealed partial class RetailFrontendFlow : Control
         Level100MissionTerminalState terminalState)
     {
         RetailFrontendScreen origin = _session.Screen;
-        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState))
+        if (!_session.TryAcceptWonHandoff(outcome, terminalState))
         {
             return;
         }
@@ -943,8 +950,7 @@ public sealed partial class RetailFrontendFlow : Control
                 // to play this falls through to the pre-existing handoff.
                 if (!TryBeginLevel100IntroCutscene())
                 {
-                    if (!RetailFrontendScenePath.TryCompleteLoading(
-                            _session,
+                    if (!_session.TryCompleteLoading(
                             startupMediaActive: false,
                             launchConsumed: _loadRequestRaised))
                     {
@@ -3443,8 +3449,7 @@ public sealed partial class RetailFrontendFlow : Control
             case RetailFrontendScreen.ClickToStart:
                 // CFEPIntro::Process 0x0051B801 submits (0,0,width,width,0x2C)
                 // — full window, not a glyph box. See RetailFrontendScenePath.
-                if (!RetailFrontendScenePath.AcceptsClickToStartMouse(
-                        _session.Screen,
+                if (!_session.AcceptsClickToStartMouse(
                         design.X,
                         design.Y))
                 {
@@ -3459,7 +3464,7 @@ public sealed partial class RetailFrontendFlow : Control
 
             case RetailFrontendScreen.MainMenu:
                 int index = MainMenuIndexAt(design);
-                if (!RetailFrontendScenePath.CanAcceptMainMenuRow(_session, index))
+                if (!_session.CanAcceptMainMenuRow(index))
                 {
                     return false;
                 }
@@ -3487,8 +3492,7 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons.
                 if (new Rect2(0f, 430f, 46f, 48f).HasPoint(design))
                 {
-                    if (!RetailFrontendScenePath.TryBackPage(
-                            _session,
+                    if (!_session.TryBackPage(
                             startupMediaActive: false,
                             out RetailFrontendSignal back))
                     {
@@ -3511,8 +3515,7 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons, as on FEP_DEVSELECT.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    if (!RetailFrontendScenePath.TryBackPage(
-                            _session,
+                    if (!_session.TryBackPage(
                             startupMediaActive: false,
                             out RetailFrontendSignal levelBack))
                     {
@@ -3572,8 +3575,7 @@ public sealed partial class RetailFrontendFlow : Control
                 // clickable this lane models.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    if (!RetailFrontendScenePath.TryBackPage(
-                            _session,
+                    if (!_session.TryBackPage(
                             startupMediaActive: false,
                             out RetailFrontendSignal pageBack))
                     {
@@ -3697,8 +3699,7 @@ public sealed partial class RetailFrontendFlow : Control
         if (IsKey(key, Key.Enter) || IsKey(key, Key.KpEnter) || IsKey(key, Key.Space))
         {
             if (_session.Screen == RetailFrontendScreen.ClickToStart
-                && !RetailFrontendScenePath.AcceptsClickToStartKey(
-                    _session.Screen,
+                && !_session.AcceptsClickToStartKey(
                     ScanCodeFor(key)))
             {
                 return true;
@@ -3709,8 +3710,7 @@ public sealed partial class RetailFrontendFlow : Control
         }
         if (IsKey(key, Key.Escape))
         {
-            if (RetailFrontendScenePath.TryBackPage(
-                    _session,
+            if (_session.TryBackPage(
                     startupMediaActive: false,
                     out RetailFrontendSignal signal))
             {
@@ -3726,8 +3726,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void Confirm()
     {
-        if (!RetailFrontendScenePath.TryConfirmPage(
-                _session,
+        if (!_session.TryConfirmPage(
                 startupMediaActive: false,
                 out RetailFrontendSignal signal))
         {

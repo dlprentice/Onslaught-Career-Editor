@@ -219,6 +219,23 @@ the movie-zoom cache's numerical float equality and explicit float stores.
 schema-1 hashes. Neither introduces a scene/input owner or uses the separately
 preserved unfinished camera draft.
 
+The live world now uses those native camera owners through `Client/world_camera.gd`.
+Its temporary bridge sends previous/current facts together and samples/binds in
+one operation per rendered frame. It transports float32 words and raw UTF-16
+identities explicitly; it owns no second camera state. The frontend likewise
+uses the native session/path owners, with cached display projections and original
+career-selection ordinals across the temporary boundary.
+
+`Core/control_response.gd` retains the exact look table, checked Int32 minimum
+failure and raw-axis float32 stores. `simulation_constants.gd` retains all 200
+numeric constants, eight positions and foot phases from the comparison source.
+`mission_timing.gd` keeps repeated float32 fade subtraction, Int32 wrap, pause
+rounding and known message timing limits. Sharing those values with HUD does
+not turn Inspector edits into simulation configuration. New scheduler boundary
+checks also consume committed original-code evidence; see [PARITY.md](PARITY.md)
+for the unresolved live precision context. Matching a managed implementation
+does not resolve that retail question.
+
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:
 

@@ -53,7 +53,10 @@ class Session extends RefCounted:
 	var _level100_launch_pending: bool = false
 	var _level100_intro_cutscene_pending: bool = true
 	var _active_loaded_career: Variant = null
-	var _selected_career_load_request: Variant = null
+	# The request stores its original supplied ordinal. This retains exact
+	# descriptor identity for the verified host read owner, including duplicate
+	# records, without copying original save bytes into this presentation model.
+	var _selected_career_load_request_index: int = -1
 	var _debriefing: Variant = null
 	var _career: Campaign.Campaign = Campaign.create_cold_training_slice()
 
@@ -381,7 +384,7 @@ class Session extends RefCounted:
 						_screen = Screen.DEV_SELECT
 						_career_page_mode = CareerPageMode.NEW
 						_active_loaded_career = null
-						_selected_career_load_request = null
+						_selected_career_load_request_index = -1
 						_selected_world_number = 100
 						_selected_career_index = -1
 						_seed_game_name()
@@ -390,7 +393,7 @@ class Session extends RefCounted:
 						_screen = Screen.DEV_SELECT
 						_career_page_mode = CareerPageMode.LOAD
 						_active_loaded_career = null
-						_selected_career_load_request = null
+						_selected_career_load_request_index = -1
 						_selected_career_index = -1
 						_reset_game_name()
 						return Values.success(FrontendSignal.PAGE_CHANGED)
@@ -412,7 +415,7 @@ class Session extends RefCounted:
 						_unavailable_selection = MenuKind.LOAD_GAME
 						return Values.success(FrontendSignal.UNAVAILABLE)
 					_active_loaded_career = _career_descriptors[_selected_career_index]
-					_selected_career_load_request = _active_loaded_career
+					_selected_career_load_request_index = _selected_career_index
 					if _active_loaded_career.career == null:
 						return Values.failure("NullReferenceException", "Selected career is null.")
 					_selected_world_number = _active_loaded_career.career.suggested_world_number
@@ -447,7 +450,7 @@ class Session extends RefCounted:
 				_screen = Screen.MAIN_MENU
 				_career_page_mode = CareerPageMode.NEW
 				_active_loaded_career = null
-				_selected_career_load_request = null
+				_selected_career_load_request_index = -1
 				_selected_career_index = -1
 				_reset_game_name()
 			Screen.SELECT_CONFIGURATION:
@@ -472,9 +475,17 @@ class Session extends RefCounted:
 
 
 	func consume_selected_career_load_request() -> Dictionary:
-		var request: Variant = _selected_career_load_request
-		_selected_career_load_request = null
-		return Values.success(null if request == null else request.duplicate(true))
+		var request: Dictionary = consume_selected_career_load_request_index()
+		return Values.success(null if request.value == null else _career_descriptors[request.value].duplicate(true))
+
+
+	## Same consume edge, represented by the caller's original descriptor ordinal.
+	## The bridge uses this to return the exact verified C# save object; it never
+	## guesses identity by matching names, slots, serialized bytes or current row.
+	func consume_selected_career_load_request_index() -> Dictionary:
+		var index: int = _selected_career_load_request_index
+		_selected_career_load_request_index = -1
+		return Values.success(null if index < 0 else index)
 
 
 	func complete_level100_load() -> Dictionary:
@@ -519,7 +530,7 @@ class Session extends RefCounted:
 		_selected_career_index = -1
 		_career_page_mode = CareerPageMode.NEW
 		_active_loaded_career = null
-		_selected_career_load_request = null
+		_selected_career_load_request_index = -1
 		_selected_configuration_index = 0
 		_debriefing = null
 		_reset_game_name()

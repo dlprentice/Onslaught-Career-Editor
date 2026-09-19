@@ -130,8 +130,7 @@ public sealed partial class RetailFrontendFlow
             return;
         }
 
-        if (!RetailFrontendScenePath.TryCompleteIntroCutscene(
-                _session,
+        if (!_session.TryCompleteIntroCutscene(
                 startupMediaActive: false))
         {
             return;

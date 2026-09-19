@@ -96,12 +96,28 @@ and translates current Core facts. The retained C# catalog is a comparison
 reference, not the live reader.
 
 Native career progression, frontend session, input-edge state and camera value
-owners also pass the migration gate. `Core/retail_career_save.gd` reads supplied
+owners also pass the migration gate. The actual frontend now uses
+`Client/frontend_session.gd` and `frontend_scene_path.gd`; its temporary C# bridge
+caches display facts after mutations and preserves selected save identity by
+the original input ordinal. Drawing does not repeatedly cross that bridge.
+The world renderer now advances and samples the single native camera owner in
+`Client/world_camera.gd`, retaining the same authored Camera3D and projection.
+Editor entry leaves that live camera owner uninitialized.
+
+`Core/retail_career_save.gd` reads supplied
 career bytes without filesystem access, retains every unknown byte and exposes
-detached projections for the frontend. It has no save writer. These state and
-input ports are being connected to their live consumers; their existence does
-not yet remove the full application's .NET dependency. The MIT Save Lab backend
+detached projections for the frontend. It has no save writer. Input and remaining
+simulation ports still need their live consumers converted; the full application
+continues to require .NET. The MIT Save Lab backend
 and its overwrite/recovery protections remain separate.
+
+`Core/simulation_constants.gd`, `control_response.gd` and `mission_timing.gd`
+preserve the existing constants, look/analogue laws and mission timing with
+explicit float32 stores and integer boundaries. Production HUD defaults now
+come from these shared native definitions. Native audio catalog, character queue
+and music policy comparisons also pass; live audio integration is still pending.
+These preserve existing behavior, including documented gaps, rather than
+establishing that every current C# rule is faithful retail behavior.
 
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in

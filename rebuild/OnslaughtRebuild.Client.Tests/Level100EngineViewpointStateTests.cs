@@ -122,11 +122,11 @@ public sealed class Level100EngineViewpointStateTests
     public void FirstFlightWorldView_ConsumesTheSelectedByValueEngineSnapshot()
     {
         string source = File.ReadAllText(Path.Combine(
-            LocateGodotDirectory(),
+            AppContext.BaseDirectory, "godot-effects-source",
             "FirstFlightWorldView.cs"));
 
         Assert.Contains(
-            "private readonly Level100EngineViewpointState _engineViewpointState = new(\n        RetailNearPlane,\n        RetailFarPlane);",
+            "Level100MissionTiming.ReleasedEventFrameTicks,\n        RetailNearPlane,\n        RetailFarPlane);",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -138,9 +138,11 @@ public sealed class Level100EngineViewpointStateTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "EngineViewpointSnapshot selectedViewpoint =\n            _engineViewpointState.Bind(cameraSnapshot);",
+            "_cameraState.SampleAndBind(interpolationAlpha);",
             source,
             StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100EngineViewpointState _engineViewpointState", source, StringComparison.Ordinal);
+        Assert.Contains("_cameraState.SelectedSnapshot;", source, StringComparison.Ordinal);
         Assert.Contains(
             "Near = selectedViewpoint.NearPlane,",
             source,
@@ -185,22 +187,4 @@ public sealed class Level100EngineViewpointStateTests
                 ClientCameraPose.Identity,
                 new Level100RenderVector3(1f, 0f, 0f)));
 
-    private static string LocateGodotDirectory()
-    {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            string candidate = Path.Combine(
-                directory.FullName,
-                "OnslaughtRebuild.Godot");
-            if (File.Exists(Path.Combine(candidate, "FirstFlightWorldView.cs")))
-            {
-                return candidate;
-            }
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
-    }
 }

@@ -34,7 +34,8 @@ func run_checks() -> void:
 		var vectors: Variant = _integer_tokens(parsed.get("scheduler"))
 		var fixture_completed: bool = _run_fixtures(vectors)
 		var boundary_completed: bool = _check_api_boundary()
-		if fixture_completed and boundary_completed:
+		var retail_boundary_completed: bool = _check_committed_queue_boundaries()
+		if fixture_completed and boundary_completed and retail_boundary_completed:
 			completed.append("event_scheduler")
 	var report: Dictionary = {"schema": 1, "failure_count": failures.size(), "counts": counts,
 		"failures": failures, "completed": completed}
@@ -304,6 +305,63 @@ func _check_api_boundary() -> bool:
 	check("callback_contract", "retry_does_not_advance", owner.public_state(), interrupted)
 	check("callback_contract", "init_recovers", owner.init().ok, true)
 	check("callback_contract", "init_restores_baseline", owner.snapshot().value, before)
+	return true
+
+
+func _check_committed_queue_boundaries() -> bool:
+	# Committed original-code evidence, independent of the managed oracle:
+	# d34f565d, binary-analysis/functions/CEventManager.cpp.md, September 19.
+	# This checks only scheduler delivery. Component flag writes, native monitor
+	# storage/allocation and the live scheduler precision mode remain outside it.
+	for pc24: bool in [false, true]:
+		var owner := Scheduler.new(pc24)
+		owner.advance_time()
+		check("retail_queue", "frame1_current", owner.public_state().current_buffer, 1)
+		check("retail_queue", "frame1_ready", owner.public_state().ready_buffer, 0)
+		var added: Dictionary = owner.add_event_time_from_now(-1.0, 0x12340bb8, 7)
+		check("retail_queue", "relative_minus1_queued", added.value.placement, Scheduler.Placement.IMMEDIATE_BUCKET)
+		owner.add_event_time_from_now(-1.0, 2999, 7)
+		check("retail_queue", "insertion_does_not_dispatch", owner.public_state().total_processed, 0)
+		check("retail_queue", "old_bucket_does_not_dispatch", owner.flush().value.size(), 0)
+		owner.advance_time()
+		var delivered: Array = owner.flush().value
+		check("retail_queue", "next_bucket_count", delivered.size(), 2)
+		if delivered.size() != 2:
+			return false
+		check("retail_queue", "low_word_and_fifo_first", delivered[0].event_num, 3000)
+		check("retail_queue", "fifo_second", delivered[1].event_num, 2999)
+
+		for frame: int in [20, 40]:
+			owner.init()
+			for _index: int in range(frame):
+				owner.advance_time()
+			added = owner.add_event_time_from_now(-1.0, 3000, 7)
+			check("retail_queue", "relative_due_is_added_before_admission", owner.slot(added.value.handle).value.time_bits, 0 if frame == 20 else 0x3f800000)
+			check("retail_queue", "relative_current_bucket_still_waits", owner.flush().value.size(), 0)
+			check("retail_queue", "relative_delivered_next_advance", owner.update().value.size(), 1)
+
+		owner.init()
+		added = owner.add_event(3000, 7, 10.0)
+		check("retail_queue", "ten_seconds_uses_overflow", added.value.placement, Scheduler.Placement.OVERFLOW)
+		for _index: int in range(200):
+			check("retail_queue", "overflow_not_before_or_at_due", owner.update().value.size(), 0)
+		check("retail_queue", "frame200_exact_time", owner.public_state().time_bits, 0x41200000)
+		check("retail_queue", "overflow_after_due", owner.update().value.size(), 1)
+
+	# Both operands of the quick-path sum are float32, and this bounded sum fits
+	# in binary64 exactly. Our explicit PC53 path therefore shares the measured
+	# PC64 result for these four inputs; this is not a general PC64 emulation.
+	for row: Array in [[false, 0x3f00418a, 2], [true, 0x3f00418a, 1],
+			[false, 0x3f004189, 1], [true, 0x3f00418b, 2]]:
+		var owner := Scheduler.new(row[0])
+		for _index: int in range(9):
+			owner.advance_time()
+		check("retail_precision", "frame9_clock", owner.public_state().time_bits, 0x3ee66667)
+		var added: Dictionary = owner.add_event(3000, 7, Float24.read_word(row[1]))
+		check("retail_precision", "selected_bucket", added.value.buffer_index, 9 if row[2] == 1 else 10)
+		check("retail_precision", "old_bucket_empty", owner.flush().value.size(), 0)
+		for advance: int in range(1, 3):
+			check("retail_precision", "precision_selects_delivery", owner.update().value.size(), 1 if advance == row[2] else 0)
 	return true
 
 

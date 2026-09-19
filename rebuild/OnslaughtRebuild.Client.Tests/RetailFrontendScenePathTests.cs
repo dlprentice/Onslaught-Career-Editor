@@ -109,11 +109,11 @@ public sealed class RetailFrontendScenePathTests
         // Input now belongs to the actual standard-engine production scene.
         // startup_scene_checks.gd executes that scene's accepted/rejected events;
         // this guard verifies the host uses it and has no second input owner.
-        Assert.Contains("configure_verified_media", sequence, StringComparison.Ordinal);
+        Assert.Contains("configure_from_cache", sequence, StringComparison.Ordinal);
         Assert.DoesNotContain("public override void _Input(", sequence, StringComparison.Ordinal);
         Assert.Contains("if not accepts_skip_event(event):", playback, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.AcceptsClickToStartMouse", clickArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.AcceptsClickToStartKey", key, StringComparison.Ordinal);
+        Assert.Contains("_session.AcceptsClickToStartMouse", clickArm, StringComparison.Ordinal);
+        Assert.Contains("_session.AcceptsClickToStartKey", key, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", startMedia, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", pointer, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", key, StringComparison.Ordinal);
@@ -157,7 +157,7 @@ public sealed class RetailFrontendScenePathTests
         string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
         string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
 
-        Assert.Contains("RetailFrontendScenePath.CanAcceptMainMenuRow", mainArm, StringComparison.Ordinal);
+        Assert.Contains("_session.CanAcceptMainMenuRow", mainArm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", mainArm, StringComparison.Ordinal);
         Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton.Set", mainArm, StringComparison.Ordinal);
@@ -330,7 +330,7 @@ public sealed class RetailFrontendScenePathTests
         string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
         string quitArm = CaseArm(pointer, "case RetailFrontendScreen.QuitConfirm:");
 
-        Assert.Contains("RetailFrontendScenePath.TryConfirmPage", confirm, StringComparison.Ordinal);
+        Assert.Contains("_session.TryConfirmPage", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.Confirm()", confirm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", devArm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", debriefingArm, StringComparison.Ordinal);
@@ -497,9 +497,9 @@ public sealed class RetailFrontendScenePathTests
         string cutscene = ReadGodotSource("RetailFrontendFlow.Cutscene.cs");
         string finish = Slice(cutscene, "private void FinishLevel100IntroCutscene(");
 
-        Assert.Contains("RetailFrontendScenePath.TryCompleteLoading", process, StringComparison.Ordinal);
+        Assert.Contains("_session.TryCompleteLoading", process, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.CompleteLevel100Load()", process, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryCompleteIntroCutscene", finish, StringComparison.Ordinal);
+        Assert.Contains("_session.TryCompleteIntroCutscene", finish, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.CompleteLevel100IntroCutscene()", finish, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", process, StringComparison.Ordinal);
     }
@@ -537,11 +537,11 @@ public sealed class RetailFrontendScenePathTests
         string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
         string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
 
-        Assert.Contains("RetailFrontendScenePath.TryBackPage", key, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryBackPage", devArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryBackPage", levelArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryBackPage", configArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.TryBackPage", backFromOptions, StringComparison.Ordinal);
+        Assert.Contains("_session.TryBackPage", key, StringComparison.Ordinal);
+        Assert.Contains("_session.TryBackPage", devArm, StringComparison.Ordinal);
+        Assert.Contains("_session.TryBackPage", levelArm, StringComparison.Ordinal);
+        Assert.Contains("_session.TryBackPage", configArm, StringComparison.Ordinal);
+        Assert.Contains("_session.TryBackPage", backFromOptions, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.Back()", key, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.Back()", pointer, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.Back()", backFromOptions, StringComparison.Ordinal);

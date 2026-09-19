@@ -184,8 +184,12 @@ public sealed partial class Level100SceneImport : Node
         int index = node.GetIndex();
         OwnChildren(node, node);
         SaveScene(node, name);
-        Node3D instance = ResourceLoader.Load<PackedScene>(DirectoryPath + "/" + name,
-            cacheMode: ResourceLoader.CacheMode.Ignore).Instantiate<Node3D>();
+        // The instantiated tree retains its scene state. Release the temporary
+        // managed resource wrapper explicitly instead of leaving it for Mono's
+        // shutdown finalizer after the engine has destroyed the resource cache.
+        using PackedScene component = ResourceLoader.Load<PackedScene>(DirectoryPath + "/" + name,
+            cacheMode: ResourceLoader.CacheMode.Ignore);
+        Node3D instance = component.Instantiate<Node3D>();
         parent.RemoveChild(node);
         parent.AddChild(instance);
         parent.MoveChild(instance, index);

@@ -46,9 +46,10 @@ public sealed class RetailCareerLoadAdapterTests
             frontendSource,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_session = new RetailFrontendSession(careerDescriptors);",
+            "_session = new GdFrontendSession(careerDescriptors);",
             frontendSource,
             StringComparison.Ordinal);
+        Assert.DoesNotContain("new RetailFrontendSession", frontendSource, StringComparison.Ordinal);
         Assert.Contains(
             "CareerSelected?.Invoke(selectedCareer);",
             frontendSource,
@@ -57,8 +58,9 @@ public sealed class RetailCareerLoadAdapterTests
             "RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs())",
             hostSource,
             StringComparison.Ordinal);
-        Assert.Contains("_frontend.Initialize(careerDescriptors);", hostSource, StringComparison.Ordinal);
-        Assert.Contains("_frontend.CareerSelected += SelectCareer;", hostSource, StringComparison.Ordinal);
+        Assert.Contains("_frontend.Initialize(RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs()));",
+            hostSource, StringComparison.Ordinal);
+        Assert.Contains("_frontend!.CareerSelected += SelectCareer;", hostSource, StringComparison.Ordinal);
     }
 
     [Fact]
