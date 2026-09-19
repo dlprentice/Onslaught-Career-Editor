@@ -191,5 +191,10 @@ for (int index = 0; index < 1024; index++)
 File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic, eulers, smooth, rng, scaledRng, big, wide, pause, json = GdscriptJsonOracle.Build(),
     startup = OnslaughtRebuild.TestSupport.GdscriptStartupScheduleOracle.Create(), chunkReader = GdscriptChunkReaderOracle.Build(),
     scheduler = GdscriptEventSchedulerOracle.BuildFixtures(),
+    invariantFormat = GdscriptInvariantFormatOracle.Build(), replayHash = GdscriptReplayOracle.Build(),
+    startup_media = OnslaughtRebuild.TestSupport.GdscriptStartupMediaOracle.Create(Path.GetDirectoryName(output)!),
+    command_tape = GdscriptCommandTapeOracle.Build(File.ReadAllText(args[1])),
+    message_panel = GdscriptMessagePanelOracle.Build(),
+    hudPresentation = GdscriptHudPresentationOracle.Build(),
     nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }, new JsonSerializerOptions { MaxDepth = 512 }));
 Console.WriteLine($"Oracle: {arithmetic.Count} numerical cases, {eulers.Count} generated bases, {nativeBasis.Length} native bases, {nativeSmooth.Length} native smooth fixtures, {smooth.Count} generated smooth cases, {rng.Count * 1024} RNG steps, {scaledRng.Count} scaled RNG cases, {big.Count} contact ratios, {wide.Count} wide integer pairs.");

@@ -164,6 +164,33 @@ allocation/reuse mutation before an invalid ring index and the default mode's
 valid alias at current buffer 48. These synthetic cases are current net8/Linux
 regression boundaries, not evidence that retail gameplay generates those values.
 
+The GDScript replay trace writer emits the unchanged schema-4 header, input
+field widths and canonical-state length prefix. Trace serialization alone
+admits the full managed field widths; gameplay still requires `SimInput`
+validation by its owner. Failed entry construction leaves the current trace
+unchanged. Repeated current-hash reads do not finish or reset a recording.
+
+The GDScript command-tape codec preserves schema-v4 upgrade and schema-v5
+serialization, field defaults, duplicate-member admission, exact canonical
+JSON identity and reader cursor/failure ordering. Its record constructors
+separate field-width admission from semantic validation, matching the existing
+C# ownership. Nullable text remains nullable; embedded NUL and raw UTF-16 units
+are retained until an explicit conversion. JSON encoding and BinaryWriter's
+UTF-8 replacement rules remain distinct. The existing C# live runner still
+owns full simulation/replay until that consumer is converted.
+
+`sha256_stream.gd` implements the unkeyed digest operations in
+[FIPS 180-4 sections 4–6](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf).
+It stores eight words and a partial block, so obtaining the current digest
+copies bounded state. The pinned engine's
+[HashingContext API](https://github.com/godotengine/godot/blob/8898c2b3d/doc/classes/HashingContext.xml)
+only exposes a consuming `finish`; retaining all prior snapshot bytes to
+rehash them would change the recording's memory contract. Differential checks
+compare chunked and non-consuming reads with .NET and the native Godot digest,
+including padding boundaries and detached source/result buffers. This is
+content-identity support, not cryptographic-module certification or a claim
+that the complete simulation/state serializer has been converted.
+
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:
 

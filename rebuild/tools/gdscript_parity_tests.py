@@ -24,6 +24,7 @@ class ParityGateTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.calls = []
+        self.working_directories = []
         self.version = gate.STANDARD_VERSION
         self.complete = True
         self.script_error = False
@@ -32,6 +33,7 @@ class ParityGateTests(unittest.TestCase):
 
     def process(self, command, *, cwd, env, timeout, capture):
         self.calls.append((command, env.copy()))
+        self.working_directories.append(cwd)
         if "--version" in command:
             return subprocess.CompletedProcess(command, 0, self.version + "\n", "")
         if "--script" in command and self.complete:
@@ -59,6 +61,9 @@ class ParityGateTests(unittest.TestCase):
         self.assertIn("--script", engine)
         self.assertNotIn("--editor", engine)
         build = self.calls[1][0]
+        # Godot --path changes the process directory. Relative-path fixtures
+        # must be observed by the C# oracle under that same directory.
+        self.assertEqual(self.root / "rebuild/OnslaughtRebuild.Godot", self.working_directories[1])
         self.assertTrue(Path(build[build.index("--artifacts-path") + 1]).is_relative_to(self.root / "local-data"))
         for _, env in self.calls:
             self.assertFalse({"DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY"} & env.keys())
@@ -69,6 +74,12 @@ class ParityGateTests(unittest.TestCase):
         self.version = "4.7.2.stable.official.ed1daf0bf"
         self.assertEqual(1, self.invoke())
         self.assertEqual(1, len(self.calls))
+
+    def test_named_check_runs_only_selected_group(self):
+        self.assertEqual(0, self.invoke("--check", "replay-hash"))
+        engine_calls = [command for command, _ in self.calls if "--script" in command]
+        self.assertEqual(1, len(engine_calls))
+        self.assertIn("res://Tests/replay_hash_checks.gd", engine_calls[0])
 
     def test_zero_engine_exit_without_completed_report_fails(self):
         self.complete = False

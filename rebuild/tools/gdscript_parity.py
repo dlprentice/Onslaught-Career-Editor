@@ -29,6 +29,12 @@ CHECKS = (
     ("startup-schedule", "startup_schedule_checks.gd", ["startup_schedule"], 30),
     ("chunk-reader", "chunk_reader_checks.gd", ["chunk_reader"], 30),
     ("event-scheduler", "event_scheduler_checks.gd", ["event_scheduler"], 60),
+    ("invariant-format", "invariant_format_checks.gd", ["invariant_format"], 30),
+    ("replay-hash", "replay_hash_checks.gd", ["replay_hash"], 60),
+    ("startup-media", "startup_media_checks.gd", ["startup_media"], 60),
+    ("command-tape", "command_tape_checks.gd", ["json", "validation", "inputs", "strings", "readers", "boundary"], 60),
+    ("message-panel", "message_panel_checks.gd", ["wrap_window", "reveal", "boundary"], 30),
+    ("hud-presentation", "hud_presentation_checks.gd", ["hud_presentation"], 30),
 )
 
 
@@ -36,6 +42,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default="godot48", help="pinned standard Godot executable")
     parser.add_argument("--output-root", type=Path, help="fresh path inside this checkout's local-data")
+    parser.add_argument("--check", action="append", choices=[name for name, *_ in CHECKS],
+                        help="run only this comparison group; may be repeated (default: all)")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this headless migration gate currently supports Linux")
@@ -56,9 +64,9 @@ def main(argv: list[str] | None = None) -> int:
             env[name] = str(directory)
         env["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1"
 
-        def run(command: list[str], name: str, timeout: float) -> str:
+        def run(command: list[str], name: str, timeout: float, *, cwd: Path = ROOT) -> str:
             try:
-                completed = run_process(command, cwd=ROOT, env=env, timeout=timeout, capture=True)
+                completed = run_process(command, cwd=cwd, env=env, timeout=timeout, capture=True)
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
                 data = error.output or ""
                 errors = error.stderr or ""
@@ -86,15 +94,23 @@ def main(argv: list[str] | None = None) -> int:
         items = ET.SubElement(project, "ItemGroup")
         ET.SubElement(items, "ProjectReference", Include=str(ROOT / "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParityOracle.cs"))
-        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs"):
+        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs", "GdscriptInvariantFormatOracle.cs", "GdscriptReplayOracle.cs", "GdscriptStartupMediaOracle.cs", "GdscriptCommandTapeOracle.cs", "GdscriptMessagePanelOracle.cs", "GdscriptHudPresentationOracle.cs"):
             ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport" / helper))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/RetailStartupMediaIndex.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessagePlaybackState.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100HudPresentation.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessageSchedule.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"
         run([dotnet, "run", "--project", str(project_path), "--artifacts-path", str(output / "build"),
-             "--disable-build-servers", "--", str(vectors)], "oracle.log", 180)
+             "--disable-build-servers", "--", str(vectors),
+             str(ROOT / "rebuild/scenarios/first-flight.v1.json")], "oracle.log", 180,
+             cwd=ROOT / "rebuild/OnslaughtRebuild.Godot")
         reports = {}
         for name, script, groups, timeout in CHECKS:
+            if args.check and name not in args.check:
+                continue
             report_path = output / f"{name}.json"
             diagnostics = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
                 str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",

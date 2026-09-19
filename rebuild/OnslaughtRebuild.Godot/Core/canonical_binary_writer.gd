@@ -3,6 +3,7 @@ extends RefCounted
 ## Little-endian BinaryWriter-compatible primitives for versioned Core hashes.
 ## This owns bytes only. Snapshot field order/schema stays with its serializer.
 ## Failure is terminal and explicit; callers cannot publish a partial result.
+const Text = preload("res://Core/canonical_json_string.gd")
 
 var _bytes: PackedByteArray = []
 var _error: String = ""
@@ -20,6 +21,32 @@ func write_u8(value: Variant) -> bool:
 	if not _error.is_empty():
 		return false
 	_bytes.append(value)
+	return true
+
+
+func write_i8(value: Variant) -> bool:
+	if typeof(value) != TYPE_INT or value < -128 or value > 127:
+		return _fail("Signed byte must be an exact integer in -128..127.")
+	return write_u8(value & 255)
+
+
+func write_i16(value: Variant) -> bool:
+	if typeof(value) != TYPE_INT or value < -32768 or value > 32767:
+		return _fail("Signed 16-bit value must be an exact integer in -32768..32767.")
+	var offset: int = _reserve(2)
+	if offset < 0:
+		return false
+	_bytes.encode_s16(offset, value)
+	return true
+
+
+func write_u16(value: Variant) -> bool:
+	if typeof(value) != TYPE_INT or value < 0 or value > 65535:
+		return _fail("Unsigned 16-bit value must be an exact integer in 0..65535.")
+	var offset: int = _reserve(2)
+	if offset < 0:
+		return false
+	_bytes.encode_u16(offset, value)
 	return true
 
 
@@ -96,10 +123,14 @@ func write_bytes(value: PackedByteArray) -> bool:
 
 
 ## BinaryWriter's UTF-8 byte count uses a 7-bit continuation length prefix.
-func write_string(value: String) -> bool:
+## Raw UTF-16 units preserve NUL; malformed pairs use Encoding.UTF8 replacement.
+func write_string(value: Variant) -> bool:
 	if not _error.is_empty():
 		return false
-	var encoded: PackedByteArray = value.to_utf8_buffer()
+	var admitted: Dictionary = Text.utf8_bytes(value, true)
+	if not admitted.ok:
+		return _fail(admitted.error)
+	var encoded: PackedByteArray = admitted.value
 	var remaining: int = encoded.size()
 	if remaining > 2147483647:
 		return _fail("UTF-8 length exceeds the BinaryWriter string contract.")

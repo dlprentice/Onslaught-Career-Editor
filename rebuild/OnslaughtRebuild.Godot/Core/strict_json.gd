@@ -107,7 +107,12 @@ class Value extends RefCounted:
             # Raw units/utf8_bytes preserve it; a caller requesting a native
             # String must make that limitation explicit instead of losing data.
             return {"ok": false, "error": "Embedded NUL requires string_units or utf8_bytes()."}
-        return {"ok": true, "value": encoded.value.get_string_from_utf8()}
+        # A leading U+FEFF is string content here, not a file's byte-order
+        # signature. Godot's decoder strips a leading UTF-8 BOM, so protect it
+        # with one known ASCII scalar and remove only that scalar afterward.
+        var prefixed := PackedByteArray([1])
+        prefixed.append_array(encoded.value)
+        return {"ok": true, "value": prefixed.get_string_from_utf8().substr(1)}
 
 
 static func parse_bytes(source: PackedByteArray, reject_duplicates: bool = true, max_depth: int = 64) -> Dictionary:

@@ -181,6 +181,55 @@ private X-server credentials and cleaned up their own display processes.
 These observations establish the converted components and their host boundary,
 not audible playback, physical input, GPU performance or full combat parity.
 
+Replay-hash foundations passed **286 synthetic SHA-256 streams**, including
+**873 chunk appends/current-hash reads**, and **96 exact schema-4 trace entries**.
+The checks compare current/final digests with the existing .NET implementation
+and native Godot SHA-256; repeated reads, source/result mutation, stream copies,
+padding boundaries, signed field widths, refusal and disposal are covered.
+Evidence is in `local-data/test-runs/gdscript-parity-yl94z6c5/`. This preserves
+the trace format without replacing the live complete state serializer or runner.
+
+The invariant filename formatter also passed **10,155 output comparisons**
+and **611 failure comparisons** against the current .NET library. Its raw
+UTF-16 API adds **868 output** and **37 failure** comparisons for embedded
+NUL, lone surrogates, numeric-format termination and exact alignment.
+Source-checkout loading from the separately licensed root-tools utility passed
+**9 dependency checks**; package/export loading is not established. These
+reports are in `local-data/test-runs/gdscript-parity-qpd6ptf8/`.
+Use `python rebuild/tools/gdscript_parity.py --check NAME` to rerun an affected
+group; omit `--check` for the complete bounded migration gate.
+
+Command-tape comparison passed all six sections: JSON admission, validation,
+input records, canonical strings/identities, reader/cursor behavior and explicit
+boundary refusals. It includes the tracked first-flight tape, without changing
+its input or expected hashes. The message-panel port passed **315 wraps**,
+**20,201 window samples** and **1,036 reveal-time samples**, including raw
+UTF-16, leading U+FEFF, NUL, malformed surrogate and Int32-overflow cases.
+The shared strict JSON group also passed after repairing leading-U+FEFF native
+String conversion. These reports are in
+`local-data/test-runs/gdscript-parity-aertulih/`; they do not establish a ported
+full simulation, full HUD runtime or rendered-text equivalence.
+
+All **12 migration groups** subsequently passed together in
+`local-data/test-runs/gdscript-parity-wjzad094/`. This added **135 media-load
+comparisons**, exact file-inventory checks (including literal-backslash decoys),
+**146 BinaryWriter string cases**, **597 direct float-trig cases** and **2,089
+scanner placements** compared by raw float32 words. HUD message timing and state
+projection also passed. The C# oracle now runs from the same process directory
+as Godot, so relative-path fixtures exercise the same filesystem contract.
+Eight launcher checks passed, including that directory and desktop isolation.
+The exact-byte media accessor then passed **12 additional read comparisons**
+alongside that complete media group in
+`local-data/test-runs/gdscript-parity-l7rxkeyg/`.
+
+A bounded headless SHA-stream sample appended 41,057-byte synthetic states
+twelve times. Inlining fixed rotations reduced its observed median from
+33.78 ms to 12.53 ms while preserving the native digest; receipts are in
+`local-data/test-runs/gdscript-hash-profile-dyls6119/` and
+`local-data/test-runs/gdscript-hash-profile-dd20on6h/`. These shared-machine
+microbenchmarks do not establish full-game throughput, input latency or GPU
+performance. Live simulation and full replay have not yet migrated.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state
