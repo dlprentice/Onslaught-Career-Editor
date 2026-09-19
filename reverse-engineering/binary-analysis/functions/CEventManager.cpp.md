@@ -52,9 +52,11 @@ a REBUILD_READY row): the event number is a 16-bit word.
   both `0x4e20`. The final free-list link is cleared at pool `+0x61a7c`.
 - The literal array-constructor callback `[0044b190,0044b1d0)` clears only
   event target `+0` and payload `+0c`, increments `0083cde8`, and returns.
-  The current function export has no entry or containing body for that range.
-  A fresh read-only Ghidra code-unit/function/reference inspection is still
-  needed before declaring a database boundary defect or creating a function.
+  Fresh read-only inspection confirmed all 15 instructions were unowned,
+  with the expected constructor-pointer reference at the entry. The
+  [preservation-gated correction](../../ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
+  now records the exact 64-byte body as default `FUN_0044b190`. All prior
+  function/variable metadata is unchanged; its prototype remains unknown.
 
 ## Projectile readiness queue — September 19
 

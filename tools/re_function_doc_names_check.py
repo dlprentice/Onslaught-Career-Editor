@@ -110,6 +110,8 @@ CURRENT_SHARED_RETURN4_OVERLAY = REPO_ROOT / "tools/cohort-specs/shared-return4-
 CURRENT_SHARED_RETURN4_OVERLAY_SHA256 = "28d6914d29e3111fbc5acd967588ffb3a0440d4e8e55b0b746e1cc0480c296bd"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
+CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
+CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256 = "d72a96b732e884d83dddc9467d5c8be64ca181c5c1d04b92d4579d8a679c3c8a"
 BASELINE_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
@@ -743,6 +745,10 @@ def run(
             table = load_table(table_path)
         if use_current_overlay:
             table = apply_current_creation_overlay(apply_current_name_overlay(table))
+            table = apply_current_creation_overlay(
+                table, CURRENT_EVENT_CONSTRUCTOR_OVERLAY,
+                expected_sha256=CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256,
+            )
             table = apply_current_name_overlay(
                 table, CURRENT_BOUNDING_BOX_OVERLAY,
                 expected_sha256=CURRENT_BOUNDING_BOX_OVERLAY_SHA256,

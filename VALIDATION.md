@@ -1478,6 +1478,38 @@ acyclicity. The same receipt binds scheduler allocation arguments, the explicit
 opened or changed for these findings; no full-shot RNG, retail session,
 campaign-grade or parity completion is claimed.
 
+### Scheduled-event constructor boundary — September 19
+
+The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
+passed fresh PRE equality/restore-open, isolated dry/apply, separate readback,
+independent comparison, live dry/apply/separate readback, and independent
+Archive A POST restore-open. Both actual-database negative controls rejected
+their inputs before writes: wrong body hash and a clipped final return.
+The replica remained byte-identical after both refusals. All nine live
+exports equal rehearsal; all 8,330 prior functions, 32,697 prior variables,
+types, bookmarks and prior stack records are unchanged. The sole addition is
+the default 64-byte, 15-instruction function at `0044b190`, with its default
+return and unknown-purge stack records. Only the function-count metric moves.
+
+`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**.
+The initial direct-file invocation could not import the repository package;
+the module invocation is the executed passing command. The base applier is
+unchanged; the derived live applier admits only the additional declared cohort.
+`python tools/re_function_doc_names_check.py --self-test` passed after the
+current-name projection gained the new default function. Frozen tables stay
+unchanged. These checks establish the bounded correction, not a recovered
+semantic prototype or retail runtime behavior.
+
+Private owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/event-constructor-boundary/`.
+`*.command.json` records the actual headless arguments; corresponding logs
+and receipts preserve outcomes. `compare_exports.py rehearsal-post` and
+`compare_exports.py live-post` independently check the full exported records.
+The first comparison stopped at the added default return record; inspection
+confirmed its meaning and the final comparison admits exactly that new
+record while preserving all existing variables. `live-readback.json` and
+`post-restore.json` identities are recorded in the Ghidra owner above.
+
 ### Shared math-error Ghidra correction — September 19
 
 The [one-function correction](reverse-engineering/ghidra/README.md#shared-math-error-abi-correction-2026-09-19)

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[renderer arguments and shared return-4 correction](#renderer-arguments-and-shared-return-4-correction-2026-09-19);
+[scheduled-event constructor boundary](#scheduled-event-constructor-boundary-2026-09-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -736,6 +736,62 @@ The current-name projection now includes the neutral leaf manifest. Frozen
 tables and explicit-table consumers remain unchanged. These metadata repairs
 and the 22 isolated registry cases do not establish complete shot ordering,
 renderer execution or player-observed parity.
+
+## Scheduled-event constructor boundary (2026-09-19)
+
+The [manifest](../../tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv)
+and [spec](../../tools/cohort-specs/scheduled-event-constructor-boundary.spec.tsv)
+create exactly one default function, `FUN_0044b190`, over existing instructions
+at `[0044b190,0044b1d0)`: 64 bytes, 15 instructions, pristine body SHA-256
+`ac037f0505dbe8d73f87d932a80e3bfd59551027bb49926cd041dccefe391adc`.
+Fresh read-only inspection found no function owner for these instructions.
+Scheduler Init supplies this literal callback to construct 20,000 records
+of size `0x14`; the iterator supplies each record in ECX. The body clears only
+target `+0` and payload `+0c`, increments the construction count, and restores
+its exception linkage before returning. Source and byte evidence belong to
+the [scheduler owner](../binary-analysis/functions/CEventManager.cpp.md).
+Its semantic role does not establish a complete prototype: the new function
+retains default name, undefined return, unknown calling convention, no formal
+arguments, no comments and no tags.
+
+The working project now measures `db.18653`: 18 files, 118,999,924 bytes,
+inventory SHA-256
+`867862c7ef056d685ce8cdf622da83e2e85a1e5bcb2b66d850048c11989c8e0e`.
+The main database is 68,698,112 bytes, SHA-256
+`879afcf636bc5305cac2304e16e7a8b26f5a28462ce315e57b817708f65cb871`.
+All 8,330 prior function rows, 32,697 prior variable records and prior stack
+records are unchanged. The new function contributes only its default return
+and unknown-purge stack records. Types, bookmarks and saved Plane stack-depth
+observations remain identical. Of 29 program metrics, only the internal
+function count changes, to 8,331; instructions, bytes, references, data and
+existing metadata are preserved. The open probe reports 8,555 including
+224 external functions, a different count from the internal inventory.
+
+The preceding shared-leaf POST matched working bytes and was restored/opened
+as PRE. Isolated dry/apply/separate readback and independent comparison passed;
+wrong-hash and clipped-final-RET controls both failed before writes with an
+unchanged replica. Final spec pins were sealed from that separately reopened
+rehearsal; no second sealed rehearsal is claimed. Live dry/apply/separate
+readback passed, and all nine live exports equal rehearsal exports exactly.
+The unchanged base framework and derived live allowlist passed 92 tests.
+
+The new independent recovery is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-scheduled-event-constructor/post-working/`.
+It was copied, hash-compared, restored elsewhere and opened read-only; the
+restored payload is stable and matches the working project. The tracked
+checkpoint still matches `745c00ad…`; no checkpoint refresh occurred.
+Commands and evidence are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/event-constructor-boundary/`:
+
+| Receipt | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `live-readback.json` | 2,286 | `39ae2910f25fcc99f18f061d36bce51f170876ab712291332f9715e6d6d2300a` |
+| `post-restore.json` | 5,767 | `238e5af4d7bc2b7b631599748e85260ced3846b38b240606552f7957643b374b` |
+
+The current-name checker composes this second default-function manifest with
+its existing overlays, preserving frozen tables and explicit-table consumers.
+This closes a demonstrated analysis boundary gap; no retail execution,
+complete scheduler audit or reconstruction parity is claimed.
 
 Related (not this folder):
 
