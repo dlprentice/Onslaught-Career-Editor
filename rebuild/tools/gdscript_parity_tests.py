@@ -27,6 +27,7 @@ class ParityGateTests(unittest.TestCase):
         self.version = gate.STANDARD_VERSION
         self.complete = True
         self.script_error = False
+        self.unicode_error = False
         self.finished_groups = ["arithmetic", "euler", "rng", "wide", "binary"]
 
     def process(self, command, *, cwd, env, timeout, capture):
@@ -34,10 +35,13 @@ class ParityGateTests(unittest.TestCase):
         if "--version" in command:
             return subprocess.CompletedProcess(command, 0, self.version + "\n", "")
         if "--script" in command and self.complete:
-            is_model = "res://Tests/pause_model_checks.gd" in command
+            groups = next(groups for _, script, groups, _ in gate.CHECKS if f"res://Tests/{script}" in command)
+            if groups[0] == "arithmetic":
+                groups = self.finished_groups
             Path(command[-1]).write_text(json.dumps({"schema": 1, "failure_count": 0,
-                "counts": {"nativeBasis": 31}, "completed": ["pause_model"] if is_model else self.finished_groups}))
-        return subprocess.CompletedProcess(command, 0, "", "SCRIPT ERROR: aborted check" if self.script_error else "")
+                "counts": {"completed": 1}, "completed": groups}))
+        diagnostic = "SCRIPT ERROR: aborted check" if self.script_error else "Unicode parsing error, characters replaced" if self.unicode_error else ""
+        return subprocess.CompletedProcess(command, 0, "", diagnostic)
 
     def invoke(self, *args):
         with patch.object(gate, "ROOT", self.root), \
@@ -72,6 +76,10 @@ class ParityGateTests(unittest.TestCase):
 
     def test_script_error_cannot_be_hidden_by_zero_exit_and_report(self):
         self.script_error = True
+        self.assertEqual(1, self.invoke())
+
+    def test_unicode_replacement_diagnostic_cannot_pass(self):
+        self.unicode_error = True
         self.assertEqual(1, self.invoke())
 
     def test_partially_aborted_group_cannot_pass(self):

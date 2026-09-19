@@ -22,6 +22,14 @@ sys.path.insert(0, str(ROOT / "tools"))
 from godot_host import ENGINE_VERSION, output_directory, print_process_output, run_process
 
 STANDARD_VERSION = ENGINE_VERSION.replace(".mono.", ".")
+CHECKS = (
+    ("numerics", "numerics_checks.gd", ["arithmetic", "euler", "rng", "wide", "binary"], 60),
+    ("pause-model", "pause_model_checks.gd", ["pause_model"], 30),
+    ("strict-json", "strict_json_checks.gd", ["strict_json"], 30),
+    ("startup-schedule", "startup_schedule_checks.gd", ["startup_schedule"], 30),
+    ("chunk-reader", "chunk_reader_checks.gd", ["chunk_reader"], 30),
+    ("event-scheduler", "event_scheduler_checks.gd", ["event_scheduler"], 60),
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -78,29 +86,27 @@ def main(argv: list[str] | None = None) -> int:
         items = ET.SubElement(project, "ItemGroup")
         ET.SubElement(items, "ProjectReference", Include=str(ROOT / "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParityOracle.cs"))
+        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs"):
+            ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport" / helper))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"
         run([dotnet, "run", "--project", str(project_path), "--artifacts-path", str(output / "build"),
              "--disable-build-servers", "--", str(vectors)], "oracle.log", 180)
-        report_path = output / "numerics.json"
-        diagnostics = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
-             str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",
-             "res://Tests/numerics_checks.gd", "--", str(vectors), str(report_path)], "godot.log", 60)
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-        if "ERROR:" in diagnostics or report.get("schema") != 1 or report.get("failure_count") != 0 \
-                or not report.get("counts") or report.get("completed") != ["arithmetic", "euler", "rng", "wide", "binary"]:
-            raise RuntimeError("Numerical parity gate did not complete successfully")
-        model_path = output / "pause-model.json"
-        model_log = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
-             str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",
-             "res://Tests/pause_model_checks.gd", "--", str(vectors), str(model_path)], "pause-model.log", 30)
-        model = json.loads(model_path.read_text(encoding="utf-8"))
-        if "ERROR:" in model_log or model.get("schema") != 1 or model.get("failure_count") != 0 \
-                or model.get("completed") != ["pause_model"] or not model.get("counts"):
-            raise RuntimeError("Pause model parity gate did not complete successfully")
-        print(json.dumps({"result": "passed", "engine": version, "counts": report["counts"],
-                          "pause_counts": model["counts"], "output": str(output)}, indent=2))
+        reports = {}
+        for name, script, groups, timeout in CHECKS:
+            report_path = output / f"{name}.json"
+            diagnostics = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
+                str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",
+                f"res://Tests/{script}", "--", str(vectors), str(report_path)], f"{name}.log", timeout)
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            if any(marker in diagnostics for marker in ("ERROR:", "Unicode parsing error")) \
+                    or report.get("schema") != 1 or report.get("failure_count") != 0 \
+                    or report.get("completed") != groups or not report.get("counts"):
+                raise RuntimeError(f"{name} parity gate did not complete successfully")
+            reports[name] = report["counts"]
+        print(json.dumps({"result": "passed", "engine": version, "checks": reports,
+                          "output": str(output)}, indent=2))
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         if isinstance(error, (subprocess.CalledProcessError, subprocess.TimeoutExpired)):

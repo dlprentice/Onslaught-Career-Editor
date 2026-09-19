@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-19 (GDScript numerical foundation; existing behavior boundaries retained)
+Last updated: 2026-09-19 (GDScript numerical and parsing foundations; existing behavior boundaries retained)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -132,6 +132,37 @@ Godot 4.8 dev6 feasibility probe demonstrated that a compiled `-0.0` literal
 could become positive zero and change the binary hash. These tests establish
 the bounded numerical modules, not a complete GDScript simulation. A matching
 C# result is regression evidence; retail contracts remain the parity authority.
+
+`Core/strict_json.gd` preserves decimal lexemes and decoded UTF-16 units instead
+of letting an engine dictionary discard duplicate members or round integers.
+`Core/decimal_float64.gd` converts a validated decimal through an exact wide-
+integer ratio and one nearest/even rounding, retaining signed zero, subnormals
+and overflow. The pinned engine's `String.to_float()` changed 269 output words
+in the initial varied-double/boundary comparison; the replacement passes the
+unchanged C# words, plus exact normal/subnormal/overflow midpoint cases. The
+strict parser checks grammar/depth and the tape's ordinal duplicate-name rule;
+the future tape owner must still enforce its exact field set and schema.
+JSON string tokens can retain an unpaired escaped surrogate until a caller
+requests Unicode decoding, while duplicate-name admission validates each name
+as the existing C# tape validator does. Embedded NUL uses raw units/bytes, since
+native Godot string conversion would lose it. This is explicit representation,
+not permission to normalize replay or save data.
+
+The resident chunk reader preserves short reads, partial live-size-word writes,
+cursor/EOF ordering, unsigned accounting and signed32 narrowing. Its result
+separates a retail short-read outcome from a terminal API failure; callers must
+inspect both `ok` and `complete`. Synthetic managed-overflow and post-close
+comparisons preserve existing C# behavior without claiming it as retail proof.
+
+The GDScript event scheduler carries the same pool, ring, stable overflow order,
+PC24/default clock paths and sparse snapshots. Synchronous callback results
+require an explicit acknowledgement; a missing return or propagated failure
+poisons the interrupted flush until reset. A handled nested-operation refusal
+can be acknowledged, matching the C# caught-exception path. The differential
+fixtures also retain typed-domain NaN and out-of-lane enum behavior, including
+allocation/reuse mutation before an invalid ring index and the default mode's
+valid alias at current buffer 48. These synthetic cases are current net8/Linux
+regression boundaries, not evidence that retail gameplay generates those values.
 
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:

@@ -43,14 +43,16 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
-wide-integer arithmetic and canonical binary writing. These scripts have no
+wide-integer arithmetic, canonical binary writing, the event scheduler, resident chunk framing and
+strict JSON with exact decimal-to-binary64 conversion. These scripts have no
 scene, input, filesystem or clock responsibilities. They are ordinary editable
 source in Godot's script editor; editor use and agent tooling share these files.
 The existing C# simulation still owns gameplay until its consumers are ported.
 No simulation owner or physics behavior changes merely because these modules
 have been introduced.
 
-`npm run test:rebuild-gdscript` compares the numerical modules and pause state
+`npm run test:rebuild-gdscript` compares the numerical/parsing modules, startup
+schedule and pause state
 in standard `godot48` with the existing C# implementation and native fixtures. It includes
 the existing 31 rotation-basis and 19 smoothing fixtures without copying their
 expected words into a second maintained table. The temporary oracle requires
@@ -59,6 +61,15 @@ it does not prepare or write the canonical lab. Each invocation owns its
 vectors, build, logs and headless profile under `local-data/test-runs/`.
 This bounded gate does not establish full simulation, cross-host trig,
 performance or complete combat parity.
+
+The JSON reader keeps integer lexemes, ordered object members and raw UTF-16
+units until a schema admits them. It rejects duplicate names after unescaping
+by default, including duplicates hidden by alternate escapes. Its explicit
+decimal converter performs one ties-to-even binary64 rounding; the pinned
+engine's ordinary string conversion changed bits in the comparison fixtures.
+Embedded NUL stays available as units/UTF-8 bytes and is refused by the native
+String convenience conversion rather than silently truncated. This foundation
+does not yet replace the live C# command-tape codec or its schema checks.
 
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening

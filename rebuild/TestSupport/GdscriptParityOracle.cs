@@ -188,6 +188,8 @@ PauseOperation("activate_selected"); PauseOperation("open"); PauseOperation("act
 string[] pauseOperations = ["open", "reset", "move_selection", "hover", "activate_selected", "cancel"];
 for (int index = 0; index < 1024; index++)
     PauseOperation(pauseOperations[(Next() >> 16) % 6], (int)((Next() >> 16) % 13) - 2);
-File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic, eulers, smooth, rng, scaledRng, big, wide, pause,
-    nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }));
+File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic, eulers, smooth, rng, scaledRng, big, wide, pause, json = GdscriptJsonOracle.Build(),
+    startup = OnslaughtRebuild.TestSupport.GdscriptStartupScheduleOracle.Create(), chunkReader = GdscriptChunkReaderOracle.Build(),
+    scheduler = GdscriptEventSchedulerOracle.BuildFixtures(),
+    nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }, new JsonSerializerOptions { MaxDepth = 512 }));
 Console.WriteLine($"Oracle: {arithmetic.Count} numerical cases, {eulers.Count} generated bases, {nativeBasis.Length} native bases, {nativeSmooth.Length} native smooth fixtures, {smooth.Count} generated smooth cases, {rng.Count * 1024} RNG steps, {scaledRng.Count} scaled RNG cases, {big.Count} contact ratios, {wide.Count} wide integer pairs.");

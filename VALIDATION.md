@@ -143,6 +143,23 @@ supported headless smoke also passed after reimporting the worktree's private
 world scene: `local-data/first-flight/smoke-izxr9__1/` retains the same 2,148-step
 `53c1cc64…` hash, retry and return-to-menu behavior, with mission **Running**.
 
+The next GDScript foundation gate passed **970 JSON cases**, **7,134 startup
+schedule samples**, **269 chunk-reader operations across 52 scenarios**, and
+**370 scheduler operations across 31 scenarios**, including **362 snapshots**.
+The numerical/native-Euler and pause comparisons also passed in that run.
+JSON comparisons include exact int64 limits, escaped duplicates, Unicode/NUL,
+depth and malformed syntax, varied decimal doubles and exact halfway cases;
+they measure full string admission as well as explicit parse-stage boundaries,
+not merely lazy `JsonDocument.Parse` acceptance. Scheduler checks include
+callback interruption, reset/restore, pool exhaustion, wrap and mutation before
+failure. The parser modules and scheduler remain foundations for future live
+consumer ports; this receipt does not replace whole-game replay acceptance.
+Logs, unchanged C# expected words and reports are in the owned
+`local-data/test-runs/gdscript-parity-pfhk60nx/` directory. All six standard-engine
+check logs completed without errors; seven launcher checks passed.
+The existing C# scheduler/chunk selection also passed **51 tests**; its log is
+`local-data/test-runs/gdscript-pause-94vdiqq3/foundation-csharp.log`.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state
