@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, math-error ABI and selected round renderer admission)
+Last updated: 2026-09-19 (weapon query, math-error ABI and selected round initialization)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -945,9 +945,14 @@ renderer initializer at `0051654c`. The
 now closes that path under the default initialized table: Forseti Missile and
 Blaster select ordinary `CRound`, whose OID 4 has no entry. Twenty-two
 original-code controls distinguish that miss from a registered or deliberately
-inserted entry. This closes one conditional dependency; collision callbacks,
-other constructor effects and actual live state still prevent an exhaustive
-total. Do not omit the resulting Actor movement-event admission.
+inserted entry. The [selected collision initialization controls](collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+also show that the component reaches its initial scan unready, preventing its
+shared response from dispatching owner Hits there. The candidate-side filter
+set is statically bounded for ordinary Round arguments, as are renderer centre
+getters for valid retail objects. Neighbor speed providers, queue operations,
+other constructor effects and live state still
+prevent an exhaustive total.
+Do not omit the resulting Actor movement-event admission.
 
 Particle and sound randomness use separate CRT state: `0055dbfe` updates
 thread-data `+14` with `state * 0x343fd + 0x269ec3`, whereas shared gameplay

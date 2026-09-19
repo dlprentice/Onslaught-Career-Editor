@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, math-error ABI and round renderer registry; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, math-error ABI and projectile admission/readiness; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1379,6 +1379,57 @@ Documentation checks passed. The first public-payload check rejected the new
 encoded comments; all six were decoded and reviewed as analytic prose, then
 admitted by exact manifest hashes using the existing mechanism. Its unchanged
 mutation/path/secret refusal controls and the public-payload check passed.
+
+### Round collision initialization — September 19
+
+`python local-data/test-runs/round-collision-init-20260919/round_collision_init.py`
+passed **20 isolated original-code cases**. Six unchanged bodies cover Round
+collision Init, base/persistent Init, response, readiness event and the persistent
+mask filter. Every body and the original `0.05f` constant were checked against
+their executable ELF load mappings. The harness controls allocation, centre,
+radius, maximum speed, movement delta, shape selection, scan, geometry, event
+request and owner-Hit dependencies. It does not launch a game or open Ghidra.
+
+Selected delayed configuration reaches the controlled scan with flags `0x56`;
+its response is called but stops before geometry/Hits. Ready positive controls
+reach geometry and both ordered Hits. Event 2999 stays blocked; event 3000 and
+`0x12340bb8` restore readiness. Negative geometry, each ignore-pointer direction
+and each owner's dead flag distinguish their gates. The native persistent
+predicate admits peer type `02000000` for the selected Forseti mask and rejects
+it for Blaster; zero-type and Round-bit controls cover both masks. Radius is
+`1.75` during scan and `4.0` afterward, or `6.5` with controlled length `2.5`.
+These numeric inputs are synthetic controls, not retail observations.
+
+Saved stem:
+`local-data/test-runs/round-collision-init-20260919/run-_podygs2/round_collision_init`.
+The `.json` receipt SHA-256 is
+`dd3585729618177452d7e46c67cf634abd633a8aab24c3de8ca9113144c0e8d7`;
+ELF SHA-256 is
+`1dcd8bf138d8a0cd7c27333c5112b8edff5ea0f57bd80a74c505d251d5c88a43`.
+The driver, assembly, exact build commands, input cases and raw output remain
+beside it. Independent read-only review checked PE/ELF binding, all 20 saved
+outputs, callback ABI/order and protected storage; it did not rerun the code.
+Native helper padding at `+10/+20/+30` remains unconstrained.
+
+`python -B local-data/test-runs/round-collision-init-20260919/selected_static.py`
+separately rechecked the authored records and byte-bound factory/vtable chain.
+Its `selected-static-receipt.json` SHA-256 is
+`df835d4e0a7a96771c6f825bec2ba11da3132d6d7428cdf3deec3b4fdbf0fb79`.
+Blaster's nested type ID 3 reaches a getter returning 2; the Round prefix uses
+that result to add its extra exclusion bit. Both selected ordinary zero-radius
+Round definitions retain the default collision-readiness delay. The
+[collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+records the full contract and distinction between the native persistent
+predicate and concrete Round trajectory filter. The same static receipt and
+full bodies bind all five collision-component vtables and three distinct
+candidate-side filters; their paths for ordinary Round arguments reach no
+RNG or unresolved virtual call. This is static closure, separate from the
+20 native cases. Five compatible renderer tables additionally close the centre
+getters through four pointer-reading bodies, under the valid-object/resource
+preconditions recorded by the owner. Neighbor speed providers and queue
+operations remain open. Actual scanning, scheduler
+cadence, geometry/damage, full Round/Actor execution and total RNG consumption
+remain outside these controls; no campaign grade or parity assertion changes.
 
 ### Shared math-error Ghidra correction — September 19
 

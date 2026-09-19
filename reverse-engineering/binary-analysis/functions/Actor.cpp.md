@@ -3,7 +3,7 @@
 > Address: `0x004011e0`
 
 Status: active bounded static/runtime note — **RED for C2 promotion**
-Last updated: 2026-09-19 (selected round renderer admission; earlier Actor evidence retained)
+Last updated: 2026-09-19 (selected round renderer admission and collision readiness; earlier Actor evidence retained)
 Summary: exact retail `CActor__Init @ 0x004011e0` identity and two retained
 caller-family write observations are reproduced, but every observed return
 crosses a replay gap and the endpoint memory queries do not read back from the
@@ -326,6 +326,14 @@ Private inputs, commands, saved outputs and hashes are in
 No actual renderer, Actor Init, full projectile creation, startup, Windows
 runtime or game session executes in this experiment. Collision callbacks and
 the other constructor dependencies still prevent an exhaustive shot RNG claim.
+
+The subsequent [selected collision initialization controls](collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+close one of those callback paths: the selected Round component reaches its
+initial scan unready, so its shared response cannot dispatch owner Hits before
+Actor's draw. A separate static check closes the candidate-filter callback set
+for ordinary Round arguments, and bounds the renderer centre getters for valid
+retail objects. Neighbor speed providers and queue operations remain distinct
+unresolved dependencies.
 
 ### Construction and proof limits
 
