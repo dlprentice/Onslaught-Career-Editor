@@ -239,6 +239,14 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public void Initialize(WorldSnapshot snapshot)
     {
+        BindProductionScene(snapshot);
+        Render(snapshot, snapshot, 0f, 0f);
+    }
+
+    // Explicit import entry only. Runtime instantiates the resulting production
+    // scene and binds its existing nodes; editor inspection executes no code.
+    internal void BuildImportedScene(WorldSnapshot snapshot)
+    {
         Name = "WorldView";
         BuildLevel100Terrain();
         BuildEnvironment();
@@ -567,19 +575,18 @@ public sealed partial class FirstFlightWorldView : Node3D
 
         string name =
             $"RetailLevel100TargetActor{descriptor.ActorId.Value}";
-        var root = new Node3D
-        {
-            Name = name,
-            Transform = ToGodotTransform(descriptor),
-            Visible = descriptor.Visible,
-        };
-        root.AddChild(new MeshInstance3D
-        {
-            Name = $"{name}Geometry",
-            Mesh = mesh,
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-        });
+        Node3D root = ResourceLoader.Load<PackedScene>("res://Scenes/World/ActorPresentation.tscn")
+            .Instantiate<Node3D>();
+        root.Name = name;
+        root.Transform = ToGodotTransform(descriptor);
+        root.Visible = descriptor.Visible;
+        MeshInstance3D geometry = root.GetNode<MeshInstance3D>("Geometry");
+        geometry.Mesh = mesh;
+        root.SetMeta("actor_id", descriptor.ActorId.Value);
+        root.SetMeta("definition", descriptor.DefinitionName);
+        root.SetMeta("mesh_binding", descriptor.MeshBinding);
         AddChild(root);
+        SetEditableInstance(root, true);
         var visual = new Level100TargetVisual(
             descriptor.Binding,
             root);

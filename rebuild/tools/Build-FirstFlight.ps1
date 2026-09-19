@@ -48,6 +48,22 @@ try {
         throw "First Flight build failed with exit code $LASTEXITCODE."
     }
 
+    $projectRoot = Split-Path -Parent $projectPath
+    $sceneArguments = @('--headless', '--audio-driver', 'Dummy', '--path', $projectRoot,
+        'res://Scenes/World/ImportLevel100.tscn', '--', '--prepare-level100-scene')
+    $terrainProbe = [Environment]::GetEnvironmentVariable('ONSLAUGHT_TERRAIN_PROBE')
+    try {
+        [Environment]::SetEnvironmentVariable('ONSLAUGHT_TERRAIN_PROBE', $null)
+        & $toolchain.ConsolePath @sceneArguments | ForEach-Object { Write-Host $_ }
+        $sceneExitCode = $LASTEXITCODE
+    }
+    finally {
+        [Environment]::SetEnvironmentVariable('ONSLAUGHT_TERRAIN_PROBE', $terrainProbe)
+    }
+    if ($sceneExitCode -ne 0) {
+        throw "Level 100 production scene import failed with exit code $sceneExitCode."
+    }
+
     return $toolchain
 }
 catch {

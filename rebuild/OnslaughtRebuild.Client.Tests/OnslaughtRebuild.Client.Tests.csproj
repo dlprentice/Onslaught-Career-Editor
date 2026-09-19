@@ -189,6 +189,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world-animation.json"
              Link="Assets\Level100\StaticWorld\level100-static-world-animation.json"
              CopyToOutputDirectory="Always" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Hud\FirstFlightHud.tscn"
+             Link="godot-hud-layout-source\FirstFlightHud.tscn"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightHud.cs"
              Link="godot-hud-layout-source\FirstFlightHud.cs"
              CopyToOutputDirectory="PreserveNewest" />

@@ -37,6 +37,7 @@ public sealed partial class FirstFlightGame : Node3D
     private FirstFlightPauseMenu _pauseView = null!;
     private Level100HudAssetCatalog _hudAssetCatalog = null!;
     private RetailFrontendFlow? _frontend;
+    private Exception? _frontendInitializationError;
     private RetailCareerDescriptor? _selectedCareer;
     private bool _level100WorldCreated;
     private bool _gameplayActive;
@@ -98,11 +99,28 @@ public sealed partial class FirstFlightGame : Node3D
         _selectedCareer = selectedCareer;
     }
 
+    public override void _EnterTree()
+    {
+        // The production frontend is authored in Main.tscn. Initialize its data
+        // before its child _Ready, without moving gameplay into an editor tool.
+        _frontend = GetNode<RetailFrontendFlow>("RetailStartupFrontend");
+        _frontend.PlaybackRetirement = _audioRetirement;
+        try
+        {
+            _frontend.Initialize(RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs()));
+        }
+        catch (Exception error)
+        {
+            _frontendInitializationError = error;
+        }
+    }
+
     public override void _Ready()
     {
         GetTree().AutoAcceptQuit = false;
         try
         {
+            if (_frontendInitializationError is not null) throw _frontendInitializationError;
             ConfigureInputMap();
             ParseUserArguments();
 
@@ -114,15 +132,7 @@ public sealed partial class FirstFlightGame : Node3D
             AddChild(_audio);
             _hudAssetCatalog = Level100HudAssetCatalog.Load();
 
-            IReadOnlyList<RetailCareerDescriptor> careerDescriptors =
-                RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs());
-            _frontend = new RetailFrontendFlow
-            {
-                Name = "RetailStartupFrontend",
-                PlaybackRetirement = _audioRetirement,
-            };
-            _frontend.Initialize(careerDescriptors);
-            _frontend.CareerSelected += SelectCareer;
+            _frontend!.CareerSelected += SelectCareer;
             _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
             _frontend.Level100LoadRequested += LoadLevel100FromFrontend;
             _frontend.GameplayActivated += ActivateFrontendGameplay;
@@ -132,7 +142,6 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.CursorModeRequested += ApplyFrontendCursorMode;
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
             _frontend.OptionsSettingsChanged += ApplyOptionsSettings;
-            AddChild(_frontend);
             ApplyFrontendCursorMode(RetailFrontendCursorMode.Custom);
             if (FrontendCaptureRig.TryCreate(OS.GetCmdlineUserArgs(), _frontend, out FrontendCaptureRig? rig))
             {
@@ -863,15 +872,14 @@ public sealed partial class FirstFlightGame : Node3D
         }
 
         WorldSnapshot snapshot = _session.CurrentSnapshot;
-        _world = new FirstFlightWorldView();
+        _world = FirstFlightWorldView.InstantiateScene();
         AddChild(_world);
         _world.Initialize(snapshot);
         _audio.BindAquila(
             RequirePlayerAquilaActorId(snapshot.Level100Actors),
             snapshot.Level100Actors);
-        _hud = new FirstFlightHud();
+        _hud = FirstFlightHud.Create(_hudAssetCatalog);
         AddChild(_hud);
-        _hud.Initialize(_hudAssetCatalog);
         _hud.UpdateFromSnapshot(
             _session.CurrentSnapshot,
             _audio.CharacterMessagePlayback);
@@ -1530,11 +1538,9 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        var sequence = new RetailStartupSequence
-        {
-            Name = "RetailStartupSequence",
-            PlaybackRetirement = _audioRetirement,
-        };
+        var sequence = RetailStartupSequence.InstantiateScene();
+        sequence.Name = "RetailStartupSequence";
+        sequence.PlaybackRetirement = _audioRetirement;
         sequence.Initialize(
             RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
             // A capture run is deterministic by contract, so the sequence has to
@@ -1631,11 +1637,9 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        var sequence = new RetailStartupSequence
-        {
-            Name = "RetailAttractRestart",
-            PlaybackRetirement = _audioRetirement,
-        };
+        var sequence = RetailStartupSequence.InstantiateScene();
+        sequence.Name = "RetailAttractRestart";
+        sequence.PlaybackRetirement = _audioRetirement;
         sequence.InitializeForAttract(
             RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
             _captureArgumentsPresent

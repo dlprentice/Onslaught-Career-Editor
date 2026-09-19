@@ -166,7 +166,7 @@ public sealed partial class RetailFrontendFlow
     private void InitializeOptions()
     {
         _options = new RetailOptionsMenu(DescribeHost());
-        ApplyOptionsToHost();
+        if (!Engine.IsEditorHint()) ApplyOptionsToHost();
     }
 
     /// <summary>
@@ -204,6 +204,7 @@ public sealed partial class RetailFrontendFlow
     /// </summary>
     private void ApplyOptionsToHost()
     {
+        if (Engine.IsEditorHint()) return;
         DisplayServer.WindowSetVsyncMode(
             _options.Settings.VSync
                 ? DisplayServer.VSyncMode.Enabled
@@ -220,6 +221,7 @@ public sealed partial class RetailFrontendFlow
 
     private void DrawOptions()
     {
+        SelectSceneSection("Options.Content");
         // The Options pages carry the identical FEP_DEVSELECT chrome. That is
         // MEASURED, not assumed: differencing the two arc bands of
         // fep-options-root-640x480.png against every 640x480 pristine reference

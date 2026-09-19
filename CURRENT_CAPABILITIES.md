@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (native aircraft cache population measured; live render/camera context and firing integration remain open).
+Last updated: 2026-09-19 (rebuild editor scenes and Godot 4.8 dev6; existing RE and companion evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -308,6 +308,31 @@ generic automation workbench.
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
+
+**September 19 editor integration.** The rebuild builds on the exact
+`4.8.dev6.mono.official.8898c2b3d` engine and `Godot.NET.Sdk/4.8.0-dev.6`, retaining
+`net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
+selectable Controls and resources before Play. Main-menu rows and native image
+controls expose their layout; complex level graph, options and debriefing sections
+remain custom composite Controls with their C# drawing code available. Explicit
+editor display properties select frozen states without running simulation,
+playing audio or acquiring the pointer.
+
+The private Level 100 scene contains the actual terrain/materials, sky, water,
+static placements, pine instances, initial actors, camera and Aquila hierarchies.
+The build imports reusable world components from the existing production loaders;
+gameplay then binds those same saved nodes and resources. Geometry, texture bytes,
+selected animated poses and unchanged snapshot hashes passed the production
+round-trip check, including saved resources before runtime refresh. An isolated
+Godot editor opened and rendered the scene successfully. Imported faithful data
+is guarded against silent edits; generated retail scenes/resources remain private.
+The [scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies what to
+open, what to edit and what remains generated. The [validation receipt](VALIDATION.md)
+records executed checks and editor-harness diagnostics.
+
+This is rebuild presentation work. It does not complete the companion lane,
+full-combat Level 100, World 110, physical-input/audio, Windows or normal GPU
+acceptance. No desktop input or desktop capture was used.
 
 **September 6 native Linux evidence.** Godot 4.7.2 .NET built and ran through
 the native synthetic First Flight smoke with no Godot error. A separate normal

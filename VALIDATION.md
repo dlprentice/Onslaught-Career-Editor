@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (rebuild Godot 4.8 dev6 engine migration; earlier validation retained).
+Last updated: 2026-09-19 (rebuild Godot 4.8 dev6 and production editor scenes; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -66,6 +66,80 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### September 19 production scene migration
+
+The supported Linux build passed with zero warnings/errors and explicitly
+imported the private Level 100 scene. No Core simulation, snapshot format,
+gameplay constant or input tape changed in this presentation migration.
+Executed focused selections passed **112 Core replay/camera/headless/recorder/
+scheduler tests**, **101 world Client tests** (one existing captured-water skip),
+**114 HUD tests**, **319 frontend tests** (one existing font-capture skip),
+**53 startup tests**, **8 pause tests**, and **24 Save Lab/backend gate tests**.
+These selections overlap; they are not a broad-suite census or new retail parity
+receipt. The rebuild launcher suite now passes **20** cases, including explicit
+world import and stripping diagnostic terrain probes only from the import process.
+
+Actual Godot scene checks passed for frontend, startup, HUD and pause, including
+authored layout round-trips, frozen editor state, production asset binding and
+preventing private pixels from being serialized into public UI scenes. The world
+check passed **23,864 assertions**: saved geometry and texture bytes before
+runtime binding, no second world construction, selected snapshot poses, separate
+retry materials/terrain, pointer preservation and unchanged simulation hashes.
+The import receipt was verified after those checks. Logs live in this branch's
+`local-data/editor-48/checks/`, `local-data/hud-editor/`, `local-data/pause-*`
+and `local-data/frontend-render-20260919/`; source checks live beside their
+production scenes under `rebuild/OnslaughtRebuild.Godot/Scenes/`.
+
+For the world check, after the supported build:
+
+```bash
+python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 90 \
+  --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy \
+  --engine-arg=res://Scenes/World/WorldSceneChecks.tscn
+```
+
+The same launch form accepts `res://Scenes/Hud/Tests/HudSceneChecks.tscn` or
+`res://Scenes/Pause/Tests/PauseSceneChecks.tscn`. For the frontend and startup,
+use `--engine-arg=--script` followed by
+`--engine-arg=res://Scenes/Frontend/Tests/frontend_scene_checks.gd` or
+`--engine-arg=res://Scenes/Frontend/Tests/startup_scene_checks.gd`.
+Those two scripts also accept `--engine-arg=--editor` for tool-mode checks;
+the HUD has a separate `res://Scenes/Hud/Tests/hud_editor_checks.gd` editor script.
+Each launcher invocation owns fresh local output and a separate user profile.
+Use an available desktop or a properly isolated display for rendered checks;
+never reuse the user's desktop implicitly.
+
+Isolated software-rendered checks inspected main menu, career, level selection,
+briefing, configuration, loading, options, startup splash, HUD at two sizes and
+pause/confirmation. An actual isolated editor opened the private Level 100 scene,
+passed eight hierarchy/safety assertions and captured its native 3D viewport.
+Runtime scene-check logs are clean. The `--editor --script` harness reports
+progress-dialog/current-window warnings and teardown RID/ObjectDB diagnostics;
+the HUD harness's teardown counts also occur with an empty editor-script control.
+These are recorded limitations, not a claim of clean interactive editor shutdown.
+No software capture proves normal GPU performance, physical input or audible audio.
+
+The headless and isolated 640×480 software-rendered Godot smokes completed
+startup/menu/gameplay/retry/return and passed the existing full
+`Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state
+matches the current Client oracle, which also passed separately. The validator's
+old `bc5d99c7…` pin predated already-committed simulation/definition changes. It now
+uses the existing `53c1cc64…` oracle in
+`InteractiveSessionTests.FirstFlightSmokeScenario_ReachesFiringRangeAndCompletesWaypoint`.
+That test retains gameplay assertions, compares definition-format 7 every tick
+after an identity-only substitution and recovers both format-6 and format-7
+fingerprints. The earlier causal receipt below remains the explanation of those
+changes; the scene migration introduces no new simulation hash. No assertion or
+driver constant was relaxed. The smoke ends with mission **Running**, not Won.
+The rendered host recorded its actual 2,148-step command tape; two Headless
+replays verified both embedded live trace and final-state hashes with no
+divergence (`rendered-smoke-tape.json`, `rendered-smoke-replay.log` under the
+check directory). The isolated X server reported unavailable input-method and
+V-Sync support; no Godot runtime error was reported. An earlier 1280×720 software
+attempt hit its 180-second bound and was cleaned up; reducing capture resolution
+changed no driver inputs or simulation budget.
+Full startup-to-combat-completion and Windows execution remain unresolved.
 
 The retained Windows `test:winui` builds one WinUI solution, then runs selected
 AppCore contracts, UI tests excluding `WinUIRuntime`/`LegacyWpf`, and CLI tests.

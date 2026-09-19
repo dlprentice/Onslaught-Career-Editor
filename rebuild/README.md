@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-19 (Godot 4.8 dev6 engine and managed package pins).
+Last updated: 2026-09-19 (Godot 4.8 dev6 and production scene architecture).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -177,8 +177,9 @@ checkout's `local-data/first-flight/`; every invocation has its own profile.
 `--output-root` may name a fresh directory under this checkout's `local-data/`.
 Individual input file links leave adjacent Godot import files checkout-local.
 `--no-build` reuses the
-managed build; `--no-prepare` also skips asset validation/preparation and therefore
-requires already current inputs. Engine flags use `--engine-arg=VALUE`; game
+managed build; `--no-prepare` also skips asset validation and the production scene
+import, so it requires current inputs and an import made with the current build.
+Engine flags use `--engine-arg=VALUE`; game
 arguments follow a separate `--`. The launcher stops only its own process group
 on exit, interruption or timeout.
 
@@ -213,6 +214,67 @@ The previous [4.7.1 manifest](toolchains/godot-4.7-stable-win-x64.json) is retai
 for recovery and is rejected by current setup. The unused Windows VM staging was
 retired on September 12; Windows acceptance needs a separately provided Windows
 environment. Linux development continues natively.
+
+### Inspect and edit in Godot
+
+Build first with `npm run build:rebuild-godot`, then open
+`rebuild/OnslaughtRebuild.Godot/project.godot` in the pinned .NET editor. The build
+imports the actual production world headlessly after compiling. In a worktree,
+set `BEA_LOCAL_LAB` to the canonical lab as described above. Opening a scene does
+not start simulation, play startup movies, acquire the pointer or read/write saves.
+Use these scenes from Godot's FileSystem dock:
+
+| Scene relative to the Godot project | What is present before Play |
+| --- | --- |
+| [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
+| [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | Black surround, actual movie/splash TextureRects and an inactive audio node. `EditorCue` reads one real frame or splash from the canonical media cache; it never plays it. |
+| [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | Production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. Editor display values feed presentation only. |
+| [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Overlay, rotating circles, root rows and confirmation frame/rows. Preview controls choose an inspectable state without running the pause controller. |
+| `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
+| `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
+
+These are the gameplay definitions. The game binds its existing C# presentation
+controllers to these nodes; it does not build an approximate second preview.
+The deterministic Core remains the single simulation owner. Actor poses, camera
+timing, terrain LOD, animation and transient effects continue to update through
+the existing adapters. The public actor scene supplies later spawned actors.
+
+Edit UI Control positions, sizes, text, resource routes and base appearance in
+their scenes. Frontend text keeps imported localization by default; an explicit
+`OverrideText` enables a deliberate authored replacement. HUD `Base`, `Glow` and
+`Text` groups expose the measured blend passes; corresponding halves of an
+instrument are separate selectable controls, with imported `Part`/`SourceRect`
+identity read-only in the Inspector. Narrow C# controls retain the measured bitmap-glyph and compositing
+laws where replacing them with a generic widget would change the image. They
+remain ordinary selectable Controls; their script and exported properties are
+available in the editor. Runtime animation applies its existing state over those
+definitions. Preview state is explicitly separate from game state, with no second
+simulation or per-object cross-language bridge.
+The level graph, options and debriefing are composite Controls: move or resize
+their section in the 2D editor and inspect their drawing/interaction code for
+internal layout. They are not yet individual native controls for every row.
+
+The tracked scenes contain code, layout and asset recipes, not retail pixels.
+Private atlas binding is transient: saving a public UI scene does not serialize
+the decoded texture. Generated world scenes/resources remain ignored. Their
+import receipt checks the build identity and each output file; faithful runtime
+refuses modified or stale generated files. A deliberate enhanced variation must
+be saved separately as private work, not silently substituted for imported defaults.
+Preserve it before regenerating. Scene transforms never become Core spawn data.
+
+All conversion lives in the explicit `ImportLevel100.tscn` import entry. Opening
+that scene in the editor performs no import; playing it without the explicit
+preparation argument only prints instructions. The supported build/run launcher
+owns preparation and verifies current files. Rebuild after code changes before
+using `--no-prepare`. Native physics bodies do not replace the custom simulation.
+
+Frontend/HUD/pause editor previews need the prepared private textures and compiled
+C# assembly. Missing data is reported rather than replaced with invented retail
+content. Runtime effects and later spawned actors naturally appear during play;
+their reusable definitions remain available in source and resources. Full combat
+completion, physical input/audio and normal GPU performance retain the acceptance
+limits stated below. Companion editor work belongs to its separate lane.
 
 ### Engine updates and recovery
 

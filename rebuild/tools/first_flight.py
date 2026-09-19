@@ -83,6 +83,18 @@ def _runtime_command(
     return command
 
 
+def _prepare_world_scene(engine: Path, project: Path, output: Path, env: dict[str, str]) -> None:
+    # Explicit offline import, with no game bootstrap or editor tool callbacks.
+    # Every generated resource remains under this checkout's ignored Assets.
+    import_env = dict(env)
+    import_env.pop("ONSLAUGHT_TERRAIN_PROBE", None)
+    run_process([
+        str(engine), "--headless", "--audio-driver", "Dummy", "--path", str(project),
+        "--log-file", str(output / "level100-import.log"),
+        "res://Scenes/World/ImportLevel100.tscn", "--", "--prepare-level100-scene",
+    ], cwd=project, env=import_env, timeout=PREPARATION_TIMEOUT)
+
+
 def _validate_smoke_completion(output: Path) -> None:
     # Window closure can exit zero before CompleteSmoke writes its report.
     # Require the completed lifecycle; this is not a pixel/audio parity gate.
@@ -115,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--game-root", type=Path, help="retail installation; otherwise discover Linux Steam")
     parser.add_argument("--no-build", action="store_true", help="run the existing managed build")
     parser.add_argument("--no-prepare", action="store_true",
-                        help="reuse prepared assets and startup media without validation or materialization")
+                        help="reuse prepared assets, production scenes and startup media without importing")
     parser.add_argument("--output-root", type=Path, help="fresh directory below this checkout's local-data")
     parser.add_argument("--timeout", type=float, help="runtime limit in seconds (smoke: 75; capture: 300)")
     parser.add_argument("--engine-arg", action="append", default=[], help="Godot option; use --engine-arg=VALUE")
@@ -166,6 +178,8 @@ def main(argv: list[str] | None = None) -> int:
                 _prepare(game_root, media_root, cwd=materializer.ROOT, env=env)
             if not args.no_build:
                 build_project(project, engine, env)
+            if not args.no_prepare:
+                _prepare_world_scene(engine, project, scratch_owner, env)
             if args.mode == "build":
                 return 0
             assert media_root is not None

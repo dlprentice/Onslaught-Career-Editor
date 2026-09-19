@@ -181,9 +181,13 @@ npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
-The launchers put scratch, logs and engine user data under canonical
-`local-data/companion/` or `local-data/first-flight/`, including from a Git worktree.
-[`rebuild/README.md`](rebuild/README.md) documents runtime modes, input and recording.
+The rebuild launcher puts scratch, logs and engine user data under this checkout's
+`local-data/first-flight/`. Worktrees read the canonical lab but own their generated
+production scenes and engine imports. The companion retains its separate launcher.
+Open `rebuild/OnslaughtRebuild.Godot/project.godot` with `godot48-mono` after building;
+the [editor scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies the
+frontend, HUD, pause and private Level 100 scenes, their editable properties and
+the faithful-data boundary. The same guide covers runtime modes, input and recording.
 `npm test` runs the supported Save Lab and launcher checks without opening a window.
 Core/Client changes use their focused test projects, as mapped in `VALIDATION.md`.
 
@@ -191,9 +195,9 @@ The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`;
 `test:appcore`, `test:ui`, `test:cli` and `release:winui-zip` also retain Windows
 dependencies. `tools/require_windows_host.py` makes Windows-only scripts fail fast
 on Linux; they are not Linux prerequisites.
-Historical Windows rebuild launchers have explicit `:windows` aliases; their
-older engine manifest needs revalidation against the current managed SDK before
-new Windows acceptance. This phase does not activate the VM.
+Historical Windows rebuild launchers have explicit `:windows` aliases and now pin
+the matching 4.8 dev6 engine/SDK. Their archive manifest was verified on Linux;
+Windows execution remains unverified. This phase does not activate the VM.
 
 ## Data and mutation safety
 
