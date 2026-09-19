@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (native aircraft cache population and render-stamp ownership; earlier validation retained).
+Last updated: 2026-09-19 (isolated retail weapon-query arbitration; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1038,6 +1038,61 @@ Plane/Move scheduling, burst delivery, automatic acquisition or geometry is test
 attachment and line-query findings to exact bytes and the freshly hashed physics
 records. [The Unit owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)
 records the consequences and remaining production work.
+
+### Weapon line-query arbitration — September 19
+
+`python local-data/test-runs/weapon-query-20260919-4al_wt70/query_arbitration.py`
+passed **53 scenarios / 106 original-code calls**, each scenario under PC24/RN
+(`007f`) and PC53/RN (`027f`). The selected pristine executable was freshly
+verified as 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The unchanged 1,256-byte query `[0050b030,0050b518)` hashes to
+`bca08a3dabe410117feccb3538fbce08599f791794f6654555b685781b39ac2d`.
+The array constructor `[004011b0,004011da)`, vector constructor
+`[00402d20,00402d23)` and iterator-node conversion `[00492c90,00492c94)`
+also execute unchanged at their retail addresses. All four bodies were compared
+against pristine bytes through the ELF's actual load mappings.
+
+The script creates a fresh private output directory on each invocation. The
+recorded successful stem is
+`local-data/test-runs/weapon-query-20260919-4al_wt70/run-njtb3uk6/query_arbitration`;
+the ELF, assembly, `.inputs.bin`, `.outputs.bin`, `.stderr.txt` and `.results.json`
+share it. The earlier 44- and 51-scenario outputs are preserved in sibling run
+directories. The first assembler attempt rejected macro operands before any
+original-code execution; its assembly remains in the parent directory.
+
+Independent read-only review reconciled all 106 saved binary records with the
+JSON, complete result words, input immutability and exact cross-kind traces,
+including stub values and retail return addresses. It separately parsed the PE
+and ELF load mappings; it did not rerun the experiment. The final result JSON is
+104,683 bytes, SHA-256
+`62f8ce270675ab79114ff7359d64e5afc9be57e95cd7039adbbdcb1f2ff3c9d1`.
+The same private parent owns `docs-final.log` and `safety-final.log` for the
+documentation and public-payload gates.
+
+Every call checks four output words, returned status, unchanged synthetic
+receiver/input bytes outside the output record, preserved nonvolatile registers
+and stack, restored SEH chain, retained control word, empty x87 stack and absence
+of invalid-operation/stack faults. FS checks cover normal return only, without
+exceptions or unwinding. Stub checks cover the passed line, terrain flag,
+iterator endpoints, translated broad centre and refined translation, plus ordered
+candidate visits and geometry/radius/refinement calls. Reversed order and paired
+boundary cases distinguish strict proxy admission from inclusive refined ties;
+other controls cover masks, exact collision low-bit equality, missing collision/
+child, negative proxy, the initial 99999 distance limit, refined-to-broad subhit
+replacement, and output-field retention on miss/terrain/early stop. A filtered
+candidate followed by an early-stop hit also checks iterator progress. The
+initial fixture's next-call expectation did not cover that combination; it was
+replaced with complete expected call sequences before adding the case.
+
+Terrain, candidate enumeration, collision/bounds lookup, radius, broad geometry
+and refined geometry are **supplied stubs**. The result establishes arbitration
+over those inputs. It does not validate the geometry, actual world enumeration,
+Weapon B's complete caller, nonfinite behavior, gameplay, Ghidra metadata or the
+rebuild implementation. The supplied integer-distance cases do not establish
+general PC24/PC53 equivalence. No desktop or production source was used.
+The [existing Unit/weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-line-query-arbitration-and-retained-result-fields)
+records the resulting contract and remaining questions.
 
 ### UnitAI exit comment correction — September 12
 

@@ -1,16 +1,18 @@
 # CComplexThing function map
 
-Status: active static function map
-Last updated: 2026-09-12 (aircraft model inputs, native cache population and render-stamp ownership)
+Status: active static and isolated-code function map
+Last updated: 2026-09-19 (weapon line-query arbitration and output ownership)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
-including the bounded angle-update, matrix and controller arithmetic evidence.
+including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — every byte below was re-read from the pristine specimen at
-file offset VA − 0x400000 with `tools/disasm_va.py`; whole-image scans by
-`tools/call_xref_scan.py`. Architecture from pinned GPL
+Evidence: MEASURED — dated static findings and isolated original-code experiments;
+their individual scopes and receipts are identified below. Earlier static work
+used `tools/disasm_va.py` and `tools/call_xref_scan.py`; the September 19 query
+experiment verifies original bodies in actual ELF load mappings with the PE
+section-aware reader. Architecture from pinned GPL
 `references/Onslaught/thing.cpp` / `thing.h` (lines cited). Function names are
 the dated Ghidra readbacks; current name authority remains in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
@@ -527,6 +529,75 @@ Vulcan/Blaster needs it. The model mount inputs below are recovered; live pose
 evaluation and collision results remain required before replacing centre launch.
 The [composition validation](../../../VALIDATION.md#common-controller-and-unit-weapon-composition--september-12)
 records raw body identities and the private static receipt.
+
+#### Weapon line-query arbitration and retained result fields
+
+The complete query `[0050b030,0050b518)` was executed unchanged on September 19
+against the pristine specimen identified above. **53 finite-input scenarios /
+106 calls** passed, with each scenario using PC24/RN and PC53/RN. Terrain,
+ordered candidate supply, collision lookup/bounds, virtual radius and broad/refined
+geometry are explicit stubs. The query, array/vector construction and iterator-node
+conversion are original instructions; this is an isolated arbitration experiment,
+not a retail world or geometry test. [Validation](../../../VALIDATION.md#weapon-line-query-arbitration--september-19)
+owns the command, private outputs, byte identities and checks.
+
+The historical name `CWorld__FindFirstThingToHitLine` is not a uniform
+nearest-contact rule. After a supplied broad hit, the query computes the
+distance from line start to `Thing.position + bound.centre`, stores it as a
+float, subtracts virtual `+44`'s radius and stores the resulting **proxy distance**
+(`0050b2a6..0050b2f4`). For finite values this must be strictly less than the
+terrain distance, when present, and the current object's saved distance, when
+present (`0050b2f8..0050b31e`). A proxy tie rejects the candidate before refinement.
+The stored distance for a broad-only winner is this proxy, including negative
+values; it is not the line's geometric intersection distance.
+
+Refinement is selected when query mode is 2, or when
+`(collision.flags & 0x0c) == 8` and the child-mode argument equals 1. A null
+child collider falls back to broad acceptance. Otherwise its virtual `+10`
+must return nonzero; the query computes a new distance from its supplied contact
+point (`0050b42b..0050b473`). This refined distance may **equal** terrain and the
+saved incumbent distance (`0050b479..0050b495`). The latter starts at `99999.0f`:
+without terrain, an initial refined contact beyond that value is rejected, while
+an initial broad-only proxy beyond it can win.
+
+| Ordered supplied results | Observed winner |
+| --- | --- |
+| Broad A proxy 10; broad B proxy 10 | A; reversing order makes B win |
+| Broad A proxy 10; refined B proxy 9, contact distance 10 | B |
+| Same setup, B contact distance 11 | A |
+| Broad A proxy 10; refined B proxy 10, contact distance 9 | A; B's refinement is never called |
+| Terrain distance 10; refined proxy 9, contact distance 10 | Object |
+| Terrain distance 10; broad proxy 10 | Terrain |
+
+Result ownership also matters. Miss writes status 0 and retains preexisting
+object, subhit and distance. Terrain writes status 1 and distance, retaining
+object/subhit. Normal object selection writes all four fields: object pointer,
+subhit (`ffffffff` for broad-only), status 3 and selected distance. An accepted
+stop-early query writes **only status 3**; it retains the previous other fields,
+including terrain distance if terrain was found earlier. It returns without
+advancing the iterator. Callers must not treat those retained fields as a fresh
+object/contact result.
+
+The measured filters precede bounds/geometry: ignored pointer, Thing flag
+`+2c & 10`, any rejected type bit, no required type bit, absent collision,
+no collision flag bit in `c0`, then Thing flag `+2c & 4` unless type `+34 & 100`.
+The required mask and collision `c0` tests require **any**, not every, bit.
+Radius is returned through x87 ST0. Constructor `00402d20` does not initialize
+the local collision-result bytes; the child result is consumed only after
+the relevant callback succeeds.
+
+For the previously inspected Weapon B caller at `005090ea`, stop-early is zero,
+reject mask is 4, required mask is `ffffffff`, and the terrain flag is 1.
+Query mode is 1; its child-mode argument is zero for target type bit `100`,
+otherwise one.
+Its static post-query admission still requires a nonnull Unit with the target's
+allegiance, not pointer identity with the target. The new experiment does not
+execute that caller. Actual iterator ordering, geometry, endpoint generation,
+nonfinite inputs and live combat remain open. These finite, mostly exact-distance
+cases do not establish general agreement between the two precision settings.
+An implementation must preserve
+this mixture of proxy and contact distances and the unequal tie rules rather
+than substituting a generic nearest-sphere sweep.
 
 #### Selected aircraft weapon mounts and runtime pose inputs
 
