@@ -278,6 +278,16 @@ event. Its owned receipt is
 Outcome was still `Running`, terminal state `None`; this is not a complete
 combat victory. World import wrote only this worktree's private generated scenes.
 
+The complete GDScript state serializer passed **55 C# snapshot envelopes**:
+**31 exact canonical payloads/hashes** across schemas **42–48**, with the
+remaining envelopes refusing invalid state. Checks retain equal-key sort order,
+Int64 limits, raw UTF-16, all mission-event arms, raw Plane words and detached
+source/output buffers. The existing 40-step `SimulationTests` fingerprint
+`0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d`
+is unchanged. This is `--check state-hash`, with evidence in
+`local-data/test-runs/gdscript-parity-n1072_a7/`; it establishes canonical
+serialization, not GDScript simulation stepping or restore behavior.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state

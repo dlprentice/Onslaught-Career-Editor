@@ -189,7 +189,19 @@ rehash them would change the recording's memory contract. Differential checks
 compare chunked and non-consuming reads with .NET and the native Godot digest,
 including padding boundaries and detached source/result buffers. This is
 content-identity support, not cryptographic-module certification or a claim
-that the complete simulation/state serializer has been converted.
+that the complete simulation has been converted.
+
+`Core/state_hasher.gd` now serializes the complete existing schemas 42–48 from
+detached snapshot facts. It preserves signed and unsigned widths, raw float
+words, BinaryWriter string behavior, schema selection and each collection's
+source order. Sorts with equal keys retain encounter order explicitly: Godot's
+unstable sort cannot substitute for LINQ's stable ordering. Missing nullable
+fields are refused rather than treated as null. The same raw-plane/base-state
+admission happens before emitting an accepted checksum. Synthetic envelopes
+exercise the serializer; acceptance by a serializer does not prove a valid
+simulation restore. Its focused C# comparison covers 55 snapshot envelopes,
+including the unchanged 40-step `SimulationTests` fingerprint and all seven
+schemas. The live C# runner remains the caller until its own port is validated.
 
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:

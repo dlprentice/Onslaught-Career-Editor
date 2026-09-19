@@ -43,7 +43,8 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
-wide-integer arithmetic, canonical binary writing, the replay trace hash stream,
+wide-integer arithmetic, canonical binary writing, the complete state serializer,
+the replay trace hash stream,
 the command-tape codec and cursor, event scheduler, resident chunk framing and
 strict JSON with exact decimal-to-binary64 conversion. These scripts have no
 scene, input, filesystem or clock responsibilities. They are ordinary editable
@@ -77,8 +78,12 @@ simulation/replay consumers are converted.
 
 The replay hash stream preserves schema 4 entry bytes and non-consuming hash
 reads. Its bounded SHA-256 state can be copied without retaining a session's
-entire history. This is a migration foundation; the live simulation's complete
-state serializer and replay runner are still C#.
+entire history. `Core/state_hasher.gd` also writes the complete existing schema
+42–48 snapshot envelope and computes the same hash. Its explicit field order,
+widths, stable sorting and raw-plane checks pass differential fixtures,
+including the existing fixed 40-step fingerprint. It consumes detached typed
+facts; it does not restore or step a simulation. The live simulation and replay
+runner still call the C# owners until those consumers are converted.
 
 `Client/message_panel.gd` preserves the existing measured 25-column wrap,
 three-line scrolling window and 40-character-per-second reveal. Its lines use

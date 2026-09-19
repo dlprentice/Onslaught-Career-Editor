@@ -36,6 +36,7 @@ CHECKS = (
     ("message-panel", "message_panel_checks.gd", ["wrap_window", "reveal", "boundary"], 30),
     ("hud-presentation", "hud_presentation_checks.gd", ["hud_presentation"], 30),
     ("startup-media-batch", "startup_media_batch_checks.gd", ["startup_media_batch"], 30),
+    ("state-hash", "state_hash_checks.gd", ["state_hash"], 60),
 )
 
 
@@ -95,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         items = ET.SubElement(project, "ItemGroup")
         ET.SubElement(items, "ProjectReference", Include=str(ROOT / "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParityOracle.cs"))
-        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs", "GdscriptInvariantFormatOracle.cs", "GdscriptReplayOracle.cs", "GdscriptStartupMediaOracle.cs", "GdscriptCommandTapeOracle.cs", "GdscriptMessagePanelOracle.cs", "GdscriptHudPresentationOracle.cs", "GdscriptStartupMediaBatchOracle.cs"):
+        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs", "GdscriptInvariantFormatOracle.cs", "GdscriptReplayOracle.cs", "GdscriptStartupMediaOracle.cs", "GdscriptCommandTapeOracle.cs", "GdscriptMessagePanelOracle.cs", "GdscriptHudPresentationOracle.cs", "GdscriptStartupMediaBatchOracle.cs", "GdscriptStateHashOracle.cs"):
             ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport" / helper))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/RetailStartupMediaIndex.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessagePlaybackState.cs"))
