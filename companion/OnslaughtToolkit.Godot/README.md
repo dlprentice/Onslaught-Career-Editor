@@ -11,8 +11,9 @@ rebuild. The September 19 migration uses standard Godot and typed GDScript for
 presentation, save decoding, edit planning, comparisons and media inventory.
 
 The one production C# exception is the explicitly packaged
-[protected file bridge](../OnslaughtToolkit.FileBridge/README.md), authorized after
-review demonstrated missing Godot APIs. It links two existing MIT safety files
+[protected file bridge](../OnslaughtToolkit.FileBridge/README.md), within David's
+permission to retain C# where necessary. Review demonstrated that Godot's exposed
+APIs cannot preserve the required file guarantees. It links two existing MIT safety files
 unchanged and performs protected reads/publication only. Its self-contained runtime
 requires no installed .NET on the user's machine. There is no Godot .NET dependency,
 C# save codec or undisclosed service. Removing the helper disables save operations;
@@ -30,6 +31,8 @@ labels, layout and presentation in the Inspector. The shared
 scenes handle behavior, rather than constructing the interface at runtime.
 Tree rows are populated from selected user data. No retail assets or saves are
 bundled, and the app does not automatically open the regression fixture.
+GDScript `.uid` files are tracked editor metadata; the actual source project also
+passed a headless standard-editor import with the retained C# references present.
 
 From the repository or this lane's worktree:
 

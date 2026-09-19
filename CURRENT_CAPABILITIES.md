@@ -37,7 +37,8 @@ read-only media browser inventories an explicitly selected local folder with
 bounded traversal, link skipping and partial-result reporting; it does not play media.
 
 The disclosed [FileBridge](companion/OnslaughtToolkit.FileBridge/README.md) is the
-bounded C# exception authorized after reviewing Godot's missing OS guarantees.
+bounded C# exception permitted where necessary; review established Godot's missing
+OS guarantees.
 It links existing safety source unchanged and bundles its runtime. Save decoding,
 edit planning, byte comparison and UI remain GDScript. There is no Godot .NET or
 C# save-codec dependency and no unchecked write fallback. Linux publication retains
@@ -55,8 +56,14 @@ passed. The owned fixture and logs are in canonical
 rendered the actual scene's preview, successful publication receipt, career
 inspector, comparison and media view; captures/logs are in
 `local-data/companion/gdscript-render-p5wuchkj/`. It used no physical-desktop input
-or screen capture. These are automated scene/render checks, not human usability
-or audio acceptance. The C# shell's September 6 result remains historical.
+or screen capture. The exported Linux package then passed actual file-dialog and
+button input on an isolated virtual display using its bundled sibling helper:
+selected edit, verified publication, conflicting-destination refusal, unchanged
+recovery copy and reopening. The independent comparison found only the intended
+three bytes changed, with the original and every unselected byte preserved.
+Receipts and captures are in `local-data/companion/export-acceptance-nx_j5ynz/`.
+These are automated runtime checks, not human usability or audio acceptance.
+The C# shell's September 6 result remains historical.
 
 Windows cross-export and package inspection are recorded in the companion
 [validation section](VALIDATION.md#native-companion-migration--september-19).

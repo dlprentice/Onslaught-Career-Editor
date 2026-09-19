@@ -1331,10 +1331,37 @@ in the companion's `toolchain.json`, verified against the shared installation.
 
 Use `npm run export:companion-godot -- --platform both` for standard Linux/Windows
 x86_64 packages with separate self-contained file-bridge directories and licenses.
-Package existence/inspection is cross-export evidence only. Windows execution,
-its retained guarded staging handoff and human platform acceptance remain open.
-No VM, release or hosted CI is part of this gate.
-The September 19 Linux and Windows packages were produced in canonical
+The September 19 packages are in canonical
 `local-data/companion/gdscript-export-pdsz2xf4/packages/`. The final scene suite
 also passed against that staged source and its packaged helper after the result
 scroll/column-label changes: `local-data/companion/gdscript-final-scene-lfre5ykz/`.
+
+The exported Linux application passed a separate actual-input workflow on isolated
+Xvfb with software OpenGL. XTest events reached only that virtual display. The
+real file dialog opened an owned golden-fixture copy; controls selected Aircraft
+3221 → 123456, displayed the byte preview, explicitly published and reopened the
+result, refused an existing destination, created an unchanged recovery copy, and
+opened that verified copy as the next source. An independent byte comparison found
+exactly offsets `0x23F6`–`0x23F8` changed; all 10,004 bytes of the original and
+recovery matched, and all unselected/packed bytes in the edited copy were preserved.
+The source SHA-256 is `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`;
+the edited SHA-256 is `84fee8d5db1967b38788e363e314be5dce2c1ef276cbc11fd5fa12eb2f43a51e`.
+`ONSLAUGHT_FILE_BRIDGE` was unset, `PATH` was `/usr/bin:/bin`, and `DOTNET_ROOT`
+pointed to a nonexistent directory, exercising the sibling self-contained helper.
+Receipts and own-display captures are in
+`local-data/companion/export-acceptance-nx_j5ynz/`. The app and virtual server were
+stopped after the check. Only virtual input-method/V-Sync warnings occurred.
+
+Both package hash inventories verified all 194 listed files. The Linux inventory
+covers 152,222,368 bytes and Windows 185,773,971 bytes, excluding the inventory
+file itself. ELF/PE x86_64 identities, runtime 8.0.30 and licenses were inspected.
+Mounted package resource views contained no legacy C# project, tests, saves,
+retail or GPL rebuild payloads. This is Windows cross-export/package evidence;
+Windows execution, its retained guarded staging handoff, human usability and
+audio acceptance remain open. No physical desktop, VM, release or hosted CI was
+used.
+
+The original worktree project also passed a headless standard-editor import,
+including its retained C# reference files. Its ten GDScript UID files are tracked
+so opening the source preserves stable editor identities. Import receipt:
+`local-data/companion/gdscript-source-editor-o1jyr6ug/logs/source-import.log`.
