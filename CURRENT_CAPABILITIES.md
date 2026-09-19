@@ -21,14 +21,14 @@ Git and their dated evidence owners; they are not current operating instructions
 
 The active preservation app is the Godot companion; retained WinUI source supplies
 migration material. The native companion owns GDScript save behavior and links
-existing AppCore file-safety source through its explicit helper. Full retail RE,
+existing AppCore file-safety source through its in-process C# adapter. Full retail RE,
 the 1:1 Godot rebuild and the Godot toolkit companion remain
 coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
 ## Godot Save Lab — first workflow
 
 The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) now uses native
-typed GDScript and standard **Godot 4.8.dev6.official.8898c2b3d**. Its main scene,
+typed GDScript and **Godot 4.8.dev6.mono.official.8898c2b3d**. Its main scene,
 category-row scene, media scene and theme are editable in the Godot editor.
 It opens a protected real-career snapshot, explains identity/known/unknown data,
 previews explicitly selected counts, and writes/reopens a separate verified copy.
@@ -36,37 +36,41 @@ Unchanged recovery copies and full byte comparison are also implemented. The
 read-only media browser inventories an explicitly selected local folder with
 bounded traversal, link skipping and partial-result reporting; it does not play media.
 
-The disclosed [FileBridge](companion/OnslaughtToolkit.FileBridge/README.md) is the
-bounded C# exception permitted where necessary; review established Godot's missing
-OS guarantees.
-It links existing safety source unchanged and bundles its runtime. Save decoding,
-edit planning, byte comparison and UI remain GDScript. There is no Godot .NET or
-C# save-codec dependency and no unchecked write fallback. Linux publication retains
+David clarified that necessary C# should run inside Godot's .NET edition. The
+thin [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
+adapter links existing safety source unchanged. Save decoding, edit planning,
+byte comparison and UI remain GDScript. There is no helper process, JSON protocol,
+C# save codec or unchecked write fallback. Normal Godot .NET exports bundle their
+runtime. Linux publication retains
 no-follow handles, physical identities, unnamed staging and no-clobber linking.
 Malformed/changed inputs and conflicting outputs are refused; uncertain publication
 never becomes a success receipt or an automatic deletion.
 
-**September 19 executed Linux evidence:** `npm test` completed the native byte
-suite, actual scene/control workflow, protected unchanged round trip, independently
-checked selected edits, reopen and comparison, missing-helper and malformed-receipt
-refusals, plus media fixture checks. All **17** protocol cases passed, including
-six transaction race/failure scenarios, and all **12** companion tooling cases
-passed. The owned fixture and logs are in canonical
-`local-data/companion/gdscript-test-xc1i0e2n/`. An isolated Xvfb/llvmpipe session
-rendered the actual scene's preview, successful publication receipt, career
-inspector, comparison and media view; captures/logs are in
-`local-data/companion/gdscript-render-p5wuchkj/`. It used no physical-desktop input
-or screen capture. The exported Linux package then passed actual file-dialog and
-button input on an isolated virtual display using its bundled sibling helper:
-selected edit, verified publication, conflicting-destination refusal, unchanged
-recovery copy and reopening. The independent comparison found only the intended
-three bytes changed, with the original and every unselected byte preserved.
-Receipts and captures are in `local-data/companion/export-acceptance-nx_j5ynz/`.
-These are automated runtime checks, not human usability or audio acceptance.
-The C# shell's September 6 result remains historical.
+**September 19 executed .NET integration evidence:** `npm test` passed the
+GDScript byte suite, actual scene/control workflow, protected round trip,
+independently checked selected edits, reopen/comparison and media checks.
+Direct adapter tests cover malformed arguments, same-byte physical replacement,
+source changes, link aliases, conflicting destinations and game-tree refusal.
+Unavailable adapters and invalid managed results fail closed. All six unchanged
+transaction race/failure cases and all **12** companion tooling cases passed.
+Receipts are in canonical `local-data/companion/godot-dotnet-test-1rg3gl2k/`.
+The original worktree's C# build, headless .NET editor import and editor
+`--build-solutions` also passed:
+`local-data/companion/mono-source-editor-ps1m7phv/`.
+The exported .NET Linux app passed actual file-dialog and button input on an
+isolated Xvfb display: open, preview, publish, verified reopen, destination
+conflict refusal, unchanged recovery and open verified result. Independent byte
+comparison confirmed exactly three selected bytes changed and all 10,004 original
+and recovery bytes matched the fixture. Its managed runtime loaded from its own
+package with an empty executable search path. Receipts and own-display captures:
+`local-data/companion/dotnet-export-acceptance-d394_btv/`.
+The standard-engine/helper prototype and its earlier rendered/exported checks
+remain dated predecessor evidence in [VALIDATION.md](VALIDATION.md#native-companion-migration--september-19).
 
+The .NET Linux/Windows packages are in canonical
+`local-data/companion/godot-dotnet-export-ph2r7cmk/packages/`.
 Windows cross-export and package inspection are recorded in the companion
-[validation section](VALIDATION.md#native-companion-migration--september-19).
+[validation section](VALIDATION.md#companion-net-integration--september-19).
 **Windows execution and human click-through acceptance remain pending.**
 Broader options/rank/Goodie writes, whole-game safe-copy/rescue, patching,
 playback/replacement, lore and asset workflows remain migration work; no legacy

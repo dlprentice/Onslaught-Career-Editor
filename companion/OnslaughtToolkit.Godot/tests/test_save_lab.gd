@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: MIT
 extends SceneTree
-## Executed scene + protected process workflow, exclusively on runner-owned copies.
+## Executed scene + in-process protected I/O, exclusively on runner-owned copies.
 
 const Codec = preload("res://domain/career_save.gd")
 const Session = preload("res://domain/save_session.gd")
 const DomainTests = preload("res://tests/test_career_save.gd")
 const MediaTests = preload("res://tests/test_media_catalog.gd")
+const ProtectedTests = preload("res://tests/test_protected_files.gd")
 var failures: Array[String] = []
 var output_dir := ""
 
@@ -35,6 +36,7 @@ func _run() -> void:
 		return
 	failures.append_array(DomainTests.run(original))
 	failures.append_array(MediaTests.run(output_dir))
+	failures.append_array(ProtectedTests.run(original, output_dir))
 	var scene = load("res://SaveLab.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame
@@ -105,29 +107,26 @@ func _run() -> void:
 	check(not refused.get("ok", false), "source change refused")
 	check(not FileAccess.file_exists(refused_output), "source refusal publishes nothing")
 	_write_path(fixture, original)
-	# No helper means unavailable, never a fallback to FileAccess writes.
-	var helper := OS.get_environment("ONSLAUGHT_FILE_BRIDGE")
-	OS.set_environment("ONSLAUGHT_FILE_BRIDGE", output_dir.path_join("absent-helper"))
+	# An unavailable managed adapter must never fall back to FileAccess writes.
+	var adapter: RefCounted = scene.files._adapter
+	scene.files._adapter = null
 	refused = await scene.write_copy(false)
-	check(not refused.get("ok", false), "missing safety helper fails closed")
-	check(not FileAccess.file_exists(refused_output), "missing helper writes nothing")
-	if OS.get_name() == "Linux":
-		var malformed_helper := output_dir.path_join("malformed-receipt-helper")
-		var helper_file := FileAccess.open(malformed_helper, FileAccess.WRITE)
-		helper_file.store_string("#!/bin/sh\nIFS= read -r line\nprintf 'not-json\\n'\n")
-		helper_file.close()
-		check(FileAccess.set_unix_permissions(malformed_helper, 448) == OK, "test receipt helper executable")
-		OS.set_environment("ONSLAUGHT_FILE_BRIDGE", malformed_helper)
-		refused = await scene.write_copy(false)
-		check(not refused.get("ok", false) and refused.get("may_have_output", false), "invalid publication receipt retains uncertainty")
-		check(scene.get_node("%ReopenCopy").disabled, "invalid receipt cannot offer a verified result")
-	OS.set_environment("ONSLAUGHT_FILE_BRIDGE", helper)
+	check(not refused.get("ok", false), "unavailable safety adapter fails closed")
+	check(not FileAccess.file_exists(refused_output), "unavailable adapter writes nothing")
+	check(scene.get_node("%ReopenCopy").disabled, "failed operation cannot offer a verified result")
+	scene.files._adapter = adapter
+	# No JSON transport remains. The GDScript boundary still independently rejects
+	# inconsistent managed results without claiming that publication was undone.
+	refused = scene._session.verify_publication({"ok": true, "bytes": "invalid", "output": refused_output}, original)
+	check(not refused.get("ok", false) and refused.get("may_have_output", false), "invalid returned bytes retain publication uncertainty")
+	refused = scene._session.verify_publication({"ok": true, "bytes": original, "size": original.size(), "sha256": Session.digest(original), "verified": true, "original_verified": false, "output": refused_output}, original)
+	check(not refused.get("ok", false) and refused.get("may_have_output", false), "missing source verification cannot become success")
 	check(FileAccess.get_file_as_bytes(fixture) == original, "owned fixture restored after adversarial scenario")
 	scene.queue_free()
 	await process_frame
 	for failure in failures:
 		printerr(failure)
-	print("NATIVE_SAVE_LAB: " + str(failures.size()) + " failures; byte domain, real scene, protected round trip, selected diff, comparison and fail-closed cases executed.")
+	print("NATIVE_SAVE_LAB: " + str(failures.size()) + " failures; GDScript domain, real scene, in-process protected round trip, selected diff, comparison and fail-closed cases executed.")
 	quit(0 if failures.is_empty() else 1)
 
 func _write_owned(name: String, bytes: PackedByteArray) -> void:

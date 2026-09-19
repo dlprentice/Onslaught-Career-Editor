@@ -1,24 +1,33 @@
 # Companion protected file bridge
 
-Status: active — bounded native file I/O exception, Linux checks executed
+Status: retained prototype and development race harness — not part of the shipped companion
 Last updated: 2026-09-19
-Summary: preserves existing file identity and publication protections while the standard Godot companion owns presentation and save-format behavior in GDScript.
+Summary: pinned Godot API-gap evidence and the superseded standalone helper; the active companion uses the same safety source inside Godot .NET.
 
-The companion uses an explicitly disclosed C# helper because standard Godot cannot
-express the existing protected-file transaction. The helper opens a bounded
+David clarified on September 19 that necessary production C# belongs inside
+Godot's .NET edition. The current [companion](../OnslaughtToolkit.Godot/README.md)
+uses [ProtectedSaveFiles.cs](../OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
+directly, with GDScript controlling the workflow. Root build/run/test/export
+commands neither start nor package this standalone helper. The separate
+transaction race harness remains development-only. The protocol below records
+the validated predecessor, not a second active production route.
+
+The retained prototype exists because standard Godot cannot express the existing
+protected-file transaction. It opens a bounded
 snapshot or publishes caller-prepared bytes to a new path. It does not parse
 career fields, calculate edits, launch the game, manage profiles or patch retail
 files. Those unused AppCore profile routes throw `NotSupportedException`.
 `Compatibility.cs` supplies only their compile-time stubs and the existing
 10,004-byte payload bound; it is not another save implementation.
 
-The production project links the unchanged MIT
+The prototype and active adapter link the unchanged MIT
 [`SaveLabFileTransaction.cs`](../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs)
 and [`FileMutationSafety.cs`](../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs).
-It has no reference to the AppCore assembly, `SaveLabService`, the C# save codec,
-GPL rebuild code, Godot .NET or third-party NuGet libraries. A self-contained
-package includes Microsoft's .NET runtime; users do not need a separate runtime
-installation. This is a production C# dependency, confined to this stated boundary.
+The retained prototype has no reference to the AppCore assembly, `SaveLabService`, the C# save codec,
+GPL rebuild code, Godot .NET or third-party NuGet libraries. Its earlier
+self-contained package included Microsoft's .NET runtime. The current companion
+instead includes that runtime through normal Godot .NET export; the necessary
+production C# dependency now resides in the in-process adapter.
 
 The measured standard editor is `4.8.dev6.official.8898c2b3d`. The following review
 pins upstream source to full commit `8898c2b3db32adf6f92c694ffb6dac19af672e5f`:
@@ -40,7 +49,7 @@ the transaction. [Unix directory creation](https://github.com/godotengine/godot/
 
 These are source-level API findings. They do not claim exhaustive operating-system
 acceptance. A later official Godot version needs its own review before removing
-the bridge or changing the guarantee.
+the managed file-safety boundary or changing the guarantee.
 
 The bridge consumes one UTF-8 JSON line on stdin and emits one JSON line on stdout.
 Save bytes travel as base64 through the pipe, never command-line arguments or
@@ -68,14 +77,14 @@ the application must not automatically delete, retry over, or announce success
 for that path. An absent helper or unsupported platform makes protected operations
 unavailable; there is no ordinary `FileAccess` write fallback.
 
-`global.json` pins the existing installed SDK to `8.0.424`, and both projects pin
+For retained prototype development only, `global.json` pins SDK `8.0.424`, and both projects pin
 the runtime to `8.0.30`. Run `dotnet` with this directory as its working directory
 so the SDK pin applies. Build with `dotnet publish OnslaughtToolkit.FileBridge.csproj
 -c Release -r linux-x64 --self-contained true` or the corresponding `win-x64`
 RID, supplying `--output`, `BaseIntermediateOutputPath` and `BaseOutputPath` beneath
-a unique ignored `local-data/` run directory. Ship the whole publish directory.
-The standard Godot launcher supplies the helper through `ONSLAUGHT_FILE_BRIDGE`
-for development or as a `file-bridge` sibling in a package.
+a unique ignored `local-data/` run directory. The predecessor shipped the whole
+publish directory and supplied it through `ONSLAUGHT_FILE_BRIDGE` for development
+or as a `file-bridge` sibling in a package. The active launcher supports neither route.
 
 [`test_file_bridge.py`](../tests/test_file_bridge.py) uses owned copies of the
 tracked real fixture for exact round trips, independent literal intended-edit

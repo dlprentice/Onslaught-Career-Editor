@@ -22,7 +22,7 @@ counts here.
 flowchart LR
     W["Retained WinUI 3 shell"] --> A["AppCore"]
     T["GDScript companion"] --> D["Native save domain"]
-    T --> B["Protected FileBridge"]
+    T --> B["In-process C# file adapter"]
     B --> S["Linked AppCore file safety"]
     C["Maintainer CLI"] --> A
     AT["AppCore tests"] --> A
@@ -36,14 +36,14 @@ flowchart LR
 
 The arrows are source dependencies, not priority. Full retail reverse
 engineering, the 1:1 Godot rebuild, and the Godot toolkit companion are coequal
-project outcomes. The companion ports format behavior to GDScript; its explicit file bridge links
+project outcomes. The companion ports format behavior to GDScript; its in-process file adapter links
 the existing AppCore safety source. Retained Windows adapters still use AppCore.
 The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
-| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/project.godot) | Standard Godot, native GDScript scenes/domain. Uses the explicit file bridge for protected I/O. |
-| [`OnslaughtToolkit.FileBridge`](companion/OnslaughtToolkit.FileBridge/README.md) | Self-contained .NET 8 helper linking only existing file-safety source; no C# save codec or AppCore assembly dependency. |
+| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/project.godot) | Godot .NET, GDScript scenes/domain, and a thin in-process C# adapter linking existing file safety. No AppCore assembly or C# save codec. |
+| [`OnslaughtToolkit.FileBridge`](companion/OnslaughtToolkit.FileBridge/README.md) | Retained standalone prototype/API-gap evidence and development-only safety race harness. Excluded from active production builds/exports. |
 | [`OnslaughtCareerEditor.WinUI`](OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj) | .NET 10 WinUI 3 executable. Owns the shell, pages, interaction, and presentation; references AppCore. |
 | [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
 | [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Windows-targeted, unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
@@ -74,10 +74,10 @@ controls and mounts [`save_lab.gd`](companion/OnslaughtToolkit.Godot/ui/save_lab
 [`career_save.gd`](companion/OnslaughtToolkit.Godot/domain/career_save.gd) owns native
 format interpretation, selected-byte previews and comparison;
 [`save_session.gd`](companion/OnslaughtToolkit.Godot/domain/save_session.gd) owns the
-opened snapshot. The explicit [FileBridge](companion/OnslaughtToolkit.FileBridge/README.md)
+opened snapshot. The in-process [adapter](companion/OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
 links `SaveLabFileTransaction` and `FileMutationSafety` unchanged for OS protections
-that standard Godot does not expose. Old companion C# UI/project files are retained
-reference material, excluded from native staging and export. The media scene and
+that GDScript does not expose. The old companion `SaveLab.cs` UI is retained
+reference material, excluded from compilation and export. The media scene and
 native catalog perform read-only metadata inventory of explicitly selected data.
 
 ## Retained WinUI route map
@@ -116,13 +116,13 @@ tests rather than assuming the representative list is exhaustive.
 
 Retained WinUI and CLI keep their shared AppCore correctness. The native companion
 owns its GDScript format/domain behavior and links only the existing file-safety
-source through its bounded helper; it does not run a second C# codec.
+source through its in-process C# adapter; it does not run a second C# codec.
 
 ## Repository owners
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT native Godot toolkit, GDScript domain and explicit file bridge. `tools/companion_godot.py` owns its pinned standard-engine routes; `tools/godot_host.py` retains shared process support and the legacy launcher. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, GDScript domain and narrow C# file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes; `tools/godot_host.py` retains shared process support and the legacy launcher. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. `ghidra/` holds the tracked checkpoint; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, campaign generations, captures, reviewer reports, frozen proof graphs, the working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |

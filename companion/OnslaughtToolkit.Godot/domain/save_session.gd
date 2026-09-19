@@ -18,11 +18,14 @@ static func digest(bytes: PackedByteArray) -> String:
 static func from_reply(reply: Dictionary) -> Dictionary:
 	if not reply.get("ok", false):
 		return reply
-	var bytes := Marshalls.base64_to_raw(str(reply.get("bytes", "")))
+	var payload: Variant = reply.get("bytes")
+	if not payload is PackedByteArray:
+		return {"ok": false, "message": "The protected read did not return save bytes."}
+	var bytes: PackedByteArray = payload
 	var analysis: Dictionary = Codec.inspect(bytes)
 	if not analysis.get("ok", false):
 		return analysis
-	if digest(bytes) != str(reply.get("sha256", "")).to_lower() or str(reply.get("identity", "")).is_empty():
+	if bytes.size() != int(reply.get("size", -1)) or digest(bytes) != str(reply.get("sha256", "")).to_lower() or str(reply.get("identity", "")).is_empty():
 		return {"ok": false, "message": "The protected read did not provide a matching content hash and file identity."}
 	var session := SaveSession.new()
 	session.path = str(reply.get("input", ""))
@@ -40,15 +43,15 @@ func analysis() -> Dictionary:
 func prepare(selections: Dictionary) -> Dictionary:
 	return Codec.preview(_bytes, selections)
 
-func publication_request(output: String, prepared: PackedByteArray) -> Dictionary:
-	return {"protocol": 1, "op": "publish", "input": path, "identity": identity,
-		"sha256": sha256, "output": output, "bytes": Marshalls.raw_to_base64(prepared)}
-
 func verify_publication(reply: Dictionary, prepared: PackedByteArray) -> Dictionary:
 	if not reply.get("ok", false):
 		return reply
-	var actual := Marshalls.base64_to_raw(str(reply.get("bytes", "")))
-	if actual != prepared or actual.size() != _bytes.size() or digest(actual) != str(reply.get("sha256", "")).to_lower() or not reply.get("original_verified", false):
+	var payload: Variant = reply.get("bytes")
+	if not payload is PackedByteArray:
+		return {"ok": false, "may_have_output": true, "output": reply.get("output", ""),
+			"message": "A copy may exist, but its verified bytes were not returned. Inspect it before use."}
+	var actual: PackedByteArray = payload
+	if actual != prepared or actual.size() != _bytes.size() or actual.size() != int(reply.get("size", -1)) or digest(actual) != str(reply.get("sha256", "")).to_lower() or not reply.get("original_verified", false) or not reply.get("verified", false):
 		return {"ok": false, "may_have_output": true, "output": reply.get("output", ""),
 			"message": "A copy may exist, but its bytes or original-file verification did not match. Inspect it before use."}
 	return reply
