@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, aim prediction and Ghidra provider corrections; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, aim/caller composition and Ghidra provider corrections; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1138,6 +1138,67 @@ provider, collision, Weapon B caller or gameplay runs. Other precision modes,
 rounding modes, denormals and unmasked faults remain untested. The
 [weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
 separates these observations from the static dispatch and source-unit evidence.
+
+### Weapon B nonballistic caller composition — September 19
+
+`python local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/weapon_feasibility.py`
+passed **22 scenarios / 44 original Weapon B calls** under masked PC24/RN
+(`007f`) and PC53/RN (`027f`). The selected pristine executable was freshly
+verified against its 2,506,752-byte size and SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The endpoint and Actor-getter bodies retain the hashes in the preceding receipt.
+Additional unchanged bodies, verified in the ELF's actual load mappings:
+
+| Original range | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Weapon B `[005088b0,00509135)` | 2,181 | `3624bd4fc4565f5faa6e6b7e503a0ef5de93157a8f03574b527f597566d3fe99` |
+| Magnitude `[004026b0,004026d1)` | 33 | `7de765c91bae23f3bf44eb837806928b78cc76637b667101421546f141c3c4d4` |
+| Line copy `[004098e0,0040994f)` | 111 | `8196b18dc22fd421a8d9c2c426b44dba7c0d2d663d79075df73f78f1f35a4496` |
+
+The recorded successful stem is
+`local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/run-laerx66n/weapon_feasibility`.
+The ELF, assembly, `.driver.py`, `.cases.json`, `.input.bin`, `.output.bin`,
+`.stderr` and `.json` share it; each invocation owns a fresh run directory.
+The result JSON is 66,432 bytes, SHA-256
+`dd06c651772dcca7961e57467a4fb2a6ed49a369de165fe1d917f6e453a46627`.
+Initial disassembly used the existing system disassembler after the default
+Python environment lacked Capstone; no package or environment was changed.
+
+The original endpoint executes 42 times and the original Actor getter 40 times;
+two height-gate refusals stop before both, and two prediction-disabled controls
+skip the getter. A recording world-query stub receives 30 complete by-value
+lines and all eight subsequent arguments. Checks cover exact endpoint words,
+query arguments and initial result storage, Boolean return, call order and exact
+receiver/return-site tuples,
+unchanged 4-KiB synthetic object/input arenas, nonvolatile registers, stack,
+normal-return FS/SEH chain, retained control word and empty x87 stack.
+The displaced zero-speed/zero-motion cases retain invalid/divide-by-zero flags
+`05`; zero-distance prediction retains `01`, and direct-copy/height controls
+retain zero exception flags. No approximation substitutes for an executed
+trigonometric helper: unexpected math or skipped-branch calls exit with failure.
+The retained endpoint fourth word `51515151` is harness stack fill, not a retail
+constant or recovered value.
+
+Independent read-only review reconciled all 40 saved calls in the preceding
+20-case run (`run-sxbtfl7v`) with its inputs, JSON, assembled stubs and actual
+ELF load mappings. The final extension adds upper/lower bound refusals with seek
+enabled and makes the exact receiver/return-site oracle executable. Its ELF is
+byte-identical and the original 40 outcomes, exception words, endpoints and
+normalized traces are unchanged; `extension-comparison.json` records that check.
+The review did not rerun native code. All four added calls passed the same ABI,
+input-preservation and output checks.
+
+Paired controls establish inclusive zero-angle bounds, nonzero seek bypass,
+distinct same-allegiance Unit admission, null/non-Unit/wrong-allegiance refusal,
+target-type-dependent child mode and the difference between direct copying and
+prediction. The full original caller does not sanitize the predicted NaNs before
+the query stub. This does **not** execute the real query against those NaNs or
+show that ordinary authored gameplay supplies these inputs. Attachment/point
+providers, query results and all object state are controlled substitutes;
+finite-angle trig, ballistics, real collision, lifecycle and live combat remain
+outside this result. No Ghidra or rebuild implementation changed.
+The [weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-nonballistic-caller-composition)
+records the reconstruction implications.
 
 ### Aim-provider Ghidra correction — September 19
 

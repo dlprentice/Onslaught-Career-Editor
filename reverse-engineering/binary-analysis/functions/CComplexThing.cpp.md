@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon line query, aim providers and prediction arithmetic)
+Last updated: 2026-09-19 (weapon query, aim providers and bounded caller composition)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -590,10 +590,11 @@ For the previously inspected Weapon B caller at `005090ea`, stop-early is zero,
 reject mask is 4, required mask is `ffffffff`, and the terrain flag is 1.
 Query mode is 1; its child-mode argument is zero for target type bit `100`,
 otherwise one.
-Its static post-query admission still requires a nonnull Unit with the target's
-allegiance, not pointer identity with the target. The new experiment does not
-execute that caller. Actual iterator ordering, geometry, endpoint generation,
-nonfinite inputs and live combat remain open. These finite, mostly exact-distance
+Its post-query admission requires a nonnull Unit with the target's allegiance,
+not pointer identity with the target. This query experiment does not execute
+that caller; the bounded composition below supplies its query results instead.
+Actual iterator ordering, geometry, nonfinite query behavior and live combat
+remain open. These finite, mostly exact-distance
 cases do not establish general agreement between the two precision settings.
 An implementation must preserve
 this mixture of proxy and contact distances and the unequal tie rules rather
@@ -650,9 +651,59 @@ With the supplied masked exception controls, zero divisors produce infinities
 or indefinite NaNs; no fallback clamp occurs. Attachment and point providers
 remain explicit stubs, and Actor state is synthetic. These results establish
 neither real attachment/segment poses nor the frequency and lifecycle of motion
-updates, the complete Weapon B caller, or live combat. Other precision/rounding
+updates, every Weapon B path, or live combat. Other precision/rounding
 modes and unmasked faults are untested. [Validation](../../../VALIDATION.md#weapon-aim-point-and-native-motion-provider--september-19)
 owns exact inputs, outputs, checks and independent review.
+
+#### Weapon B nonballistic caller composition
+
+The complete unchanged body `[005088b0,00509135)` now executes with the original
+endpoint, Actor getter, magnitude helper and line-copy constructor in **22
+scenarios / 44 calls**, under PC24/RN and PC53/RN. This covers a bounded
+nonballistic path, not every branch of the body. Attachment position/orientation,
+target point and world query are recording stubs; the objects are synthetic.
+The [validation receipt](../../../VALIDATION.md#weapon-b-nonballistic-caller-composition--september-19)
+owns the exact bytes, inputs and retained outputs.
+
+With prediction enabled, zero projectile speed, zero Actor motion, target point
+`(3,4,0)` and origin `(0,0,0)`, the helper produces indefinite NaNs on XYZ.
+The caller's magnitude comparisons take their unordered/zero arms and use an
+angle of zero; they do **not** replace the endpoint with a finite point.
+Mode bounds `+80 <= 0 <= +7c` admit this path, including equality at either or
+both ends. Bounds excluding zero reject before any query, including when seek
+is nonzero. These results do not
+establish the general finite-angle or ballistic calculation.
+
+| Supplied condition after the angle check | Observed caller result |
+| --- | --- |
+| Round `+48` equals 1 or 2 | Returns 1 without a world query, despite the NaN endpoint |
+| Round `+48` is zero; query returns 0, 1 or 2 | Returns 0 |
+| Query returns 3 with a distinct Unit hit of the target's allegiance | Returns 1; exact target identity is not required |
+| Query returns 3 with null hit, non-Unit hit or different allegiance | Returns 0 |
+
+The actual line constructor preserves the four computed endpoint words and
+the separately sampled attachment origin. The predicted fourth word retains
+`51515151`, the harness's stack fill, not a recovered game value.
+All 30 recording-query calls receive
+these values without sanitization, with ignored owner `weapon+8`, stop-early 0,
+mode 1, reject mask 4, terrain flag 1 and required mask `ffffffff`. Target type
+bit `100` changes the child-mode argument from 1 to 0. Result storage initially
+contains `(null, ffffffff, 0, -1.0f)`; the caller tests the query's EAX status
+before reading the returned Unit pointer and allegiance.
+
+Prediction-disabled zero-distance control supplies a finite four-word point
+and has no arithmetic exception. Enabling prediction for that same zero-distance
+point gives NaNs through `0/0`, while still admitting the supplied matching hit.
+An origin above the supplied height gate returns before endpoint generation.
+All synthetic input objects remain byte-identical, and normal-return ABI/SEH/x87
+checks pass. Exception flags are deliberately masked and recorded.
+
+Reconstruction must keep angle admission, seek bypass, endpoint contents and
+same-allegiance hit admission distinct. A generic finite-vector guard or
+exact-target-only ray test would change these measured paths. Whether authored
+gameplay reaches zero-speed prediction remains open; actual collision handling
+of a nonfinite line, real attachment/part providers, visibility/terrain/ballistic
+arms, unmasked faults and live combat are not established by this experiment.
 
 #### Selected aircraft weapon mounts and runtime pose inputs
 
