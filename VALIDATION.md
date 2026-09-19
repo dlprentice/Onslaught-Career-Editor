@@ -1316,12 +1316,53 @@ extra model type, not a required live addition. An explicit local rewrite is
 also unnecessary for the demonstrated improvement.
 
 No live Ghidra project, tracked checkpoint or production implementation changed
-for these experiments. Custom-storage/type promotion remains pending the
-required exact mutation and collateral guards; the disposable models are not
-a completed live correction. Initial exploratory export/comparison failures
+for these experiments. The subsequent ABI-only promotion below adopts the
+physical carrier model; the record-type experiment remains unpromoted.
+Initial exploratory export/comparison failures
 were missing function ownership and comparison-format assumptions, not native
 execution failures; the retained successful readbacks and explicit comparisons
 own the results above.
+
+### Shared math-error Ghidra correction — September 19
+
+The [one-function correction](reverse-engineering/ghidra/README.md#shared-math-error-abi-correction-2026-09-19)
+replaces `00561547`'s fabricated hidden-pointer/fastcall description with six
+explicit register/x87/stack inputs and a `float10` ST0 return. It changes only
+the prototype, nonrepeatable comment and tags. The binary64 spill/reload and
+conditional control-word restore remain explicit in the comment; this is a
+physical ABI model, not a recovered C declaration.
+
+`python -m unittest tools.ghidra_cohort_framework_tests -v` passed **92 tests**.
+The optional custom-storage route adds exact PRE/POST ABI pins, parameter
+name/storage conflict checks with `force=false`, and a protected census of
+program bytes, all locals, unrelated internal/external ABIs and datatype
+definitions/settings. The historical dynamic-storage census is unchanged.
+Independent opens exposed the built-in `ImageBaseOffset32` type's process-local
+ID; pinned Ghidra source and a complete field comparison justified excluding
+built-in IDs, while persistent type and source-archive identities remain bound.
+
+Ten actual-Ghidra negative controls refused before writes: conflicting local
+names/storage, target/unrelated local comments, same-rendered input-register,
+stack-offset and return-register changes, incomplete bindings, width mismatch,
+and overlapping inputs. Three additional database-backed controls detect enum,
+function-definition and argument comments that the rendered definitions omit.
+All control projects were opened read-only and retained identical project bytes.
+
+Fresh isolated dry/apply/separate readback and the sealed repetition passed;
+the live dry/apply/separate readback produced identical full exports. Only
+one of 8,330 function rows changed; all 8,329 other rows and every local
+variable remain identical. Removing the invented parameter reduces variable
+records from 32,697 to 32,696. Types, bookmarks, saved stack details, Plane-depth
+and all target instructions are unchanged; only `commentsSha256` moves among
+29 program metrics. Independent review also reconciled all 8,965 protected
+census entries. The scoped source correction does not validate the real CRT
+dispatcher, exceptional inputs, Windows behavior or gameplay.
+
+Commands, exact manifests, logs, full comparisons and PRE/POST recovery receipts
+belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/promotion/`.
+The Ghidra correction record above owns the live-readback and recovery identities;
+no tracked-checkpoint refresh is included.
 
 ### Asin-helper Ghidra correction — September 19
 

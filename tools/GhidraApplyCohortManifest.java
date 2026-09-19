@@ -27,7 +27,7 @@
 // cohort cannot touch a name, because the code path does not exist for it.
 //
 //   SET_NAME               Function.setName / Symbol.setName
-//   SET_PROTOTYPE          Function.updateFunction (DYNAMIC_STORAGE_FORMAL_PARAMS)
+//   SET_PROTOTYPE          Function.updateFunction (dynamic formal or explicit custom storage)
 //                          plus Function.setVarArgs, MANIFEST-DRIVEN (see below)
 //   SET_TAGS               Exact function tag membership; never deletes global tags
 //   SET_COMMENT            Function.setComment (non-repeatable function comment)
@@ -39,6 +39,17 @@
 //   DISASSEMBLE_BOUNDED    Disassembler.disassemble(seeds, admitted, true)
 //   CLEAR_BOUNDED          Listing.clearCodeUnits inside the admitted ranges
 //   REMOVE_STALE_BOOKMARK  BookmarkManager.removeBookmark for a pinned set
+//
+// ---------------------------------------------------------------------------
+// EXPLICIT CUSTOM STORAGE is opt-in, limited to the PC x86/windows model. The
+// five CUSTOM_STORAGE_FIELDS bindings are all-or-none and require the separate
+// protectedAbiStateSha256 pin. REG@name@bytes and STACK@0xoffset@bytes locations
+// must match existing type widths. PRE/POST ABI pins bind actual/formal types,
+// locations, auto/indirect flags, sources, comments and frame properties; the
+// protected census binds all locals, non-target ABI state, datatype definitions
+// and program bytes. Names/storage are preflighted and updateFunction uses
+// force=false. A late exception still requires verified PRE recovery: this route
+// does not assume in-process rollback. Historical dynamic receipts are unchanged.
 //
 // ---------------------------------------------------------------------------
 // VARARGS IS A MANIFEST FIELD OF SET_PROTOTYPE, AND ITS DEFAULT IS PRESERVE.
@@ -141,6 +152,7 @@
 // APPLIER SHA PIN and refuses before any write.
 
 import ghidra.app.script.GhidraScript;
+import ghidra.docking.settings.Settings;
 import ghidra.program.disassemble.Disassembler;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressIterator;
@@ -149,7 +161,15 @@ import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
+import ghidra.program.model.data.Array;
+import ghidra.program.model.data.BitFieldDataType;
+import ghidra.program.model.data.Composite;
+import ghidra.program.model.data.DataTypeComponent;
+import ghidra.program.model.data.FunctionDefinition;
+import ghidra.program.model.data.ParameterDefinition;
+import ghidra.program.model.data.Pointer;
 import ghidra.program.model.data.PointerDataType;
+import ghidra.program.model.data.TypeDef;
 import ghidra.program.model.listing.Bookmark;
 import ghidra.program.model.listing.BookmarkManager;
 import ghidra.program.model.listing.CodeUnit;
@@ -167,12 +187,15 @@ import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.ParameterImpl;
 import ghidra.program.model.listing.ReturnParameterImpl;
 import ghidra.program.model.listing.Variable;
+import ghidra.program.model.listing.VariableStorage;
+import ghidra.program.model.lang.Register;
 import ghidra.program.model.mem.MemoryBlock;
 import ghidra.program.model.symbol.Reference;
 import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
 import ghidra.program.model.symbol.SymbolIterator;
+import ghidra.program.model.symbol.SymbolType;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -314,6 +337,19 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         return out;
     }
 
+    static Set<String> mutableColumnsFor(Set<String> verbs, boolean varArgsDeclared,
+            boolean currentConventionDeclared, boolean customStorageDeclared) {
+        Set<String> out = mutableColumnsFor(verbs, varArgsDeclared, currentConventionDeclared);
+        if (verbs.contains(V_SET_PROTOTYPE) && customStorageDeclared) {
+            out.add("customStorage");
+        }
+        return out;
+    }
+
+    static final List<String> CUSTOM_STORAGE_FIELDS = Arrays.asList(
+        "currentCustomStorage", "customStorage", "returnStorage",
+        "currentAbiSha256", "proposedAbiSha256");
+
     static final Pattern LEGAL_NAME =
         Pattern.compile("^[A-Za-z_][A-Za-z0-9_]{0,190}$");
     static final Pattern LEGAL_TYPE =
@@ -405,6 +441,8 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.currentCallingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
+        "col.currentCustomStorage", "col.customStorage", "col.returnStorage",
+        "col.currentAbiSha256", "col.proposedAbiSha256", "protectedAbiStateSha256",
         "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
         "col.proposedLabel",
         "col.currentTags", "col.proposedTags",
@@ -522,6 +560,9 @@ public class GhidraApplyCohortManifest extends GhidraScript {
          *  (empty cell, or no bound column at all). */
         Boolean varArgsWanted;
         String varArgsPost = "";
+        boolean customStorage;
+        Parameter customReturn;
+        final List<Variable> customParams = new ArrayList<>();
 
         // measurement
         String targetName = "";
@@ -822,6 +863,331 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         out.add(f.getParentNamespace() == null ? ""
                 : f.getParentNamespace().getName(true));
         return out;
+    }
+
+    // Separate from the historical frozen census: old receipt digests do not change.
+    private static void abiValue(StringBuilder out, Object value) {
+        String text = value == null ? null : value.toString();
+        out.append(text == null ? -1 : text.length()).append(':');
+        if (text != null) out.append(text);
+    }
+
+    private static String typeShape(DataType type) {
+        if (type == null) return "<null>";
+        StringBuilder out = new StringBuilder();
+        abiValue(out, type.getPathName());
+        abiValue(out, type.getLength());
+        if (type instanceof BitFieldDataType bits) {
+            abiValue(out, typeShape(bits.getBaseDataType()));
+            abiValue(out, bits.getDeclaredBitSize());
+            abiValue(out, bits.getBitOffset());
+        }
+        return out.toString();
+    }
+
+    private static String settingsShape(Settings settings) {
+        StringBuilder out = new StringBuilder();
+        Set<Settings> seen = Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        while (settings != null) {
+            if (!seen.add(settings)) throw new IllegalArgumentException("cyclic datatype settings");
+            List<String> names = new ArrayList<>(Arrays.asList(settings.getNames()));
+            Collections.sort(names);
+            abiValue(out, names.size());
+            for (String name : names) {
+                Object value = settings.getValue(name);
+                if (value != null && !(value instanceof String) && !(value instanceof Long)) {
+                    throw new IllegalArgumentException("unsupported datatype setting value");
+                }
+                abiValue(out, name);
+                abiValue(out, value == null ? null : value.getClass().getName());
+                abiValue(out, value);
+            }
+            settings = settings.getDefaultSettings();
+        }
+        return out.toString();
+    }
+
+    // Bind definitions explicitly: the rendered text omits enum and argument comments.
+    // Archive synchronization timestamps and DB bookkeeping are not semantic axes.
+    static String dataTypeShape(DataType type) {
+        StringBuilder out = new StringBuilder();
+        abiValue(out, type.getClass().getName());
+        abiValue(out, typeShape(type));
+        abiValue(out, type.getAlignment());
+        abiValue(out, type.getDescription());
+        abiValue(out, type.toString());
+        // Some built-ins (IBO32DataType) allocate a new ID on every independent open.
+        abiValue(out, type instanceof ghidra.program.model.data.BuiltInDataType
+            ? null : type.getUniversalID());
+        abiValue(out, type.getSourceArchive() == null ? null
+            : type.getSourceArchive().getSourceArchiveID());
+        abiValue(out, settingsShape(type.getDefaultSettings()));
+        if (type instanceof ghidra.program.model.data.Enum enumeration) {
+            abiValue(out, enumeration.getSignedState());
+            List<String> names = new ArrayList<>(Arrays.asList(enumeration.getNames()));
+            Collections.sort(names);
+            for (String name : names) {
+                abiValue(out, name);
+                abiValue(out, enumeration.getValue(name));
+                abiValue(out, enumeration.getComment(name));
+            }
+        }
+        if (type instanceof FunctionDefinition definition) {
+            abiValue(out, definition.getComment());
+            abiValue(out, typeShape(definition.getReturnType()));
+            abiValue(out, definition.getCallingConventionName());
+            abiValue(out, definition.hasVarArgs());
+            abiValue(out, definition.hasNoReturn());
+            for (ParameterDefinition parameter : definition.getArguments()) {
+                abiValue(out, parameter.getName());
+                abiValue(out, typeShape(parameter.getDataType()));
+                abiValue(out, parameter.getComment());
+            }
+        }
+        if (type instanceof Composite composite) {
+            abiValue(out, composite.getPackingType());
+            abiValue(out, composite.getExplicitPackingValue());
+            abiValue(out, composite.getAlignmentType());
+            abiValue(out, composite.getExplicitMinimumAlignment());
+            abiValue(out, composite.getNumComponents());
+            for (DataTypeComponent component : composite.getDefinedComponents()) {
+                abiValue(out, component.getOrdinal());
+                abiValue(out, component.getOffset());
+                abiValue(out, component.getLength());
+                abiValue(out, typeShape(component.getDataType()));
+                abiValue(out, component.getFieldName());
+                abiValue(out, component.getComment());
+                abiValue(out, settingsShape(component.getDefaultSettings()));
+            }
+        }
+        if (type instanceof Pointer pointer) abiValue(out, typeShape(pointer.getDataType()));
+        if (type instanceof TypeDef alias) {
+            abiValue(out, typeShape(alias.getDataType()));
+            abiValue(out, alias.isAutoNamed());
+        }
+        if (type instanceof Array array) {
+            abiValue(out, typeShape(array.getDataType()));
+            abiValue(out, array.getNumElements());
+            abiValue(out, array.getElementLength());
+        }
+        return out.toString();
+    }
+
+    static String variableShape(Variable variable) {
+        StringBuilder out = new StringBuilder();
+        abiValue(out, variable.getName());
+        abiValue(out, variable.getSource());
+        abiValue(out, variable.getComment());
+        abiValue(out, typeShape(variable.getDataType()));
+        abiValue(out, variable.getFirstUseOffset());
+        VariableStorage storage = variable.getVariableStorage();
+        abiValue(out, storage.getSerializationString());
+        abiValue(out, storage.isAutoStorage());
+        abiValue(out, storage.getAutoParameterType());
+        abiValue(out, storage.isForcedIndirect());
+        abiValue(out, storage.isBadStorage());
+        abiValue(out, storage.isUnassignedStorage());
+        abiValue(out, storage.isVoidStorage());
+        if (variable instanceof Parameter) {
+            Parameter parameter = (Parameter) variable;
+            abiValue(out, parameter.getOrdinal());
+            abiValue(out, parameter.isAutoParameter());
+            abiValue(out, parameter.getAutoParameterType());
+            abiValue(out, parameter.isForcedIndirect());
+            abiValue(out, typeShape(parameter.getFormalDataType()));
+        }
+        return out.toString();
+    }
+
+    static String abiShape(Function function) {
+        StringBuilder out = new StringBuilder();
+        abiValue(out, function.getCallingConventionName());
+        abiValue(out, function.hasCustomVariableStorage());
+        abiValue(out, function.getSignatureSource());
+        abiValue(out, function.hasVarArgs());
+        abiValue(out, function.getStackPurgeSize());
+        abiValue(out, function.getStackFrame().getParameterOffset());
+        abiValue(out, function.getStackFrame().getParameterSize());
+        abiValue(out, function.getStackFrame().getReturnAddressOffset());
+        abiValue(out, variableShape(function.getReturn()));
+        abiValue(out, function.getParameterCount());
+        for (Parameter parameter : function.getParameters()) {
+            abiValue(out, variableShape(parameter));
+        }
+        return out.toString();
+    }
+
+    private String protectedAbiState(List<Row> rows) throws Exception {
+        Set<Long> targets = new HashSet<>();
+        for (Row row : rows) if (row.entry != null) targets.add(row.addr);
+        TreeMap<String, String> state = new TreeMap<>();
+        state.put("programMemory", memoryDigest());
+        FunctionManager fm = currentProgram.getFunctionManager();
+        for (FunctionIterator iterator : Arrays.asList(fm.getFunctions(true), fm.getExternalFunctions())) {
+            while (iterator.hasNext()) {
+                monitor.checkCancelled();
+                Function function = iterator.next();
+                StringBuilder value = new StringBuilder();
+                // Locals and these frame properties are never a custom-prototype axis.
+                abiValue(value, function.getStackPurgeSize());
+                abiValue(value, function.getStackFrame().getLocalSize());
+                abiValue(value, function.getStackFrame().getParameterOffset());
+                abiValue(value, function.getStackFrame().getReturnAddressOffset());
+                List<String> locals = new ArrayList<>();
+                for (Variable local : function.getLocalVariables()) locals.add(variableShape(local));
+                Collections.sort(locals);
+                for (String local : locals) abiValue(value, local);
+                if (function.isExternal() || !targets.contains(function.getEntryPoint().getOffset())) {
+                    abiValue(value, abiShape(function));
+                }
+                state.put("function:" + function.getEntryPoint(), value.toString());
+            }
+        }
+        Iterator<DataType> types = currentProgram.getDataTypeManager().getAllDataTypes();
+        while (types.hasNext()) {
+            DataType type = types.next();
+            state.put("type:" + type.getPathName(), dataTypeShape(type));
+        }
+        return digestOfMap(state);
+    }
+
+    private void gateProtectedAbiState(Spec spec, List<Row> rows) throws Exception {
+        if (!spec.has("col.customStorage")) return;
+        String got = protectedAbiState(rows);
+        println("COHORT_ABI protectedStateSha256=" + got);
+        notes.add("protectedAbiStateSha256=" + got);
+        if (!got.equals(spec.opt("protectedAbiStateSha256", ""))) {
+            fail("PROTECTED ABI STATE digest " + got + " != pinned "
+                + spec.opt("protectedAbiStateSha256", ""));
+        }
+    }
+
+    private void gateAbiPin(Row row, Function function, boolean post) throws Exception {
+        String got = sha256(abiShape(function));
+        String expected = row.get(post ? "proposedAbiSha256" : "currentAbiSha256");
+        println("COHORT_ABI entry=" + row.addrText + " post=" + post + " sha256=" + got);
+        if (!got.equals(expected)) fail(row, (post ? "POST" : "CURRENT")
+            + " ABI digest " + got + " != pinned " + expected);
+    }
+
+    private VariableStorage explicitStorage(String token, DataType type, Row row) throws Exception {
+        String[] fields = token.split("@", -1);
+        if (fields.length != 3 || !fields[2].matches("[1-9][0-9]{0,3}")) {
+            throw new IllegalArgumentException("expected REG@name@bytes or STACK@offset@bytes");
+        }
+        int size = Integer.parseInt(fields[2]);
+        // This route models exact machine carriers. It does not infer widened or indirect storage.
+        if (type == null || type.getLength() != size) {
+            throw new IllegalArgumentException("explicit storage width differs from type length");
+        }
+        if (fields[0].equals("REG")) {
+            Register register = currentProgram.getRegister(fields[1]);
+            if (register == null || register.getMinimumByteSize() != size) {
+                throw new IllegalArgumentException("unknown register or wrong register width");
+            }
+            return new VariableStorage(currentProgram, register);
+        }
+        if (fields[0].equals("STACK") && fields[1].matches("0x[0-9a-f]+")) {
+            long offset = Long.parseLong(fields[1].substring(2), 16);
+            if (offset < 4 || offset + size > 0x100000) {
+                throw new IllegalArgumentException("stack argument outside admitted positive range");
+            }
+            return new VariableStorage(currentProgram, (int) offset, size);
+        }
+        throw new IllegalArgumentException("unsupported explicit storage location");
+    }
+
+    private void prepareCustomStorage(Row row) {
+        row.customParams.clear();
+        row.customReturn = null;
+        try {
+            if (!currentProgram.getLanguageID().toString().equals("x86:LE:32:default")
+                    || !currentProgram.getCompilerSpec().getCompilerSpecID().toString().equals("windows")) {
+                throw new IllegalArgumentException("explicit storage currently supports the PC x86/windows model only");
+            }
+            VariableStorage result = explicitStorage(row.get("returnStorage"),
+                resolveCustomType(row.get("returnType"), row), row);
+            if (!result.isRegisterStorage()) throw new IllegalArgumentException("return must be a register");
+            row.customReturn = new ReturnParameterImpl(resolveCustomType(row.get("returnType"), row), result, currentProgram);
+            List<VariableStorage> occupied = new ArrayList<>();
+            Set<String> names = new HashSet<>();
+            int stackExtent = 0;
+            Function function = currentProgram.getFunctionManager().getFunctionAt(row.entry);
+            Set<String> nonParamNames = new HashSet<>();
+            for (Symbol symbol : currentProgram.getSymbolTable().getSymbols(function)) {
+                if (symbol.getSource() != SourceType.DEFAULT
+                        && symbol.getSymbolType() != SymbolType.PARAMETER) {
+                    nonParamNames.add(symbol.getName());
+                }
+            }
+            for (Variable local : function.getLocalVariables()) {
+                if (!local.getVariableStorage().isValid()) throw new IllegalArgumentException("invalid existing local storage");
+            }
+            for (String[] fields : row.params) {
+                if (!fields[3].equals("expl")) throw new IllegalArgumentException("custom inputs must be explicit");
+                if (!names.add(fields[2])) throw new IllegalArgumentException("duplicate parameter name");
+                if (nonParamNames.contains(fields[2])) {
+                    throw new IllegalArgumentException("parameter name conflicts with an existing non-parameter symbol");
+                }
+                DataType type = resolveCustomType(fields[1], row);
+                VariableStorage storage = explicitStorage(fields[0], type, row);
+                for (VariableStorage prior : occupied) {
+                    if (storage.intersects(prior)) throw new IllegalArgumentException("overlapping input storage");
+                }
+                for (Variable local : function.getLocalVariables()) {
+                    if (storage.intersects(local.getVariableStorage())) {
+                        throw new IllegalArgumentException("input storage conflicts with an existing local");
+                    }
+                }
+                occupied.add(storage);
+                if (storage.isStackStorage()) stackExtent = Math.max(stackExtent,
+                    storage.getStackOffset() + type.getLength() - 4);
+                row.customParams.add(new ParameterImpl(fields[2], type, storage, currentProgram, SourceType.USER_DEFINED));
+            }
+            if (stackExtent != row.arityBytes) throw new IllegalArgumentException("stack extent differs from arityBytes");
+        } catch (Exception exception) {
+            fail(row, "CUSTOM STORAGE preflight: " + exception.getMessage());
+        }
+    }
+
+    private DataType resolveCustomType(String specification, Row row) {
+        String base = specification.trim();
+        while (base.endsWith("*")) base = base.substring(0, base.length() - 1).trim();
+        List<DataType> hits = new ArrayList<>();
+        currentProgram.getDataTypeManager().findDataTypes(base, hits);
+        if (hits.size() != 1) throw new IllegalArgumentException("custom datatype must have one existing base type");
+        DataType resolved = resolveType(specification, row);
+        DataType stored = resolved == null ? null
+            : currentProgram.getDataTypeManager().getDataType(resolved.getPathName());
+        if (stored == null || !stored.isEquivalent(resolved)) {
+            throw new IllegalArgumentException("custom datatype must already exist without resolution writes");
+        }
+        return stored;
+    }
+
+    private void gateCustomPost(Row row, Function function) throws Exception {
+        if (!function.hasCustomVariableStorage()) fail(row, "POST custom storage flag lost");
+        gateAbiPin(row, function, true);
+        if (row.customReturn == null || row.customParams.size() != function.getParameterCount()) {
+            fail(row, "POST custom parameter count/preflight differs");
+            return;
+        }
+        List<Parameter> actual = new ArrayList<>();
+        List<Variable> expected = new ArrayList<>();
+        actual.add(function.getReturn()); expected.add(row.customReturn);
+        actual.addAll(Arrays.asList(function.getParameters())); expected.addAll(row.customParams);
+        for (int index = 0; index < actual.size(); index++) {
+            Parameter parameter = actual.get(index);
+            Variable wanted = expected.get(index);
+            if (parameter.isAutoParameter() || parameter.isForcedIndirect()
+                    || parameter.getVariableStorage().isAutoStorage()
+                    || parameter.getVariableStorage().isForcedIndirect()
+                    || !parameter.getVariableStorage().equals(wanted.getVariableStorage())
+                    || !typeShape(parameter.getDataType()).equals(typeShape(wanted.getDataType()))
+                    || !typeShape(parameter.getFormalDataType()).equals(typeShape(wanted.getDataType()))) {
+                fail(row, "POST custom saved storage/type/indirection differs at " + index);
+            }
+        }
     }
 
     /** Non-dynamic symbols only.  Dynamic (auto-generated, never stored) labels
@@ -1265,7 +1631,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         checkVerbColumnBinding(spec, verbs);
         boolean varArgsDeclared = spec.has("col.varArgs");
         Set<String> mutableColumns = mutableColumnsFor(verbs, varArgsDeclared,
-            spec.has("col.currentCallingConvention"));
+            spec.has("col.currentCallingConvention"), spec.has("col.customStorage"));
         println("COHORT_GATE spec=ok cohort=" + cohortId + " sha256=" + spec.sha256
             + " verbs=" + verbs + " mutableColumns=" + mutableColumns);
         println("COHORT_GATE varargsPolicy=MANIFEST_DRIVEN_DEFAULT_PRESERVE"
@@ -1806,6 +2172,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
 
         // ---- PRE census snapshot -------------------------------------------
         TreeMap<String, String> preFrozen = frozenCensus();
+        gateProtectedAbiState(spec, rows);
         List<String> preSyms = symbolCensus();
         List<String> preDefinedData = definedDataCensus();
         String preMemory = memoryDigest();
@@ -2089,6 +2456,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             collateral = collateralProof(rows, spec, verbs, mutableColumns,
                 preFrozen, preSyms, preBookmarkList, preDefinedData, preMemory,
                 admitted, removedBookmarks, relax);
+            gateProtectedAbiState(spec, rows);
             gateMetrics(spec, "POST", "post", functionCount(),
                 listing.getNumInstructions(), referenceCount(),
                 listing.getNumDefinedData(), undefinedDataCount(),
@@ -2170,6 +2538,18 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         owner.put("col.arity", V_SET_PROTOTYPE);
         owner.put("col.arityBytes", V_SET_PROTOTYPE);
         owner.put("col.varArgs", V_SET_PROTOTYPE);
+        boolean customDeclared = spec.has("protectedAbiStateSha256");
+        for (String field : CUSTOM_STORAGE_FIELDS) {
+            owner.put("col." + field, V_SET_PROTOTYPE);
+            customDeclared |= spec.has("col." + field);
+        }
+        if (customDeclared) {
+            if (!verbs.contains(V_SET_PROTOTYPE)) fail("CUSTOM STORAGE requires SET_PROTOTYPE");
+            for (String field : CUSTOM_STORAGE_FIELDS) requireBinding(spec, "col." + field, "CUSTOM_STORAGE");
+            if (!spec.opt("protectedAbiStateSha256", "").matches("[0-9a-f]{64}")) {
+                fail("CUSTOM STORAGE requires protectedAbiStateSha256");
+            }
+        }
         owner.put("col.colName", V_SET_DATA_POINTER);
         owner.put("col.dwordValue", V_SET_DATA_POINTER);
         owner.put("col.confidence", V_SET_DATA_POINTER);
@@ -2409,7 +2789,23 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 + expectedConvention + "] actual ["
                 + f.getCallingConventionName() + "]");
         }
-        if (f.hasCustomVariableStorage()) {
+        row.customStorage = row.cells.containsKey("customStorage");
+        if (row.customStorage) {
+            for (String field : CUSTOM_STORAGE_FIELDS) {
+                if (row.get(field).isEmpty()) fail(row, "CUSTOM STORAGE missing " + field);
+            }
+            if (!row.get("customStorage").equals("true")
+                    || !(row.get("currentCustomStorage").equals("true")
+                         || row.get("currentCustomStorage").equals("false"))) {
+                fail(row, "CUSTOM STORAGE requires explicit current flag and proposed true");
+            }
+            for (String field : Arrays.asList("currentAbiSha256", "proposedAbiSha256")) {
+                if (!row.get(field).matches("[0-9a-f]{64}")) fail(row, "CUSTOM STORAGE invalid " + field);
+            }
+            boolean expectedCustom = readback || row.get("currentCustomStorage").equals("true");
+            if (f.hasCustomVariableStorage() != expectedCustom) fail(row, "CUSTOM STORAGE current flag differs");
+            gateAbiPin(row, f, readback);
+        } else if (f.hasCustomVariableStorage()) {
             fail(row, "uses custom variable storage; this framework only "
                 + "installs dynamic storage");
         }
@@ -2463,7 +2859,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             fail(row, "arity/arityBytes not numeric");
             return;
         }
-        if (row.arityBytes != row.arity * 4) {
+        if (!row.customStorage && row.arityBytes != row.arity * 4) {
             fail(row, "arityBytes/arity mismatch " + row.arityBytes + " vs "
                 + row.arity);
         }
@@ -2488,7 +2884,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 if (!fields[3].equals("auto") && !fields[3].equals("expl")) {
                     fail(row, "illegal param mode " + fields[3]);
                 }
-                if (fields[0].equals("STACK")) {
+                if (!row.customStorage && fields[0].contains("@")) {
+                    fail(row, "explicit storage token without CUSTOM STORAGE bindings");
+                }
+                if (fields[0].equals("STACK") || (row.customStorage && fields[0].startsWith("STACK@"))) {
                     nstack++;
                 } else {
                     nreg++;
@@ -2500,12 +2899,13 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             fail(row, "stack param count expected [" + row.arity + "] actual ["
                 + nstack + "]");
         }
-        if ("__fastcall".equals(row.get("callingConvention")) && nstack > 0
+        if (!row.customStorage && "__fastcall".equals(row.get("callingConvention")) && nstack > 0
                 && nreg < 2) {
             fail(row, "__fastcall with " + nreg + " register param(s) and "
                 + nstack + " stack param(s) would let dynamic storage"
                 + " fabricate an EDX argument");
         }
+        if (row.customStorage) prepareCustomStorage(row);
     }
 
     private void gateGeometryRow(Row row, Function fn, Spec spec,
@@ -3231,7 +3631,9 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                     fail(row, "POST signature source expected [USER_DEFINED] "
                         + "actual [" + f.getSignatureSource() + "]");
                 }
-                if (f.hasCustomVariableStorage()) {
+                if (row.customStorage) {
+                    gateCustomPost(row, f);
+                } else if (f.hasCustomVariableStorage()) {
                     fail(row, "POST uses custom variable storage");
                 }
                 int stack = 0;
@@ -3338,7 +3740,9 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                     fail(row, "READBACK signature source expected [USER_DEFINED] "
                         + "actual [" + f.getSignatureSource() + "]");
                 }
-                if (f.hasCustomVariableStorage()) {
+                if (row.customStorage) {
+                    gateCustomPost(row, f);
+                } else if (f.hasCustomVariableStorage()) {
                     fail(row, "READBACK uses custom variable storage");
                 }
             }
@@ -3348,18 +3752,28 @@ public class GhidraApplyCohortManifest extends GhidraScript {
 
     private String applyPrototype(Row row) throws Exception {
         Function f = currentProgram.getFunctionManager().getFunctionAt(row.entry);
-        List<Variable> params = new ArrayList<>();
-        for (String[] p : row.params) {
-            if (p[3].equals("auto")) {
-                continue;   // Ghidra regenerates auto params from the convention
+        List<Variable> params;
+        Parameter result;
+        FunctionUpdateType updateType;
+        if (row.customStorage) {
+            // Never force away a conflicting local. Preflight objects are explicit,
+            // and exact saved-storage/ABI and protected-state gates follow this call.
+            params = row.customParams;
+            result = row.customReturn;
+            updateType = FunctionUpdateType.CUSTOM_STORAGE;
+        } else {
+            params = new ArrayList<>();
+            for (String[] p : row.params) {
+                if (p[3].equals("auto")) {
+                    continue;   // Ghidra regenerates auto params from the convention
+                }
+                params.add(new ParameterImpl(p[2], resolveType(p[1], row), currentProgram));
             }
-            params.add(new ParameterImpl(p[2], resolveType(p[1], row), currentProgram));
+            result = new ReturnParameterImpl(resolveType(row.get("returnType"), row), currentProgram);
+            updateType = FunctionUpdateType.DYNAMIC_STORAGE_FORMAL_PARAMS;
         }
-        f.updateFunction(row.get("callingConvention"),
-            new ReturnParameterImpl(resolveType(row.get("returnType"), row),
-                currentProgram),
-            params, FunctionUpdateType.DYNAMIC_STORAGE_FORMAL_PARAMS, true,
-            SourceType.USER_DEFINED);
+        f.updateFunction(row.get("callingConvention"), result, params, updateType,
+            !row.customStorage, SourceType.USER_DEFINED);
         // The varargs decision comes from the manifest; a row that asked for
         // nothing is restored to the value measured before this write, so
         // updateFunction cannot silently drop it either.  This is the only

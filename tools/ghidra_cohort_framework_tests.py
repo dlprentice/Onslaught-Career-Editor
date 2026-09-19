@@ -202,6 +202,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # all formal parameters, locals and program structure preserved.
 # asin-helper-semantics: two names/comments/tag sets, 2026-09-19. Original
 # finite-code execution establishes asin; every prototype and body stays frozen.
+# math-error-custom-abi: one explicit register/x87/stack prototype, comment and
+# tag set, 2026-09-19. Original-code controls and separate rehearsal readback;
+# all locals/types/unrelated ABI state preserved, ten actual-DB refusals passed.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -229,6 +232,7 @@ LIVE_GRANTED_COHORTS = [
     "unit-ai-exit-contract",
     "aim-provider-semantics",
     "asin-helper-semantics",
+    "math-error-custom-abi",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -662,6 +666,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "unit-ai-exit-contract",\n'
         '        "aim-provider-semantics",\n'
         '        "asin-helper-semantics",\n'
+        '        "math-error-custom-abi",\n'
         "    };\n",
     ),
     (
@@ -1533,6 +1538,10 @@ class CallingConventionFieldTests(unittest.TestCase):
   if(!Set.of("tags").equals(mutableColumnsFor(Set.of(V_SET_TAGS),false,true))) throw new AssertionError("undeclared verb widened");
   expected.add("varArgs");
   if(!expected.equals(mutableColumnsFor(prototype,true,true))) throw new AssertionError("independent axes lost");
+  if(!expected.equals(mutableColumnsFor(prototype,true,true,false))) throw new AssertionError("absent custom widened");
+  expected.add("customStorage");
+  if(!expected.equals(mutableColumnsFor(prototype,true,true,true))) throw new AssertionError("custom axis missing");
+  if(!Set.of("tags").equals(mutableColumnsFor(Set.of(V_SET_TAGS),false,true,true))) throw new AssertionError("custom without prototype widened");
  }
 }
 """
@@ -1544,6 +1553,170 @@ class CallingConventionFieldTests(unittest.TestCase):
             path.write_text(program, encoding="utf-8")
             result = subprocess.run([java, str(path)], capture_output=True, text=True, timeout=30)
             self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+
+class CustomStorageTests(unittest.TestCase):
+    def test_actual_abi_serialization_storage_and_binding_guards(self):
+        install = Path.home() / ".local/opt/ghidra_12.1.3_PUBLIC"
+        jars = sorted(install.glob("Ghidra/**/lib/*.jar"))
+        javac, java = shutil.which("javac"), shutil.which("java")
+        if not jars or not javac or not java:
+            self.skipTest("Pinned Ghidra API jars and Java required for custom ABI probe")
+        program = r"""
+import java.lang.reflect.*;
+import java.util.*;
+import ghidra.program.model.address.*;
+import ghidra.program.model.data.*;
+import ghidra.program.model.lang.*;
+import ghidra.program.model.listing.*;
+import ghidra.program.model.listing.Parameter;
+import ghidra.program.model.mem.*;
+import ghidra.program.model.pcode.*;
+import ghidra.program.model.symbol.*;
+import ghidra.util.task.TaskMonitor;
+class CustomAbiProbe extends GhidraApplyCohortManifest {
+ static String change="none";
+ static AddressSpace ram=new GenericAddressSpace("ram",32,AddressSpace.TYPE_RAM,0);
+ static AddressSpace regs=new GenericAddressSpace("register",32,AddressSpace.TYPE_REGISTER,1);
+ static AddressSpace stack=new GenericAddressSpace("stack",32,AddressSpace.TYPE_STACK,2);
+ static AddressFactory factory=new DefaultAddressFactory(new AddressSpace[]{ram,regs},ram) {
+  public AddressSpace getStackSpace(){return stack;}
+  public boolean isValidAddress(Address address){return address.getAddressSpace()==stack || super.isValidAddress(address);}
+  public AddressSpace getAddressSpace(int id){return id==stack.getSpaceID()?stack:super.getAddressSpace(id);}
+ };
+ interface Call {Object get(String name,Object[] args) throws Throwable;}
+ @SuppressWarnings("unchecked") static <T> T proxy(Class<T> type,Call call) {
+  return (T)Proxy.newProxyInstance(type.getClassLoader(),new Class[]{type},(p,m,a)-> {
+   Object result=call.get(m.getName(),a==null?new Object[0]:a);
+   if(result!=null)return result;
+   if(m.getReturnType()==boolean.class)return false;
+   if(m.getReturnType()==int.class)return 0;
+   if(m.getReturnType()==long.class)return 0L;
+   return null;
+  });
+ }
+ static Register register(String name) {
+  int offset=switch(name){case "EAX","AX"->0;case "ECX"->4;case "EDX"->8;case "EBX"->12;case "ST0"->0x1100;case "ST1"->0x1110;default->-1;};
+  if(offset<0)return null;
+  return new Register(name,name,regs.getAddress(offset),name.startsWith("ST")?10:name.equals("AX")?2:4,false,0);
+ }
+ static Language language=proxy(Language.class,(n,a)->n.equals("getRegister")?register("EAX"):null);
+ static Program program=proxy(Program.class,(n,a)->switch(n){
+  case "getAddressFactory"->factory;case "getLanguage"->language;
+  case "getRegister"->register((String)a[0]);
+  case "getMemory"->proxy(Memory.class,(m,b)->m.equals("getBlocks")?new MemoryBlock[0]:null);
+  case "getDataTypeManager"->proxy(ProgramBasedDataTypeManager.class,(m,b)->m.equals("getAllDataTypes")?List.<DataType>of().iterator():null);
+  case "getFunctionManager"->proxy(FunctionManager.class,(m,b)->m.equals("getFunctions")?iterator(List.of(function(true),function(false))):m.equals("getExternalFunctions")?iterator(List.of()):null);
+  default->null;
+ });
+ static FunctionIterator iterator(List<Function> functions) {
+  Iterator<Function> it=functions.iterator();return proxy(FunctionIterator.class,(n,a)->switch(n){case "hasNext"->it.hasNext();case "next"->it.next();default->null;});
+ }
+ static VariableStorage storage(boolean onStack,long offset,int bytes) throws Exception {
+  return new VariableStorage(program,new Varnode((onStack?stack:regs).getAddress(offset),bytes));
+ }
+ static Parameter parameter(int index) throws Exception {
+  boolean result=index==-1;
+  DataType type=result?Float10DataType.dataType:IntegerDataType.dataType;
+  VariableStorage place=result?storage(false,change.equals("return-register")?0x1110:0x1100,change.equals("return-width")?8:10):
+    index==0?storage(false,change.equals("input-register")?12:0,4):storage(true,change.equals("stack-offset")?8:4,4);
+  return proxy(Parameter.class,(n,a)->switch(n){
+   case "getName"->result?"<RETURN>":change.equals("parameter-name")&&index==0?"renamed":"input"+index;
+   case "getDataType"->type;
+   case "getFormalDataType"->result&&change.equals("formal-type")?DoubleDataType.dataType:type;
+   case "getVariableStorage"->place;case "getOrdinal"->index;
+   case "isAutoParameter"->index==0&&change.equals("auto-flag");
+   case "getAutoParameterType"->index==0&&change.equals("auto-kind")?AutoParameterType.RETURN_STORAGE_PTR:null;
+   case "isForcedIndirect"->result&&change.equals("forced-indirect");
+   case "getSource"->change.equals("parameter-source")&&index==0?SourceType.ANALYSIS:SourceType.USER_DEFINED;
+   case "getComment"->change.equals("parameter-comment")&&index==0?"changed":null;
+   default->null;
+  });
+ }
+ static Variable local(boolean target) throws Exception {
+  VariableStorage place=storage(true,!target&&change.equals("other-local-storage")?-12:-8,4);
+  return proxy(Variable.class,(n,a)->switch(n){
+   case "getName"->"local";case "getDataType"->IntegerDataType.dataType;case "getVariableStorage"->place;
+   case "getSource"->SourceType.DEFAULT;
+   case "getFirstUseOffset"->target&&change.equals("target-local-first-use")?4:0;
+   case "getComment"->!target&&change.equals("other-local-comment")?"changed":null;
+   default->null;
+  });
+ }
+ static Function function(boolean target) throws Exception {
+  return proxy(Function.class,(n,a)->switch(n){
+   case "getEntryPoint"->ram.getAddress(target?0x561547:0x404120);
+   case "getCallingConventionName"->"unknown";case "hasCustomVariableStorage"->true;
+   case "getSignatureSource"->SourceType.USER_DEFINED;case "getStackPurgeSize"->change.equals("purge")?4:0;
+   case "getReturn"->parameter(-1);case "getParameters"->new Parameter[]{parameter(0),parameter(1)};case "getParameterCount"->2;
+   case "getLocalVariables"->new Variable[]{local(target)};
+   case "getStackFrame"->proxy(StackFrame.class,(m,b)->switch(m){case "getParameterOffset"->4;case "getParameterSize"->4;case "getLocalSize"->40;default->null;});
+   default->null;
+  });
+ }
+ static Method method(String name,Class<?>... types)throws Exception {
+  Method m=GhidraApplyCohortManifest.class.getDeclaredMethod(name,types);m.setAccessible(true);return m;
+ }
+ @SuppressWarnings("unchecked") static List<String> failures(GhidraApplyCohortManifest script)throws Exception {
+  Field f=GhidraApplyCohortManifest.class.getDeclaredField("failures");f.setAccessible(true);return (List<String>)f.get(script);
+ }
+ public static void main(String[] args)throws Exception {
+  ghidra.util.UniversalIdGenerator.initialize();
+  CustomAbiProbe script=new CustomAbiProbe();script.currentProgram=program;script.monitor=TaskMonitor.DUMMY;
+  String baseline=abiShape(function(true));
+  for(String negative:List.of("input-register","stack-offset","return-register","return-width","formal-type","auto-flag","auto-kind","forced-indirect","parameter-name","parameter-source","parameter-comment","purge")) {
+   change=negative;if(baseline.equals(abiShape(function(true))))throw new AssertionError("ABI failed to bind "+negative);
+  }
+  change="none";Row row=new Row();row.addr=0x561547;row.entry=ram.getAddress(row.addr);
+  Method protectedState=method("protectedAbiState",List.class);
+  String protectedBase=(String)protectedState.invoke(script,List.of(row));
+  for(String negative:List.of("target-local-first-use","other-local-comment","other-local-storage","input-register","purge")) {
+   change=negative;if(protectedBase.equals(protectedState.invoke(script,List.of(row))))throw new AssertionError("protected state missed "+negative);
+  }
+  FunctionDefinitionDataType definition=new FunctionDefinitionDataType("comment_probe");
+  definition.setArguments(new ParameterDefinitionImpl[]{new ParameterDefinitionImpl("arg",IntegerDataType.dataType,"before")});
+  String rendering=definition.toString(),definitionBefore=dataTypeShape(definition);
+  definition.setArguments(new ParameterDefinitionImpl[]{new ParameterDefinitionImpl("arg",IntegerDataType.dataType,"after")});
+  if(!rendering.equals(definition.toString()) || definitionBefore.equals(dataTypeShape(definition)))throw new AssertionError("argument comment unbound");
+  definitionBefore=dataTypeShape(definition);definition.setComment("function comment");
+  if(!rendering.equals(definition.toString()) || definitionBefore.equals(dataTypeShape(definition)))throw new AssertionError("definition comment unbound");
+  ghidra.program.model.data.Enum enumeration=proxy(ghidra.program.model.data.Enum.class,(n,a)->switch(n){
+   case "getPathName"->"/EnumProbe";case "getLength"->4;case "toString"->"A=1 comment";
+   case "getNames"->new String[]{"A"};case "getValue"->1L;case "getComment"->change;default->null;
+  });
+  change="first enum comment";String enumBefore=dataTypeShape(enumeration);change="second enum comment";
+  if(enumBefore.equals(dataTypeShape(enumeration)))throw new AssertionError("enum comment unbound");
+  if(!dataTypeShape(new IBO32DataType()).equals(dataTypeShape(new IBO32DataType())))throw new AssertionError("process-local built-in ID leaked");
+  change="none";Method explicit=method("explicitStorage",String.class,DataType.class,Row.class);
+  explicit.invoke(script,"REG@EAX@4",IntegerDataType.dataType,row);
+  explicit.invoke(script,"STACK@0x4@4",IntegerDataType.dataType,row);
+  for(String negative:List.of("REG@EAX@8","REG@MISSING@4","REG@AX@4","STACK@0x0@4","STACK@-4@4","STACK@0x100000@4","REG@EAX@04","REG:EAX:4")) {
+   try {explicit.invoke(script,negative,IntegerDataType.dataType,row);throw new AssertionError("accepted "+negative);}
+   catch(InvocationTargetException expected){if(!(expected.getCause() instanceof IllegalArgumentException))throw expected;}
+  }
+  Method bindings=method("checkVerbColumnBinding",Spec.class,Set.class);
+  for(String omitted:CUSTOM_STORAGE_FIELDS) {
+   Spec spec=new Spec();for(String field:List.of("currentSignature","proposedSignature","returnType","paramSpec","callingConvention"))spec.raw.put("col."+field,List.of(field));
+   spec.raw.put("protectedAbiStateSha256",List.of("0".repeat(64)));
+   for(String field:CUSTOM_STORAGE_FIELDS)if(!field.equals(omitted))spec.raw.put("col."+field,List.of(field));
+   GhidraApplyCohortManifest check=new GhidraApplyCohortManifest();bindings.invoke(check,spec,Set.of("SET_PROTOTYPE"));
+   if(failures(check).stream().noneMatch(s->s.contains("col."+omitted)))throw new AssertionError("partial group admitted "+omitted);
+  }
+  System.out.println("custom ABI controls PASS: 12 shape, 5 preservation, 8 location, 5 binding, 3 datatype negatives and stable built-in identity");
+ }
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="bea-custom-abi-", dir="/var/tmp") as scratch:
+            probe = Path(scratch) / "CustomAbiProbe.java"
+            probe.write_text(program, encoding="utf-8")
+            cp = os.pathsep.join(str(path) for path in jars)
+            compiled = subprocess.run([javac, "-proc:none", "-cp", cp, "-d", scratch,
+                                       str(BASE), str(LIVE), str(probe)], capture_output=True, text=True)
+            self.assertEqual(0, compiled.returncode, compiled.stdout + compiled.stderr)
+            result = subprocess.run([java, "-cp", scratch + os.pathsep + cp, "CustomAbiProbe"],
+                                    capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertIn("custom ABI controls PASS", result.stdout)
 
 
 class CreateFunctionTests(unittest.TestCase):

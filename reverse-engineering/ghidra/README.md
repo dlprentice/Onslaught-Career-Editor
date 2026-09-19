@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[asin-helper metadata correction](#asin-helper-metadata-correction-2026-09-19);
+[shared math-error ABI correction](#shared-math-error-abi-correction-2026-09-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -624,6 +624,51 @@ Commands, comparisons and receipts are in
 `post-working-restore.json`: 5,773 bytes, SHA-256
 `e42a86cf77d6b115c28435e529a96fda0d30a980cc77b6e4dd439bebd8a3625f`.
 This is an analysis correction, not retail gameplay or full math-library acceptance.
+
+## Shared math-error ABI correction (2026-09-19)
+
+The working project now measures `db.18650`: 18 payload files, 118,999,924 bytes,
+inventory SHA-256
+`dc3df9fdb2cc9c390f70421e47f2a25ecbcb18db5f8adcbb6763140a3a305c65`.
+Its main database is 68,698,112 bytes, SHA-256
+`f750ca22556143ee48fb2075f0715f4620e12ecb1b354e718b50b85c5ade86ec`.
+The [manifest](../../tools/cohort-specs/math-error-custom-abi.manifest.tsv) and
+[spec](../../tools/cohort-specs/math-error-custom-abi.spec.tsv) correct only
+`00561547`'s prototype, nonrepeatable comment and tags. Its retained name is
+`__startOneArgErrorHandling`. The physical ABI uses EAX, EDX, ECX and ST0 plus
+the two actual enclosing-frame arguments at stack offsets `+4` and `+c`, with
+ST0 return and zero purge. It removes the invented hidden-result pointer and
+keeps the enclosing return-address slot out of the parameter list.
+
+The [contract and original-code controls](../binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
+distinguish the `float10` register carrier from the binary64 spill/reload.
+Eight controlled calls establish the observed bridge behavior; they do not
+validate the actual CRT dispatcher, exceptional inputs, Windows or gameplay.
+The related record-type model, sibling ABI and outer entries remain separate.
+
+The existing framework now supports explicitly pinned custom storage. Its
+92 tests passed, as did ten actual-database refusals before writes and three
+datatype-comment controls. The fresh independent PRE matched working exactly,
+was restored elsewhere and reopened read-only. Isolated dry/apply/separate
+readback, independent full review and the sealed repetition all passed.
+Live dry/apply/separate readback equals that rehearsal in all nine exports.
+Only the declared function row changes; all 8,329 others, every local variable,
+type definition, body, byte, bookmark and saved stack offset remain unchanged.
+The removed auto parameter reduces saved variable records by one. Only the
+comment digest changes among 29 program metrics. Exact ABI and protected-state
+pins also cover storage, hidden/indirect flags, local first-use offsets,
+unrelated external functions and datatype metadata omitted by rendered text.
+
+PRE recovery is the verified asin-helper POST above. New independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-math-error-custom-abi/post-working/`.
+It was copied, hash-compared, independently restored and opened read-only;
+the restored bytes equal working. The tracked checkpoint remains the exact
+`745c00ad…` payload; no refresh occurred. Commands and comparisons belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/promotion/`.
+`live-readback.json`: 2,490 bytes, SHA-256
+`f426dfc5ac9a8e93a93f0fadf52ab8e93d0a7b09d3fdcddcd915de61ec92d456`.
+`post-working-restore.json`: 5,779 bytes, SHA-256
+`c89ebc6389d77a9465759f1f174610727df56d3923bdd6577877f402d5f1a999`.
 
 Related (not this folder):
 

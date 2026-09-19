@@ -843,9 +843,12 @@ rewriting the helper's saved local variables. Its high P-code already retained
 the call-dependent result before that type change: fragmented C was a
 presentation limitation, not proof that the dependency was lost.
 
-These prototype/type models have **not** been promoted. The existing live
-cohort tool admits dynamic storage only; explicit register/stack storage and
-record types need exact preservation checks before a live correction. The
+The [one-function live correction](../../ghidra/README.md#shared-math-error-abi-correction-2026-09-19)
+adopts the physical `float10` model with all six explicit inputs and ST0 return.
+The name, body, local variables and existing types remain unchanged. The
+dispatcher-record type model remains unpromoted; no local rewrite is needed
+for its demonstrated improvement. The asin core's earlier comment about this
+helper's hidden pointer describes its pre-correction state. The
 binary sibling at `00561530` prepares its own frame and jumps into `00561550`;
 it must not receive this entry contract by association. Sibling/outer-tail
 signatures, alternate-entry ownership, exceptional inputs and Windows exception

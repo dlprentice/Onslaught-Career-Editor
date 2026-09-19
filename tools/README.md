@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-12 (unused Windows VM retired; TTD platform limits retained)
+Last updated: 2026-09-19 (explicit Ghidra ABI preservation; platform limits retained)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports retail research, the Godot rebuild, the Godot companion and retained toolkit
@@ -190,6 +190,21 @@ a strip by omission is a refusal on any of the 8,329 rows. `POST` and readback
 compare against the manifest value, never a literal. `probe-fault-varargsflip`
 writes the opposite of the resolved decision so those gates can be provoked in
 both directions; like every fault mode it can never commit.
+
+**Explicit custom storage is a separate opt-in.** For the PC x86/windows
+model, a prototype manifest can bind `currentCustomStorage`, `customStorage`,
+`returnStorage`, `currentAbiSha256` and `proposedAbiSha256` together, with a
+`protectedAbiStateSha256` spec pin. Register and stack locations use
+`REG@EAX@4` / `STACK@0x4@2` tokens and must match existing datatype widths.
+The ABI pins cover actual and formal types, exact locations, auto/indirect
+flags, variable names/sources/comments and frame properties. The protected
+census covers program bytes, every local, unrelated function ABIs and datatype
+definitions, including comments and settings omitted from rendered text.
+Process-local built-in type IDs and archive bookkeeping are excluded; persistent
+type IDs and source-archive identities remain bound. The custom route rejects
+name/storage conflicts before applying and uses `force=false` so it cannot
+silently discard conflicting locals. A late failure still requires verified
+PRE recovery. Historical dynamic-storage receipts retain their original census.
 
 **Every run records which applier produced it.** `COHORT_APPLIER` and the
 receipt's `applier` object carry this script's own source SHA-256, measured before
