@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://FirstFlightHud.cs" id="1_root"]
-[ext_resource type="Script" path="res://Scenes/Hud/HudDesignStage.cs" id="2_stage"]
+[ext_resource type="Script" path="res://Scenes/Hud/hud_design_stage.gd" id="2_stage"]
 [ext_resource type="Script" path="res://Scenes/Hud/RetailHudPart.cs" id="3_part"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/radio-view.tres" id="4_texture"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/weapon-fill.tres" id="5_texture"]

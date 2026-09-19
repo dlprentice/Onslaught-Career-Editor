@@ -50,9 +50,11 @@ public sealed partial class HudSceneChecks : Node
             var scanner = view.GetNode<TextureRect>("Surface/DesignStage/Base/ScannerBackdrop");
             Check(scanner.Position == new Vector2(17, 368) && scanner.Size == new Vector2(128, 128),
                 "Native scanner rectangle retains the measured retail baseline.");
-            Check(scanner.Texture is HudTexturePage && scanner.Texture.GetSize() == new Vector2(128, 128),
+            Texture2D scannerTexture = scanner.Texture ?? throw new InvalidOperationException("Scanner has no texture recipe.");
+            Check(scannerTexture.GetScript().As<Script>().ResourcePath ==
+                "res://Scenes/Shared/retail_texture_page.gd" && scannerTexture.GetSize() == new Vector2(128, 128),
                 "Native texture uses a reusable recipe for the actual private page.");
-            Check(scanner.Texture.GetImage().GetWidth() == 128, "The production private texture decodes.");
+            Check(scannerTexture.GetImage().GetWidth() == 128, "The production private texture decodes.");
             var right = view.GetNode<TextureRect>("Surface/DesignStage/Base/RightWeaponBacking");
             Check(right.FlipH && right.Position == new Vector2(499, 339), "Right backing retains the measured mirror.");
             var crosshair = view.GetNode<Control>("Surface/DesignStage/Base/Crosshair");

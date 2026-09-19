@@ -94,7 +94,7 @@ public sealed class RetailFrontendCursorTests
         string cursor = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.Cursor.cs"));
         string sequence = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailStartupSequence.cs"));
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "startup_sequence.gd"));
 
         Assert.Contains("RetailFrontendCursor.ShouldDrawOnFrontend", cursor, StringComparison.Ordinal);
         Assert.Contains("RetailFrontendCursor.QuadSize", cursor, StringComparison.Ordinal);

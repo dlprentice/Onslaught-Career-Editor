@@ -263,7 +263,7 @@ Use these scenes from Godot's FileSystem dock:
 | Scene relative to the Godot project | What is present before Play |
 | --- | --- |
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
-| [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | Black surround, actual movie/splash TextureRects and an inactive audio node. `EditorCue` reads one real frame or splash from the canonical media cache; it never plays it. |
+| [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | Production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. Editor display values feed presentation only. |
 | [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |
@@ -287,6 +287,17 @@ remain ordinary selectable Controls; their script and exported properties are
 available in the editor. Runtime animation applies its existing state over those
 definitions. Preview state is explicitly separate from game state, with no second
 simulation or per-object cross-language bridge.
+The startup scene owns its schedule, playback clock, two reusable frame buffers,
+skip controls and voice lifetime in GDScript. During the transition its C# host
+supplies one verified media batch and observes voice starts for the existing
+audio-retirement check. Opening the scene or running it without that explicit
+configuration cannot start gameplay. Its real controls retain authored layout
+edits, and packing them excludes transient decoded images and audio.
+HUD texture recipes and the common screen-layout transform also use GDScript.
+Select a TextureRect's texture resource to edit its `source_path`, `dimensions`
+and `compression` recipe; private decoded pixels stay transient. The HUD checks
+all required recipes before reporting ready. Its remaining instrument drawing
+and presentation state continue in C# while those consumers are converted.
 The level graph, options and debriefing are composite Controls: move or resize
 their section in the 2D editor and inspect their drawing/interaction code for
 internal layout. They are not yet individual native controls for every row.

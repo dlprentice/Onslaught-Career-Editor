@@ -207,6 +207,12 @@
     <Content Include="..\OnslaughtRebuild.Godot\RetailStartupSequence.cs"
              Link="godot-pause-source\RetailStartupSequence.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\startup_sequence.gd"
+             Link="godot-pause-source\startup_sequence.gd"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Startup.tscn"
+             Link="godot-pause-source\Startup.tscn"
+             CopyToOutputDirectory="PreserveNewest" />
     <!-- FEP_OPTIONS lives in a partial. RetailFrontendPageFillEvidenceTests has
          to see its page renderer too, because the "the frontend is showing the
          raw D3D clear colour" reading of #147 named the options root by name. -->

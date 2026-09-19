@@ -226,6 +226,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
         GetNode<Control>("Surface/DesignStage/Glow").Material = _glowLayer.Material;
         GetNode<Control>("Surface/DesignStage/Text").Material = _textLayer.Material;
         _parts = FindChildren("*", nameof(Control), true, false).OfType<RetailHudPart>().ToArray();
+        foreach (TextureRect control in FindChildren("*", nameof(TextureRect), true, false).OfType<TextureRect>())
+        {
+            if (control.Texture is { } recipe && recipe.HasMethod("ensure_loaded"))
+            {
+                Godot.Collections.Dictionary admission = recipe.Call("ensure_loaded").AsGodotDictionary();
+                if (!admission["ok"].AsBool())
+                    throw new InvalidDataException(admission["error"].AsString());
+            }
+        }
         _presentationReady = true;
     }
 

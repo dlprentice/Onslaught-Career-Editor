@@ -160,6 +160,27 @@ check logs completed without errors; seven launcher checks passed.
 The existing C# scheduler/chunk selection also passed **51 tests**; its log is
 `local-data/test-runs/gdscript-pause-94vdiqq3/foundation-csharp.log`.
 
+The production startup playback is now GDScript. Actual-scene checks passed
+**244 .NET-host checks**, including the temporary bridge and audio-retirement
+observer, and **233 standard-engine checks**. The frozen editor view passed
+**79 checks** in the .NET editor. The whole project still needs that edition
+while world/frontend/HUD controllers remain C#: a standard-editor run can
+report missing C# loaders when restoring those scenes. The scripted editor
+exit also reports editor-owned RID/ObjectDB shutdown allocations; this is not
+evidence of a clean interactive editor shutdown.
+
+Four isolated llvmpipe startup captures passed **256 rendered checks** for
+the real logo, montage and two splash fade points. The full-brightness splash
+matches the previous C# scene capture pixel for pixel. HUD native texture
+recipes and screen fitting now use GDScript, with **44 headless checks** and
+**46 rendered checks**; both the 640×480 and 1280×720 captures match the prior
+C# output pixel for pixel. The affected existing startup/frontend source and
+behavior tests passed **57 tests**. Logs and private captures are retained in
+`local-data/test-runs/gdscript-startup-a8xurdqe/`. Rendered runs used fresh
+private X-server credentials and cleaned up their own display processes.
+These observations establish the converted components and their host boundary,
+not audible playback, physical input, GPU performance or full combat parity.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state

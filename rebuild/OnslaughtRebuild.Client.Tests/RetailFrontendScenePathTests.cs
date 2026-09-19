@@ -99,14 +99,19 @@ public sealed class RetailFrontendScenePathTests
         string game = ReadGodotSource("FirstFlightGame.cs");
         string flow = ReadGodotSource("RetailFrontendFlow.cs");
         string sequence = ReadGodotSource("RetailStartupSequence.cs");
+        string playback = ReadGodotSource("startup_sequence.gd");
         string startMedia = Slice(game, "private void StartRetailStartupMedia()");
         string pointer = Slice(flow, "private bool HandlePointerConfirm(");
         string key = Slice(flow, "private bool HandleKey(");
-        string sequenceInput = Slice(sequence, "public override void _Input(");
         string clickArm = CaseArm(pointer, "case RetailFrontendScreen.ClickToStart:");
 
         Assert.Contains("RetailFrontendScenePath.IsStartupSuppressed", startMedia, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendScenePath.AcceptsStartupSkip", sequenceInput, StringComparison.Ordinal);
+        // Input now belongs to the actual standard-engine production scene.
+        // startup_scene_checks.gd executes that scene's accepted/rejected events;
+        // this guard verifies the host uses it and has no second input owner.
+        Assert.Contains("configure_verified_media", sequence, StringComparison.Ordinal);
+        Assert.DoesNotContain("public override void _Input(", sequence, StringComparison.Ordinal);
+        Assert.Contains("if not accepts_skip_event(event):", playback, StringComparison.Ordinal);
         Assert.Contains("RetailFrontendScenePath.AcceptsClickToStartMouse", clickArm, StringComparison.Ordinal);
         Assert.Contains("RetailFrontendScenePath.AcceptsClickToStartKey", key, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", startMedia, StringComparison.Ordinal);
