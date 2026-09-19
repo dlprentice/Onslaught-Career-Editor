@@ -154,14 +154,18 @@ function Test-FirstFlightSmokeEvidence {
 
     $report = $rawReport | ConvertFrom-Json
     Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v17' $report.schemaVersion
-    Assert-SmokeValue 'engineVersion' '4.7.1-stable (official)' $report.engineVersion
+    Assert-SmokeValue 'engineVersion' '4.8-dev6 (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
-    # Shared 2,148-step tape expectation after the living-aircraft turn-rate
-    # correction. Repeated Client input runs and native Linux Godot smoke
-    # reproduce it with the gameplay assertions intact. Windows execution of
-    # this retained gate remains pending.
-    Assert-SmokeValue 'stateHash' 'bc5d99c7f1fbd5e2bf86363e5309e5aa77f0ad132241ef08a9e61b15d75b3dfd' $report.stateHash
+    # Shared 2,148-step expectation with the already-committed definition-format
+    # 8 identity (InteractiveSessionTests.FirstFlightSmokeScenario_ReachesFiringRangeAndCompletesWaypoint).
+    # That test preserves gameplay assertions and compares format-7 state every
+    # tick after substituting only definition identity; it also retains format-6
+    # and format-7 fingerprints. The former bc5d99c7 pin predated those changes.
+    # September 19 Linux Godot execution agrees with the current Client oracle;
+    # this scene migration changes no Core contract. Windows execution remains
+    # pending. See VALIDATION.md's September 19 scene-migration receipt.
+    Assert-SmokeValue 'stateHash' '53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

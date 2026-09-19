@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-19 (native companion route; other lanes retain their stated evidence).
+Last updated: 2026-09-19 (native companion and rebuild editor routes on Godot 4.8 dev6).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -105,9 +105,11 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-The engineering host is Omarchy Linux. The companion uses the pinned standard
-Godot 4.8 dev6 engine (`godot48`) and an explicit protected-file helper. The rebuild
-owns its independent engine migration; see its README. Its synthetic native smoke
+The engineering host is Omarchy Linux. The companion uses pinned standard Godot
+4.8 dev6 (`godot48`) and an explicit protected-file helper. The rebuild uses the
+pinned Godot 4.8 dev6 .NET engine (`godot48-mono`), with its exact SDK and recovery
+route in [rebuild/README.md](rebuild/README.md#run-on-linux).
+The rebuild's earlier synthetic native smoke
 and a live session's two deterministic replays passed; full tutorial acceptance
 is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
 and the Windows-targeted CLI retain Windows dependencies. The never-built evaluation
@@ -122,7 +124,8 @@ Common requirements:
 - Python 3.14 available as `python`; root commands use forward-slash paths
 - Companion: standard Godot 4.8 dev6 and matching templates from the shared pinned
   toolchain; .NET SDK 8.0.424 only to build its self-contained file helper
-- Retained C# lanes: their declared engine/SDK and cached AppCore dependencies
+- Rebuild: Godot 4.8 dev6 .NET and its bundled `4.8.0-dev.6` C# packages
+- Retained C# lanes: their declared SDK and cached AppCore dependencies
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
 - Windows 10 or 11 and PowerShell 7 only for retained Windows procedures
@@ -182,9 +185,14 @@ npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
-The launchers put scratch, logs and engine user data under canonical
-`local-data/companion/` or `local-data/first-flight/`, including from a Git worktree.
-[`rebuild/README.md`](rebuild/README.md) documents runtime modes, input and recording.
+The companion launcher puts scratch, logs and user data under canonical
+`local-data/companion/`, including from a Git worktree. The rebuild launcher uses
+its checkout's `local-data/first-flight/`; worktrees read the canonical lab and own
+their generated production scenes and engine imports.
+Open `rebuild/OnslaughtRebuild.Godot/project.godot` with `godot48-mono` after building;
+the [editor scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies the
+frontend, HUD, pause and private Level 100 scenes, editable properties and the
+faithful-data boundary. The guide also covers runtime modes, input and recording.
 `npm test` runs native Save Lab, protected-publication and companion-tooling checks
 without opening a window. `test:save-lab` retains the C# comparison oracle.
 Core/Client changes use their focused test projects, as mapped in `VALIDATION.md`.
@@ -193,9 +201,9 @@ The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`;
 `test:appcore`, `test:ui`, `test:cli` and `release:winui-zip` also retain Windows
 dependencies. `tools/require_windows_host.py` makes Windows-only scripts fail fast
 on Linux; they are not Linux prerequisites.
-Historical Windows rebuild launchers have explicit `:windows` aliases; their
-older engine manifest needs revalidation against the current managed SDK before
-new Windows acceptance. This phase does not activate the VM.
+Historical Windows rebuild launchers have explicit `:windows` aliases and now pin
+the matching 4.8 dev6 engine/SDK. Their archive manifest was verified on Linux;
+Windows execution remains unverified. This phase does not activate the VM.
 
 ## Data and mutation safety
 

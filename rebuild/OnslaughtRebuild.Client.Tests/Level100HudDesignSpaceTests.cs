@@ -49,6 +49,20 @@ public sealed class Level100HudDesignSpaceTests
         return File.ReadAllText(path);
     }
 
+    private static string ReadHudScene() => File.ReadAllText(Path.Combine(
+        AppContext.BaseDirectory, "godot-hud-layout-source", "FirstFlightHud.tscn"));
+
+    private static float ScannerSceneOffset(string property)
+    {
+        string scene = ReadHudScene();
+        Match node = Regex.Match(scene,
+            @"\[node name=""ScannerBackdrop""[^\]]*\]([^\[]*)", RegexOptions.Singleline);
+        Assert.True(node.Success, "The authored scanner backing is missing.");
+        Match offset = Regex.Match(node.Groups[1].Value, property + @" = ([0-9.]+)");
+        Assert.True(offset.Success, $"The scanner {property} is missing.");
+        return float.Parse(offset.Groups[1].Value, CultureInfo.InvariantCulture);
+    }
+
     private static float Constant(string pattern)
     {
         Match match = Regex.Match(Source, pattern, RegexOptions.Singleline);
@@ -104,8 +118,8 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void LowerLeftScannerRingSitsOnItsMeasuredRetailCircle()
     {
-        float left = Constant(@"radarRect = new\((\d+(?:\.\d+)?)f,");
-        float bottomInset = Constant(@"radarRect = new\(\d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
+        float left = ScannerSceneOffset("offset_left");
+        float bottomInset = DesignHeight - ScannerSceneOffset("offset_top");
 
         Assert.Equal(66.01f, left + RingContentCentre, 1.0f);
         Assert.Equal(417.25f, DesignHeight - bottomInset + RingContentCentre, 1.0f);
@@ -137,7 +151,7 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void BothLowerInstrumentsShareTheMeasuredRetailBaseline()
     {
-        float leftBottom = Constant(@"radarRect = new\(\d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
+        float leftBottom = DesignHeight - ScannerSceneOffset("offset_top");
         float rightBottom = Constant(@"BattleLineInstrumentRect\(\) =>\s*new\(DesignWidth - \d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
 
         // Retail puts both ring centres within 0.8px of the same scanline

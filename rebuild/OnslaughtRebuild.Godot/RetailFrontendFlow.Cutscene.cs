@@ -84,11 +84,9 @@ public sealed partial class RetailFrontendFlow
             return false;
         }
 
-        var sequence = new RetailStartupSequence
-        {
-            Name = "Level100IntroCutscene",
-            PlaybackRetirement = PlaybackRetirement,
-        };
+        var sequence = RetailStartupSequence.InstantiateScene();
+        sequence.Name = "Level100IntroCutscene";
+        sequence.PlaybackRetirement = PlaybackRetirement;
         sequence.InitializeForClip(
             RetailStartupSequence.ResolveMediaRoot(arguments),
             RetailStartupCue.Level100IntroCutscene,

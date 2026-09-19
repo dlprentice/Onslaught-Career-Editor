@@ -67,6 +67,7 @@ public enum RetailStartupClockMode
 /// for retail footage, and it never substitutes generated sound for retail
 /// audio.
 /// </summary>
+[Tool]
 public sealed partial class RetailStartupSequence : Control
 {
     private const float DesignWidth = RetailFmvPresentation.StageWidth;
@@ -143,6 +144,12 @@ public sealed partial class RetailStartupSequence : Control
             return configured;
         }
 
+        string? canonicalLab = System.Environment.GetEnvironmentVariable("BEA_LOCAL_LAB");
+        if (!string.IsNullOrWhiteSpace(canonicalLab))
+        {
+            return Path.Combine(canonicalLab, "startup-media");
+        }
+
         string? local = System.Environment.GetEnvironmentVariable("LOCALAPPDATA");
         return string.IsNullOrWhiteSpace(local)
             ? string.Empty
@@ -208,14 +215,22 @@ public sealed partial class RetailStartupSequence : Control
 
     public override void _Ready()
     {
+        BindSceneSurface();
+        if (Engine.IsEditorHint())
+        {
+            SetProcess(false);
+            SetProcessInput(false);
+            ShowEditorStill();
+            return;
+        }
+
         if (!_initialized)
         {
             throw new InvalidOperationException(
                 "Initialize the startup sequence before adding it to the tree.");
         }
 
-        AnchorRight = 1f;
-        AnchorBottom = 1f;
+        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
         // Above the frontend flow's ZIndex of 100: while the sequence owns the
         // screen the frontend is not processing, but this makes the ordering
@@ -240,7 +255,7 @@ public sealed partial class RetailStartupSequence : Control
 
     public override void _Process(double delta)
     {
-        if (_completed)
+        if (Engine.IsEditorHint() || _completed)
         {
             return;
         }
@@ -273,7 +288,7 @@ public sealed partial class RetailStartupSequence : Control
 
     public override void _Input(InputEvent inputEvent)
     {
-        if (_completed)
+        if (Engine.IsEditorHint() || _completed)
         {
             return;
         }
@@ -324,58 +339,6 @@ public sealed partial class RetailStartupSequence : Control
         Key.KpEnter => 0x9C,
         _ => 0,
     };
-
-    public override void _Draw()
-    {
-        DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
-
-        RetailStartupFrame frame = _schedule.Sample(_elapsedSeconds);
-        if (frame.Kind is RetailStartupFrameKind.Black or RetailStartupFrameKind.Finished)
-        {
-            return;
-        }
-
-        float scale = Mathf.Min(Size.X / DesignWidth, Size.Y / DesignHeight);
-        var offset = new Vector2(
-            (Size.X - (DesignWidth * scale)) * 0.5f,
-            (Size.Y - (DesignHeight * scale)) * 0.5f);
-        DrawSetTransform(offset, 0f, new Vector2(scale, scale));
-
-        if (frame.Kind == RetailStartupFrameKind.Splash)
-        {
-            if (_splashTexture is { } splash)
-            {
-                DrawTextureRect(
-                    splash,
-                    new Rect2(0f, 0f, DesignWidth, DesignHeight),
-                    false,
-                    new Color(1f, 1f, 1f, frame.Alpha));
-            }
-        }
-        else if (frame.Cue is { } cue && EnsureFrameResident(cue, frame.FrameIndex))
-        {
-            // The measured quad and the measured diffuse. Retail draws one
-            // TRIFAN at (0,40)-(640,440) with stage 0 MODULATE against
-            // 0xFFFEFEFE; Godot's canvas modulate multiplies the sampled texel
-            // by the same value, and a CanvasItem's default Mix blend IS
-            // SRCALPHA/INVSRCALPHA, which is what the capture logged
-            // (ab=1 sb=5 db=6 bop=1). The remaining logged states — depth test
-            // off, depth write off, cull NONE, unlit, fog off — are properties
-            // of drawing on a 2D canvas at all, so they are satisfied by
-            // construction rather than by a setting.
-            DrawTextureRect(
-                _videoBuffers[_presentedBuffer]!,
-                new Rect2(
-                    RetailFmvPresentation.QuadLeft,
-                    RetailFmvPresentation.QuadTop,
-                    RetailFmvPresentation.QuadWidth,
-                    RetailFmvPresentation.QuadHeight),
-                false,
-                FullBrightnessDiffuse);
-        }
-
-        DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-    }
 
     /// <summary>
     /// Brings one decoded frame into the buffer retail would have decoded it
@@ -438,7 +401,7 @@ public sealed partial class RetailStartupSequence : Control
     }
 
     /// <summary>
-    /// Adds the one <see cref="AudioStreamPlayer"/> this sequence ever owns, if
+    /// Binds the one authored <see cref="AudioStreamPlayer"/> this sequence owns, if
     /// any beat in the schedule has a decoded track AND the clock is wall time.
     ///
     /// <para><b>Why the clock decides.</b> Audio playback is paced by the sound
@@ -463,16 +426,9 @@ public sealed partial class RetailStartupSequence : Control
             return;
         }
 
-        _voice = new AudioStreamPlayer
-        {
-            Name = "RetailFmvVoice",
-            // The frontend suspends its own _Process while the movie owns the
-            // screen, but nothing pauses the tree here; Always keeps the two
-            // from diverging if that ever changes.
-            ProcessMode = ProcessModeEnum.Always,
-            VolumeDb = 0f,
-        };
-        AddChild(_voice);
+        // Startup.tscn owns the master-bus, unity-gain, Always-process player.
+        // Binding it here preserves the existing wall-clock/audio gate.
+        _voice = GetNode<AudioStreamPlayer>("RetailFmvVoice");
     }
 
     /// <summary>
@@ -612,6 +568,8 @@ public sealed partial class RetailStartupSequence : Control
         // gameplay and starts the tutorial bed; a voice track still running
         // underneath it would be the exact defect this lane exists to avoid.
         StopVoiceTrack();
+        _videoSurface.Texture = null;
+        _splashSurface.Texture = null;
         Array.Clear(_videoBuffers);
         _splashTexture = null;
         _residentFrame = null;

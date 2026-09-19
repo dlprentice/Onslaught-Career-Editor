@@ -272,7 +272,8 @@ internal sealed class Level100TerrainAppearanceAsset
         byte[] rootTexture,
         Texture2D detailTexture,
         Texture2D cloudShadowTexture,
-        Level100HeightFieldAsset heightField)
+        Level100HeightFieldAsset heightField,
+        ShaderMaterial? sceneMaterial = null)
     {
         _compositor = compositor;
         _macroTextures[0] = CreateRgb565Texture(rootTexture);
@@ -291,14 +292,14 @@ internal sealed class Level100TerrainAppearanceAsset
             _occupiedSlots[level] = new int[slotCount];
         }
 
-        var shader = new Shader
+        _material = sceneMaterial ?? new ShaderMaterial
         {
-            Code = ProbeShaderCode(),
+            Shader = new Shader { Code = ProbeShaderCode() },
         };
-        _material = new ShaderMaterial
-        {
-            Shader = shader,
-        };
+        // Diagnostics affect this live instance only, never the saved faithful
+        // material. With no probe, use the production scene's shader directly.
+        if (sceneMaterial is not null && !string.IsNullOrWhiteSpace(OS.GetEnvironment("ONSLAUGHT_TERRAIN_PROBE")))
+            _material.Shader = new Shader { Code = ProbeShaderCode() };
         for (int level = 0; level <= 4; level++)
         {
             _material.SetShaderParameter($"macro_map_{level}", _macroTextures[level]);
@@ -345,7 +346,8 @@ internal sealed class Level100TerrainAppearanceAsset
         string hierarchyResourcePath,
         string detailTextureResourcePath,
         string cloudShadowResourcePath,
-        Level100HeightFieldAsset heightField)
+        Level100HeightFieldAsset heightField,
+        ShaderMaterial? sceneMaterial = null)
     {
         byte[] rootTexture = Godot.FileAccess.GetFileAsBytes(rootTextureResourcePath);
         if (rootTexture.Length != RootTextureLength ||
@@ -381,7 +383,8 @@ internal sealed class Level100TerrainAppearanceAsset
             rootTexture,
             detailTexture,
             cloudShadowTexture,
-            heightField);
+            heightField,
+            sceneMaterial);
     }
 
     /// <summary>

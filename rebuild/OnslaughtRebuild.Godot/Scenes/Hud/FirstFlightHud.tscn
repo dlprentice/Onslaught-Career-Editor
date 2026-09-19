@@ -1,0 +1,411 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://FirstFlightHud.cs" id="1_root"]
+[ext_resource type="Script" path="res://Scenes/Hud/HudDesignStage.cs" id="2_stage"]
+[ext_resource type="Script" path="res://Scenes/Hud/RetailHudPart.cs" id="3_part"]
+[ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/radio-view.tres" id="4_texture"]
+[ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/weapon-fill.tres" id="5_texture"]
+[ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-primary.tres" id="6_texture"]
+[ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-secondary.tres" id="7_texture"]
+[ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-dot.tres" id="8_texture"]
+
+[node name="FirstFlightHud" type="CanvasLayer"]
+script = ExtResource("1_root")
+ShowEditorIllustration = true
+metadata/preview_note = "Full gauges and deployed message frame are editor-only presentation illustrations, not a mission snapshot. Layout edits change presentation only; faithful defaults are pinned by HUD tests."
+
+[node name="Surface" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+
+[node name="DesignStage" type="Control" parent="Surface"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("2_stage")
+
+[node name="Base" type="Control" parent="Surface/DesignStage"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = false
+metadata/blend = "Released alpha-tested mix; ordered before Glow and Text."
+
+[node name="Compass" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 112.0
+offset_right = 448.0
+offset_bottom = 368.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 0
+SourceRect = Rect2(192.0, 112.0, 256.0, 256.0)
+
+[node name="ScannerBackdrop" type="TextureRect" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 368.0
+offset_right = 145.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("4_texture")
+expand_mode = 1
+self_modulate = Color(1, 1, 1, 0.435294117647)
+
+[node name="LeftWeaponBacking" type="TextureRect" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 339.0
+offset_right = 137.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("5_texture")
+expand_mode = 1
+self_modulate = Color(0, 0, 0, 0.247058823529)
+
+[node name="LeftWeaponResourceAndIcon" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 339.0
+offset_right = 137.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 1
+SourceRect = Rect2(9.0, 339.0, 128.0, 128.0)
+
+[node name="ScannerContactsAndNorth" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 368.0
+offset_right = 145.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 2
+SourceRect = Rect2(17.0, 368.0, 128.0, 128.0)
+
+[node name="RightWeaponBacking" type="TextureRect" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 339.0
+offset_right = 627.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("5_texture")
+expand_mode = 1
+self_modulate = Color(0, 0, 0, 0.247058823529)
+flip_h = true
+
+[node name="RightWeaponResource" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 339.0
+offset_right = 627.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 3
+SourceRect = Rect2(499.0, 339.0, 128.0, 128.0)
+
+[node name="WeaponSelection" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 503.0
+offset_top = 240.0
+offset_right = 631.0
+offset_bottom = 368.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 4
+SourceRect = Rect2(503.0, 240.0, 128.0, 128.0)
+
+[node name="BattleLineSocket" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 503.0
+offset_top = 352.0
+offset_right = 647.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 5
+SourceRect = Rect2(503.0, 352.0, 144.0, 144.0)
+
+[node name="MessageFrame" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 156.0
+offset_top = 379.0
+offset_right = 528.0
+offset_bottom = 499.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 6
+SourceRect = Rect2(156.0, 379.0, 372.0, 120.0)
+
+[node name="OffscreenObjectives" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 7
+SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+
+[node name="Crosshair" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 256.0
+offset_top = 176.0
+offset_right = 384.0
+offset_bottom = 304.0
+mouse_filter = 2
+use_parent_material = true
+
+[node name="Primary" type="TextureRect" parent="Surface/DesignStage/Base/Crosshair"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("6_texture")
+expand_mode = 1
+self_modulate = Color(1, 1, 1, 0.6863)
+
+[node name="Secondary" type="TextureRect" parent="Surface/DesignStage/Base/Crosshair"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("7_texture")
+expand_mode = 1
+self_modulate = Color(1, 1, 1, 0.3412)
+
+[node name="Dot" type="TextureRect" parent="Surface/DesignStage/Base/Crosshair"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+use_parent_material = true
+texture = ExtResource("8_texture")
+expand_mode = 1
+self_modulate = Color(1, 1, 1, 0.3412)
+
+[node name="TargetClassificationAndPrediction" type="Control" parent="Surface/DesignStage/Base"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 176.0
+offset_right = 640.0
+offset_bottom = 304.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 8
+SourceRect = Rect2(0.0, 176.0, 640.0, 128.0)
+
+[node name="Glow" type="Control" parent="Surface/DesignStage"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = false
+metadata/blend = "Released alpha-tested additive; all mix backing precedes these parts."
+
+[node name="ScannerOutline" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 368.0
+offset_right = 145.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 9
+SourceRect = Rect2(17.0, 368.0, 128.0, 128.0)
+
+[node name="LeftWeaponOutline" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 339.0
+offset_right = 137.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 10
+SourceRect = Rect2(9.0, 339.0, 128.0, 128.0)
+
+[node name="RightWeaponOutline" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 339.0
+offset_right = 627.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 11
+SourceRect = Rect2(499.0, 339.0, 128.0, 128.0)
+
+[node name="WeaponSelectionOutline" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 503.0
+offset_top = 240.0
+offset_right = 631.0
+offset_bottom = 368.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 12
+SourceRect = Rect2(503.0, 240.0, 128.0, 128.0)
+
+[node name="CompassGaugesDialThreats" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 112.0
+offset_right = 448.0
+offset_bottom = 368.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 13
+SourceRect = Rect2(192.0, 112.0, 256.0, 256.0)
+
+[node name="BattleLineInfluence" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 368.0
+offset_right = 647.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 14
+SourceRect = Rect2(519.0, 368.0, 128.0, 128.0)
+
+[node name="BattleLineOutline" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 368.0
+offset_right = 647.0
+offset_bottom = 496.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 15
+SourceRect = Rect2(519.0, 368.0, 128.0, 128.0)
+
+[node name="ForsetiIcon" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 536.0
+offset_top = 320.0
+offset_right = 600.0
+offset_bottom = 384.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 16
+SourceRect = Rect2(536.0, 320.0, 64.0, 64.0)
+
+[node name="ObjectiveReticles" type="Control" parent="Surface/DesignStage/Glow"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 17
+SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+
+[node name="Text" type="Control" parent="Surface/DesignStage"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = false
+metadata/blend = "Released alpha-tested mix text, after instrument glow."
+
+[node name="MessageText" type="Control" parent="Surface/DesignStage/Text"]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 405.0
+offset_right = 497.0
+offset_bottom = 465.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 18
+SourceRect = Rect2(191.0, 405.0, 306.0, 60.0)
+
+[node name="HelpPrompts" type="Control" parent="Surface/DesignStage/Text"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 19
+SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+
+[node name="WeaponAmmo" type="Control" parent="Surface/DesignStage/Text"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 339.0
+offset_right = 640.0
+offset_bottom = 467.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 20
+SourceRect = Rect2(0.0, 339.0, 640.0, 128.0)
+
+[node name="MissionTerminal" type="Control" parent="Surface/DesignStage/Text"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+use_parent_material = true
+script = ExtResource("3_part")
+Part = 21
+SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)

@@ -230,11 +230,17 @@ try {
     }
 
     Invoke-TestCase 'normal setup accepts only the exact tracked Godot manifest' {
-        $manifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'
+        $manifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.8-dev6-win-x64.json'
         $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 
         $verified = Assert-PinnedGodotManifest -ManifestPath $manifestPath -Manifest $manifest
         Assert-True -Condition $verified.Valid -Message 'Expected the tracked pinned manifest to pass.'
+
+        $previousManifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'
+        $previousManifest = Get-Content -LiteralPath $previousManifestPath -Raw | ConvertFrom-Json
+        Assert-Throws -Pattern 'tracked manifest path' -Action {
+            Assert-PinnedGodotManifest -ManifestPath $previousManifestPath -Manifest $previousManifest
+        }
 
         $copiedManifestPath = Join-Path $scratch 'copied-manifest.json'
         Copy-Item -LiteralPath $manifestPath -Destination $copiedManifestPath

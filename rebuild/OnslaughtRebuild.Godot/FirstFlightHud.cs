@@ -5,6 +5,7 @@ using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
+[Tool]
 public sealed partial class FirstFlightHud : CanvasLayer
 {
     // The released in-level HUD composes on a 640x480 stage, the same stage
@@ -112,9 +113,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private RetailHudTextLayer _textLayer = null!;
 
     public bool IsReadyForSmoke =>
-        IsInstanceValid(_baseLayer) &&
-        IsInstanceValid(_glowLayer) &&
-        IsInstanceValid(_textLayer) &&
+        _baseLayer is not null &&
+        _glowLayer is not null &&
+        _textLayer is not null &&
         _baseLayer.IsReady &&
         _glowLayer.IsReady &&
         _textLayer.IsReady;
@@ -151,21 +152,125 @@ public sealed partial class FirstFlightHud : CanvasLayer
     public double Level100MessagePlaybackPositionSeconds { get; private set; }
     public double Level100MessagePlaybackLengthSeconds { get; private set; }
 
+    public const string ScenePath = "res://Scenes/Hud/FirstFlightHud.tscn";
+    private RetailHudPart[] _parts = [];
+    private Control _surface = null!;
+    private bool _presentationReady;
+
+    // The editor's full gauges illustrate presentation only. No simulation,
+    // mission/event producer, playback clock, input owner or save is created.
+    private bool _showEditorIllustration = true;
+    [Export]
+    public bool ShowEditorIllustration
+    {
+        get => _showEditorIllustration;
+        set
+        {
+            _showEditorIllustration = value;
+            if (!_presentationReady || !Engine.IsEditorHint())
+                return;
+            if (value) ShowIllustration();
+            else _surface.Visible = false;
+        }
+    }
+
+    public static FirstFlightHud Create(Level100HudAssetCatalog catalog)
+    {
+        var view = GD.Load<PackedScene>(ScenePath).Instantiate<FirstFlightHud>();
+        view.Initialize(catalog);
+        return view;
+    }
+
+    public override string[] _GetConfigurationWarnings() =>
+        Godot.FileAccess.FileExists("res://Assets/Hud/font-13ps.texture.aya")
+            ? []
+            : ["Prepare the private HUD assets with the supported rebuild launcher to display the production pages. Public layout remains editable."];
+
+    public override void _Ready()
+    {
+        if (!Engine.IsEditorHint())
+            return;
+        if (!Godot.FileAccess.FileExists("res://Assets/Hud/font-13ps.texture.aya"))
+            return; // Public layout remains editable before private materialization.
+        InitializePresentation(Level100HudAssetCatalog.Load());
+        if (ShowEditorIllustration)
+            ShowIllustration();
+        else
+            _surface.Visible = false;
+    }
+
     public void Initialize(Level100HudAssetCatalog catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        _catalog = catalog;
         _presentation = new Level100HudPresentationState(
             Level100StaticWorldAsset.LoadAuthoredAllegiance());
+        InitializePresentation(catalog);
+        _surface.Visible = false; // A runtime snapshot, never the editor sample, opens it.
+    }
+
+    private void InitializePresentation(Level100HudAssetCatalog catalog)
+    {
+        if (_presentationReady)
+            return;
+        _catalog = catalog;
         _assets = LoadAssets();
         _baseLayer = new RetailHudBaseLayer(_assets);
-        AddFullScreenControl(_baseLayer);
-
         _glowLayer = new RetailHudGlowLayer(_assets);
-        AddFullScreenControl(_glowLayer);
-
         _textLayer = new RetailHudTextLayer(_assets.Font13Ps, _assets.Font22, catalog);
-        AddFullScreenControl(_textLayer);
+        _baseLayer._Ready();
+        _glowLayer._Ready();
+        _textLayer._Ready();
+        _surface = GetNode<Control>("Surface");
+        _surface.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+        GetNode<Control>("Surface/DesignStage/Base").Material = _baseLayer.Material;
+        GetNode<Control>("Surface/DesignStage/Glow").Material = _glowLayer.Material;
+        GetNode<Control>("Surface/DesignStage/Text").Material = _textLayer.Material;
+        _parts = FindChildren("*", nameof(Control), true, false).OfType<RetailHudPart>().ToArray();
+        _presentationReady = true;
+    }
+
+    internal void DrawPart(RetailHudPart part)
+    {
+        if (!_presentationReady)
+            return;
+        RetailHudLayer layer = part.Part switch
+        {
+            <= RetailHudPart.Content.CrosshairTarget => _baseLayer,
+            <= RetailHudPart.Content.ObjectiveReticles => _glowLayer,
+            _ => _textLayer,
+        };
+        layer.Render(part);
+    }
+
+    private void ShowIllustration()
+    {
+        var frame = new HudFrame(0, SimulationConstants.MaximumEnergy,
+            SimulationConstants.MaximumShield, SimulationConstants.MaximumHull,
+            0, new SimVector2(0, 0), Level100MissionTiming.MessageBoxAllowedTick);
+        var hud = new Level100HudSnapshot(Level100HudWeaponSnapshot.Unavailable,
+            [], [], [], [], null, null, [], [], [], [],
+            Level100HudBattleLineSnapshot.Unavailable,
+            new(false, Level100MissionOutcome.Running, Level100MissionFailureReason.None, 0));
+        _baseLayer.SetState(frame, hud, Level100HudLowerRightSocket.Indeterminate,
+            null, null, null, 0);
+        _glowLayer.SetState(frame, hud, Level100HudLowerRightSocket.Indeterminate);
+        _textLayer.SetState(hud, null, Level100MessagePlaybackSnapshot.Unavailable);
+        RefreshParts();
+    }
+
+    private void RefreshParts()
+    {
+        _surface.Visible = true;
+        foreach (RetailHudPart part in _parts)
+            part.QueueRedraw();
+    }
+
+    private sealed record HudFrame(int Tick, int Energy, int Shield, int Hull,
+        int FacingYawMicroRad, SimVector2 PlayerPosition, int MissionTick)
+    {
+        public static HudFrame From(WorldSnapshot snapshot) => new(snapshot.Tick,
+            snapshot.Energy, snapshot.Shield, snapshot.Hull, snapshot.FacingYawMicroRad,
+            snapshot.PlayerPosition, snapshot.Level100Mission.Tick);
     }
 
     public void ConsumeMissionEvents(IReadOnlyList<Level100MissionEvent> events) =>
@@ -231,16 +336,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
             hud.BattleLine.InfluenceMap);
         Level100LowerRightSocket = socket;
 
+        HudFrame frame = HudFrame.From(snapshot);
         _baseLayer.SetState(
-            snapshot,
+            frame,
             hud,
             socket,
             message,
             activeDelivery?.Speaker,
             activePlayback.PortraitPoseIndex,
             MessageNoisePhaseIndex(scheduled, missionTick));
-        _glowLayer.SetState(snapshot, hud, socket);
+        _glowLayer.SetState(frame, hud, socket);
         _textLayer.SetState(hud, message, activePlayback);
+        RefreshParts();
     }
 
     // A deterministic stand-in, not a measurement. Classifying retail's pose on
@@ -643,9 +750,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // adjacent radii): the r<=2 centre reads 156 where white at 0.3412 over a
     // 104 background predicts 153; the r 26..28 ring reads 206-215 where white
     // at 0.6863 over a ~150 background predicts 222 at full coverage.
-    private static Color RetailCrosshairBright => new(1f, 1f, 1f, 0.6863f);
-
-    private static Color RetailCrosshairFaint => new(1f, 1f, 1f, 0.3412f);
+    // These exact tints and draw order are authored on Base/Crosshair in
+    // Scenes/Hud/FirstFlightHud.tscn and checked on the instantiated controls.
 
     // COMPASS GAUGE ARCS. The reconstruction drew these ADDITIVELY; that is
     // refuted by measurement, and retail's actual blend is now byte-backed.
@@ -745,7 +851,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             ((uint)Math.Clamp(alpha, 0, 255) << 24) |
             (uint)Level100ScannerProjection.TintRgb(contact.Allegiance));
 
-    private static float RelativeYaw(WorldSnapshot snapshot, SimVector2 position)
+    private static float RelativeYaw(HudFrame snapshot, SimVector2 position)
     {
         float dx = position.X - snapshot.PlayerPosition.X;
         float dz = position.Z - snapshot.PlayerPosition.Z;
@@ -758,7 +864,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// objective is outside the released horizontal limit and the off-screen
     /// arrow is drawn instead.
     /// </summary>
-    private static float? WorldMarkerScreenX(WorldSnapshot snapshot, SimVector2 position)
+    private static float? WorldMarkerScreenX(HudFrame snapshot, SimVector2 position)
     {
         const float horizontalLimit = 1.05f;
         float relativeYaw = RelativeYaw(snapshot, position);
@@ -783,41 +889,39 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return angle;
     }
 
-    private void AddFullScreenControl(Control control)
-    {
-        control.AnchorRight = 1f;
-        control.AnchorBottom = 1f;
-        control.MouseFilter = Control.MouseFilterEnum.Ignore;
-        // The 640x480 retail frame shows single-texel glyph stems and hard
-        // instrument edges (font-13ps 'h' renders a one-pixel-wide stem), i.e.
-        // the released HUD blitted texels 1:1 with no interpolation. At the
-        // 640x480 design resolution DesignTransform is the identity and Nearest
-        // reproduces that blit exactly. Above 640x480 retail has no measured
-        // behaviour to match; Nearest is chosen because it keeps the hard edges
-        // the frame demonstrates rather than softening every element.
-        control.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-        AddChild(control);
-    }
-
     /// <summary>
-    /// The shared 640x480 released stage. Every layer draws in design pixels and
-    /// lets this map them onto the window, so a constant measured off the retail
-    /// 640x480 capture stays at the same relative position and scale at any
-    /// window size. This mirrors RetailFrontendFlow.DesignTransform.
+    /// Per-layer drawing services share immutable asset pages and the last
+    /// presentation snapshot. Each draw is issued by one authored Control,
+    /// whose native transform is the production layout. HudDesignStage owns
+    /// the one 640x480 letterbox; no instrument reads viewport dimensions.
     /// </summary>
-    private abstract partial class RetailHudLayer : Control
+    private abstract partial class RetailHudLayer
     {
+        private RetailHudPart _target = null!;
+        protected RetailHudPart.Content Part => _target.Part;
+        public Material? Material { get; protected set; }
+        public virtual void _Ready() { }
+        public abstract void _Draw();
+        public void Render(RetailHudPart target)
+        {
+            _target = target;
+            _Draw();
+        }
         protected static Vector2 DesignCenter => new(DesignWidth * 0.5f, DesignHeight * 0.5f);
 
-        protected (float Scale, Vector2 Offset) DesignTransform()
-        {
-            float scale = Mathf.Min(Size.X / DesignWidth, Size.Y / DesignHeight);
-            return (
-                scale,
-                new Vector2(
-                    (Size.X - (DesignWidth * scale)) * 0.5f,
-                    (Size.Y - (DesignHeight * scale)) * 0.5f));
-        }
+        protected (float Scale, Vector2 Offset) DesignTransform() => (1f, Vector2.Zero);
+
+        protected void DrawSetTransform(Vector2 offset, float rotation, Vector2 scale) =>
+            _target.SetRetailDrawTransform(offset, rotation, scale);
+        protected void DrawTextureRect(Texture2D texture, Rect2 rect, bool tile, Color? modulate = null) =>
+            _target.DrawTextureRect(texture, rect, tile, modulate);
+        protected void DrawTextureRectRegion(Texture2D texture, Rect2 rect, Rect2 source, Color modulate) =>
+            _target.DrawTextureRectRegion(texture, rect, source, modulate);
+        protected void DrawPolyline(Vector2[] points, Color color, float width, bool antialiased) =>
+            _target.DrawPolyline(points, color, width, antialiased);
+        protected void DrawLine(Vector2 from, Vector2 to, Color color, float width, bool antialiased) =>
+            _target.DrawLine(from, to, color, width, antialiased);
+        protected void DrawRect(Rect2 rect, Color color) => _target.DrawRect(rect, color);
 
         protected void BeginDesignSpace()
         {
@@ -829,8 +933,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         /// <summary>
         /// DrawSetTransform replaces rather than nests, so a rotated blit has to
-        /// re-compose the letterbox around its design-space pivot and then
-        /// restore design space. Same shape as RetailFrontendFlow's helper.
+        /// compose the local instrument mapping around its measured pivot and
+        /// then restore the part mapping. The parent stage owns letterboxing.
         /// </summary>
         protected void DrawCenteredRotated(
             Texture2D texture,
@@ -926,7 +1030,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// is the opposite of what HighlightHudPart means.
         /// </summary>
         protected void DrawCompassGaugeArcs(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             bool alphaBlendedHalf)
         {
@@ -970,7 +1074,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         protected static float HighlightAlpha(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             Level100HudPart part)
         {
@@ -1061,7 +1165,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         CompassBaseRingTexelPremultipliedRgb / (1f + CompassBaseRingTexelAlpha);
 
     private static Color CompassBaseColor(
-        WorldSnapshot snapshot,
+        HudFrame snapshot,
         Level100HudSnapshot hud,
         float compassHighlight) =>
         new(
@@ -1128,7 +1232,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     private sealed partial class RetailHudBaseLayer(HudAssets assets) : RetailHudLayer
     {
-        private WorldSnapshot? _snapshot;
+        private HudFrame? _snapshot;
         private Level100HudSnapshot? _hud;
         private Level100HudMessageDefinition? _message;
         private Level100HudSpeaker? _speaker;
@@ -1162,7 +1266,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         public void SetState(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             Level100HudLowerRightSocket socket,
             Level100HudMessageDefinition? message,
@@ -1177,29 +1281,31 @@ public sealed partial class FirstFlightHud : CanvasLayer
             _speaker = speaker;
             _portraitPoseIndex = portraitPoseIndex;
             _messageNoisePhase = messageNoisePhase;
-            QueueRedraw();
         }
 
         public override void _Draw()
         {
-            if (_snapshot is not WorldSnapshot snapshot ||
+            if (_snapshot is not HudFrame snapshot ||
                 _hud is not Level100HudSnapshot hud)
             {
                 return;
             }
 
             BeginDesignSpace();
-            DrawCompassBaseRing(snapshot, hud);
-            DrawLowerLeftInstrument(snapshot, hud);
-            DrawLowerRightArcShellFill(snapshot, hud);
-            DrawWeaponSelection(hud);
-            DrawBattleLine();
-            if (MessageBoxIsDeployed(snapshot))
+            switch (Part)
             {
-                DrawMessageFrame();
+                case RetailHudPart.Content.CompassBase: DrawCompassBaseRing(snapshot, hud); break;
+                case RetailHudPart.Content.LeftWeapon: DrawLeftWeapon(snapshot, hud); break;
+                case RetailHudPart.Content.ScannerContacts: DrawLowerLeftInstrument(snapshot, hud); break;
+                case RetailHudPart.Content.RightWeapon: DrawLowerRightArcShellFill(snapshot, hud); break;
+                case RetailHudPart.Content.WeaponSelection: DrawWeaponSelection(hud); break;
+                case RetailHudPart.Content.BattleLine: DrawBattleLine(); break;
+                case RetailHudPart.Content.MessageFrame:
+                    if (MessageBoxIsDeployed(snapshot)) DrawMessageFrame();
+                    break;
+                case RetailHudPart.Content.OffscreenObjectives: DrawWorldMarkers(snapshot, hud); break;
+                case RetailHudPart.Content.CrosshairTarget: DrawCrosshair(snapshot, hud); break;
             }
-            DrawWorldMarkers(snapshot, hud);
-            DrawCrosshair(snapshot, hud);
             EndDesignSpace();
         }
 
@@ -1213,7 +1319,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// then the ONE/ONE state, then the SRCALPHA/INVSRCALPHA state).
         /// </summary>
         private void DrawCompassBaseRing(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
@@ -1247,7 +1353,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// hud-timeline-run1 has an overlap that would show the difference.
         /// </summary>
         private void DrawCompassObjectiveMarkers(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
@@ -1266,18 +1372,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
-        private void DrawLowerLeftInstrument(
-            WorldSnapshot snapshot,
-            Level100HudSnapshot hud)
+        private void DrawLeftWeapon(HudFrame snapshot, Level100HudSnapshot hud)
         {
-            Rect2 radarRect = new(17f, DesignHeight - 112f, 128f, 128f);
             Rect2 weaponRect = new(9f, DesignHeight - 141f, 128f, 128f);
-            DrawTextureRect(assets.RadioView, radarRect, false, RetailColor(0x6fffffff));
-            DrawTextureRect(assets.WeaponFill, weaponRect, false, RetailColor(0x3f000000));
-
             DrawWeaponResource(snapshot, hud, weaponRect);
             DrawWeaponIcon(hud.Weapon, weaponRect);
+        }
 
+        private void DrawLowerLeftInstrument(
+            HudFrame snapshot,
+            Level100HudSnapshot hud)
+        {
+            // The static radio-view and weapon-fill are authored TextureRects.
             // Recovered scanner centre: 0x005dbb70 (69) - 1 in x, and
             // (480 - 44 [0x005dbe74]) - 20 [0x005d857c] + 1 in y. Retail's
             // sprite helper anchors mode 4, i.e. the CENTRE of the quad, so
@@ -1356,14 +1462,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// <see cref="LowerRightArcShellRect"/> for the placement and the mirror.
         /// </summary>
         private void DrawLowerRightArcShellFill(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
-            DrawTextureRectRegion(
-                assets.WeaponFill,
-                LowerRightArcShellRect(),
-                MirroredWeaponPageSource(),
-                RetailColor(0x3f000000));
             // Retail's issue order is backing (1165), bar (1166), shell (1167).
             DrawLowerRightWeaponResource(snapshot, hud);
         }
@@ -1397,7 +1498,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// </para>
         /// </remarks>
         private void DrawWeaponResource(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             Rect2 rect)
         {
@@ -1416,7 +1517,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         /// <summary>The mirrored right-hand bar, retail draw 1166.</summary>
         private void DrawLowerRightWeaponResource(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             if (ResourceFraction(hud) is not float fraction)
@@ -1451,7 +1552,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         private static Color ResourceTint(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             Color measured) =>
             // A 0.2 s half-cycle overheat blink: TicksPerSecond/5 ticks on,
@@ -1678,8 +1779,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// ~179 and the box is allowed at tick 182, one 250 ms sample apart.
         /// </para>
         /// </remarks>
-        private static bool MessageBoxIsDeployed(WorldSnapshot snapshot) =>
-            snapshot.Level100Mission.Tick >= Level100MissionTiming.MessageBoxAllowedTick;
+        private static bool MessageBoxIsDeployed(HudFrame snapshot) =>
+            snapshot.MissionTick >= Level100MissionTiming.MessageBoxAllowedTick;
 
         private void DrawMessageFrame()
         {
@@ -1740,7 +1841,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         // would render as a solid white square on an additive layer, because
         // those transparent texels carry RGB 255.
         private void DrawWorldMarkers(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
@@ -1765,7 +1866,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         private void DrawCrosshair(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             // The retail frame's crosshair rings are centred on (320, 240) at
@@ -1797,21 +1898,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // The r 12..15 band was 25-45 DN hot and only the removed fourth
             // draw explains it.
             Vector2 center = DesignCenter;
-            DrawTextureRect(
-                assets.CrosshairPrimary,
-                new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false,
-                RetailCrosshairBright);
-            DrawTextureRect(
-                assets.CrosshairSecondary,
-                new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
-                false,
-                RetailCrosshairFaint);
-            DrawTextureRect(
-                assets.CrosshairDot,
-                new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false,
-                RetailCrosshairFaint);
+            // Primary, Secondary and Dot are ordered native TextureRects in the scene.
 
             if (hud.Target is not Level100HudTargetSnapshot target)
             {
@@ -2009,7 +2096,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// </summary>
     private sealed partial class RetailHudGlowLayer(HudAssets assets) : RetailHudLayer
     {
-        private WorldSnapshot? _snapshot;
+        private HudFrame? _snapshot;
         private Level100HudSnapshot? _hud;
         private Level100HudLowerRightSocket _socket =
             Level100HudLowerRightSocket.Indeterminate;
@@ -2036,7 +2123,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         public void SetState(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud,
             Level100HudLowerRightSocket socket)
         {
@@ -2046,24 +2133,30 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Energy = snapshot.Energy;
             Shield = snapshot.Shield;
             Health = snapshot.Hull;
-            QueueRedraw();
         }
 
         public override void _Draw()
         {
-            if (_snapshot is not WorldSnapshot snapshot ||
+            if (_snapshot is not HudFrame snapshot ||
                 _hud is not Level100HudSnapshot hud)
             {
                 return;
             }
 
             BeginDesignSpace();
-            DrawInstrumentOutlines(snapshot, hud);
-            DrawDynamicCompass(snapshot, hud);
-            DrawBattleLineInfluence(hud);
-            DrawBattleLineOutline(snapshot, hud);
-            DrawForsetiIcon();
-            DrawWorldMarkerReticles(snapshot, hud);
+            switch (Part)
+            {
+                case RetailHudPart.Content.ScannerOutline:
+                case RetailHudPart.Content.LeftWeaponOutline:
+                case RetailHudPart.Content.RightWeaponOutline:
+                case RetailHudPart.Content.WeaponSelectionOutline:
+                    DrawInstrumentOutlines(snapshot, hud); break;
+                case RetailHudPart.Content.CompassGlow: DrawDynamicCompass(snapshot, hud); break;
+                case RetailHudPart.Content.InfluenceMap: DrawBattleLineInfluence(hud); break;
+                case RetailHudPart.Content.BattleLineOutline: DrawBattleLineOutline(snapshot, hud); break;
+                case RetailHudPart.Content.Forseti: DrawForsetiIcon(); break;
+                case RetailHudPart.Content.ObjectiveReticles: DrawWorldMarkerReticles(snapshot, hud); break;
+            }
             EndDesignSpace();
         }
 
@@ -2180,7 +2273,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// hud-timeline-run1/level100-t038063ms.png has none.
         /// </summary>
         private void DrawWorldMarkerReticles(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
@@ -2203,7 +2296,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         private void DrawInstrumentOutlines(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             float radarHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Radar);
@@ -2211,6 +2304,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 snapshot,
                 hud,
                 Level100HudPart.CurrentWeapon);
+            if (Part == RetailHudPart.Content.ScannerOutline)
             DrawTextureRect(
                 assets.RadarOutline,
                 new Rect2(17f, DesignHeight - 112f, 128f, 128f),
@@ -2244,6 +2338,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // this colour - blue-tilted to achromatic within 0.4 DN. The flat
             // +14 that remains is a brightness residual on this panel that
             // predates the colour and is not the diffuse.
+            if (Part == RetailHudPart.Content.LeftWeaponOutline)
             DrawTextureRect(
                 assets.WeaponOutline,
                 new Rect2(9f, DesignHeight - 141f, 128f, 128f),
@@ -2257,6 +2352,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // UVs directly - u = 1 at x = 499 and u = 0 at x = 627 on BOTH the
             // outline and the WeaponFill backing under it - which settles the
             // "recorded as unresolved" note on LowerRightArcShellRect.
+            if (Part == RetailHudPart.Content.RightWeaponOutline)
             DrawTextureRectRegion(
                 assets.WeaponOutline,
                 LowerRightArcShellRect(),
@@ -2265,7 +2361,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
             Rect2 gunsRect = GunsRect();
             Level100HudWeaponSnapshot weapon = hud.Weapon;
-            if (weapon.SelectionPanelVisible == true &&
+            if (Part == RetailHudPart.Content.WeaponSelectionOutline &&
+                weapon.SelectionPanelVisible == true &&
                 weapon.SelectionSlot is Level100HudWeaponSelectionSlot selectionSlot &&
                 selectionSlot != Level100HudWeaponSelectionSlot.None)
             {
@@ -2274,7 +2371,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         private void DrawDynamicCompass(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             // Radii MEASURED off the 27 retail frames in
@@ -2496,7 +2593,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         private void DrawDialNorthOverlay(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Vector2 center,
             float innerRadius,
             float outerRadius,
@@ -2547,7 +2644,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         // The outline's tint below is the outline quad's own diffuse DWORD,
         // 0xff6f8faf = (0.4353, 0.5608, 0.6863), confirmed at the device.
         private void DrawBattleLineOutline(
-            WorldSnapshot snapshot,
+            HudFrame snapshot,
             Level100HudSnapshot hud)
         {
             Rect2 rect = BattleLineInstrumentRect();
@@ -2660,7 +2757,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
             _terminalDarkenerAlpha = hud.Terminal.Visible
                 ? Math.Min(0xa0, (enteringTerminal ? 0 : _terminalDarkenerAlpha) + 0x10)
                 : 0;
-            QueueRedraw();
         }
 
         public override void _Draw()
@@ -2670,10 +2766,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // 9x10 in the atlas), so the released text path is a 1:1 blit on the
             // 640x480 stage. Drawing it in design space preserves that.
             BeginDesignSpace();
-            DrawMessageWindow();
-            DrawHelpPrompts();
-            DrawWeaponAmmo();
-            DrawTerminalOverlay();
+            switch (Part)
+            {
+                case RetailHudPart.Content.MessageText: DrawMessageWindow(); break;
+                case RetailHudPart.Content.HelpText: DrawHelpPrompts(); break;
+                case RetailHudPart.Content.WeaponAmmo: DrawWeaponAmmo(); break;
+                case RetailHudPart.Content.Terminal: DrawTerminalOverlay(); break;
+            }
             EndDesignSpace();
         }
 

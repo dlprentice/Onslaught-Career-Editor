@@ -63,21 +63,23 @@ class LauncherTests(unittest.TestCase):
             "    output.write(json.dumps({'tool': pathlib.Path(sys.argv[0]).name, "
             "'args': sys.argv[1:], 'tmp': os.environ['TMPDIR'], "
             "'data': os.environ['XDG_DATA_HOME'], 'cache': os.environ['XDG_CACHE_HOME'], "
+            "'config': os.environ['XDG_CONFIG_HOME'], "
+            "'terrain_probe': os.environ.get('ONSLAUGHT_TERRAIN_PROBE'), "
             "'unrelated': os.environ['FAKE_UNRELATED']}) + '\\n')\n"
-            "if pathlib.Path(sys.argv[0]).name == 'godot-mono':\n"
+            "if pathlib.Path(sys.argv[0]).name == 'godot48-mono':\n"
             "    report = os.environ.get('FAKE_SMOKE_REPORT')\n"
             "    for arg in sys.argv:\n"
             "        if arg.startswith('--report=') and report is not None:\n"
             "            pathlib.Path(arg.split('=', 1)[1]).write_text(report)\n"
             "    raise SystemExit(int(os.environ.get('FAKE_ENGINE_EXIT', '0')))\n"
         )
-        self.engine = self.root / "engine/godot-mono"
+        self.engine = self.root / "engine/godot48-mono"
         self.engine.parent.mkdir()
         self.engine.write_text(fake, encoding="utf-8")
         self.engine.chmod(0o700)
         packages = self.engine.parent / "GodotSharp/Tools/nupkgs"
         packages.mkdir(parents=True)
-        (packages / "Godot.NET.Sdk.4.7.2.nupkg").touch()
+        (packages / "Godot.NET.Sdk.4.8.0-dev.6.nupkg").touch()
         dotnet = self.engine.parent / "dotnet"
         dotnet.write_text(fake, encoding="utf-8")
         dotnet.chmod(0o700)
@@ -86,6 +88,7 @@ class LauncherTests(unittest.TestCase):
             mock.patch.object(launcher.materializer, "ROOT", self.checkout),
             mock.patch.object(launcher.materializer, "_canonical_repository_root", return_value=self.canonical),
             mock.patch.object(launcher.materializer, "_outputs_ready", return_value=False),
+            mock.patch.object(launcher.materializer, "_startup_media_ready", return_value=True),
             mock.patch.dict(os.environ, {"FAKE_CALLS": str(self.calls),
                                         "FAKE_UNRELATED": "preserved",
                                         "ONSLAUGHT_STARTUP_MEDIA": "",
@@ -104,44 +107,84 @@ class LauncherTests(unittest.TestCase):
     def test_run_uses_selected_game_canonical_media_local_packages_and_user_arguments(self) -> None:
         self.assertEqual(0, self.invoke("run", "--", "--skipfmv"))
         calls = self.read_calls()
-        self.assertEqual(["materialize_retail_assets.py", "materialize_retail_assets.py",
-                          "dotnet", "dotnet", "godot-mono"], [call["tool"] for call in calls])
-        assets, media, restore, build, engine = (call["args"] for call in calls)
-        self.assertIn("--host-default-work-root", assets)
-        self.assertEqual(str(self.game), assets[assets.index("--game-root") + 1])
-        self.assertIn("--startup-media", media)
-        self.assertNotIn("--host-default-work-root", media)
+        self.assertEqual(["materialize_retail_assets.py",
+                          "dotnet", "dotnet", "godot48-mono", "godot48-mono"], [call["tool"] for call in calls])
+        assets, restore, build, scene_import, engine = (call["args"] for call in calls)
+        self.assertEqual(["--reuse-canonical-assets"], assets)
         canonical_media = self.canonical / "local-lab/startup-media"
-        self.assertEqual(str(canonical_media), media[media.index("--startup-media-root") + 1])
         self.assertEqual(str(self.engine.parent / "GodotSharp/Tools/nupkgs"), restore[restore.index("--source") + 1])
         self.assertIn("--locked-mode", restore)
         self.assertIn("--no-restore", build)
+        self.assertIn("--headless", scene_import)
+        self.assertIn("Dummy", scene_import)
+        self.assertIn("res://Scenes/World/ImportLevel100.tscn", scene_import)
+        self.assertEqual(["--prepare-level100-scene"], scene_import[scene_import.index("--") + 1:])
         self.assertEqual([f"--startup-media={canonical_media}", "--skipfmv"], engine[engine.index("--") + 1:])
         for call in calls:
-            self.assertTrue(Path(call["tmp"]).is_relative_to(self.canonical / "local-data"))
+            self.assertTrue(Path(call["tmp"]).is_relative_to(self.checkout / "local-data"))
             self.assertFalse(Path(call["tmp"]).exists())
-            self.assertTrue(Path(call["data"]).is_relative_to(self.canonical / "local-data"))
-            self.assertTrue(Path(call["cache"]).is_relative_to(self.canonical / "local-data"))
+            self.assertTrue(Path(call["data"]).is_relative_to(self.checkout / "local-data"))
+            self.assertTrue(Path(call["cache"]).is_relative_to(self.checkout / "local-data"))
+            self.assertTrue(Path(call["config"]).is_relative_to(self.checkout / "local-data"))
             self.assertEqual("preserved", call["unrelated"])
+        self.assertFalse((self.canonical / "local-data").exists())
 
     def test_verified_asset_cache_skips_regeneration_and_no_build_skips_dotnet(self) -> None:
         with mock.patch.object(launcher.materializer, "_outputs_ready", return_value=True):
             self.assertEqual(0, self.invoke("run", "--no-build"))
         calls = self.read_calls()
-        self.assertEqual(["materialize_retail_assets.py", "godot-mono"], [call["tool"] for call in calls])
-        self.assertIn("--startup-media", calls[0]["args"])
+        self.assertEqual(["godot48-mono", "godot48-mono"], [call["tool"] for call in calls])
+        self.assertIn("--prepare-level100-scene", calls[0]["args"])
 
-    def test_build_has_no_startup_media_or_runtime(self) -> None:
+    def test_missing_worktree_media_fails_without_writing_shared_inputs(self) -> None:
+        with mock.patch.object(launcher.materializer, "_outputs_ready", return_value=True), \
+             mock.patch.object(launcher.materializer, "_startup_media_ready", return_value=False):
+            self.assertEqual(2, self.invoke("run", "--no-build"))
+        self.assertFalse(self.calls.exists())
+        self.assertFalse((self.canonical / "local-data").exists())
+
+    def test_canonical_preparation_keeps_the_explicit_staging_owner(self) -> None:
+        with mock.patch.object(launcher.materializer, "_canonical_repository_root", return_value=self.checkout):
+            (self.checkout / "local-lab").mkdir()
+            self.assertEqual(0, self.invoke("run", "--no-build"))
+        assets, media, _, _ = (call["args"] for call in self.read_calls())
+        self.assertIn("--host-default-work-root", assets)
+        self.assertEqual(str(self.game), assets[assets.index("--game-root") + 1])
+        self.assertIn("--startup-media", media)
+        self.assertEqual(str(self.checkout / "local-lab/startup-media"),
+                         media[media.index("--startup-media-root") + 1])
+
+    def test_output_owner_is_checkout_local_and_each_run_has_an_isolated_profile(self) -> None:
+        output = self.checkout / "local-data/engine-check/run"
+        self.assertEqual(0, self.invoke("run", "--no-build", "--no-prepare", "--output-root", str(output)))
+        self.assertEqual(0, self.invoke("run", "--no-build", "--no-prepare"))
+        calls = self.read_calls()
+        for key in ("data", "cache", "config"):
+            self.assertNotEqual(calls[0][key], calls[1][key])
+        self.assertEqual(2, self.invoke("run", "--no-build", "--no-prepare", "--output-root", str(output)))
+        shared = self.canonical / "local-data/first-flight/run"
+        self.assertEqual(2, self.invoke("run", "--no-build", "--no-prepare", "--output-root", str(shared)))
+        self.assertFalse(shared.exists())
+
+    def test_default_engine_selects_the_pinned_48_alias(self) -> None:
+        self.assertEqual(0, launcher.main(["run", "--no-build", "--no-prepare"]))
+        self.assertEqual("godot48-mono", self.read_calls()[0]["tool"])
+
+    def test_build_prepares_scene_without_startup_media_or_gameplay(self) -> None:
         self.assertEqual(0, self.invoke("build"))
-        self.assertEqual(["materialize_retail_assets.py", "dotnet", "dotnet"],
+        self.assertEqual(["materialize_retail_assets.py", "dotnet", "dotnet", "godot48-mono"],
                          [call["tool"] for call in self.read_calls()])
+        importer = self.read_calls()[-1]["args"]
+        self.assertIn("--headless", importer)
+        self.assertIn("--prepare-level100-scene", importer)
+        self.assertFalse(any(arg.startswith("--startup-media") for arg in importer))
 
     def test_no_prepare_launch_skips_validation_and_materializer_processes(self) -> None:
         with mock.patch.object(launcher.materializer, "_outputs_ready", side_effect=AssertionError("must not validate")), \
              mock.patch.object(launcher.materializer, "_resolve_game_root", side_effect=AssertionError("must not discover retail inputs")):
             self.assertEqual(0, self.invoke("run", "--no-build", "--no-prepare"))
         calls = self.read_calls()
-        self.assertEqual(["godot-mono"], [call["tool"] for call in calls])
+        self.assertEqual(["godot48-mono"], [call["tool"] for call in calls])
         self.assertIn(f"--startup-media={self.canonical / 'local-lab/startup-media'}", calls[0]["args"])
 
     def test_no_prepare_build_reuses_existing_assets(self) -> None:
@@ -166,12 +209,27 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(75, run.call_args.kwargs["timeout"])
             self.assertEqual(0, self.invoke("capture", "--no-build", "--", "--capture-plan=mainmenu"))
             self.assertEqual(300, run.call_args.kwargs["timeout"])
-        engine_calls = [call["args"] for call in self.read_calls() if call["tool"] == "godot-mono"]
+        engine_calls = [call["args"] for call in self.read_calls()
+                        if call["tool"] == "godot48-mono" and "--prepare-level100-scene" not in call["args"]]
         report = next(arg.removeprefix("--report=") for arg in engine_calls[0] if arg.startswith("--report="))
         capture = next(arg.removeprefix("--capture-dir=") for arg in engine_calls[1] if arg.startswith("--capture-dir="))
         self.assertNotEqual(Path(report).parent, Path(capture))
-        self.assertTrue(Path(capture).is_relative_to(self.canonical / "local-data"))
+        self.assertTrue(Path(capture).is_relative_to(self.checkout / "local-data"))
         self.assertIn("--capture-plan=mainmenu", engine_calls[1])
+
+    def test_scene_import_failure_stops_before_gameplay(self) -> None:
+        with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "9"}):
+            self.assertEqual(9, self.invoke("run", "--no-build"))
+        engine_calls = [call for call in self.read_calls() if call["tool"] == "godot48-mono"]
+        self.assertEqual(1, len(engine_calls))
+        self.assertIn("--prepare-level100-scene", engine_calls[0]["args"])
+
+    def test_diagnostic_probe_is_runtime_only_and_never_baked_into_import(self) -> None:
+        with mock.patch.dict(os.environ, {"ONSLAUGHT_TERRAIN_PROBE": "macro"}):
+            self.assertEqual(0, self.invoke("run", "--no-build"))
+        engine_calls = [call for call in self.read_calls() if call["tool"] == "godot48-mono"]
+        self.assertIsNone(engine_calls[0]["terrain_probe"])
+        self.assertEqual("macro", engine_calls[1]["terrain_probe"])
 
     def test_zero_exit_without_smoke_completion_is_failure(self) -> None:
         invalid = [None, "{", "[]", "{}"]

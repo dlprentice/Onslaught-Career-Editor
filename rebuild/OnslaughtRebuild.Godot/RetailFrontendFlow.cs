@@ -13,6 +13,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// Main Menu return seams to the existing gameplay host. Mission/HUD and audio
 /// presentation remain separate owners.
 /// </summary>
+[Tool]
 public sealed partial class RetailFrontendFlow : Control
 {
     // Steam FE virtual stage (cluster hint from CFEPMain / click render).
@@ -669,7 +670,7 @@ public sealed partial class RetailFrontendFlow : Control
         _session = new RetailFrontendSession(careerDescriptors);
         LoadLocalization();
         LoadTextures();
-        _feBackFrames = LoadFeBackFrames();
+        _feBackFrames = LoadFeBackFrames(Engine.IsEditorHint() ? 1 : int.MaxValue);
         _glyphWidths = MeasureGlyphWidths(_titleFont.GetImage(), GlyphCellSize, GlyphColumns);
         _font22Widths = MeasureGlyphWidths(_font22.GetImage(), Font22CellSize, Font22Columns);
         InitializeOptions();
@@ -799,13 +800,27 @@ public sealed partial class RetailFrontendFlow : Control
 
     public override void _Ready()
     {
-        if (!_initialized)
+        if (Engine.IsEditorHint() && !_initialized)
         {
-            throw new InvalidOperationException("Initialize the retail frontend before adding it to the tree.");
+            try
+            {
+                Initialize([]);
+                SetEditorPage();
+            }
+            catch (Exception exception)
+            {
+                GD.PushWarning($"Frontend assets unavailable: {exception.Message}");
+                SetProcess(false);
+                SetProcessInput(false);
+                return;
+            }
         }
+        if (!_initialized)
+            Initialize([]); // Running the frontend scene alone has no injected careers.
+        BindSceneParts();
 
-        AnchorRight = 1f;
-        AnchorBottom = 1f;
+        if (!Engine.IsEditorHint())
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
         ZIndex = 100;
 
@@ -820,19 +835,24 @@ public sealed partial class RetailFrontendFlow : Control
         AddChild(_titleLogoReflection);
         _titleLogoReflection.Configure(_titleLogo, _reflectionMap);
 
-        _mouseCursorLayer = new RetailMouseCursorLayer
+        if (!Engine.IsEditorHint())
         {
-            Name = "RetailMouseCursor",
-            ZIndex = 2,
-        };
-        _mouseCursorLayer.Configure(this);
-        AddChild(_mouseCursorLayer);
-
+            _mouseCursorLayer = new RetailMouseCursorLayer
+            {
+                Name = "RetailMouseCursor",
+                ZIndex = 2,
+            };
+            _mouseCursorLayer.Configure(this);
+            AddChild(_mouseCursorLayer);
+        }
+        SetProcess(!Engine.IsEditorHint());
+        SetProcessInput(!Engine.IsEditorHint());
         QueueRedraw();
     }
 
     public override void _Process(double delta)
     {
+        if (Engine.IsEditorHint()) return;
         double step = Math.Max(0d, delta);
         _animationSeconds += step;
 
@@ -972,12 +992,10 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Keeps the additive sheen child on FEP_MAIN's design transform and phase.
+    /// Keeps the additive sheen on the authored logo's transform and retail phase.
     ///
-    /// It is hidden on QuitConfirm: this lane draws its messbox INSIDE the parent
-    /// _Draw, so a child layer would land on top of the dialog. Retail draws the
-    /// messbox as a later page over a finished FEP_MAIN and has no such problem.
-    /// That is a Godot ordering concession, recorded rather than papered over.
+    /// The existing QuitConfirm visibility concession is preserved during the
+    /// scene migration; its retail parity remains a separate visual question.
     /// </summary>
     private void UpdateTitleLogoReflection()
     {
@@ -993,9 +1011,12 @@ public sealed partial class RetailFrontendFlow : Control
             return;
         }
 
-        (float scale, Vector2 offset) = DesignTransform();
-        layer.Position = offset;
-        layer.Scale = new Vector2(scale, scale);
+        if (!_nativeTextures.TryGetValue("MainMenu/TitleLogo/Body", out RetailTextureRect? logo)) return;
+        Vector2 ratio = logo.Size / new Vector2(TitleLogoReflectionLayer.LogoWidth, TitleLogoReflectionLayer.LogoHeight);
+        var sourceToLogo = new Transform2D(
+            new Vector2(ratio.X, 0f), new Vector2(0f, ratio.Y),
+            -new Vector2(TitleLogoReflectionLayer.LogoLeft, TitleLogoReflectionLayer.LogoTop) * ratio);
+        layer.Transform = GetGlobalTransformWithCanvas().AffineInverse() * logo.GetGlobalTransformWithCanvas() * sourceToLogo;
         layer.SetScroll(_feBackSeconds);
     }
 
@@ -1010,6 +1031,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     public override void _Input(InputEvent inputEvent)
     {
+        if (Engine.IsEditorHint()) return;
         // IntroCutscene is included because the movie owns the screen and the
         // RetailStartupSequence child owns the abort. A frontend page reacting to
         // the keypress that skips the movie would navigate an invisible page.
@@ -1054,47 +1076,9 @@ public sealed partial class RetailFrontendFlow : Control
 
     public override void _Draw()
     {
-        // Letterbox outside the 640-class stage; no invented navy FE clear.
-        DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
-        (float scale, Vector2 offset) = DesignTransform();
-        DrawSetTransform(offset, 0f, new Vector2(scale, scale));
-
-        switch (_session.Screen)
-        {
-            case RetailFrontendScreen.ClickToStart:
-                DrawClickToStart();
-                break;
-            case RetailFrontendScreen.MainMenu:
-                DrawMainMenu();
-                break;
-            case RetailFrontendScreen.QuitConfirm:
-                DrawMainMenu();
-                DrawQuitConfirm();
-                break;
-            case RetailFrontendScreen.DevSelect:
-                DrawDevSelect();
-                break;
-            case RetailFrontendScreen.Options:
-                DrawOptions();
-                break;
-            case RetailFrontendScreen.Debriefing:
-                DrawDebriefing();
-                break;
-            case RetailFrontendScreen.LevelSelect:
-                DrawLevelSelect();
-                break;
-            case RetailFrontendScreen.MissionBriefing:
-                DrawMissionBriefing();
-                break;
-            case RetailFrontendScreen.SelectConfiguration:
-                DrawSelectConfiguration();
-                break;
-            case RetailFrontendScreen.Loading:
-                DrawLoading();
-                break;
-        }
-
-        DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        // Actual production page components own their drawing in the authored
+        // scene. Only the outside-stage letterbox belongs to this controller.
+        base.DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
     }
 
     private void DrawClickToStart()
@@ -1102,6 +1086,7 @@ public sealed partial class RetailFrontendFlow : Control
         // CFEPIntro::Render 0x0051B866 splash dest — DAT_0089d880 / fe_splash1.
         // Scale is min(this+0x18, 1.0) then the stored pulse; dest is the
         // specimen affine, not a scale-free (320, 240) centre.
+        SelectSceneSection("Click.Splash");
         float splashScale = RetailClickToStartSplash.Scale(_clickPulseTimer);
         DrawSurfaceCentered(
             _clickBackground,
@@ -1115,6 +1100,7 @@ public sealed partial class RetailFrontendFlow : Control
         // five CDXFont__DrawTextScaled calls at Y 401/399/400, sx=sy=1.
         // A capture-derived textScale=2 is not the body. ShouldDraw is the
         // same timer>4 / fmod<2 arm as RetailClickToStartPrompt.
+        SelectSceneSection("Click.Prompt");
         if (RetailClickToStartGlyphs.ShouldDraw(_clickPulseTimer))
         {
             const string prompt = "Click to start"; // Localization 0x77
@@ -1134,6 +1120,7 @@ public sealed partial class RetailFrontendFlow : Control
         // (the pair sits 400 px off the left edge). Fade is
         // clamp(timer-4, 0, 1); offset is (1-fade)²*400; dest X is
         // settled − offset.
+        SelectSceneSection("Click.Slide");
         if (RetailClickToStartSlide.ShouldDraw(_clickPulseTimer))
         {
             foreach (RetailClickToStartSlide.Pass pass in RetailClickToStartSlide.Passes)
@@ -1154,6 +1141,7 @@ public sealed partial class RetailFrontendFlow : Control
         // Gate is page*1.2 > 2; scale slams 2.5→0.5; four z=0.05 outline
         // corners then the z=0.04 body. The previous 0.35 / sin(page*3) stub
         // is not the specimen law.
+        SelectSceneSection("Click.Title");
         if (RetailClickToStartTitle.ShouldDraw(_clickPageSeconds))
         {
             float titleScale = RetailClickToStartTitle.Scale(_clickPageSeconds);
@@ -1174,6 +1162,7 @@ public sealed partial class RetailFrontendFlow : Control
         // CFEPIntro::Render 0x0051BD01 sixth z=0.02 copy. Second gate:
         // 2 < page < 2.25, not page*1.2 > 2. Dest (250, 290), sx=sy=1-v.
         // Not folded into Passes.
+        SelectSceneSection("Click.TitleFlash");
         if (RetailClickToStartTitle.ShouldDrawSixth(_clickPageSeconds))
         {
             float sixthScale = RetailClickToStartTitle.SixthScale(_clickPageSeconds);
@@ -1421,6 +1410,7 @@ public sealed partial class RetailFrontendFlow : Control
         // 0.75..0.8.
         float iconFade = Clamp01((transition - 0.8f) * 5f);
 
+        SelectSceneSection("Main.Background");
         DrawMainUnderlay(transition);
 
         // The faint crosshair guides. FEP_DEVSELECT and FEP_LEVEL_SELECT have drawn
@@ -1444,6 +1434,7 @@ public sealed partial class RetailFrontendFlow : Control
         // FEP_NONE), not by CFEPMain, and retail's t = 14 ms frame already carries
         // the full-height x = 123 column and the full-width y = 180 row while
         // every CFEPMain element is still absent.
+        SelectSceneSection("Main.Guides");
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
@@ -1457,6 +1448,7 @@ public sealed partial class RetailFrontendFlow : Control
         // 0x3F666666 then dest 458. That leftover is Z, not scale, so the
         // draw keeps scale 1.0 and TileX and does not treat the dword as
         // a 29% title-logo. Not a sheen. ChromeTint stays put.
+        SelectSceneSection("Main.Writing");
         var chromeTint = new Color(ChromeTint.R, ChromeTint.G, ChromeTint.B, ChromeTint.A * fade);
         float writingCounter = RetailMainMenuWritingScroll.ImageInitialCounter;
         DrawSurfaceCentered(
@@ -1481,6 +1473,7 @@ public sealed partial class RetailFrontendFlow : Control
             1f,
             chromeTint);
 
+        SelectSceneSection("Main.Language");
         DrawLanguageSelector(fade);
 
         // The selector bar is drawn BEFORE every row, not interleaved into the
@@ -1492,10 +1485,12 @@ public sealed partial class RetailFrontendFlow : Control
         // ending at rowY-12). That washed the bottom 4px of the previous label
         // with the bar's 49%-alpha black on every selection except row 0 — which
         // is exactly why nothing caught it: the settled capture selects row 0.
+        SelectSceneSection("Main.Selector");
         DrawMainMenuSelectorBar(iconFade);
 
         for (int index = 0; index < _session.Items.Count; index++)
         {
+            SelectSceneSection($"Main.Row{index}");
             RetailFrontendMenuItem item = _session.Items[index];
             // RetailMainMenuRowY: [esp+0x10] seeds 268 / index
             // -1. Nonzero [0x0083D990] overwrites 304 / index 0.
@@ -1510,7 +1505,7 @@ public sealed partial class RetailFrontendFlow : Control
             // Draw the string as authored. english.json holds "Continue Game" /
             // "Load Game" in mixed case and retail renders them that way.
             // Font13PS cells are 16px, so scale 1.0 gives the retail 20px pitch.
-            string label = _menuText[item.Kind];
+            string label = SceneText(_menuText[item.Kind]);
             const float textScale = 1f;
             float textWidth = MeasureText(label, textScale);
             // RetailMainMenuLabelDest: dest X is the measure
@@ -1562,6 +1557,7 @@ public sealed partial class RetailFrontendFlow : Control
         // untouched.
         var leftShadow = RetailFrontendDecorShadow.LeftArcOffsetAtPhase(
             RetailFrontendDecorShadow.PhaseAtSeconds(_animationSeconds));
+        SelectSceneSection("Main.Decoration");
         var sharedShadow = RetailFrontendDecorShadow.OffsetAtPhase(
             RetailFrontendDecorShadow.PhaseAtSeconds(_animationSeconds));
         var leftArcBody = new Vector2(219f, 344f);
@@ -1659,6 +1655,7 @@ public sealed partial class RetailFrontendFlow : Control
         // TitleLogoReflectionLayer). Not a 29% title-logo scale. ChromeTint
         // and ShadowTint stay put.
 
+        SelectSceneSection("Main.SelectedIcon");
         if (iconFade > 0f)
         {
             Texture2D icon = _menuIcons[_session.SelectedMainIndex];
@@ -1686,6 +1683,7 @@ public sealed partial class RetailFrontendFlow : Control
             DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, new Color(iconTint, iconTint.A * iconFade));
         }
 
+        SelectSceneSection("Main.Version");
         if (fade > 0f)
         {
             // SHADOWED, corrected 2026-07-28 from a single flat run. The version
@@ -1800,6 +1798,7 @@ public sealed partial class RetailFrontendFlow : Control
         // scale, so this draw keeps TitleLogoTint, scale 1.0, DestX,
         // and DestY and does not treat the dword as a 29% title-logo.
         // Nearby 0x3F866666 is already ShadowScaleBoost. Not a sheen.
+        SelectSceneSection("Main.TitleLogo");
         DrawSurfaceCentered(
             _titleLogo,
             RetailMainMenuTitleLogoZ.DestX + (float)sharedShadow.X,
@@ -2178,6 +2177,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawQuitConfirm()
     {
+        SelectSceneSection("Quit.Dialog");
         // Create() width/centre are pinned on RetailFeMessBox. Height is still
         // reconstruction (the 4th stack immediate is 0.1f). Chrome below is
         // FrontEnd.cpp DrawPanel/DrawBox plus the option_mode-2 YESNO stack,
@@ -2279,10 +2279,12 @@ public sealed partial class RetailFrontendFlow : Control
         // Settled: the transition length into FEP_DEVSELECT is not evidenced.
         // Passing 1 keeps its settled rendering while both New Game and Load Game
         // use the Client-owned page state.
+        SelectSceneSection("Career.Background");
         DrawMainUnderlay(1f);
 
         // Faint crosshair guides, present on this page and on the retail main
         // menu; the reconstruction has not drawn them anywhere before now.
+        SelectSceneSection("Career.Guides");
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
@@ -2309,6 +2311,7 @@ public sealed partial class RetailFrontendFlow : Control
         // control on SELECT LEVEL, reaches 99.7% at 1.25/(329,344) — reproducing
         // that page's source constants and beating its previously recorded 96.1%.
         // So both pages are one texture at one centre with two source scales.
+        SelectSceneSection("Career.Decoration");
         const float bracketScale = 1.4f;
         const float bracketShadowScale = bracketScale * ShadowScaleBoost;
         DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
@@ -2342,6 +2345,7 @@ public sealed partial class RetailFrontendFlow : Control
         //
         // BASELINE MOVED: this page's pinned no-regression capture changes in the
         // header band. That is intended and is the point of the change.
+        SelectSceneSection("Career.Header");
         DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxTint);
         float titleWidth = MeasureFont22Text(DevSelectTitle, 1f);
         DrawFont22Text(
@@ -2352,6 +2356,7 @@ public sealed partial class RetailFrontendFlow : Control
             ReleasedTitleText);
 
         // List panel: border, interior, scrollbar divider and thumb.
+        SelectSceneSection("Career.List");
         DrawRect(new Rect2(128f, 130f, 403f, 272f), DevSelectPanelBorder);
         DrawRect(new Rect2(129f, 131f, 401f, 270f), DevSelectPanelFill);
         DrawRect(new Rect2(129f, 180f, 401f, 1f), DevSelectGuideOverPanel);
@@ -2374,6 +2379,7 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         // Name field: border, interior, selection highlight, then the name.
+        SelectSceneSection("Career.Name");
         DrawRect(new Rect2(128f, 408f, 403f, 44f), DevSelectFieldBorder);
         DrawRect(new Rect2(129f, 409f, 401f, 42f), DevSelectPanelFill);
 
@@ -2392,6 +2398,7 @@ public sealed partial class RetailFrontendFlow : Control
         // Measured extents: right chevron x604..631 y437..472, left chevron the
         // mirrored pair six rows lower; both render in the same lit metal as the
         // arcs (~(107,117,131)), not the faint ChromeTint the language selector uses.
+        SelectSceneSection("Career.Navigation");
         var arrowSource = new Rect2(16f, 12f, 30f, 40f);
         DrawTextureRectRegion(_feArrow, new Rect2(36f, 443f, -27f, 35f), arrowSource, BracketTint);
         DrawTextureRectRegion(_feArrow, new Rect2(604f, 437f, 27f, 35f), arrowSource, BracketTint);
@@ -2462,6 +2469,7 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawLevelSelect()
     {
+        SelectSceneSection("LevelSelect.Content");
         // Settled, for the same reason as DrawDevSelect.
         DrawMainUnderlay(1f);
 
@@ -2889,6 +2897,7 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawDebriefing()
     {
+        SelectSceneSection("Debriefing.Content");
         RetailDebriefingProjection debriefing = _session.Debriefing
             ?? throw new InvalidOperationException(
                 "The debriefing screen has no END_LEVEL_DATA projection.");
@@ -3117,9 +3126,12 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawMissionBriefing()
     {
+        SelectSceneSection("Briefing.Background");
         DrawBriefingStage();
+        SelectSceneSection("Briefing.Header");
         DrawHeaderBarTitle(MissionBriefingTitle);
 
+        SelectSceneSection("Briefing.LevelName");
         DrawFont22Text(
             _session.SelectedLevelName,
             new Vector2(BriefingLevelNameLeft, BriefingLevelNameTop),
@@ -3133,6 +3145,7 @@ public sealed partial class RetailFrontendFlow : Control
         // stays only as the byte-identical world-100 receipt for the case
         // where no localization document is loaded; an empty session body
         // must draw NOTHING, never another world's copy.
+        SelectSceneSection("Briefing.Body");
         IReadOnlyList<string> briefingBody =
             _session.SelectedBriefingBody.Count > 0
                 ? _session.SelectedBriefingBody
@@ -3150,6 +3163,7 @@ public sealed partial class RetailFrontendFlow : Control
             y += BriefingBodyPitch;
         }
 
+        SelectSceneSection("Briefing.Navigation");
         DrawPageChevrons();
     }
 
@@ -3246,9 +3260,12 @@ public sealed partial class RetailFrontendFlow : Control
     {
         RetailFrontendBattleEngineConfiguration configuration = _session.SelectedConfiguration;
 
+        SelectSceneSection("Configuration.Background");
         DrawBriefingStage();
+        SelectSceneSection("Configuration.Header");
         DrawHeaderBarTitle(SelectConfigurationTitle);
 
+        SelectSceneSection("Configuration.Unit");
         DrawFont22Text(
             configuration.DisplayName,
             new Vector2(ConfigurationUnitLeft, ConfigurationUnitTop),
@@ -3256,17 +3273,20 @@ public sealed partial class RetailFrontendFlow : Control
             1f,
             ReleasedTitleText);
 
+        SelectSceneSection("Configuration.Walker");
         DrawConfigurationRows(
             "Walker Mode",
             configuration.WalkerPrimary,
             configuration.WalkerSecondary,
             ConfigurationWalkerTop);
+        SelectSceneSection("Configuration.Jet");
         DrawConfigurationRows(
             "Jet Mode",
             configuration.JetPrimary,
             configuration.JetSecondary,
             ConfigurationJetTop);
 
+        SelectSceneSection("Configuration.Navigation");
         DrawPageChevrons();
     }
 
@@ -3330,6 +3350,7 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawLoading()
     {
+        SelectSceneSection("Loading.Background");
         DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), Colors.Black);
         DrawTextureRect(
             _loadingScreen,
@@ -3342,6 +3363,7 @@ public sealed partial class RetailFrontendFlow : Control
         // instead left 50.6% of the text region materially different at an
         // otherwise pixel-exact ink bbox (ref x270..365 y401..420 against
         // x271..366 y401..420).
+        SelectSceneSection("Loading.Caption");
         var origin = new Vector2(LoadingTextLeft, LoadingTextTop);
         DrawFont22Outlined(_loadingText, origin + new Vector2(-1f, 1f), Colors.Black);
         DrawFont22Outlined(_loadingText, origin + new Vector2(1f, 1f), Colors.Black);
@@ -3349,6 +3371,7 @@ public sealed partial class RetailFrontendFlow : Control
         DrawFont22Outlined(_loadingText, origin + new Vector2(1f, -1f), Colors.Black);
         DrawFont22Outlined(_loadingText, origin, Colors.White);
 
+        SelectSceneSection("Loading.Bar");
         DrawRect(
             new Rect2(LoadingBarLeft, LoadingBarTop, LoadingBarWidth, LoadingBarHeight),
             Colors.Black);
@@ -3774,18 +3797,15 @@ public sealed partial class RetailFrontendFlow : Control
 
     private int MainMenuIndexAt(Vector2 designPosition)
     {
-        var menuRect = new Rect2(
-            MenuColumnX - MenuHitHalfWidth,
-            MenuStartY - (MenuPitch * 0.5f),
-            MenuHitHalfWidth * 2f,
-            MenuPitch * _session.Items.Count);
-        if (!menuRect.HasPoint(designPosition))
+        if (_stage is null) return -1;
+        Vector2 canvasPoint = _stage.GetGlobalTransformWithCanvas() * designPosition;
+        for (int index = 0; index < _session.Items.Count; index++)
         {
-            return -1;
+            RetailFrontendPart row = _sceneParts[$"Main.Row{index}"];
+            Vector2 local = row.GetGlobalTransformWithCanvas().AffineInverse() * canvasPoint;
+            if (new Rect2(Vector2.Zero, row.Size).HasPoint(local)) return index;
         }
-
-        int index = (int)((designPosition.Y - MenuStartY + (MenuPitch * 0.5f)) / MenuPitch);
-        return Math.Clamp(index, 0, _session.Items.Count - 1);
+        return -1;
     }
 
     private static int QuitConfirmIndexAt(Vector2 designPosition)
@@ -3961,7 +3981,7 @@ public sealed partial class RetailFrontendFlow : Control
         ];
     }
 
-    private static Texture2D[] LoadFeBackFrames()
+    private static Texture2D[] LoadFeBackFrames(int maximumFrames = int.MaxValue)
     {
         string absolute = ProjectSettings.GlobalizePath(FeBackStripPath);
         if (!File.Exists(absolute))
@@ -3978,7 +3998,7 @@ public sealed partial class RetailFrontendFlow : Control
                 $"FEBack strip length {strip.Length} is not a multiple of {FeBackFrameBytes}.");
         }
 
-        int frameCount = strip.Length / FeBackFrameBytes;
+        int frameCount = Math.Min(strip.Length / FeBackFrameBytes, maximumFrames);
         var frames = new Texture2D[frameCount];
         // The flat page fill, pre-added into every frame. See DrawMainUnderlay for
         // why baking the composite is exact rather than an approximation, and for
@@ -4012,14 +4032,14 @@ public sealed partial class RetailFrontendFlow : Control
         return frames;
     }
 
-    private static Texture2D LoadTexture(
+    private Texture2D LoadTexture(
         string name,
         int width,
         int height,
         CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2,
         string folder = "Frontend") =>
         CuratedAyaTextureLoader.Load(
-            $"res://Assets/{folder}/{name}.texture.aya",
+            AssetPaths.TexturePath(folder, name),
             width,
             height,
             compression);
@@ -4288,6 +4308,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     private (float Scale, Vector2 Offset) DesignTransform()
     {
+        if (_paintingPart is not null) return (1f, Vector2.Zero);
         float scale = Mathf.Min(Size.X / DesignWidth, Size.Y / DesignHeight);
         return (
             scale,
@@ -4459,6 +4480,7 @@ public sealed partial class RetailFrontendFlow : Control
     /// counter is never reset on a page change, so its value at main-menu entry
     /// depends on how long click-to-start was held.
     /// </summary>
+    [Tool]
     private sealed partial class TitleLogoReflectionLayer : Node2D
     {
         // Recovered: 126/255 from the 0xff7e7e7e vertex tint under ONE/ONE.

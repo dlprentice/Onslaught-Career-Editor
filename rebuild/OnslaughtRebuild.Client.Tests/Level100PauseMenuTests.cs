@@ -195,33 +195,32 @@ public sealed class Level100PauseMenuTests
     public void ConfirmationDrawsTheRetailPanelFrameOverTheStillDrawnRootList()
     {
         string view = ReadPauseView();
-        string draw = ExtractMethod(view, "public override void _Draw()");
+        string draw = ExtractMethod(view, "private void ApplyVisualState()");
 
         // CPauseMenu__Render renders the active range (index this+0x24, still 0
         // while a Retry/Quit prompt is up) and then the prompt hanging off
         // this+0x08. The root list must therefore stay drawn, and the prompt
         // must be the range that carries the panel flag.
-        AssertOccursInOrder(
-            draw,
-            "\"PAUSED\"",
-            "Model.RootEntries",
-            "Level100PausePage.Root,",
-            "panelFrame: false);",
-            "\"Are you sure?\"",
-            "Model.Entries",
-            "panelFrame: true);");
-
-        // The root and options ranges are built with panel_flag = 0 in
-        // PauseMenu__Init, so exactly one range in the whole surface is framed.
-        Assert.Equal(1, CountOccurrences(view, "panelFrame: true"));
-        Assert.Equal(2, CountOccurrences(view, "panelFrame: false"));
+        AssertOccursInOrder(draw,
+            "_rootRange.Visible = transitionSeconds >= FadeSeconds;",
+            "_confirmationRange.Visible = _rootRange.Visible && confirmation;",
+            "ApplyMenuRange(_rootTitle, _rootRows, \"PAUSED\", _model.RootEntries,",
+            "confirmation ? _model.UnderlyingRootSelection : _model.SelectedIndex);",
+            "if (confirmation)",
+            "ApplyMenuRange(_confirmationTitle, _confirmationRows, \"Are you sure?\", _model.Entries,",
+            "ArrangePanelFrame(\"Are you sure?\", _model.Entries, _model.Page);");
+        Assert.Equal(1, CountOccurrences(draw, "ArrangePanelFrame("));
+        string scene = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
+            "godot-pause-source", "PauseMenu.tscn"));
+        Assert.DoesNotContain("parent=\"Surface/Native/RootRange/Frame\"", scene, StringComparison.Ordinal);
+        Assert.Equal(9, CountOccurrences(scene, "type=\"TextureRect\" parent=\"Surface/Native/ConfirmationRange/Frame\""));
     }
 
     [Fact]
     public void PanelFrameUsesTheMeasuredRetailGeometryAndTint()
     {
         string view = ReadPauseView();
-        string panel = ExtractMethod(view, "private void DrawPanelFrame(");
+        string panel = ExtractMethod(view, "private void ArrangePanelFrame(");
 
         // Sizing pass in CMenuItemRange__Render: (max(title, widest item) +
         // 0x10) * 1.1 wide, (0x20 + summed item heights) * 1.1 tall, centred on
@@ -247,8 +246,8 @@ public sealed class Level100PauseMenuTests
         Assert.Contains("private const float PanelMinimumSize = 64f;", view, StringComparison.Ordinal);
         Assert.Contains("private const float PanelCornerSize = 32f;", view, StringComparison.Ordinal);
 
-        // ROUND(1.2 * _DAT_005dc568) with _DAT_005dc568 = 160.0 read from the
-        // pristine .rdata at file offset 0x1dc568, applied over RGB 0.
+        // Keep the previous renderer's ROUND(1.2 * 160.0) over RGB 0 and
+        // its cited lab executable identity. This migration does not remeasure it.
         Assert.Contains(
             "PanelTint = new(0f, 0f, 0f, 192f / 255f)",
             view,
@@ -278,8 +277,8 @@ public sealed class Level100PauseMenuTests
         // CMenuItemRange__Render packs exactly that ARGB for its single title
         // CDXFont__DrawText call. Faintness is retail, not a defect.
         Assert.Contains("TitleColor = RetailColor(0xff505050)", view, StringComparison.Ordinal);
-        string range = ExtractMethod(view, "private void DrawMenuRange(");
-        AssertOccursInOrder(range, "TitleColor,", "shadow: false);");
+        string range = ExtractMethod(view, "private static void ApplyMenuRange(");
+        AssertOccursInOrder(range, "titleControl.TextColor = TitleColor;", "titleControl.Shadow = false;");
     }
 
     private static string ReadPauseView() => File.ReadAllText(
