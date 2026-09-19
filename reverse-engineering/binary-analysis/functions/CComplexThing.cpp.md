@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, aim providers and finite-angle caller composition)
+Last updated: 2026-09-19 (weapon query, aim providers, finite-angle composition and asin metadata)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -718,10 +718,16 @@ point providers and a supplied world-query result. It does not sample live game
 precision or CRT state.
 
 The routine computes an **elevation difference**, not a full three-dimensional
-angle between the two directions. The finite interior of `0055dcb0` computes
+angle between the two directions. For these float32 ratios, `0055dcb0` computes
 `atan2(r, sqrt((1+r)*(1-r)))`, with the original intermediate rounding. Its
 error-name literal at `00653310` is `asin`; exact `r=+1/-1` uses the original
-signed 80-bit pi/2 constant. The retained `Acos` interpretation is wrong.
+signed 80-bit pi/2 constant. The former `Acos` interpretation is wrong. The
+[reviewed metadata correction](../../ghidra/README.md#asin-helper-metadata-correction-2026-09-19)
+names the wrapper `CRT__AsinDispatch_ST0` and the `0055dccd` core
+`CRT__AsinCoreWithFpuGuards`, while leaving their unresolved prototypes intact.
+The wrapper classifies a saved double copy; arithmetic uses the retained ST0
+value. This experiment does not cover extended inputs that round across a
+classification boundary when copied to double.
 
 The caller's important stores are:
 

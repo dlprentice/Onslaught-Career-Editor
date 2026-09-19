@@ -200,6 +200,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # aim-provider-semantics: four names/comments/tag sets and two native pointer
 # returns, 2026-09-19. Exact pristine-body and independent rehearsal comparison;
 # all formal parameters, locals and program structure preserved.
+# asin-helper-semantics: two names/comments/tag sets, 2026-09-19. Original
+# finite-code execution establishes asin; every prototype and body stays frozen.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -226,6 +228,7 @@ LIVE_GRANTED_COHORTS = [
     "unit-ai-event-arguments",
     "unit-ai-exit-contract",
     "aim-provider-semantics",
+    "asin-helper-semantics",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -658,6 +661,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "unit-ai-event-arguments",\n'
         '        "unit-ai-exit-contract",\n'
         '        "aim-provider-semantics",\n'
+        '        "asin-helper-semantics",\n'
         "    };\n",
     ),
     (

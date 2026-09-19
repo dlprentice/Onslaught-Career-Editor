@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-19 (weapon aim-point correction; other contracts retain their dated evidence)
+Last updated: 2026-09-19 (weapon aim-point and asin names; other contracts retain their dated evidence)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -18,12 +18,16 @@ contracts are independent of those labels.
 
 ## Shape
 
-The ballistic rows below use `asin` for the measured finite `|x| < 1` branch of
-`0x0055dcb0`/`0x0055dccd`. Retained `Acos` names do not describe that arithmetic:
-it computes `sqrt((1+x)*(1-x))` then `FPATAN`. The
+The ballistic rows below use `asin` for the measured finite interior branch of
+`0x0055dcb0`/`0x0055dccd`: `sqrt((1+x)*(1-x))` then `FPATAN`. The corrected names
+are `CRT__AsinDispatch_ST0` and `CRT__AsinCoreWithFpuGuards`, respectively; their
+prototypes remain unresolved. The
 [Unit attachment owner](Unit.cpp/CUnit__UpdateTransform.md#four-world110-component-inputs)
-records the pristine bounds and arithmetic check. Endpoints, NaNs and exceptional
-paths remain outside this correction.
+records the earlier pristine bounds and arithmetic check. The subsequent
+[Weapon B experiment](CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+executes the shared finite core, exact poles and selected inexact-result handling
+with supplied float32 ratios and explicit precision/CRT state. It does not rerun
+these ballistic arms or establish NaN, other exceptional or live-game behavior.
 
 `IScript` is a mission-script runtime object. Its RTTI chain
 (CompleteObjectLocator `0x00619588` → TypeDescriptor `0x0064fa28` →

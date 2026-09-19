@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[aim-provider metadata correction](#aim-provider-metadata-correction-2026-09-19);
+[asin-helper metadata correction](#asin-helper-metadata-correction-2026-09-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -579,6 +579,51 @@ Receipts and exports are in
 `post-working-restore.json`: 5,778 bytes, SHA-256
 `6fd0bc9a4ce89fd5b9958b97135a1e51fff4706cc9bb7c8c7724328a4e293883`.
 This corrects analysis metadata; it does not establish retail gameplay acceptance.
+
+## Asin-helper metadata correction (2026-09-19)
+
+The exact [manifest](../../tools/cohort-specs/asin-helper-semantics.manifest.tsv)
+and [spec](../../tools/cohort-specs/asin-helper-semantics.spec.tsv) correct two
+misleading names, nonrepeatable comments and semantic tags:
+
+| Address | Previous name | Corrected name |
+| --- | --- | --- |
+| `0055dcb0` | `CRT__AcosDispatch_ST0` | `CRT__AsinDispatch_ST0` |
+| `0055dccd` | `CRT__Acos` | `CRT__AsinCoreWithFpuGuards` |
+
+The [Weapon B finite experiment](../binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+executes the original helper closure and establishes signed elevation behavior
+under its supplied inputs and floating-point state. The wrapper classifies a
+saved double copy while the core uses retained ST0 for arithmetic. Comments
+distinguish these paths, and obsolete verified-signature tags are removed.
+All prototypes and parameter/local storage remain frozen and explicitly
+unresolved. This does not repair the shared error helper at `00561547` or define
+the alternate entry at `0055dcc4`; those require separate structural/ABI work.
+
+Fresh PRE matched the independent aim-provider POST above and was restored and
+opened read-only. The final rehearsal and independent comparison changed only
+two of 8,330 internal function rows. All 32,697 variable records, types,
+bookmarks, saved stack, Plane-depth and the 54 selected instructions/194 bytes
+remain unchanged; only the program comment digest moves. A stale second-row
+comment control refused before writes. Sealed readback, live dry/apply and a
+separate readback passed. All nine live exports equal the reviewed rehearsal.
+
+Measured working POST is `db.18649`: 18 files / 118,983,540 bytes, inventory
+SHA-256 `a38825aab32f3741d826740381c19284c6f79f44ac830618cf831482ef342345`.
+The main database is 68,681,728 bytes, SHA-256
+`ed633e07053ad8e51104842cf6e2124da449160a34207ab2c47b9382a63e8591`.
+Independent POST at
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-asin-helper-semantics/post-working/`
+was copied, hash-compared, restored elsewhere and reopened read-only. The tracked
+checkpoint payload remains byte-identical and was not writable-opened.
+
+Commands, comparisons and receipts are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/asin-helper-semantics/`.
+`live-readback.json`: 2,306 bytes, SHA-256
+`d8d8ca16a4a4df45e4eca52c9184a8a3e80a4ed15ffe69d6670801fb07a49bde`.
+`post-working-restore.json`: 5,773 bytes, SHA-256
+`e42a86cf77d6b115c28435e529a96fda0d30a980cc77b6e4dd439bebd8a3625f`.
+This is an analysis correction, not retail gameplay or full math-library acceptance.
 
 Related (not this folder):
 

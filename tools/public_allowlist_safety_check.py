@@ -188,10 +188,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (2,226/3,536 decoded bytes).
 # UnitAI exit contract contains two analytic comments (3,509 decoded bytes).
 # Aim-provider semantics contains eight analytic comments (7,662 decoded bytes).
+# Asin-helper semantics contains four analytic comments (4,607 decoded bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/asin-helper-semantics.manifest.tsv":
+        "e3a8567675054accd4045b91a623f0b291b23a7b56b40b220464d7160f99fe1e",
     "tools/cohort-specs/aim-provider-semantics.manifest.tsv":
         "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6",
     "tools/cohort-specs/unit-ai-exit-contract.manifest.tsv":

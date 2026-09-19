@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, aim/finite-angle caller composition and Ghidra provider corrections; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, aim/finite-angle caller composition and Ghidra metadata corrections; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1264,6 +1264,30 @@ This is finite nonballistic caller composition with controlled providers and
 query results. No production reconstruction code or Ghidra database changes in
 this experiment; real collision, special mount handling, ballistics, unmasked
 faults, other rounding modes and live combat remain unvalidated.
+
+### Asin-helper Ghidra correction — September 19
+
+The two-function [correction record](reverse-engineering/ghidra/README.md#asin-helper-metadata-correction-2026-09-19)
+owns the exact manifest/spec and working/recovery identities. Fresh exports
+matched 194 pristine bytes across 54 instructions. The final rehearsal and
+independent full comparison changed only names, nonrepeatable comments and tag
+sets at two entries; all prototypes, 32,697 variable records, 8,328 non-target
+function rows and program structure remain unchanged. Only the program comment
+digest moves. All nine live exports match the separately reopened rehearsal.
+
+The existing framework passed isolated dry/apply, stale-second-comment refusal
+before writes, sealed readback, live dry/apply/separate readback, and independent
+Archive A POST restore/read-only reopen. The refusal control used the initial
+draft with the same PRE guards; final wording was rehearsed on a fresh PRE copy.
+`python -m tools.ghidra_cohort_framework_tests` passed **91 tests**. Direct script
+invocation first failed to resolve the existing `tools` package; module invocation
+passed without a framework behavior change. The only live-applier change is the
+exact new cohort grant. Private commands, logs and comparison records are under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/asin-helper-semantics/`.
+
+The tracked checkpoint is unchanged. Implicit x87 inputs, the shared error helper's
+signature and alternate-entry ownership remain separate open work; the corrected
+names do not certify those prototypes or live gameplay.
 
 ### Aim-provider Ghidra correction — September 19
 
