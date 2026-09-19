@@ -27,7 +27,7 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
-    private readonly Level100PauseMenu _pauseMenu = new();
+    private readonly GdPauseMenuState _pauseMenu = new();
     private readonly AudioPlaybackRetirement _audioRetirement = new();
     private int? _quitExitCode;
     private ulong _audioShutdownDeadlineMs;
@@ -740,6 +740,7 @@ public sealed partial class FirstFlightGame : Node3D
             _tapeRecorder?.Dispose();
             _tapeRecorder = null;
             _audioRetirement.Dispose();
+            _pauseMenu.Dispose();
             if (!_smokeMode)
             {
                 ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);

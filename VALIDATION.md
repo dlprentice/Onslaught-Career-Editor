@@ -37,7 +37,7 @@ are not replaced by the focused portable results below.
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
-| GDScript rebuild numerical migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes and SHA-256. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. This is a bounded foundation gate, not full simulation, performance or gameplay parity. |
+| GDScript rebuild migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes/SHA-256, pause transitions and detached snapshots. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. The production pause scene has separate actual-scene checks described below. This is a bounded migration gate, not full simulation, performance or gameplay parity. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` and `build:rebuild-godot` build without a visible app. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
@@ -120,6 +120,28 @@ progress-dialog/current-window warnings and teardown RID/ObjectDB diagnostics;
 the HUD harness's teardown counts also occur with an empty editor-script control.
 These are recorded limitations, not a claim of clean interactive editor shutdown.
 No software capture proves normal GPU performance, physical input or audible audio.
+
+The subsequent GDScript pause conversion passed **1,047 model transitions** against
+the retained C# model, **115 standard-engine scene checks**, **91 editor-mode
+checks**, and **94 checks through the temporary managed host adapter**. The
+seven selected Client checks passed, including unchanged pause/resume tape,
+trace and final-hash equality and neutral-input handling after resume. The
+scene script is `res://Scenes/Pause/Tests/pause_scene_checks.gd`; run it with the
+standard pinned engine's `--headless --audio-driver Dummy --script` options and
+the rebuild project path, adding `--editor` for the frozen preview checks.
+The isolated software render passed **120 checks**; its root and confirmation
+captures each differed from the previous C# scene capture by **zero pixels**.
+Checks cover authored rows/hit regions, input gating, private texture packing,
+asset bytes and bitmap-font measurements, including raw UTF-16 code units where
+embedded NUL cannot cross the ordinary Godot string bridge intact. Deliberately
+corrupt compressed fixtures produce two expected native zlib errors. The editor
+harness also reports scan-abort and teardown RID/ObjectDB diagnostics; this is
+not a clean interactive-editor shutdown claim. Evidence is in the owned
+`local-data/test-runs/gdscript-pause-94vdiqq3/` directory. Whole-game simulation
+and the remaining frontend/HUD/world host still use C# during conversion. The
+supported headless smoke also passed after reimporting the worktree's private
+world scene: `local-data/first-flight/smoke-izxr9__1/` retains the same 2,148-step
+`53c1cc64…` hash, retry and return-to-menu behavior, with mission **Running**.
 
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 extends SceneTree
 ## Runs the production GDScript kernels against the existing C# and native
-## fixtures exported by TestSupport/GdscriptNumericOracle.cs. No asset inputs.
+## fixtures exported by TestSupport/GdscriptParityOracle.cs. No asset inputs.
 
 const Float24 = preload("res://Core/retail_float24.gd")
 const Euler = preload("res://Core/retail_unit_euler.gd")

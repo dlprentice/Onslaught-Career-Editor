@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Compare production GDScript numerics with the existing C# and native fixtures.
+"""Compare production GDScript with the existing C# and native fixtures.
 
 This is a temporary migration oracle, not a second simulation or asset pipeline.
 Every invocation owns its logs, profiles, oracle build and vector data. Godot is
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
             ET.SubElement(properties, name).text = value
         items = ET.SubElement(project, "ItemGroup")
         ET.SubElement(items, "ProjectReference", Include=str(ROOT / "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"))
-        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptNumericOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParityOracle.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"
@@ -91,8 +91,16 @@ def main(argv: list[str] | None = None) -> int:
         if "ERROR:" in diagnostics or report.get("schema") != 1 or report.get("failure_count") != 0 \
                 or not report.get("counts") or report.get("completed") != ["arithmetic", "euler", "rng", "wide", "binary"]:
             raise RuntimeError("Numerical parity gate did not complete successfully")
+        model_path = output / "pause-model.json"
+        model_log = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
+             str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",
+             "res://Tests/pause_model_checks.gd", "--", str(vectors), str(model_path)], "pause-model.log", 30)
+        model = json.loads(model_path.read_text(encoding="utf-8"))
+        if "ERROR:" in model_log or model.get("schema") != 1 or model.get("failure_count") != 0 \
+                or model.get("completed") != ["pause_model"] or not model.get("counts"):
+            raise RuntimeError("Pause model parity gate did not complete successfully")
         print(json.dumps({"result": "passed", "engine": version, "counts": report["counts"],
-                          "output": str(output)}, indent=2))
+                          "pause_counts": model["counts"], "output": str(output)}, indent=2))
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         if isinstance(error, (subprocess.CalledProcessError, subprocess.TimeoutExpired)):

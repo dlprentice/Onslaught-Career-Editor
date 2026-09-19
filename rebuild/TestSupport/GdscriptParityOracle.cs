@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.Core.Tests;
+using OnslaughtRebuild.Client;
 
 string output = Path.GetFullPath(args[0]);
 Type fp = typeof(Simulation).Assembly.GetType("OnslaughtRebuild.Core.RetailFloat24")!;
@@ -151,6 +152,42 @@ foreach (string right in wideInputs)
         compare = a.CompareTo(b), difference = a >= b ? Limbs(a - b) : [],
         quotient = b > 0 ? Limbs(a / b) : [], remainder = b > 0 ? Limbs(a % b) : [] });
 }
-File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic, eulers, smooth, rng, scaledRng, big, wide,
+var pause = new List<object>();
+var menu = new Level100PauseMenu();
+object PauseState() => new
+{
+    is_open = menu.IsOpen, page = (int)menu.Page, selected_index = menu.SelectedIndex,
+    underlying_root_selection = menu.UnderlyingRootSelection,
+    entries = menu.Entries.Select(entry => new { id = (int)entry.Id, label = entry.Label, enabled = entry.IsEnabled }).ToArray(),
+    root_entries = menu.RootEntries.Select(entry => new { id = (int)entry.Id, label = entry.Label, enabled = entry.IsEnabled }).ToArray(),
+};
+void PauseOperation(string operation, int argument = 0)
+{
+    object? returned = null;
+    switch (operation)
+    {
+        case "open": menu.Open(); break;
+        case "reset": menu.Reset(); break;
+        case "move_selection": returned = menu.MoveSelection(argument); break;
+        case "hover": returned = menu.Hover(argument); break;
+        case "activate_selected": returned = (int)menu.ActivateSelected(); break;
+        case "cancel": returned = (int)menu.Cancel(); break;
+        default: throw new InvalidOperationException(operation);
+    }
+    pause.Add(new { operation, argument, returned, state = PauseState() });
+}
+// Explicit confirmation outcomes, safe No/default, disabled rows, cancel and reopen.
+PauseOperation("reset"); PauseOperation("cancel"); PauseOperation("activate_selected");
+PauseOperation("open"); PauseOperation("hover", 1); PauseOperation("hover", -1);
+PauseOperation("move_selection", 0); PauseOperation("move_selection", 1);
+PauseOperation("activate_selected"); PauseOperation("open"); PauseOperation("activate_selected");
+PauseOperation("activate_selected"); PauseOperation("move_selection", 1); PauseOperation("activate_selected");
+PauseOperation("open"); PauseOperation("move_selection", -1); PauseOperation("activate_selected");
+PauseOperation("cancel"); PauseOperation("activate_selected"); PauseOperation("hover", 1);
+PauseOperation("activate_selected"); PauseOperation("open"); PauseOperation("activate_selected");
+string[] pauseOperations = ["open", "reset", "move_selection", "hover", "activate_selected", "cancel"];
+for (int index = 0; index < 1024; index++)
+    PauseOperation(pauseOperations[(Next() >> 16) % 6], (int)((Next() >> 16) % 13) - 2);
+File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic, eulers, smooth, rng, scaledRng, big, wide, pause,
     nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }));
 Console.WriteLine($"Oracle: {arithmetic.Count} numerical cases, {eulers.Count} generated bases, {nativeBasis.Length} native bases, {nativeSmooth.Length} native smooth fixtures, {smooth.Count} generated smooth cases, {rng.Count * 1024} RNG steps, {scaledRng.Count} scaled RNG cases, {big.Count} contact ratios, {wide.Count} wide integer pairs.");

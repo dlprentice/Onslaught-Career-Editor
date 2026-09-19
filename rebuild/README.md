@@ -50,8 +50,8 @@ The existing C# simulation still owns gameplay until its consumers are ported.
 No simulation owner or physics behavior changes merely because these modules
 have been introduced.
 
-`npm run test:rebuild-gdscript` compares the production scripts in standard
-`godot48` with the existing C# implementation and native fixtures. It includes
+`npm run test:rebuild-gdscript` compares the numerical modules and pause state
+in standard `godot48` with the existing C# implementation and native fixtures. It includes
 the existing 31 rotation-basis and 19 smoothing fixtures without copying their
 expected words into a second maintained table. The temporary oracle requires
 the current C# test project to build and its already-prepared asset links;
@@ -255,12 +255,12 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | Black surround, actual movie/splash TextureRects and an inactive audio node. `EditorCue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | Production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. Editor display values feed presentation only. |
-| [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Overlay, rotating circles, root rows and confirmation frame/rows. Preview controls choose an inspectable state without running the pause controller. |
+| [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |
 | `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
 | `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
 
-These are the gameplay definitions. The game binds its existing C# presentation
-controllers to these nodes; it does not build an approximate second preview.
+These are the gameplay definitions. The game binds presentation controllers
+to these nodes; it does not build an approximate second preview.
 The deterministic Core remains the single simulation owner. Actor poses, camera
 timing, terrain LOD, animation and transient effects continue to update through
 the existing adapters. The public actor scene supplies later spawned actors.
@@ -270,8 +270,8 @@ their scenes. Frontend text keeps imported localization by default; an explicit
 `OverrideText` enables a deliberate authored replacement. HUD `Base`, `Glow` and
 `Text` groups expose the measured blend passes; corresponding halves of an
 instrument are separate selectable controls, with imported `Part`/`SourceRect`
-identity read-only in the Inspector. Narrow C# controls retain the measured bitmap-glyph and compositing
-laws where replacing them with a generic widget would change the image. They
+identity read-only in the Inspector. The remaining frontend/HUD C# controls
+retain bitmap-glyph and compositing laws during their migration. They
 remain ordinary selectable Controls; their script and exported properties are
 available in the editor. Runtime animation applies its existing state over those
 definitions. Preview state is explicitly separate from game state, with no second
@@ -294,8 +294,16 @@ preparation argument only prints instructions. The supported build/run launcher
 owns preparation and verifies current files. Rebuild after code changes before
 using `--no-prepare`. Native physics bodies do not replace the custom simulation.
 
-Frontend/HUD/pause editor previews need the prepared private textures and compiled
-C# assembly. Missing data is reported rather than replaced with invented retail
+The pause scene, its shared bitmap font/texture components and
+`Client/pause_menu.gd` state owner run in standard Godot without C#. The still-managed
+game host uses small temporary adapters in `GdPauseMenuState.cs` and
+`FirstFlightPauseMenu.cs`; the old C# menu model is a comparison reference,
+not a second live owner. Open the same production scene and its linked scripts
+to inspect both behavior and layout in Godot. Bound texture pixels cannot be
+serialized into the public scene when it is saved.
+
+Frontend/HUD editor previews still need the compiled C# assembly. All retail
+previews need prepared private textures. Missing data is reported rather than replaced with invented retail
 content. Runtime effects and later spawned actors naturally appear during play;
 their reusable definitions remain available in source and resources. Full combat
 completion, physical input/audio and normal GPU performance retain the acceptance

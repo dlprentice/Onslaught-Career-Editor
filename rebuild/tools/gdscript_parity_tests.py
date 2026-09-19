@@ -34,8 +34,9 @@ class ParityGateTests(unittest.TestCase):
         if "--version" in command:
             return subprocess.CompletedProcess(command, 0, self.version + "\n", "")
         if "--script" in command and self.complete:
+            is_model = "res://Tests/pause_model_checks.gd" in command
             Path(command[-1]).write_text(json.dumps({"schema": 1, "failure_count": 0,
-                "counts": {"nativeBasis": 31}, "completed": self.finished_groups}))
+                "counts": {"nativeBasis": 31}, "completed": ["pause_model"] if is_model else self.finished_groups}))
         return subprocess.CompletedProcess(command, 0, "", "SCRIPT ERROR: aborted check" if self.script_error else "")
 
     def invoke(self, *args):
@@ -53,7 +54,7 @@ class ParityGateTests(unittest.TestCase):
         self.assertIn("--headless", engine)
         self.assertIn("--script", engine)
         self.assertNotIn("--editor", engine)
-        build = self.calls[-2][0]
+        build = self.calls[1][0]
         self.assertTrue(Path(build[build.index("--artifacts-path") + 1]).is_relative_to(self.root / "local-data"))
         for _, env in self.calls:
             self.assertFalse({"DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY"} & env.keys())
