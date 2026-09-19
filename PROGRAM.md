@@ -236,18 +236,18 @@ and its workflow acceptance remain open.
 
 ### P10 — Godot toolkit companion — NATIVE SAVE LAB IMPLEMENTED
 
-The September 19 companion lane uses standard Godot 4.8 dev6 and native GDScript
+The September 19 companion lane uses Godot 4.8 dev6 .NET and native GDScript
 for editable scenes, save inspection/planning, comparison and media metadata.
 Linux headless execution now covers open → explicit preview → separate verified
-copy → reopen through the actual scene and packaged helper. Byte-identical career
+copy → reopen through the actual scene and in-process C# file adapter. Byte-identical career
 recovery copies and read-only comparisons are native workflows. See the
 [companion goal/acceptance](companion/OnslaughtToolkit.Godot/README.md#migration-goal-and-acceptance)
 and [executed evidence](CURRENT_CAPABILITIES.md#godot-save-lab--first-workflow).
 
-Godot lacks the required OS file identity/no-clobber primitives. David explicitly
-allowed unavoidable C#; the bounded self-contained FileBridge links existing file
-safety unchanged, with GDScript owning save semantics. It is disclosed and packaged,
-not a Godot .NET requirement or hidden backend. Unsupported protection fails closed.
+GDScript lacks the required OS file identity/no-clobber primitives. David clarified
+that necessary C# should run inside Godot's .NET edition. The thin adapter links
+existing file safety unchanged, with GDScript owning save semantics and presentation.
+There is no production helper process. Unsupported protection fails closed.
 WinUI/AppCore and the old C# scene script remain reference material. The legacy
 [Windows release procedure](README.RELEASE.md) remains historical, not a release task.
 

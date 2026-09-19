@@ -2,7 +2,7 @@
 
 Status: active independent MIT application boundary
 Last updated: 2026-09-19
-Evidence: SOURCE — native scenes/domain and FileBridge project links; executed package boundaries are recorded in VALIDATION.md.
+Evidence: SOURCE — native scenes/domain and integrated C# safety project links; executed package boundaries are recorded in VALIDATION.md.
 Summary: native companion scenes and GDScript derive only from MIT application references; retail data and GPL reconstruction remain separate.
 
 The scenes, theme and typed GDScript in this project are original MIT application
@@ -11,13 +11,15 @@ were ported from the existing MIT `BesFilePatcher`, `SaveLabService` and their
 focused tests. The native parser is now the production companion owner; retained
 C# save/UI code is a development reference, excluded from native exports.
 
-The explicit [FileBridge](../OnslaughtToolkit.FileBridge/README.md) exception links
+The in-process [ProtectedSaveFiles](io/ProtectedSaveFiles.cs) adapter links
 `SaveLabFileTransaction.cs` and `FileMutationSafety.cs` unchanged. It performs OS
 file protection and verified publication only; it imports no C# save parser,
-AppCore assembly, Godot .NET SDK or third-party AppCore media libraries. Its
-self-contained .NET runtime remains a disclosed production dependency with its
-own MIT and third-party notices. Standard Godot retains its MIT/third-party
-licenses. The interface uses built-in controls and the default engine font.
+AppCore assembly or third-party AppCore media libraries. Godot .NET SDK
+`4.8.0-dev.6` and the self-contained .NET runtime are disclosed production
+dependencies with their MIT and third-party notices. Godot retains its own
+MIT/third-party licenses. The interface uses built-in controls and the default
+engine font. The earlier standalone FileBridge is retained reference/test source,
+excluded from production builds and exports.
 
 No source from `rebuild/` or `references/Onslaught`, decompiler output, proprietary
 asset, font, music, executable or user save enters this application or its exports.

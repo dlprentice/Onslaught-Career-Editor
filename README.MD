@@ -12,9 +12,9 @@ companion for Linux and Windows. The companion covers real save/options files,
 safe game copies, evidence-backed patches, media, catalogs and lore.
 
 The active companion is the [Godot Save Lab](companion/OnslaughtToolkit.Godot/README.md),
-which uses editable native GDScript scenes on standard Godot 4.8 dev6 to inspect,
-preview and verify separate career copies. Its explicit self-contained file-safety
-helper preserves OS protections missing from Godot; no installed .NET is needed
+which uses editable native GDScript scenes on Godot 4.8 dev6 .NET to inspect,
+preview and verify separate career copies. A small C# adapter inside Godot preserves
+OS protections missing from GDScript; the export bundles .NET, so no separate install is needed
 for packaged use. Linux scene/workflow checks pass; human interaction and Windows
 runtime acceptance remain separate. The broader
 WinUI toolkit stays available as migration material. The approved phase also
@@ -105,10 +105,10 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-The engineering host is Omarchy Linux. The companion uses pinned standard Godot
-4.8 dev6 (`godot48`) and an explicit protected-file helper. The rebuild uses the
-pinned Godot 4.8 dev6 .NET engine (`godot48-mono`), with its exact SDK and recovery
-route in [rebuild/README.md](rebuild/README.md#run-on-linux).
+The engineering host is Omarchy Linux. The companion uses the pinned
+Godot 4.8 dev6 .NET engine (`godot48-mono`) with GDScript and a narrow C# file adapter.
+The rebuild also uses Godot 4.8 dev6 .NET, with its exact SDK and recovery route in
+[rebuild/README.md](rebuild/README.md#run-on-linux).
 The rebuild's earlier synthetic native smoke
 and a live session's two deterministic replays passed; full tutorial acceptance
 is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
@@ -122,8 +122,8 @@ Common requirements:
   `~/.local/opt/game-pipeline`
 - Node.js 26.7 and npm 11.19 from mise
 - Python 3.14 available as `python`; root commands use forward-slash paths
-- Companion: standard Godot 4.8 dev6 and matching templates from the shared pinned
-  toolchain; .NET SDK 8.0.424 only to build its self-contained file helper
+- Companion: Godot 4.8 dev6 .NET and matching templates from the shared pinned
+  toolchain; .NET SDK 8.0.424 for its integrated file-safety adapter
 - Rebuild: Godot 4.8 dev6 .NET and its bundled `4.8.0-dev.6` C# packages
 - Retained C# lanes: their declared SDK and cached AppCore dependencies
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and

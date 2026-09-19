@@ -1,6 +1,7 @@
-<Project Sdk="Godot.NET.Sdk/4.7.2">
+<Project Sdk="Godot.NET.Sdk/4.8.0-dev.6">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <RuntimeFrameworkVersion>8.0.30</RuntimeFrameworkVersion>
     <RootNamespace>OnslaughtToolkit.Companion</RootNamespace>
     <AssemblyName>OnslaughtToolkit.Godot</AssemblyName>
     <Nullable>enable</Nullable>
@@ -11,8 +12,16 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj" />
+    <!-- SaveLab.cs is retained migration reference, never compiled into this app. -->
+    <Compile Include="io/ProtectedSaveFiles.cs" />
+    <Compile Include="io/SafetyCompatibility.cs" />
+    <!-- Share the existing safety implementation without the AppCore codec/services. -->
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs" Link="Safety/SaveLabFileTransaction.cs" />
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs" Link="Safety/FileMutationSafety.cs" />
   </ItemGroup>
 </Project>

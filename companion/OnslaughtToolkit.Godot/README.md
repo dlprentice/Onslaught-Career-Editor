@@ -2,27 +2,34 @@
 
 Status: native GDScript Save Lab implemented; Linux executed checks, Windows runtime acceptance pending
 Last updated: 2026-09-19
-Summary: an editor-authored MIT companion on standard Godot 4.8 dev6, with an explicit protected-file helper for the OS guarantees Godot cannot express.
+Summary: an editor-authored MIT companion using GDScript on Godot 4.8 dev6 .NET, with a small in-process C# adapter for protected OS file operations.
 
 The companion owns careers, saves, recovery copies, supported patches, media and
 related preservation tools. Retail reverse engineering and the faithful GPL game
 rebuild have separate owners. This project neither launches nor depends on that
-rebuild. The September 19 migration uses standard Godot and typed GDScript for
+rebuild. The September 19 migration uses Godot .NET and typed GDScript for
 presentation, save decoding, edit planning, comparisons and media inventory.
 
-The one production C# exception is the explicitly packaged
-[protected file bridge](../OnslaughtToolkit.FileBridge/README.md), within David's
-permission to retain C# where necessary. Review demonstrated that Godot's exposed
-APIs cannot preserve the required file guarantees. It links two existing MIT safety files
-unchanged and performs protected reads/publication only. Its self-contained runtime
-requires no installed .NET on the user's machine. There is no Godot .NET dependency,
-C# save codec or undisclosed service. Removing the helper disables save operations;
-there is no ordinary FileAccess-write fallback.
+David clarified the architecture: use Godot's .NET edition when C# is necessary,
+and use GDScript for as much of the application as possible. The active
+[ProtectedSaveFiles.cs](io/ProtectedSaveFiles.cs) adapter runs inside Godot and
+links two existing MIT safety files unchanged. It performs protected reads and
+publication only. GDScript calls it directly with byte arrays; there is no helper
+process, JSON protocol, sibling executable or C# save codec. Godot's normal .NET
+export includes its runtime, so packaged use needs no separate .NET installation.
+An unavailable adapter disables save operations; there is no unchecked write fallback.
+
+The [pinned API review](../OnslaughtToolkit.FileBridge/README.md) records why pure
+GDScript cannot express the required physical-identity, no-clobber publication and
+disk-flush protections. This is an OS API gap, not a requirement to write the
+interface or save parser in C#. The earlier standalone helper remains reference
+source and a development race harness; it is excluded from the application.
 
 ## Open and edit the project
 
-Open `companion/OnslaughtToolkit.Godot/project.godot` using `~/.local/bin/godot48`.
-The measured engine is **4.8.dev6.official.8898c2b3d**. Open
+Open `companion/OnslaughtToolkit.Godot/project.godot` using `~/.local/bin/godot48-mono`.
+The measured engine is **4.8.dev6.mono.official.8898c2b3d**. Build the C# project
+once with the editor's Build button before running it. Open
 [SaveLab.tscn](SaveLab.tscn) to inspect the actual controls, containers, dialogs and
 four tabs. [KillEditRow.tscn](ui/KillEditRow.tscn) is the reusable category row;
 [MediaBrowser.tscn](ui/MediaBrowser.tscn) owns the media view. Change spacing,
@@ -31,8 +38,8 @@ labels, layout and presentation in the Inspector. The shared
 scenes handle behavior, rather than constructing the interface at runtime.
 Tree rows are populated from selected user data. No retail assets or saves are
 bundled, and the app does not automatically open the regression fixture.
-GDScript `.uid` files are tracked editor metadata; the actual source project also
-passed a headless standard-editor import with the retained C# references present.
+GDScript `.uid` files are tracked editor metadata. `SaveLab.cs` is retained reference
+source, explicitly excluded from the active C# project.
 
 From the repository or this lane's worktree:
 
@@ -44,14 +51,13 @@ npm run export:companion-godot -- --platform both
 ```
 
 Build/test/export are headless. **Run opens a window**; use it when the desktop is
-available. The build records the Linux helper location in the ignored project
-`.godot/companion_bridge_path.txt`, so F6/F5 in the source editor uses the same
-helper. Development commands stage only native project resources into unique
-canonical `local-data/companion/gdscript-*` directories. Imports, scratch, profiles,
+available. F6/F5 uses the integrated C# assembly built by the editor. Development
+commands stage the companion and its two linked MIT safety source files into unique
+canonical `local-data/companion/` directories. Imports, scratch, profiles,
 logs, owned fixtures and packages live there, independently of other tasks.
 Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research
-corpus is copied. `--bridge /absolute/helper` can reuse a built Linux helper for
-subsequent test/run commands. The tooling prints the exact output owner.
+corpus is copied. The tooling prints the exact output owner. There is no `--bridge`
+option or helper-path environment variable in the active workflow.
 
 ## Use Save Lab
 
@@ -78,11 +84,14 @@ subsequent test/run commands. The tooling prints the exact output owner.
    differing byte, including bytes without a known interpretation.
 
 Malformed inputs, changed sources, same-path/linked sources, existing or dangling
-link destinations, missing helpers and unsupported protected operations fail
+link destinations, an unavailable adapter and unsupported protected operations fail
 closed. The file dialogs cannot delete or create folders. Post-publication
 uncertainty explicitly says that a copy may exist; it is never automatically
 removed or reported as verified. A successful receipt concerns that operation,
-not subsequent changes by another program or behavior inside the game.
+not subsequent changes by another program or behavior inside the game. File work
+runs on one worker thread. The UI remains responsive, but it waits for the result
+and defers normal closing while a transaction is active; a timeout is not falsely
+reported as cancellation of an in-process write.
 
 **Media** inventories an explicitly chosen local folder: file names, relative
 paths, formats and sizes. It skips links, bounds traversal and reports incomplete
@@ -93,11 +102,11 @@ results. This increment does not decode or play media and makes no playback clai
 The lane's deliverables are:
 
 - A native editor-visible scene/resource structure and typed GDScript behavior,
-  built using the exact shared standard-engine/template pins.
+  built using the exact shared .NET-engine/template pins.
 - A complete separate-copy Save Lab flow with honest inspection, explicit preview,
   unchanged-byte preservation, guarded publication and protected reopen; plus
   useful recovery-copy, comparison and read-only catalog increments.
-- A narrow documented OS bridge only where API evidence requires it, reusing the
+- A narrow documented in-process C# adapter where API evidence requires it, reusing the
   existing safety implementation without importing legacy format/UI behavior.
 - Executed real-fixture round trips, independent intended-change byte diffs,
   malformed/changed/conflicting input checks and publication-race regressions.
@@ -105,11 +114,12 @@ The lane's deliverables are:
   evidence, scoped documentation and normal commits/pushes. Windows runtime,
   human interaction and later legacy parity are never inferred from packaging.
 
-The native test runs actual scene methods/controls and the packaged helper against
+The native test runs actual scene methods/controls and the integrated adapter against
 owned copies of the sole tracked fixture. Domain checks cover all categories,
 0/24-bit limits, immutable snapshots, unknown bytes and corrected link states.
-The separate bridge tests exercise identity replacement with identical content,
-link aliases, destination conflicts and six Linux transaction-race/failure cases.
+Direct adapter tests exercise identity replacement with identical content,
+link aliases and destination conflicts. The separate development-only race harness
+exercises six Linux transaction-race/failure cases through the same safety source.
 No synthetic career is created. Exact receipts and remaining platform acceptance
 are recorded in [CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md) and
 [VALIDATION.md](../../VALIDATION.md).
@@ -125,9 +135,10 @@ are recorded in [CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md) and
 | WinUI Media / `MediaCatalogService` | Catalog plus NAudio/LibVLC playback and replacement | Native metadata catalog now; playback/replacement and asset preview remain |
 | Lore, assets, cheats, settings | Retained WinUI/AppCore services and tests | Retained as migration references; no native parity claim |
 
-The old `SaveLab.cs`, `.csproj` and package lock stay as reference source and are
-excluded from native staging/export. The bridge does not reference that project
-or the AppCore assembly. One legacy analysis defect was intentionally not ported:
+The old `SaveLab.cs` stays as reference source and is excluded from staging/export.
+The active `.csproj` and package lock now build only the adapter, compatibility
+stubs and linked safety source; they do not reference the AppCore assembly.
+One legacy analysis defect was intentionally not ported:
 nonzero campaign links are not all complete; broken and unknown states are shown
 separately. Mission-rank editing changes other fields in legacy code and is not
 silently offered as a rank-only edit.
@@ -136,9 +147,10 @@ silently offered as a rank-only edit.
 
 [toolchain.json](toolchain.json) records the measured binary/template hashes and
 shared lock revision. `tools/companion_godot.py` verifies the selected shared
-installation and refuses mismatches. FileBridge's own `global.json` pins SDK
-8.0.424; runtime 8.0.30 is bundled. Export presets target Linux x86_64 and Windows
-x86_64. Keep the complete exported folder, including `file-bridge/`.
+installation and refuses mismatches. This project's `global.json` pins .NET SDK
+8.0.424; its Godot SDK is `4.8.0-dev.6` and runtime `8.0.30`. Export presets target
+Linux x86_64 and Windows x86_64. Keep the complete normal Godot .NET export folder.
+Standard `godot48` and other shared toolchain installations remain unchanged.
 
 Adopt a later official 4.8 development/beta release only in an isolated worktree:
 review upstream changes and API guarantees; retain the old pinned shared install;
@@ -146,6 +158,7 @@ update exact pins and matching templates; run affected codec, scene, transaction
 export and isolated-render checks. Do not upgrade through an unpinned `latest`.
 Rollback uses the preceding committed project plus its preserved engine/templates
 and its own import cache; never downgrade a newly saved project in another task's
-checkout or erase its work. The pre-migration baseline is commit `25db5b23`.
+checkout or erase its work. The pre-migration baseline is commit `25db5b23`;
+`9764e585` preserves the validated standard-engine/standalone-helper prototype.
 
 See [PROVENANCE.md](PROVENANCE.md) for licensing and data boundaries.

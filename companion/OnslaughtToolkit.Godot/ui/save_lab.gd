@@ -8,10 +8,12 @@ var _session: SaveSession
 var _plan: Dictionary = {}
 var _busy := false
 var _last_output := ""
-@onready var bridge: CompanionFileBridge = %FileBridge
+@onready var files: CompanionSaveFiles = %SaveFiles
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(920, 700)
+	get_tree().auto_accept_quit = false
+	get_window().close_requested.connect(_close_requested)
 	%OpenButton.pressed.connect(func() -> void: %OpenDialog.popup_centered_ratio(0.75))
 	%OpenDialog.file_selected.connect(open_career)
 	%ChooseOutput.pressed.connect(_choose_output)
@@ -26,9 +28,15 @@ func _ready() -> void:
 		row.selection_changed.connect(_refresh_preview)
 	_configure_tree(%Inspector, ["Record", "Stored value", "Interpretation"])
 	_configure_tree(%Comparison, ["File offset", "Original byte", "Comparison byte"])
-	if not bridge.is_available():
-		_status("The file-safety helper is missing. Build the companion or restore its file-bridge folder to open saves.", true)
+	if not files.is_available():
+		_status("Save access is unavailable. Use Godot 4.8 dev6 .NET and build the project, or restore the complete exported app.", true)
 	_update_actions()
+
+func _close_requested() -> void:
+	if _busy:
+		_status("A file operation is still finishing. Wait for its result before closing.")
+	else:
+		get_tree().quit()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.ctrl_pressed and event.keycode == KEY_O and not _busy:
@@ -66,7 +74,7 @@ func open_career(path: String) -> Dictionary:
 	if _busy:
 		return {"ok": false, "message": "A file operation is already running."}
 	_set_busy(true, "Opening and checking the career…")
-	var reply: Dictionary = await bridge.transact({"protocol": 1, "op": "open", "input": path})
+	var reply: Dictionary = await files.open_career(path)
 	var opened: Dictionary = Session.from_reply(reply)
 	if not opened.get("ok", false):
 		_set_busy(false)
@@ -129,11 +137,11 @@ func write_copy(unchanged: bool) -> Dictionary:
 	var changed: int = 0 if unchanged else _plan.changes.size()
 	_set_busy(true, "Verifying the original and publishing the separate copy…")
 	_last_output = ""
-	var reply: Dictionary = await bridge.transact(_session.publication_request(destination, prepared))
+	var reply: Dictionary = await files.publish_copy(_session.path, _session.identity, _session.sha256, destination, prepared)
 	reply = _session.verify_publication(reply, prepared)
 	if reply.get("ok", false):
 		# Read again through the protected interface; no hash-only path reads.
-		var reopened: Dictionary = await bridge.transact({"protocol": 1, "op": "open", "input": str(reply.output)})
+		var reopened: Dictionary = await files.open_career(str(reply.output))
 		var result: Dictionary = Session.from_reply(reopened)
 		if not result.get("ok", false) or result.session.bytes() != prepared:
 			reply = {"ok": false, "may_have_output": true, "output": reply.output,
@@ -158,7 +166,7 @@ func compare_career(path: String) -> Dictionary:
 	if _busy or _session == null:
 		return {"ok": false, "message": "Open an original first."}
 	_set_busy(true, "Opening the comparison career…")
-	var reply: Dictionary = await bridge.transact({"protocol": 1, "op": "open", "input": path})
+	var reply: Dictionary = await files.open_career(path)
 	var opened: Dictionary = Session.from_reply(reply)
 	_set_busy(false)
 	if not opened.get("ok", false):
