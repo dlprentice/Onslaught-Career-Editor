@@ -16,7 +16,13 @@ import tempfile
 import time
 from pathlib import Path
 
-ENGINE_VERSION = "4.7.2.stable.mono.official.ed1daf0bf"
+ENGINE_VERSION = "4.8.dev6.mono.official.8898c2b3d"
+ENGINE_SDK_VERSION = "4.8.0-dev.6"
+DEFAULT_ENGINE = "godot48-mono"
+# Retained MIT companion remains on its committed SDK until its own migration.
+COMPANION_ENGINE_VERSION = "4.7.2.stable.mono.official.ed1daf0bf"
+COMPANION_SDK_VERSION = "4.7.2"
+COMPANION_DEFAULT_ENGINE = "godot-mono"
 ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
 
@@ -112,15 +118,30 @@ def print_process_output(error: subprocess.CalledProcessError | subprocess.Timeo
         print(note, file=sys.stderr)
 
 
-def engine_path(requested: str) -> Path:
+def engine_path(requested: str, *, sdk_version: str = ENGINE_SDK_VERSION) -> Path:
     located = shutil.which(requested)
     if located is None:
         raise RuntimeError(f"Godot Mono executable not found: {requested}")
     engine = Path(located).resolve(strict=True)
     packages = engine.parent / "GodotSharp/Tools/nupkgs"
-    if not (packages / "Godot.NET.Sdk.4.7.2.nupkg").is_file():
-        raise RuntimeError(f"Godot 4.7.2 bundled SDK package is missing: {packages}")
+    if not (packages / f"Godot.NET.Sdk.{sdk_version}.nupkg").is_file():
+        raise RuntimeError(f"Godot {sdk_version} bundled SDK package is missing: {packages}")
     return engine
+
+
+def output_directory(checkout: Path, requested: Path | None, owner: str, mode: str) -> Path:
+    """Allocate a fresh invocation below this checkout, never a shared profile."""
+    local_data = (checkout / "local-data").resolve()
+    if requested is None:
+        parent = local_data / owner
+        parent.mkdir(parents=True, exist_ok=True)
+        return Path(tempfile.mkdtemp(prefix=f"{mode}-", dir=parent))
+    output = requested.expanduser().absolute()
+    if output.resolve() == local_data or not output.resolve().is_relative_to(local_data):
+        raise RuntimeError("--output-root must be below this checkout's local-data")
+    output.mkdir(parents=True, exist_ok=False)
+    return output
+
 
 def build_project(project: Path, engine: Path, env: dict[str, str]) -> None:
     dotnet = shutil.which("dotnet")
@@ -140,7 +161,7 @@ def build_project(project: Path, engine: Path, env: dict[str, str]) -> None:
 def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build or run the Godot Save Lab on Linux.")
     parser.add_argument("mode", choices=("build", "run"), nargs="?", default="run")
-    parser.add_argument("--engine", default="godot-mono")
+    parser.add_argument("--engine", default=COMPANION_DEFAULT_ENGINE)
     parser.add_argument("--no-build", action="store_true")
     parser.add_argument("--timeout", type=float, help="optional runtime limit in seconds")
     parser.add_argument("--engine-arg", action="append", default=[])
@@ -172,11 +193,11 @@ def companion_main(argv: list[str] | None = None) -> int:
             env = dict(os.environ, TMPDIR=scratch, TMP=scratch, TEMP=scratch,
                        XDG_DATA_HOME=str(owner / "user-data"), XDG_CACHE_HOME=str(owner / "cache"),
                        DOTNET_CLI_TELEMETRY_OPTOUT="1", DOTNET_NOLOGO="1")
-            engine = engine_path(args.engine)
+            engine = engine_path(args.engine, sdk_version=COMPANION_SDK_VERSION)
             version = run_process([str(engine), "--version"], cwd=COMPANION, env=env,
                                   timeout=30, capture=True).stdout.strip()
-            if version != ENGINE_VERSION:
-                raise RuntimeError(f"expected Godot {ENGINE_VERSION}; found {version!r}")
+            if version != COMPANION_ENGINE_VERSION:
+                raise RuntimeError(f"expected Godot {COMPANION_ENGINE_VERSION}; found {version!r}")
             if not args.no_build:
                 build_project(COMPANION, engine, env)
             if args.mode == "run":

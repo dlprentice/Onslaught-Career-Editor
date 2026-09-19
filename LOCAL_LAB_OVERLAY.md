@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-09-08.
+Last updated: 2026-09-19.
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -37,6 +37,17 @@ was retired. The old ProjectData path is absent, not a compatibility link.
 Fresh clones and Git child worktrees do not receive ignored content. A worktree
 must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
 the owning tool's explicit lab option; do not create a per-worktree copy.
+
+The rebuild materializer detects a linked worktree and verifies the canonical
+materialized files against its current source pins, then creates individual
+file links in the worktree's ignored `Assets/` paths. The explicit equivalent is
+`python rebuild/tools/materialize_retail_assets.py --reuse-canonical-assets`.
+It refuses stale inputs, conflicting destinations and directory links; it never
+regenerates the canonical files. This leaves adjacent `.import` files and the
+project's `.godot/` cache local to the worktree. Rebuild launchers place each
+invocation's output/profile under that checkout's `local-data/first-flight/`
+and only read the canonical startup-media cache. Generated production scenes
+and resources must remain checkout-local, private and ignored as well.
 
 Git ignore is a publication boundary, not a backup. Never run root-level
 `git clean` with `-x` or `-X`; any deliberate clean needs a dry run, narrow

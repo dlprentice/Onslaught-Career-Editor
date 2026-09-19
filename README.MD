@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-09-12 (command reference consolidated from the agent guide).
+Last updated: 2026-09-19 (rebuild engine baseline updated to Godot 4.8 dev6).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -103,8 +103,10 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-The engineering host is Omarchy Linux. Native Godot build/run routes use the
-installed pinned Godot 4.7.2 .NET engine. The rebuild's synthetic native smoke
+The engineering host is Omarchy Linux. The rebuild's build/run routes use the
+installed pinned Godot 4.8 dev6 .NET engine (`godot48-mono`), with the exact SDK
+and recovery route in [rebuild/README.md](rebuild/README.md#run-on-linux).
+The rebuild's earlier synthetic native smoke
 and a live session's two deterministic replays passed; full tutorial acceptance
 is unfinished. AppCore targets .NET 8 and 10. Its complete legacy suite, WinUI,
 and the Windows-targeted CLI retain Windows dependencies. The never-built evaluation
@@ -117,8 +119,9 @@ Common requirements:
   `~/.local/opt/game-pipeline`
 - Node.js 26.7 and npm 11.19 from mise
 - Python 3.14 available as `python`; root commands use forward-slash paths
-- Godot 4.7.2 .NET with its bundled C# packages; AppCore dependencies restored
-  into the local NuGet cache
+- Godot 4.8 dev6 .NET with its bundled `4.8.0-dev.6` C# packages for the rebuild;
+  the companion's current requirements belong to its [own guide](companion/OnslaughtToolkit.Godot/README.md).
+  AppCore dependencies must be restored into the local NuGet cache
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
 - Windows 10 or 11 and PowerShell 7 only for retained Windows procedures

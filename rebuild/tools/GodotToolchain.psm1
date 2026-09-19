@@ -9,13 +9,13 @@ function Assert-PinnedGodotManifest {
         [Parameter(Mandatory)]$Manifest
     )
 
-    $expectedPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'))
+    $expectedPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\toolchains\godot-4.8-dev6-win-x64.json'))
     $observedPath = [IO.Path]::GetFullPath($ManifestPath)
     if (-not $observedPath.Equals($expectedPath, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Godot setup requires the tracked manifest path '$expectedPath'."
     }
 
-    $expectedManifestHash = '6559c306efd9b542f54140bdf4e31fde042dc849ce4cff3b2fa80e91105dac76'
+    $expectedManifestHash = '09a8ad60be8fad767032466fd34e3ff90099aeb0f11069e84dfa345f294e803f'
     $actualManifestHash = (Get-FileHash -LiteralPath $observedPath -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actualManifestHash -ne $expectedManifestHash) {
         throw "Pinned Godot manifest hash mismatch: expected $expectedManifestHash, observed $actualManifestHash."
@@ -23,18 +23,18 @@ function Assert-PinnedGodotManifest {
 
     $expectedValues = [ordered]@{
         'schemaVersion' = 'onslaught-godot-toolchain.v1'
-        'rootDirectory' = 'Godot_v4.7.1-stable_mono_win64'
-        'executable' = 'Godot_v4.7.1-stable_mono_win64.exe'
-        'consoleExecutable' = 'Godot_v4.7.1-stable_mono_win64_console.exe'
-        'archive.fileName' = 'Godot_v4.7.1-stable_mono_win64.zip'
-        'archive.uri' = 'https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_win64.zip'
-        'archive.size' = 114763108L
-        'archive.sha256' = '764a089809fb1a6f745686ce9f6d3ca83adce8fb60fb9a4e2324b63baaebaa45'
-        'engine.version' = '4.7.1-stable'
-        'engine.versionOutput' = '4.7.1.stable.mono.official.a13da4feb'
-        'engine.godotNetSdkVersion' = '4.7.1'
+        'rootDirectory' = 'Godot_v4.8-dev6_mono_win64'
+        'executable' = 'Godot_v4.8-dev6_mono_win64.exe'
+        'consoleExecutable' = 'Godot_v4.8-dev6_mono_win64_console.exe'
+        'archive.fileName' = 'Godot_v4.8-dev6_mono_win64.zip'
+        'archive.uri' = 'https://github.com/godotengine/godot-builds/releases/download/4.8-dev6/Godot_v4.8-dev6_mono_win64.zip'
+        'archive.size' = 115772298L
+        'archive.sha256' = '0642d39681dbebb2e5965924f58bc7e56058096750678b1d50f9eba941324da5'
+        'engine.version' = '4.8-dev6'
+        'engine.versionOutput' = '4.8.dev6.mono.official.8898c2b3d'
+        'engine.godotNetSdkVersion' = '4.8.0-dev.6'
         'engine.license' = 'MIT'
-        'engine.officialReleasePage' = 'https://godotengine.org/download/archive/4.7.1-stable/'
+        'engine.officialReleasePage' = 'https://godotengine.org/download/archive/4.8-dev6/'
     }
     $actualValues = [ordered]@{
         'schemaVersion' = [string]$Manifest.schemaVersion

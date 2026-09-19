@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-12 (unused Windows VM retired; native Linux routes unchanged).
+Last updated: 2026-09-19 (Godot 4.8 dev6 engine and managed package pins).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -148,7 +148,11 @@ live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
 
 ## Run on Linux
 
-Use the installed pinned Godot 4.7.2 .NET engine and its bundled C# packages:
+Use the installed pinned Godot 4.8 dev6 .NET engine (`godot48-mono`) and its
+bundled `Godot.NET.Sdk/4.8.0-dev.6` packages. The launcher requires the exact
+identity `4.8.dev6.mono.official.8898c2b3d`; the project remains `net8.0`.
+The standard `godot48` edition is installed for GDScript-only work, but this
+C# rebuild requires the .NET edition.
 
 ```bash
 npm run build:rebuild-godot
@@ -156,16 +160,23 @@ npm run run:rebuild-godot
 ```
 
 `rebuild/tools/first_flight.py` discovers the user's Linux Steam libraries or
-accepts `--game-root "/absolute/game/root"`. It prepares the exact supported
-retail inputs under canonical `local-lab/rebuild-godot/` and startup media under
-`local-lab/startup-media/`, restores against bundled Godot packages with the lock
-file, and launches from this checkout. Required non-Godot NuGet dependencies must
+accepts `--game-root "/absolute/game/root"`. In the canonical checkout it prepares
+the supported retail inputs through `local-lab/rebuild-godot/` and startup media
+under `local-lab/startup-media/`. A child worktree verifies the current exact
+canonical asset files and links individual inputs into its ignored asset paths;
+it reads existing startup media without regenerating it. Set `BEA_LOCAL_LAB` to
+the canonical absolute lab path. Missing or stale inputs fail explicitly.
+The launcher restores against bundled Godot packages with the lock file and
+launches from this checkout. Required non-Godot NuGet dependencies must
 already be available in the package cache. It never downloads or installs an engine.
 A genuinely fresh canonical clone needs its private `local-lab/` owner first;
 child worktrees reuse that canonical owner instead of creating a second corpus.
 
-The launcher owns scratch, user data/cache and fresh run logs under canonical
-`local-data/first-flight/`, including from a worktree. `--no-build` reuses the
+The launcher owns scratch, user data/config/cache and fresh run logs under this
+checkout's `local-data/first-flight/`; every invocation has its own profile.
+`--output-root` may name a fresh directory under this checkout's `local-data/`.
+Individual input file links leave adjacent Godot import files checkout-local.
+`--no-build` reuses the
 managed build; `--no-prepare` also skips asset validation/preparation and therefore
 requires already current inputs. Engine flags use `--engine-arg=VALUE`; game
 arguments follow a separate `--`. The launcher stops only its own process group
@@ -186,15 +197,57 @@ session passed two replays on September 6. A substantial tutorial playthrough is
 still required; synthetic smoke and captured screenshots do not meet that acceptance.
 
 `prepare:rebuild-assets`, Core/Client tests and headless replay do not open a
-window. Run/smoke/capture require an available desktop. The September 6 native
+window. Run/smoke/capture require an explicitly available desktop or an isolated
+virtual display with its own credentials and profile; never fall back to the
+physical desktop. Software rendering establishes bounded visual observations,
+not GPU performance, physical input or audible playback. The September 6 native
 smoke and live startup into Level 100 establish Linux runtime execution; complete
 controls/audio/tutorial parity remains unverified.
 
-Historical Windows PowerShell launchers remain under `tools/`, with explicit
+Retained Windows PowerShell launchers remain under `tools/`, with explicit
 `run:rebuild-godot:windows` and `test:rebuild-godot-smoke:windows` aliases. Their
-4.7.1 engine manifest needs revalidation against the current 4.7.2 managed SDK
-before new Windows acceptance. The unused Windows VM staging was retired on September 12;
-Windows acceptance would need a separately provided Windows environment. Linux development continues natively.
+active [Windows manifest](toolchains/godot-4.8-dev6-win-x64.json) pins the matching
+4.8 dev6 official archive and every extracted file. Archive hashes and manifest
+validation have been checked on Linux; Windows execution remains unverified.
+The previous [4.7.1 manifest](toolchains/godot-4.7-stable-win-x64.json) is retained
+for recovery and is rejected by current setup. The unused Windows VM staging was
+retired on September 12; Windows acceptance needs a separately provided Windows
+environment. Linux development continues natively.
+
+### Engine updates and recovery
+
+The shared pinned toolchain owns installed engines and matching export templates;
+Onslaught owns its exact runtime resolver, managed SDK/lock and project feature
+version. On September 19 both installed 4.8 dev6 editions and both template trees
+passed the shared toolchain's payload hash verification. The preceding 4.7.2
+standard/.NET engines and templates remain installed; their previous Onslaught
+SDK/project pins remain recoverable from Git. Downgrading requires that matching
+source baseline and a fresh checkout-local import cache, not pointing current
+4.8 managed assemblies at an older executable.
+
+The official development notes identify relevant cumulative changes: the
+[dev1](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-1/) and
+[dev2](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-2/) editor/game
+view and resource workflows; [dev3](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-3/)
+editor resource defaults and Windows mouse processing;
+[dev4](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-4/) dock changes
+and Compatibility-renderer decals;
+[dev5](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-5/) texture import
+options and automatic Control focus;
+[dev6](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-6/) Linux touchpad
+scrolling fixes. These changes select compatibility checks; they do not authorize
+new visuals, altered imported retail defaults or replacement simulation physics.
+
+Subsequent official 4.8 development and beta releases are eligible after reviewing
+the cumulative [official changelog](https://godotengine.github.io/godot-interactive-changelog/)
+from the current pin, including intermediate releases and known regressions.
+Keep the previous installed version and a recoverable source commit, verify the
+new engine/templates, then update the resolver, SDK lock, feature version and
+retained Windows manifest together. Run the affected launcher, build, headless
+scene, deterministic replay and presentation checks selected by
+[VALIDATION.md](../VALIDATION.md); input/audio or GPU claims still require their
+actual environment. Do not defer a compatible update solely because it is a
+development build. No monitoring automation is implied.
 
 Controls:
 

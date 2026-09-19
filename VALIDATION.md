@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-12 (native aircraft cache population and render-stamp ownership; earlier validation retained).
+Last updated: 2026-09-19 (rebuild Godot 4.8 dev6 engine migration; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -21,7 +21,8 @@ WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated. The unused
 evaluation VM was retired; no Windows host is provisioned here. The Windows entries
 below require a separately provided Windows validation host, not a Linux prerequisite
 or an instruction to recreate the VM. Historical rebuild launchers use explicit `:windows` aliases
-and need their older engine manifest revalidated against the current managed SDK.
+and pin the matching 4.8 dev6 engine manifest and managed SDK. Archive/manifest
+verification on Linux does not establish Windows runtime behavior.
 No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
 run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
 are not replaced by the focused portable results below.
@@ -51,8 +52,20 @@ are not replaced by the focused portable results below.
 Rebuild commands materialize their exact retail inputs to ignored paths. Linux
 selects canonical `local-lab/rebuild-godot` and discovers Steam library roots;
 `-- --game-root "/absolute/game/root"` overrides discovery. A fresh checkout needs
-its private canonical lab owner; worktrees reuse it. `prepare:rebuild-assets`
+its private canonical lab owner; worktrees verify and link its current materialized
+files read-only, with imports and new output owned by the worktree. `prepare:rebuild-assets`
 is sufficient when only that boundary changed.
+
+September 19 engine migration: both installed 4.8 dev6 editions and matching
+template payloads passed the shared toolchain's pinned hash verification. The
+rebuild's supported Linux build passed locked restore/build with
+`Godot.NET.Sdk/4.8.0-dev.6`, zero warnings/errors and unchanged `net8.0`. The
+launcher suites passed 12 shared-host and 18 rebuild cases; canonical input
+reuse/routing passed 17 cases, including stale-input, conflicting-file and
+directory-link refusal. The matching Windows archive/manifest was checked on
+Linux; Windows execution was not run. Evidence belongs to this branch's
+`local-data/engine48/` and task transcript. These checks do not establish visual,
+input, audio, GPU-performance or complete combat acceptance.
 
 The retained Windows `test:winui` builds one WinUI solution, then runs selected
 AppCore contracts, UI tests excluding `WinUIRuntime`/`LegacyWpf`, and CLI tests.

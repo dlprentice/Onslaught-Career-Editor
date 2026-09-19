@@ -154,7 +154,7 @@ function Test-FirstFlightSmokeEvidence {
 
     $report = $rawReport | ConvertFrom-Json
     Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v17' $report.schemaVersion
-    Assert-SmokeValue 'engineVersion' '4.7.1-stable (official)' $report.engineVersion
+    Assert-SmokeValue 'engineVersion' '4.8-dev6 (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
     # Shared 2,148-step tape expectation after the living-aircraft turn-rate
