@@ -11,8 +11,8 @@ public enum RetailStartupClockMode { FixedTick, Wall }
 /// <summary>
 /// Temporary host bridge. The standard-Godot Startup.tscn owns the complete
 /// presentation, schedule, input, two frame buffers and audio lifecycle.
-/// This bridge supplies one batch from the existing verified media index and
-/// forwards completion; it never drives frames or handles input.
+/// This bridge asks the GDScript media provider to admit one cache and forwards
+/// completion; it never drives frames, parses media or handles input.
 /// </summary>
 public sealed partial class RetailStartupSequence : Node
 {
@@ -67,60 +67,11 @@ public sealed partial class RetailStartupSequence : Node
         // before rereading any input, even if its newly supplied cache is bad.
         if (Presentation.Call("is_initialized").AsBool())
             throw new InvalidOperationException("The startup sequence is already initialized.");
-        GDictionary batch = LoadVerifiedMediaBatch(mediaRoot);
-        GDictionary result = Presentation.Call("configure_verified_media", batch, route,
+        GDictionary result = Presentation.Call("configure_from_cache", mediaRoot, route,
             (int)cue, (int)clock, Callable.From<AudioStreamPlayer>(ObserveVoiceStart)).AsGodotDictionary();
         if (!result["ok"].AsBool())
             throw new InvalidOperationException(result["error"].AsString());
     }
 
     private void ObserveVoiceStart(AudioStreamPlayer player) => PlaybackRetirement.Observe(player);
-
-    /// <summary>
-    /// One-time language boundary. Only the existing index admits media: its
-    /// schema, complete frame inventory, hashes, image envelopes and canonical
-    /// WAV checks remain authoritative. The GDScript player receives explicit
-    /// admitted paths and never interprets a runtime JSON manifest.
-    /// </summary>
-    internal static GDictionary LoadVerifiedMediaBatch(string mediaRoot)
-    {
-        RetailStartupMediaIndex media = RetailStartupMediaIndex.Load(mediaRoot, File.Exists);
-        var clips = new GDictionary();
-        var frames = new GDictionary();
-        var audio = new GDictionary();
-        foreach ((RetailStartupCue cue, RetailStartupClip clip) in media.Clips)
-        {
-            clips[(int)cue] = new GDictionary
-            {
-                ["frame_count"] = clip.FrameCount,
-                ["fps_numerator"] = clip.FramesPerSecondNumerator,
-                ["fps_denominator"] = clip.FramesPerSecondDenominator,
-                ["width"] = clip.Width,
-                ["height"] = clip.Height,
-            };
-            var paths = new string[clip.FrameCount];
-            for (int index = 0; index < paths.Length; index++)
-                paths[index] = Path.GetFullPath(Path.Combine(media.Root, media.FrameRelativePath(cue, index)));
-            frames[(int)cue] = paths;
-        }
-        foreach ((RetailStartupCue cue, RetailStartupClipAudio track) in media.ClipAudio)
-        {
-            audio[(int)cue] = new GDictionary
-            {
-                ["path"] = Path.GetFullPath(Path.Combine(media.Root, media.AudioRelativePath(cue))),
-                ["sample_rate"] = track.SampleRate,
-                ["channels"] = track.Channels,
-            };
-        }
-        return new GDictionary
-        {
-            ["schema"] = "onslaught-startup-verified-batch.v1",
-            ["clips"] = clips,
-            ["frame_paths"] = frames,
-            ["audio"] = audio,
-            ["splash_path"] = media.SplashRelativePath is { } splash
-                ? Path.GetFullPath(Path.Combine(media.Root, splash)) : string.Empty,
-            ["unavailable"] = media.Unavailable ?? string.Empty,
-        };
-    }
 }

@@ -192,6 +192,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Hud\FirstFlightHud.tscn"
              Link="godot-hud-layout-source\FirstFlightHud.tscn"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Hud\*.gd"
+             Link="godot-hud-layout-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightHud.cs"
              Link="godot-hud-layout-source\FirstFlightHud.cs"
              CopyToOutputDirectory="PreserveNewest" />

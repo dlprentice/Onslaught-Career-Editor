@@ -1,17 +1,42 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=14 format=3]
 
-[ext_resource type="Script" path="res://FirstFlightHud.cs" id="1_root"]
+[ext_resource type="Script" path="res://Scenes/Hud/first_flight_hud.gd" id="1_root"]
 [ext_resource type="Script" path="res://Scenes/Hud/hud_design_stage.gd" id="2_stage"]
-[ext_resource type="Script" path="res://Scenes/Hud/RetailHudPart.cs" id="3_part"]
+[ext_resource type="Script" path="res://Scenes/Hud/hud_part.gd" id="3_part"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/radio-view.tres" id="4_texture"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/weapon-fill.tres" id="5_texture"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-primary.tres" id="6_texture"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-secondary.tres" id="7_texture"]
 [ext_resource type="Texture2D" path="res://Scenes/Hud/Textures/crosshair-dot.tres" id="8_texture"]
 
+[sub_resource type="Shader" id="Shader_mix"]
+code = "shader_type canvas_item;
+render_mode blend_mix, unshaded;
+void fragment() {
+    if (COLOR.a < (8.0 / 255.0)) { discard; }
+}
+"
+
+[sub_resource type="Shader" id="Shader_add"]
+code = "shader_type canvas_item;
+render_mode blend_add, unshaded;
+void fragment() {
+    if (COLOR.a < (8.0 / 255.0)) { discard; }
+}
+"
+
+[sub_resource type="ShaderMaterial" id="Material_base"]
+shader = SubResource("Shader_mix")
+
+[sub_resource type="ShaderMaterial" id="Material_glow"]
+shader = SubResource("Shader_add")
+
+[sub_resource type="ShaderMaterial" id="Material_text"]
+shader = SubResource("Shader_mix")
+
 [node name="FirstFlightHud" type="CanvasLayer"]
 script = ExtResource("1_root")
-ShowEditorIllustration = true
+show_editor_illustration = true
 metadata/preview_note = "Full gauges and deployed message frame are editor-only presentation illustrations, not a mission snapshot. Layout edits change presentation only; faithful defaults are pinned by HUD tests."
 
 [node name="Surface" type="Control" parent="."]
@@ -35,6 +60,7 @@ use_parent_material = true
 script = ExtResource("2_stage")
 
 [node name="Base" type="Control" parent="Surface/DesignStage"]
+material = SubResource("Material_base")
 layout_mode = 0
 offset_left = 0.0
 offset_top = 0.0
@@ -53,8 +79,8 @@ offset_bottom = 368.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 0
-SourceRect = Rect2(192.0, 112.0, 256.0, 256.0)
+part = 0
+source_rect = Rect2(192.0, 112.0, 256.0, 256.0)
 
 [node name="ScannerBackdrop" type="TextureRect" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -89,8 +115,8 @@ offset_bottom = 467.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 1
-SourceRect = Rect2(9.0, 339.0, 128.0, 128.0)
+part = 1
+source_rect = Rect2(9.0, 339.0, 128.0, 128.0)
 
 [node name="ScannerContactsAndNorth" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -101,8 +127,8 @@ offset_bottom = 496.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 2
-SourceRect = Rect2(17.0, 368.0, 128.0, 128.0)
+part = 2
+source_rect = Rect2(17.0, 368.0, 128.0, 128.0)
 
 [node name="RightWeaponBacking" type="TextureRect" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -126,8 +152,8 @@ offset_bottom = 467.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 3
-SourceRect = Rect2(499.0, 339.0, 128.0, 128.0)
+part = 3
+source_rect = Rect2(499.0, 339.0, 128.0, 128.0)
 
 [node name="WeaponSelection" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -138,8 +164,8 @@ offset_bottom = 368.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 4
-SourceRect = Rect2(503.0, 240.0, 128.0, 128.0)
+part = 4
+source_rect = Rect2(503.0, 240.0, 128.0, 128.0)
 
 [node name="BattleLineSocket" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -150,8 +176,8 @@ offset_bottom = 496.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 5
-SourceRect = Rect2(503.0, 352.0, 144.0, 144.0)
+part = 5
+source_rect = Rect2(503.0, 352.0, 144.0, 144.0)
 
 [node name="MessageFrame" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -162,8 +188,8 @@ offset_bottom = 499.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 6
-SourceRect = Rect2(156.0, 379.0, 372.0, 120.0)
+part = 6
+source_rect = Rect2(156.0, 379.0, 372.0, 120.0)
 
 [node name="OffscreenObjectives" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -174,8 +200,8 @@ offset_bottom = 480.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 7
-SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+part = 7
+source_rect = Rect2(0.0, 0.0, 640.0, 480.0)
 
 [node name="Crosshair" type="Control" parent="Surface/DesignStage/Base"]
 layout_mode = 0
@@ -231,10 +257,11 @@ offset_bottom = 304.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 8
-SourceRect = Rect2(0.0, 176.0, 640.0, 128.0)
+part = 8
+source_rect = Rect2(0.0, 176.0, 640.0, 128.0)
 
 [node name="Glow" type="Control" parent="Surface/DesignStage"]
+material = SubResource("Material_glow")
 layout_mode = 0
 offset_left = 0.0
 offset_top = 0.0
@@ -253,8 +280,8 @@ offset_bottom = 496.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 9
-SourceRect = Rect2(17.0, 368.0, 128.0, 128.0)
+part = 9
+source_rect = Rect2(17.0, 368.0, 128.0, 128.0)
 
 [node name="LeftWeaponOutline" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -265,8 +292,8 @@ offset_bottom = 467.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 10
-SourceRect = Rect2(9.0, 339.0, 128.0, 128.0)
+part = 10
+source_rect = Rect2(9.0, 339.0, 128.0, 128.0)
 
 [node name="RightWeaponOutline" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -277,8 +304,8 @@ offset_bottom = 467.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 11
-SourceRect = Rect2(499.0, 339.0, 128.0, 128.0)
+part = 11
+source_rect = Rect2(499.0, 339.0, 128.0, 128.0)
 
 [node name="WeaponSelectionOutline" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -289,8 +316,8 @@ offset_bottom = 368.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 12
-SourceRect = Rect2(503.0, 240.0, 128.0, 128.0)
+part = 12
+source_rect = Rect2(503.0, 240.0, 128.0, 128.0)
 
 [node name="CompassGaugesDialThreats" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -301,8 +328,8 @@ offset_bottom = 368.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 13
-SourceRect = Rect2(192.0, 112.0, 256.0, 256.0)
+part = 13
+source_rect = Rect2(192.0, 112.0, 256.0, 256.0)
 
 [node name="BattleLineInfluence" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -313,8 +340,8 @@ offset_bottom = 496.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 14
-SourceRect = Rect2(519.0, 368.0, 128.0, 128.0)
+part = 14
+source_rect = Rect2(519.0, 368.0, 128.0, 128.0)
 
 [node name="BattleLineOutline" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -325,8 +352,8 @@ offset_bottom = 496.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 15
-SourceRect = Rect2(519.0, 368.0, 128.0, 128.0)
+part = 15
+source_rect = Rect2(519.0, 368.0, 128.0, 128.0)
 
 [node name="ForsetiIcon" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -337,8 +364,8 @@ offset_bottom = 384.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 16
-SourceRect = Rect2(536.0, 320.0, 64.0, 64.0)
+part = 16
+source_rect = Rect2(536.0, 320.0, 64.0, 64.0)
 
 [node name="ObjectiveReticles" type="Control" parent="Surface/DesignStage/Glow"]
 layout_mode = 0
@@ -349,10 +376,11 @@ offset_bottom = 480.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 17
-SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+part = 17
+source_rect = Rect2(0.0, 0.0, 640.0, 480.0)
 
 [node name="Text" type="Control" parent="Surface/DesignStage"]
+material = SubResource("Material_text")
 layout_mode = 0
 offset_left = 0.0
 offset_top = 0.0
@@ -371,8 +399,8 @@ offset_bottom = 465.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 18
-SourceRect = Rect2(191.0, 405.0, 306.0, 60.0)
+part = 18
+source_rect = Rect2(191.0, 405.0, 306.0, 60.0)
 
 [node name="HelpPrompts" type="Control" parent="Surface/DesignStage/Text"]
 layout_mode = 0
@@ -383,8 +411,8 @@ offset_bottom = 480.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 19
-SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+part = 19
+source_rect = Rect2(0.0, 0.0, 640.0, 480.0)
 
 [node name="WeaponAmmo" type="Control" parent="Surface/DesignStage/Text"]
 layout_mode = 0
@@ -395,8 +423,8 @@ offset_bottom = 467.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 20
-SourceRect = Rect2(0.0, 339.0, 640.0, 128.0)
+part = 20
+source_rect = Rect2(0.0, 339.0, 640.0, 128.0)
 
 [node name="MissionTerminal" type="Control" parent="Surface/DesignStage/Text"]
 layout_mode = 0
@@ -407,5 +435,5 @@ offset_bottom = 480.0
 mouse_filter = 2
 use_parent_material = true
 script = ExtResource("3_part")
-Part = 21
-SourceRect = Rect2(0.0, 0.0, 640.0, 480.0)
+part = 21
+source_rect = Rect2(0.0, 0.0, 640.0, 480.0)

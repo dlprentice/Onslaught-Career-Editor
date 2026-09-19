@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 extends SceneTree
-## Actual production scene checks. Runtime receives a batch from the unchanged
-## C# verifier; --startup-verified-fixture=ABS may write it ONCE under this
-## checkout's local-data for a repeat with the standard engine. The fixture is
-## an object-free Variant dictionary, never an alternate runtime JSON loader.
+## Actual production scene checks. Runtime receives a freshly verified GDScript
+## batch. An existing C# fixture (or a .NET-only fresh reference batch) compares
+## exact paths/metadata; the fixture is never an alternate runtime JSON loader.
 ## Use --audio-driver Dummy; this process also mutes its own Master bus.
 
 const Playback = preload("res://Scenes/Frontend/startup_sequence.gd")
 const Schedule = preload("res://Client/startup_schedule.gd")
+const MediaBatch = preload("res://Client/startup_media_batch.gd")
 var failures: Array[String] = []
 var checks: int = 0
 var _scene: PackedScene
@@ -138,6 +138,8 @@ func check_editor(view: Control) -> void:
 	check(completions.is_empty() and not view.call("is_initialized"), "Editor initialized or completed playback")
 	check(not view.call("configure_verified_media", empty_batch(), 0, 2, 0, Callable()).ok,
 		"Editor admitted runtime configuration")
+	check(not view.call("configure_from_cache", "", 0, 2, 0, Callable()).ok,
+		"Editor admitted a production cache scan or playback")
 	check_layout_and_serialization(view)
 	_sections["editor"] = true
 
@@ -388,8 +390,17 @@ func check_host_bridge() -> void:
 	check(completion_state(view) == retired_state(), "Managed completion left playback or input active")
 	view.call("_process", 0.0)
 	check(adapter.call("BridgeSnapshot", bridge).completions == 1, "Managed completion repeated")
-	await create_timer(0.25).timeout
+	# Media admission can make the current process delta much longer than the
+	# time since a newly created SceneTreeTimer. Poll the actual weak handle
+	# against the same monotonic five-second deadline as FirstFlightGame quit;
+	# an immediately expired frame timer does not prove mixer retirement.
+	var retirement_start: int = Time.get_ticks_msec()
+	while adapter.call("BridgeSnapshot", bridge).pending_audio > 0 \
+			and Time.get_ticks_msec() - retirement_start < 5000:
+		await process_frame
 	check(adapter.call("BridgeSnapshot", bridge).pending_audio == 0, "Managed audio observer retained a stopped playback")
+	print("STARTUP_AUDIO_RETIREMENT: ", Time.get_ticks_msec() - retirement_start, " ms; pending=",
+		adapter.call("BridgeSnapshot", bridge).pending_audio)
 	bridge.queue_free()
 	await process_frame
 	adapter.call("DisposeRetirement")
@@ -408,24 +419,34 @@ func empty_batch() -> Dictionary:
 
 func load_verified_batch() -> Dictionary:
 	var fixture: String = ""
+	var reference: Dictionary = {}
+	var media_root: String = Playback.resolve_media_root(OS.get_cmdline_user_args())
 	for argument: String in OS.get_cmdline_user_args():
 		if argument.begins_with("--startup-verified-fixture="):
 			fixture = argument.substr("--startup-verified-fixture=".length())
 	if not fixture.is_empty() and FileAccess.file_exists(fixture):
 		var input := FileAccess.open(fixture, FileAccess.READ)
 		var value: Variant = input.get_var(false)
+		input.close()
 		if check(typeof(value) == TYPE_DICTIONARY, "Verified test fixture is not an object-free dictionary"):
-			_sections["batch"] = true
-			return value
+			reference = value
+		else:
+			return {}
+	else:
+		if not check(ClassDB.class_exists("CSharpScript"), "First comparison needs .NET to create its reference fixture; standard repeat needs --startup-verified-fixture"):
+			return {}
+		var adapter_script: Script = load("res://Scenes/Frontend/Tests/StartupSceneCheckMedia.cs")
+		var adapter: RefCounted = adapter_script.new()
+		reference = adapter.call("LoadVerifiedMedia", media_root)
+	var loaded: Dictionary = MediaBatch.load_verified_media_batch(media_root)
+	if not check(loaded.ok, "Production GDScript media admission failed: " + str(loaded.get("error", ""))):
 		return {}
-	if not check(ClassDB.class_exists("CSharpScript"), "First runtime check needs .NET to create its verified fixture; standard repeat needs --startup-verified-fixture"):
+	var batch: Dictionary = loaded.value
+	if not check(batch == reference, "Production GDScript media batch differs from the C# reference"):
 		return {}
-	var adapter_script: Script = load("res://Scenes/Frontend/Tests/StartupSceneCheckMedia.cs")
-	var adapter: RefCounted = adapter_script.new()
-	var batch: Dictionary = adapter.call("LoadVerifiedMedia", Playback.resolve_media_root(OS.get_cmdline_user_args()))
 	if not check(batch.clips.size() == 3 and batch.audio.size() == 3, "Canonical verified startup clips/audio are unavailable"):
 		return {}
-	if not fixture.is_empty():
+	if not fixture.is_empty() and not FileAccess.file_exists(fixture):
 		var owned_root: String = ProjectSettings.globalize_path("res://../../local-data").simplify_path().trim_suffix("/") + "/"
 		if not check(fixture.is_absolute_path() and fixture.simplify_path().begins_with(owned_root), "New verified test fixture must remain in this checkout's local-data"):
 			return {}
@@ -434,7 +455,16 @@ func load_verified_batch() -> Dictionary:
 		var output := FileAccess.open(fixture, FileAccess.WRITE)
 		if not check(output != null, "Could not create the owned verified test fixture"):
 			return {}
-		output.store_var(batch, false)
+		output.store_var(reference, false)
+		output.close()
+	var missing: Control = _scene.instantiate()
+	check(missing.call("configure_from_cache", "", 2, 3, 0, Callable()).ok,
+		"Production missing-cache route did not preserve the graceful empty schedule")
+	check(missing.call("is_initialized") and missing.call("get_scheduled_seconds") == 0.0,
+		"Production cache endpoint failed to initialize its empty clip schedule")
+	check(not missing.call("configure_from_cache", "", 2, 3, 0, Callable()).ok,
+		"Repeated cache initialization was accepted")
+	missing.free()
 	_sections["batch"] = true
 	return batch
 

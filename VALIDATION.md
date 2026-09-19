@@ -230,6 +230,54 @@ twelve times. Inlining fixed rotations reduced its observed median from
 microbenchmarks do not establish full-game throughput, input latency or GPU
 performance. Live simulation and full replay have not yet migrated.
 
+The production HUD then moved its model, message schedule, text reveal and all
+three drawing layers to GDScript. The actual standard-engine scene passed
+**174 headless checks** and **182 isolated rendered checks**; the temporary
+C# Core/catalog bridge passed **1,487 headless checks** and **1,489 rendered
+checks**. This includes all 51 catalog message IDs and signed extremes for
+portrait/noise phases. The two real initial-session captures, at 640×480 and
+1280×720, match `local-data/hud-editor/capture-01/` pixel for pixel. Synthetic
+optional-branch captures exercise rendering but are not retail fidelity
+references. Receipts are under
+`local-data/test-runs/gdscript-hud-render-n3spgf53/` and
+`local-data/test-runs/gdscript-hud-scene-v19y_5xj/`.
+
+The frozen HUD editor scene passed **170 checks** and startup passed **80**;
+both refuse live initialization and retain pointer ownership. The startup
+host passed **250 checks** after using the production GDScript cache provider.
+Its audio-retirement check now observes the actual weak handle against the
+same monotonic five-second deadline as the game shutdown path. The old fixed
+SceneTreeTimer could expire immediately using the long cache-loading frame's
+delta; the measured handle retired after **88 ms** with no remaining playback.
+These receipts are in
+`local-data/test-runs/gdscript-hud-startup-integration-ftp_v4m7/`. Scripted editor
+exit still reports the same editor-owned shutdown allocations described above;
+this does not establish a clean interactive editor shutdown.
+
+The affected existing HUD, message, startup and skip checks passed **127/127**
+in `local-data/test-runs/gdscript-hud-client-wxgh0rgy/client-verified.log`.
+The HUD evidence test now locates prepared links from an owned artifacts
+directory and stops at its worktree boundary when they are missing.
+
+The startup batch provider also passed **294 explicit-directory** and **294
+process-directory** path comparisons. Its actual playback helpers selected the
+correct decoded pixels and bytes from synthetic literal-backslash, normalized
+alias and ordinary PNG paths, preserving every fixture hash; evidence is in
+`local-data/test-runs/gdscript-parity-n1072_a7/`. The real admitted cache batch
+matched the earlier C# provider, including **5,378 ordered frame paths**, in
+`local-data/test-runs/gdscript-startup-provider-ew38cn7q/`. The standard-engine
+startup scene passed **239 checks** against that retained C# fixture in
+`local-data/test-runs/gdscript-startup-scene-ugcfv1yr/`.
+
+The supported headless application smoke then passed **2,148 simulation steps**,
+retry and return to the main menu with the unchanged state hash
+`53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`.
+The native HUD was ready and delivered the same 13 message IDs and one help
+event. Its owned receipt is
+`local-data/test-runs/gdscript-hud-smoke-iu5agxg_/smoke/first-flight-smoke.json`.
+Outcome was still `Running`, terminal state `None`; this is not a complete
+combat victory. World import wrote only this worktree's private generated scenes.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state

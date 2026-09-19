@@ -83,8 +83,9 @@ state serializer and replay runner are still C#.
 `Client/message_panel.gd` preserves the existing measured 25-column wrap,
 three-line scrolling window and 40-character-per-second reveal. Its lines use
 raw UTF-16 units so surrogate boundaries and embedded NUL cannot silently
-change the source cursor. It is ready for the ongoing HUD renderer conversion;
-the complete HUD is not yet independent of C#.
+change the source cursor. The production HUD now uses this module and the
+GDScript HUD state model; its C# bridge only translates current Core facts and
+the verified catalog while those remaining providers are converted.
 
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in
@@ -101,7 +102,11 @@ backslash filenames use direct, bounded read-only pipes to GNU coreutils
 `/usr/bin/cat`, `/usr/bin/stat` and `/usr/bin/timeout`; Godot's normal path API
 would silently replace the backslash with a separator. Ordinary cache paths
 use Godot file APIs. This fallback's other platforms remain explicitly
-unsupported/unverified. The runtime provider is being connected separately.
+unsupported/unverified. `Client/startup_media_batch.gd` now supplies the actual
+startup scene's verified paths and metadata. Playback uses the same exact-byte
+route for literal-backslash files, including PNG decoding; ordinary cache paths
+retain Godot's normal loader. Windows full-path rules remain an explicit
+unverified migration gap, not an assumed permanent C# exception.
 
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
@@ -297,7 +302,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
-| [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | Production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. Editor display values feed presentation only. |
+| [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | GDScript production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. `show_editor_illustration` selects a frozen presentation state without creating a live HUD model. |
 | [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |
 | `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
 | `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
@@ -312,24 +317,27 @@ Edit UI Control positions, sizes, text, resource routes and base appearance in
 their scenes. Frontend text keeps imported localization by default; an explicit
 `OverrideText` enables a deliberate authored replacement. HUD `Base`, `Glow` and
 `Text` groups expose the measured blend passes; corresponding halves of an
-instrument are separate selectable controls, with imported `Part`/`SourceRect`
-identity read-only in the Inspector. The remaining frontend/HUD C# controls
-retain bitmap-glyph and compositing laws during their migration. They
-remain ordinary selectable Controls; their script and exported properties are
+instrument are separate selectable controls, with imported `part`/`source_rect`
+identity read-only in the Inspector. GDScript HUD and remaining C# frontend controls
+retain their bitmap-glyph and compositing laws. They remain ordinary selectable
+Controls; their script and exported properties are
 available in the editor. Runtime animation applies its existing state over those
 definitions. Preview state is explicitly separate from game state, with no second
 simulation or per-object cross-language bridge.
 The startup scene owns its schedule, playback clock, two reusable frame buffers,
-skip controls and voice lifetime in GDScript. During the transition its C# host
-supplies one verified media batch and observes voice starts for the existing
-audio-retirement check. Opening the scene or running it without that explicit
+skip controls, verified media admission and voice lifetime in GDScript. During
+the transition its C# host requests one cache load and observes voice starts for
+the existing audio-retirement check. Opening the scene or running it without that explicit
 configuration cannot start gameplay. Its real controls retain authored layout
 edits, and packing them excludes transient decoded images and audio.
 HUD texture recipes and the common screen-layout transform also use GDScript.
 Select a TextureRect's texture resource to edit its `source_path`, `dimensions`
 and `compression` recipe; private decoded pixels stay transient. The HUD checks
-all required recipes before reporting ready. Its remaining instrument drawing
-and presentation state continue in C# while those consumers are converted.
+all required recipes before reporting ready. Its three drawing scripts share
+`hud_draw.gd`, and the scene owns the GDScript model, event history, message
+schedule, text reveal and portrait/noise phases. The temporary C# bridge sends
+one detached Core-facts batch per snapshot and one verified catalog at setup;
+there is no per-instrument language bridge or second live HUD state owner.
 The level graph, options and debriefing are composite Controls: move or resize
 their section in the 2D editor and inspect their drawing/interaction code for
 internal layout. They are not yet individual native controls for every row.
@@ -356,7 +364,9 @@ not a second live owner. Open the same production scene and its linked scripts
 to inspect both behavior and layout in Godot. Bound texture pixels cannot be
 serialized into the public scene when it is saved.
 
-Frontend/HUD editor previews still need the compiled C# assembly. All retail
+Startup, HUD and pause scenes can run their focused checks in standard Godot.
+The whole project still needs the compiled C# assembly and .NET editor while
+the frontend/world host is converted. All retail
 previews need prepared private textures. Missing data is reported rather than replaced with invented retail
 content. Runtime effects and later spawned actors naturally appear during play;
 their reusable definitions remain available in source and resources. Full combat

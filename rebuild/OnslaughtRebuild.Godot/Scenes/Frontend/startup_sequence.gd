@@ -8,6 +8,8 @@ extends Control
 signal completed
 
 const Schedule = preload("res://Client/startup_schedule.gd")
+const MediaBatch = preload("res://Client/startup_media_batch.gd")
+const MediaIndex = preload("res://Client/startup_media_index.gd")
 const F32 = preload("res://Scenes/Shared/retail_float32.gd")
 enum Route { COLD = 0, ATTRACT = 1, SINGLE_CLIP = 2 }
 enum Clock { FIXED_TICK = 0, WALL = 1 }
@@ -43,6 +45,20 @@ var _aborted: bool = false
 var _completed: bool = false
 var _initialized: bool = false
 var _editor_problem: String = ""
+
+
+## Production admission stays in GDScript and runs once before the node enters
+## the scene tree. Editing/F6 cannot trigger a cache scan or playback.
+func configure_from_cache(media_root: Variant, route: int, cue: int, clock: int,
+		voice_started: Callable = Callable()) -> Dictionary:
+	if _initialized:
+		return _failure("The startup sequence is already initialized.")
+	if Engine.is_editor_hint():
+		return _failure("The editor preview does not initialize playback.")
+	var loaded: Dictionary = MediaBatch.load_verified_media_batch(media_root)
+	if not loaded.ok:
+		return loaded
+	return configure_verified_media(loaded.value, route, cue, clock, voice_started)
 
 
 ## The caller must obtain this batch through the verified media index. Shape
@@ -212,7 +228,7 @@ func _ensure_frame_resident(cue: int, frame_index: int) -> bool:
 		return false
 	var path: String = _media.frame_paths[cue][frame_index]
 	var image := Image.new()
-	if image.load(path) != OK:
+	if _load_png(image, path) != OK:
 		push_warning("Startup media %d frame %d unreadable at %s." % [cue, frame_index, path])
 		return false
 	var target: int = ((frame_index % 2) + 2) % 2
@@ -238,10 +254,11 @@ func _update_voice_track(frame: Dictionary) -> void:
 		return
 	_stop_voice_track()
 	var track: Dictionary = _media.audio[cue]
-	var wave: PackedByteArray = FileAccess.get_file_as_bytes(track.path)
-	if FileAccess.get_open_error() != OK:
+	var read: Dictionary = _read_media_bytes(track.path)
+	if not read.ok:
 		push_warning("Startup media %d audio track unreadable at %s." % [cue, track.path])
 		return
+	var wave: PackedByteArray = read.value
 	if wave.size() <= 44:
 		return
 	# The verified provider admitted a canonical 44-byte-header PCM s16 WAV.
@@ -287,10 +304,27 @@ func _finish() -> void:
 
 static func _load_image_texture(path: String) -> ImageTexture:
 	var image := Image.new()
-	if image.load(path) != OK:
+	if _load_png(image, path) != OK:
 		push_warning("Startup splash unreadable at " + path)
 		return null
 	return ImageTexture.create_from_image(image)
+
+
+static func _read_media_bytes(path: String) -> Dictionary:
+	if OS.get_name() != "Windows" and path.contains("\\"):
+		return MediaIndex.read_file_bytes_exact(path)
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+	return {"ok": true, "value": bytes} if FileAccess.get_open_error() == OK \
+		else _failure("Cannot read startup media bytes.")
+
+
+static func _load_png(image: Image, path: String) -> Error:
+	if OS.get_name() == "Windows" or not path.contains("\\"):
+		return image.load(path)
+	# The verifier admits literal Unix filenames. Godot's path loader replaces
+	# backslashes with '/', so use its same PNG decoder on the exact bytes.
+	var read: Dictionary = _read_media_bytes(path)
+	return image.load_png_from_buffer(read.value) if read.ok else ERR_CANT_OPEN
 
 
 static func _admit_batch_shape(batch: Dictionary) -> Dictionary:
