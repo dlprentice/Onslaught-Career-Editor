@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[scheduled-event constructor boundary](#scheduled-event-constructor-boundary-2026-09-19);
+[debug-log metadata correction](#debug-log-metadata--september-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -819,6 +819,46 @@ Ghidra may update project metadata when opening or upgrading it. Static database
 evidence, not a claim that every inferred signature or semantic label is
 correct; controlled copied-runtime observation continues to own behavioral
 claims.
+
+## Debug-log metadata — September 19
+
+The [manifest](../../tools/cohort-specs/debug-log-metadata.manifest.tsv) and
+[spec](../../tools/cohort-specs/debug-log-metadata.spec.tsv) correct exactly five
+names, nonrepeatable comments and tag sets. Four functions at `004416e0`,
+`00441740`, `004418a0` and `004419e0` now identify `CDebugLog` history/reset,
+formatting and rendering. The generic store at `00441730` has the neutral name
+`StoreField04_00441730`; its known setup-history use does not establish an
+exclusive class owner. RTTI, initialization, output gating and evidence limits
+are documented in the [logger contract](../binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19).
+
+All 8,326 non-target functions and every prototype, variadic flag, parameter,
+local, type, stack record, function body and instruction remain unchanged.
+The old parameter spelling `console` remains intentionally frozen. The full
+program export changes only `commentsSha256`; all nine live exports equal the
+separately reopened final rehearsal. The default constructor boundary from the
+preceding cohort remains present; internal function count stays 8,331.
+
+PRE was the freshly matched and restored scheduled-event-constructor POST.
+Isolated rehearsal, stale-comment/name-collision refusals, independent review,
+live dry/apply/separate readback and independent POST recovery passed. Review
+narrowed two comments before live application; the original and revised
+rehearsals remain preserved. An initial census with missing column bindings
+refused before writes; the corrected census passed and the replica remained
+unchanged. This is not a new full-game semantic audit or runtime acceptance.
+
+Working identity: `db.18654`, 18 files / 118,999,924 bytes,
+inventory SHA-256 `09872845704237ea08b32e678aad961510f0e20756e10229b27774c1594b6326`; main database
+68,698,112 bytes, SHA-256 `c3c294fa7b94b3f64e03b34d32feca928b57eeda80d98e865081641802681df7`.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-19-debug-log-metadata/post-working`. It was copied, hash-compared, restored elsewhere
+and reopened read-only. The tracked `db.18634` checkpoint remains exactly
+`745c00ad…`; no refresh occurred.
+
+Private evidence owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/debug-log-metadata/`.
+`live-readback.json`: 2,298 bytes, SHA-256 `9bad6511c12e60a5f07f742a93ae420d0833c8c0b3bd10060bceafe9ac66aa78`.
+`post-restore.json`: 5,742 bytes, SHA-256 `9edea84ddd1f2be128a4c9107109aa1694616d9b1ec1c82e3a2f1707c98e274d`.
+Current name projection uses this manifest; frozen logger census tools,
+explicit name tables and historical receipt schemas remain unchanged.
 
 ## Historical Windows live-ceremony contract (suspended)
 

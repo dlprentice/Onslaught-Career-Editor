@@ -1,7 +1,9 @@
 # CScriptObjectCode__Push
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -29,7 +31,7 @@ starts at `0x00539470`).
 `[esi + [esi+0x200]*4] = arg0`, then `++[esi+0x200]`. If
 the new depth `> 0x80` (128) the body `push 0x00650078`
 (`FATAL ERROR: Stack out of memory`) / `push 0x0066f580`
-and `E8`s table `CConsole__Printf` `0x00441740`
+and `E8`s table `CDebugLog__Printf` `0x00441740`
 (`0x00539450`, `add esp, 8`), then `--[esi+0x200]` (the
 overflowing store is rejected). That callee body is **not**
 this proof.

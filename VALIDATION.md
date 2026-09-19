@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, math-error ABI and projectile admission/readiness; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, projectile readiness and logger ownership; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1477,6 +1477,50 @@ acyclicity. The same receipt binds scheduler allocation arguments, the explicit
 20,000-event count, allocator bodies and mutex imports. No Ghidra database was
 opened or changed for these findings; no full-shot RNG, retail session,
 campaign-grade or parity completion is claimed.
+
+### Debug-log ownership and initialization — September 19
+
+The [logger contract](reverse-engineering/binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)
+separates static control flow, isolated initialization/reset, and unresolved
+live file/heap state. All byte findings select pristine SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Private owner: `local-data/test-runs/round-logging-boundary-20260919/`.
+
+- `python -B <owner>/inspect.py`: pins nine complete contiguous bodies and
+  the explicitly identified three-range heap-body envelope. The envelope is
+  not a recovered complete contiguous function.
+- `python -B <owner>/literal_paths.py`: all **111** bytes of the two fixed
+  pool messages remain on the pristine formatter's literal path. Receipt
+  `literal-paths.json`, SHA-256
+  `392a9a557cca37800ce288e813d1cef9b1726f7e9b9b3752b6acf932ba854e92`.
+  This is static table/instruction analysis, not a retail execution.
+- `python -B <owner>/initializer_reset.py`: **24/24** original-code controls
+  passed. Accepted stem `initializer-run-ar33gbxm/initializer_reset`; receipt
+  `.json` SHA-256
+  `e2541be24011d1e9d03226d0e0246a0f4f8a535398b64d9b19083f518319f830`;
+  executable SHA-256
+  `59bc2ddb14c4086f5ce82e0f209841d5ba9aad38bc414885bb2ec21ceb323af1`.
+  The saved driver, assembly/link commands, actual load-byte comparison and
+  each input/output are retained beside it.
+
+The three complete bodies are `[004415b0,0044161a)`,
+`[00441630,0044169a)` and `[004416e0,0044172c)`. Authored adjacent logger
+objects and selector values exercise initial output-off/output-on, selectors
+0/1/2/`FFFFFFFF`, and initialized/1/7 flag states. A recording exit-registration
+hook is the only substituted dependency. Four full 5,120-byte snapshots per
+case distinguish each initialization, the authored pre-reset state and the
+reset result. The reset preserves the other logger, filename, vptr,
+first-attempt flag, text interiors and guards; nonvolatile registers and stack
+sentinels also pass. Independent read-only review reconstructed those exact
+writes from the saved bytes and outputs; it did not rerun the experiment.
+
+The function names and corrected comments belong to the separate
+[five-row Ghidra cohort](reverse-engineering/ghidra/README.md#debug-log-metadata--september-19).
+The warning-specific disabled route does not establish arbitrary-format
+safety. Enabled file logging may reach a CRT allocation-failure handler before
+a successful retry. Actual enable, locale, heap mode, retry/handler state,
+startup/parser execution, file I/O, rendering and complete-shot RNG remain
+outside these results. No desktop or game session was used.
 
 ### Scheduled-event constructor boundary — September 19
 

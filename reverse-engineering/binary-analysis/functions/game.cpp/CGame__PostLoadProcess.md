@@ -3,7 +3,7 @@
 > Address: `0x0046d040`
 
 Status: active static function note
-Last updated: 2026-08-30
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: `references/Onslaught/game.cpp:764`
 (`CGame::PostLoadProcess`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -57,7 +57,7 @@ Sequence:
      `0x0046d0fa` to `0x0046d0c6`; it does not stop after a match.
      Every matching row therefore assigns again in list order, and the
      last matching row supplies the retained assignment.
-   - Exhausted with no match: `CConsole__Printf` (buffer `0x0066f580`)
+   - Exhausted with no match: `CDebugLog__Printf` (buffer `0x0066f580`)
      with `.rdata 0x0062c008` =
      `"No start position for player - creating a default one"`, then
      `OID__CreateObject(type=0xf, flags=0)` (`0x004bf090`) and, on a

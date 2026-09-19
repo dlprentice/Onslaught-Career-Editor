@@ -1,10 +1,18 @@
 # CFEPOptions__WriteDefaultOptionsFile
 
+> Address: 0x0051f680 | Source: `references/Onslaught/FEPOptions.cpp`
+
+Source File: retained references/Onslaught/FEPOptions.cpp comparison | Binary: BEA.exe (earlier analysis, not remeasured by this callee rename)
+
+Status: active function reference; retained evidence limits apply
+Summary: existing function analysis with current CDebugLog callee naming.
+
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x004d2580` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
-> Address: 0x0051f680 | Source: `references/Onslaught/FEPOptions.cpp`
 
 ## Status
 - **Named in Ghidra:** Yes
@@ -28,7 +36,7 @@ void CFEPOptions__WriteDefaultOptionsFile(void * data, int size);
    - `fwrite(data, size, 1, file)`
    - `fclose(file)`
 3. If open fails:
-   - emits console message `"Couldn't write defaultoptions"` via `CConsole__Printf`.
+   - passes a diagnostic message `"Couldn't write defaultoptions"` via `CDebugLog__Printf`.
 
 No internal allocation or serialization happens here; caller owns `data` and `size`.
 

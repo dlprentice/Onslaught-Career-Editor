@@ -334,9 +334,11 @@ Actor's draw. A separate static check closes the candidate-filter callback set
 for ordinary Round arguments, and bounds the renderer centre getters for valid
 retail objects. The later [speed-provider closure](collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
 bounds normal finite parent chains, and the [readiness queue composition](CEventManager.cpp.md#projectile-readiness-queue--september-19)
-executes actual insertion and deferred delivery. Allocator/diagnostic paths,
-pair-scanner events, live state and other constructor effects still prevent
-an exhaustive shot RNG claim.
+executes actual insertion and deferred delivery. The [debug-log contract](string-helpers.md#debug-log-ownership-and-history--september-19)
+now bounds the two fixed pool messages when the receiver is disabled and
+distinguishes that route from enabled file logging and possible CRT retry
+callbacks. Actual logging/allocator state, pair-scanner events and other
+constructor effects still prevent an exhaustive shot RNG claim.
 
 ### Construction and proof limits
 

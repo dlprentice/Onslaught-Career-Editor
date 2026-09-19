@@ -1,7 +1,9 @@
 # CScriptObjectCode__RemoveTop
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -30,7 +32,7 @@ at `0x005394e0`).
 
 If `[ecx+0x200] == 0`, the body `push 0x006500c4`
 (`FATAL ERROR: RemoveTop called on empty stack`) /
-`push 0x0066f580` and `E8`s table `CConsole__Printf`
+`push 0x0066f580` and `E8`s table `CDebugLog__Printf`
 `0x00441740` (`0x005394b4`, `add esp, 8`), then `ret`.
 Else it stores `--[ecx+0x200]`, loads
 `elem = [ecx + newDepth*4]`, and if `elem != 0` does

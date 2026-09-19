@@ -1,7 +1,9 @@
 # CScriptObjectCode__CallEvent
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -30,7 +32,7 @@ is **not** in the body (neighbour
 
 If `[esi+0x20c] != 0`, the body `push 0x00650160`
 (`FATAL ERROR: stack not empty on call`) / `push 0x0066f580`
-and `E8`s table `CConsole__Printf` `0x00441740`
+and `E8`s table `CDebugLog__Printf` `0x00441740`
 (`0x005399a8`, `add esp, 8`). It does **not** return there.
 
 Then `[esi+8] = [esp+0xc]` (first stack arg, the event

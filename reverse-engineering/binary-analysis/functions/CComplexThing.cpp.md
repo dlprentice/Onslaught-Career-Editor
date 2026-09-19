@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, math-error ABI and selected round initialization)
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -70,7 +70,7 @@ These thing-event numbers are **not** the IScript `HandleMessage`
 | `0x004de700` | `Return1f` | `d90568855d00 c3` | Slot 24 (`+0x60`) of `CUnit` `0x005df998` / `CRadar` `0x005dd788` / `CSubmarine` `0x005e1490` (re-read dwords `00 e7 4d 00`). Zero-arg; `ECX` unused; zero `E8`; zero inbound `E8`/`E9`. `fld dword [0x005d8568]` (`00 00 80 3f` = `1.0f`); bare `ret`. HIGH. Child `t_416de69b` REPORT.md independently reproduced. Do not promote a CUnit-owned name — this is a folded stub. |
 | `0x0050e940` | `CGroundUnit__ReturnFloat005d85bc_0050e940` | `d905bc855d00 c3` | Slot 24 of `CGroundVehicle` `0x005e297c` is **not** `Return1f`. Same shape; `[0x005d85bc]` = `00 00 80 40` = `4.0f`. HIGH on these bytes. Subclass override, not the CUnit answer. |
 | `0x005333b0` | `IScript__Constructor` | `c706d4925d00 8d4e28 e85b24fbff … c706084f5e00 894608 894e0c 897168 … 897e24 … c20800` | `ret 8`; args `(thing, eventObj)`. Installs `CMonitor` vptr `0x005d92d4` then IScript vptr `0x005e4f08`. `CSPtrSet__Init` at `+0x28`. `[this+8]=[this+0x10]=thing`; `[this+0xc]=eventObj`; `[eventObj+0x68]=this`. Zeroes `+0x14` / `+0x18` / `+0x1c` / `+0x24` / `+0x38`. HIGH. Only `E8` is `SetScript` `0x004f42a8`. |
-| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CConsole__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
+| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CDebugLog__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
 | `0x00535c50` | `IScript__SetScript` | `8b442404 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
 
 ### Unit Euler update: isolated execution, September 8

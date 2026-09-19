@@ -1,7 +1,9 @@
 # CScriptObjectCode__GetTop
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -29,7 +31,7 @@ One `E8`, zero `E9`. One `nop` after the last `ret 4` is
 `idx = [ecx+0x200] - arg0`. If `idx <= 0`, the body
 `push edx` / `push 0x006500f4`
 (`FATAL ERROR: Stack item does not exist in call to GetTop - %d`)
-/ `push 0x0066f580` and `E8`s table `CConsole__Printf`
+/ `push 0x0066f580` and `E8`s table `CDebugLog__Printf`
 `0x00441740` (`0x005394fb`, `add esp, 0xc`), then
 `xor eax, eax` / `ret 4`. Else it returns
 `EAX = [ecx + idx*4 - 4]` (arg 0 is the top). It does

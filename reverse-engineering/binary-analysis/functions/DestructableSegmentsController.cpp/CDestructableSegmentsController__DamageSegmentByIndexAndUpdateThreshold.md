@@ -3,7 +3,7 @@
 > Address: `0x00444030`
 
 Status: active static function note
-Last updated: 2026-09-08
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: none — the reference drop has no `DestructableSegmentsController.cpp`
 or `DestroyableSegment.cpp` source body (checked 2026-08-22 against the
 main-tree `references/Onslaught/` inventory; the debug-path name survives only
@@ -56,7 +56,7 @@ Argument map:
    damage handling to the threshold epilogue (stage 5) with nothing applied.
 2. **Indexed child fetch + missing-part warn** (`0x0044404a`–`0x004440ce`):
    child = `[ctrl+0x4][index]`. If null:
-   `CConsole__Printf 0x00441740([0x0066f580], "WARNING: '%s', building part
+   `CDebugLog__Printf 0x00441740([0x0066f580], "WARNING: '%s', building part
    not found!!!!!! part = %d" @ .rdata 0x00628614,
    CMesh__GetNameOrUnknown 0x004aa6b0(mesh), index)` — the mesh name comes
    from `[ctrl+0x10]->[+0x30]` vtable slot `+0x24()`; a null there or a null
@@ -124,7 +124,7 @@ Argument map:
 | `0x0044407f` | `CDestroyableSegment__SumActiveValueRecursive` `0x00442890` |
 | `0x00444106` | `CDestroyableSegment__SumActiveValueRecursive` `0x00442890` |
 | `0x004440b9` | `CMesh__GetNameOrUnknown` `0x004aa6b0` |
-| `0x004440c9` | `CConsole__Printf` `0x00441740` |
+| `0x004440c9` | `CDebugLog__Printf` `0x00441740` |
 
 ## Callers
 

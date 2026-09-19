@@ -210,6 +210,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # exact three-function scope without no-op rename/prototype writes.
 # scheduled-event-constructor-boundary: one absent default function over 64
 # existing decoded bytes, 2026-09-19. No instruction or existing metadata edits.
+# debug-log-metadata: five names/comments/tag sets, preserving every prototype,
+# variable, type, body and non-target row; 2026-09-19.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -241,6 +243,7 @@ LIVE_GRANTED_COHORTS = [
     "render-registry-arguments",
     "shared-return4-leaf",
     "scheduled-event-constructor-boundary",
+    "debug-log-metadata",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -678,6 +681,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "render-registry-arguments",\n'
         '        "shared-return4-leaf",\n'
         '        "scheduled-event-constructor-boundary",\n'
+        '        "debug-log-metadata",\n'
         "    };\n",
     ),
     (

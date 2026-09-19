@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-12 (shared initializer callee name)
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Summary: the retained source-coordinate long-tail map with current initializer naming.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -96,7 +96,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00425B50` | `CCollisionSeekingRound__InitCollisionLineAndSound` | 265 | 1 | 27 | `CConsole__Printf` x1; `CDXMemoryManager__Alloc` x1 |
+| `0x00425B50` | `CCollisionSeekingRound__InitCollisionLineAndSound` | 265 | 1 | 27 | `CDebugLog__Printf` x1; `CDXMemoryManager__Alloc` x1 |
 
 ### `collisionseekingthing.cpp` (1)
 
@@ -149,7 +149,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00444660` | `CDestructableSegmentsController__Init` | 732 | 0 | 388–424 | `CConsole__Printf` x4; `CDXMemoryManager__Alloc` x3 |
+| `0x00444660` | `CDestructableSegmentsController__Init` | 732 | 0 | 388–424 | `CDebugLog__Printf` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x004449C0` | `CDestructableSegmentsController__CreateSegment` | 525 | 4 | 488–498 | `CDXMemoryManager__Alloc` x4; `CDestructableSegment__Init` x3 |
 
 ### `DiveBomber.cpp` (1)
@@ -432,7 +432,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0042D640` | `CController__Init` | 308 | 3 | 24 | `CSPtrSet__Init` x2; `CDXMemoryManager__Alloc` x2 |
 | `0x0042E610` | `CController__SetToControl` | 204 | 1 | 24 | `CDXMemoryManager__Alloc` x2; `CSPtrSet__AddToHead` x2 |
-| `0x00444660` | `CDestructableSegmentsController__Init` | 732 | 0 | 24 | `CConsole__Printf` x4; `CDXMemoryManager__Alloc` x3 |
+| `0x00444660` | `CDestructableSegmentsController__Init` | 732 | 0 | 24 | `CDebugLog__Printf` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x004D28C0` | `CPlayer__GotoFPView` | 246 | 0 | 24 | `CDXMemoryManager__Alloc` x2; `CSPtrSet__Init` x1 |
 | `0x004E5700` | `CSphereTrigger__Hit` | 315 | 2 | 24 | `CDXMemoryManager__Alloc` x2; `CComplexThing__Hit` x1 |
 
@@ -472,7 +472,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x005154E0` | `PCPlatform__Init` | 253 | 0 | 27 | `CConsole__Printf` x3; `CDXMemoryManager__Alloc` x1 |
+| `0x005154E0` | `PCPlatform__Init` | 253 | 0 | 27 | `CDebugLog__Printf` x3; `CDXMemoryManager__Alloc` x1 |
 | `0x005155E0` | `PCPlatform__LoadFonts` | 457 | 0 | 79–103 | `DebugTrace` x4; `CDXMemoryManager__Alloc` x4 |
 
 ### `PCRTID.cpp` (1)
@@ -485,7 +485,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x005169B0` | `CPCSoundManager__Init` | 1300 | 0 | 229 | `CConsole__Printf` x13; `CDXMemoryManager__Alloc` x1 |
+| `0x005169B0` | `CPCSoundManager__Init` | 1300 | 0 | 229 | `CDebugLog__Printf` x13; `CDXMemoryManager__Alloc` x1 |
 | `0x005172A0` | `CPCSoundManager__CreateSampleFromFile` | 411 | 3 | 679–714 | `CDXMemoryManager__Free` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x005176D0` | `CPCSoundManager__CreateSampleFromData` | 184 | 4 | 753 | `CDXMemoryManager__Free` x1; `CDXMemoryManager__Alloc` x1 |
 
@@ -536,7 +536,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004E59F0` | `CSPtrSet__Initialise` | 131 | 0 | 137 | `CConsole__Printf` x1; `CDXMemoryManager__Alloc` x1 |
+| `0x004E59F0` | `CSPtrSet__Initialise` | 131 | 0 | 137 | `CDebugLog__Printf` x1; `CDXMemoryManager__Alloc` x1 |
 
 ### `SquadNormal.cpp` (1)
 
@@ -575,7 +575,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004F39C0` | `CThing__InitCollisionSeekingThing` | 137 | 1 | 310 | `CDXMemoryManager__Alloc` x1; `CConsole__Printf` x1 |
+| `0x004F39C0` | `CThing__InitCollisionSeekingThing` | 137 | 1 | 310 | `CDXMemoryManager__Alloc` x1; `CDebugLog__Printf` x1 |
 | `0x004F44A0` | `CComplexThing__SetAnimMode` | 136 | 3 | 767 | `CDXMemoryManager__Alloc` x1; `CAnimation__ctor` x1 |
 
 ### `TokenArchive.cpp` (2)

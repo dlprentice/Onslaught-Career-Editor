@@ -122,7 +122,6 @@ reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md
 reverse-engineering/binary-analysis/functions/DXKempyCube.cpp.md
 reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md
 reverse-engineering/binary-analysis/functions/DXPalletizer.cpp.md
-reverse-engineering/binary-analysis/functions/DXParticleTexture.cpp.md
 reverse-engineering/binary-analysis/functions/DXPatchManager.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
@@ -151,7 +150,6 @@ reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Init
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Process.md
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Render.md
 reverse-engineering/binary-analysis/functions/FEPMain.cpp.md
-reverse-engineering/binary-analysis/functions/FEPOptions.cpp/CFEPOptions__WriteDefaultOptionsFile.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__AskIfYouWantToDelete.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__ButtonPressed.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__CreateSave.md
@@ -229,7 +227,6 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
 reverse-engineering/binary-analysis/functions/Pod.cpp/CPod__VFunc_66_UpdateMotionAndAccumulateScalar.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__SetSlot.md
-reverse-engineering/binary-analysis/functions/ScriptEventNB.cpp.md
 reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
 reverse-engineering/binary-analysis/functions/Sentinel.cpp.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/Audio__ReinitializeSoundAndRestoreMusic.md
@@ -269,7 +266,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__HasNearbyHostileWi
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Init.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsMultiplayer.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsRunningResources.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclareGameDrawn.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclarePlayerWon.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Pause.md
@@ -313,7 +309,6 @@ reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__Process.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__UpdateFlightWalkerTransitionState.md
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__dtor.md
-reverse-engineering/binary-analysis/functions/string-helpers.md
 reverse-engineering/binary-analysis/functions/string-locations-index.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__CopyFrom.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__Ctor.md
@@ -325,7 +320,6 @@ reverse-engineering/binary-analysis/functions/text.cpp/CText__GetStringByIdAfter
 reverse-engineering/binary-analysis/functions/text.cpp/CText__Init.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__ResetCoreFields.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTextureBase__Init.md
-reverse-engineering/binary-analysis/functions/texture.cpp/CTexture__FindTexture.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTexture__FindTexture_Unwind.md
 reverse-engineering/binary-analysis/functions/tree.cpp/CTree__ComputeLodBucket.md
 reverse-engineering/binary-analysis/functions/tree.cpp/CTree__CreateFallingTree.md

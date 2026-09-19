@@ -1,7 +1,9 @@
 # CScriptObjectCode__Pop
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -29,7 +31,7 @@ One `E8`, zero `E9`. Six `nop`s after the last `ret` are
 
 If `[ecx+0x200] == 0`, the body `push 0x0065009c`
 (`FATAL ERROR: Pop called on empty stack`) /
-`push 0x0066f580` and `E8`s table `CConsole__Printf`
+`push 0x0066f580` and `E8`s table `CDebugLog__Printf`
 `0x00441740` (`0x00539484`, `add esp, 8`), then
 `xor eax, eax` / `ret`. Else it stores `--[ecx+0x200]`
 and returns `EAX = [ecx + newDepth*4]` (the pointer).

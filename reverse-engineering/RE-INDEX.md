@@ -694,7 +694,8 @@ Current local boundaries that materially change the discovery lane:
   native registry, and the 72-index coverage join. It finds 726 source `Print`
   calls, 783 compiled calls, 9,382 source native calls using 110 names, and 9,236
   compiled native calls using 108 names. The pristine binary has exactly 380
-  direct calls to `CConsole__Printf`: 253 use the dormant-debug receiver and 127
+  direct calls to the historically labeled `CConsole__Printf` (now
+  [`CDebugLog__Printf`](binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)): 253 use the dormant-debug receiver and 127
   use setup history; Ghidra maps 377, leaving call sites `0x004F22FA`,
   `0x005351F0`, and `0x00536BA9` residual-owned. The older 329-call W* export
   subset is not the binary denominator. Census membership does not prove that a

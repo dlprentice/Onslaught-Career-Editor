@@ -3,9 +3,8 @@
 > Address: `0x0046cdf0`
 
 Status: active static function note
-Last updated: 2026-08-30
-Source File: `references/Onslaught/game.cpp:685` (`CGame::LoadLevel`) |
-Binary: BEA.exe pristine specimen
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Source File: `references/Onslaught/game.cpp:685` (`CGame::LoadLevel`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Per-attempt level construction. Logs `"Game::LoadLevel %d"`,
@@ -40,9 +39,9 @@ returns nonzero on success via `ret 4`. Boundary: five `nop`
 
 Sequence:
 
-1. `CConsole__Printf("Game::LoadLevel %d", level)` (`.rdata
+1. `CDebugLog__Printf("Game::LoadLevel %d", level)` (`.rdata
    0x0062bfd0`; format buffer `0x0066eb90`). Then six size probes —
-   `CConsole__Printf("Size of tree = %d", 0x4c)`,
+   `CDebugLog__Printf("Size of tree = %d", 0x4c)`,
    `"Size of thing = %d"` (0x3c), `"Size of complex thing = %d"`
    (0x7c), `"Size of CST thing = %d"` (0x24),
    `"Size of CST Persistent thing = %d"` (0x38) — compile-time class
@@ -77,7 +76,7 @@ Sequence:
    `CConsole__RenderLoadingScreen(1, 0)`; engine track slot
    `CDXEngine__SetTrackSlotByFlag(0xff, 1)` with `ecx = 0x0089c9a0`
    (`0x0053f010`); `Input__ResetKeyStateTables` on `0x0088a0a8`
-   (`0x005159b0`); `CConsole__Printf("G::LL succeeded")` (`.rdata
+   (`0x005159b0`); `CDebugLog__Printf("G::LL succeeded")` (`.rdata
    0x0062bf40`); return 1.
 
 Field map pinned by this body:

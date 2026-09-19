@@ -194,7 +194,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
+# Debug-log metadata: ten analytic comments (7,419 decoded bytes), with the
+# same exact-content requirement and all other payload/secret checks retained.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/debug-log-metadata.manifest.tsv":
+        "6c9dd2b0a8d2b2ac44a093232f1f7770bcc16d6174100854ba6f6fed9fc93b17",
     "tools/cohort-specs/render-registry-arguments.manifest.tsv":
         "35aa28c32dec8183e92d441afb9287e5204c98420b2de12a6cb5c93d2af4e121",
     "tools/cohort-specs/shared-return4-leaf.manifest.tsv":
