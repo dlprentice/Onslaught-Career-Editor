@@ -288,6 +288,39 @@ is unchanged. This is `--check state-hash`, with evidence in
 `local-data/test-runs/gdscript-parity-n1072_a7/`; it establishes canonical
 serialization, not GDScript simulation stepping or restore behavior.
 
+The native HUD catalog passed both the retained .NET reader comparison and the
+standard-engine reader in
+`local-data/test-runs/gdscript-hud-catalog-yqylpkir/`. It retains the exact file
+SHA and source pins, all 51 messages, six help rows, eight terminal strings,
+raw UTF-16 text, refusals and detached lookups. Production now calls that native
+reader at boot. After integration, the actual HUD host again passed **1,487
+checks**, and the standard catalog check passed with no engine errors in
+`local-data/test-runs/gdscript-hud-catalog-integration-hbu89l1i/`.
+
+Career progression, host input and camera value checks passed in
+`local-data/test-runs/gdscript-parity-9mt08bqg/`. They cover objective/ranking/
+goodie/link mutations, the 43-row world table, input records and edge sequences,
+movie-zoom caching and copied viewpoint/hash state. The complete pure frontend
+session passed its transitions, constructor admission, detached getters and
+all 65,536 UTF-16 glyph inputs in
+`local-data/test-runs/gdscript-parity-tlbmrjke/`. These are comparisons against
+existing behavior, not new retail discoveries or full-game completion.
+
+The native read-only career reader passed **456 containers derived in memory
+from the real tracked gold fixture**: **139 accepted projections** and **317
+refusals**, including exact error precedence. Every accepted read preserved
+the supplied bytes; source and returned data do not alias, and the fixture
+remained unchanged. Evidence is in
+`local-data/test-runs/gdscript-parity-ejtvaa12/` (`--check career-save`). No save
+writer or AppCore replacement is part of this reader.
+
+The current attached-pan camera and Level 100 viewpoint adapter passed native
+state, interpolation, lifecycle, error-order and hash comparisons in
+`local-data/test-runs/gdscript-parity-3mxhl595/` (`--check attached-camera`). The
+fixtures include every opening tick, varied raw poses and live simulation
+snapshot pairs. This preserves the committed camera contract; the separately
+preserved camera draft remains unfinished and was not integrated by this port.
+
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full
 `Test-FirstFlightSmokeEvidence` validator. Their 2,148-step state

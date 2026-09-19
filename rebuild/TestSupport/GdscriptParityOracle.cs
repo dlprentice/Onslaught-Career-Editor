@@ -10,6 +10,7 @@ using OnslaughtRebuild.Core.Tests;
 using OnslaughtRebuild.Client;
 
 string output = Path.GetFullPath(args[0]);
+byte[] goldCareerContainer = File.ReadAllBytes(args[2]);
 Type fp = typeof(Simulation).Assembly.GetType("OnslaughtRebuild.Core.RetailFloat24")!;
 string Hex(double v) => Convert.ToHexString(BitConverter.GetBytes(v)).ToLowerInvariant();
 uint[] Words(Level100FloatVector3Bits v) => [unchecked((uint)v.X), unchecked((uint)v.Y), unchecked((uint)v.Z)];
@@ -198,5 +199,11 @@ File.WriteAllText(output, JsonSerializer.Serialize(new { schema = 1, arithmetic,
     hudPresentation = GdscriptHudPresentationOracle.Build(),
     startup_media_batch = OnslaughtRebuild.TestSupport.GdscriptStartupMediaBatchOracle.Create(Path.GetDirectoryName(output)!),
     stateHash = GdscriptStateHashOracle.Build(),
+    retail_career = GdscriptRetailCareerOracle.Build(),
+    clientInput = GdscriptInputOracle.Build(),
+    cameraValues = GdscriptCameraOracle.Build(),
+    frontend_session = GdscriptFrontendSessionOracle.Build(goldCareerContainer),
+    careerSave = GdscriptCareerSaveOracle.Build(goldCareerContainer),
+    attachedCamera = GdscriptAttachedCameraOracle.Build(),
     nativeBasis, nativeSmooth, binary = new { label, hex = Convert.ToHexString(binary).ToLowerInvariant(), sha256 = Convert.ToHexString(SHA256.HashData(binary)).ToLowerInvariant() } }, new JsonSerializerOptions { MaxDepth = 512 }));
 Console.WriteLine($"Oracle: {arithmetic.Count} numerical cases, {eulers.Count} generated bases, {nativeBasis.Length} native bases, {nativeSmooth.Length} native smooth fixtures, {smooth.Count} generated smooth cases, {rng.Count * 1024} RNG steps, {scaledRng.Count} scaled RNG cases, {big.Count} contact ratios, {wide.Count} wide integer pairs.");

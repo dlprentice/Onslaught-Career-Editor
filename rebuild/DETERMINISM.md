@@ -203,6 +203,22 @@ simulation restore. Its focused C# comparison covers 55 snapshot envelopes,
 including the unchanged 40-step `SimulationTests` fingerprint and all seven
 schemas. The live C# runner remains the caller until its own port is validated.
 
+The native career and frontend owners retain source mutation order, including
+partial changes before rejected operations, one-shot load requests and nullable
+UTF-16 names. Career-name editing works on code units, not Unicode code points;
+the differential gate checks all 65,536 glyph inputs. The read-only career codec
+accepts the same 10,004-byte/versioned container and validates links before
+nodes. Ranking words and all reserved/unknown bytes remain exact. Its malformed
+input probes start from the existing tracked save in memory and never emit saves.
+
+`Client/platform_input_edges.gd` retains key echo handling, read-once edges,
+joystick byte state and counter wrap. These are host input facts; they do not
+claim a new retail DirectInput scan-code mapping. `Core/camera_laws.gd` preserves
+the movie-zoom cache's numerical float equality and explicit float stores.
+`Core/engine_viewpoint.gd` keeps two slots, copied current viewport state and
+schema-1 hashes. Neither introduces a scene/input owner or uses the separately
+preserved unfinished camera draft.
+
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:
 

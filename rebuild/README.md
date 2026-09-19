@@ -89,8 +89,19 @@ runner still call the C# owners until those consumers are converted.
 three-line scrolling window and 40-character-per-second reveal. Its lines use
 raw UTF-16 units so surrogate boundaries and embedded NUL cannot silently
 change the source cursor. The production HUD now uses this module and the
-GDScript HUD state model; its C# bridge only translates current Core facts and
-the verified catalog while those remaining providers are converted.
+GDScript HUD state model. `Client/hud_catalog.gd` admits the pinned private
+manifest and supplies the actual production text batch; boot still verifies
+that manifest before gameplay. Its C# bridge now only forwards catalog loading
+and translates current Core facts. The retained C# catalog is a comparison
+reference, not the live reader.
+
+Native career progression, frontend session, input-edge state and camera value
+owners also pass the migration gate. `Core/retail_career_save.gd` reads supplied
+career bytes without filesystem access, retains every unknown byte and exposes
+detached projections for the frontend. It has no save writer. These state and
+input ports are being connected to their live consumers; their existence does
+not yet remove the full application's .NET dependency. The MIT Save Lab backend
+and its overwrite/recovery protections remain separate.
 
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in

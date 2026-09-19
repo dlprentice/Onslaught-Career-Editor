@@ -318,6 +318,14 @@ remain custom composite Controls with their C# drawing code available. Explicit
 editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
 
+The full GDScript conversion is underway. Startup playback/cache admission,
+pause UI and HUD state/drawing/catalog now run from native scripts and the same
+production scenes. Numerical, parsing, replay/hash, career, input and camera
+foundations have focused differential checks. The remaining live simulation,
+frontend/world host and other adapters still require .NET; this is not yet a
+standard-engine-only game. See the [rebuild guide](rebuild/README.md) for the
+current boundary and [validation receipts](VALIDATION.md) for executed checks.
+
 The private Level 100 scene contains the actual terrain/materials, sky, water,
 static placements, pine instances, initial actors, camera and Aquila hierarchies.
 The build imports reusable world components from the existing production loaders;

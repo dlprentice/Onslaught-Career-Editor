@@ -25,7 +25,7 @@ public sealed partial class HudSceneChecks : Node
                     throw new InvalidOperationException("Capture directory must be an existing absolute task-owned path.");
             }
             Input.MouseModeEnum pointerBefore = Input.MouseMode;
-            var view = FirstFlightHud.Create(Level100HudAssetCatalog.Load());
+            var view = FirstFlightHud.Create(FirstFlightHud.LoadVerifiedCatalog());
             CanvasLayer presentation = view.Presentation;
             var stage = presentation.GetNode<Control>("Surface/DesignStage");
             var parts = presentation.FindChildren("*", nameof(Control), true, false).OfType<Control>()

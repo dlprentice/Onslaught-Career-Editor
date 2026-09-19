@@ -8,7 +8,7 @@ using A = Godot.Collections.Array;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Temporary Core/catalog boundary. The standard-engine scene owns the HUD
+/// Temporary Core boundary. The standard-engine scene owns the HUD catalog,
 /// model, event history, schedule, presentation and all authored drawing parts.
 /// This bridge sends detached facts once per snapshot and verified text once.
 /// </summary>
@@ -34,38 +34,30 @@ public sealed partial class FirstFlightHud : Node
     public double Level100MessagePlaybackPositionSeconds => Seconds("playback_position");
     public double Level100MessagePlaybackLengthSeconds => Seconds("playback_length");
 
-    public static FirstFlightHud Create(Level100HudAssetCatalog catalog)
+    public static D LoadVerifiedCatalog()
     {
-        ArgumentNullException.ThrowIfNull(catalog);
+        using GodotObject provider = GD.Load<GDScript>("res://Client/hud_catalog.gd").New().AsGodotObject();
+        D result = provider.Call("load_verified_text_batch").AsGodotDictionary();
+        Require(result);
+        return result["value"].AsGodotDictionary();
+    }
+
+    public static FirstFlightHud Create(D verifiedCatalog)
+    {
+        ArgumentNullException.ThrowIfNull(verifiedCatalog);
         var bridge = new FirstFlightHud { Name = "FirstFlightHudBridge" };
         bridge.Presentation = GD.Load<PackedScene>(ScenePath).Instantiate<CanvasLayer>();
         bridge.AddChild(bridge.Presentation);
-        bridge.Initialize(catalog);
+        bridge.Initialize(verifiedCatalog);
         return bridge;
     }
 
-    public void Initialize(Level100HudAssetCatalog catalog)
+    public void Initialize(D verifiedCatalog)
     {
-        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(verifiedCatalog);
         var allegiance = new D();
         foreach ((string definition, int value) in Level100StaticWorldAsset.LoadAuthoredAllegiance())
             allegiance[definition] = value;
-        var messages = new D();
-        foreach (Level100MessageAudioSpec message in Level100AudioCatalog.CharacterMessages)
-            messages[message.MessageId] = Units(catalog.GetRequired(message.MessageId).Text);
-        var help = new D();
-        foreach (Level100HudHelpPrompt prompt in Enum.GetValues<Level100HudHelpPrompt>())
-            help[(int)prompt] = Units(catalog.GetRequired(prompt).Text);
-        // Catalog.Load retains the exact manifest SHA and all source identities.
-        // GDScript receives its admitted values, never a permissive JSON reader.
-        var verifiedCatalog = new D
-        {
-            ["schema"] = "onslaught-hud-verified-catalog.v1", ["messages"] = messages, ["help"] = help,
-            ["terminal"] = new D { ["victory"] = Units(catalog.TerminalStrings.Victory),
-                ["defeat"] = Units(catalog.TerminalStrings.Defeat),
-                ["tutorial_broken"] = Units(catalog.TerminalStrings.TutorialBroken),
-                ["player_death"] = Units(catalog.TerminalStrings.PlayerDeath), ["water"] = Units(catalog.TerminalStrings.Water) },
-        };
         var constants = new D { ["maximum_energy"] = SimulationConstants.MaximumEnergy,
             ["maximum_hull"] = SimulationConstants.MaximumHull, ["ticks_per_second"] = SimulationConstants.TicksPerSecond,
             ["damage_flash_lifetime_ticks"] = SimulationConstants.Level100DamageFlashLifetimeTicks,
@@ -139,7 +131,6 @@ public sealed partial class FirstFlightHud : Node
 
     private static D Position(SimVector2 value) => new() { ["x"] = value.X, ["z"] = value.Z };
     private static D Position(SimVector3 value) => new() { ["x"] = value.X, ["y"] = value.Y, ["z"] = value.Z };
-    private static int[] Units(string text) => text.Select(character => (int)character).ToArray();
     private static A Pack<T>(IEnumerable<T> items, Func<T, D> convert)
     {
         var result = new A();

@@ -40,7 +40,7 @@ class ParityGateTests(unittest.TestCase):
             groups = next(groups for _, script, groups, _ in gate.CHECKS if f"res://Tests/{script}" in command)
             if groups[0] == "arithmetic":
                 groups = self.finished_groups
-            Path(command[-1]).write_text(json.dumps({"schema": 1, "failure_count": 0,
+            Path(command[command.index("--") + 2]).write_text(json.dumps({"schema": 1, "failure_count": 0,
                 "counts": {"completed": 1}, "completed": groups}))
         diagnostic = "SCRIPT ERROR: aborted check" if self.script_error else "Unicode parsing error, characters replaced" if self.unicode_error else ""
         return subprocess.CompletedProcess(command, 0, "", diagnostic)
@@ -80,6 +80,14 @@ class ParityGateTests(unittest.TestCase):
         engine_calls = [command for command, _ in self.calls if "--script" in command]
         self.assertEqual(1, len(engine_calls))
         self.assertIn("res://Tests/replay_hash_checks.gd", engine_calls[0])
+
+    def test_career_reader_gets_the_existing_fixture_as_an_explicit_input(self):
+        self.assertEqual(0, self.invoke("--check", "career-save"))
+        fixture = str(self.root / "tests_shared/fixtures/gold_career_save.bin")
+        engine = self.calls[-1][0]
+        self.assertEqual(fixture, engine[-1])
+        self.assertEqual(fixture, self.calls[1][0][-1])
+        self.assertFalse(Path(fixture).exists())  # The launcher never creates a save.
 
     def test_zero_engine_exit_without_completed_report_fails(self):
         self.complete = False

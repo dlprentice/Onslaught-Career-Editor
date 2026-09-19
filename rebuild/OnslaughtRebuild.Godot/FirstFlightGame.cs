@@ -35,7 +35,7 @@ public sealed partial class FirstFlightGame : Node3D
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
     private FirstFlightPauseMenu _pauseView = null!;
-    private Level100HudAssetCatalog _hudAssetCatalog = null!;
+    private Godot.Collections.Dictionary _hudTextCatalog = null!;
     private RetailFrontendFlow? _frontend;
     private Exception? _frontendInitializationError;
     private RetailCareerDescriptor? _selectedCareer;
@@ -130,7 +130,7 @@ public sealed partial class FirstFlightGame : Node3D
 
             _audio = new Level100Audio { PlaybackRetirement = _audioRetirement };
             AddChild(_audio);
-            _hudAssetCatalog = Level100HudAssetCatalog.Load();
+            _hudTextCatalog = FirstFlightHud.LoadVerifiedCatalog();
 
             _frontend!.CareerSelected += SelectCareer;
             _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
@@ -879,7 +879,7 @@ public sealed partial class FirstFlightGame : Node3D
         _audio.BindAquila(
             RequirePlayerAquilaActorId(snapshot.Level100Actors),
             snapshot.Level100Actors);
-        _hud = FirstFlightHud.Create(_hudAssetCatalog);
+        _hud = FirstFlightHud.Create(_hudTextCatalog);
         AddChild(_hud);
         _hud.UpdateFromSnapshot(
             _session.CurrentSnapshot,

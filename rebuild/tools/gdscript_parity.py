@@ -37,6 +37,12 @@ CHECKS = (
     ("hud-presentation", "hud_presentation_checks.gd", ["hud_presentation"], 30),
     ("startup-media-batch", "startup_media_batch_checks.gd", ["startup_media_batch"], 30),
     ("state-hash", "state_hash_checks.gd", ["state_hash"], 60),
+    ("retail-career", "retail_career_checks.gd", ["numeric", "objectives", "campaign", "world_strings", "ownership"], 60),
+    ("client-input", "input_checks.gd", ["client_input"], 30),
+    ("camera-values", "camera_value_checks.gd", ["aspect", "movie", "viewpoint", "ownership"], 30),
+    ("frontend-session", "frontend_session_checks.gd", ["constants", "glyphs", "constructors", "transitions", "ownership", "transport"], 60),
+    ("career-save", "career_save_checks.gd", ["reader", "ownership", "read_only"], 30),
+    ("attached-camera", "attached_camera_checks.gd", ["attached_camera"], 60),
 )
 
 
@@ -96,27 +102,31 @@ def main(argv: list[str] | None = None) -> int:
         items = ET.SubElement(project, "ItemGroup")
         ET.SubElement(items, "ProjectReference", Include=str(ROOT / "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParityOracle.cs"))
-        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs", "GdscriptInvariantFormatOracle.cs", "GdscriptReplayOracle.cs", "GdscriptStartupMediaOracle.cs", "GdscriptCommandTapeOracle.cs", "GdscriptMessagePanelOracle.cs", "GdscriptHudPresentationOracle.cs", "GdscriptStartupMediaBatchOracle.cs", "GdscriptStateHashOracle.cs"):
+        for helper in ("GdscriptJsonOracle.cs", "GdscriptStartupScheduleOracle.cs", "GdscriptChunkReaderOracle.cs", "GdscriptEventSchedulerOracle.cs", "GdscriptInvariantFormatOracle.cs", "GdscriptReplayOracle.cs", "GdscriptStartupMediaOracle.cs", "GdscriptCommandTapeOracle.cs", "GdscriptMessagePanelOracle.cs", "GdscriptHudPresentationOracle.cs", "GdscriptStartupMediaBatchOracle.cs", "GdscriptStateHashOracle.cs", "GdscriptRetailCareerOracle.cs", "GdscriptInputOracle.cs", "GdscriptCameraOracle.cs", "GdscriptFrontendSessionOracle.cs"):
             ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport" / helper))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/RetailStartupMediaIndex.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessagePlaybackState.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100HudPresentation.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/OnslaughtRebuild.Godot/Level100MessageSchedule.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptCareerSaveOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptAttachedCameraOracle.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"
         run([dotnet, "run", "--project", str(project_path), "--artifacts-path", str(output / "build"),
              "--disable-build-servers", "--", str(vectors),
-             str(ROOT / "rebuild/scenarios/first-flight.v1.json")], "oracle.log", 180,
+             str(ROOT / "rebuild/scenarios/first-flight.v1.json"),
+             str(ROOT / "tests_shared/fixtures/gold_career_save.bin")], "oracle.log", 180,
              cwd=ROOT / "rebuild/OnslaughtRebuild.Godot")
         reports = {}
         for name, script, groups, timeout in CHECKS:
             if args.check and name not in args.check:
                 continue
             report_path = output / f"{name}.json"
+            extra = [str(ROOT / "tests_shared/fixtures/gold_career_save.bin")] if name == "career-save" else []
             diagnostics = run([engine, "--headless", "--audio-driver", "Dummy", "--path",
                 str(ROOT / "rebuild/OnslaughtRebuild.Godot"), "--script",
-                f"res://Tests/{script}", "--", str(vectors), str(report_path)], f"{name}.log", timeout)
+                f"res://Tests/{script}", "--", str(vectors), str(report_path), *extra], f"{name}.log", timeout)
             report = json.loads(report_path.read_text(encoding="utf-8"))
             if any(marker in diagnostics for marker in ("ERROR:", "Unicode parsing error")) \
                     or report.get("schema") != 1 or report.get("failure_count") != 0 \
