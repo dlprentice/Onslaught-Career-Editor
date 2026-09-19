@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, aim/caller composition and Ghidra provider corrections; earlier validation retained).
+Last updated: 2026-09-19 (weapon query, aim/finite-angle caller composition and Ghidra provider corrections; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1199,6 +1199,71 @@ finite-angle trig, ballistics, real collision, lifecycle and live combat remain
 outside this result. No Ghidra or rebuild implementation changed.
 The [weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-nonballistic-caller-composition)
 records the reconstruction implications.
+
+### Weapon B finite-angle composition — September 19
+
+The extended `weapon_feasibility.py` command above passed **49 scenarios / 152
+original caller executions**: the prior 22 scenarios under two precision modes,
+plus 27 finite scenarios under PC24/RN and PC53/RN with supplied CRT mode 0/1.
+The pristine specimen was rehashed to the same `74154bfa…7750` identity above.
+Original caller/endpoint/getter/magnitude/line-copy bytes retain their preceding
+pins. Added unmodified code, checked against actual ELF load mappings:
+
+| Original range | Bytes | SHA-256 |
+| --- | --- | --- |
+| Angle wrapper, alternate entry and core `[0055dcb0,0055dd7b)` | 203 | `750a2a1cfe8f3f3c052cdffe828c46fc37fcc3c6b52a4abc6f2b1caa7d65ba41` |
+| Error-record helper `[00561547,00561583)` | 60 | `e635df29a77e340ab58f4d27a5be9770760e0020bf076ccfc95172775a4c1eaf` |
+| Classifiers/control support `[005615a5,00561665)` | 192 | `0e63ae2de4858df9110b8f3e70a81987ad0bc29813de37dcb96d5abf0af98344` |
+| Masked-error helper `[005627ea,00562a01)` | 535 | `0036539cb836792003645031c3b392d943c9f26da34627ad0d453431ca8e1349` |
+| Error-kind dispatch `[00562a89,00562ab1)` | 40 | `f9b415ecff2961414c5c0888a3e02788d809f3678f2c7e5801911f8edb76f952` |
+| Control/status helpers `[00562c76,00562cef)` | 121 | `0b22f26a2c310176d25ac53de9dd73b4c892516c2676ef93c984dd7fce783ae2` |
+| CRT dispatcher `[00569cc1,00569d91)` | 208 | `c4475177497be476cdf6ecd75caa3a18fc35761c0abcc93513ec6e2391a2e268` |
+
+The original `asin` name literal at `00653310` and 80-bit pi/2 constant at
+`0065373a` are also mapped and pinned in the receipt. Original code handles
+finite interior and exact +/-1 inputs; selected exceptional/OS dependencies
+trap rather than supplying approximations. The global `009d08b4` is explicitly
+supplied and checked unchanged. Neither its runtime value nor the game's current
+floating-point mode is inferred from this experiment.
+
+Final stem:
+`local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/run-y3mf5pmc/weapon_feasibility`.
+Saved `.driver.py`, assembly, ELF, cases, input/output bytes, stderr and JSON
+remain together. JSON: **202,329 bytes**, SHA-256
+`d98a3ed85d68687a7948eebaa81cace30491888f93210f8259274fccb22101f5`.
+The earlier 124- and 136-call extensions remain separate receipts.
+
+Checks cover all input bytes, original body identities, exact provider call
+order/receivers, endpoints, query arguments/result initialization, return values,
+nonvolatile registers, stack, normal-return FS/SEH chain, x87 control/exception
+state and empty x87 stack. The final deflection is observed after return without
+patching the body; all 96 query calls agree with a second observation made before
+the query stub modifies its result. There are 150 endpoint and 48 Actor-getter
+executions. The prior 44 outcomes/status/endpoint/normalized call traces remain
+unchanged, and all 54 finite CRT-mode pairs agree; `extension-comparison.json`
+records that comparison.
+
+Independent arithmetic predictions were supplied before reviewing native output:
+signed/asymmetric bounds, horizontal reversal, nonunit normalization, identical-
+direction residuals, displacement stores and a precision-dependent tiny-angle
+boundary. The harness includes the separate arithmetic comparator for the
+selected final words. Original `FPATAN` still executes; the comparator is not a
+replacement or an assertion of general modern-library equivalence. The
+[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+records the derived implementation contract and measured discriminating cases.
+
+Subsequent read-only review independently reconciled all 152 saved binary
+records, all 17 original code/constant pins through ELF load mappings, and all
+14 stub/trap destinations. It checked the stack-relative angle observers and
+all 44 prior records, normalizing only the documented new observation/input
+fields and relocated harness/stack addresses. It also compared the finite
+results with its preceding arithmetic predictions. The reviewer did not rerun
+native code; this is an audit of retained execution evidence.
+
+This is finite nonballistic caller composition with controlled providers and
+query results. No production reconstruction code or Ghidra database changes in
+this experiment; real collision, special mount handling, ballistics, unmasked
+faults, other rounding modes and live combat remain unvalidated.
 
 ### Aim-provider Ghidra correction — September 19
 

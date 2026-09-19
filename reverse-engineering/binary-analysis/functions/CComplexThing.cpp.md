@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (weapon query, aim providers and bounded caller composition)
+Last updated: 2026-09-19 (weapon query, aim providers and finite-angle caller composition)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -657,7 +657,7 @@ owns exact inputs, outputs, checks and independent review.
 
 #### Weapon B nonballistic caller composition
 
-The complete unchanged body `[005088b0,00509135)` now executes with the original
+The first composition executes the unchanged body `[005088b0,00509135)` with the original
 endpoint, Actor getter, magnitude helper and line-copy constructor in **22
 scenarios / 44 calls**, under PC24/RN and PC53/RN. This covers a bounded
 nonballistic path, not every branch of the body. Attachment position/orientation,
@@ -704,6 +704,81 @@ exact-target-only ray test would change these measured paths. Whether authored
 gameplay reaches zero-speed prediction remains open; actual collision handling
 of a nonfinite line, real attachment/part providers, visibility/terrain/ballistic
 arms, unmasked faults and live combat are not established by this experiment.
+
+#### Weapon B finite elevation and arithmetic boundaries
+
+The extension executes the same original caller with its original `0055dcb0`
+angle wrapper, shared arithmetic core and finite CRT support. It retains the
+preceding 44 calls and adds **27 finite scenarios / 108 calls**, each under
+PC24/RN and PC53/RN and supplied CRT flag `009d08b4` values 0 and 1.
+The [finite-angle receipt](../../../VALIDATION.md#weapon-b-finite-angle-composition--september-19)
+owns the unchanged-byte pins, inputs, outputs and independent review.
+This scope uses `weapon+98==0`, nonballistic round settings, recording attachment/
+point providers and a supplied world-query result. It does not sample live game
+precision or CRT state.
+
+The routine computes an **elevation difference**, not a full three-dimensional
+angle between the two directions. The finite interior of `0055dcb0` computes
+`atan2(r, sqrt((1+r)*(1-r)))`, with the original intermediate rounding. Its
+error-name literal at `00653310` is `asin`; exact `r=+1/-1` uses the original
+signed 80-bit pi/2 constant. The retained `Acos` interpretation is wrong.
+
+The caller's important stores are:
+
+- Endpoint minus attachment origin is stored as float32 XYZ before magnitude.
+  Each component of projectile-speed times orientation column `+4/+14/+24`
+  also stores as float32 before its magnitude.
+- Both elevation ratios store as float32 before entering the helper. Target
+  elevation then stores as float32 at `00508a04`.
+- Forward elevation remains on the x87 stack through subtraction from the
+  stored target elevation at `00508a66`; the difference stores at `00508a6c`.
+  Mode `+80` and `+7c` bound that signed difference inclusively.
+
+With flat forward `(0,1,0)`, targets `(0,4,3)`, `(0,-4,3)` and `(4,0,3)` all
+admit bounds `[0.6,0.7]`; reversing horizontal direction leaves this check
+unchanged. Target `(0,4,-3)` refuses those bounds and admits `[-0.7,-0.6]`.
+Forward vectors `(0,4,3)` and `(0,8,6)` give the same negative deflection toward
+target `(0,1,0)`, demonstrating normalization. Positive speed scaling preserves
+that result; negative speed reverses the forward elevation. This does not remove
+other controller/weapon checks or real collision occlusion.
+
+Identical target/forward directions `(0,4,3)` do **not** produce exact zero:
+
+| Supplied precision | Stored target elevation | Stored final difference |
+| --- | --- | --- |
+| PC24/RN | `3f24bc7d` | `b298d054`, approximately `-1.77898656e-8` |
+| PC53/RN | `3f24bc7e` | `32cd9612`, approximately `+2.39333851e-8` |
+
+Zero-only bounds refuse both; `[-1e-6,1e-6]` admits both. Negative-only and
+positive-only intervals admit opposite precision modes. A separate float-store
+control uses origin `(-1,0,0)` and target `(16777216,0,2)`: displacement X stores
+as 16777216, and final elevation `34000000` admits an equal upper bound but
+refuses its preceding float. With target Z changed to 1, the final words are
+`33800001` under PC24 and `33800000` under PC53; an upper bound of `33800000`
+therefore changes admission. These are deliberately constructed boundary
+controls, not evidence that shipping weapon limits encounter them.
+
+CRT flag 0 can send PC24 inexact results through the original error-record path,
+which stores/reloads the result as double; flag 1 takes the direct restore tail.
+PC53/RN `027f` bypasses that precision-handling path. Both flag settings preserve
+the same final outcomes for these controls. Original control words and empty
+x87 stacks survive every call; no modern math function substitutes for executed
+retail instructions. An independent arithmetic model predicts the selected
+boundary words, without claiming general libm/x87 equivalence.
+
+Finite prediction also composes through the real endpoint and Actor getter:
+target `(0,4,3)`, speed 25, flat forward and native motion `(0,0,1)` produce
+factor 4 and endpoint `(0,4,7)`, admitted by `[1.04,1.06]`. Disabling prediction
+or reversing that motion refuses the same interval. Predicted W retains stack
+fill; direct-copy W retains the supplied provider word. Seek still cannot
+bypass a refused angle, and skips the query only after admission.
+
+Reconstruction must preserve signed elevation, normalization, ordered stores
+and the separate query decision. Replacing the helper with `acos(dot)`, forcing
+equal directions to zero, or assuming precision modes have identical boundary
+decisions would change these measured paths. Ballistics, `weapon+98` handling,
+real attachment transforms, complete point providers, geometry and live combat
+remain outside this experiment.
 
 #### Selected aircraft weapon mounts and runtime pose inputs
 
