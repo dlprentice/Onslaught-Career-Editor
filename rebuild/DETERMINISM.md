@@ -263,6 +263,14 @@ instead of entering the old wrapping loop. This documented refusal affects
 none of the 338 emitters in the three pinned inputs; all other finite
 schedules retain their original traversal, including omissions after the cap.
 
+`Core/terrain.gd` checks supplied HFLD bytes against the existing world pins,
+preserves metadata words and signed samples, and exposes one sampler for scalar
+and batch consumers. Fixed-point interpolation truncates after each axis;
+AirGuide's unusual X-edge shift remains distinct from the regular lattice.
+Ground and gradient conversion retain checked widths, signed floor division
+and away-from-zero rounding. LOD complexity retains integer midpoint division
+and binary32 stores. The module has no filesystem or scene owner.
+
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:
 

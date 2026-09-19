@@ -394,6 +394,15 @@ passed **67 safety assertions** but retained the known 205-object/RID shutdown
 diagnostics; its strict console gate remains red. These Dummy-audio checks
 establish control/state compatibility, not audible parity or full combat.
 
+The `terrain` group passed **45,681 checks** in
+`local-data/test-runs/gdscript-parity-7uz9cc9v/` on the pinned standard engine.
+Each of the four existing world resources was compared with its already-linked
+input without copying the corpus. Exact metadata, complete 513×513 lattice,
+512×512 subcell interpolation and 64×64 LOD-word hashes pass, together with
+edge/mask probes, 2,048 scale words, signed-64 division cases, byte admission
+failures and detachment. This validates the native owner; live terrain/Sun
+consumer integration remains separate.
+
 The scheduler group additionally passed **454 checks** derived from the committed
 September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
 alongside its existing differential transcripts. The HUD model comparison also

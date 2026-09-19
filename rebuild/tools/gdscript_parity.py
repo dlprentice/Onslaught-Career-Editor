@@ -51,6 +51,7 @@ CHECKS = (
     ("invariant-number", "invariant_number_checks.gd", ["invariant_number"], 90),
     ("particle-set", "particle_set_checks.gd", ["cases", "contracts", "corpus", "ownership"], 90),
     ("particle-effects", "particle_effect_checks.gd", ["particle_effects"], 90),
+    ("terrain", "terrain_checks.gd", ["terrain"], 90),
 )
 
 
@@ -127,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptInvariantNumberOracle.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParticleSetOracle.cs"))
         ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptParticleEffectOracle.cs"))
+        ET.SubElement(items, "Compile", Include=str(ROOT / "rebuild/TestSupport/GdscriptTerrainOracle.cs"))
         project_path = oracle / "Oracle.csproj"
         ET.ElementTree(project).write(project_path, encoding="unicode")
         vectors = output / "vectors.json"

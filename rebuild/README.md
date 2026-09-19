@@ -141,6 +141,12 @@ shipped emitters uses it. Native Latin-1 fallback and invariant name casing
 also preserve the managed reader's behavior. Live world effect consumers are
 still being converted.
 
+`Core/terrain.gd` admits the four already-pinned heightfields from supplied
+bytes and retains the shared fixed/grid/AirGuide samplers, metadata and terrain
+LOD law. Its full-grid and edge comparisons pass for worlds 100, 110, 200 and
+300; this preserves their existing admission and does not add playable routes.
+Existing C# terrain consumers still await integration.
+
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in
 [`tools/godot_compat/invariant_int32_format.gd`](../tools/godot_compat/invariant_int32_format.gd).
