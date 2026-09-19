@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 using OnslaughtRebuild.GodotClient;
 
 namespace OnslaughtRebuild.Client.Tests;
@@ -102,150 +103,66 @@ public sealed class Level100AudioCatalogTests
     [Fact]
     public void CharacterMessageVoiceStartsAfterTheReleasedActivationLead()
     {
-        string audio = ReadGodotSource("Level100Audio.cs");
-        Assert.Contains(
-            "RetailCharacterMessageVoiceLeadSeconds = 0.2d;",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "RetailCharacterMessageHandoffSeconds = 0.3d;",
-            audio,
-            StringComparison.Ordinal);
-
-        int processStart = audio.IndexOf(
-            "public override void _Process(double delta)",
-            StringComparison.Ordinal);
-        int processEnd = audio.IndexOf(
-            "public void StartTutorialMusic()",
-            processStart,
-            StringComparison.Ordinal);
-        string process = audio[processStart..processEnd];
-        AssertOccursInOrder(
-            process,
-            "if (_gameplayPaused)",
-            "_characterMessageVoiceLeadSecondsRemaining -= delta;",
-            "if (_characterMessageVoiceLeadSecondsRemaining <= 0d)",
-            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
-            "StartNextCharacterMessage();");
-        Assert.Equal(1, CountOccurrences(process, "StartNextCharacterMessage();"));
-        AssertOccursInOrder(
-            process,
-            "_characterMessageHandoffSecondsRemaining -= delta;",
-            "if (_characterMessageHandoffSecondsRemaining <= 0d)",
-            "_characterMessageHandoffSecondsRemaining = 0d;",
-            "_characterMessageVoiceLeadSecondsRemaining =",
-            "RetailCharacterMessageVoiceLeadSeconds;");
-
-        int queueStart = audio.IndexOf(
-            "public void QueueCharacterMessage(int speakerId, int messageId)",
-            StringComparison.Ordinal);
-        int queueEnd = audio.IndexOf(
-            "public void StopCharacterMessages()",
-            queueStart,
-            StringComparison.Ordinal);
-        string queue = audio[queueStart..queueEnd];
-        AssertOccursInOrder(
-            queue,
-            "_characterMessageVoiceLeadSecondsRemaining =",
-            "RetailCharacterMessageVoiceLeadSeconds;");
-        Assert.DoesNotContain("StartNextCharacterMessage();", queue, StringComparison.Ordinal);
-
-        string stop = audio[queueEnd..audio.IndexOf(
-            "public void SetMasterSoundOption(float optionValue)",
-            queueEnd,
-            StringComparison.Ordinal)];
-        Assert.Contains(
-            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
-            stop,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
-            MethodBody(audio, "private void StartNextCharacterMessage()"),
-            StringComparison.Ordinal);
+        string audio = ReadAudioSource("level100_audio.gd");
+        Assert.Contains("CHARACTER_VOICE_LEAD_SECONDS: float = 0.2", audio, StringComparison.Ordinal);
+        Assert.Contains("CHARACTER_HANDOFF_SECONDS: float = 0.3", audio, StringComparison.Ordinal);
+        string advance = GdMethodBody(audio, "advance");
+        AssertOccursInOrder(advance,
+            "_advance_music(delta)", "if not result.ok or _paused:",
+            "if _voice_lead > 0.0:", "_voice_lead -= delta", "if _voice_lead <= 0.0:",
+            "_voice_lead = 0.0", "return _start_next_message()");
+        Assert.Equal(1, CountOccurrences(advance, "_start_next_message()"));
+        AssertOccursInOrder(advance,
+            "_handoff -= delta", "if _handoff <= 0.0:", "_handoff = 0.0",
+            "_voice_lead = CHARACTER_VOICE_LEAD_SECONDS");
+        string queue = GdMethodBody(audio, "queue_character_message");
+        AssertOccursInOrder(queue,
+            "_queue.enqueue(speaker_id, message_id)",
+            "not _voice.playing and _handoff <= 0.0 and _voice_lead <= 0.0",
+            "_voice_lead = CHARACTER_VOICE_LEAD_SECONDS");
+        Assert.DoesNotContain("_start_next_message()", queue, StringComparison.Ordinal);
+        Assert.Contains("_voice_lead = 0.0", GdMethodBody(audio, "stop_character_messages"), StringComparison.Ordinal);
+        AssertOccursInOrder(GdMethodBody(audio, "_start_next_message"),
+            "_voice_lead = 0.0", "_queue.try_dequeue()", "_voice.play()", "_observer.call(_voice)");
+        AssertOccursInOrder(GdMethodBody(audio, "_begin_handoff"),
+            "_active_message = null", "_queue.count() > 0", "_handoff = CHARACTER_HANDOFF_SECONDS");
     }
 
     [Fact]
     public void AquilaWarningLoopsFollowTheReleasedHullFirstThresholdLaw()
     {
-        string game = ReadGodotSource("FirstFlightGame.cs");
-        string consume = MethodBody(
-            game,
-            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
+        // Core facts cross once; the native scene owns the active loop and fade.
+        string bridge = ReadGodotSource("Level100Audio.cs");
+        string facts = MethodBody(bridge, "private static D FrameFacts(FrameAdvanceResult frame)");
+        Assert.Contains(
+            $"snapshot.Hull < 7_000 ? {(int)AquilaWarningAudioState.HullCritical} : " +
+            $"snapshot.Energy < 2_000 ? {(int)AquilaWarningAudioState.EnergyLow} : {(int)AquilaWarningAudioState.Normal}",
+            facts, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hull <= 7_000", bridge, StringComparison.Ordinal);
+        Assert.DoesNotContain("Energy <= 2_000", bridge, StringComparison.Ordinal);
+        Assert.True(Level100AudioCatalog.GetAquilaWarning(AquilaWarningAudioState.EnergyLow).Looping);
+        Assert.True(Level100AudioCatalog.GetAquilaWarning(AquilaWarningAudioState.HullCritical).Looping);
 
-        AssertOccursInOrder(
-            consume,
-            "_audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);",
-            "_audio.SetAquilaWarningState(",
-            "result.CurrentSnapshot.Hull < 7_000",
-            "AquilaWarningAudioState.HullCritical",
-            "result.CurrentSnapshot.Energy < 2_000",
-            "AquilaWarningAudioState.EnergyLow",
-            "AquilaWarningAudioState.Normal");
-        Assert.Equal(1, CountOccurrences(consume, "_audio.SetAquilaWarningState("));
-        Assert.DoesNotContain("Hull <= 7_000", consume, StringComparison.Ordinal);
-        Assert.DoesNotContain("Energy <= 2_000", consume, StringComparison.Ordinal);
-        Assert.True(Level100AudioCatalog.GetAquilaWarning(
-            AquilaWarningAudioState.EnergyLow).Looping);
-        Assert.True(Level100AudioCatalog.GetAquilaWarning(
-            AquilaWarningAudioState.HullCritical).Looping);
-
-        string audio = ReadGodotSource("Level100Audio.cs");
-        string warningState = MethodBody(
-            audio,
-            "public void SetAquilaWarningState(AquilaWarningAudioState state)");
-        AssertOccursInOrder(
-            warningState,
-            "if (state == AquilaWarningAudioState.Normal)",
-            "_aquilaWarningLoopTargetSubVolume = 0f;",
-            "_aquilaWarningLoopFadeStep =",
-            "-Level100AudioCatalog.RetailFlightLoopFadeStep;",
-            "_aquilaWarningLoopState == state",
-            "StopAquilaWarningLoop();",
-            "SetSpecificLoop(");
-        Assert.Equal(1, CountOccurrences(warningState, "StopAquilaWarningLoop();"));
-        string normalizedWarningState = warningState.Replace(
-            "\r\n",
-            "\n",
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "if (IsPlaying(_aquilaWarningLoop) &&\n" +
-            "            _aquilaWarningLoopState == state)\n" +
-            "        {\n" +
-            "            return;\n" +
-            "        }",
-            normalizedWarningState,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_aquilaWarningLoopState = state;",
-            warningState,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_aquilaWarningLoopState = AquilaWarningAudioState.Normal;",
-            MethodBody(audio, "private void StopAquilaWarningLoop()"),
-            StringComparison.Ordinal);
-
-        string warningFade = MethodBody(
-            audio,
-            "private void AdvanceAquilaWarningLoopFade(double delta)");
-        Assert.Contains("RetailSoundUpdateSeconds", warningFade, StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(",
-            warningFade,
-            StringComparison.Ordinal);
-        AssertOccursInOrder(
-            warningFade,
-            "out bool crossedTarget",
-            "if (crossedTarget)",
-            "if (_aquilaWarningLoopTargetSubVolume == 0f)",
-            "StopAquilaWarningLoop();");
-        Assert.Contains(
-            "AdvanceAquilaWarningLoopFade(delta);",
-            MethodBody(audio, "public override void _Process(double delta)"),
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "ReferenceEquals(player, _aquilaWarningLoop)",
-            MethodBody(audio, "private void UpdateSpatialAttenuation()"),
-            StringComparison.Ordinal);
+        string audio = ReadAudioSource("level100_audio.gd");
+        string consume = GdMethodBody(audio, "consume_frame");
+        AssertOccursInOrder(consume,
+            "update_aquila_pose(facts.actors)", "set_aquila_warning_state(facts.warning_state)");
+        Assert.Equal(1, CountOccurrences(consume, "set_aquila_warning_state("));
+        string warning = GdMethodBody(audio, "set_aquila_warning_state");
+        AssertOccursInOrder(warning,
+            "if state == 0:", "_fades.warning.target = 0.0",
+            "_fades.warning.step = -F32.read_word(Catalog.RETAIL_FLIGHT_LOOP_FADE_STEP_WORD)",
+            "if _loop_playing(\"warning\") and _warning_loop_state == state:",
+            "return _ok()", "_stop_warning_loop()", "_set_loop(\"warning\"", "_warning_loop_state = state");
+        Assert.Equal(1, CountOccurrences(warning, "_stop_warning_loop()"));
+        Assert.Contains("_warning_loop_state = 0", GdMethodBody(audio, "_stop_warning_loop"), StringComparison.Ordinal);
+        string fade = GdMethodBody(audio, "_advance_fade");
+        AssertOccursInOrder(fade,
+            "fade.accumulator >= SOUND_UPDATE_SECONDS",
+            "Catalog.advance_retail_flight_loop_sub_volume(fade.sub, fade.target, fade.step)",
+            "if result.crossed_target:", "if fade.target == 0.0:", "_stop_warning_loop()");
+        Assert.Contains("for key: String in [\"flight\", \"warning\"]", GdMethodBody(audio, "advance"), StringComparison.Ordinal);
+        Assert.Contains("_live_loops.get(\"warning\") == player", GdMethodBody(audio, "_update_spatial_attenuation"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -262,17 +179,9 @@ public sealed class Level100AudioCatalogTests
         Assert.Equal("res://Assets/Aquila/SoundEffects/strafe.wav", dash.ResourcePath);
         Assert.False(dash.Looping);
 
-        string consume = MethodBody(
-            ReadGodotSource("Level100Audio.cs"),
-            "public void ConsumeAquilaFlightEvents(");
-        AssertOccursInOrder(
-            consume,
-            "case AquilaFlightEvents.WalkerHydraulicsRequested:",
-            "PlayOnAquila(Level100EffectCue.AquilaHydraulics);");
-        AssertOccursInOrder(
-            consume,
-            "case AquilaFlightEvents.WalkerDashRequested:",
-            "PlayOnAquila(Level100EffectCue.AquilaStrafe);");
+        string consume = GdMethodBody(ReadAudioSource("level100_audio.gd"), "consume_aquila_flight_events");
+        Assert.Contains($"{(int)AquilaFlightEvents.WalkerHydraulicsRequested}: result = play_on_aquila(Catalog.EffectCue.AQUILA_HYDRAULICS)", consume, StringComparison.Ordinal);
+        Assert.Contains($"{(int)AquilaFlightEvents.WalkerDashRequested}: result = play_on_aquila(Catalog.EffectCue.AQUILA_STRAFE)", consume, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -314,69 +223,44 @@ public sealed class Level100AudioCatalogTests
             cue.ResourcePath);
         Assert.False(cue.Looping);
 
-        string audio = ReadGodotSource("Level100Audio.cs");
-        string consume = MethodBody(audio, "public void ConsumeAquilaFlightEvents(");
-        AssertOccursInOrder(
-            consume,
-            "int missionStartTick = checked(simulationTick - missionTick);",
-            "_lastHostileEnvironmentContactTick = missionStartTick;",
-            "case AquilaFlightEvents.WaterSkim:",
-            "Level100AudioCatalog.ObserveHostileEnvironmentContact(",
-            "ref _lastHostileEnvironmentContactTick",
-            "PlayTerminalCue(Level100TerminalCue.HostileEnvironment);");
-        AssertOccursInOrder(
-            MethodBody(audio, "public void StopGameplaySamples()"),
-            "_hostileEnvironmentMissionStartTick = null;",
-            "_lastHostileEnvironmentContactTick = 0;");
-
-        string frame = MethodBody(
-            ReadGodotSource("FirstFlightGame.cs"),
-            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
-        AssertOccursInOrder(
-            frame,
-            "_audio.ConsumeAquilaFlightEvents(",
-            "result.AquilaFlightEvents,",
-            "result.CurrentSnapshot.Tick,",
-            "result.CurrentSnapshot.Level100Mission.Tick);");
+        string audio = ReadAudioSource("level100_audio.gd");
+        string consume = GdMethodBody(audio, "consume_aquila_flight_events");
+        AssertOccursInOrder(consume,
+            "var start: int = simulation_tick - mission_tick", "_last_hostile_contact = start",
+            $"{(int)AquilaFlightEvents.WaterSkim}:", "Catalog.observe_hostile_environment_contact(event.tick, _last_hostile_contact)",
+            "_last_hostile_contact = result.previous_contact_tick", "if result.value:",
+            "play_terminal_cue(Catalog.TerminalCue.HOSTILE_ENVIRONMENT)");
+        AssertOccursInOrder(GdMethodBody(audio, "stop_gameplay_samples"),
+            "_mission_start_tick = null", "_last_hostile_contact = 0");
+        Assert.Contains("consume_aquila_flight_events(facts.flight_events, facts.simulation_tick, facts.mission_tick)",
+            GdMethodBody(audio, "consume_frame"), StringComparison.Ordinal);
+        string facts = MethodBody(ReadGodotSource("Level100Audio.cs"), "private static D FrameFacts(FrameAdvanceResult frame)");
+        Assert.Contains("[\"simulation_tick\"] = snapshot.Tick", facts, StringComparison.Ordinal);
+        Assert.Contains("[\"mission_tick\"] = mission.Tick", facts, StringComparison.Ordinal);
     }
 
     [Fact]
     public void DeathTerminalFeedsTheRecoveredMixBeforeTheNominalPause()
     {
+        string audio = ReadAudioSource("level100_audio.gd");
+        string consume = GdMethodBody(audio, "consume_frame");
+        AssertOccursInOrder(consume,
+            "consume_destruction_events(facts.destruction_events)",
+            "set_gameplay_mix(facts.gameplay_mix)", "set_gameplay_paused(facts.gameplay_paused)");
+        Assert.Equal(1, CountOccurrences(consume, "set_gameplay_mix("));
+        Assert.Equal(1, CountOccurrences(consume, "set_gameplay_paused("));
+        string bridge = ReadGodotSource("Level100Audio.cs");
+        Assert.Contains("Level100MissionTiming.GameplayMix(", bridge, StringComparison.Ordinal);
+        Assert.Contains("Level100MissionTiming.GameplayPaused(", bridge, StringComparison.Ordinal);
         string game = ReadGodotSource("FirstFlightGame.cs");
-        string consume = MethodBody(
-            game,
-            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
-
-        AssertOccursInOrder(
-            consume,
-            "_audio.SetGameplayMix(Level100MissionTiming.GameplayMix(",
-            "mission.Outcome,",
-            "mission.FailureReason,",
-            "mission.TerminalTicksRemaining));",
-            "_audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(",
-            "mission.Outcome,",
-            "mission.FailureReason,",
-            "mission.TerminalTicksRemaining));");
-        Assert.Equal(1, CountOccurrences(consume, "_audio.SetGameplayMix("));
-        Assert.Equal(1, CountOccurrences(consume, "_audio.SetGameplayPaused("));
-        Assert.DoesNotContain("OpenAuthenticPauseMenu", consume, StringComparison.Ordinal);
-
-        string resume = MethodBody(
-            game,
-            "private void ResumeFromAuthenticPause()");
-        AssertOccursInOrder(
-            resume,
+        Assert.DoesNotContain("OpenAuthenticPauseMenu", MethodBody(game, "private void ConsumeFrameEvents(FrameAdvanceResult result)"), StringComparison.Ordinal);
+        string resume = MethodBody(game, "private void ResumeFromAuthenticPause()");
+        AssertOccursInOrder(resume,
             "_session.SetAuthenticMenuPaused(false);",
             "Level100MissionSnapshot mission = _session.CurrentSnapshot.Level100Mission;",
             "_audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(",
-            "mission.Outcome,",
-            "mission.FailureReason,",
-            "mission.TerminalTicksRemaining));");
-        Assert.DoesNotContain(
-            "_audio.SetGameplayPaused(false)",
-            resume,
-            StringComparison.Ordinal);
+            "mission.Outcome,", "mission.FailureReason,", "mission.TerminalTicksRemaining));");
+        Assert.DoesNotContain("_audio.SetGameplayPaused(false)", resume, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -388,17 +272,9 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.GetEffect(Level100EffectCue.DroneDestroyed);
         Assert.Equal(108, pulseImpact.RetailSoundRecord);
         Assert.Equal(pulseImpact, droneDestroyed);
-        string destructionConsumer = MethodBody(
-            ReadGodotSource("Level100Audio.cs"),
-            "public void ConsumeLevel100DestructionEvents(");
-        Assert.Contains(
-            "Level100DestructionEffectKind.DroneDestroyed =>",
-            destructionConsumer,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100EffectCue.DroneDestroyed",
-            destructionConsumer,
-            StringComparison.Ordinal);
+        string destructionConsumer = GdMethodBody(ReadAudioSource("level100_audio.gd"), "consume_destruction_events");
+        Assert.Contains($"{(int)Level100DestructionEffectKind.DroneDestroyed}: cue = Catalog.EffectCue.DRONE_DESTROYED", destructionConsumer, StringComparison.Ordinal);
+        AssertOccursInOrder(destructionConsumer, "Catalog.get_effect(cue)", "retail_world(event.position)");
 
         Level100AudioCueRecipe vulcan =
             Level100AudioCatalog.GetEffect(Level100EffectCue.VulcanCannonFire);
@@ -524,28 +400,19 @@ public sealed class Level100AudioCatalogTests
         // The exact retail source must be materialized. Selection replay belongs
         // to RetailMusicPolicy, not the decoder stream, and level entry stops the
         // frontend selection before the tutorial selection starts.
-        string audio = ReadGodotSource("Level100Audio.cs");
+        string audio = ReadAudioSource("level100_audio.gd");
+        string scene = ReadAudioSource("Level100Audio.tscn");
         string game = ReadGodotSource("FirstFlightGame.cs");
         string frontend = ReadGodotSource("RetailFrontendFlow.cs");
         string materializer = ReadGodotSource("materialize_retail_assets.py");
-
         Assert.Contains(music.RetailSourceName, materializer, StringComparison.Ordinal);
-        Assert.Contains(
-            "private readonly RetailMusicPolicy _musicPolicy = new();",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_music.Finished += HandleMusicFinished;",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "ApplyMusicActions(_musicPolicy.HandleTrackFinished());",
-            MethodBody(audio, "private void HandleMusicFinished()"),
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "LoadOgg(trackIdentity, looping: false)",
-            MethodBody(audio, "private AudioStreamOggVorbis MusicStream(string trackIdentity)"),
-            StringComparison.Ordinal);
+        Assert.Contains("var _music_policy := MusicPolicy.new()", audio, StringComparison.Ordinal);
+        Assert.Contains("_music.finished.connect(_music_finished)", GdMethodBody(audio, "_ready"), StringComparison.Ordinal);
+        Assert.Contains("_apply_music(_music_policy.handle_track_finished())", GdMethodBody(audio, "_music_finished"), StringComparison.Ordinal);
+        string authoredFrontend = SceneResourceBody(scene, "FrontendMusic");
+        Assert.Contains("source_path = \"res://Assets/Frontend/Music/frontend-track-08.ogg\"", authoredFrontend, StringComparison.Ordinal);
+        Assert.DoesNotContain("looping = true", authoredFrontend, StringComparison.Ordinal);
+        Assert.Contains("looping: bool = false", ReadAudioSource("retail_audio_stream.gd"), StringComparison.Ordinal);
         string ready = MethodBody(game, "public override void _Ready()");
         string startupComplete = MethodBody(
             game,
@@ -584,6 +451,32 @@ public sealed class Level100AudioCatalogTests
         File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", fileName));
 
+    private static string ReadAudioSource(string fileName) =>
+        File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-audio-layout-source", fileName));
+
+    private static string GdMethodBody(string source, string name)
+    {
+        int start = source.IndexOf("func " + name + "(", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Expected native audio method '{name}'.");
+        int next = source.Length;
+        foreach (string boundary in new[] { "\nfunc ", "\nstatic func " })
+        {
+            int found = source.IndexOf(boundary, start, StringComparison.Ordinal);
+            if (found >= 0) next = Math.Min(next, found);
+        }
+        return source[start..next];
+    }
+
+    private static string SceneResourceBody(string source, string resourceId)
+    {
+        string declaration = $"[sub_resource type=\"Resource\" id=\"{resourceId}\"]";
+        int start = source.IndexOf(declaration, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Expected authored audio resource '{resourceId}'.");
+        int next = source.IndexOf("\n[", start + declaration.Length, StringComparison.Ordinal);
+        return next < 0 ? source[start..] : source[start..next];
+    }
+
     private static void AssertOccursInOrder(string source, params string[] values)
     {
         int cursor = 0;
@@ -599,12 +492,13 @@ public sealed class Level100AudioCatalogTests
     {
         int start = source.IndexOf(declaration, StringComparison.Ordinal);
         Assert.True(start >= 0, $"Expected method declaration '{declaration}'.");
-        int next = source.IndexOf("\n    private ", start + declaration.Length, StringComparison.Ordinal);
-        if (next < 0)
+        int next = source.Length;
+        foreach (string boundary in new[] { "\n    private ", "\n    public ", "\n    protected ", "\n    internal " })
         {
-            next = source.IndexOf("\n    public ", start + declaration.Length, StringComparison.Ordinal);
+            int found = source.IndexOf(boundary, start + declaration.Length, StringComparison.Ordinal);
+            if (found >= 0) next = Math.Min(next, found);
         }
-        return next < 0 ? source[start..] : source[start..next];
+        return source[start..next];
     }
 
     [Fact]
@@ -626,33 +520,16 @@ public sealed class Level100AudioCatalogTests
     {
         const float retailSoundOption = 0.8f;
         const float retailMusicOption = 0.9f;
-        string audio = ReadGodotSource("Level100Audio.cs")
-            .Replace("\r\n", "\n", StringComparison.Ordinal);
-
-        Assert.Contains(
-            $"RetailSoundOptionValue = {retailSoundOption:0.0}f",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            $"RetailMusicOptionValue = {retailMusicOption:0.0}f",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_soundMasterVolume =\n        " +
-            "Level100AudioCatalog.ToRetailSoundMasterVolume(RetailSoundOptionValue)",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "private readonly RetailMusicPolicy _musicPolicy = new();",
-            audio,
-            StringComparison.Ordinal);
-
-        Assert.Equal(
-            retailSoundOption,
-            Level100AudioCatalog.ToRetailSoundMasterVolume(retailSoundOption));
-        Assert.Equal(
-            114,
-            Level100AudioCatalog.ToRetailMusicSetVolume(retailMusicOption));
+        string audio = ReadAudioSource("level100_audio.gd");
+        string music = ReadAudioSource("music_policy.gd");
+        Assert.Contains($"SOUND_OPTION_WORD: int = 0x{BitConverter.SingleToUInt32Bits(retailSoundOption):x8}", audio, StringComparison.Ordinal);
+        Assert.Contains("_sound_master: float = F32.read_word(SOUND_OPTION_WORD)", audio, StringComparison.Ordinal);
+        Assert.Contains($"AUTHORED_DEFAULT_VOLUME_WORD: int = 0x{BitConverter.SingleToUInt32Bits(retailMusicOption):x8}", music, StringComparison.Ordinal);
+        AssertOccursInOrder(GdMethodBody(music, "_init"),
+            "_configured_volume = F32.read_word(AUTHORED_DEFAULT_VOLUME_WORD)",
+            "_set_volume = Audio.round_volume(_configured_volume)");
+        Assert.Equal(retailSoundOption, Level100AudioCatalog.ToRetailSoundMasterVolume(retailSoundOption));
+        Assert.Equal(114, Level100AudioCatalog.ToRetailMusicSetVolume(retailMusicOption));
         var policy = new RetailMusicPolicy();
         Assert.Equal(retailMusicOption, policy.ConfiguredVolume);
         Assert.Equal(114, policy.SetVolume);
@@ -661,29 +538,19 @@ public sealed class Level100AudioCatalogTests
     [Fact]
     public void SoundOptionChange_StoresTheDirectMasterAndReappliesTheMix()
     {
-        string setter = MethodBody(
-            ReadGodotSource("Level100Audio.cs"),
-            "public void SetMasterSoundOption(float optionValue)");
-
-        AssertOccursInOrder(
-            setter,
-            "_soundMasterVolume = " +
-            "Level100AudioCatalog.ToRetailSoundMasterVolume(optionValue);",
-            "ApplyMixVolumes();");
+        string setter = GdMethodBody(ReadAudioSource("level100_audio.gd"), "set_master_sound_option");
+        AssertOccursInOrder(setter,
+            "Catalog.to_retail_sound_master_volume(value)", "if not admitted.ok:", "return admitted",
+            "_sound_master = admitted.value", "_apply_mix()");
     }
 
     [Fact]
     public void MusicOptionChange_HandsTheRawFloatToTheSharedPolicy()
     {
-        string setter = MethodBody(
-            ReadGodotSource("Level100Audio.cs"),
-            "public void SetMusicOption(float optionValue)");
-
-        Assert.Contains(
-            "_musicPolicy.SetConfiguredVolume(optionValue);",
-            setter,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("ToRetailMusicSetVolume", setter, StringComparison.Ordinal);
+        string setter = GdMethodBody(ReadAudioSource("level100_audio.gd"), "set_music_option");
+        Assert.Contains("_music_policy.set_configured_volume(value)", setter, StringComparison.Ordinal);
+        Assert.DoesNotContain("round_volume", setter, StringComparison.Ordinal);
+        Assert.DoesNotContain("127", setter, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1042,17 +909,16 @@ public sealed class Level100AudioCatalogTests
         Assert.True(reversalComplete);
         Assert.Equal(0f, reversed);
 
-        string audio = ReadGodotSource("Level100Audio.cs");
-        Assert.Contains(
-            "AdvanceAquilaFlightLoopFade(delta);",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains("initialSubVolume: 0f", audio, StringComparison.Ordinal);
-        Assert.Equal(2, CountOccurrences(audio, "FadeOutAquilaFlightLoop();"));
-        Assert.Contains(
-            "ReferenceEquals(player, _aquilaFlightLoop)",
-            audio,
-            StringComparison.Ordinal);
+        string audio = ReadAudioSource("level100_audio.gd");
+        AssertOccursInOrder(GdMethodBody(audio, "advance"),
+            "for key: String in [\"flight\", \"warning\"]", "_advance_fade(key, delta)");
+        AssertOccursInOrder(GdMethodBody(audio, "_fade_in_flight"),
+            "_set_loop(\"flight\", _aquila, \"RetailAquilaInFlightLoop\", spec, true, 0.0)",
+            "_fades.flight.sub = 0.0", "_fades.flight.target = 1.0",
+            "_fades.flight.step = F32.read_word(Catalog.RETAIL_FLIGHT_LOOP_FADE_STEP_WORD)");
+        Assert.Contains("_fade_out_flight()", GdMethodBody(audio, "consume_aquila_flight_events"), StringComparison.Ordinal);
+        Assert.Contains("_fade_out_flight()", GdMethodBody(audio, "play_aquila_transition"), StringComparison.Ordinal);
+        Assert.Contains("_live_loops.get(\"flight\") == player", GdMethodBody(audio, "_update_spatial_attenuation"), StringComparison.Ordinal);
     }
 
     // LAW 2. CSoundManager::GetVolumeForPos,
@@ -1149,65 +1015,123 @@ public sealed class Level100AudioCatalogTests
         Assert.Equal(0.5f, Level100AudioCatalog.RetailPcPitchMultiplier(0.5f));
     }
 
-    // The adapter half of all three laws. Level100Audio.cs is Godot-typed and
-    // cannot be compiled into this project, so it is asserted as source text.
+    // These guards follow production wiring. Actual audio state and values are
+    // compared in the native scene harness; the retained C# catalog above
+    // continues to pin the independent numerical expectations during migration.
     [Fact]
     public void Level100Audio_AppliesTheThreeReleasedLawsAndNotTheInventedOnes()
     {
-        string audio = ReadGodotSource("Level100Audio.cs");
-
-        // Law 1: the linear->dB conversion is gone from the SOUND path. The one
-        // surviving use is the Godot presentation boundary for CMusic's released
-        // integer set volume; no DirectSound device-volume parity is inferred.
-        Assert.Equal(1, CountOccurrences(audio, "Mathf.LinearToDb("));
-        Assert.Contains(
-            "Mathf.LinearToDb(volume / (float)RetailMusicPolicy.FullVolume)",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100AudioCatalog.RetailVolumeDb(",
-            audio,
-            StringComparison.Ordinal);
+        string audio = ReadAudioSource("level100_audio.gd");
+        // Law 1: sample gain uses the released catalog law. Only music crosses
+        // Godot's native linear setter, which preserves the float logarithm.
+        foreach (string method in new[] { "_mixed_db", "_spatial_db" })
+        {
+            string volume = GdMethodBody(audio, method);
+            Assert.Contains("Catalog.retail_volume_db(", volume, StringComparison.Ordinal);
+            Assert.Contains("_sound_master", volume, StringComparison.Ordinal);
+            Assert.DoesNotContain("linear_to_db(", volume, StringComparison.Ordinal);
+            Assert.DoesNotContain("volume_linear", volume, StringComparison.Ordinal);
+        }
+        Assert.Contains("_music.volume_linear = _f32(float(volume) / 127.0)", GdMethodBody(audio, "_set_music_volume"), StringComparison.Ordinal);
         Assert.DoesNotContain("ToRetailOptionMix", audio, StringComparison.Ordinal);
-        Assert.Contains(
-            "_soundMasterVolume",
-            MethodBody(
-                audio,
-                "private float MixedSoundVolumeDb(float baseVolume, bool gameplay, int sourceVolume)"),
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_soundMasterVolume",
-            MethodBody(
-                audio,
-                "private float SpatialVolumeDb("),
-            StringComparison.Ordinal);
 
-        // Law 2: the invented distances are gone, Godot's model is off, and the
-        // released early-out and per-update tracking are present.
-        Assert.DoesNotContain("MaxDistance = 80f", audio, StringComparison.Ordinal);
-        Assert.DoesNotContain("UnitSize = 8f", audio, StringComparison.Ordinal);
-        Assert.Contains(
-            "AttenuationModel = AudioStreamPlayer3D.AttenuationModelEnum.Disabled",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100AudioCatalog.RetailRefusesNonLoopingStart(distanceUnits)",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "UpdateSpatialAttenuation();",
-            audio,
-            StringComparison.Ordinal);
+        // Law 2: the authored player disables Godot attenuation; the owner
+        // applies retail's early refusal and updates tracked player gains.
+        string spatialScene = ReadAudioSource("SpatialVoice.tscn");
+        Assert.Contains("attenuation_model = 3", spatialScene, StringComparison.Ordinal);
+        Assert.Contains("max_distance = 0.0", spatialScene, StringComparison.Ordinal);
+        string spatial = GdMethodBody(audio, "_play_spatial");
+        AssertOccursInOrder(spatial,
+            "player.pitch_scale = _pitch_for(spec)",
+            "Catalog.retail_refuses_non_looping_start(distance)",
+            "player.volume_db = _spatial_db(spec.linear_volume, distance)", "player.play()");
+        Assert.Contains("_update_spatial_attenuation()", GdMethodBody(audio, "advance"), StringComparison.Ordinal);
+        Assert.Contains("Catalog.retail_source_volume_for_distance(distance)", GdMethodBody(audio, "_spatial_db"), StringComparison.Ordinal);
 
-        // Law 3: both producers reach the buffer through the PC clamp, and
-        // neither assigns a raw PitchScale any more.
-        Assert.DoesNotContain(
-            "PitchScale = 1f + (thrusterFraction * 0.25f)",
-            audio,
-            StringComparison.Ordinal);
-        Assert.Equal(
-            2,
-            CountOccurrences(audio, "Level100AudioCatalog.RetailPcPitchMultiplier("));
+        // Law 3: both pitch producers pass through the same PC clamp, including
+        // the variance draw consumed before a distant one-shot is refused.
+        Assert.Contains("Catalog.retail_pc_pitch_multiplier(desired)", GdMethodBody(audio, "_pitch_for"), StringComparison.Ordinal);
+        Assert.Contains("Catalog.retail_pc_pitch_multiplier(_f32(1.0 + _f32(admitted.value * 0.25)))",
+            GdMethodBody(audio, "set_aquila_flight_pitch"), StringComparison.Ordinal);
+        Assert.Contains("player.pitch_scale = _pitch_for(spec)", GdMethodBody(audio, "_set_loop"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NativeAudioSceneOwnsPlayersAndStartsOnlyAfterRuntimeConfiguration()
+    {
+        string bridge = ReadGodotSource("Level100Audio.cs");
+        AssertOccursInOrder(MethodBody(bridge, "public override void _Ready()"),
+            "SetProcess(false)", "if (Engine.IsEditorHint()) return;",
+            "GD.Load<PackedScene>(\"res://Scenes/Audio/Level100Audio.tscn\")",
+            "AddChild(_native)", "Invoke(\"configure\", Callable.From<Node>(ObservePlayback))");
+        foreach (string competingOwner in new[] { "new AudioStreamPlayer", "new RetailMusicPolicy", "new Level100CharacterMessageQueue", "LegacyLevel100AudioReference" })
+            Assert.DoesNotContain(competingOwner, bridge, StringComparison.Ordinal);
+        Assert.Contains("PlaybackRetirement.Observe(flat)", bridge, StringComparison.Ordinal);
+        Assert.Contains("PlaybackRetirement.Observe(spatial)", bridge, StringComparison.Ordinal);
+
+        string scene = ReadAudioSource("Level100Audio.tscn");
+        Assert.Contains("path=\"res://Scenes/Audio/level100_audio.gd\"", scene, StringComparison.Ordinal);
+        foreach (string role in new[] { "Music", "CharacterVoice", "FlightLoop", "WarningLoop", "AirTrainer", "Transport", "RepairPad" })
+            Assert.Contains($"[node name=\"{role}\"", scene, StringComparison.Ordinal);
+        foreach (string player in new[] { "OneShot2D.tscn", "SpatialVoice.tscn" })
+            Assert.Contains("autoplay = false", ReadAudioSource(player), StringComparison.Ordinal);
+        string audio = ReadAudioSource("level100_audio.gd");
+        AssertOccursInOrder(GdMethodBody(audio, "_ready"),
+            "set_process(false)", "if Engine.is_editor_hint():", "return", "_voice.finished.connect");
+        AssertOccursInOrder(GdMethodBody(audio, "configure"),
+            "Engine.is_editor_hint() or not is_node_ready() or _initialized",
+            "if not playback_started.is_valid():", "_validate_authored_recipes()",
+            "_observer = playback_started", "_initialized = true", "set_process(true)");
+        AssertOccursInOrder(GdMethodBody(ReadAudioSource("retail_audio_stream.gd"), "load_stream"),
+            "if Engine.is_editor_hint():", "return _failure(", "FileAccess.get_file_as_bytes(source_path)");
+    }
+
+    [Fact]
+    public void AudioFrameBatchRetainsTheExistingHudAndWorldInterleavings()
+    {
+        string nativeFrame = GdMethodBody(ReadAudioSource("level100_audio.gd"), "consume_frame");
+        AssertOccursInOrder(nativeFrame,
+            "update_aquila_pose(facts.actors)", "set_aquila_warning_state(facts.warning_state)",
+            "_interleave(interleave, 0)", "queue_character_message(message.speaker_id, message.message_id)",
+            "consume_aquila_flight_events(facts.flight_events, facts.simulation_tick, facts.mission_tick)",
+            "consume_weapon_fire_events(facts.weapon_events)", "_interleave(interleave, 1)",
+            "set_aquila_flight_pitch(facts.thruster_fraction)", "_interleave(interleave, 2)",
+            "consume_destruction_events(facts.destruction_events)",
+            "set_gameplay_mix(facts.gameplay_mix)", "set_gameplay_paused(facts.gameplay_paused)");
+        Assert.Equal(3, CountOccurrences(nativeFrame, "_interleave(interleave,"));
+        for (int phase = 0; phase < 3; phase++)
+        {
+            string call = $"_interleave(interleave, {phase})";
+            int start = nativeFrame.IndexOf(call, StringComparison.Ordinal);
+            int next = nativeFrame.IndexOf("\n\tresult =", start + call.Length, StringComparison.Ordinal);
+            string phaseTail = next < 0 ? nativeFrame[start..] : nativeFrame[start..next];
+            AssertOccursInOrder(phaseTail, "if not result.ok:", "return result");
+        }
+
+        string bridge = ReadGodotSource("Level100Audio.cs");
+        string consume = MethodBody(bridge, "public void ConsumeFrame(FrameAdvanceResult frame, Action<int> interleave)");
+        Assert.Equal(1, CountOccurrences(consume, "Native.Call(\"consume_frame\", FrameFacts(frame), callback)"));
+        AssertOccursInOrder(consume, "interleave(phase)", "hostFailure = error", "Native.Call(\"consume_frame\"",
+            "ExceptionDispatchInfo.Capture(hostFailure).Throw()", "Check(result)");
+        string facts = MethodBody(bridge, "private static D FrameFacts(FrameAdvanceResult frame)");
+        Assert.Contains("foreach (Level100MissionEvent value in frame.Level100MissionEvents)", facts, StringComparison.Ordinal);
+        Assert.Contains("foreach (AquilaFlightEvent value in frame.AquilaFlightEvents)", facts, StringComparison.Ordinal);
+        Assert.Contains("foreach (Level100WeaponFireEvent value in frame.Level100WeaponFireEvents)", facts, StringComparison.Ordinal);
+        Assert.Contains("foreach (Level100DestructionEvent value in frame.Level100DestructionEvents)", facts, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderBy", facts, StringComparison.Ordinal);
+        Assert.DoesNotContain("Distinct", facts, StringComparison.Ordinal);
+
+        string game = ReadGodotSource("FirstFlightGame.cs");
+        string frame = MethodBody(game, "private void ConsumeFrameEvents(FrameAdvanceResult result)");
+        Assert.Equal(1, CountOccurrences(frame, "_audio.ConsumeFrame(result,"));
+        AssertOccursInOrder(frame,
+            "case 0:", "ConsumeLevel100MissionEvents(result.Level100MissionEvents)",
+            "case 1:", "_world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents)",
+            "case 2:", "_world.ConsumeLevel100DestructionEvents(");
+        string messages = MethodBody(game, "private void ConsumeLevel100MissionEvents(");
+        AssertOccursInOrder(messages, "_hud.ConsumeMissionEvents(events)", "_smokeAudioQueuedSpeakerIds.Add(message.SpeakerId)",
+            "_smokeAudioQueuedMessageIds.Add(message.MessageId)");
+        Assert.DoesNotContain("_audio.QueueCharacterMessage", messages, StringComparison.Ordinal);
     }
 
     private static int CountOccurrences(string source, string value)

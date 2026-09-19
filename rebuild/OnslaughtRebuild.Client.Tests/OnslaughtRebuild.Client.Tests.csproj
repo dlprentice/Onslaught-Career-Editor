@@ -231,6 +231,12 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100Audio.cs"
              Link="godot-pause-source\Level100Audio.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Audio\*.gd;..\OnslaughtRebuild.Godot\Scenes\Audio\*.tscn"
+             Link="godot-audio-layout-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Client\music_policy.gd"
+             Link="godot-audio-layout-source\music_policy.gd"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\tools\materialize_retail_assets.py"
              Link="godot-pause-source\materialize_retail_assets.py"
              CopyToOutputDirectory="PreserveNewest" />

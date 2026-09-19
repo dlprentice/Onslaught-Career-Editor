@@ -378,6 +378,22 @@ detached results. The Int32-maximum lifetime refusal is source-derived, not
 an executed infinite-loop comparison; all **338 shipped emitter lifetimes**
 were checked and exclude that input. No corpus copy or original write occurs.
 
+Native audio integration passed **4,034 .NET reference checks** and **4,031
+standard-engine checks** in `gdscript-audio-scene-20260919-f/` and
+`gdscript-audio-scene-20260919-g/` under `local-data/test-runs/`.
+They compare 135 RNG observations, all 128 music-gain words, ordered frame
+interleavings and callback aborts, persistent/transient players and cleanup.
+The focused catalog/ownership suite passed **90 tests** in
+`audio-client-20260919-a/`; the two affected pause/particle source guards
+passed separately in `gdscript-audio-guards-bj_mov24/`.
+The supported build and refreshed private scene import passed, followed by
+`audio-smoke-20260919-a/first-flight-smoke.json`: unchanged
+`53c1cc64…096e5e` state hash, 13 ordered message IDs, retry and main-menu
+release, with no runtime errors or shutdown leaks. The .NET editor harness
+passed **67 safety assertions** but retained the known 205-object/RID shutdown
+diagnostics; its strict console gate remains red. These Dummy-audio checks
+establish control/state compatibility, not audible parity or full combat.
+
 The scheduler group additionally passed **454 checks** derived from the committed
 September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
 alongside its existing differential transcripts. The HUD model comparison also

@@ -807,11 +807,15 @@ public sealed class ParticleSetTests
             materializer,
             StringComparison.Ordinal);
 
-        string audioSource = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/Level100Audio.cs"));
+        string audioSource = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-audio-layout-source", "level100_audio.gd"));
+        int audioStart = audioSource.IndexOf("func consume_destruction_events(", StringComparison.Ordinal);
+        Assert.True(audioStart >= 0);
+        int audioEnd = audioSource.IndexOf("\nfunc ", audioStart + 1, StringComparison.Ordinal);
+        Assert.True(audioEnd > audioStart);
         Assert.Contains(
-            "Level100DestructionEffectKind.VulcanImpact => null",
-            audioSource,
+            $"0, {(int)Level100DestructionEffectKind.VulcanImpact}: continue",
+            audioSource[audioStart..audioEnd],
             StringComparison.Ordinal);
     }
 

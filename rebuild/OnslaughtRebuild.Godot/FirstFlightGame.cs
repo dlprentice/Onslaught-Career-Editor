@@ -1430,46 +1430,33 @@ public sealed partial class FirstFlightGame : Node3D
                     _smokeAudioQueuedSpeakerIds.Add(message.SpeakerId);
                     _smokeAudioQueuedMessageIds.Add(message.MessageId);
                 }
-                _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
             }
         }
     }
 
     private void ConsumeFrameEvents(FrameAdvanceResult result)
     {
-        _audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);
-        // BattleEngine.cpp:1763-1815 checks the absolute hull warning first,
-        // then the energy warning, using strict comparisons in retail units.
-        // Core stores both values in thousandths of those units.
-        _audio.SetAquilaWarningState(
-            result.CurrentSnapshot.Hull < 7_000
-                ? AquilaWarningAudioState.HullCritical
-                : result.CurrentSnapshot.Energy < 2_000
-                    ? AquilaWarningAudioState.EnergyLow
-                    : AquilaWarningAudioState.Normal);
-        ConsumeLevel100MissionEvents(result.Level100MissionEvents);
-        _audio.ConsumeAquilaFlightEvents(
-            result.AquilaFlightEvents,
-            result.CurrentSnapshot.Tick,
-            result.CurrentSnapshot.Level100Mission.Tick);
-        _audio.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
-        _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
-        _audio.SetAquilaFlightPitch(
-            result.CurrentSnapshot.JetThrusterPermille / 1_000f);
-        _world.ConsumeLevel100DestructionEvents(
-            result.Level100DestructionEvents,
-            result.CurrentSnapshot.Tick);
-        _audio.ConsumeLevel100DestructionEvents(
-            result.Level100DestructionEvents);
-        Level100MissionSnapshot mission = result.CurrentSnapshot.Level100Mission;
-        _audio.SetGameplayMix(Level100MissionTiming.GameplayMix(
-            mission.Outcome,
-            mission.FailureReason,
-            mission.TerminalTicksRemaining));
-        _audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(
-            mission.Outcome,
-            mission.FailureReason,
-            mission.TerminalTicksRemaining));
+        // The native audio owner receives one ordered Core batch. These fixed
+        // host phases preserve the former world/HUD interleavings exactly.
+        _audio.ConsumeFrame(result, phase =>
+        {
+            switch (phase)
+            {
+                case 0:
+                    ConsumeLevel100MissionEvents(result.Level100MissionEvents);
+                    break;
+                case 1:
+                    _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
+                    break;
+                case 2:
+                    _world.ConsumeLevel100DestructionEvents(
+                        result.Level100DestructionEvents,
+                        result.CurrentSnapshot.Tick);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown native audio host phase {phase}.");
+            }
+        });
     }
 
     private void RunFocusLossHandlerSmokeProbe()

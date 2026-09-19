@@ -141,13 +141,21 @@ public sealed class Level100PauseMenuTests
             1,
             CountOccurrences(game, "FrontendAudioCueRequested?.Invoke(cue);"));
 
-        string stopForExit = ExtractMethod(
+        Assert.Contains(
+            "public void StopForLevelExit(bool playFrontendSelect) => Invoke(\"stop_for_level_exit\", playFrontendSelect);",
             audio,
-            "public void StopForLevelExit(bool playFrontendSelect)");
+            StringComparison.Ordinal);
+        string nativeAudio = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-audio-layout-source", "level100_audio.gd"));
+        int stopStart = nativeAudio.IndexOf("func stop_for_level_exit(", StringComparison.Ordinal);
+        Assert.True(stopStart >= 0);
+        int stopEnd = nativeAudio.IndexOf("\nfunc ", stopStart + 1, StringComparison.Ordinal);
+        Assert.True(stopEnd > stopStart);
+        string stopForExit = nativeAudio[stopStart..stopEnd];
         AssertOccursInOrder(
             stopForExit,
-            "StopLevel100Audio();",
-            "PlayFrontendCue(\"Select\");");
+            "var result: Dictionary = stop_level100_audio()",
+            "return play_frontend_cue(\"Select\") if result.ok and play_frontend_select else result");
 
         string destroy = ExtractMethod(game, "private void DestroyLevel100World()");
         AssertOccursInOrder(

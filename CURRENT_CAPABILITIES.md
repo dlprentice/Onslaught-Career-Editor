@@ -320,7 +320,9 @@ playing audio or acquiring the pointer.
 
 The full GDScript conversion is underway. Startup playback/cache admission,
 pause UI, HUD state/drawing/catalog, frontend session and live camera state now
-run from native scripts and the same production scenes. Numerical, parsing,
+run from native scripts and the same production scenes. Audio playback,
+queues, fades and actor attachments now use an authored native audio scene.
+Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
 focused differential checks. The remaining live simulation, frontend/world
 drawing host and other adapters still require .NET; this is not yet a

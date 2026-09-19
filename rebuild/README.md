@@ -115,7 +115,10 @@ and its overwrite/recovery protections remain separate.
 preserve the existing constants, look/analogue laws and mission timing with
 explicit float32 stores and integer boundaries. Production HUD defaults now
 come from these shared native definitions. Native audio catalog, character queue
-and music policy comparisons also pass; live audio integration is still pending.
+and music policy now drive the production `Scenes/Audio/Level100Audio.tscn`.
+Its native owner handles players, queues, fades and actor attachments. The
+temporary C# adapter transfers one frame batch and preserves the three existing
+HUD/world interleavings, sharing the established playback-retirement owner.
 These preserve existing behavior, including documented gaps, rather than
 establishing that every current C# rule is faithful retail behavior.
 
@@ -355,6 +358,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | GDScript production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. `show_editor_illustration` selects a frozen presentation state without creating a live HUD model. |
 | [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |
+| [Scenes/Audio/Level100Audio.tscn](OnslaughtRebuild.Godot/Scenes/Audio/Level100Audio.tscn) | Seven native audio players, stream recipes and four actor attachment markers. Inspect source routes, looping and attachment structure; editor entry never loads or starts playback. |
 | `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
 | `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
 
@@ -389,6 +393,12 @@ all required recipes before reporting ready. Its three drawing scripts share
 schedule, text reveal and portrait/noise phases. The temporary C# bridge sends
 one detached Core-facts batch per snapshot and one verified catalog at setup;
 there is no per-instrument language bridge or second live HUD state owner.
+The audio scene uses the same reusable `OneShot2D.tscn` and
+`SpatialVoice.tscn` players at runtime. Saved recipes contain paths and
+configuration; loaded streams remain transient. Its faithful setup checks the
+admitted identities. The current character-message handoff still follows voice
+completion plus 0.3 seconds; conversion does not resolve the separate retail
+HUD-reveal completion question or establish audible playback.
 The level graph, options and debriefing are composite Controls: move or resize
 their section in the 2D editor and inspect their drawing/interaction code for
 internal layout. They are not yet individual native controls for every row.
