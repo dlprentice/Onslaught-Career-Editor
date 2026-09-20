@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (native save reload and complete reset-time Goodie composition; device/file acceptance remains bounded)
+Last updated: 2026-09-20 (dedicated RE safe pause; unfinished language-cleanup experiment retained)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -20,7 +20,19 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ### Dedicated RE lane — current continuation
 
-David resumed this dedicated RE task after the September 19 restart checkpoint.
+David requested a safe pause on September 20 after a usage interruption.
+Completed save-reload and startup-reset work is preserved at `9cd3bc1b`.
+The unfinished nonnull language-cleanup experiment stopped at the
+`controller-item-zero-flag` snapshot assertion; it has no completed receipt or
+accepted new pass count. Its unchanged driver, saved inputs/outputs and failure
+log remain in `local-data/test-runs/save-startup-20260919/`, under
+`language-cleanup-run-7x9im6kj/` and `language-cleanup-controls-v1.log`.
+The existing `loader-language-publication.json` records the exact resume point
+and private review owner. On explicit resumption, resolve the observed key-sink
+state versus the oracle using the saved case and original instructions before
+rerunning or publishing findings. No experiment or Ghidra process was running
+at the pause check; the databases were not opened during checkpointing.
+
 Separate tasks own rebuild and companion implementation. The working branch is
 `codex/retail-re-20260919`. Current database and recovery identities remain in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`; use those
