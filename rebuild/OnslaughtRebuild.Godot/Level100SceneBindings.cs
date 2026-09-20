@@ -24,20 +24,8 @@ internal sealed partial class RetailAquilaWalkerAsset
 
 internal sealed partial class Level100WaterAsset
 {
-    public static Level100WaterAsset BindScene(Node3D root, Level100HeightFieldAsset terrain)
-    {
-        var grid = root.GetNode<MeshInstance3D>("RetailCameraRelativeWaterGrid");
-        var shoreline = root.GetNode<MeshInstance3D>("RetailAuthoredShorelineBands");
-        var sunGlint = root.GetNode<MeshInstance3D>("RetailCameraRelativeWaterSunGlint");
-        Vector3 horizontalSun = new(terrain.SunPosition.X, 0f, -terrain.SunPosition.Y);
-        Vector3 direction = horizontalSun.LengthSquared() > 0f
-            ? -horizontalSun.Normalized() : Vector3.Forward;
-        return new Level100WaterAsset(root, grid,
-            (ShaderMaterial)grid.MaterialOverride,
-            (ShaderMaterial)shoreline.MaterialOverride,
-            sunGlint, (ShaderMaterial)sunGlint.MaterialOverride,
-            direction, terrain.WaterRelativeHeight, SurfaceSegmentCount * 4);
-    }
+    public static Level100WaterAsset BindScene(Node3D root, Level100HeightFieldAsset terrain) =>
+        BindNativeScene(root, terrain);
 }
 
 internal sealed partial class Level100StaticWorldAsset

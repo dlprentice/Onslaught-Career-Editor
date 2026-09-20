@@ -377,13 +377,15 @@ public sealed class RetailFrontendScenePathTests
     public void DebriefingDrawUsesWritingChromeAndNoPageChevrons()
     {
         string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string draw = Slice(flow, "private void DrawDebriefing(");
-        string chrome = Slice(flow, "private void DrawDebriefingWritingChrome(");
-        string loads = Slice(flow, "private void LoadTextures(");
-        string debriefingLoads = loads[
-            loads.IndexOf("_debriefingMetalRing", StringComparison.Ordinal)..
-            loads.IndexOf("_loadingScreen", StringComparison.Ordinal)];
+        string sourceRoot = Path.Combine(AppContext.BaseDirectory, "godot-debriefing-source");
+        string reference = File.ReadAllText(Path.Combine(sourceRoot, "DebriefingReference.cs"));
+        string scene = File.ReadAllText(Path.Combine(sourceRoot, "Debriefing.tscn"));
+        string presenter = File.ReadAllText(Path.Combine(sourceRoot, "debriefing_presentation.gd"));
+        string draw = Slice(reference, "private void DrawDebriefing(");
+        string chrome = Slice(reference, "private void DrawDebriefingWritingChrome(");
+        string debriefingLoads = Slice(reference, "private void LoadTextures(");
 
+        Assert.DoesNotContain("private void DrawDebriefing(", flow, StringComparison.Ordinal);
         Assert.Contains("DrawDebriefingWritingChrome();", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("DrawBriefingStage", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("DrawPageChevrons", draw, StringComparison.Ordinal);
@@ -391,7 +393,7 @@ public sealed class RetailFrontendScenePathTests
         Assert.Contains("index < 4", chrome, StringComparison.Ordinal);
         Assert.Contains(
             "RetailColor(0xfeffffff)",
-            flow,
+            reference,
             StringComparison.Ordinal);
         Assert.Equal(
             2,
@@ -405,6 +407,22 @@ public sealed class RetailFrontendScenePathTests
             "CuratedAyaTextureLoader.Compression.Rgba8",
             debriefingLoads,
             StringComparison.Ordinal);
+        Assert.Contains("unmeasured score/time", reference, StringComparison.Ordinal);
+        Assert.Contains("entry/exit interpolation", reference, StringComparison.Ordinal);
+        Assert.Contains("delayed grade glint", reference, StringComparison.Ordinal);
+        Assert.Contains("_modulate2x", presenter, StringComparison.Ordinal);
+        Assert.Contains("Math.Min(255u, (channel * 255u) >> 7) / 255f", reference, StringComparison.Ordinal);
+        Assert.DoesNotContain("Chevrons", scene, StringComparison.Ordinal);
+        Assert.DoesNotContain("BriefingStage", scene, StringComparison.Ordinal);
+        for (int index = 0; index < 4; index++)
+            Assert.Contains($"[node name=\"Tile{index}\" type=\"TextureRect\" parent=\"Writing\"]", scene, StringComparison.Ordinal);
+        Assert.Equal(2, scene.Split("self_modulate = Color(1, 1, 1, 0.9960784316062927)", StringSplitOptions.None).Length - 1);
+        foreach (string name in new[] { "MetalRing", "GradeA", "GradeB", "GradeC", "GradeD", "GradeE", "GradeS" })
+        {
+            string recipe = File.ReadAllText(Path.Combine(sourceRoot, $"Debriefing{name}.tres"));
+            Assert.Contains("compression = 1", recipe, StringComparison.Ordinal);
+            Assert.DoesNotContain("compression = 2", recipe, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

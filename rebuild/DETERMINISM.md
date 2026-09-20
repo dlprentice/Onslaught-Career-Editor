@@ -282,6 +282,23 @@ Ground and gradient conversion retain checked widths, signed floor division
 and away-from-zero rounding. LOD complexity retains integer midpoint division
 and binary32 stores. The module has no filesystem or scene owner.
 
+`Scenes/World/height_field.gd` owns production renderer smoothing, tile selection,
+stitching, the FNV64 signature and mesh generation. Its y/x traversal explicitly
+transposes the sampler's x-major complexity batch on admission. All emitted
+vertex, UV, UV2 and index words compare against the retained C# renderer;
+lazy caching reuses immutable tile geometry without skipping camera updates or
+changing LOD decisions. The existing ArrayMesh is mutated in place and survives
+release of the renderer when a scene still owns it.
+
+The shared presentation binary32 store uses a single-precision Vector3 component
+on the pinned official engine, with the former packed-array store retained as a
+fallback for double-precision engines. Exact checks cover signed zero,
+subnormals, ties, overflow and NaN payloads. This removes a temporary allocation
+at each arithmetic store without replacing explicit rounding with float64 math.
+Water retains its ordered float32 phases and float remainder behavior, including
+no advance for nonpositive or nonfinite frame deltas. Native camera updates stay
+in the original world presentation order, after terrain appearance.
+
 Core simulation truth must be independent of presentation and environment.
 Core code does not call:
 

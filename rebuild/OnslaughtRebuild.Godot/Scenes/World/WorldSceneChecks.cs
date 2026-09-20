@@ -108,7 +108,14 @@ public sealed partial class WorldSceneChecks : Node
         string withResource = Level100SceneImport.NativeSourceIdentity(root);
         Check(edited != withResource, "Adding a native resource invalidates the private bake.");
         System.IO.File.Move(resource, Path.Combine(root, "Scenes/Shared/renamed.tres"));
-        Check(withResource != Level100SceneImport.NativeSourceIdentity(root), "Native resource path identity participates in the import.");
+        string renamed = Level100SceneImport.NativeSourceIdentity(root);
+        Check(withResource != renamed, "Native resource path identity participates in the import.");
+        string shader = Path.Combine(root, "Scenes/World/water.gdshader");
+        System.IO.File.WriteAllText(shader, "shader_type spatial;\n");
+        string withShader = Level100SceneImport.NativeSourceIdentity(root);
+        Check(renamed != withShader, "External native shader source participates in the import.");
+        System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/water.gdshaderinc"), "float wave = 1.0;\n");
+        Check(withShader != Level100SceneImport.NativeSourceIdentity(root), "External shader includes participate in the import.");
     }
 
     private void Compare(FirstFlightWorldView recipe, FirstFlightWorldView production,

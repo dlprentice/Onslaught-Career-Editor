@@ -212,9 +212,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public override void _Notification(int what)
     {
-        // Reparenting/removing a live world is not a camera reset. Release its
-        // sole native state only when the owning node is actually destroyed.
-        if (what == NotificationPredelete) _cameraState.Dispose();
+        // Reparenting/removing a live world does not reset native presentation
+        // owners. Release them only when the owning node is destroyed.
+        if (what == NotificationPredelete)
+        {
+            _cameraState.Dispose();
+            _level100Terrain?.Dispose();
+        }
     }
 
     public void Initialize(WorldSnapshot snapshot)

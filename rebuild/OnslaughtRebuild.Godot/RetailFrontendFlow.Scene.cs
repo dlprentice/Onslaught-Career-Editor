@@ -8,7 +8,7 @@ namespace OnslaughtRebuild.GodotClient;
 public enum RetailFrontendEditorPage
 {
     ClickToStart, MainMenu, QuitConfirm, CareerName, LevelSelect,
-    MissionBriefing, SelectConfiguration, Loading, Options,
+    MissionBriefing, SelectConfiguration, Loading, Options, Debriefing,
 }
 
 public sealed partial class RetailFrontendFlow
@@ -90,7 +90,7 @@ public sealed partial class RetailFrontendFlow
         _feBackSeconds = 0d;
         _mainTransitionCount = 0;
         _mainTransitionTime = 0;
-        if (_editorPage == RetailFrontendEditorPage.ClickToStart) return;
+        if (_editorPage is RetailFrontendEditorPage.ClickToStart or RetailFrontendEditorPage.Debriefing) return;
         _session.Confirm();
         if (_editorPage == RetailFrontendEditorPage.MainMenu) return;
         if (_editorPage is RetailFrontendEditorPage.QuitConfirm or RetailFrontendEditorPage.Options)
@@ -114,7 +114,10 @@ public sealed partial class RetailFrontendFlow
     {
         base.QueueRedraw();
         if (_stage is null || !_initialized) return;
-        RetailFrontendScreen screen = _session.Screen;
+        // Debriefing's editor fixture is display data, not a manufactured Won
+        // transition. The actual Session remains at its cold click page.
+        RetailFrontendScreen screen = Engine.IsEditorHint() && _editorPage == RetailFrontendEditorPage.Debriefing
+            ? RetailFrontendScreen.Debriefing : _session.Screen;
         foreach (Control page in _stage.GetChildren().OfType<Control>())
         {
             page.Visible = page.Name.ToString() switch
@@ -134,6 +137,7 @@ public sealed partial class RetailFrontendFlow
         }
         UpdateNativeTextures();
         UpdateOptionsFrame();
+        UpdateDebriefingFrame();
         foreach (RetailFrontendPart part in _sceneParts.Values)
             part.QueueRedraw();
         UpdateTitleLogoReflection();
@@ -197,7 +201,6 @@ public sealed partial class RetailFrontendFlow
                 case "Loading": DrawLoading(); break;
                 case "Quit": DrawQuitConfirm(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
-                case "Debriefing": DrawDebriefing(); break;
                 default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");
             }
         }

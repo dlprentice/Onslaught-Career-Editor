@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="4"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
 
 [node name="Frontend" type="Control"]
 layout_mode = 3
@@ -690,20 +691,5 @@ SourceRect = Rect2(78, 423, 485, 25)
 [node name="Options" parent="Stage" instance=ExtResource("options_scene")]
 visible = false
 
-[node name="Debriefing" type="Control" parent="Stage"]
+[node name="Debriefing" parent="Stage" instance=ExtResource("debriefing_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="MissionReport" type="Control" parent="Stage/Debriefing"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Debriefing.Content"
-SourceRect = Rect2(0, 0, 640, 480)

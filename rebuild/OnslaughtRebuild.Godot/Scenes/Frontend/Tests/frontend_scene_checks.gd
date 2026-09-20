@@ -35,11 +35,14 @@ func run_checks() -> void:
     if Engine.is_editor_hint():
         if not require(menu.visible and not view.is_processing() and not view.is_processing_input(), "Editor must show frozen Main Menu without processing"): return
         if not require(not view.has_node("RetailMouseCursor"), "Editor must not install the game cursor"): return
-        var pages: Array[String] = ["ClickToStart", "MainMenu", "QuitConfirm", "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration", "Loading", "Options"]
+        var pages: Array[String] = ["ClickToStart", "MainMenu", "QuitConfirm", "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration", "Loading", "Options", "Debriefing"]
         for page in range(pages.size()):
             view.set("EditorPage", page)
             if not require(stage.get_node(pages[page]).visible, "Editor page selector did not expose its actual page"): return
             if not require(not view.is_processing() and not view.is_processing_input(), "Changing editor page started processing"): return
+            if pages[page] == "Debriefing":
+                var report: Control = stage.get_node("Debriefing")
+                if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return
         view.set("EditorPage", 1)
     else:
         if not require(view.get_node("Stage/ClickToStart").visible and not menu.visible, "Runtime frontend must start on its real click page"): return

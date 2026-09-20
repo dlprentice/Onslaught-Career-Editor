@@ -314,8 +314,9 @@ filesystem, clock, process, network, or GPU dependencies.
 `net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
 selectable Controls and resources before Play. Main-menu rows and native image
 controls expose their layout. Options now has four native pages with selectable
-rows, binding controls, sliders and dropdowns; the level graph and debriefing
-remain custom composite Controls with their C# drawing code available. Explicit
+rows, binding controls, sliders and dropdowns. Debriefing exposes native report
+labels, values, grade artwork and header; the level graph remains a composite
+Control with its drawing code available. Explicit
 editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
 
@@ -324,11 +325,16 @@ pause UI, HUD state/drawing/catalog, frontend session and live camera state now
 run from native scripts and the same production scenes. Audio playback,
 queues, fades and actor attachments now use an authored native audio scene.
 Options state/actions, the shared frontend font/FEBack resources, actor/projectile
-presentation and the Sun now have native production owners as well. Exact
+presentation, debriefing, terrain LOD/mesh generation, water and the Sun now have
+native production owners as well. Exact
 component comparisons cover callback interruption/reentry, font pixels,
 transforms/trails and terrain-only Sun occlusion; unresolved retail behavior
 remains unresolved. Public projectile/muzzle and Sun scenes show the same
 production texture recipes before Play, with private pixels excluded from saves.
+Water adds three inspectable mesh components and external production shaders.
+Its complete isolated-render comparison matches the retained component's RGBA
+bytes; terrain comparisons match every word across twelve mesh updates. These
+are migration checks, not new claims of pristine retail pixel parity.
 Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
 focused differential checks. The remaining live simulation, frontend/world

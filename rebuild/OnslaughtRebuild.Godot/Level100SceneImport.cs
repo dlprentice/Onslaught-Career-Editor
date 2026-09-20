@@ -101,7 +101,7 @@ public sealed partial class Level100SceneImport : Node
         {
             string root = Path.Combine(projectDirectory, directory);
             foreach (string path in System.IO.Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-                .Where(path => Path.GetExtension(path) is ".gd" or ".tscn" or ".tres")
+                .Where(path => Path.GetExtension(path) is ".gd" or ".gdshader" or ".gdshaderinc" or ".tscn" or ".tres")
                 .OrderBy(path => Path.GetRelativePath(projectDirectory, path).Replace('\\', '/'), StringComparer.Ordinal))
             {
                 string relative = Path.GetRelativePath(projectDirectory, path).Replace('\\', '/');

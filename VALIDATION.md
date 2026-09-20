@@ -472,6 +472,98 @@ combat completion. All these directories are under this worktree's
 isolated credentials/displays and establish no physical-input, audible-playback
 or normal GPU-performance claim.
 
+The native terrain renderer passed **801 assertions** across **3,183,306 exact
+mesh words**, 464 height samples, all 49 stitch-index patterns and twelve full
+camera/mesh updates. The retained C# exporter passed **49,206 assertions**.
+The first comparison found a transposed complexity-grid lookup; the production
+admission now converts x-major samples to the renderer's y/x order, with no
+expected-data change. Smoothing words, ordered tile batches, FNV64 signatures,
+material retention, supplied mesh identity and resource release all match.
+The unchanged reference is in `height-field-oracle-y2kb9hoj/`; the final cached
+implementation report is `heightfield-cache-1pvzrig6/native.json` under
+`local-data/test-runs/`. Both logs are clean.
+
+The allocation-free presentation float store passed **299,263 raw-word
+comparisons** against the former packed-array store, including ties, signed zero,
+subnormals, overflow and NaN payloads (`heightfield-fast-float-2szsnnpi/float.log`).
+The same bounded twelve-update headless probe measured about 36–40 ms per moving
+update before lazy geometry caching and 10–11 ms afterwards. This is a local CPU
+observation, not a normal GPU or whole-game performance result. After the shared
+store change, Options passed 1,282 scene assertions and its 5,204 pure comparisons,
+HUD passed 174 scene assertions, and Sun passed 8,081 comparisons. Pause passed
+115 assertions; its deliberate malformed gzip cases still emit engine diagnostics.
+Receipts are `float-scene-regressions-em7nufka/`, `gdscript-float-options-a/` and
+`sun-fast-float-yvhqwcse/` under `local-data/test-runs/`.
+
+The native Water scene passed **2,702 checks** against the retained C# component,
+including exact mesh arrays, decoded bytes from all five textures and **1,173
+ordered phase/placement/rebind operations**. The oracle reads surface-format bits
+through the native Int64 method; the typed C# enum had discarded bit 35 and is
+not an adequate reference for that field. Public-save/private-resource round trips
+and failed-input retries also pass. The isolated llvmpipe check passed **2,631
+assertions** with **zero differing RGBA pixels** in a 640×360 component image.
+It establishes preservation of the current water renderer, not retail pixel parity.
+The editor check passed **353 assertions** with the existing 166-object/RID
+shutdown diagnostics; automatic preview creates the real three meshes without a
+live animation/input owner. Receipts are `gdscript-water-reference-x7culyur/`,
+`gdscript-water-native-n62n9z5g/`, `gdscript-water-capture-2k3b287p/` and
+`gdscript-water-editor-0lllj7_s/`. The first integrated world check exposed missing
+child overrides when Water was nested inside StaticWorld. Water now marks its
+private instance editable in the owning parent; two-level save tests compare exact
+stored transforms, meshes and materials before binding. The production instance
+stays shared with its public template. Fresh import and the unchanged world gate
+then passed **24,134 assertions**, including the new shader identity checks,
+before-play geometry/materials, selected poses, retry isolation and unchanged
+simulation hashes (`gdscript-terrain-water-world-b/`), with clean logs.
+The related Client terrain/water selection passed
+**6 tests**, with the existing full-gameplay retail-water pixel test **skipped**
+without a qualifying capture; its thresholds are unchanged
+(`terrain-water-client-q1zscu55/results/terrain-water.trx`).
+
+The native Debriefing scene passed **2,059 runtime assertions** and **2,060 editor
+assertions**; the frontend editor selector exercises all ten pages, including
+Debriefing's frozen resource without manufacturing a Won session. The actual
+host/render comparison passed **274 checks**, with ten complete 640×480 pages
+byte-identical to the retained C# renderer. Cases include all outcome labels,
+objective-row combinations, grades A–E/S, raw UTF-16 fallback and FEBack times.
+The ring uses an authored Node2D origin to preserve the former fractional draw
+rectangle without changing GUI snapping for other pages. Client debriefing and
+frontend-path tests passed **23/23**, with zero skips. Receipts are
+`debriefing-native-1tdcg2z7/`, `debriefing-editor-u_g_ebv4/`,
+`debriefing-frontend-editor-zeeht8o1/`, `debriefing-render-8f3zk4v1/` and
+`debriefing-client-h1wgdut_/` under `local-data/test-runs/`. Runtime logs are clean;
+both editor harnesses finish their checks and filesystem scans, then report 205
+ObjectDB instances and Canvas/viewport/text RID diagnostics during teardown.
+This does not claim a clean editor-harness shutdown, retail pixels, completed
+combat or resolution of the earlier Options Image/RID gap.
+
+The integrated presentation passed the supported .NET build with zero warnings
+or errors (`gdscript-terrain-water-build-d.log`) and the headless application
+smoke (`gdscript-terrain-water-smoke-a/`). The smoke retains **2,148 steps**, all
+13 ordered message deliveries/queues, fresh retry, world release and MainMenu.
+Its state hash remains `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`;
+the recorded tape is byte-identical to the preceding milestone. The two actual
+headless replays in `terrain-water-replay-99w1vqgo/replay.log` verify both embedded
+expectations and retain trace hash
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`, with no divergence.
+Only the smoke's wall-clock audio observation advanced further: seven queued
+voices had started instead of four. Both remain the required ordered prefix;
+`FirstFlightGame.SampleSmokeVoiceProgress` and its report explicitly distinguish
+audio-mixer progress from fixed-fps simulation. Mission state remains **Running /
+None**, so this is not full-combat acceptance or an audible-playback result.
+
+Run `res://Scenes/Shared/retail_float32_checks.gd` with the standard engine's
+`--headless --script` options for the focused binary32 store check. The .NET
+`Scenes/World/HeightFieldSceneChecks.tscn` exports an object-free fixture and JSON
+report to two distinct fresh absolute paths under this worktree's `local-data/`,
+passed after `--`. The standard `height_field_checks.gd` consumes that fixture and
+a fresh report path. `WaterSceneChecks.tscn` and `water_scene_checks.gd` use the
+same explicit fixture/report convention. These checks never choose a display.
+Debriefing's standard `Scenes/Frontend/Tests/debriefing_scene_checks.gd` also runs
+under `--editor`. The .NET `DebriefingSceneChecks.tscn -- --skipfmv` checks the
+actual frontend boundary; rendered comparisons require a caller-owned isolated
+display and `--debriefing-render-dir=/absolute/owned/local-data/path`.
+
 Run `res://Scenes/Frontend/Tests/OptionsBridgeChecks.tscn` and
 `res://Scenes/World/EntityBridgeChecks.tscn` using the same supported headless
 launch form as the world check above. Standard Godot accepts

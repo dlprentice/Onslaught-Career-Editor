@@ -1,0 +1,9 @@
+[gd_resource type="Texture2D" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+source_path = "res://Assets/Frontend/Debriefing/ranking-d.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1

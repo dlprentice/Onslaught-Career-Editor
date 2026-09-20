@@ -19,7 +19,7 @@ public sealed partial class SunSceneChecks : Node
     public override async void _Ready()
     {
         LegacyLevel100SunReference? sun = null;
-        Level100HeightFieldAsset? terrain = null;
+        LegacyLevel100HeightFieldReference? terrain = null;
         try
         {
             string[] args = OS.GetCmdlineUserArgs();
@@ -32,7 +32,7 @@ public sealed partial class SunSceneChecks : Node
             string terrainPath = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"),
                 "..", "OnslaughtRebuild.Core", "Assets", "Level100", "level100-heightfield.hfld.bin"));
             D before = InputHashes(terrainPath);
-            terrain = Level100HeightFieldAsset.Load();
+            terrain = LegacyLevel100HeightFieldReference.Load();
             sun = LegacyLevel100SunReference.Create(terrain);
             AddChild(sun.Root);
             Vector3 offset = (Vector3)typeof(LegacyLevel100SunReference).GetField("_offsetFromCamera", PrivateInstance)!.GetValue(sun)!;

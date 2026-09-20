@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Transitional test oracle copied from the pre-native Level100SunAsset owner;
-// only its class/constructor name changed. Never consumed by production scenes.
+// Its class/constructor and preserved terrain dependency names changed; the
+// original arithmetic remains intact. Never consumed by production scenes.
 
 using Godot;
 using OnslaughtRebuild.Client;
@@ -112,12 +113,12 @@ internal sealed class LegacyLevel100SunReference
     /// <summary>Ray-march step for the occlusion probe, in metres.</summary>
     private const float LineOfSightStepMetres = 2f;
 
-    private readonly Level100HeightFieldAsset _terrain;
+    private readonly LegacyLevel100HeightFieldReference _terrain;
     private readonly Vector3 _offsetFromCamera;
     private readonly Vector3 _directionFromCamera;
 
     private LegacyLevel100SunReference(
-        Level100HeightFieldAsset terrain,
+        LegacyLevel100HeightFieldReference terrain,
         ParticleSpriteLayer layer,
         MeshInstance3D root,
         Vector3 offsetFromCamera)
@@ -145,7 +146,7 @@ internal sealed class LegacyLevel100SunReference
     /// Decodes <c>Sun Sprite</c> out of the shipped particle set and builds the
     /// billboard for it.
     /// </summary>
-    public static LegacyLevel100SunReference Create(Level100HeightFieldAsset terrain, MeshInstance3D? sceneRoot = null)
+    public static LegacyLevel100SunReference Create(LegacyLevel100HeightFieldReference terrain, MeshInstance3D? sceneRoot = null)
     {
         ArgumentNullException.ThrowIfNull(terrain);
 
@@ -321,7 +322,7 @@ internal sealed class LegacyLevel100SunReference
 
     /// <summary>
     /// The engine's <c>(X, Y, Z)</c> into Godot's basis, the same mapping
-    /// <see cref="Level100HeightFieldAsset"/> uses for the light direction.
+    /// <see cref="LegacyLevel100HeightFieldReference"/> uses for the light direction.
     /// </summary>
     private static Vector3 ToGodotDirection(Vector3 beaVector) =>
         new(beaVector.X, -beaVector.Z, -beaVector.Y);

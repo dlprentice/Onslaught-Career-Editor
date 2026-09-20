@@ -246,6 +246,12 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100WaterAsset.cs"
              Link="godot-water-source\Level100WaterAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\World\Water.tscn;..\OnslaughtRebuild.Godot\Scenes\World\water.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_mesh.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_recipe.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_grid.gdshader;..\OnslaughtRebuild.Godot\Scenes\World\water_shoreline.gdshader;..\OnslaughtRebuild.Godot\Scenes\World\water_sun_glint.gdshader"
+             Link="godot-water-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\debriefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\DebriefingReference.cs;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Debriefing.cs"
+             Link="godot-debriefing-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
