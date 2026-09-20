@@ -290,6 +290,15 @@ lazy caching reuses immutable tile geometry without skipping camera updates or
 changing LOD decisions. The existing ArrayMesh is mutated in place and survives
 release of the renderer when a scene still owns it.
 
+`Client/terrain_compositor.gd` admits the existing hierarchy hash before decoding
+and retains Int32 overflow, signed byte weights and arithmetic shifts, UInt32
+blend masks, the Sun+Ambient lighting gradient and reverse pine-shadow order.
+Terrain vertex diffuse remains a separate Sun+AntiSun calculation with explicit
+binary32 stores. It writes the same RGB565 bytes, including the old flat-array
+aliases and partial writes on destination failure. Unsupported texture levels
+are refused before a potentially enormous shifted allocation; valid levels stay
+0 through 4. This is a bounded invalid-input refusal, not a changed LOD decision.
+
 The shared presentation binary32 store uses a single-precision Vector3 component
 on the pinned official engine, with the former packed-array store retained as a
 fallback for double-precision engines. Exact checks cover signed zero,

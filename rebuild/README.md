@@ -183,6 +183,13 @@ The original renderer is retained under `Scenes/World/Tests/` for word-level
 comparisons. Immutable tile geometry is cached lazily; neither cache reuse nor
 Inspector activity changes the terrain law or its admitted source data.
 
+`Client/terrain_compositor.gd` carries the pinned hierarchy decoder, signed
+material blending, lighting gradient, ordered pine shadows and RGB565 tile
+composition. Its exact byte checks cover the complete root texture and selected
+higher-detail tiles without changing the existing hashes. The cache/material
+consumer is being converted separately; passing this component does not establish
+full-world rendering or performance parity.
+
 `Scenes/World/Water.tscn` exposes the production grid, shoreline bands and Sun
 glint as three named mesh nodes with external shader files and texture recipes.
 Opening the scene admits the same private sources and displays static geometry

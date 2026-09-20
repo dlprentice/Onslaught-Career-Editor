@@ -483,6 +483,24 @@ The unchanged reference is in `height-field-oracle-y2kb9hoj/`; the final cached
 implementation report is `heightfield-cache-1pvzrig6/native.json` under
 `local-data/test-runs/`. Both logs are clean.
 
+The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
+compared bytes** against the unchanged C# exporter, which passed **43 checks**.
+All 4,096 level-zero tiles reproduce the existing 524,288-byte root and its
+unchanged hash. Thirty-two higher-level blocks, five pine-order fixtures,
+902 blends, 162 lighting cases, admission and partial-write boundaries also
+match. Empty input initially exposed Godot's refusal of `HashingContext.update`
+with zero bytes; finishing a started empty hash preserves the original identity
+refusal without that engine error. The owner releases after the suspended
+comparison coroutine unwinds one process frame later; no forced collection or
+weakened release assertion is used. Final logs are clean in
+`terrain-compositor-native-fixed-1jn1mha8/`, against
+`terrain-compositor-reference-lix2e76b/reference.variant`, under
+`local-data/test-runs/`. The reference scene is
+`Scenes/World/TerrainCompositorSceneChecks.tscn`; its two user arguments are fresh
+owned fixture and JSON report paths. Standard Godot runs
+`Scenes/World/terrain_compositor_checks.gd` with that fixture and a fresh report.
+These checks do not yet establish the cache/material integration or performance.
+
 The allocation-free presentation float store passed **299,263 raw-word
 comparisons** against the former packed-array store, including ties, signed zero,
 subnormals, overflow and NaN payloads (`heightfield-fast-float-2szsnnpi/float.log`).
