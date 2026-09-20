@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-12 (native aircraft cache population measured; live render/camera context and firing integration remain open).
+Last updated: 2026-09-20 (save/settings/startup RE rechecked; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -23,6 +23,23 @@ The active preservation app is the Godot companion; retained WinUI source suppli
 migration material and AppCore owns shared file correctness. Full retail RE,
 the 1:1 Godot rebuild and the Godot toolkit companion remain
 coequal outcomes; the unshipped CLI and focused tools are support surfaces.
+
+## Dedicated retail RE — save, settings and startup
+
+The [current compatibility recheck](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+executes selected unchanged retail bodies with preserved inputs and explicit
+OS/heap/device boundaries. It establishes startup read versus write filenames,
+campaign reset after settings load, menu-load forwarding to the next startup,
+binding/preset serialization effects and the active language field written by the serializer.
+
+The September 20 language extension passes 19 parser/cached-read/copy cases,
+then 17 lookup-composition cases. All 2,571 IDs in each of six preserved language
+files resolve through original text/audio-name/adjacent lookup code; pool bounds,
+termination and offline decoding pass. Actual file Open and allocation remain
+intercepted, and lookup imports captured state explicitly. These results do not
+establish full startup, audio playback, localized rendering, durable save round
+trips or reconstruction acceptance. Audio dependencies and reset/serialization
+composition remain the next focused work. See [executed checks](VALIDATION.md#original-language-file-parsing--september-20).
 
 ## Godot Save Lab — first workflow
 

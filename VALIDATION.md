@@ -1834,12 +1834,86 @@ The subsequent static dependency inspection reads complete `CText__Init`
 `f208b0fcea5393790160ea84b43bd07d441566d7f264b2ea77251b3badb499ca`,
 and the actual fatal chain `0042c750 → 0042cfa0 → ExitProcess` plus cached-read,
 size, ctor/dtor and close helpers. Selected disassembly is retained as
-`language-<address>.asm` in this same owner. No initializer, file API or fatal
-path was executed. `language-file-inputs.json` pins six bounded preserved-file
-reads and their version-3/count-2571 headers. These are input observations for
-the next experiment, not extra passing runtime cases. The
-[initializer contract](reverse-engineering/binary-analysis/functions/text.cpp/CText__Init.md)
-corrects the old open-failure and loaded-state interpretation.
+`language-<address>.asm` in this same owner. That static phase did not execute
+the initializer or fatal chain. `language-file-inputs.json` pins six bounded
+preserved-file reads and their version-3/count-2571 headers. The following
+experiments supply the later executed evidence.
+
+### Original language file parsing — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_file_control.py`
+passed **19 original-code cases**, retaining ten unchanged function bodies
+(1,982 bytes) plus Init's one alignment byte and 20-byte switch table.
+Accepted stem `local-data/test-runs/save-startup-20260919/language-file-run-8clnw9rt/file`;
+receipt SHA-256 `a3bebcc872a6df436cbbdd01351ea4ab0599c55fa48954ef8d48f1ba46d3aaec`;
+ELF SHA-256 `50afc2b7a9a9d7ec9755dfd2b2c88f3b8bb73e99622e016f73b06a359626a57e`.
+`language-file-controls-v2.log` records the passing invocation. The first
+build failed because output overlapped TLS/arena; no original code ran.
+`language-file-run-s2cqn14x/` and `language-file-controls-v1.log` retain
+that failure. The accepted output base is `0x0a000000`.
+
+Original Init, ctor/dtor, file-size/cached Read/Close and SetLanguage/null
+cleanup/CopyFrom execute against the six admitted files and owned derivatives.
+Open supplies the byte-backed final-prefetch object shape; formatting,
+allocation/free and GetFileSize/CloseHandle are explicit hooks. No refill,
+decompression, real file access or heap failure is exercised.
+
+The 19 cases cover six language files, American override of a French selector,
+invalid Init selector/English fallback, 16-byte and empty cache reads,
+unknown versions with/without the high bit, v1/v2/legacy header derivatives,
+two header guard skips, Open failure and a CloseHandle error. Full selected
+state, allocations/guards and complete input are compared. Copied bytes and
+the logical count at Close measure the short reads; Read's EAX is not separately
+captured. Short/empty cases use declared zero allocation fill, so loaded state
+does not establish usable text. Version derivatives establish arithmetic only;
+high-bit v2/v3 auxiliary parsing remains outside this cohort.
+
+The Open-failure child stops at the fatal call with exit 17; it does not
+manufacture cleanup/unwind. Normal Init restores the valid `FS:[0]` sentinel
+provided through i386 TLS; stack and callee-saved registers are checked.
+The invalid Init selector is 65535 but the later SetLanguage cache slot is zero.
+Actual SetLanguage bounds safety is not established. A forbidden-call negative
+ends with SIGSYS; original specimen/resources remain unchanged.
+Independent read-only review reproduced embedded bytes and saved state
+without rerunning the experiment.
+
+### Original language lookups from parser output — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_lookup_control.py`
+passed **17 cases**, with three unchanged lookup bodies (420 bytes).
+Accepted stem `local-data/test-runs/save-startup-20260919/language-lookup-run-ekd5wuja/lookup`;
+receipt SHA-256 `13dff5555778153c3971046d8771c99ddd66c6114332df6dcc9c8c83e102db7b`;
+ELF SHA-256 `208d8bef42c1c8ba62c70e716c714690aaff9784579d4cd67c7dea53b396a079`.
+`language-lookup-controls-v1.log`, immutable driver/assembly, commands and
+all inputs/outputs preserve the accepted run.
+
+The experiment imports exact active headers and allocation snapshots from the
+previous parser/copy outputs, with producer receipt/output hashes checked.
+For each of six resources, all 2,571 record IDs and one absent ID pass through
+original text, audio and After lookup. After uses +1 for each nonfinal record,
+zero for the final/missing controls. Eleven owned derivatives test duplicate-first
+selection, negative/excess/wrapped displacement, cleared loaded state,
+v1/unknown/negative versions, nonpositive counts and unchecked pool offsets.
+There are 46,338 native calls; this is a call count, not extra independent
+acceptance cases or a parity percentage.
+
+The entire imported header/arena/input remains unchanged. Results match ordered
+pointer selection; real-file pointers are also checked offline against declared
+pools, termination, UTF-16LE and ASCII decoding. All six files have unique IDs.
+Adverse returned pointers are compared without dereferencing. The ordinary
+logger is intercepted; legacy MultiByteToWideChar is not exercised.
+Stack/register guards and forbidden-syscall negative pass. The logger records
+its first three arguments; After's fourth diagnostic argument (requested offset)
+is not captured. Independent read-only review checked all returned pointers,
+saved memory, embedded bytes and decoded rows without rerunning native code.
+
+This establishes bounded parser-output/lookup compatibility, not continuous
+startup, actual audio assets/playback, glyph rendering or save publication.
+The separate four-probe decoder check reproduces missing offline bounds and
+termination validation using only in-memory derivatives; private receipt
+`language-lookup-consumer-probe.json` SHA-256
+`39b6ba91c73b1b164efafa3cb31733074361ea8a0a7b86c122b32241a3c02bf3`.
+No production decoder/rebuild/companion source is changed by these contracts.
 
 ### Scheduled-event constructor boundary — September 19
 

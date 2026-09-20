@@ -157,16 +157,58 @@ inspection of `CText__Init` confirms that it sets the language field before
 opening or parsing the file, and that its American override/invalid-selector
 fallback can select a different filename without changing that field. Thus
 neither the input mirror nor header language proves which text actually loaded.
-Real language-file initialization and localized menu acceptance remain open.
+The following controls now establish bounded real-file parsing and lookup;
+localized menu acceptance remains open.
 
-The subsequent [initializer inspection](functions/text.cpp/CText__Init.md)
-also corrects the failure boundary: an Open failure reaches the fatal helper
-before the apparent cleanup tail. Its call chain ends at the confirmed
-`ExitProcess(1)` import. Successful Open does not prove a complete read: Init
-ignores the actual copied count, and an unknown tagged format has a path that
-sets the loaded flag after a returning diagnostic/Close. Those are fresh static
-findings, not executed failure results. Six preserved language files have been
-read and identified for the next controlled original-parser experiment.
+## Original language files, lookup and failure handling
+
+`language_file_control.py` passes 19 cases through ten unchanged bodies:
+original Init, text/file constructors, file destructor/size/cached Read/Close,
+and SetLanguage/null cleanup/CopyFrom. All six preserved language inputs are
+identified in `language-file-inputs.json` and parsed from their actual bytes.
+Accepted stem `language-file-run-8clnw9rt/file`; receipt
+`a3bebcc872a6df436cbbdd01351ea4ab0599c55fa48954ef8d48f1ba46d3aaec`.
+
+Open supplies the explicitly measured final-prefetch file-object shape;
+allocation/free, formatting, GetFileSize and CloseHandle results are
+intercepted. The original cached reader consumes actual admitted bytes.
+Init does not check its returned count: under the declared zero allocation
+fill, a 16-byte or empty cached read still reaches loaded state. Unknown
+tagged versions also set that flag after an ordinary returning diagnostic,
+without replacing prior version/count/pool fields. Neither result is
+successful localization. Open failure stops at the real fatal-call site;
+the downstream `ExitProcess(1)` chain remains static evidence.
+
+American override and invalid-selector English fallback preserve the original
+header's supplied language value. The latter test passes 65535 to Init and
+zero to SetLanguage; no out-of-range SetLanguage safety is implied. Legacy/v1/v2
+header derivatives establish arithmetic, not valid older resources.
+
+`language_lookup_control.py` imports the exact original parser/active-copy
+header and allocation snapshots into three unchanged lookup bodies. Accepted
+stem `language-lookup-run-ekd5wuja/lookup`; receipt
+`13dff5555778153c3971046d8771c99ddd66c6114332df6dcc9c8c83e102db7b`.
+Seventeen cases pass: six complete resource queries and eleven owned controls.
+Every one of each file's 2,571 IDs, plus a missing ID, goes through text,
+audio-name and adjacent-string selection. All six have unique IDs; expected
+pointers, bounded terminated UTF-16 text and ASCII audio names pass. This
+is an explicit memory-image handoff, not continuous game execution.
+
+The recheck resolves three important selection rules:
+
+- Text/audio searches use the first matching physical record. A first
+  duplicate with audio offset `-1` returns null even if the next duplicate
+  has a name. The six original files contain no such duplicates.
+- “After” means a displacement in physical records, not another matching ID.
+  Its fixed 12-byte stride also differs from ordinary v1 text lookup.
+- Missing text returns the pool base after a diagnostic; missing audio
+  returns null. After's unsupported-version diagnostic returns null, despite
+  its fatal wording. The old note overstated termination.
+
+Controlled adverse offsets/counts/versions expose absent bounds checks; they
+are not supported save or language inputs. Actual file opening, refill,
+decompression, nonnull cleanup, allocator failure, audio playback, rendering
+and full startup/save composition remain open.
 
 ## Rechecked static edges awaiting further execution
 
@@ -183,6 +225,17 @@ setter at `004cefe0` writes `(index + 1) * 3.0`; the construction bounds yield
 that editor's range is a narrower application policy, not the retail range.
 The `OptionsD3DDeviceIndex`/`D3DDeviceIndex` consumer names similarly misdescribe
 the packed display-mode key. No companion/rebuild code was changed in this RE pass.
+
+The language decoder preserves physical rows, but its string readers do not
+enforce declared pool bounds or termination. Four private in-memory probes
+reproduce silent empty/truncated results and text running into the audio-size
+field; receipt `language-lookup-consumer-probe.json` is in the same private
+owner. Strict rejection would be an offline validation policy, not an imitation
+of retail's unchecked pointers. The rebuild materializer's ID dictionary and
+corpus exporter's merged matrix select the last duplicate, unlike retail's
+first match; original per-language export rows retain ordering. All six measured
+files have unique IDs and valid pools, so these are derivative-input limitations,
+not demonstrated errors in their current retail outputs.
 
 ## Inherited surface and routing
 

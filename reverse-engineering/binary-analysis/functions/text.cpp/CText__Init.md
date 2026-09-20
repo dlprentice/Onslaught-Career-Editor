@@ -1,10 +1,10 @@
 # CText__Init
 
-Status: independently rechecked static contract; original-parser execution pending
+Status: independently rechecked static and bounded original-parser contract
 Last updated: 2026-09-20
 Summary: language-file selection, parsing and loaded-state behavior; an open failure reaches a fatal boundary and read counts are not validated here.
 Source File: `text.cpp` is absent from the pinned partial-source snapshot | Binary: pristine `BEA.exe.original.backup`.
-Evidence: MEASURED — fresh pristine-body inspection and bounded reads of six preserved language files; no new execution of this initializer.
+Evidence: MEASURED — pristine-body inspection and 19 original parser/cached-read/active-copy cases with admitted files and owned derivatives.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Address: `0x004f21f0`
 
@@ -48,8 +48,10 @@ the obsolete `game/data/language/` route is not the owner on this host.
   normal execution must supply and check that storage; a guarded fault would
   not prove Windows exception dispatch or cleanup.
 
-These are static instruction findings. Actual filesystem failure, allocation
-failure and localized error presentation have not been reproduced here.
+The controls below execute the parser, normal exception-frame traffic and
+cached file helpers. Open failure stops at the fatal-call boundary; its shutdown
+chain is static evidence. Actual filesystem failure, allocation failure,
+Windows exception dispatch and localized error presentation remain untested.
 
 ## Rechecked parsing structure
 
@@ -86,13 +88,34 @@ On September 20, bounded first-hand reads of the six exact files established:
 All six begin with magic `0xffffffbb`, version flags 3 and count 2571.
 Exact paths/hashes are in private
 `local-data/test-runs/save-startup-20260919/language-file-inputs.json`.
-Those observations establish selected input identities and headers, not
-successful original parsing, valid strings or rendered localization. Entry-ID,
-UTF-16 and audio-name semantics require the separate lookup consumers; the
-existing `tools/language_dat_decode.py` is a consumer, not proof of them.
+The subsequent [19 original-parser controls](../../../../VALIDATION.md#original-language-file-parsing--september-20)
+pass those exact files through this body, original file ctor/dtor, size,
+cached Read and Close, then original SetLanguage/null cleanup/CopyFrom.
+Open supplies an explicitly modeled final-cache object; allocator/free,
+formatting and two Win32 API results are intercepted.
 
-Next execute this initializer with actual preserved bytes and explicit
-file/allocator boundaries, retaining original cached-read count behavior.
-Stop open failures at the fatal boundary. Keep the already executed
-[language-copy/save contract](../../save-options-static-review-2026-05-26.md#original-language-application-and-persistence)
-separate: its authored caches did not execute this initializer.
+The controls compare the complete selected headers, allocations, guards and
+source. Read-mode Close frees/clears its cache before the destructor's two
+Free(NULL) calls; a supplied CloseHandle error does not change this path.
+A 16-byte cached read and an empty cached read use an explicitly zero-filled
+remainder: both reach loaded state. This depends on the declared allocation
+fill and is not evidence of a valid resource or safe short-read handling.
+
+Unknown-version cases reach loaded state with prior parser fields preserved;
+v1/v2/legacy header derivatives establish field arithmetic only. The high-bit
+v2/v3 auxiliary-data branch remains unexecuted. Header/buffer guard skips,
+American override and invalid-selector English fallback also execute.
+The invalid Init argument is 65535; the subsequent SetLanguage call uses
+valid cache slot zero. It does not establish safe selection at index 65535.
+
+The [lookup composition](../../../../VALIDATION.md#original-language-lookups-from-parser-output--september-20)
+then imports exact active state and executes all three original lookup bodies.
+Every one of the 2,571 IDs in each file is unique; selected text/audio pointers,
+pool bounds, termination and offline decoding pass. Full rendered localization
+and audio playback remain open.
+
+Keep the [language-copy/save controls](../../save-options-static-review-2026-05-26.md#original-language-application-and-persistence)
+separate: those earlier authored caches establish Save's language-field source,
+while these controls establish real parser/copy/lookup behavior through an
+explicit memory-image handoff. No single full-startup/durable-save experiment
+combines all of them.

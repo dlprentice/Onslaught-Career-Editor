@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (composed save/control/language behavior rechecked)
+Last updated: 2026-09-20 (original language parsing/lookup established; audio and round-trip work remain)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -78,11 +78,17 @@ Sixteen additional cases retain original language selection, its null cleanup
 path and text-buffer copy. They separate the requested selector from the active
 header field that Save actually serializes, and correct the old whole-object
 copy claim. Authored cache data and intercepted allocation/audio remain explicit
-boundaries; real language-file initialization is not established by these controls.
+boundaries for those controls.
 
-Next, close the language-file initialization and audio dependencies, then
-reset/serialization ordering. Confirm round-trip compatibility using preserved
-real saves, rather than treating a decoder's self-round-trip as proof. The
+The next 19 cases execute original language initialization/cached reading and
+active copy with all six preserved files. A further 17-case lookup composition
+queries every ID through original text, audio-name and adjacent-string bodies.
+File Open/heap services and the explicit memory-image handoff remain bounded.
+The recheck corrects missing/duplicate-ID behavior, physical adjacency and
+misleading fatal-message wording; it does not establish rendering or playback.
+
+Next, close the audio dependencies, then reset/serialization ordering. Confirm
+round-trip compatibility using preserved real saves, rather than treating a decoder's self-round-trip as proof. The
 retained AppCore sensitivity clamp and display-mode naming discrepancy are
 implementation-consumer findings, not fixes made by this RE task. Full menu,
 failure/recovery and cross-runtime acceptance remain open.
