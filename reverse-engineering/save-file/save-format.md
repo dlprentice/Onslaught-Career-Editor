@@ -1,7 +1,10 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-08-17
+Last updated: 2026-09-19
+Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
+Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 Supported career saves are exactly 10,004 bytes (`0x2714`) and begin with the
 16-bit version word `0x4BD1`. `CCareer__Load` and `CCareer__Save` copy a fixed
@@ -128,6 +131,16 @@ flag, entry id, and two binding triples. Packed keys use
   `OptionsTail_Read`; this is the boot path for `defaultoptions.bea`.
 - A later career save serializes the current in-memory option table, so an
   existing `.bes` options block can be replaced by the current boot settings.
+- The frontend can also publish the original loaded career buffer as the next
+  boot's `defaultoptions.bea`. Skipping immediate option application does not
+  make embedded options irrelevant to later startup.
+
+The September 19 [independent recheck](../binary-analysis/save-options-static-review-2026-05-26.md#september-19-independent-recheck)
+executes the original boot path and serializers with intercepted services.
+It distinguishes that execution from the freshly inspected, still unexecuted
+normal menu-load publication chain. The raw loader has no size parameter or
+checksum check; callers admit a requested read length. Product exact-size and
+unknown-byte protections remain stricter requirements.
 
 These semantics are why AppCore treats save and options edits as separate,
 byte-preserving operations.
@@ -149,7 +162,7 @@ Offsets are relative to `0x26BE` for the supported specimen.
 | `+0x1C` | 4 | low-resolution landscape geometry flag |
 | `+0x20` | 4 | screen shape |
 | `+0x24` | 4 | mipmapping-disallow flag |
-| `+0x28` | 4 | D3D device index |
+| `+0x28` | 4 | packed display-mode key: width, height, pixel-format class |
 | `+0x2C` | 4 | lockable-backbuffer flag |
 | `+0x30` | 4 | landscape maximum levels |
 | `+0x34` | 4 | texture resolution-loss shift |
@@ -162,6 +175,14 @@ Offsets are relative to `0x26BE` for the supported specimen.
 | `+0x50` | 4 | 3D sound method |
 | `+0x54` | 1 | landscape detail level 2 flag |
 | `+0x55` | 1 | landscape detail level 1 flag |
+
+The rechecked helper `00420d10` packs mode width in bits 0–15, height in
+bits 16–30, and bit 31 when format is 20, 21 or 22. This is not an adapter or
+device ordinal. Reader mode selection can alter the packed key; writer mode
+selection recomputes it. The original tail reader also normalizes nonzero
+`+54/+55` bytes to one and converts `+1c/+20/+24/+30/+34/+38` through signed
+integer → float32 → x87 integer operations, which can lose precision. Preset,
+language and audio calls remain behavioral dependencies, not raw-field copies.
 
 ## Product rules
 

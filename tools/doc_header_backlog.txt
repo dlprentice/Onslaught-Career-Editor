@@ -68,7 +68,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__Blank.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__SetBaseThingExistTo.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Blank.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__CheckSRankUnlock.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__CountGoodies.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__DoesBaseThingExist.md
@@ -84,16 +83,12 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetKillCounter
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetLevelStructure.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetNode.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetNodeFromWorld.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetSaveSize.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetUnlockedGoodieCount.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsEpisodeAvailable.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsWorldLater.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Later.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Load.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__NodeArrayAt.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__ReCalcLinks.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Save.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SaveWithFlag.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F4.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F8.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlot.md
@@ -349,7 +344,6 @@ reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md
 reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md
 reverse-engineering/binary-analysis/retail-specimen-baseline.md
 reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md
-reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md
 reverse-engineering/binary-analysis/terrain-ambient-light-applied-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-ambient-light-material-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md
@@ -426,7 +420,6 @@ reverse-engineering/save-file/career-unlock-recipes.md
 reverse-engineering/save-file/goodies-system.md
 reverse-engineering/save-file/grade-system.md
 reverse-engineering/save-file/kill-tracking.md
-reverse-engineering/save-file/save-format.md
 reverse-engineering/save-file/struct-layouts.md
 reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md

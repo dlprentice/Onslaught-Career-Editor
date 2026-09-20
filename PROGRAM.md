@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-19 (original parser controls and distinct startup selectors grounded)
+Last updated: 2026-09-19 (save/settings/startup recheck prioritized)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -43,13 +43,34 @@ startup override from `-level`. No active consumer of either trace-request
 field or later deliberate developer-selector writer was identified. That is
 bounded static evidence, not proof against computed or external writes.
 
-The startup call chain now places pointer-pool initialization before both logger
-resets, after command-line parsing. Continue the aircraft/weapon warning and
-conditional-RNG investigation using that chain without assuming logger state
-at an arbitrary warning. Actual full startup, enabled-logger callbacks and
-complete-shot behavior remain open. The frontend subobject helper `00459810`
-also has a source/retail identity question; the old inferred name must not be
-used as proof of a page identifier. Separate tasks still own implementation.
+David's current priority is to recheck save files, settings and startup as one
+compatibility chain. Existing notes, prior agent work and this lane's earlier
+conclusions are fallible leads. Reproduce consequential claims against selected
+pristine bytes and controlled execution before carrying them forward. Keep the
+full-retail mandate and separate implementation owners.
+
+The first [save/startup recheck](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-19-independent-recheck)
+passes 17 original-code scenarios through the actual startup/parser/load/reset
+bodies and options-tail reader, followed by separately invoked original Save,
+SaveWithFlag and default-options writer. It checks complete serialized buffers,
+input preservation, path selection, short/version failures, mode lookup and
+tail conversions. System calls and audio/preset/language/Goodie actions remain
+explicit boundaries; this is not complete retail startup or compatibility acceptance.
+
+Next, execute and recheck normal career-load publication, both load modes and
+mutable binding-table admission, then preset/hardware, language/audio and
+reset/serialization ordering. Confirm round-trip compatibility using preserved
+real saves, rather than treating a decoder's self-round-trip as proof. The
+retained AppCore sensitivity clamp and display-mode naming discrepancy are
+implementation-consumer findings, not fixes made by this RE task. Full menu,
+failure/recovery and cross-runtime acceptance remain open.
+
+Preserve the aircraft/weapon continuation: pool initialization precedes logger
+resets after parsing; arbitrary warning state, enabled-logger callbacks and
+complete-shot RNG remain unresolved. A read-only frontend review identified
+`00459810` as a card-selection setter and `00465f10` as the outer frontend
+constructor; their saved metadata still needs the scoped byte-backed correction
+workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
 
 ### Remote checkpoint integrated on Linux — September 12
 

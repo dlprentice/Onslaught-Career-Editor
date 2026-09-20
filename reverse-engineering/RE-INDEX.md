@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-19 (CLI startup contract and current Ghidra routing)
+Last updated: 2026-09-19 (save/settings/startup recheck and current Ghidra routing)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -1043,7 +1043,7 @@ asserted here — where that table still names the 05-26 document, so does this 
 
 | Slice | Standing |
 | --- | --- |
-| [Save and options](binary-analysis/save-options-static-review-2026-05-26.md) | **Still current.** The cited owner for options and control bindings, and the contract behind the save/options persistence chains. |
+| [Save, options and startup](binary-analysis/save-options-static-review-2026-05-26.md) | September 19 independent recheck: 17 original-code startup/settings scenarios and 34 complete serializer outputs, with explicit system/presentation boundaries. Corrects loader-size/progress claims and packed display-mode identity. Normal menu publication has fresh static checks; complete real-file compatibility remains open. Older evidence is identified separately. |
 | [Audio, media, cutscene](binary-analysis/audio-media-cutscene-static-review-2026-05-26.md) | **Still the cited owner** for audio, media, cutscenes, and camera. The wave counts inside it are snapshots. |
 | [Frontend, input, game loop](binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md) | Superseded for frontend/HUD by [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md). Its companion proof-plan file no longer exists in the tree; the 2026-07-28 correction inside it gives the `git show` needed to recover it. |
 | [Unit / BattleEngine gameplay](binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md) | Superseded by [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) (2026-07-16). |

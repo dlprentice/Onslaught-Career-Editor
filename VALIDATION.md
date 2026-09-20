@@ -1604,6 +1604,66 @@ error zero and does not cover normal nonzero Win32 error handling. Original-code
 checks use authored startup memory/default locale and are not a retail launch,
 whole-process write audit, console rendering, full startup or gameplay acceptance.
 
+### Original save and startup controls — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/startup_control.py`
+passed **17 isolated original-code scenarios**, retaining 38 code envelopes
+(10,828 bytes; 10,817 body bytes plus the already identified 11-byte `strchr`
+alignment envelope). Accepted stem:
+`local-data/test-runs/save-startup-20260919/startup-run-o3zcj6ov/startup`.
+Receipt SHA-256 `9639d263d59a96532c7f182d1e0b209f20b4faa90bc9e4acc519c8dd938a45f7`;
+ELF SHA-256 `1a3ea8c014e2e7f9e8fe16b4dd8bbe0a2b6b0223d6a843aadcdc85ed04b7694a`.
+`startup-controls-v5.log` retains the command result; the immutable driver,
+assembler/linker commands, inputs, output buffers and stderr live beside the receipt.
+
+The original WinMain, parser, career initializer/load/Blank, binding-table
+initializer and options-tail reader execute. The driver supplies Windows
+version/system-query, file and allocation boundaries, plus a controlled
+adapter/device/mode context. WinMain returns through its ordinary failure
+return after an intercepted graphics-create call. No window, actual game-file
+operation or desktop control occurs.
+
+Cases cover missing/empty/short/wrong-version inputs, successful settings load,
+the CLI read-name override, changed/unchanged audio settings, noncanonical
+boolean bytes, integer/float conversion loss, conditional graphics-reset
+request, and matching-second/unavailable/empty display-mode lists. Three
+snapshots compare the selected career/binding/settings state, complete input
+immutability and read-buffer guards. Conversion uses `fninit`'s default x87
+state. The preset hook's copied tail is taken from an authored address; it does
+not independently measure the reader's cursor or returned end pointer.
+
+**After WinMain returns**, the driver separately calls original Save,
+SaveWithFlag and the default-options writer. It compares both complete
+10,004-byte serializer outputs and guards in every scenario, and observes the
+packed-mode refresh and live progress word. Full state snapshots precede those
+serializer calls; only the explicitly captured fields establish their observed
+live-state effects. The file writer receives the original fixture-derived
+buffer, not either serializer output. This is neither a serialize→file→reload
+round trip nor evidence that startup automatically writes settings. Writer
+success/open-failure/short-write/close-error results are supplied by hooks;
+actual publication durability is untested.
+
+Audio, preset/language actions, diagnostics and final Goodie recomputation stay
+intercepted. The raw original Goodie dependency and complete normal menu-load
+transaction were not executed. A Linux seccomp negative control attempts
+`getpid`, terminates with SIGSYS (`-31`), and produces no output. The admitted
+syscalls are only read/write/exit. The pristine executable and real tracked save
+fixture are rehashed unchanged after execution.
+
+The first 10-case experiment intercepted the whole tail reader. The following
+attempt retained that reader but failed an expectation that the real fixture's
+audio choices equaled CLI defaults; they differ. That failure remains in
+`startup-controls-v2.log` and `startup-run-drggwcgp/`. Subsequent 14- and 17-case
+intermediate results remain separate, not added to the final pass count.
+Independent read-only reviews checked saved code/input/output identities,
+compiled sandbox instructions and the serializer extension; they did not rerun
+the experiment. Records use the existing ignored aircraft-audit owner.
+
+The [subsystem contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+separates executed findings, fresh static checks, inherited receipts and pending
+cross-runtime acceptance. This tranche changes RE documentation; it does not
+modify Ghidra or either implementation lane.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

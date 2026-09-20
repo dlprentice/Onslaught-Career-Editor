@@ -1,10 +1,15 @@
 # CCareer__Save
 
+> Address: 0x00421350 | Source: `references/Onslaught/Career.cpp`
+
+Status: mixed — current byte serialization rechecked; older source/callsite receipts retain their limits
+Last updated: 2026-09-19
+Summary: serializes career, active bindings and runtime tail; tail construction also refreshes the packed display-mode global.
+Source File: `references/Onslaught/Career.cpp` (partial-source comparison) | Binary: pristine `BEA.exe.original.backup`; September 19 byte/control evidence is linked below.
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x004d2580` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
-
-> Address: 0x00421350 | Source: `references/Onslaught/Career.cpp`
 
 ## Status
 - **Named in Ghidra:** Yes
@@ -41,20 +46,28 @@ Internal size formula is `0x2514 + 0x20*N`. Retail Steam saves observed here hav
 
 ## Notes
 - Migrated from ghidra-analysis.md (Dec 2025)
-- 2026-02-13: MCP `functions_set_signature(0x00421350, ...)` timed out and hard-froze CodeBrowser; after restart, read-back (`functions_get`) showed the signature was present. Treat this as an MCP-signature hotspot: avoid repeating MCP signature writes here; use manual CodeBrowser `Edit Function...` if the signature ever needs to change.
+- Historical 2026-02-13 MCP signature work timed out before later readback. This is a retained incident, not current operational policy; any future metadata change follows the current Ghidra preservation guide.
 - Writes version as a 16-bit word then bulk-copies `0x24BC` bytes into `dest + 2` (`rep movsd` with `ECX=0x92F`).
 - Iterates the options definition table at `0x008892d8` until the sentinel (entry+4 == -1) and writes only “active” entries (byte[0] != 0). In the Steam retail build observed here, this yields 16 entries.
 - Calls `OptionsTail_Write` (`0x00420b10`) with the pointer to the end of the options block to append the final 0x56 bytes.
 - Does NOT set `mCareerInProgress` (see SaveWithFlag).
 - Companion to CCareer__Load
+- September 19 [original-code controls](../../save-options-static-review-2026-05-26.md#september-19-independent-recheck) compare both serializer variants' complete 10,004-byte outputs and guards in 17 scenarios. The entire tail writer and both display helpers execute with controlled device records; no actual display or file is used.
 
 ## Side Effects and Boundaries (Verified)
 
 - `CCareer__Save` itself is a **buffer serializer**:
-  - writes only to caller-provided `dest`,
+  - writes the serialized output to caller-provided `dest`,
   - reads from `this` (`CAREER`) and the options descriptor table at `0x008892d8`,
   - appends options-tail bytes via `OptionsTail_Write`,
   - performs no direct disk I/O.
+
+The earlier “writes only to dest” claim omitted a callee side effect:
+`OptionsTail_Write` calls `00420d10` with receiver `0066061c`, refreshing that
+global packed display-mode key before serializing it. This was reproduced by
+the September 19 controls, including after reader mode lookup cleared the key's
+low 16 bits. Ordinary Save does not set the live career-progress word;
+SaveWithFlag does.
 
 - File-write side effects occur in callers, not inside `CCareer__Save`:
   - `CFEPOptions__SaveDefaultOptions` (`0x0051f500`) allocates `size = CCareer__GetSaveSize()`, calls `CCareer__Save`, then writes `defaultoptions.bea` via `fopen/fwrite/fclose`.
