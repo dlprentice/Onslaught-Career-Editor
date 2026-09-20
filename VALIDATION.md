@@ -1829,6 +1829,18 @@ publication or localized presentation. The complete loader/preset and language
 review records use the existing ignored aircraft-audit owner. No Ghidra or
 implementation-lane source changes accompany this documentation tranche.
 
+The subsequent static dependency inspection reads complete `CText__Init`
+`[004f21f0,004f2497)`, SHA-256
+`f208b0fcea5393790160ea84b43bd07d441566d7f264b2ea77251b3badb499ca`,
+and the actual fatal chain `0042c750 → 0042cfa0 → ExitProcess` plus cached-read,
+size, ctor/dtor and close helpers. Selected disassembly is retained as
+`language-<address>.asm` in this same owner. No initializer, file API or fatal
+path was executed. `language-file-inputs.json` pins six bounded preserved-file
+reads and their version-3/count-2571 headers. These are input observations for
+the next experiment, not extra passing runtime cases. The
+[initializer contract](reverse-engineering/binary-analysis/functions/text.cpp/CText__Init.md)
+corrects the old open-failure and loaded-state interpretation.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

@@ -159,6 +159,15 @@ fallback can select a different filename without changing that field. Thus
 neither the input mirror nor header language proves which text actually loaded.
 Real language-file initialization and localized menu acceptance remain open.
 
+The subsequent [initializer inspection](functions/text.cpp/CText__Init.md)
+also corrects the failure boundary: an Open failure reaches the fatal helper
+before the apparent cleanup tail. Its call chain ends at the confirmed
+`ExitProcess(1)` import. Successful Open does not prove a complete read: Init
+ignores the actual copied count, and an unknown tagged format has a path that
+sets the loaded flag after a returning diagnostic/Close. Those are fresh static
+findings, not executed failure results. Six preserved language files have been
+read and identified for the next controlled original-parser experiment.
+
 ## Rechecked static edges awaiting further execution
 
 The PC save reader checks the requested byte count, not trailing EOF; open

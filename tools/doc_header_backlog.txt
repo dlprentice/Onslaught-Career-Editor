@@ -304,7 +304,6 @@ reverse-engineering/binary-analysis/functions/text.cpp/CText__GetAudioNameById.m
 reverse-engineering/binary-analysis/functions/text.cpp/CText__GetLanguageName.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__GetStringById.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__GetStringByIdAfter.md
-reverse-engineering/binary-analysis/functions/text.cpp/CText__Init.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__ResetCoreFields.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTextureBase__Init.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTexture__FindTexture_Unwind.md
