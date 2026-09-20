@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native Aquila integration and plane/mesh arithmetic checks; earlier validation retained).
+Last updated: 2026-09-20 (native actor registry, Aquila and plane/mesh checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -649,6 +649,24 @@ before teardown versus eight previously. Retry/return released the world, and
 the 112 exterior/10 cockpit surfaces retained their existing counts. The route
 still ends `Running`/`None` with zero targets destroyed; this does not establish
 full combat completion or audible playback.
+
+The mutable native actor registry passed **2,756 assertions** against the
+unchanged C# owner: **190** construction/restoration cases and **333** operations
+over **12** definition sets. Checks compare full ordered snapshots after both
+successful and refused operations, authored/spawned identities, raw Plane
+creation/exit poses, lifecycle/fact ordering, UTF-16 lookups, immutable restore
+admission, signed fact-sequence wrap, detached inputs and owner lifetime.
+The fixtures include the actual 44-actor/10-spawn Level 100 definitions; no live
+consumer or simulation hash expectation changed. The guarded getters preserve
+the shared Thing/Actor allocation rather than restoring another mutable owner.
+Reference/native receipts are `actor-registry-reference-fd7qq2nu/` and
+`actor-registry-native-3k47ow66/`; both logs are clean. The source-only check is
+`actor-registry-parse-v2rb1xvb/`. Run .NET
+`Scenes/World/Tests/ActorRegistryReferenceChecks.tscn` with a fresh absolute
+`.variant` fixture and report, then standard
+`Scenes/World/Tests/actor_registry_checks.gd` with that fixture and a fresh report.
+Outputs stay under the owned worktree's `local-data/`. Live mission scheduling,
+collision handling and complete registry adoption remain unconverted.
 
 The pure Thing/Actor base-state port passed **18,548 native assertions** against
 the unchanged Core implementation on Godot-hosted .NET 10.0.12: 818 factory/restore

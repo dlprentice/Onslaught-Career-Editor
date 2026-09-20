@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (native Aquila scene components; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (native actor registry and Aquila components; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -72,6 +72,14 @@ PC53 attachment operations remain their existing owners' responsibilities.
 arithmetic, terrain clearance and free-flight step. It uses the same native
 terrain sampler and commits through `Thing.Actor` only after all computations
 succeed. Live plane scheduling, collisions and registry adoption remain separate.
+`Core/actor_registry.gd` composes these native owners for mutable identities,
+spawns, lifecycle facts and snapshot restoration. Its construction context takes
+the already-admitted terrain, complete mission-program names and contact facts
+in one batch; the module neither loads a second catalog nor invents missing
+definitions. The guarded Plane/construction getters return the same Thing/Actor
+allocation. Its comparisons cover the actual Level 100 definitions and existing
+construction-route refusals; the gameplay session still uses C# until the
+remaining simulation consumers can move together.
 
 The conversion worktree is `.worktrees/godot-editor-48-20260919`, branch
 `codex/godot-editor-48-20260919`. Use canonical `BEA_LOCAL_LAB` routing and fresh
