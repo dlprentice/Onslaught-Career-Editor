@@ -787,7 +787,7 @@ public sealed class ParticleSetTests
         string animation = RequireSection(
             worldSource,
             "private static void AnimateVulcanImpactSpark(",
-            "private static void AnimatePulseCannonMuzzleFlash(");
+            "private static void AnimateTargetTankDelayedExplosion(");
         Assert.Contains("const int startCell = 11;", animation, StringComparison.Ordinal);
         Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
         Assert.Contains(
@@ -1094,8 +1094,11 @@ public sealed class ParticleSetTests
         Assert.Contains("_pending_muzzles = _i32(_pending_muzzles - 1)", projectileUpdate, StringComparison.Ordinal);
         Assert.Contains("_pending_muzzles = 0", projectileUpdate, StringComparison.Ordinal);
         string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
-        Assert.Contains("particle-alparticle5-additive.texture.aya", presentation, StringComparison.Ordinal);
         string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn"));
+        Assert.DoesNotContain("particle-alparticle5-additive.texture.aya", presentation, StringComparison.Ordinal);
+        Assert.Contains("particle-alparticle5-additive.texture.aya", scene, StringComparison.Ordinal);
+        Assert.Contains("retail_texture_page.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("_admit_texture_pages()", owner, StringComparison.Ordinal);
         Assert.Contains("wait_time = 0.5", scene, StringComparison.Ordinal);
         Assert.Contains("one_shot = true", scene, StringComparison.Ordinal);
         Assert.Contains("size = Vector2(0.6, 0.6)", scene, StringComparison.Ordinal);

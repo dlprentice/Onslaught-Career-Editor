@@ -87,6 +87,28 @@ public sealed partial class Level100SceneImport : Node
             // empty. Deterministic .NET builds derive the module ID from content.
             hash.AppendData(type.Assembly.ManifestModule.ModuleVersionId.ToByteArray());
         }
+        hash.AppendData(Convert.FromHexString(NativeSourceIdentity(ProjectSettings.GlobalizePath("res://"))));
+        return Convert.ToHexString(hash.GetHashAndReset());
+    }
+
+    internal static string NativeSourceIdentity(string projectDirectory)
+    {
+        // Native definitions now participate in the private bake. Managed MVIDs
+        // alone would silently accept an old world after a GDScript, template or
+        // resource edit. Hash public production inputs, never generated Assets.
+        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        foreach (string directory in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World" })
+        {
+            string root = Path.Combine(projectDirectory, directory);
+            foreach (string path in System.IO.Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                .Where(path => Path.GetExtension(path) is ".gd" or ".tscn" or ".tres")
+                .OrderBy(path => Path.GetRelativePath(projectDirectory, path).Replace('\\', '/'), StringComparer.Ordinal))
+            {
+                string relative = Path.GetRelativePath(projectDirectory, path).Replace('\\', '/');
+                hash.AppendData(System.Text.Encoding.UTF8.GetBytes(relative + "\0"));
+                hash.AppendData(SHA256.HashData(System.IO.File.ReadAllBytes(path)));
+            }
+        }
         return Convert.ToHexString(hash.GetHashAndReset());
     }
 

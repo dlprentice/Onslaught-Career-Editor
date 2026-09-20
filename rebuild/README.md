@@ -41,46 +41,23 @@ available as a comparison implementation while replacements are validated; a
 permanent production exception needs a demonstrated parity blocker. The MIT
 companion/AppCore has its own migration owner and remains a separate boundary.
 
-### Restart checkpoint — 2026-09-19
+### Migration state
 
-The user paused the conversion for a machine restart. Continue only when resumed,
-in `.worktrees/godot-editor-48-20260919` on
-`codex/godot-editor-48-20260919`. Inspect its status and newer committed peer work
-first; preserve the separate uncommitted companion changes. Do not reset or
-switch the canonical checkout or another worktree.
+Startup, HUD, pause, audio, Options, world camera, actor/projectile presentation
+and the Sun now use production GDScript owners and native scene definitions.
+The frontend session/path, terrain sampler and numerical/parsing/replay foundations
+also have native owners. The remaining frontend drawing, world assembly,
+terrain/water/Aquila rendering, full simulation and replay entry still need their
+live consumers converted. The complete project therefore still requires .NET.
+The component checks below preserve existing reconstruction behavior; full retail
+combat completion and cross-platform parity remain open.
 
-The last validated full runtime source milestone is `5515fa77` (native production
-audio). Its bounded smoke retained the existing 2,148-step hash and ordered
-messages. The later pure terrain port at `bf1b829e` passed 45,681 comparisons;
-its receipt is `local-data/test-runs/gdscript-parity-7uz9cc9v/`. Neither result
-validates the subsequent integration drafts saved in this checkpoint:
-
-- Native options/frontend resources and host wiring are complete file drafts,
-  but have not been parsed, compiled or run. Start with the supported .NET build,
-  then `res://Scenes/Frontend/Tests/options_scene_checks.gd` in standard Godot and
-  the editor using owned profiles (marker `OPTIONS_SCENE_CHECKS`). The actual
-  frontend settings/audio/back handoff check and exact native/C# FEBack table
-  and font comparisons still need to be written. Run affected Client guards
-  and frontend smoke after resolving first-pass failures.
-- Native actor/projectile/muzzle scenes and their batched world bridge are also
-  uncompiled and untested. Run `res://Scenes/World/entity_scene_checks.gd`
-  (marker `ENTITY_SCENE_CHECKS`), then the .NET
-  `res://Scenes/World/EntityBridgeChecks.tscn` (marker `ENTITY_BRIDGE_CHECKS`).
-  Reimport private Level 100 before the existing world/camera checks and smoke:
-  the saved private scene predates `EntityPresentation.tscn`. Check numerical
-  transforms/trails and preservation of private scene overrides explicitly.
-- `Scenes/World/SunSprite.tscn`, `sun_recipe.gd` and `sun_sprite.gd` are an
-  unintegrated prototype. Existing C# Sun code still owns production. Before
-  wiring it in, verify editor availability of the parser dependencies, public
-  versus private serialization of decoded resources, and exact float/terrain
-  line-of-sight behavior against the unchanged implementation. No Sun bridge
-  or differential scene checks have been added yet.
-
-The drafts received whitespace and public-payload checks, not runtime acceptance.
-Resume with canonical `BEA_LOCAL_LAB` routing and fresh owned outputs under this
-worktree's `local-data/`; remain headless or use an isolated owned display.
-The full rebuild still requires .NET, and full combat completion remains open.
-The validated module descriptions below retain their individual evidence scope.
+The conversion worktree is `.worktrees/godot-editor-48-20260919`, branch
+`codex/godot-editor-48-20260919`. Use canonical `BEA_LOCAL_LAB` routing and fresh
+owned output under this worktree's `local-data/`; remain headless or use an
+isolated owned display. Preserve the separate companion changes and other lanes'
+worktrees. Executed comparisons and their limits are recorded in
+[`VALIDATION.md`](../VALIDATION.md#september-19-production-scene-migration).
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
@@ -168,9 +145,20 @@ and shortest round-trip binary32 text. Its decimal path rounds directly to
 binary32, so parsing through a double cannot introduce an extra rounding.
 `Client/options_menu.gd`, `options_laws.gd` and `options_controller.gd`
 retain the four options pages, bindings, ordered side effects and detached
-settings. Native target projection and render interpolation also pass focused
-comparisons. These pure owners are validated; their remaining scene/host
-consumers are still being converted.
+settings. `Scenes/Frontend/Options.tscn` now owns the actual rows, bindings,
+sliders, dropdowns and chrome. Its three font recipes and FEBack resource also
+supply the remaining frontend host; these are the production assets, not preview
+substitutes. The temporary adapter invokes effects synchronously at their original
+action points, retaining partial mutation on failure and reentrant callback order.
+It does not poll every row across languages each frame.
+
+`Scenes/World/EntityPresentation.tscn` owns native actor/foot interpolation,
+projectile transforms, trails and muzzle flashes. One snapshot-pair batch and
+one temporary Aquila callback retain the existing render order. Saved initial
+actors are rebound; later actors use the same `ActorPresentation.tscn` template.
+Projectile and muzzle materials carry the same read-only texture recipes in
+standalone editor views and gameplay. Empty trail slots acquire geometry only
+from actual projectile history. Impact/destruction consumers remain managed.
 
 `Client/particle_set.gd` retains authored descriptor/field order, duplicate
 names and byte re-emission. `particle_effect_resolver.gd` carries the existing
@@ -186,7 +174,28 @@ still being converted.
 bytes and retains the shared fixed/grid/AirGuide samplers, metadata and terrain
 LOD law. Its full-grid and edge comparisons pass for worlds 100, 110, 200 and
 300; this preserves their existing admission and does not add playable routes.
-Existing C# terrain consumers still await integration.
+The Sun consumes this native sampler; the remaining C# terrain consumers still
+await integration.
+
+The production Sun now uses `Scenes/World/SunSprite.tscn` and its GDScript
+recipe/owner. Opening it loads the same private particle definition and texture
+used in gameplay, without initializing a live sampler. The temporary C# adapter
+passes the already-embedded terrain bytes once; native code owns placement and
+every ray sample. Exact comparisons retain the existing 200 m, terrain-only
+occlusion check and its unresolved `VisibleSun`/world-object omissions. The
+explicit NaN coordinate conversion matches the current Linux .NET heightfield
+consumer; it is not evidence of retail NaN behavior. Public preview saves retain
+recipes, while explicit private imports preserve their derived mesh/material
+across repeated editor saves, including materials duplicated per scene.
+
+The pinned Godot .NET host reports `.NET 10.0.12` on this machine while the
+projects keep their existing `net8.0` targets. The actual scene comparisons,
+rather than that target framework, determine host-specific conversion edges:
+FEBack frame indexing saturates overflowing double-to-Int64 conversions and
+maps NaN to zero; Sun height coordinates also map NaN to zero. These explicit
+compatibility paths preserve the current renderer, not measured retail NaN or
+overflow behavior. CLI comparison fixtures retain their separately observed
+runtime context.
 
 Startup media filenames retain invariant Int32 composite formatting through
 the separately attributed MIT utility in
@@ -403,9 +412,12 @@ Use these scenes from Godot's FileSystem dock:
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
 | [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | GDScript production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. `show_editor_illustration` selects a frozen presentation state without creating a live HUD model. |
 | [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |
 | [Scenes/Audio/Level100Audio.tscn](OnslaughtRebuild.Godot/Scenes/Audio/Level100Audio.tscn) | Seven native audio players, stream recipes and four actor attachment markers. Inspect source routes, looping and attachment structure; editor entry never loads or starts playback. |
+| [Scenes/World/SunSprite.tscn](OnslaughtRebuild.Godot/Scenes/World/SunSprite.tscn) | The admitted Sun Sprite quad, additive material and real private texture. Its recipe exposes the source identity; editor entry never initializes terrain sampling or camera updates. |
+| [Scenes/World/EntityPresentation.tscn](OnslaughtRebuild.Godot/Scenes/World/EntityPresentation.tscn), [PulseBolt.tscn](OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn), [VulcanBullet.tscn](OnslaughtRebuild.Godot/Scenes/World/VulcanBullet.tscn), [PulseMuzzleFlash.tscn](OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn) | Shared projectile/muzzle nodes and materials with real texture pages before Play. Trail slots expose their material; trail geometry requires movement history. The entity owner has no process or input callback. |
 | `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
 | `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
 
@@ -446,14 +458,16 @@ configuration; loaded streams remain transient. Its faithful setup checks the
 admitted identities. The current character-message handoff still follows voice
 completion plus 0.3 seconds; conversion does not resolve the separate retail
 HUD-reveal completion question or establish audible playback.
-The level graph, options and debriefing are composite Controls: move or resize
-their section in the 2D editor and inspect their drawing/interaction code for
-internal layout. They are not yet individual native controls for every row.
+Options rows, labels, value bars and binding controls are individually selectable
+in their production scene. The level graph and debriefing remain composite
+Controls: move or resize their section in the 2D editor and inspect their
+drawing/interaction code for internal layout.
 
 The tracked scenes contain code, layout and asset recipes, not retail pixels.
 Private atlas binding is transient: saving a public UI scene does not serialize
 the decoded texture. Generated world scenes/resources remain ignored. Their
-import receipt checks the build identity and each output file; faithful runtime
+import receipt checks the managed build, native script/scene/resource identities
+and each output file; faithful runtime
 refuses modified or stale generated files. A deliberate enhanced variation must
 be saved separately as private work, not silently substituted for imported defaults.
 Preserve it before regenerating. Scene transforms never become Core spawn data.
@@ -472,7 +486,8 @@ not a second live owner. Open the same production scene and its linked scripts
 to inspect both behavior and layout in Godot. Bound texture pixels cannot be
 serialized into the public scene when it is saved.
 
-Startup, HUD and pause scenes can run their focused checks in standard Godot.
+Startup, HUD, pause, Options, entity and Sun scenes can run their focused checks
+in standard Godot.
 The whole project still needs the compiled C# assembly and .NET editor while
 the frontend/world host is converted. All retail
 previews need prepared private textures. Missing data is reported rather than replaced with invented retail

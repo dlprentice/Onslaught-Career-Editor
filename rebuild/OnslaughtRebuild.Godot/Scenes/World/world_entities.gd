@@ -10,6 +10,7 @@ const Float32 = preload("res://Core/retail_float24.gd")
 const Target = preload("res://Client/target_presentation.gd")
 const Interpolation = preload("res://Client/render_interpolation.gd")
 const Muzzle = preload("res://Scenes/World/pulse_muzzle_flash.gd")
+const TexturePage = preload("res://Scenes/Shared/retail_texture_page.gd")
 const ActorScene = preload("res://Scenes/World/ActorPresentation.tscn")
 const PULSE_TRAIL_WIDTH_BITS: int = 0x3da3d70a # .08f
 const VULCAN_TRAIL_WIDTH_BITS: int = 0x3ca3d70a # .02f
@@ -24,6 +25,10 @@ var _projectiles: Dictionary = {}
 var _trails: Dictionary = {}
 var _configured: bool = false
 var _pending_muzzles: int = 0
+var _test_textures: bool = false
+const TEXTURE_PARTS: Dictionary = {"spark": "PulseBolt/PulseBoltSprite", "halo": "PulseBolt/PulseBoltHalo",
+	"energy": "PulseBolt/PulseBoltEnergyTrail", "pulse_trail": "PulseBolt/ProjectileTrail",
+	"vulcan_trail": "VulcanBullet/ProjectileTrail", "muzzle": "MuzzleFlash/PulseCannonMuzzleFlash"}
 
 
 ## assets are the same six admitted production meshes used by imported actors.
@@ -31,6 +36,8 @@ var _pending_muzzles: int = 0
 func configure(world: Node3D, camera: Camera3D, assets: Array, initial_targets: Array) -> Dictionary:
 	if Engine.is_editor_hint() or _configured or world == null or camera == null:
 		return Target.failure("InvalidOperationException", "Entity presentation requires one explicit runtime configuration.")
+	var textures: Dictionary = _admit_texture_pages()
+	if not textures.ok: return textures
 	_world = world
 	_camera = camera
 	for item: Variant in assets:
@@ -52,22 +59,44 @@ func configure(world: Node3D, camera: Camera3D, assets: Array, initial_targets: 
 	return _result()
 
 
-## Called by the explicit private importer, not by editor preview. Materials,
-## sizes and transforms stay authored in the production template scenes.
-func bind_textures(textures: Dictionary) -> Dictionary:
+## Production textures live in the same authored native material recipes the
+## editor displays. Readiness must refuse a missing/malformed retained page,
+## rather than letting the virtual texture's empty RID hide an asset failure.
+func _admit_texture_pages() -> Dictionary:
+	if _test_textures: return {"ok": true}
+	for key: String in TEXTURE_PARTS:
+		var visual: MeshInstance3D = get_node("Definitions/" + str(TEXTURE_PARTS[key]))
+		var material: StandardMaterial3D = visual.material_override
+		if material == null or material.albedo_texture == null or material.albedo_texture.get_script() != TexturePage:
+			return Target.failure("InvalidDataException", "Missing authored projectile texture recipe: " + key)
+		var page: TexturePage = material.albedo_texture
+		var loaded: Dictionary = page.ensure_loaded()
+		if not loaded.ok: return Target.failure("InvalidDataException", loaded.error)
+		# In 4.8 dev6 an unshaded material marks emission properties as non-
+		# storage. Local-to-scene duplication therefore drops its inactive
+		# emission flag/texture, even when both authored slots name this page.
+		# Preserve that engine behavior; an active/different page still refuses.
+		var omitted_inactive_emission: bool = material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED \
+			and not material.emission_enabled and material.emission_texture == null
+		if key != "muzzle" and not omitted_inactive_emission and material.emission_texture != page:
+			return Target.failure("InvalidDataException", "Projectile emission must share its authored texture page: " + key)
+	return {"ok": true}
+
+
+## Explicit synthetic-resource seam for the bounded scene checks. Production
+## never calls this: public editor saves always retain only texture recipes.
+func bind_test_textures(textures: Dictionary) -> Dictionary:
 	if Engine.is_editor_hint():
 		return Target.failure("InvalidOperationException", "Editor texture mutation is disabled.")
-	var paths: Dictionary = {"spark": "PulseBolt/PulseBoltSprite", "halo": "PulseBolt/PulseBoltHalo",
-		"energy": "PulseBolt/PulseBoltEnergyTrail", "pulse_trail": "PulseBolt/ProjectileTrail",
-		"vulcan_trail": "VulcanBullet/ProjectileTrail", "muzzle": "MuzzleFlash/PulseCannonMuzzleFlash"}
-	for key: String in paths:
+	for key: String in TEXTURE_PARTS:
 		if not textures.get(key) is Texture2D:
-			return Target.failure("ArgumentException", "Missing production texture: " + key)
-	for key: String in paths:
-		var visual: MeshInstance3D = get_node("Definitions/" + str(paths[key]))
+			return Target.failure("ArgumentException", "Missing synthetic test texture: " + key)
+	for key: String in TEXTURE_PARTS:
+		var visual: MeshInstance3D = get_node("Definitions/" + str(TEXTURE_PARTS[key]))
 		var material: StandardMaterial3D = visual.material_override
 		material.albedo_texture = textures[key]
 		if key != "muzzle": material.emission_texture = textures[key]
+	_test_textures = true
 	return {"ok": true}
 
 

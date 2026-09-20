@@ -535,7 +535,7 @@ public sealed class RetailFrontendScenePathTests
         string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
         string pointer = Slice(flow, "private bool HandlePointerConfirm(");
         string key = Slice(flow, "private bool HandleKey(");
-        string backFromOptions = Slice(options, "private bool ApplyOptionsResult(");
+        string backFromOptions = Slice(options, "private Godot.Collections.Dictionary DispatchOptionsEffect(");
         string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
         string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
         string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");

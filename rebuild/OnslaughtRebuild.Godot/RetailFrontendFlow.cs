@@ -3959,12 +3959,21 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static Texture2D[] LoadFeBackFrames(int maximumFrames = int.MaxValue)
     {
-        Resource recipe = GD.Load<Resource>("res://Scenes/Frontend/FrontendUnderlay.tres");
-        Godot.Collections.Dictionary result = recipe.Call("load_frames", maximumFrames).AsGodotDictionary();
+        using Resource recipe = GD.Load<Resource>("res://Scenes/Frontend/FrontendUnderlay.tres");
+        using Variant returned = recipe.Call("load_frames", maximumFrames);
+        using Godot.Collections.Dictionary result = returned.AsGodotDictionary();
         RequireOptionsResult(result);
         if (result["missing"].AsBool())
             GD.PushWarning($"FEBack strip missing at {FeBackStripPath}; main underlay uses solid fallback.");
-        return result["frames"].AsGodotArray().Select(static frame => frame.As<Texture2D>()).ToArray();
+        using Variant frameList = result["frames"];
+        using Godot.Collections.Array frames = frameList.AsGodotArray();
+        var textures = new Texture2D[frames.Count];
+        for (int index = 0; index < textures.Length; index++)
+        {
+            using Variant frame = frames[index];
+            textures[index] = frame.As<Texture2D>();
+        }
+        return textures;
     }
 
     private Texture2D LoadTexture(

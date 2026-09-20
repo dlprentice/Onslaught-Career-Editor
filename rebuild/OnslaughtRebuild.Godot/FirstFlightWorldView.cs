@@ -236,7 +236,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildPlayer();
         BuildCamera();
         CreateEntityPresentation();
-        BuildPulseCannonPresentation(importEntityTextures: true);
+        BuildPulseCannonPresentation();
         ConfigureEntityPresentation(snapshot);
         Render(snapshot, snapshot, 0f, 0f);
     }
@@ -840,47 +840,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         return contacts;
     }
 
-    private void BuildPulseCannonPresentation(bool importEntityTextures = false)
+    private void BuildPulseCannonPresentation()
     {
-        if (importEntityTextures)
-        {
-            Texture2D spark = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/pulse-bolt-blue-spark.texture.aya",
-                64,
-                64);
-            Texture2D trail = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/pulse-bolt-blue-trail.texture.aya",
-                64,
-                64,
-                CuratedAyaTextureLoader.Compression.Dxt1);
-            Texture2D vulcanBulletTrail = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/vulcan-bullet-trail.texture.aya",
-                64,
-                64,
-                CuratedAyaTextureLoader.Compression.Dxt1);
-            Texture2D halo = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya",
-                64,
-                64,
-                CuratedAyaTextureLoader.Compression.Dxt1);
-            Texture2D energyTrail = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/mech-pulse-medium-energy-trail.texture.aya",
-                64,
-                64,
-                CuratedAyaTextureLoader.Compression.Dxt1);
-            Texture2D muzzle = CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/particle-alparticle5-additive.texture.aya",
-                128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
-            using Godot.Collections.Dictionary resources = new()
-            {
-                ["spark"] = spark, ["pulse_trail"] = trail,
-                ["vulcan_trail"] = vulcanBulletTrail, ["halo"] = halo,
-                ["energy"] = energyTrail, ["muzzle"] = muzzle,
-            };
-            using Godot.Collections.Dictionary bound = EntityResult(
-                _entityPresentation.Call("bind_textures", resources));
-        }
-
         _pulseImpactAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
             256,

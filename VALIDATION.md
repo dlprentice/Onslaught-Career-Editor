@@ -400,8 +400,87 @@ Each of the four existing world resources was compared with its already-linked
 input without copying the corpus. Exact metadata, complete 513×513 lattice,
 512×512 subcell interpolation and 64×64 LOD-word hashes pass, together with
 edge/mask probes, 2,048 scale words, signed-64 division cases, byte admission
-failures and detachment. This validates the native owner; live terrain/Sun
-consumer integration remains separate.
+failures and detachment. This validates the native owner; the subsequent Sun
+consumer integration is covered below. Other live terrain consumers remain managed.
+
+The resumed Options integration passed **1,282 standard-engine scene checks**,
+**1,292 isolated rendered checks** across four actual pages, and **1,284 editor
+assertions**. Its actual C#/GDScript frontend boundary passed **5,988 headless
+checks** and **6,005 rendered checks**, including nine exact RGBA font comparisons
+at varied scales/shadows. The same host checks cover all font widths, FEBack byte
+tables/phase boundaries, shared frame identity, settings/audio/Back handoffs,
+callback failures, partial mutation and reentrant action order. The focused
+Client selection passed **144/144**. Pure Options comparisons also passed after
+the synchronous callback change. Final receipts are
+`local-data/test-runs/options-host-tlovxf1e/`, `options-fonts-rxyrhscr/` and
+`options-client-mi9cy457/`; native page/editor receipts are `options-action-7l25qk90/`,
+`options-render-4s4gdbbu/` and `options-editor-mszwwwnv/` under that same test-runs
+owner. The actual Godot process reports `.NET 10.0.12` with unchanged `net8.0`
+targets. Explicit native casts preserve its observed FEBack overflow/NaN result.
+
+Explicit Variant-carrier disposal removed 574 retained texture allocations at
+the temporary frontend boundary. The final rendered host exits cleanly, but the
+headless Options harness still reports **one Image and one Dummy texture RID**
+at exit; its strict console gate remains red. Disposing the retained DDS loader's
+temporary Image did not resolve that final allocation. Its owner is unresolved;
+no forced GC, diagnostic suppression or weakened assertion was used. The native
+editor harness also retains scripted-editor scan/shutdown diagnostics. These
+limits are separate from the passing behavior and pixel comparisons.
+
+The entity owner passed **89 native runtime checks**, **64 editor assertions**
+and **23,038 actual managed-boundary checks**. Every actor/foot/projectile word,
+trail vertex/UV and muzzle frame retains its reference behavior; all six authored
+texture pages match the previous loader byte-for-byte, including format and
+mipmap flags. Public template saves contain recipes without decoded pixels.
+The authored albedo/emission slots share a page; the checks preserve the pinned
+engine's omission of inactive unshaded emission properties during scene-local
+duplication, while still refusing an active mismatched page. Runtime logs are
+clean; the editor has the previously recorded scripted shutdown diagnostics.
+Receipts are `entity-art-native-fixed-cthkzvbj/`, `entity-art-editor-46875jwv/`
+and `entity-art-bridge-final-oxutw64r/` under `local-data/test-runs/`.
+The particle/quad/Sun Client selection passed **25/25** in
+`entity-art-client-ofvtnlgq/results/focused.trx` under that same owner.
+
+The production Sun passed **8,081 standard-engine checks**, including 848 height
+samples and 2,348 camera cases against the unchanged, renamed C# reference, plus
+exact texture/material/mesh/colour comparisons. **104 editor assertions** cover
+inactive sampler/input, unchanged sources, public saves without pixels and
+repeated private saves retaining external resources. Runtime is clean; scripted
+editor teardown diagnostics remain. Receipts are `gdscript-sun-reference-5jfln59c/`,
+`gdscript-sun-native-final-znutlbka/` and `gdscript-sun-editor-final-du_moph1/` under
+`local-data/test-runs/`. The explicit NaN coordinate shim matches the actual
+host's current heightfield reader; it does not establish retail NaN behavior or
+resolve the existing terrain-only/VisibleSun omissions.
+
+The combined supported build and private import passed with zero warnings/errors
+in `local-data/test-runs/gdscript-resume-build-g/`. The final world check passed
+**24,132 assertions** in `gdscript-resume-world-c/`, with clean runtime shutdown.
+It covers geometry/material/texture round-trips, initial bindings, selected poses,
+retry isolation, unchanged pointer/hash state and native source/resource import
+invalidation. Exactly two authored trail slots remain empty before movement;
+their generated history is checked by the entity comparison. The unchanged
+camera bridge also passed **849 checks** in `gdscript-resume-camera-a/`.
+The supported headless smoke in `gdscript-resume-smoke-a/` again retained
+**2,148 steps**, the unchanged `53c1cc64…096e5e` hash, 13 ordered message IDs,
+fresh retry and world release at the main menu, with a clean runtime log.
+Its actual 2,148-step recording passed two Headless replays in
+`gdscript-resume-replay-a/replay.log`: both embedded live trace
+(`a4e6673b…43c58f2`) and final-state hashes verified, with no first divergence.
+Mission outcome remains **Running**, terminal state **None**; this is not full
+combat completion. All these directories are under this worktree's
+`local-data/test-runs/`, using the canonical lab read-only. Rendered checks used
+isolated credentials/displays and establish no physical-input, audible-playback
+or normal GPU-performance claim.
+
+Run `res://Scenes/Frontend/Tests/OptionsBridgeChecks.tscn` and
+`res://Scenes/World/EntityBridgeChecks.tscn` using the same supported headless
+launch form as the world check above. Standard Godot accepts
+`--script res://Scenes/Frontend/Tests/options_scene_checks.gd` and
+`--script res://Scenes/World/entity_scene_checks.gd`, with `--editor` for their
+frozen editor checks. Sun's headless .NET `SunSceneChecks.tscn` requires two fresh
+absolute owned output paths after `--` (reference Variant and report JSON);
+the standard `sun_scene_checks.gd` accepts that reference and a new owned report
+path. These entry points reuse production scenes and existing comparison owners.
 
 The scheduler group additionally passed **454 checks** derived from the committed
 September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),

@@ -17,6 +17,7 @@ public sealed partial class WorldSceneChecks : Node
     {
         try
         {
+            CheckNativeImportIdentity();
             var session = new InteractiveSession(0x4F4E534Cu, Level100StaticWorldAsset.LoadActorDefinitions());
             Input.MouseModeEnum pointer = Input.MouseMode;
             string initialHash = StateHasher.ComputeHex(session.CurrentSnapshot);
@@ -86,6 +87,30 @@ public sealed partial class WorldSceneChecks : Node
         }
     }
 
+    private void CheckNativeImportIdentity()
+    {
+        // Synthetic files in this invocation's owned profile; never edit the
+        // production source or private assets to exercise stale-import refusal.
+        string root = Path.Combine(ProjectSettings.GlobalizePath("user://"), "native-import-identity");
+        foreach (string relative in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Assets" })
+            System.IO.Directory.CreateDirectory(Path.Combine(root, relative));
+        string script = Path.Combine(root, "Scenes/World/source.gd");
+        System.IO.File.WriteAllText(script, "extends Node\nconst VALUE = 1\n");
+        string before = Level100SceneImport.NativeSourceIdentity(root);
+        System.IO.File.WriteAllText(Path.Combine(root, "Assets/generated.tscn"), "private output is not an input");
+        System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/source.gd.uid"), "editor identity only");
+        Check(before == Level100SceneImport.NativeSourceIdentity(root), "Generated output and UID metadata cannot stale the import.");
+        System.IO.File.WriteAllText(script, "extends Node\nconst VALUE = 2\n");
+        string edited = Level100SceneImport.NativeSourceIdentity(root);
+        Check(before != edited, "A native script edit invalidates the private bake without a managed rebuild.");
+        string resource = Path.Combine(root, "Scenes/Shared/recipe.tres");
+        System.IO.File.WriteAllText(resource, "[gd_resource type=\"Resource\" format=3]\n");
+        string withResource = Level100SceneImport.NativeSourceIdentity(root);
+        Check(edited != withResource, "Adding a native resource invalidates the private bake.");
+        System.IO.File.Move(resource, Path.Combine(root, "Scenes/Shared/renamed.tres"));
+        Check(withResource != Level100SceneImport.NativeSourceIdentity(root), "Native resource path identity participates in the import.");
+    }
+
     private void Compare(FirstFlightWorldView recipe, FirstFlightWorldView production,
         bool compareGeometry, bool compareBindings = true)
     {
@@ -101,6 +126,17 @@ public sealed partial class WorldSceneChecks : Node
             }
             if (compareGeometry && expected is MeshInstance3D mesh && actual is MeshInstance3D other)
             {
+                // Authored projectile templates have no history before play.
+                // Their two trail slots retain the material but acquire mesh
+                // vertices only from actual projectile samples (EntityBridgeChecks).
+                if (mesh.Mesh is null && path.ToString() is
+                    "EntityPresentation/Definitions/PulseBolt/ProjectileTrail" or
+                    "EntityPresentation/Definitions/VulcanBullet/ProjectileTrail")
+                {
+                    Check(other.Mesh is null, "Unplayed trail template retains its empty history at " + path);
+                    CompareMaterial(mesh.MaterialOverride, other.MaterialOverride, path);
+                    continue;
+                }
                 Check(mesh.Mesh is not null && other.Mesh is not null, "Mesh retained at " + path);
                 Check(mesh.Mesh!.GetSurfaceCount() == other.Mesh!.GetSurfaceCount(), "Surface count at " + path);
                 CompareMaterial(mesh.MaterialOverride, other.MaterialOverride, path);

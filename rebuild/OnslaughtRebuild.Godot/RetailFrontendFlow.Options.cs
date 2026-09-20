@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Runtime.ExceptionServices;
 using Godot;
 using OnslaughtRebuild.Client;
 
@@ -40,6 +41,8 @@ public sealed partial class RetailFrontendFlow
 {
     private Control _optionsView = null!;
     private Godot.Collections.Dictionary _optionsSettings = new();
+    private readonly Dictionary<int, ExceptionDispatchInfo> _optionsEffectFailures = [];
+    private int _optionsEffectFailureSequence;
 
     // Detached, cached settings. No property or drawing read crosses languages.
     internal RetailOptionsSettings OptionsSettings => ReadOptionsSettings(_optionsSettings);
@@ -48,7 +51,10 @@ public sealed partial class RetailFrontendFlow
     private void InitializeOptions()
     {
         _optionsView = GetNode<Control>("Stage/Options");
-        var paths = new Godot.Collections.Dictionary
+        if (!Engine.IsEditorHint())
+            _optionsView.Call("set_effect_handler", Callable.From<Godot.Collections.Dictionary,
+                Godot.Collections.Dictionary, Godot.Collections.Dictionary>(DispatchOptionsEffect));
+        using var paths = new Godot.Collections.Dictionary
         {
             ["body_font"] = AssetPaths.TexturePath("Hud", "font-13ps"),
             ["title_font"] = AssetPaths.TexturePath("Hud", "font-22"),
@@ -56,12 +62,25 @@ public sealed partial class RetailFrontendFlow
             ["bracket"] = AssetPaths.TexturePath("Frontend", "level-bracket-01"),
             ["arrow"] = AssetPaths.TexturePath("Frontend", "fe-arrow"),
         };
-        var frames = new Godot.Collections.Array();
-        foreach (Texture2D frame in _feBackFrames) frames.Add(frame);
-        RequireOptionsResult(_optionsView.Call("configure_assets", paths, frames).AsGodotDictionary());
+        using var frames = new Godot.Collections.Array();
+        foreach (Texture2D frame in _feBackFrames)
+        {
+            using Variant texture = frame;
+            frames.Add(texture);
+        }
+        // Resource-bearing Variants own a native reference independently of
+        // the Array/Dictionary wrappers. Dispose the temporary batch carriers,
+        // while the view and decoded C# texture handles keep their own owners.
+        using Variant pathBatch = paths;
+        using Variant frameBatch = frames;
+        using Variant configuredAssets = _optionsView.Call("configure_assets", pathBatch, frameBatch);
+        using Godot.Collections.Dictionary assetResult = configuredAssets.AsGodotDictionary();
+        RequireOptionsResult(assetResult);
         // All frontend glyph users share these production pages and widths.
-        _titleFont = _optionsView.Call("font_texture", false).As<Texture2D>();
-        _font22 = _optionsView.Call("font_texture", true).As<Texture2D>();
+        using Variant bodyTexture = _optionsView.Call("font_texture", false);
+        using Variant titleTexture = _optionsView.Call("font_texture", true);
+        _titleFont = bodyTexture.As<Texture2D>();
+        _font22 = titleTexture.As<Texture2D>();
         _glyphWidths = _optionsView.Call("font_widths", false).AsInt32Array();
         _font22Widths = _optionsView.Call("font_widths", true).AsInt32Array();
         RetailOptionsHostCapabilities host = DescribeHost();
@@ -144,31 +163,51 @@ public sealed partial class RetailFrontendFlow
     {
         if (result.TryGetValue("settings", out Variant settings))
             _optionsSettings = settings.AsGodotDictionary().Duplicate(true);
-        if (result.TryGetValue("effects", out Variant effects))
-        {
-            // Effects before a failure remain observable, in source order.
-            foreach (Variant effectValue in effects.AsGodotArray())
-            {
-                Godot.Collections.Dictionary effect = effectValue.AsGodotDictionary();
-                switch (effect["kind"].AsString())
-                {
-                    case "audio": RequestAudioCue((RetailFrontendAudioCue)effect["cue"].AsInt32()); break;
-                    case "apply_settings": ApplyOptionsToHost(); break;
-                    case "redraw": QueueRedraw(); break;
-                    case "frontend_back":
-                        if (_session.TryBackPage(startupMediaActive: false, out RetailFrontendSignal frontend))
-                        {
-                            RequestAudioCue(RetailFrontendAudioCue.Back);
-                            HandleNavigationSignal(frontend);
-                            QueueRedraw();
-                        }
-                        break;
-                    default: throw new InvalidDataException("Unknown native options effect.");
-                }
-            }
-        }
+        // User-action effects already ran at their original source points in
+        // the narrow callback below. They must never be replayed after mutation.
+        if (result.TryGetValue("host_exception_id", out Variant failureId)
+            && _optionsEffectFailures.Remove(failureId.AsInt32(), out ExceptionDispatchInfo? error))
+            error.Throw();
         RequireOptionsResult(result);
         return result.TryGetValue("value", out Variant value) && value.VariantType == Variant.Type.Bool && value.AsBool();
+    }
+
+    private Godot.Collections.Dictionary DispatchOptionsEffect(
+        Godot.Collections.Dictionary effect, Godot.Collections.Dictionary settings)
+    {
+        // Synchronous user-action boundary: an audio/settings observer can
+        // throw or reenter. Native control flow stops at a returned failure;
+        // ExceptionDispatchInfo preserves the exact host exception on return.
+        _optionsSettings = settings.Duplicate(true);
+        try
+        {
+            switch (effect["kind"].AsString())
+            {
+                case "audio": RequestAudioCue((RetailFrontendAudioCue)effect["cue"].AsInt32()); break;
+                case "apply_settings": ApplyOptionsToHost(); break;
+                case "redraw": QueueRedraw(); break;
+                case "frontend_back":
+                    if (_session.TryBackPage(startupMediaActive: false, out RetailFrontendSignal frontend))
+                    {
+                        RequestAudioCue(RetailFrontendAudioCue.Back);
+                        HandleNavigationSignal(frontend);
+                        QueueRedraw();
+                    }
+                    break;
+                default: throw new InvalidDataException("Unknown native options effect.");
+            }
+            return new Godot.Collections.Dictionary { ["ok"] = true };
+        }
+        catch (Exception error)
+        {
+            int id = ++_optionsEffectFailureSequence;
+            _optionsEffectFailures.Add(id, ExceptionDispatchInfo.Capture(error));
+            return new Godot.Collections.Dictionary
+            {
+                ["ok"] = false, ["error_type"] = error.GetType().Name,
+                ["error"] = error.Message, ["host_exception_id"] = id,
+            };
+        }
     }
 
     private static void RequireOptionsResult(Godot.Collections.Dictionary result)

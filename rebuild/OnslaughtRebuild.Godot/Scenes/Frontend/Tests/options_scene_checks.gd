@@ -106,6 +106,12 @@ func _run() -> void:
 	_key(view, "back")
 	view.select_row(1)
 	_key(view, "confirm")
+	view.select_row(1)
+	var clicked: Dictionary = view.pointer_confirm(Vector2(0.0, 196.0))
+	_check(_effects(clicked) == ["audio:0", "audio:0", "apply_settings", "redraw"], "Clicking an unselected value bar preserves hover and adjustment effects.")
+	_check(clicked.effect_settings.size() == 4 and clicked.effect_settings[0].sound_volume == F32(0.8)
+		and clicked.effect_settings[1].sound_volume == F32(0.7) and clicked.settings.sound_volume == F32(0.7),
+		"Coarse host handoff retains settings observed before and after the adjustment.")
 	view.select_row(4)
 	_key(view, "confirm")
 	var entry: Control = view.get_node("Dropdown/Entries/State01")
@@ -126,6 +132,40 @@ func _run() -> void:
 	_key(view, "back")
 	_check(_effects(_key(view, "back")) == ["frontend_back"], "Root Back requests the existing frontend owner.")
 	_done("controller_and_settings")
+
+	# Injected user-action effects stop at the source failure point and permit
+	# synchronous observer reentry without overwriting the outer result journal.
+	view.reset_menu()
+	view.select_row(1)
+	_key(view, "confirm")
+	view.select_row(1)
+	var volume_before: float = view.view_snapshot().settings.sound_volume
+	var observer_calls: Array[Dictionary] = []
+	view.set_effect_handler(func(effect: Dictionary, settings: Dictionary) -> Dictionary:
+		observer_calls.append({"effect": effect.duplicate(true), "settings": settings.duplicate(true)})
+		return {"ok": false, "error_type": "IOException", "error": "synthetic observer failure"})
+	var failed: Dictionary = view.pointer_confirm(Vector2(639.0, 196.0))
+	_check(not failed.ok and failed.error_type == "IOException" and observer_calls.size() == 1,
+		"Observer failure aborts after the first source effect.")
+	_check(view.view_snapshot().selected_index == 0 and failed.settings.sound_volume == volume_before,
+		"Observer failure keeps hover selection but prevents the later adjustment.")
+	view.set_effect_handler(Callable())
+	view.select_row(1)
+	var reentered: Array[bool] = [false]
+	var inner_results: Array[Dictionary] = []
+	view.set_effect_handler(func(effect: Dictionary, _settings: Dictionary) -> Dictionary:
+		if effect.kind == "audio" and not reentered[0]:
+			reentered[0] = true
+			inner_results.append(view.handle_key(false, false, false, true, false, false))
+		return {"ok": true})
+	var outer: Dictionary = view.pointer_confirm(Vector2(639.0, 196.0))
+	_check(outer.ok and reentered[0] and inner_results.size() == 1 and inner_results[0].ok,
+		"Synchronous nested action succeeds through the same sole controller.")
+	_check(_effects(outer) == ["audio:0", "audio:0", "apply_settings", "redraw"]
+		and _effects(inner_results[0]) == ["audio:0", "apply_settings", "redraw"],
+		"Nested and outer effect journals remain separate.")
+	view.set_effect_handler(Callable())
+	_done("observer_failure_and_reentry")
 
 	var host: Dictionary = {"screen_modes": ["640 x 480"], "video_adapters": [PackedInt32Array([65, 0, 66, 0xd83d, 0xde80])], "anti_aliasing_levels": ["None"], "sound_devices": ["Primary Sound Driver"], "recommended_texture_resolution": 0, "recommended_enable32_bit_textures": 2}
 	_check(view.configure_host(host).ok, "Verified host facts are admitted once.")
@@ -200,6 +240,10 @@ func _effects(result: Dictionary) -> Array[String]:
 	for effect: Dictionary in result.effects:
 		effects.append(effect.kind + (":" + str(effect.cue) if effect.kind == "audio" else ""))
 	return effects
+
+
+func F32(value: float) -> float:
+	return PackedFloat32Array([value])[0]
 
 
 func _stored(value: Variant, visited: Dictionary) -> void:

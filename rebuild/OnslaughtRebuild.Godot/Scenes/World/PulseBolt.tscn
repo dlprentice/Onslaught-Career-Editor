@@ -1,4 +1,30 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="1_page"]
+
+[sub_resource type="Texture2D" id="SparkTexture"]
+script = ExtResource("1_page")
+source_path = "res://Assets/Level100/Textures/pulse-bolt-blue-spark.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1
+
+[sub_resource type="Texture2D" id="HaloTexture"]
+script = ExtResource("1_page")
+source_path = "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 0
+
+[sub_resource type="Texture2D" id="EnergyTexture"]
+script = ExtResource("1_page")
+source_path = "res://Assets/Level100/Textures/mech-pulse-medium-energy-trail.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 0
+
+[sub_resource type="Texture2D" id="TrailTexture"]
+script = ExtResource("1_page")
+source_path = "res://Assets/Level100/Textures/pulse-bolt-blue-trail.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 0
 
 [sub_resource type="StandardMaterial3D" id="Spark"]
 resource_local_to_scene = true
@@ -10,6 +36,9 @@ cull_mode = 2
 billboard_mode = 1
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
+
+albedo_texture = SubResource("SparkTexture")
+emission_texture = SubResource("SparkTexture")
 
 [sub_resource type="QuadMesh" id="SparkQuad"]
 size = Vector2(0.5, 0.5)
@@ -25,6 +54,9 @@ billboard_mode = 1
 emission_enabled = true
 emission = Color(0.25, 0.25, 0.25, 1)
 
+albedo_texture = SubResource("HaloTexture")
+emission_texture = SubResource("HaloTexture")
+
 [sub_resource type="QuadMesh" id="HaloQuad"]
 size = Vector2(0.6, 0.6)
 
@@ -37,6 +69,9 @@ cull_mode = 2
 albedo_color = Color(0.3, 0.3, 0.3, 1)
 emission_enabled = true
 emission = Color(0.3, 0.3, 0.3, 1)
+
+albedo_texture = SubResource("EnergyTexture")
+emission_texture = SubResource("EnergyTexture")
 
 [sub_resource type="CylinderMesh" id="EnergyCylinder"]
 top_radius = 0.25
@@ -53,6 +88,9 @@ cull_mode = 2
 albedo_color = Color(0.5, 0.5, 0.5, 1)
 emission_enabled = true
 emission = Color(0.5, 0.5, 0.5, 1)
+
+albedo_texture = SubResource("TrailTexture")
+emission_texture = SubResource("TrailTexture")
 
 [node name="PulseBolt" type="Node3D"]
 metadata/definition = "Mech Pulse Bolt Medium; production visual template"

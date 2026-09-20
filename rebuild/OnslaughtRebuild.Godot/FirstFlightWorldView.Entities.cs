@@ -25,15 +25,28 @@ public sealed partial class FirstFlightWorldView
 
     private void ConfigureEntityPresentation(WorldSnapshot snapshot)
     {
-        var assets = new Array();
+        using var assets = new Array();
         foreach ((Level100TargetVisualBinding binding, Mesh mesh) in _level100TargetAssets)
-            assets.Add(new Dictionary
+        {
+            using Variant definitionName = TextUnits(binding.DefinitionName);
+            using Variant meshBinding = TextUnits(binding.MeshBinding);
+            using Variant meshValue = mesh;
+            using var entry = new Dictionary
             {
-                ["definition_name"] = TextUnits(binding.DefinitionName),
-                ["mesh_binding"] = TextUnits(binding.MeshBinding), ["mesh"] = mesh,
-            });
-        using Dictionary result = EntityResult(_entityPresentation.Call("configure",
-            this, _camera, assets, EntityTargetFacts(snapshot.Targets)));
+                ["definition_name"] = definitionName,
+                ["mesh_binding"] = meshBinding, ["mesh"] = meshValue,
+            };
+            using Variant entryValue = entry;
+            assets.Add(entryValue);
+        }
+        // The native owner retains its own mesh references. Release both the
+        // collection wrappers and independent Variant carriers for this batch.
+        using Array targets = EntityTargetFacts(snapshot.Targets);
+        using Variant assetValues = assets;
+        using Variant targetValues = targets;
+        using Variant configured = _entityPresentation.Call("configure",
+            this, _camera, assetValues, targetValues);
+        using Dictionary result = EntityResult(configured);
         StoreEntityCounts(result);
     }
 
@@ -48,7 +61,14 @@ public sealed partial class FirstFlightWorldView
             try
             {
                 if (feet.Count != 4) throw new InvalidDataException("Native Aquila contacts are incomplete.");
-                aquilaStage(feet.Select(value => EntityVector(value.AsGodotDictionary())).ToArray());
+                var contacts = new Vector3[feet.Count];
+                for (int index = 0; index < feet.Count; index++)
+                {
+                    using Variant value = feet[index];
+                    using Dictionary contact = value.AsGodotDictionary();
+                    contacts[index] = EntityVector(contact);
+                }
+                aquilaStage(contacts);
                 return new Dictionary { ["ok"] = true };
             }
             catch (Exception error)
@@ -58,14 +78,15 @@ public sealed partial class FirstFlightWorldView
                     ["error"] = error.Message };
             }
         });
-        using Variant nativeResult = _entityPresentation.Call("render_frame", facts, callback);
+        using Variant factValues = facts;
+        using Variant nativeResult = _entityPresentation.Call("render_frame", factValues, callback);
         // Preserve a partial muzzle decrement if a later actor/projectile stage
         // refuses the frame. An aborted GDScript function is never success.
         if (nativeResult.VariantType == Variant.Type.Dictionary)
         {
             using Dictionary partial = nativeResult.AsGodotDictionary();
             if (partial.TryGetValue("pending_muzzles", out Variant count))
-                _pendingPulseCannonMuzzleFlashes = checked((int)count.AsInt64());
+                using (count) _pendingPulseCannonMuzzleFlashes = checked((int)count.AsInt64());
         }
         if (hostFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(hostFailure).Throw();
         using Dictionary result = EntityResult(nativeResult);
@@ -74,9 +95,12 @@ public sealed partial class FirstFlightWorldView
 
     private void StoreEntityCounts(Dictionary result)
     {
-        _targetVisualCount = checked((int)result["target_count"].AsInt64());
-        _projectileVisualCount = checked((int)result["projectile_count"].AsInt64());
-        _targetSurfaceCount = checked((int)result["target_surface_count"].AsInt64());
+        using Variant targets = result["target_count"];
+        using Variant projectiles = result["projectile_count"];
+        using Variant surfaces = result["target_surface_count"];
+        _targetVisualCount = checked((int)targets.AsInt64());
+        _projectileVisualCount = checked((int)projectiles.AsInt64());
+        _targetSurfaceCount = checked((int)surfaces.AsInt64());
     }
 
     internal static Dictionary EntityFrameFacts(WorldSnapshot previous, WorldSnapshot current,
@@ -162,18 +186,34 @@ public sealed partial class FirstFlightWorldView
         if (result.VariantType != Variant.Type.Dictionary)
             throw new InvalidOperationException("Native entity presentation aborted without a completion result.");
         Dictionary record = result.AsGodotDictionary();
-        if (!record.TryGetValue("ok", out Variant ok) || ok.VariantType != Variant.Type.Bool)
-            throw new InvalidOperationException("Native entity presentation returned no completion flag.");
-        if (ok.AsBool()) return record;
-        string kind = record.TryGetValue("error_type", out Variant name) ? name.AsString() : "InvalidOperationException";
-        string error = record.TryGetValue("error", out Variant message) ? message.AsString() : "Native entity presentation failed.";
-        throw kind switch
+        try
         {
-            "InvalidDataException" => new InvalidDataException(error),
-            "ArgumentOutOfRangeException" => new ArgumentOutOfRangeException(null, error),
-            "ArgumentNullException" => new ArgumentNullException(null, error),
-            "ArgumentException" => new ArgumentException(error),
-            _ => new InvalidOperationException(error),
-        };
+            bool hasFlag = record.TryGetValue("ok", out Variant ok);
+            using (ok)
+            {
+                if (!hasFlag || ok.VariantType != Variant.Type.Bool)
+                    throw new InvalidOperationException("Native entity presentation returned no completion flag.");
+                if (ok.AsBool()) return record;
+            }
+            string kind = "InvalidOperationException";
+            string error = "Native entity presentation failed.";
+            if (record.TryGetValue("error_type", out Variant name))
+                using (name) kind = name.AsString();
+            if (record.TryGetValue("error", out Variant message))
+                using (message) error = message.AsString();
+            throw kind switch
+            {
+                "InvalidDataException" => new InvalidDataException(error),
+                "ArgumentOutOfRangeException" => new ArgumentOutOfRangeException(null, error),
+                "ArgumentNullException" => new ArgumentNullException(null, error),
+                "ArgumentException" => new ArgumentException(error),
+                _ => new InvalidOperationException(error),
+            };
+        }
+        catch
+        {
+            record.Dispose();
+            throw;
+        }
     }
 }

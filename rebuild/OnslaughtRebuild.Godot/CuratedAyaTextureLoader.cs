@@ -64,7 +64,7 @@ internal static class CuratedAyaTextureLoader
                 $"Curated texture '{resourcePath}' does not contain the expected {mipCount} DDS mip levels.");
         }
 
-        var image = new Image();
+        using var image = new Image();
         Error result = image.LoadDdsFromBuffer(dds);
         if (result != Error.Ok || image.IsEmpty())
         {

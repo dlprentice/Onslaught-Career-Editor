@@ -11,7 +11,7 @@ metadata/presentation_owner = "Native actor joins, pose interpolation and projec
 
 [node name="Definitions" type="Node3D" parent="."]
 visible = false
-metadata/purpose = "Actual production templates; private textures bind during explicit import only"
+metadata/purpose = "Actual production templates; editor and gameplay share private-page texture recipes"
 
 [node name="PulseBolt" parent="Definitions" instance=ExtResource("2")]
 

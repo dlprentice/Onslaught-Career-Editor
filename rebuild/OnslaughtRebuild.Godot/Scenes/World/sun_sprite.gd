@@ -22,12 +22,18 @@ var _layer: Dictionary = {}
 var _offset: Vector3
 var _direction: Vector3
 var _height_scale: float
-var _private_bake: bool = false
+# Only explicit import/runtime configuration or an existing private mesh sets
+# this stored flag. Public editor previews never enable derived-resource saves.
+@export_storage var _private_bake: bool = false
 var _preview_error: String = ""
 
 
 func _ready() -> void:
 	set_process(false)
+	if mesh != null and mesh.resource_path.begins_with("res://Assets/Level100/Scenes/"):
+		# Local-to-scene material copies lose ResourcePath on reload. Preserve
+		# their override using the admitted private mesh, also on a second save.
+		_private_bake = true
 	if Engine.is_editor_hint() and (mesh == null or material_override == null):
 		var result: Dictionary = prepare_visual(false)
 		_preview_error = "" if result.ok else result.error
@@ -41,8 +47,13 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _validate_property(property: Dictionary) -> void:
 	# Public editor saves retain the recipe/template, never derived material or
 	# texture bytes. Only the explicit private importer enables their storage.
-	if property.name in ["mesh", "material_override"] and not _private_bake \
-			and not scene_file_path.begins_with("res://Assets/Level100/Scenes/"):
+	if property.name not in ["mesh", "material_override"] or _private_bake:
+		return
+	var resource: Resource = get(property.name)
+	# Imported overrides already point to private external resources. Retain
+	# those references on reload/editor saves without embedding derived bytes
+	# in the public recipe scene or relying on its parent's current scene path.
+	if resource == null or not resource.resource_path.begins_with("res://Assets/Level100/Scenes/"):
 		property.usage = int(property.usage) & ~PROPERTY_USAGE_STORAGE
 
 
@@ -99,7 +110,7 @@ func configure(terrain_bytes: PackedByteArray, retain_saved: bool) -> Dictionary
 	var sun := Vector3(_word(data.sun_position_x_bits), -_word(data.sun_position_z_bits), -_word(data.sun_position_y_bits))
 	_offset = sun * F.value(SCALE)
 	_direction = _offset.normalized()
-	_private_bake = not retain_saved
+	_private_bake = _private_bake or not retain_saved
 	notify_property_list_changed()
 	return {"ok": true}
 
@@ -125,10 +136,19 @@ func has_line_of_sight(camera_position: Vector3) -> bool:
 func relative_height(relative_x: float, relative_z: float) -> float:
 	var x: float = F.value(F.value(relative_x) + F.value(float(Terrain.PLAYER_START_RETAIL_X_FIXED) / 256.0))
 	var z: float = F.value(F.value(relative_z) + F.value(float(Terrain.PLAYER_START_RETAIL_Y_FIXED) / 256.0))
-	var fixed_x: int = int(floor(F.value(clampf(x, 0.0, _word(MAX_COORDINATE_BITS)) * 256.0)))
-	var fixed_z: int = int(floor(F.value(clampf(z, 0.0, _word(MAX_COORDINATE_BITS)) * 256.0)))
+	var fixed_x: int = _fixed_coordinate(x)
+	var fixed_z: int = _fixed_coordinate(z)
 	var units: int = _terrain._fixed_height_units_admitted(fixed_x, fixed_z)
-	return F.value(-10.0 - F.value(float(units) * _height_scale))
+	return F.value(float(Terrain.PLAYER_START_REFERENCE_ELEVATION_MILLIMETERS) / 1000.0 - F.value(float(units) * _height_scale))
+
+
+static func _fixed_coordinate(coordinate: float) -> int:
+	# The retained Linux .NET float-to-Int32 NaN result is zero in the actual
+	# HeightField comparison. GDScript int(NaN) instead yields Int64 minimum.
+	# This is a host-compatibility edge, not a claim about retail NaN cameras.
+	if is_nan(coordinate):
+		return 0
+	return int(floor(F.value(clampf(coordinate, 0.0, _word(MAX_COORDINATE_BITS)) * 256.0)))
 
 
 func definition() -> Dictionary:

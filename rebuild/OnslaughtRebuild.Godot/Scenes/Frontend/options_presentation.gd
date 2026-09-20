@@ -37,6 +37,7 @@ const TITLES: Array[String] = ["OPTIONS", "Controller Options", "Video Options",
 			_preview()
 
 var _menu: Options.Menu
+var _effect_handler: Callable
 var _controller: Controller
 var _seconds: float = 0.0
 var _frames: Array = []
@@ -66,7 +67,13 @@ func _ready() -> void:
 func _ensure_menu() -> void:
 	if _menu == null:
 		_menu = Options.create().value
-		_controller = Controller.new(_menu)
+		_controller = Controller.new(_menu, _effect_handler)
+
+
+func set_effect_handler(handler: Callable) -> void:
+	_effect_handler = handler
+	if _controller != null:
+		_controller.set_effect_handler(handler)
 
 
 ## One initialization batch. Device enumeration remains with the host adapter.
@@ -75,7 +82,7 @@ func configure_host(host: Dictionary) -> Dictionary:
 	if not created.ok:
 		return created
 	_menu = created.value
-	_controller = Controller.new(_menu)
+	_controller = Controller.new(_menu, _effect_handler)
 	_host_configured = true
 	_refresh()
 	return _finish({"ok": true, "value": true, "effects": []})

@@ -313,7 +313,8 @@ filesystem, clock, process, network, or GPU dependencies.
 `4.8.dev6.mono.official.8898c2b3d` engine and `Godot.NET.Sdk/4.8.0-dev.6`, retaining
 `net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
 selectable Controls and resources before Play. Main-menu rows and native image
-controls expose their layout; complex level graph, options and debriefing sections
+controls expose their layout. Options now has four native pages with selectable
+rows, binding controls, sliders and dropdowns; the level graph and debriefing
 remain custom composite Controls with their C# drawing code available. Explicit
 editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
@@ -322,6 +323,12 @@ The full GDScript conversion is underway. Startup playback/cache admission,
 pause UI, HUD state/drawing/catalog, frontend session and live camera state now
 run from native scripts and the same production scenes. Audio playback,
 queues, fades and actor attachments now use an authored native audio scene.
+Options state/actions, the shared frontend font/FEBack resources, actor/projectile
+presentation and the Sun now have native production owners as well. Exact
+component comparisons cover callback interruption/reentry, font pixels,
+transforms/trails and terrain-only Sun occlusion; unresolved retail behavior
+remains unresolved. Public projectile/muzzle and Sun scenes show the same
+production texture recipes before Play, with private pixels excluded from saves.
 Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
 focused differential checks. The remaining live simulation, frontend/world
@@ -331,12 +338,13 @@ current boundary and [validation receipts](VALIDATION.md) for executed checks.
 
 The private Level 100 scene contains the actual terrain/materials, sky, water,
 static placements, pine instances, initial actors, camera and Aquila hierarchies.
-The build imports reusable world components from the existing production loaders;
+The build imports reusable world components from the production loaders and scenes;
 gameplay then binds those same saved nodes and resources. Geometry, texture bytes,
 selected animated poses and unchanged snapshot hashes passed the production
 round-trip check, including saved resources before runtime refresh. An isolated
 Godot editor opened and rendered the scene successfully. Imported faithful data
-is guarded against silent edits; generated retail scenes/resources remain private.
+is guarded against silent edits, including native source/recipe changes in the
+import identity; generated retail scenes/resources remain private.
 The [scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies what to
 open, what to edit and what remains generated. The [validation receipt](VALIDATION.md)
 records executed checks and editor-harness diagnostics.

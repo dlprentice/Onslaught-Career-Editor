@@ -251,6 +251,17 @@ compare with the current Client. The Int32-maximum trail-tail case is
 source-derived and bounded; the original multi-billion-iteration loop was
 not executed. These presentation checks do not change the simulation owner.
 
+The live Options adapter preserves synchronous side effects at their original
+action points: a pre-adjustment audio failure prevents the later mutation, while
+a post-commit settings failure retains the committed value. Reentrant actions
+keep separate effect contexts. Actual Godot-hosted checks exercise these cases
+and the exact frontend font/FEBack outputs. That process reports `.NET 10.0.12`
+while the project target remains `net8.0`; the target is not the executed CLR.
+The native FEBack cast preserves this host's saturating overflow and NaN-to-zero
+Int64 conversion. The Sun uses an explicit NaN-to-zero Int32 coordinate shim
+before its native terrain sampler. These are current-renderer compatibility
+edges, not evidence of retail nonfinite inputs or a changed simulation contract.
+
 The native particle reader preserves raw UTF-16 fields, first-name lookup and
 duplicate field order. Its Latin-1 encoder preserves all 65,536 unit mappings,
 including the 295 legacy best-fit substitutions and two fallback bytes for a

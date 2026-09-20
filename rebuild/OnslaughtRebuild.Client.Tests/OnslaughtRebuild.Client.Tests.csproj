@@ -249,6 +249,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\World\sun*.gd;..\OnslaughtRebuild.Godot\Scenes\World\SunSprite.tscn"
+             Link="godot-sun-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <!-- ParticleQuadSizeConventionTests reads the effect construction sites to
          check every sprite size is an authored Radius taken through the one
          owner. It cannot instantiate the Godot type, so it asserts on source. -->

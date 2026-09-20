@@ -56,7 +56,17 @@ static func frame_index(seconds: float, count: int) -> int:
 	if count <= 0:
 		return 0
 	var rounded: float = F.round_even(seconds * 30.0)
-	# Preserve the pinned x64 checked-independent floating-to-Int64 conversion.
-	var index: int = -9223372036854775808 if not is_finite(rounded) or rounded >= 9223372036854775808.0 or rounded < -9223372036854775808.0 else int(rounded)
+	# The current pinned Godot .NET host saturates this unchecked conversion,
+	# with NaN becoming zero. Keep the following signed64 phase subtraction
+	# separate: subtracting from Int64.MinValue wraps, as in the C# expression.
+	var index: int
+	if is_nan(rounded):
+		index = 0
+	elif rounded >= 9223372036854775808.0:
+		index = 9223372036854775807
+	elif rounded <= -9223372036854775808.0:
+		index = -9223372036854775808
+	else:
+		index = int(rounded)
 	index -= 3
 	return 0 if index <= 0 else index % count
