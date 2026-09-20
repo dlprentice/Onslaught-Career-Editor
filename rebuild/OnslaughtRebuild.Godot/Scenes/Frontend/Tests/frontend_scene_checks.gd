@@ -21,8 +21,9 @@ func run_checks() -> void:
     if not require(menu.get_node("Language/Flag") is TextureRect, "Language must be a native texture control"): return
     if not require(menu.get_node("VerticalGuide") is ColorRect, "Guide must be a native color control"): return
     if not require(row.position == Vector2(99, 294) and row.size == Vector2(240, 20), "Measured default row geometry changed"): return
-    if not require(row.get("Text") == "New Game", "Main-menu production text is not authored"): return
-    if not require(not row.get("OverrideText"), "Authored English labels must not replace imported localization"): return
+    if not require(row.get("text") == "New Game", "Main-menu production text is not authored"): return
+    if not require(not row.get("override_text"), "Authored English labels must not replace imported localization"): return
+    if not require(menu.has_method("set_frame") and menu.has_method("hit_test") and row.has_method("displayed_units"), "Main Menu must expose its production native component before Ready"): return
     var shadow: TextureRect = menu.get_node("TitleLogo/ShadowMotion/Shadow")
     var shadow_origin: Vector2 = shadow.position
     var old_pointer: int = Input.mouse_mode
@@ -32,6 +33,7 @@ func run_checks() -> void:
     if not require(menu.get_node("TitleLogo/Body").texture != null, "Title production pixels unavailable"): return
     if not require(view.get_node("Stage/Loading/Background").texture != null, "Loading production pixels unavailable"): return
     if not require(Input.mouse_mode == old_pointer, "Frontend scene changed pointer mode"): return
+    if not require(not menu.is_processing() and not menu.is_processing_input(), "Main Menu presentation started a clock or input owner"): return
     if Engine.is_editor_hint():
         if not require(menu.visible and not view.is_processing() and not view.is_processing_input(), "Editor must show frozen Main Menu without processing"): return
         if not require(not view.has_node("RetailMouseCursor"), "Editor must not install the game cursor"): return
@@ -45,6 +47,10 @@ func run_checks() -> void:
                 if not require(not click.get("_frame_supplied") and click.get_node("Splash/Motion/Image").has_method("drawing_rect"), "Click editor page must expose its native production controls and frozen facts"): return
                 if not require(click.view_snapshot() == {"pulse_timer": 5.0, "page_seconds": 5.0}, "Editor selection must not advance Click clocks"): return
                 if not require(click.get_node("Title/Body/Motion/Image").texture == menu.get_node("TitleLogo/Body").texture, "Click and the main menu must share the production title recipe"): return
+            if pages[page] == "MainMenu":
+                if not require(not menu.get("_frame_supplied") and menu.view_snapshot().selected_index == 0, "Main Menu must expose its frozen native fixture"): return
+            if pages[page] == "QuitConfirm":
+                if not require(menu.visible and menu.view_snapshot().selected_index == 6 and not menu.get_node("Reflection").visible, "Quit confirmation must retain its selected Quit backdrop and hidden reflection"): return
             if pages[page] == "Debriefing":
                 var report: Control = stage.get_node("Debriefing")
                 if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return
@@ -65,7 +71,7 @@ func run_checks() -> void:
     row.size += Vector2(8, 2)
     await process_frame
     if not require(row.position == old_position + Vector2(10, 5), "Presentation overwrote an authored layout edit"): return
-    if not require(row.get("SourceRect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
+    if not require(row.get("source_rect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
     if not require(shadow.position == shadow_origin, "Animation overwrote authored shadow geometry"): return
     view.size = Vector2(1280, 720)
     if not require(stage.scale == Vector2(1.5, 1.5) and stage.position == Vector2(160, 0), "Widescreen changed the measured stage fit"): return

@@ -134,33 +134,17 @@ public sealed class RetailMainMenuWritingZTests
     [Fact]
     public void DrawMainMenuKeepsCaptureChromeTintAndDoesNotScaleByZeroPointNine()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawMainMenu()");
-
-        Assert.Contains("RetailMainMenuWritingZ", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuWritingScroll.TileX", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuWritingScroll.TileY", draw, StringComparison.Ordinal);
-        Assert.Contains("ChromeTint", draw, StringComparison.Ordinal);
-        Assert.Contains("DAT_0089D7F0", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuWritingZ.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuWritingColor.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("0.9f", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-        Assert.Contains("0x3e7f7f7f", flow, StringComparison.OrdinalIgnoreCase);
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        for (int tile = 0; tile < RetailMainMenuWritingScroll.TileCount; tile++)
+        {
+            float y = RetailMainMenuWritingScroll.TileY(RetailMainMenuWritingScroll.ImageInitialCounter, tile);
+            NativeMainMenuSource.HasBounds("Writing/Tile" + tile, RetailMainMenuWritingScroll.TileX - 64f, y - 256f, RetailMainMenuWritingScroll.TileX + 64f, y + 256f);
+            NativeMainMenuSource.HasColor("Writing/Tile" + tile, 0x3e7f7f7fu);
+        }
+        Assert.Contains("for index: int in range(3): get_node(\"Writing/Tile%d\" % index).set_fade(fade)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("forseti-writing-large.texture.aya", NativeMainMenuSource.Scene, StringComparison.Ordinal);
+        Assert.DoesNotContain("Writing/Tile%d\" % index).position", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Writing/Tile%d\" % index).scale", NativeMainMenuSource.Controller, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

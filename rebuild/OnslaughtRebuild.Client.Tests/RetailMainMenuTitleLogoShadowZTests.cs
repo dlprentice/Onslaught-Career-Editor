@@ -188,48 +188,28 @@ public sealed class RetailMainMenuTitleLogoShadowZTests
     [Fact]
     public void DrawMainMenuKeepsShadowTintAndDoesNotTreatZeroPointOneAsScaleOrDestImmediate()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawMainMenu()");
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        NativeMainMenuSource.HasBounds("TitleLogo/Body", 64f, 2f, 576f, 258f);
+        NativeMainMenuSource.HasBounds("TitleLogo/ShadowMotion/Shadow", 51.2f, -4.4f, 588.8f, 264.4f);
+        NativeMainMenuSource.HasColor("TitleLogo/ShadowMotion/Shadow", 0x3e000000u);
+        Assert.Equal(new[] { 0xafu / 255f, 0xcfu / 255f, 1f, 0xfeu / 255f },
+            NativeMainMenuSource.Vector(NativeMainMenuSource.Node("TitleLogo/Body"), "ink_color", "Color"));
+        Assert.Contains("get_node(\"TitleLogo/ShadowMotion\").position = offset", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"TitleLogo/Body\").set_fade(1.0)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"TitleLogo/ShadowMotion/Shadow\").set_fade(1.0)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("ClickTitle.tres", NativeMainMenuSource.Scene, StringComparison.Ordinal);
+        NativeMainMenuSource.HasMeasuredReflectionOnly();
 
-        Assert.Contains("RetailMainMenuTitleLogoShadowZ", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuTitleLogoZ.DestX", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuTitleLogoZ.DestY", draw, StringComparison.Ordinal);
-        Assert.Contains("sharedShadow", draw, StringComparison.Ordinal);
-        Assert.Contains("ShadowTint", draw, StringComparison.Ordinal);
-        Assert.Contains("ShadowScaleBoost", draw, StringComparison.Ordinal);
-        Assert.Contains("DAT_0089D88C", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuTitleLogoShadowZ.DestXAdd",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuTitleLogoShadowZ.DestYAdd",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuTitleLogoShadow.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("0.1", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-
+        string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
         string quit = Slice(flow, "private void DrawQuitConfirm()");
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", choice, StringComparison.Ordinal);
         string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", loading, StringComparison.Ordinal);
-        string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
+        string bar = NativeMainMenuSource.Selector;
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", bar, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuSelectorBarZ.DestX", bar, StringComparison.Ordinal);
+        Assert.Contains("const ROW_CENTER_X: float = 219.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

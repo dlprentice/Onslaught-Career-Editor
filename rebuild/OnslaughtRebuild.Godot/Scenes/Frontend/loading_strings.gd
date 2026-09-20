@@ -16,6 +16,27 @@ func load_caption() -> Dictionary:
 
 
 static func admit_source(source: String, path: String = "res://Assets/Frontend/english.json") -> Dictionary:
+	var admitted: Dictionary = admit_table(source, path)
+	return {"ok": true, "value": admitted.value.loading.duplicate()} if admitted.ok else admitted
+
+
+func load_menu_rows() -> Dictionary:
+	return admit_menu_rows(FileAccess.get_file_as_string(source_path), source_path)
+
+
+static func admit_menu_rows(source: String, path: String = "res://Assets/Frontend/english.json") -> Dictionary:
+	var admitted: Dictionary = admit_table(source, path)
+	if not admitted.ok:
+		return admitted
+	var rows: Array[PackedInt32Array] = []
+	for key: String in ["newGame", "continueGame", "loadGame", "multiplayer", "goodies", "options", "quit"]:
+		rows.append(admitted.value[key].duplicate())
+	return {"ok": true, "value": rows}
+
+
+## Shared admission keeps LoadLocalization's original property/error order.
+## Each caller receives detached raw units, including embedded NUL.
+static func admit_table(source: String, path: String = "res://Assets/Frontend/english.json") -> Dictionary:
 	if source.is_empty():
 		return _failure("InvalidDataException", "Released frontend localization is missing: " + path)
 	# JsonDocument keeps duplicate members and GetProperty takes the last one.
@@ -32,7 +53,7 @@ static func admit_source(source: String, path: String = "res://Assets/Frontend/e
 	var strings: StrictJson.Value = root.member("strings")
 	if strings == null:
 		return _failure("KeyNotFoundException", "Missing property: strings")
-	var caption := PackedInt32Array()
+	var table: Dictionary = {}
 	for key: String in REQUIRED_KEYS:
 		var value: Dictionary = _string_property(strings, key)
 		if not value.ok:
@@ -41,9 +62,8 @@ static func admit_source(source: String, path: String = "res://Assets/Frontend/e
 			return _failure("InvalidDataException", "Released frontend localization is missing '" + key + "'.")
 		if key == "level100" and value.value != Text.units(WorldStrings.level_name(100)).value:
 			return _failure("InvalidDataException", "english.json level100 row diverged from the decoded world-strings table.")
-		if key == "loading":
-			caption = value.value
-	return {"ok": true, "value": caption.duplicate()}
+		table[key] = value.value.duplicate()
+	return {"ok": true, "value": table}
 
 
 static func _string_property(owner: StrictJson.Value, key: String) -> Dictionary:

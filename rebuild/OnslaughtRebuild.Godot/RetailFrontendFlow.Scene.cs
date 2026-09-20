@@ -33,8 +33,6 @@ public sealed partial class RetailFrontendFlow
     }
 
     private readonly Dictionary<string, RetailFrontendPart> _sceneParts = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, RetailTextureRect> _nativeTextures = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, Color> _nativeTints = new(StringComparer.Ordinal);
     private Control? _stage;
     private RetailFrontendPart? _paintingPart;
     private string _drawingSection = string.Empty;
@@ -53,18 +51,8 @@ public sealed partial class RetailFrontendFlow
                     throw new InvalidDataException($"Duplicate frontend scene section '{part.Section}'.");
             }
         }
-        foreach (Node node in _stage.FindChildren("*", "TextureRect", true, false))
-        {
-            if (node is RetailTextureRect texture)
-            {
-                string key = _stage.GetPathTo(texture).ToString();
-                _nativeTextures.Add(key, texture);
-                _nativeTints.Add(key, texture.SelfModulate);
-            }
-        }
         if (_sceneParts.Count == 0)
             throw new InvalidDataException("Frontend must be instantiated from its production scene.");
-        _nativeTextures["MainMenu/TitleLogo/Body"].ItemRectChanged += UpdateTitleLogoReflection;
         Resized += FitSceneStage;
         FitSceneStage();
     }
@@ -75,7 +63,6 @@ public sealed partial class RetailFrontendFlow
         (float scale, Vector2 offset) = DesignTransform();
         _stage.Position = offset;
         _stage.Scale = new Vector2(scale, scale);
-        UpdateTitleLogoReflection();
     }
 
     private void SetEditorPage()
@@ -135,52 +122,13 @@ public sealed partial class RetailFrontendFlow
                 _ => false,
             };
         }
-        UpdateNativeTextures();
+        UpdateMainMenuFrame();
         UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
         UpdateDebriefingFrame();
         foreach (RetailFrontendPart part in _sceneParts.Values)
             part.QueueRedraw();
-        UpdateTitleLogoReflection();
-    }
-
-    private void UpdateNativeTextures()
-    {
-        float fade = Clamp01((MainMenuTransition - 0.75f) * 4f);
-        float iconFade = Clamp01((MainMenuTransition - 0.8f) * 5f);
-        for (int index = 0; index < 3; index++)
-            BindNativeTexture($"MainMenu/Writing/Tile{index}", _forsetiWritingLarge, fade);
-        int language = Math.Clamp((int)_session.Language, 0, _languageFlags.Length - 1);
-        BindNativeTexture("MainMenu/Language/Flag", _languageFlags[language], fade);
-        bool arrows = RetailMainMenuLanguageBlink.ShouldDraw(
-            RetailMainMenuLanguageBlink.ImageInitialCounter, RetailMainMenuLanguageBlink.ImageInitialTimer);
-        BindNativeTexture("MainMenu/Language/LeftChevron", _feArrow, arrows ? fade : 0f);
-        BindNativeTexture("MainMenu/Language/RightChevron", _feArrow, arrows ? fade : 0f);
-        Texture2D icon = _menuIcons[_session.SelectedMainIndex];
-        BindNativeTexture("MainMenu/SelectedIcon/ShadowMotion/Shadow", icon, iconFade);
-        BindNativeTexture("MainMenu/SelectedIcon/Body", icon, iconFade);
-        if (!_session.SelectedMainItem.IsAvailable)
-            _nativeTextures["MainMenu/SelectedIcon/Body"].SelfModulate =
-                new Color(ReleasedUnavailable, ReleasedUnavailable.A * iconFade);
-        BindNativeTexture("MainMenu/TitleLogo/ShadowMotion/Shadow", _titleLogo, 1f);
-        BindNativeTexture("MainMenu/TitleLogo/Body", _titleLogo, 1f);
-        var shadow = RetailFrontendDecorShadow.OffsetAtPhase(
-            RetailFrontendDecorShadow.PhaseAtSeconds(_animationSeconds));
-        Vector2 offset = new((float)shadow.X, (float)shadow.Y);
-        // Animation owns only the motion wrapper. The texture's authored
-        // Position/Size remain editable, and saving/reopening cannot accumulate
-        // the current phase offset into the next run's baseline.
-        _stage!.GetNode<Control>("MainMenu/SelectedIcon/ShadowMotion").Position = offset;
-        _stage.GetNode<Control>("MainMenu/TitleLogo/ShadowMotion").Position = offset;
-    }
-
-    private void BindNativeTexture(string key, Texture2D texture, float fade)
-    {
-        RetailTextureRect control = _nativeTextures[key];
-        control.Texture = texture;
-        Color tint = _nativeTints[key];
-        control.SelfModulate = new Color(tint, tint.A * fade);
     }
 
     internal void DrawScenePart(RetailFrontendPart part)
@@ -194,7 +142,6 @@ public sealed partial class RetailFrontendFlow
             string prefix = part.Section.Split('.')[0];
             switch (prefix)
             {
-                case "Main": DrawMainMenu(); break;
                 case "Career": DrawDevSelect(); break;
                 case "Briefing": DrawMissionBriefing(); break;
                 case "Configuration": DrawSelectConfiguration(); break;

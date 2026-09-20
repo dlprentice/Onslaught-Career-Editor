@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native actor registry, Aquila and plane/mesh checks; earlier validation retained).
+Last updated: 2026-09-20 (interrupted Main Menu/weapon checkpoint; completed component evidence retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -649,6 +649,51 @@ before teardown versus eight previously. Retry/return released the world, and
 the 112 exterior/10 cockpit surfaces retained their existing counts. The route
 still ends `Running`/`None` with zero targets destroyed; this does not establish
 full combat completion or audible playback.
+
+#### Interrupted conversion checkpoint — September 20
+
+The native Main Menu is integrated but remains under validation. The following
+receipts are retained in the conversion worktree's `local-data/test-runs/`:
+
+- `main-menu-law-fixed-njfykcp9/report.json`: **205,452** comparisons passed
+  against `main-menu-laws-1u34suyk/`, covering 5,188 expression cases and 1,040
+  packed-color cases. Ten initial overflow/negative-NaN word differences were
+  corrected in the native implementation against the unchanged fixture.
+  Subsequent harness output guards/completion metadata still need a re-run.
+- `main-menu-frontend-b.log`: the actual frontend scene checks passed after
+  enabling editable Main Menu children; the initial round-trip failure is
+  retained in `main-menu-frontend-a.log`. The checks cover all ten authored
+  pages, seven menu rows, shared resources, edits and unchanged pointer mode.
+- `main-menu-frontend-editor-a.log`: functional editor checks passed, with
+  the known 205 ObjectDB/associated RID shutdown diagnostics. This is not a
+  clean editor-exit claim.
+- `main-menu-session-a.log`: **967** session/path/admission assertions passed;
+  `main-menu-click-sharing-a.log`: **136** shared Click/title checks passed.
+  These are headless checks, not rendered Main Menu comparisons.
+- `main-menu-client-j2kczeef/results/main-menu-b.trx`: **177/177** affected
+  Client tests passed, with no skips. Existing numerical expectations remain
+  unchanged; production-source guards now inspect the native owners.
+- `safe-resume-checkpoint-build-20260920-a.log`: the supported pinned
+  `first_flight.py build --no-prepare` passed with **zero warnings/errors**,
+  including the new `MainMenuSceneChecks` and `RetailWeaponReferenceChecks`.
+  Neither new scene harness has been executed at this checkpoint.
+
+The standalone native Main Menu editor/publication checks are not yet written,
+the exact rendered comparison has not run, and the interrupted integration
+review produced no completed findings. Complete those checks before accepting
+the component. The latest world import and actual-tape replay receipts above
+belong to the earlier Aquila milestone; current assembly/source edits require
+a fresh supported import and affected runtime/replay validation before claiming
+the same results for Main Menu.
+
+The three native weapon foundations and their native test harness parse in
+standard Godot (`weapon-foundation-parse-bp1o65si/` and
+`weapon-harness-parse-shi18jiw/`). The reference exporter compiles in the
+checkpoint build, but no weapon export or native differential run has occurred.
+They have no live consumers and make no validated weapon-parity claim.
+Resume instructions are in [`rebuild/README.md`](rebuild/README.md#interrupted-conversion-checkpoint--september-20).
+
+#### Completed actor foundations
 
 The mutable native actor registry passed **2,756 assertions** against the
 unchanged C# owner: **190** construction/restoration cases and **333** operations

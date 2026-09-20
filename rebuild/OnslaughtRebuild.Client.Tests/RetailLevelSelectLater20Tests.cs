@@ -230,7 +230,8 @@ public sealed class RetailLevelSelectLater20Tests
             "godot-pause-source",
             "RetailFrontendFlow.cs"));
         string level = Slice(flow, "private void DrawLevelSelect()");
-        string main = Slice(flow, "private void DrawMainMenu()");
+        string main = NativeMainMenuSource.Presentation;
+        Assert.DoesNotContain("level_select", main, StringComparison.Ordinal);
         string quit = Slice(flow, "private void DrawQuitConfirm()");
         string loading = NativeLoadingSource.Presentation;
         string click = NativeClickSource.Presentation;

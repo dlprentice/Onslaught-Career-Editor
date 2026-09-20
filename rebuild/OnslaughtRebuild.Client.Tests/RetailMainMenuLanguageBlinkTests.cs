@@ -76,21 +76,16 @@ public sealed class RetailMainMenuLanguageBlinkTests
     [Fact]
     public void DrawLanguageSelectorWiresTheBlinkAndLeavesTheHotspotsAlone()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawLanguageSelector");
-
-        Assert.Contains("RetailMainMenuLanguageBlink.ShouldDraw", draw, StringComparison.Ordinal);
-        Assert.Contains("ImageInitialCounter", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0x007F7F7F", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailOptionsApplyPulse", draw, StringComparison.Ordinal);
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        NativeMainMenuSource.HasColor("Language/Flag", 0xfd3f3f3fu);
+        NativeMainMenuSource.HasColor("Language/LeftChevron", 0x3e7f7f7fu);
+        NativeMainMenuSource.HasColor("Language/RightChevron", 0x3e7f7f7fu);
+        Assert.Contains("for path: String in [\"Flag\", \"LeftChevron\", \"RightChevron\"]: get_node(\"Language/\" + path).set_fade(fade)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("language_flags[clampi(facts.language, 0, 4)]", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Language/LeftChevron\").visible", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Language/RightChevron\").visible", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("PackedColor", NativeMainMenuSource.Presentation, StringComparison.Ordinal);
+        Assert.DoesNotContain("blink(", NativeMainMenuSource.Controller, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

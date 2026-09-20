@@ -72,26 +72,23 @@ public sealed class RetailMainMenuVersionOverlayTests
     [Fact]
     public void DrawMainMenuWiresTheFormatAndKeepsVersionTint()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawMainMenu()");
-
-        Assert.Contains("RetailMainMenuVersionOverlay.Format", draw, StringComparison.Ordinal);
-        Assert.Contains("ImageInitialMajor", draw, StringComparison.Ordinal);
-        Assert.Contains("ImageInitialMinor", draw, StringComparison.Ordinal);
-        Assert.Contains("VersionTint", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuVersionOverlay.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetFileVersionInfo", draw, StringComparison.Ordinal);
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        Assert.Contains("const VERSION_TEXT: String = \"V1.00\"", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"Version\").bind(Laws.VERSION_TEXT, font)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("Laws.retail_color(Laws.VERSION)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("const VERSION: int = 0xff102025", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"Version\").visible = not fade <= 0.0", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("F.value(version_tint.a * fade)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        NativeMainMenuSource.HasAnchor("Version", RetailMainMenuVersionOverlayZ.DestX, RetailMainMenuVersionOverlayZ.DestY(480));
+        Assert.Contains("centered = false", NativeMainMenuSource.Node("Version"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"font\")", NativeMainMenuSource.Node("Version"), StringComparison.Ordinal);
+        Assert.Contains("FrontendFont13.tres", NativeMainMenuSource.Scene, StringComparison.Ordinal);
+        Assert.Contains("active_font.draw_run", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("wrap", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("42.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("1000.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.01", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain(" - 2", NativeMainMenuSource.Label, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

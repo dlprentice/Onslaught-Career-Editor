@@ -1,0 +1,699 @@
+[gd_scene load_steps=37 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_presentation.gd" id="page"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_texture.gd" id="texture"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_label.gd" id="label"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_selector.gd" id="selector"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_rotated_image.gd" id="rotated"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_underlay.gd" id="underlay"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_reflection.gd" id="reflection"]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/main_menu_preview.gd" id="preview"]
+
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont13.tres" id="font"]
+
+[ext_resource type="Resource" path="res://Scenes/Frontend/LoadingStrings.tres" id="strings"]
+
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendUnderlay.tres" id="underlay_recipe"]
+
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/ClickTitle.tres" id="title"]
+
+[ext_resource type="Shader" path="res://Scenes/Frontend/main_menu_reflection.gdshader" id="shader"]
+
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="recipe"]
+
+
+[sub_resource type="Texture2D" id="writing"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/forseti-writing-large.texture.aya"
+dimensions = Vector2i(128, 512)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="arrow"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/fe-arrow.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="bar"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/title-text-box.texture.aya"
+dimensions = Vector2i(256, 32)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="left"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/title-bracket-01.texture.aya"
+dimensions = Vector2i(256, 256)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="left_twin"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/title-bracket-02.texture.aya"
+dimensions = Vector2i(256, 256)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="right"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/symbol-bracket-01.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="right_twin"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/symbol-bracket-02.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="reflection"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/reflection-map.texture.aya"
+dimensions = Vector2i(512, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="flag0"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Flags/flag-uk.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="flag1"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Flags/flag-fr.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="flag2"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Flags/flag-gr.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="flag3"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Flags/flag-it.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="flag4"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Flags/flag-sp.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 0
+
+
+[sub_resource type="Texture2D" id="icon0"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/new-game.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon1"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/continue-game.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon2"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/load-game.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon3"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/multiplayer.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon4"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/goodies.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon5"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/options.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="Texture2D" id="icon6"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/Icons/quit.texture.aya"
+dimensions = Vector2i(128, 128)
+compression = 1
+
+
+[sub_resource type="ShaderMaterial" id="reflection_material"]
+shader = ExtResource("shader")
+shader_parameter/reflection = SubResource("reflection")
+shader_parameter/gain = 0.49411764705882355
+shader_parameter/scroll = 86.68
+
+
+[sub_resource type="Resource" id="frozen"]
+script = ExtResource("preview")
+
+
+[node name="MainMenu" type="Control"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("page")
+font = ExtResource("font")
+strings = ExtResource("strings")
+language_flags = Array[Texture2D]([SubResource("flag0"), SubResource("flag1"), SubResource("flag2"), SubResource("flag3"), SubResource("flag4")])
+menu_icons = Array[Texture2D]([SubResource("icon0"), SubResource("icon1"), SubResource("icon2"), SubResource("icon3"), SubResource("icon4"), SubResource("icon5"), SubResource("icon6")])
+editor_preview = SubResource("frozen")
+
+
+[node name="Background" type="Control" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("underlay")
+recipe = ExtResource("underlay_recipe")
+
+
+[node name="VerticalGuide" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 123.0
+offset_top = 0.0
+offset_right = 124.0
+offset_bottom = 480.0
+mouse_filter = 2
+color = Color(0.19607843, 0.2, 0.28235295, 1)
+
+
+[node name="HorizontalGuide" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 180.0
+offset_right = 640.0
+offset_bottom = 181.0
+mouse_filter = 2
+color = Color(0.19607843, 0.2, 0.28235295, 1)
+
+
+[node name="Writing" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+
+[node name="Tile0" type="TextureRect" parent="Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = -81.0
+offset_right = 522.0
+offset_bottom = 431.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("writing")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+
+
+[node name="Tile1" type="TextureRect" parent="Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 269.0
+offset_right = 522.0
+offset_bottom = 781.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("writing")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+
+
+[node name="Tile2" type="TextureRect" parent="Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 619.0
+offset_right = 522.0
+offset_bottom = 1131.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("writing")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+
+
+[node name="Language" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+
+[node name="Flag" type="TextureRect" parent="Language"]
+layout_mode = 0
+offset_left = 177.4
+offset_top = 252.0
+offset_right = 260.6
+offset_bottom = 284.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("flag0")
+expand_mode = 1
+ink_color = Color(0.49019607843137253, 0.49019607843137253, 0.49019607843137253, 0.9921568627450981)
+
+
+[node name="LeftChevron" type="TextureRect" parent="Language"]
+layout_mode = 0
+offset_left = 128.4
+offset_top = 242.4
+offset_right = 179.60000000000002
+offset_bottom = 293.6
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("arrow")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+flip_h = true
+
+
+[node name="RightChevron" type="TextureRect" parent="Language"]
+layout_mode = 0
+offset_left = 258.4
+offset_top = 242.4
+offset_right = 309.59999999999997
+offset_bottom = 293.6
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("arrow")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+
+
+[node name="Selector" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 288.0
+offset_right = 339.0
+offset_bottom = 440.0
+mouse_filter = 2
+script = ExtResource("selector")
+texture = SubResource("bar")
+
+
+[node name="NewGame" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 294.0
+offset_right = 339.0
+offset_bottom = 314.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "New Game"
+body_origin = false
+source_rect = Rect2(99, 294.0, 240, 20)
+source_anchor = Vector2(219, 296.0)
+
+
+[node name="ContinueGame" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 314.0
+offset_right = 339.0
+offset_bottom = 334.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Continue Game"
+body_origin = false
+source_rect = Rect2(99, 314.0, 240, 20)
+source_anchor = Vector2(219, 316.0)
+
+
+[node name="LoadGame" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 334.0
+offset_right = 339.0
+offset_bottom = 354.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Load Game"
+body_origin = false
+source_rect = Rect2(99, 334.0, 240, 20)
+source_anchor = Vector2(219, 336.0)
+
+
+[node name="Multiplayer" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 354.0
+offset_right = 339.0
+offset_bottom = 374.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Multiplayer"
+body_origin = false
+source_rect = Rect2(99, 354.0, 240, 20)
+source_anchor = Vector2(219, 356.0)
+
+
+[node name="Goodies" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 374.0
+offset_right = 339.0
+offset_bottom = 394.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Goodies"
+body_origin = false
+source_rect = Rect2(99, 374.0, 240, 20)
+source_anchor = Vector2(219, 376.0)
+
+
+[node name="Options" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 394.0
+offset_right = 339.0
+offset_bottom = 414.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Options"
+body_origin = false
+source_rect = Rect2(99, 394.0, 240, 20)
+source_anchor = Vector2(219, 396.0)
+
+
+[node name="Quit" type="Control" parent="."]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 414.0
+offset_right = 339.0
+offset_bottom = 434.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "Quit"
+body_origin = false
+source_rect = Rect2(99, 414.0, 240, 20)
+source_anchor = Vector2(219, 416.0)
+
+
+[node name="Decoration" type="Control" parent="."]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 240.0
+offset_right = 560.0
+offset_bottom = 450.0
+mouse_filter = 2
+
+
+[node name="Left" type="Control" parent="Decoration"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="Control" parent="Decoration/Left"]
+layout_mode = 0
+offset_left = -69.0
+offset_top = -64.0
+offset_right = 267.0
+offset_bottom = 272.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("left")
+source_rect = Rect2(51.0, 176.0, 336.0, 336.0)
+source_anchor = Vector2(219.0, 344.0)
+source_size = Vector2(256.0, 256.0)
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="Control" parent="Decoration/Left"]
+layout_mode = 0
+offset_left = -61.0
+offset_top = -56.0
+offset_right = 259.0
+offset_bottom = 264.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("left")
+source_rect = Rect2(59.0, 184.0, 320.0, 320.0)
+source_anchor = Vector2(219.0, 344.0)
+source_size = Vector2(256.0, 256.0)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+
+[node name="LeftTwin" type="Control" parent="Decoration"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="Control" parent="Decoration/LeftTwin"]
+layout_mode = 0
+offset_left = -69.0
+offset_top = -64.0
+offset_right = 267.0
+offset_bottom = 272.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("left_twin")
+source_rect = Rect2(51.0, 176.0, 336.0, 336.0)
+source_anchor = Vector2(219.0, 344.0)
+source_size = Vector2(256.0, 256.0)
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="Control" parent="Decoration/LeftTwin"]
+layout_mode = 0
+offset_left = -61.0
+offset_top = -56.0
+offset_right = 259.0
+offset_bottom = 264.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("left_twin")
+source_rect = Rect2(59.0, 184.0, 320.0, 320.0)
+source_anchor = Vector2(219.0, 344.0)
+source_size = Vector2(256.0, 256.0)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+
+[node name="Right" type="Control" parent="Decoration"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="Control" parent="Decoration/Right"]
+layout_mode = 0
+offset_left = 253.0
+offset_top = 31.0
+offset_right = 421.0
+offset_bottom = 199.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("right")
+source_rect = Rect2(373.0, 271.0, 168.0, 168.0)
+source_anchor = Vector2(457.0, 355.0)
+source_size = Vector2(128.0, 128.0)
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="Control" parent="Decoration/Right"]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 35.0
+offset_right = 417.0
+offset_bottom = 195.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("right")
+source_rect = Rect2(377.0, 275.0, 160.0, 160.0)
+source_anchor = Vector2(457.0, 355.0)
+source_size = Vector2(128.0, 128.0)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+
+[node name="RightTwin" type="Control" parent="Decoration"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="Control" parent="Decoration/RightTwin"]
+layout_mode = 0
+offset_left = 253.0
+offset_top = 31.0
+offset_right = 421.0
+offset_bottom = 199.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("right_twin")
+source_rect = Rect2(373.0, 271.0, 168.0, 168.0)
+source_anchor = Vector2(457.0, 355.0)
+source_size = Vector2(128.0, 128.0)
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="Control" parent="Decoration/RightTwin"]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 35.0
+offset_right = 417.0
+offset_bottom = 195.0
+mouse_filter = 2
+script = ExtResource("rotated")
+texture = SubResource("right_twin")
+source_rect = Rect2(377.0, 275.0, 160.0, 160.0)
+source_anchor = Vector2(457.0, 355.0)
+source_size = Vector2(128.0, 128.0)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+
+[node name="SelectedIcon" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+
+[node name="ShadowMotion" type="Control" parent="SelectedIcon"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 10.0
+offset_right = 0.0
+offset_bottom = 10.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="TextureRect" parent="SelectedIcon/ShadowMotion"]
+layout_mode = 0
+offset_left = 389.8
+offset_top = 287.8
+offset_right = 524.2
+offset_bottom = 422.20000000000005
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("icon0")
+expand_mode = 1
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="TextureRect" parent="SelectedIcon"]
+layout_mode = 0
+offset_left = 393.0
+offset_top = 291.0
+offset_right = 521.0
+offset_bottom = 419.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = SubResource("icon0")
+expand_mode = 1
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+
+[node name="Version" type="Control" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 464.0
+offset_right = 300.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("font")
+text = "V1.00"
+body_origin = false
+source_rect = Rect2(0, 464, 300, 16)
+source_anchor = Vector2(0, 464)
+centered = false
+
+
+[node name="TitleLogo" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+
+[node name="ShadowMotion" type="Control" parent="TitleLogo"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 10.0
+offset_right = 0.0
+offset_bottom = 10.0
+mouse_filter = 2
+
+
+[node name="Shadow" type="TextureRect" parent="TitleLogo/ShadowMotion"]
+layout_mode = 0
+offset_left = 51.2
+offset_top = -4.4
+offset_right = 588.8000000000001
+offset_bottom = 264.40000000000003
+mouse_filter = 2
+script = ExtResource("texture")
+texture = ExtResource("title")
+expand_mode = 1
+ink_color = Color(0, 0, 0, 0.24313725490196078)
+
+
+[node name="Body" type="TextureRect" parent="TitleLogo"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 2.0
+offset_right = 576.0
+offset_bottom = 258.0
+mouse_filter = 2
+script = ExtResource("texture")
+texture = ExtResource("title")
+expand_mode = 1
+ink_color = Color(0.6862745098039216, 0.8117647058823529, 1, 0.996078431372549)
+
+
+[node name="Reflection" type="Node2D" parent="."]
+script = ExtResource("reflection")
+texture = ExtResource("title")
+reflection = SubResource("reflection")
+material = SubResource("reflection_material")

@@ -136,6 +136,8 @@ public sealed class RetailMainMenuHitTestTests
     [Fact]
     public void HotspotMethodsDoNotCallTheHitTestHelper()
     {
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        NativeMainMenuSource.HasNativeHostBridge();
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 

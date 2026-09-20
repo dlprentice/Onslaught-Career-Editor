@@ -64,8 +64,11 @@ func configure_assets(paths: Dictionary, shared_font: AtlasFont = null) -> Dicti
 		var texture: Texture2D = get_node(pair[1]).texture
 		if texture == null: return _failure("Click page is missing its " + pair[0] + " texture.")
 		if texture.has_method("ensure_loaded"):
-			texture = texture.duplicate(true)
-			if paths.has(pair[0]): texture.set("source_path", paths[pair[0]])
+			# Click and Main Menu reference one production title recipe. Only
+			# a deliberate route override needs a separate mutable resource.
+			if paths.has(pair[0]) and paths[pair[0]] != texture.get("source_path"):
+				texture = texture.duplicate(true)
+				texture.set("source_path", paths[pair[0]])
 			result = texture.call("ensure_loaded")
 			if not result.ok: return result
 		textures[pair[0]] = texture

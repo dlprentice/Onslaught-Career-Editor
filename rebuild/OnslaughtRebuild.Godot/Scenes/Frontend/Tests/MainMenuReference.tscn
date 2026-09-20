@@ -1,0 +1,309 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="Script" path="res://Scenes/Frontend/Tests/MainMenuReference.cs" id="1"]
+[ext_resource type="Script" path="res://Scenes/Frontend/Tests/MainMenuReferencePart.cs" id="2"]
+[ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="4"]
+[node name="MainMenuReference" type="Control"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("1")
+[node name="Stage" type="Control" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+[node name="MainMenu" type="Control" parent="Stage"]
+visible = true
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Background" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Background"
+SourceRect = Rect2(0, 0, 640, 480)
+
+[node name="VerticalGuide" type="ColorRect" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 123.0
+offset_top = 0.0
+offset_right = 124.0
+offset_bottom = 480.0
+mouse_filter = 2
+color = Color(0.19607843, 0.2, 0.28235295, 1)
+
+[node name="HorizontalGuide" type="ColorRect" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 180.0
+offset_right = 640.0
+offset_bottom = 181.0
+mouse_filter = 2
+color = Color(0.19607843, 0.2, 0.28235295, 1)
+
+[node name="Writing" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Tile0" type="TextureRect" parent="Stage/MainMenu/Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = -81.0
+offset_right = 522.0
+offset_bottom = 431.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+script = ExtResource("4")
+
+[node name="Tile1" type="TextureRect" parent="Stage/MainMenu/Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 269.0
+offset_right = 522.0
+offset_bottom = 781.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+script = ExtResource("4")
+
+[node name="Tile2" type="TextureRect" parent="Stage/MainMenu/Writing"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 619.0
+offset_right = 522.0
+offset_bottom = 1131.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+script = ExtResource("4")
+
+
+[node name="Language" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Flag" type="TextureRect" parent="Stage/MainMenu/Language"]
+layout_mode = 0
+offset_left = 177.4
+offset_top = 252.0
+offset_right = 260.6
+offset_bottom = 284.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.49019607843137253, 0.49019607843137253, 0.49019607843137253, 0.9921568627450981)
+script = ExtResource("4")
+
+[node name="LeftChevron" type="TextureRect" parent="Stage/MainMenu/Language"]
+layout_mode = 0
+offset_left = 128.4
+offset_top = 242.4
+offset_right = 179.60000000000002
+offset_bottom = 293.6
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+script = ExtResource("4")
+flip_h = true
+
+[node name="RightChevron" type="TextureRect" parent="Stage/MainMenu/Language"]
+layout_mode = 0
+offset_left = 258.4
+offset_top = 242.4
+offset_right = 309.59999999999997
+offset_bottom = 293.6
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.24313725490196078)
+script = ExtResource("4")
+
+
+[node name="Selector" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 288.0
+offset_right = 339.0
+offset_bottom = 440.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Selector"
+SourceRect = Rect2(99, 288, 240, 152)
+
+[node name="NewGame" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 294.0
+offset_right = 339.0
+offset_bottom = 314.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row0"
+SourceRect = Rect2(99, 294, 240, 20)
+Text = "New Game"
+
+[node name="ContinueGame" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 314.0
+offset_right = 339.0
+offset_bottom = 334.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row1"
+SourceRect = Rect2(99, 314, 240, 20)
+Text = "Continue Game"
+
+[node name="LoadGame" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 334.0
+offset_right = 339.0
+offset_bottom = 354.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row2"
+SourceRect = Rect2(99, 334, 240, 20)
+Text = "Load Game"
+
+[node name="Multiplayer" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 354.0
+offset_right = 339.0
+offset_bottom = 374.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row3"
+SourceRect = Rect2(99, 354, 240, 20)
+Text = "Multiplayer"
+
+[node name="Goodies" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 374.0
+offset_right = 339.0
+offset_bottom = 394.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row4"
+SourceRect = Rect2(99, 374, 240, 20)
+Text = "Goodies"
+
+[node name="Options" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 394.0
+offset_right = 339.0
+offset_bottom = 414.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row5"
+SourceRect = Rect2(99, 394, 240, 20)
+Text = "Options"
+
+[node name="Quit" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 414.0
+offset_right = 339.0
+offset_bottom = 434.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Row6"
+SourceRect = Rect2(99, 414, 240, 20)
+Text = "Quit"
+
+[node name="Decoration" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 240.0
+offset_right = 560.0
+offset_bottom = 450.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Decoration"
+SourceRect = Rect2(120, 240, 440, 210)
+
+[node name="SelectedIcon" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="ShadowMotion" type="Control" parent="Stage/MainMenu/SelectedIcon"]
+layout_mode = 0
+offset_top = 10.0
+offset_bottom = 10.0
+mouse_filter = 2
+
+[node name="Shadow" type="TextureRect" parent="Stage/MainMenu/SelectedIcon/ShadowMotion"]
+layout_mode = 0
+offset_left = 389.8
+offset_top = 287.8
+offset_right = 524.2
+offset_bottom = 422.20000000000005
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0, 0, 0, 0.24313725490196078)
+script = ExtResource("4")
+
+[node name="Body" type="TextureRect" parent="Stage/MainMenu/SelectedIcon"]
+layout_mode = 0
+offset_left = 393.0
+offset_top = 291.0
+offset_right = 521.0
+offset_bottom = 419.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+script = ExtResource("4")
+
+
+[node name="Version" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 464.0
+offset_right = 300.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("2")
+Section = "Main.Version"
+SourceRect = Rect2(0, 464, 300, 16)
+
+[node name="TitleLogo" type="Control" parent="Stage/MainMenu"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="ShadowMotion" type="Control" parent="Stage/MainMenu/TitleLogo"]
+layout_mode = 0
+offset_top = 10.0
+offset_bottom = 10.0
+mouse_filter = 2
+
+[node name="Shadow" type="TextureRect" parent="Stage/MainMenu/TitleLogo/ShadowMotion"]
+layout_mode = 0
+offset_left = 51.2
+offset_top = -4.4
+offset_right = 588.8000000000001
+offset_bottom = 264.40000000000003
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0, 0, 0, 0.24313725490196078)
+script = ExtResource("4")
+
+[node name="Body" type="TextureRect" parent="Stage/MainMenu/TitleLogo"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 2.0
+offset_right = 576.0
+offset_bottom = 258.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.6862745098039216, 0.8117647058823529, 1, 0.996078431372549)
+script = ExtResource("4")

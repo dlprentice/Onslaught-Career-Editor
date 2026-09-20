@@ -23,10 +23,6 @@ public sealed partial class RetailFrontendFlow
         using Variant routes = paths;
         using Variant returned = _clickView.Call("configure_assets", routes, bodyFont);
         RequireClickResult(returned);
-        // The still-managed main menu shares the native title recipe. There
-        // is one decoded title owner, never a second approximate preview.
-        using Variant title = _clickView.GetNode("Title/Body/Motion/Image").Get("texture");
-        _titleLogo = title.As<Texture2D>();
     }
 
     private void UpdateClickFrame()

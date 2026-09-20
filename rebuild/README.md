@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (native actor registry and Aquila components; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (resume checkpoint for unfinished native Main Menu and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -87,6 +87,56 @@ owned output under this worktree's `local-data/`; remain headless or use an
 isolated owned display. Preserve the separate companion changes and other lanes'
 worktrees. Executed comparisons and their limits are recorded in
 [`VALIDATION.md`](../VALIDATION.md#september-19-production-scene-migration).
+
+#### Interrupted conversion checkpoint — September 20
+
+The last completed component milestones are the production Aquila conversion
+(`e31519b8`) and native actor-registry foundation (`052b4d1c`). The following
+work is preserved for resumption after the usage interruption; it is not another
+completed parity milestone. The supported headless `build --no-prepare` passed
+with zero warnings/errors at this checkpoint, including the new comparison
+harnesses. It does not refresh the private world import receipt.
+
+`Scenes/Frontend/MainMenu.tscn` now contains the actual editable rows, title,
+selector, language controls, reflection and decoration components. Its typed
+GDScript owners use the production recipes, with a narrow C# host adapter
+retaining session/input/clock ownership. `Frontend.tscn` instances this scene
+with editable children; its authored row changes survive a scene round-trip.
+The menu is already connected to the live frontend, but its isolated rendered
+comparison and standalone editor/publication checks remain unfinished.
+`Scenes/Frontend/Tests/MainMenuReference*` retain the original presentation for
+comparison, not a second production menu.
+
+`Core/retail_weapon_charge.gd`, `retail_weapon_stores.gd` and
+`retail_weapon_selection.gd` are draft pure-state foundations. They have passed
+parsing only; their C# fixture exporter now compiles, but its export and native
+differential checks have not run. No live weapon consumer uses these modules.
+
+Resume in this same worktree, keeping the following order:
+
+1. Re-run `MainMenuLawReferenceChecks.tscn` and `main_menu_law_checks.gd` with
+   fresh owned outputs to cover their latest output guards and completion
+   metadata. Earlier arithmetic comparisons passed; those harness changes came
+   afterwards.
+2. Run the newly compiled `MainMenuSceneChecks.tscn` headlessly with
+   `--skipfmv`, then compare its native/reference/integrated images on an
+   isolated owned display using `--main-menu-render-dir=ABS_FRESH_EMPTY_DIR`.
+   Finish the standalone native editor/publication checks and review the
+   production integration before treating Main Menu as complete.
+3. Run `RetailWeaponReferenceChecks.tscn` and `retail_weapon_checks.gd` using
+   their declared output arguments before accepting or adopting the weapon
+   foundations. Their comparison results are currently unknown.
+4. Before gameplay acceptance, run the supported full build/private import to
+   refresh the world receipt, then the affected world/smoke and actual-tape
+   replay checks. The older receipt predates the current assembly/source edits;
+   do not bypass or delete its admission guards.
+
+Existing focused receipts and known editor shutdown diagnostics are listed in
+[`VALIDATION.md`](../VALIDATION.md#interrupted-conversion-checkpoint--september-20).
+No rendered Main Menu, complete combat, normal-GPU performance, physical-input
+or audible-playback acceptance is implied. Preserve the separate uncommitted
+companion work. The interrupted subagents are not running; resume from these
+source files and receipts rather than assuming their assignments completed.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,

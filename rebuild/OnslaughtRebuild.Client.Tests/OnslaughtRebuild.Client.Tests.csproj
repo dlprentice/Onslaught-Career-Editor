@@ -258,6 +258,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\click_presentation.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\click_preview.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickToStart.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSplash.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSlide.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickTitle.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_image.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\ClickReference.cs;..\OnslaughtRebuild.Godot\Client\click_to_start_laws.gd;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Click.cs"
              Link="godot-click-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Client\main_menu_laws.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MainMenu.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_reflection.gdshader;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_atlas_font.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_underlay.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading_strings.gd;..\OnslaughtRebuild.Godot\RetailFrontendFlow.MainMenu.cs"
+             Link="godot-main-menu-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
