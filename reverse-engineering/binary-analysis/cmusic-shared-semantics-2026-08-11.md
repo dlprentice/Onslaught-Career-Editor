@@ -43,6 +43,21 @@ application and Save. The preserved fixture's music float produces configured
 integer 51, while its original float bits survive serialization. Audio reset,
 music initialization/playback and durable storage remain separate.
 
+The separate [reset/restoration controls](../../VALIDATION.md#original-audio-reset-and-music-restoration--september-20)
+now retain original Shutdown, Init and PlaySelection. Init sets current/target
+to 127, derives configured volume from the career float, clears the queue and
+sets its initialized byte. The platform-Init hook supplies an owned playlist;
+its supplied zero return does not suppress these original state writes.
+Shutdown clears the list head but leaves the current-song pointer. The recorded
+free calls preserve owned memory, so neither a safe lifetime nor a dangling
+access is established.
+
+Level 100 restoration selects policy category 2. The tested frontend route uses
+category 0 and Level 110 uses category 4, with original list selection/fallback
+and virtual-volume/play call ordering. Device failure returns can still lead to
+selection with an empty playlist. Actual playlist enumeration, platform setup,
+decoder timing and audible playback remain outside the experiment.
+
 ## Retained August 11 static report
 
 These eleven bodies cover 1,631 retail bytes and 604 decoded instructions.

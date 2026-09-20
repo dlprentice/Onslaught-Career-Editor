@@ -298,7 +298,6 @@ reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent
 reverse-engineering/binary-analysis/functions/string-locations-index.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__Ctor.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__FreeBuffer.md
-reverse-engineering/binary-analysis/functions/text.cpp/CText__GetLanguageName.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__ResetCoreFields.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTextureBase__Init.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTexture__FindTexture_Unwind.md

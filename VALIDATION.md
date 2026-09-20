@@ -1992,6 +1992,80 @@ and forbidden-syscall controls pass. Independent read-only review checked the
 complete saved composition without rerunning it. No Ghidra or implementation-lane
 source changes accompany this tranche.
 
+### Original audio reset and music restoration — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/audio_reset_control.py`
+passed **26 cases**, with nine unchanged original bodies (985 bytes) and the
+20-byte original selection table. Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-reset-run-qi8cblpe/reset`;
+receipt SHA-256 `1261c203280b093848bec7f080419e941a9e6e1558b3e84458d7d9b98a71a74e`;
+ELF SHA-256 `981c2131385de9664167f629664994cd8931a5cf5415310dc5dd78be016b90f5`.
+`audio-reset-controls-v1.log` retains the command result.
+
+Complete selected snapshots, guards, input copies and **625 ordered hook
+observations** match. The original wrapper/reinitializer, sample deletion,
+music shutdown/Init/selection, level selection, device shutdown and message
+voice helper execute. Supplied Init returns distinguish AL from higher bits;
+wrapper/playing flags use low bytes, while music-enable and refresh-suppression
+use full words. Cases include failed initialization, empty/short/new playlists,
+Level 100/110/frontend selection, repeated reset, cutscene admission and an
+alternate receiver's canonical sample refresh.
+
+The preserved fixture supplies music volume bits, producing configured integer
+51 under the supplied PC53-nearest mode. Music's current-song pointer can remain
+after the recorded playlist frees. Shared authored pointers in the alternate
+case and hooks that preserve their memory do not establish valid lifetime after
+real destruction. Integer ABI and x87 control/TOP checks pass; full x87 tag words
+and whole-process preservation are not asserted. A forbidden syscall ends in
+SIGSYS, and original specimen/fixture bytes remain unchanged.
+
+Device Init, music-platform/playlist construction, sample-bank publication,
+allocation/free/destructors, sample lookup, voice stopping, virtual playback,
+RNG and formatting remain declared hooks. These exercise caller behavior under
+supplied results, not real API failures, devices or playback. Trace hooks observe
+calls to `0040c640`, whose original body is RET; they do not recover retail logs.
+Selection categories 1/3, active-track transitions, negative RNG and the separate
+byte music override are not covered. Load/TailRead and Save remain separate.
+Independent read-only review reproduced saved results without rerunning them.
+
+### Original language-bank admission and retry — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_bank_control.py`
+passed **22 cases**, retaining seven complete bodies (1,166 bytes) and the
+20-byte language-name switch table. Final stem
+`local-data/test-runs/save-startup-20260919/language-bank-run-7p1_0_ep/bank`;
+receipt SHA-256 `c121f8a7da97a19c327eda2966db9d7d8db300a0b8867284177718d9b678d8fb`;
+ELF SHA-256 `9ca10744f39c7cfd80cc245b91245d68140f4f4b2a1f1e5820c5381215805270`.
+`language-bank-controls-v3.log` records this final run.
+
+Original Reload, GetLanguageName, ASCII stricmp, 64-slot buffer Stop,
+compressed-bank admission and file ctor/dtor execute. Open always returns zero
+at an explicit boundary. All selected snapshots and **223 ordered observations**
+match: early cache writes, full list relinking, Stop without pointer clearing,
+sample-destructor calls, failed-open cleanup and preserved input/guards.
+Same-path retries skip after failure or admission changes; a different language
+retries. Case-only path changes also skip. All five names, unknown/negative-ID
+fallback and the American-text distinction are checked.
+
+The alternate receiver has distinct buffer objects and cache text: Stop and
+Open use the canonical manager, while the selected manager owns event/sample/cache
+updates. Event/sample nodes remain shared authored objects, not independent
+healthy managers. The formatter supplies only the verified two-string bank path;
+original sprintf and non-C locale behavior are excluded. Normal FS registration
+restoration, integer ABI and forbidden-syscall controls pass. Original specimen
+bytes remain unchanged. There is no actual file-open error, allocation/free,
+COM Stop/destruction, successful bank parsing, codec, playback, Windows exception
+dispatch, Load/TailRead or Save execution in this cohort.
+
+The initial `language-bank-controls-v1.log` preserves one oracle failure at
+`language-bank-run-ydd_0rts`: the second destructor free-return site was written
+as `00547db0`. Fresh inspection of the five-byte CALL at `00547daa` establishes
+`00547daf`; v2 fixes only that expected address and passes at
+`language-bank-run-18wy3l8i`. V3 adds distinct alternate buffer objects to make
+Stop ownership discriminating, with no original-byte change. Independent
+read-only review reproduced the final saved results and this correction history.
+Exact prompts and full reports remain in the existing private review owner.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

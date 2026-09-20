@@ -50,6 +50,39 @@ preset, language-copy and Save operations. Live-setting preservation modes skip
 the setters/events. This is bounded native execution, not device opening,
 playback, reset, language-bank loading or a durable save round trip.
 
+## September 20 independent reset and bank recheck
+
+The [original reset controls](../../VALIDATION.md#original-audio-reset-and-music-restoration--september-20)
+and [bank controls](../../VALIDATION.md#original-language-bank-admission-and-retry--september-20)
+separate operations formerly grouped as sound reset. DeviceShutdown releases
+and clears both 64-slot arrays, then the device/wrapper. Bank reload instead
+calls the 64-slot buffer Stop path, ignores its supplied results and retains the
+pointers. Both controls use owned virtual objects, not an audio driver.
+
+Reload `004e2c50` checks the low initialized byte, obtains the active text
+header's language name, formats the path and compares it case-insensitively.
+An equal path leaves events, samples and buffers alone. A changed path is copied
+**before** active-event recycling, sample deletion or bank admission. The tested
+two-event list is moved to the free-list head in reversed traversal order.
+
+Original loader `00517d00` then skips for nonzero `00662dd4` or zero
+`0066307c`. Otherwise its Open boundary receives the canonical manager's cached
+path. A supplied zero return runs the real buffer destructor and returns without
+cache rollback. Repeated same-path calls therefore skip even after either gate
+is enabled; changing language retries. The cache proves a requested path, not a
+successfully loaded bank. These controls exclude successful file parsing.
+
+An alternate-receiver case uses distinct buffer objects and cache names:
+event/sample/cache operations use the selected receiver while Stop and bank load
+use the canonical manager. Shared authored event/sample nodes remain a lifetime
+limitation. Embedded trace sites call `0040c640`, a one-byte RET in this
+specimen; the experiment's intercepted trace records are not retail log output.
+
+Full bank/sample decoding, nonnull language cleanup, actual object destruction,
+device setup and audible behavior remain open. See the existing
+[save/settings contract](save-options-static-review-2026-05-26.md#original-audio-reset-and-language-bank-retry-behavior)
+for composition boundaries.
+
 ## Retained August 11 static report
 
 These thirty-four functions cover 10,003 retail bytes and 3,359 decoded

@@ -1,10 +1,10 @@
 # CSoundManager__ReinitializeAfterDeviceLoss
 
-Status: independently rechecked static ordering; controlled execution pending
+Status: independently rechecked instructions and bounded original execution
 Last updated: 2026-09-20
 Summary: sample deletion, music/device shutdown and conditional reinitialization; corrects stale stream-stop and voice-release identities.
 Source File: no exact retained source body | Binary: pristine `BEA.exe.original.backup`.
-Evidence: MEASURED — complete selected pristine bodies and direct call sites; nested device/sample behavior is not runtime-validated here.
+Evidence: MEASURED — complete selected pristine bodies and original reset/shutdown execution; platform creation and real object lifetime remain intercepted.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Address: `0x00517f10`
 
@@ -16,14 +16,16 @@ success result and returns with `RET`. Its ordered calls are:
    receiver `+0`. It is **DeleteAllSamples**, not StopAllStreams as the
    earlier note said. The independently inspected body follows sample `+0x74`,
    calls each nonnull object's vtable slot zero with argument 1, then clears
-   the head; the nested destructors are not inspected by this recheck.
+   the head; nested destructors remain owned hooks in the execution below.
 3. Global music shutdown `004bb400`. Its body conditionally stops a playing
    stream, but invokes platform vtable slot `+4` unconditionally. A zeroed
    music object is therefore not a sufficient isolated-execution precondition.
 4. If `008a9d84` is nonnull, call `004b8800` with that receiver.
 5. DeviceShutdown `005171e0`, then device Init `005169b0` on the
    selected sound receiver. The earlier voice-release name at this call
-   was misleading. Lower device behavior remains to be checked.
+   was misleading. The controls execute DeviceShutdown's two 64-slot arrays,
+   release the 3D slot before its paired ordinary slot, clear each pointer, then
+   release the device and destroy its wrapper. Init remains an explicit hook.
 6. If Init's low return byte is zero, return immediately. Otherwise,
    music-enable global `00662dcc` conditionally admits `004bb380`.
 7. Call compressed-bank helper `00517d00` with argument 1.
@@ -32,9 +34,23 @@ success result and returns with `RET`. Its ordered calls are:
    `+0x6c` field with final argument 1. This last walk uses the canonical
    manager rather than an arbitrary selected receiver.
 
-This corrects direct ordering and identities. It does not establish successful
-recovery, the compressed-bank helper's own admission rules, message-box voice
-behavior, nested ownership, filesystem effects or audible continuity.
+The [26 reset controls](../../../../VALIDATION.md#original-audio-reset-and-music-restoration--september-20)
+match complete selected state and 625 ordered hook observations. They also retain
+the original message helper: a nonzero cutscene word skips it; otherwise it
+clears the message's voice byte and routes a retained voice event through
+StopSound/deleting-destructor hooks before nulling the global event pointer.
+The music Init body restores configured volume from the fixture and initializes
+current/target fields; its platform hook supplies the owned new playlist.
+
+The alternate receiver deliberately shares authored sample/device pointers with
+the canonical manager. Its final refresh proves the absolute-list selection,
+not valid lifetime after real destruction. Music Shutdown clears the list head
+but leaves its old current-song pointer in the disabled/direct cases. Real
+deallocation and subsequent pointer use remain untested.
+
+These controls do not establish successful recovery, actual nested ownership,
+filesystem effects or audible continuity. The compressed-bank hook is separate
+from the [original bank admission/retry controls](../../../../VALIDATION.md#original-language-bank-admission-and-retry--september-20).
 The caller [audio reset wrapper](Audio__ReinitializeSoundAndRestoreMusic.md)
 continues after this function returns, including its early Init-failure return.
 

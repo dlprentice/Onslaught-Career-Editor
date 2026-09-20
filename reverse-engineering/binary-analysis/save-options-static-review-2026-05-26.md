@@ -246,12 +246,66 @@ are compared. PC53 nearest is explicitly supplied; the direct controls also
 test other rounding directions. Neither is a live post-device FPU observation.
 The original fixture and executable remain unchanged.
 
-Audio reset, language-bank loading, nonnull cleanup, real devices/playback and
-a durable save/reload round trip are still open. Fresh static reinspection
-corrects the [reset helper's stale call identities](functions/SoundManager.cpp/CSoundManager__ReinitializeAfterDeviceLoss.md):
-it deletes samples and shuts down the device; it is not merely a stream-stop or
-voice-buffer-release notification. The restoration wrapper does not gate its
-next call on device initialization success. Those reset paths remain unexecuted.
+This Load/audio/Save experiment still intercepts reset and language-bank calls.
+The separate controls below now execute their original callers; they have not
+yet been folded into this load/serialization composition.
+
+## Original audio reset and language-bank retry behavior
+
+The [reset controls](../../VALIDATION.md#original-audio-reset-and-music-restoration--september-20)
+execute nine unchanged bodies in 26 cases. Original shutdown deletes sample
+objects, stops/frees music state, handles message voice, and releases/clears
+device slots before attempting sound Init. Init admission tests its low return
+byte. The outer wrapper continues after a supplied failure return: enabled
+music still passes through original selection and changes mode/selection fields,
+even though the now-empty playlist produces no play call. This is a controlled
+return-value experiment, not an actual device failure.
+
+Original music Init resets current/target volume to 127, derives configured
+volume 51 from the preserved fixture, and consumes a playlist supplied by the
+owned platform-Init hook. Restoration selects category 2 for Level 100 and
+category 4 for the tested Level 110 route; frontend selection uses category 0.
+The original selection code falls back to the playlist head if the requested
+track is unavailable. Virtual playback, real playlist creation and audible
+continuity remain outside the experiment.
+
+Shutdown clears the playlist head but does not itself clear the current-song
+pointer at music `+0x10`. The disabled-music and direct-reset controls retain
+that pointer after recorded free calls. Free/destructor hooks preserve owned
+memory, so this neither proves a valid lifetime nor demonstrates a real dangling
+access. The alternate-manager case likewise establishes the final canonical
+sample-list traversal without claiming safe sharing after real destruction.
+
+The [bank controls](../../VALIDATION.md#original-language-bank-admission-and-retry--september-20)
+execute seven unchanged bodies in 22 cases. Once initialized, Reload obtains the
+name from active CText `+0x1c`, builds the bank path, and compares it with the
+manager's cached path using original ASCII case-insensitive comparison. Equal
+paths return before changing events, samples or buffers. American text-file
+selection still maps to the English bank name in this getter.
+
+For a changed path, retail **stores the new path first**, recycles active events
+into the free list, stops the canonical buffer slots, deletes the receiver's
+samples, cleans memory and calls the canonical bank loader. Resource-build
+mode or disabled compressed audio can then skip loading; an intercepted Open
+failure instead executes the real buffer destructor. None rolls back the path.
+A second identical request skips loading even after either blocking flag is
+changed. A different language retries. The cache therefore records the requested
+path, not successful audio availability. This is a reproduced original caller
+quirk, not a claim that the preserved or installed bank files are missing.
+
+Bank Stop visits 64 ascending slots, retains their pointers and ignores the
+supplied result. Device shutdown separately calls Release and clears its slots.
+The alternate-manager control uses distinct buffer objects to distinguish the
+canonical Stop target and canonical bank path from the receiver's own state.
+Its event/sample nodes are deliberately shared and do not model independent
+healthy managers. The embedded trace calls target `0040c640`, whose pristine
+body is only RET; intercepted trace records are not retail log output.
+
+These tests preserve the selected executable and fixture. They do not execute
+successful bank parsing, real device/platform setup, actual allocation/free,
+nonnull language cleanup, a complete startup or durable save reopening.
+Unchanged full bodies and explicit hooks are pinned in the private receipts;
+this tranche changes no Ghidra database or implementation-lane source.
 
 ## Rechecked static edges awaiting further execution
 

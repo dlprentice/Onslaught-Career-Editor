@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (original volume setters composed with save loading; reset/bank and round-trip work remain)
+Last updated: 2026-09-20 (original audio reset/restoration and language-bank retry controls; complete save round trips remain)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -93,12 +93,20 @@ Save cases. Sound updates existing event records, and music preserves distinct
 configured/current/target fields. Original devices and audible behavior remain
 outside these controls.
 
-Next, resolve audio reset/language-bank and music-restoration dependencies, then
-complete reset/serialization ordering and preserved-real-save round trips rather
-than treating a decoder's self-round-trip as proof. The
-retained AppCore sensitivity clamp and display-mode naming discrepancy are
-implementation-consumer findings, not fixes made by this RE task. Full menu,
-failure/recovery and cross-runtime acceptance remain open.
+A further 26 original reset/restoration cases resolve caller behavior around
+supplied device-init results, shutdown ordering, music initialization and Level
+100 selection. Twenty-two bank controls establish early path caching, event
+recycling and same-path suppression after a failed Open or admission skip.
+The bank's Stop operation preserves buffer slots; device shutdown releases and
+clears them. These are owned-object experiments with intercepted platform and
+lifetime services, not successful device recovery or bank decoding.
+
+Next, carry the rechecked reset/bank behavior into composed load/serialization
+and preserved-real-save round trips, then close the remaining nonnull cleanup,
+successful bank/sample and failure/recovery boundaries. Do not treat a decoder's
+self-round-trip as proof. The retained AppCore sensitivity clamp and display-mode
+naming discrepancy are implementation-consumer findings, not fixes made by this
+RE task. Full menu, durable publication and cross-runtime acceptance remain open.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and

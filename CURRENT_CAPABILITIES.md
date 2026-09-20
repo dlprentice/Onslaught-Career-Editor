@@ -41,8 +41,12 @@ establish full startup, audio playback, localized rendering, durable save round
 trips or reconstruction acceptance. The subsequent audio-volume recheck adds
 25 focused scenarios at two x87 precisions and 16 composed loader/setter/save
 cases, retaining original sound-event updates with explicit device boundaries.
-Reset/bank restoration and complete round trips remain open. See
-[executed checks](VALIDATION.md#original-audio-volume-controls--september-20).
+The next 26 reset/restoration and 22 language-bank controls resolve caller
+ordering and a cached-path retry limitation: a failed Open or skipped load can
+suppress the next identical request. Actual devices, lifetime services and bank
+file opening remain intercepted. Successful sample decoding, nonnull cleanup,
+full startup and durable save round trips remain open. See
+[executed checks](VALIDATION.md#original-audio-reset-and-music-restoration--september-20).
 
 ## Godot Save Lab — first workflow
 
