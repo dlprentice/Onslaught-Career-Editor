@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native mesh-part arithmetic checks; earlier validation retained).
+Last updated: 2026-09-20 (native plane and mesh-part arithmetic checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -623,6 +623,21 @@ absolute fixture/report paths under the owned worktree's `local-data/`, then
 standard `Scenes/World/Tests/mesh_part_pose_checks.gd` with that fixture and a
 fresh report path. Both run headlessly with Dummy audio; no retail inputs are
 needed. The exporter preserves target framework `net8.0`.
+
+The pure Plane motion port passed **14,741 native checks** against **3,015
+direct cases**, 21 sequences with **567 steps**, and **26 restores** from the
+unchanged C# owner on Godot-hosted .NET 10.0.12. These cover raw words, PC24
+operation order, ignored fields, unusual-basis retention, checked-overflow
+failures and atomic Actor commits. Terrain clearance uses the existing sampler;
+the canonical heightfield remains unchanged. Reference and native logs are
+clean in `plane-motion-reference-ja9aqb18/` and `plane-motion-native-a0njrw3t/`;
+both include exact `command.json` invocations. Four final/ancestor output-link
+refusals also passed without creating targets (`plane-motion-output-guards-qajfvylq/`).
+Run .NET `Scenes/World/Tests/RetailPlaneMotionReferenceChecks.tscn` with two fresh
+absolute fixture/report paths, then standard `Tests/retail_plane_motion_checks.gd`
+with that fixture and a fresh report, using headless/Dummy audio and owned
+`local-data/` outputs. This foundation does not replace the live registry,
+collision/lifecycle owners or establish general cross-platform transcendental parity.
 
 The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
 compared bytes** against the unchanged C# exporter, which passed **43 checks**.

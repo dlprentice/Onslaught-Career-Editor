@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (native mesh-part arithmetic; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (native plane and mesh-part arithmetic; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -68,6 +68,10 @@ single-frame interpolation, parent hierarchy composition, owner composition and
 local sphere-query conversion. It retains source operation order, explicit float
 stores and detached raw-word results. Frame/cache selection and the separate
 PC53 attachment operations remain their existing owners' responsibilities.
+`Core/retail_plane_motion.gd` adds the retained Plane state, guide/velocity
+arithmetic, terrain clearance and free-flight step. It uses the same native
+terrain sampler and commits through `Thing.Actor` only after all computations
+succeed. Live plane scheduling, collisions and registry adoption remain separate.
 
 The conversion worktree is `.worktrees/godot-editor-48-20260919`, branch
 `codex/godot-editor-48-20260919`. Use canonical `BEA_LOCAL_LAB` routing and fresh
