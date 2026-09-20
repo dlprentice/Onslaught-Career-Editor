@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (weapon query, projectile readiness and logger ownership; earlier validation retained).
+Last updated: 2026-09-19 (CLI defaults/parser audit and preserved initializer correction; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1521,6 +1521,52 @@ safety. Enabled file logging may reach a CRT allocation-failure handler before
 a successful retry. Actual enable, locale, heap mode, retry/handler state,
 startup/parser execution, file I/O, rendering and complete-shot RNG remain
 outside these results. No desktop or game session was used.
+
+### CLI initialization and parser ownership — September 19
+
+`python local-data/test-runs/cli-startup-20260919/inspect.py` pinned the complete
+initializer, startup wrapper, parser and WinMain bodies against pristine
+`74154bfa…7750`. The complete parser review identified 25 comparisons and their
+direct actions; `parser-static.json` binds the literals and five complete
+helper bodies. This was static review, not execution of all options.
+
+`python local-data/test-runs/cli-startup-20260919/initializer_control.py`
+passed **4/4** original-code cases: zeroed/poisoned receiver memory crossed
+with the external `0066e94e` byte at `0/1`. Accepted stem:
+`local-data/test-runs/cli-startup-20260919/initializer-run-48y5v5ma/cli_defaults`.
+Its receipt SHA-256 is
+`917010a27b097282015b3b71821cebece4099fe47d091f2b41f5fea4655422a6`;
+the actual ELF SHA-256 is
+`8fde3fcd2aa5ccf3dd177c1ade38bcccce622edf068f50faa847c12a624a7cfc`.
+All 459 original body bytes and 26 literal-range bytes remain unchanged at
+their original addresses. Each case compares a full 864-byte guarded
+postimage, returned receiver, stack/nonvolatile registers and external-byte
+preservation. No dependency stubs are needed: this body makes no calls.
+An independent reviewer reconstructed all outputs from the saved instructions;
+that review did not rerun them. Static disassembly commands are retained in the
+private body receipts.
+
+The [one-row Ghidra correction](reverse-engineering/ghidra/README.md#cli-initializer-ownership--september-19)
+passed fresh PRE equality/restore-open, isolated dry/apply/separate readback,
+independent exact-cohort review, live dry/apply/separate readback and independent
+Archive A POST restore-open. Exactly one name, nonrepeatable comment and tag
+set changes; all 8,330 other functions, every ABI/variable/type/stack record
+and program structure stay unchanged. Only the comment digest moves among
+program metrics; all nine live exports equal rehearsal. The initial unsupported
+`dry-run` mode refused before writes and the replica stayed unchanged; corrected
+`dry` passed. Stale-comment and name-collision controls both refused before
+writes. The final spec seals the measured rehearsal; no second sealed rehearsal
+is claimed.
+
+`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**;
+`python tools/re_function_doc_names_check.py --self-test` passed.
+Commands, logs, comparisons, refusals and recovery receipts are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-initializer-ownership/`.
+`compare_exports.py rehearsal-post` and `compare_exports.py live-post` compare
+the complete exports. The [parser owner](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+records the source/retail distinctions and unresolved consumers. No full parser,
+retail startup, later selector values, file I/O, desktop or gameplay acceptance
+was exercised.
 
 ### Scheduled-event constructor boundary — September 19
 

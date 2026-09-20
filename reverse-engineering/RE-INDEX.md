@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-12 (working-state routing and structural audit)
+Last updated: 2026-09-19 (CLI startup contract and current Ghidra routing)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -956,6 +956,7 @@ correction before acting on either.
 
 | Document | Anchor, and how far the claim reaches |
 | --- | --- |
+| [CLI defaults and complete parser](binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md) | September 19: initializer ownership corrected from Unit AI to CLIParams; four isolated original-code defaulting cases and a complete 25-option static parser map. Records sequential argument consumption, the zero-initialized windowed guard and autoconfig directory/logger-path actions. Full parser execution, trace-request consumers and later selector state remain open. |
 | [Windowed mode](binary-analysis/windowed-mode-analysis.md) | **Partially superseded 2026-07-28, and the withdrawn half is the half people used.** `-forcewindowed` is real and reachable, but its parser gate `DAT_00662f3e` is **BSS — zero at load** and is set only by `-testeur` appearing *earlier on the same command line*. The old "normalize the guard byte in a hex editor" recipe was false: there is no file byte to edit. The two-gate model and the startup-flow patch at file offset `0x12A644` stand. |
 | [Extra-graphics feature gate](binary-analysis/extra-graphics-feature-gate-patch.md) | `GEFORCE_FX_POWER` registers with default `0`; `0x004CDD40`, `6A 00` → `6A 01`. Carries the companion row that ignores `cardid.txt` vendor/device matching. |
 | [Version overlay](binary-analysis/version-overlay-patch.md) | The opt-in `V1.00 - PATCHED` marker as a **pair**: a visible pointer row plus a hidden cave-string payload row. One bounded copied-game title/menu run confirmed the marker; no broader overlay or parity claim. |

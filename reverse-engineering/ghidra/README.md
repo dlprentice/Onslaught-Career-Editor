@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[debug-log metadata correction](#debug-log-metadata--september-19);
+[CLI initializer ownership correction](#cli-initializer-ownership--september-19);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -859,6 +859,48 @@ Private evidence owner:
 `post-restore.json`: 5,742 bytes, SHA-256 `9edea84ddd1f2be128a4c9107109aa1694616d9b1ec1c82e3a2f1707c98e274d`.
 Current name projection uses this manifest; frozen logger census tools,
 explicit name tables and historical receipt schemas remain unchanged.
+
+## CLI initializer ownership — September 19
+
+The [manifest](../../tools/cohort-specs/cli-initializer-ownership.manifest.tsv) and
+[spec](../../tools/cohort-specs/cli-initializer-ownership.spec.tsv) correct exactly
+one name, nonrepeatable comment and tag set: `004239f0` is now
+`CLIParams__InitDefaults`. Its startup wrapper and WinMain/parser share the
+same receiver; the previous Unit AI ownership and missing-caller-boundary
+claims were wrong. Complete byte and isolated execution evidence belongs to
+the [CLI owner](../binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md).
+
+All 8,330 other function rows and all ABI, parameters, locals, types, stack
+records, instructions and bodies remain unchanged. The target's displayed
+signature changes only its name. Of 825 exported instruction rows, 113 change
+only the displayed initializer name. Only `commentsSha256` moves among the
+program metrics. All nine live exports exactly match the separately reopened
+rehearsal; the internal function count remains 8,331.
+
+Fresh PRE equality and restored read-only opening, isolated dry/apply/separate
+readback, two stale-comment/name-collision refusals, independent exact-cohort
+review, live dry/apply/separate readback and independent POST recovery passed.
+The first dry invocation used unsupported mode `dry-run` and refused before
+writes; the replica remained byte-identical and the corrected `dry` route
+passed. Final spec pins came from the measured rehearsal; no second sealed
+rehearsal is claimed. The unchanged base framework and extended live allowance
+passed 92 focused tests. Four isolated initializer cases are separate from
+the complete static parser audit; no full parser or retail runtime acceptance
+is claimed.
+
+Working identity: `db.18655`, 18 files / 118,999,924 bytes,
+inventory SHA-256 `5d1f226fc00b44409429edbdb53e2f57ec8d98e16fb1ff7a3add6e1782fb4f31`; main database
+68,698,112 bytes, SHA-256 `38577307e6858ecbd3ad72fb43f7f6f371bf8e406a7475ab5aa43bbde0481bb3`.
+PRE was the freshly matched debug-log POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-cli-initializer-ownership/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-initializer-ownership/`.
+`live-readback.json`: 2,318 bytes, SHA-256 `c466a5dc45e2e238880aa50e098481f00f8e9e630cd7520f76618e3b4d07b91e`.
+`post-restore.json`: 5,763 bytes, SHA-256 `cac2d9e1f3ff7287899c019b9ceed3edea68ff783c2d773fe48ed8d580d7a53d`.
+The current name projection composes the exact new manifest; frozen tables and
+historical receipts remain unchanged.
 
 ## Historical Windows live-ceremony contract (suspended)
 

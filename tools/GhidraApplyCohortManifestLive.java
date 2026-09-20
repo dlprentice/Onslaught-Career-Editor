@@ -295,6 +295,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "shared-return4-leaf",
         "scheduled-event-constructor-boundary",
         "debug-log-metadata",
+        "cli-initializer-ownership",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

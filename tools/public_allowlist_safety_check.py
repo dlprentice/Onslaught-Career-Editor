@@ -197,6 +197,8 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Debug-log metadata: ten analytic comments (7,419 decoded bytes), with the
 # same exact-content requirement and all other payload/secret checks retained.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/cli-initializer-ownership.manifest.tsv":
+        "7159872b1d29231f1c89d6fc74bf5944035e463348defec60cb26b9fb0fd893a",
     "tools/cohort-specs/debug-log-metadata.manifest.tsv":
         "6c9dd2b0a8d2b2ac44a093232f1f7770bcc16d6174100854ba6f6fed9fc93b17",
     "tools/cohort-specs/render-registry-arguments.manifest.tsv":

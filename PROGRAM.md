@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-19 (dedicated RE lane paused at a preserved restart checkpoint)
+Last updated: 2026-09-19 (RE resumed; CLI initialization and parser contracts corrected)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -18,29 +18,28 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ## Open work
 
-### Dedicated RE lane — restart checkpoint
+### Dedicated RE lane — current continuation
 
-David paused this task's goal for a computer restart on September 19. Resume
-this lane after his direction; separate tasks own rebuild and companion
-implementation. The last completed RE change is `576b0e5b` on
-`codex/retail-re-20260919`: the
-[five-row debug-log metadata correction](reverse-engineering/ghidra/README.md#debug-log-metadata--september-19).
-Its separate readback and restored Archive A recovery checks passed before
-publication. The tracked checkpoint was preserved. Current database and recovery
-identities remain in `developer_state.json` →
-`current_re_authority.latestLiveGhidraState`; use those pointers rather than
-selecting a project by date or database number. No mutation is pending.
+David resumed this dedicated RE task after the September 19 restart checkpoint.
+Separate tasks own rebuild and companion implementation. The working branch is
+`codex/retail-re-20260919`. Current database and recovery identities remain in
+`developer_state.json` → `current_re_authority.latestLiveGhidraState`; use those
+pointers rather than selecting a project by date or database number.
 
-The next investigation is unfinished: independently reproduce the suspected
-CLIParams ownership of `CUnitAI__InitDefaults_AutoConfigTestPath` at
-`0x004239f0`, then review the
-[parser note](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
-against the documented pristine specimen and current live export. Its earlier
-BSS/windowed explanation conflicts with its final guard-default claim. The
-paused read-only review also raised trace-flag consumers, `-e3`/initializer
-ordering and `-autoconfigtest` directory/log-path side effects for verification
-before any parser experiment. These are review leads, not applied corrections
-or runtime acceptance. No initializer/parser cohort or experiment was prepared.
+The resumed investigation confirmed CLIParams ownership of the initializer at
+`004239f0`; its former Unit AI name is corrected through the
+[one-row preservation/readback workflow](reverse-engineering/ghidra/README.md#cli-initializer-ownership--september-19).
+Four isolated original-code cases establish its bounded defaults and preserved
+memory. The complete [parser contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+now records all 25 comparisons, sequential argument consumption, the initial
+zero windowed guard, and directory/logger-filename side effects. These are
+static parser findings, not full parser or retail startup execution.
+
+Next, trace the actual consumers of the two trace-request fields and later
+developer-selector writes before inferring logger enablement or the complete
+warning/RNG path. An isolated parser experiment needs intercepted filesystem
+and exit calls. Continue aircraft/weapon ordering through the existing owners;
+the startup work does not close complete-shot behavior or gameplay acceptance.
 
 ### Remote checkpoint integrated on Linux — September 12
 
