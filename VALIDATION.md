@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native Click and shared-material checks; earlier validation retained).
+Last updated: 2026-09-20 (native mesh-part arithmetic checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -609,6 +609,20 @@ Receipts `thing-actor-state-8_v6hbwr/`, `thing-actor-final-g2de2np9/` and
 logs. Both harnesses also refused dangling output links without creating the
 target; the final exporter produced unchanged fixture SHA-256
 `efc4403db2d972cf6d02b020cbae16c82d86ec80d81d66466e67f5324a859da1`.
+
+The pure mesh-part pose port passed **53,592 native assertions**, including
+**14,058 exact raw float words**, against **2,058 unchanged-C# cases**: 1,299
+accepted results and 759 expected refusals. The four operations retain their
+PC24 evaluation order, signed zeros, intermediate overflow refusals, permitted
+final infinity stores and detached outputs. This does not select frames/caches,
+port the separate PC53 attachment operations or replace the live registry.
+Both runtime logs are clean in `mesh-part-pose-reference-xhdyoaq9/` and
+`mesh-part-pose-native-ow95mdhg/` under `local-data/test-runs/`.
+Run .NET `Scenes/World/Tests/MeshPartPoseReferenceChecks.tscn` with two fresh
+absolute fixture/report paths under the owned worktree's `local-data/`, then
+standard `Scenes/World/Tests/mesh_part_pose_checks.gd` with that fixture and a
+fresh report path. Both run headlessly with Dummy audio; no retail inputs are
+needed. The exporter preserves target framework `net8.0`.
 
 The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
 compared bytes** against the unchanged C# exporter, which passed **43 checks**.
