@@ -640,8 +640,9 @@ Run standard `Scenes/Frontend/Tests/loading_scene_checks.gd` with
 `--headless --script`, adding `--editor` for its frozen-resource checks. The .NET
 `Scenes/Frontend/Tests/LoadingSceneChecks.tscn -- --skipfmv` checks the live host;
 `--loading-render-dir=/absolute/owned/local-data/path` enables rendered comparisons
-only when the caller provides an isolated display. `--loading-baseline` also
-measures the retained old composition. No test chooses the physical display.
+only when the caller provides an isolated display. The historical baseline used
+`--loading-measure-existing-composition` before integration; that mode requires
+the old production `DrawLoading` implementation. No test chooses the physical display.
 
 Run `res://Scenes/Shared/retail_float32_checks.gd` with the standard engine's
 `--headless --script` options for the focused binary32 store check. The .NET
