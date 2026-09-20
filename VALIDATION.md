@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native terrain appearance and Loading checks; earlier validation retained).
+Last updated: 2026-09-20 (native actor-state foundation checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -497,6 +497,24 @@ logs are clean. Run .NET `Scenes/World/Tests/ActorDefinitionReferenceChecks.tscn
 with fresh fixture/report user paths, then standard
 `Scenes/World/Tests/actor_definition_checks.gd` with that fixture and a fresh
 report. This validates immutable definitions; the live registry is still C#.
+
+The pure Thing/Actor base-state port passed **18,548 native assertions** against
+the unchanged Core implementation on Godot-hosted .NET 10.0.12: 818 factory/restore
+cases, 993 mutation/getter operations, 2,884 projection/angular-law cases and
+349 derived-property cases. Checks retain signed float words (including signed
+zero), checked overflow, wrapped movement subtraction, flags/type words,
+current/old pose order, failure atomicity and detached snapshot ownership.
+The existing distinction between allowing a negative motion countdown at runtime
+and refusing it on restore is preserved. There is no Godot physics or live
+registry integration in this foundation.
+Run .NET `Scenes/World/Tests/ThingActorStateReferenceChecks.tscn` with two fresh
+absolute fixture/report paths under this worktree's `local-data/`, then standard
+`Tests/thing_actor_state_checks.gd` with the fixture and a fresh report path.
+Receipts `thing-actor-state-8_v6hbwr/`, `thing-actor-final-g2de2np9/` and
+`thing-actor-export-final-a1n8p3qa/` under `local-data/test-runs/` have clean runtime
+logs. Both harnesses also refused dangling output links without creating the
+target; the final exporter produced unchanged fixture SHA-256
+`efc4403db2d972cf6d02b020cbae16c82d86ec80d81d66466e67f5324a859da1`.
 
 The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
 compared bytes** against the unchanged C# exporter, which passed **43 checks**.
