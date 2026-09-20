@@ -136,6 +136,7 @@ public sealed partial class RetailFrontendFlow
             };
         }
         UpdateNativeTextures();
+        UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
         UpdateDebriefingFrame();
@@ -194,7 +195,6 @@ public sealed partial class RetailFrontendFlow
             switch (prefix)
             {
                 case "Main": DrawMainMenu(); break;
-                case "Click": DrawClickToStart(); break;
                 case "Career": DrawDevSelect(); break;
                 case "Briefing": DrawMissionBriefing(); break;
                 case "Configuration": DrawSelectConfiguration(); break;

@@ -40,6 +40,11 @@ func run_checks() -> void:
             view.set("EditorPage", page)
             if not require(stage.get_node(pages[page]).visible, "Editor page selector did not expose its actual page"): return
             if not require(not view.is_processing() and not view.is_processing_input(), "Changing editor page started processing"): return
+            if pages[page] == "ClickToStart":
+                var click: Control = stage.get_node("ClickToStart")
+                if not require(not click.get("_frame_supplied") and click.get_node("Splash/Motion/Image").has_method("drawing_rect"), "Click editor page must expose its native production controls and frozen facts"): return
+                if not require(click.view_snapshot() == {"pulse_timer": 5.0, "page_seconds": 5.0}, "Editor selection must not advance Click clocks"): return
+                if not require(click.get_node("Title/Body/Motion/Image").texture == menu.get_node("TitleLogo/Body").texture, "Click and the main menu must share the production title recipe"): return
             if pages[page] == "Debriefing":
                 var report: Control = stage.get_node("Debriefing")
                 if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return

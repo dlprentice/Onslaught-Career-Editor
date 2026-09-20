@@ -139,7 +139,7 @@ public sealed class RetailMainMenuHitTestTests
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private void DrawClickToStart"));
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeClickSource.Presentation);
         Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandlePointerConfirm"));
         Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandleKey"));
         Assert.DoesNotContain("RetailMainMenuHitTest", NativeLoadingSource.Presentation);

@@ -117,9 +117,12 @@ public sealed class RetailFrontendScenePathTests
         Assert.DoesNotContain("ConfirmForSmoke", startMedia, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", pointer, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", key, StringComparison.Ordinal);
-        Assert.Contains("RetailClickToStartSplash.Scale", flow, StringComparison.Ordinal);
-        Assert.Contains("RetailClickToStartSlide.ShouldDraw", flow, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendScenePath", Slice(flow, "private void DrawClickToStart()"), StringComparison.Ordinal);
+        Assert.Contains("Laws.splash_scale(timer)", NativeClickSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("-Laws.slide_offset(timer)", NativeClickSource.Controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendScenePath", NativeClickSource.Presentation, StringComparison.Ordinal);
+        Assert.Contains("\"set_frame\"", NativeClickSource.Bridge, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void DrawClickToStart()", flow, StringComparison.Ordinal);
+        NativeClickSource.HasNoPresentationSideEffects();
     }
 
     [Fact]

@@ -109,6 +109,21 @@ public sealed partial class Level100SceneImport : Node
                 hash.AppendData(SHA256.HashData(System.IO.File.ReadAllBytes(path)));
             }
         }
+        // Original adapters remain in the GPL tree; separately licensed
+        // numerical implementations stay outside it. Their actual selected
+        // source must participate too, or an adapter could keep the same bytes
+        // while the behavior used to bake the world changes underneath it.
+        foreach ((string source, string packaged) in new[]
+        {
+            ("../../tools/godot_compat/invariant_int32_format.gd", "RuntimeDependencies/DotNetInvariantInt32Format.gd"),
+            ("../../tools/godot_compat/arm_cosf.gd", "RuntimeDependencies/ArmCosf.gd"),
+        })
+        {
+            string relative = System.IO.File.Exists(Path.Combine(projectDirectory, packaged)) ? packaged : source;
+            string path = Path.GetFullPath(Path.Combine(projectDirectory, relative));
+            hash.AppendData(System.Text.Encoding.UTF8.GetBytes(relative + "\0"));
+            hash.AppendData(SHA256.HashData(System.IO.File.ReadAllBytes(path)));
+        }
         return Convert.ToHexString(hash.GetHashAndReset());
     }
 

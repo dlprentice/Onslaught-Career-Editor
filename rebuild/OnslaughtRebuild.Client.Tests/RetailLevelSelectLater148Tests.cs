@@ -275,7 +275,7 @@ public sealed class RetailLevelSelectLater148Tests
         string main = Slice(flow, "private void DrawMainMenu()");
         string quit = Slice(flow, "private void DrawQuitConfirm()");
         string loading = NativeLoadingSource.Presentation;
-        string click = Slice(flow, "private void DrawClickToStart()");
+        string click = NativeClickSource.Presentation;
         string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
         string handleKey = Slice(flow, "private bool HandleKey(");
 

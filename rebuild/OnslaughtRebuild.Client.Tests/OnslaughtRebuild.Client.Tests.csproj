@@ -49,7 +49,7 @@
     <Compile Include="..\OnslaughtRebuild.Godot\RetailCareerLoadAdapter.cs"
              Link="godot-startup-source\RetailCareerLoadAdapter.cs" />
     <!-- CFEPIntro this+0x18 clock. Godot-free so the click-to-start prompt
-         blink can be pinned without an engine; DrawClickToStart is the consumer. -->
+         blink can be pinned without an engine; the native Click page is the consumer. -->
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartPrompt.cs"
              Link="godot-startup-source\RetailClickToStartPrompt.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartTitle.cs"
@@ -254,6 +254,9 @@
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\LoadingReference.cs"
              Link="godot-loading-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\click_presentation.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\click_preview.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickToStart.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSplash.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSlide.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickTitle.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_image.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\ClickReference.cs;..\OnslaughtRebuild.Godot\Client\click_to_start_laws.gd;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Click.cs"
+             Link="godot-click-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"

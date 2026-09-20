@@ -559,8 +559,6 @@ public sealed partial class RetailFrontendFlow : Control
     private GdFrontendSession _session = null!;
     private readonly Dictionary<RetailFrontendMenuItemKind, string> _menuText = [];
 
-    private Texture2D _clickBackground = null!;
-    private Texture2D _clickSlide = null!;
     private Texture2D _rockBackground = null!;
     private Texture2D[] _feBackFrames = [];
     private Texture2D _forsetiWritingLarge = null!;
@@ -643,6 +641,7 @@ public sealed partial class RetailFrontendFlow : Control
         LoadTextures();
         _feBackFrames = LoadFeBackFrames(Engine.IsEditorHint() ? 1 : int.MaxValue);
         InitializeOptions();
+        InitializeClick();
         InitializeLoading();
         InitializeDebriefing();
 
@@ -1058,101 +1057,6 @@ public sealed partial class RetailFrontendFlow : Control
         // Actual production page components own their drawing in the authored
         // scene. Only the outside-stage letterbox belongs to this controller.
         base.DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
-    }
-
-    private void DrawClickToStart()
-    {
-        // CFEPIntro::Render 0x0051B866 splash dest — DAT_0089d880 / fe_splash1.
-        // Scale is min(this+0x18, 1.0) then the stored pulse; dest is the
-        // specimen affine, not a scale-free (320, 240) centre.
-        SelectSceneSection("Click.Splash");
-        float splashScale = RetailClickToStartSplash.Scale(_clickPulseTimer);
-        DrawSurfaceCentered(
-            _clickBackground,
-            RetailClickToStartSplash.X(_clickPulseTimer),
-            RetailClickToStartSplash.Y(_clickPulseTimer),
-            splashScale,
-            splashScale,
-            Colors.White);
-
-        // CFEPIntro::Render 0x0051B92F glyph submits — Localization 0x77,
-        // five CDXFont__DrawTextScaled calls at Y 401/399/400, sx=sy=1.
-        // A capture-derived textScale=2 is not the body. ShouldDraw is the
-        // same timer>4 / fmod<2 arm as RetailClickToStartPrompt.
-        SelectSceneSection("Click.Prompt");
-        if (RetailClickToStartGlyphs.ShouldDraw(_clickPulseTimer))
-        {
-            const string prompt = "Click to start"; // Localization 0x77
-            int width = (int)MeasureText(prompt, RetailClickToStartGlyphs.ScaleX);
-            foreach (RetailClickToStartGlyphs.Pass pass in RetailClickToStartGlyphs.Passes)
-            {
-                DrawTextFlat(
-                    prompt,
-                    new Vector2(RetailClickToStartGlyphs.X(pass, width), pass.Y),
-                    RetailClickToStartGlyphs.ScaleX,
-                    RetailColor(pass.Color));
-            }
-        }
-
-        // DAT_0089d7bc LostToys sliding pair. No skip after the two byte
-        // writes: both mode-0 CDXSurf calls issue even when this+0x18 <= 4
-        // (the pair sits 400 px off the left edge). Fade is
-        // clamp(timer-4, 0, 1); offset is (1-fade)²*400; dest X is
-        // settled − offset.
-        SelectSceneSection("Click.Slide");
-        if (RetailClickToStartSlide.ShouldDraw(_clickPulseTimer))
-        {
-            foreach (RetailClickToStartSlide.Pass pass in RetailClickToStartSlide.Passes)
-            {
-                DrawTextureRect(
-                    _clickSlide,
-                    new Rect2(
-                        RetailClickToStartSlide.X(pass, _clickPulseTimer),
-                        pass.Y,
-                        _clickSlide.GetWidth(),
-                        _clickSlide.GetHeight()),
-                    false,
-                    RetailColor(pass.Color));
-            }
-        }
-
-        // CFEPIntro::Render 0x0051BBA0 title slam — DAT_0089d88c / FE_BEA_Title2.
-        // Gate is page*1.2 > 2; scale slams 2.5→0.5; four z=0.05 outline
-        // corners then the z=0.04 body. The previous 0.35 / sin(page*3) stub
-        // is not the specimen law.
-        SelectSceneSection("Click.Title");
-        if (RetailClickToStartTitle.ShouldDraw(_clickPageSeconds))
-        {
-            float titleScale = RetailClickToStartTitle.Scale(_clickPageSeconds);
-            uint outline = RetailClickToStartTitle.OutlineColor(_clickPageSeconds);
-            uint body = RetailClickToStartTitle.BodyColor(_clickPageSeconds);
-            foreach (RetailClickToStartTitle.Pass pass in RetailClickToStartTitle.Passes)
-            {
-                DrawSurfaceCentered(
-                    _titleLogo,
-                    pass.X,
-                    pass.Y,
-                    titleScale,
-                    titleScale,
-                    RetailColor(pass.Outline ? outline : body));
-            }
-        }
-
-        // CFEPIntro::Render 0x0051BD01 sixth z=0.02 copy. Second gate:
-        // 2 < page < 2.25, not page*1.2 > 2. Dest (250, 290), sx=sy=1-v.
-        // Not folded into Passes.
-        SelectSceneSection("Click.TitleFlash");
-        if (RetailClickToStartTitle.ShouldDrawSixth(_clickPageSeconds))
-        {
-            float sixthScale = RetailClickToStartTitle.SixthScale(_clickPageSeconds);
-            DrawSurfaceCentered(
-                _titleLogo,
-                RetailClickToStartTitle.SixthPass.X,
-                RetailClickToStartTitle.SixthPass.Y,
-                sixthScale,
-                sixthScale,
-                RetailColor(RetailClickToStartTitle.SixthColor(_clickPageSeconds)));
-        }
     }
 
     /// <summary>The released clamp idiom, <c>_DAT_005d856c</c> / <c>_DAT_005d8568</c>.</summary>
@@ -3578,19 +3482,12 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void LoadTextures()
     {
-        _clickBackground = LoadTexture(
-            "Backgrounds/click-to-start",
-            1024,
-            1024,
-            CuratedAyaTextureLoader.Compression.Dxt1);
         _rockBackground = LoadTexture(
             "Backgrounds/rock",
             1024,
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
-        _clickSlide = LoadTexture("click-slide", 128, 128);
         _forsetiWritingLarge = LoadTexture("forseti-writing-large", 128, 512);
-        _titleLogo = LoadTexture("title-logo", 512, 256);
         // FrontEnd\v2\FE_Reflection_map.tga — DAT_0089d7fc, the CFEPMain__Render
         // additive sheen. See TitleLogoReflectionLayer.
         _reflectionMap = LoadTexture(

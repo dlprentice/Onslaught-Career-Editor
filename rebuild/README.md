@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (native actor-state foundations; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (native Click presentation and shared materials; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -164,6 +164,26 @@ substitutes. The temporary adapter invokes effects synchronously at their origin
 action points, retaining partial mutation on failure and reentrant callback order.
 It does not poll every row across languages each frame.
 
+`Scenes/Frontend/ClickToStart.tscn` owns the splash, five outlined prompt passes,
+two sliding-logo passes, five title passes and the separate title flash. Its
+frozen `editor_preview` resource supplies the two time facts; the existing host
+still owns the clock, input and idle transition. The small `frontend_image.gd`
+and bitmap-label controls preserve source rectangle/glyph calculations before
+canvas transforms. Their sizes, centers, content origins, textures and outer
+transforms are editable; gameplay uses those same controls and recipes. Changing
+them is a deliberate presentation override, not new retail evidence. The main
+menu also shares the native title recipe. `override_prompt` explicitly selects
+enhanced text. No separate preview art, timer or session is created.
+
+`Client/click_to_start_laws.gd` keeps the source float32 stores and binary64
+clocks. Its cosine adapter loads the pinned MIT Arm adaptation from
+`tools/godot_compat/arm_cosf.gd` outside the GPL subtree. This preserves the
+measured Linux x86-64 host's `cosf` results, including cases where casting
+Godot's double-precision cosine back to float32 differs. It is a checked
+source-checkout dependency; standalone exports and Windows compatibility remain
+unverified. Private scene imports include this dependency and the invariant
+formatter in their source fingerprint.
+
 `Scenes/Frontend/Loading.tscn` exposes the actual background, five outlined
 caption passes and fixed black bar. Its native owner receives display facts from
 the existing frontend session; selecting an editor fixture cannot request a load
@@ -215,6 +235,14 @@ production definitions. Private imports retain the actual frozen cache pixels;
 public resources retain source recipes. Editor inspection does not start a live
 cache or a diagnostic probe. The former C# compositor and appearance owners stay
 under `Scenes/World/Tests/` as comparison references.
+
+`Scenes/Shared/RetailFixedFunctionMaterial.tres`, `retail_fixed_function.gdshader`
+and its GDScript factory now own the shared six-slot mesh material used by the
+static world and Aquila. The external shader is unchanged apart from its license
+line; the factory retains texture identity, per-draw light rigs, source float32
+stores and alpha conversion. Existing C# callers use a temporary typed adapter.
+Public material resources contain no converted retail textures; private world
+imports retain the actual admitted materials.
 
 `Scenes/World/Water.tscn` exposes the production grid, shoreline bands and Sun
 glint as three named mesh nodes with external shader files and texture recipes.
@@ -461,6 +489,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Frontend/ClickToStart.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/ClickToStart.tscn) | Actual splash, five prompt passes, sliding-logo pair, five title passes and title flash. `editor_preview` supplies frozen times. Image `center`/size and text `content_origin` expose the source layout; outer transforms and `override_prompt` support deliberate edits. |
 | [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
 | [Scenes/Frontend/Loading.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Loading.tscn) | Production background, five ordered caption passes and fixed bar. `editor_progress` supplies frozen host facts; `override_caption` marks deliberate enhanced text. The scene does not request or advance loading. |
 | [Scenes/Frontend/Debriefing.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Debriefing.tscn) | Settled report labels/values, writing tiles, grade artwork/shadows and header as separate native Controls. `editor_projection` selects a frozen outcome/objective/grade illustration without creating a gameplay result. |

@@ -91,7 +91,12 @@ public sealed partial class WorldSceneChecks : Node
     {
         // Synthetic files in this invocation's owned profile; never edit the
         // production source or private assets to exercise stale-import refusal.
-        string root = Path.Combine(ProjectSettings.GlobalizePath("user://"), "native-import-identity");
+        string owner = Path.Combine(ProjectSettings.GlobalizePath("user://"), "native-import-identity");
+        string root = Path.Combine(owner, "rebuild/Godot");
+        string dependencies = Path.Combine(owner, "tools/godot_compat");
+        System.IO.Directory.CreateDirectory(dependencies);
+        foreach (string name in new[] { "invariant_int32_format.gd", "arm_cosf.gd" })
+            System.IO.File.WriteAllText(Path.Combine(dependencies, name), "extends RefCounted\n");
         foreach (string relative in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Assets" })
             System.IO.Directory.CreateDirectory(Path.Combine(root, relative));
         string script = Path.Combine(root, "Scenes/World/source.gd");
@@ -116,6 +121,33 @@ public sealed partial class WorldSceneChecks : Node
         Check(renamed != withShader, "External native shader source participates in the import.");
         System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/water.gdshaderinc"), "float wave = 1.0;\n");
         Check(withShader != Level100SceneImport.NativeSourceIdentity(root), "External shader includes participate in the import.");
+        foreach ((string source, string packaged) in new[]
+        {
+            ("invariant_int32_format.gd", "DotNetInvariantInt32Format.gd"), ("arm_cosf.gd", "ArmCosf.gd"),
+        })
+        {
+            string beforeDependency = Level100SceneImport.NativeSourceIdentity(root);
+            string external = Path.Combine(dependencies, source);
+            System.IO.File.AppendAllText(external, "const VALUE = 2\n");
+            string afterDependency = Level100SceneImport.NativeSourceIdentity(root);
+            Check(beforeDependency != afterDependency, "Selected external dependency content invalidates the bake: " + source);
+            System.IO.Directory.CreateDirectory(Path.Combine(root, "RuntimeDependencies"));
+            string packagedPath = Path.Combine(root, "RuntimeDependencies", packaged);
+            System.IO.File.Copy(external, packagedPath);
+            string afterPackaging = Level100SceneImport.NativeSourceIdentity(root);
+            Check(afterDependency != afterPackaging, "Dependency routing participates even with identical bytes: " + source);
+            System.IO.File.AppendAllText(external, "# inactive source checkout path\n");
+            Check(afterPackaging == Level100SceneImport.NativeSourceIdentity(root), "Only the selected dependency route affects the bake: " + source);
+            System.IO.File.AppendAllText(packagedPath, "const VALUE_2 = 3\n");
+            Check(afterPackaging != Level100SceneImport.NativeSourceIdentity(root), "Selected packaged dependency content invalidates the bake: " + source);
+            System.IO.File.Delete(packagedPath);
+            System.IO.File.Delete(external);
+            bool refused = false;
+            try { Level100SceneImport.NativeSourceIdentity(root); }
+            catch (FileNotFoundException) { refused = true; }
+            Check(refused, "A missing selected dependency cannot certify the bake: " + source);
+            System.IO.File.WriteAllText(external, "extends RefCounted\n");
+        }
     }
 
     private void Compare(FirstFlightWorldView recipe, FirstFlightWorldView production,

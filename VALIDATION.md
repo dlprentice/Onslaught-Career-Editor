@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native actor-state foundation checks; earlier validation retained).
+Last updated: 2026-09-20 (native Click and shared-material checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -497,6 +497,100 @@ logs are clean. Run .NET `Scenes/World/Tests/ActorDefinitionReferenceChecks.tscn
 with fresh fixture/report user paths, then standard
 `Scenes/World/Tests/actor_definition_checks.gd` with that fixture and a fresh
 report. This validates immutable definitions; the live registry is still C#.
+
+The native click-page expressions passed **68,630 exact checks** against the
+retained C# helpers: 5,703 expression rows, 144 binary64 clock rows and fifty
+Int32-width glyph rows. The initial thirty-six failures came from using
+double-precision `cos` followed by a float32 cast. The pinned Arm adaptation,
+with exact fused-operation emulation, passed **69,113 assertions** against the
+actual Godot-hosted .NET 10.0.12 `MathF.Cos` and `Math.FusedMultiplyAdd`: 21,078
+cosine words, 4,112 finite FMA inputs, and the existing click samples. No expected
+word changed. This is bounded compatibility evidence for Linux x86-64/glibc 2.44,
+not proof of every float input or of Windows/retail trigonometry. Receipts are
+`click-laws-reference-n1z2lgpw/`, `click-adopted-hl1txc21/`,
+`cosf-reference-ya7q4rwv/` and `cosf-native-0iuj4dyh/` under
+`local-data/test-runs/`.
+
+The actual native Click scene passed **136 headless assertions** and **329
+rendered assertions**, including **128 exact full-page RGBA comparisons**:
+sixteen pulse/page-time pairs at 640×480, 1280×720, 801×601 and 320×240, each
+against the retained drawing and the integrated frontend. The same comparisons
+against the pre-integration host also passed. A first parent-scale/translation
+implementation changed a few filtered color bytes by one at fractional viewport
+scales. The final small image/text controls form the original float32 rectangles
+before canvas transforms and pass the unchanged zero-difference assertion.
+Source passes, coordinates, gates, colors, private texture/font bytes and clock
+facts are retained. Captures used an isolated authenticated Xvfb display with
+llvmpipe and dummy audio, not the physical desktop. Clean headless logs and final
+render logs (only XIM/VSync warnings) are in `click-integrated-2z_igtkj/`; the
+pre-integration comparison is `click-render-surfaces-cljldf49/`. The affected
+22-class Client run passed **113/113**, with no skips or changed numerical
+expectations (`click-source-client-mtbgbjke/results/click-client.trx`).
+Loading's existing handoff/asset checks also passed **234 assertions** after the
+shared bitmap-label extension (`click-integrated-2z_igtkj/loading.log`).
+
+To reproduce the Click checks, run .NET
+`Scenes/Frontend/Tests/ClickLawReferenceChecks.tscn` with one fresh fixture
+user path, then standard `Scenes/Frontend/Tests/click_law_checks.gd` with that
+fixture and a fresh report. The cosine exporter is
+`Scenes/Shared/Tests/CosfReferenceChecks.tscn`; its two fresh fixture/report
+arguments produce the cosine fixture. Standard
+`Scenes/Shared/Tests/retail_cosf_checks.gd` takes, in order, that cosine fixture,
+the click fixture and a fresh report path. Run .NET
+`Scenes/Frontend/Tests/ClickSceneChecks.tscn -- --skipfmv` for the integrated
+component. With a caller-owned isolated display, add
+`--click-render-dir=/absolute/owned/capture-directory` for exact RGBA comparisons.
+All output paths belong under the invoking worktree's `local-data/`.
+
+The standalone native Click harness passed **658 checks** in both standard
+runtime and editor, covering actual assets, source-order drawing rectangles,
+preserved authored geometry/centers, frozen inspector facts, detached inputs,
+round-trip serialization without private pixels, and pointer/input ownership.
+The `.NET --editor` frontend check passed all ten pages plus native Click,
+frozen-time and shared-title assertions. An initial editor-only dependency
+refusal was resolved by marking the pure cosine utility `@tool`; its numerical
+implementation is unchanged. Final receipts are `click-scene-native-iemqeo_e/`,
+`click-scene-editor-t3gzsieg/` and `frontend-click-editor-ia7i3pg1/`.
+Runtime is clean. The editors retain 166 (standard) / 205 (.NET) ObjectDB
+instances and associated Canvas/viewport/texture/text RID shutdown diagnostics;
+these are not clean editor exits. Run standard
+`Scenes/Frontend/Tests/click_scene_checks.gd` with one fresh owned output directory,
+adding `--editor` for inspector/serialization checks. The integrated editor entry
+is `Scenes/Frontend/Tests/frontend_scene_checks.gd` under the .NET engine.
+
+The shared fixed-function material factory passed **1,732 native assertions**
+against 88 original factory/admission cases and 1,044 alpha words. Texture and
+shader identity, ordered failures, all parameters, public/private serialization
+and release match. Both old and native text saves reload fog density as decimal
+double `0.0084`, while preserving shader float32 word `0x3c09a027`; the checks
+compare actual old/new reloads and separately preserve original shader words.
+The external shader differs only by its SPDX line and end-of-file newline.
+Reference/native runtime logs are clean in `gdscript-fixed-material-reference-q9qpn_id/`
+and `gdscript-fixed-material-native-35t_bdpw/`. The three affected Client classes
+passed **53/53** in `gdscript-fixed-material-client-hg72ai4f/results/material.trx`.
+The .NET editor gate passed **42 functional checks**, retaining the previously
+observed 205 ObjectDB/associated RID shutdown diagnostics
+(`gdscript-fixed-material-editor-mono-hh0tc01l/`); that editor exit is not clean.
+Use .NET `Scenes/Shared/FixedFunctionMaterialChecks.tscn` with fresh fixture/report
+user arguments, then standard `Scenes/Shared/fixed_function_material_checks.gd`
+with that fixture and a fresh report; `--editor` selects its inactive-resource gate.
+
+After Click/material integration, the supported pinned build and private Level
+100 import passed with zero build warnings/errors. `WorldSceneChecks.tscn`
+passed **24,144 checks**, including the added external-dependency route/content
+and missing-input checks (`click-material-full-build-e.log` and
+`click-material-world-e.log`). The **2,148-step** smoke retained thirteen ordered
+message deliveries/queues, a fresh retry, return to Main Menu and world release.
+Its complete recorded tape is byte-identical to the prior milestone, SHA-256
+`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+Two replays verified unchanged trace hash
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+and state hash `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+with no first divergence. Receipts are `click-material-smoke-3ywj6mz6/` and
+`click-material-replay-7s41lvmd/`; runtime logs are clean. Eight voices began
+before teardown versus nine in the prior host-timed run; the ordered queue and
+simulation delivery sequence remain identical. The mission is still
+`Running`/`None` with zero targets destroyed: this is not full-combat acceptance.
 
 The pure Thing/Actor base-state port passed **18,548 native assertions** against
 the unchanged Core implementation on Godot-hosted .NET 10.0.12: 818 factory/restore

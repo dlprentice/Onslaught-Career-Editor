@@ -23,6 +23,12 @@ enum Alignment { LEFT, CENTRE, INTEGER_CENTRE, RIGHT, FLOOR_CENTRE }
 @export var ink_color: Color = Color.WHITE
 @export var shadow: bool = true
 @export var body_origin: bool = true
+## An authored draw origin is useful when source glyph coordinates must be
+## formed before the canvas transform, rather than translated per node.
+@export var content_origin: Vector2 = Vector2.ZERO:
+	set(value):
+		content_origin = value
+		queue_redraw()
 var _imported: Variant
 var _font: AtlasFont
 var _tint: Color = Color.WHITE
@@ -67,6 +73,8 @@ func _draw() -> void:
 		Alignment.RIGHT: x = Laws.dropdown_dest_x(size.x, int(width))
 		Alignment.FLOOR_CENTRE: x = floor(F.value(F.value(size.x * 0.5) - F.value(width * 0.5)))
 	var origin := Vector2(x, 0.0) + _offset
+	if content_origin != Vector2.ZERO:
+		origin += content_origin
 	if body_origin and shadow:
 		origin += Vector2.ONE
 	font.draw_run(self, value, origin, ink_color * _tint, shadow)

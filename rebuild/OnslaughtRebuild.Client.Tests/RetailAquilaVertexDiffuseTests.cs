@@ -137,7 +137,7 @@ public sealed class RetailAquilaVertexDiffuseTests
             "                        stageZeroColorOperation: stageZeroColorOperation);",
             loader.Replace("\r\n", "\n"));
         Assert.Contains("profile.StageZeroColorOperation);", loader);
-        Assert.Contains("vertex_light_color *= COLOR.rgb;", ReadGodotSource("Level100StaticWorldAsset.cs"));
+        Assert.Contains("vertex_light_color *= COLOR.rgb;", ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader"));
     }
 
     /// <summary>
@@ -454,7 +454,7 @@ public sealed class RetailAquilaVertexDiffuseTests
             loader);
         Assert.Contains(
             "vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);",
-            ReadGodotSource("Level100StaticWorldAsset.cs"));
+            ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader"));
     }
 
     /// <summary>

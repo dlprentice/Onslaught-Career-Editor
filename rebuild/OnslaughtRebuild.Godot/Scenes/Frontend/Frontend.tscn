@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Loading.tscn" id="loading_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/ClickToStart.tscn" id="click_scene"]
 
 [node name="Frontend" type="Control"]
 layout_mode = 3
@@ -324,67 +325,8 @@ self_modulate = Color(0.6862745098039216, 0.8117647058823529, 1, 0.9960784313725
 script = ExtResource("4")
 
 
-[node name="ClickToStart" type="Control" parent="Stage"]
+[node name="ClickToStart" parent="Stage" instance=ExtResource("click_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Splash" type="Control" parent="Stage/ClickToStart"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Click.Splash"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="Prompt" type="Control" parent="Stage/ClickToStart"]
-layout_mode = 0
-offset_left = 99.0
-offset_top = 390.0
-offset_right = 539.0
-offset_bottom = 424.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Click.Prompt"
-SourceRect = Rect2(99, 390, 440, 34)
-
-[node name="Slide" type="Control" parent="Stage/ClickToStart"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 320.0
-offset_right = 256.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Click.Slide"
-SourceRect = Rect2(0, 320, 256, 160)
-
-[node name="Title" type="Control" parent="Stage/ClickToStart"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Click.Title"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="TitleFlash" type="Control" parent="Stage/ClickToStart"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Click.TitleFlash"
-SourceRect = Rect2(0, 0, 640, 480)
 
 [node name="QuitConfirm" type="Control" parent="Stage"]
 visible = false
