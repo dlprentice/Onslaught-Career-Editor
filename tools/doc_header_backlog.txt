@@ -104,7 +104,6 @@ reverse-engineering/binary-analysis/functions/Carver.cpp.md
 reverse-engineering/binary-analysis/functions/Cockpit.cpp/CCockpit__ctor.md
 reverse-engineering/binary-analysis/functions/Controller.cpp/CController__GetToControl.md
 reverse-engineering/binary-analysis/functions/Controller.cpp/CController__InactivityMeansQuitGame.md
-reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md
 reverse-engineering/binary-analysis/functions/Controller.cpp/GameControllers__RelinquishControlForTarget.md
 reverse-engineering/binary-analysis/functions/Credits.cpp/CCredits__BuildDefaultEntries.md
 reverse-engineering/binary-analysis/functions/Credits.cpp/CCredits__WriteEntry_String.md
@@ -139,7 +138,6 @@ reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CGoodieData__ctor.m
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/get_goodie_number.md
 reverse-engineering/binary-analysis/functions/FEPLevelSelect.cpp/CFEPLevelSelect__UpdateMouseEdgeSlide.md
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__ButtonPressed.md
-reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__DoLoad.md
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Init.md
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Process.md
 reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Render.md

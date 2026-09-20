@@ -1664,6 +1664,98 @@ separates executed findings, fresh static checks, inherited receipts and pending
 cross-runtime acceptance. This tranche changes RE documentation; it does not
 modify Ghidra or either implementation lane.
 
+### Original menu load and next startup — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/menu_control.py`
+passed **20 isolated composed menu-load cases**, retaining 18 unchanged original
+bodies (2,974 bytes). Accepted stem:
+`local-data/test-runs/save-startup-20260919/menu-run-47t_hlhy/menu`.
+Receipt SHA-256 `720608d9374496a1341259191136537c6a903c725a468e1eafb60c8092159211`;
+ELF SHA-256 `bc6212a7849c6fa9c6880de80c0e95f92e194e371c635b3058a49f1669985ee9`.
+`menu-controls-v1.log`, saved driver, assembler/linker commands, inputs, full
+outputs and stderr retain the invocation. No failed experiment preceded this
+accepted set.
+
+The complete original menu body calls the real PC card-info/read/name-conversion
+code, career Load(flag 1) and conditional default-options writer. Cases cover no
+selection, missing/empty/short/version-failing reads, successful load, supplied
+writer open/write/close failures, reader close errors, low-byte publication
+gating, changed device/slot and low-byte filename alias/truncation. Two explicit
+dependency controls make the intercepted page callback set/clear the gate;
+these prove the test occurs after the callback, not that an actual page callback
+has those effects.
+
+Complete selected career/binding state, input and read-buffer immutability,
+guards, attempted publication payload, call order and preserved calling
+convention are compared. Font lookup pops one argument; the remaining pushed
+values belong to the subsequent eleven-argument dialog call. The original PC
+card-info stub reports present/formatted, so unavailable-card branches are not
+claimed executed. Latest-world selection, text/font/dialog/page behavior and
+file/allocation services are intercepted. Only read/write/exit syscalls remain
+admitted; forbidden `getpid` again terminates with SIGSYS and no output.
+
+`python -P local-data/test-runs/save-startup-20260919/menu_to_startup.py`
+then passed the successful menu case's exact captured payload to the earlier
+original WinMain executable. Accepted stem `menu-boot-qssmorvv/chain` in the same
+owner; receipt SHA-256
+`533c72da0958207b18b1eb5ea20ec378598226a3c0ca5065451d71906f2f3639`;
+command result `menu-to-startup-v1.log`. It checks the preserved menu-live volume
+bits, changed next-startup volume bits and audio-action arguments, binding copy,
+sensitivity, progress reset and immutable input. A comparison with the earlier
+checked startup case is a continuity check, not an independent semantic oracle.
+The startup driver's separately invoked post-WinMain serializers/writer are
+outside this chain claim.
+
+The storage handoff is supplied and assumes successful publication. These
+experiments establish neither durable writes nor actual CRT double-close
+effects, desktop startup, input/audio acceptance or complete save compatibility.
+Pristine executable and real tracked fixture identities are checked unchanged
+after execution. No Ghidra or implementation-lane code was changed.
+
+### Original control preset behavior — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/preset_control.py`
+passed **20 direct original-code cases**, retaining nine unchanged bodies
+(2,499 bytes) with no intercepted callees. Accepted stem
+`local-data/test-runs/save-startup-20260919/preset-run-viieck2x/preset`;
+receipt SHA-256 `e69513d9c0cec731d786cd2ca8933a63b12ec7c28bc9af6f03da45b2a1ee2c70`;
+ELF SHA-256 `c9a28da4f3120e00a7f76e99a3473da41d9947bfb54957b5c473040c38eea51d`.
+`preset-controls-v2.log`, immutable driver, commands, inputs, outputs and stderr
+retain the invocation. No failed execution preceded the accepted cases. An
+earlier inspection tried to read the fallback table directly from the PE and
+was correctly refused because the addresses are BSS; the experiment instead
+executes its actual initializer.
+
+The original single/dual/fallback initializers, three entry helpers, FindById,
+ApplyPreset and GetSaveSize execute. The driver copies real fixture binding
+rows into the initialized runtime table; it does not call Load. BSS retains
+ordinary zero initialization, with explicit surrounding guards. Authored
+detected counts stay within `0..4`; flags include enabled, disabled,
+out-of-count and noncanonical-nonzero examples. Schemes cover 0, 1, 2, 3, 4,
+65535 and a negative direct-call value that cannot arise from the saved u16.
+
+Comparisons cover complete runtime and preset tables, guards, immutable input,
+size before/after and the calling convention. One/two/three-device cases
+distinguish actual selected indices and the clearing of secondary-slot field0
+across inactive rows. The initial 19-case artifact remains at
+`preset-run-8ook0_le/preset`; its inactive rows already had field0 `-1`, so
+unchanged output alone did not demonstrate those writes. Read-only review
+identified that limitation. The final added control seeds all 31 inactive
+secondary slots to `(3, 0x44556677, 0x12345678)` and verifies exactly
+`(-1, 0x44556677, 0x12345678)` afterward. It also asserts nonzero-scheme
+preset-cursor destinations. Missing/duplicate/inactive/early-sentinel runtime IDs
+exercise lookup and size effects. A deliberately changed preset with absent
+secondary slots exercises the general fallback branch; it is explicitly not
+the untouched shipped group. The read/write/exit-only syscall filter again
+rejects a forbidden `getpid` with SIGSYS and no output. Fixture and specimen
+identities remain unchanged.
+
+This establishes the selected helper behavior, not device enumeration, key
+delivery, selector/remap UI execution, full loader/preset composition or
+arbitrary malformed-save safety. The [binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md)
+separates these executions from fresh UI instruction checks and inherited
+historical mappings. No Ghidra or implementation code changed.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

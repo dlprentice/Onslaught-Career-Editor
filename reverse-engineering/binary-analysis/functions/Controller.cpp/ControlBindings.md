@@ -1,5 +1,12 @@
 # Control Bindings (Options Entries)
 
+Status: active bounded contract; complete remap/input acceptance pending
+Last updated: 2026-09-19
+Summary: original preset execution establishes initialized-table replacement, enabled-device fallback and the boundary between saved bindings and runtime bindings.
+Source File: binary-derived contract; no exact partial-source body asserted. Binary: pristine `BEA.exe.original.backup`.
+Evidence: MEASURED — selected pristine instructions and 20 isolated preset controls; historical remap/UI mappings below remain subject to recheck.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 This documents the **0x20-byte “options entries”** block in `.bes` / `defaultoptions.bea` and the BEA.exe code that reads/writes it.
 
 The key finding is that these “options entries” are not generic settings blobs; they are **persisted control bindings** (two slots per action) plus a small remap state machine.
@@ -13,27 +20,85 @@ Related save-file doc: `reverse-engineering/save-file/save-format.md` (Region 3:
   - Internally the size logic is `0x2514 + 0x20*N`, but this project does **not** resize save files.
 - Tail begins at `0x24BE + 0x20*16` (file offset `0x26BE`) and contains `g_ControlSchemeIndex` (tail + `0x08`).
 
-## Control Scheme Nuance (Important)
+## Independently rechecked preset behavior — September 19
 
-`g_ControlSchemeIndex` determines how the game interprets the two binding slots in each entry:
+`Controls__ApplyPreset` at `00453780` writes its full argument to `00677d70`,
+then may replace binding records. It does not merely change how two immutable
+saved slots are interpreted. The earlier description of distinct "scheme
+layers" was insufficient for the actual initialized retail tables.
 
-- `0` = **Custom**: no preset is applied (see `Controls__ApplyPreset(0)` early-return). Tooling should prefer this mode when patching bindings directly.
-- `>= 1` = **Preset scheme**: `Controls__ApplyPreset(scheme)` applies `scheme` layers from the preset table (base `DAT_00677af0`) and can rewrite entry slot fields based on the selected scheme.
-  - Observed in retail saves: scheme values are not limited to `1` (we have seen `1`, `3`, `4`, etc).
-  - Retail UI rendering still reads slot columns directly: `ControlsUI__RenderBindingsList` (`0x00455010`) indexes entries as `slot = param_2 / 2` (left column => slot0, right column => slot1), with no `g_ControlSchemeIndex` branch on slot orientation.
+Original `00453460` creates one 16-record preset group at `00677af0` followed
+by two sentinels. Original `00453630` creates a 16-record joystick fallback
+table at `006778d0` followed by one sentinel; `006778d4` is its ID column,
+not its record base. Original `00514210` creates 47 runtime records at
+`008892d8`: 16 active and 31 inactive, then a sentinel. The initializers write
+the active byte and leave padding bytes untouched; ordinary BSS supplies zero
+padding. Neither table is recovered by reading these BSS addresses from disk.
 
-Implication for tooling:
-- If you patch keybinds directly, **force `g_ControlSchemeIndex = 0`** so edits map predictably to in-game columns.
+| Scheme and initialized inputs | Rechecked result |
+| --- | --- |
+| `0` | Stores the scheme; preserves the runtime table and preset cursor. |
+| `1` | Copies all 32 bytes of each preset row into the first matching runtime ID, including active/padding, ID and both slots. Ordinary matching rows already have a secondary slot, so enabled devices do not replace them on this path. |
+| Positive `>=2`, no enabled detected device | Repeats the same group; the initialized table does not contain separate groups for schemes 2, 3 or 4. Selected cases 2 and 4 have the same final bindings as scheme 1. |
+| Positive `>=2`, enabled detected devices | After the first group, substitutes fallback bindings using the first two enabled device indices and returns. Cases 2, 3 and 65535 have the same binding result with the same supplied hardware state. |
+| Negative direct argument | Executes one group through the signed loop condition. This direct-call control is not a value produced by TailRead's zero-extended 16-bit field. |
 
-## When These Bindings Apply (Steam Build)
+The hardware predicate uses detected count `00888ff8` and nonzero **enable
+flags** at `00889024 + index`. These bytes are user-toggleable: the rechecked
+handler at `004d0420/004d0423` toggles one, clears eligible disabled-device
+slots, then calls ApplyPreset at `004d0484`. They are not simply presence bits.
+Counts in the isolated controls are explicitly bounded to `0..4`; ApplyPreset
+itself has no such admission check.
+
+The first enabled device replaces slot 0 (`+08..+13`) from the fallback row
+and writes its index at `+08`. A second enabled device similarly replaces
+slot 1 (`+14..+1f`). If only one exists, the original code writes **only
+`+14 = -1` across all 47 runtime entries**, including inactive entries; the
+remaining secondary-slot bytes survive. Disabled indices are skipped, and a
+third enabled device is unused by this selection.
+
+FindById ignores active status, chooses the first match and stops at ID `-1`.
+Controlled missing, duplicate, inactive and early-sentinel IDs demonstrate
+those effects and resulting size changes. A separate authored preset with
+all secondary slots absent exercises the general secondary-slot fallback;
+that is not the untouched shipped preset table.
+
+The ordinary pause-menu selector has a count virtual returning 2
+(`005de66c + 40 -> 004059c0`), with the generic selector clamping to `0..1`.
+This is a freshly inspected static UI limit, not a file-format admission limit.
+Older reports of real saves containing 3 or 4 remain inherited observations;
+these controls derive higher scheme values privately from the real fixture.
+
+The 20 direct controls retain nine unchanged bodies and have no intercepted
+callees. They use original initializers and copy the real fixture's binding
+rows into runtime memory with an explicitly authored setup; they **do not**
+execute the career loader. Complete selected tables, guards and source
+immutability are compared. A separate control populates all 31 inactive
+secondary slots before execution and observes their field0 clearing while
+the adjacent eight bytes remain intact. Commands and exact pins are in
+[VALIDATION.md](../../../../VALIDATION.md#original-control-preset-behavior--september-19).
+Actual device enumeration, physical input and the full startup-to-preset
+composition remain separate boundaries.
+
+For tooling, custom scheme 0 preserves admitted manual bindings through this
+preset helper. Selecting it is a deliberate settings change, not permission
+to silently alter an unrelated saved scheme.
+
+## When these bindings apply in the selected retail body
 
 This trips up testing if you only patch a `.bes` save:
 
 - `CCareer::Load(source, flag)` at `0x00421200`:
-  - `flag == 0` (boot path for `defaultoptions.bea`): copies options entries (`0x24BE`) into the in-memory options table and calls `OptionsTail_Read` on the tail pointer, applying keybinds + tail globals.
-  - `flag != 0` (career save load): **skips** applying options entries + tail snapshot to runtime.
-- The frontend load path `CFEPLoadGame__DoLoad` at `0x00461e20` calls `CCareer::Load(..., flag=1)` and may write `defaultoptions.bea` from the loaded save buffer (load-path condition: `DAT_0082b5b0 == 0`) via `CFEPOptions__WriteDefaultOptionsFile(source, size)`.
+  - Low flag byte zero (boot path for `defaultoptions.bea`): copies options entries (`0x24BE`) into the in-memory options table and calls `OptionsTail_Read`, which calls ApplyPreset after reading the tail scheme.
+  - Low flag byte nonzero (career save load): **skips** options entries and the tail snapshot.
+- The frontend load path `CFEPLoadGame__DoLoad` at `0x00461e20` calls `CCareer::Load(..., flag=1)` and may forward the original save buffer to `CFEPOptions__WriteDefaultOptionsFile(source, size)` when the post-page-call low byte at `0082b5b0` is zero.
   - Result: a patched `.bes` can update `defaultoptions.bea` for the **next boot**, but keybind changes generally won’t take effect until restart.
+
+The independently executed [menu-to-startup handoff](../../save-options-static-review-2026-05-26.md#original-menu-load-and-next-startup-composition)
+demonstrates this distinction with supplied successful file operations. It does
+not establish actual storage durability or real input remapping. The layout and
+historical mapping sections below retain their earlier evidence; they are not
+all newly reverified by these controls.
 
 ## Per-Entry Layout (0x20 bytes)
 
@@ -61,6 +126,7 @@ Notes:
 |---------|------|------|
 | 0x0042db10 | `OptionsEntries__FindById` | Returns pointer to 0x20-byte entry by `entry_id` (sentinel `-1`) |
 | 0x00453460 | `OptionsEntries__InitDefaultDualBindingsTable` | Initializes default dual-binding options-entry table at `DAT_00677af0` using `OptionsEntries__InitDualBindingEntry` (+ sentinels) |
+| 0x00453630 | `FUN_00453630` (current saved name) | Rechecked initializer for joystick fallback records at `006778d0`; no Ghidra rename applied in this tranche |
 | 0x00514210 | `OptionsEntries__InitDefaultSingleBindingsTable` | Initializes default single-binding options-entry table at `DAT_008892d8` using `OptionsEntries__InitSingleBindingEntry` (+ sentinel) |
 | 0x00453970 | `CControllerDefinition__InitDefaults` | Initializes control-definition defaults/vtable for remap lifecycle helper object |
 | 0x004539b0 | `CControllerDefinition__scalar_deleting_dtor` | Scalar deleting dtor wrapper for control-definition helper (`dtor` + optional free by flag) |

@@ -43,7 +43,56 @@ control terminates with SIGSYS. These controls establish neither real desktop
 startup nor full save compatibility. Exact commands and intermediate failures
 are in [VALIDATION.md](../../VALIDATION.md#original-save-and-startup-controls--september-19).
 
-## Rechecked static edges awaiting composed execution
+## Original menu load and next-startup composition
+
+`menu_control.py` in the same private owner passed 20 cases through unchanged
+`CFEPLoadGame__DoLoad`, PC storage-info/read, name-conversion, career Load and
+default-options writer bodies. Accepted stem `menu-run-47t_hlhy/menu`, receipt
+`720608d9374496a1341259191136537c6a903c725a468e1eafb60c8092159211`.
+This replaces the earlier static-only status of the normal load/publication edge.
+
+The live career receives the file's data with its two packed counter bytes
+normalized, but retains its previous volumes; bindings and selected tail
+globals stay unchanged. If the post-page-call low byte at `0082b5b0` is zero,
+the original writer receives **every byte of the original read buffer**.
+Nonzero higher bytes alone do not suppress the write. File open/write/close
+failures do not change the menu caller's success path. Actual page behavior,
+latest-world selection, text/audio services and filesystem effects remain
+intercepted rather than validated.
+
+`menu_to_startup.py` then feeds the successful case's captured payload unchanged
+to the existing original WinMain executable. Receipt
+`533c72da0958207b18b1eb5ea20ec378598226a3c0ca5065451d71906f2f3639`,
+stem `menu-boot-qssmorvv/chain`. Menu-live volumes remain `0.25/0.75`, whereas
+the next startup reads the fixture's `0.6/0.4` bits, applies its bindings and
+sensitivity, and resets campaign progress. The handoff assumes successful
+storage; it does not prove durable publication, real process restart or audio
+playback. The startup driver's later separately invoked serializers/writer are
+outside this chain claim.
+
+The PC reader controls also reproduce name narrowing to low bytes, filename
+aliasing/truncation for authored wide strings, name-based identity despite
+changed device/slot, one close on a short read and two closes on a complete
+read. Supplied close errors do not alter full-read success. Upstream keyboard
+admission and the actual CRT consequences remain open.
+
+## Control preset recheck
+
+Twenty separate original-code preset controls pass with original table
+initialization and authored detected-count/enable flags. The existing
+[binding contract](functions/Controller.cpp/ControlBindings.md#independently-rechecked-preset-behavior--september-19)
+now replaces the ambiguous "scheme layers" description: the initialized image
+has one 16-row preset group plus a joystick fallback table. Scheme 1 copies
+matching rows; higher schemes may substitute the first two enabled devices.
+With only one enabled device on that path, secondary-slot field0 is cleared
+across all 47 runtime rows, including the 31 normally omitted from saves.
+
+These controls invoke ApplyPreset directly after copying fixture-derived
+binding bytes. They do not yet compose the original loader/tail reader with
+the real preset action. Missing/duplicate/inactive/early-sentinel controls
+bound table lookup behavior, not arbitrary malformed-save admission.
+
+## Rechecked static edges awaiting further execution
 
 Fresh inspection of `CCareer__Load` confirms that only the flag's low byte
 selects its mode. Nonzero mode copies career data but restores the receiver's
@@ -57,17 +106,9 @@ all 32 bytes without validating the incoming active flag or ID. File row IDs
 do not select destinations. Altered metadata can affect later sizing/writing;
 the ordinary initialized 16-active-row contract is not arbitrary-file validation.
 
-Fresh instructions in frontend `00461e20` confirm that successful normal career
-load can pass the **original entire read buffer** to the fixed-path writer at
-`00461fe4`, conditional on byte `0082b5b0 == 0`. Thus immediate option skipping
-does not exclude applying that save's options next boot. This complete menu
-transaction has **not** been executed by the September 19 controls.
-
-The PC save reader's documented double-close success edge is also present in
-the rechecked `00515080` instructions. It checks the requested byte count, not
-trailing EOF; open failure leaves `out_read` untouched. No new filesystem or
-double-close runtime consequence is claimed. Its older demo-comparison results
-remain inherited evidence, not comparisons rerun here.
+The PC save reader checks the requested byte count, not trailing EOF; open
+failure leaves `out_read` untouched. Its older demo-comparison results remain
+inherited evidence, not comparisons rerun here.
 
 ## Implementation-consumer findings
 

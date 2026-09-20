@@ -57,8 +57,22 @@ input preservation, path selection, short/version failures, mode lookup and
 tail conversions. System calls and audio/preset/language/Goodie actions remain
 explicit boundaries; this is not complete retail startup or compatibility acceptance.
 
-Next, execute and recheck normal career-load publication, both load modes and
-mutable binding-table admission, then preset/hardware, language/audio and
+The composed normal menu-load follow-up passes 20 original-code controls.
+It preserves live volumes while forwarding the original entire save buffer to
+the conditional default-options writer; writer failures do not change the
+menu success path. A separate explicit handoff feeds the successful captured
+payload to original startup and demonstrates its next-boot volume/binding
+effect. File and UI services remain intercepted; no real publication or player
+acceptance is claimed.
+
+The separate preset recheck passes 20 direct original-code controls with
+original table initialization. It replaces the ambiguous scheme-layer account
+with one initialized preset group, enabled-device fallback and exact whole-row
+versus slot-only overwrites. It uses fixture-derived runtime rows; the actual
+loader/tail/preset chain still needs composition.
+
+Next, compose the loader/tail reader with the actual preset and recheck mutable
+binding-table admission, then language/audio and
 reset/serialization ordering. Confirm round-trip compatibility using preserved
 real saves, rather than treating a decoder's self-round-trip as proof. The
 retained AppCore sensitivity clamp and display-mode naming discrepancy are
