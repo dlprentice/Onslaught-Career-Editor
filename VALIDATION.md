@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (native plane and mesh-part arithmetic checks; earlier validation retained).
+Last updated: 2026-09-20 (native Aquila integration and plane/mesh arithmetic checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -591,6 +591,64 @@ with no first divergence. Receipts are `click-material-smoke-3ywj6mz6/` and
 before teardown versus nine in the prior host-timed run; the ordered queue and
 simulation delivery sequence remain identical. The mission is still
 `Running`/`None` with zero targets destroyed: this is not full-combat acceptance.
+
+The native Aquila component passed **1,121 checks** against the original three
+profiles: complete decoded definitions, mesh arrays/format flags, shared
+materials, componentwise matrix interpolation, contact poses, saved resources
+and retry binding. The expanded set includes **546 pose checks**, nonfinite
+contacts and the original partial-mutation/error order. The initial Godot-native
+arc constructor sanitized some nonfinite inputs; the final explicit IEEE path
+preserves the original raw words and parameterless zero-vector error instead.
+Reference/native receipts are `gdscript-aquila-reference-56_ecpii/` and
+`gdscript-aquila-native-qu0dw_db/`, with clean runtime logs. All **19** affected
+Client material/provenance tests passed (`aquila-client-c8cd03nv/results/aquila.trx`).
+
+All **111** synthetic public source-admission comparisons also match. A separate
+uncommitted diagnostic found **21/36** differences between the old private
+`ZLibStream` helper's incomplete/trailing-record acceptance and the shared
+native strict decoder. Every affected input is rejected by both production
+entrances' length/SHA-256 pins before decompression; all three admitted streams
+decode byte-for-byte identically. The diagnostic vectors/results remain in the
+reference fixture and earlier `gdscript-aquila-reference-cnkzi_zu/` comparison
+receipts. No committed expectations were relaxed and no general unpinned
+inflater equivalence is claimed. Admitting another source requires a new review.
+
+The final .NET editor gate passed **33 functional checks**
+(`gdscript-aquila-editor-mono-5ab1tqit/`), retaining the known 205 ObjectDB/RID
+shutdown diagnostics. An isolated Xvfb/llvmpipe editor run rendered the actual
+walker, jet and cockpit as **54/58/10 surfaces** without an animation owner or
+input capture; images and source hashes are in `aquila-editor-visual-0gqofenh/`.
+These were inspected as bounded component views. That custom editor run also
+reported two progress-dialog `current_window` errors and 163 ObjectDB/associated
+RID shutdown diagnostics; it is not a clean editor exit or a normal-GPU claim.
+Run .NET `Scenes/Aquila/AquilaSceneChecks.tscn` with fresh absolute fixture/report
+paths, then standard `Scenes/Aquila/aquila_scene_checks.gd` with that fixture and
+a fresh report. Add `--editor` for the inactive preview/serialization gate.
+Both use the owned worktree's `local-data/`; comparison scenes remain private.
+
+The supported pinned build and private Level 100 import passed with zero
+warnings/errors after live Aquila adoption (`aquila-full-build-g.log`).
+`WorldSceneChecks.tscn` passed **24,169 checks** (`aquila-world-g.log`), including
+native profile/script binding before initialization, inactive animation owners,
+Aquila template edits invalidating the bake, the existing geometry/material
+round-trip, selected snapshot poses, retry isolation and unchanged state hashes.
+The receipt now also admits the five actual private texture inputs used by the
+saved Aquila recipes. Focused synthetic files exercise same-size byte changes,
+missing inputs, malformed/duplicate/empty receipt entries and normalized path
+refusals, plus read-only linked input preservation. Research inputs are untouched.
+
+The live Aquila smoke (`aquila-smoke-t56qsw2y/`) kept the **2,148-step** tape
+byte-identical to the preceding Click/material milestone
+(`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`).
+Two actual-tape replay runs (`aquila-replay-eqg57euc/`) matched trace
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+and final state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`
+with no behavioral event or state divergence. All 13 ordered message IDs, queues
+and speakers remained the same; host-timed playback had seven voice starts
+before teardown versus eight previously. Retry/return released the world, and
+the 112 exterior/10 cockpit surfaces retained their existing counts. The route
+still ends `Running`/`None` with zero targets destroyed; this does not establish
+full combat completion or audible playback.
 
 The pure Thing/Actor base-state port passed **18,548 native assertions** against
 the unchanged Core implementation on Godot-hosted .NET 10.0.12: 818 factory/restore

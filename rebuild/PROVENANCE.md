@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-20 (separately licensed GDScript dependencies; earlier claims retain their dated evidence).
+Last updated: 2026-09-20 (native Aquila provenance and separately licensed dependencies; earlier claims retain their dated evidence).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
@@ -20,6 +20,17 @@ Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` is a GPL-3.0-or-later, source- and reverse-engineering-informed
 reconstruction. It is not a clean-room lane. The root MIT license does not
 relicense this subtree or the pinned `references/Onslaught` source.
+
+The native Aquila conversion retains the three exact specimen pins, observed
+standing poses and per-profile material operations in
+`OnslaughtRebuild.Godot/Client/aquila_mesh.gd`. The original detailed cockpit
+measurements and their overlay-contamination closure remain in
+`Scenes/Aquila/Tests/LegacyRetailAquilaReference.cs`; production tests inspect
+the native operation choices and forbid fitted per-part paths there. The
+walker/jet COLOROP remains unmeasured and unchanged at MODULATE2X; the cockpit
+retains the measured MODULATE. Converting parser, materials and poses supplies
+no new retail observation and does not broaden the camera evidence. Converted
+geometry and texture payloads remain private and ignored.
 
 ## Permitted evidence and inputs
 

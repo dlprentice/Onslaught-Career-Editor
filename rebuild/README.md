@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (native plane and mesh-part arithmetic; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (native Aquila scene components; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -44,11 +44,11 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 ### Migration state
 
 Startup, click-to-start, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
-terrain LOD/meshes/texture caches, water and the Sun now use production GDScript owners and
+terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
 also have native owners. The remaining frontend drawing, world assembly,
-Aquila rendering, full simulation and replay entry still need their
+full simulation and replay entry still need their
 live consumers converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
@@ -252,6 +252,23 @@ line; the factory retains texture identity, per-draw light rigs, source float32
 stores and alpha conversion. Existing C# callers use a temporary typed adapter.
 Public material resources contain no converted retail textures; private world
 imports retain the actual admitted materials.
+
+`Scenes/Aquila/Walker.tscn`, `Jet.tscn` and `Cockpit.tscn` use the same native
+`aquila_model.gd` component and public texture/material recipes. Their editor
+preview reads the exact prepared mesh specimens and shows the actual part
+hierarchies without input, animation clocks or simulation. Gameplay binds the
+packed versions in `Assets/Level100/Scenes/`, whose parts, meshes and materials
+already exist before initialization. `Client/aquila_mesh.gd` owns the bounded
+CMSH admission and componentwise matrix interpolation; the native component
+owns the standing/contact poses. The temporary C# adapter sends a frame or four
+contacts per call and retains no duplicate hierarchy. The original C# code and
+its detailed profile provenance remain under `Scenes/Aquila/Tests/` as the
+comparison reference. Camera orientation and transition timing still belong to
+the existing world host and are unchanged. The private import receipt hashes the
+five actual texture inputs selected by those recipes as well as the saved
+resources and public source. Missing or changed inputs prevent runtime binding,
+including direct editor Play and launches that skip preparation; documented
+canonical-lab input links remain read-only.
 
 `Scenes/World/Water.tscn` exposes the production grid, shoreline bands and Sun
 glint as three named mesh nodes with external shader files and texture recipes.
@@ -508,8 +525,9 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/World/SunSprite.tscn](OnslaughtRebuild.Godot/Scenes/World/SunSprite.tscn) | The admitted Sun Sprite quad, additive material and real private texture. Its recipe exposes the source identity; editor entry never initializes terrain sampling or camera updates. |
 | [Scenes/World/Water.tscn](OnslaughtRebuild.Godot/Scenes/World/Water.tscn) | Three production mesh nodes for the water grid, authored shoreline and Sun glint, with real texture recipes and external shaders. The editor builds the static presentation from admitted sources without a live animation clock. |
 | [Scenes/World/EntityPresentation.tscn](OnslaughtRebuild.Godot/Scenes/World/EntityPresentation.tscn), [PulseBolt.tscn](OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn), [VulcanBullet.tscn](OnslaughtRebuild.Godot/Scenes/World/VulcanBullet.tscn), [PulseMuzzleFlash.tscn](OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn) | Shared projectile/muzzle nodes and materials with real texture pages before Play. Trail slots expose their material; trail geometry requires movement history. The entity owner has no process or input callback. |
+| [Scenes/Aquila/Walker.tscn](OnslaughtRebuild.Godot/Scenes/Aquila/Walker.tscn), [Jet.tscn](OnslaughtRebuild.Godot/Scenes/Aquila/Jet.tscn), [Cockpit.tscn](OnslaughtRebuild.Godot/Scenes/Aquila/Cockpit.tscn) | Exact prepared part hierarchies with public texture/material recipes. Preview geometry is transient. Open the corresponding private component below to select and inspect its saved individual parts; use a separate private copy for deliberate pose/material variations. |
 | `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
-| `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
+| `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes and materials are external private `.res` resources beside them. Native Aquila also shares public texture recipes whose decoded pixels stay transient. |
 
 These are the gameplay definitions. The game binds presentation controllers
 to these nodes; it does not build an approximate second preview.

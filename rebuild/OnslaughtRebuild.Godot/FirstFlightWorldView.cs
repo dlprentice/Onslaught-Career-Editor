@@ -555,39 +555,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        Texture2D cockpitTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Aquila/Textures/cockpit.texture.aya",
-            512,
-            512);
-        Texture2D textureA = CuratedAyaTextureLoader.Load(
-            "res://Assets/Aquila/Textures/be-tex-a.texture.aya",
-            512,
-            512);
-        Texture2D textureB = CuratedAyaTextureLoader.Load(
-            "res://Assets/Aquila/Textures/be-tex-b.texture.aya",
-            1024,
-            1024);
-        RetailTextureLayer chrome = RetailLayer(_retailChrome3Texture, 0.299999982f);
-        _walkerAsset = RetailAquilaWalkerAsset.Load(
-            "res://Assets/Aquila/Source/m_f_be1.msh.aya",
-            new Dictionary<int, Texture2D>
-            {
-                [0] = cockpitTexture,
-                [1] = textureB,
-                [3] = textureA,
-            },
-            _level100Terrain);
-        _jetAsset = RetailAquilaWalkerAsset.LoadJet(
-            "res://Assets/Aquila/Source/m_f_be2.msh.aya",
-            new Dictionary<int, Texture2D>
-            {
-                [0] = cockpitTexture,
-                [1] = _retailChrome3Texture,
-                [2] = textureB,
-                [3] = _retailChrome3Texture,
-                [4] = textureA,
-            },
-            _level100Terrain);
+        _walkerAsset = RetailAquilaWalkerAsset.CreateWalker(_level100Terrain);
+        _jetAsset = RetailAquilaWalkerAsset.CreateJet(_level100Terrain);
         _playerBodyPivot.AddChild(_walkerAsset.Root);
         _playerBodyPivot.AddChild(_jetAsset.Root);
     }
@@ -631,40 +600,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddChild(_camera);
         UpdateRetailPixelCentreOffset();
 
-        Texture2D cockpitTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Aquila/Textures/cockpit.texture.aya",
-            512,
-            512);
-        Texture2D gunLightTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Aquila/Textures/bluegun-light.texture.aya",
-            64,
-            64);
-        var gunLightMaterial = new StandardMaterial3D
-        {
-            AlbedoTexture = gunLightTexture,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
-            EmissionEnabled = true,
-            Emission = new Color(0.12f, 0.45f, 1f),
-            EmissionTexture = gunLightTexture,
-            EmissionEnergyMultiplier = 1.6f,
-        };
-        _cockpitAsset = RetailAquilaWalkerAsset.LoadCockpit(
-            "res://Assets/Aquila/Source/m_cockpit2.msh.aya",
-            new Dictionary<int, Texture2D>
-            {
-                [0] = gunLightTexture,
-                [1] = cockpitTexture,
-                [2] = _retailChrome3Texture,
-            },
-            new Dictionary<string, Material>(StringComparer.Ordinal)
-            {
-                ["layers-00000000-ffffffff-ffffffff-ffffffff-ffffffff-ffffffff"] =
-                    gunLightMaterial,
-            },
-            _level100Terrain);
+        _cockpitAsset = RetailAquilaWalkerAsset.CreateCockpit(_level100Terrain);
         _camera.AddChild(_cockpitAsset.Root);
         // Retail composes CCockpit+0x2c onto the camera's own orientation
         // before the cockpit is drawn (see the constant's provenance above).

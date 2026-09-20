@@ -277,7 +277,7 @@ public sealed class Level100VertexDiffuseTests
     /// <see cref="Level100StaticWorldAsset"/> hangs the mesh under a
     /// <c>MeshInstance3D</c> with <c>RotationDegrees = (-90, 0, 0)</c>. The
     /// composite <c>Rx(-90) * F</c> is asserted below to be exactly
-    /// <c>RetailAquilaWalkerAsset.MapVector</c>, <c>(x, y, z) -> (x, -z, -y)</c>
+    /// <c>Client/aquila_mesh.gd: Asset.map_vector</c>, <c>(x, y, z) -> (x, -z, -y)</c>
     /// — the same orthogonal, symmetric, self-inverse map with determinant -1
     /// the cockpit uses — so the world path is not a different normal space at
     /// all, only a different factorisation of the same one.

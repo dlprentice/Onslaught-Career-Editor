@@ -31,6 +31,22 @@ public sealed partial class WorldSceneChecks : Node
                 Check(actor.GetNode<MeshInstance3D>("Geometry").Mesh is not null, "Packed actor overrides preserve geometry.");
             Check(production.GetNode<Camera3D>("RetailOpeningAndFirstPersonCamera").Far == 700f,
                 "Camera projection is authored in the production scene.");
+            foreach ((string path, string profile) in new[]
+            {
+                ("PlayerVisual/BodyPivot/RetailAquilaWalker", "walker"),
+                ("PlayerVisual/BodyPivot/RetailAquilaJet", "jet"),
+                ("RetailOpeningAndFirstPersonCamera/RetailAquilaCockpit", "cockpit"),
+            })
+            {
+                Node3D aquila = production.GetNode<Node3D>(path);
+                using Variant nativeScript = aquila.GetScript();
+                Check(nativeScript.As<Script>().ResourcePath == "res://Scenes/Aquila/aquila_model.gd",
+                    "Imported Aquila uses the production native component: " + profile);
+                Check(aquila.Get("profile").AsString() == profile && aquila.HasMethod("configure_prepared"),
+                    "Imported Aquila keeps its authored profile and native binding entry: " + profile);
+                Check(aquila.Get("_asset").VariantType == Variant.Type.Nil,
+                    "Aquila inspection does not start its runtime animation owner: " + profile);
+            }
             Mesh terrain = production.GetNode<MeshInstance3D>("RetailLevel100HeightField").Mesh;
             int countBefore = authored.Length;
             AddChild(production);
@@ -38,6 +54,8 @@ public sealed partial class WorldSceneChecks : Node
             var recipe = new FirstFlightWorldView();
             AddChild(recipe);
             recipe.BuildImportedScene(session.CurrentSnapshot);
+            Check(Level100SceneImport.CaptureTextureInputs(recipe).Length == 5,
+                "The three Aquila profiles share five actual private texture input dependencies.");
             // Check the frozen editor resources before binding refreshes the
             // terrain's runtime texture cache. A successful runtime refresh
             // alone would hide a broken saved texture from the editor check.
@@ -97,7 +115,7 @@ public sealed partial class WorldSceneChecks : Node
         System.IO.Directory.CreateDirectory(dependencies);
         foreach (string name in new[] { "invariant_int32_format.gd", "arm_cosf.gd" })
             System.IO.File.WriteAllText(Path.Combine(dependencies, name), "extends RefCounted\n");
-        foreach (string relative in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Assets" })
+        foreach (string relative in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Scenes/Aquila", "Assets" })
             System.IO.Directory.CreateDirectory(Path.Combine(root, relative));
         string script = Path.Combine(root, "Scenes/World/source.gd");
         System.IO.File.WriteAllText(script, "extends Node\nconst VALUE = 1\n");
@@ -121,6 +139,13 @@ public sealed partial class WorldSceneChecks : Node
         Check(renamed != withShader, "External native shader source participates in the import.");
         System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/water.gdshaderinc"), "float wave = 1.0;\n");
         Check(withShader != Level100SceneImport.NativeSourceIdentity(root), "External shader includes participate in the import.");
+        string beforeAquila = Level100SceneImport.NativeSourceIdentity(root);
+        string aquila = Path.Combine(root, "Scenes/Aquila/Walker.tscn");
+        System.IO.File.WriteAllText(aquila, "[gd_scene format=3]\n");
+        string withAquila = Level100SceneImport.NativeSourceIdentity(root);
+        Check(beforeAquila != withAquila, "Adding an Aquila template invalidates the private bake.");
+        System.IO.File.AppendAllText(aquila, "[node name=\"Walker\" type=\"Node3D\"]\n");
+        Check(withAquila != Level100SceneImport.NativeSourceIdentity(root), "Editing an Aquila template invalidates the private bake.");
         foreach ((string source, string packaged) in new[]
         {
             ("invariant_int32_format.gd", "DotNetInvariantInt32Format.gd"), ("arm_cosf.gd", "ArmCosf.gd"),
@@ -147,6 +172,48 @@ public sealed partial class WorldSceneChecks : Node
             catch (FileNotFoundException) { refused = true; }
             Check(refused, "A missing selected dependency cannot certify the bake: " + source);
             System.IO.File.WriteAllText(external, "extends RefCounted\n");
+        }
+        CheckTextureInputReceipt(root, owner);
+    }
+
+    private void CheckTextureInputReceipt(string project, string owner)
+    {
+        string resourcePath = "res://Assets/recipe.texture.aya";
+        string path = Path.Combine(project, "Assets/recipe.texture.aya");
+        byte[] bytes = [1, 2, 3, 4];
+        string hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+        var input = new Level100SceneImport.ImportedInput(resourcePath, hash);
+        System.IO.File.WriteAllBytes(path, bytes);
+        Level100SceneImport.VerifyInputs(project, [input]);
+        Check(true, "Unchanged recipe input bytes certify the saved world.");
+        System.IO.File.WriteAllBytes(path, [4, 3, 2, 1]);
+        Refused([input], "Same-size changed recipe bytes invalidate the world before binding.");
+        System.IO.File.Delete(path);
+        Refused([input], "A missing recipe input cannot certify the saved world.");
+        System.IO.File.WriteAllBytes(path, bytes);
+        Refused(null, "An old receipt without private input identities requires a rebuild.");
+        Refused([], "An empty private-input list cannot certify the world.");
+        Refused([input, input], "Duplicate input entries cannot hide an incomplete receipt.");
+        Refused([input with { Sha256 = "not a hash" }], "Malformed input hashes are refused.");
+        foreach (string invalid in new[] { "res://Assets/../recipe", "res://Assets//recipe", "res://Assets/", "user://recipe", "res://Assets\\recipe" })
+            Refused([input with { ResourcePath = invalid }], "Input paths must name normalized private assets: " + invalid);
+        if (OperatingSystem.IsLinux())
+        {
+            string target = Path.Combine(owner, "shared-recipe-input");
+            string link = Path.Combine(project, "Assets/shared.texture.aya");
+            System.IO.File.WriteAllBytes(target, bytes);
+            System.IO.File.CreateSymbolicLink(link, target);
+            Level100SceneImport.VerifyInputs(project, [input with { ResourcePath = "res://Assets/shared.texture.aya" }]);
+            Check(System.IO.File.ReadAllBytes(target).SequenceEqual(bytes),
+                "Canonical-lab input links are read in place without modifying their targets.");
+        }
+
+        void Refused(Level100SceneImport.ImportedInput[]? inputs, string message)
+        {
+            bool refused = false;
+            try { Level100SceneImport.VerifyInputs(project, inputs); }
+            catch (InvalidDataException) { refused = true; }
+            Check(refused, message);
         }
     }
 

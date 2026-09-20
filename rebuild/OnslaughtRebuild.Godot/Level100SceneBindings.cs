@@ -5,21 +5,17 @@ using OnslaughtRebuild.Client;
 
 namespace OnslaughtRebuild.GodotClient;
 
-// These adapters retain the existing decoded animation/state owners and bind
-// them to production scene nodes. They do not build a hidden second world.
+// Bind the production components without constructing a second world.
 internal sealed partial class RetailAquilaWalkerAsset
 {
     public static RetailAquilaWalkerAsset BindWalker(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_walkerProfile, "res://Assets/Aquila/Source/m_f_be1.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("walker", "Walker", terrain, root);
 
     public static RetailAquilaWalkerAsset BindJet(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_jetProfile, "res://Assets/Aquila/Source/m_f_be2.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("jet", "Jet", terrain, root);
 
     public static RetailAquilaWalkerAsset BindCockpit(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_cockpitProfile, "res://Assets/Aquila/Source/m_cockpit2.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("cockpit", "Cockpit", terrain, root);
 }
 
 internal sealed partial class Level100WaterAsset
