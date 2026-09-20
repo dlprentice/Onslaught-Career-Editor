@@ -2066,6 +2066,86 @@ Stop ownership discriminating, with no original-byte change. Independent
 read-only review reproduced the final saved results and this correction history.
 Exact prompts and full reports remain in the existing private review owner.
 
+### Original Load, Save and reload controls — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_roundtrip_control.py`
+passed **15 cases** with 27 unchanged original bodies (6,236 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/load-roundtrip-run-a29vv1kx/load`;
+receipt SHA-256 `5a89bc7561ebcb69baeac9f684311d139d79c39ce0f9bf8a003be4d2451a9c20`;
+ELF SHA-256 `c3bdb6b3ba35bb1cce7b891c47b4b955c0c7c8b6f36e005cfae61c13faac6169`.
+`load-roundtrip-controls-v2.log` records the accepted run.
+
+The second native Load reads the first original serializer buffer directly.
+Six selected snapshots, all supplied input bytes, both complete serializer
+capacities/guards, integer ABI, x87 CW/TOP and **126 ordered observations** pass.
+Both gold controls compare each native 10,004-byte output directly with the real
+fixture, with/without career reinitialization. Named private derivatives cover
+counter normalization, binding reinitialization/preset application, low-byte
+Load flags and discriminating zero-to-one progress-flag writes. Setting only
+the second SaveWithFlag changes exactly file byte `0x248a`.
+
+The original career static initializer restores career volume words to `.8/.9`;
+it is not Blank or a complete audio reset. Preserve-mode Load retains those
+words and skips volume setters, leaving the prior audio-manager state. Original
+reset/bank, allocation/free, diagnostics and latest-world remain hooks. Language
+cache headers and audio objects are authored. Binding reinitialization is
+compared with captured original-initializer output; this review did not rederive
+every initial binding constant. These are not whole-memory, general malformed
+input, real-device or full process-startup guarantees.
+
+Each generated output is created privately, flushed/fsynced and reread with
+Python. No original save is overwritten. This is Linux private-copy readback,
+not retail-writer, Windows or crash-durability acceptance. The forbidden syscall
+control terminates with SIGSYS; selected specimen and fixture remain unchanged.
+Independent review reconstructed saved results without rerunning them.
+
+The retained first run (`load-roundtrip-controls-v1.log`,
+`load-roundtrip-run-6q_xyqop/load`) passed 12 cases. Its SaveWithFlag inputs already
+had the progress flag set, so they did not discriminate the mutation; its full
+save payload was checked but its preceding control header was not snapshotted.
+V2 adds those checks, three zero-scalar cases and the corrected low-byte label.
+No original body bytes changed. Both iterations remain private evidence.
+
+### Original startup reset with Goodies — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/startup_goodies_control.py`
+passed **17 cases**, with 53 unchanged original functions and the 36-byte episode
+jump table. Their copied extents total 37,597 bytes: 37,586 inventoried body bytes
+plus 11 preserved inter-range bytes around the existing `0055e2d0` CRT extent.
+Accepted stem
+`local-data/test-runs/save-startup-20260919/startup-goodies-run-0e30s139/startup`;
+receipt SHA-256 `97bc4eb4bb6544e04735878cbb56d85623b9f74d44c109b3ef4a0e0fecea0f97`;
+ELF SHA-256 `41e4493e7894a5807d8ba67e885989ed7ef661cdf18f74e7099f8ecab6dea57b`.
+`startup-goodies-controls-v1.log` records the run. The retained original
+`startup_control.py` remains unchanged, SHA-256
+`557915d737c6b7e3ba55823d30960e7d7976f7e0f56ac416ad851b5bdc7a56a1`.
+
+WinMain calls original Load/Blank; the final Goodie call now executes with
+original descriptor initialization, grade/episode/index helpers and text scratch
+conversion. Complete career comparisons include every Goodie: precisely slots
+`0, 1, 8, 14, 33, 36, 41, 42, 43` finish at state one; all others and both badge
+bookkeeping globals are zero. The valid, missing, short and invalid-version
+cases retain their expected settings and untouched record storage. Original
+Save/SaveWithFlag and default-options writer are separately invoked afterward;
+that is not a claim that startup automatically saves settings. This separately
+invoked writer receives the original input buffer, not the reset serialization.
+
+Three selected snapshots include the full input, guarded descriptor table and
+text scratch. Descriptor preservation and threshold 40 are checked; the original
+initializer, rather than guessed zero BSS, supplies other descriptor values.
+Scratch contents and guards match, except its final rotating index is checked
+only within `0..3` (observed 3), not independently derived from a call count.
+Positive-ranking CRT conversion traps unexpected entry; its absence is expected
+for the reset graph. ABI, PC53-nearest CW/TOP, buffer capacities and the SIGSYS
+negative control pass. Original inputs remain unchanged.
+
+File/allocator/version/system services, graphics, audio and preset/language
+actions remain intercepted. The experiment returns through the declared
+graphics-create failure. It does not cover general unlock rules, malformed
+graphs, alternate receivers, retail storage, real devices, visible startup or UI.
+The byte-backed static dependency review and final instrument review are retained
+with exact prompts and full reports in the existing private review owner.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

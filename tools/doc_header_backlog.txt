@@ -94,7 +94,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounter
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlot.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__StaticInitDefaults.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Update.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__UpdateGoodieStates.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__UpdateThingsKilled.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CGrade__ctor_char.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CGrade__operator_gte.md

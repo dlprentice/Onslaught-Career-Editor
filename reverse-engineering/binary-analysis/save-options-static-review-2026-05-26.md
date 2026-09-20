@@ -307,6 +307,69 @@ nonnull language cleanup, a complete startup or durable save reopening.
 Unchanged full bodies and explicit hooks are pinned in the private receipts;
 this tranche changes no Ghidra database or implementation-lane source.
 
+## Original save reload after reinitialization
+
+The [round-trip controls](../../VALIDATION.md#original-load-save-and-reload-controls--september-20)
+pass 15 cases through unchanged Load, the settings/preset/language-copy and
+volume bodies, and both Save variants. The second Load reads the first native
+serializer's buffer directly. Optional original career and binding initializers
+run between the two loads; no Python serializer supplies that second input.
+
+With full settings application, the real 10,004-byte gold fixture survives both
+serializations exactly, with and without intervening career initialization.
+This includes its unknown bytes. Private derivatives distinguish counter
+normalization, preset restoration and progress-flag writes. Plain Save retains
+a zero progress scalar; SaveWithFlag changes it before copying. When only the
+second save sets it, the sole changed byte is file offset `0x248a`.
+
+Load's preservation flag is its **low byte**: `0x100` applies settings and
+`0x101` preserves them. When the second Load preserves settings after career
+initialization, its output legitimately contains the initializer's sound/music
+floats `0.8/0.9`, rather than the fixture's `0.6/0.4`. The two volume words are
+the only changed fields between those saves. Audio-manager state remains from
+the first load because this second load skips the setters. Preserving live
+settings is therefore not equivalent to restoring saved settings or resetting
+the audio system.
+
+Six selected snapshots, the full supplied input, both serializer capacities,
+guards and ordered boundary observations are checked. Generated output copies
+are written with create-new semantics, fsynced and reread on Linux. That checks
+these private files, not retail/Windows publication or crash durability. The
+career static initializer is not Blank. Audio reset/bank, allocation/free,
+diagnostics and latest-world selection remain hooks; language caches and audio
+objects are authored. This is bounded original-code compatibility evidence for
+one real fixture and named derivatives, not complete startup acceptance.
+
+## Original startup reset including Goodies
+
+The [extended startup controls](../../VALIDATION.md#original-startup-reset-with-goodies--september-20)
+replace the former Goodie hook with the unchanged recomputation and its required
+helpers. Original descriptor initialization supplies the thresholds; zero-filled
+BSS is not an equivalent starting state. WinMain, Load and Blank execute in 17
+valid, missing, short, invalid-version and options-tail scenarios.
+
+After Blank, exactly Goodies `0, 1, 8, 14, 33, 36, 41, 42, 43` have state `1`
+(instructions available). All other 291 slots are zero; none is unlocked at
+state `2` or above. Both badge bookkeeping globals remain zero. Thus the final
+reset result is not an entirely zero Goodie array. Complete career comparisons
+retain the options, each node's leading word, and unused node/link storage while
+rebuilding the 43-node/86-link authored graph and clearing progression.
+
+The recheck also corrects the old name for career `+0`: it holds pending extra
+Goodies, not the accumulated new-Goodie count. At `00420230–0042026c`, original
+instructions add that pending value and the count delta to global `00662b20`,
+then clear the pending field. `00662b24` is the first-Goodie flag. Progression
+predicates use canonical CAREER even though Goodie writes use the receiver;
+alternate-receiver behavior remains static evidence here.
+
+The reset-time result is executed, not merely predicted from partial source.
+It does not validate every unlock rule or the Goodies UI. Positive-ranking CRT
+conversion is an unexpected-entry trap in these reset cases; malformed graphs
+and alternate receivers are excluded. File, allocator, graphics, audio and
+preset/language services retain explicit boundaries. Separate post-startup Save
+calls do not imply that WinMain saves settings automatically. No original save,
+Ghidra database or implementation-lane source was modified.
+
 ## Rechecked static edges awaiting further execution
 
 The PC save reader checks the requested byte count, not trailing EOF; open

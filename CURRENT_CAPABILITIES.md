@@ -44,9 +44,17 @@ cases, retaining original sound-event updates with explicit device boundaries.
 The next 26 reset/restoration and 22 language-bank controls resolve caller
 ordering and a cached-path retry limitation: a failed Open or skipped load can
 suppress the next identical request. Actual devices, lifetime services and bank
-file opening remain intercepted. Successful sample decoding, nonnull cleanup,
-full startup and durable save round trips remain open. See
-[executed checks](VALIDATION.md#original-audio-reset-and-music-restoration--september-20).
+file opening remain intercepted.
+
+The subsequent 15 native reload cases feed original Save output directly into
+original Load. Both gold controls preserve all 10,004 bytes, including unknown
+fields; named derivatives distinguish flag writes, normalization and preserved
+live settings. Private generated-copy fsync/readback succeeds on Linux. A further
+17 startup cases execute original Blank and its full reset-time Goodie call:
+exactly nine entries finish in instruction state, with no unlocked Goodies.
+These results do not establish retail writer durability, complete process startup,
+every unlock rule, successful sample decoding, nonnull cleanup or player parity.
+See [executed checks](VALIDATION.md#original-load-save-and-reload-controls--september-20).
 
 ## Godot Save Lab — first workflow
 

@@ -1,7 +1,7 @@
 # CCareer__SaveWithFlag
 
 Status: active bounded serializer contract; earlier source/callsite receipts remain dated evidence
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Summary: sets the live progress word before serialization; Load does not clear that word.
 Source File: `references/Onslaught/Career.cpp` (partial-source comparison) | Binary: pristine `BEA.exe.original.backup`; September 19 byte/control evidence is linked below.
 
@@ -33,6 +33,7 @@ void CCareer__SaveWithFlag(void * this, void * dest);
 - Deep-pass verified callsite (2026-02-23): `0x00465045` in `CFEPSaveGame__CreateSave` calls `CCareer__SaveWithFlag`.
 - No `CALL CCareer__Save` occurs inside `CCareer__SaveWithFlag`; parity is by duplicated logic, not wrapper call-through.
 - September 19 [original-code controls](../../save-options-static-review-2026-05-26.md#september-19-independent-recheck) compare its complete output and guards alongside ordinary Save, with the complete original tail writer. It changes live `+2488` to one before copying. The two calls are authored controls after startup, not proof that startup saves automatically.
+- September 20 [native reload controls](../../save-options-static-review-2026-05-26.md#original-save-reload-after-reinitialization) add real-fixture derivatives whose progress word starts at zero. Plain Save preserves zero; this variant writes one into live state and its output before that buffer reaches the second original Load. Setting the flag only on the second save changes exactly file byte `0x248a`. Cases whose source flag was already one provide only the separate idempotence check.
 - WARNING: Offset 0x22D4 is Goodie 228, NOT progress flag!
 - Our patcher does NOT write mCareerInProgress to avoid Goodie 228 corruption
 

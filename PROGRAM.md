@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (original audio reset/restoration and language-bank retry controls; complete save round trips remain)
+Last updated: 2026-09-20 (native save reload and complete reset-time Goodie composition; device/file acceptance remains bounded)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -49,64 +49,39 @@ conclusions are fallible leads. Reproduce consequential claims against selected
 pristine bytes and controlled execution before carrying them forward. Keep the
 full-retail mandate and separate implementation owners.
 
-The first [save/startup recheck](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-19-independent-recheck)
-passes 17 original-code scenarios through the actual startup/parser/load/reset
-bodies and options-tail reader, followed by separately invoked original Save,
-SaveWithFlag and default-options writer. It checks complete serialized buffers,
-input preservation, path selection, short/version failures, mode lookup and
-tail conversions. System calls and audio/preset/language/Goodie actions remain
-explicit boundaries; this is not complete retail startup or compatibility acceptance.
+The [save/startup contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+now separates the startup reader, normal menu load and writer, active settings,
+serializer, and campaign reset. Original-code controls establish read/write
+filename differences, menu forwarding into the next boot, binding/preset effects,
+active-language ownership and volume application. Six preserved language files
+also pass bounded original parsing and lookup. File/heap/device boundaries
+remain explicit; these results do not establish complete retail startup.
 
-The composed normal menu-load follow-up passes 20 original-code controls.
-It preserves live volumes while forwarding the original entire save buffer to
-the conditional default-options writer; writer failures do not change the
-menu success path. A separate explicit handoff feeds the successful captured
-payload to original startup and demonstrates its next-boot volume/binding
-effect. File and UI services remain intercepted; no real publication or player
-acceptance is claimed.
+The audio reset/bank controls resolve caller ordering, init-return admission,
+shutdown versus Stop, Level 100 music restoration and early path caching that
+can suppress a same-path retry after a failed or skipped bank load. Actual
+platform services, lifetime effects, sample decoding and playback remain open.
 
-The separate preset recheck passes 20 direct original-code controls with
-original table initialization. It replaces the ambiguous scheme-layer account
-with one initialized preset group, enabled-device fallback and exact whole-row
-versus slot-only overwrites. The follow-up now composes actual
-Load/TailRead/ApplyPreset and later Save in 19 cases. Private binding-metadata
-changes alter the next same-process load's tail cursor and serialized size;
-preset application can restore the tested active row. This is not a claim of
-drift across fresh startups, which reinitialize those tables.
+Fifteen native Load/Save/reinitialize/Load/Save cases now include direct handoff
+of the first serializer buffer. Both gold controls preserve all 10,004 bytes;
+private derivatives distinguish progress-flag writes, counter normalization,
+preset restoration and preservation-mode volumes. Linux generated-copy readback
+is checked; retail file publication and full process restart are not. The
+intervening career static initializer must not be confused with Blank.
 
-Sixteen additional cases retain original language selection, its null cleanup
-path and text-buffer copy. They separate the requested selector from the active
-header field that Save actually serializes, and correct the old whole-object
-copy claim. Authored cache data and intercepted allocation/audio remain explicit
-boundaries for those controls.
+Seventeen extended startup cases now execute Blank's original Goodie
+recomputation with descriptor initialization. The final canonical reset has nine
+instruction-state Goodies, no unlocked entries, preserved settings and unused
+record storage. This closes the former Goodie hook for the reset route, not the
+complete unlock table or its UI. Exact commands, artifacts and limits belong in
+[VALIDATION.md](VALIDATION.md#original-load-save-and-reload-controls--september-20).
 
-The next 19 cases execute original language initialization/cached reading and
-active copy with all six preserved files. A further 17-case lookup composition
-queries every ID through original text, audio-name and adjacent-string bodies.
-File Open/heap services and the explicit memory-image handoff remain bounded.
-The recheck corrects missing/duplicate-ID behavior, physical adjacency and
-misleading fatal-message wording; it does not establish rendering or playback.
-
-The audio-volume follow-up now passes 25 focused scenario/rounding combinations
-at each of two x87 precisions, plus 16 composed Load/setter/tail/preset/language/
-Save cases. Sound updates existing event records, and music preserves distinct
-configured/current/target fields. Original devices and audible behavior remain
-outside these controls.
-
-A further 26 original reset/restoration cases resolve caller behavior around
-supplied device-init results, shutdown ordering, music initialization and Level
-100 selection. Twenty-two bank controls establish early path caching, event
-recycling and same-path suppression after a failed Open or admission skip.
-The bank's Stop operation preserves buffer slots; device shutdown releases and
-clears them. These are owned-object experiments with intercepted platform and
-lifetime services, not successful device recovery or bank decoding.
-
-Next, carry the rechecked reset/bank behavior into composed load/serialization
-and preserved-real-save round trips, then close the remaining nonnull cleanup,
-successful bank/sample and failure/recovery boundaries. Do not treat a decoder's
-self-round-trip as proof. The retained AppCore sensitivity clamp and display-mode
-naming discrepancy are implementation-consumer findings, not fixes made by this
-RE task. Full menu, durable publication and cross-runtime acceptance remain open.
+Next, close the remaining nonnull language-cleanup and successful bank/sample
+boundaries, then compose the remaining rechecked services into the preserved
+real-save route. Keep original-code evidence distinct from decoder self-tests,
+retail file durability and player acceptance. The retained AppCore sensitivity
+clamp and display-mode naming discrepancy are implementation-consumer findings;
+this RE task does not own those production changes.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and
