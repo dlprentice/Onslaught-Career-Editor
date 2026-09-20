@@ -1915,6 +1915,83 @@ termination validation using only in-memory derivatives; private receipt
 `39b6ba91c73b1b164efafa3cb31733074361ea8a0a7b86c122b32241a3c02bf3`.
 No production decoder/rebuild/companion source is changed by these contracts.
 
+### Original audio volume controls — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/audio_volume_control.py`
+passed **50 cases**: 25 scenario/rounding combinations, each at PC53 and PC64.
+Accepted stem `local-data/test-runs/save-startup-20260919/audio-volume-run-vra1oais/volume`;
+receipt SHA-256 `80a944c49b0e54c3ee76cd128d7f314dcd440a935a14dbd1874a4775e85f29a0`;
+ELF SHA-256 `7cc622a08f0df338ca075fd585e40983cce52eb0d8247d152af8426333ce10b9`.
+`audio-volume-controls-v2.log` records the invocation. Earlier 25 PC64-only
+cases passed at `audio-volume-run-jcl2i1js/volume`; v2 expands precision
+coverage, rather than repairing a failed case.
+
+Four unchanged bodies (917 bytes) execute with original constants: music and
+sound setters, GetCamera and PC UpdateSound. Authored lists include both
+categories, playing-byte/channel variants, tracked positions, null buffer slots
+and an owned 2D COM object. Intercepted methods record SetVolume, SetFrequency
+and GetStatus; the sole failed HRESULT case is SetVolume. GetStatus supplies
+a playing status. The stopped-buffer and 3D COM routes are excluded.
+
+Complete before/after-music/after-sound selected snapshots, guards and input
+copies match an exact-rational oracle. Chosen intermediates fit both precisions
+and distances have exact integral square roots; agreement does not prove
+precision equivalence for arbitrary inputs. Four rounding modes produce distinct
+integer results. Manager fields change before the logger, career globals after
+it; event fields and 28 COM observations across the 50 cases match.
+The saved fixture supplies raw music/sound words from offsets `0x2492/0x248e`.
+
+Native integer ABI guards and Python x87 control/TOP checks pass; no full x87
+tag audit is claimed. A forbidden getpid ends with SIGSYS, and specimen/fixture
+bytes remain unchanged. Independent read-only review checked all saved results
+without rerunning the executable. There is no audio-device creation, playback,
+Load/TailRead, Save, reset/bank execution or full-process preservation claim.
+
+Fresh static inspection follows entry `00560181` through
+`0055dd7b → [006532e8]=0055da76 → 00560cb1` to the control-word helpers
+`0056947e/00569449/00569494/00569526`. The configured mask changes precision
+to 53 bits while preserving rounding-direction bits. This does not establish
+the initial rounding direction or FPU state after device calls. Complete selected
+disassembly is retained as `audio-<address>.asm` in the same private owner.
+
+### Original Load, audio and Save composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_audio_control.py`
+passed **16 composed cases**, retaining 26 unchanged bodies (6,124 bytes).
+Accepted stem `local-data/test-runs/save-startup-20260919/load-audio-run-ehbe0h_d/load`;
+receipt SHA-256 `3f92794e90da6d0728787ecfe6be39f3e8cd441ab43a1baec5352a962b74a972`;
+ELF SHA-256 `347f511146830f5a9ec25996958234a6e0d5e9dd345a43a30e76706de6bab1e5`.
+`load-audio-controls-v1.log` and immutable driver/assembly/input/output files
+retain the command and result. The unchanged parent language driver is pinned
+in the receipt.
+
+The original music/sound setters replace the former hooks inside the accepted
+Load/TailRead/preset/language-copy chain, followed by original Save. One authored
+playing event reaches original PC UpdateSound's null-buffer return; a second,
+nonplaying tracked event still receives both volume-field updates. Manager/event
+state is compared in full alongside existing career, binding, language, guards,
+input and entire serialization capacity. Real setter logs are observed as
+double arguments; the old intercepted-call argument layout is not reused.
+This logger layout omits music's additional integer argument; the direct controls
+capture it separately. The 16 cases vary composition/language conditions using
+one volume pair. Every active case reaches the bank hook, so the reset branch
+is not covered by this run.
+
+The fixture gives configured music 51 and sound master bits `0x3f19999a`;
+the tracked event's fields become `(-3600,-4000)` in this declared state.
+Repeated loads, low-byte flag modes, version rejection and the existing
+language-copy controls retain expected results. The preservation mode and
+wrong-version cases leave sound-event state unchanged. PC53 nearest is supplied
+and checked after execution. These are not measurements of a real detected
+audio device or initialized game scene.
+
+Reset/language-bank, allocator/free, diagnostics and latest-world remain
+explicit hooks. No real language-file parsing is added here, and the output
+is not fed back through a durable file round trip. Input/specimen preservation
+and forbidden-syscall controls pass. Independent read-only review checked the
+complete saved composition without rerunning it. No Ghidra or implementation-lane
+source changes accompany this tranche.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

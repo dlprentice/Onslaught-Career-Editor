@@ -38,8 +38,11 @@ files resolve through original text/audio-name/adjacent lookup code; pool bounds
 termination and offline decoding pass. Actual file Open and allocation remain
 intercepted, and lookup imports captured state explicitly. These results do not
 establish full startup, audio playback, localized rendering, durable save round
-trips or reconstruction acceptance. Audio dependencies and reset/serialization
-composition remain the next focused work. See [executed checks](VALIDATION.md#original-language-file-parsing--september-20).
+trips or reconstruction acceptance. The subsequent audio-volume recheck adds
+25 focused scenarios at two x87 precisions and 16 composed loader/setter/save
+cases, retaining original sound-event updates with explicit device boundaries.
+Reset/bank restoration and complete round trips remain open. See
+[executed checks](VALIDATION.md#original-audio-volume-controls--september-20).
 
 ## Godot Save Lab — first workflow
 

@@ -218,8 +218,6 @@ reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__SetSlot.md
 reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
 reverse-engineering/binary-analysis/functions/Sentinel.cpp.md
-reverse-engineering/binary-analysis/functions/SoundManager.cpp/Audio__ReinitializeSoundAndRestoreMusic.md
-reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__ReinitializeAfterDeviceLoss.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
 reverse-engineering/binary-analysis/functions/Symtab.cpp.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateGuide.md

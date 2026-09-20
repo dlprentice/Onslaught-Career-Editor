@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (original language parsing/lookup established; audio and round-trip work remain)
+Last updated: 2026-09-20 (original volume setters composed with save loading; reset/bank and round-trip work remain)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -87,8 +87,15 @@ File Open/heap services and the explicit memory-image handoff remain bounded.
 The recheck corrects missing/duplicate-ID behavior, physical adjacency and
 misleading fatal-message wording; it does not establish rendering or playback.
 
-Next, close the audio dependencies, then reset/serialization ordering. Confirm
-round-trip compatibility using preserved real saves, rather than treating a decoder's self-round-trip as proof. The
+The audio-volume follow-up now passes 25 focused scenario/rounding combinations
+at each of two x87 precisions, plus 16 composed Load/setter/tail/preset/language/
+Save cases. Sound updates existing event records, and music preserves distinct
+configured/current/target fields. Original devices and audible behavior remain
+outside these controls.
+
+Next, resolve audio reset/language-bank and music-restoration dependencies, then
+complete reset/serialization ordering and preserved-real-save round trips rather
+than treating a decoder's self-round-trip as proof. The
 retained AppCore sensitivity clamp and display-mode naming discrepancy are
 implementation-consumer findings, not fixes made by this RE task. Full menu,
 failure/recovery and cross-runtime acceptance remain open.

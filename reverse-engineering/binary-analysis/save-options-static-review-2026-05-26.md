@@ -210,6 +210,49 @@ are not supported save or language inputs. Actual file opening, refill,
 decompression, nonnull cleanup, allocator failure, audio playback, rendering
 and full startup/save composition remain open.
 
+## Original volume application and save composition
+
+The former music/sound setter hooks are now independently rechecked and replaced
+in a composed experiment. `audio_volume_control.py` executes four original
+bodies: music setter, sound setter, camera getter and PC UpdateSound. Twenty-five
+scenario/rounding combinations pass once at each of x87 PC53 and PC64, yielding
+50 cases. Accepted stem `audio-volume-run-vra1oais/volume`; receipt
+`80a944c49b0e54c3ee76cd128d7f314dcd440a935a14dbd1874a4775e85f29a0`.
+Manager/event state and 2D COM boundaries are authored; this opens no device.
+
+Music stores the x87-converted configured integer, logs, then preserves the
+original float bits in career. It leaves current/target fade values unchanged.
+Sound stores its master float, logs, writes career, then recalculates both volume
+fields on every linked event. Low-byte playing and signed channel checks select
+device updates. The controls cover category differences, tracking, null buffers,
+an intercepted SetVolume error, low-volume remapping and sample-rate fallback.
+Logger snapshots establish manager-before-career-write ordering.
+See the precise [music](cmusic-shared-semantics-2026-08-11.md#september-20-independent-volume-recheck)
+and [sound](csoundmanager-shared-semantics-2026-08-11.md#september-20-independent-volumeevent-recheck)
+contracts.
+
+`load_audio_control.py` then passes 16 cases through original Load, both
+setters, TailRead/preset/language application and later Save. Accepted stem
+`load-audio-run-ehbe0h_d/load`; receipt
+`3f92794e90da6d0728787ecfe6be39f3e8cd441ab43a1baec5352a962b74a972`.
+It retains a playing event with a null device buffer and a nonplaying tracked
+event. The fixture's unchanged music/sound bits produce configured music 51
+and sound master `0.6000000238418579`. Both event records update before the
+tail/preset/language actions. Nonzero low-byte flags preserve live settings and
+skip those changes; repeated loads retain the expected serialized bytes.
+
+The entire selected manager/event state, source, guards and serialized capacity
+are compared. PC53 nearest is explicitly supplied; the direct controls also
+test other rounding directions. Neither is a live post-device FPU observation.
+The original fixture and executable remain unchanged.
+
+Audio reset, language-bank loading, nonnull cleanup, real devices/playback and
+a durable save/reload round trip are still open. Fresh static reinspection
+corrects the [reset helper's stale call identities](functions/SoundManager.cpp/CSoundManager__ReinitializeAfterDeviceLoss.md):
+it deletes samples and shuts down the device; it is not merely a stream-stop or
+voice-buffer-release notification. The restoration wrapper does not gate its
+next call on device initialization success. Those reset paths remain unexecuted.
+
 ## Rechecked static edges awaiting further execution
 
 The PC save reader checks the requested byte count, not trailing EOF; open
