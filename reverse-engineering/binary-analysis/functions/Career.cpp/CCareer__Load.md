@@ -1,7 +1,7 @@
 # CCareer__Load
 
 Status: mixed — inherited source comparison with independently rechecked retail load contract
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Summary: raw career copy, version admission and distinct load modes; size validation belongs to callers.
 Source File: `references/Onslaught/Career.cpp` (partial-source comparison) | Binary: pristine `BEA.exe.original.backup`; September 19 byte/control evidence is linked below.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -54,7 +54,16 @@ metadata too, without validating it. It does not route rows by incoming ID.
 The [September 19 recheck](../../save-options-static-review-2026-05-26.md#september-19-independent-recheck)
 executes the canonical flag-zero path inside original WinMain, followed by the
 separate startup Blank. Normal flag-one behavior and its complete frontend
-publication transaction have fresh static checks, not new composed execution.
+publication edge also execute in the separate composed menu controls, with
+filesystem/page/latest-world actions intercepted. The
+[loader/preset follow-up](../../save-options-static-review-2026-05-26.md#original-loader-mutable-bindings-and-later-serialization)
+executes those original callees together and confirms low-byte flag admission,
+canonical-global audio sourcing with an alternate receiver, and metadata effects
+on a later direct load in the same process. Changing the first serialized row
+to inactive shifts that second load's tail 32 bytes earlier; scheme 1 restores
+the tested row and stable size. An incoming first ID `-1` truncates subsequent
+table walks. Fresh startups initialize the table again; these controls do not
+establish cross-startup drift or safe admission of arbitrary altered saves.
 Load itself preserves the copied career-in-progress field; Blank clears it later
 on the boot route. Flag `0x100` selects the zero-byte branch, not career mode.
 
@@ -67,6 +76,6 @@ on the boot route. Flag `0x100` selects the zero-byte branch, not career mode.
   - `0x00512337` in `CLTShell__WinMain` calls `CCareer__Load` after `PUSH 0x0` (`flag=0`, full options/tail apply path).
 
 ## Related Functions
-- [CCareer__Blank](CCareer__Blank.md) - Called before load to clear state
+- [CCareer__Blank](CCareer__Blank.md) - Called after settings Load on the startup route
 - [CCareer__Save](CCareer__Save.md) - Reverse operation
 - [CCareer__GetSaveSize](CCareer__GetSaveSize.md) - Returns expected buffer size

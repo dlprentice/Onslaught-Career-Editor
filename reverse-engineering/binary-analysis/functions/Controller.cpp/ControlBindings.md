@@ -1,10 +1,10 @@
 # Control Bindings (Options Entries)
 
 Status: active bounded contract; complete remap/input acceptance pending
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Summary: original preset execution establishes initialized-table replacement, enabled-device fallback and the boundary between saved bindings and runtime bindings.
 Source File: binary-derived contract; no exact partial-source body asserted. Binary: pristine `BEA.exe.original.backup`.
-Evidence: MEASURED — selected pristine instructions and 20 isolated preset controls; historical remap/UI mappings below remain subject to recheck.
+Evidence: MEASURED — selected pristine instructions, 20 direct preset controls and 19 composed loader controls; historical remap/UI mappings below remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This documents the **0x20-byte “options entries”** block in `.bes` / `defaultoptions.bea` and the BEA.exe code that reads/writes it.
@@ -77,8 +77,15 @@ immutability are compared. A separate control populates all 31 inactive
 secondary slots before execution and observes their field0 clearing while
 the adjacent eight bytes remain intact. Commands and exact pins are in
 [VALIDATION.md](../../../../VALIDATION.md#original-control-preset-behavior--september-19).
-Actual device enumeration, physical input and the full startup-to-preset
-composition remain separate boundaries.
+The subsequent
+[19-case Load/TailRead/ApplyPreset composition](../../save-options-static-review-2026-05-26.md#original-loader-mutable-bindings-and-later-serialization)
+executes actual positional binding loading and later original Save. An incoming
+inactive row can reduce the next same-process load's consumed row count; an
+incoming first sentinel truncates future table walks. Scheme 1 restores the
+tested inactive row. These private negative controls show why the runtime table
+is part of the load contract. They do not establish repeated drift across fresh
+startups or authorize changing save length. Actual device enumeration, physical
+input and complete player startup acceptance remain separate boundaries.
 
 For tooling, custom scheme 0 preserves admitted manual bindings through this
 preset helper. Selecting it is a deliberate settings change, not permission

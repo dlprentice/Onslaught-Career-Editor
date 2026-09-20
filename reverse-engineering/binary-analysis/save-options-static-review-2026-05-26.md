@@ -1,7 +1,7 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -87,24 +87,79 @@ matching rows; higher schemes may substitute the first two enabled devices.
 With only one enabled device on that path, secondary-slot field0 is cleared
 across all 47 runtime rows, including the 31 normally omitted from saves.
 
-These controls invoke ApplyPreset directly after copying fixture-derived
-binding bytes. They do not yet compose the original loader/tail reader with
-the real preset action. Missing/duplicate/inactive/early-sentinel controls
-bound table lookup behavior, not arbitrary malformed-save admission.
+Those direct controls are now complemented by the composed loader experiment
+below. Missing/duplicate/inactive/early-sentinel controls bound table lookup
+behavior, not arbitrary malformed-save admission.
 
-## Rechecked static edges awaiting further execution
+## Original loader, mutable bindings and later serialization
 
-Fresh inspection of `CCareer__Load` confirms that only the flag's low byte
-selects its mode. Nonzero mode copies career data but restores the receiver's
-previous volume words and skips entry/tail application. Zero mode takes its
-audio values from absolute globals in canonical CAREER (`00660620`), a
-precondition missing from an arbitrary-receiver interpretation.
+`load_preset_control.py` passed 19 cases through unchanged Load, TailRead,
+ApplyPreset and their actual table helpers, followed by original Save/TailWrite.
+Accepted stem `load-preset-run-k8m1uqgd/load`, receipt
+`2235a9b50f4d537e1ec45c5fabc2c491ca6c73450d59d0608496e2c2fcab8610`.
+The driver measures the actual tail-end ESI at the language-call boundary and
+compares complete selected state, serializer output and guards.
+
+Only the flag's low byte selects its mode: `0x100` applies bindings and tail;
+`1` and `0x101` preserve receiver volumes and skip them. A separate receiver
+control confirms that zero-mode audio calls still use canonical CAREER's
+absolute volume globals, rather than the selected receiver's copied values.
 
 The binding table is a sequence of 32-byte records terminated by ID `-1`.
 Loading chooses each destination using its pre-copy active byte, then replaces
 all 32 bytes without validating the incoming active flag or ID. File row IDs
 do not select destinations. Altered metadata can affect later sizing/writing;
 the ordinary initialized 16-active-row contract is not arbitrary-file validation.
+
+| Private input change | Observed direct same-process result |
+| --- | --- |
+| First saved row becomes inactive, custom scheme | Size changes `10004 → 9972 → 9940` across two loads of the same input. The second tail starts at `0x269e`, 32 bytes earlier than `0x26be`. |
+| First saved ID becomes `-1` | The first load still consumes the ordinary 16 rows. Later table walks stop at the new first sentinel: size becomes 9492 and the next load reads its tail at `0x24be`. |
+| First saved row becomes inactive, scheme 1 | Actual preset application restores that row; both loads retain size 10004 and tail start `0x26be`. |
+| First saved ID duplicates the next row | Both loads retain the ordinary size and tail start in this tested custom-scheme case. This does not make duplicate IDs equivalent under later preset lookup. |
+
+These are deliberately changed private derivatives of the real fixture.
+Repeated direct calls do **not** establish drift across fresh startups, which
+run the binding initializer again. Final Save consumes the resulting live table;
+it is not fed back into Load in this experiment. Language/audio/latest-world
+actions remain intercepted here. No arbitrary malformed-file safety is claimed.
+
+## Original language application and persistence
+
+`language_control.py` then replaces the language hook with original
+`CFrontEnd__SetLanguage`, cleanup and `CText__CopyFrom`, keeping the real
+Load/TailRead/preset/Save chain. Sixteen cases pass; accepted stem
+`language-run-n__ph8sw/language`, receipt
+`016b415f9846f13e02fc2c290e5c96c52e01f1af9cc245d30d119cf507fde5dd`.
+The five cache slots and one adjacent-state negative control use explicitly
+authored headers/buffers. They are not actual loaded language files.
+
+TailRead's unsigned 16-bit selector chooses a cached object through unchecked
+`frontend + 0xbf40 + selector * 0x30` arithmetic. The copy frees a nonnull
+destination buffer, copies selected header fields, allocates/copies exactly the
+source byte count, and rebases two pointers. Destination `+20..+2f` survives;
+the old claim that every object field is copied was incorrect. Reapplying the
+same selector repeats the free/allocation/copy. Sizes 0, 1, 3, 4, 7 and 17
+exercise the dword and trailing-byte copy paths. See the precise
+[copy contract](functions/text.cpp/CText__CopyFrom.md).
+
+The active language field is copied from the source header's `+1c`; only after
+that operation returns does TailRead store the input selector to `0066305c`.
+Save writes the **low word of active header `0083d97c`**, not that mirror.
+An authored selector 2/header-language 4 case therefore saves 4; a full header
+value `0x12345678` saves `0x5678`. These controls distinguish the two owners,
+not legitimate localization configurations. Index 5 and out-of-buffer pointer
+controls expose missing bounds checks without establishing supported inputs.
+
+The original cleanup's null-object path executes; nonnull destruction remains
+unresolved. Allocator/free and audio services are intercepted. Fresh static
+inspection of `CText__Init` confirms that it sets the language field before
+opening or parsing the file, and that its American override/invalid-selector
+fallback can select a different filename without changing that field. Thus
+neither the input mirror nor header language proves which text actually loaded.
+Real language-file initialization and localized menu acceptance remain open.
+
+## Rechecked static edges awaiting further execution
 
 The PC save reader checks the requested byte count, not trailing EOF; open
 failure leaves `out_read` untouched. Its older demo-comparison results remain

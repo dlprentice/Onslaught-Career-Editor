@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-19 (save/settings/startup recheck prioritized)
+Last updated: 2026-09-20 (composed save/control/language behavior rechecked)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -68,11 +68,19 @@ acceptance is claimed.
 The separate preset recheck passes 20 direct original-code controls with
 original table initialization. It replaces the ambiguous scheme-layer account
 with one initialized preset group, enabled-device fallback and exact whole-row
-versus slot-only overwrites. It uses fixture-derived runtime rows; the actual
-loader/tail/preset chain still needs composition.
+versus slot-only overwrites. The follow-up now composes actual
+Load/TailRead/ApplyPreset and later Save in 19 cases. Private binding-metadata
+changes alter the next same-process load's tail cursor and serialized size;
+preset application can restore the tested active row. This is not a claim of
+drift across fresh startups, which reinitialize those tables.
 
-Next, compose the loader/tail reader with the actual preset and recheck mutable
-binding-table admission, then language/audio and
+Sixteen additional cases retain original language selection, its null cleanup
+path and text-buffer copy. They separate the requested selector from the active
+header field that Save actually serializes, and correct the old whole-object
+copy claim. Authored cache data and intercepted allocation/audio remain explicit
+boundaries; real language-file initialization is not established by these controls.
+
+Next, close the language-file initialization and audio dependencies, then
 reset/serialization ordering. Confirm round-trip compatibility using preserved
 real saves, rather than treating a decoder's self-round-trip as proof. The
 retained AppCore sensitivity clamp and display-mode naming discrepancy are

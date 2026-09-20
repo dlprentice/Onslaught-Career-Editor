@@ -178,7 +178,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__RenderPreC
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__RenderStart.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__ResolveLevelNameTextByCode.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Run.md
-reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetPage.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__UpdateCamera.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/FrontEnd__HasStandardSlidingTextBordersAndMaskPage.md
@@ -299,7 +298,6 @@ reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__UpdateFlightWa
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__dtor.md
 reverse-engineering/binary-analysis/functions/string-locations-index.md
-reverse-engineering/binary-analysis/functions/text.cpp/CText__CopyFrom.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__Ctor.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__FreeBuffer.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__GetAudioNameById.md

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (original parser controls and startup-selector distinctions; earlier validation retained).
+Last updated: 2026-09-20 (composed save/control/language execution; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1755,6 +1755,79 @@ delivery, selector/remap UI execution, full loader/preset composition or
 arbitrary malformed-save safety. The [binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md)
 separates these executions from fresh UI instruction checks and inherited
 historical mappings. No Ghidra or implementation code changed.
+
+### Original loader, preset and serialization composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_preset_control.py`
+passed **19 composed original-code cases**, retaining 19 unchanged bodies
+(4,976 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/load-preset-run-k8m1uqgd/load`;
+receipt SHA-256 `2235a9b50f4d537e1ec45c5fabc2c491ca6c73450d59d0608496e2c2fcab8610`;
+ELF SHA-256 `e8a67606bbf1c716b2509442682e681a1415a34b567b5732de6059161a0f727e`.
+`load-preset-controls-v1.log`, immutable driver, assembler/linker commands and
+complete input/output/stderr files retain the invocation.
+
+Original table initializers, Load, TailRead, ApplyPreset and helpers execute;
+original Save/TailWrite run after the final Load. Cases cover ordinary custom
+and preset settings, authored enabled-device inputs, low-byte flags, version
+rejection, incoming inactive/sentinel/duplicate metadata, preset restoration,
+preexisting inactive/sentinel rows and an alternate career receiver. Both
+direct repeated loads use the same input in the same process. Actual ESI at
+the intercepted language call measures the tail-end cursor; Load's return
+does not expose TailRead's return value.
+
+The selected before/after snapshots, complete source, table guards and entire
+serializer capacity are compared. Incoming inactive metadata changes sizes
+`10004 → 9972 → 9940` over two direct loads; incoming first ID `-1` makes the
+next size 9492. The preset-one case restores the tested active row. These
+results do not establish drift across fresh startups, which initialize the
+tables again. Audio actions read canonical career globals even with an
+alternate receiver. The serialized result is not reloaded, and post-Save
+whole-memory state is not claimed measured.
+
+Language/audio/latest-world services and diagnostics remain intercepted here.
+No Blank, file caller, real input or process restart occurs. A read/write/exit
+seccomp filter rejects forbidden `getpid` with SIGSYS and empty output; fixture
+and pristine executable are rehashed unchanged. A read-only review separately
+checked the bodies, instruction-shaped table oracle and saved results without
+rerunning original code.
+
+### Original language copy and save composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_control.py`
+passed **16 composed original-code cases**, retaining 22 unchanged bodies
+(5,207 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/language-run-n__ph8sw/language`;
+receipt SHA-256 `016b415f9846f13e02fc2c290e5c96c52e01f1af9cc245d30d119cf507fde5dd`;
+ELF SHA-256 `f2db062ad045c30ae35d067cc986bb6b30d8888856bbfba470e3477890949ebf`.
+`language-controls-v1.log`, immutable driver, commands and saved inputs/outputs
+retain the invocation under the same private owner.
+
+This extends the actual Load/TailRead/preset/Save chain with original language
+selection `00466ab0`, cleanup `0051f8e0` and text copy `004f2660`. Cleanup takes
+its real null-object path. Five cache slots, an adjacent-state negative header,
+source byte buffers and allocation destinations are explicitly authored;
+allocator/free calls are intercepted and recorded. Their preserved argument
+cleanup is checked along with the caller's stack/register guards.
+
+Cases distinguish copied header language from requested selector, low-WORD
+serialization of a full language DWORD, repeat selection, null/existing prior
+buffers, sizes 0/1/3/4/7/17, original preset composition and flag/version skips.
+Index 5 and out-of-buffer source-pointer controls exercise unchecked selection
+and pointer rebasing without calling those supported configurations. Complete
+selected headers, buffers, guards, input and serialization capacity are compared.
+Events capture active-header and mirror values before freeing, during allocation
+and after copy; actual ESI at the audio-service boundary measures the tail end.
+The last 16 header bytes survive, and Save consumes the copied language field,
+not the input mirror. The repeated case frees the first returned buffer before
+receiving a distinct second allocation.
+
+The same syscall restriction/forbidden-call negative and original-input hash
+checks pass. These controls establish neither actual language-file parsing nor
+allocation failure, nonnull object destruction, audio output, durable save
+publication or localized presentation. The complete loader/preset and language
+review records use the existing ignored aircraft-audit owner. No Ghidra or
+implementation-lane source changes accompany this documentation tranche.
 
 ### Scheduled-event constructor boundary — September 19
 

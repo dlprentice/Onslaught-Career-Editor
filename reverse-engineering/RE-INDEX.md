@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-19 (save/settings/startup recheck and current Ghidra routing)
+Last updated: 2026-09-20 (composed loader/preset/language contracts; current Ghidra routing retained)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -1043,7 +1043,7 @@ asserted here — where that table still names the 05-26 document, so does this 
 
 | Slice | Standing |
 | --- | --- |
-| [Save, options and startup](binary-analysis/save-options-static-review-2026-05-26.md) | September 19 independent recheck: original startup/serialization, 20 composed menu-load controls and a captured-payload next-startup handoff distinguish live settings from next-boot settings. Twenty separate original preset controls correct the scheme-layer account and bind hardware-dependent slot overwrites. Loader/preset composition and complete real-file compatibility remain open; older evidence is identified separately. |
+| [Save, options and startup](binary-analysis/save-options-static-review-2026-05-26.md) | September 19–20 independent recheck: original startup/serialization and menu-to-startup handoff distinguish live from next-boot settings. Direct presets and 19 composed loader cases establish binding replacement and same-process metadata effects. Sixteen composed language cases distinguish the requested selector from the active header serialized by Save. Real language loading, audio and complete real-file compatibility remain open; older evidence is identified separately. |
 | [Audio, media, cutscene](binary-analysis/audio-media-cutscene-static-review-2026-05-26.md) | **Still the cited owner** for audio, media, cutscenes, and camera. The wave counts inside it are snapshots. |
 | [Frontend, input, game loop](binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md) | Superseded for frontend/HUD by [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md). Its companion proof-plan file no longer exists in the tree; the 2026-07-28 correction inside it gives the `git show` needed to recover it. |
 | [Unit / BattleEngine gameplay](binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md) | Superseded by [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) (2026-07-16). |
