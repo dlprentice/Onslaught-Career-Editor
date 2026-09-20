@@ -1,6 +1,28 @@
 # CFrontEnd__Init
 
+Status: mixed — inherited function reference with scoped startup-selector corrections
+Last updated: 2026-09-19
+Summary: frontend initialization reference; distinguish developer selection and the separate startup selector from command-line level parsing.
+Source File: `references/Onslaught/FrontEnd.cpp` at `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` | Binary: pristine BEA.exe.original.backup, SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+
 > Address: 0x004662a0 | Source: `references/Onslaught/FrontEnd.cpp` | Line: ~179 (0xb3)
+
+## Selector correction — September 19
+
+The read at `00466775` uses CLIParams `+18` (`00662dd0`), the cross-subsystem
+developer selector. It is not frontend state or a demo/intro flag. Its
+nonzero branch at `0046678b` changes first-run page selection; source
+`FrontEnd.cpp`:188–203 names the corresponding developer-mode condition.
+The [CLI owner](../CLIParams.cpp/CLIParams__ParseCommandLine.md#developer-selector-and-trace-consumers--september-19)
+records the other consumers and evidence limits.
+
+The separate reads at `004665e0/00466618` concern `0066304c` (CLIParams `+294`),
+not the `-level` destination at `00662dc8` (`+10`). This branch sets active
+page `0x17`, calls `00466ae0(0,0)`, and passes the separate selector to
+`00459810`. Do not translate the old "direct level load via -level" label
+into rebuild behavior. These corrections do not revalidate the other inherited
+page names or the complete initialization routine. Complete body bytes and
+disassembly are retained in the CLI private owner as `consumer-004662a0.*`.
 
 ## Name corrections — 2026-07-28
 
@@ -151,7 +173,7 @@ Complex logic determines which page to show first:
 
 | Condition | Page Set | Notes |
 |-----------|----------|-------|
-| DAT_0066304c != -1 | 0x17 (23) | Direct level load via -level param |
+| DAT_0066304c != -1 | 0x17, then `SetPage(0,0)` | Separate startup selector; not the parser's `-level` field (September 19 correction above) |
 | mFromOutro && no intro | 0x17 -> 0x0c | Return from victory |
 | mFromOutro && intro | 0x17 -> 0x00 | Return to intro |
 | entry == 2 | 0x17 -> 0x00 | From victory screen |
@@ -167,11 +189,11 @@ Complex logic determines which page to show first:
 
 | Address | Read/Write | Purpose |
 |---------|------------|---------|
-| g_bDevModeEnabled | R | Check for dev mode access |
+| CLIParams `+3c` (`00662df4`; legacy `g_bDevModeEnabled`) | R | Autoconfig-test flag; also bypasses cheat queries. Distinct from `+18` developer selection. |
 | g_bAllCheatsEnabled | R | Check for all cheats |
-| DAT_0066304c | R | Level override from -level param |
+| DAT_0066304c | R | Separate CLIParams `+294` startup selector; `-level` writes `+10` instead |
 | DAT_00662f40 | R | Unknown init flag |
-| DAT_00662dd0 | R | Demo/intro mode flag |
+| DAT_00662dd0 | R | CLIParams `+18` developer selector; see September 19 correction |
 | DAT_00662dcc | R | Unknown flag |
 | DAT_0083d448 | R | Demo state |
 | DAT_0083d454 | R | Playable demo flag |

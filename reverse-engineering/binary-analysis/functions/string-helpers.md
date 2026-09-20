@@ -95,6 +95,14 @@ first-attempt flag, slot interiors and surrounding bytes. Exit registration
 was a recording hook; its callbacks were not executed. This does not measure
 actual startup, the parser, a live selector, file I/O or presentation.
 
+The subsequent [CLI consumer audit](CLIParams.cpp/CLIParams__ParseCommandLine.md#developer-selector-and-trace-consumers--september-19)
+pins the startup call order: WinMain parses first, then `004efb10` initializes
+the pointer pool and resets the debug and history loggers in that order.
+It identifies no consumer connecting either trace-request flag to logger enable.
+Forty-seven separate parser cases preserve both logger extents except the
+documented autoconfig filename store. Those cases use authored startup state
+and intercepted OS calls; actual logger state at a gameplay warning remains open.
+
 For the pointer-pool warning path, `CSPtrSet__AddToHead` at `004e5a80` passes
 the debug logger and fixed messages at `00632774`/`006327ac`. Those contain
 54/57 ASCII literal bytes with no format conversions. All 111 bytes were

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-19 (RE resumed; CLI initialization and parser contracts corrected)
+Last updated: 2026-09-19 (original parser controls and distinct startup selectors grounded)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -32,14 +32,24 @@ The resumed investigation confirmed CLIParams ownership of the initializer at
 Four isolated original-code cases establish its bounded defaults and preserved
 memory. The complete [parser contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
 now records all 25 comparisons, sequential argument consumption, the initial
-zero windowed guard, and directory/logger-filename side effects. These are
-static parser findings, not full parser or retail startup execution.
+zero windowed guard, and directory/logger-filename side effects. Retail startup
+acceptance remains separate from the isolated parser execution below.
 
-Next, trace the actual consumers of the two trace-request fields and later
-developer-selector writes before inferring logger enablement or the complete
-warning/RNG path. An isolated parser experiment needs intercepted filesystem
-and exit calls. Continue aircraft/weapon ordering through the existing owners;
-the startup work does not close complete-shot behavior or gameplay acceptance.
+The follow-up passed 47 isolated cases through the unchanged parser and native
+CRT conversion code, with OS/printf boundaries intercepted. It identified ten
+absolute reads of the developer selector, corrected its old frontend-state
+identity, and separated autoconfig/cheat-query admission and the frontend
+startup override from `-level`. No active consumer of either trace-request
+field or later deliberate developer-selector writer was identified. That is
+bounded static evidence, not proof against computed or external writes.
+
+The startup call chain now places pointer-pool initialization before both logger
+resets, after command-line parsing. Continue the aircraft/weapon warning and
+conditional-RNG investigation using that chain without assuming logger state
+at an arbitrary warning. Actual full startup, enabled-logger callbacks and
+complete-shot behavior remain open. The frontend subobject helper `00459810`
+also has a source/retail identity question; the old inferred name must not be
+used as proof of a page identifier. Separate tasks still own implementation.
 
 ### Remote checkpoint integrated on Linux — September 12
 

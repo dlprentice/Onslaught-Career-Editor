@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (CLI defaults/parser audit and preserved initializer correction; earlier validation retained).
+Last updated: 2026-09-19 (original parser controls and startup-selector distinctions; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1567,6 +1567,42 @@ the complete exports. The [parser owner](reverse-engineering/binary-analysis/fun
 records the source/retail distinctions and unresolved consumers. No full parser,
 retail startup, later selector values, file I/O, desktop or gameplay acceptance
 was exercised.
+
+### Original parser and startup selectors — September 19
+
+`python local-data/test-runs/cli-startup-20260919/parser_control.py` passed
+**47 isolated original-code cases**, retaining the complete parser, initializer,
+native ASCII scanner and helper bodies at original addresses. Accepted stem:
+`local-data/test-runs/cli-startup-20260919/parser-run-m20ei0zy/cli_parser`.
+Receipt SHA-256 `e6dca9f618862716ac0c129f151335938b3d81e8e72e441146a4a499173a1296`;
+ELF SHA-256 `9d785de30b3e49cb1a24ad7b38b2fa5f40474a9d894ae23336a151497f5104cf`.
+Each case compares 8,400 bytes of selected state, including input immutability,
+both guarded receivers and both complete logger extents. Forty-six verify
+normal-return ABI preservation; the version case takes an intercepted
+nonreturning exit. A forbidden syscall control terminates with SIGSYS.
+
+The [CLI contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md#isolated-parser-execution--september-19)
+records argument ordering, conversion failure, windowed guard, timeout,
+resolution, directory-prefix and version-exit controls. Independent read-only
+review checked all saved bytes, inputs, outputs and the compiled syscall filter;
+it did not rerun them. Initial setup refused an incorrect single-range assumption
+for `strchr`; the next harness returned 99 with a malformed filter descriptor.
+Both were corrected before accepted execution. The intermediate 45-case run
+and all failed attempts are retained separately; they are not added to the
+47-case pass count.
+
+`trace_consumers.py` then reproduced ten absolute developer-selector reads,
+the startup call chain and the bounded absence of identified trace-field
+consumers. `trace-consumers.json` and `selector-neighbors.json` retain body
+pins and disassembly commands. These corrections change documentation only;
+the Ghidra working project and tracked checkpoint were not opened or modified.
+Native review records are retained under the existing audit owner in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-parser-review.json`.
+
+OS/printf boundaries are authored hooks. The false directory result uses last
+error zero and does not cover normal nonzero Win32 error handling. Original-code
+checks use authored startup memory/default locale and are not a retail launch,
+whole-process write audit, console rendering, full startup or gameplay acceptance.
 
 ### Scheduled-event constructor boundary — September 19
 

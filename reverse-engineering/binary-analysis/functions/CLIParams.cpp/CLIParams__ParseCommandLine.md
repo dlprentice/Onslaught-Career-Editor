@@ -1,9 +1,9 @@
 # CLIParams__ParseCommandLine
 
-Status: active — complete parser static audit; isolated initializer controls
+Status: active — complete parser static audit; bounded original-code execution
 Last updated: 2026-09-19
 Summary: startup defaults, the 25 retail option comparisons, argument ordering and bounded side effects.
-Evidence: MEASURED — pristine instructions and four executions of the unchanged initializer on controlled memory; no new retail launch or full parser execution.
+Evidence: MEASURED — pristine instructions, four initializer controls and 47 isolated parser cases; no retail startup or gameplay acceptance.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752 bytes,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -27,7 +27,8 @@ Private evidence is under `local-data/test-runs/cli-startup-20260919/`:
 `selected-bodies.json`, the complete body disassemblies, `parser-static.json`,
 and `initializer-run-48y5v5ma/cli_defaults.*`. The latter contains the exact
 driver, linked original bytes, inputs and complete outputs. Four initializer
-cases passed; this is not a count of parser tests or retail acceptance runs.
+cases passed. The separate parser experiment below adds 47 cases with explicit
+OS/printf interception; neither count describes retail acceptance runs.
 
 ## Startup defaults ownership
 
@@ -68,7 +69,8 @@ advances the token pointer, and subsequent comparisons in that same iteration
 inspect the consumed token. For example, the instruction path for
 `-level -nomusic` attempts an integer scan and then reaches the later
 music-off comparison. `-level -testeur` does not revisit the earlier testeur
-comparison. These examples are static paths, not newly executed parser tests.
+comparison. Both cases now pass with the unchanged parser and original scanner
+in the isolated experiment below.
 
 Tokenization tests ASCII space, not tabs or quoting syntax. It skips repeated
 spaces; a trailing space can leave an empty final token. Unknown tokens fall
@@ -76,7 +78,7 @@ through without a parser diagnostic. Numeric scan results are ignored.
 `-timeout`, `-soundbuffers` and `-res` check remaining-token counts;
 `-level` and `-defaultoptionsname` do not. The nominal 30 slots of 256 bytes
 must not be described as safely bounded: some stores precede the length/count
-checks. Malformed-input behavior was not executed in this audit.
+checks. Overlong tokens and excess-token memory behavior were not executed.
 
 ## Complete retail option map
 
@@ -141,8 +143,9 @@ from developer selector `+18` and either `CDebugLog` output-enable field.
 The complete parser has no deliberate store to those fields. This excludes
 neither malformed-input effects nor later startup writers. Pinned source
 `CLIParams.cpp`:278–279 calls `CONSOLE.SetTrace(TRUE)` for `-traceconsole`;
-retail instead stores the request field. Follow its actual consumers before
-claiming that it enables the [reviewed logger](../string-helpers.md#debug-log-ownership-and-history--september-19).
+retail instead stores the request field. The bounded consumer review below
+identified no path from either request to the
+[reviewed logger](../string-helpers.md#debug-log-ownership-and-history--september-19).
 
 ## Autoconfig path side effects
 
@@ -157,8 +160,112 @@ attempts; their success is not checked here.
 At `004240a0`, it calls `StoreField04_00441730` with setup-history logger
 receiver `0066eb90` and filename pointer `00662cb0`. The complete ten-byte
 setter changes only receiver `+4`. This path does not itself open/write the
-log, reset its first-attempt flag, or enable either logger. A future isolated
-parser experiment must intercept these filesystem calls before execution.
+log, reset its first-attempt flag, or enable either logger. The isolated
+experiment intercepts the filesystem boundary and confirms the prefix order,
+filename store and logger preservation for its selected cases.
+
+## Isolated parser execution — September 19
+
+`python local-data/test-runs/cli-startup-20260919/parser_control.py` passed
+**47 bounded cases**. Accepted stem:
+`parser-run-m20ei0zy/cli_parser` under that same private owner. Receipt SHA-256:
+`e6dca9f618862716ac0c129f151335938b3d81e8e72e441146a4a499173a1296`;
+ELF SHA-256:
+`9d785de30b3e49cb1a24ad7b38b2fa5f40474a9d894ae23336a151497f5104cf`.
+
+The complete initializer and parser, stack probe, case-insensitive comparison,
+numeric/string scanner and required helpers execute unchanged at their original
+addresses. All 21 admitted code envelopes match pristine bytes: 6,017 named
+body bytes plus the 11 alignment bytes inside the two-range `strchr` envelope.
+Original character tables and default locale data are retained. Numeric scanning
+is original retail code, not an authored approximation of `sscanf`.
+
+Each case compares 8,400 captured bytes before and after parsing: both settings
+objects and their guards, both complete logger extents, command input, filenames,
+selected globals and the resolution/landscape helper outputs. Forty-six cases
+also check normal-return stack/nonvolatile registers. The version case deliberately
+leaves through an intercepted nonreturning `ExitProcess` boundary.
+
+Consequential controls establish:
+
+- Mixed-case options match; tabs do not split tokens and quotes are literal.
+- Reversing `-testeur -forcewindowed` changes admission. An alternate receiver's
+  `+186` cannot substitute for the separately read global guard.
+- `-e3` sets its global byte without changing the initialized timeout;
+  `-timeout 42` separately changes that timeout.
+- Failed `%d` conversion preserves the destination but still consumes the token.
+  Thus `-level -nomusic` disables music, while `-level -testeur` does not enable
+  the earlier option. `-defaultoptionsname -level 110` handles both consuming
+  branches in one iteration.
+- For `-res 800 -showdebugtrace`, failed height conversion preserves the authored
+  preloaded height of 720, and the later trace comparison still runs. This does
+  not make 720 a retail startup default. A width below 640 instead resets both
+  dimensions to 640/480.
+- Autoconfig records each directory prefix in order, keeps a following option
+  separate from the optional path, and stores the composed filename without
+  enabling logging. `-getversion -nosound` exits before the sound option.
+
+`printf`, `CreateDirectoryA`, `GetLastError` and `ExitProcess` are authored
+recording boundaries. No actual formatting, directories or Windows exit behavior
+are claimed. The false-directory-result control supplies last error zero; it
+does not cover ordinary nonzero Win32 errors or errno translation. The child
+admits only Linux read/write/exit syscalls; a separate forbidden-`getpid` control
+terminates with SIGSYS. No omitted locale/heap/file helper was needed by the
+accepted bounded cases. Snapshot preservation covers the recorded regions,
+not all process memory. Independent review checked the saved ELF and all outputs
+without rerunning them. Earlier harness failures and the narrower 45-case run
+remain separate from this accepted receipt.
+
+## Developer selector and trace consumers — September 19
+
+`00662dd0` is the settings object's `+18` developer selector, not frontend state
+or a demo/intro flag. Its initializer clears it at `00423a25`. Static retail
+branches correspond to `CLIPARAMS.mDeveloperMode` in pinned source
+`actor.cpp`:87–109, `BattleEngine.cpp`:1259–1262, `eventmanager.cpp`:400–409,
+`FrontEnd.cpp`:188–203 and `game.cpp`:2672,2710,3360,3593.
+
+All ten occurrences of this absolute address in the specimen decode as reads:
+
+| Read instruction | Bounded consumer behavior |
+| --- | --- |
+| `0040164f` | Zero skips actor velocity diagnostics. |
+| `00408195` | Nonzero, together with zero receiver vulnerability, bypasses the water-death virtual call after the altitude gate. |
+| `00441715` | Exactly one enables the logger during history reset; other values preserve enablement. |
+| `0044b7e0` | Exactly one admits scheduler overflow-order diagnostics. |
+| `00466775` | Nonzero changes the first-run frontend branch. |
+| `0046f945` | Exactly one admits the developer win-level branch. |
+| `0046fa39` | Exactly one, with game state at least three, admits the developer lose-level branch. |
+| `00470687` | Zero skips developer diagnostic rendering. |
+| `00471614` | Zero skips additional debug output. |
+| `004bbda0` | Exactly one admits this function body; its full semantics were not re-audited here. |
+
+`trace_consumers.py` preserves complete enclosing-body envelopes, decoded reads
+and startup calls in `trace-consumers.json`, SHA-256
+`db29480702a78a37d3242498124dbb13050860afb7838610eb271aaa8fb46451`.
+The PE contains no absolute address-dword occurrence for `00663060` (`+2a8`),
+`00663068` (`+2b0`) or their interior bytes. The base address `00662db8`
+occurs only as initializer/parser receiver and a read of its first dword.
+No consumer of either trace request, or later deliberate writer of `+18`, was
+identified. This bounded absence claim excludes neither computed pointers,
+bulk writes, malformed-input effects nor external changes.
+
+Initializer table slots `006220f0/0062218c/00622190` point to the CLI, debug-log
+and setup-history initializers. Debug enable starts at zero; history enable
+starts at one. WinMain's parser call at `0051229d` precedes its `004efb10` call
+at `005123c3`. In that latter body, calls at `004efb58/004efb65/004efb6f`
+initialize the pointer pool, reset the debug logger and reset setup history,
+respectively. With selector zero, both resets preserve their prior enable flags.
+These are static call relationships plus the earlier isolated logger controls,
+not a new whole-startup observation or a proof of logger state at every warning.
+
+Two neighboring fields must remain separate from this developer selector:
+`+3c` (`00662df4`) is the autoconfig-test flag and also causes
+[`IsCheatActive`](../FEPSaveGame.cpp/IsCheatActive.md#autoconfig-identity-correction--september-19)
+to return true early. `+294` (`0066304c`) is a distinct frontend startup
+override, initialized to `-1`; it is not the parser's `-level` destination at
+`+10` (`00662dc8`). The latter is read at `004f034a` and forwarded to the game
+call at `004f036e`. `selector-neighbors.json` binds the additional complete
+bodies, SHA-256 `142ba92383897d598d11086bac0894d6d9bff568c1d016dee512a437d12113e2`.
 
 ## Source differences and remaining work
 
@@ -169,9 +276,9 @@ literals. In particular, source `CLIParams.cpp`:269–270 supplies a developer
 option absent from these retail branches. This does not prove the absence of
 other development mechanisms or later writes to the selector.
 
-Trace-request consumers, startup initializer order beyond the demonstrated
-caller chain, later developer-selector writes, complete parser execution,
-and downstream presentation/audio behavior remain open. The next useful
-checks are reference-backed consumer analysis and isolated parser cases with
-explicit filesystem/exit interception. Full startup-to-Level-100 parity is
-not established by this note.
+No active trace-request consumer or later developer-selector writer has been
+identified. Full startup ordering and actual warning/logger state, nondefault
+locale and nonzero Windows error paths, and downstream presentation/audio
+behavior remain open. The startup path supplies the next evidence for the
+pointer-pool warning and complete-shot RNG investigation; the isolated parser
+cases do not establish full startup-to-Level-100 parity.

@@ -157,7 +157,6 @@ reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Proc
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__RemovedMUWhinge.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Render.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/FEPSaveLoad__TransitionNotification.md
-reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/IsCheatActive.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFEPDirectory__GetCursorStateInRectAndConsumeIfMouseReady.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawBar.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawBarGraph.md
@@ -174,7 +173,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetPlayer0
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetShadowOffsetX.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetShadowOffsetY.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__HasStandardSlidingTextBordersAndMask.md
-reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Init.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__NumControllersPresent.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__PlaySound.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md
@@ -302,7 +300,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/con_resetmemsizes.md
 reverse-engineering/binary-analysis/functions/game.cpp/con_win.md
 reverse-engineering/binary-analysis/functions/game.cpp/lookup_FMV.md
 reverse-engineering/binary-analysis/functions/gcgamut.cpp.md
-reverse-engineering/binary-analysis/functions/globals.md
 reverse-engineering/binary-analysis/functions/import-thunks.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__Process.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__UpdateFlightWalkerTransitionState.md
