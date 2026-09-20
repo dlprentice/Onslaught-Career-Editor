@@ -53,6 +53,12 @@ live consumers converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
 
+`Core/actor_definitions.gd` and `Client/actor_definition_manifest.gd` now admit
+the immutable actor, spawn, waypoint and motion definitions in standard Godot.
+They preserve the pinned manifest, raw UTF-16 keys, detached values and existing
+identity formats. Live actor construction and mutation still use the C# registry;
+these validated definitions are the foundation for its conversion.
+
 The conversion worktree is `.worktrees/godot-editor-48-20260919`, branch
 `codex/godot-editor-48-20260919`. Use canonical `BEA_LOCAL_LAB` routing and fresh
 owned output under this worktree's `local-data/`; remain headless or use an

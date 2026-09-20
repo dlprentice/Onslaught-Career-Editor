@@ -483,6 +483,21 @@ The unchanged reference is in `height-field-oracle-y2kb9hoj/`; the final cached
 implementation report is `heightfield-cache-1pvzrig6/native.json` under
 `local-data/test-runs/`. Both logs are clean.
 
+The immutable actor-definition and pinned manifest ports passed **3,856 native
+assertions** and **139,848 exact canonical bytes**. The unchanged C# exporter
+passed **194 checks**, providing 275 constructor cases (160 accepted, 115
+refused), 164 lookup cases and eighteen manifest refusals. Identity formats
+6/7/8, raw UTF-16/NUL/unpaired-surrogate keys, detached inputs/snapshots/lookups,
+and ordered failure types/parameters agree. World number remains admitted but
+absent from the existing identity bytes. The actual definition identity remains
+`2fc2219881a66a4662688d69b1ab5d2b7b9e02cb6fdc63ce5a34019974fa69b2`.
+Receipts are `actor-definition-reference-tyv7nvwk/` and
+`actor-definitions-native-lo2crjol/` under `local-data/test-runs/`; both engine
+logs are clean. Run .NET `Scenes/World/Tests/ActorDefinitionReferenceChecks.tscn`
+with fresh fixture/report user paths, then standard
+`Scenes/World/Tests/actor_definition_checks.gd` with that fixture and a fresh
+report. This validates immutable definitions; the live registry is still C#.
+
 The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
 compared bytes** against the unchanged C# exporter, which passed **43 checks**.
 All 4,096 level-zero tiles reproduce the existing 524,288-byte root and its
