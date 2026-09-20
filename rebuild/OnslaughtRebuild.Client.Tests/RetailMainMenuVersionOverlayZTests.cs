@@ -184,7 +184,7 @@ public sealed class RetailMainMenuVersionOverlayZTests
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", choice, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", loading, StringComparison.Ordinal);
         string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", bar, StringComparison.Ordinal);

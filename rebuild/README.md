@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-19 (full GDScript migration started; Godot 4.8 dev6 and production scenes).
+Last updated: 2026-09-20 (native terrain appearance and Loading; Godot 4.8 dev6 and production scenes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,12 +43,12 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, HUD, pause, audio, Options, debriefing, world camera, actor/projectile presentation,
-terrain LOD/meshes, water and the Sun now use production GDScript owners and
+Startup, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+terrain LOD/meshes/texture caches, water and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
 also have native owners. The remaining frontend drawing, world assembly,
-terrain texture composition/Aquila rendering, full simulation and replay entry still need their
+Aquila rendering, full simulation and replay entry still need their
 live consumers converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
@@ -153,6 +153,15 @@ substitutes. The temporary adapter invokes effects synchronously at their origin
 action points, retaining partial mutation on failure and reentrant callback order.
 It does not poll every row across languages each frame.
 
+`Scenes/Frontend/Loading.tscn` exposes the actual background, five outlined
+caption passes and fixed black bar. Its native owner receives display facts from
+the existing frontend session; selecting an editor fixture cannot request a load
+or advance the two-frame handoff. A Node2D caption anchor preserves the original
+`393.5` source coordinate, correcting the old Control proxy's fractional-position
+loss. That text-only pixel change is recorded in validation. The bar remains the
+existing bounding-box fallback; its retail sprite/blend and any progress fill
+are still unresolved.
+
 `Scenes/World/EntityPresentation.tscn` owns native actor/foot interpolation,
 projectile transforms, trails and muzzle flashes. One snapshot-pair batch and
 one temporary Aquila callback retain the existing render order. Saved initial
@@ -186,9 +195,15 @@ Inspector activity changes the terrain law or its admitted source data.
 `Client/terrain_compositor.gd` carries the pinned hierarchy decoder, signed
 material blending, lighting gradient, ordered pine shadows and RGB565 tile
 composition. Its exact byte checks cover the complete root texture and selected
-higher-detail tiles without changing the existing hashes. The cache/material
-consumer is being converted separately; passing this component does not establish
-full-world rendering or performance parity.
+higher-detail tiles without changing the existing hashes.
+`Scenes/World/terrain_appearance.gd` owns the five RGB565 caches, slot ownership,
+cloud phase, shader parameters and texture uploads. It receives the native
+heightfield's packed selection batch directly, without per-tile C# reconstruction.
+`TerrainMaterial.tres`, its external shader and detail/cloud recipes are the
+production definitions. Private imports retain the actual frozen cache pixels;
+public resources retain source recipes. Editor inspection does not start a live
+cache or a diagnostic probe. The former C# compositor and appearance owners stay
+under `Scenes/World/Tests/` as comparison references.
 
 `Scenes/World/Water.tscn` exposes the production grid, shoreline bands and Sun
 glint as three named mesh nodes with external shader files and texture recipes.
@@ -436,6 +451,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
+| [Scenes/Frontend/Loading.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Loading.tscn) | Production background, five ordered caption passes and fixed bar. `editor_progress` supplies frozen host facts; `override_caption` marks deliberate enhanced text. The scene does not request or advance loading. |
 | [Scenes/Frontend/Debriefing.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Debriefing.tscn) | Settled report labels/values, writing tiles, grade artwork/shadows and header as separate native Controls. `editor_projection` selects a frozen outcome/objective/grade illustration without creating a gameplay result. |
 | [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | GDScript production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. `show_editor_illustration` selects a frozen presentation state without creating a live HUD model. |
 | [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Fully GDScript overlay, circles, root rows and confirmation frame/rows. `preview_confirmation` selects a frozen editor state. Layout edits also move the production hit regions. |

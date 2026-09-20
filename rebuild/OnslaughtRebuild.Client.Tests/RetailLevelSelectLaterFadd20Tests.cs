@@ -230,7 +230,7 @@ public sealed class RetailLevelSelectLaterFadd20Tests
         string level = Slice(flow, "private void DrawLevelSelect()");
         string main = Slice(flow, "private void DrawMainMenu()");
         string quit = Slice(flow, "private void DrawQuitConfirm()");
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         string click = Slice(flow, "private void DrawClickToStart()");
         string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
         string handleKey = Slice(flow, "private bool HandleKey(");

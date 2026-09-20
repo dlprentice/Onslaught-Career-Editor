@@ -35,7 +35,7 @@
              Link="godot-hud-source\Level100MessagePlaybackState.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100MessageSchedule.cs"
              Link="godot-hud-source\Level100MessageSchedule.cs" />
-    <Compile Include="..\OnslaughtRebuild.Godot\Level100TerrainCompositor.cs"
+    <Compile Include="..\OnslaughtRebuild.Godot\Scenes\World\Tests\Level100TerrainCompositor.cs"
              Link="godot-terrain-source\Level100TerrainCompositor.cs" />
     <!-- The deterministic half of the cold-start media lane. Both files are
          deliberately free of Godot types so the sequence can be tested without
@@ -251,6 +251,9 @@
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\debriefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\DebriefingReference.cs;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Debriefing.cs"
              Link="godot-debriefing-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\LoadingReference.cs"
+             Link="godot-loading-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"

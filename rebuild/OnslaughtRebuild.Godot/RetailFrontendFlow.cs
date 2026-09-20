@@ -290,14 +290,6 @@ public sealed partial class RetailFrontendFlow : Control
     private const float BriefingRingSize = 990f;
     private const float BriefingRingCenterX = 267f;
     private const float BriefingRingCenterY = 221f;
-    // Loading page. Bar extents and text origin measured from
-    // local-lab/retail-reference-pristine/loading/07-loading-640x480.png.
-    private const float LoadingTextLeft = 270f;
-    private const float LoadingTextTop = 393.5f;
-    private const float LoadingBarLeft = 78f;
-    private const float LoadingBarTop = 423f;
-    private const float LoadingBarWidth = 485f;
-    private const float LoadingBarHeight = 25f;
 
     /// <summary>
     /// The briefing body, transcribed from the pristine capture. The
@@ -585,7 +577,6 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _levelBracket02 = null!;
     private Texture2D _levelRing01 = null!;
     private Texture2D _levelRing02 = null!;
-    private Texture2D _loadingScreen = null!;
     private Texture2D _titleFont = null!;
     private Texture2D _font22 = null!;
     private int[] _font22Widths = [];
@@ -652,6 +643,7 @@ public sealed partial class RetailFrontendFlow : Control
         LoadTextures();
         _feBackFrames = LoadFeBackFrames(Engine.IsEditorHint() ? 1 : int.MaxValue);
         InitializeOptions();
+        InitializeLoading();
         InitializeDebriefing();
 
         _initialized = true;
@@ -3093,70 +3085,6 @@ public sealed partial class RetailFrontendFlow : Control
             ReleasedTitleText);
     }
 
-    /// <summary>
-    /// Retail LOADING.
-    ///
-    /// Measured from local-lab/retail-reference-pristine/loading/
-    /// 07-loading-640x480.png. The background is LoadingScreen.tga stretched to
-    /// the full 640x480 stage: comparing the decoded texture resampled to
-    /// 640x480 against the retail frame gives a mean absolute delta of 5.5 per
-    /// channel over the whole frame BEFORE any overlay is drawn, and the only
-    /// regions that disagree materially are the two overlay elements below.
-    ///
-    /// The previous implementation of this method drew neither of them
-    /// correctly: it painted a 640x60 black band at y420 that retail does not
-    /// draw at all, and put "Loading..." left-aligned at (24,436) scale 2 in
-    /// Font13PS where retail centres it in font22 at scale 1 with its ink at
-    /// x270..365, y401..419.
-    ///
-    ///   text  font22 scale 1, fitted origin (270, 393.5); its advance width 98
-    ///         from x=270 centres on x=319
-    ///   bar   x78..562, y423..447
-    ///
-    /// KNOWN GAP: the bar is the measured opaque black rectangle over that
-    /// bbox. The capture is a continuous dark overlay on y435 (x78=(40,41,43),
-    /// x100=(7,6,6), x200=(33,28,29), x300=(66,78,88), x400=(32,31,31),
-    /// x540=(2,1,1), x562=(39,39,39); outside, x70/x570 stay mid-grey). A
-    /// full-width rect is too solid in the middle but at least spans the bbox.
-    ///
-    /// FrontEnd\BarL/BarC/BarR.tga stay hash-pinned in FRONTEND_ASSETS. They
-    /// are CFrontEnd::DrawBar (FrontEnd.cpp:1073) header-bar white masks
-    /// (64x64 DXT2), not this page's sprite. CConsole__RenderLoadingScreen
-    /// (0x0042C810) does not call DrawBar; its static callee list has one
-    /// CVBufTexture__DrawSpriteEx and one CDXSurf__RenderSurface. Do not
-    /// invent a DrawBar tile dest here. Draw the recovered sprite (texture,
-    /// dest, tint, blend) only when that RenderLoadingScreen call is cited.
-    /// Falsifier: local-lab/retail-reference-pristine/loading/07-loading-640x480.png.
-    /// </summary>
-    private void DrawLoading()
-    {
-        SelectSceneSection("Loading.Background");
-        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), Colors.Black);
-        DrawTextureRect(
-            _loadingScreen,
-            new Rect2(0f, 0f, DesignWidth, DesignHeight),
-            false);
-
-        // Retail outlines this string rather than drop-shadowing it: the glyphs
-        // carry a 1px black edge on all four sides, the same treatment the
-        // click-to-start prompt uses. Drawing it with the standard +2/+2 shadow
-        // instead left 50.6% of the text region materially different at an
-        // otherwise pixel-exact ink bbox (ref x270..365 y401..420 against
-        // x271..366 y401..420).
-        SelectSceneSection("Loading.Caption");
-        var origin = new Vector2(LoadingTextLeft, LoadingTextTop);
-        DrawFont22Outlined(_loadingText, origin + new Vector2(-1f, 1f), Colors.Black);
-        DrawFont22Outlined(_loadingText, origin + new Vector2(1f, 1f), Colors.Black);
-        DrawFont22Outlined(_loadingText, origin + new Vector2(-1f, -1f), Colors.Black);
-        DrawFont22Outlined(_loadingText, origin + new Vector2(1f, -1f), Colors.Black);
-        DrawFont22Outlined(_loadingText, origin, Colors.White);
-
-        SelectSceneSection("Loading.Bar");
-        DrawRect(
-            new Rect2(LoadingBarLeft, LoadingBarTop, LoadingBarWidth, LoadingBarHeight),
-            Colors.Black);
-    }
-
     private bool HandlePointerMotion(Vector2 position)
     {
         Vector2 design = ToDesignPosition(position);
@@ -3687,11 +3615,6 @@ public sealed partial class RetailFrontendFlow : Control
         _levelBracket02 = LoadTexture("level-bracket-02", 512, 512);
         _levelRing01 = LoadTexture("level-ring-01", 64, 64);
         _levelRing02 = LoadTexture("level-ring-02", 64, 64);
-        _loadingScreen = LoadTexture(
-            "loading-screen",
-            512,
-            512,
-            CuratedAyaTextureLoader.Compression.Dxt1);
         // data/language holds exactly five sets and the released texture set carries
         // exactly five matching flags (Career.h: NUM_LANGUAGES 5). Order matches
         // RetailFrontendLanguage.
@@ -3907,19 +3830,6 @@ public sealed partial class RetailFrontendFlow : Control
             scaleY,
             color,
             dropShadow: true);
-
-    private void DrawFont22Outlined(string text, Vector2 position, Color color) =>
-        DrawAtlasText(
-            _font22,
-            _font22Widths,
-            Font22CellSize,
-            Font22Columns,
-            text,
-            position,
-            1f,
-            1f,
-            color,
-            dropShadow: false);
 
     private int MeasureGameNameExtent(string text)
     {

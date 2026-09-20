@@ -137,6 +137,7 @@ public sealed partial class RetailFrontendFlow
         }
         UpdateNativeTextures();
         UpdateOptionsFrame();
+        UpdateLoadingFrame();
         UpdateDebriefingFrame();
         foreach (RetailFrontendPart part in _sceneParts.Values)
             part.QueueRedraw();
@@ -171,7 +172,6 @@ public sealed partial class RetailFrontendFlow
         // the current phase offset into the next run's baseline.
         _stage!.GetNode<Control>("MainMenu/SelectedIcon/ShadowMotion").Position = offset;
         _stage.GetNode<Control>("MainMenu/TitleLogo/ShadowMotion").Position = offset;
-        BindNativeTexture("Loading/Background", _loadingScreen, 1f);
     }
 
     private void BindNativeTexture(string key, Texture2D texture, float fade)
@@ -198,7 +198,6 @@ public sealed partial class RetailFrontendFlow
                 case "Career": DrawDevSelect(); break;
                 case "Briefing": DrawMissionBriefing(); break;
                 case "Configuration": DrawSelectConfiguration(); break;
-                case "Loading": DrawLoading(); break;
                 case "Quit": DrawQuitConfirm(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
                 default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");

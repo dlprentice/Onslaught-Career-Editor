@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Test-only reference retained unchanged from b86b7b9b. Production composition
+// is owned by Client/terrain_compositor.gd; this source is not a live renderer.
 
 using System.Security.Cryptography;
 

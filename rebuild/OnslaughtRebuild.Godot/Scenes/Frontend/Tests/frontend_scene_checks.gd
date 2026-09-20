@@ -43,6 +43,11 @@ func run_checks() -> void:
             if pages[page] == "Debriefing":
                 var report: Control = stage.get_node("Debriefing")
                 if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return
+            if pages[page] == "Loading":
+                var loading: Control = stage.get_node("Loading")
+                if not require(not loading.get("_frame_supplied") and loading.get_node("Caption") is Node2D
+                    and loading.get_node("Caption/Body").has_method("displayed_units"), "Loading must expose the same native fractional caption and frozen facts"): return
+                if not require(loading.view_snapshot().facts == {"loading_frames": 0, "launch_requested": false, "ready": false}, "Editor selection must not advance or request loading"): return
         view.set("EditorPage", 1)
     else:
         if not require(view.get_node("Stage/ClickToStart").visible and not menu.visible, "Runtime frontend must start on its real click page"): return

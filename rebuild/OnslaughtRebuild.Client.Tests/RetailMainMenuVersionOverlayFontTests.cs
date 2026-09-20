@@ -172,7 +172,7 @@ public sealed class RetailMainMenuVersionOverlayFontTests
         Assert.DoesNotContain("RetailMainMenuVersionOverlayFont", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuVersionOverlayFont", choice, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayFont", loading, StringComparison.Ordinal);
         string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
         Assert.DoesNotContain("RetailMainMenuVersionOverlayFont", bar, StringComparison.Ordinal);

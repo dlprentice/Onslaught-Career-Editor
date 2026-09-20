@@ -177,7 +177,7 @@ public sealed class RetailClickToStartProcessHeadTests
 
         Assert.DoesNotContain(
             "RetailClickToStartProcessHead",
-            Slice(flow, "private void DrawLoading()"));
+            NativeLoadingSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcessHead",
             Slice(flow, "private void DrawQuitConfirm()"));

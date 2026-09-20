@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -8,6 +8,7 @@
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/Loading.tscn" id="loading_scene"]
 
 [node name="Frontend" type="Control"]
 layout_mode = 3
@@ -647,46 +648,8 @@ script = ExtResource("2")
 Section = "Configuration.Navigation"
 SourceRect = Rect2(9, 438, 623, 36)
 
-[node name="Loading" type="Control" parent="Stage"]
+[node name="Loading" parent="Stage" instance=ExtResource("loading_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Background" type="TextureRect" parent="Stage/Loading"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-expand_mode = 1
-self_modulate = Color(1, 1, 1, 1)
-script = ExtResource("4")
-
-
-[node name="Caption" type="Control" parent="Stage/Loading"]
-layout_mode = 0
-offset_left = 269.0
-offset_top = 392.5
-offset_right = 449.0
-offset_bottom = 426.5
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Loading.Caption"
-SourceRect = Rect2(269, 392.5, 180, 34)
-
-[node name="Bar" type="Control" parent="Stage/Loading"]
-layout_mode = 0
-offset_left = 78.0
-offset_top = 423.0
-offset_right = 563.0
-offset_bottom = 448.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Loading.Bar"
-SourceRect = Rect2(78, 423, 485, 25)
 
 [node name="Options" parent="Stage" instance=ExtResource("options_scene")]
 visible = false

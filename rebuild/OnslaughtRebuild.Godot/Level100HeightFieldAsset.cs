@@ -13,7 +13,8 @@ internal readonly record struct Level100TerrainTileSelection(
 /// Temporary adapter for the native terrain renderer. It transfers pinned
 /// HFLD bytes once and one camera/selection batch per update. The native owner
 /// controls sampling, smoothing, LOD, stitching, mesh identity and geometry;
-/// existing managed appearance/static-world consumers only read these facts.
+/// the native appearance owner receives its packed selections directly. The
+/// remaining managed static-world consumers only read immutable scalar facts.
 /// Original numerical/provenance comments remain with the unchanged reference
 /// in Scenes/World/Tests/LegacyLevel100HeightFieldReference.cs.
 /// </summary>
@@ -25,7 +26,6 @@ internal sealed class Level100HeightFieldAsset : IDisposable
     public const float PlayerStartZ = Level100Terrain.PlayerStartRetailYFixed / (float)Level100Terrain.FixedPointUnitsPerRetailUnit;
     public const float PlayerStartElevation = Level100Terrain.PlayerStartReferenceElevationMillimeters / 1_000f;
     private readonly RefCounted _native;
-    private readonly List<Level100TerrainTileSelection> _selections = new(4096);
 
     private Level100HeightFieldAsset(RefCounted native)
     {
@@ -97,20 +97,16 @@ internal sealed class Level100HeightFieldAsset : IDisposable
         return result.AsSingle();
     }
 
-    public IReadOnlyList<Level100TerrainTileSelection> Update(Camera3D camera)
+    public void Update(Camera3D camera, Level100TerrainAppearanceAsset appearance, double frameDelta)
     {
         using Variant returned = _native.Call("update", camera.GlobalPosition, -camera.GlobalTransform.Basis.Z);
         using Dictionary result = Result(returned);
-        using Variant selection = result["selections"];
-        int[] facts = selection.AsInt32Array();
-        if (facts.Length != 4096 * 3)
-            throw new InvalidDataException("Native terrain returned an incomplete tile batch.");
-        _selections.Clear();
-        for (int index = 0; index < 4096; index++)
-            _selections.Add(new(index % 64, index / 64, facts[index * 3], facts[index * 3 + 1], facts[index * 3 + 2]));
+        // Geometry has already changed if the following appearance update
+        // fails. Preserve those observable counts before forwarding its batch.
         VertexCount = Read<int>(result, "vertex_count");
         TriangleCount = Read<int>(result, "triangle_count");
-        return _selections;
+        using Variant selection = result["selections"];
+        appearance.UpdateHeightfield(selection, frameDelta);
     }
 
     public void Dispose() => _native.Dispose();

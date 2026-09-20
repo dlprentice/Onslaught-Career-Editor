@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 extends RefCounted
-## Exact byte-processing port of Level100TerrainCompositor.cs. Its pinned LTH1
+## Exact byte-processing port of Scenes/World/Tests/Level100TerrainCompositor.cs.
+## Its pinned LTH1
 ## input is locally materialized retail data, never a public scene resource.
 ## This owner has no files, clock, scene, material or simulation dependencies.
 ## The appearance owner can call render_tile natively for a whole cache update;

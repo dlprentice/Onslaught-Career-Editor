@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-19 (GDScript numerical and parsing foundations; existing behavior boundaries retained)
+Last updated: 2026-09-20 (native terrain cache ordering; existing behavior boundaries retained)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -298,6 +298,15 @@ binary32 stores. It writes the same RGB565 bytes, including the old flat-array
 aliases and partial writes on destination failure. Unsupported texture levels
 are refused before a potentially enormous shifted allocation; valid levels stay
 0 through 4. This is a bounded invalid-input refusal, not a changed LOD decision.
+
+Terrain appearance retains binary64 cloud accumulators and rates, with a
+binary32 store only at the shader uniform. Each update advances phase, resets
+occupancy, processes selected tiles in input order and uploads changed textures
+only after the full traversal succeeds. An alias failure can therefore preserve
+changed CPU bytes and slot owners while leaving GPU contents unchanged. Both the
+explicit tile API and the direct 4,096-record heightfield batch preserve that
+order. Binding keeps the supplied material and unprobed shader identities;
+runtime probes never enter a private faithful import.
 
 The shared presentation binary32 store uses a single-precision Vector3 component
 on the pinned official engine, with the former packed-array store retained as a

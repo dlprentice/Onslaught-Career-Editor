@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-19 (rebuild editor scenes and Godot 4.8 dev6; existing RE and companion evidence retains its stated limits).
+Last updated: 2026-09-20 (native rebuild terrain appearance and Loading; existing RE and companion evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -314,7 +314,9 @@ filesystem, clock, process, network, or GPU dependencies.
 `net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
 selectable Controls and resources before Play. Main-menu rows and native image
 controls expose their layout. Options now has four native pages with selectable
-rows, binding controls, sliders and dropdowns. Debriefing exposes native report
+rows, binding controls, sliders and dropdowns. Loading exposes its background,
+five caption passes and fixed bar; its frozen facts never start a load.
+Debriefing exposes native report
 labels, values, grade artwork and header; the level graph remains a composite
 Control with its drawing code available. Explicit
 editor display properties select frozen states without running simulation,
@@ -325,7 +327,7 @@ pause UI, HUD state/drawing/catalog, frontend session and live camera state now
 run from native scripts and the same production scenes. Audio playback,
 queues, fades and actor attachments now use an authored native audio scene.
 Options state/actions, the shared frontend font/FEBack resources, actor/projectile
-presentation, debriefing, terrain LOD/mesh generation, water and the Sun now have
+presentation, Loading, debriefing, terrain LOD/mesh/texture generation, water and the Sun now have
 native production owners as well. Exact
 component comparisons cover callback interruption/reentry, font pixels,
 transforms/trails and terrain-only Sun occlusion; unresolved retail behavior
@@ -335,6 +337,11 @@ Water adds three inspectable mesh components and external production shaders.
 Its complete isolated-render comparison matches the retained component's RGBA
 bytes; terrain comparisons match every word across twelve mesh updates. These
 are migration checks, not new claims of pristine retail pixel parity.
+Terrain texture composition also matches the fixed root bytes and selected
+higher-level fixtures; native cache checks preserve CPU/GPU contents, update
+failure order and shader/material identity. Loading matches the retained drawing
+law while correcting the old scene proxy's fractional caption placement; the
+text-only difference and unresolved bar appearance are recorded explicitly.
 Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
 focused differential checks. The remaining live simulation, frontend/world

@@ -217,6 +217,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         if (what == NotificationPredelete)
         {
             _cameraState.Dispose();
+            _level100TerrainAppearance?.Dispose();
             _level100Terrain?.Dispose();
         }
     }
@@ -298,9 +299,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera.Size =
             2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
         UpdateCamera(cameraSnapshot);
-        IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
-            _level100Terrain.Update(_camera);
-        _level100TerrainAppearance.Update(terrainSelection, frameDelta);
+        _level100Terrain.Update(_camera, _level100TerrainAppearance, frameDelta);
         _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
         _level100StaticWorld.Animation.Update(frameDelta);
     }

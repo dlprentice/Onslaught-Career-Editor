@@ -204,7 +204,7 @@ public sealed class RetailMainMenuLanguagePitchTests
         Assert.DoesNotContain("RetailMainMenuLanguagePitch", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuLanguagePitch", choice, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLanguagePitch", loading, StringComparison.Ordinal);
         string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
         Assert.DoesNotContain("RetailMainMenuLanguagePitch", bar, StringComparison.Ordinal);

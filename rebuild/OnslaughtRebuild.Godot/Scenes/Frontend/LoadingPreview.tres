@@ -1,0 +1,9 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/loading_preview.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+loading_frames = 0
+launch_requested = false
+ready = false

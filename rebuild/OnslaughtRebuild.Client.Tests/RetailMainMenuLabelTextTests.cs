@@ -193,7 +193,7 @@ public sealed class RetailMainMenuLabelTextTests
         Assert.DoesNotContain("RetailMainMenuLabelText", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuLabelText", choice, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLabelText", loading, StringComparison.Ordinal);
         string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
         Assert.DoesNotContain("RetailMainMenuLabelText", bar, StringComparison.Ordinal);

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-19 (rebuild Godot 4.8 dev6 and production editor scenes; earlier validation retained).
+Last updated: 2026-09-20 (native terrain appearance and Loading checks; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -499,7 +499,31 @@ weakened release assertion is used. Final logs are clean in
 `Scenes/World/TerrainCompositorSceneChecks.tscn`; its two user arguments are fresh
 owned fixture and JSON report paths. Standard Godot runs
 `Scenes/World/terrain_compositor_checks.gd` with that fixture and a fresh report.
-These checks do not yet establish the cache/material integration or performance.
+These compositor checks alone do not establish cache/material integration or performance.
+
+The native terrain appearance owner passed **397 checks** against **39 exact
+ordered snapshots** from eight unchanged C# scenarios. The exporter passed
+**13 checks**. Phase words, CPU/GPU cache bytes, slot ownership, alias failures,
+retry states, both complete 4,096-record APIs, supplied material/shader identity
+and public/private resource round-trips agree. The shader comparison removes
+only the added license line and final newline. Receipts are
+`gdscript-appearance-reference-wv6mqhsr/` and
+`gdscript-appearance-native-fxgx3mvc/` under `local-data/test-runs/`; both console
+logs are clean. The original compositor moved into `Scenes/World/Tests/` without
+logic changes, and the original appearance owner remains beside it.
+
+The appearance editor harness passed **53 checks** in each engine edition.
+It preserves recipe-only public materials and refuses live cache initialization
+in the editor. The standard editor scan still encounters retained C# frontend
+resources and reports 166 ObjectDB instances at shutdown; the .NET run has the
+previously observed custom-harness shutdown diagnostics (205 ObjectDB instances,
+viewport/texture/text RIDs and Canvas items). These are not clean editor exits.
+Receipts are `gdscript-appearance-editor-6rqstmyf/` and
+`gdscript-appearance-editor-mono-7tfxxan6/`. Run
+`Scenes/World/TerrainAppearanceSceneChecks.tscn` in .NET with fresh fixture/report
+user arguments, then standard `Scenes/World/terrain_appearance_checks.gd` with
+that fixture and a fresh report; adding `--editor` selects the inactive-resource
+checks. All output belongs to the invoking worktree's private `local-data/`.
 
 The allocation-free presentation float store passed **299,263 raw-word
 comparisons** against the former packed-array store, including ties, signed zero,
@@ -569,6 +593,55 @@ voices had started instead of four. Both remain the required ordered prefix;
 `FirstFlightGame.SampleSmokeVoiceProgress` and its report explicitly distinguish
 audio-mixer progress from fixed-fps simulation. Mission state remains **Running /
 None**, so this is not full-combat acceptance or an audible-playback result.
+
+The native Loading page passed **165 standard-engine checks**, followed by
+**234 integrated host checks** and **316 isolated rendered checks**. All twenty
+complete RGBA pages match the retained `DrawLoading` renderer: five loading/raw
+UTF-16 cases at 640×480, 1280×720, 801×601 and 320×240. The old composed frontend
+had snapped away the source caption's `393.5` vertical anchor. Loading now uses
+an authored Node2D origin to preserve that existing value; comparison with the
+old composition finds text-only pixel differences, explicitly recorded in
+`loading-baseline-3m4xxuni/render.log`. This corrects the scene wrapper, not the
+unresolved retail progress-bar behavior. The fixed black bar, two-frame request,
+ready handoff and root-hide ordering remain unchanged. Final runtime receipts
+are `loading-native-917fgaad/` and `loading-integrated-gp6txn4l/` under
+`local-data/test-runs/`; logs are clean apart from the isolated Xvfb driver's
+input-method/VSync warnings. These software-rendered comparisons establish no
+normal GPU, physical-input or audible-playback result.
+
+Loading passed **166 editor checks** in standard Godot. The full frontend's
+.NET editor selector also passed all ten pages, checking Loading's frozen facts,
+authored layout, pointer safety and public serialization. Both retain the
+custom editor-harness shutdown diagnostics: 166 ObjectDB instances in the
+standard run, 205 in .NET, plus Canvas, viewport, texture and text RIDs. No clean
+editor exit is claimed. Receipts are in `loading-editor-final-w3epra0x/` under
+`local-data/test-runs/`. The related Client selection passed **39/39**, with zero
+failures or skips: thirty Loading/source guards and nine terrain compositor,
+ambient and macro-cache checks (`loading-client-34tteit_/results/loading-client.trx`).
+
+The combined terrain appearance/Loading integration passed the supported .NET
+build and private scene import with zero warnings/errors
+(`gdscript-terrain-loading-build-e.log`). The regenerated Level 100 passed
+**24,134 world checks** with a clean log
+(`gdscript-terrain-loading-world-check-a.log`). The application smoke passed
+**2,148 steps**, thirteen unchanged ordered deliveries/queues, fresh retry and
+world release at MainMenu (`terrain-loading-smoke-o1oxik06/run/`). Its actual
+recording is byte-identical to the preceding milestone: SHA-256
+`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+Two Headless replays verify the embedded trace and final-state expectations
+unchanged, with no divergence (`terrain-loading-replay-yafz8_rw/replay.log`).
+The audio-mixer observation reached nine voices, still the same ordered prefix;
+it is not fixed-step simulation or an audible-playback check. Runtime logs are
+clean. Mission state remains **Running / None**, with zero destroyed targets;
+full combat acceptance is still open. These receipts are worktree-owned beneath
+`local-data/test-runs/` and consume the canonical lab read-only.
+
+Run standard `Scenes/Frontend/Tests/loading_scene_checks.gd` with
+`--headless --script`, adding `--editor` for its frozen-resource checks. The .NET
+`Scenes/Frontend/Tests/LoadingSceneChecks.tscn -- --skipfmv` checks the live host;
+`--loading-render-dir=/absolute/owned/local-data/path` enables rendered comparisons
+only when the caller provides an isolated display. `--loading-baseline` also
+measures the retained old composition. No test chooses the physical display.
 
 Run `res://Scenes/Shared/retail_float32_checks.gd` with the standard engine's
 `--headless --script` options for the focused binary32 store check. The .NET
