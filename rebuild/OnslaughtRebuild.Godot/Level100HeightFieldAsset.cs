@@ -26,6 +26,7 @@ internal sealed class Level100HeightFieldAsset : IDisposable
     public const float PlayerStartZ = Level100Terrain.PlayerStartRetailYFixed / (float)Level100Terrain.FixedPointUnitsPerRetailUnit;
     public const float PlayerStartElevation = Level100Terrain.PlayerStartReferenceElevationMillimeters / 1_000f;
     private readonly RefCounted _native;
+    internal RefCounted NativeOwner => _native;
 
     private Level100HeightFieldAsset(RefCounted native)
     {
@@ -57,6 +58,12 @@ internal sealed class Level100HeightFieldAsset : IDisposable
     public ArrayMesh Mesh { get; }
     public int VertexCount { get; private set; }
     public int TriangleCount { get; private set; }
+
+    internal void SynchronizePresentationCounts(int vertices, int triangles)
+    {
+        VertexCount = vertices;
+        TriangleCount = triangles;
+    }
     public byte MixerSet { get; }
     public byte SkyCube { get; }
     public byte DetailTexture { get; }

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using Godot;
 using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
@@ -13,8 +12,6 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class CameraBridgeChecks : Node
 {
     private int _checks;
-    private static readonly FieldInfo BridgeField = typeof(FirstFlightWorldView)
-        .GetField("_cameraState", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     public override async void _Ready()
     {
@@ -29,10 +26,14 @@ public sealed partial class CameraBridgeChecks : Node
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
             AddChild(viewport);
             var world = FirstFlightWorldView.InstantiateScene();
-            var bridge = (GdCameraState)BridgeField.GetValue(world)!;
+            Node presentation = world.GetNode("WorldPresentation");
+            using var bridge = new GdCameraState(presentation);
             Camera3D camera = world.GetNode<Camera3D>("RetailOpeningAndFirstPersonCamera");
             Transform3D authored = camera.Transform;
             Check(!bridge.IsInitialized, "Instantiating the production scene creates no live native camera owner.");
+            Expect<InvalidOperationException>(() => _ = bridge.SelectedSnapshot,
+                "An uninitialized borrowed observer cannot lazily create the production camera.");
+            Check(!bridge.IsInitialized, "The refused observer read leaves the world frozen.");
             viewport.AddChild(world);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(!bridge.IsInitialized && camera.Transform == authored,
@@ -45,6 +46,13 @@ public sealed partial class CameraBridgeChecks : Node
             reference.Advance(basis, basis);
             CompareConsumer(world, bridge, camera, expectedCamera, reference.Sample(0f), engineReference);
             Check(bridge.IsInitialized && !bridge.IsDisposed, "Explicit world initialization starts the native camera owner.");
+            using (var temporary = new GdCameraState(presentation))
+            {
+                string hash = temporary.ComputeCameraHash();
+                temporary.Dispose();
+                Check(temporary.IsDisposed && !temporary.IsInitialized && bridge.ComputeCameraHash() == hash,
+                    "Disposing one borrowed observer leaves the production camera and another observer intact.");
+            }
             string originalCoreHash = StateHasher.ComputeHex(basis);
 
             WorldSnapshot previous = basis;

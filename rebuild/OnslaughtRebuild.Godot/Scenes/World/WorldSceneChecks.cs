@@ -22,6 +22,13 @@ public sealed partial class WorldSceneChecks : Node
             Input.MouseModeEnum pointer = Input.MouseMode;
             string initialHash = StateHasher.ComputeHex(session.CurrentSnapshot);
             var production = FirstFlightWorldView.InstantiateScene();
+            Node presentation = production.GetNode("WorldPresentation");
+            using (Variant script = presentation.GetScript())
+                Check(script.As<Script>().ResourcePath == "res://Scenes/World/world_presentation.gd",
+                    "The imported scene contains the actual native world presentation owner.");
+            Check(presentation.Get("_camera_state").VariantType == Variant.Type.Nil &&
+                !presentation.IsProcessing() && !presentation.IsProcessingInput(),
+                "Inspecting the authored world does not initialize a camera, clock or input owner.");
             Node[] authored = Descendants(production).ToArray();
             Check(authored.Length > 200, "World has an inspectable hierarchy before initialization.");
             Check(authored.OfType<MeshInstance3D>().Count(node => node.Mesh is not null) > 70,
@@ -63,6 +70,9 @@ public sealed partial class WorldSceneChecks : Node
             _comparedMaterials.Clear();
             _comparedTextures.Clear();
             production.Initialize(session.CurrentSnapshot);
+            Check(production.GetNode("WorldPresentation") == presentation &&
+                presentation.Get("_camera_state").VariantType == Variant.Type.Object,
+                "Explicit binding configures the authored native owner without replacing it.");
             Check(Descendants(production).Count() == countBefore, "Binding does not build a second world.");
             Check(production.GetNode<MeshInstance3D>("RetailLevel100HeightField").Mesh == terrain,
                 "Runtime LOD updates the same authored terrain resource.");

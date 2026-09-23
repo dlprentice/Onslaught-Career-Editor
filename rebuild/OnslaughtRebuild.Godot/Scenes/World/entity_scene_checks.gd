@@ -2,6 +2,7 @@
 extends SceneTree
 const Owner = preload("res://Scenes/World/world_entities.gd")
 const Scene = preload("res://Scenes/World/EntityPresentation.tscn")
+const WorldPresentationScene = preload("res://Scenes/World/WorldPresentation.tscn")
 const Target = preload("res://Client/target_presentation.gd")
 const Float32 = preload("res://Core/retail_float24.gd")
 const TexturePage = preload("res://Scenes/Shared/retail_texture_page.gd")
@@ -27,6 +28,22 @@ func _run() -> void:
 	world.add_child(camera)
 	var owner: Owner = Scene.instantiate()
 	world.add_child(owner)
+	var controller: Node = WorldPresentationScene.instantiate()
+	world.add_child(controller)
+	_check(controller.get_script().resource_path == "res://Scenes/World/world_presentation.gd",
+		"Authored world controller retains its production script")
+	_check(not controller.is_processing() and not controller.is_physics_processing() and not controller.is_processing_input(),
+		"Inspecting the world controller does not schedule rendering, physics or input")
+	_check(controller.get("_camera_state") == null and not controller.get("_configured"),
+		"Tree entry creates no camera or world state owner")
+	var refusal: Dictionary = controller.call("configure", null, null)
+	_check(not refusal.ok and refusal.error_type == ("InvalidOperationException" if Engine.is_editor_hint() else "ArgumentException"),
+		"Editor guard precedes even configuration admission")
+	_check(not controller.call("render_frame", {}).ok and not controller.call("queue_weapon_events", [1]).ok,
+		"An inspected controller cannot render or queue weapon effects")
+	var frozen: Dictionary = controller.call("host_snapshot")
+	_check(frozen.particle_seconds_bits == 0 and frozen.pending_muzzles == 0 and not frozen.show_hud,
+		"Refused operations leave the uninitialized clocks and gates frozen")
 	_check(owner.get_node("Definitions/PulseBolt/PulseBoltSprite").mesh is QuadMesh, "Authored pulse geometry exists before configuration")
 	_check(owner.get_node("Definitions/PulseBolt/PulseBoltHalo").mesh.size == Vector2(0.6, 0.6), "Authored halo size")
 	_check(owner.get_node("Definitions/PulseBolt/PulseBoltEnergyTrail").mesh.radial_segments == 20, "Authored energy cylinder")
@@ -49,6 +66,8 @@ func _run() -> void:
 		await process_frame
 		_check(world.get_child_count() == children_before, "Editor frames create no actors, projectiles or effects")
 		_check(owner.get_node("Definitions/MuzzleFlash/Lifetime").is_stopped(), "Editor frames leave authored effect time frozen")
+		_check(controller.get("_camera_state") == null and controller.call("host_snapshot") == frozen,
+			"Editor frames keep the native world controller entirely uninitialized")
 	else:
 		_check(not owner.diagnostic_snapshot().configured, "Opening the scene creates no live frame owner")
 		var result: Variant = _runtime(owner, world, camera, assets)

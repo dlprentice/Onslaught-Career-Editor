@@ -124,10 +124,16 @@ public sealed class Level100EngineViewpointStateTests
         string source = File.ReadAllText(Path.Combine(
             AppContext.BaseDirectory, "godot-effects-source",
             "FirstFlightWorldView.cs"));
+        string bridge = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-effects-source",
+            "FirstFlightWorldView.Presentation.cs"));
+        string owner = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-effects-source",
+            "world_presentation.gd"));
 
         Assert.Contains(
-            "Level100MissionTiming.ReleasedEventFrameTicks,\n        RetailNearPlane,\n        RetailFarPlane);",
-            source,
+            "[\"control_view_handoff_lead_ticks\"] = Level100MissionTiming.ReleasedEventFrameTicks,",
+            bridge,
             StringComparison.Ordinal);
         Assert.Contains(
             "private const float RetailNearPlane = 0.1f;",
@@ -138,22 +144,29 @@ public sealed class Level100EngineViewpointStateTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_cameraState.SampleAndBind(interpolationAlpha);",
-            source,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("Level100EngineViewpointState _engineViewpointState", source, StringComparison.Ordinal);
-        Assert.Contains("_cameraState.SelectedSnapshot;", source, StringComparison.Ordinal);
-        Assert.Contains(
-            "Near = selectedViewpoint.NearPlane,",
-            source,
+            "[\"near_bits\"] = (long)BitConverter.SingleToUInt32Bits(RetailNearPlane),",
+            bridge,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Far = selectedViewpoint.FarPlane,",
+            "[\"far_bits\"] = (long)BitConverter.SingleToUInt32Bits(RetailFarPlane),",
+            bridge,
+            StringComparison.Ordinal);
+        Assert.Contains("config.near_bits, config.far_bits", owner, StringComparison.Ordinal);
+        Assert.Contains("_call_checked(_camera_state, \"sample_and_bind\", [alpha_bits], \"camera\")", owner, StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100EngineViewpointState _engineViewpointState", source + bridge, StringComparison.Ordinal);
+        Assert.Contains("stage.viewpoint = result.value.viewpoint", owner, StringComparison.Ordinal);
+        Assert.Contains("var selected_viewpoint: Dictionary = stage.viewpoint", owner, StringComparison.Ordinal);
+        Assert.Contains(
+            "Near = RetailNearPlane,",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;",
+            "Far = RetailFarPlane,",
             source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_camera.size = F.value(F.value(F.value(2.0 * Words.read_word(selected_viewpoint.near_plane_bits)) * 0.75) * Words.read_word(camera_snapshot.zoom_bits))",
+            owner,
             StringComparison.Ordinal);
         Assert.DoesNotContain("Near = 0.1f,", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Far = 700f,", source, StringComparison.Ordinal);

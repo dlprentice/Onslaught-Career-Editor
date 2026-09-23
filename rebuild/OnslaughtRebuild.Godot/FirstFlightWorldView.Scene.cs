@@ -50,6 +50,8 @@ public sealed partial class FirstFlightWorldView
         _entityPresentation = GetNode("EntityPresentation");
         BuildPulseCannonPresentation();
         ConfigureEntityPresentation(snapshot);
+        _worldPresentation = GetNode("WorldPresentation");
+        ConfigureWorldPresentation();
         UpdateRetailPixelCentreOffset();
     }
 

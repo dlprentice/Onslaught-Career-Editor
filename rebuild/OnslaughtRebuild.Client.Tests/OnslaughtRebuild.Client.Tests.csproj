@@ -276,8 +276,8 @@
     <!-- ParticleQuadSizeConventionTests reads the effect construction sites to
          check every sprite size is an authored Radius taken through the one
          owner. It cannot instantiate the Godot type, so it asserts on source. -->
-    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightWorldView.cs"
-             Link="godot-effects-source\FirstFlightWorldView.cs"
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightWorldView.cs;..\OnslaughtRebuild.Godot\FirstFlightWorldView.Presentation.cs;..\OnslaughtRebuild.Godot\Scenes\World\world_presentation.gd"
+             Link="godot-effects-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

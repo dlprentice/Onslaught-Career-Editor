@@ -96,7 +96,7 @@ public sealed partial class EntityBridgeChecks : Node
                 foreach (float alpha in new[] { 0f, 0.25f, 0.5f, 1f })
                 {
                     int callbacks = 0;
-                    using Dictionary facts = FirstFlightWorldView.EntityFrameFacts(previous, current, alpha,
+                    using Dictionary facts = EntityFrameFacts(previous, current, alpha,
                         resetJump: step == 12, pendingMuzzles: 0);
                     Callable stage = Callable.From<Array, Dictionary>(feet =>
                     {
@@ -116,7 +116,7 @@ public sealed partial class EntityBridgeChecks : Node
                 previous = current;
             }
             // Reference-equal snapshots deliberately suppress previous joins.
-            using (Dictionary same = FirstFlightWorldView.EntityFrameFacts(previous, previous, 0.5f, false, 0))
+            using (Dictionary same = EntityFrameFacts(previous, previous, 0.5f, false, 0))
             {
                 Check(same["same_snapshot"].AsBool() && same["previous_targets"].AsGodotArray().Count == 0 &&
                     same["previous_projectiles"].AsGodotArray().Count == 0 && same["previous_feet"].VariantType == Variant.Type.Nil,
@@ -366,13 +366,52 @@ public sealed partial class EntityBridgeChecks : Node
         }
     }
 
+    // Retained pre-controller host fixture from FirstFlightWorldView.Entities
+    // at 1bb29345. Production now submits raw snapshot facts to its native
+    // world owner; this conversion remains only as an independent leaf oracle.
+    private static Dictionary EntityFrameFacts(WorldSnapshot previous, WorldSnapshot current,
+        float alpha, bool resetJump, int pendingMuzzles)
+    {
+        Array currentFeet = EntityVectors(FootOffsets(current));
+        Variant previousFeet = default;
+        bool same = ReferenceEquals(previous, current);
+        if (!resetJump && !same && previous.WalkerFeet.Count == current.WalkerFeet.Count)
+            previousFeet = EntityVectors(FootOffsets(previous));
+        return new Dictionary
+        {
+            ["alpha_bits"] = (long)BitConverter.SingleToUInt32Bits(alpha),
+            ["same_snapshot"] = same, ["current_feet"] = currentFeet,
+            ["previous_feet"] = previousFeet,
+            ["previous_targets"] = same ? new Array() : FirstFlightWorldView.EntityTargetFacts(previous.Targets),
+            ["current_targets"] = FirstFlightWorldView.EntityTargetFacts(current.Targets),
+            ["previous_projectiles"] = same ? new Array() : FirstFlightWorldView.EntityProjectileFacts(previous.Projectiles),
+            ["current_projectiles"] = FirstFlightWorldView.EntityProjectileFacts(current.Projectiles),
+            ["pending_muzzles"] = pendingMuzzles,
+        };
+    }
+
+    private static Array EntityVectors(IEnumerable<Vector3> values)
+    {
+        var result = new Array();
+        foreach (Vector3 value in values)
+            result.Add(new Dictionary { ["x_bits"] = (long)BitConverter.SingleToUInt32Bits(value.X),
+                ["y_bits"] = (long)BitConverter.SingleToUInt32Bits(value.Y), ["z_bits"] = (long)BitConverter.SingleToUInt32Bits(value.Z) });
+        return result;
+    }
+
     private static Vector3[] FootOffsets(WorldSnapshot snapshot)
     {
+        if (snapshot.WalkerFeet.Count != 4)
+            throw new InvalidDataException("Core did not expose four Aquila foot contacts.");
         var result = new Vector3[4];
         foreach (WalkerFootContactSnapshot foot in snapshot.WalkerFeet)
+        {
+            if (foot.Id < 0 || foot.Id >= result.Length)
+                throw new InvalidDataException($"Core exposed unknown Aquila foot {foot.Id}.");
             result[foot.Id] = new((foot.Position.X - snapshot.PlayerPosition.X) * 0.001f,
                 (foot.GroundElevationMillimeters + foot.LiftMillimeters - snapshot.PlayerGroundElevationMillimeters) * 0.001f,
                 -(foot.Position.Z - snapshot.PlayerPosition.Z) * 0.001f);
+        }
         return result;
     }
     private static Level100ActorSnapshot Actor(int index, int step)

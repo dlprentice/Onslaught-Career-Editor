@@ -50,49 +50,6 @@ public sealed partial class FirstFlightWorldView
         StoreEntityCounts(result);
     }
 
-    private void RenderEntities(WorldSnapshot previous, WorldSnapshot current, float alpha,
-        bool resetJump, Action<Vector3[]> aquilaStage)
-    {
-        using Dictionary facts = EntityFrameFacts(previous, current, alpha, resetJump,
-            _pendingPulseCannonMuzzleFlashes);
-        Exception? hostFailure = null;
-        Callable callback = Callable.From<Array, Dictionary>(feet =>
-        {
-            try
-            {
-                if (feet.Count != 4) throw new InvalidDataException("Native Aquila contacts are incomplete.");
-                var contacts = new Vector3[feet.Count];
-                for (int index = 0; index < feet.Count; index++)
-                {
-                    using Variant value = feet[index];
-                    using Dictionary contact = value.AsGodotDictionary();
-                    contacts[index] = EntityVector(contact);
-                }
-                aquilaStage(contacts);
-                return new Dictionary { ["ok"] = true };
-            }
-            catch (Exception error)
-            {
-                hostFailure = error;
-                return new Dictionary { ["ok"] = false, ["error_type"] = error.GetType().Name,
-                    ["error"] = error.Message };
-            }
-        });
-        using Variant factValues = facts;
-        using Variant nativeResult = _entityPresentation.Call("render_frame", factValues, callback);
-        // Preserve a partial muzzle decrement if a later actor/projectile stage
-        // refuses the frame. An aborted GDScript function is never success.
-        if (nativeResult.VariantType == Variant.Type.Dictionary)
-        {
-            using Dictionary partial = nativeResult.AsGodotDictionary();
-            if (partial.TryGetValue("pending_muzzles", out Variant count))
-                using (count) _pendingPulseCannonMuzzleFlashes = checked((int)count.AsInt64());
-        }
-        if (hostFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(hostFailure).Throw();
-        using Dictionary result = EntityResult(nativeResult);
-        StoreEntityCounts(result);
-    }
-
     private void StoreEntityCounts(Dictionary result)
     {
         using Variant targets = result["target_count"];
@@ -101,30 +58,6 @@ public sealed partial class FirstFlightWorldView
         _targetVisualCount = checked((int)targets.AsInt64());
         _projectileVisualCount = checked((int)projectiles.AsInt64());
         _targetSurfaceCount = checked((int)surfaces.AsInt64());
-    }
-
-    internal static Dictionary EntityFrameFacts(WorldSnapshot previous, WorldSnapshot current,
-        float alpha, bool resetJump, int pendingMuzzles)
-    {
-        // Current feet are admitted first, then previous feet only through the
-        // original reset/reference/count gates. Int32 offset arithmetic remains
-        // explicit here; the native owner performs their float32 interpolation.
-        Array currentFeet = EntityVectors(ToFootOffsets(current));
-        Variant previousFeet = default;
-        bool same = ReferenceEquals(previous, current);
-        if (!resetJump && !same && previous.WalkerFeet.Count == current.WalkerFeet.Count)
-            previousFeet = EntityVectors(ToFootOffsets(previous));
-        return new Dictionary
-        {
-            ["alpha_bits"] = (long)BitConverter.SingleToUInt32Bits(alpha),
-            ["same_snapshot"] = same, ["current_feet"] = currentFeet,
-            ["previous_feet"] = previousFeet,
-            ["previous_targets"] = same ? new Array() : EntityTargetFacts(previous.Targets),
-            ["current_targets"] = EntityTargetFacts(current.Targets),
-            ["previous_projectiles"] = same ? new Array() : EntityProjectileFacts(previous.Projectiles),
-            ["current_projectiles"] = EntityProjectileFacts(current.Projectiles),
-            ["pending_muzzles"] = pendingMuzzles,
-        };
     }
 
     internal static Array EntityTargetFacts(IReadOnlyList<TargetSnapshot> targets)
@@ -153,33 +86,22 @@ public sealed partial class FirstFlightWorldView
         return result;
     }
 
-    private static Array EntityProjectileFacts(IReadOnlyList<ProjectileSnapshot> projectiles)
+    internal static Array EntityProjectileFacts(IReadOnlyList<ProjectileSnapshot> projectiles)
     {
         var result = new Array();
-        foreach (ProjectileSnapshot item in projectiles)
+        foreach (ProjectileSnapshot? item in projectiles)
+        {
+            if (item is null) { result.Add(default(Variant)); continue; }
             result.Add(new Dictionary { ["id"] = item.Id, ["kind"] = (int)item.Kind,
                 ["x"] = item.Position.X, ["z"] = item.Position.Z, ["elevation"] = item.ElevationMillimeters,
                 ["velocity_x"] = item.Velocity.X, ["velocity_z"] = item.Velocity.Z,
                 ["vertical_velocity"] = item.VerticalVelocityMillimetersPerTick, ["remaining_ticks"] = item.RemainingTicks });
+        }
         return result;
     }
 
     private static Variant TextUnits(string? value) => value is null
         ? default : Variant.From(value.Select(character => (int)character).ToArray());
-
-    private static Array EntityVectors(IEnumerable<Vector3> values)
-    {
-        var result = new Array();
-        foreach (Vector3 value in values)
-            result.Add(new Dictionary { ["x_bits"] = (long)BitConverter.SingleToUInt32Bits(value.X),
-                ["y_bits"] = (long)BitConverter.SingleToUInt32Bits(value.Y), ["z_bits"] = (long)BitConverter.SingleToUInt32Bits(value.Z) });
-        return result;
-    }
-
-    private static Vector3 EntityVector(Dictionary value) => new(
-        BitConverter.UInt32BitsToSingle(checked((uint)value["x_bits"].AsInt64())),
-        BitConverter.UInt32BitsToSingle(checked((uint)value["y_bits"].AsInt64())),
-        BitConverter.UInt32BitsToSingle(checked((uint)value["z_bits"].AsInt64())));
 
     private static Dictionary EntityResult(Variant result)
     {

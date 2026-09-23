@@ -1375,100 +1375,147 @@ internal sealed record Level100StaticWorldAnimationBinding(
 /// because the released selection through <c>VHFM</c> is a table lookup per
 /// virtual frame, not a curve.</para>
 /// </summary>
-internal sealed class Level100StaticWorldAnimationDriver(
-    int framesPerSecond,
-    IReadOnlyList<Level100StaticWorldAnimationBinding> bindings)
+internal sealed class Level100StaticWorldAnimationDriver : IDisposable
 {
-    private readonly int[] _shownFrames = new int[bindings.Count];
-    private double _elapsedSeconds;
+    private const string ScriptPath = "res://Scenes/World/static_world_animation.gd";
+    private RefCounted? _nativeOwner;
 
-    public int BindingCount => bindings.Count;
+    public Level100StaticWorldAnimationDriver(
+        int framesPerSecond,
+        IReadOnlyList<Level100StaticWorldAnimationBinding> bindings)
+    {
+        // Preserve the original constructor's null-list failure. Tracks become
+        // an immutable native batch; nodes remain borrowed scene identities.
+        BindingCount = bindings.Count;
+        FramesPerSecond = framesPerSecond;
+        using Godot.Collections.Array rows = new();
+        foreach (Level100StaticWorldAnimationBinding? binding in bindings)
+        {
+            if (binding is null)
+            {
+                rows.Add(default);
+                continue;
+            }
+            using Godot.Collections.Dictionary row = new();
+            if (binding.Mesh is { } mesh)
+            {
+                using Godot.Collections.Dictionary meshFacts = new()
+                {
+                    ["playback"] = (int)mesh.Playback,
+                    ["loop_frame_count"] = mesh.LoopFrameCount,
+                };
+                row["mesh"] = meshFacts;
+            }
+            else row["mesh"] = default;
+            if (binding.Part is { } part)
+            {
+                using Godot.Collections.Dictionary partFacts = new();
+                if (part.Frames is { } frames)
+                {
+                    using Godot.Collections.Array frameFacts = new();
+                    foreach (Level100RigidFrame frame in frames)
+                    {
+                        using Godot.Collections.Dictionary item = FrameFacts(frame);
+                        frameFacts.Add(item);
+                    }
+                    partFacts["frames"] = frameFacts;
+                }
+                else partFacts["frames"] = default;
+                row["part"] = partFacts;
+            }
+            else row["part"] = default;
+            row["node"] = binding.Node;
+            rows.Add(row);
+        }
+        using GDScript script = GD.Load<GDScript>(ScriptPath);
+        using Variant batch = Variant.From(rows);
+        using Variant returned = script.Call("create", framesPerSecond, batch);
+        using Godot.Collections.Dictionary result = Checked(returned);
+        using Variant value = result["value"];
+        _nativeOwner = value.As<RefCounted>()
+            ?? throw new InvalidOperationException("Static animation did not create its native owner.");
+    }
+
+    public int BindingCount { get; }
+
+    /// <summary>The manifest's own virtual-frame rate, without a selected default.</summary>
+    public int FramesPerSecond { get; }
 
     /// <summary>
-    /// Virtual frames per second, straight from the manifest's own
-    /// <c>framesPerSecond</c>. No rate is chosen here.
+    /// The sole mutable animation owner. The production native world controller
+    /// retains this owner and calls it once after water, without a per-binding
+    /// or per-frame managed callback. This adapter owns only its managed handle.
     /// </summary>
-    public int FramesPerSecond { get; } = framesPerSecond;
+    public RefCounted NativeOwner => _nativeOwner
+        ?? throw new ObjectDisposedException(nameof(Level100StaticWorldAnimationDriver));
 
     public void Update(float frameDelta)
     {
-        if (!float.IsFinite(frameDelta) || frameDelta <= 0f)
-        {
-            return;
-        }
-
-        // Wrap on the longest lap present so the accumulator cannot drift into
-        // the range where a double loses whole-frame resolution during a long
-        // session. Every lap length divides evenly into its own modulus, so this
-        // never shifts a mesh's phase.
-        _elapsedSeconds += frameDelta;
-        double period = LongestLapSeconds();
-        if (period > 0d && _elapsedSeconds >= period)
-        {
-            _elapsedSeconds %= period;
-        }
-
-        for (int index = 0; index < bindings.Count; index++)
-        {
-            Level100StaticWorldAnimationBinding binding = bindings[index];
-            int frame = binding.Mesh.SelectVirtualFrame(_elapsedSeconds, FramesPerSecond);
-            if (frame == _shownFrames[index])
-            {
-                continue;
-            }
-
-            _shownFrames[index] = frame;
-            binding.Node.Transform = ToObjSpaceTransform(binding.Part.Frames[frame]);
-        }
+        using Variant returned = NativeOwner.Call("update", frameDelta);
+        using Godot.Collections.Dictionary result = Checked(returned);
     }
 
     /// <summary>
-    /// One released delta into a Godot <see cref="Transform3D"/>, applied in OBJ
-    /// space with no conversion.
-    ///
-    /// <para><c>basis</c> is nine floats ROW-major
-    /// (<c>cmsh_static_preview.py:1084</c> flattens <c>obj_rows</c> row by row,
-    /// under the storage convention stated at <c>:901-902</c>). Godot's
-    /// three-vector constructor takes COLUMNS - the shipped
-    /// <c>GodotSharp.dll</c> names its parameters
-    /// <c>column0, column1, column2</c> - so the rows are transposed into
-    /// columns here. Passing them straight through would build the transpose,
-    /// which for a rotation is its inverse: every dish would spin backwards.</para>
+    /// One released delta into a Godot <see cref="Transform3D"/>, in OBJ space.
+    /// <c>cmsh_static_preview.py:1084</c> flattens ROW-major values under the
+    /// convention at :901-902. Godot's Basis constructor takes COLUMNS. The
+    /// native primitive decoder retains that exact row-to-column mapping and
+    /// every float word; this is an import-time facade, not a second pose law.
     /// </summary>
     public static Transform3D ToObjSpaceTransform(Level100RigidFrame frame)
     {
-        float[] basis = frame.Basis;
-        return new Transform3D(
-            new Basis(
-                new Vector3(basis[0], basis[3], basis[6]),
-                new Vector3(basis[1], basis[4], basis[7]),
-                new Vector3(basis[2], basis[5], basis[8])),
-            new Vector3(frame.Origin[0], frame.Origin[1], frame.Origin[2]));
+        using GDScript script = GD.Load<GDScript>(ScriptPath);
+        using Godot.Collections.Dictionary facts = FrameFacts(frame);
+        using Variant argument = Variant.From(facts);
+        using Variant returned = script.Call("to_obj_space_transform", argument);
+        using Godot.Collections.Dictionary result = Checked(returned);
+        using Variant value = result["value"];
+        return value.AsTransform3D();
     }
 
-    private double LongestLapSeconds()
+    public void Dispose()
     {
-        long lapFrames = 1;
-        foreach (Level100StaticWorldAnimationBinding binding in bindings)
+        _nativeOwner?.Dispose();
+        _nativeOwner = null;
+    }
+
+    private static Godot.Collections.Dictionary FrameFacts(Level100RigidFrame frame) => new()
+    {
+        ["basis_bits"] = frame.Basis is null ? default : Variant.From(
+            frame.Basis.Select(value => (long)BitConverter.SingleToUInt32Bits(value)).ToArray()),
+        ["origin_bits"] = frame.Origin is null ? default : Variant.From(
+            frame.Origin.Select(value => (long)BitConverter.SingleToUInt32Bits(value)).ToArray()),
+    };
+
+    private static Godot.Collections.Dictionary Checked(Variant returned)
+    {
+        if (returned.VariantType != Variant.Type.Dictionary)
+            throw new InvalidOperationException("Static animation aborted without a completion result.");
+        Godot.Collections.Dictionary result = returned.AsGodotDictionary();
+        if (result.TryGetValue("ok", out Variant ok))
         {
-            if (binding.Mesh.LoopFrameCount > 0)
+            using (ok)
+                if (ok.VariantType == Variant.Type.Bool && ok.AsBool()) return result;
+        }
+        using (result)
+        {
+            if (!result.ContainsKey("error_type") || !result.ContainsKey("error"))
+                throw new InvalidOperationException("Static animation returned an incomplete failure result.");
+            using Variant type = result["error_type"];
+            using Variant error = result["error"];
+            using Variant parameter = result["parameter"];
+            string message = error.AsString();
+            throw type.AsString() switch
             {
-                lapFrames = Lcm(lapFrames, binding.Mesh.LoopFrameCount);
-            }
+                "NullReferenceException" => new NullReferenceException(message),
+                "IndexOutOfRangeException" => new IndexOutOfRangeException(message),
+                "ArgumentOutOfRangeException" => new ArgumentOutOfRangeException(parameter.AsString(), message),
+                "ArgumentException" => new ArgumentException(message, parameter.AsString()),
+                "ObjectDisposedException" => new ObjectDisposedException(nameof(MeshInstance3D), message),
+                "OverflowException" => new OverflowException(message),
+                "InvalidOperationException" => new InvalidOperationException(message),
+                _ => new InvalidDataException(message),
+            };
         }
-
-        return lapFrames / (double)FramesPerSecond;
-    }
-
-    private static long Lcm(long left, long right)
-    {
-        long a = left;
-        long b = right;
-        while (b != 0)
-        {
-            (a, b) = (b, a % b);
-        }
-
-        return left / a * right;
     }
 }

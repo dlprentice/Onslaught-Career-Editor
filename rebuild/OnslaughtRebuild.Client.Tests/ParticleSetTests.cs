@@ -983,7 +983,11 @@ public sealed class ParticleSetTests
         Assert.Contains("width * 0.5", trailUpdater, StringComparison.Ordinal);
         Assert.Contains("surface.add_vertex", trailUpdater, StringComparison.Ordinal);
         string world = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
-        Assert.Contains("RenderEntities(previous, current, interpolationAlpha", world, StringComparison.Ordinal);
+        string controller = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_presentation.gd"));
+        Assert.Contains("WorldFrameFacts(previous, current, interpolationAlpha, frameDelta, failures)", world, StringComparison.Ordinal);
+        Assert.Contains("_worldPresentation.Call(\"render_frame\", batch)", world, StringComparison.Ordinal);
+        Assert.Contains("_aquila_stage.bind(previous, current, player_yaw, frame_delta, batch.alpha_bits, stage)", controller, StringComparison.Ordinal);
+        Assert.Contains("_call_checked(_entities, \"render_frame\", [entity_batch.value, callback], \"entity presentation\")", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("Level100ProjectileTrailHistory", world, StringComparison.Ordinal);
         Assert.DoesNotContain("Level100RenderInterpolation.Interpolate", world, StringComparison.Ordinal);
 
@@ -1067,13 +1071,21 @@ public sealed class ParticleSetTests
             "public void ConsumeLevel100WeaponFireEvents(",
             "private void BuildEnvironment()");
         Assert.Contains(
-            "if (item.Weapon == Level100PlayerWeapon.PulseCannonPod)",
+            "weapons.Add(item is null ? default(Variant) : (int)item.Weapon);",
             fireEvents,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes++;",
+            "_worldPresentation.Call(\"queue_weapon_events\", batch)",
             fireEvents,
             StringComparison.Ordinal);
+        string controller = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_presentation.gd"));
+        string queueEvents = RequireSection(controller, "func queue_weapon_events(", "func host_snapshot()");
+        Assert.Equal(1, (int)Level100PlayerWeapon.PulseCannonPod);
+        Assert.Contains("PULSE_CANNON_POD: int = 1", controller, StringComparison.Ordinal);
+        Assert.Contains("if weapon == PULSE_CANNON_POD:", queueEvents, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = _wrap_i32(_pending_muzzles + 1)", queueEvents, StringComparison.Ordinal);
+        Assert.Contains("\"pending_muzzles\": _pending_muzzles", controller, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = rendered.pending_muzzles", controller, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "MechTwinVulcanCannon",
             fireEvents,

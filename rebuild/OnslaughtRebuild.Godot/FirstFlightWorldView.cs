@@ -9,8 +9,6 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
-    private const float RetailWalkerCenterOfGravityHeight =
-        Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     // 2*atan(0.75), from the released binary rather than from fitting.
     // CDXEngine__SetProjectionMatrix (0x00550b10) builds proj[0][0] =
     // near/viewport_w and proj[1][1] = near/viewport_h, and the world call in
@@ -47,14 +45,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     // in any shader: resampling blurs exactly what it corrects, and the offset
     // moves the sky as well as the terrain.
     private const float RetailPixelCentreOffsetPixels = 0.5f;
-    private const float RetailAquilaAnimationHz = 20f;
-    private const float RetailJetWalkToFlySeconds = 25f / RetailAquilaAnimationHz;
-    private const float RetailJetFlyToWalkSeconds = 25f / RetailAquilaAnimationHz;
-    // Steam enters the cockpit sequence with current=1/24 (virtual frame 27),
-    // while the external jet begins at current=0 (virtual frame 25).
-    private const float RetailCockpitWalkToFlySeconds = 23f / RetailAquilaAnimationHz;
-    private const float RetailCockpitFlyToWalkSeconds = 24f / RetailAquilaAnimationHz;
-
     // The cockpit is NOT drawn in the camera's own basis. Retail's cockpit
     // render thing gets its orientation from the virtual at 0x004254f0, which
     // composes a 3x4 matrix held at CCockpit+0x2c - the cockpit's own
@@ -119,11 +109,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         new Vector3(-0.03870098f, 0.99919593f, 0.01047720f),
         new Vector3(-0.02999347f, -0.01164191f, 0.99948227f));
 
-    private readonly GdCameraState _cameraState = new(
-        SimulationConstants.Level100OpeningPanTicks,
-        Level100MissionTiming.ReleasedEventFrameTicks,
-        RetailNearPlane,
-        RetailFarPlane);
     // Import-time mesh catalog only. All live actor/projectile identity, joins,
     // interpolation and trail state belong to Scenes/World/world_entities.gd.
     private readonly Dictionary<Level100TargetVisualBinding, Mesh>
@@ -147,13 +132,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
-    private int _pendingPulseCannonMuzzleFlashes;
+    // Detached native clock fact used only by the remaining impact effects.
     private float _particlePresentationSeconds;
-    private float _walkerToJetVisualElapsed = float.PositiveInfinity;
-    private float _jetToWalkerVisualElapsed = float.PositiveInfinity;
-    private VehicleTransition _previousTransition;
-    private VehicleMode _previousMode = VehicleMode.Walker;
-
     public int TargetVisualCount => _targetVisualCount;
 
     public int ProjectileVisualCount => _projectileVisualCount;
@@ -216,7 +196,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         // owners. Release them only when the owning node is destroyed.
         if (what == NotificationPredelete)
         {
-            _cameraState.Dispose();
+            _level100StaticWorld?.Animation.Dispose();
             _level100TerrainAppearance?.Dispose();
             _level100Terrain?.Dispose();
         }
@@ -243,65 +223,19 @@ public sealed partial class FirstFlightWorldView : Node3D
         CreateEntityPresentation();
         BuildPulseCannonPresentation();
         ConfigureEntityPresentation(snapshot);
+        CreateWorldPresentation();
+        ConfigureWorldPresentation();
         Render(snapshot, snapshot, 0f, 0f);
     }
 
-    public void Render(
-        WorldSnapshot previous,
-        WorldSnapshot current,
-        float interpolationAlpha,
-        float frameDelta)
+    public void Render(WorldSnapshot previous, WorldSnapshot current,
+        float interpolationAlpha, float frameDelta)
     {
-        _particlePresentationSeconds += Math.Max(frameDelta, 0f);
-        Vector3 previousPosition = ToPlayerWorld(previous);
-        Vector3 currentPosition = ToPlayerWorld(current);
-        bool resetJump = previousPosition.DistanceSquaredTo(currentPosition) > 100f;
-        Vector3 playerPosition = resetJump
-            ? currentPosition
-            : previousPosition.Lerp(currentPosition, interpolationAlpha);
-        _playerRoot.Position = playerPosition;
-
-        float previousYaw = previous.FacingYawMicroRad / 1_000_000f;
-        float currentYaw = current.FacingYawMicroRad / 1_000_000f;
-        float playerYaw = Mathf.LerpAngle(previousYaw, currentYaw, interpolationAlpha);
-        float previousPitch = previous.FacingPitchMicroRad / 1_000_000f;
-        float currentPitch = current.FacingPitchMicroRad / 1_000_000f;
-        float playerPitch = Mathf.Lerp(previousPitch, currentPitch, interpolationAlpha);
-        float previousRoll = previous.BodyRollMicroRad / 1_000_000f;
-        float currentRoll = current.BodyRollMicroRad / 1_000_000f;
-        float playerRoll = Mathf.LerpAngle(previousRoll, currentRoll, interpolationAlpha);
-        _playerRoot.Rotation = new Vector3(
-            0f,
-            playerYaw,
-            0f);
-        bool renderFlightAttitude = current.Mode == VehicleMode.Jet &&
-            current.Transition == VehicleTransition.None;
-        _playerBodyPivot.Rotation = renderFlightAttitude
-            ? new Vector3(-playerPitch, 0f, -playerRoll)
-            : Vector3.Zero;
-
-        AttachedPanCameraViewSnapshot cameraSnapshot = default;
-        EngineViewpointSnapshot selectedViewpoint = default;
-        // One native frame batch owns feet interpolation, target joins and
-        // projectile history. Its one callback preserves the existing Aquila /
-        // camera-state stage before target/projectile presentation. The camera
-        // node itself is still updated only after trails use its prior pose.
-        RenderEntities(previous, current, interpolationAlpha, resetJump, contacts =>
-        {
-            ApplyWalkerPose(contacts, playerYaw);
-            UpdateAquilaTransitionPresentation(current, frameDelta);
-            _cameraState.Advance(previous, current);
-            (cameraSnapshot, selectedViewpoint) = _cameraState.SampleAndBind(interpolationAlpha);
-            ShowHud = cameraSnapshot.HudVisible;
-            OpeningPanActive = cameraSnapshot.OpeningPanActive;
-            UpdatePlayerShape(current, ShowHud);
-        });
-        _camera.Size =
-            2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
-        UpdateCamera(cameraSnapshot);
-        _level100Terrain.Update(_camera, _level100TerrainAppearance, frameDelta);
-        _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
-        _level100StaticWorld.Animation.Update(frameDelta);
+        var failures = new List<System.Runtime.ExceptionServices.ExceptionDispatchInfo>();
+        using Godot.Collections.Dictionary facts = WorldFrameFacts(previous, current, interpolationAlpha, frameDelta, failures);
+        using Variant batch = facts;
+        using Variant returned = _worldPresentation.Call("render_frame", batch);
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned, failures);
     }
 
     public void ConsumeLevel100DestructionEvents(
@@ -342,17 +276,15 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
-    public void ConsumeLevel100WeaponFireEvents(
-        IReadOnlyList<Level100WeaponFireEvent> events)
+    public void ConsumeLevel100WeaponFireEvents(IReadOnlyList<Level100WeaponFireEvent> events)
     {
         ArgumentNullException.ThrowIfNull(events);
-        foreach (Level100WeaponFireEvent item in events)
-        {
-            if (item.Weapon == Level100PlayerWeapon.PulseCannonPod)
-            {
-                _pendingPulseCannonMuzzleFlashes++;
-            }
-        }
+        using var weapons = new Godot.Collections.Array();
+        foreach (Level100WeaponFireEvent? item in events)
+            weapons.Add(item is null ? default(Variant) : (int)item.Weapon);
+        using Variant batch = weapons;
+        using Variant returned = _worldPresentation.Call("queue_weapon_events", batch);
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
     }
 
     private void BuildEnvironment()
@@ -579,14 +511,12 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildCamera()
     {
-        EngineViewpointSnapshot selectedViewpoint =
-            _cameraState.SelectedSnapshot;
         _camera = new Camera3D
         {
             Name = "RetailOpeningAndFirstPersonCamera",
             Fov = RetailVerticalFovDegrees,
-            Near = selectedViewpoint.NearPlane,
-            Far = selectedViewpoint.FarPlane,
+            Near = RetailNearPlane,
+            Far = RetailFarPlane,
             Current = true,
         };
         // Frustum rather than Perspective only so the half-pixel translation
@@ -627,157 +557,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     /// </summary>
     internal static Basis CockpitOrientationOffsetDefault =>
         RetailNoCockpitOrientationOffset;
-
-    private void UpdatePlayerShape(WorldSnapshot snapshot, bool attachedView)
-    {
-        // The released pan camera hides the HUD/cockpit and renders the
-        // exterior Aquila. Its first-person handoff reverses that visibility.
-        bool showingJet =
-            float.IsFinite(_walkerToJetVisualElapsed) ||
-            float.IsFinite(_jetToWalkerVisualElapsed) ||
-            snapshot.Transition != VehicleTransition.None ||
-            snapshot.Mode == VehicleMode.Jet;
-        _walkerAsset.Root.Visible = !attachedView && !showingJet;
-        _jetAsset.Root.Visible = !attachedView && showingJet;
-        _cockpitAsset.Root.Visible = attachedView;
-        _playerBodyPivot.Position = showingJet
-            ? Vector3.Up * RetailWalkerCenterOfGravityHeight
-            : Vector3.Zero;
-    }
-
-    private void UpdateAquilaTransitionPresentation(WorldSnapshot snapshot, float frameDelta)
-    {
-        bool walkerToJetStarted =
-            snapshot.Transition == VehicleTransition.WalkerToJet &&
-            _previousTransition != VehicleTransition.WalkerToJet;
-        bool jetToWalkerStarted =
-            snapshot.Transition == VehicleTransition.JetToWalker &&
-            _previousTransition != VehicleTransition.JetToWalker;
-        bool returnedToWalker = snapshot.Transition == VehicleTransition.None &&
-            snapshot.Mode == VehicleMode.Walker &&
-            (_previousTransition != VehicleTransition.None ||
-             _previousMode == VehicleMode.Jet);
-
-        if (walkerToJetStarted)
-        {
-            _walkerToJetVisualElapsed = 0f;
-            _jetToWalkerVisualElapsed = float.PositiveInfinity;
-        }
-        else if (jetToWalkerStarted)
-        {
-            _walkerToJetVisualElapsed = float.PositiveInfinity;
-            _jetToWalkerVisualElapsed = 0f;
-        }
-        else if (returnedToWalker)
-        {
-            _walkerToJetVisualElapsed = float.PositiveInfinity;
-            _jetToWalkerVisualElapsed = float.PositiveInfinity;
-        }
-
-        if (float.IsFinite(_walkerToJetVisualElapsed))
-        {
-            _walkerToJetVisualElapsed = Math.Min(
-                _walkerToJetVisualElapsed + Math.Max(0f, frameDelta),
-                RetailJetWalkToFlySeconds);
-            int jetStep = Math.Min(
-                Mathf.FloorToInt(_walkerToJetVisualElapsed * RetailAquilaAnimationHz),
-                25);
-            _jetAsset.SetVirtualFrame(25f + jetStep);
-
-            if (_walkerToJetVisualElapsed < RetailCockpitWalkToFlySeconds)
-            {
-                int cockpitStep = Math.Min(
-                    Mathf.FloorToInt(_walkerToJetVisualElapsed * RetailAquilaAnimationHz),
-                    22);
-                _cockpitAsset.SetVirtualFrame(27f + cockpitStep);
-            }
-            else
-            {
-                _cockpitAsset.SetVirtualFrame(0f);
-            }
-
-            if (_walkerToJetVisualElapsed >= RetailJetWalkToFlySeconds)
-            {
-                _jetAsset.SetVirtualFrame(0f);
-                _walkerToJetVisualElapsed = float.PositiveInfinity;
-            }
-        }
-        else if (float.IsFinite(_jetToWalkerVisualElapsed))
-        {
-            _jetToWalkerVisualElapsed = Math.Min(
-                _jetToWalkerVisualElapsed + Math.Max(0f, frameDelta),
-                RetailJetFlyToWalkSeconds);
-            int jetStep = Math.Min(
-                Mathf.FloorToInt(_jetToWalkerVisualElapsed * RetailAquilaAnimationHz),
-                25);
-            _jetAsset.SetVirtualFrame(jetStep);
-
-            int cockpitStep = Math.Min(
-                Mathf.FloorToInt(_jetToWalkerVisualElapsed * RetailAquilaAnimationHz),
-                24);
-            _cockpitAsset.SetVirtualFrame(1f + cockpitStep);
-            if (_jetToWalkerVisualElapsed >= RetailCockpitFlyToWalkSeconds)
-            {
-                _cockpitAsset.SetVirtualFrame(25f);
-            }
-            if (_jetToWalkerVisualElapsed >= RetailJetFlyToWalkSeconds)
-            {
-                _jetAsset.SetVirtualFrame(25f);
-                _jetToWalkerVisualElapsed = float.PositiveInfinity;
-            }
-        }
-        else if (snapshot.Mode == VehicleMode.Jet)
-        {
-            _jetAsset.SetVirtualFrame(0f);
-            _cockpitAsset.SetVirtualFrame(0f);
-        }
-        else
-        {
-            _jetAsset.SetVirtualFrame(25f);
-            _cockpitAsset.SetVirtualFrame(25f);
-        }
-
-        _previousTransition = snapshot.Transition;
-        _previousMode = snapshot.Mode;
-    }
-
-    private void ApplyWalkerPose(Vector3[] contacts, float renderedYaw)
-    {
-        // The legs are drawn in the player root's rendered frame, so the
-        // world-to-player rotation must use the interpolated yaw the root is
-        // actually carrying this frame.
-        Basis worldToPlayer = new Basis(Vector3.Up, renderedYaw).Inverse();
-        for (int foot = 0; foot < contacts.Length; foot++)
-        {
-            contacts[foot] = worldToPlayer * contacts[foot];
-        }
-
-        _walkerAsset.SetGroundContactPose(contacts);
-    }
-
-    private static Vector3[] ToFootOffsets(WorldSnapshot snapshot)
-    {
-        if (snapshot.WalkerFeet.Count != 4)
-        {
-            throw new InvalidDataException("Core did not expose four Aquila foot contacts.");
-        }
-
-        var contacts = new Vector3[4];
-        foreach (WalkerFootContactSnapshot foot in snapshot.WalkerFeet)
-        {
-            if (foot.Id < 0 || foot.Id >= contacts.Length)
-            {
-                throw new InvalidDataException($"Core exposed unknown Aquila foot {foot.Id}.");
-            }
-            contacts[foot.Id] = new Vector3(
-                (foot.Position.X - snapshot.PlayerPosition.X) * UnitsToMeters,
-                (foot.GroundElevationMillimeters + foot.LiftMillimeters -
-                    snapshot.PlayerGroundElevationMillimeters) * UnitsToMeters,
-                -(foot.Position.Z - snapshot.PlayerPosition.Z) * UnitsToMeters);
-        }
-
-        return contacts;
-    }
 
     private void BuildPulseCannonPresentation()
     {
@@ -1302,56 +1081,11 @@ public sealed partial class FirstFlightWorldView : Node3D
         };
     }
 
-    private void UpdateCamera(AttachedPanCameraViewSnapshot cameraSnapshot)
-    {
-        _camera.Position = ToGodot(cameraSnapshot.Pose.Position);
-        Vector3 forward = ToGodot(cameraSnapshot.Pose.Forward);
-        Vector3 up = ToGodot(cameraSnapshot.Pose.Up);
-        _camera.LookAt(_camera.Position + forward, up);
-
-        _level100Sky.Position = _camera.Position;
-        _level100Sun.Update(_camera.Position);
-        UpdateRetailPixelCentreOffset();
-    }
-
-    /// <summary>
-    /// Translates the projection by half a rendered pixel down and right, which
-    /// is where retail's Direct3D 9 rasteriser puts the same geometry.
-    /// </summary>
     private void UpdateRetailPixelCentreOffset()
     {
-        float viewportHeight = GetViewport()?.GetVisibleRect().Size.Y ?? 0f;
-        if (viewportHeight <= 0f)
-        {
-            return;
-        }
-
-        // Size is the full vertical near-plane extent, so one pixel of vertical
-        // extent is Size / height. The rendered pixels are square (retail's
-        // tan(hfov/2) = 1 against tan(vfov/2) = 0.75 is exactly the 4:3 frame's
-        // aspect), so the same figure is one pixel of horizontal extent.
-        float unitsPerPixel = _camera.Size / viewportHeight;
-        float offset = unitsPerPixel * RetailPixelCentreOffsetPixels;
-        // FrustumOffset moves the near-plane WINDOW, so the image moves the
-        // other way: -x slides the window left and the image right, and +y
-        // slides the window up and the image down. Godot's near-plane y is up
-        // while a captured PNG's y is down, hence the opposing signs for one
-        // shift that is +0.5 in both screen axes.
-        _camera.FrustumOffset = new Vector2(-offset, offset);
-    }
-
-    private static Vector3 ToGodot(Level100RenderVector3 value) =>
-        new(value.X, value.Y, value.Z);
-
-    private static Vector3 ToPlayerWorld(WorldSnapshot snapshot)
-    {
-        float x = snapshot.PlayerPosition.X * UnitsToMeters;
-        float z = snapshot.PlayerPosition.Z * UnitsToMeters;
-        return new Vector3(
-            x,
-            (snapshot.PlayerElevationMillimeters -
-                Level100Terrain.WalkerCenterOfGravityMillimeters) * UnitsToMeters,
-            -z);
+        using GDScript script = GD.Load<GDScript>(WorldPresentationScriptPath);
+        using Variant returned = script.Call("apply_pixel_centre_offset", this, _camera);
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
     }
 
     private Vector3 ToWorld(SimVector2 position, float heightAboveTerrain)

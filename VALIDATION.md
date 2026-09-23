@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native frontend orchestration and host handoffs; live input edges and weapon foundations).
+Last updated: 2026-09-23 (native world-frame and frontend orchestration; live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1175,6 +1175,69 @@ or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
 display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
+
+#### Native world presentation — September 23
+
+The actual private Level 100 scene now embeds `WorldPresentation.tscn`.
+`world_presentation.gd` owns player interpolation, foot conversion, Aquila
+transitions, camera/projection application and environment update order.
+`static_world_animation.gd` owns scenery's double clock and discrete rigid-part
+frames. The temporary C# facade submits one immutable snapshot pair and caches
+detached display facts. Its former camera adapter is test-only. Import
+construction, destruction effects, full simulation and replay entry still need
+conversion; the full game still requires .NET.
+
+Executed checks use owned profiles and outputs under this worktree's ignored
+`local-data/test-runs/`, with the canonical lab read in place:
+
+- `world-presentation-final-r19du5l7/`: standard-engine parsing and the supported
+  .NET build/private import passed with zero compiler warnings/errors. Scenery
+  animation passed **84,395 assertions**, including raw transform words, pinned
+  private tracks, discrete frame selection, wrapping, alias order and partial
+  failures. Camera **852**, entities **23,038**, and the actual imported world
+  **24,177** checks passed. The world check covers authored geometry/materials,
+  round-trip, shared production nodes, retry isolation and unchanged snapshots.
+- `world-frame-verified-umx3qe6v/`: the final supported build/import passed.
+  The combined controller passed **112,833 assertions** against retained
+  `1bb29345` arithmetic on identical authored node state. Six completed groups
+  cover initialization, player/Aquila/camera, partial writes, deferred target
+  and projectile failures, nonfinite transition math and disposed scenery.
+  The extreme Int32-coordinate case produces the same engine `look_at` refusal
+  in both implementations. Those two diagnostics remain in the receipt; this
+  is an exact comparison pass, not a clean-log claim for that adversarial case.
+- `world-frame-client-havrl4nl/`: **72/72** affected Client tests passed, with
+  zero skips. Camera/viewpoint, interpolation, scenery, particle and measured
+  Aquila material expectations remain unchanged. Only source-wiring checks
+  moved to the actual native controller.
+- `world-frame-native-yyh3b6fb/`: standard Godot passed **95 runtime** and
+  **71 editor** assertions. Native templates retain their production artwork;
+  the world controller starts no processing, camera, clock, gameplay or input
+  owner. Editor configuration is refused before admission. The scripted editor
+  shutdown still reports the existing **166 ObjectDB instances** and associated
+  RID allocations, so its strict clean-log gate remains failed.
+- `world-frame-smoke-jkomlsmt/`: the normal headless startup→menus→Level 100→retry→
+  Main Menu smoke completed **2,148 ticks**, followed by two successful replay
+  repetitions. Runtime logs are clean. The recording, trace and final-state
+  hashes are unchanged from the frontend milestone below. Thirteen ordered
+  deliveries/queues and world release remain verified. The mission still ends
+  **Running / None**, with **zero targets destroyed**; this is not combat
+  completion.
+
+The first combined comparison exposed a fixture error: its fresh identity
+player node did not share the saved world's decomposed scale. The bounded probe
+in `world-yaw-probe-5tc9_gy3/` reproduces the one-ULP difference with the same
+yaw word and no renderer call. The final oracle captures the authored transforms
+and flags before initialization. No production arithmetic, tolerance or expected
+hash changed to resolve that fixture issue.
+
+Run .NET `res://Scenes/World/StaticAnimationChecks.tscn` and
+`res://Scenes/World/Tests/WorldPresentationChecks.tscn` with the supported
+headless launch form and Dummy audio. The existing camera, entity and world
+scene harnesses use the same form. Standard
+`--script res://Scenes/World/entity_scene_checks.gd` checks the native templates
+and inactive controller; add `--editor` for the editor guard. These comparisons
+do not establish normal GPU performance, physical input, audible playback,
+Windows behavior or full-combat completion.
 
 #### Native frontend orchestration — September 23
 

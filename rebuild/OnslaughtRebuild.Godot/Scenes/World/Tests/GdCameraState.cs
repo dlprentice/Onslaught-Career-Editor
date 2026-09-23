@@ -7,35 +7,69 @@ using Dictionary = Godot.Collections.Dictionary;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Temporary marshaling boundary while the world renderer remains managed.
-/// All live camera/viewpoint state belongs to Client/world_camera.gd and its
-/// two validated native owners. This class retains only immutable configuration
-/// and one native reference; it creates no managed camera state or cached pose.
+/// Test-only camera observer and pure compatibility bridge. A borrowed observer
+/// reads the actual WorldPresentation camera without creating, replacing or
+/// disposing that owner's state. The original constructor remains available
+/// solely for the raw-word/pure-owner comparison cases.
 /// </summary>
-public sealed class GdCameraState(int panDurationTicks, int controlViewHandoffLeadTicks,
-    float nearPlane, float farPlane) : IDisposable
+internal sealed class GdCameraState : IDisposable
 {
+    private readonly int _panDurationTicks;
+    private readonly int _controlViewHandoffLeadTicks;
+    private readonly float _nearPlane;
+    private readonly float _farPlane;
+    private readonly Node? _borrowedOwner;
     private GodotObject? _state;
     private bool _disposed;
 
-    internal bool IsInitialized => _state is not null;
-    internal bool IsDisposed => _disposed;
+    internal GdCameraState(int panDurationTicks, int controlViewHandoffLeadTicks, float nearPlane, float farPlane)
+    {
+        _panDurationTicks = panDurationTicks;
+        _controlViewHandoffLeadTicks = controlViewHandoffLeadTicks;
+        _nearPlane = nearPlane;
+        _farPlane = farPlane;
+    }
+
+    internal GdCameraState(Node worldPresentation)
+    {
+        ArgumentNullException.ThrowIfNull(worldPresentation);
+        _borrowedOwner = worldPresentation;
+    }
+
+    internal bool IsInitialized
+    {
+        get
+        {
+            if (IsDisposed) return false;
+            if (_borrowedOwner is null) return _state is not null;
+            using Variant state = _borrowedOwner.Get("_camera_state");
+            return state.VariantType == Variant.Type.Object && GodotObject.IsInstanceValid(state.AsGodotObject());
+        }
+    }
+    internal bool IsDisposed => _disposed || (_borrowedOwner is not null && !GodotObject.IsInstanceValid(_borrowedOwner));
 
     private GodotObject State
     {
         get
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
+            ObjectDisposedException.ThrowIf(IsDisposed, this);
             if (Engine.IsEditorHint())
                 throw new InvalidOperationException("Live world camera state is unavailable during editor inspection.");
+            if (_borrowedOwner is not null)
+            {
+                using Variant state = _borrowedOwner.Get("_camera_state");
+                return state.VariantType == Variant.Type.Object && GodotObject.IsInstanceValid(state.AsGodotObject())
+                    ? state.AsGodotObject()
+                    : throw new InvalidOperationException("The production world camera has not been initialized.");
+            }
             if (_state is not null) return _state;
             using Variant created = GD.Load<GDScript>("res://Client/world_camera.gd").New();
             GodotObject native = created.AsGodotObject()
                 ?? throw new InvalidOperationException("Native world camera could not be instantiated.");
             try
             {
-                RequireResult(native.Call("configure", panDurationTicks, controlViewHandoffLeadTicks,
-                    Word(nearPlane), Word(farPlane)));
+                RequireResult(native.Call("configure", _panDurationTicks, _controlViewHandoffLeadTicks,
+                    Word(_nearPlane), Word(_farPlane)));
                 _state = native;
                 return native;
             }

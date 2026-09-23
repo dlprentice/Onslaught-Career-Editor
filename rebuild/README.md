@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native frontend orchestration, page assembly and host handoffs; live input edges and weapon foundations).
+Last updated: 2026-09-23 (native frontend and world-frame orchestration; live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -50,8 +50,10 @@ terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production 
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
 also have native owners. The complete frontend scene now owns its navigation,
-input, clocks, page assembly and loading/intro orchestration in GDScript. World
-assembly, full simulation and replay entry still need their live consumers
+input, clocks, page assembly and loading/intro orchestration in GDScript. Native
+world-frame orchestration also joins the player, Aquila, camera, terrain, water
+and scenery components. World import construction, destruction effects, full
+simulation and replay entry still need their live consumers
 converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
@@ -127,6 +129,27 @@ value; use an explicit `--startup-media=` argument to preserve such a literal
 path. This unusual environment case remains an explicit parity gap.
 The executed checks and remaining limits are in
 [the validation record](../VALIDATION.md#native-frontend-orchestration--september-23).
+
+#### Native world-frame controller
+
+The private production `Assets/Level100/Scenes/Level100.tscn` contains the
+`WorldPresentation` component from `Scenes/World/WorldPresentation.tscn`.
+Its linked `world_presentation.gd` owns player interpolation, Aquila transitions
+and visibility, camera application, projection offset and the ordered terrain,
+water and scenery updates. It uses the existing actor/projectile and camera
+owners directly. Scenery's `static_world_animation.gd` advances the imported
+rigid-part tracks without interpolation or a second animation clock.
+
+These scripts have no automatic process or input callbacks. The editor shows
+the imported world, transforms and materials without starting their runtime
+state. The game explicitly configures the same component and submits one
+snapshot-pair batch per rendered frame. The managed world host retains import
+construction and destruction effects while those consumers await conversion;
+it caches display facts for its existing diagnostics and effect creation.
+Core remains the simulation owner. A failed frame preserves preceding native
+writes, and projectile trails still observe the camera's prior pose.
+Executed comparisons and their limits are recorded in
+[validation](../VALIDATION.md#native-world-presentation--september-23).
 
 #### Native cursor and asset routing
 
@@ -406,8 +429,8 @@ owners also pass the migration gate. The actual frontend now uses
 `Scenes/Frontend/frontend_flow.gd`. Its temporary C# facade preserves selected
 save identity by the original input ordinal and marshals coarse host events.
 Native drawing, input and settled animation frames do not cross that facade.
-The world renderer now advances and samples the single native camera owner in
-`Client/world_camera.gd`, retaining the same authored Camera3D and projection.
+The native world-frame controller advances and samples the single camera owner
+in `Client/world_camera.gd`, retaining the same authored Camera3D and projection.
 Editor entry leaves that live camera owner uninitialized.
 
 Live gameplay now uses `Client/platform_input_edges.gd` for held/read-once key
@@ -795,6 +818,7 @@ Use these scenes from Godot's FileSystem dock:
 | Scene relative to the Godot project | What is present before Play |
 | --- | --- |
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
+| [Scenes/World/WorldPresentation.tscn](OnslaughtRebuild.Godot/Scenes/World/WorldPresentation.tscn) | Inactive native world-frame controller. Inspect its linked script for player/Aquila, camera and environment update order; inspect the actual geometry in the private Level 100 scene below. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Complete native frontend root, ten authored pages, seven main-menu rows, images, guides, letterbox and cursor. `EditorPage` selects a frozen view; it does not navigate the game. The linked GDScript owns input and page/loading orchestration. |
 | [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |

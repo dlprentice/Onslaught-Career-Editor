@@ -15,6 +15,7 @@ internal sealed class Level100TerrainAppearanceAsset : IDisposable
 {
     private const string ScriptPath = "res://Scenes/World/terrain_appearance.gd";
     private readonly RefCounted _native;
+    internal RefCounted NativeOwner => _native;
 
     private Level100TerrainAppearanceAsset(RefCounted native)
     {
