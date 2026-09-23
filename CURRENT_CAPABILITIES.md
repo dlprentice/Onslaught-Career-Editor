@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-22 (sample decoding and saved Ghidra corrections; earlier implementation receipts retain their dates).
+Last updated: 2026-09-22 (sample destruction and failed-load composition; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -83,6 +83,17 @@ all types, storage and unrelated functions are unchanged. A sample
 can be inserted after a supplied device-creation failure, so list presence alone
 does not establish playable audio. See the
 [outer sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration).
+
+Original sample destruction now passes **23 standalone cases** and **11 cases
+composed with the caller and loader**. A zero payload read removes a reused
+sample from the canonical list, detaches matching events, conditionally stops
+their channels and requests each old resource release once. Failed fresh creation
+preserves existing samples and events. An initially null primary channel leaves
+its secondary slot untouched.
+These are guarded ownership observations with heap/COM/callback boundaries;
+they do not establish real reclamation, playback or complete startup. See the
+[destruction contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
+and [executed checks](VALIDATION.md#original-sample-destruction-and-failed-loads--september-22).
 
 ## Godot Save Lab — first workflow
 

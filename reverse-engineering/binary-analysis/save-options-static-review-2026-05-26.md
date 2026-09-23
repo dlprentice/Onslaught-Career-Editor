@@ -428,12 +428,68 @@ therefore loses the tested suffix classification.
 A supplied device-create failure still yields a sample object that the outer
 caller inserts. A supplied lock failure on reuse preserves its list position
 and returns that object without PCM. Returning null after a zero payload read
-invokes the logger boundary instead of insertion. The destructor hook retains
-objects, so the reused zero-read case's unchanged list does not establish real
-retail unlinking or lifetime safety. Fresh static inspection of `005168d0` and
-`004dff30` shows that actual destruction traverses/unlinks the canonical sound
-manager, which requires its own coherent ownership setup before execution.
-Whole-bank traversal, actual destruction and successful playback remain open.
+invokes the logger boundary instead of insertion. That earlier experiment's
+destructor hook retains objects, so its unchanged reused-sample list is not a
+retail unlinking result. The following controls replace that boundary with
+original destruction under canonical ownership. Whole-bank traversal and
+successful playback remain open.
+
+## Original sample destruction and failed loads
+
+The [23 standalone and 11 composed controls](../../VALIDATION.md#original-sample-destruction-and-failed-loads--september-22)
+execute the original deleting wrapper, derived/base destructors, matching-event
+shutdown, channel stop, owner clearing and reader-list removal. The composed
+route additionally executes `004e0890` → `005172a0` → cached Read, with an
+authored size word followed by immediate EOF. Objects, ownership lists and
+device returns are supplied; heap/COM calls and owner notification record state
+without reclaiming or mutating objects.
+
+The deleting wrapper at `00516960` always destroys the sample. Low-byte flag
+bit zero controls the final object-free request: `1`/`257` request it and
+`0`/`2` do not. Derived destruction at `005168d0` first shuts down matching
+events, then frees/clears sample allocation `+0x78` and releases/clears sample
+buffer `+0x80`. Base destruction at `004dff30` changes the vtable, repeats the
+event traversal and unlinks through canonical manager `00896988`. Head, middle,
+tail and singleton cases are exercised; the singleton leaves the head null.
+Sample next and size fields are not cleared. Normal SEH-chain restoration is
+checked; exception dispatch is not executed.
+
+An event matches through its sample pointer at `+0x0c`. Owner notification
+requires flag DWORD `+0x7c` to equal **1** and a nonnull owner. Notification
+precedes channel shutdown, clearing the playing byte and owner detachment.
+Playing byte zero does not suppress channel stopping; a negative channel skips
+that call. For a nonnull primary channel, original `005179b0` requests Stop, primary Release,
+primary clear, then secondary Release/clear. **An initially null primary returns
+without touching a nonnull secondary.** Supplied return bits do not prevent the
+observed stores; this does not establish real COM failure handling.
+
+When registered, owner clearing removes only the first matching reader-list node,
+recycles it, decrements the count and leaves the cursor unchanged. Event sample pointers,
+links and channel values remain, as do the manager's event head/count/free-list
+fields. Duplicate/missing registrations and owner-null orphan registrations are
+deliberate boundary fixtures. In the normal supplied chain, derived detachment
+clears owners before base traversal: **no base-loop notification was observed**.
+Complete body inclusion is not coverage of every callback or device branch.
+
+The composed failure cases establish a consequential ordering: reuse frees old
+storage and releases its sample buffer **before** attempting the payload read.
+A zero result then frees the temporary allocation, executes the original sample
+destructor, unlinks the sample and requests its final free; the outer caller
+returns null and invokes the logging boundary. The destructor does not request
+those already-cleared sample resources again. This is not transactional
+replacement preserving the old sound. Fresh failure constructs a next-null
+sample, destroys it without publication and preserves all existing canonical
+samples/events. Its base unlink still traverses the existing list and writes
+the already-zero final link; unchanged state does not mean no store occurred.
+Authored size zero follows the same null-return path even though
+the reader's error field remains zero; positive size with immediate EOF sets it.
+
+Separate adverse fixtures show that base unlinking does not require finding
+the sample first: an absent sample with a foreign next pointer rewrites the
+canonical tail, or the head when empty. These intentionally inconsistent states
+do not demonstrate corruption in a healthy retail session. Actual reclamation,
+COM lifetime, mutating owner callbacks, repeated destruction, bank traversal,
+retail file behavior, audible results and complete startup remain open.
 
 ## Original save reload after reinitialization
 

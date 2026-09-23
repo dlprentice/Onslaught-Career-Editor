@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-22 (sample-loader metadata corrected from the rechecked audio path)
+Last updated: 2026-09-22 (original sample destruction and failed-load composition)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -105,9 +105,13 @@ insertion despite a supplied device-create failure. Its filename-route stub and
 working buffer loader contradict inherited semantic labels; the
 [caller contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
 records the evidence; the [four-function Ghidra correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
-now preserves it in the working database with unchanged types and storage. Next, close successful
-bank traversal and actual sample destruction with coherent canonical ownership,
-then compose the remaining rechecked services into the preserved real-save route.
+now preserves it in the working database with unchanged types and storage.
+Original destruction now has 23 standalone controls and 11 composed failed-load
+controls. A zero payload read removes a reused sample; old storage and sample
+buffers are released once, while failed fresh creation preserves existing samples
+and events. Heap reclamation, device lifetime and mutating callbacks remain
+intercepted. Next, close successful bank traversal, then compose the remaining
+rechecked services into the preserved real-save route.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;

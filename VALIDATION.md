@@ -2324,6 +2324,61 @@ These metadata changes preserve the preceding 44 direct and 25 outer controls;
 they do not execute successful whole-bank traversal, actual sample destruction,
 real audio-device operations or a complete startup.
 
+### Original sample destruction and failed loads — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/sample_destruction_control.py`
+passed **23 cases / 112 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/sample-destruction-run-1waarils/destruction`;
+receipt SHA-256 `6105827101f7cba36147e6b60f75fb63c498ac4cb6644ac5bcfdd392f63e95fc`;
+ELF SHA-256 `6c056ab660b46afbd538f23c43992f9b24dd917861cf692edaa1330f46620c01`.
+`sample-destruction-controls-v2.log` records the result. Seven complete original
+bodies total 615 bytes. The saved driver preserves the exact source used; the current
+driver subsequently gained the composition mode below.
+
+Cases cover deletion flags, all canonical list positions, matching/nonmatching
+events, zero playing state, negative channels, strict notification flags,
+null primary/secondary slots, owner-list removal and deliberately inconsistent
+ownership. Independent review recomputed all final captured bytes and hook
+snapshots from actual saved inputs. It caught four fixtures labeled singleton
+that actually inherited a middle position. V2 explicitly supplies singleton
+ownership: all four now clear the canonical head. The ELF/assembly are unchanged;
+the other 19 inputs are identical, and their outputs differ only in captured
+per-process FS addresses. V1 remains preserved, not counted as singleton evidence.
+
+`python -P local-data/test-runs/save-startup-20260919/sample_destruction_control.py --load-failure`
+then passed **11 cases / 84 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/sample-load-failure-run-0gj_94uh/destruction`;
+receipt SHA-256 `77bbc859158828ba198e2a8c3bbc09bedc8db99e96a52b27998835c059d61bc3`;
+ELF SHA-256 `d4188bf8a6adb55a854aef8c17e9a0f9bfd32cb147e38282949731b972e9bdca`.
+`sample-load-failure-controls-v3.log` records the result. Four additional complete
+bodies retain 2,278 original bytes in total: CreateSample, ASCII name comparison,
+the buffer loader and cached Read now reach the original destructor. Authored
+headers declare 32 or zero decoded bytes, with no following payload. This is
+failure-path composition, not successful bank loading or a decoded retail record.
+
+The selected pristine specimen remains SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Both instruments check original bodies/data/BSS, nonoverlapping ELF segments,
+full selected guarded state, unchanged input, ordered snapshots, unused output
+storage, integer ABI, PC53-nearest CW/TOP and normal FS-chain restoration.
+The forbidden-syscall control terminates with SIGSYS and empty output. Root
+separately decoded failure outputs to check exact release counts, canonical
+unlinking, fresh-case preservation and zero-size versus EOF error state.
+
+The composed instrument's preserved v1 syntax failure executed no experiment.
+V2 exposed an incorrect expected incidental ECX value at the loader's Release:
+`005172da` loads its vtable into EDX, leaving the supplied heap hook's ECX intact.
+V3 corrects that expectation from the instructions, without changing original
+bytes. Formatter/logger hooks validate stable arguments; the formatter writes
+no path bytes because this route does not consume them. Heap and COM storage
+is retained, and owner callbacks only record. These checks do not establish
+actual reclamation, device lifetime, callback side effects, exception dispatch,
+successful bank traversal, file publication, playback or complete startup.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
+records observed ordering and adverse-fixture limits. Exact review prompts,
+reports and primary dispositions remain in the existing private review owner.
+No Ghidra project was opened for these experiments.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
