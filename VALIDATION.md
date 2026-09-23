@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (interrupted Main Menu/weapon checkpoint; completed component evidence retained).
+Last updated: 2026-09-22 (validated native weapon foundations; Main Menu checks in progress).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -686,12 +686,34 @@ belong to the earlier Aquila milestone; current assembly/source edits require
 a fresh supported import and affected runtime/replay validation before claiming
 the same results for Main Menu.
 
-The three native weapon foundations and their native test harness parse in
-standard Godot (`weapon-foundation-parse-bp1o65si/` and
-`weapon-harness-parse-shi18jiw/`). The reference exporter compiles in the
-checkpoint build, but no weapon export or native differential run has occurred.
-They have no live consumers and make no validated weapon-parity claim.
+The three weapon foundations had only parsed at the September 20 checkpoint;
+their subsequent comparison results are recorded below. They have no live
+consumers yet.
 Resume instructions are in [`rebuild/README.md`](rebuild/README.md#interrupted-conversion-checkpoint--september-20).
+
+#### Native weapon foundations — September 22
+
+The standard-engine comparison passed **89,663 assertions** over all nine
+required groups: 1,299 charge sequences/14,331 steps, 1,521 readiness cases,
+1,788 store cases, 787 cycles and 1,106 Unit scorer/selection cases. It checks
+raw float words, aliasing, failure ordering, detached values and public input
+admission against the unchanged C# owners. The first run exposed 90 NaN-payload
+differences; explicit current-charge-first payload selection and quieting fixed
+them against the same fixture. This is managed regression evidence, not proof
+of retail behavior for synthetic NaNs.
+
+The final receipt is `retail-weapon-final-xp45flg1/native.json` under the
+conversion worktree's `local-data/test-runs/`; it records all four source
+identities and fixture SHA-256
+`9f5faddbd2d074057c252d606b9103240107f3d5cd55544ab854e84ab9573b9d`.
+The incomplete-fixture/missing-source controls and eight output refusal checks
+preserved their inputs and sentinel bytes. All **149** existing affected Core
+tests also passed, with no skips (`retail-weapon-core-ug8izsg6/core.log`).
+Runtime logs are clean. Run the .NET `Scenes/World/Tests/RetailWeaponReferenceChecks.tscn`
+with fresh absolute fixture/report paths, then standard
+`Scenes/World/Tests/retail_weapon_checks.gd` with the fixture and a fresh report;
+both outputs belong below this worktree's `local-data/`. Live weapon scheduling,
+effects, event order and full combat remain with their existing owners.
 
 #### Completed actor foundations
 

@@ -105,6 +105,16 @@ static func charge(weapon: Variant) -> Dictionary:
 	if not allowed.value: return Values.success()
 	var current: float = Float24.read_word(weapon.charge_bits())
 	if current >= 400.0: return Values.success()
+	# The unchanged managed owner quiets a NaN and retains the current charge's
+	# payload when both operands are NaNs. Native double addition selects the
+	# other payload, so spell out this observed reference behavior in raw words.
+	# This does not establish a separate retail payload-propagation contract.
+	var current_word: int = weapon.charge_bits()
+	if (current_word & 0x7fffffff) > 0x7f800000:
+		return weapon.set_word("charge_bits", Values.int32(current_word | 0x00400000))
+	var rate_word: int = weapon.charge_rate_bits()
+	if (rate_word & 0x7fffffff) > 0x7f800000:
+		return weapon.set_word("charge_bits", Values.int32(rate_word | 0x00400000))
 	return weapon.set_word("charge_bits", Store.bits(Float24.read_word(weapon.charge_rate_bits()) + current))
 
 

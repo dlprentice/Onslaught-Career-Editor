@@ -7,6 +7,9 @@ const Charge = preload("res://Core/retail_weapon_charge.gd")
 const Stores = preload("res://Core/retail_weapon_stores.gd")
 const Selection = preload("res://Core/retail_weapon_selection.gd")
 const Values = preload("res://Core/retail_career_values.gd")
+const SOURCE_FILES: Array[String] = ["RetailFloat24.cs", "RetailWeaponCharge.cs", "RetailWeaponSelection.cs", "RetailWeaponStores.cs"]
+const EXPECTED_CASE_COUNTS: Dictionary = {"charge_sequences": 1299, "charge_steps": 14331,
+	"ready": 1521, "stores": 1788, "cycles": 787, "unit": 1106}
 var _checks: int = 0
 var _failure_count: int = 0
 var _failures: Array[String] = []
@@ -43,11 +46,17 @@ func _run() -> void:
 		quit(2)
 		return
 	var fixture: Dictionary = payload
-	_check(fixture.charge.size() >= 1200 and fixture.ready.size() >= 1500 and fixture.stores.size() >= 1700
-		and fixture.cycles.size() >= 642 and fixture.unit.size() >= 900, "Complete operation groups present.")
-	for file: String in fixture.source_sha256:
+	var charge_steps: int = 0
+	for row: Dictionary in fixture.charge: charge_steps += row.steps.size()
+	var case_counts: Dictionary = {"charge_sequences": fixture.charge.size(), "charge_steps": charge_steps,
+		"ready": fixture.ready.size(), "stores": fixture.stores.size(), "cycles": fixture.cycles.size(), "unit": fixture.unit.size()}
+	_equal(case_counts, EXPECTED_CASE_COUNTS, "Every fixed reference case and operation is present")
+	var source_files: Array = fixture.source_sha256.keys()
+	source_files.sort()
+	_equal(source_files, SOURCE_FILES, "All four unchanged reference sources are identified")
+	for file: String in SOURCE_FILES:
 		var path: String = ProjectSettings.globalize_path("res://../OnslaughtRebuild.Core/" + file)
-		_equal(_hash(FileAccess.get_file_as_bytes(path)), fixture.source_sha256[file], "Unchanged source identity: " + file)
+		_equal(_hash(FileAccess.get_file_as_bytes(path)), fixture.source_sha256.get(file, ""), "Unchanged source identity: " + file)
 	_equal({"level_count": Charge.LEVEL_COUNT, "absent_level": Charge.ABSENT_LEVEL, "value_per_level": Charge.VALUE_PER_LEVEL,
 		"increment_cap_bits": Charge.INCREMENT_CAP_FLOAT_BITS, "store_count": Stores.STORE_COUNT,
 		"full_ammo_percentage_bits": Stores.FULL_AMMO_PERCENTAGE_FLOAT_BITS}, fixture.constants, "Public constants")
@@ -83,6 +92,7 @@ func _run() -> void:
 	_finish()
 	var report: Dictionary = {"schema": 1, "checks": _checks, "failure_count": _failure_count,
 		"failures": _failures, "completed": _completed, "counts": _counts,
+		"case_counts": case_counts, "source_sha256": fixture.source_sha256.duplicate(true),
 		"fixture_sha256": fixture_hash, "engine": Engine.get_version_info().string}
 	var output: FileAccess = FileAccess.open(args[1], FileAccess.WRITE)
 	if output == null:

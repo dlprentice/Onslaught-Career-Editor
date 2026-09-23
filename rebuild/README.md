@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-20 (resume checkpoint for unfinished native Main Menu and weapon foundations).
+Last updated: 2026-09-22 (validated native weapon foundations; Main Menu validation in progress).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -81,6 +81,14 @@ allocation. Its comparisons cover the actual Level 100 definitions and existing
 construction-route refusals; the gameplay session still uses C# until the
 remaining simulation consumers can move together.
 
+`Core/retail_weapon_charge.gd`, `retail_weapon_stores.gd` and
+`retail_weapon_selection.gd` now preserve charge/readiness, fixed stores,
+cyclic mounted selection and the finite Unit weapon scorer. Their raw-word
+buffers retain aliasing, refusal order and detached snapshots. Differential
+checks and the existing focused Core tests pass; live weapon consumers still
+use the C# owners. The explicit NaN-payload handling preserves the measured
+managed comparison result, without claiming a new retail NaN contract.
+
 The conversion worktree is `.worktrees/godot-editor-48-20260919`, branch
 `codex/godot-editor-48-20260919`. Use canonical `BEA_LOCAL_LAB` routing and fresh
 owned output under this worktree's `local-data/`; remain headless or use an
@@ -107,10 +115,9 @@ comparison and standalone editor/publication checks remain unfinished.
 `Scenes/Frontend/Tests/MainMenuReference*` retain the original presentation for
 comparison, not a second production menu.
 
-`Core/retail_weapon_charge.gd`, `retail_weapon_stores.gd` and
-`retail_weapon_selection.gd` are draft pure-state foundations. They have passed
-parsing only; their C# fixture exporter now compiles, but its export and native
-differential checks have not run. No live weapon consumer uses these modules.
+The weapon foundations preserved at this checkpoint passed their comparison
+and focused Core checks on September 22, as described above. No live weapon
+consumer uses these modules yet.
 
 Resume in this same worktree, keeping the following order:
 
@@ -123,10 +130,7 @@ Resume in this same worktree, keeping the following order:
    isolated owned display using `--main-menu-render-dir=ABS_FRESH_EMPTY_DIR`.
    Finish the standalone native editor/publication checks and review the
    production integration before treating Main Menu as complete.
-3. Run `RetailWeaponReferenceChecks.tscn` and `retail_weapon_checks.gd` using
-   their declared output arguments before accepting or adopting the weapon
-   foundations. Their comparison results are currently unknown.
-4. Before gameplay acceptance, run the supported full build/private import to
+3. Before gameplay acceptance, run the supported full build/private import to
    refresh the world receipt, then the affected world/smoke and actual-tape
    replay checks. The older receipt predates the current assembly/source edits;
    do not bypass or delete its admission guards.
