@@ -647,6 +647,59 @@ bank loading nor playable audio. Real platform effects, device-index changes
 through a composed Load/Save, startup reachability and player acceptance remain
 open; no original save or Ghidra database changed in these controls.
 
+## Original outer sound-manager initialization
+
+The [ten outer-initialization controls](../../VALIDATION.md#original-outer-sound-manager-initialization--september-23)
+execute original `004e00d0`, its registration/timer helpers and device Init in
+one call. The receiver is the canonical sound manager `00896988`. SFX parsing
+at `004e2530` remains an explicit recording boundary: the caller requests
+`data\sounds\sounds.sfx`, but this experiment supplies no effect records.
+
+The outer caller clears its sample/event heads, copies the master-volume word
+from `00662aac`, sets two gain fields to one and calls UpdateVolume with the
+now-empty event list. It allocates and links **256 distinct 136-byte sound-event
+objects**, then constructs a 20-byte menu and registers it through the original
+native thiscall operation. A prior registry child remains linked and untouched.
+Successful allocation is supplied; the original pool/menu/console paths do not
+provide a safe general allocation-failure contract.
+
+Original console helpers register `snd_frozen`, `snd_visible`,
+`snd_radiomessagevolume`, `snd_hudmessagevolume` and the `playsound` callback.
+The admitted C-locale comparison reuses existing uppercase-name entries without
+allocating duplicates; names, descriptions and value/callback pointers are
+updated. The command callback itself does not execute. Whole object/guard
+comparisons preserve unwritten fields and padding.
+
+Before device Init, outer writes only **BYTE receiver `+4=1`**. If device Init
+returns false in AL, outer clears that byte but leaves the pool, menu, console
+registrations and sampled timer in place. Both success and failure preserve
+the other three bytes of that word. An existing device wrapper skips inner
+device setup but does not skip the outer setup. This outer function is therefore
+not an idempotent initialization guard. Direct device Init alone does not set
+the flag; the reset caller `00517f10` also has no corresponding flag write.
+The reset distinction is static instruction evidence, pending composition with
+actual device Init and Load/Save.
+
+The original timer `005159e0` reads its **ECX receiver**, supplied by outer as
+`0088a0a8`, and returns through x87 ST0. With nonzero signed 64-bit frequency,
+it samples the supplied performance counter, establishes the global baseline
+on the first call, and divides the signed counter delta by frequency times the
+receiver's float scale. The API return status is ignored; the zero-status
+control here still supplies a valid counter. With zero frequency it instead
+zero-extends the supplied millisecond DWORD and multiplies by float32 bits
+`3a83126f`. Thus `80000000` milliseconds yields positive `2147483.75` seconds
+when stored in the manager's float32 field. The first-counter and established
+baseline controls yield zero and exactly 0.25 seconds. These controls use pinned
+x87 settings, not a host clock or a full timer-precision survey.
+
+The reviewed function export currently omits this timer receiver. That is a
+metadata-correction candidate backed by instructions and execution; no Ghidra
+change is implied. Original WinMain/shell instructions place outer sound setup
+after options Load, campaign Blank and graphics setup. The earlier isolated
+WinMain experiment deliberately stops at failed graphics creation, so these
+separate controls still do not establish a complete executed cold-start chain,
+actual SFX loading, device behavior, playback or save compatibility.
+
 ## Original save reload after reinitialization
 
 The [round-trip controls](../../VALIDATION.md#original-load-save-and-reload-controls--september-20)

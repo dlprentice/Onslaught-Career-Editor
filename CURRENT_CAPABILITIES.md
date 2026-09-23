@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (coupled settings routing and original device initialization; earlier implementation receipts retain their dates).
+Last updated: 2026-09-23 (coupled settings routing and original sound initialization; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -123,6 +123,14 @@ different retained/defaulted state. These are isolated instruction observations
 with supplied device responses, not actual audio-device or Load/Save integration
 acceptance. See the
 [device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization).
+
+Ten further controls execute original outer sound-manager setup and device Init
+together. They verify all 256 pool objects, menu/console registration, timer
+sampling and the initialized-byte distinction. Device failure clears that byte
+but retains the preceding setup; matching console names reuse their entries.
+SFX parsing and platform effects remain supplied boundaries. This is not yet
+the full startup chain or device Init composed into save loading. See the
+[outer initialization contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
 
 ## Godot Save Lab — first workflow
 

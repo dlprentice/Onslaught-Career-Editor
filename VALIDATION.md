@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (coupled settings routing and original device initialization; earlier validation retained).
+Last updated: 2026-09-23 (coupled settings routing and original sound initialization; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2508,6 +2508,43 @@ logger and narrow hex formatter behavior. No real device, playback, save Load/Sa
 composition, empty-description localization or complete startup acceptance is
 established. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
 records the reconstruction implications and remaining boundaries.
+
+### Original outer sound-manager initialization — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/audio_manager_init_control.py`
+passed **10 cases / 3,595 observations**; the accepted frozen owner is
+`local-data/test-runs/save-startup-20260919/audio-manager-init-run-3gzsvdhh/init`.
+Receipt SHA-256 `b076063fe41d4d232f1a5e2faa732eeabbc68ba464c36801c12cb51fe421cfa0`;
+ELF SHA-256 `fb9b1d9edf9cf75fcece6ebc5a7cac954c6efa9190acb535afd22a467fd38f34`;
+driver SHA-256 `d836eabc774d830862342da5d2001ae8d064229dd0a7b047f998bd055f507a73`.
+The command log is `audio-manager-init-controls-v2.log` in the parent owner.
+
+Seventeen complete bodies total **4,148 original bytes**. Two 84,804-byte selected
+snapshots per case cover the guarded pool/menu/console objects, manager/device
+state, master volume, timer/baseline, registry, locale and excluded effect-list
+region. Ordered events check original receiver/stack conventions, all 256 pool
+allocations, before-call manager state and timer output-pointer locations.
+The fixture verifies normal-return integer ABI, stack guards, FS restoration,
+the x87 control word and permitted status bits. The forbidden-syscall control
+terminates with SIGSYS and empty output. Actual APIs are intercepted.
+
+Cases cover successful setup, failed device creation, empty device enumeration,
+existing and null wrappers, pre-existing registry/uppercase console entries,
+first and established performance-counter baselines, zero API return status
+with supplied counter output, and unsigned millisecond fallback. Pool/menu/
+console allocations succeed by construction. The SFX parser is excluded at its
+exact call boundary; effect-list state is unchanged, not populated successfully.
+
+Root readback independently checks body/data identity, all outer object bytes
+and guards, registration links/fields, initialized high bytes, sampled values,
+event ordering and snapshot pins without running/importing the driver.
+`init.root-readback.json` records it. All 30 input/output/stderr artifacts equal
+the preserved first run; the second version replaces unused excluded-locale
+traps with their verified targets and adds pointer/logger assertions. Neither
+version alters original instructions. Full read-only review reports remain in
+the existing private review owner. No real clock/device, SFX parser, Load/Save
+composition, full WinMain/shell execution or player acceptance is established.
+See the [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
 
 ### Scheduled-event constructor boundary — September 19
 

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-23 (coupled settings routing and original audio-device initialization)
+Last updated: 2026-09-23 (coupled settings routing and original sound-manager/device initialization)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -122,11 +122,14 @@ refresh replaces it. The same serialized result fixes the path on the next Load.
 Device Init and the final bank entry remain explicit boundaries in this paired
 control. Separate original Init controls now establish device-index normalization,
 capability-derived state, enumeration and failure cleanup under supplied API
-responses. Next compose these rechecked services into Load/Save without losing
-their conditional behavior; actual device/playback and cold-start acceptance
-remain open. The
+responses. Ten original outer-manager controls now establish pool/registration
+setup, timer sampling and the caller-owned initialized byte: failed device Init
+clears that byte without undoing setup. SFX parsing remains a boundary. Next
+compose the rechecked device service into Load/reset/Save, especially index
+normalization and failure/reload state. Actual device/playback and cold-start
+acceptance remain open. The
 [coupled contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
-and [device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
+and [sound initialization contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization)
 record the exact prior state and limits.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
