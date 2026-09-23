@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (native Main Menu and Quit confirmation; weapon foundations).
+Last updated: 2026-09-22 (native Main Menu, Quit confirmation and live input edges; weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -827,6 +827,53 @@ res://Scenes/Frontend/Tests/frontend_scene_checks.gd -- --skipfmv`.
 These comparisons preserve the previous reconstruction. Retail Quit rendering,
 localization and the reconstructed dialog height remain unmeasured; software
 captures establish neither normal GPU performance nor physical input/audio.
+
+#### Live native input edges — September 22
+
+`FirstFlightGame` now injects the existing `Client/platform_input_edges.gd`
+owner into its actual `InteractiveSession`. The temporary managed bridge has
+no mirrored key/joystick maps. Its native resource is released on retry, world
+release and shutdown, including partial-load failure paths. The standalone
+C# state remains the comparison/default for managed consumers; simulation and
+the rest of the session have not been converted by this change.
+
+The earlier standard-engine input foundation receipt remains
+`gdscript-parity-9mt08bqg/client-input.json` (**3,855 checks**). The adoption
+adds these executed checks under the same worktree's `local-data/test-runs/`:
+
+- `input-bridge-client-ewvs9xkq/`: **58** affected platform/session tests plus
+  **5** pause integration tests passed, zero skips. The new injection test
+  proves the borrowed owner receives the original frame/reset lifecycle.
+- `input-bridge-headless-b5v2o4sr/report.json`: **3,891 checks**, **526**
+  reference operations and **11** explicit session-frame calls; all five
+  groups completed with zero failures and a clean runtime log. Coverage
+  includes Echo, release-latched presses, byte values through 255, signed
+  Int32 IDs, signed Int64 counters beyond binary64 precision and overflow,
+  detached captures, refusals, disposal, actual host create/release/retry,
+  focus/pause resets and exact paired-session event/state/tape bytes.
+  The admitted manifest and source inputs retained their recorded hashes.
+  The paired-session final state was
+  `04c5aaaa7dd5de5712f4c08c343b782efb47277e28afea1118a8a0785b20543a`,
+  trace `a36d1d4e7084976e4919b51a132949f69b3c9468e62bfcffc33df630171facf6`.
+- `input-bridge-build-fixed-8h7_09jw/`: supported pinned .NET build and private
+  Level 100 import passed with zero build warnings/errors.
+- `input-bridge-smoke-25y8sm09/`: live native-input gameplay completed the
+  existing **2,148-step** smoke with focus-loss/rearm, fresh retry and world
+  release at Main Menu. Its tape remains byte-identical to the Quit milestone,
+  SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Two replays (`input-bridge-replay-b4cfw8j5/`) verified the same full-smoke
+  trace/state hashes recorded above with no first divergence. Runtime logs
+  are clean. The mission remains `Running`/`None`, zero targets destroyed;
+  this is regression evidence, not full-combat acceptance.
+
+Run .NET `--headless --audio-driver Dummy --path GODOT_PROJECT
+res://Tests/PlatformInputBridgeChecks.tscn` with an isolated owned profile.
+The harness reports to stdout and writes no files; the caller owns its log.
+It never samples physical devices or enters the game tree. Explicit paused
+session API calls advance input history once; the actual host still returns
+before making those calls while paused. This conversion preserves that
+distinction. Retail repeat policy and joystick polling cadence remain open;
+these checks do not establish physical-device behavior or full combat parity.
 
 #### Native weapon foundations — September 22
 

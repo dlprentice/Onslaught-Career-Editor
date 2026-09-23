@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (native Main Menu and Quit confirmation; weapon foundations).
+Last updated: 2026-09-22 (native Main Menu, Quit confirmation and live input edges; weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -218,9 +218,24 @@ The world renderer now advances and samples the single native camera owner in
 `Client/world_camera.gd`, retaining the same authored Camera3D and projection.
 Editor entry leaves that live camera owner uninitialized.
 
+Live gameplay now uses `Client/platform_input_edges.gd` for held/read-once key
+bytes and previous/current joystick bytes. `GdPlatformInputEdges` only translates
+the existing host contract; it does not keep another mutable input state.
+`InteractiveSession` borrows that owner, and `FirstFlightGame` creates/releases
+it with the gameplay session, including retry, menu return and failed loading.
+Input observation, Escape-before-pause routing, focus/pause resets and frame
+advancement retain their existing order. The session API advances history once
+per accepted frame call, including its paused branch; the live host still
+returns before making that call while paused. The pure script remains
+editable in Godot's script editor and never acquires native input or a clock.
+The standalone C# state remains the temporary comparison/default for managed
+consumers. Sampling, pointer easing and the remaining session/simulation logic
+still await conversion. Retail key-repeat policy and joystick poll cadence
+remain unresolved; this adoption does not invent either contract.
+
 `Core/retail_career_save.gd` reads supplied
 career bytes without filesystem access, retains every unknown byte and exposes
-detached projections for the frontend. It has no save writer. Input and remaining
+detached projections for the frontend. It has no save writer. The remaining input and
 simulation ports still need their live consumers converted; the full application
 continues to require .NET. The MIT Save Lab backend
 and its overwrite/recovery protections remain separate.

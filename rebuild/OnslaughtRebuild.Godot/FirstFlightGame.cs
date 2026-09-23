@@ -27,6 +27,7 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
+    private GdPlatformInputEdges? _platformInput;
     private readonly GdPauseMenuState _pauseMenu = new();
     private readonly AudioPlaybackRetirement _audioRetirement = new();
     private int? _quitExitCode;
@@ -737,6 +738,8 @@ public sealed partial class FirstFlightGame : Node3D
         }
         finally
         {
+            // Also covers a native owner created before world loading failed.
+            ReleasePlatformInput();
             _tapeRecorder?.Dispose();
             _tapeRecorder = null;
             _audioRetirement.Dispose();
@@ -1100,11 +1103,36 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.QueueFree();
         _pauseView.QueueFree();
         _level100WorldCreated = false;
+        ReleasePlatformInput();
         _session = null!;
     }
 
-    private static InteractiveSession CreateSession() =>
-        new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+    private InteractiveSession CreateSession()
+    {
+        if (_platformInput is not null)
+            throw new InvalidOperationException("Release the previous platform input owner before creating a session.");
+        Level100ActorDefinitionSet definitions = Level100StaticWorldAsset.LoadActorDefinitions();
+        var input = new GdPlatformInputEdges();
+        try
+        {
+            // The session borrows this one native state. Host events, pause and
+            // focus resets, and host-frame advances keep their existing order.
+            var session = new InteractiveSession(SimulationSeed, definitions, input);
+            _platformInput = input;
+            return session;
+        }
+        catch
+        {
+            input.Dispose();
+            throw;
+        }
+    }
+
+    private void ReleasePlatformInput()
+    {
+        _platformInput?.Dispose();
+        _platformInput = null;
+    }
 
     /// <summary>
     /// When --record-tape was given, the session

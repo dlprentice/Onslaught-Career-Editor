@@ -138,8 +138,12 @@ public sealed class InteractiveSession
     private CommandTapeRecorder? _recorder;
     private int _recordedTicks;
 
-    public InteractiveSession(uint seed, Level100ActorDefinitionSet level100ActorDefinitions)
+    public InteractiveSession(
+        uint seed,
+        Level100ActorDefinitionSet level100ActorDefinitions,
+        IPlatformInputEdges? platformInput = null)
     {
+        PlatformInput = platformInput ?? new PlatformInputEdgeState();
         _simulation = new Simulation(seed, level100ActorDefinitions);
         PreviousSnapshot = _simulation.Snapshot;
         CurrentSnapshot = PreviousSnapshot;
@@ -196,7 +200,8 @@ public sealed class InteractiveSession
 
     public long InterpolationPhase => _interpolationPhase;
 
-    public PlatformInputEdgeState PlatformInput { get; } = new();
+    /// <summary>The borrowed host-input owner; the caller retains its lifetime.</summary>
+    public IPlatformInputEdges PlatformInput { get; }
 
     public InteractivePauseReason PauseReasons => _pauseReasons;
 
