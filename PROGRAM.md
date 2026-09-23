@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-23 (complete English bank and coupled settings/audio routing)
+Last updated: 2026-09-23 (coupled settings routing and original audio-device initialization)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -120,10 +120,14 @@ Load/Save/reload controls expose a routing distinction: changing language and an
 audio word together preserves the cached old bank path, while language-only
 refresh replaces it. The same serialized result fixes the path on the next Load.
 Device Init and the final bank entry remain explicit boundaries in this paired
-control; next close their composition and device-dependent normalization before
-claiming complete settings application. The
+control. Separate original Init controls now establish device-index normalization,
+capability-derived state, enumeration and failure cleanup under supplied API
+responses. Next compose these rechecked services into Load/Save without losing
+their conditional behavior; actual device/playback and cold-start acceptance
+remain open. The
 [coupled contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
-records the exact prior state and limits.
+and [device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
+record the exact prior state and limits.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;

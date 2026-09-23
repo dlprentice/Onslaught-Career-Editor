@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (English-bank execution and coupled settings/audio routing; earlier implementation receipts retain their dates).
+Last updated: 2026-09-23 (coupled settings routing and original device initialization; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -114,6 +114,15 @@ corrects the path. Device Init and bank loading remain intercepted in this
 composition; these results do not demonstrate audible wrong-language playback
 or a cold-start defect. See the
 [coupled routing contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing).
+
+Separate original device Init/enumeration controls now pass **29 cases**. They
+establish conditional index normalization, exact primary formats, capability-derived
+method/count values and failure cleanup. An oversized device index becomes zero;
+a negative index survives. Failed GetCaps can still lead to successful Init, with
+different retained/defaulted state. These are isolated instruction observations
+with supplied device responses, not actual audio-device or Load/Save integration
+acceptance. See the
+[device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization).
 
 ## Godot Save Lab — first workflow
 

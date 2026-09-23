@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (English-bank execution and coupled settings/audio routing; earlier validation retained).
+Last updated: 2026-09-23 (coupled settings routing and original device initialization; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2467,6 +2467,47 @@ shutdown, diagnostics and latest-world remain supplied boundaries. No actual fil
 Open, device normalization, playback or cold-start reachability is established.
 The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
 records the stale-path result, second-load correction and serialization limits.
+
+### Original audio-device initialization — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/audio_device_init_control.py`
+passed **29 cases / 3,213 ordered observations** in
+`local-data/test-runs/save-startup-20260919/audio-device-init-run-6_s044v6/init`.
+Receipt SHA-256 `5730c451811c14b1d7e5ac18f4de80435d0751328088dea1cdd9d669f2a720f9`;
+ELF SHA-256 `2d7e3083761c5a856cc0d4ce49221a030fd4cbdae63726e9463e83f329ac2d56`.
+The frozen driver SHA-256 is
+`dd8a21137262a162074829051063f21b798e21afe04d1904b723507740a7ccec`;
+`audio-device-init-controls-v1.log` retains the command outcome.
+
+Nine complete original bodies total 2,412 bytes, including Init, actual callback,
+wrapper construction/destruction and description conversion/copy. The loaded
+bodies/data/zero BSS match the pinned pristine specimen. Each case compares two
+complete 39,300-byte selected-state snapshots, intact input, immutable vtables,
+ordered consequential boundary calls, manager/CLI/wrapper state, GUID/capability/
+descriptor/format payloads and exact stack-relative output locations. The owned
+initialized stack, integer ABI, FS-chain restoration and x87 control/status pass.
+The forbidden-syscall negative control terminates with SIGSYS and empty output.
+
+Cases include every main failure stage, positive HRESULTs, null allocation,
+existing-wrapper early return, filtered enumeration, eleven callbacks versus ten
+records, returned enumeration failure, index boundaries, all format branches,
+automatic/explicit method/count values, high-bit count arithmetic, and bounded
+high-byte/49/50-byte descriptions. Supplied failures normally write null output;
+the second QueryInterface failure deliberately leaves its prior output unchanged.
+The existing-wrapper case retains an authored table-count sentinel; the receipt's
+`admittedDevices` field there is **not an enumeration count**.
+
+Root independently reads the saved bytes without importing/running the driver;
+`root-output-review.json` records original-byte identity, index/GUID selection,
+unchanged settings and manager regions, exact format requests and selected failure
+results. Independent read-only reviews also reconstructed every selected-state
+byte and all 3,213 event positions; full prompts/reports remain in the existing
+private review owner. Acquisition counters describe this invocation's resources,
+excluding pre-existing authored pointers. These are isolated original-code controls with supplied heap, API, COM,
+logger and narrow hex formatter behavior. No real device, playback, save Load/Save
+composition, empty-description localization or complete startup acceptance is
+established. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
+records the reconstruction implications and remaining boundaries.
 
 ### Scheduled-event constructor boundary — September 19
 

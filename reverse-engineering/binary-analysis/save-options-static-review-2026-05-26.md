@@ -572,10 +572,80 @@ reconstruction cannot infer this runtime cache state from the saved language fie
 These are conditional original-code routing observations with authored empty
 audio ownership and language caches. They do not establish that the prior state
 occurs at cold startup, that a French bank opens, or that wrong-language audio
-plays. Fresh static inspection of the complete device Init body finds no direct
-bank-path refresh, but its platform branches are **not executed** here. In
-particular, `00516ab2–00516ac4` can normalize device index `00663078` to zero;
-device-dependent serialization and real initialization effects remain open.
+plays. This paired experiment does not execute Init. The separate
+[device controls below](#original-audio-device-initialization) now execute its
+admitted branches with supplied platform responses, including device-index
+normalization. Their composition with Load/Save and real platform effects remain
+open.
+
+## Original audio-device initialization
+
+The [29 isolated controls](../../VALIDATION.md#original-audio-device-initialization--september-23)
+execute the complete original Init `005169b0`, enumeration callback and seven
+wrapper/import/string bodies. Heap, enumeration delivery, COM/device methods,
+`mmioClose` and diagnostics remain supplied boundaries. These results extend
+the recheck beyond the status-only Init boundary in the paired Load experiment;
+they are **not yet composed into that experiment**.
+
+The original callback admits devices after successful creation and cooperative
+level, even when their capability query fails. Temporary interfaces are released
+before admission. At ten records, an otherwise-admissible eleventh callback still
+creates/queries/releases its temporary device, then returns zero without writing
+a record. Init uses the resulting count, ignoring the enumerator's returned
+HRESULT. Nonnegative HRESULTs, including positive values, select success branches.
+
+With admitted devices, saved index `00663078` is compared to the count as a
+**signed integer**: equal or larger becomes zero, but negative indices survive.
+The `-1` control reads its GUID pointer from the explicitly guarded cell
+`00896460`, before the device table. With no admitted devices, initialization
+fails without normalizing the index. This behavior is not permission for a
+consumer to dereference an invalid index without bounds checks.
+
+Init always writes receiver `+2cc=12`, including the early-success path when
+`+2c8` already contains a wrapper. Normal initialization clears only the 64
+primary slots at `[+c4,+1c4)`; the secondary slots, cached bank path and receiver
+initialized flag at `+4` remain unchanged in these controls. Main GetCaps failure
+does not stop primary setup: prior method `+bc` and continuous-rate byte remain,
+count stays 12, and the hardware-use byte is cleared.
+
+On successful main GetCaps, method setting `00663084=-1` selects method two;
+the comparison against capability value 30 controls no conditional branch.
+Other method values copy unchanged. Explicit count setting `00663088` also
+copies unchanged. Automatic count takes unsigned maxima of 12 and capability
+`+3c`, additionally including `+24` for method two, then applies a **signed**
+upper comparison with 64. Ordinary large values clamp; `80000000` survives.
+The corresponding saved method/count/quality/hardware preferences remain
+unchanged. Continuous-rate state follows capability flag `10`; hardware-use
+state follows whether preference `00663074` is nonzero.
+
+| Quality preference | Primary rate | Bits | Channels | Block alignment | Bytes/second |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0 | 44,100 | 16 | 2 | 4 | 176,400 |
+| 1 | 22,050 | 16 | 2 | 4 | 88,200 |
+| Every other value, including negative | 11,025 | 8 | 2 | 2 | 22,050 |
+
+These are the exact observed 18-byte PCM format requests, with extension size
+zero, not proof a real device accepts them. Successful Init retains the supplied
+device/listener and wrapper, releases its temporary primary reference and
+returns truth in **AL**, without establishing a canonical full-EAX Boolean.
+Failure cleanup depends on which interfaces were acquired. QueryInterface's
+output is not precleared or cleared by Init on failure; the two failure controls
+separate an API writing null from one leaving the prior listener value untouched.
+
+Wrapper allocation failure does not immediately abort initialization. The
+constructor initializes only its vtable and `+4`; later failure destruction
+forwards the supplied allocation bytes at `+8` to `mmioClose`. Here that word is
+an explicit sentinel, not evidence of a real open handle or real heap contents.
+Original enumeration also widens each description byte directly, including high
+bytes, rather than decoding UTF-8. It copies 49 wide units into each 120-byte
+record; a long name need not be terminated in that field, and the final two
+record bytes remain untouched. Empty-description localization is excluded.
+
+For compatibility, preserve the distinction between saved preferences, selected
+device and effective runtime state. A successful Init alone proves neither
+bank loading nor playable audio. Real platform effects, device-index changes
+through a composed Load/Save, startup reachability and player acceptance remain
+open; no original save or Ghidra database changed in these controls.
 
 ## Original save reload after reinitialization
 
