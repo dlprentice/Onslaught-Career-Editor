@@ -451,14 +451,14 @@ mouse_filter = 2
 
 [node name="Shadow" type="Control" parent="Decoration/Left"]
 layout_mode = 0
-offset_left = -69.0
-offset_top = -64.0
-offset_right = 267.0
-offset_bottom = 272.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("left")
-source_rect = Rect2(51.0, 176.0, 336.0, 336.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(219.0, 344.0)
 source_size = Vector2(256.0, 256.0)
 ink_color = Color(0, 0, 0, 0.24313725490196078)
@@ -466,14 +466,14 @@ ink_color = Color(0, 0, 0, 0.24313725490196078)
 
 [node name="Body" type="Control" parent="Decoration/Left"]
 layout_mode = 0
-offset_left = -61.0
-offset_top = -56.0
-offset_right = 259.0
-offset_bottom = 264.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("left")
-source_rect = Rect2(59.0, 184.0, 320.0, 320.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(219.0, 344.0)
 source_size = Vector2(256.0, 256.0)
 ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
@@ -490,14 +490,14 @@ mouse_filter = 2
 
 [node name="Shadow" type="Control" parent="Decoration/LeftTwin"]
 layout_mode = 0
-offset_left = -69.0
-offset_top = -64.0
-offset_right = 267.0
-offset_bottom = 272.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("left_twin")
-source_rect = Rect2(51.0, 176.0, 336.0, 336.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(219.0, 344.0)
 source_size = Vector2(256.0, 256.0)
 ink_color = Color(0, 0, 0, 0.24313725490196078)
@@ -505,14 +505,14 @@ ink_color = Color(0, 0, 0, 0.24313725490196078)
 
 [node name="Body" type="Control" parent="Decoration/LeftTwin"]
 layout_mode = 0
-offset_left = -61.0
-offset_top = -56.0
-offset_right = 259.0
-offset_bottom = 264.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("left_twin")
-source_rect = Rect2(59.0, 184.0, 320.0, 320.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(219.0, 344.0)
 source_size = Vector2(256.0, 256.0)
 ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
@@ -529,14 +529,14 @@ mouse_filter = 2
 
 [node name="Shadow" type="Control" parent="Decoration/Right"]
 layout_mode = 0
-offset_left = 253.0
-offset_top = 31.0
-offset_right = 421.0
-offset_bottom = 199.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("right")
-source_rect = Rect2(373.0, 271.0, 168.0, 168.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(457.0, 355.0)
 source_size = Vector2(128.0, 128.0)
 ink_color = Color(0, 0, 0, 0.24313725490196078)
@@ -544,14 +544,14 @@ ink_color = Color(0, 0, 0, 0.24313725490196078)
 
 [node name="Body" type="Control" parent="Decoration/Right"]
 layout_mode = 0
-offset_left = 257.0
-offset_top = 35.0
-offset_right = 417.0
-offset_bottom = 195.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("right")
-source_rect = Rect2(377.0, 275.0, 160.0, 160.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(457.0, 355.0)
 source_size = Vector2(128.0, 128.0)
 ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
@@ -568,14 +568,14 @@ mouse_filter = 2
 
 [node name="Shadow" type="Control" parent="Decoration/RightTwin"]
 layout_mode = 0
-offset_left = 253.0
-offset_top = 31.0
-offset_right = 421.0
-offset_bottom = 199.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("right_twin")
-source_rect = Rect2(373.0, 271.0, 168.0, 168.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(457.0, 355.0)
 source_size = Vector2(128.0, 128.0)
 ink_color = Color(0, 0, 0, 0.24313725490196078)
@@ -583,14 +583,14 @@ ink_color = Color(0, 0, 0, 0.24313725490196078)
 
 [node name="Body" type="Control" parent="Decoration/RightTwin"]
 layout_mode = 0
-offset_left = 257.0
-offset_top = 35.0
-offset_right = 417.0
-offset_bottom = 195.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 440.0
+offset_bottom = 210.0
 mouse_filter = 2
 script = ExtResource("rotated")
 texture = SubResource("right_twin")
-source_rect = Rect2(377.0, 275.0, 160.0, 160.0)
+source_rect = Rect2(120, 240, 440, 210)
 source_anchor = Vector2(457.0, 355.0)
 source_size = Vector2(128.0, 128.0)
 ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
@@ -693,6 +693,8 @@ ink_color = Color(0.6862745098039216, 0.8117647058823529, 1, 0.996078431372549)
 
 
 [node name="Reflection" type="Node2D" parent="."]
+top_level = true
+z_as_relative = false
 script = ExtResource("reflection")
 texture = ExtResource("title")
 reflection = SubResource("reflection")

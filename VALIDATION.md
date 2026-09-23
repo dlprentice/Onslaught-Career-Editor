@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (validated native weapon foundations; Main Menu checks in progress).
+Last updated: 2026-09-22 (native Main Menu presentation and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -652,7 +652,7 @@ full combat completion or audible playback.
 
 #### Interrupted conversion checkpoint — September 20
 
-The native Main Menu is integrated but remains under validation. The following
+At this checkpoint the native Main Menu was integrated but still under validation. The following
 receipts are retained in the conversion worktree's `local-data/test-runs/`:
 
 - `main-menu-law-fixed-njfykcp9/report.json`: **205,452** comparisons passed
@@ -678,18 +678,90 @@ receipts are retained in the conversion worktree's `local-data/test-runs/`:
   including the new `MainMenuSceneChecks` and `RetailWeaponReferenceChecks`.
   Neither new scene harness has been executed at this checkpoint.
 
-The standalone native Main Menu editor/publication checks are not yet written,
-the exact rendered comparison has not run, and the interrupted integration
-review produced no completed findings. Complete those checks before accepting
-the component. The latest world import and actual-tape replay receipts above
-belong to the earlier Aquila milestone; current assembly/source edits require
-a fresh supported import and affected runtime/replay validation before claiming
-the same results for Main Menu.
+The standalone editor/publication checks, rendered comparison and integration
+review were unfinished at that checkpoint. The September 22 results below
+supersede those gaps; the earlier Aquila receipts above retain their original
+scope.
 
 The three weapon foundations had only parsed at the September 20 checkpoint;
 their subsequent comparison results are recorded below. They have no live
 consumers yet.
-Resume instructions are in [`rebuild/README.md`](rebuild/README.md#interrupted-conversion-checkpoint--september-20).
+Current component guidance is in [`rebuild/README.md`](rebuild/README.md#native-main-menu).
+
+#### Native Main Menu — September 22
+
+The production native page and its live frontend adapter preserve the existing
+renderer in the following executed checks. All receipts below belong to this
+worktree's ignored `local-data/test-runs/`; canonical research inputs were read
+through the existing asset routes.
+
+- `main-menu-resume-laws-zw542v2k/`: **205,454 checks**, all expression and
+  packed-color groups complete, against 5,188 expression rows and 1,040 color
+  rows from the unchanged C# comparison. Eight output-path refusals preserved
+  their sentinels and fixture hash (`main-menu-law-guards-5z2qnidd/`).
+- `main-menu-render-decor-o5hlffl3/report.json`: **2,282 checks**, all five
+  groups and **92 samples** complete. All **178 native/live-host image
+  comparisons have zero RGBA-byte differences** against the retained original
+  renderer: 640×480, 1280×720, 801×601 and 320×240 transitions, language flags,
+  raw UTF-16, reflection suppression and authored row text/geometry. The
+  isolated Xvfb display used separate credentials/profiles, Dummy audio and
+  llvmpipe (Mesa 26.2.2, LLVM 22.1.8), then stopped its owned processes.
+  Two representative captures were inspected. The log contains only the
+  expected virtual-display input-method/V-Sync warnings, with no runtime
+  errors or teardown leaks. This is software-rendered regression evidence,
+  not normal-GPU performance, physical input or audible playback.
+- `main-menu-native-pass-edit-pwuz8krr/result/report.json`: **576 checks**,
+  all ten groups complete in standard headless Godot, with a clean log.
+  It uses the actual production scene/assets, checks inactive input/clocks,
+  detached admitted facts, frozen Inspector redraws, independent decoration
+  edits and actual pack/reopen. Public serialization excludes private decoded
+  images and byte buffers. Standard headless editor also passed all **576**
+  checks (`main-menu-native-editor-shared-frame-v2tlygzz/`) but reported
+  **166 ObjectDB/associated RID teardown leaks**; this is not a clean
+  editor-exit claim. Eight native output-path refusals preserved their
+  sentinels (`main-menu-native-output-guards-be33uep4/`).
+- The actual .NET frontend scene passed its ten-page/seven-row, asset sharing,
+  edit/round-trip and pointer checks in runtime and editor modes
+  (`main-menu-frontend-runtime-final-myenqszi/` and
+  `main-menu-frontend-editor-final-ivccwh8b/`). The runtime log is clean; the
+  editor retained **205 ObjectDB/associated RID shutdown leaks**.
+- `main-menu-client-complete-mnjeui0b/results/main-menu.trx`: **177/177** affected
+  Client tests passed with zero skips. Numerical expectations remain unchanged.
+- `main-menu-full-build-f1uqiost/`: the supported pinned .NET build and private
+  Level 100 production import passed with zero warnings/errors.
+  `main-menu-world-3n78x08g/`: **24,169 world checks** passed, including saved
+  geometry/materials, native bindings, selected poses, retry isolation and
+  unchanged simulation hashes.
+- `main-menu-smoke-eaehifkc/`: the live headless frontend/world smoke completed
+  **2,148 steps**, thirteen ordered message deliveries/queues, a fresh retry
+  and return to Main Menu with world release. Its recorded tape remains
+  byte-identical to the preceding Aquila milestone, SHA-256
+  `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  `main-menu-replay-cq_in8zz/`: two actual-tape replays verified unchanged
+  trace `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no first divergence. Runtime logs are clean. The mission still ends
+  `Running`/`None` with zero targets destroyed; this is not full-combat acceptance.
+
+The rendered check exposed two canvas-structure differences at fractional
+scales. The reflection now retains the original canvas-root shader submission,
+follows frozen authored title/ancestor transforms and keeps derived pose/Z out
+of saved defaults. Decoration passes now share the original decoration canvas
+frame instead of regrouping floating-point transforms around tighter individual
+bounds. Their named Controls remain independently editable. The assertions
+still require exact pixels. Review also exposed an unknown Resource leaking
+through frame snapshots and an anchor edit requiring another frame batch;
+both are fixed and covered by the native checks.
+
+Run .NET `Scenes/Frontend/Tests/MainMenuSceneChecks.tscn` with `--skipfmv` for
+actual scene/host checks; a caller-owned isolated display plus
+`--main-menu-render-dir=ABS_FRESH_EMPTY_DIR` enables the exact image comparisons.
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/main_menu_scene_checks.gd -- ABS_FRESH_EMPTY_DIR`
+for native editor/publication checks; `--editor` selects tool mode. Output must
+stay in this worktree's `local-data/`. The scene comparison reference preserves
+the reconstruction's existing retail evidence gaps; matching it does not close
+unmeasured retail behavior or complete Level 100 combat.
 
 #### Native weapon foundations — September 22
 

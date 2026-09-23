@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (validated native weapon foundations; Main Menu validation in progress).
+Last updated: 2026-09-22 (native Main Menu presentation and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -96,51 +96,37 @@ isolated owned display. Preserve the separate companion changes and other lanes'
 worktrees. Executed comparisons and their limits are recorded in
 [`VALIDATION.md`](../VALIDATION.md#september-19-production-scene-migration).
 
-#### Interrupted conversion checkpoint — September 20
+#### Native Main Menu
 
-The last completed component milestones are the production Aquila conversion
-(`e31519b8`) and native actor-registry foundation (`052b4d1c`). The following
-work is preserved for resumption after the usage interruption; it is not another
-completed parity milestone. The supported headless `build --no-prepare` passed
-with zero warnings/errors at this checkpoint, including the new comparison
-harnesses. It does not refresh the private world import receipt.
-
-`Scenes/Frontend/MainMenu.tscn` now contains the actual editable rows, title,
+`Scenes/Frontend/MainMenu.tscn` contains the actual editable rows, title,
 selector, language controls, reflection and decoration components. Its typed
 GDScript owners use the production recipes, with a narrow C# host adapter
 retaining session/input/clock ownership. `Frontend.tscn` instances this scene
 with editable children; its authored row changes survive a scene round-trip.
-The menu is already connected to the live frontend, but its isolated rendered
-comparison and standalone editor/publication checks remain unfinished.
+Opening the native page supplies frozen `editor_preview` facts and uses the
+same art, atlas fonts, draw laws and reflection shader as gameplay. It neither
+starts a session nor acquires input. Main Menu and Click share `ClickTitle.tres`.
 `Scenes/Frontend/Tests/MainMenuReference*` retain the original presentation for
 comparison, not a second production menu.
 
-The weapon foundations preserved at this checkpoint passed their comparison
-and focused Core checks on September 22, as described above. No live weapon
-consumer uses these modules yet.
+Rows expose position, size, source anchor and explicit `override_text`/`text`;
+imported labels remain the default and retain selector-width authority. Each
+decoration has separate Shadow and Body controls with editable texture, tint,
+source anchor and dimensions. Their selection rectangles share the original
+decoration coordinate frame to preserve floating-point rendering at fractional
+window scales. Select the named pass in the Scene dock when these bounds overlap.
+The reflection follows the authored title pose while preserving its original
+canvas-root shader submission; its derived transform and Z are not saved as
+another authored pose. Frozen Inspector edits redraw without advancing time.
 
-Resume in this same worktree, keeping the following order:
-
-1. Re-run `MainMenuLawReferenceChecks.tscn` and `main_menu_law_checks.gd` with
-   fresh owned outputs to cover their latest output guards and completion
-   metadata. Earlier arithmetic comparisons passed; those harness changes came
-   afterwards.
-2. Run the newly compiled `MainMenuSceneChecks.tscn` headlessly with
-   `--skipfmv`, then compare its native/reference/integrated images on an
-   isolated owned display using `--main-menu-render-dir=ABS_FRESH_EMPTY_DIR`.
-   Finish the standalone native editor/publication checks and review the
-   production integration before treating Main Menu as complete.
-3. Before gameplay acceptance, run the supported full build/private import to
-   refresh the world receipt, then the affected world/smoke and actual-tape
-   replay checks. The older receipt predates the current assembly/source edits;
-   do not bypass or delete its admission guards.
-
-Existing focused receipts and known editor shutdown diagnostics are listed in
-[`VALIDATION.md`](../VALIDATION.md#interrupted-conversion-checkpoint--september-20).
-No rendered Main Menu, complete combat, normal-GPU performance, physical-input
-or audible-playback acceptance is implied. Preserve the separate uncommitted
-companion work. The interrupted subagents are not running; resume from these
-source files and receipts rather than assuming their assignments completed.
+The native/reference/live-host comparison passed 178 exact image comparisons
+over four window sizes on an isolated software display. Standard headless
+checks cover authored content, inactive input/clocks, edits and pack/reopen
+without embedding private images. The known headless editor shutdown leaks
+remain unresolved. Commands, receipts and limits are in
+[`VALIDATION.md`](../VALIDATION.md#native-main-menu--september-22).
+The September 20 interrupted checkpoint is retained there as history; its
+unfinished Main Menu checks are superseded by these executed results.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
@@ -577,6 +563,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |
 | [Scenes/Frontend/ClickToStart.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/ClickToStart.tscn) | Actual splash, five prompt passes, sliding-logo pair, five title passes and title flash. `editor_preview` supplies frozen times. Image `center`/size and text `content_origin` expose the source layout; outer transforms and `override_prompt` support deliberate edits. |
 | [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
 | [Scenes/Frontend/Loading.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Loading.tscn) | Production background, five ordered caption passes and fixed bar. `editor_progress` supplies frozen host facts; `override_caption` marks deliberate enhanced text. The scene does not request or advance loading. |
@@ -599,7 +586,8 @@ the existing adapters. The public actor scene supplies later spawned actors.
 
 Edit UI Control positions, sizes, text, resource routes and base appearance in
 their scenes. Frontend text keeps imported localization by default; an explicit
-`OverrideText` enables a deliberate authored replacement. HUD `Base`, `Glow` and
+`override_text` (or `OverrideText` on remaining C# controls) enables a deliberate
+authored replacement. HUD `Base`, `Glow` and
 `Text` groups expose the measured blend passes; corresponding halves of an
 instrument are separate selectable controls, with imported `part`/`source_rect`
 identity read-only in the Inspector. GDScript HUD and remaining C# frontend controls

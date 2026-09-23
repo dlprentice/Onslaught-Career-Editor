@@ -74,7 +74,26 @@ public sealed partial class MainMenuSceneChecks : Node
                     SetHost(host, counts[index], animation, background, selected);
                     Check(page.GetNode<CanvasItem>("Selector").Visible && page.GetNode<CanvasItem>("Reflection").Visible,
                         "Selector object and reflection retain their distinct draw-time visibility gates.");
+                    Transform2D sheen = page.GetNode<Node2D>("Reflection").GetGlobalTransformWithCanvas();
+                    Transform2D referenceSheen = reference.GetNode<Node2D>("TitleLogoReflection").GetGlobalTransformWithCanvas();
+                    Check(sheen == referenceSheen, $"Exact reflection canvas transform at {size}: native={sheen}, reference={referenceSheen}.");
+                    var nativeMaterial = (ShaderMaterial)page.GetNode<Node2D>("Reflection").Material;
+                    var oldMaterial = (ShaderMaterial)reference.GetNode<Node2D>("TitleLogoReflection").Material;
+                    foreach (string parameter in new[] { "gain", "scroll" })
+                        Check(nativeMaterial.GetShaderParameter(parameter).AsDouble() == oldMaterial.GetShaderParameter(parameter).AsDouble(), "Exact reflection uniform: " + parameter);
+                    Check(page.GetNode<Control>("TitleLogo/Body").GetGlobalTransformWithCanvas() == reference.GetNode<Control>("Stage/MainMenu/TitleLogo/Body").GetGlobalTransformWithCanvas(), "Exact title body canvas transform.");
                     CheckFrame(page, reference, selected, transition, labels);
+                    if (_directory is not null && size == new Vector2I(801, 601) && index == 0)
+                    {
+                        using D withoutReflection = Frame(transition, animation, background, selected, 0, availability, labels, false);
+                        Require(page.Call("set_frame", withoutReflection));
+                        Require(host.GetNode("Stage/MainMenu").Call("set_frame", withoutReflection));
+                        reference.SetFrame(transition, animation, background, selected, 0, availability, labels, false);
+                        await ComparePixels(nativeViewport, referenceViewport, hostViewport, "fractional-without-reflection", true);
+                        Require(page.Call("set_frame", facts));
+                        Require(host.GetNode("Stage/MainMenu").Call("set_frame", facts));
+                        reference.SetFrame(transition, animation, background, selected, 0, availability, labels, true);
+                    }
                     if (_directory is not null) await ComparePixels(nativeViewport, referenceViewport, hostViewport, $"{size.X}x{size.Y}-{index:D2}", true);
                     _samples++;
                 }

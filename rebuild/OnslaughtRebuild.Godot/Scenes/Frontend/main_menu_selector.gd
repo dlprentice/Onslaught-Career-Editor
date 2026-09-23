@@ -4,9 +4,17 @@ extends Control
 ## The selector is one genuine image control, submitted before every text row.
 ## Its width follows the imported label's ink+31, independent of text overrides.
 const F = preload("res://Scenes/Shared/retail_float32.gd")
-@export var texture: Texture2D
-@export var source_rect: Rect2 = Rect2(99, 288, 240, 152)
-@export var ink_color: Color = Color(0.0, 0.0, 0.0, 0.49411764705882355)
+@export var texture: Texture2D:
+	set(value):
+		if texture != null and texture.changed.is_connected(queue_redraw):
+			texture.changed.disconnect(queue_redraw)
+		texture = value
+		if texture != null: texture.changed.connect(queue_redraw)
+		queue_redraw()
+@export var source_rect: Rect2 = Rect2(99, 288, 240, 152):
+	set(value): source_rect = value; queue_redraw()
+@export var ink_color: Color = Color(0.0, 0.0, 0.0, 0.49411764705882355):
+	set(value): ink_color = value; queue_redraw()
 var _rectangle: Rect2 = Rect2(160.5, 288, 117, 32)
 var _alpha: float = 1.0
 

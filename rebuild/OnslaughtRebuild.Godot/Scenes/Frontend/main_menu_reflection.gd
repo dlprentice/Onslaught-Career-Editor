@@ -15,6 +15,8 @@ func _ready() -> void:
 	set_process(false)
 	set_process_input(false)
 	set_process_unhandled_input(false)
+	top_level = true
+	z_as_relative = false
 	_prepare_material()
 
 
@@ -40,7 +42,21 @@ func set_frame(seconds: float, logo: Control) -> void:
 	_prepare_material()
 	var ratio: Vector2 = logo.size / Vector2(512.0, 256.0)
 	var source_to_logo := Transform2D(Vector2(ratio.x, 0.0), Vector2(0.0, ratio.y), -Vector2(64.0, 2.0) * ratio)
-	transform = get_parent().get_global_transform_with_canvas().affine_inverse() * logo.get_global_transform_with_canvas() * source_to_logo
+	# The retained renderer submits this shader at the canvas root. A nested
+	# shader item produces different pixels at fractional window scales even
+	# with the same final matrix. Top-level submission preserves that path;
+	# the real authored title still supplies its complete pose and dimensions.
+	transform = logo.get_global_transform() * source_to_logo
+	var ancestors: Array[CanvasItem] = []
+	var ancestor: Node = get_parent()
+	while ancestor is CanvasItem:
+		ancestors.push_front(ancestor)
+		if ancestor.top_level or not ancestor.z_as_relative: break
+		ancestor = ancestor.get_parent()
+	var inherited_z: int = 0
+	for item: CanvasItem in ancestors:
+		inherited_z = clampi(inherited_z + item.z_index, RenderingServer.CANVAS_ITEM_Z_MIN, RenderingServer.CANVAS_ITEM_Z_MAX)
+	z_index = inherited_z
 	queue_redraw()
 
 
@@ -51,3 +67,9 @@ func view_snapshot() -> Dictionary:
 func _draw() -> void:
 	if texture != null:
 		draw_texture_rect(texture, Rect2(64.0, 2.0, 512.0, 256.0), false, Color.WHITE)
+
+
+func _validate_property(property: Dictionary) -> void:
+	# These values follow the title, rather than becoming a second saved pose.
+	if property.name in ["position", "rotation", "scale", "skew", "z_index"]:
+		property.usage = (property.usage & ~PROPERTY_USAGE_STORAGE) | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY

@@ -6,7 +6,8 @@ extends Control
 const Underlay = preload("res://Scenes/Frontend/frontend_underlay.gd")
 const Laws = preload("res://Client/main_menu_laws.gd")
 @export var recipe: Underlay
-@export var source_rect: Rect2 = Rect2(0, 0, 640, 480)
+@export var source_rect: Rect2 = Rect2(0, 0, 640, 480):
+	set(value): source_rect = value; queue_redraw()
 var _frames: Array = []
 var _alpha: float = 1.0
 var _seconds: float = 0.0

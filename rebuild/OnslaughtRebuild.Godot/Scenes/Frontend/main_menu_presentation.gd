@@ -44,7 +44,10 @@ func _ready() -> void:
 			return
 	if not _frame_supplied:
 		show_editor_preview()
-	get_node("TitleLogo/Body").item_rect_changed.connect(_refresh_reflection)
+	var title: TextureRect = get_node("TitleLogo/Body")
+	title.item_rect_changed.connect(_refresh_reflection)
+	title.connect(&"canvas_transform_changed", _refresh_reflection)
+	title.set_notify_transform(true)
 	_refresh_reflection()
 
 
@@ -133,9 +136,11 @@ func set_frame(facts: Dictionary) -> Dictionary:
 			return _failure("Main Menu row text requires non-null UTF-16 units.")
 		rows.append({"text": units.value, "available": row.available})
 	if not _assets_configured: return _failure("Main Menu assets have not been admitted.")
-	_facts = facts.duplicate(true)
-	_facts.rows = rows
-	_facts.transition = F.value(facts.transition)
+	# Keep only admitted display facts. Dictionary.duplicate(true) does not
+	# detach Objects/Resources an unrelated caller might put in extra keys.
+	_facts = {"transition": F.value(facts.transition), "animation_seconds": facts.animation_seconds,
+		"background_seconds": facts.background_seconds, "selected_index": facts.selected_index,
+		"language": facts.language, "rows": rows, "reflection_visible": facts.reflection_visible}
 	_frame_supplied = true
 	var transition: float = _facts.transition
 	var fade: float = Laws.page_fade(transition)

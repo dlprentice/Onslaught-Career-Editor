@@ -4,6 +4,7 @@ extends TextureRect
 ## Authored texture/geometry and ink remain editable. The calculated display
 ## tint is transient, so saving a reveal frame cannot become its next baseline.
 const F = preload("res://Scenes/Shared/retail_float32.gd")
+signal canvas_transform_changed
 @export var ink_color: Color = Color.WHITE:
 	set(value):
 		ink_color = value
@@ -17,6 +18,11 @@ func _ready() -> void:
 	set_process_input(false)
 	set_process_unhandled_input(false)
 	_refresh()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSFORM_CHANGED:
+		canvas_transform_changed.emit()
 
 
 func set_fade(fade: float, replacement: Variant = null) -> void:
