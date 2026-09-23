@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (complete original English-bank execution; earlier validation retained).
+Last updated: 2026-09-23 (English-bank execution and coupled settings/audio routing; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2427,6 +2427,46 @@ project, original save or production implementation was changed. The
 [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
 records reconstruction implications and remaining composition/playback limits.
 Exact review prompts and reports remain in the existing private review owner.
+
+### Original coupled settings and audio routing — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/load_audio_routing_control.py`
+passed **nine cases / 105 ordered boundary snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/load-audio-routing-run-k7s4slkl/load`;
+receipt SHA-256 `cf4e5f977337b48c6708092c16f3bd1f70b6d0a554b25090155f917656f9ef3c`;
+ELF SHA-256 `32f3706cf90767612102048337a6e8cc07c2eb407353488d44e772cc737dc859`.
+The frozen driver and `load-audio-routing-controls-v2.log` retain this run.
+Thirty-seven complete original bodies total 7,257 bytes; the language-name
+getter also uses its original 20-byte jump table. Pristine and unchanged gold
+identities remain those recorded above.
+
+Cases vary prior language/path, each of four audio comparison words, both
+preservation flags and supplied Init success/failure. All use the same real
+fixture. Eight full-settings cases preserve all 10,004 bytes in both original
+serializer outputs. The ninth preserves live settings and checks their complete
+expected serialization. Six complete selected-state snapshots, source/serializer
+guards, all recorded paths, bank arguments/return sites, integer ABI, owned stack
+and x87 control/TOP pass. The forbidden-syscall control terminates with SIGSYS.
+
+Root independently compares original bodies/data/zero BSS, nonoverlapping ELF
+regions and the read-only jump table against the pristine file. Saved-output
+readback checks all source/control bytes, complete serializers and guards,
+immutable music vtable and all 44 CLI-tail bytes at every observation phase.
+Full review and root readback remain private. The retained v1 failure caught
+Python/assembler escaping removing the authored path separators; v2 uses numeric
+string bytes and verifies their exact loaded representation. Retail bytes are
+unchanged.
+
+This composition executes reset/shutdown and language-path construction, with
+actual bank loading at a **recording boundary**; it is not the preceding full-bank
+experiment embedded into Load. Device Init supplies status without state effects;
+its failure leaves the authored initialized flag set, admitting the later refresh.
+That case does not establish real device failure recovery.
+The formatter produces only the admitted bank-path template; heap, music-platform
+shutdown, diagnostics and latest-world remain supplied boundaries. No actual file
+Open, device normalization, playback or cold-start reachability is established.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
+records the stale-path result, second-load correction and serialization limits.
 
 ### Scheduled-event constructor boundary — September 19
 

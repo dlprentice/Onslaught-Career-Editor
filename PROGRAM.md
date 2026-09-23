@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-23 (complete English-bank execution and reload controls)
+Last updated: 2026-09-23 (complete English bank and coupled settings/audio routing)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -115,8 +115,15 @@ intercepted. Original bank loading, file Open/refill/Close and decoding now pass
 tag/trailer admission and supplied device failures. The materializer's pure
 decoder matches every complete high-quality output. The
 [bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
-separates parser, publication and device success. Next, compose the remaining
-rechecked services into the preserved real-save route.
+separates parser, publication and device success. Nine subsequent original
+Load/Save/reload controls expose a routing distinction: changing language and an
+audio word together preserves the cached old bank path, while language-only
+refresh replaces it. The same serialized result fixes the path on the next Load.
+Device Init and the final bank entry remain explicit boundaries in this paired
+control; next close their composition and device-dependent normalization before
+claiming complete settings application. The
+[coupled contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
+records the exact prior state and limits.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;

@@ -537,6 +537,46 @@ are recording boundaries. Allocation failure, exceptions, `.aya` decompression,
 nonzero file offsets, actual Windows I/O, audio playback and complete settings-load
 or startup composition remain outside this experiment.
 
+## Coupled language and audio settings routing
+
+The [nine paired controls](../../VALIDATION.md#original-coupled-settings-and-audio-routing--september-23)
+use the **unchanged real gold save** and vary only prior live state. Original
+Load/TailRead/SetLanguage execute into either reset/shutdown or language-bank
+refresh; original Save then supplies its buffer directly to a second Load and
+Save. The final bank entry records the selected path and reuse argument without
+opening a file. Device Init supplies a status without modifying state.
+
+With French active and a cached French bank path, loading the English fixture
+when all four audio words already match selects language refresh. It constructs
+the English path and calls bank entry `00517d00` with reuse zero. Changing prior
+quality from one to the fixture's zero instead selects reset: the bank entry
+receives the **old French path**, with reuse one, while active text and the CLI
+language mirror are already English. The same result occurs when changing only
+one of the other comparison words at `00663074`, `00663078` or `00663084`.
+Matching the prior English path separates reset behavior from a path mismatch.
+
+Both original serializer outputs in all eight full-settings cases equal every
+byte of the 10,004-byte gold fixture, including unknown fields. In the stale-path
+cases, the second Load sees matching audio words, takes language refresh and
+replaces the old path with English. A fully matching path causes refresh to skip
+the bank call. The low-byte-preservation control skips settings/audio application
+and serializes its separately checked live options; its output is stable across
+the second Load/Save but is intentionally different from gold.
+
+The supplied failed-Init control makes no first bank call, yet still serializes
+the English settings. The authored initialized flag remains set, so its second
+Load can refresh the path; this does not demonstrate real device failure recovery.
+Serialization of the language is independent of a successful bank request. A
+reconstruction cannot infer this runtime cache state from the saved language field alone.
+
+These are conditional original-code routing observations with authored empty
+audio ownership and language caches. They do not establish that the prior state
+occurs at cold startup, that a French bank opens, or that wrong-language audio
+plays. Fresh static inspection of the complete device Init body finds no direct
+bank-path refresh, but its platform branches are **not executed** here. In
+particular, `00516ab2–00516ac4` can normalize device index `00663078` to zero;
+device-dependent serialization and real initialization effects remain open.
+
 ## Original save reload after reinitialization
 
 The [round-trip controls](../../VALIDATION.md#original-load-save-and-reload-controls--september-20)

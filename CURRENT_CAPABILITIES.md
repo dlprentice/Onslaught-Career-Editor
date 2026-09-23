@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (complete English-bank execution; earlier implementation receipts retain their dates).
+Last updated: 2026-09-23 (English-bank execution and coupled settings/audio routing; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -105,6 +105,15 @@ zero/negative counts skip samples. These are original-code observations with
 supplied filesystem/heap/COM boundaries, not real playback or complete startup.
 See the [bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
 and [executed checks](VALIDATION.md#original-complete-bank-loading-and-reloads--september-22).
+
+Nine paired settings controls now connect original Load, reset/language refresh,
+Save and direct-buffer reload. With a cached French path, applying English plus
+an audio-word change presents that old path to the bank loader, although both
+serialized outputs exactly match the English gold fixture. The second Load
+corrects the path. Device Init and bank loading remain intercepted in this
+composition; these results do not demonstrate audible wrong-language playback
+or a cold-start defect. See the
+[coupled routing contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing).
 
 ## Godot Save Lab — first workflow
 
