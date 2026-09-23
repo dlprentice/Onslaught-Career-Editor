@@ -31,6 +31,7 @@ public sealed partial class EntityBridgeChecks : Node
             CompareProductionTexturePages();
             CompareMuzzleAnimation();
             CompareVulcanImpactAnimation();
+            CompareDestructionAnimations();
             var viewport = new SubViewport { Size = new(320, 240), OwnWorld3D = true,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
             AddChild(viewport);
@@ -529,6 +530,674 @@ public sealed partial class EntityBridgeChecks : Node
             }));
         }
         return tween;
+    }
+
+    private void CompareDestructionAnimations()
+    {
+        // The three old 673b630a spawn bodies and their helpers are retained
+        // below without replacing their arithmetic or callback order. These
+        // are comparisons with that implementation, not new retail claims
+        // about the still-unresolved emitter multiplicity/placement/colour.
+        const ulong admissionSeed = 0x4453545241444dUL;
+        GD.Seed(admissionSeed);
+        uint[] expectedAdmissionRandom = Enumerable.Range(0, 16).Select(_ => GD.Randi()).ToArray();
+        GD.Seed(admissionSeed);
+        using GDScript controller = GD.Load<GDScript>("res://Scenes/World/destruction_effect.gd");
+        var inputs = new[]
+        {
+            (Id: "animated_blob", File: "pulse-impact-animated-blob", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt2),
+            (Id: "flash_medium", File: "effect-flash-medium", Size: 128, Compression: CuratedAyaTextureLoader.Compression.Dxt1),
+            (Id: "explosion_animated", File: "target-tank-explosion-animated", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt1),
+            (Id: "fireball", File: "target-tank-explosion-fireball", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt2),
+        };
+        var paths = inputs.Select(row => "res://Assets/Level100/Textures/" + row.File + ".texture.aya").ToArray();
+        byte[][] beforeHashes = paths.Select(path => System.Security.Cryptography.SHA256.HashData(
+            File.ReadAllBytes(ProjectSettings.GlobalizePath(path)))).ToArray();
+        var textures = new Texture2D[inputs.Length];
+        var recipes = new Texture2D[inputs.Length];
+        try
+        {
+            for (int index = 0; index < inputs.Length; index++)
+            {
+                textures[index] = CuratedAyaTextureLoader.Load(paths[index], inputs[index].Size, inputs[index].Size, inputs[index].Compression);
+                using Variant returned = controller.Call("admit_artwork", inputs[index].Id);
+                using Dictionary admitted = Result(returned);
+                recipes[index] = admitted["value"].As<Texture2D>();
+                using Image actual = recipes[index].GetImage();
+                using Image retained = textures[index].GetImage();
+                Check(actual.GetWidth() == retained.GetWidth() && actual.GetHeight() == retained.GetHeight() &&
+                    actual.GetFormat() == retained.GetFormat() && actual.HasMipmaps() == retained.HasMipmaps(),
+                    "Destruction recipe image shape/format/mips match the retained loader: " + inputs[index].Id);
+                Check(actual.GetData().AsSpan().SequenceEqual(retained.GetData()),
+                    "Every destruction recipe pixel byte matches the retained loader: " + inputs[index].Id);
+            }
+            Check(Enumerable.Range(0, 16).Select(_ => GD.Randi()).SequenceEqual(expectedAdmissionRandom),
+                "Loading and admitting all destruction artwork consumes no presentation RNG.");
+            CompareDestructionFamily("TargetTankDestruction", Level100DestructionEffectKind.TargetDestroyed, 1.5d, 1, 5, textures, recipes);
+            CompareDestructionFamily("TargetDroneDestruction", Level100DestructionEffectKind.DroneDestroyed, 1.5d, 1, 3, textures, recipes);
+            CompareDestructionFamily("FacilityDestruction", Level100DestructionEffectKind.FacilityDestroyed, 15d, 2, 5, textures, recipes);
+            for (int index = 0; index < paths.Length; index++)
+                Check(beforeHashes[index].AsSpan().SequenceEqual(System.Security.Cryptography.SHA256.HashData(
+                    File.ReadAllBytes(ProjectSettings.GlobalizePath(paths[index])))),
+                    "Destruction admission, animation and event routing preserve prepared input bytes: " + inputs[index].Id);
+        }
+        finally
+        {
+            foreach (Texture2D? texture in textures) texture?.Dispose();
+        }
+    }
+
+    private void CompareDestructionFamily(string sceneName, Level100DestructionEffectKind kind,
+        double lifetimeSeconds, int randomDraws, int tweenCount, Texture2D[] textures, Texture2D[] recipes)
+    {
+        string scenePath = "res://Scenes/World/" + sceneName + ".tscn";
+        const ulong seed = 0x54414e4b46495245UL;
+        GD.Seed(seed);
+        uint[] expectedRandom = Enumerable.Range(0, 16).Select(_ => GD.Randi()).ToArray();
+        GD.Seed(seed);
+        using PackedScene scene = GD.Load<PackedScene>(scenePath);
+        var native = scene.Instantiate<Node3D>();
+        var sibling = scene.Instantiate<Node3D>();
+        var retained = new RetainedDestructionEffects(textures);
+        var host = new FirstFlightWorldView();
+        var allTweens = new List<Tween>();
+        var sentinels = new List<StandardMaterial3D>();
+        try
+        {
+            var lifetime = native.GetNode<Godot.Timer>("Lifetime");
+            using (Variant refusedValue = native.Call("start"))
+            using (Dictionary refused = refusedValue.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    sceneName + " refuses off-tree activation explicitly.");
+            var before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            AddChild(native);
+            AddChild(sibling);
+            AddChild(retained.Root);
+            Check(lifetime.IsStopped() && sibling.GetNode<Godot.Timer>("Lifetime").IsStopped() &&
+                !native.IsProcessing() && !native.IsProcessingInput() && !native.IsProcessingUnhandledInput() &&
+                GetTree().GetProcessedTweens().All(value => before.Contains(value.GetInstanceId())),
+                sceneName + " scene entry has no automatic animation, timer or input owner.");
+            Check(Enumerable.Range(0, 16).Select(_ => GD.Randi()).SequenceEqual(expectedRandom),
+                sceneName + " scene load, instantiation and refused start consume no RNG.");
+
+            GD.Seed(seed);
+            using (Variant returned = native.Call("start"))
+            using (Dictionary result = Result(returned)) { }
+            Tween[] nativeTweens = NewDestructionTweens(before, allTweens, tweenCount, sceneName + " native");
+            Check(Enumerable.Range(0, 16 - randomDraws).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(randomDraws)),
+                sceneName + " consumes exactly its original ordered RNG draws at start.");
+
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            Node3D reference = retained.Spawn(kind, Vector3.Zero, 37);
+            Tween[] referenceTweens = NewDestructionTweens(before, allTweens, tweenCount, sceneName + " retained");
+            Check(Enumerable.Range(0, 16 - randomDraws).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(randomDraws)),
+                sceneName + " retained spawn confirms the same RNG suffix.");
+
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            using (Variant returned = sibling.Call("start"))
+            using (Dictionary result = Result(returned)) { }
+            NewDestructionTweens(before, allTweens, tweenCount, sceneName + " sibling");
+            Check(Enumerable.Range(0, 16 - randomDraws).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(randomDraws)),
+                sceneName + " independent sibling retains the same draw count.");
+
+            var actualMaterials = DestructionMaterials(native);
+            var referenceMaterials = DestructionMaterials(reference);
+            var siblingMaterials = DestructionMaterials(sibling);
+            Check(native.GetChildren().Select(child => child.Name.ToString()).SequenceEqual(
+                reference.GetChildren().Select(child => child.Name.ToString())),
+                sceneName + " keeps the original Timer and sprite creation order.");
+            CompareDestructionTimer(lifetime, reference.GetNode<Godot.Timer>("Lifetime"), lifetimeSeconds, sceneName);
+            CompareDestructionFrame(native, reference, actualMaterials, referenceMaterials, sceneName + " initial");
+            foreach (MeshInstance3D mesh in native.GetChildren().OfType<MeshInstance3D>())
+            {
+                string name = mesh.Name.ToString();
+                var referenceMesh = reference.GetNode<MeshInstance3D>(name);
+                var actualMaterial = actualMaterials[name];
+                var referenceMaterial = referenceMaterials[name];
+                Check(mesh.Mesh is QuadMesh && referenceMesh.Mesh is QuadMesh, sceneName + " retains billboard quad geometry: " + name);
+                Vector2 actualSize = ((QuadMesh)mesh.Mesh).Size, referenceSize = ((QuadMesh)referenceMesh.Mesh).Size;
+                Compare(new Vector3(actualSize.X, actualSize.Y, 0f), new Vector3(referenceSize.X, referenceSize.Y, 0f), name + " quad size");
+                Check(actualMaterial != siblingMaterials[name], "Simultaneous destruction instances own independent material targets: " + name);
+                Check(actualMaterial.ShadingMode == referenceMaterial.ShadingMode && actualMaterial.CullMode == referenceMaterial.CullMode &&
+                    actualMaterial.Transparency == referenceMaterial.Transparency && actualMaterial.BlendMode == referenceMaterial.BlendMode &&
+                    actualMaterial.BillboardMode == referenceMaterial.BillboardMode && actualMaterial.BillboardKeepScale == referenceMaterial.BillboardKeepScale,
+                    sceneName + " preserves the original material recipe: " + name);
+                int textureIndex = name.EndsWith("Flash", StringComparison.Ordinal) ? 1 : name == "ExplosionAnimatedSprite" ? 2 : name.EndsWith("Smoke", StringComparison.Ordinal) ? 0 : 3;
+                Check(actualMaterial.AlbedoTexture == recipes[textureIndex] && referenceMaterial.AlbedoTexture == textures[textureIndex] &&
+                    siblingMaterials[name].AlbedoTexture == recipes[textureIndex],
+                    sceneName + " renders its single admitted shared texture recipe: " + name);
+            }
+
+            // Preserve each initial animated target while replacing only the
+            // mesh override: all old atlas closures captured their material.
+            var sentinelOffset = new Vector3(0.125f, 0.375f, 0.625f);
+            foreach ((string name, StandardMaterial3D material) in actualMaterials)
+            {
+                if (material.Uv1Scale.X != 0.25f) continue;
+                var actualSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset };
+                var referenceSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset };
+                sentinels.Add(actualSentinel);
+                sentinels.Add(referenceSentinel);
+                native.GetNode<MeshInstance3D>(name).MaterialOverride = actualSentinel;
+                reference.GetNode<MeshInstance3D>(name).MaterialOverride = referenceSentinel;
+            }
+            var siblingOffsets = siblingMaterials.ToDictionary(row => row.Key, row => row.Value.Uv1Offset);
+            var siblingScales = sibling.GetChildren().OfType<MeshInstance3D>().ToDictionary(mesh => mesh.Name.ToString(), mesh => mesh.Scale);
+            var siblingVisibility = sibling.GetChildren().OfType<MeshInstance3D>().ToDictionary(mesh => mesh.Name.ToString(), mesh => mesh.Visible);
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            using (Variant refusedValue = native.Call("start"))
+            using (Dictionary refused = refusedValue.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    sceneName + " refuses repeated activation before another timer/tween/RNG mutation.");
+            Check(GetTree().GetProcessedTweens().All(tween => before.Contains(tween.GetInstanceId())),
+                sceneName + " refused restart adds no tween owner.");
+            bool[] actualActive = Enumerable.Repeat(true, tweenCount).ToArray();
+            bool[] referenceActive = Enumerable.Repeat(true, tweenCount).ToArray();
+            const double explosionInterval = 1d / (0.7d * SimulationConstants.TicksPerSecond);
+            const double loopInterval = 1d / (0.5d * SimulationConstants.TicksPerSecond);
+            var times = new List<double> { 0d, Math.BitDecrement(loopInterval), loopInterval, Math.BitIncrement(loopInterval),
+                Math.BitDecrement(0.25d), 0.25d, 0.25d, Math.BitIncrement(0.25d), 0.3d,
+                Math.BitDecrement(0.25d + explosionInterval), 0.25d + explosionInterval, Math.BitIncrement(0.25d + explosionInterval),
+                0.5d, Math.BitDecrement(0.75d), 0.75d, Math.BitIncrement(0.75d), 0.8d,
+                Math.BitDecrement(1.5d), 1.5d, Math.BitIncrement(1.5d), 1.6d, 1.7d };
+            if (kind == Level100DestructionEffectKind.FacilityDestroyed)
+                times.AddRange([Math.BitDecrement(3d), 3d, Math.BitIncrement(3d), 3.1d,
+                    Math.BitDecrement(15d), 15d, Math.BitIncrement(15d), 15.1d, 15.2d]);
+            times.Sort();
+            double previousTime = 0d;
+            foreach (double time in times)
+            {
+                double delta = time - previousTime;
+                previousTime = time;
+                for (int index = 0; index < tweenCount; index++)
+                {
+                    if (actualActive[index]) actualActive[index] = nativeTweens[index].CustomStep(delta);
+                    if (referenceActive[index]) referenceActive[index] = referenceTweens[index].CustomStep(delta);
+                    Check(actualActive[index] == referenceActive[index] && nativeTweens[index].IsValid() == referenceTweens[index].IsValid(),
+                        sceneName + " actual/retained tween completion and validity agree at sample " + time.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                    Check(BitConverter.DoubleToInt64Bits(nativeTweens[index].GetTotalElapsedTime()) == BitConverter.DoubleToInt64Bits(referenceTweens[index].GetTotalElapsedTime()),
+                        sceneName + " actual/retained elapsed words agree for ordered tween " + index);
+                }
+                CompareDestructionFrame(native, reference, actualMaterials, referenceMaterials, sceneName);
+                foreach (StandardMaterial3D sentinel in sentinels) Compare(sentinel.Uv1Offset, sentinelOffset, sceneName + " replacement override stays unchanged");
+                foreach ((string name, StandardMaterial3D material) in siblingMaterials)
+                {
+                    Compare(material.Uv1Offset, siblingOffsets[name], sceneName + " independent sibling atlas");
+                    Compare(sibling.GetNode<MeshInstance3D>(name).Scale, siblingScales[name], sceneName + " independent sibling scale");
+                    Check(sibling.GetNode<MeshInstance3D>(name).Visible == siblingVisibility[name], sceneName + " independent sibling visibility");
+                }
+            }
+            Check(actualActive.All(active => !active) && referenceActive.All(active => !active),
+                sceneName + " actual and retained tweens both finish within the compared observation schedule.");
+            Check(Enumerable.Range(0, 16).Select(_ => GD.Randi()).SequenceEqual(expectedRandom),
+                sceneName + " rejected restart and all animation callbacks consume no additional RNG.");
+            CompareDestructionTimer(lifetime, reference.GetNode<Godot.Timer>("Lifetime"), lifetimeSeconds, sceneName + " after manual animation");
+            Check(!native.IsQueuedForDeletion() && !reference.IsQueuedForDeletion(),
+                sceneName + " manual animation does not substitute for its independent lifetime Timer.");
+            lifetime.EmitSignal(Godot.Timer.SignalName.Timeout);
+            reference.GetNode<Godot.Timer>("Lifetime").EmitSignal(Godot.Timer.SignalName.Timeout);
+            Check(native.IsQueuedForDeletion() && reference.IsQueuedForDeletion(), sceneName + " actual/retained timeout signals queue their roots.");
+
+            // The public event route must instantiate this scene, retain the
+            // actor-only name and original X/-Z/-Y position, and start it.
+            AddChild(host);
+            var position = new Level100Vector3(12345, -6789, 4321);
+            Vector3 mapped = new(position.X * 0.001f, -position.Z * 0.001f, -position.Y * 0.001f);
+            var item = new Level100DestructionEvent(Level100DestructionEventKind.Terminal, kind, 71, 0, 0, position);
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            host.ConsumeLevel100DestructionEvents([item], 81);
+            Node3D spawned = host.GetNode<Node3D>(sceneName + "71");
+            NewDestructionTweens(before, allTweens, tweenCount, sceneName + " public event");
+            Check(Enumerable.Range(0, 16 - randomDraws).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(randomDraws)),
+                sceneName + " public event preserves the exact random draw count.");
+            using (Variant script = spawned.GetScript())
+                Check(script.As<GodotObject>() is GDScript nativeScript && nativeScript.ResourcePath == "res://Scenes/World/destruction_effect.gd" &&
+                    spawned.SceneFilePath == scenePath && host.GetChildCount() == 1,
+                    sceneName + " public event constructs exactly its actual native production scene.");
+            Compare(spawned.Position, mapped, sceneName + " public event position");
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            Node3D expectedSpawn = retained.Spawn(kind, mapped, 71);
+            NewDestructionTweens(before, allTweens, tweenCount, sceneName + " retained public event");
+            CompareDestructionFrame(spawned, expectedSpawn, DestructionMaterials(spawned), DestructionMaterials(expectedSpawn), sceneName + " public event");
+            CompareDestructionTimer(spawned.GetNode<Godot.Timer>("Lifetime"), expectedSpawn.GetNode<Godot.Timer>("Lifetime"), lifetimeSeconds, sceneName + " public event");
+        }
+        finally
+        {
+            foreach (Tween tween in allTweens) if (tween.IsValid()) tween.Kill();
+            if (GodotObject.IsInstanceValid(native)) native.Free();
+            if (GodotObject.IsInstanceValid(sibling)) sibling.Free();
+            if (GodotObject.IsInstanceValid(retained.Root)) retained.Root.Free();
+            if (GodotObject.IsInstanceValid(host)) host.Free();
+            foreach (StandardMaterial3D sentinel in sentinels) sentinel.Dispose();
+        }
+    }
+
+    private Tween[] NewDestructionTweens(HashSet<ulong> before, List<Tween> owned, int expectedCount, string name)
+    {
+        Tween[] result = GetTree().GetProcessedTweens().Where(tween => !before.Contains(tween.GetInstanceId())).ToArray();
+        owned.AddRange(result);
+        Check(result.Length == expectedCount, name + " creates the original ordered tween count.");
+        foreach (Tween tween in result) tween.Pause();
+        return result;
+    }
+
+    private static System.Collections.Generic.Dictionary<string, StandardMaterial3D> DestructionMaterials(Node root) =>
+        root.GetChildren().OfType<MeshInstance3D>().ToDictionary(mesh => mesh.Name.ToString(), mesh => (StandardMaterial3D)mesh.MaterialOverride);
+
+    private void CompareDestructionTimer(Godot.Timer actual, Godot.Timer retained, double lifetime, string name)
+    {
+        Check(!actual.IsStopped() && actual.IsStopped() == retained.IsStopped() && actual.OneShot == retained.OneShot &&
+            actual.Autostart == retained.Autostart && actual.ProcessCallback == retained.ProcessCallback &&
+            actual.IgnoreTimeScale == retained.IgnoreTimeScale && actual.OneShot && !actual.Autostart,
+            name + " Timer ownership and defaults match the retained effect.");
+        Check(BitConverter.DoubleToInt64Bits(actual.WaitTime) == BitConverter.DoubleToInt64Bits(retained.WaitTime) &&
+            BitConverter.DoubleToInt64Bits(actual.TimeLeft) == BitConverter.DoubleToInt64Bits(retained.TimeLeft) &&
+            actual.WaitTime == lifetime && actual.TimeLeft == lifetime,
+            name + " keeps the exact unadvanced lifetime seconds.");
+        Check(actual.GetSignalConnectionList(Godot.Timer.SignalName.Timeout).Count == 1 &&
+            retained.GetSignalConnectionList(Godot.Timer.SignalName.Timeout).Count == 1,
+            name + " connects precisely one original timeout owner.");
+    }
+
+    private void CompareDestructionFrame(Node3D actual, Node3D retained,
+        IReadOnlyDictionary<string, StandardMaterial3D> actualMaterials,
+        IReadOnlyDictionary<string, StandardMaterial3D> retainedMaterials, string name)
+    {
+        foreach ((string path, StandardMaterial3D material) in actualMaterials)
+        {
+            var actualMesh = actual.GetNode<MeshInstance3D>(path);
+            var retainedMesh = retained.GetNode<MeshInstance3D>(path);
+            StandardMaterial3D referenceMaterial = retainedMaterials[path];
+            Compare(actualMesh.Scale, retainedMesh.Scale, name + " " + path + " scale");
+            Check(actualMesh.Visible == retainedMesh.Visible, name + " " + path + " visibility follows the retained callback order.");
+            Compare(material.Uv1Scale, referenceMaterial.Uv1Scale, name + " " + path + " UV scale");
+            Compare(material.Uv1Offset, referenceMaterial.Uv1Offset, name + " " + path + " captured UV offset");
+            Color ink = material.AlbedoColor, expectedInk = referenceMaterial.AlbedoColor;
+            Compare(new Vector3(ink.R, ink.G, ink.B), new Vector3(expectedInk.R, expectedInk.G, expectedInk.B), name + " " + path + " RGB");
+            Check(BitConverter.SingleToUInt32Bits(ink.A) == BitConverter.SingleToUInt32Bits(expectedInk.A), name + " " + path + " alpha word");
+        }
+    }
+
+    // Test-only 673b630a FirstFlightWorldView source. The following spawn,
+    // material and animation bodies retain their executable text, float stores,
+    // callback captures and provenance. Root/AddChild only supplies their former
+    // containing world; the native scene is never used to construct this oracle.
+    private sealed class RetainedDestructionEffects
+    {
+        public Node3D Root { get; } = new();
+        private readonly Texture2D _pulseImpactAnimatedTexture;
+        private readonly Texture2D _effectFlashMediumTexture;
+        private readonly Texture2D _targetTankExplosionAnimatedTexture;
+        private readonly Texture2D _targetTankExplosionFireballTexture;
+
+        public RetainedDestructionEffects(Texture2D[] textures)
+        {
+            _pulseImpactAnimatedTexture = textures[0];
+            _effectFlashMediumTexture = textures[1];
+            _targetTankExplosionAnimatedTexture = textures[2];
+            _targetTankExplosionFireballTexture = textures[3];
+        }
+
+        public Node3D Spawn(Level100DestructionEffectKind kind, Vector3 position, int actorId)
+        {
+            switch (kind)
+            {
+                case Level100DestructionEffectKind.TargetDestroyed:
+                    SpawnTargetTankDestruction(position, actorId);
+                    break;
+                case Level100DestructionEffectKind.DroneDestroyed:
+                    SpawnTargetDroneDestruction(position, actorId);
+                    break;
+                case Level100DestructionEffectKind.FacilityDestroyed:
+                    SpawnFacilityDestruction(position, actorId);
+                    break;
+                default: throw new ArgumentOutOfRangeException(nameof(kind));
+            }
+            return Root.GetChild<Node3D>(Root.GetChildCount() - 1);
+        }
+
+        private void AddChild(Node child) => Root.AddChild(child);
+
+        private void SpawnTargetTankDestruction(Vector3 position, int targetId)
+        {
+            Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.5d);
+            // `Tank Explosion Medium` dispatches the shared `Flash` sprite at Time
+            // 0: sun2.tga, Radius 5, Final_Radius 0 and Life 5 turns (0.25 s).
+            MeshInstance3D flash = CreateEffectSprite(
+                "TargetTankFlash",
+                _effectFlashMediumTexture,
+                5f);
+            root.AddChild(flash);
+            AnimateScale(flash, 1f, 0f, 0.25d);
+
+            // `Explosion Anim Sprite Medium`: Radius 1.5, Final_Radius 1.3,
+            // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2,
+            // PlayOnce at 0.7 cells/turn. Tank Explosion Medium schedules it at
+            // Time 5, so this direct layer remains hidden for the first 0.25 s.
+            MeshInstance3D animatedExplosion = CreateEffectSprite(
+                "ExplosionAnimatedSprite",
+                _targetTankExplosionAnimatedTexture,
+                1.5f,
+                columns: 4,
+                rows: 4);
+            root.AddChild(animatedExplosion);
+            AnimateTargetTankDelayedExplosion(root, animatedExplosion);
+
+            // `Fire Sprite Damped 2`: Radius 1.0, Final_Radius 0.5,
+            // Life 30 turns = 1.5 s, Texture_Size 2, fireball.tga. It loops only
+            // cells 0..11 at 0.5 cells/turn from one authored random start; cells
+            // 12..15 are deliberately blank and are not part of this sprite.
+            MeshInstance3D fireball = CreateEffectSprite(
+                "ExplosionFireball",
+                _targetTankExplosionFireballTexture,
+                1.0f,
+                columns: 4,
+                rows: 4);
+            root.AddChild(fireball);
+            AnimateTargetTankFireball(root, fireball);
+            AnimateScale(fireball, 1f, 0.5f, 1.5d);
+        }
+
+        private void SpawnTargetDroneDestruction(Vector3 position, int droneId)
+        {
+            Node3D root = CreateTimedEffect(
+                $"TargetDroneDestruction{droneId}",
+                position,
+                1.5d);
+            // `Drone Explosion Effect` dispatches `Flash` directly at Time 0.
+            // That retained sprite is sun2.tga, Radius 5, Final_Radius 0 and Life
+            // 5 released 20 Hz turns. Its debris/emitter multiplicity, placement,
+            // velocity and colour evolution remain open rather than being guessed.
+            MeshInstance3D flash = CreateEffectSprite(
+                "DroneFlash",
+                _effectFlashMediumTexture,
+                5f);
+            root.AddChild(flash);
+            AnimateScale(flash, 1f, 0f, 0.25d);
+
+            // `Drone Explosion Emitter` is the other Time-0 branch retained by
+            // `Drone Explosion Effect`. One explicitly representative
+            // `Fire Sprite Damped 2` preserves its bright tail: additive
+            // fireball.tga, Radius 1.0 -> 0.5, Life 30 turns = 1.5 s, and
+            // random-start looping cells 0..11 at 0.5 cells/turn. The emitter's
+            // decreasing multiplicity, shape, placement and velocity remain open.
+            MeshInstance3D fireball = CreateEffectSprite(
+                "DroneFireball",
+                _targetTankExplosionFireballTexture,
+                1f,
+                columns: 4,
+                rows: 4);
+            root.AddChild(fireball);
+            AnimateLoopingFireball(root, fireball, lifeTurns: 30);
+            AnimateScale(fireball, 1f, 0.5f, 1.5d);
+        }
+
+        private void SpawnFacilityDestruction(Vector3 position, int facilityId)
+        {
+            Node3D root = CreateTimedEffect(
+                $"FacilityDestruction{facilityId}",
+                position,
+                15d);
+            // `Flash Building`: direct Time-0 entry in Muspell Building Explosion
+            // Effect. Radius 3, Final_Radius 0, Life 6 released 20 Hz turns = 0.30 s,
+            // Texture_Size 4 (one cell), sun2.tga.
+            MeshInstance3D flash = CreateEffectSprite(
+                "FacilityFlash",
+                _effectFlashMediumTexture,
+                3f);
+            root.AddChild(flash);
+            AnimateScale(flash, 1f, 0f, 0.3d);
+
+            // `Fire Sprite Damped Long`: one explicitly representative billboard
+            // from the authored Time-0 Muspell Building Explosion Emitter. Radius
+            // 0.5 -> 2.0, Life 60 turns = 3.0 s, random-start looping cells 0..11
+            // at 0.5 cells/turn. The emitter's unresolved decreasing multiplicity,
+            // placement and velocity laws remain open rather than being invented.
+            MeshInstance3D fireball = CreateEffectSprite(
+                "FacilityFireball",
+                _targetTankExplosionFireballTexture,
+                0.5f,
+                columns: 4,
+                rows: 4);
+            root.AddChild(fireball);
+            AnimateFacilityFireball(root, fireball);
+            AnimateScale(fireball, 1f, 4f, 3d);
+
+            // `Smoke Sprite Anim Large Building`: the single Time-0 smoke emitted
+            // by Building Smoke Emitter. It is an alpha-blended 4x4 alparticle4
+            // billboard, radius 3 -> 2, random-start looping cells 0..14 at 0.5
+            // cells/turn for 300 turns = 15 seconds. Shape placement, velocity
+            // randomness and Fade_Col/Life_Pct colour behavior remain open.
+            MeshInstance3D smoke = CreateEffectSprite(
+                "FacilitySmoke",
+                _pulseImpactAnimatedTexture,
+                3f,
+                columns: 4,
+                rows: 4);
+            ((StandardMaterial3D)smoke.MaterialOverride).BlendMode =
+                BaseMaterial3D.BlendModeEnum.Mix;
+            root.AddChild(smoke);
+            AnimateFacilitySmoke(root, smoke);
+            AnimateScale(smoke, 1f, 2f / 3f, 15d);
+        }
+
+        private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
+        {
+            var root = new Node3D
+            {
+                Name = name,
+                Position = position,
+            };
+            AddChild(root);
+            var lifetime = new Godot.Timer
+            {
+                Name = "Lifetime",
+                OneShot = true,
+                WaitTime = lifetimeSeconds,
+            };
+            lifetime.Timeout += root.QueueFree;
+            root.AddChild(lifetime);
+            lifetime.Start();
+            return root;
+        }
+
+        /// <summary>
+        /// Builds one billboard for a sprite descriptor.
+        /// </summary>
+        /// <param name="authoredRadius">
+        /// The descriptor's <c>Radius</c>, exactly as its <c>MainSet.par</c> record
+        /// spells it. It is a HALF extent; the quad side is derived by the one
+        /// owner of that law,
+        /// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>. Pass the
+        /// authored number, never a pre-doubled one - a bare literal cannot be
+        /// traced back to the record it came from, which is exactly how this
+        /// convention came to look inconsistent (task #151).
+        /// </param>
+        private static MeshInstance3D CreateEffectSprite(
+            string name,
+            Texture2D texture,
+            float authoredRadius,
+            int columns = 1,
+            int rows = 1)
+        {
+            StandardMaterial3D material = CreateEffectMaterial(texture, billboard: true);
+            material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
+            float side = ParticleEffectResolver.BillboardQuadSide(authoredRadius);
+            return new MeshInstance3D
+            {
+                Name = name,
+                Mesh = new QuadMesh { Size = new Vector2(side, side) },
+                MaterialOverride = material,
+            };
+        }
+
+        private static void AnimateTargetTankDelayedExplosion(
+            Node root,
+            MeshInstance3D sprite)
+        {
+            const int startCell = 0;
+            const int endCell = 7;
+            const int columns = 4;
+            const int rows = 4;
+            const double cellsPerTurn = 0.7d;
+            const double lifeSeconds = 0.5d;
+            double startDelaySeconds = 5d / SimulationConstants.TicksPerSecond;
+            double cellIntervalSeconds =
+                1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+            var material = (StandardMaterial3D)sprite.MaterialOverride;
+            material.Uv1Offset = new Vector3(
+                (startCell % columns) / (float)columns,
+                (startCell / columns) / (float)rows,
+                0f);
+            sprite.Visible = false;
+            sprite.Scale = Vector3.One;
+
+            Tween atlasTween = root.CreateTween();
+            atlasTween.TweenInterval(startDelaySeconds);
+            atlasTween.TweenCallback(Callable.From(() =>
+            {
+                sprite.Visible = true;
+            }));
+            for (int cell = startCell + 1; cell <= endCell; cell++)
+            {
+                int capturedCell = cell;
+                atlasTween.TweenInterval(cellIntervalSeconds);
+                atlasTween.TweenCallback(Callable.From(() =>
+                {
+                    material.Uv1Offset = new Vector3(
+                        (capturedCell % columns) / (float)columns,
+                        (capturedCell / columns) / (float)rows,
+                        0f);
+                }));
+            }
+
+            Tween scaleTween = root.CreateTween();
+            scaleTween.TweenInterval(startDelaySeconds);
+            scaleTween.TweenProperty(
+                sprite,
+                new NodePath("scale"),
+                Vector3.One * (1.3f / 1.5f),
+                lifeSeconds);
+            scaleTween.TweenCallback(Callable.From(() =>
+            {
+                sprite.Visible = false;
+            }));
+        }
+
+        private static void AnimateTargetTankFireball(
+            Node root,
+            MeshInstance3D sprite) =>
+            AnimateLoopingFireball(root, sprite, lifeTurns: 30);
+
+        private static void AnimateFacilityFireball(
+            Node root,
+            MeshInstance3D sprite) =>
+            AnimateLoopingFireball(root, sprite, lifeTurns: 60);
+
+        private static void AnimateLoopingFireball(
+            Node root,
+            MeshInstance3D sprite,
+            int lifeTurns)
+        {
+            const int startCell = 0;
+            const int endCell = 11;
+            const int columns = 4;
+            const int rows = 4;
+            const double cellsPerTurn = 0.5d;
+            int cellCount = endCell - startCell + 1;
+            int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
+            double cellIntervalSeconds =
+                1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+            int frameAdvances = (int)(lifeTurns * cellsPerTurn);
+            var material = (StandardMaterial3D)sprite.MaterialOverride;
+            material.Uv1Offset = new Vector3(
+                (initialCell % columns) / (float)columns,
+                (initialCell / columns) / (float)rows,
+                0f);
+
+            Tween tween = root.CreateTween();
+            for (int step = 1; step <= frameAdvances; step++)
+            {
+                int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
+                tween.TweenInterval(cellIntervalSeconds);
+                tween.TweenCallback(Callable.From(() =>
+                {
+                    material.Uv1Offset = new Vector3(
+                        (capturedCell % columns) / (float)columns,
+                        (capturedCell / columns) / (float)rows,
+                        0f);
+                }));
+            }
+            tween.TweenCallback(Callable.From(() => sprite.Visible = false));
+        }
+
+        private static void AnimateFacilitySmoke(Node root, MeshInstance3D sprite)
+        {
+            const int startCell = 0;
+            const int endCell = 14;
+            const int columns = 4;
+            const int rows = 4;
+            const int lifeTurns = 300;
+            const double cellsPerTurn = 0.5d;
+            int cellCount = endCell - startCell + 1;
+            int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
+            double cellIntervalSeconds =
+                1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+            int frameAdvances = (int)(lifeTurns * cellsPerTurn);
+            var material = (StandardMaterial3D)sprite.MaterialOverride;
+            material.Uv1Offset = new Vector3(
+                (initialCell % columns) / (float)columns,
+                (initialCell / columns) / (float)rows,
+                0f);
+
+            Tween tween = root.CreateTween();
+            for (int step = 1; step <= frameAdvances; step++)
+            {
+                int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
+                tween.TweenInterval(cellIntervalSeconds);
+                tween.TweenCallback(Callable.From(() =>
+                {
+                    material.Uv1Offset = new Vector3(
+                        (capturedCell % columns) / (float)columns,
+                        (capturedCell / columns) / (float)rows,
+                        0f);
+                }));
+            }
+        }
+
+        private static void AnimateScale(Node3D node, float start, float end, double durationSeconds)
+        {
+            node.Scale = Vector3.One * start;
+            node.CreateTween().TweenProperty(
+                node,
+                new NodePath("scale"),
+                Vector3.One * end,
+                durationSeconds);
+        }
+
+        private static StandardMaterial3D CreateEffectMaterial(
+            Texture2D texture,
+            bool billboard)
+        {
+            return new StandardMaterial3D
+            {
+                AlbedoTexture = texture,
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+                BillboardMode = billboard
+                    ? BaseMaterial3D.BillboardModeEnum.Enabled
+                    : BaseMaterial3D.BillboardModeEnum.Disabled,
+                BillboardKeepScale = billboard,
+            };
+        }
+
     }
 
     private void CompareTargets(Node owner, Node3D world, WorldSnapshot previous, WorldSnapshot current, float alpha)

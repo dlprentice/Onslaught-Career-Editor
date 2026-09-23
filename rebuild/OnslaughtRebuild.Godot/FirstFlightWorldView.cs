@@ -131,8 +131,10 @@ public sealed partial class FirstFlightWorldView : Node3D
     internal const string VulcanImpactScenePath = "res://Scenes/World/VulcanImpact.tscn";
     private const string VulcanImpactScriptPath = "res://Scenes/World/vulcan_impact.gd";
     private Texture2D _effectFlashMediumTexture = null!;
-    private Texture2D _targetTankExplosionAnimatedTexture = null!;
-    private Texture2D _targetTankExplosionFireballTexture = null!;
+    private const string DestructionEffectScriptPath = "res://Scenes/World/destruction_effect.gd";
+    internal const string TargetTankDestructionScenePath = "res://Scenes/World/TargetTankDestruction.tscn";
+    internal const string TargetDroneDestructionScenePath = "res://Scenes/World/TargetDroneDestruction.tscn";
+    internal const string FacilityDestructionScenePath = "res://Scenes/World/FacilityDestruction.tscn";
     // Detached native clock fact used only by the remaining impact effects.
     private float _particlePresentationSeconds;
     public int TargetVisualCount => _targetVisualCount;
@@ -561,10 +563,9 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildPulseCannonPresentation()
     {
-        _pulseImpactAnimatedTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
-            256,
-            256);
+        // Admit shared native recipes in the original texture-load order.
+        // PulseImpact keeps using these exact objects until its own port.
+        _pulseImpactAnimatedTexture = AdmitDestructionArtwork("animated_blob");
         _pulseImpactShockwaveTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya",
             128,
@@ -575,20 +576,17 @@ public sealed partial class FirstFlightWorldView : Node3D
         using (GDScript effect = GD.Load<GDScript>(VulcanImpactScriptPath))
         using (Variant returned = effect.Call("admit_artwork"))
         using (Godot.Collections.Dictionary result = WorldPresentationResult(returned)) { }
-        _effectFlashMediumTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/effect-flash-medium.texture.aya",
-            128,
-            128,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        _targetTankExplosionAnimatedTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/target-tank-explosion-animated.texture.aya",
-            256,
-            256,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        _targetTankExplosionFireballTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/target-tank-explosion-fireball.texture.aya",
-            256,
-            256);
+        _effectFlashMediumTexture = AdmitDestructionArtwork("flash_medium");
+        _ = AdmitDestructionArtwork("explosion_animated");
+        _ = AdmitDestructionArtwork("fireball");
+    }
+
+    private Texture2D AdmitDestructionArtwork(string id)
+    {
+        using GDScript effect = GD.Load<GDScript>(DestructionEffectScriptPath);
+        using Variant returned = effect.Call("admit_artwork", id);
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
+        return result["value"].As<Texture2D>();
     }
 
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
@@ -642,127 +640,24 @@ public sealed partial class FirstFlightWorldView : Node3D
         using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
     }
 
-    private void SpawnTargetTankDestruction(Vector3 position, int targetId)
+    private void SpawnTargetTankDestruction(Vector3 position, int targetId) =>
+        SpawnDestructionScene(TargetTankDestructionScenePath, $"TargetTankDestruction{targetId}", position);
+
+    private void SpawnTargetDroneDestruction(Vector3 position, int droneId) =>
+        SpawnDestructionScene(TargetDroneDestructionScenePath, $"TargetDroneDestruction{droneId}", position);
+
+    private void SpawnFacilityDestruction(Vector3 position, int facilityId) =>
+        SpawnDestructionScene(FacilityDestructionScenePath, $"FacilityDestruction{facilityId}", position);
+
+    private void SpawnDestructionScene(string path, string name, Vector3 position)
     {
-        Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.5d);
-        // `Tank Explosion Medium` dispatches the shared `Flash` sprite at Time
-        // 0: sun2.tga, Radius 5, Final_Radius 0 and Life 5 turns (0.25 s).
-        MeshInstance3D flash = CreateEffectSprite(
-            "TargetTankFlash",
-            _effectFlashMediumTexture,
-            5f);
-        root.AddChild(flash);
-        AnimateScale(flash, 1f, 0f, 0.25d);
-
-        // `Explosion Anim Sprite Medium`: Radius 1.5, Final_Radius 1.3,
-        // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2,
-        // PlayOnce at 0.7 cells/turn. Tank Explosion Medium schedules it at
-        // Time 5, so this direct layer remains hidden for the first 0.25 s.
-        MeshInstance3D animatedExplosion = CreateEffectSprite(
-            "ExplosionAnimatedSprite",
-            _targetTankExplosionAnimatedTexture,
-            1.5f,
-            columns: 4,
-            rows: 4);
-        root.AddChild(animatedExplosion);
-        AnimateTargetTankDelayedExplosion(root, animatedExplosion);
-
-        // `Fire Sprite Damped 2`: Radius 1.0, Final_Radius 0.5,
-        // Life 30 turns = 1.5 s, Texture_Size 2, fireball.tga. It loops only
-        // cells 0..11 at 0.5 cells/turn from one authored random start; cells
-        // 12..15 are deliberately blank and are not part of this sprite.
-        MeshInstance3D fireball = CreateEffectSprite(
-            "ExplosionFireball",
-            _targetTankExplosionFireballTexture,
-            1.0f,
-            columns: 4,
-            rows: 4);
-        root.AddChild(fireball);
-        AnimateTargetTankFireball(root, fireball);
-        AnimateScale(fireball, 1f, 0.5f, 1.5d);
-    }
-
-    private void SpawnTargetDroneDestruction(Vector3 position, int droneId)
-    {
-        Node3D root = CreateTimedEffect(
-            $"TargetDroneDestruction{droneId}",
-            position,
-            1.5d);
-        // `Drone Explosion Effect` dispatches `Flash` directly at Time 0.
-        // That retained sprite is sun2.tga, Radius 5, Final_Radius 0 and Life
-        // 5 released 20 Hz turns. Its debris/emitter multiplicity, placement,
-        // velocity and colour evolution remain open rather than being guessed.
-        MeshInstance3D flash = CreateEffectSprite(
-            "DroneFlash",
-            _effectFlashMediumTexture,
-            5f);
-        root.AddChild(flash);
-        AnimateScale(flash, 1f, 0f, 0.25d);
-
-        // `Drone Explosion Emitter` is the other Time-0 branch retained by
-        // `Drone Explosion Effect`. One explicitly representative
-        // `Fire Sprite Damped 2` preserves its bright tail: additive
-        // fireball.tga, Radius 1.0 -> 0.5, Life 30 turns = 1.5 s, and
-        // random-start looping cells 0..11 at 0.5 cells/turn. The emitter's
-        // decreasing multiplicity, shape, placement and velocity remain open.
-        MeshInstance3D fireball = CreateEffectSprite(
-            "DroneFireball",
-            _targetTankExplosionFireballTexture,
-            1f,
-            columns: 4,
-            rows: 4);
-        root.AddChild(fireball);
-        AnimateLoopingFireball(root, fireball, lifeTurns: 30);
-        AnimateScale(fireball, 1f, 0.5f, 1.5d);
-    }
-
-    private void SpawnFacilityDestruction(Vector3 position, int facilityId)
-    {
-        Node3D root = CreateTimedEffect(
-            $"FacilityDestruction{facilityId}",
-            position,
-            15d);
-        // `Flash Building`: direct Time-0 entry in Muspell Building Explosion
-        // Effect. Radius 3, Final_Radius 0, Life 6 released 20 Hz turns = 0.30 s,
-        // Texture_Size 4 (one cell), sun2.tga.
-        MeshInstance3D flash = CreateEffectSprite(
-            "FacilityFlash",
-            _effectFlashMediumTexture,
-            3f);
-        root.AddChild(flash);
-        AnimateScale(flash, 1f, 0f, 0.3d);
-
-        // `Fire Sprite Damped Long`: one explicitly representative billboard
-        // from the authored Time-0 Muspell Building Explosion Emitter. Radius
-        // 0.5 -> 2.0, Life 60 turns = 3.0 s, random-start looping cells 0..11
-        // at 0.5 cells/turn. The emitter's unresolved decreasing multiplicity,
-        // placement and velocity laws remain open rather than being invented.
-        MeshInstance3D fireball = CreateEffectSprite(
-            "FacilityFireball",
-            _targetTankExplosionFireballTexture,
-            0.5f,
-            columns: 4,
-            rows: 4);
-        root.AddChild(fireball);
-        AnimateFacilityFireball(root, fireball);
-        AnimateScale(fireball, 1f, 4f, 3d);
-
-        // `Smoke Sprite Anim Large Building`: the single Time-0 smoke emitted
-        // by Building Smoke Emitter. It is an alpha-blended 4x4 alparticle4
-        // billboard, radius 3 -> 2, random-start looping cells 0..14 at 0.5
-        // cells/turn for 300 turns = 15 seconds. Shape placement, velocity
-        // randomness and Fade_Col/Life_Pct colour behavior remain open.
-        MeshInstance3D smoke = CreateEffectSprite(
-            "FacilitySmoke",
-            _pulseImpactAnimatedTexture,
-            3f,
-            columns: 4,
-            rows: 4);
-        ((StandardMaterial3D)smoke.MaterialOverride).BlendMode =
-            BaseMaterial3D.BlendModeEnum.Mix;
-        root.AddChild(smoke);
-        AnimateFacilitySmoke(root, smoke);
-        AnimateScale(smoke, 1f, 2f / 3f, 15d);
+        using PackedScene scene = GD.Load<PackedScene>(path);
+        Node3D root = scene.Instantiate<Node3D>();
+        root.Name = name;
+        root.Position = position;
+        AddChild(root);
+        using Variant returned = root.Call("start");
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
     }
 
     private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
@@ -879,140 +774,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 tween.TweenInterval(frameIntervalSeconds);
             }
-        }
-    }
-
-    private static void AnimateTargetTankDelayedExplosion(
-        Node root,
-        MeshInstance3D sprite)
-    {
-        const int startCell = 0;
-        const int endCell = 7;
-        const int columns = 4;
-        const int rows = 4;
-        const double cellsPerTurn = 0.7d;
-        const double lifeSeconds = 0.5d;
-        double startDelaySeconds = 5d / SimulationConstants.TicksPerSecond;
-        double cellIntervalSeconds =
-            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
-        var material = (StandardMaterial3D)sprite.MaterialOverride;
-        material.Uv1Offset = new Vector3(
-            (startCell % columns) / (float)columns,
-            (startCell / columns) / (float)rows,
-            0f);
-        sprite.Visible = false;
-        sprite.Scale = Vector3.One;
-
-        Tween atlasTween = root.CreateTween();
-        atlasTween.TweenInterval(startDelaySeconds);
-        atlasTween.TweenCallback(Callable.From(() =>
-        {
-            sprite.Visible = true;
-        }));
-        for (int cell = startCell + 1; cell <= endCell; cell++)
-        {
-            int capturedCell = cell;
-            atlasTween.TweenInterval(cellIntervalSeconds);
-            atlasTween.TweenCallback(Callable.From(() =>
-            {
-                material.Uv1Offset = new Vector3(
-                    (capturedCell % columns) / (float)columns,
-                    (capturedCell / columns) / (float)rows,
-                    0f);
-            }));
-        }
-
-        Tween scaleTween = root.CreateTween();
-        scaleTween.TweenInterval(startDelaySeconds);
-        scaleTween.TweenProperty(
-            sprite,
-            new NodePath("scale"),
-            Vector3.One * (1.3f / 1.5f),
-            lifeSeconds);
-        scaleTween.TweenCallback(Callable.From(() =>
-        {
-            sprite.Visible = false;
-        }));
-    }
-
-    private static void AnimateTargetTankFireball(
-        Node root,
-        MeshInstance3D sprite) =>
-        AnimateLoopingFireball(root, sprite, lifeTurns: 30);
-
-    private static void AnimateFacilityFireball(
-        Node root,
-        MeshInstance3D sprite) =>
-        AnimateLoopingFireball(root, sprite, lifeTurns: 60);
-
-    private static void AnimateLoopingFireball(
-        Node root,
-        MeshInstance3D sprite,
-        int lifeTurns)
-    {
-        const int startCell = 0;
-        const int endCell = 11;
-        const int columns = 4;
-        const int rows = 4;
-        const double cellsPerTurn = 0.5d;
-        int cellCount = endCell - startCell + 1;
-        int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
-        double cellIntervalSeconds =
-            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
-        int frameAdvances = (int)(lifeTurns * cellsPerTurn);
-        var material = (StandardMaterial3D)sprite.MaterialOverride;
-        material.Uv1Offset = new Vector3(
-            (initialCell % columns) / (float)columns,
-            (initialCell / columns) / (float)rows,
-            0f);
-
-        Tween tween = root.CreateTween();
-        for (int step = 1; step <= frameAdvances; step++)
-        {
-            int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
-            tween.TweenInterval(cellIntervalSeconds);
-            tween.TweenCallback(Callable.From(() =>
-            {
-                material.Uv1Offset = new Vector3(
-                    (capturedCell % columns) / (float)columns,
-                    (capturedCell / columns) / (float)rows,
-                    0f);
-            }));
-        }
-        tween.TweenCallback(Callable.From(() => sprite.Visible = false));
-    }
-
-    private static void AnimateFacilitySmoke(Node root, MeshInstance3D sprite)
-    {
-        const int startCell = 0;
-        const int endCell = 14;
-        const int columns = 4;
-        const int rows = 4;
-        const int lifeTurns = 300;
-        const double cellsPerTurn = 0.5d;
-        int cellCount = endCell - startCell + 1;
-        int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
-        double cellIntervalSeconds =
-            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
-        int frameAdvances = (int)(lifeTurns * cellsPerTurn);
-        var material = (StandardMaterial3D)sprite.MaterialOverride;
-        material.Uv1Offset = new Vector3(
-            (initialCell % columns) / (float)columns,
-            (initialCell / columns) / (float)rows,
-            0f);
-
-        Tween tween = root.CreateTween();
-        for (int step = 1; step <= frameAdvances; step++)
-        {
-            int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
-            tween.TweenInterval(cellIntervalSeconds);
-            tween.TweenCallback(Callable.From(() =>
-            {
-                material.Uv1Offset = new Vector3(
-                    (capturedCell % columns) / (float)columns,
-                    (capturedCell / columns) / (float)rows,
-                    0f);
-            }));
         }
     }
 

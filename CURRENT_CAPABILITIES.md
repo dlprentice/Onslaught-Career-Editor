@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (native rebuild Vulcan impact, frontend and world-frame orchestration; existing RE and companion evidence retains its stated limits).
+Last updated: 2026-09-23 (native rebuild impact/destruction scenes, frontend and world-frame orchestration; existing RE and companion evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -338,7 +338,10 @@ remains unresolved. Public projectile/muzzle and Sun scenes show the same
 production texture recipes before Play, with private pixels excluded from saves.
 The direct Vulcan impact spark now also has an authored native scene, including
 its billboard, material and stopped timer; its unresolved emitter branches remain
-absent. Other destruction effects still await conversion.
+absent. Tank, drone and facility destruction now use native scenes with their
+existing flash, explosion, fireball and smoke layers, shared texture recipes and
+explicitly started animation. Their representative-emitter limitations remain
+open. Pulse impact still awaits conversion.
 Water adds three inspectable mesh components and external production shaders.
 Its complete isolated-render comparison matches the retained component's RGBA
 bytes; terrain comparisons match every word across twelve mesh updates. These
@@ -351,7 +354,7 @@ text-only difference and unresolved bar appearance are recorded explicitly.
 Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
 focused differential checks. The remaining live simulation, world import
-construction, destruction effects and game host still require .NET; this is not yet a
+construction, Pulse impact and game host still require .NET; this is not yet a
 standard-engine-only game. See the [rebuild guide](rebuild/README.md) for the
 current boundary and [validation receipts](VALIDATION.md) for executed checks.
 

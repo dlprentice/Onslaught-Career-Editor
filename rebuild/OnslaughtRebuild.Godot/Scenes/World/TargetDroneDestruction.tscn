@@ -1,0 +1,53 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Scenes/World/destruction_effect.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectFlashMediumTexture.tres" id="2"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectFireballTexture.tres" id="3"]
+
+[sub_resource type="StandardMaterial3D" id="FlashMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("2")
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="FlashQuad"]
+size = Vector2(10, 10)
+
+[sub_resource type="StandardMaterial3D" id="FireballMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("3")
+billboard_mode = 1
+billboard_keep_scale = true
+uv1_scale = Vector3(0.25, 0.25, 1)
+
+[sub_resource type="QuadMesh" id="FireballQuad"]
+size = Vector2(2, 2)
+
+[node name="TargetDroneDestruction" type="Node3D"]
+script = ExtResource("1")
+profile = "drone"
+metadata/definition = "Drone Explosion Effect: direct Flash and one retained representative Fire Sprite Damped 2; emitter/debris laws remain unresolved"
+
+[node name="Lifetime" type="Timer" parent="."]
+wait_time = 1.5
+one_shot = true
+
+[node name="DroneFlash" type="MeshInstance3D" parent="."]
+mesh = SubResource("FlashQuad")
+material_override = SubResource("FlashMaterial")
+metadata/definition = "Flash: Radius 5 -> 0, Life 5 turns, Time 0"
+
+[node name="DroneFireball" type="MeshInstance3D" parent="."]
+mesh = SubResource("FireballQuad")
+material_override = SubResource("FireballMaterial")
+metadata/definition = "Fire Sprite Damped 2: one representative emitter layer, Radius 1 -> 0.5, Life 30 turns, random-start cells 0..11"

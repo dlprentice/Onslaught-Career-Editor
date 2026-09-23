@@ -1,0 +1,74 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://Scenes/World/destruction_effect.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectFlashMediumTexture.tres" id="2"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectFireballTexture.tres" id="3"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectAnimatedBlobTexture.tres" id="4"]
+
+[sub_resource type="StandardMaterial3D" id="FlashMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("2")
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="FlashQuad"]
+size = Vector2(6, 6)
+
+[sub_resource type="StandardMaterial3D" id="FireballMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("3")
+billboard_mode = 1
+billboard_keep_scale = true
+uv1_scale = Vector3(0.25, 0.25, 1)
+
+[sub_resource type="QuadMesh" id="FireballQuad"]
+size = Vector2(1, 1)
+
+[sub_resource type="StandardMaterial3D" id="SmokeMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 0
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("4")
+billboard_mode = 1
+billboard_keep_scale = true
+uv1_scale = Vector3(0.25, 0.25, 1)
+
+[sub_resource type="QuadMesh" id="SmokeQuad"]
+size = Vector2(6, 6)
+
+[node name="FacilityDestruction" type="Node3D"]
+script = ExtResource("1")
+profile = "facility"
+metadata/definition = "Muspell Building Explosion Effect: retained direct flash, one representative fireball and one smoke; emitter and colour evolution remain unresolved"
+
+[node name="Lifetime" type="Timer" parent="."]
+wait_time = 15.0
+one_shot = true
+
+[node name="FacilityFlash" type="MeshInstance3D" parent="."]
+mesh = SubResource("FlashQuad")
+material_override = SubResource("FlashMaterial")
+metadata/definition = "Flash Building: Radius 3 -> 0, Life 6 turns, Time 0"
+
+[node name="FacilityFireball" type="MeshInstance3D" parent="."]
+mesh = SubResource("FireballQuad")
+material_override = SubResource("FireballMaterial")
+metadata/definition = "Fire Sprite Damped Long: one representative emitter layer, Radius 0.5 -> 2, Life 60 turns, random-start cells 0..11"
+
+[node name="FacilitySmoke" type="MeshInstance3D" parent="."]
+mesh = SubResource("SmokeQuad")
+material_override = SubResource("SmokeMaterial")
+metadata/definition = "Smoke Sprite Anim Large Building: one retained Time-0 smoke, Radius 3 -> 2, Life 300 turns, random-start cells 0..14; placement/velocity/Fade_Col/Life_Pct unresolved"

@@ -170,17 +170,32 @@ func _artwork_checks() -> bool:
 		"VulcanBullet": {"ProjectileTrail": ["vulcan-bullet-trail", 64, 0]},
 		"PulseMuzzleFlash": {"PulseCannonMuzzleFlash": ["particle-alparticle5-additive", 128, 0]},
 		"VulcanImpact": {"VulcanImpactSpark": ["vulcan-impact-spark", 256, 0]},
+		"TargetTankDestruction": {"TargetTankFlash": ["effect-flash-medium", 128, 0],
+			"ExplosionAnimatedSprite": ["target-tank-explosion-animated", 256, 0],
+			"ExplosionFireball": ["target-tank-explosion-fireball", 256, 1]},
+		"TargetDroneDestruction": {"DroneFlash": ["effect-flash-medium", 128, 0],
+			"DroneFireball": ["target-tank-explosion-fireball", 256, 1]},
+		"FacilityDestruction": {"FacilityFlash": ["effect-flash-medium", 128, 0],
+			"FacilityFireball": ["target-tank-explosion-fireball", 256, 1],
+			"FacilitySmoke": ["pulse-impact-animated-blob", 256, 1]},
 	}
+	var lifetimes: Dictionary = {"PulseMuzzleFlash": 0.5, "VulcanImpact": 0.25,
+		"TargetTankDestruction": 1.5, "TargetDroneDestruction": 1.5, "FacilityDestruction": 15.0}
 	for name: String in definitions:
 		var scene: PackedScene = load("res://Scenes/World/" + name + ".tscn")
 		var instance: Node3D = scene.instantiate()
 		# No tree or gameplay initialization is needed to inspect the artwork.
-		if name == "VulcanImpact":
+		if lifetimes.has(name):
 			var timer: Timer = instance.get_node("Lifetime")
-			_check(timer.is_stopped() and not timer.autostart and timer.one_shot and timer.wait_time == 0.25,
-				"The authored impact lifetime stays frozen until an explicit runtime start")
+			_check(timer.is_stopped() and not timer.autostart and timer.one_shot and timer.wait_time == lifetimes[name],
+				name + " authored lifetime stays frozen until an explicit runtime start")
 			_check(not instance.get_script().is_tool() and not instance.is_processing(),
-				"Opening the impact scene cannot execute gameplay")
+				name + " cannot execute gameplay in the editor")
+			var tween_count: int = get_processed_tweens().size()
+			root.add_child(instance)
+			_check(timer.is_stopped() and not instance.is_processing() and not instance.is_physics_processing() \
+				and not instance.is_processing_input() and get_processed_tweens().size() == tween_count,
+				name + " tree entry starts no timer, tween, process or input owner")
 		for part: String in definitions[name]:
 			var pin: Array = definitions[name][part]
 			var mesh: MeshInstance3D = instance.get_node(part)

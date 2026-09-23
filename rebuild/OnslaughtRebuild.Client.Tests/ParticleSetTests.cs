@@ -604,90 +604,149 @@ public sealed class ParticleSetTests
             worldSource,
             "private void SpawnTargetTankDestruction(",
             "private void SpawnTargetDroneDestruction(");
-        Assert.Contains("position, 1.5d);", spawn, StringComparison.Ordinal);
+        Assert.Contains(
+            "SpawnDestructionScene(TargetTankDestructionScenePath, $\"TargetTankDestruction{targetId}\", position)",
+            spawn, StringComparison.Ordinal);
+        string spawnScene = RequireSection(worldSource, "private void SpawnDestructionScene(", "private Node3D CreateTimedEffect(");
+        AssertSourceOrder(spawnScene,
+            "GD.Load<PackedScene>(path)",
+            "scene.Instantiate<Node3D>()",
+            "root.Name = name;",
+            "root.Position = position;",
+            "AddChild(root);",
+            "root.Call(\"start\")",
+            "WorldPresentationResult(returned)");
+        Assert.DoesNotContain("AnimateTargetTankDelayedExplosion", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateLoopingFireball", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateFacilitySmoke", worldSource, StringComparison.Ordinal);
+
+        // These are the actual production profiles and controller, not a
+        // retained renderer. Their named mesh radii are checked separately in
+        // ParticleQuadSizeConventionTests. Actual callback and material-state
+        // parity belongs to the dedicated scene checks, beyond this source guard.
+        foreach ((string name, string profile, string lifetime) in new[]
+        {
+            ("TargetTankDestruction", "tank", "1.5"),
+            ("TargetDroneDestruction", "drone", "1.5"),
+            ("FacilityDestruction", "facility", "15.0"),
+        })
+        {
+            string scene = File.ReadAllText(Locate($"rebuild/OnslaughtRebuild.Godot/Scenes/World/{name}.tscn"));
+            Assert.Contains($"{name}ScenePath = \"res://Scenes/World/{name}.tscn\"", worldSource, StringComparison.Ordinal);
+            Assert.Contains("res://Scenes/World/destruction_effect.gd", scene, StringComparison.Ordinal);
+            Assert.Contains($"profile = \"{profile}\"", scene, StringComparison.Ordinal);
+            string timer = RequireSection(scene, "[node name=\"Lifetime\" type=\"Timer\" parent=\".\"]", "[node ");
+            Assert.Contains($"wait_time = {lifetime}\n", timer, StringComparison.Ordinal);
+            Assert.Contains("one_shot = true", timer, StringComparison.Ordinal);
+            Assert.DoesNotContain("autostart = true", timer, StringComparison.Ordinal);
+        }
+
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/destruction_effect.gd"));
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("COLUMNS: int = 4", animation, StringComparison.Ordinal);
+        Assert.Contains("ROWS: int = 4", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _process(", animation, StringComparison.Ordinal);
+        string start = RequireSection(animation, "func start()", "func _start_tank()");
+        AssertSourceOrder(start,
+            "if Engine.is_editor_hint():",
+            "if _started or not is_inside_tree():",
+            "_started = true",
+            "lifetime.timeout.connect(queue_free)",
+            "lifetime.start()",
+            "\"tank\": _start_tank()",
+            "\"drone\": _start_drone()",
+            "\"facility\": _start_facility()");
+
+        string tank = RequireSection(animation, "func _start_tank()", "func _start_drone()");
+        AssertSourceOrder(tank,
+            "_layer(\"TargetTankFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.25)",
+            "_layer(\"ExplosionAnimatedSprite\")",
+            "_animate_tank_delayed(explosion)",
+            "_layer(\"ExplosionFireball\")",
+            "_animate_looping_fireball(fireball, 30)",
+            "_animate_scale(fireball, 1.0, 0.5, 1.5)");
+        string drone = RequireSection(animation, "func _start_drone()", "func _start_facility()");
+        AssertSourceOrder(drone,
+            "_layer(\"DroneFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.25)",
+            "_layer(\"DroneFireball\")",
+            "_animate_looping_fireball(fireball, 30)",
+            "_animate_scale(fireball, 1.0, 0.5, 1.5)");
+        string facility = RequireSection(animation, "func _start_facility()", "func _layer(");
+        AssertSourceOrder(facility,
+            "_layer(\"FacilityFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.3)",
+            "_layer(\"FacilityFireball\")",
+            "_animate_looping_fireball(fireball, 60)",
+            "_animate_scale(fireball, 1.0, 4.0, 3.0)",
+            "_layer(\"FacilitySmoke\")",
+            "_animate_facility_smoke(smoke)",
+            "_animate_scale(smoke, 1.0, F.value(2.0 / 3.0), 15.0)");
+        string facilityScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/FacilityDestruction.tscn"));
+        string smokeMaterial = RequireSection(facilityScene, "[sub_resource type=\"StandardMaterial3D\" id=\"SmokeMaterial\"]", "[sub_resource ");
+        Assert.Contains("blend_mode = 0", smokeMaterial, StringComparison.Ordinal);
         Assert.Matches(
-            @"CreateEffectSprite\(\s*""TargetTankFlash"",\s*" +
-            @"_effectFlashMediumTexture,\s*5f\);",
-            spawn);
-        Assert.Contains(
-            "AnimateScale(flash, 1f, 0f, 0.25d);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateTargetTankDelayedExplosion(root, animatedExplosion);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateTargetTankFireball(root, fireball);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(fireball, 1f, 0.5f, 1.5d);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("AnimateAtlas(", spawn, StringComparison.Ordinal);
-        Assert.DoesNotContain("frames: 16", spawn, StringComparison.Ordinal);
+            @"(?s)\[node name=""FacilitySmoke"" type=""MeshInstance3D""[^\]]*\][^\[]*" +
+            @"material_override = SubResource\(""SmokeMaterial""\)",
+            facilityScene);
 
-        string delayed = RequireSection(
-            worldSource,
-            "private static void AnimateTargetTankDelayedExplosion(",
-            "private static void AnimateTargetTankFireball(");
-        Assert.Contains("const int startCell = 0;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 7;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 0.7d;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const double lifeSeconds = 0.5d;", delayed, StringComparison.Ordinal);
-        Assert.Contains(
-            "5d / SimulationConstants.TicksPerSecond",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "1d / (cellsPerTurn * SimulationConstants.TicksPerSecond)",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "atlasTween.TweenInterval(startDelaySeconds);",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "scaleTween.TweenInterval(startDelaySeconds);",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains("cell <= endCell", delayed, StringComparison.Ordinal);
-        Assert.Contains("sprite.Visible = false;", delayed, StringComparison.Ordinal);
-        Assert.Contains("sprite.Visible = true;", delayed, StringComparison.Ordinal);
-        Assert.Contains(
-            "Vector3.One * (1.3f / 1.5f)",
-            delayed,
-            StringComparison.Ordinal);
+        string layer = RequireSection(animation, "func _layer(", "func _animate_tank_delayed(");
+        Assert.Contains("sprite.material_override = sprite.material_override.duplicate(false)", layer, StringComparison.Ordinal);
+        string delayed = RequireSection(animation, "func _animate_tank_delayed(", "func _animate_looping_fireball(");
+        Assert.Contains("START_CELL: int = 0", delayed, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 7", delayed, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 0.7", delayed, StringComparison.Ordinal);
+        Assert.Contains("LIFE_SECONDS: float = 0.5", delayed, StringComparison.Ordinal);
+        Assert.Contains("5.0 / TICKS_PER_SECOND", delayed, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", delayed, StringComparison.Ordinal);
+        AssertSourceOrder(delayed,
+            "_set_cell(material, START_CELL)",
+            "sprite.visible = false",
+            "sprite.scale = Vector3.ONE",
+            "var atlas: Tween = create_tween()",
+            "atlas.tween_interval(start_delay)",
+            "atlas.tween_callback(_set_visible.bind(sprite, true))",
+            "range(START_CELL + 1, END_CELL + 1)",
+            "atlas.tween_interval(interval)",
+            "atlas.tween_callback(_set_cell.bind(material, cell))",
+            "var scaling: Tween = create_tween()",
+            "scaling.tween_interval(start_delay)",
+            "F.value(F.value(1.3) / F.value(1.5))",
+            "scaling.tween_property(sprite, \"scale\", Vector3.ONE * final_scale, LIFE_SECONDS)",
+            "scaling.tween_callback(_set_visible.bind(sprite, false))");
 
-        string loopingWrappers = RequireSection(
-            worldSource,
-            "private static void AnimateTargetTankFireball(",
-            "private static void AnimateLoopingFireball(");
-        Assert.Contains(
-            "AnimateLoopingFireball(root, sprite, lifeTurns: 30);",
-            loopingWrappers,
-            StringComparison.Ordinal);
+        string looping = RequireSection(animation, "func _animate_looping_fireball(", "func _animate_facility_smoke(");
+        string smoke = RequireSection(animation, "func _animate_facility_smoke(", "func _animate_scale(");
+        foreach ((string source, int endCell, string lifeTurns) in new[]
+        {
+            (looping, 11, "life_turns"),
+            (smoke, 14, "LIFE_TURNS"),
+        })
+        {
+            Assert.Contains("START_CELL: int = 0", source, StringComparison.Ordinal);
+            Assert.Contains($"END_CELL: int = {endCell}", source, StringComparison.Ordinal);
+            Assert.Contains("CELLS_PER_TURN: float = 0.5", source, StringComparison.Ordinal);
+            Assert.Contains("cell_count: int = END_CELL - START_CELL + 1", source, StringComparison.Ordinal);
+            AssertSourceOrder(source,
+                "initial_cell: int = START_CELL + (randi() % cell_count)",
+                "1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)",
+                $"int({lifeTurns} * CELLS_PER_TURN)",
+                "_set_cell(material, initial_cell)",
+                "var atlas: Tween = create_tween()",
+                "range(1, advances + 1)",
+                "START_CELL + ((initial_cell - START_CELL + step) % cell_count)",
+                "atlas.tween_interval(interval)",
+                "atlas.tween_callback(_set_cell.bind(material, cell))");
+        }
 
-        string looping = RequireSection(
-            worldSource,
-            "private static void AnimateLoopingFireball(",
-            "private static void AnimateScale(");
-        Assert.Contains("const int startCell = 0;", looping, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 11;", looping, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 0.5d;", looping, StringComparison.Ordinal);
-        Assert.Contains("GD.Randi() % (uint)cellCount", looping, StringComparison.Ordinal);
-        Assert.Contains("lifeTurns * cellsPerTurn", looping, StringComparison.Ordinal);
-        Assert.Contains("step <= frameAdvances", looping, StringComparison.Ordinal);
-        Assert.Contains("% cellCount", looping, StringComparison.Ordinal);
-        Assert.Contains(
-            "tween.TweenInterval(cellIntervalSeconds);",
-            looping,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            looping,
-            StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_callback(_set_visible.bind(sprite, false))", looping, StringComparison.Ordinal);
+        Assert.Contains("LIFE_TURNS: int = 300", smoke, StringComparison.Ordinal);
+        Assert.DoesNotContain("_set_visible", smoke, StringComparison.Ordinal);
+        string scaling = RequireSection(animation, "func _animate_scale(", "func _set_cell(");
+        Assert.Contains("sprite.scale = Vector3.ONE * F.value(start_scale)", scaling, StringComparison.Ordinal);
+        Assert.Contains("sprite.create_tween().tween_property(sprite, \"scale\", Vector3.ONE * F.value(end_scale), duration)", scaling, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -779,11 +838,24 @@ public sealed class ParticleSetTests
         Assert.DoesNotContain("_vulcanImpactSparkTexture", worldSource, StringComparison.Ordinal);
 
         string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
-        int shockwave = presentation.IndexOf("pulse-impact-shockwave.texture.aya", StringComparison.Ordinal);
-        int admission = presentation.IndexOf("effect.Call(\"admit_artwork\")", StringComparison.Ordinal);
-        int flash = presentation.IndexOf("effect-flash-medium.texture.aya", StringComparison.Ordinal);
-        Assert.True(shockwave >= 0 && flash > shockwave);
-        Assert.InRange(admission, shockwave + 1, flash - 1);
+        // Keep all six admission slots, including the two texture recipes
+        // shared by remaining PulseImpact code and native destruction scenes.
+        int priorAdmission = -1;
+        foreach (string marker in new[]
+        {
+            "AdmitDestructionArtwork(\"animated_blob\")",
+            "pulse-impact-shockwave.texture.aya",
+            "effect.Call(\"admit_artwork\")",
+            "AdmitDestructionArtwork(\"flash_medium\")",
+            "AdmitDestructionArtwork(\"explosion_animated\")",
+            "AdmitDestructionArtwork(\"fireball\")",
+        })
+        {
+            int admission = presentation.IndexOf(marker, StringComparison.Ordinal);
+            Assert.True(admission > priorAdmission, $"Texture admission '{marker}' moved before its original slot.");
+            Assert.Equal(admission, presentation.LastIndexOf(marker, StringComparison.Ordinal));
+            priorAdmission = admission;
+        }
 
         string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn"));
         Assert.Contains("res://Scenes/World/vulcan_impact.gd", scene, StringComparison.Ordinal);
@@ -1268,6 +1340,17 @@ public sealed class ParticleSetTests
         int endIndex = source.IndexOf(end, startIndex + start.Length, StringComparison.Ordinal);
         Assert.True(endIndex > startIndex, $"Source section end '{end}' is missing.");
         return source[startIndex..endIndex];
+    }
+
+    private static void AssertSourceOrder(string source, params string[] statements)
+    {
+        int offset = 0;
+        foreach (string statement in statements)
+        {
+            int index = source.IndexOf(statement, offset, StringComparison.Ordinal);
+            Assert.True(index >= 0, $"Source operation '{statement}' is missing or out of order.");
+            offset = index + statement.Length;
+        }
     }
 
     private static string Locate(string repositoryRelativePath)

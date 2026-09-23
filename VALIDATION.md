@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native Vulcan impact, world-frame and frontend orchestration).
+Last updated: 2026-09-23 (native impact/destruction scenes, world-frame and frontend orchestration).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1176,6 +1176,44 @@ display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
 
+#### Native destruction scenes — September 23
+
+Tank, drone and facility destruction now instantiate authored scenes driven by
+`Scenes/World/destruction_effect.gd`. Their retained layers share four native
+texture recipes; the remaining managed Pulse impact uses those same objects.
+The original six texture-admission slots remain ordered. Existing representative
+emitter limitations are unchanged; no debris, placement, velocity or colour law
+was inferred to fill them.
+
+Headless checks used fresh owned profiles under `local-data/test-runs/`:
+
+- `destruction-scenes-final-1c6ey79n/`: supported build/private import passed
+  with zero compiler warnings/errors. The entity harness passed **29,444
+  assertions**, including paired native/retained schedules for all three
+  families, raw UV/scale/colour/elapsed words, visibility, captured materials,
+  independent siblings, lifetime timers and actual public event routing.
+  Texture bytes match the retained loader and source hashes remain unchanged.
+  RNG checks preserve exactly **1 / 1 / 2** start draws for tank/drone/facility,
+  with facility fireball before smoke and no further animation draws.
+- `destruction-scenes-client-hdrlknux/`: all **21** affected Client tests passed,
+  with zero skips. Descriptor and numerical assertions are unchanged. The size
+  guard now follows each named scene layer to its own QuadMesh resource.
+- `destruction-scenes-native-71rcgquf/`: standard-engine parsing and **172
+  runtime assertions** passed with clean logs. **148 editor assertions** passed
+  for real artwork, scene round-trips, private-pixel exclusion and inactive
+  timer/tween/input state. The same **166 ObjectDB instances** and associated
+  RID shutdown diagnostics remain; the editor's strict clean-log gate failed.
+- `destruction-scenes-smoke-epp65z9f/`: the normal startup/menu/Level 100/retry/
+  Main Menu route passed **2,148 ticks**, followed by two successful replays.
+  Runtime logs are clean; recording, trace and final-state hashes are unchanged
+  from the world milestone below. This also exercises admission of the shared
+  recipes by the remaining managed host. The mission remains **Running / None**
+  with **zero targets destroyed**, so this is not combat-completion evidence.
+
+Run the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` forms
+below. These are comparisons against the retained `673b630a` reconstruction,
+not new retail-completeness or GPU-performance claims.
+
 #### Native Vulcan impact — September 23
 
 `Scenes/World/VulcanImpact.tscn` now supplies the production direct spark's
@@ -1220,7 +1258,7 @@ transitions, camera/projection application and environment update order.
 `static_world_animation.gd` owns scenery's double clock and discrete rigid-part
 frames. The temporary C# facade submits one immutable snapshot pair and caches
 detached display facts. Its former camera adapter is test-only. Import
-construction, destruction effects, full simulation and replay entry still need
+construction, the remaining Pulse impact, full simulation and replay entry still need
 conversion; the full game still requires .NET.
 
 Executed checks use owned profiles and outputs under this worktree's ignored
