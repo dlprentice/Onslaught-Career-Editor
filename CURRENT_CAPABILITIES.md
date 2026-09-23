@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-22 (nonnull language-cleanup RE; earlier implementation receipts retain their dates).
+Last updated: 2026-09-22 (sample decode/quality RE; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -53,7 +53,7 @@ live settings. Private generated-copy fsync/readback succeeds on Linux. A furthe
 17 startup cases execute original Blank and its full reset-time Goodie call:
 exactly nine entries finish in instruction state, with no unlocked Goodies.
 These results do not establish retail writer durability, complete process startup,
-every unlock rule, successful sample decoding or player parity.
+every unlock rule or player parity. Direct sample decoding is bounded separately below.
 See [executed checks](VALIDATION.md#original-load-save-and-reload-controls--september-20).
 
 The September 22 extension passes 26 original nonnull-cleanup and language-change
@@ -63,6 +63,16 @@ write is verified at its corrected address. Heap operations and optional child
 destruction are intercepted; authored objects do not establish complete menu
 construction, input-device effects or visible localization. See the
 [bounded cleanup contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md#nonnull-cleanup-before-text-replacement).
+
+The subsequent **44 sample controls** execute original cached reading, buffer
+creation, decoding and quality conversion with intercepted heap/device services.
+Two real English-bank records decode at all three normal quality values. One
+reproduces a one-byte excess at quality 1 and a one-byte unwritten tail at quality
+2 relative to the requested sizes. The current materializer's pure decoder matches
+both complete quality-0 outputs. These are controlled-memory results, not real
+device overflow, audible behavior, whole-bank loading or full startup acceptance.
+See the [sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
+and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversion--september-22).
 
 ## Godot Save Lab — first workflow
 

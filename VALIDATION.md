@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (nonnull language-cleanup execution; earlier validation retained).
+Last updated: 2026-09-22 (original sample decode/quality execution; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2196,6 +2196,58 @@ and actual optional child destructors, real memory reclamation, exception
 unwinding, reentrancy, language-format admission, Load/Save composition and live
 menu recreation/rendering remain outside this cohort. Exact reviewer prompts
 and reports are retained in the existing private review owner.
+
+### Original sample decode and quality conversion — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_sample_control.py`
+passed **44 cases**, retaining five complete single-range original bodies
+(2,002 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-sample-run-czk0ur1j/sample`;
+receipt SHA-256 `1edefa0d58727cc6b9f4631ee1f8a233d0d9cbc1fefeb661a296e141e4116bd4`;
+ELF SHA-256 `7755ab7a4c603414a20b071dbc2b389cd6982ad63fc43729aede410e7a0b377d`.
+`audio-sample-controls-v2.log` records the invocation. The saved driver,
+assembly/link commands, complete input/output/stderr and selected body/table
+hashes preserve the instrument. The selected pristine executable remains
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Original sample loading, cached Read, buffer creation, ADPCM decoding and
+quality conversion execute. Two complete real English-bank size/payload records
+run at qualities 0, 1 and 2. Authored size residues, quality 3/negative quality,
+fresh/reused objects, supplied Create/Lock/Unlock failures, zero/short reads,
+short returned lock span and descriptor flag/GUID selection cover adverse paths.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
+identifies the bank and separates its 164 framed records from the two decoded.
+
+Complete selected state, the entire guarded allocation arena and unchanged input
+are compared, with **310 ordered hook snapshots**. Device descriptor/format and
+meaningful method arguments are checked; incidental stack-pointer values are
+captured rather than modeled. Unused event capacity, integer ABI guards and
+PC53-nearest x87 CW/TOP pass. The syscall restriction rejects `getpid` with
+SIGSYS and no output. Executable and bank are rechecked unchanged.
+
+The preserved v1 failure expected zero after the 16-byte PCM format prefix.
+Original stack instructions place the 36-byte buffer descriptor immediately
+after that prefix, so an 18-byte capture includes its size's low word `0x24`.
+V2 corrects that observation boundary; it does not claim an initialized
+`WAVEFORMATEX.cbSize` or alter retail instructions to obtain agreement.
+
+One real 29,490-byte record requests/writes 14,745/14,746 bytes at quality 1
+and 3,687/3,686 at quality 2. The full arena comparisons include the excess byte
+and unchanged trailing byte. Heap/COM hooks retain oversized owned memory;
+supplied failures and span lengths do not establish actual driver behavior,
+real overflow/crashes, lifetime safety or audible results. Open/refill, complete
+bank traversal, outer CreateSample/reuse lookup, allocation failure, malformed
+huge lengths, exceptions, Load/Save composition and full startup remain outside
+this experiment.
+
+A separate `python -P -` read-only AST comparison selected only the current
+materializer's two literal tables and pure decoder. The private
+`audio-sample-materializer-comparison.json` records exact source hash
+`710c3843f533af18e9b634ed40051da2ab1f1a6cb71fab0db716e13081566081`, selected lines
+and output hashes. Both complete real quality-0 outputs match; an authored odd
+size differs only at its final byte. The full materializer was not invoked or
+edited. Review prompts, full reports and root dispositions remain in the existing
+private save-loader/language review record. No Ghidra database was opened.
 
 ### Scheduled-event constructor boundary — September 19
 

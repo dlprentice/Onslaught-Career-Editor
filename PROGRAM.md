@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-22 (RE resumed; nonnull language-cleanup controls completed)
+Last updated: 2026-09-22 (sample decoding and saved audio-quality behavior rechecked)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -66,7 +66,8 @@ remain explicit; these results do not establish complete retail startup.
 The audio reset/bank controls resolve caller ordering, init-return admission,
 shutdown versus Stop, Level 100 music restoration and early path caching that
 can suppress a same-path retry after a failed or skipped bank load. Actual
-platform services, lifetime effects, sample decoding and playback remain open.
+platform services, lifetime effects and playback remain open; the direct sample
+decode/quality path now has the bounded original-code evidence below.
 
 Fifteen native Load/Save/reinitialize/Load/Save cases now include direct handoff
 of the first serializer buffer. Both gold controls preserve all 10,004 bytes;
@@ -91,9 +92,17 @@ and optional child destruction remain explicit boundaries. The
 and [saved controls](VALIDATION.md#original-nonnull-language-cleanup--september-22)
 record exactly what this establishes.
 
-Next, close successful bank/sample loading boundaries, then compose the
-remaining rechecked services into the preserved real-save route. Keep
-original-code evidence distinct from decoder self-tests,
+Direct sample controls now execute the original cached reader, buffer factory,
+ADPCM decoder and quality converter with two real English-bank records. They
+expose different rounding in requested versus written sizes, and distinguish
+returning a sample object from successfully decoding it. The current materializer's
+pure decoder matches both complete high-quality PCM outputs. This does not
+establish all-bank loading, real device outcomes or playback; see the
+[sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality).
+
+Next, close the successful bank loader and outer sample reuse/list boundaries,
+then compose the remaining rechecked services into the preserved real-save route.
+Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;
 this RE task does not own those production changes.

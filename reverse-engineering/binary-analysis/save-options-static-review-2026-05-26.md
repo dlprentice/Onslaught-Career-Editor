@@ -312,6 +312,72 @@ nonnull language cleanup, a complete startup or durable save reopening.
 Unchanged full bodies and explicit hooks are pinned in the private receipts;
 this tranche changes no Ghidra database or implementation-lane source.
 
+## Original sample decoding and saved quality
+
+The [44 direct sample controls](../../VALIDATION.md#original-sample-decode-and-quality-conversion--september-22)
+execute unchanged sample loading `005172a0`, cached Read `00548570`, device-buffer
+creation `00517440`, ADPCM decoding `00517fa0` and conversion `00517600`. The
+heap and COM methods are explicit recording hooks. Original bank traversal,
+outer CreateSample/name lookup, real device behavior and playback are excluded.
+
+Two complete size/payload records come from
+`local-lab/safe-copy-bea-pristine/data/sounds/sounds_english_pc.xap`, SHA-256
+`658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7`.
+Its 164 record extents reach exact EOF; 106 declared PCM sizes are divisible by
+four and 58 have remainder two. None is odd. That is a metadata pass over this
+one bank, not execution of all records. Zero-based records 3 and 4, the computer
+and energy plant atmosphere samples, are the two actually decoded at each normal
+quality value. The executable is the pristine specimen pinned at this document's head.
+
+For the bounded nonnegative byte counts tested, the direct helper requests
+`ceil(N/4)` compressed bytes and decodes `floor(N/2)` signed PCM samples with
+fresh predictor/index state zero. The high nibble is consumed first. Static
+instructions establish the signed predictor, clamped index `0..88`, individual
+step shifts and predictor saturation; the two actual records and authored
+controls execute that path. State can persist through the decoder's state
+pointer, but nibble phase does not; arbitrary odd-sized decode chunks cannot be
+assumed equivalent to a single call. Nonzero initial-state/chunk behavior has
+not been executed by these controls.
+
+| Quality word | Requested device bytes | Converter writes | Mono format |
+| --- | --- | --- | --- |
+| `0` | `N` | Direct decoder writes `2 * floor(N/2)` | 44,100 Hz, 16 bit |
+| `1` | `ceil(N/2)` | `2 * ceil(N/4)` | 22,050 Hz, 16 bit |
+| `2` | `ceil(N/8)` | `floor(N/8)` | 11,025 Hz, 8 bit |
+| Other tested values (`3`, `-1`) | `N` | `floor(N/8)` | 11,025 Hz, 8 bit |
+
+Quality 1 averages adjacent mono samples using a signed right shift; an
+incomplete four-byte group appends a zero word. It is sample-rate reduction,
+not the stereo-to-mono interpretation in the historical W009/A05 review. The
+lower-quality path averages complete groups of four samples into unsigned
+eight-bit output and discards the incomplete group. These formulas do not
+establish safe admission of negative/overflowing lengths.
+
+Record 3 declares 29,490 PCM bytes: quality 1 requests 14,745 but writes 14,746;
+quality 2 requests 3,687 but writes 3,686, leaving the last byte unchanged.
+Record 4's 29,752-byte size produces exact requested/written sizes at all three
+normal qualities. The instrument deliberately supplies oversized guarded
+storage. These results do not establish that a real DirectSound buffer permits
+those writes, that retail crashes, or what a player hears.
+
+A supplied Create/Lock failure still returns a nonnull sample object without
+decoding; Lock failure releases and clears its buffer pointer. A zero payload
+read returns null through the sample-destructor boundary. A nonzero short read
+is accepted and decoding includes retained allocation filler. The helper also
+ignores a short returned lock span, passes the original `N` to Unlock after
+conversion, and ignores the supplied Unlock failure. Reuse here means an
+explicitly supplied object; outer name selection/list ownership is not tested.
+None of these quirks is a recommendation to reproduce unchecked writes in Godot.
+
+Read-only extraction of the current materializer's two literal tables and pure
+`_decode_ima_high_nibble_first` function reproduces both entire quality-0 native
+outputs byte for byte. This is a focused consumer comparison, not a full asset
+materialization run. An authored seven-byte case matches the first six bytes;
+the materializer emits a seventh while the original helper leaves it unchanged.
+Since all sizes in the selected bank are even, that control does not demonstrate
+a defect in its shipped materialized output. The exact source and output hashes
+are retained in the private comparison linked from validation.
+
 ## Original save reload after reinitialization
 
 The [round-trip controls](../../VALIDATION.md#original-load-save-and-reload-controls--september-20)
