@@ -100,7 +100,12 @@ pure decoder matches both complete high-quality PCM outputs. This does not
 establish all-bank loading, real device outcomes or playback; see the
 [sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality).
 
-Next, close the successful bank loader and outer sample reuse/list boundaries,
+The outer caller now has original-code reuse/list/name-copy controls, including
+insertion despite a supplied device-create failure. Its filename-route stub and
+working buffer loader contradict inherited semantic labels; the
+[caller contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+records the evidence and pending metadata correction. Next, close successful
+bank traversal and actual sample destruction with coherent canonical ownership,
 then compose the remaining rechecked services into the preserved real-save route.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity

@@ -378,6 +378,57 @@ Since all sizes in the selected bank are even, that control does not demonstrate
 a defect in its shipped materialized output. The exact source and output hashes
 are retained in the private comparison linked from validation.
 
+## Outer sample admission and registration
+
+The [25 outer-call controls](../../VALIDATION.md#original-sample-admission-and-registration--september-22)
+add original `004e0890`, ASCII `stricmp`, `strncpy` and the five-byte stub at
+`00517290` to the preceding sample pipeline. They use only English-bank record 3;
+existing sample objects and list layouts are authored. Formatter, logger,
+heap/COM and actual sample destruction remain intercepted.
+
+With a nonnull data stream, `004e0890` calls `005172a0` with the stream, original
+music word and selected existing object. With a null stream, it passes the path
+buffer intended for `sounds\%s` or `music\%s` to `00517290`; that original stub
+returns null. No name search or sample insertion occurs on that path. The
+instrument observes the formatter arguments but deliberately emits no path
+bytes: neither tested branch reads that destination afterward.
+
+This contradicts the saved metadata name `LoadSampleFromBuffer_StubFail` at
+`00517290`, and the filename implication of `CreateSampleFromFile` at
+`005172a0`. The caller establishes a filename-route stub and a working
+cached-buffer loader, respectively. The partial source at
+`references/Onslaught` commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`
+has the opposite PC implementation availability: `pcsoundmanager.h:58` stubs
+the buffer loader, while `pcsoundmanager.cpp:151` implements filename loading.
+`SoundManager.cpp:248` also lacks retail's fourth reuse argument. Those source
+identities must not be copied onto retail mechanically. The database labels
+remain unmodified pending the scoped preservation/readback correction.
+
+Separately, the bank call at `00517e89` passes music zero and forwards its own
+argument as the reuse argument. Its saved `stream_mode` parameter name therefore
+misdescribes this policy. This caller edge is statically inspected; the complete
+bank loader has not executed in these sample controls.
+
+Retail tests only the reuse argument's low byte. Values `1`, `2` and `257`
+admit reuse; `0` and `256` do not. The first case-insensitive match in physical
+list order wins, including after a nonmatching head and before a duplicate.
+Reuse preserves list position. A fresh object prepends to the existing head.
+Successful return stores the whole music word, clears language-dependent state,
+copies at most 99 name bytes and terminates the 100-byte name field. Left/right
+type comes from the **stored** name's case-insensitive `_L`/`_R` suffix, and only
+when its length exceeds five. A 100-character input losing its final character
+therefore loses the tested suffix classification.
+
+A supplied device-create failure still yields a sample object that the outer
+caller inserts. A supplied lock failure on reuse preserves its list position
+and returns that object without PCM. Returning null after a zero payload read
+invokes the logger boundary instead of insertion. The destructor hook retains
+objects, so the reused zero-read case's unchanged list does not establish real
+retail unlinking or lifetime safety. Fresh static inspection of `005168d0` and
+`004dff30` shows that actual destruction traverses/unlinks the canonical sound
+manager, which requires its own coherent ownership setup before execution.
+Whole-bank traversal, actual destruction and successful playback remain open.
+
 ## Original save reload after reinitialization
 
 The [round-trip controls](../../VALIDATION.md#original-load-save-and-reload-controls--september-20)

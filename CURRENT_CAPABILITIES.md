@@ -74,6 +74,14 @@ device overflow, audible behavior, whole-bank loading or full startup acceptance
 See the [sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
 and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversion--september-22).
 
+A further 25 original caller controls resolve sample reuse, list insertion,
+name truncation and suffix selection. They distinguish a filename-route stub
+from the working buffer loader, correcting the meaning implied by inherited
+names; the database labels still await their preservation workflow. A sample
+can be inserted after a supplied device-creation failure, so list presence alone
+does not establish playable audio. See the
+[outer sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration).
+
 ## Godot Save Lab — first workflow
 
 The MIT [Godot companion](companion/OnslaughtToolkit.Godot/README.md) opens a real

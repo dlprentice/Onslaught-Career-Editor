@@ -2249,6 +2249,41 @@ size differs only at its final byte. The full materializer was not invoked or
 edited. Review prompts, full reports and root dispositions remain in the existing
 private save-loader/language review record. No Ghidra database was opened.
 
+### Original sample admission and registration — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_sample_control.py --outer`
+passed **25 cases / 172 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-sample-outer-run-rmgj4y_q/sample`;
+receipt SHA-256 `487ca48200e953807f5527b4bb9dc6e48679d2c3d99cded176c75b0748f722ae`;
+ELF SHA-256 `b9ee0618c1cdc74b5283190b8d3d7ed79e9a48cf262b404326283900cec8fc86`.
+`audio-sample-outer-controls-v2.log` retains the result. Nine complete original
+bodies total 2,827 bytes; the new four are CreateSample, two CRT string helpers
+and the null-stream stub. Specimen identity is unchanged from the preceding
+sample cohort. The original 44-case receipt and saved driver remain immutable.
+
+This mode executes only English-bank record 3. Cases cover fresh insertion,
+case-insensitive head/second/duplicate selection, byte versus word reuse flags,
+music-word preservation, null streams, name truncation, stored-name suffix
+boundaries, create/lock failures, zero payload reads and composed quality-1
+conversion. Complete selected state, arena, guards and input plus all ordered
+snapshots are checked. Integer ABI, PC53-nearest CW/TOP, unused output capacity,
+specimen/bank identity and the forbidden-syscall negative control pass.
+
+Formatter/logger calls only record arguments and return; no formatted path
+bytes are produced. The destination is unused by the tested compressed route
+and original null-stream stub. The original ASCII-locale comparison/copy does
+execute; other locales do not. Heap/COM/destruction hooks retain memory, so
+sample reuse and insertion are not proof of actual device or object lifetime.
+No bank traversal, real file access, audible behavior, Load/Save composition or
+startup acceptance is claimed. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+distinguishes caller evidence from the pending Ghidra naming correction.
+
+The preserved v1 outer run passed but inherited two-record receipt wording
+from direct mode and duplicated one case. V2 narrows the executed-record metadata
+to record 3 and replaces that duplicate with reuse preserving music word 256.
+The ELF is unchanged. Exact prompts and full independent reports stay in the
+existing private review owner; no Ghidra project was opened or modified.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
