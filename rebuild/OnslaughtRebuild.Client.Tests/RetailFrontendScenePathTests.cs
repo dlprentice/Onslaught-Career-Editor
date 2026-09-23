@@ -229,7 +229,7 @@ public sealed class RetailFrontendScenePathTests
     {
         string flow = ReadGodotSource("RetailFrontendFlow.cs");
         string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
-        string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
+        string input = SliceUntil(flow, "public override void _Input", "private bool HandlePointerMotion");
         string confirm = Slice(options, "private void ConfirmOptions(");
         string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
         string draw = NativeOptionsSource.Function("options_row.gd", "update_time");

@@ -39,8 +39,8 @@ public sealed partial class FrontendSessionSceneChecks : Node
 
             Input.MouseModeEnum pointerBefore = Input.MouseMode;
             RetailFrontendFlow view = RetailFrontendFlow.InstantiateScene();
-            Check(view.GetNode<Control>("Stage").GetChildCount() == 10,
-                "The production scene retains ten authored pages before initialization.");
+            Check(view.GetNode<Control>("Stage").GetChildCount() == 10 && view.HasNode("MouseCursor/Quad"),
+                "The production scene retains ten authored pages and their inspectable cursor before initialization.");
             view.Initialize([first, second]);
             GdFrontendSession state = NativeState(view);
             Check(typeof(RetailFrontendFlow).GetFields(BindingFlags.Instance | BindingFlags.NonPublic)

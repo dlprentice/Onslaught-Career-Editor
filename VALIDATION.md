@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native Level Select and Mission Briefing; frontend page drawing, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native frontend cursor and asset routing; frontend page drawing, live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1175,6 +1175,78 @@ or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
 display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
+
+#### Native cursor and asset routing — September 23
+
+`MouseCursor.tscn` now owns the production final frontend draw; `Frontend.tscn`
+embeds that scene and an actual black `Letterbox` control. The cursor preserves
+the measured 32×32 quad, 124×124 UV region, literal white, exclusion of Loading /
+IntroCutscene / Gameplay, unclamped top-left placement and late draw order.
+Only an explicitly configured runtime source permits live pointer sampling,
+after lazy texture admission in `_draw`. Editor previews remain frozen and the
+full frontend leaves the game cursor hidden. The managed host no longer draws
+page content, the cursor or the letterbox; navigation and clocks remain there.
+The old cursor predicate and renderer remain test-only references from
+`92c1775b` with their existing provenance.
+
+`RetailFrontendAssets.tres` now uses a typed GDScript routing Resource with the
+same exported field names. Override lookup still precedes folder validation;
+nonblank override text is returned exactly and only trailing ASCII slashes are
+trimmed from a default directory. The temporary C# wrapper transports raw UTF-16
+and maps checked failures; it does not contain a second path resolver.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `cursor-native-final-xz5w3ro_/`: **104 standard-headless checks**, all eight
+  groups, clean shutdown. Covered live-source lifetime, deterministic capture
+  override, missing-file retry, actual curated DXT2→RGBA8/eight-mip admission,
+  frozen geometry edits, scene reopening and the explicit fractional draw fit.
+  Both output-refusal probes passed in the initial `mouse-cursor-native-xioyz1cs/`
+  run; all ten source hashes and the measured mouse texture hash were unchanged
+  within each native run.
+- `frontend-asset-paths-final-4rxabo62/`: **126 standard-headless checks**, all
+  six groups, clean shutdown. Exact routing, Unicode whitespace, raw UTF-16,
+  null/error order, exported metadata, resource duplication and ordinary
+  edited-resource save/reload passed. No texture or save was opened by this gate.
+  The pinned engine's `.tres` reload strips a leading U+FEFF from both built-in
+  `Resource.resource_name` and the native directory field. The receipt records
+  both carriers' before/reloaded units; direct routing keeps the same character.
+  Earlier failing resource receipts are retained. No custom serialization or
+  altered retail assertion was introduced to hide this engine limitation.
+- `cursor-final-49t3lwxo/`: the supported pinned .NET build/private Level 100
+  import passed with zero build warnings/errors. **967 frontend session checks**,
+  **20 cursor host checks**, the runtime ten-page edit/pack/reopen check and
+  **33 affected Client tests** passed with clean diagnostics. The initial
+  `cursor-host-0l6yfzk5/` integration also passed **6,048 Options checks** including
+  synchronous observer failures/reentry, and **234 Loading checks**.
+- `cursor-render-final-c2nr_vn5/`: **33 checks**, **six exact composed-image
+  comparisons**, zero differing RGBA bytes. Four viewport sizes cover the actual
+  menu reflection, fractional cursor coordinates and unclamped off-screen draws.
+  Inspection included the 801×601 image. The first rendered attempt exposed
+  Control pixel snapping of Stage's y=0.125 offset: 1,061 cursor RGBA bytes differed.
+  Keeping the native cursor beside Stage and submitting the original explicit
+  fit inside the draw callback removed that rounding, without changing expected
+  pixels or globally disabling GUI snapping. The isolated X server/client and
+  credentials were cleaned up; only the expected XIM/VSync warnings remain.
+- `cursor-editor-3xqc8m9g/`: headless editor import was clean. All ten actual
+  pages, the letterbox, inactive cursor, shared resources and authored edit /
+  pack / reopen checks passed without changing pointer mode. Scripted editor
+  teardown still reports the previously recorded **205 ObjectDB instances**
+  and associated RID allocations; runtime checks remain clean.
+- `cursor-smoke-36w1xotj/`: the supported **2,148-step** lifecycle smoke and
+  two replay runs passed with unchanged tape, trace and state hashes recorded
+  above. Thirteen ordered message/audio queues, synthetic focus-loss/rearm,
+  fresh retry, Main Menu return, world release and cursor policy all passed.
+  Outcome remains `Running`, zero targets destroyed; this is not full combat.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/mouse_cursor_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+or `frontend_asset_paths_checks.gd` with the same arguments. Run .NET
+`res://Scenes/Frontend/Tests/MouseCursorSceneChecks.tscn -- --skipfmv` for host
+integration; `--cursor-render-dir=ABS_FRESH_EMPTY_DIR` additionally compares
+rendered output on an isolated owned display. Outputs belong under this
+worktree's `local-data/`. These checks do not establish physical input,
+audible playback, normal GPU performance, Windows behavior or combat completion.
 
 #### Live native input edges — September 22
 

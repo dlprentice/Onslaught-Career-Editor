@@ -308,7 +308,6 @@ public sealed partial class RetailFrontendFlow : Control
         SetProcess(true);
         SetProcessInput(true);
         QueueRedraw();
-        _mouseCursorLayer?.QueueRedraw();
     }
 
     public override void _Ready()
@@ -337,16 +336,7 @@ public sealed partial class RetailFrontendFlow : Control
         MouseFilter = MouseFilterEnum.Ignore;
         ZIndex = 100;
 
-        if (!Engine.IsEditorHint())
-        {
-            _mouseCursorLayer = new RetailMouseCursorLayer
-            {
-                Name = "RetailMouseCursor",
-                ZIndex = 2,
-            };
-            _mouseCursorLayer.Configure(this);
-            AddChild(_mouseCursorLayer);
-        }
+        InitializeMouseCursor();
         SetProcess(!Engine.IsEditorHint());
         SetProcessInput(!Engine.IsEditorHint());
         QueueRedraw();
@@ -461,7 +451,6 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         QueueRedraw();
-        _mouseCursorLayer?.QueueRedraw();
     }
 
     /// <summary>
@@ -543,13 +532,6 @@ public sealed partial class RetailFrontendFlow : Control
         {
             GetViewport().SetInputAsHandled();
         }
-    }
-
-    public override void _Draw()
-    {
-        // Actual production page components own their drawing in the authored
-        // scene. Only the outside-stage letterbox belongs to this controller.
-        base.DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
     }
 
     private bool HandlePointerMotion(Vector2 position)
@@ -931,7 +913,6 @@ public sealed partial class RetailFrontendFlow : Control
         SetProcessInput(true);
         SetProcess(true);
         QueueRedraw();
-        _mouseCursorLayer?.QueueRedraw();
     }
 
     private void HandleNavigationSignal(RetailFrontendSignal signal)

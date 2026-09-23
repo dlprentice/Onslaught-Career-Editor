@@ -96,10 +96,20 @@ public sealed class RetailFrontendCursorTests
         string sequence = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "startup_sequence.gd"));
 
-        Assert.Contains("RetailFrontendCursor.ShouldDrawOnFrontend", cursor, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendCursor.QuadSize", cursor, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendCursor.SourceExtent", cursor, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendScreen.Loading or", cursor, StringComparison.Ordinal);
+        string native = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "mouse_cursor_presentation.gd"));
+        string quad = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "mouse_cursor_quad.gd"));
+        string scene = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "MouseCursor.tscn"));
+        Assert.Contains("MouseCursor", cursor, StringComparison.Ordinal);
+        Assert.Contains("configure_live_pointer", cursor, StringComparison.Ordinal);
+        Assert.Contains("set_frame", cursor, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawTextureRectRegion", cursor, StringComparison.Ordinal);
+        Assert.Contains("Session.Screen.LOADING, Session.Screen.INTRO_CUTSCENE, Session.Screen.GAMEPLAY", native, StringComparison.Ordinal);
+        Assert.Contains("Vector2(32, 32)", quad, StringComparison.Ordinal);
+        Assert.Contains("Rect2(0, 0, 124, 124)", quad, StringComparison.Ordinal);
+        Assert.Contains("z_index = 2", scene, StringComparison.Ordinal);
 
         Assert.DoesNotContain("mouse.tga", sequence, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadMouseCursorTexture", sequence, StringComparison.Ordinal);

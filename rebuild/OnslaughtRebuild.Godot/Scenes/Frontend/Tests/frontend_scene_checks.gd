@@ -15,6 +15,7 @@ func run_checks() -> void:
     var scene: PackedScene = load("res://Scenes/Frontend/Frontend.tscn")
     var view: Control = scene.instantiate()
     var stage: Control = view.get_node("Stage")
+    if not require(view.get_node("Letterbox") is ColorRect and view.get_node("Letterbox").color == Color.BLACK, "Outside-stage clear must be an authored black control"): return
     var menu: Control = view.get_node("Stage/MainMenu")
     var quit_view: Control = view.get_node("Stage/QuitConfirm")
     var quit_dialog: Control = quit_view.get_node("Dialog")
@@ -27,7 +28,7 @@ func run_checks() -> void:
     var configuration: Control = stage.get_node("SelectConfiguration")
     var configuration_unit: Control = configuration.get_node("Unit")
     var row: Control = menu.get_node("NewGame")
-    if not require(stage.get_child_count() == 10, "Expected 10 authored frontend pages before Ready"): return
+    if not require(stage.get_child_count() == 10 and view.has_node("MouseCursor/Quad"), "Expected 10 authored frontend pages plus their inspectable cursor before Ready"): return
     if not require(menu.get_node("Language/Flag") is TextureRect, "Language must be a native texture control"): return
     if not require(menu.get_node("VerticalGuide") is ColorRect, "Guide must be a native color control"): return
     if not require(row.position == Vector2(99, 294) and row.size == Vector2(240, 20), "Measured default row geometry changed"): return
@@ -80,7 +81,7 @@ func run_checks() -> void:
         "Configuration must share the production frontend fonts"): return
     if Engine.is_editor_hint():
         if not require(menu.visible and not view.is_processing() and not view.is_processing_input(), "Editor must show frozen Main Menu without processing"): return
-        if not require(not view.has_node("RetailMouseCursor"), "Editor must not install the game cursor"): return
+        if not require(not view.get_node("MouseCursor").visible and not view.get_node("MouseCursor").is_processing_input(), "Editor must leave the authored game cursor inactive"): return
         var pages: Array[String] = ["ClickToStart", "MainMenu", "QuitConfirm", "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration", "Loading", "Options", "Debriefing"]
         for page in range(pages.size()):
             view.set("EditorPage", page)

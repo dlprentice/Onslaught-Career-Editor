@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native Level Select and Mission Briefing; frontend page drawing, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native frontend cursor and asset routing; all frontend page drawing, live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -95,6 +95,31 @@ owned output under this worktree's `local-data/`; remain headless or use an
 isolated owned display. Preserve the separate companion changes and other lanes'
 worktrees. Executed comparisons and their limits are recorded in
 [`VALIDATION.md`](../VALIDATION.md#september-19-production-scene-migration).
+
+#### Native cursor and asset routing
+
+Open `rebuild/OnslaughtRebuild.Godot/Scenes/Frontend/MouseCursor.tscn` to inspect
+its actual `Quad` control and shared `MouseCursorTexture.tres` recipe. The
+production defaults retain the measured 32×32 quad, 124×124 source region,
+white modulation, top-left hotspot and unclamped position. The root exposes a
+frozen screen/position for inspection; the quad exposes geometry, source region
+and color for deliberate presentation edits. These are the same components
+embedded at `Frontend.tscn` → `MouseCursor`, above the menu reflection.
+The full frontend also exposes its outside-stage black fill as `Letterbox`, a
+native `ColorRect`, and hides its game cursor in the editor. Standalone preview uses
+only the frozen position; live pointer sampling requires an explicit runtime
+host and remains in the draw callback, after lazy texture admission. Neither
+mode changes pointer capture or starts an input owner.
+
+`Scenes/Frontend/RetailFrontendAssets.tres` now uses
+`retail_frontend_asset_paths.gd`. Its existing directory and `TextureOverrides`
+Inspector fields retain their names. Routing preserves the override-before-folder
+validation order, exact override whitespace and trailing-slash behavior. The
+resource resolves names only; it does not copy, import or write assets. Native
+recipes still decode private material through the canonical-lab setup, and
+private decoded pixels stay transient rather than entering public scene files.
+The managed host still supplies navigation, clocks and callbacks; converting
+these resources does not by itself remove the project's .NET requirement.
 
 #### Native Main Menu
 

@@ -155,7 +155,7 @@ public sealed class RetailMainMenuHitTestTests
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
+        string input = SliceUntil(flow, "public override void _Input", "private bool HandlePointerMotion");
         string motion = Slice(flow, "private bool HandlePointerMotion");
 
         Assert.Contains("RetailMainMenuHitTest.SwallowsFrontendInput", input);

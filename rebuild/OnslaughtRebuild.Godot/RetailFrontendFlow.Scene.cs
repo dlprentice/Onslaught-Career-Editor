@@ -15,7 +15,7 @@ public sealed partial class RetailFrontendFlow
 {
     public const string ProductionScenePath = "res://Scenes/Frontend/Frontend.tscn";
 
-    [Export] public RetailFrontendAssetPaths AssetPaths { get; set; } = new();
+    [Export] public Resource AssetPaths { get; set; } = RetailFrontendAssetPathBridge.Create();
     private RetailFrontendEditorPage _editorPage = RetailFrontendEditorPage.MainMenu;
     [Export]
     public RetailFrontendEditorPage EditorPage
@@ -119,5 +119,65 @@ public sealed partial class RetailFrontendFlow
         UpdateOptionsFrame();
         UpdateLoadingFrame();
         UpdateDebriefingFrame();
+        UpdateMouseCursorFrame();
     }
+}
+
+/// <summary>Temporary marshalling boundary; the native routing resource is the sole owner.</summary>
+internal static class RetailFrontendAssetPathBridge
+{
+    internal static Resource Create()
+    {
+        using GDScript script = GD.Load<GDScript>("res://Scenes/Frontend/retail_frontend_asset_paths.gd")
+            ?? throw new InvalidDataException("The native frontend asset-path resource is unavailable.");
+        using Variant created = script.New();
+        return created.AsGodotObject() as Resource
+            ?? throw new InvalidDataException("The frontend asset-path owner must be a Resource.");
+    }
+
+    public static string TexturePath(this Resource owner, string? folder, string? name)
+    {
+        if (owner is null) throw new NullReferenceException();
+        ObjectDisposedException.ThrowIf(!GodotObject.IsInstanceValid(owner), owner);
+        if (!owner.HasMethod("texture_path_units"))
+            throw new InvalidDataException("The frontend asset-path resource has no checked resolver.");
+        using Variant folderUnits = Units(folder);
+        using Variant nameUnits = Units(name);
+        using Variant returned = owner.Call("texture_path_units", folderUnits, nameUnits);
+        if (returned.VariantType != Variant.Type.Dictionary)
+            throw new InvalidDataException("The frontend asset-path resolver returned no result.");
+        using Godot.Collections.Dictionary result = returned.AsGodotDictionary();
+        if (!result.TryGetValue("ok", out Variant ok) || ok.VariantType != Variant.Type.Bool)
+            throw new InvalidDataException("The frontend asset-path resolver returned no completion flag.");
+        using (ok)
+        {
+            if (!ok.AsBool())
+            {
+                string type = result["error_type"].AsString();
+                string message = result["error"].AsString();
+                throw type switch
+                {
+                    "ArgumentOutOfRangeException" => new ArgumentOutOfRangeException("folder"),
+                    "NullReferenceException" => new NullReferenceException(message),
+                    "ArgumentException" => new ArgumentException(message, result["parameter"].AsString()),
+                    _ => new InvalidDataException(message),
+                };
+            }
+        }
+        using Variant value = result["value"];
+        if (value.VariantType != Variant.Type.PackedInt32Array)
+            throw new InvalidDataException("The frontend asset path is missing its UTF-16 units.");
+        int[] units = value.AsInt32Array();
+        var characters = new char[units.Length];
+        for (int index = 0; index < units.Length; index++)
+        {
+            if (units[index] is < 0 or > ushort.MaxValue)
+                throw new InvalidDataException("The frontend asset path contains an invalid UTF-16 unit.");
+            characters[index] = (char)units[index];
+        }
+        return new string(characters);
+    }
+
+    private static Variant Units(string? value) => value is null
+        ? default(Variant) : value.Select(character => (int)character).ToArray();
 }
