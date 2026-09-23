@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (native Main Menu, Quit confirmation and live input edges; weapon foundations).
+Last updated: 2026-09-22 (native career-name page, Main Menu, Quit confirmation and live input edges; weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -827,6 +827,104 @@ res://Scenes/Frontend/Tests/frontend_scene_checks.gd -- --skipfmv`.
 These comparisons preserve the previous reconstruction. Retail Quit rendering,
 localization and the reconstructed dialog height remain unmeasured; software
 captures establish neither normal GPU performance nor physical input/audio.
+
+#### Native career-name page — September 22
+
+`CareerName.tscn` now owns the production New/Load page's header, bracket pair,
+eleven row slots, list/scrollbar, name field/highlight and chevrons. Gameplay
+and the editor use the same typed GDScript controls and shared font/texture
+recipes. The narrow host adapter supplies detached display facts, queries hit
+regions/name extent, and retains the existing session/navigation/audio/save
+handoff. The original renderer and its measurement provenance are retained
+under `Scenes/Frontend/Tests/CareerNameReference*`, pinned to `14f6f72b`.
+
+Executed receipts under the conversion worktree's `local-data/test-runs/`:
+
+- `career-name-native-66aas6ow/result/report.json`: **495 checks**, all eight
+  sections, zero failures in standard headless Godot. Authored nodes exist
+  before Ready; frozen previews, UTF-16/width laws, overflow/refusals, transformed
+  half-open hit regions, edits and pack/reopen passed. Fourteen public sources
+  and five private production inputs retained their hashes; public scene
+  serialization contains no private image pixels. Runtime diagnostics are clean.
+  `career-output-guards-t61kzkdq/` adds two executed existing-report/symlink
+  refusal probes; the sentinel bytes and symlink target remained unchanged.
+- `career-headless-fixed-wur6ftj9/report.json`: **6,338 checks**, sixteen states
+  and all five comparison groups passed. This includes the live host, all BMP
+  input units, source-frame geometry, name editing, keyboard/pointer navigation,
+  exact selected descriptor identity and ordered callbacks. The tracked gold
+  save fixture was read through its verified parser and remained byte-identical;
+  no save was discovered, synthesized or written. No pixel claim is made here.
+- `career-comparison-render-3ryerm7e/report.json`: **6,418 checks** and **32
+  exact native/live-host image comparisons with zero differing RGBA bytes**.
+  Coverage includes 640×480, 1280×720, 801×601 and 320×240, New/Load, overflow
+  selection, raw UTF-16, edited names and authored header/list/name transforms.
+  The 1280×720 New and 801×601 Load host images were inspected. Rendering used
+  task-owned Xvfb credentials/profiles, llvmpipe and Dummy audio with process
+  cleanup. Only the expected input-method/V-Sync warnings appeared; no runtime
+  errors or teardown leaks occurred.
+- `career-frontend-runtime-zcyj78m7/` and `career-frontend-editor-wz7yhlm5/`:
+  actual frontend sharing, all ten frozen editor pages, native CareerName edits,
+  pack/reopen and unchanged pointer passed. Runtime shutdown is clean. Editor
+  shutdown retains the existing **205 ObjectDB/associated RID leaks**; it is
+  not a clean-exit claim. The separate import
+  `career-frontend-editor-import-gwf0lkdg/` completed cleanly.
+- `career-startup-capture-rijwodsj/run/capture-manifest.json`: all **13/13**
+  scheduled startup shots captured at 640×480 with the expected screen at every
+  boundary. `career-client-final-ikbjrsw9/results/career.trx` then executed
+  **127 affected Client tests: 126 passed, one failed, zero skipped**. The
+  failing retail title gate is described below; its expected values are unchanged.
+- `career-integration-final-0puv5c6w/`: supported pinned .NET build and private
+  Level 100 import passed with zero build warnings/errors. The **2,148-step**
+  smoke preserved thirteen ordered message deliveries/queues, focus-loss/rearm,
+  a fresh retry and return to Main Menu with world release. The recorded tape
+  retains SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Both replay runs verified trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no divergence. Logs are clean; mission outcome remains `Running`, zero
+  targets destroyed. A prior smoke correctly refused stale generated scenes
+  after the comparison harness was recompiled; the supported build refreshed
+  this worktree's private scene import before the successful final run.
+
+The fresh retail header gate is **not green**. Both CareerName and the unchanged
+LevelSelect draw title ink at **y71..87**, while the pinned retail expectation is
+**y72..88**. All glyph-run widths match. Current horizontal extents match retail
+(CareerName x263..513, LevelSelect x304..471), so the old one-pixel-right note is
+historical. `career-header-diagnosis-ovow_8tj/report.json` records the same y71..87
+result from the retained pre-conversion CareerName renderer on the same engine,
+with byte-identical native/reference comparison images. It also remeasures the
+pristine retail `local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png`
+(SHA-256 `45bd325ad9112af8323755a8aadb210f856ba3f5d1206b4293b32d4c126ea1d5`)
+at y72..88. This is an unresolved reconstruction/raster discrepancy, not evidence
+that this conversion moved the title. Its cause is still unknown. A bounded
+comparison of the same retained draw under the previous pinned engine and dev6,
+followed by the actual retail glyph submissions, can distinguish engine raster
+change from the retained drawing origin. No source constant, expected row or
+image threshold was adjusted to pass. Automatic capture selection now considers
+native frontend sources/resources as well as the C# host, preventing stale
+pre-conversion captures from satisfying this gate.
+
+An offscreen-null regression was found and corrected: the old renderer stops
+before row eleven, so the bridge must preserve a null twelfth name without
+reading or normalizing it. That case now renders exactly. Malformed *visible*
+null rows are explicitly refused at native `set_frame` admission with
+`InvalidDataException`; the retained renderer threw `NullReferenceException`
+during glyph iteration. Both session owners retain the original partial mutation
+and failure when selecting a null name. The native API rejects that resulting
+null name, while the temporary host's raw-text projection still throws
+`ArgumentNullException`, the same type as the prior draw's name-width sum.
+The comparison report records these different refusal stages; it does not claim
+identical malformed-input exception timing.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/career_name_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native component. Run .NET
+`res://Scenes/Frontend/Tests/CareerNameSceneChecks.tscn -- --skipfmv` headlessly
+for the comparison, or add `--career-render-dir=ABS_FRESH_EMPTY_DIR` only on a
+caller-owned isolated display. Output belongs under this worktree's `local-data/`.
+The missing header endcaps/Forseti art, unmeasured page transition and retail
+header discrepancy remain open. These checks establish neither full combat nor
+normal GPU, physical-device, audible playback or cross-platform parity.
 
 #### Live native input edges — September 22
 

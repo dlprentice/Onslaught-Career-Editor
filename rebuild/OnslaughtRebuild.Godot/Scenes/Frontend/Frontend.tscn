@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -6,6 +6,7 @@
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/MainMenu.tscn" id="main_menu_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/QuitConfirm.tscn" id="quit_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/CareerName.tscn" id="career_scene"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
@@ -38,96 +39,8 @@ visible = false
 [node name="QuitConfirm" parent="Stage" instance=ExtResource("quit_scene")]
 visible = false
 
-[node name="CareerName" type="Control" parent="Stage"]
+[node name="CareerName" parent="Stage" instance=ExtResource("career_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Background" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.Background"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="VerticalGuide" type="ColorRect" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 123.0
-offset_top = 0.0
-offset_right = 124.0
-offset_bottom = 480.0
-mouse_filter = 2
-color = Color(0.19607843, 0.2, 0.28235295, 1)
-
-[node name="HorizontalGuide" type="ColorRect" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 180.0
-offset_right = 640.0
-offset_bottom = 181.0
-mouse_filter = 2
-color = Color(0.19607843, 0.2, 0.28235295, 1)
-
-[node name="Decoration" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.Decoration"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="Header" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 191.0
-offset_top = 65.0
-offset_right = 585.0
-offset_bottom = 97.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.Header"
-SourceRect = Rect2(191, 65, 394, 32)
-
-[node name="List" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 128.0
-offset_top = 130.0
-offset_right = 531.0
-offset_bottom = 402.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.List"
-SourceRect = Rect2(128, 130, 403, 272)
-
-[node name="Name" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 128.0
-offset_top = 408.0
-offset_right = 531.0
-offset_bottom = 452.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.Name"
-SourceRect = Rect2(128, 408, 403, 44)
-
-[node name="Navigation" type="Control" parent="Stage/CareerName"]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 437.0
-offset_right = 631.0
-offset_bottom = 478.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Career.Navigation"
-SourceRect = Rect2(9, 437, 622, 41)
 
 [node name="LevelSelect" type="Control" parent="Stage"]
 visible = false
@@ -294,3 +207,5 @@ visible = false
 [editable path="Stage/MainMenu"]
 
 [editable path="Stage/QuitConfirm"]
+
+[editable path="Stage/CareerName"]

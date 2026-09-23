@@ -264,6 +264,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\quit_confirm_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\QuitConfirm.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.QuitConfirm.cs"
              Link="godot-quit-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\career_name_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\CareerName.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.CareerName.cs"
+             Link="godot-career-name-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />

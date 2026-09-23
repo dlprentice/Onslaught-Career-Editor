@@ -88,29 +88,6 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color BracketTint = RetailColor(0xfe7f7f7f);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
 
-    // FEP_DEVSELECT ("CHOOSE GAME NAME"). See DrawDevSelect for the measurement
-    // method; every literal below is either a measured extent from the pristine
-    // 640x480 capture or a constant lifted from references/Onslaught/FrontEnd.cpp.
-    private const string DevSelectTitle = "CHOOSE GAME NAME";
-    // Retail's title occupies x263..513 (251px wide) and y73..88 (16px tall) for
-    // 16 glyphs. Font13PS at scale 1 rendered 256px wide but only 10px tall in
-    // the first capture of this page, so the page is NOT tracked-out small text:
-    // it is the same atlas at ~1.5x, which lands 249px wide and 15px tall.
-    // The header title is drawn in font22 at scale 1 on this page as on every
-    // other header page; see DrawDevSelect for the glyph-run measurement that
-    // replaced the previous Font13PS-at-1.5 reading. HeaderBarCenterX /
-    // HeaderTitleTop now carry the placement, so no page-local title constants
-    // remain.
-    // Rows and the name field are drawn larger than the 20px-pitch main menu:
-    // retail's row pitch here is 24 and its glyph bodies are ~14px tall. The
-    // first capture measured our "BEA 1" at 53x12 against retail's 69x17, i.e.
-    // 1.30-1.42x too small at scale 1.25.
-    private const float DevSelectRowScale = 1.4f;
-    private const float DevSelectRowPitch = 24f;
-    private const float DevSelectRowX = 132f;
-    private const float DevSelectRowTop = 137f;
-    private const float DevSelectNameTop = 417f;
-
     // FEP_LEVEL_SELECT ("SELECT LEVEL"). Every literal below is measured from the
     // pristine 640x480 capture; see DrawLevelSelect for the method and the gaps.
     // FrontEndText token — english.json "selectLevel" already carries the exact
@@ -292,15 +269,6 @@ public sealed partial class RetailFrontendFlow : Control
     // draw in this file is a candidate for the same correction; none is changed
     // here because their captures are pinned baselines for this change.
     private static readonly Color BriefingRingTint = new(1.257f, 0.960f, 0.777f, 1f);
-    private static readonly Color DevSelectRowText = RetailColor(0xff404040);
-    private static readonly Color DevSelectNameHighlight = RetailColor(0xff004050);
-    // Panel fills and hairlines are measured framebuffer colours, not modulated
-    // sprite tints, so they are stated literally.
-    private static readonly Color DevSelectPanelFill = new(9f / 255f, 9f / 255f, 18f / 255f, 1f);
-    private static readonly Color DevSelectPanelBorder = new(130f / 255f, 132f / 255f, 139f / 255f, 1f);
-    private static readonly Color DevSelectFieldBorder = new(159f / 255f, 162f / 255f, 165f / 255f, 1f);
-    private static readonly Color DevSelectScrollDivider = new(127f / 255f, 129f / 255f, 132f / 255f, 1f);
-    private static readonly Color DevSelectScrollThumb = new(245f / 255f, 249f / 255f, 245f / 255f, 1f);
     private static readonly Color DevSelectGuide = new(50f / 255f, 51f / 255f, 72f / 255f, 1f);
     // Node-graph link lines and the episode sweep arcs are measured framebuffer
     // colours at the line core, stated literally for the same reason the panel
@@ -321,11 +289,6 @@ public sealed partial class RetailFrontendFlow : Control
     // delta is (10,12,14), whose 1.4 blue/red ratio matches ring_bracket01's 1.49
     // and not ring_bracket02's 1.00.
     private static readonly Color LevelNodeRingTint = RetailColor(0x1cffffff);
-    // The guide line survives BEHIND the list panel: retail's y=180 row inside the
-    // panel measures (19,19,27) rather than the (9,9,18) panel fill, which is the
-    // guide colour attenuated by the panel's own alpha. Stating the measured
-    // composite avoids depending on blend rounding to reproduce it.
-    private static readonly Color DevSelectGuideOverPanel = new(19f / 255f, 19f / 255f, 27f / 255f, 1f);
     // FrontEnd.cpp:1127 sets col = 0x7f000000; line 1134 draws
     // FET3_HEADER_TEXT_BOX, and the
     // measured header interior is (12,12,24) — exactly that alpha over the
@@ -571,6 +534,7 @@ public sealed partial class RetailFrontendFlow : Control
         InitializeClick();
         InitializeMainMenu();
         InitializeQuitConfirm();
+        InitializeCareerName();
         InitializeLoading();
         InitializeDebriefing();
 
@@ -1132,185 +1096,6 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game
-    /// and Load Game.
-    ///
-    /// New mode renders the editable name field; Load mode renders caller-injected
-    /// read-only career rows. Client owns bounded row selection, accept/back, and
-    /// the selected-career handoff. This lane carries no career persistence or
-    /// implicit save discovery.
-    ///
-    /// Geometry is MEASURED from the pristine 640x480 retail capture
-    /// local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png
-    /// by scanning for the exact fill colours it contains:
-    ///   page background      flat (23,23,48)                — same fill proven for the main menu
-    ///   header text box      interior (12,12,24), x191..584, y69..89
-    ///   title text           white (254,254,254), x263..513, y73..88, centred on x=390
-    ///   list panel           border (130,132,139) at x128/x530/y130/y401,
-    ///                        interior (9,9,18) x129..529, y131..400
-    ///   scrollbar divider    (127,129,132) 1px at x=510, y131..400
-    ///   scrollbar thumb      (245,249,245) outline x515..525, y135..396
-    ///   name field           border (159,162,165) at x128/x530/y408/y451,
-    ///                        interior (9,9,18) x129..529, y409..450
-    ///   name highlight       (0,128,159) x293..366, y415..445
-    ///   career row text      (128,128,128), left edge x=132, pitch 24
-    ///   faint guide lines    (50,51,72) at x=123 and y=180
-    ///
-    /// Two of those colours corroborate the released source directly:
-    /// the header box interior is exactly black at 0x7f alpha over the page
-    /// background, which is the literal `col = 0x7f000000` at
-    /// references/Onslaught/FrontEnd.cpp:1127, and the title is drawn centred on
-    /// HEADER_BAR_X = 390 (FrontEnd.cpp:1103) in 0xff7f7f7f (FrontEnd.cpp:1215).
-    ///
-    /// KNOWN GAPS, stated rather than faked: the metal header end-cap brackets
-    /// (FET3_HEADER_BRACKET1, retail x182..190 and x585..598) and the blue
-    /// Forseti emblem at top-left are drawn from textures this lane has not
-    /// identified or materialized, so they are not drawn at all here.
-    /// </summary>
-    private void DrawDevSelect()
-    {
-        // Settled: the transition length into FEP_DEVSELECT is not evidenced.
-        // Passing 1 keeps its settled rendering while both New Game and Load Game
-        // use the Client-owned page state.
-        SelectSceneSection("Career.Background");
-        DrawMainUnderlay(1f);
-
-        // Faint crosshair guides, present on this page and on the retail main
-        // menu; the reconstruction has not drawn them anywhere before now.
-        SelectSceneSection("Career.Guides");
-        DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
-        DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
-
-        // FrontEnd.cpp:891-892 — FET3_SELECT_BRACKET1 at SELECT_BRACKET_X/Y
-        // (328,343) with SELECT_BRACKET_SCALE 1.25, plus its +5/+10 shadow at
-        // scale*1.05 in 0x3F000000. FEP_DEVSELECT is one of the pages
-        // got_standard_SlidingTextBordersAndMask() returns TRUE for
-        // (FrontEnd.cpp:780), which pins transition to 1 and therefore this
-        // settled scale. The outside bracket only draws while dest == FEP_MAIN.
-        // MEASURED (re-fit 2026-07-26, tools/frontend_arc_bracket_fit.py): this
-        // page really does use SELECT_BRACKET_SCALE2 1.4, but the centre it was
-        // previously paired with was wrong. Fitting the bracket alpha mask over
-        // 4,000 sampled retail arc pixels peaks at 100.0% coverage at scale 1.40,
-        // centre (329,344) — i.e. SELECT_BRACKET_X/Y (328,343) within 1px, the
-        // same centre DrawLevelSelect uses. Scale 1.25 reaches only 13.8% there.
-        // The response surface is single-peaked: 1.38 -> 97.3, 1.39 -> 99.2,
-        // 1.40 -> 100.0, 1.41 -> 95.0. Robust across alpha threshold 16..200,
-        // three sample seeds, and thin-run filter 3..20.
-        //
-        // The earlier 83.3%/1.39/(328,336) fit was contaminated by the level-map
-        // episode curves and the FET3_HEADER_BRACKET1 end-caps; a geometric
-        // thin-run filter removes both (the arc band is >=25px wide on every
-        // scanline it occupies). The same method, run first as a mandatory
-        // control on SELECT LEVEL, reaches 99.7% at 1.25/(329,344) — reproducing
-        // that page's source constants and beating its previously recorded 96.1%.
-        // So both pages are one texture at one centre with two source scales.
-        SelectSceneSection("Career.Decoration");
-        const float bracketScale = 1.4f;
-        const float bracketShadowScale = bracketScale * ShadowScaleBoost;
-        DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
-
-        // Header text box then the centred title.
-        //
-        // MEASURED 2026-07-26 — the title is font22 at scale 1, NOT Font13PS at
-        // 1.5. Atlas-free proof, from the pristine captures alone: cut the header
-        // title band (y70..92, x200..580, ink threshold >120) on all four header
-        // pages, segment it into per-glyph column runs, and compare glyphs of the
-        // SAME LETTER between pages at 1:1 with no rescaling.
-        //
-        //   page                  ink rows   ink x        per-glyph run widths
-        //   MISSION BRIEFING      72..88     288..490     17,2,13,13,2,15,12,...
-        //   SELECT CONFIGURATION  72..88     249..526     13,11,10,11,13,14,...
-        //   SELECT LEVEL          72..88     304..471     13,11,10,11,13,14,...
-        //   CHOOSE GAME NAME      72..88     263..513     13,12,15,15,13,11,...
-        //
-        // All four have identical 17-row ink height, and SELECT LEVEL's first six
-        // glyph widths are byte-identical to SELECT CONFIGURATION's ("SELECT" on
-        // both). Per-letter mask IoU at 1:1 against SELECT CONFIGURATION:
-        // MISSION BRIEFING 0.992 (8 letters), SELECT LEVEL 0.990 (5 letters),
-        // CHOOSE GAME NAME 0.979 (7 letters). Font13PS at 1.5 would have to be a
-        // rescale of a 16px cell and could not land on the same integer glyph
-        // widths as a 32px cell at 1:1; it does not.
-        //
-        // MISSION BRIEFING and SELECT CONFIGURATION are already drawn in font22
-        // at scale 1 here (NCC 0.951 fit, DrawHeaderBarTitle), so this page and
-        // SELECT LEVEL are corrected to the same call.
-        //
-        // BASELINE MOVED: this page's pinned no-regression capture changes in the
-        // header band. That is intended and is the point of the change.
-        SelectSceneSection("Career.Header");
-        DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxTint);
-        float titleWidth = MeasureFont22Text(DevSelectTitle, 1f);
-        DrawFont22Text(
-            DevSelectTitle,
-            new Vector2(HeaderBarCenterX - (titleWidth * 0.5f), HeaderTitleTop),
-            1f,
-            1f,
-            ReleasedTitleText);
-
-        // List panel: border, interior, scrollbar divider and thumb.
-        SelectSceneSection("Career.List");
-        DrawRect(new Rect2(128f, 130f, 403f, 272f), DevSelectPanelBorder);
-        DrawRect(new Rect2(129f, 131f, 401f, 270f), DevSelectPanelFill);
-        DrawRect(new Rect2(129f, 180f, 401f, 1f), DevSelectGuideOverPanel);
-        DrawRect(new Rect2(510f, 131f, 1f, 270f), DevSelectScrollDivider);
-        DrawScrollThumbOutline(new Rect2(515f, 135f, 11f, 262f));
-
-        for (int index = 0; index < _session.CareerNames.Count; index++)
-        {
-            float rowTop = DevSelectRowTop + (index * DevSelectRowPitch);
-            if (rowTop + (GlyphCellSize * DevSelectRowScale) > 400f)
-            {
-                break;
-            }
-
-            DrawText(
-                _session.CareerNames[index],
-                new Vector2(DevSelectRowX, rowTop),
-                DevSelectRowScale,
-                index == _session.SelectedCareerIndex ? ReleasedTitleText : DevSelectRowText);
-        }
-
-        // Name field: border, interior, selection highlight, then the name.
-        SelectSceneSection("Career.Name");
-        DrawRect(new Rect2(128f, 408f, 403f, 44f), DevSelectFieldBorder);
-        DrawRect(new Rect2(129f, 409f, 401f, 42f), DevSelectPanelFill);
-
-        float nameWidth = Math.Max(0, _session.GameName.Sum(character =>
-            _glyphWidths[RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: false)] + 1) - 1) * DevSelectRowScale;
-        var nameOrigin = new Vector2(329.5f - (nameWidth * 0.5f), DevSelectNameTop);
-        if (_session.GameNameIsFresh)
-            DrawRect(new Rect2(nameOrigin.X - 4f, 415f, nameWidth + 8f, 31f), DevSelectNameHighlight);
-        DrawAtlasText(_titleFont, _glyphWidths, GlyphCellSize, GlyphColumns,
-            _session.GameName, nameOrigin, DevSelectRowScale, DevSelectRowScale, ReleasedTitleText,
-            dropShadow: true, retailNameGlyphs: true);
-
-        // Page chevrons. FE_Arrow points right and its artwork occupies only
-        // (16,12)-(46,52) of the 64x64 texture, exactly as DrawLanguageSelector
-        // measured; the left chevron is the mirrored draw.
-        // Measured extents: right chevron x604..631 y437..472, left chevron the
-        // mirrored pair six rows lower; both render in the same lit metal as the
-        // arcs (~(107,117,131)), not the faint ChromeTint the language selector uses.
-        SelectSceneSection("Career.Navigation");
-        var arrowSource = new Rect2(16f, 12f, 30f, 40f);
-        DrawTextureRectRegion(_feArrow, new Rect2(36f, 443f, -27f, 35f), arrowSource, BracketTint);
-        DrawTextureRectRegion(_feArrow, new Rect2(604f, 437f, 27f, 35f), arrowSource, BracketTint);
-    }
-
-    /// <summary>1px outline for the list scrollbar thumb.</summary>
-    private void DrawScrollThumbOutline(Rect2 rect)
-    {
-        DrawRect(new Rect2(rect.Position.X, rect.Position.Y, rect.Size.X, 1f), DevSelectScrollThumb);
-        DrawRect(
-            new Rect2(rect.Position.X, rect.Position.Y + rect.Size.Y - 1f, rect.Size.X, 1f),
-            DevSelectScrollThumb);
-        DrawRect(new Rect2(rect.Position.X, rect.Position.Y, 1f, rect.Size.Y), DevSelectScrollThumb);
-        DrawRect(
-            new Rect2(rect.Position.X + rect.Size.X - 1f, rect.Position.Y, 1f, rect.Size.Y),
-            DevSelectScrollThumb);
-    }
-
-    /// <summary>
     /// Retail FEP_LEVEL_SELECT — the "SELECT LEVEL" episode/level graph reached
     /// from the CHOOSE GAME NAME page.
     ///
@@ -1363,7 +1148,7 @@ public sealed partial class RetailFrontendFlow : Control
     private void DrawLevelSelect()
     {
         SelectSceneSection("LevelSelect.Content");
-        // Settled, for the same reason as DrawDevSelect.
+        // Settled; the DevSelect measurement is retained in Tests/CareerNameReference.cs.
         DrawMainUnderlay(1f);
 
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
@@ -1559,7 +1344,7 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         // font22 at scale 1, for the glyph-run and per-letter-IoU evidence
-        // written out in DrawDevSelect. Retail's ink here is x304..471, y72..88,
+        // retained in Tests/CareerNameReference.cs. Retail's ink here is x304..471, y72..88,
         // and its "SELECT" glyph widths are byte-identical to the SELECT
         // CONFIGURATION title that is already drawn in font22.
         //
@@ -2105,8 +1890,8 @@ public sealed partial class RetailFrontendFlow : Control
                 return true;
 
             case RetailFrontendScreen.DevSelect:
-                // Chevron hit rects match the drawn chevrons.
-                if (new Rect2(0f, 430f, 46f, 48f).HasPoint(design))
+                int careerTarget = CareerNameTargetAt(design);
+                if (careerTarget == 1)
                 {
                     if (!_session.TryBackPage(
                             startupMediaActive: false,
@@ -2119,8 +1904,7 @@ public sealed partial class RetailFrontendFlow : Control
                     QueueRedraw();
                     return true;
                 }
-                if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design) ||
-                    new Rect2(128f, 408f, 403f, 44f).HasPoint(design))
+                if (careerTarget == 2)
                 {
                     Confirm();
                     return true;
@@ -2566,13 +2350,12 @@ public sealed partial class RetailFrontendFlow : Control
         float scaleX,
         float scaleY,
         Color color,
-        bool dropShadow,
-        bool retailNameGlyphs = false)
+        bool dropShadow)
     {
         float x = position.X;
         foreach (char character in text)
         {
-            int glyph = retailNameGlyphs ? RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: false) : GlyphIndex(character);
+            int glyph = GlyphIndex(character);
             float glyphWidth = widths[glyph] * scaleX;
             var source = new Rect2(
                 (glyph % columns) * cellSize,
@@ -2647,17 +2430,6 @@ public sealed partial class RetailFrontendFlow : Control
             scaleY,
             color,
             dropShadow: true);
-
-    private int MeasureGameNameExtent(string text)
-    {
-        int width = 0;
-        foreach (char character in text)
-        {
-            int glyph = RetailFrontendSession.GameNameRenderGlyphIndex(character, swapInvertedPunctuation: true);
-            width += _font22Widths[glyph] + 1;
-        }
-        return width;
-    }
 
     private float MeasureFont22Text(string text, float scaleX)
     {

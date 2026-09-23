@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (native Main Menu, Quit confirmation and live input edges; weapon foundations).
+Last updated: 2026-09-22 (native career-name page, Main Menu, Quit confirmation and live input edges; weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, Main Menu, Quit confirmation, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -154,6 +154,41 @@ the original click rules. The existing English-only localization and unmeasured
 the prior implementation does not resolve them. Executed checks and the
 unchanged headless editor shutdown leaks are recorded in
 [`VALIDATION.md`](../VALIDATION.md#native-quit-confirmation--september-22).
+
+#### Native career-name page
+
+`Scenes/Frontend/CareerName.tscn` supplies the actual New Game/Load Game page:
+header, bracket body/shadow, list panel, eleven visible row slots, static
+scrollbar, name field/highlight and navigation arrows. `Frontend.tscn` instances
+this scene with editable children. Open it directly or select CareerName through
+`EditorPage`. The `editor_career_names`, `editor_selected_career_index`,
+`editor_game_name`, freshness and background-time properties select a frozen
+illustration. They neither discover saves nor create a gameplay career.
+
+The same production atlas fonts, private texture recipes and underlay feed
+editor and gameplay. Edit the Header, List, Name or Navigation sections and
+their named passes; the source coordinate frames preserve the existing
+fractional-scale drawing. Labels retain imported raw UTF-16 by default;
+`override_text` marks deliberate enhanced text. Authored name-field and arrow
+transforms also move their hit regions. The existing host keeps input, audio,
+navigation and the selected-save handoff; GDScript owns presentation and exact
+name-width measurement. No new save-writing path is introduced.
+
+The conversion preserves caller row order, eleven visible rows, the static
+scroll thumb and the original name-field click-to-confirm behavior. It does
+not introduce row clicking, scrolling or a text caret. The display width and
+input-admission extent keep their different glyph mapping, accumulation and
+spacing rules. The missing header endcaps/Forseti artwork, unmeasured transition
+duration and known one-pixel header offset remain open. The retained
+`Scenes/Frontend/Tests/CareerNameReference*` is a comparison renderer with the
+original measurement provenance, not another production page.
+
+All 32 native/live-host image comparisons match the retained C# rendering
+exactly. The separate retail title gate remains red: current dev6 software
+captures and the retained C# renderer place the title one pixel high. Its
+expected retail rows stay unchanged. Native/editor checks, executed regression
+results and the precise malformed-name refusal differences are recorded in
+[`VALIDATION.md`](../VALIDATION.md#native-career-name-page--september-22).
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
@@ -607,6 +642,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |
 | [Scenes/Frontend/QuitConfirm.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/QuitConfirm.tscn) | Production panel, four borders, prompt, Yes/No rows and measured highlights. `editor_selected_index` freezes No/Yes selection; Dialog and individual passes are editable. Text overrides are explicit; the scene never handles input or requests exit itself. |
+| [Scenes/Frontend/CareerName.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/CareerName.tscn) | Native header, bracket body/shadow, list with eleven row slots, static scrollbar, name field/highlight and navigation arrows. `editor_career_names`, selection, name and freshness expose frozen facts. Section/pass transforms are editable; labels use explicit `override_text`. No save discovery or persistence runs in this scene. |
 | [Scenes/Frontend/ClickToStart.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/ClickToStart.tscn) | Actual splash, five prompt passes, sliding-logo pair, five title passes and title flash. `editor_preview` supplies frozen times. Image `center`/size and text `content_origin` expose the source layout; outer transforms and `override_prompt` support deliberate edits. |
 | [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
 | [Scenes/Frontend/Loading.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Loading.tscn) | Production background, five ordered caption passes and fixed bar. `editor_progress` supplies frozen host facts; `override_caption` marks deliberate enhanced text. The scene does not request or advance loading. |

@@ -92,7 +92,7 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [InlineData("DrawOptions")]
     public void EveryFrontendPageRendererCompositesTheUnderlay(string renderer)
     {
-        if (renderer == "DrawMainMenu")
+        if (renderer is "DrawMainMenu" or "DrawDevSelect")
         {
             string body = NativeMainMenuSource.Function("main_menu_underlay.gd", "_draw");
             int clear = body.IndexOf("Underlay.CLEAR", StringComparison.Ordinal);
@@ -100,9 +100,21 @@ public sealed class RetailFrontendPageFillEvidenceTests
             int video = body.IndexOf("draw_texture_rect(_frames[Underlay.frame_index", StringComparison.Ordinal);
             Assert.True(clear >= 0 && darkener > clear && video > darkener);
             Assert.Contains("fe-back-128x128x30.rgb", NativeMainMenuSource.Read("frontend_underlay.gd"), StringComparison.Ordinal);
-            Assert.Contains("load_frames(1 if Engine.is_editor_hint() else 2147483647)", NativeMainMenuSource.Read("main_menu_underlay.gd"), StringComparison.Ordinal);
-            Assert.Contains("get_node(\"Background\").set_frame(transition, facts.background_seconds)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-            Assert.Contains("recipe = ExtResource(\"underlay_recipe\")", NativeMainMenuSource.Node("Background"), StringComparison.Ordinal);
+            if (renderer == "DrawDevSelect")
+            {
+                static string CareerSource(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-career-name-source", name));
+                string underlay = CareerSource("career_name_underlay.gd");
+                Assert.Contains("extends \"res://Scenes/Frontend/main_menu_underlay.gd\"", underlay, StringComparison.Ordinal);
+                Assert.Contains("load_frames(1 if Engine.is_editor_hint() else 2147483647)", underlay, StringComparison.Ordinal);
+                Assert.Contains("get_node(\"Background\").set_frame(1.0, facts.background_seconds)", CareerSource("career_name_presentation.gd"), StringComparison.Ordinal);
+                Assert.Contains("recipe = ExtResource(\"background\")", NativeMainMenuSource.Node("Background", CareerSource("CareerName.tscn")), StringComparison.Ordinal);
+            }
+            else
+            {
+                Assert.Contains("load_frames(1 if Engine.is_editor_hint() else 2147483647)", NativeMainMenuSource.Read("main_menu_underlay.gd"), StringComparison.Ordinal);
+                Assert.Contains("get_node(\"Background\").set_frame(transition, facts.background_seconds)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+                Assert.Contains("recipe = ExtResource(\"underlay_recipe\")", NativeMainMenuSource.Node("Background"), StringComparison.Ordinal);
+            }
             Assert.Contains("Color(31.0 / 255.0, 31.0 / 255.0, 63.0 / 255.0, 1.0)", NativeMainMenuSource.Read("frontend_underlay.gd"), StringComparison.Ordinal);
             Assert.Contains("Color(0.0, 0.0, 0.0, 62.0 / 255.0)", NativeMainMenuSource.Read("frontend_underlay.gd"), StringComparison.Ordinal);
             return;

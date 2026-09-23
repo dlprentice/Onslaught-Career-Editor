@@ -124,6 +124,7 @@ public sealed partial class RetailFrontendFlow
         }
         UpdateMainMenuFrame();
         UpdateQuitConfirmFrame();
+        UpdateCareerNameFrame();
         UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
@@ -143,7 +144,6 @@ public sealed partial class RetailFrontendFlow
             string prefix = part.Section.Split('.')[0];
             switch (prefix)
             {
-                case "Career": DrawDevSelect(); break;
                 case "Briefing": DrawMissionBriefing(); break;
                 case "Configuration": DrawSelectConfiguration(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
