@@ -1,7 +1,7 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -431,8 +431,8 @@ and returns that object without PCM. Returning null after a zero payload read
 invokes the logger boundary instead of insertion. That earlier experiment's
 destructor hook retains objects, so its unchanged reused-sample list is not a
 retail unlinking result. The following controls replace that boundary with
-original destruction under canonical ownership. Whole-bank traversal and
-successful playback remain open.
+original destruction under canonical ownership, then execute whole-bank loading
+separately. Successful playback remains open.
 
 ## Original sample destruction and failed loads
 
@@ -488,8 +488,54 @@ Separate adverse fixtures show that base unlinking does not require finding
 the sample first: an absent sample with a foreign next pointer rewrites the
 canonical tail, or the head when empty. These intentionally inconsistent states
 do not demonstrate corruption in a healthy retail session. Actual reclamation,
-COM lifetime, mutating owner callbacks, repeated destruction, bank traversal,
-retail file behavior, audible results and complete startup remain open.
+COM lifetime, mutating owner callbacks, repeated destruction, retail file behavior,
+audible results and complete startup remain open. The next controls address bank
+traversal with supplied filesystem/device services.
+
+## Complete original bank loading and reloads
+
+The [11 bank controls](../../VALIDATION.md#original-complete-bank-loading-and-reloads--september-22)
+execute unchanged `00517d00`, file Open/refill/Close/constructor/destructor,
+CreateSample, sample loading, decoding, conversion and string helpers. The full
+English XAP is 5,396,113 bytes, SHA-256
+`658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7`.
+Its 164 records decode to 21,537,072 bytes at quality zero. Every complete PCM
+output matches both an independent calculation and the current materializer's
+pure decoder. This does not execute the complete materialization/export route.
+
+Original Open uses a 1 MiB cache. Six supplied ReadFile calls fill it: five full
+chunks and 153,233 final bytes. Refills cross sample payloads at indices
+34, 70, 103, 120 and 158. The final logical position equals the file size;
+the file EOF field is set by the short final fill, without a short logical read.
+CreateFileA/ReadFile/CloseHandle imports operate on read-only admitted source
+bytes; the retail code performs no operating-system file operations here.
+
+Fresh samples are absent from the canonical chain during buffer creation and
+published before the progress callback. Progress receives float32 `i/count`
+after each attempt: zero first and `163/164` last, with no final `1.0` callback.
+The two-record reload preserves object identity/list position when reuse is
+enabled and releases each old buffer before its replacement. Disabling reuse
+creates four distinct samples across two loads and prepends the duplicates.
+Qualities one/two retain the previously measured requested-versus-written size
+distinctions; these guarded fixtures do not exercise a real device overflow.
+
+Bank and record tag words are read without validation. Replacing them with zero
+still loads both selected records. Appended bytes are prefetched into the cache
+but remain **unconsumed by the parser**. Complete headers with counts zero or
+negative one load no samples and issue no progress calls. The shipped names are
+terminated; these controls do not establish safe malformed-name handling.
+
+A supplied first-sample Create failure leaves that sample published with a null
+buffer and untouched PCM. A supplied Lock failure releases/clears the failed
+buffer but also publishes the sample. Both continue to the next record. Thus
+bank traversal, sample registration and playable audio are distinct outcomes.
+A supplied false CloseHandle result does not suppress cache cleanup; it does
+not prove that a real failed close releases the handle.
+
+Heap/COM operations retain memory; formatting, diagnostics and frontend progress
+are recording boundaries. Allocation failure, exceptions, `.aya` decompression,
+nonzero file offsets, actual Windows I/O, audio playback and complete settings-load
+or startup composition remain outside this experiment.
 
 ## Original save reload after reinitialization
 

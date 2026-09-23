@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-22 (original sample destruction and failed-load composition)
+Last updated: 2026-09-23 (complete English-bank execution and reload controls)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -110,7 +110,12 @@ Original destruction now has 23 standalone controls and 11 composed failed-load
 controls. A zero payload read removes a reused sample; old storage and sample
 buffers are released once, while failed fresh creation preserves existing samples
 and events. Heap reclamation, device lifetime and mutating callbacks remain
-intercepted. Next, close successful bank traversal, then compose the remaining
+intercepted. Original bank loading, file Open/refill/Close and decoding now pass
+11 cases: all 164 English samples, reload identity/duplication, quality changes,
+tag/trailer admission and supplied device failures. The materializer's pure
+decoder matches every complete high-quality output. The
+[bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+separates parser, publication and device success. Next, compose the remaining
 rechecked services into the preserved real-save route.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity

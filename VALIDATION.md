@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (original sample decode/quality execution; earlier validation retained).
+Last updated: 2026-09-23 (complete original English-bank execution; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2378,6 +2378,55 @@ The [contract](reverse-engineering/binary-analysis/save-options-static-review-20
 records observed ordering and adverse-fixture limits. Exact review prompts,
 reports and primary dispositions remain in the existing private review owner.
 No Ghidra project was opened for these experiments.
+
+### Original complete bank loading and reloads — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_bank_control.py --all`
+passed **11 cases / 184 sample attempts / 2,009 ordered hook snapshots**.
+Accepted stem `local-data/test-runs/save-startup-20260919/audio-bank-run-6yqv9knl/bank`;
+receipt SHA-256 `bfb45043109560269cca4385d05fd181ed05d1c92e06938be59563a412f3d71a`;
+ELF SHA-256 `7e72a16b3d946ed632f7f5b14bb939201a84807e67836f1675be08c830cce533`.
+The frozen driver, exact inputs/outputs and `audio-bank-controls-v5.log` retain
+the executed work. Thirteen complete bodies total 4,709 unchanged original bytes
+from pristine SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+The full English bank at quality zero exercises all 164 records and six actual
+original-code refill requests. Ten bounded variants use private two-record
+derivatives or complete empty headers: reuse on/off across two loads, qualities
+one/two, altered tags with trailer, counts zero/negative, first-sample Create/Lock
+failure and CloseHandle false. Full PCM destinations/guards, final object/global/
+cache/scratch regions, complete samples at every progress event, file state,
+resource ordering and all nine per-event cursor/counter/liveness words are checked.
+The stack is owned initialized storage; integer ABI, normal SEH restoration and
+x87 control/stack state pass. Raw final status `0x220` for the full bank is a
+this-host observation, not a portable whole-status-register guarantee. The
+forbidden-syscall control terminates with SIGSYS and empty output.
+
+Independent read-only review parsed saved bytes without running/importing the
+driver. Root separately checked admitted bodies, source and output identities,
+every progress name/size/buffer/link/head, refill indices and consumed versus
+prefetched lengths. A separate read-only AST extraction of the materializer's
+two tables and pure decoder matches **all 164 PCM outputs / 21,537,072 bytes**;
+source SHA-256 `710c3843f533af18e9b634ed40051da2ab1f1a6cb71fab0db716e13081566081`.
+`audio-bank-materializer-comparison.json` records each comparison; it is not a
+full materializer run or a lower-quality/playback validation.
+
+Earlier attempts remain preserved. V1 failed assembly because `GS` collided
+with a register name; no original code ran. V2 passed the first whole-bank
+control but omitted the intended per-event I/O cursor capture. V3 corrected
+that capture and strengthened checks, then exposed an incorrect x87 expectation:
+the final `FSTP` rounds `163/164` upward to float32, setting C1 as well as precision.
+V4 corrected the oracle from that instruction sequence. V5 replaces the skipped
+intermediate reload comparison and checks exact release/publication order.
+Its ELF and all 33 case input/output/stderr files equal V4 byte-for-byte.
+
+Heap, filesystem imports, COM/device behavior, formatting and frontend progress
+remain explicit supplied boundaries. The trailer is prefetched but not parsed;
+CloseHandle false tests ignored return behavior, not actual closure. No Ghidra
+project, original save or production implementation was changed. The
+[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+records reconstruction implications and remaining composition/playback limits.
+Exact review prompts and reports remain in the existing private review owner.
 
 ### Scheduled-event constructor boundary — September 19
 

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-22 (sample destruction and failed-load composition; earlier implementation receipts retain their dates).
+Last updated: 2026-09-23 (complete English-bank execution; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -94,6 +94,17 @@ These are guarded ownership observations with heap/COM/callback boundaries;
 they do not establish real reclamation, playback or complete startup. See the
 [destruction contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
 and [executed checks](VALIDATION.md#original-sample-destruction-and-failed-loads--september-22).
+
+Complete original bank/Open/refill/Close/sample decoding now passes **11 cases /
+184 sample attempts**. All 164 English-bank high-quality PCM outputs also match
+the current materializer's pure decoder: **21,537,072 bytes** compared. Reuse
+preserves sample identities and list positions; disabling it prepends duplicates.
+Supplied Create/Lock failures leave a published sample without playable PCM while
+later records continue. Changed tags and a parser-unconsumed trailer are admitted;
+zero/negative counts skip samples. These are original-code observations with
+supplied filesystem/heap/COM boundaries, not real playback or complete startup.
+See the [bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+and [executed checks](VALIDATION.md#original-complete-bank-loading-and-reloads--september-22).
 
 ## Godot Save Lab — first workflow
 
