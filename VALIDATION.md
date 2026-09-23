@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (native career-name page, Main Menu, Quit confirmation and live input edges; weapon foundations).
+Last updated: 2026-09-22 (native Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -925,6 +925,85 @@ caller-owned isolated display. Output belongs under this worktree's `local-data/
 The missing header endcaps/Forseti art, unmeasured page transition and retail
 header discrepancy remain open. These checks establish neither full combat nor
 normal GPU, physical-device, audible playback or cross-platform parity.
+
+#### Native Select Configuration — September 22
+
+`SelectConfiguration.tscn` owns the production background passes, translucent
+header, unit name, Walker/Jet weapon rows and chevrons. Its six sections expose
+real editable controls before Ready. The shared atlas fonts and private texture
+recipes serve both gameplay and frozen editor examples. The C# host forwards
+five raw UTF-16 display fields and queries the native hit regions, retaining the
+existing session, audio and launch ordering. The original draw methods and
+their measurement provenance remain in `Tests/ConfigurationReference*`, pinned
+to `7474445c`.
+
+Executed receipts under the conversion worktree's `local-data/test-runs/`:
+
+- `configuration-native-68nn5ltn/result/report.json`: **385 checks**, all eight
+  sections and zero failures in standard headless Godot. Coverage includes
+  actual asset admission, detached UTF-16, refusal atomicity, half-open arrow
+  edges, authored transforms, frozen text overrides and pack/reopen. Thirteen
+  public sources and five private production inputs retained their hashes.
+  Saved scenes contain public recipes and layout, not decoded private pixels.
+  Runtime diagnostics are clean. The same receipt's two output-refusal probes
+  preserve an existing report-directory sentinel and a dangling scene symlink.
+- `configuration-headless-_e3rsl5k/report.json`: **1,997 checks**, eleven states
+  and all five comparison groups passed against the retained C# renderer and
+  actual frontend host. Coverage includes exact asset/glyph bytes and widths,
+  detached facts, authored source transforms, half-open targets at five window
+  sizes, the one-configuration restriction and keyboard/pointer callback order
+  through two loading handoffs. No gameplay world is constructed. Logs are clean.
+- `configuration-render-6o0d44b6/report.json`: **2,044 checks** and **18 exact
+  native/live-host image comparisons with zero differing RGBA bytes**. This
+  covers production defaults at 640×480, 1280×720, 801×601 and 320×240, raw
+  UTF-16/empty text, edited background/header/weapon sections and explicit
+  unit-name overrides. The 1280×720 production and edited Walker host images
+  were inspected. Task-owned Xvfb used separate credentials/profiles, software
+  rendering and Dummy audio; processes were cleaned up and credentials removed.
+  Only the expected input-method/V-Sync warnings appeared; runtime and shutdown
+  were otherwise clean. Six private inputs retained their hashes.
+- `configuration-editor-b84mrgvl/`: headless .NET editor import and actual
+  frontend runtime/edit/pack/reopen checks passed. All ten frozen editor-page
+  selections passed; selecting Configuration starts neither processing nor
+  loading. Pointer state remains unchanged. Import and runtime
+  exit cleanly. Editor shutdown retains the existing **205 ObjectDB/associated
+  RID leaks**, so the editor result is a functional pass, not a clean-exit claim.
+- `configuration-startup-ozo7di_i/run/capture-manifest.json`: all **13/13**
+  scheduled 640×480 startup shots matched their expected screens, including
+  entry/settled Configuration and the Loading boundary, on an isolated display.
+- `configuration-client-j0d50v19/results/configuration.trx`: **127 affected
+  Client tests executed: 126 passed, one failed, zero skipped**. The fresh
+  captures reproduce the same CareerName/LevelSelect retail header discrepancy
+  described above: y71..87 versus the unchanged y72..88 expectation. No new
+  configuration failure appeared, and no assertion or expected image was weakened.
+- `configuration-build-iskvkwcx/`: supported pinned .NET build and this
+  worktree's private Level 100 import passed with zero build warnings/errors.
+  `configuration-smoke-0s9difyy/` then passed the **2,148-step** lifecycle smoke,
+  thirteen ordered message deliveries/queues, synthetic focus-loss/rearm,
+  fresh retry and Main Menu return with world release. Its tape SHA-256 is
+  unchanged at `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Both replay runs verified trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`
+  without divergence. Logs are clean. Outcome remains `Running`, with zero
+  targets destroyed; this is not full-combat acceptance.
+
+The half-transparent header, ring red gain above 1.0, fractional unit-name
+origin and mirrored arrow preserve the retained rendering contract. Explicit
+label overrides are a new editor feature: the old C# configuration sections'
+text override did not affect these draw methods. The missing live unit model,
+mode icons, rating stars, Forseti emblem and header endcaps remain unresolved.
+The separate CareerName/LevelSelect retail header gate above does not measure
+this configuration page.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/configuration_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native scene. Run .NET
+`res://Scenes/Frontend/Tests/ConfigurationSceneChecks.tscn -- --skipfmv`
+headlessly for the comparison, or add
+`--configuration-render-dir=ABS_FRESH_EMPTY_DIR` on a caller-owned isolated
+display. Outputs belong below this worktree's `local-data/`. These checks make
+no full-combat, physical-input, audible-playback, GPU-performance or Windows claim.
 
 #### Live native input edges — September 22
 

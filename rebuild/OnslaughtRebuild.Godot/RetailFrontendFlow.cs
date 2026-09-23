@@ -166,9 +166,8 @@ public sealed partial class RetailFrontendFlow : Control
     // measured from the two pristine 640x480 captures taken 2026-07-25:
     //   local-lab/retail-reference-pristine/mission-briefing/05-mission-briefing-640x480.png
     //   local-lab/retail-reference-pristine/select-configuration/06-select-configuration-640x480.png
-    // See DrawMissionBriefing / DrawSelectConfiguration for the method per element.
+    // See DrawMissionBriefing and Tests/ConfigurationReference.cs for the per-element evidence.
     private const string MissionBriefingTitle = "MISSION BRIEFING";
-    private const string SelectConfigurationTitle = "SELECT CONFIGURATION";
     private const float HeaderBarCenterX = 390f;
     private const float HeaderTitleTop = 65f;
     private const float BriefingLevelNameLeft = 178.5f;
@@ -193,12 +192,6 @@ public sealed partial class RetailFrontendFlow : Control
     // 167,183,199,215,231,247 then 273,289, so the paragraph break adds 10 on
     // top of the line the last paragraph line already advanced (247+16+10=273).
     private const float BriefingParagraphGap = 10f;
-    private const float ConfigurationUnitLeft = 260.5f;
-    private const float ConfigurationUnitTop = 99.5f;
-    private const float ConfigurationRowLeft = 280f;
-    private const float ConfigurationRowPitch = 16f;
-    private const float ConfigurationWalkerTop = 210f;
-    private const float ConfigurationJetTop = 274f;
     // The rock background quad and the big ring, both fitted — see DrawBriefingStage.
     private const float BriefingBackgroundScale = 1.25f;
     private const float BriefingBackgroundLeft = -70f;
@@ -238,9 +231,6 @@ public sealed partial class RetailFrontendFlow : Control
     // Briefing body ink measures (251,220,95) at its brightest; this modulate
     // renders (252,222,95).
     private static readonly Color BriefingBodyText = RetailColor(0xff7e6f30);
-    // SELECT CONFIGURATION mode headers measure (249,217,62); this renders
-    // (247,215,61). It is a different amber from the briefing body.
-    private static readonly Color ConfigurationModeText = RetailColor(0xff7c6c1f);
     // The header box is the same FET3_HEADER_TEXT_BOX 0x7f000000 overlay the
     // menu pages use, but these two pages sit over a textured background rather
     // than the flat (23,23,48) fill, so the measured composite constant
@@ -535,6 +525,7 @@ public sealed partial class RetailFrontendFlow : Control
         InitializeMainMenu();
         InitializeQuitConfirm();
         InitializeCareerName();
+        InitializeConfiguration();
         InitializeLoading();
         InitializeDebriefing();
 
@@ -1507,12 +1498,11 @@ public sealed partial class RetailFrontendFlow : Control
     /// neither 1.25 nor 1.4 is in play here.
     ///
     /// KNOWN GAPS, left undrawn rather than approximated:
-    ///   * the background is ANIMATED. The two reference frames disagree by
-    ///     9.4% material pixels in a clean sky band and the configuration
-    ///     frame's own background best-fit lands at scale 1.275, origin
-    ///     (-110,-86) rather than the briefing's 1.25/(-70,-80). This draw is
-    ///     static and pinned to the briefing frame, so the configuration page
-    ///     carries the full pan error as measured cost.
+    ///   * An earlier 9.4% difference was attributed to background animation.
+    ///     The no-skipfmv control instead localised it to the live unit render,
+    ///     with the same landscape behind both modes. That correction and the
+    ///     original measurements are retained in Tests/ConfigurationReference.cs.
+    ///     This shared stage retains the measured static origin and scale.
     ///   * the blue Forseti emblem at top-left, unidentified here as it is on
     ///     every other page.
     /// </summary>
@@ -1686,102 +1676,6 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         return lines;
-    }
-
-    /// <summary>
-    /// Retail SELECT CONFIGURATION — the page between briefing and loading that
-    /// this reconstruction did not model at all until this change. Reference:
-    /// local-lab/retail-reference-pristine/select-configuration/
-    /// 06-select-configuration-640x480.png.
-    ///
-    ///   title            font22 scale 1, ink x249..526 y73..87; its advance
-    ///                    width 280 from origin 249 centres on x=389
-    ///   unit name        font22 scale 1, fitted origin (260.5, 99.5),
-    ///                    ink x259..536 y107..127, white
-    ///   mode headers     Font13PS scale 1 at x=280, ink tops 213 and 277,
-    ///                    brightest ink (249,217,62)
-    ///   weapon rows      Font13PS scale 1 at x=280, ink tops 229,245,293,309,
-    ///                    white; row pitch 16, block gap 32
-    ///
-    /// KNOWN GAPS, left undrawn because no materialized asset matches them, with
-    /// their measured extents so the cost is attributable:
-    ///   * the circular unit render at roughly x64..256, y152..344 — it is a
-    ///     live 3D view of the battle engine, not a sprite.
-    ///
-    ///     CORROBORATED 2026-07-26, and it corrects a recorded misreading.
-    ///     Differencing the -skipfmv reference against the no-skipfmv control
-    ///     (no-skipfmv-frontend/06n-select-configuration-nofmv.png) leaves this
-    ///     page 90.28% pixel-identical: the painted landscape backdrop is the
-    ///     SAME in both, so this page has no video background. All the
-    ///     difference above threshold 64 falls in x68..270 y218..367, which is
-    ///     this window, and the two frames show the unit in JET form and in
-    ///     WALKER form. The earlier reading of "the two reference frames
-    ///     disagree by 9.4% in a clean sky band, so the background is animated"
-    ///     came from a sample band that was not clean — it contained this
-    ///     render. That is the project's region-mean failure mode again, and
-    ///     the countermeasure is the one used here: localise the difference by
-    ///     row/column density before interpreting it.
-    ///   * the three circular mode icons at x449..541, y183..209;
-    ///   * the green/red star rating glyphs at x448..545 on the four weapon
-    ///     rows. They are 5-pointed star sprites, not the Font13PS asterisk:
-    ///     the drawn stars are 5 rows tall with a solid body, and no atlas in
-    ///     the materialized set contains them.
-    /// </summary>
-    private void DrawSelectConfiguration()
-    {
-        RetailFrontendBattleEngineConfiguration configuration = _session.SelectedConfiguration;
-
-        SelectSceneSection("Configuration.Background");
-        DrawBriefingStage();
-        SelectSceneSection("Configuration.Header");
-        DrawHeaderBarTitle(SelectConfigurationTitle);
-
-        SelectSceneSection("Configuration.Unit");
-        DrawFont22Text(
-            configuration.DisplayName,
-            new Vector2(ConfigurationUnitLeft, ConfigurationUnitTop),
-            1f,
-            1f,
-            ReleasedTitleText);
-
-        SelectSceneSection("Configuration.Walker");
-        DrawConfigurationRows(
-            "Walker Mode",
-            configuration.WalkerPrimary,
-            configuration.WalkerSecondary,
-            ConfigurationWalkerTop);
-        SelectSceneSection("Configuration.Jet");
-        DrawConfigurationRows(
-            "Jet Mode",
-            configuration.JetPrimary,
-            configuration.JetSecondary,
-            ConfigurationJetTop);
-
-        SelectSceneSection("Configuration.Navigation");
-        DrawPageChevrons();
-    }
-
-    private void DrawConfigurationRows(
-        string modeName,
-        RetailFrontendWeaponConfiguration primary,
-        RetailFrontendWeaponConfiguration secondary,
-        float top)
-    {
-        DrawText(
-            modeName,
-            new Vector2(ConfigurationRowLeft, top),
-            1f,
-            ConfigurationModeText);
-        DrawText(
-            primary.DisplayName,
-            new Vector2(ConfigurationRowLeft, top + ConfigurationRowPitch),
-            1f,
-            ReleasedTitleText);
-        DrawText(
-            secondary.DisplayName,
-            new Vector2(ConfigurationRowLeft, top + (2f * ConfigurationRowPitch)),
-            1f,
-            ReleasedTitleText);
     }
 
     private bool HandlePointerMotion(Vector2 position)
@@ -1973,7 +1867,11 @@ public sealed partial class RetailFrontendFlow : Control
             case RetailFrontendScreen.SelectConfiguration:
                 // Both pages carry the same two chevrons and nothing else
                 // clickable this lane models.
-                if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
+                int pageTarget = _session.Screen == RetailFrontendScreen.SelectConfiguration
+                    ? ConfigurationTargetAt(design)
+                    : new Rect2(0f, 430f, 48f, 48f).HasPoint(design) ? 1
+                    : new Rect2(595f, 430f, 45f, 48f).HasPoint(design) ? 2 : 0;
+                if (pageTarget == 1)
                 {
                     if (!_session.TryBackPage(
                             startupMediaActive: false,
@@ -1986,7 +1884,7 @@ public sealed partial class RetailFrontendFlow : Control
                     QueueRedraw();
                     return true;
                 }
-                if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design))
+                if (pageTarget == 2)
                 {
                     Confirm();
                     return true;

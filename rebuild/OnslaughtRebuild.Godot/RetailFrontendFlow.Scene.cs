@@ -125,6 +125,7 @@ public sealed partial class RetailFrontendFlow
         UpdateMainMenuFrame();
         UpdateQuitConfirmFrame();
         UpdateCareerNameFrame();
+        UpdateConfigurationFrame();
         UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
@@ -145,7 +146,6 @@ public sealed partial class RetailFrontendFlow
             switch (prefix)
             {
                 case "Briefing": DrawMissionBriefing(); break;
-                case "Configuration": DrawSelectConfiguration(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
                 default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");
             }

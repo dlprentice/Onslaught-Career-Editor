@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (native career-name page, Main Menu, Quit confirmation and live input edges; weapon foundations).
+Last updated: 2026-09-22 (native Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Select Configuration, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -189,6 +189,37 @@ captures and the retained C# renderer place the title one pixel high. Its
 expected retail rows stay unchanged. Native/editor checks, executed regression
 results and the precise malformed-name refusal differences are recorded in
 [`VALIDATION.md`](../VALIDATION.md#native-career-name-page--september-22).
+
+#### Native Select Configuration
+
+`Scenes/Frontend/SelectConfiguration.tscn` contains the production rock and ring
+passes, translucent header, unit name, Walker/Jet weapon rows and navigation
+arrows. Open it directly or select SelectConfiguration with `Frontend.tscn`'s
+`EditorPage`. Its frozen `editor_*` fields change only the displayed example;
+they do not select another unit, start loading or create a gameplay session.
+The existing session supplies the five live display strings in one raw UTF-16
+batch. The host retains Back/Confirm, audio and launch ordering.
+
+Edit the named Background, Header, Unit, Walker, Jet and Navigation sections or
+their individual passes. The source rectangles preserve the existing fractional
+draw positions while section transforms remain editable. Fonts and private
+texture recipes are shared with gameplay. `override_text` deliberately replaces
+an imported label; the old C# section's text override was inert on this page, so
+this is an explicit editor feature rather than a claimed old behavior. Moving
+Navigation also moves its half-open hit regions. The page has no input or clock
+owner of its own.
+
+The static landscape, ring tint above 1.0 and missing unit model, mode icons,
+rating stars, Forseti emblem and header endcaps retain their existing evidence
+limits. Converting the page does not fill those gaps with invented artwork.
+`Scenes/Frontend/Tests/ConfigurationReference*` retain the former draw methods
+and provenance from `7474445c` for comparison.
+
+All 18 native/live-host rendered comparisons match that retained implementation
+exactly, including fractional window scales and edited sections. Standard
+Godot checks cover the actual scene, input inactivity, explicit overrides and
+pack/reopen without private pixels. Executed checks and remaining limits are in
+[`VALIDATION.md`](../VALIDATION.md#native-select-configuration--september-22).
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,

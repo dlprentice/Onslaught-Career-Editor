@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/MainMenu.tscn" id="main_menu_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/QuitConfirm.tscn" id="quit_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/CareerName.tscn" id="career_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/SelectConfiguration.tscn" id="configuration_scene"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
@@ -122,78 +123,8 @@ script = ExtResource("2")
 Section = "Briefing.Navigation"
 SourceRect = Rect2(9, 438, 623, 36)
 
-[node name="SelectConfiguration" type="Control" parent="Stage"]
+[node name="SelectConfiguration" parent="Stage" instance=ExtResource("configuration_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Background" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Background"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="Header" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 191.0
-offset_top = 65.0
-offset_right = 585.0
-offset_bottom = 97.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Header"
-SourceRect = Rect2(191, 65, 394, 32)
-
-[node name="Unit" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 260.5
-offset_top = 99.5
-offset_right = 580.5
-offset_bottom = 131.5
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Unit"
-SourceRect = Rect2(260.5, 99.5, 320, 32)
-
-[node name="Walker" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 280.0
-offset_top = 210.0
-offset_right = 585.0
-offset_bottom = 258.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Walker"
-SourceRect = Rect2(280, 210, 305, 48)
-
-[node name="Jet" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 280.0
-offset_top = 274.0
-offset_right = 585.0
-offset_bottom = 322.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Jet"
-SourceRect = Rect2(280, 274, 305, 48)
-
-[node name="Navigation" type="Control" parent="Stage/SelectConfiguration"]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 438.0
-offset_right = 632.0
-offset_bottom = 474.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Configuration.Navigation"
-SourceRect = Rect2(9, 438, 623, 36)
 
 [node name="Loading" parent="Stage" instance=ExtResource("loading_scene")]
 visible = false
@@ -209,3 +140,4 @@ visible = false
 [editable path="Stage/QuitConfirm"]
 
 [editable path="Stage/CareerName"]
+[editable path="Stage/SelectConfiguration"]
