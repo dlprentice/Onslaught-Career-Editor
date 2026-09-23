@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native frontend cursor and asset routing; all frontend page drawing, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native frontend orchestration, page assembly and host handoffs; live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -29,8 +29,10 @@ of readiness tooling.
 - `OnslaughtRebuild.Core` owns deterministic simulation state and fixed 20 Hz
   stepping - retail's own rate, `GAME_FR 20.0` / `CLOCK_TICK 0.05`. It has no presentation, filesystem, clock, process, network, or GPU
   dependency.
-- `OnslaughtRebuild.Client` adapts real-time input to exact Core steps and owns
-  the presentation-only frontend lifecycle state.
+- `OnslaughtRebuild.Client` adapts real-time input to exact Core steps and retains
+  comparison models for migrated behavior. The live frontend Session and
+  lifecycle now belong to native scripts under `OnslaughtRebuild.Godot/Client`
+  and `Scenes/Frontend`.
 - `OnslaughtRebuild.Headless` replays command tapes and verifies versioned final
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
@@ -47,9 +49,10 @@ Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Le
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
-also have native owners. All ten frontend page renderers are native; frontend
-orchestration, world assembly, full simulation and replay entry still need their
-live consumers converted. The complete project therefore still requires .NET.
+also have native owners. The complete frontend scene now owns its navigation,
+input, clocks, page assembly and loading/intro orchestration in GDScript. World
+assembly, full simulation and replay entry still need their live consumers
+converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
 
@@ -95,6 +98,35 @@ owned output under this worktree's `local-data/`; remain headless or use an
 isolated owned display. Preserve the separate companion changes and other lanes'
 worktrees. Executed comparisons and their limits are recorded in
 [`VALIDATION.md`](../VALIDATION.md#september-19-production-scene-migration).
+
+#### Native frontend orchestration
+
+Open `Scenes/Frontend/Frontend.tscn` for the actual production layout and
+`frontend_flow.gd` for its input, timing and handoff logic. `frontend_pages.gd`
+binds the authored pages to the same Session and shared font/FEBack resources.
+It creates no second navigation owner. `AssetPaths` and `EditorPage` keep their
+existing Inspector names. The editor displays frozen page facts, leaves its
+cursor inactive and never starts media, gameplay or save persistence.
+
+The root preserves the 50-Process Main Menu entry, binary32 hit-test threshold,
+two-frame loading request, synchronous ready/rejection callbacks and same-frame
+intro completion. Host effects return checked results: a failed observer aborts
+that operation after its existing partial writes; it does not queue later effects
+or disable future frames. The C# `RetailFrontendFlow` is a non-Node facade over
+`View`, with cached host facts and original verified save identities. It owns no
+Session, frame loop, input handler, page renderer or media decoder.
+
+A standalone frontend runs in standard `godot48`, starting at Click to Start.
+It has no injected careers or world-construction callback, so confirming through
+to Loading cannot construct the game on its own. Use the supported full-game
+launcher for that route; its remaining world/simulation host still needs .NET.
+Private assets use the existing canonical lab routing and ignored materialized
+assets. Public scene packing retains recipes and layout, not retail pixels.
+The pinned Linux engine drops a leading U+FEFF when reading an environment
+value; use an explicit `--startup-media=` argument to preserve such a literal
+path. This unusual environment case remains an explicit parity gap.
+The executed checks and remaining limits are in
+[the validation record](../VALIDATION.md#native-frontend-orchestration--september-23).
 
 #### Native cursor and asset routing
 
@@ -305,9 +337,9 @@ header endcaps, amber node-center artwork and faint writing remain missing.
 
 The retired C# graph/draw helpers and measurement provenance remain in
 `Scenes/Frontend/Tests/LevelSelectReference*`, pinned to `51477f62`. No live
-`RetailFrontendPart` draw proxy remains. The root's temporary C# controller
-still owns navigation, input and loading while the native pages own their
-presentation; full standard-engine startup is not yet available.
+`RetailFrontendPart` draw proxy remains. The native frontend root now owns
+navigation, input and loading as well as those pages. The whole game still
+requires its managed world/simulation host.
 
 The [Level Select validation record](../VALIDATION.md#native-level-select--september-23)
 records native/editor checks, exact retained-renderer comparisons and the
@@ -370,9 +402,10 @@ reference, not the live reader.
 
 Native career progression, frontend session, input-edge state and camera value
 owners also pass the migration gate. The actual frontend now uses
-`Client/frontend_session.gd` and `frontend_scene_path.gd`; its temporary C# bridge
-caches display facts after mutations and preserves selected save identity by
-the original input ordinal. Drawing does not repeatedly cross that bridge.
+`Client/frontend_session.gd` and `frontend_scene_path.gd` directly from
+`Scenes/Frontend/frontend_flow.gd`. Its temporary C# facade preserves selected
+save identity by the original input ordinal and marshals coarse host events.
+Native drawing, input and settled animation frames do not cross that facade.
 The world renderer now advances and samples the single native camera owner in
 `Client/world_camera.gd`, retaining the same authored Camera3D and projection.
 Editor entry leaves that live camera owner uninitialized.
@@ -417,15 +450,15 @@ binary32, so parsing through a double cannot introduce an extra rounding.
 retain the four options pages, bindings, ordered side effects and detached
 settings. `Scenes/Frontend/Options.tscn` now owns the actual rows, bindings,
 sliders, dropdowns and chrome. Its three font recipes and FEBack resource also
-supply the remaining frontend host; these are the production assets, not preview
-substitutes. The temporary adapter invokes effects synchronously at their original
-action points, retaining partial mutation on failure and reentrant callback order.
-It does not poll every row across languages each frame.
+supply the other production frontend pages. The native root invokes effects
+synchronously at their original action points, retaining partial mutation on
+failure and reentrant callback order. The temporary managed facade forwards
+typed host callbacks and preserves their exact exception identity.
 
 `Scenes/Frontend/ClickToStart.tscn` owns the splash, five outlined prompt passes,
 two sliding-logo passes, five title passes and the separate title flash. Its
-frozen `editor_preview` resource supplies the two time facts; the existing host
-still owns the clock, input and idle transition. The small `frontend_image.gd`
+frozen `editor_preview` resource supplies the two time facts; the native frontend
+root owns its clocks and input, while the game host retains the attract-loop seam. The small `frontend_image.gd`
 and bitmap-label controls preserve source rectangle/glyph calculations before
 canvas transforms. Their sizes, centers, content origins, textures and outer
 transforms are editable; gameplay uses those same controls and recipes. Changing
@@ -763,7 +796,7 @@ Use these scenes from Godot's FileSystem dock:
 | --- | --- |
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
-| [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Complete native frontend root, ten authored pages, seven main-menu rows, images, guides, letterbox and cursor. `EditorPage` selects a frozen view; it does not navigate the game. The linked GDScript owns input and page/loading orchestration. |
 | [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |
 | [Scenes/Frontend/QuitConfirm.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/QuitConfirm.tscn) | Production panel, four borders, prompt, Yes/No rows and measured highlights. `editor_selected_index` freezes No/Yes selection; Dialog and individual passes are editable. Text overrides are explicit; the scene never handles input or requests exit itself. |
 | [Scenes/Frontend/CareerName.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/CareerName.tscn) | Native header, bracket body/shadow, list with eleven row slots, static scrollbar, name field/highlight and navigation arrows. `editor_career_names`, selection, name and freshness expose frozen facts. Section/pass transforms are editable; labels use explicit `override_text`. No save discovery or persistence runs in this scene. |
@@ -789,12 +822,11 @@ the existing adapters. The public actor scene supplies later spawned actors.
 
 Edit UI Control positions, sizes, text, resource routes and base appearance in
 their scenes. Frontend text keeps imported localization by default; an explicit
-`override_text` (or `OverrideText` on remaining C# controls) enables a deliberate
-authored replacement. HUD `Base`, `Glow` and
+`override_text` enables a deliberate authored replacement. HUD `Base`, `Glow` and
 `Text` groups expose the measured blend passes; corresponding halves of an
 instrument are separate selectable controls, with imported `part`/`source_rect`
-identity read-only in the Inspector. GDScript HUD and remaining C# frontend controls
-retain their bitmap-glyph and compositing laws. They remain ordinary selectable
+identity read-only in the Inspector. Native HUD and frontend controls retain
+their bitmap-glyph and compositing laws. They remain ordinary selectable
 Controls; their script and exported properties are
 available in the editor. Runtime animation applies its existing state over those
 definitions. Preview state is explicitly separate from game state, with no second
@@ -852,10 +884,10 @@ not a second live owner. Open the same production scene and its linked scripts
 to inspect both behavior and layout in Godot. Bound texture pixels cannot be
 serialized into the public scene when it is saved.
 
-Startup, HUD, pause, Options, debriefing, entity, water and Sun scenes can run their focused checks
-in standard Godot.
+The complete frontend, Startup, HUD, pause, entity, water and Sun scenes can run
+their focused checks in standard Godot.
 The whole project still needs the compiled C# assembly and .NET editor while
-the frontend/world host is converted. All retail
+the world and simulation hosts are converted. All retail
 previews need prepared private textures. Missing data is reported rather than replaced with invented retail
 content. Runtime effects and later spawned actors naturally appear during play;
 their reusable definitions remain available in source and resources. Full combat

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-20 (native rebuild terrain appearance and Loading; existing RE and companion evidence retains its stated limits).
+Last updated: 2026-09-23 (native rebuild frontend orchestration and editable pages; existing RE and companion evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -317,14 +317,16 @@ controls expose their layout. Options now has four native pages with selectable
 rows, binding controls, sliders and dropdowns. Loading exposes its background,
 five caption passes and fixed bar; its frozen facts never start a load.
 Debriefing exposes native report
-labels, values, grade artwork and header; the level graph remains a composite
-Control with its drawing code available. Explicit
+labels, values, grade artwork and header. Level Select now exposes twelve node
+groups, sixteen links and their hit regions as native controls. Explicit
 editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
 
 The full GDScript conversion is underway. Startup playback/cache admission,
-pause UI, HUD state/drawing/catalog, frontend session and live camera state now
-run from native scripts and the same production scenes. Audio playback,
+pause UI, HUD state/drawing/catalog, the complete frontend controller and pages,
+and live camera state now run from native scripts and the same production scenes.
+The frontend owns its input, clocks, navigation and loading/intro handoffs in
+GDScript; its temporary C# facade only connects the remaining managed game host. Audio playback,
 queues, fades and actor attachments now use an authored native audio scene.
 Options state/actions, the shared frontend font/FEBack resources, actor/projectile
 presentation, Loading, debriefing, terrain LOD/mesh/texture generation, water and the Sun now have
@@ -344,8 +346,8 @@ law while correcting the old scene proxy's fractional caption placement; the
 text-only difference and unresolved bar appearance are recorded explicitly.
 Numerical, parsing,
 replay/hash, career, input, mission timing and audio policy foundations have
-focused differential checks. The remaining live simulation, frontend/world
-drawing host and other adapters still require .NET; this is not yet a
+focused differential checks. The remaining live simulation, world assembly
+and game host still require .NET; this is not yet a
 standard-engine-only game. See the [rebuild guide](rebuild/README.md) for the
 current boundary and [validation receipts](VALIDATION.md) for executed checks.
 

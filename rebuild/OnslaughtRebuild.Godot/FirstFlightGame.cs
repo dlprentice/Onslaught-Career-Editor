@@ -104,7 +104,7 @@ public sealed partial class FirstFlightGame : Node3D
     {
         // The production frontend is authored in Main.tscn. Initialize its data
         // before its child _Ready, without moving gameplay into an editor tool.
-        _frontend = GetNode<RetailFrontendFlow>("RetailStartupFrontend");
+        _frontend = RetailFrontendFlow.Attach(GetNode<Control>("RetailStartupFrontend"));
         _frontend.PlaybackRetirement = _audioRetirement;
         try
         {
@@ -740,6 +740,8 @@ public sealed partial class FirstFlightGame : Node3D
         {
             // Also covers a native owner created before world loading failed.
             ReleasePlatformInput();
+            _frontend?.Dispose();
+            _frontend = null;
             _tapeRecorder?.Dispose();
             _tapeRecorder = null;
             _audioRetirement.Dispose();
@@ -1545,7 +1547,7 @@ public sealed partial class FirstFlightGame : Node3D
         // CGame::GetIntroFMV (game.cpp:1103-1119) is one retail flag. The
         // reconstruction owner is RetailFrontendScenePath.IsStartupSuppressed
         // so --skipfmv, --smoke, capture, and --intro cannot drift from the
-        // level-cutscene gate in RetailFrontendFlow.Cutscene.
+        // level-cutscene gate in the native frontend_flow.gd owner.
         bool suppressed = RetailFrontendScenePath.IsStartupSuppressed(
             OS.GetCmdlineUserArgs());
         if (suppressed)

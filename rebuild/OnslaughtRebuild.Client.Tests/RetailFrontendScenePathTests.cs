@@ -97,31 +97,28 @@ public sealed class RetailFrontendScenePathTests
     public void FirstFlightGameAndFlowDriveThePathInsteadOfSmokeConfirm()
     {
         string game = ReadGodotSource("FirstFlightGame.cs");
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string facade = ReadGodotSource("RetailFrontendFlow.cs");
         string sequence = ReadGodotSource("RetailStartupSequence.cs");
         string playback = ReadGodotSource("startup_sequence.gd");
         string startMedia = Slice(game, "private void StartRetailStartupMedia()");
-        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
-        string key = Slice(flow, "private bool HandleKey(");
-        string clickArm = CaseArm(pointer, "case RetailFrontendScreen.ClickToStart:");
+        string pointer = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string key = NativeFrontendSource.RootFunction("handle_key");
+        string clickArm = NativeFrontendSource.PointerArm("CLICK_TO_START");
 
         Assert.Contains("RetailFrontendScenePath.IsStartupSuppressed", startMedia, StringComparison.Ordinal);
-        // Input now belongs to the actual standard-engine production scene.
-        // startup_scene_checks.gd executes that scene's accepted/rejected events;
-        // this guard verifies the host uses it and has no second input owner.
         Assert.Contains("configure_from_cache", sequence, StringComparison.Ordinal);
         Assert.DoesNotContain("public override void _Input(", sequence, StringComparison.Ordinal);
         Assert.Contains("if not accepts_skip_event(event):", playback, StringComparison.Ordinal);
-        Assert.Contains("_session.AcceptsClickToStartMouse", clickArm, StringComparison.Ordinal);
-        Assert.Contains("_session.AcceptsClickToStartKey", key, StringComparison.Ordinal);
+        Assert.Contains("Path.accepts_click_to_start_mouse(_session.get_screen(), design.x, design.y)", clickArm, StringComparison.Ordinal);
+        Assert.Contains("Path.accepts_click_to_start_key(_session.get_screen(), scan_code_for(key))", key, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", startMedia, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", pointer, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", key, StringComparison.Ordinal);
         Assert.Contains("Laws.splash_scale(timer)", NativeClickSource.Controller, StringComparison.Ordinal);
         Assert.Contains("-Laws.slide_offset(timer)", NativeClickSource.Controller, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendScenePath", NativeClickSource.Presentation, StringComparison.Ordinal);
-        Assert.Contains("\"set_frame\"", NativeClickSource.Bridge, StringComparison.Ordinal);
-        Assert.DoesNotContain("private void DrawClickToStart()", flow, StringComparison.Ordinal);
+        Assert.Contains("_click.set_frame(", NativeClickSource.Bridge, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void DrawClickToStart()", facade, StringComparison.Ordinal);
         NativeClickSource.HasNoPresentationSideEffects();
     }
 
@@ -154,15 +151,11 @@ public sealed class RetailFrontendScenePathTests
     [Fact]
     public void FlowAcceptsMainMenuRowsThroughThePathAndDoesNotTreatLatchAsAccept()
     {
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
-        string mainArm = CaseArm(pointer, "case RetailFrontendScreen.MainMenu:");
-        string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
-
-        Assert.Contains("_session.CanAcceptMainMenuRow", mainArm, StringComparison.Ordinal);
+        string mainArm = NativeFrontendSource.PointerArm("MAIN_MENU");
+        string cancel = NativeFrontendSource.RootFunction("cancel_options");
+        Assert.Contains("Path.can_accept_main_menu_row(_session, index)", mainArm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", mainArm, StringComparison.Ordinal);
-        Assert.Contains("pointer_cancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("_options_view.pointer_cancel(true)", cancel, StringComparison.Ordinal);
         Assert.Contains("Laws.cancel_applies(false, right_down)", NativeOptionsSource.Function("options_controller.gd", "pointer_cancel"), StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton.Set", mainArm, StringComparison.Ordinal);
     }
@@ -227,26 +220,23 @@ public sealed class RetailFrontendScenePathTests
     [Fact]
     public void FlowDrivesOptionsApplyConfirmAndRightClickCancelFromThePath()
     {
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
-        string input = SliceUntil(flow, "public override void _Input", "private bool HandlePointerMotion");
-        string confirm = Slice(options, "private void ConfirmOptions(");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string input = NativeFrontendSource.RootFunction("handle_input");
+        string confirm = NativeFrontendSource.RootFunction("confirm_options");
+        string cancel = NativeFrontendSource.RootFunction("cancel_options");
         string draw = NativeOptionsSource.Function("options_row.gd", "update_time");
-        string pointerCancel = Slice(flow, "private bool HandlePointerCancel(");
-
-        Assert.Contains("MouseButton.Right", input, StringComparison.Ordinal);
-        Assert.Contains("HandlePointerCancel", input, StringComparison.Ordinal);
-        Assert.Contains("handle_key", confirm, StringComparison.Ordinal);
+        string pointerCancel = NativeFrontendSource.RootFunction("handle_pointer_cancel");
+        Assert.Contains("MOUSE_BUTTON_RIGHT", input, StringComparison.Ordinal);
+        Assert.Contains("handle_pointer_cancel()", input, StringComparison.Ordinal);
+        Assert.Contains("_options_view.handle_key(false, false, false, false, true, false)", confirm, StringComparison.Ordinal);
         Assert.Contains("_menu.confirm()", NativeOptionsSource.Function("options_controller.gd", "_confirm"), StringComparison.Ordinal);
-        Assert.Contains("pointer_cancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("_options_view.pointer_cancel(true)", cancel, StringComparison.Ordinal);
         Assert.Contains("Laws.cancel_applies(false, right_down)", NativeOptionsSource.Function("options_controller.gd", "pointer_cancel"), StringComparison.Ordinal);
-        Assert.Contains("HandleOptionsPointerCancel", pointerCancel, StringComparison.Ordinal);
+        Assert.Contains("cancel_options() if _session.get_screen() == Frontend.Screen.OPTIONS", pointerCancel, StringComparison.Ordinal);
         Assert.Contains("Laws.pulse_packed_color", draw, StringComparison.Ordinal);
         Assert.Contains("Laws.dropdown_row_is_pending", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendScenePath", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandlePointerConfirm("), StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", NativeFrontendSource.RootFunction("handle_pointer_confirm"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -326,29 +316,25 @@ public sealed class RetailFrontendScenePathTests
     [Fact]
     public void FlowConfirmsCampaignAndQuitThroughThePath()
     {
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string confirm = Slice(flow, "private void Confirm(");
-        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
-        string key = Slice(flow, "private bool HandleKey(");
-        string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
-        string debriefingArm = CaseArm(pointer, "case RetailFrontendScreen.Debriefing:");
-        string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
-        string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
-        string quitArm = CaseArm(pointer, "case RetailFrontendScreen.QuitConfirm:");
-
-        Assert.Contains("_session.TryConfirmPage", confirm, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.Confirm()", confirm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", devArm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", debriefingArm, StringComparison.Ordinal);
-        Assert.Contains(
-            "new Rect2(0f, 0f, DesignWidth, DesignHeight).HasPoint(design)",
-            debriefingArm,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("TryBackPage", debriefingArm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", levelArm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", configArm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", quitArm, StringComparison.Ordinal);
-        Assert.Contains("Confirm();", key, StringComparison.Ordinal);
+        string confirm = NativeFrontendSource.RootFunction("confirm");
+        string key = NativeFrontendSource.RootFunction("handle_key");
+        string devArm = NativeFrontendSource.PointerArm("DEV_SELECT");
+        string debriefingArm = NativeFrontendSource.PointerArm("DEBRIEFING");
+        string levelArm = NativeFrontendSource.PointerArm("LEVEL_SELECT");
+        string configArm = NativeFrontendSource.PointerArm("SELECT_CONFIGURATION");
+        string quitArm = NativeFrontendSource.PointerArm("QUIT_CONFIRM");
+        Assert.Contains("Path.try_confirm_page(_session, false)", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.confirm()", confirm, StringComparison.Ordinal);
+        Assert.Contains("_confirm_page_target(career_name_target_at(design))", devArm, StringComparison.Ordinal);
+        Assert.Contains("_handled(confirm())", debriefingArm, StringComparison.Ordinal);
+        Assert.Contains("Rect2(0, 0, 640, 480).has_point(design)", debriefingArm, StringComparison.Ordinal);
+        Assert.DoesNotContain("try_back_page", debriefingArm, StringComparison.Ordinal);
+        Assert.Contains("_handled(confirm())", levelArm, StringComparison.Ordinal);
+        Assert.Contains("_confirm_page_target(configuration_target_at(design))", configArm, StringComparison.Ordinal);
+        Assert.Contains("_select_then_confirm(_session.select_quit_confirm_index(choice))", quitArm, StringComparison.Ordinal);
+        Assert.Contains("_handled(confirm())", NativeFrontendSource.RootFunction("_select_then_confirm"), StringComparison.Ordinal);
+        Assert.Contains("_handled(confirm()) if target == 2", NativeFrontendSource.RootFunction("_confirm_page_target"), StringComparison.Ordinal);
+        Assert.Contains("_handled(confirm())", key, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", confirm, StringComparison.Ordinal);
@@ -516,15 +502,12 @@ public sealed class RetailFrontendScenePathTests
     [Fact]
     public void FlowCompletesLoadingThroughThePath()
     {
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string process = Slice(flow, "public override void _Process(");
-        string cutscene = ReadGodotSource("RetailFrontendFlow.Cutscene.cs");
-        string finish = Slice(cutscene, "private void FinishLevel100IntroCutscene(");
-
-        Assert.Contains("_session.TryCompleteLoading", process, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.CompleteLevel100Load()", process, StringComparison.Ordinal);
-        Assert.Contains("_session.TryCompleteIntroCutscene", finish, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.CompleteLevel100IntroCutscene()", finish, StringComparison.Ordinal);
+        string process = NativeFrontendSource.RootFunction("advance");
+        string finish = NativeFrontendSource.RootFunction("finish_level100_intro_cutscene");
+        Assert.Contains("Path.try_complete_loading(_session, false, _load_request_raised)", process, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.complete_level100_load()", process, StringComparison.Ordinal);
+        Assert.Contains("Path.try_complete_intro_cutscene(_session, false)", finish, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.complete_level100_intro_cutscene()", finish, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", process, StringComparison.Ordinal);
     }
 
@@ -552,23 +535,20 @@ public sealed class RetailFrontendScenePathTests
     [Fact]
     public void FlowDrivesCampaignBackFromThePath()
     {
-        string flow = ReadGodotSource("RetailFrontendFlow.cs");
-        string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
-        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
-        string key = Slice(flow, "private bool HandleKey(");
-        string backFromOptions = Slice(options, "private Godot.Collections.Dictionary DispatchOptionsEffect(");
-        string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
-        string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
-        string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
-
-        Assert.Contains("_session.TryBackPage", key, StringComparison.Ordinal);
-        Assert.Contains("_session.TryBackPage", devArm, StringComparison.Ordinal);
-        Assert.Contains("_session.TryBackPage", levelArm, StringComparison.Ordinal);
-        Assert.Contains("_session.TryBackPage", configArm, StringComparison.Ordinal);
-        Assert.Contains("_session.TryBackPage", backFromOptions, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.Back()", key, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.Back()", pointer, StringComparison.Ordinal);
-        Assert.DoesNotContain("_session.Back()", backFromOptions, StringComparison.Ordinal);
+        string pointer = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string key = NativeFrontendSource.RootFunction("handle_key");
+        string back = NativeFrontendSource.RootFunction("_back_page");
+        string pageTarget = NativeFrontendSource.RootFunction("_confirm_page_target");
+        string backFromOptions = NativeFrontendSource.RootFunction("_dispatch_options_effect");
+        Assert.Contains("Path.try_back_page(_session, false)", back, StringComparison.Ordinal);
+        Assert.Contains("_back_page()", key, StringComparison.Ordinal);
+        Assert.Contains("if target == 1: return _back_page()", pageTarget, StringComparison.Ordinal);
+        foreach (string screen in new[] { "DEV_SELECT", "LEVEL_SELECT", "SELECT_CONFIGURATION" })
+            Assert.Contains("_confirm_page_target(", NativeFrontendSource.PointerArm(screen), StringComparison.Ordinal);
+        Assert.Contains("\"frontend_back\": return _back_page()", backFromOptions, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.back()", key, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.back()", pointer, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.back()", backFromOptions, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", key, StringComparison.Ordinal);
     }
 

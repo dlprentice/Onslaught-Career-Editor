@@ -10,7 +10,7 @@ internal static class NativeLevelSelectSource
     public static string Read(string name) => File.ReadAllText(Path.Combine(
         AppContext.BaseDirectory, "godot-level-select-source", name));
     public static string Reference => Read("LevelSelectReference.cs");
-    public static string Bridge => Read("RetailFrontendFlow.LevelSelect.cs");
+    public static string Bridge => NativeFrontendSource.PageBranch("level");
     public static string Controller => Read("level_select_presentation.gd");
     public static string Scene => Read("LevelSelect.tscn");
     public static string Presentation => string.Join('\n', Controller, Scene,

@@ -14,7 +14,7 @@ internal static class NativeClickSource
     public static string Controller => Read("click_presentation.gd");
     public static string Laws => Read("click_to_start_laws.gd");
     public static string Scene => Read("ClickToStart.tscn");
-    public static string Bridge => Read("RetailFrontendFlow.Click.cs");
+    public static string Bridge => NativeFrontendSource.PageBranch("click");
     public static string Presentation => Controller + "\n" + Laws + "\n" + Scene +
         "\n" + Read("click_preview.gd") + "\n" + Read("frontend_image.gd") +
         "\n" + Read("frontend_bitmap_label.gd") + "\n" + Bridge;

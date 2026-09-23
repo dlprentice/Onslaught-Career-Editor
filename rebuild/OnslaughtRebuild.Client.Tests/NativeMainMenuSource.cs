@@ -100,18 +100,18 @@ internal static class NativeMainMenuSource
 
     public static void HasNativeHostBridge()
     {
-        string bridge = Read("RetailFrontendFlow.MainMenu.cs");
-        Assert.Contains("GetNode<Control>(\"Stage/MainMenu\")", bridge, StringComparison.Ordinal);
-        Assert.Single(Regex.Matches(bridge, @"\.Call\(""set_frame""", RegexOptions.None, TimeSpan.FromSeconds(2)));
-        foreach (string fact in new[] { "[\"transition\"] = MainMenuTransition", "[\"animation_seconds\"] = _animationSeconds",
-            "[\"background_seconds\"] = _feBackSeconds", "[\"selected_index\"] = _session.SelectedMainIndex",
-            "[\"language\"] = (int)_session.Language", "[\"available\"] = item.IsAvailable",
-            "[\"reflection_visible\"] = _session.Screen == RetailFrontendScreen.MainMenu" })
+        string bridge = NativeFrontendSource.PageFunction("_update_main");
+        Assert.Contains("get_node(\"Stage/MainMenu\")", NativeFrontendSource.PageFunction("_configure_main"), StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(bridge, @"_main\.set_frame\(", RegexOptions.None, TimeSpan.FromSeconds(2)));
+        foreach (string fact in new[] { "\"transition\": facts.transition", "\"animation_seconds\": facts.animation_seconds",
+            "\"background_seconds\": facts.background_seconds", "\"selected_index\": session.get_selected_main_index()",
+            "\"language\": session.get_language()", "\"available\": item.is_available",
+            "\"reflection_visible\": session.get_screen() == Frontend.Screen.MAIN_MENU" })
             Assert.Contains(fact, bridge, StringComparison.Ordinal);
-        Assert.Contains("Engine.IsEditorHint()", bridge, StringComparison.Ordinal);
-        Assert.Contains(".Call(\"show_editor_preview\")", bridge, StringComparison.Ordinal);
-        foreach (string forbidden in new[] { "DrawTexture", "DrawString", "DrawRect", "new Control", "new TextureRect",
-            "new RetailFrontendSession", "RetailMainMenuLabelColor", "RetailMainMenuLeftDecorOverlay", "MathF.", "ShaderMaterial" })
+        Assert.Contains("EditorPage if Engine.is_editor_hint() else -1", NativeFrontendSource.RootFunction("redraw"), StringComparison.Ordinal);
+        Assert.Contains("_main.show_editor_preview()", bridge, StringComparison.Ordinal);
+        foreach (string forbidden in new[] { "draw_texture", "draw_string", "draw_rect", "Control.new", "TextureRect.new",
+            "Frontend.create", "new RetailFrontendSession", "RetailMainMenuLabelColor", "RetailMainMenuLeftDecorOverlay", "MathF.", "ShaderMaterial" })
             Assert.DoesNotContain(forbidden, bridge, StringComparison.Ordinal);
     }
 }

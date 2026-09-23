@@ -46,12 +46,18 @@ public sealed class RetailCareerLoadAdapterTests
             frontendSource,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_session = new GdFrontendSession(careerDescriptors);",
+            "using D result = InvokeNative(\"initialize\", batch);",
             frontendSource,
             StringComparison.Ordinal);
+        Assert.Contains("RetailCareerDescriptor[] descriptors = careerDescriptors.ToArray();", frontendSource, StringComparison.Ordinal);
+        Assert.Contains("_originalDescriptors = descriptors;", frontendSource, StringComparison.Ordinal);
+        Assert.Contains("descriptor.Name.Select(character => (int)character).ToArray()", frontendSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new RetailFrontendSession", frontendSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new GdFrontendSession", frontendSource, StringComparison.Ordinal);
+        Assert.Contains("Frontend.create(descriptors)", NativeFrontendSource.RootFunction("initialize"), StringComparison.Ordinal);
+        Assert.Contains("_session.consume_selected_career_load_request_index()", NativeFrontendSource.RootFunction("_handle_navigation_signal"), StringComparison.Ordinal);
         Assert.Contains(
-            "CareerSelected?.Invoke(selectedCareer);",
+            "CareerSelected?.Invoke(_originalDescriptors[index]);",
             frontendSource,
             StringComparison.Ordinal);
         Assert.Contains(

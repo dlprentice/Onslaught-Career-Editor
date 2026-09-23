@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Godot;
@@ -25,6 +24,7 @@ public sealed partial class DebriefingSceneChecks : Node
     public override async void _Ready()
     {
         SubViewport? productionViewport = null, referenceViewport = null;
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -41,25 +41,24 @@ public sealed partial class DebriefingSceneChecks : Node
             }
             Input.MouseModeEnum pointer = Input.MouseMode;
             productionViewport = MakeViewport();
-            RetailFrontendFlow flow = RetailFrontendFlow.InstantiateScene();
+            RetailFrontendFlow flow = RetailFrontendFlow.InstantiateScene(); facades.Add(flow);
             flow.Initialize([]);
-            productionViewport.AddChild(flow);
+            productionViewport.AddChild(flow.View);
             flow.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
-            flow.SetProcess(false);
-            flow.SetProcessInput(false);
+            flow.View.SetProcess(false);
+            flow.View.SetProcessInput(false);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            Control page = flow.GetNode<Control>("Stage/Debriefing");
+            Control page = flow.View.GetNode<Control>("Stage/Debriefing");
             using (Variant script = page.GetScript())
             using (Resource scriptResource = script.As<Resource>())
                 Check(scriptResource.ResourcePath == "res://Scenes/Frontend/debriefing_presentation.gd", "Live frontend embeds the native production page.");
             Check(!page.HasNode("MissionReport") && page.GetNode("Report/Labels").GetChildCount() == 3,
                 "The old composite draw node is replaced by authored report controls.");
             Check(!page.IsProcessing() && !page.IsProcessingInput() && !page.IsProcessingUnhandledInput(), "Page owns no clock or input process.");
-            Check(typeof(RetailFrontendFlow).GetMethod("DrawDebriefing", BindingFlags.NonPublic | BindingFlags.Instance) is null,
-                "Live flow has no C# Debriefing draw callback.");
+            Check(FrontendHarnessChecks.HasNativeRoot(flow), "The native root and page own Debriefing presentation; the facade cannot draw.");
             referenceViewport = MakeViewport();
             var reference = new DebriefingReference();
-            Texture2D[] frames = Field<Texture2D[]>(flow, "_feBackFrames");
+            Texture2D[] frames = FrontendHarnessChecks.SharedFrames(flow);
             reference.Initialize(frames);
             referenceViewport.AddChild(reference);
             CheckAssets(flow, page, reference);
@@ -75,21 +74,22 @@ public sealed partial class DebriefingSceneChecks : Node
             }
             // Return via the actual session rather than the synthetic display
             // fixtures supplied to the presentation-only comparisons above.
-            flow._Process(0d);
-            flow.SetProcess(false);
-            flow.SetProcessInput(false);
+            FrontendHarnessChecks.Command(flow, "advance", 0d);
+            flow.View.SetProcess(false);
+            flow.View.SetProcessInput(false);
             flow.ConfirmForSmoke();
             Check(flow.CurrentScreen == RetailFrontendScreen.LevelSelect && !page.Visible,
                 "Acknowledging Debriefing keeps the existing Level Select handoff.");
-            flow.EditorPage = RetailFrontendEditorPage.Debriefing;
-            typeof(RetailFrontendFlow).GetMethod("SetEditorPage", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(flow, null);
-            GdFrontendSession frozen = Field<GdFrontendSession>(flow, "_session");
+            flow.View.Set("EditorPage", (int)RetailFrontendEditorPage.Debriefing);
+            FrontendHarnessChecks.Command(flow, "set_editor_page");
+            GdFrontendSession frozen = GdFrontendSession.BorrowExisting(flow.View);
             Check(frozen.Screen == RetailFrontendScreen.ClickToStart && frozen.Debriefing is null,
                 "Selecting the editor fixture leaves a cold session without a manufactured Won outcome.");
             Check(Input.MouseMode == pointer, "No pointer ownership changes.");
-            Check(flow.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0, "Page never creates audio playback.");
-            Check(flow.FindChildren("*", "Camera3D", true, false).Count == 0, "Terminal fixture never creates a gameplay world.");
+            Check(flow.View.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0, "Page never creates audio playback.");
+            Check(flow.View.FindChildren("*", "Camera3D", true, false).Count == 0, "Terminal fixture never creates a gameplay world.");
             Complete("inactive_safety");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             productionViewport.QueueFree(); productionViewport = null;
             referenceViewport.QueueFree(); referenceViewport = null;
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -99,6 +99,7 @@ public sealed partial class DebriefingSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             productionViewport?.QueueFree(); referenceViewport?.QueueFree();
             GD.PushError(error.ToString());
             Report(error.Message);
@@ -165,25 +166,29 @@ public sealed partial class DebriefingSceneChecks : Node
 
     private void CheckHandoff(RetailFrontendFlow flow, Control page)
     {
-        GdFrontendSession session = Field<GdFrontendSession>(flow, "_session");
+        GdFrontendSession session = GdFrontendSession.BorrowExisting(flow.View);
         int returns = 0, activations = 0;
         flow.ReturnToMainMenuRequested += () => returns++;
         flow.GameplayActivated += () => activations++;
         flow.Level100LoadRequested += flow.MarkLevel100Ready;
         for (int index = 0; index < 6; index++) flow.ConfirmForSmoke();
+        session.Refresh();
         Check(session.Screen == RetailFrontendScreen.Loading, "Existing navigation reaches the loading seam.");
-        flow._Process(0d); flow._Process(0d);
+        FrontendHarnessChecks.Command(flow, "advance", 0d); FrontendHarnessChecks.Command(flow, "advance", 0d);
+        session.Refresh();
         Check(session.Screen == RetailFrontendScreen.Gameplay && activations == 1, "Synthetic ready callback uses the actual two-frame handoff.");
         flow.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.SuccessCountdown);
+        session.Refresh();
         Check(session.Screen == RetailFrontendScreen.Gameplay && !page.Visible, "Incomplete terminal countdown does not show Debriefing.");
         flow.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady);
-        flow.SetProcess(false); flow.SetProcessInput(false);
+        flow.View.SetProcess(false); flow.View.SetProcessInput(false);
         var expected = new RetailFrontendSession();
         for (int index = 0; index < 6; index++) expected.Confirm();
         expected.ConsumeLevel100LaunchRequest();
         expected.CompleteLevel100Load();
         Check(expected.TryAcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady),
             "Reference accepts the same synthetic terminal handoff.");
+        session.Refresh();
         Check(session.Screen == RetailFrontendScreen.Debriefing && page.Visible && returns == 1 && session.Debriefing == expected.Debriefing,
             "Actual native session remains the sole owner of the settled campaign projection.");
         using Variant snapshotValue = page.Call("view_snapshot");
@@ -192,9 +197,11 @@ public sealed partial class DebriefingSceneChecks : Node
         using Godot.Collections.Dictionary projection = projectionValue.AsGodotDictionary();
         using Godot.Collections.Dictionary exact = RetailFrontendFlow.DebriefingFrame(expected.Debriefing!);
         Check(projection.Count == exact.Count && exact.All(pair => projection.TryGetValue(pair.Key, out Variant value) && value.Equals(pair.Value)), "The production page receives the exact existing projection batch.");
-        int calls = session.NativeCallCount;
-        for (int index = 0; index < 3; index++) flow._Process(0.125d);
-        Check(session.NativeCallCount == calls, "Settled presentation frames perform no extra session calls.");
+        byte[] beforeFrames = session.SnapshotBytes();
+        int calls = flow.NativeCallCount;
+        for (int index = 0; index < 3; index++) FrontendHarnessChecks.Command(flow, "advance", 0.125d);
+        Check(flow.NativeCallCount == calls + 3 && beforeFrames.SequenceEqual(session.SnapshotBytes()),
+            "Three explicit frame batches leave Session untouched and make no extra managed-to-native calls.");
         flow.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady);
         Check(returns == 1, "Repeated terminal handoff does not apply campaign progress twice.");
     }
@@ -293,8 +300,6 @@ public sealed partial class DebriefingSceneChecks : Node
 
     private static Color RetailColor(uint word) => new(Channel(word >> 16), Channel(word >> 8), Channel(word), ((word >> 24) & 255) / 255f);
     private static float Channel(uint value) => Math.Min(255u, ((value & 255) * 255) >> 7) / 255f;
-    private static T Field<T>(object value, string name) =>
-        (T)value.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(value)!;
     private void Check(bool value, string message)
     {
         _checks++;

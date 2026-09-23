@@ -227,8 +227,8 @@ public sealed class RetailFrontendLatchToButtonTests
         Assert.DoesNotContain("cancel_applies", NativeOptionsSource.Function("options_controller.gd", "pointer_confirm"), StringComparison.Ordinal);
         Assert.DoesNotContain("cancel_applies", NativeOptionsSource.Read("options_row.gd"), StringComparison.Ordinal);
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandlePointerConfirm("), StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandleKey("), StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", NativeFrontendSource.RootFunction("handle_pointer_confirm"), StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", NativeFrontendSource.RootFunction("handle_key"), StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

@@ -8,6 +8,7 @@ const Text = preload("res://Core/canonical_json_string.gd")
 const WorldStrings = preload("res://Core/frontend_world_strings.gd")
 const SOURCE_SHA256: String = "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a"
 const REQUIRED_KEYS: Array[String] = ["newGame", "continueGame", "loadGame", "multiplayer", "goodies", "options", "quit", "selectLevel", "level100", "loading"]
+const MENU_ENUM_NAMES: Array[String] = ["NewGame", "ContinueGame", "LoadGame", "Multiplayer", "Goodies", "Options", "Quit"]
 @export_file("*.json") var source_path: String = "res://Assets/Frontend/english.json"
 
 
@@ -63,6 +64,45 @@ static func admit_table(source: String, path: String = "res://Assets/Frontend/en
 		if key == "level100" and value.value != Text.units(WorldStrings.level_name(100)).value:
 			return _failure("InvalidDataException", "english.json level100 row diverged from the decoded world-strings table.")
 		table[key] = value.value.duplicate()
+	return {"ok": true, "value": table}
+
+
+## The root's original LoadLocalization mutates seven Dictionary.Add entries,
+## then three separate fields. Unlike atomic admit_table above, failed startup
+## keeps all preceding writes; a retry validates each new value before trying
+## to add its existing menu key. The supplied table remains the caller's owner.
+static func admit_incremental(source: String, table: Dictionary, path: String = "res://Assets/Frontend/english.json") -> Dictionary:
+	if source.is_empty():
+		return _failure("InvalidDataException", "Released frontend localization is missing: " + path)
+	var parsed: Dictionary = StrictJson.parse_bytes(source.to_utf8_buffer(), false)
+	if not parsed.ok:
+		return _failure("JsonReaderException", parsed.error)
+	var root: StrictJson.Value = parsed.value
+	# The original || identity expression stops at the first failed comparison.
+	for pair: Array in [["schema", "onslaught.frontend-strings.v1"], ["culture", "en"], ["sourceSha256", SOURCE_SHA256]]:
+		var identity: Dictionary = _string_property(root, pair[0])
+		if not identity.ok: return identity
+		if identity.value != Text.units(pair[1]).value:
+			return _failure("InvalidDataException", "Released frontend localization has unexpected identity.")
+	var strings: StrictJson.Value = root.member("strings")
+	if strings == null:
+		return _failure("KeyNotFoundException", "Missing property: strings")
+	for index: int in range(REQUIRED_KEYS.size()):
+		var key: String = REQUIRED_KEYS[index]
+		var value: Dictionary = _string_property(strings, key)
+		if not value.ok: return value
+		if value.value == null or value.value.is_empty():
+			return _failure("InvalidDataException", "Released frontend localization is missing '" + key + "'.")
+		if index < MENU_ENUM_NAMES.size() and table.has(key):
+			# .NET 8 Dictionary.TryInsert/ThrowHelper.GetAddingDuplicateWithKeyArgumentException
+			# uses new ArgumentException(message), with no parameter name. The key
+			# is the original RetailFrontendMenuItemKind enum, not this JSON key.
+			return _failure("ArgumentException", "An item with the same key has already been added. Key: " + MENU_ENUM_NAMES[index])
+		table[key] = value.value.duplicate()
+		# Assignment precedes this comparison in the source; even the rejected
+		# level100 text remains observable, while the loading field is untouched.
+		if key == "level100" and value.value != Text.units(WorldStrings.level_name(100)).value:
+			return _failure("InvalidDataException", "english.json level100 row diverged from the decoded world-strings table.")
 	return {"ok": true, "value": table}
 
 

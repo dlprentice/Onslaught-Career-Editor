@@ -11,6 +11,7 @@ const Schedule = preload("res://Client/startup_schedule.gd")
 const MediaBatch = preload("res://Client/startup_media_batch.gd")
 const MediaIndex = preload("res://Client/startup_media_index.gd")
 const F32 = preload("res://Scenes/Shared/retail_float32.gd")
+const Text = preload("res://Core/canonical_json_string.gd")
 enum Route { COLD = 0, ATTRACT = 1, SINGLE_CLIP = 2 }
 enum Clock { FIXED_TICK = 0, WALL = 1 }
 const VERIFIED_BATCH_SCHEMA: String = "onslaught-startup-verified-batch.v1"
@@ -436,11 +437,24 @@ static func resolve_media_root(arguments: PackedStringArray) -> String:
 	for argument: String in arguments:
 		if argument.begins_with("--startup-media="):
 			return argument.substr("--startup-media=".length())
+	# Pinned Linux OS.get_environment strips a leading U+FEFF before this code
+	# can inspect it. The focused flow check reports that .NET parity gap;
+	# a prefixed --startup-media= argument retains the same literal path.
 	var configured: String = OS.get_environment("ONSLAUGHT_STARTUP_MEDIA")
-	if not configured.strip_edges().is_empty():
+	if not Text.is_null_or_white_space(Text.units(configured).value):
 		return configured
 	var canonical_lab: String = OS.get_environment("BEA_LOCAL_LAB")
-	if not canonical_lab.strip_edges().is_empty():
-		return canonical_lab.path_join("startup-media")
+	if not Text.is_null_or_white_space(Text.units(canonical_lab).value):
+		return _combine_media_path(canonical_lab, "startup-media")
 	var local: String = OS.get_environment("LOCALAPPDATA")
-	return "" if local.strip_edges().is_empty() else local.path_join("OnslaughtToolkit/startup-media")
+	return "" if Text.is_null_or_white_space(Text.units(local).value) else \
+		_combine_media_path(_combine_media_path(local, "OnslaughtToolkit"), "startup-media")
+
+
+static func _combine_media_path(directory: String, child: String) -> String:
+	# RetailStartupSequence.ResolveMediaRoot used Path.Combine, not Godot's
+	# path normalization. Keep literal Unix backslashes and repeated separators.
+	var windows: bool = OS.get_name() == "Windows"
+	if directory.is_empty() or directory.ends_with("/") or (windows and directory.ends_with("\\")):
+		return directory + child
+	return directory + ("\\" if windows else "/") + child

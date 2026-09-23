@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -12,7 +11,6 @@ namespace OnslaughtRebuild.GodotClient;
 /// display; all outputs are fresh and contained in its worktree local-data.</summary>
 public sealed partial class MainMenuSceneChecks : Node
 {
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private int _checks, _samples;
     private readonly List<string> _completed = [];
     private readonly List<object> _pixels = [];
@@ -22,6 +20,7 @@ public sealed partial class MainMenuSceneChecks : Node
     public override async void _Ready()
     {
         List<SubViewport> views = [];
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] args = OS.GetCmdlineUserArgs();
@@ -47,9 +46,9 @@ public sealed partial class MainMenuSceneChecks : Node
             stage.AddChild(page);
             MainMenuReference reference = GD.Load<PackedScene>("res://Scenes/Frontend/Tests/MainMenuReference.tscn").Instantiate<MainMenuReference>();
             reference.Initialize(); referenceViewport.AddChild(reference);
-            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); host.Initialize([]); hostViewport.AddChild(host);
+            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host); host.Initialize([]); hostViewport.AddChild(host.View);
             host.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
-            host.SetProcess(false); host.SetProcessInput(false);
+            host.View.SetProcess(false); host.View.SetProcessInput(false);
             host.ConfirmForSmoke();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(page.Get("_assets_configured").AsBool() && page.Get("_error").AsString() == "", "Production native recipes admit before readiness.");
@@ -62,7 +61,7 @@ public sealed partial class MainMenuSceneChecks : Node
             foreach (Vector2I size in new[] { new Vector2I(640, 480), new Vector2I(1280, 720), new Vector2I(801, 601), new Vector2I(320, 240) })
             {
                 foreach (SubViewport view in views) view.Size = size;
-                Fit(stage, size); reference.Size = size; host.Size = size;
+                Fit(stage, size); reference.Size = size; host.View.Size = size;
                 for (int index = 0; index < counts.Length; index++)
                 {
                     float transition = counts[index] / 50f;
@@ -87,11 +86,11 @@ public sealed partial class MainMenuSceneChecks : Node
                     {
                         using D withoutReflection = Frame(transition, animation, background, selected, 0, availability, labels, false);
                         Require(page.Call("set_frame", withoutReflection));
-                        Require(host.GetNode("Stage/MainMenu").Call("set_frame", withoutReflection));
+                        Require(host.View.GetNode("Stage/MainMenu").Call("set_frame", withoutReflection));
                         reference.SetFrame(transition, animation, background, selected, 0, availability, labels, false);
                         await ComparePixels(nativeViewport, referenceViewport, hostViewport, "fractional-without-reflection", true);
                         Require(page.Call("set_frame", facts));
-                        Require(host.GetNode("Stage/MainMenu").Call("set_frame", facts));
+                        Require(host.View.GetNode("Stage/MainMenu").Call("set_frame", facts));
                         reference.SetFrame(transition, animation, background, selected, 0, availability, labels, true);
                     }
                     if (_directory is not null) await ComparePixels(nativeViewport, referenceViewport, hostViewport, $"{size.X}x{size.Y}-{index:D2}", true);
@@ -134,12 +133,14 @@ public sealed partial class MainMenuSceneChecks : Node
                 "Presentation never acquires pointer, starts audio or constructs gameplay.");
             foreach ((string path, string before) in _inputHashes) Check(Hash(path) == before, "Read-only input unchanged: " + path);
             _completed.Add("read_only_and_ownership");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Report(null); GetTree().Quit(0);
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree();
             Report(error.Message); GD.PushError(error.ToString()); GetTree().Quit(1);
         }
@@ -189,10 +190,10 @@ public sealed partial class MainMenuSceneChecks : Node
     }
     private static void SetHost(RetailFrontendFlow host, int count, double animation, double background, int selected)
     {
-        typeof(RetailFrontendFlow).GetField("_mainTransitionCount", Private)!.SetValue(host, count);
-        typeof(RetailFrontendFlow).GetField("_mainTransitionTime", Private)!.SetValue(host, 50);
-        typeof(RetailFrontendFlow).GetField("_animationSeconds", Private)!.SetValue(host, animation);
-        typeof(RetailFrontendFlow).GetField("_feBackSeconds", Private)!.SetValue(host, background);
+        host.View.Set("_main_transition_count", count);
+        host.View.Set("_main_transition_time", 50);
+        host.View.Set("_animation_seconds", animation);
+        host.View.Set("_fe_back_seconds", background);
         host.SelectMainIndexForCapture(selected);
     }
     private async Task ComparePixels(SubViewport native, SubViewport reference, SubViewport host, string name, bool includeHost)

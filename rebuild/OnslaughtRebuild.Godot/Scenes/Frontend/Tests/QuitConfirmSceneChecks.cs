@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -17,7 +16,6 @@ namespace OnslaughtRebuild.GodotClient;
 /// </summary>
 public sealed partial class QuitConfirmSceneChecks : Node
 {
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static readonly string[] Required = ["production_assets", "frames_and_host", "hit_bounds_and_navigation", "authored_overrides", "read_only_and_ownership"];
     private readonly List<string> _completed = [];
     private readonly List<object> _pixels = [];
@@ -31,6 +29,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
     public override async void _Ready()
     {
         List<SubViewport> views = [];
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] args = OS.GetCmdlineUserArgs();
@@ -66,9 +65,9 @@ public sealed partial class QuitConfirmSceneChecks : Node
             Control referencePage = GD.Load<PackedScene>("res://Scenes/Frontend/Tests/QuitConfirmReference.tscn").Instantiate<Control>();
             QuitConfirmReference reference = referencePage.GetNode<QuitConfirmReference>("Dialog");
             reference.Initialize(); referenceStage.AddChild(referencePage);
-            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); host.Initialize([]); hostView.AddChild(host);
+            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host); host.Initialize([]); hostView.AddChild(host.View);
             host.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
-            host.SetProcess(false); host.SetProcessInput(false);
+            host.View.SetProcess(false); host.View.SetProcessInput(false);
             host.ConfirmForSmoke(); EnterQuit(host);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(page.Get("_assets_configured").AsBool() && page.Get("_error").AsString() == "", "Production recipes admit before presentation.");
@@ -82,15 +81,15 @@ public sealed partial class QuitConfirmSceneChecks : Node
             foreach (Vector2I size in new[] { new Vector2I(640, 480), new Vector2I(1280, 720), new Vector2I(801, 601), new Vector2I(320, 240) })
             {
                 foreach (SubViewport view in views) view.Size = size;
-                Fit(nativeStage, size); Fit(referenceStage, size); host.Size = size;
+                Fit(nativeStage, size); Fit(referenceStage, size); host.View.Size = size;
                 for (int selected = 0; selected <= 1; selected++)
                 {
                     SetFrame(page, reference, host, nativeBackdrop, referenceBackdrop, selected, _samples * .427d, _samples * .071d);
                     await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                     CheckGeometry(page, reference, selected);
-                    CheckGeometry(host.GetNode<Control>("Stage/QuitConfirm"), reference, selected);
+                    CheckGeometry(host.View.GetNode<Control>("Stage/QuitConfirm"), reference, selected);
                     Check(!nativeBackdrop.GetNode<CanvasItem>("Reflection").Visible && !referenceBackdrop.GetNode<CanvasItem>("Reflection").Visible
-                        && !host.GetNode<CanvasItem>("Stage/MainMenu/Reflection").Visible, "Quit keeps the actual Main Menu backdrop and hides its reflection.");
+                        && !host.View.GetNode<CanvasItem>("Stage/MainMenu/Reflection").Visible, "Quit keeps the actual Main Menu backdrop and hides its reflection.");
                     if (_directory is not null) await ComparePixels(nativeView, referenceView, hostView, $"{size.X}x{size.Y}-{(selected == 0 ? "no" : "yes")}");
                     _samples++;
                 }
@@ -101,19 +100,19 @@ public sealed partial class QuitConfirmSceneChecks : Node
             foreach (Vector2I size in new[] { new Vector2I(640, 480), new Vector2I(1280, 720), new Vector2I(801, 601), new Vector2I(320, 240), new Vector2I(1024, 768) })
             {
                 foreach (SubViewport view in views) view.Size = size;
-                Fit(nativeStage, size); Fit(referenceStage, size); host.Size = size;
+                Fit(nativeStage, size); Fit(referenceStage, size); host.View.Size = size;
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 CheckHitBoundaries(page, host, size);
             }
             foreach (SubViewport view in views) view.Size = new Vector2I(640, 480);
-            Fit(nativeStage, new(640, 480)); Fit(referenceStage, new(640, 480)); host.Size = new(640, 480);
+            Fit(nativeStage, new(640, 480)); Fit(referenceStage, new(640, 480)); host.View.Size = new(640, 480);
             CheckNavigation(host);
             Complete();
 
             _group = Required[3];
             foreach (SubViewport view in views) view.Size = new Vector2I(801, 601);
-            Fit(nativeStage, new(801, 601)); Fit(referenceStage, new(801, 601)); host.Size = new(801, 601);
-            Control hostDialog = host.GetNode<Control>("Stage/QuitConfirm/Dialog");
+            Fit(nativeStage, new(801, 601)); Fit(referenceStage, new(801, 601)); host.View.Size = new(801, 601);
+            Control hostDialog = host.View.GetNode<Control>("Stage/QuitConfirm/Dialog");
             for (int edit = 0; edit < 4; edit++)
             {
                 Vector2 position = edit == 0 ? new(113.25f, 167.5f) : new(110f, 170f);
@@ -129,7 +128,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
                 Check(dialog.Position == position && dialog.Size == size && dialog.Rotation == rotation && dialog.Scale == scale,
                     "Frame updates retain authored dialog geometry.");
                 CheckGeometry(page, reference, edit & 1);
-                CheckGeometry(host.GetNode<Control>("Stage/QuitConfirm"), reference, edit & 1);
+                CheckGeometry(host.View.GetNode<Control>("Stage/QuitConfirm"), reference, edit & 1);
                 if (_directory is not null) await ComparePixels(nativeView, referenceView, hostView, "authored-dialog-" + edit);
                 _samples++;
             }
@@ -138,7 +137,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
             _group = Required[4];
             using (D detached = page.Call("view_snapshot").AsGodotDictionary()) detached["selected_index"] = 99;
             Check(Selection(page) == 1, "View snapshots are detached from production selection.");
-            foreach (Control owner in new[] { page, host.GetNode<Control>("Stage/QuitConfirm") })
+            foreach (Control owner in new[] { page, host.View.GetNode<Control>("Stage/QuitConfirm") })
             {
                 Check(!owner.IsProcessing() && !owner.IsProcessingInput() && !owner.IsProcessingUnhandledInput(), "Native dialog owns no clock or input.");
                 foreach (Node node in owner.FindChildren("*", "Control", true, false))
@@ -151,6 +150,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
             Complete();
             Check(_completed.SequenceEqual(Required) && Required.All(group => _counts.GetValueOrDefault(group) > 0), "All five groups completed.");
             Check(_samples == 12 && _pixels.Count == (_directory is null ? 0 : 24), "Every headless/rendered state completed without a partial pixel claim.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -158,6 +158,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree();
             Report(error.Message); GD.PushError(error.ToString()); GetTree().Quit(1);
         }
@@ -221,7 +222,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
             Vector2 originalDesign = (canvas - offset) / scale;
             int expected = QuitConfirmReference.HitTest(originalDesign);
             Check(page.Call("hit_test", originalDesign).AsInt32() == expected, $"Standalone full-width half-open hit at {size}/{canvas}.");
-            int actualHost = (int)typeof(RetailFrontendFlow).GetMethod("QuitConfirmIndexAt", Private)!.Invoke(host, [originalDesign])!;
+            int actualHost = FrontendHarnessChecks.Hit(host, "quit_confirm_index_at", originalDesign);
             Check(actualHost == expected, $"Host full-width half-open hit at {size}/{canvas}.");
         }
         if (size == new Vector2I(1024, 768) || size == new Vector2I(801, 601))
@@ -232,7 +233,7 @@ public sealed partial class QuitConfirmSceneChecks : Node
             Check((point - offset) / scale == new Vector2(520f, 250f), $"Exact retained {size} pointer conversion.");
             int selected = State(host).SelectedQuitConfirmIndex;
             using var input = new InputEventMouseButton { Position = point, Pressed = true, ButtonIndex = MouseButton.Left };
-            host._Input(input);
+            FrontendHarnessChecks.Command(host, "handle_input", input);
             Check(host.CurrentScreen == RetailFrontendScreen.QuitConfirm && State(host).SelectedQuitConfirmIndex == selected,
                 $"The actual pointer route excludes the {size} right boundary.");
         }
@@ -259,12 +260,12 @@ public sealed partial class QuitConfirmSceneChecks : Node
             effects.Clear(); InputKey(host, Key.Down);
             Check(State(host).SelectedQuitConfirmIndex == 0 && effects.SequenceEqual(new[] { "audio:Move" }), "Down selects the lower No row.");
             effects.Clear();
-            using (var outside = new InputEventMouseButton { Position = new(520f, 226f), Pressed = true, ButtonIndex = MouseButton.Left }) host._Input(outside);
+            using (var outside = new InputEventMouseButton { Position = new(520f, 226f), Pressed = true, ButtonIndex = MouseButton.Left }) FrontendHarnessChecks.Command(host, "handle_input", outside);
             Check(host.CurrentScreen == RetailFrontendScreen.QuitConfirm && effects.Count == 0, "The excluded right boundary neither confirms nor emits audio.");
-            using (var no = new InputEventMouseButton { Position = new(120f, 226f), Pressed = true, ButtonIndex = MouseButton.Left }) host._Input(no);
+            using (var no = new InputEventMouseButton { Position = new(120f, 226f), Pressed = true, ButtonIndex = MouseButton.Left }) FrontendHarnessChecks.Command(host, "handle_input", no);
             Check(host.CurrentScreen == RetailFrontendScreen.MainMenu && exits == 0 && effects.SequenceEqual(new[] { "audio:Select", "cursor:Custom" }), "Full-width No-row pointer confirmation uses the production input route.");
             effects.Clear(); EnterQuit(host); effects.Clear();
-            using (var yes = new InputEventMouseButton { Position = new(120f, 194f), Pressed = true, ButtonIndex = MouseButton.Left }) host._Input(yes);
+            using (var yes = new InputEventMouseButton { Position = new(120f, 194f), Pressed = true, ButtonIndex = MouseButton.Left }) FrontendHarnessChecks.Command(host, "handle_input", yes);
             Check(exits == 1 && host.CurrentScreen == RetailFrontendScreen.QuitConfirm && effects.SequenceEqual(new[] { "audio:Move", "audio:Select", "exit" }), "Yes emits one ordered exit request; the harness never attaches a quit callback.");
             Check(GetTree().CurrentScene == this, "The actual scene remains alive after the exit signal.");
         }
@@ -273,17 +274,17 @@ public sealed partial class QuitConfirmSceneChecks : Node
     private static void InputKey(RetailFrontendFlow host, Key key)
     {
         using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key };
-        host._Input(input);
+        FrontendHarnessChecks.Command(host, "handle_input", input);
     }
     private void EnterQuit(RetailFrontendFlow host)
     {
         Check(host.CurrentScreen == RetailFrontendScreen.MainMenu, "Quit is entered from the actual Main Menu.");
-        SetField(host, "_mainTransitionTime", 0); SetField(host, "_mainTransitionCount", 0);
+        SetField(host, "_main_transition_time", 0); SetField(host, "_main_transition_count", 0);
         host.SelectMainIndexForCapture(6); host.ConfirmForSmoke();
         Check(host.CurrentScreen == RetailFrontendScreen.QuitConfirm, "The original session opens Quit confirmation.");
     }
-    private static GdFrontendSession State(RetailFrontendFlow host) => (GdFrontendSession)typeof(RetailFrontendFlow).GetField("_session", Private)!.GetValue(host)!;
-    private static void SetField(RetailFrontendFlow host, string name, object value) => typeof(RetailFrontendFlow).GetField(name, Private)!.SetValue(host, value);
+    private static GdFrontendSession State(RetailFrontendFlow host) => GdFrontendSession.BorrowExisting(host.View);
+    private static void SetField(RetailFrontendFlow host, string name, Variant value) => host.View.Set(name, value);
     private static int Selection(Control page)
     {
         using Variant value = page.Call("view_snapshot"); using D state = value.AsGodotDictionary();
@@ -295,10 +296,10 @@ public sealed partial class QuitConfirmSceneChecks : Node
         using D facts = new() { ["selected_index"] = selected };
         Require(page.Call("set_frame", facts)); reference.SetFrame(selected);
         State(host).SelectQuitConfirmIndex(selected);
-        SetField(host, "_mainTransitionTime", 0); SetField(host, "_mainTransitionCount", 0);
-        SetField(host, "_animationSeconds", animation); SetField(host, "_feBackSeconds", background);
+        SetField(host, "_main_transition_time", 0); SetField(host, "_main_transition_count", 0);
+        SetField(host, "_animation_seconds", animation); SetField(host, "_fe_back_seconds", background);
         host.SelectMainIndexForCapture(6); // Also queues the host's frame while Quit owns selection.
-        using Variant snapshot = host.GetNode("Stage/MainMenu").Call("view_snapshot");
+        using Variant snapshot = host.View.GetNode("Stage/MainMenu").Call("view_snapshot");
         Require(nativeBackdrop.Call("set_frame", snapshot)); Require(referenceBackdrop.Call("set_frame", snapshot));
     }
     private static void Require(Variant returned)

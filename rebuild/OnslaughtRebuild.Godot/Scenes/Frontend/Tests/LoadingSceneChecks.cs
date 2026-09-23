@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
@@ -25,6 +24,7 @@ public sealed partial class LoadingSceneChecks : Node
     public override async void _Ready()
     {
         SubViewport? flowViewport = null, nativeViewport = null, referenceViewport = null;
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -42,18 +42,17 @@ public sealed partial class LoadingSceneChecks : Node
             }
             Input.MouseModeEnum pointer = Input.MouseMode;
             flowViewport = MakeViewport();
-            RetailFrontendFlow flow = RetailFrontendFlow.InstantiateScene();
+            RetailFrontendFlow flow = RetailFrontendFlow.InstantiateScene(); facades.Add(flow);
             flow.Initialize([]);
-            flowViewport.AddChild(flow);
+            flowViewport.AddChild(flow.View);
             flow.SetMouseCursorDesignPositionForCapture(new Vector2(-100, -100));
-            flow.SetProcess(false); flow.SetProcessInput(false);
+            flow.View.SetProcess(false); flow.View.SetProcessInput(false);
             for (int index = 0; index < 6; index++) flow.ConfirmForSmoke();
             Control page;
             Control? nativeStage = null;
             if (_baseline)
             {
-                Check(typeof(RetailFrontendFlow).GetMethod("DrawLoading", BindingFlags.Instance | BindingFlags.NonPublic) is not null,
-                    "Baseline comparison uses the actual old production draw owner.");
+                Check(false, "Historical pre-conversion baseline mode requires its original checkpoint; this root is now entirely native.");
                 nativeViewport = MakeViewport();
                 nativeStage = MakeStage(nativeViewport);
                 page = GD.Load<PackedScene>("res://Scenes/Frontend/Loading.tscn").Instantiate<Control>();
@@ -61,13 +60,11 @@ public sealed partial class LoadingSceneChecks : Node
             }
             else
             {
-                page = flow.GetNode<Control>("Stage/Loading");
+                page = flow.View.GetNode<Control>("Stage/Loading");
                 using Variant script = page.GetScript();
                 using Resource resource = script.As<Resource>();
                 Check(resource.ResourcePath == "res://Scenes/Frontend/loading_presentation.gd", "Live frontend embeds the native production page.");
-                Check(typeof(RetailFrontendFlow).GetMethod("DrawLoading", BindingFlags.Instance | BindingFlags.NonPublic) is null
-                    && typeof(RetailFrontendFlow).GetField("_loadingScreen", BindingFlags.Instance | BindingFlags.NonPublic) is null,
-                    "No live C# Loading draw or duplicate art owner remains.");
+                Check(FrontendHarnessChecks.HasNativeRoot(flow), "The native root and page own Loading presentation; the facade cannot draw.");
             }
             referenceViewport = MakeViewport();
             Control referenceStage = MakeStage(referenceViewport);
@@ -89,10 +86,11 @@ public sealed partial class LoadingSceneChecks : Node
             }
             CheckHandoff(flow, page);
             Complete("loading_handoff");
-            Check(Input.MouseMode == pointer && flow.FindChildren("*", "Camera3D", true, false).Count == 0
-                && flow.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0,
+            Check(Input.MouseMode == pointer && flow.View.FindChildren("*", "Camera3D", true, false).Count == 0
+                && flow.View.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0,
                 "Synthetic load readiness starts no world, playback or pointer ownership.");
             Complete("inactive_safety");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             flowViewport.QueueFree(); flowViewport = null;
             nativeViewport?.QueueFree(); nativeViewport = null;
             referenceViewport.QueueFree(); referenceViewport = null;
@@ -102,6 +100,7 @@ public sealed partial class LoadingSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             flowViewport?.QueueFree(); nativeViewport?.QueueFree(); referenceViewport?.QueueFree();
             GD.PushError(error.ToString()); Report(error.Message); GetTree().Quit(1);
         }
@@ -188,30 +187,31 @@ public sealed partial class LoadingSceneChecks : Node
 
     private void CheckHandoff(RetailFrontendFlow flow, Control page)
     {
-        GdFrontendSession session = Field<GdFrontendSession>(flow, "_session");
+        GdFrontendSession session = GdFrontendSession.BorrowExisting(flow.View);
         int requests = 0, activations = 0;
         flow.Level100LoadRequested += () => requests++;
         flow.GameplayActivated += () => activations++;
-        Check(flow.CurrentScreen == RetailFrontendScreen.Loading && Field<int>(flow, "_loadingFrames") == 0,
+        Check(flow.CurrentScreen == RetailFrontendScreen.Loading && flow.View.Get("_loading_frames").AsInt32() == 0,
             "Actual frontend enters Loading before its two frame seam.");
         if (!_baseline) CheckFacts(page, 0, false, false);
-        flow._Process(0d);
-        Check(requests == 0 && Field<int>(flow, "_loadingFrames") == 1, "The first loading frame cannot consume the launch request.");
+        FrontendHarnessChecks.Command(flow, "advance", 0d);
+        Check(requests == 0 && flow.View.Get("_loading_frames").AsInt32() == 1, "The first loading frame cannot consume the launch request.");
         if (!_baseline) CheckFacts(page, 1, false, false);
-        flow._Process(0d);
+        FrontendHarnessChecks.Command(flow, "advance", 0d);
         Check(requests == 1 && flow.CurrentScreen == RetailFrontendScreen.Loading, "The second loading frame requests exactly one launch and waits for readiness.");
         if (!_baseline) CheckFacts(page, 2, true, false);
-        flow._Process(0d);
+        FrontendHarnessChecks.Command(flow, "advance", 0d);
         Check(requests == 1 && activations == 0, "Waiting never repeats the consumed request or activates gameplay.");
-        int calls = session.NativeCallCount;
+        byte[] beforeDisplay = session.SnapshotBytes();
+        int calls = flow.NativeCallCount;
         SetFrame(page, 2, true, true, "Loading...");
         SetFrame(page, int.MaxValue, false, false, "Loading...");
-        Check(session.NativeCallCount == calls && requests == 1 && activations == 0, "Display batches never mutate the frontend session or trigger loading.");
+        Check(flow.NativeCallCount == calls && beforeDisplay.SequenceEqual(session.SnapshotBytes()) && requests == 1 && activations == 0, "Display batches never mutate the frontend session or trigger loading.");
         flow.MarkLevel100Ready();
-        flow._Process(0d);
-        flow.SetProcess(false); flow.SetProcessInput(false);
-        Check(flow.CurrentScreen == RetailFrontendScreen.Gameplay && activations == 1 && !flow.Visible
-            && !flow.GetNode<Control>("Stage/Loading").IsVisibleInTree(),
+        FrontendHarnessChecks.Command(flow, "advance", 0d);
+        flow.View.SetProcess(false); flow.View.SetProcessInput(false);
+        Check(flow.CurrentScreen == RetailFrontendScreen.Gameplay && activations == 1 && !flow.View.Visible
+            && !flow.View.GetNode<Control>("Stage/Loading").IsVisibleInTree(),
             "Existing ready handoff activates once and hides the frontend root before any page visibility refresh.");
         bool rejected = false;
         try { flow.MarkLevel100Ready(); }
@@ -233,7 +233,7 @@ public sealed partial class LoadingSceneChecks : Node
             flowViewport.Size = size;
             referenceViewport.Size = size;
             if (nativeViewport is not null) nativeViewport.Size = size;
-            flow.Size = size;
+            flow.View.Size = size;
             Fit(referenceStage, size);
             if (nativeStage is not null) Fit(nativeStage, size);
             foreach (var sample in samples)
@@ -242,8 +242,8 @@ public sealed partial class LoadingSceneChecks : Node
                 reference.SetCaption(sample.Text);
                 if (_baseline)
                 {
-                    typeof(RetailFrontendFlow).GetField("_loadingText", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(flow, sample.Text);
-                    foreach (Node part in flow.FindChildren("*", "Control", true, false))
+                    FrontendHarnessChecks.SetLoadingCaption(flow, sample.Text);
+                    foreach (Node part in flow.View.FindChildren("*", "Control", true, false))
                         if (part is Control authored) authored.QueueRedraw();
                 }
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -270,7 +270,7 @@ public sealed partial class LoadingSceneChecks : Node
                 }
             }
         }
-        typeof(RetailFrontendFlow).GetField("_loadingText", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(flow, "Loading...");
+        FrontendHarnessChecks.SetLoadingCaption(flow, "Loading...");
         SetFrame(page, 0, false, false, "Loading...");
     }
 
@@ -328,7 +328,6 @@ public sealed partial class LoadingSceneChecks : Node
             { left = Math.Min(left, pixel % size.X); top = Math.Min(top, pixel / size.X); right = Math.Max(right, pixel % size.X); bottom = Math.Max(bottom, pixel / size.X); }
         return right < 0 ? null : [left, top, right, bottom];
     }
-    private static T Field<T>(object value, string name) => (T)value.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(value)!;
     private void Check(bool value, string message) { _checks++; if (!value) throw new InvalidOperationException(message); }
     private void Complete(string section) { _completed.Add(section); GD.Print("LOADING_HOST_SECTION: ", section); }
     private void Report(string? error) => GD.Print("LOADING_HOST_CHECKS: ", System.Text.Json.JsonSerializer.Serialize(new

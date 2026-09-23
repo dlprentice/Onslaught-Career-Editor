@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -11,13 +10,13 @@ namespace OnslaughtRebuild.GodotClient;
 /// retained 92c1775b renderer. The caller owns the isolated display/output.</summary>
 public sealed partial class MouseCursorSceneChecks : Node
 {
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private int _checks;
     private readonly List<object> _pixels = [];
 
     public override async void _Ready()
     {
         var views = new List<SubViewport>();
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] args = OS.GetCmdlineUserArgs();
@@ -34,10 +33,10 @@ public sealed partial class MouseCursorSceneChecks : Node
             Input.MouseModeEnum pointer = Input.MouseMode;
             SubViewport actualViewport = MakeViewport(), expectedViewport = MakeViewport();
             views.AddRange([actualViewport, expectedViewport]);
-            RetailFrontendFlow actual = MakeHost(actualViewport), expected = MakeHost(expectedViewport);
+            RetailFrontendFlow actual = MakeHost(actualViewport, facades), expected = MakeHost(expectedViewport, facades);
             var reference = new MouseCursorReference { Name = "RetainedCursor", ZIndex = 2 };
-            expected.AddChild(reference);
-            Control cursor = actual.GetNode<Control>("MouseCursor");
+            expected.View.AddChild(reference);
+            Control cursor = actual.View.GetNode<Control>("MouseCursor");
             Check(cursor.GetNode<Control>("Quad").Get("quad_size").AsVector2() == new Vector2(32, 32), "Actual cursor geometry is an authored Control.");
             Check(cursor.ZIndex == 2 && !cursor.IsProcessing() && !cursor.IsProcessingInput(),
                 "Cursor is the final frontend layer and has no clock or input owner.");
@@ -49,8 +48,8 @@ public sealed partial class MouseCursorSceneChecks : Node
             foreach (RetailFrontendFlow host in new[] { actual, expected })
             {
                 host.ConfirmForSmoke();
-                SetField(host, "_animationSeconds", 1.25d);
-                SetField(host, "_feBackSeconds", 0.75d);
+                SetField(host, "_animation_seconds", 1.25d);
+                SetField(host, "_fe_back_seconds", 0.75d);
             }
             (Vector2I Size, Vector2 Position)[] samples =
             [
@@ -67,11 +66,11 @@ public sealed partial class MouseCursorSceneChecks : Node
                 foreach (SubViewport viewport in views) viewport.Size = size;
                 foreach (RetailFrontendFlow host in new[] { actual, expected })
                 {
-                    host.Size = size;
+                    host.View.Size = size;
                     host.SetMouseCursorDesignPositionForCapture(position);
                     Refresh(host);
                 }
-                expected.GetNode<Control>("MouseCursor").Visible = false;
+                expected.View.GetNode<Control>("MouseCursor").Visible = false;
                 reference.Screen = actual.CurrentScreen;
                 reference.CursorPosition = position;
                 reference.ViewportSize = size;
@@ -104,7 +103,7 @@ public sealed partial class MouseCursorSceneChecks : Node
             Check(!cursor.IsVisibleInTree(), "Startup suspension hides the native cursor with the frontend.");
             actual.ResumeAfterStartupMedia();
             Check(cursor.IsVisibleInTree(), "Startup resume restores the same production cursor component.");
-            actual.SetProcess(false); actual.SetProcessInput(false);
+            actual.View.SetProcess(false); actual.View.SetProcessInput(false);
             actual.ConfirmForSmoke(); // Career Name
             actual.ConfirmForSmoke(); // Level Select
             actual.ConfirmForSmoke(); // Briefing
@@ -113,6 +112,7 @@ public sealed partial class MouseCursorSceneChecks : Node
             Check(actual.CurrentScreen == RetailFrontendScreen.Loading && !cursor.GetNode<CanvasItem>("Quad").Visible,
                 "The launch edge suppresses the cursor before the first Loading draw.");
             Check(Input.MouseMode == pointer, "Presentation never changes the host pointer mode.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -121,6 +121,7 @@ public sealed partial class MouseCursorSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree();
             GD.Print("MOUSE_CURSOR_SCENE_CHECKS: " + JsonSerializer.Serialize(new { checks = _checks, pixels = _pixels, failures = 1 }));
             GD.PushError(error.ToString()); GetTree().Quit(1);
@@ -134,18 +135,18 @@ public sealed partial class MouseCursorSceneChecks : Node
         AddChild(view); return view;
     }
 
-    private static RetailFrontendFlow MakeHost(SubViewport viewport)
+    private static RetailFrontendFlow MakeHost(SubViewport viewport, List<RetailFrontendFlow> facades)
     {
-        RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene();
-        host.Initialize([]); viewport.AddChild(host);
-        host.SetProcess(false); host.SetProcessInput(false);
+        RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host);
+        host.Initialize([]); viewport.AddChild(host.View);
+        host.View.SetProcess(false); host.View.SetProcessInput(false);
         return host;
     }
 
-    private static void SetField(RetailFrontendFlow host, string name, object value) =>
-        typeof(RetailFrontendFlow).GetField(name, Private)!.SetValue(host, value);
+    private static void SetField(RetailFrontendFlow host, string name, Variant value) =>
+        host.View.Set(name, value);
     private static void Refresh(RetailFrontendFlow host) =>
-        typeof(RetailFrontendFlow).GetMethod("QueueRedraw", Private | BindingFlags.DeclaredOnly)!.Invoke(host, null);
+        FrontendHarnessChecks.Command(host, "redraw");
     private void Check(bool condition, string message)
     {
         _checks++; if (!condition) throw new InvalidOperationException(message);

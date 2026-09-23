@@ -14,6 +14,9 @@ func require(condition: bool, message: String) -> bool:
 func run_checks() -> void:
     var scene: PackedScene = load("res://Scenes/Frontend/Frontend.tscn")
     var view: Control = scene.instantiate()
+    if not require(view.get_script() is GDScript
+        and view.get_script().resource_path == "res://Scenes/Frontend/frontend_flow.gd",
+        "The actual frontend root must own its behavior in standard-Godot GDScript"): return
     var stage: Control = view.get_node("Stage")
     if not require(view.get_node("Letterbox") is ColorRect and view.get_node("Letterbox").color == Color.BLACK, "Outside-stage clear must be an authored black control"): return
     var menu: Control = view.get_node("Stage/MainMenu")

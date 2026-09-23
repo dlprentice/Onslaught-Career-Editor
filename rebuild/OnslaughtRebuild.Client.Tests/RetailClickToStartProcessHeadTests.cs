@@ -177,7 +177,7 @@ public sealed class RetailClickToStartProcessHeadTests
             NativeQuitSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcessHead",
-            Slice(flow, "private bool HandleKey("));
+            NativeFrontendSource.RootFunction("handle_key"));
     }
 
     private static string Slice(string flow, string marker)

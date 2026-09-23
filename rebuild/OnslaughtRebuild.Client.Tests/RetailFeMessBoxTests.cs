@@ -37,7 +37,7 @@ public sealed class RetailFeMessBoxTests
             RetailFeMessBox.BoxTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ReconstructionHeight);
         Assert.Equal(new[] { RetailFeMessBox.QuitCenterX, RetailFeMessBox.PromptTop },
             NativeMainMenuSource.Vector(NativeQuitSource.Node("Dialog/Prompt"), "source_anchor", "Vector2"));
-        Assert.Contains("Stage/QuitConfirm", NativeQuitSource.Bridge);
+        Assert.Contains("Stage/QuitConfirm", NativeFrontendSource.PageFunction("_configure_quit"));
         Assert.DoesNotContain("new Rect2(70f, 160f, 500f, 140f)", NativeQuitSource.Presentation);
     }
 
@@ -104,10 +104,10 @@ public sealed class RetailFeMessBoxTests
             RetailFeMessBox.NoChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
         AssertRectangle("Dialog/Yes", "hit_rect", RetailFeMessBox.QuitLeft,
             RetailFeMessBox.YesChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
-        Assert.Contains(".Call(\"hit_test\",", NativeQuitSource.Bridge);
+        Assert.Contains("get_node(\"Stage/QuitConfirm\").hit_test(design)", NativeFrontendSource.RootFunction("quit_confirm_index_at"));
         Assert.Contains("hit_rect.has_point(", NativeQuitSource.Read("quit_confirm_row.gd"));
-        Assert.Contains("[\"selected_index\"] = _session.SelectedQuitConfirmIndex", NativeQuitSource.Bridge);
-        Assert.DoesNotContain(".Confirm(", NativeQuitSource.Bridge);
+        Assert.Contains("\"selected_index\": session.get_selected_quit_confirm_index()", NativeQuitSource.Bridge);
+        Assert.DoesNotContain(".confirm(", NativeQuitSource.Bridge);
         Assert.DoesNotContain("get_tree().quit", NativeQuitSource.Presentation);
     }
 
@@ -122,75 +122,26 @@ public sealed class RetailFeMessBoxTests
         Assert.Equal(1, RetailFeMessBox.YesChoiceIndex);
         Assert.Equal(0, RetailFeMessBox.DefaultChoiceIndex);
 
-        string handleKey = MethodBody(FlowSource(), "HandleKey");
-        Assert.Contains("RetailFrontendScreen.QuitConfirm", handleKey);
-        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", handleKey);
-        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", handleKey);
-
-        int quit = handleKey.IndexOf(
-            "Screen == RetailFrontendScreen.QuitConfirm",
-            StringComparison.Ordinal);
-        Assert.True(quit >= 0, "HandleKey must special-case QuitConfirm.");
+        string handleKey = NativeFrontendSource.RootFunction("handle_key");
+        int quit = handleKey.IndexOf("if _session.get_screen() == Frontend.Screen.QUIT_CONFIRM:", StringComparison.Ordinal);
+        Assert.True(quit >= 0, "handle_key must special-case QuitConfirm.");
         string quitArm = handleKey[quit..];
-        int sharedUpLeft = quitArm.IndexOf(
-            "IsKey(key, Key.Up) || IsKey(key, Key.Left)",
-            StringComparison.Ordinal);
+        int sharedUpLeft = quitArm.IndexOf("if is_key(key, KEY_UP) or is_key(key, KEY_LEFT):", StringComparison.Ordinal);
         Assert.True(sharedUpLeft > 0, "The shared Up/Left arm must follow the QuitConfirm split.");
         string beforeShared = quitArm[..sharedUpLeft];
-        Assert.Contains("IsKey(key, Key.Up)", beforeShared);
-        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", beforeShared);
-        Assert.Contains("IsKey(key, Key.Down)", beforeShared);
-        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", beforeShared);
-        Assert.DoesNotContain("IsKey(key, Key.Left)", beforeShared);
-        Assert.DoesNotContain("IsKey(key, Key.Right)", beforeShared);
-        Assert.Contains("IsKey(key, Key.Left)", handleKey);
-        Assert.Contains("_session.MovePrevious()", handleKey);
-        Assert.Contains("IsKey(key, Key.Right)", handleKey);
-        Assert.Contains("_session.MoveNext()", handleKey);
+        Assert.Contains("if is_key(key, KEY_UP): return _handled(_move_selection(_session.select_quit_confirm_index(1)))", beforeShared);
+        Assert.Contains("if is_key(key, KEY_DOWN): return _handled(_move_selection(_session.select_quit_confirm_index(0)))", beforeShared);
+        Assert.DoesNotContain("is_key(key, KEY_LEFT)", beforeShared);
+        Assert.DoesNotContain("is_key(key, KEY_RIGHT)", beforeShared);
+        Assert.Contains("is_key(key, KEY_LEFT)", handleKey);
+        Assert.Contains("_session.move_previous()", handleKey);
+        Assert.Contains("is_key(key, KEY_RIGHT)", handleKey);
+        Assert.Contains("_session.move_next()", handleKey);
     }
-
-    private static string FlowSource() =>
-        File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
     private static void AssertRectangle(string node, string property, params float[] values) =>
         Assert.Equal(values, NativeMainMenuSource.Vector(NativeQuitSource.Node(node), property, "Rect2"));
 
     private static void AssertColor(string node, uint argb) => NativeQuitSource.HasColor(node, argb);
 
-    private static string MethodBody(string source, string methodName)
-    {
-        int signature = IndexOfSignature(source, "int " + methodName + "(");
-        if (signature < 0)
-        {
-            signature = IndexOfSignature(source, "bool " + methodName + "(");
-        }
-
-        Assert.True(signature >= 0, methodName + " was not found.");
-        int open = source.IndexOf('{', signature);
-        int depth = 0;
-        for (int index = open; index < source.Length; index++)
-        {
-            if (source[index] == '{')
-            {
-                depth++;
-            }
-            else if (source[index] == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return source[open..(index + 1)];
-                }
-            }
-        }
-
-        throw new InvalidOperationException(methodName + " has an unbalanced body.");
-    }
-
-    private static int IndexOfSignature(string source, string signature)
-    {
-        int found = source.IndexOf(signature, StringComparison.Ordinal);
-        return found;
-    }
 }

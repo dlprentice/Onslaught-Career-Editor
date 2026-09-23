@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Reflection;
 using System.Security.Cryptography;
 using Godot;
 using OnslaughtRebuild.Client;
@@ -19,6 +18,7 @@ public sealed partial class FrontendSessionSceneChecks : Node
 
     public override async void _Ready()
     {
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -36,15 +36,16 @@ public sealed partial class FrontendSessionSceneChecks : Node
             GD.Print("FRONTEND_SESSION_SCENE_SECTION: native_path");
             CheckTransportAndOwnership(first, second);
             GD.Print("FRONTEND_SESSION_SCENE_SECTION: ownership_and_transport");
+            CheckHostEffects();
+            GD.Print("FRONTEND_SESSION_SCENE_SECTION: host_effect_failures_reentry");
 
             Input.MouseModeEnum pointerBefore = Input.MouseMode;
-            RetailFrontendFlow view = RetailFrontendFlow.InstantiateScene();
-            Check(view.GetNode<Control>("Stage").GetChildCount() == 10 && view.HasNode("MouseCursor/Quad"),
+            RetailFrontendFlow view = RetailFrontendFlow.InstantiateScene(); facades.Add(view);
+            Check(view.View.GetNode<Control>("Stage").GetChildCount() == 10 && view.View.HasNode("MouseCursor/Quad"),
                 "The production scene retains ten authored pages and their inspectable cursor before initialization.");
             view.Initialize([first, second]);
             GdFrontendSession state = NativeState(view);
-            Check(typeof(RetailFrontendFlow).GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                .All(field => field.FieldType != typeof(RetailFrontendSession)), "The live flow has no retained C# Session owner.");
+            Check(FrontendHarnessChecks.HasNativeRoot(view), "The actual root is GDScript and its managed facade cannot process or draw as a Node.");
             int careerEvents = 0;
             RetailCareerDescriptor? selected = null;
             int loads = 0, starts = 0, activations = 0, suspensions = 0, returns = 0;
@@ -61,9 +62,9 @@ public sealed partial class FrontendSessionSceneChecks : Node
             view.GameplayActivated += () => activations++;
             view.GameplaySuspended += () => suspensions++;
             view.ReturnToMainMenuRequested += () => returns++;
-            AddChild(view);
-            view.SetProcess(false);
-            view.SetProcessInput(false);
+            AddChild(view.View);
+            view.View.SetProcess(false);
+            view.View.SetProcessInput(false);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 
             Check(view.CurrentScreen == RetailFrontendScreen.ClickToStart, "Runtime opens its real click page.");
@@ -72,77 +73,80 @@ public sealed partial class FrontendSessionSceneChecks : Node
             Check(view.CurrentScreen == RetailFrontendScreen.ClickToStart, "Rejected input leaves the page unchanged.");
             using (var enter = new InputEventKey { Keycode = Godot.Key.Enter, PhysicalKeycode = Godot.Key.Enter, Pressed = true })
                 Check(Key(view, enter), "The production key owner accepts Enter.");
-            Check(view.GetNode<Control>("Stage/MainMenu").Visible, "Native state drives the actual Main Menu page.");
+            Check(view.View.GetNode<Control>("Stage/MainMenu").Visible, "Native state drives the actual Main Menu page.");
             view.SelectMainIndexForCapture(2);
             view.ConfirmForSmoke();
-            Check(state.CareerPageMode == RetailFrontendCareerPageMode.Load && state.SelectCareerIndex(1), "Load mode selects the second supplied descriptor.");
+            Check(NativeState(view).CareerPageMode == RetailFrontendCareerPageMode.Load && NativeState(view).SelectCareerIndex(1), "Load mode selects the second supplied descriptor.");
             view.ConfirmForSmoke();
             Check(careerEvents == 1 && ReferenceEquals(selected, second) && !ReferenceEquals(selected, first),
                 "CareerSelected hands the exact second verified object to the existing host seam.");
             Check(ReferenceEquals(selected!.Career, save) && selected.Career.ContainerBytes.SequenceEqual(fixtureBytes),
                 "The native menu never replaces, serializes or edits the verified save bytes.");
-            Check(state.SelectedWorldNumber == save.SuggestedWorldNumber, "Loaded selection uses the verified career projection.");
-            Check(state.ConsumeSelectedCareerLoadRequest() is null, "The production load edge is consumed once.");
+            Check(NativeState(view).SelectedWorldNumber == save.SuggestedWorldNumber, "Loaded selection uses the verified career projection.");
+            Check(NativeState(view).ConsumeSelectedCareerLoadRequest() is null, "The production load edge is consumed once.");
             Escape(view);
             Escape(view);
-            Check(state.Screen == RetailFrontendScreen.MainMenu, "Loaded campaign Back returns through the native path.");
+            Check(NativeState(view).Screen == RetailFrontendScreen.MainMenu, "Loaded campaign Back returns through the native path.");
             view.SelectMainIndexForCapture(0);
             view.ConfirmForSmoke();
-            Check(view.GetNode<Control>("Stage/CareerName").Visible, "New Game shows the authored career page.");
+            Check(view.View.GetNode<Control>("Stage/CareerName").Visible, "New Game shows the authored career page.");
             using (var character = new InputEventKey { Unicode = 'X', Pressed = true })
                 Check(Key(view, character), "Actual key dispatch edits the native name.");
-            Check(state.GameName == "X" && !state.GameNameIsFresh, "Fresh-name replacement is visible in the cached display facts.");
+            Check(NativeState(view).GameName == "X" && !NativeState(view).GameNameIsFresh, "Fresh-name replacement is visible in the cached display facts.");
             view.ConfirmForSmoke();
-            Check(state.SelectedWorldNumber == 100 && view.GetNode<Control>("Stage/LevelSelect").Visible,
+            Check(NativeState(view).SelectedWorldNumber == 100 && view.View.GetNode<Control>("Stage/LevelSelect").Visible,
                 "New Game selects the actual cold campaign root.");
             view.ConfirmForSmoke();
             view.ConfirmForSmoke();
             view.ConfirmForSmoke();
-            Check(starts == 1 && loads == 0 && state.Screen == RetailFrontendScreen.Loading,
+            Check(starts == 1 && loads == 0 && NativeState(view).Screen == RetailFrontendScreen.Loading,
                 "Configuration emits LoadingStarted without prematurely consuming the launch edge.");
-            view._Process(0d);
+            FrontendHarnessChecks.Command(view, "advance", 0d);
             Check(loads == 0 && activations == 0, "First loading frame preserves the two-frame boundary.");
-            view._Process(0d);
-            Check(loads == 1 && activations == 1 && state.Screen == RetailFrontendScreen.Gameplay,
+            FrontendHarnessChecks.Command(view, "advance", 0d);
+            Check(loads == 1 && activations == 1 && NativeState(view).Screen == RetailFrontendScreen.Gameplay,
                 "Second loading frame consumes once, accepts ready and activates once.");
-            Check(!view.Visible && !view.IsProcessing() && !view.IsProcessingInput(), "Gameplay suspends the production frontend.");
-            Check(!state.Level100IntroCutscenePending, "Skipped intro consumes the original first-entry flag.");
+            Check(!view.View.Visible && !view.View.IsProcessing() && !view.View.IsProcessingInput(), "Gameplay suspends the production frontend.");
+            Check(!NativeState(view).Level100IntroCutscenePending, "Skipped intro consumes the original first-entry flag.");
             view.RestartLevel100();
-            Check(starts == 2 && suspensions == 1 && !state.Level100IntroCutscenePending,
+            Check(starts == 2 && suspensions == 1 && !NativeState(view).Level100IntroCutscenePending,
                 "Retry preserves the native campaign and does not re-arm the intro.");
-            view.SetProcess(false);
-            view.SetProcessInput(false);
-            view._Process(0d);
-            view._Process(0d);
-            Check(loads == 2 && activations == 2 && state.Screen == RetailFrontendScreen.Gameplay,
+            view.View.SetProcess(false);
+            view.View.SetProcessInput(false);
+            FrontendHarnessChecks.Command(view, "advance", 0d);
+            FrontendHarnessChecks.Command(view, "advance", 0d);
+            Check(loads == 2 && activations == 2 && NativeState(view).Screen == RetailFrontendScreen.Gameplay,
                 "Retry uses the same load seam exactly once.");
             view.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.SuccessCountdown);
-            Check(state.Screen == RetailFrontendScreen.Gameplay && returns == 0, "Won countdown is not a completed handoff.");
+            Check(NativeState(view).Screen == RetailFrontendScreen.Gameplay && returns == 0, "Won countdown is not a completed handoff.");
             view.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady);
-            view.SetProcess(false);
-            view.SetProcessInput(false);
+            view.View.SetProcess(false);
+            view.View.SetProcessInput(false);
             var expected = new RetailFrontendSession();
             PrepareGameplay(expected);
             Check(expected.TryAcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady),
                 "Retained reference accepts the same terminal handoff.");
-            Check(state.Debriefing == expected.Debriefing && returns == 1 && suspensions == 2,
+            Check(NativeState(view).Debriefing == expected.Debriefing && returns == 1 && suspensions == 2,
                 "The production Won handoff applies the actual campaign update and exact debriefing projection.");
-            Check(view.GetNode<Control>("Stage/Debriefing").Visible && state.Level100IntroCutscenePending,
+            Check(view.View.GetNode<Control>("Stage/Debriefing").Visible && NativeState(view).Level100IntroCutscenePending,
                 "Won shows the authored debriefing and re-arms the next level intro.");
             view.AcceptWonHandoff(Level100MissionOutcome.Won, Level100MissionTerminalState.FrontEndHandoffReady);
             Check(returns == 1, "Repeated terminal handoff cannot apply the campaign update twice.");
             view.ConfirmForSmoke();
-            Check(state.SelectWorld(110), "Actual Won progression unlocks World 110.");
+            Check(NativeState(view).SelectWorld(110), "Actual Won progression unlocks World 110.");
             view.ConfirmForSmoke();
             view.ConfirmForSmoke();
             view.ConfirmForSmoke();
-            view._Process(0d);
-            view._Process(0d);
-            Check(loadWorlds.SequenceEqual([100, 100, 110]) && activations == 2 && state.Screen == RetailFrontendScreen.LevelSelect,
+            FrontendHarnessChecks.Command(view, "advance", 0d);
+            FrontendHarnessChecks.Command(view, "advance", 0d);
+            Check(loadWorlds.SequenceEqual([100, 100, 110]) && activations == 2 && NativeState(view).Screen == RetailFrontendScreen.LevelSelect,
                 "Unconstructed World 110 returns through its existing seam without substituting Level 100.");
             GD.Print("FRONTEND_SESSION_SCENE_SECTION: production_handoff");
 
-            int calls = state.NativeCallCount;
+            state.Refresh();
+            int boundaryCalls = view.NativeCallCount;
+            byte[] beforeFrames = state.SnapshotBytes();
+            int borrowedCalls = state.NativeCallCount;
             for (int index = 0; index < 1000; index++)
             {
                 _ = state.SelectedMainItem;
@@ -151,23 +155,33 @@ public sealed partial class FrontendSessionSceneChecks : Node
                 _ = state.SelectedConfiguration;
                 _ = state.SelectedBriefingBody.Count;
                 _ = state.SelectedLevelName;
+                _ = view.CurrentScreen;
+                _ = view.LaunchWorldNumber;
+                _ = view.SelectedWorldIsConstructible;
             }
-            // _Process updates presentation animation but this settled page has
-            // no state operation. Rendering consumes the same cached getters.
+            Check(state.NativeCallCount == borrowedCalls && view.NativeCallCount == boundaryCalls,
+                "Repeated detached test facts and production facade getters make no native calls.");
+            // Exercise the actual native _process, without a managed advance
+            // call per frame. Settled presentation must leave Session untouched.
+            int factSignals = 0;
+            Callable observeFacts = Callable.From<Godot.Collections.Dictionary>(_ => factSignals++);
+            view.View.Connect("host_state_changed", observeFacts);
+            view.View.SetProcess(true);
             for (int frame = 0; frame < 3; frame++)
-            {
-                view._Process(0d);
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            }
-            Check(state.NativeCallCount == calls, "Repeated display reads and settled frames perform no cross-language state calls.");
+            view.View.SetProcess(false);
+            view.View.Disconnect("host_state_changed", observeFacts);
+            Check(view.NativeCallCount == boundaryCalls && factSignals == 0 && beforeFrames.SequenceEqual(state.SnapshotBytes()),
+                "Native settled frames preserve Session facts without crossing the managed facade.");
             Check(Input.MouseMode == pointerBefore, "Initialization and navigation leave pointer ownership unchanged.");
-            Check(view.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0,
+            Check(view.View.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0,
                 "The test does not start audio playback.");
-            Check(view.FindChildren("*", "Camera3D", true, false).Count == 0,
+            Check(view.View.FindChildren("*", "Camera3D", true, false).Count == 0,
                 "Frontend events do not create a gameplay world.");
             Check(SHA256.HashData(File.ReadAllBytes(fixture)).SequenceEqual(fixtureHash), "Original fixture bytes are unchanged.");
             Check(save.ContainerBytes.SequenceEqual(fixtureBytes), "Verified read owner still retains every original byte.");
-            view.QueueFree();
+            FrontendHarnessChecks.ReleaseFacades(facades);
+            view.View.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(Result(() => state.Confirm()).Error == nameof(ObjectDisposedException), "Deleting the scene releases its native state bridge.");
             GD.Print("FRONTEND_SESSION_SCENE_SECTION: cached_display_and_safety");
@@ -176,6 +190,7 @@ public sealed partial class FrontendSessionSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             GD.PushError(error.ToString());
             GetTree().Quit(1);
         }
@@ -324,10 +339,8 @@ public sealed partial class FrontendSessionSceneChecks : Node
         try { return new(operation(), null); }
         catch (Exception error) { return new(null, error.GetType().Name); }
     }
-    private static GdFrontendSession NativeState(RetailFrontendFlow value) => (GdFrontendSession)
-        typeof(RetailFrontendFlow).GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(value)!;
-    private static bool Key(RetailFrontendFlow value, InputEventKey input) => (bool)
-        typeof(RetailFrontendFlow).GetMethod("HandleKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(value, [input])!;
+    private static GdFrontendSession NativeState(RetailFrontendFlow value) => GdFrontendSession.BorrowExisting(value.View);
+    private static bool Key(RetailFrontendFlow value, InputEventKey input) => FrontendHarnessChecks.Boolean(value, "handle_key", input);
     private void Escape(RetailFrontendFlow value)
     {
         using var key = new InputEventKey { Keycode = Godot.Key.Escape, PhysicalKeycode = Godot.Key.Escape, Pressed = true };

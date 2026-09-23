@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Runtime.CompilerServices;
 using Godot;
 using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
@@ -9,15 +10,17 @@ using D = Godot.Collections.Dictionary;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Temporary managed presenter boundary. The native Session is the sole owner
-/// of navigation, pending edges and campaign state. Each operation refreshes
-/// detached display facts once; drawing and property reads never call GDScript.
+/// Test-only retained marshaller for differential Session checks. Production
+/// owns and drives its native Session directly. A borrowed test adapter observes
+/// that same owner; the standalone constructor is only the existing oracle seam.
 /// Verified save objects remain with the original host and are returned by the
 /// supplied descriptor ordinal, including when two descriptors compare equal.
 /// </summary>
 internal sealed class GdFrontendSession : IDisposable
 {
+    private static readonly ConditionalWeakTable<Control, GdFrontendSession> Borrowed = new();
     private readonly GodotObject _state;
+    private readonly Control? _borrowedOwner;
     private readonly GodotObject _path;
     private readonly RetailCareerDescriptor[] _originalDescriptors;
     private bool _disposed;
@@ -74,6 +77,45 @@ internal sealed class GdFrontendSession : IDisposable
         _state = created["value"].AsGodotObject();
         _path = GD.Load<GDScript>("res://Client/frontend_scene_path.gd").New().AsGodotObject();
         Refresh();
+    }
+
+    private GdFrontendSession(Control owner, GodotObject state)
+    {
+        _borrowedOwner = owner;
+        _state = state;
+        _originalDescriptors = [];
+        CareerDescriptors = Array.AsReadOnly(_originalDescriptors);
+        _path = GD.Load<GDScript>("res://Client/frontend_scene_path.gd").New().AsGodotObject();
+        owner.TreeExited += Dispose;
+        Refresh();
+    }
+
+    /// <summary>Borrow the actual live Session; this never constructs a second one.</summary>
+    internal static GdFrontendSession BorrowExisting(Control owner)
+    {
+        ObjectDisposedException.ThrowIf(!GodotObject.IsInstanceValid(owner), owner);
+        using Variant current = owner.Get("_session");
+        GodotObject state = current.AsGodotObject()
+            ?? throw new InvalidOperationException("The native frontend has no initialized Session.");
+        if (Borrowed.TryGetValue(owner, out GdFrontendSession? adapter))
+        {
+            if (!adapter._disposed && adapter._state.GetInstanceId() == state.GetInstanceId())
+            {
+                adapter.Refresh();
+                return adapter;
+            }
+            adapter.Dispose();
+            Borrowed.Remove(owner);
+        }
+        var borrowed = new GdFrontendSession(owner, state);
+        Borrowed.Add(owner, borrowed);
+        return borrowed;
+    }
+
+    internal byte[] SnapshotBytes()
+    {
+        using Variant snapshot = Call(_state, "snapshot");
+        return GD.VarToBytes(snapshot);
     }
 
     public bool SelectCareerIndex(int index) => Change("select_career_index", index).AsBool();
@@ -162,12 +204,12 @@ internal sealed class GdFrontendSession : IDisposable
 
     private Variant Call(GodotObject owner, string method, params Variant[] arguments)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(_disposed || (_borrowedOwner is not null && !GodotObject.IsInstanceValid(_borrowedOwner)), this);
         NativeCallCount++;
         return owner.Call(method, arguments);
     }
 
-    private void Refresh()
+    internal void Refresh()
     {
         using D snapshot = Call(_state, "snapshot").AsGodotDictionary();
         Screen = (RetailFrontendScreen)snapshot["screen"].AsInt32();
@@ -242,7 +284,10 @@ internal sealed class GdFrontendSession : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
+        // This releases this managed wrapper's reference. A borrowed Session
+        // is still owned by the native root; never call free/queue_free on it.
         _state.Dispose();
+        if (_borrowedOwner is not null && GodotObject.IsInstanceValid(_borrowedOwner)) _borrowedOwner.TreeExited -= Dispose;
         _path.Dispose();
         _disposed = true;
     }

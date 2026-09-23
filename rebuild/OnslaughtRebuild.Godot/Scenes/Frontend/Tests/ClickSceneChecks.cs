@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -12,10 +11,10 @@ public sealed partial class ClickSceneChecks : Node
 {
     private int _checks;
     private readonly List<object> _pixels = [];
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     public override async void _Ready()
     {
         var views = new List<SubViewport>();
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] args = OS.GetCmdlineUserArgs();
@@ -36,9 +35,9 @@ public sealed partial class ClickSceneChecks : Node
                 && page.GetNode("Title").GetChildCount() == 5, "Five production sections and all caption/title passes exist before Ready.");
             stage.AddChild(page);
             var reference = new ClickReference(); reference.Initialize(); referenceStage.AddChild(reference);
-            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); host.Initialize([]); hostViewport.AddChild(host);
+            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host); host.Initialize([]); hostViewport.AddChild(host.View);
             host.SetMouseCursorDesignPositionForCapture(new Vector2(-100, -100));
-            host.SetProcess(false); host.SetProcessInput(false);
+            host.View.SetProcess(false); host.View.SetProcessInput(false);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             using Variant configured = page.Get("_assets_configured");
             Check(configured.AsBool() && !page.IsProcessing() && !page.IsProcessingInput()
@@ -62,7 +61,7 @@ public sealed partial class ClickSceneChecks : Node
             foreach (Vector2I size in new[] { new Vector2I(640, 480), new Vector2I(1280, 720), new Vector2I(801, 601), new Vector2I(320, 240) })
             {
                 foreach (SubViewport view in views) view.Size = size;
-                Fit(stage, size); Fit(referenceStage, size); host.Size = size;
+                Fit(stage, size); Fit(referenceStage, size); host.View.Size = size;
                 for (int index = 0; index < samples.Length; index++)
                 {
                     (double timer, double seconds) = samples[index];
@@ -71,9 +70,9 @@ public sealed partial class ClickSceneChecks : Node
                     using Godot.Collections.Dictionary result = returned.AsGodotDictionary(); using Variant ok = result["ok"];
                     Check(ok.AsBool(), "Explicit time batch accepted.");
                     reference.SetFrame(timer, seconds);
-                    typeof(RetailFrontendFlow).GetField("_clickPulseTimer", Private)!.SetValue(host, timer);
-                    typeof(RetailFrontendFlow).GetField("_clickPageSeconds", Private)!.SetValue(host, seconds);
-                    typeof(RetailFrontendFlow).GetMethod("QueueRedraw", Private | BindingFlags.DeclaredOnly)!.Invoke(host, null);
+                    host.View.Set("_click_pulse_timer", timer);
+                    host.View.Set("_click_page_seconds", seconds);
+                    FrontendHarnessChecks.Command(host, "redraw");
                     Check(page.GetNode<CanvasItem>("Prompt").Visible == RetailClickToStartGlyphs.ShouldDraw(timer)
                         && page.GetNode<CanvasItem>("Title").Visible == RetailClickToStartTitle.ShouldDraw(seconds)
                         && page.GetNode<CanvasItem>("TitleFlash").Visible == RetailClickToStartTitle.ShouldDrawSixth(seconds), "All strict visibility gates match.");
@@ -91,6 +90,7 @@ public sealed partial class ClickSceneChecks : Node
             }
             Check(Input.MouseMode == pointer && page.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0,
                 "Page never acquires pointer or audio.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             GD.Print("CLICK_SCENE_CHECKS: " + JsonSerializer.Serialize(new { checks = _checks, pixels = _pixels, failures = 0 }));
@@ -98,6 +98,7 @@ public sealed partial class ClickSceneChecks : Node
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport view in views) view.QueueFree();
             GD.Print("CLICK_SCENE_CHECKS: " + JsonSerializer.Serialize(new { checks = _checks, pixels = _pixels, failures = 1 }));
             GD.PushError(error.ToString()); GetTree().Quit(1);

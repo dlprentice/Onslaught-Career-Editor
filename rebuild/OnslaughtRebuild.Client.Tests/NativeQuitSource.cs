@@ -10,7 +10,7 @@ internal static class NativeQuitSource
     public static string Read(string name) => File.ReadAllText(Path.Combine(DirectoryPath, name));
     public static string Scene => Read("QuitConfirm.tscn");
     public static string Controller => Read("quit_confirm_presentation.gd");
-    public static string Bridge => Read("RetailFrontendFlow.QuitConfirm.cs");
+    public static string Bridge => NativeFrontendSource.PageBranch("quit");
     public static string Node(string path) => NativeMainMenuSource.Node(path, Scene);
     public static void HasColor(string path, uint argb) => NativeMainMenuSource.HasColorIn(Node(path), argb);
     public static string Presentation

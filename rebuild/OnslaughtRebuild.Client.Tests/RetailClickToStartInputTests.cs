@@ -94,29 +94,12 @@ public sealed class RetailClickToStartInputTests
     [Fact]
     public void HandlePointerConfirmCallsTheFullWindowMousePredicate()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-
-        int handle = flow.IndexOf("private bool HandlePointerConfirm", StringComparison.Ordinal);
-        Assert.True(handle >= 0);
-        string handleBody = flow[handle..];
-        int click = handleBody.IndexOf(
-            "case RetailFrontendScreen.ClickToStart:",
-            StringComparison.Ordinal);
-        Assert.True(click >= 0);
-        string arm = handleBody[click..];
-        const string casePrefix = "case RetailFrontendScreen.ClickToStart:";
-        int next = arm.IndexOf("case RetailFrontendScreen.", casePrefix.Length, StringComparison.Ordinal);
-        if (next >= 0)
-        {
-            arm = arm[..next];
-        }
-
-        // DrawClickToStart also has a ClickToStart case; this arm is the
-        // pointer owner. A prompt/logo HasPoint here must fail.
-        Assert.Contains("_session.AcceptsClickToStartMouse", arm);
-        Assert.DoesNotContain("HasPoint(design)", arm);
-        Assert.DoesNotContain("vectorlosttoyssplash", flow);
-        Assert.DoesNotContain("TWIMTBP", flow);
+        string arm = NativeFrontendSource.PointerArm("CLICK_TO_START");
+        // The production pointer owner accepts the entire window. A prompt/logo
+        // hit region here would change the admitted coordinate-independent law.
+        Assert.Contains("Path.accepts_click_to_start_mouse(_session.get_screen(), design.x, design.y)", arm);
+        Assert.DoesNotContain(".has_point(design)", arm);
+        Assert.DoesNotContain("vectorlosttoyssplash", NativeFrontendSource.Root);
+        Assert.DoesNotContain("TWIMTBP", NativeFrontendSource.Root);
     }
 }

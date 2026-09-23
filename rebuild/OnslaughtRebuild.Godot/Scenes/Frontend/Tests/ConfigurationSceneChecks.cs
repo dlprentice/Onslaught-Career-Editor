@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -17,7 +16,6 @@ namespace OnslaughtRebuild.GodotClient;
 /// </summary>
 public sealed partial class ConfigurationSceneChecks : Node
 {
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static readonly string[] Required = ["production_assets_and_glyphs", "frames_and_host", "hit_bounds_and_navigation", "authored_sections", "read_only_and_ownership"];
     private static readonly string[] Passes = ["Background/Rock", "Background/Ring", "Header/Panel", "Header/Title", "Unit/Name",
         "Walker/Title", "Walker/Primary", "Walker/Secondary", "Jet/Title", "Jet/Primary", "Jet/Secondary", "Navigation/Back", "Navigation/Forward"];
@@ -34,6 +32,7 @@ public sealed partial class ConfigurationSceneChecks : Node
     public override async void _Ready()
     {
         List<SubViewport> views = [];
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -65,9 +64,9 @@ public sealed partial class ConfigurationSceneChecks : Node
             nativeStage.AddChild(page);
             ConfigurationReference reference = GD.Load<PackedScene>("res://Scenes/Frontend/Tests/ConfigurationReference.tscn").Instantiate<ConfigurationReference>();
             referenceStage.AddChild(reference);
-            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene();
-            host.Initialize([]); hostView.AddChild(host);
-            host.SetProcess(false); host.SetProcessInput(false);
+            RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host);
+            host.Initialize([]); hostView.AddChild(host.View);
+            host.View.SetProcess(false); host.View.SetProcessInput(false);
             host.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
             EnterConfiguration(host);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -80,13 +79,13 @@ public sealed partial class ConfigurationSceneChecks : Node
                 bool includeHost = true, RetailFrontendBattleEngineConfiguration? displayed = null)
             {
                 foreach (SubViewport viewport in views) viewport.Size = size;
-                Fit(nativeStage, size); Fit(referenceStage, size); host.Size = size; host.Visible = includeHost;
+                Fit(nativeStage, size); Fit(referenceStage, size); host.View.Size = size; host.View.Visible = includeHost;
                 using D batch = Facts(facts); Require(page.Call("set_frame", batch));
                 reference.SetFrame(displayed ?? facts);
                 if (includeHost) host.SelectMainIndexForCapture(0); // Queues the current page without changing its selection.
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 CheckFrame(page, reference, facts, displayed ?? facts);
-                if (includeHost) CheckFrame(host.GetNode<Control>("Stage/SelectConfiguration"), reference, production, production);
+                if (includeHost) CheckFrame(host.View.GetNode<Control>("Stage/SelectConfiguration"), reference, production, production);
                 if (_directory is not null) await ComparePixels(nativeView, referenceView, includeHost ? hostView : null, label);
                 _samples++;
             }
@@ -102,10 +101,10 @@ public sealed partial class ConfigurationSceneChecks : Node
             Complete();
 
             _group = Required[2];
-            host.Visible = true;
+            host.View.Visible = true;
             CheckHitBounds(page, host, nativeStage, views);
             CheckNavigation(host);
-            EnterConfiguration(host); host.SetProcess(false); host.SetProcessInput(false);
+            EnterConfiguration(host); host.View.SetProcess(false); host.View.SetProcessInput(false);
             Complete();
 
             _group = Required[3];
@@ -113,7 +112,7 @@ public sealed partial class ConfigurationSceneChecks : Node
             foreach (string section in new[] { "Background", "Header", "Walker" })
             {
                 Control authored = page.GetNode<Control>(section), old = reference.GetNode<Control>(section);
-                Control integrated = host.GetNode<Control>("Stage/SelectConfiguration/" + section);
+                Control integrated = host.View.GetNode<Control>("Stage/SelectConfiguration/" + section);
                 Vector2 position = authored.Position, extent = authored.Size, scale = authored.Scale; float rotation = authored.Rotation;
                 foreach (Control component in new[] { authored, old, integrated })
                 {
@@ -154,7 +153,7 @@ public sealed partial class ConfigurationSceneChecks : Node
                 snapshot["walker_primary"] = units; snapshot["unit_name"] = new[] { 90 };
             }
             CheckSnapshot(page, production);
-            foreach (Control component in new[] { page, host.GetNode<Control>("Stage/SelectConfiguration") })
+            foreach (Control component in new[] { page, host.View.GetNode<Control>("Stage/SelectConfiguration") })
             {
                 foreach (Node owner in component.FindChildren("*", "Control", true, false).Prepend(component))
                     Check(!owner.IsProcessing() && !owner.IsProcessingInput() && !owner.IsProcessingUnhandledInput(), "Configuration controls own no clock or input.");
@@ -166,12 +165,14 @@ public sealed partial class ConfigurationSceneChecks : Node
             Complete();
             Check(_completed.SequenceEqual(Required) && Required.All(group => _counts.GetValueOrDefault(group) > 0), "Every required group completed.");
             Check(_samples == 11 && _pixels.Count == (_directory is null ? 0 : 18), "All bounded states completed; headless makes no pixel claim.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Report(null); GetTree().Quit(0);
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree();
             GD.PushError(error.ToString()); Report(error.ToString()); GetTree().Quit(1);
         }
@@ -192,8 +193,8 @@ public sealed partial class ConfigurationSceneChecks : Node
         SameTexture(page.GetNode("Background/Rock").Get("texture").As<Texture2D>(), reference.Rock, "rock");
         SameTexture(page.GetNode("Background/Ring").Get("texture").As<Texture2D>(), reference.Ring, "ring");
         SameTexture(page.GetNode("Navigation/Forward").Get("texture").As<Texture2D>(), reference.Arrow, "arrow");
-        using Variant shared = host.GetNode("Stage/SelectConfiguration").Get("body_font");
-        using Variant existing = host.GetNode("Stage/Options").Get("body_font");
+        using Variant shared = host.View.GetNode("Stage/SelectConfiguration").Get("body_font");
+        using Variant existing = host.View.GetNode("Stage/Options").Get("body_font");
         Check(shared.AsGodotObject().GetInstanceId() == existing.AsGodotObject().GetInstanceId(), "Live host reuses the admitted body font resource.");
         Require(page.Call("configure_assets"));
         Check(State(host).ConfigurationCount == 1 && State(host).SelectedConfigurationIndex == 0
@@ -250,10 +251,9 @@ public sealed partial class ConfigurationSceneChecks : Node
 
     private void CheckHitBounds(Control page, RetailFrontendFlow host, Control stage, IReadOnlyList<SubViewport> views)
     {
-        MethodInfo target = typeof(RetailFrontendFlow).GetMethod("ConfigurationTargetAt", Private)!;
         foreach (Vector2I size in Sizes.Append(new(1024, 768)))
         {
-            foreach (SubViewport view in views) view.Size = size; host.Size = size; Fit(stage, size);
+            foreach (SubViewport view in views) view.Size = size; host.View.Size = size; Fit(stage, size);
             foreach (Rect2 rect in new[] { new Rect2(0, 430, 48, 48), new Rect2(595, 430, 45, 48) })
             {
                 float cx = rect.Position.X + rect.Size.X * .5f, cy = rect.Position.Y + rect.Size.Y * .5f;
@@ -262,7 +262,7 @@ public sealed partial class ConfigurationSceneChecks : Node
                 foreach (Vector2 point in points)
                 {
                     int expected = ConfigurationReference.HitTest(point);
-                    Check(page.Call("hit_test", point).AsInt32() == expected && (int)target.Invoke(host, [point])! == expected,
+                    Check(page.Call("hit_test", point).AsInt32() == expected && FrontendHarnessChecks.Hit(host, "configuration_target_at", point) == expected,
                         "Native and actual host preserve half-open design targets without another Stage roundtrip.");
                 }
             }
@@ -272,7 +272,7 @@ public sealed partial class ConfigurationSceneChecks : Node
 
     private void CheckNavigation(RetailFrontendFlow host)
     {
-        host.Size = new(640, 480); var effects = new List<string>(); int exits = 0;
+        host.View.Size = new(640, 480); var effects = new List<string>(); int exits = 0;
         void Audio(RetailFrontendAudioCue cue) => effects.Add("audio:" + cue);
         void Cursor(RetailFrontendCursorMode mode) => effects.Add("cursor:" + mode);
         void Started() => effects.Add("loading");
@@ -302,14 +302,14 @@ public sealed partial class ConfigurationSceneChecks : Node
                 if (pointer) Click(host, new(595, 430)); else Key(host, Godot.Key.Enter);
                 Check(host.CurrentScreen == RetailFrontendScreen.Loading && effects.SequenceEqual(new[] { "audio:Select", "loading", "cursor:Hidden" }),
                     "Configuration confirm emits Select, loading-start, then hidden cursor before any load.");
-                host._Process(0d);
+                FrontendHarnessChecks.Command(host, "advance", 0d);
                 Check(host.CurrentScreen == RetailFrontendScreen.Loading && effects.Count == 3, "The first loading frame never raises the construction edge.");
-                host._Process(0d);
+                FrontendHarnessChecks.Command(host, "advance", 0d);
                 Check(host.CurrentScreen == RetailFrontendScreen.Gameplay && effects.SequenceEqual(new[] { "audio:Select", "loading", "cursor:Hidden", "load", "cursor:Captured", "gameplay" }),
                     "The second loading frame consumes the edge and invokes the ready handoff in its original order.");
-                host._Process(0d);
+                FrontendHarnessChecks.Command(host, "advance", 0d);
                 Check(effects.Count == 6 && !State(host).ConsumeLevel100LaunchRequest(), "Load and gameplay edges fire exactly once.");
-                host.LeaveLevel100ForMainMenu(); host.SetProcess(false); host.SetProcessInput(false);
+                host.LeaveLevel100ForMainMenu(); host.View.SetProcess(false); host.View.SetProcessInput(false);
                 EnterConfiguration(host);
             }
             Check(exits == 0, "No configuration path requests window quit.");
@@ -326,7 +326,7 @@ public sealed partial class ConfigurationSceneChecks : Node
         if (host.CurrentScreen == RetailFrontendScreen.SelectConfiguration) return;
         if (host.CurrentScreen == RetailFrontendScreen.ClickToStart) host.ConfirmForSmoke();
         Check(host.CurrentScreen == RetailFrontendScreen.MainMenu, "Configuration route begins at the actual Main Menu.");
-        SetField(host, "_mainTransitionTime", 0); SetField(host, "_mainTransitionCount", 0);
+        SetField(host, "_main_transition_time", 0); SetField(host, "_main_transition_count", 0);
         host.SelectMainIndexForCapture(0);
         foreach (RetailFrontendScreen screen in new[] { RetailFrontendScreen.DevSelect, RetailFrontendScreen.LevelSelect, RetailFrontendScreen.MissionBriefing, RetailFrontendScreen.SelectConfiguration })
         { host.ConfirmForSmoke(); Check(host.CurrentScreen == screen, "Original New-to-configuration route: " + screen); }
@@ -343,14 +343,14 @@ public sealed partial class ConfigurationSceneChecks : Node
     private static RetailFrontendBattleEngineConfiguration WithText(RetailFrontendBattleEngineConfiguration value, string text) => value with {
         DisplayName = text, WalkerPrimary = value.WalkerPrimary with { DisplayName = text }, WalkerSecondary = value.WalkerSecondary with { DisplayName = text },
         JetPrimary = value.JetPrimary with { DisplayName = text }, JetSecondary = value.JetSecondary with { DisplayName = text } };
-    private static GdFrontendSession State(RetailFrontendFlow host) => (GdFrontendSession)typeof(RetailFrontendFlow).GetField("_session", Private)!.GetValue(host)!;
-    private static void SetField(RetailFrontendFlow host, string name, object value) => typeof(RetailFrontendFlow).GetField(name, Private)!.SetValue(host, value);
+    private static GdFrontendSession State(RetailFrontendFlow host) => GdFrontendSession.BorrowExisting(host.View);
+    private static void SetField(RetailFrontendFlow host, string name, Variant value) => host.View.Set(name, value);
     private static int[] Units(string value) => value.Select(character => (int)character).ToArray();
     private static uint Bits(float value) => unchecked((uint)BitConverter.SingleToInt32Bits(value));
     private static void Key(RetailFrontendFlow host, Godot.Key key, bool echo = false)
-    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key, Echo = echo }; host._Input(input); }
+    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key, Echo = echo }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Click(RetailFrontendFlow host, Vector2 point)
-    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; host._Input(input); }
+    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Require(Variant returned)
     {
         using (returned)

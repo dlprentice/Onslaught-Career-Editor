@@ -420,9 +420,7 @@ public sealed class Level100AudioCatalogTests
         string stopForLevel = MethodBody(
             game,
             "private void StopFrontendMusicForLevelEntry()");
-        string navigation = MethodBody(
-            frontend,
-            "private void HandleNavigationSignal(RetailFrontendSignal signal)");
+        string navigation = NativeFrontendSource.RootFunction("_handle_navigation_signal");
         string activateGameplay = MethodBody(
             game,
             "private void ActivateFrontendGameplay()");
@@ -436,10 +434,12 @@ public sealed class Level100AudioCatalogTests
             "_frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;",
             ready,
             StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100LoadingStarted?.Invoke();",
-            navigation,
-            StringComparison.Ordinal);
+        Assert.Contains("case \"level_loading_started\": Level100LoadingStarted?.Invoke();", frontend, StringComparison.Ordinal);
+        AssertOccursInOrder(navigation,
+            "_load_request_raised = false", "_level100_ready = false",
+            "_gameplay_activation_raised = false", "_loading_frames = 0",
+            "_dispatch_host({\"kind\": \"level_loading_started\"})",
+            "_cursor_mode(Frontend.CursorMode.HIDDEN)");
         Assert.Contains("_audio.StopFrontendMusic();", stopForLevel, StringComparison.Ordinal);
         AssertOccursInOrder(
             activateGameplay,

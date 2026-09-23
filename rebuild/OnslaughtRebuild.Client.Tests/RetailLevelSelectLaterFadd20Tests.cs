@@ -235,8 +235,8 @@ public sealed class RetailLevelSelectLaterFadd20Tests
         string quit = NativeQuitSource.Presentation;
         string loading = NativeLoadingSource.Presentation;
         string click = NativeClickSource.Presentation;
-        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
-        string handleKey = Slice(flow, "private bool HandleKey(");
+        string pointerConfirm = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string handleKey = NativeFrontendSource.RootFunction("handle_key");
 
         Assert.Contains("RetailLevelSelectLaterFadd20", level, StringComparison.Ordinal);
         Assert.Contains("RetailLevelSelectLaterFadd20.Offset", level, StringComparison.Ordinal);

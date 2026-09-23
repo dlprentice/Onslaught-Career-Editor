@@ -38,6 +38,7 @@ public sealed partial class CareerNameSceneChecks : Node
     public override async void _Ready()
     {
         List<SubViewport> views = [];
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -77,11 +78,11 @@ public sealed partial class CareerNameSceneChecks : Node
             RetailCareerDescriptor[] offscreenNull = descriptors.Take(11).Append(new RetailCareerDescriptor(12, null!, save)).ToArray();
             foreach (int count in new[] { 0, 1, 11, 12, 13 })
             {
-                RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene();
-                host.Initialize(count == 12 ? offscreenNull : descriptors.Take(count).ToArray()); hostView.AddChild(host);
-                host.SetProcess(false); host.SetProcessInput(false);
+                RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host);
+                host.Initialize(count == 12 ? offscreenNull : descriptors.Take(count).ToArray()); hostView.AddChild(host.View);
+                host.View.SetProcess(false); host.View.SetProcessInput(false);
                 host.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
-                host.ConfirmForSmoke(); host.Visible = false; hosts.Add(count, host);
+                host.ConfirmForSmoke(); host.View.Visible = false; hosts.Add(count, host);
             }
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             using (D paths = new()) using (D fonts = new()) using (A frames = new()) Require(page.Call("configure_assets", paths, fonts, frames));
@@ -90,14 +91,14 @@ public sealed partial class CareerNameSceneChecks : Node
             _group = Required[1];
             async Task Sample(RetailFrontendFlow host, Vector2I size, string label, double seconds)
             {
-                foreach (RetailFrontendFlow item in hosts.Values) item.Visible = ReferenceEquals(item, host);
+                foreach (RetailFrontendFlow item in hosts.Values) item.View.Visible = ReferenceEquals(item, host);
                 foreach (SubViewport viewport in views) viewport.Size = size;
                 Fit(nativeStage, size); Fit(referenceStage, size);
-                foreach (RetailFrontendFlow item in hosts.Values) item.Size = size;
+                foreach (RetailFrontendFlow item in hosts.Values) item.View.Size = size;
                 Sync(page, reference, host, seconds);
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 CheckFrame(page, reference, State(host));
-                CheckFrame(host.GetNode<Control>("Stage/CareerName"), reference, State(host));
+                CheckFrame(host.View.GetNode<Control>("Stage/CareerName"), reference, State(host));
                 if (_directory is not null) await ComparePixels(nativeView, referenceView, hostView, label);
                 _samples++;
             }
@@ -133,7 +134,7 @@ public sealed partial class CareerNameSceneChecks : Node
             foreach (string section in new[] { "Header", "List", "Name" })
             {
                 Control authored = page.GetNode<Control>(section), old = reference.GetNode<Control>(section);
-                Control integrated = hosts[11].GetNode<Control>("Stage/CareerName/" + section);
+                Control integrated = hosts[11].View.GetNode<Control>("Stage/CareerName/" + section);
                 Vector2 position = authored.Position, extent = authored.Size, scale = authored.Scale; float rotation = authored.Rotation;
                 foreach (Control component in new[] { authored, old, integrated })
                 {
@@ -158,7 +159,7 @@ public sealed partial class CareerNameSceneChecks : Node
                 using A rows = snapshot["career_names"].AsGodotArray(); rows[0] = new[] { 89 };
             }
             CheckSnapshot(page, State(hosts[11]));
-            foreach (Control component in new[] { page, hosts[11].GetNode<Control>("Stage/CareerName") })
+            foreach (Control component in new[] { page, hosts[11].View.GetNode<Control>("Stage/CareerName") })
             {
                 foreach (Node owner in component.FindChildren("*", "Control", true, false).Prepend(component))
                     Check(!owner.IsProcessing() && !owner.IsProcessingInput() && !owner.IsProcessingUnhandledInput(), "Production Career controls own no clock or input.");
@@ -173,12 +174,14 @@ public sealed partial class CareerNameSceneChecks : Node
             Check(_completed.SequenceEqual(Required) && Required.All(group => _counts.GetValueOrDefault(group) > 0), "All five required groups completed.");
             Check(_samples == 16 && _pixels.Count == (_directory is null ? 0 : 32) && _refusalBoundaries.Count == 2,
                 "All bounded states and refusal observations completed; headless cannot claim pixels.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Report(null); GetTree().Quit(0);
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree();
             GD.PushError(error.ToString()); Report(error.ToString()); GetTree().Quit(1);
         }
@@ -197,12 +200,11 @@ public sealed partial class CareerNameSceneChecks : Node
         var texts = new List<string> { "", "BEA 1", "¡¿", "áàâäçéèêëíìîïóòôöœñúùûüÁÀÄÂÇÉÈÍÌÑÓÒÖÜÚÙŒ¡¿©®™«»ºª\u001fßÊËÎÏÔÛ┐┌", "’–", "$@[\\]^_{|}~\u007f", "A\0B\ud800\udc00\ufffd\uffff" };
         texts.AddRange(Enumerable.Range(0, 288).Select(code => new string((char)code, 1)));
         texts.Add(new string(Enumerable.Range(0, 65536).Select(code => (char)code).ToArray()));
-        MethodInfo extent = typeof(RetailFrontendFlow).GetMethod("MeasureGameNameExtent", Private)!;
         foreach (string text in texts)
         {
             int expected = reference.MeasureNameExtent(text);
             Check(page.Call("measure_name_extent", Units(text)).AsInt64() == expected, "Font22 input extent retains raw UTF-16 mapping, inverted punctuation and trailing spacing.");
-            Check((int)extent.Invoke(host, [text])! == expected, "Live host routes the same exact name extent.");
+            Check(FrontendHarnessChecks.Integer(host, "measure_game_name_extent", Units(text)) == expected, "Live host routes the same exact name extent.");
         }
         using D configured = page.Call("configure_assets").AsGodotDictionary();
         Check(configured["ok"].AsBool(), "Repeat production asset configuration succeeds without a new owner.");
@@ -259,10 +261,9 @@ public sealed partial class CareerNameSceneChecks : Node
     private void CheckHitBounds(Control page, RetailFrontendFlow host, Control stage, IReadOnlyList<SubViewport> views)
     {
         Enter(host, false);
-        MethodInfo target = typeof(RetailFrontendFlow).GetMethod("CareerNameTargetAt", Private)!;
         foreach (Vector2I size in new[] { new Vector2I(640, 480), new Vector2I(1280, 720), new Vector2I(801, 601), new Vector2I(320, 240) })
         {
-            foreach (SubViewport view in views) view.Size = size; host.Size = size; Fit(stage, size);
+            foreach (SubViewport view in views) view.Size = size; host.View.Size = size; Fit(stage, size);
             foreach (Rect2 rect in new[] { new Rect2(0, 430, 46, 48), new Rect2(595, 430, 45, 48), new Rect2(128, 408, 403, 44) })
             {
                 float cx = rect.Position.X + rect.Size.X * .5f, cy = rect.Position.Y + rect.Size.Y * .5f;
@@ -271,7 +272,7 @@ public sealed partial class CareerNameSceneChecks : Node
                 foreach (Vector2 point in points)
                 {
                     int expected = CareerNameReference.HitTest(point);
-                    Check(page.Call("hit_test", point).AsInt32() == expected && (int)target.Invoke(host, [point])! == expected,
+                    Check(page.Call("hit_test", point).AsInt32() == expected && FrontendHarnessChecks.Hit(host, "career_name_target_at", point) == expected,
                         "Native and host preserve exact half-open design-space targets without a Stage roundtrip.");
                 }
             }
@@ -281,7 +282,7 @@ public sealed partial class CareerNameSceneChecks : Node
 
     private void CheckNavigation(RetailFrontendFlow empty, RetailFrontendFlow host, RetailCareerDescriptor[] descriptors, RetailCareerSave save)
     {
-        host.Size = new(640, 480); empty.Size = new(640, 480);
+        host.View.Size = new(640, 480); empty.View.Size = new(640, 480);
         var effects = new List<string>(); RetailCareerDescriptor? selected = null; int exits = 0;
         void Audio(RetailFrontendAudioCue cue) => effects.Add("audio:" + cue);
         void Cursor(RetailFrontendCursorMode mode) => effects.Add("cursor:" + mode);
@@ -294,7 +295,7 @@ public sealed partial class CareerNameSceneChecks : Node
             var expected = new RetailFrontendSession(descriptors); expected.Confirm(); expected.Confirm();
             foreach (char character in new[] { 'X', '¡', '¿', 'é', '’', '–', '$', '\ud800' })
             {
-                int extent = host.GetNode<Control>("Stage/CareerName").Call("measure_name_extent", Units(expected.GameName)).AsInt32();
+                int extent = host.View.GetNode<Control>("Stage/CareerName").Call("measure_name_extent", Units(expected.GameName)).AsInt32();
                 expected.AppendGameNameCharacter(character, extent); Character(host, character);
                 CompareState(State(host), expected, "actual key character path");
             }
@@ -368,16 +369,15 @@ public sealed partial class CareerNameSceneChecks : Node
                 ["game_name"] = default(Variant), ["game_name_is_fresh"] = State(host).GameNameIsFresh, ["background_seconds"] = 0d };
             using D selectedResult = page.Call("set_frame", selectedFacts).AsGodotDictionary();
             Check(!selectedResult["ok"].AsBool() && selectedResult["error_type"].AsString() == nameof(InvalidDataException), "Native display boundary refuses the selected null name.");
-            MethodInfo refresh = typeof(RetailFrontendFlow).GetMethod("UpdateCareerNameFrame", Private)!;
-            string hostFailure = ErrorType(() => refresh.Invoke(host, null));
-            // The retained host adapter projects the current name with LINQ
-            // before calling the native view. Preserve and report that actual
-            // ArgumentNullException; it is not the native API's refusal stage.
+            string hostFailure = ErrorType(() => FrontendHarnessChecks.Command(host, "update_career_name_frame"));
+            // The production root preserves the prior checked selected-name
+            // refusal before calling the display component. The native display
+            // admission has its own separately asserted error boundary.
             Check(hostFailure == original, "Live host retains the original selected-null exception type; actual=" + hostFailure);
             _refusalBoundaries.Add(new { name = "selected_offscreen_null_name", original_error = original,
                 native_error = selectedResult["error_type"].AsString(), host_error = hostFailure,
                 original_stage = "DrawDevSelect checked name-width sum", native_stage = "set_frame admission",
-                host_stage = "UpdateCareerNameFrame raw UTF-16 projection" });
+                host_stage = "native root checked career-name projection" });
         }
         finally
         {
@@ -411,13 +411,13 @@ public sealed partial class CareerNameSceneChecks : Node
     {
         for (int attempts = 0; host.CurrentScreen != RetailFrontendScreen.MainMenu && attempts < 3; attempts++) Key(host, Godot.Key.Escape);
         Check(host.CurrentScreen == RetailFrontendScreen.MainMenu, "Career page is entered through the actual Main Menu.");
-        SetField(host, "_mainTransitionTime", 0); SetField(host, "_mainTransitionCount", 0);
+        SetField(host, "_main_transition_time", 0); SetField(host, "_main_transition_count", 0);
         host.SelectMainIndexForCapture(load ? 2 : 0); host.ConfirmForSmoke();
         Check(host.CurrentScreen == RetailFrontendScreen.DevSelect && State(host).CareerPageMode == (load ? RetailFrontendCareerPageMode.Load : RetailFrontendCareerPageMode.New), "Requested existing career mode is active.");
     }
     private static void Sync(Control page, CareerNameReference reference, RetailFrontendFlow host, double seconds)
     {
-        SetField(host, "_feBackSeconds", seconds); host.SelectMainIndexForCapture(0); // Queues one display batch even outside Main.
+        SetField(host, "_fe_back_seconds", seconds); host.SelectMainIndexForCapture(0); // Queues one display batch even outside Main.
         GdFrontendSession state = State(host);
         using A names = new(); foreach (string name in state.CareerNames)
         { using Variant units = name is null ? default(Variant) : Units(name); names.Add(units); }
@@ -425,18 +425,18 @@ public sealed partial class CareerNameSceneChecks : Node
             ["game_name"] = Units(state.GameName), ["game_name_is_fresh"] = state.GameNameIsFresh, ["background_seconds"] = seconds };
         Require(page.Call("set_frame", facts)); reference.SetFrame(state.CareerNames, state.SelectedCareerIndex, state.GameName, state.GameNameIsFresh, seconds);
     }
-    private static GdFrontendSession State(RetailFrontendFlow host) => (GdFrontendSession)typeof(RetailFrontendFlow).GetField("_session", Private)!.GetValue(host)!;
-    private static void SetField(RetailFrontendFlow host, string name, object value) => typeof(RetailFrontendFlow).GetField(name, Private)!.SetValue(host, value);
+    private static GdFrontendSession State(RetailFrontendFlow host) => GdFrontendSession.BorrowExisting(host.View);
+    private static void SetField(RetailFrontendFlow host, string name, Variant value) => host.View.Set(name, value);
     private static int[] Units(string value) => value.Select(character => (int)character).ToArray();
     private static uint Bits(float value) => unchecked((uint)BitConverter.SingleToInt32Bits(value));
     private static Color Retail(uint argb) => new(Math.Min(255u, (((argb >> 16) & 255u) * 255u) >> 7) / 255f,
         Math.Min(255u, (((argb >> 8) & 255u) * 255u) >> 7) / 255f, Math.Min(255u, ((argb & 255u) * 255u) >> 7) / 255f, (argb >> 24) / 255f);
     private static void Key(RetailFrontendFlow host, Godot.Key key)
-    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key }; host._Input(input); }
+    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Character(RetailFrontendFlow host, char character, bool echo = false)
-    { using var input = new InputEventKey { Pressed = true, Unicode = character, Echo = echo }; host._Input(input); }
+    { using var input = new InputEventKey { Pressed = true, Unicode = character, Echo = echo }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Click(RetailFrontendFlow host, Vector2 point)
-    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; host._Input(input); }
+    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Require(Variant returned)
     {
         using (returned)

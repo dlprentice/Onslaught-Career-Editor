@@ -21,6 +21,7 @@ public sealed partial class OptionsBridgeChecks : Node
     public override async void _Ready()
     {
         RetailFrontendFlow? view = null;
+        List<RetailFrontendFlow> facades = [];
         try
         {
             foreach (string argument in OS.GetCmdlineUserArgs())
@@ -35,15 +36,14 @@ public sealed partial class OptionsBridgeChecks : Node
             }
 
             Input.MouseModeEnum pointer = Input.MouseMode;
-            view = RetailFrontendFlow.InstantiateScene();
+            view = RetailFrontendFlow.InstantiateScene(); facades.Add(view);
             view.Initialize([]);
-            AddChild(view);
-            view.SetProcess(false);
-            view.SetProcessInput(false);
+            AddChild(view.View);
+            view.View.SetProcess(false);
+            view.View.SetProcessInput(false);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            Check(typeof(RetailFrontendFlow).GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                .All(field => field.FieldType != typeof(RetailOptionsMenu)), "Live frontend has no C# Options state owner.");
-            Check(view.GetNode<Control>("Stage/Options/Pages").GetChildCount() == 4, "The live frontend embeds the four production Options pages.");
+            Check(FrontendHarnessChecks.HasNativeRoot(view), "The live frontend controller is native and the managed facade is not a Node.");
+            Check(view.View.GetNode<Control>("Stage/Options/Pages").GetChildCount() == 4, "The live frontend embeds the four production Options pages.");
             CheckFonts(view);
             CheckLiveFrontendFonts(view);
             Complete("font_arithmetic");
@@ -61,14 +61,15 @@ public sealed partial class OptionsBridgeChecks : Node
             // Inspector borrows must preserve the production font resources
             // shared by all native frontend pages.
             CheckLiveFrontendFonts(view);
-            view.QueueRedraw();
+            FrontendHarnessChecks.Command(view, "redraw");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             CheckLiveFrontendFonts(view);
             Check(Input.MouseMode == pointer, "Options frontend initialization and navigation leave pointer mode unchanged.");
-            Check(view.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0, "The Options scene does not create an audio playback owner.");
-            Check(view.FindChildren("*", "Camera3D", true, false).Count == 0, "Options navigation does not start a game world.");
-            view.QueueFree();
+            Check(view.View.FindChildren("*", "AudioStreamPlayer", true, false).Count == 0, "The Options scene does not create an audio playback owner.");
+            Check(view.View.FindChildren("*", "Camera3D", true, false).Count == 0, "Options navigation does not start a game world.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
+            view.View.QueueFree();
             view = null;
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -79,7 +80,8 @@ public sealed partial class OptionsBridgeChecks : Node
         }
         catch (Exception error)
         {
-            view?.QueueFree();
+            FrontendHarnessChecks.ReleaseFacades(facades);
+            if (view is not null && GodotObject.IsInstanceValid(view.View)) view.View.QueueFree();
             GD.PushError(error.ToString());
             GD.Print("OPTIONS_BRIDGE_CHECKS: ", System.Text.Json.JsonSerializer.Serialize(new
             { schema = 1, checks = _checks, failure_count = 1, completed = _completed, error = error.Message,
@@ -107,7 +109,7 @@ public sealed partial class OptionsBridgeChecks : Node
             int[] expected = (int[])widthOracle.Invoke(null, [image, cell, 16])!;
             int[] actual = font.Call("glyph_widths").AsInt32Array();
             Check(actual.SequenceEqual(expected), "Every atlas width matches the retained C# scan for " + cell);
-            using Variant liveFontValue = view.GetNode("Stage/LevelSelect").Get(title ? "title_font" : "body_font");
+            using Variant liveFontValue = view.View.GetNode("Stage/LevelSelect").Get(title ? "title_font" : "body_font");
             Resource liveFont = liveFontValue.As<Resource>();
             Check(liveFont.GetInstanceId() == font.GetInstanceId()
                 && liveFont.Call("glyph_widths").AsInt32Array().SequenceEqual(expected),
@@ -137,7 +139,7 @@ public sealed partial class OptionsBridgeChecks : Node
             Resource shared = sharedValue.As<Resource>();
             foreach (string path in new[] { "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration" })
             {
-                using Variant fontValue = view.GetNode("Stage/" + path).Get(name);
+                using Variant fontValue = view.View.GetNode("Stage/" + path).Get(name);
                 Resource font = fontValue.As<Resource>();
                 Check(GodotObject.IsInstanceValid(font) && font.GetInstanceId() == shared.GetInstanceId(),
                     "Native pages retain the same production font after inspection: " + path + "/" + name);
@@ -181,7 +183,7 @@ public sealed partial class OptionsBridgeChecks : Node
             Check(actual == expected, $"FEBack phase matches C# at {time}/{count}: expected {expected}, actual {actual}.");
         }
 
-        Texture2D[] frames = Field<Texture2D[]>(view, "_feBackFrames");
+        Texture2D[] frames = FrontendHarnessChecks.SharedFrames(view);
         string path = ProjectSettings.GlobalizePath("res://Assets/Frontend/Backgrounds/fe-back-128x128x30.rgb");
         byte[] strip = File.ReadAllBytes(path);
         const int frameBytes = 128 * 128 * 3;
@@ -372,7 +374,7 @@ public sealed partial class OptionsBridgeChecks : Node
         state = view.OptionsView.Call("view_snapshot").AsGodotDictionary();
         Check(view.OptionsSettings.SoundVolume == 0.3f && (float)state["settings"].AsGodotDictionary()["sound_volume"].AsDouble() == 0.3f,
             "Reentrant actions leave the host cache and native owner aligned.");
-        Check(Field<Dictionary<int, System.Runtime.ExceptionServices.ExceptionDispatchInfo>>(view, "_optionsEffectFailures").Count == 0,
+        Check(view.PendingCallbackFailureCount == 0,
             "Handled observer failures leave no retained exception transport records.");
         view.BackFromOptionsForCapture();
         view.BackFromOptionsForCapture();
@@ -398,17 +400,16 @@ public sealed partial class OptionsBridgeChecks : Node
         foreach (int code in text) width += (widths[code >= 32 && code < 288 ? code - 32 : 31] + 1) * scale;
         return Mathf.Max(0f, width - scale);
     }
-    private static T Field<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(owner)!;
     private static bool Same(RetailOptionsSettings a, RetailOptionsSettings b) => a.SoundVolume == b.SoundVolume
         && a.MusicVolume == b.MusicVolume && a.MouseSensitivity == b.MouseSensitivity && a.SoundQuality == b.SoundQuality && a.VSync == b.VSync;
     private void Record(string effect, RetailOptionsSettings value) => _events.Add((effect, value.SoundVolume, value.MusicVolume, value.MouseSensitivity));
     private static bool Key(RetailFrontendFlow view, Key key)
     {
         using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key };
-        return (bool)typeof(RetailFrontendFlow).GetMethod("HandleKey", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(view, [input])!;
+        return FrontendHarnessChecks.Boolean(view, "handle_key", input);
     }
-    private static bool PointerConfirm(RetailFrontendFlow view, Vector2 point) => (bool)typeof(RetailFrontendFlow)
-        .GetMethod("HandleOptionsPointerConfirm", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(view, [point])!;
+    private static bool PointerConfirm(RetailFrontendFlow view, Vector2 point) =>
+        FrontendHarnessChecks.Boolean(view, "handle_options_pointer_confirm", point);
     private void Check(bool condition, string message)
     {
         _checks++;

@@ -193,8 +193,8 @@ public sealed class RetailLevelSelectSlidingBordersTests
         string quit = NativeQuitSource.Presentation;
         string loading = NativeLoadingSource.Presentation;
         string click = NativeClickSource.Presentation;
-        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
-        string handleKey = Slice(flow, "private bool HandleKey(");
+        string pointerConfirm = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string handleKey = NativeFrontendSource.RootFunction("handle_key");
 
         Assert.Contains("RetailLevelSelectSlidingBorders", level, StringComparison.Ordinal);
         Assert.Contains("RetailLevelSelectSlidingBorders.Applies", level, StringComparison.Ordinal);
@@ -257,11 +257,11 @@ public sealed class RetailLevelSelectSlidingBordersTests
         Assert.Contains("return _facts.duplicate(true)", NativeLevelSelectSource.Function("view_snapshot"), StringComparison.Ordinal);
 
         string bridge = NativeLevelSelectSource.Bridge;
-        Assert.Contains("GetNode<Control>(\"Stage/LevelSelect\")", bridge, StringComparison.Ordinal);
-        Assert.Contains("Engine.IsEditorHint()", bridge, StringComparison.Ordinal);
-        Assert.Contains(".Call(\"show_editor_preview\")", bridge, StringComparison.Ordinal);
-        Assert.Single(System.Text.RegularExpressions.Regex.Matches(bridge, @"\.Call\(""set_frame""", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(2)));
-        foreach (string forbidden in new[] { "DrawTexture", "DrawString", "DrawRect", "DrawLine", "DrawArc", "new Control", "new TextureRect", "new RetailFrontendSession" })
+        Assert.Contains("get_node(\"Stage/LevelSelect\")", NativeFrontendSource.PageFunction("_configure_level"), StringComparison.Ordinal);
+        Assert.Contains("EditorPage if Engine.is_editor_hint() else -1", NativeFrontendSource.RootFunction("redraw"), StringComparison.Ordinal);
+        Assert.Contains("_level.show_editor_preview()", bridge, StringComparison.Ordinal);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(bridge, @"_level\.set_frame\(", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(2)));
+        foreach (string forbidden in new[] { "draw_texture", "draw_string", "draw_rect", "draw_line", "draw_arc", "Control.new", "TextureRect.new", "Frontend.create" })
             Assert.DoesNotContain(forbidden, bridge, StringComparison.Ordinal);
     }
 

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native frontend cursor and asset routing; frontend page drawing, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native frontend orchestration and host handoffs; live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1175,6 +1175,104 @@ or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
 display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
+
+#### Native frontend orchestration — September 23
+
+`Frontend.tscn` now uses `frontend_flow.gd` as its actual Control script. It owns
+its one native Session, clocks, input, page binding, loading and intro completion.
+`frontend_pages.gd` configures the same ten production pages in their original
+order. `RetailFrontendFlow` is now a non-Node managed facade for coarse commands,
+verified save identities and synchronous typed host callbacks. No managed frame
+loop or per-page frame batch remains. C# scene comparison helpers live under
+`Scenes/Frontend/Tests/`; their retained numerical/pixel expectations are unchanged.
+
+The conversion preserves failure points as well as successful navigation. In
+particular, an initialization observer can replace `AssetPaths` before later page
+reads; failed localization retains the preceding Add/field writes; and a host
+observer can throw or reenter after a loading mutation. Native checked results
+stop the interrupted operation. Explicit facade calls rethrow the same managed
+observer exception and retire their temporary exception tokens. JSON reader
+failures cross that temporary facade as public `JsonException` (the original
+.NET `JsonReaderException` subtype is internal); native admission and its failure
+ordering remain checked separately.
+
+Receipts are under this worktree's ignored `local-data/test-runs/`:
+
+- `frontend-native-parse-qvcqjlll/`: standard-engine parser check and **177
+  localization assertions** across five groups passed. Partial writes, all ten
+  field boundaries, duplicate Add/retry order, last JSON property, raw UTF-16 and
+  the unchanged atomic loader APIs are covered.
+- `frontend-native-scene-kwtjx7c_/`: the complete frontend passed the existing
+  standard-engine runtime scene inspection, shared production assets, layout
+  editing, pack/reopen and private-pixel exclusion checks.
+- `frontend-flow-editor-gnibq925/`: the complete standard-engine headless editor
+  passed all ten frozen page selections, authored edits and pack/reopen, without
+  pointer, gameplay or audio ownership. The known scripted editor exit still
+  reported **166 ObjectDB instances** and associated RID allocations; this was
+  a functional pass, not a clean editor shutdown.
+- `frontend-flow-final-nl0k8ksd/`: supported .NET build and private Level 100
+  import passed with no compiler warnings or errors. All twelve managed
+  frontend harnesses passed: Session **1,025**, Options **6,048**, Loading
+  **234**, Debriefing **212**, Cursor **20**, Click **136**, Main Menu **1,832**,
+  Quit **1,457**, Career Name **6,338**, Configuration **1,997**, Briefing
+  **2,656** and Level Select **7,669** assertions. Session includes **57**
+  focused synchronous callback failure/reentry assertions, exact original
+  exception identity, partial mutations and exception-token retirement. Settled
+  native frames make no facade calls or redundant host-state notifications.
+- `frontend-flow-client-oy654utz/`: affected Client checks passed **436**, with
+  **one existing capture-dependent HeaderFont skip**, no failures and a clean
+  compile. Numerical fixtures remained unchanged; source-wiring checks now
+  inspect the actual native owners.
+- `frontend-flow-native-verified-chad7xnz/`: standard Godot passed **35** focused
+  controller assertions across route precedence, initialization failure/retry
+  and native timing/input. Its report separately exposes **one environment
+  parity gap**, described below. The runtime and editor scene checks again
+  passed all ten editable pages, shared assets and private-pixel exclusion;
+  the editor retained the same **166-instance** shutdown allocation warning.
+- `frontend-flow-render-51phmvq_/`: isolated authenticated Xvfb and llvmpipe
+  comparisons passed **2,282** Main Menu and **33** cursor assertions. All
+  **178 Main Menu** and **six cursor** image pairs matched their retained
+  C# rendering references exactly. Private captures stayed in the owned output
+  directory; the display, credentials and child processes were cleaned up.
+- `frontend-flow-smoke-19wub5xx/`: final supported build/private import passed,
+  followed by the headless startup→menus→Level 100→retry→main-menu smoke and
+  two replay repetitions. The **2,148-tick** run retained trace hash
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state hash
+  `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`.
+  Its mission remained **Running / None**, with **zero targets destroyed**;
+  this is lifecycle/replay evidence, not combat completion.
+
+The route check initially failed **one of 34** assertions in
+`frontend-flow-native-final-3w5um7z2/`. The isolated probe
+`frontend-env-probe-igpwftri/` establishes that pinned Linux Godot's
+`OS.get_environment` removes a leading U+FEFF, including a BOM-only value.
+The .NET probe in `frontend-flow-smoke-19wub5xx/` preserves both cases and
+does not classify them as whitespace. A BOM-only native environment value can
+therefore fall through to another media owner. The final native report keeps
+the original expected bytes and actual route under `parity_gaps`; it does not
+claim equivalent environment routing. The actual prefixed command-line probe
+in `frontend-flow-native-verified-chad7xnz/` preserves U+FEFF through
+`--startup-media=`. Open question: can a later pinned engine expose environment
+values without this loss? Re-run this focused probe when reviewing that engine;
+do not change the whitespace law or infer that retail paths contain this edge.
+
+The standalone frontend has no world-construction callback; reaching Loading
+there does not establish a standard-engine game. Full combat completion remains
+unresolved. Software rendering, headless input events and synthetic handoff
+fixtures do not establish physical input, audible playback, normal GPU performance
+or Windows behavior. Existing retail header/art and editor shutdown gaps remain.
+
+Run standard `godot48 --headless --audio-driver Dummy --path
+rebuild/OnslaughtRebuild.Godot --script res://Tests/frontend_localization_checks.gd`
+for the pure admission checks. The production scene harness remains
+`res://Scenes/Frontend/Tests/frontend_scene_checks.gd`; add `--editor` for its
+frozen editor path. Run the standard engine with
+`--script res://Tests/frontend_flow_checks.gd -- --skipfmv` for controller checks;
+inspect its `parity_gaps` as well as `failure_count`. Run .NET
+`FrontendSessionSceneChecks.tscn` with `--skipfmv`
+and an explicit absolute `--gold-career-fixture=.../tests_shared/fixtures/gold_career_save.bin`
+for its managed host, exact verified object identity and read-only fixture checks.
 
 #### Native cursor and asset routing — September 23
 

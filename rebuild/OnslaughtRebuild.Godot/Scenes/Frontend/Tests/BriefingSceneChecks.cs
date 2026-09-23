@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
@@ -20,7 +19,6 @@ namespace OnslaughtRebuild.GodotClient;
 /// </summary>
 public sealed partial class BriefingSceneChecks : Node
 {
-    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private const string Fixture = "res://../../tests_shared/fixtures/gold_career_save.bin";
     private static readonly string[] Required = ["production_assets_and_wrap", "frames_and_host", "hit_bounds_and_navigation", "authored_sections", "read_only_and_ownership"];
     private static readonly string[] Passes = ["Background/Rock", "Background/Ring", "Header/Panel", "Header/Title", "LevelName/Text", "Body/Text", "Navigation/Back", "Navigation/Forward"];
@@ -37,6 +35,7 @@ public sealed partial class BriefingSceneChecks : Node
     public override async void _Ready()
     {
         List<SubViewport> views = [];
+        List<RetailFrontendFlow> facades = [];
         try
         {
             string[] arguments = OS.GetCmdlineUserArgs();
@@ -74,12 +73,12 @@ public sealed partial class BriefingSceneChecks : Node
             var hosts = new Dictionary<int, RetailFrontendFlow>();
             foreach (int world in new[] { 100, 110 })
             {
-                RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene();
+                RetailFrontendFlow host = RetailFrontendFlow.InstantiateScene(); facades.Add(host);
                 RetailCareerDescriptor[] suppliedCareers = world == 100 ? [] : [new RetailCareerDescriptor(1, "Read-only gold fixture", save)];
                 host.Initialize(suppliedCareers);
-                hostView.AddChild(host); host.SetProcess(false); host.SetProcessInput(false);
+                hostView.AddChild(host.View); host.View.SetProcess(false); host.View.SetProcessInput(false);
                 host.SetMouseCursorDesignPositionForCapture(new Vector2(-100f, -100f));
-                EnterBriefing(host, world, suppliedCareers.SingleOrDefault()); host.Visible = false; hosts.Add(world, host);
+                EnterBriefing(host, world, suppliedCareers.SingleOrDefault()); host.View.Visible = false; hosts.Add(world, host);
             }
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Require(page.Call("configure_assets"));
@@ -88,15 +87,15 @@ public sealed partial class BriefingSceneChecks : Node
             _group = Required[1];
             async Task Sample(RetailFrontendFlow host, Vector2I size, string label, Frame facts, bool includeHost = true, Frame? displayed = null)
             {
-                foreach (RetailFrontendFlow current in hosts.Values) current.Visible = includeHost && ReferenceEquals(current, host);
+                foreach (RetailFrontendFlow current in hosts.Values) current.View.Visible = includeHost && ReferenceEquals(current, host);
                 foreach (SubViewport viewport in views) viewport.Size = size;
                 Fit(nativeStage, size); Fit(referenceStage, size);
-                foreach (RetailFrontendFlow current in hosts.Values) current.Size = size;
+                foreach (RetailFrontendFlow current in hosts.Values) current.View.Size = size;
                 using D batch = Facts(facts); Require(page.Call("set_frame", batch)); reference.SetFrame(displayed ?? facts);
                 if (includeHost) host.SelectMainIndexForCapture(0);
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 CheckFrame(page, reference, facts, displayed ?? facts);
-                if (includeHost) CheckFrame(host.GetNode<Control>("Stage/MissionBriefing"), reference, ReadFrame(host), ReadFrame(host));
+                if (includeHost) CheckFrame(host.View.GetNode<Control>("Stage/MissionBriefing"), reference, ReadFrame(host), ReadFrame(host));
                 if (_directory is not null) await ComparePixels(nativeView, referenceView, includeHost ? hostView : null, label);
                 _samples++;
             }
@@ -118,7 +117,7 @@ public sealed partial class BriefingSceneChecks : Node
             Complete();
 
             _group = Required[2];
-            hosts[100].Visible = true;
+            hosts[100].View.Visible = true;
             CheckHitBounds(page, hosts[100], nativeStage, views);
             CheckNavigation(hosts[100], 100); CheckNavigation(hosts[110], 110);
             Complete();
@@ -128,7 +127,7 @@ public sealed partial class BriefingSceneChecks : Node
             foreach (string section in new[] { "Body", "Header", "LevelName" })
             {
                 Control authored = page.GetNode<Control>(section), old = reference.GetNode<Control>(section);
-                Control integrated = hosts[100].GetNode<Control>("Stage/MissionBriefing/" + section);
+                Control integrated = hosts[100].View.GetNode<Control>("Stage/MissionBriefing/" + section);
                 Vector2 position = authored.Position, extent = authored.Size, scale = authored.Scale; float rotation = authored.Rotation;
                 foreach (Control component in new[] { authored, old, integrated })
                 {
@@ -172,7 +171,7 @@ public sealed partial class BriefingSceneChecks : Node
                 snapshot["level_name"] = new[] { 90 }; using A paragraphs = snapshot["paragraphs"].AsGodotArray(); paragraphs[0] = new[] { 91 };
             }
             CheckSnapshot(page, production);
-            foreach (Control component in new[] { page, hosts[100].GetNode<Control>("Stage/MissionBriefing"), hosts[110].GetNode<Control>("Stage/MissionBriefing") })
+            foreach (Control component in new[] { page, hosts[100].View.GetNode<Control>("Stage/MissionBriefing"), hosts[110].View.GetNode<Control>("Stage/MissionBriefing") })
             {
                 foreach (Node owner in component.FindChildren("*", "Control", true, false).Prepend(component))
                     Check(!owner.IsProcessing() && !owner.IsProcessingInput() && !owner.IsProcessingUnhandledInput(), "Briefing controls own no clock or input.");
@@ -185,12 +184,14 @@ public sealed partial class BriefingSceneChecks : Node
             Complete();
             Check(_completed.SequenceEqual(Required) && Required.All(group => _counts.GetValueOrDefault(group) > 0), "Every required group completed.");
             Check(_samples == 16 && _pixels.Count == (_directory is null ? 0 : 27), "All bounded states completed; headless makes no pixel claim.");
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree(); views.Clear();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Report(null); GetTree().Quit(0);
         }
         catch (Exception error)
         {
+            FrontendHarnessChecks.ReleaseFacades(facades);
             foreach (SubViewport viewport in views) viewport.QueueFree();
             GD.PushError(error.ToString()); Report(error.ToString()); GetTree().Quit(1);
         }
@@ -210,7 +211,7 @@ public sealed partial class BriefingSceneChecks : Node
         SameTexture(page.GetNode("Background/Rock").Get("texture").As<Texture2D>(), reference.Rock, "rock");
         SameTexture(page.GetNode("Background/Ring").Get("texture").As<Texture2D>(), reference.Ring, "ring");
         SameTexture(page.GetNode("Navigation/Forward").Get("texture").As<Texture2D>(), reference.Arrow, "arrow");
-        using Variant shared = host.GetNode("Stage/MissionBriefing").Get("body_font"); using Variant existing = host.GetNode("Stage/Options").Get("body_font");
+        using Variant shared = host.View.GetNode("Stage/MissionBriefing").Get("body_font"); using Variant existing = host.View.GetNode("Stage/Options").Get("body_font");
         Check(shared.AsGodotObject().GetInstanceId() == existing.AsGodotObject().GetInstanceId(), "The host reuses the admitted body-font recipe.");
         const string ceiling = "Tatiana will take you through the";
         Check(reference.TextWidth(ceiling, false, 1f) == 286f, "The original measured line lies exactly at the retained 286 ceiling.");
@@ -296,10 +297,9 @@ public sealed partial class BriefingSceneChecks : Node
 
     private void CheckHitBounds(Control page, RetailFrontendFlow host, Control stage, IReadOnlyList<SubViewport> views)
     {
-        MethodInfo target = typeof(RetailFrontendFlow).GetMethod("BriefingTargetAt", Private)!;
         foreach (Vector2I size in Sizes.Append(new(1024, 768)))
         {
-            foreach (SubViewport view in views) view.Size = size; host.Size = size; Fit(stage, size);
+            foreach (SubViewport view in views) view.Size = size; host.View.Size = size; Fit(stage, size);
             foreach (Rect2 rect in new[] { new Rect2(0, 430, 48, 48), new Rect2(595, 430, 45, 48) })
             {
                 float cx = rect.Position.X + rect.Size.X * .5f, cy = rect.Position.Y + rect.Size.Y * .5f;
@@ -308,7 +308,7 @@ public sealed partial class BriefingSceneChecks : Node
                 foreach (Vector2 point in points)
                 {
                     int expected = BriefingReference.HitTest(point);
-                    Check(page.Call("hit_test", point).AsInt32() == expected && (int)target.Invoke(host, [point])! == expected,
+                    Check(page.Call("hit_test", point).AsInt32() == expected && FrontendHarnessChecks.Hit(host, "briefing_target_at", point) == expected,
                         "Native and host preserve exact half-open design-space hits without a Stage roundtrip.");
                 }
             }
@@ -318,7 +318,7 @@ public sealed partial class BriefingSceneChecks : Node
 
     private void CheckNavigation(RetailFrontendFlow host, int world)
     {
-        host.Size = new(640, 480); var effects = new List<string>(); int loads = 0, starts = 0, activations = 0, exits = 0;
+        host.View.Size = new(640, 480); var effects = new List<string>(); int loads = 0, starts = 0, activations = 0, exits = 0;
         void Audio(RetailFrontendAudioCue cue) => effects.Add("audio:" + cue);
         void Cursor(RetailFrontendCursorMode mode) => effects.Add("cursor:" + mode);
         void Load() => loads++; void Start() => starts++; void Activated() => activations++; void Exit() => exits++;
@@ -356,7 +356,7 @@ public sealed partial class BriefingSceneChecks : Node
     private void EnterBriefing(RetailFrontendFlow host, int world, RetailCareerDescriptor? suppliedCareer)
     {
         host.ConfirmForSmoke(); Check(host.CurrentScreen == RetailFrontendScreen.MainMenu, "Cold frontend enters Main Menu.");
-        SetField(host, "_mainTransitionTime", 0); SetField(host, "_mainTransitionCount", 0);
+        SetField(host, "_main_transition_time", 0); SetField(host, "_main_transition_count", 0);
         host.SelectMainIndexForCapture(world == 100 ? 0 : 2); host.ConfirmForSmoke();
         Check(host.CurrentScreen == RetailFrontendScreen.DevSelect, "Existing New or verified Load route enters Career Name.");
         if (world != 100)
@@ -394,14 +394,14 @@ public sealed partial class BriefingSceneChecks : Node
         return new() { ["level_name"] = Units(frame.SelectedLevelName), ["paragraphs"] = paragraphs };
     }
     private static Frame ReadFrame(RetailFrontendFlow host) => new(State(host).SelectedLevelName, State(host).SelectedBriefingBody);
-    private static GdFrontendSession State(RetailFrontendFlow host) => (GdFrontendSession)typeof(RetailFrontendFlow).GetField("_session", Private)!.GetValue(host)!;
-    private static void SetField(RetailFrontendFlow host, string name, object value) => typeof(RetailFrontendFlow).GetField(name, Private)!.SetValue(host, value);
+    private static GdFrontendSession State(RetailFrontendFlow host) => GdFrontendSession.BorrowExisting(host.View);
+    private static void SetField(RetailFrontendFlow host, string name, Variant value) => host.View.Set(name, value);
     private static int[] Units(string value) => value.Select(character => (int)character).ToArray();
     private static uint Bits(float value) => unchecked((uint)BitConverter.SingleToInt32Bits(value));
     private static void Key(RetailFrontendFlow host, Godot.Key key, bool echo = false)
-    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key, Echo = echo }; host._Input(input); }
+    { using var input = new InputEventKey { Pressed = true, Keycode = key, PhysicalKeycode = key, Echo = echo }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Click(RetailFrontendFlow host, Vector2 point)
-    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; host._Input(input); }
+    { using var input = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left, Position = point }; FrontendHarnessChecks.Command(host, "handle_input", input); }
     private static void Require(Variant returned)
     {
         using (returned)

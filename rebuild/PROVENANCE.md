@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-20 (native Aquila provenance and separately licensed dependencies; earlier claims retain their dated evidence).
+Last updated: 2026-09-23 (native frontend owner; existing evidence and licensing boundaries retained).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
@@ -168,9 +168,10 @@ state, the bounded Godot level-selector page, the mission-briefing and
 select-configuration pages, the released loading image, the
 released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
-Level 100 session/world. The `RetailFrontendScreen` enum in
-`rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
-that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
+Level 100 session/world. The production `Screen` enum in
+`rebuild/OnslaughtRebuild.Godot/Client/frontend_session.gd` owns that list; its
+retained C# comparison is `OnslaughtRebuild.Client/RetailFrontendSession.cs`.
+Re-read those definitions rather than quoting this sentence. `--skipfmv`, smoke,
 and capture modes suppress the reconstructed video sequences. The materializer
 decodes track 0 for the single-track logo/montage and the English Level 100 intro
 beside their lossless video frames. Native Linux intro playback produced audio;

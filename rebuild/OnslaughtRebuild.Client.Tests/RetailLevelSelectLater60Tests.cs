@@ -199,8 +199,8 @@ public sealed class RetailLevelSelectLater60Tests
         string quit = NativeQuitSource.Presentation;
         string loading = NativeLoadingSource.Presentation;
         string click = NativeClickSource.Presentation;
-        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
-        string handleKey = Slice(flow, "private bool HandleKey(");
+        string pointerConfirm = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string handleKey = NativeFrontendSource.RootFunction("handle_key");
 
         Assert.Contains("RetailLevelSelectLater60", level, StringComparison.Ordinal);
         Assert.Contains("RetailLevelSelectLater60.Factor", level, StringComparison.Ordinal);
