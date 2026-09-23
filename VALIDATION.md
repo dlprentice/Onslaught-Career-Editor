@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-20 (composed save/control/language execution; earlier validation retained).
+Last updated: 2026-09-22 (nonnull language-cleanup execution; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -2145,6 +2145,57 @@ graphics-create failure. It does not cover general unlock rules, malformed
 graphs, alternate receivers, retail storage, real devices, visible startup or UI.
 The byte-backed static dependency review and final instrument review are retained
 with exact prompts and full reports in the existing private review owner.
+
+### Original nonnull language cleanup — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/language_cleanup_control.py`
+passed **26 cases**, retaining 16 complete single-range original bodies
+(1,081 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/language-cleanup-run-f_nhvrni/cleanup`;
+receipt SHA-256 `a971620046afeb991e507b2d43a4ffce4b033d3c3e4254323b06c16186a64b5a`;
+ELF SHA-256 `90a56a903bea39990c8c20d743019a191f8832dc83ee6962f34a9b3cbd1a712b`.
+`language-cleanup-controls-v3.log` records the run. The saved driver, assembler/
+linker commands and complete input/output/stderr files retain the instrument.
+The selected pristine executable remains SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Original Cleanup/SetLanguage, outer and nested menu/base/controller-item
+destruction, pooled-list clear, resource decrement, monitored-base invalidation,
+key-sink adapter/store and CText copy execute. The real constructor is excluded;
+objects, references, resources, cache headers and buffers are authored. The
+constructor/vtable ownership link is separately instruction-backed, not executed.
+
+Cases cover null/empty/populated owners, optional child dispatch, repeated
+cleanup, aliased/absent/zero-count resources, absent monitors, embedded-null
+payloads/cells, a zero list count with live nodes, controller flag states,
+deleting-wrapper bit admission and repeated/changed language selection. These
+adverse states are explicit controls, not evidence that retail creates them.
+Complete selected state is compared before/after calls and at **185 ordered
+hook observations**, including the old active text throughout destruction and
+the owner clearing before text-buffer free. Repeated language calls allocate
+distinct buffers; their second cleanup sees null rather than recreating menus.
+
+The key-sink word at `00889008`, its guards, the untouched `00888008` word,
+complete input, unused output capacity and normal FS-chain restoration are
+checked. Integer stack/register guards and PC53-nearest x87 CW/TOP pass. The
+read/write/exit restriction rejects forbidden `getpid` with SIGSYS and no output.
+Original specimen bytes are rechecked unchanged. No Windows exception dispatch,
+whole-process memory preservation or actual input-device behavior is claimed.
+
+The saved v1 failure at `language-cleanup-run-7x9im6kj/cleanup` watched the wrong
+word: a private static review and oracle had misadded `00855bb0 + 33458` as
+`00888008`. Fresh selected instructions establish `00889008`. V2 reran the
+unchanged failing driver after an inspection helper used a string instead of
+the Path required by PeImage. V3 corrects the captured/expected address, seeds
+it nonzero and retains the previous word as an unchanged control. No original
+instructions or expected final hash were substituted to force agreement.
+
+Heap allocation/free and optional child virtual calls remain recording hooks
+with their checked argument cleanup. The large constructor, other derived item
+and actual optional child destructors, real memory reclamation, exception
+unwinding, reentrancy, language-format admission, Load/Save composition and live
+menu recreation/rendering remain outside this cohort. Exact reviewer prompts
+and reports are retained in the existing private review owner.
 
 ### Scheduled-event constructor boundary — September 19
 

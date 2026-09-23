@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-20 (dedicated RE safe pause; unfinished language-cleanup experiment retained)
+Last updated: 2026-09-22 (RE resumed; nonnull language-cleanup controls completed)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -20,18 +20,12 @@ queue revisions remain in Git and existing evidence owners; do not recreate a di
 
 ### Dedicated RE lane — current continuation
 
-David requested a safe pause on September 20 after a usage interruption.
-Completed save-reload and startup-reset work is preserved at `9cd3bc1b`.
-The unfinished nonnull language-cleanup experiment stopped at the
-`controller-item-zero-flag` snapshot assertion; it has no completed receipt or
-accepted new pass count. Its unchanged driver, saved inputs/outputs and failure
-log remain in `local-data/test-runs/save-startup-20260919/`, under
-`language-cleanup-run-7x9im6kj/` and `language-cleanup-controls-v1.log`.
-The existing `loader-language-publication.json` records the exact resume point
-and private review owner. On explicit resumption, resolve the observed key-sink
-state versus the oracle using the saved case and original instructions before
-rerunning or publishing findings. No experiment or Ghidra process was running
-at the pause check; the databases were not opened during checkpointing.
+David resumed this dedicated RE task on September 22 from the preserved pause.
+The interrupted language-cleanup control had watched the wrong input-state
+address. Original instructions resolve that arithmetic error; the corrected
+experiment now passes 26 cases while retaining the old address as an unchanged
+control. Failed runs remain in the existing private owner. No retail body was
+changed to make the checks pass.
 
 Separate tasks own rebuild and companion implementation. The working branch is
 `codex/retail-re-20260919`. Current database and recovery identities remain in
@@ -88,9 +82,18 @@ record storage. This closes the former Goodie hook for the reset route, not the
 complete unlock table or its UI. Exact commands, artifacts and limits belong in
 [VALIDATION.md](VALIDATION.md#original-load-save-and-reload-controls--september-20).
 
-Next, close the remaining nonnull language-cleanup and successful bank/sample
-boundaries, then compose the remaining rechecked services into the preserved
-real-save route. Keep original-code evidence distinct from decoder self-tests,
+Nonnull language cleanup now executes the original outer/nested menu teardown,
+list recycling, resource decrements and monitored-pointer clearing. Composed
+SetLanguage calls retain old text throughout teardown, clear the outer owner,
+then replace the active buffer; repeat selection copies again. Heap operations
+and optional child destruction remain explicit boundaries. The
+[cleanup contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md#nonnull-cleanup-before-text-replacement)
+and [saved controls](VALIDATION.md#original-nonnull-language-cleanup--september-22)
+record exactly what this establishes.
+
+Next, close successful bank/sample loading boundaries, then compose the
+remaining rechecked services into the preserved real-save route. Keep
+original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;
 this RE task does not own those production changes.

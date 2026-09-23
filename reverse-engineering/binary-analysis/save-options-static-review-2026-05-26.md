@@ -1,7 +1,7 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-20
+Last updated: 2026-09-22
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -151,8 +151,13 @@ value `0x12345678` saves `0x5678`. These controls distinguish the two owners,
 not legitimate localization configurations. Index 5 and out-of-buffer pointer
 controls expose missing bounds checks without establishing supported inputs.
 
-The original cleanup's null-object path executes; nonnull destruction remains
-unresolved. Allocator/free and audio services are intercepted. Fresh static
+These September 20 controls execute cleanup's null-object path. The subsequent
+[nonnull cleanup contract](functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md#nonnull-cleanup-before-text-replacement)
+adds 26 direct cleanup/language-change cases: original nested menu destruction,
+resource decrements and monitored-pointer invalidation precede text replacement.
+Its authored objects, intercepted heap and optional child calls leave complete
+UI construction/destruction open; it is not another Load/Save composition.
+Allocator/free and audio services remain intercepted here. Fresh static
 inspection of `CText__Init` confirms that it sets the language field before
 opening or parsing the file, and that its American override/invalid-selector
 fallback can select a different filename without changing that field. Thus
