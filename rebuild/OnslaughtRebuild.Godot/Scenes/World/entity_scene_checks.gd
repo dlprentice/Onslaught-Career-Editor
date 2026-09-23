@@ -170,6 +170,9 @@ func _artwork_checks() -> bool:
 		"VulcanBullet": {"ProjectileTrail": ["vulcan-bullet-trail", 64, 0]},
 		"PulseMuzzleFlash": {"PulseCannonMuzzleFlash": ["particle-alparticle5-additive", 128, 0]},
 		"VulcanImpact": {"VulcanImpactSpark": ["vulcan-impact-spark", 256, 0]},
+		"PulseImpact": {"BlueAnimatedBlob": ["pulse-impact-animated-blob", 256, 1],
+			"FlashMedium": ["effect-flash-medium", 128, 0],
+			"PulseBlastSphere": ["pulse-impact-shockwave", 128, 0]},
 		"TargetTankDestruction": {"TargetTankFlash": ["effect-flash-medium", 128, 0],
 			"ExplosionAnimatedSprite": ["target-tank-explosion-animated", 256, 0],
 			"ExplosionFireball": ["target-tank-explosion-fireball", 256, 1]},
@@ -179,7 +182,7 @@ func _artwork_checks() -> bool:
 			"FacilityFireball": ["target-tank-explosion-fireball", 256, 1],
 			"FacilitySmoke": ["pulse-impact-animated-blob", 256, 1]},
 	}
-	var lifetimes: Dictionary = {"PulseMuzzleFlash": 0.5, "VulcanImpact": 0.25,
+	var lifetimes: Dictionary = {"PulseMuzzleFlash": 0.5, "VulcanImpact": 0.25, "PulseImpact": 1.05,
 		"TargetTankDestruction": 1.5, "TargetDroneDestruction": 1.5, "FacilityDestruction": 15.0}
 	for name: String in definitions:
 		var scene: PackedScene = load("res://Scenes/World/" + name + ".tscn")

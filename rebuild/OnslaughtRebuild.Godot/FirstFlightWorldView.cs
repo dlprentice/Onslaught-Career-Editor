@@ -126,16 +126,15 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _retailChrome3Texture = null!;
     private Texture2D _warehouseOverlayTexture = null!;
     private Camera3D _camera = null!;
-    private Texture2D _pulseImpactAnimatedTexture = null!;
-    private Texture2D _pulseImpactShockwaveTexture = null!;
+    internal const string PulseImpactScenePath = "res://Scenes/World/PulseImpact.tscn";
+    private const string PulseImpactScriptPath = "res://Scenes/World/pulse_impact.gd";
     internal const string VulcanImpactScenePath = "res://Scenes/World/VulcanImpact.tscn";
     private const string VulcanImpactScriptPath = "res://Scenes/World/vulcan_impact.gd";
-    private Texture2D _effectFlashMediumTexture = null!;
     private const string DestructionEffectScriptPath = "res://Scenes/World/destruction_effect.gd";
     internal const string TargetTankDestructionScenePath = "res://Scenes/World/TargetTankDestruction.tscn";
     internal const string TargetDroneDestructionScenePath = "res://Scenes/World/TargetDroneDestruction.tscn";
     internal const string FacilityDestructionScenePath = "res://Scenes/World/FacilityDestruction.tscn";
-    // Detached native clock fact used only by the remaining impact effects.
+    // Detached native clock fact passed to the explicit impact start call.
     private float _particlePresentationSeconds;
     public int TargetVisualCount => _targetVisualCount;
 
@@ -563,20 +562,17 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildPulseCannonPresentation()
     {
-        // Admit shared native recipes in the original texture-load order.
-        // PulseImpact keeps using these exact objects until its own port.
-        _pulseImpactAnimatedTexture = AdmitDestructionArtwork("animated_blob");
-        _pulseImpactShockwaveTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya",
-            128,
-            128,
-            CuratedAyaTextureLoader.Compression.Dxt1);
+        // Admit the production scene recipes in the original six-load order.
+        _ = AdmitDestructionArtwork("animated_blob");
+        using (GDScript pulse = GD.Load<GDScript>(PulseImpactScriptPath))
+        using (Variant returned = pulse.Call("admit_artwork"))
+        using (Godot.Collections.Dictionary result = WorldPresentationResult(returned)) { }
         // The effect and editor share this native texture recipe. Keep its
         // explicit admission at the original third texture-load boundary.
         using (GDScript effect = GD.Load<GDScript>(VulcanImpactScriptPath))
         using (Variant returned = effect.Call("admit_artwork"))
         using (Godot.Collections.Dictionary result = WorldPresentationResult(returned)) { }
-        _effectFlashMediumTexture = AdmitDestructionArtwork("flash_medium");
+        _ = AdmitDestructionArtwork("flash_medium");
         _ = AdmitDestructionArtwork("explosion_animated");
         _ = AdmitDestructionArtwork("fireball");
     }
@@ -591,38 +587,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
     {
-        Node3D root = CreateTimedEffect($"PulseImpact{targetId}-{tick}", position, 1.05d);
-        // `Blue Anim Blob Large Sprite`: Radius 0.7, Final_Radius 0.75,
-        // Life 20 turns = 1.0 s, End_Frame 14 (15 cells), Random_Start_Frame 1,
-        // Texture_Size 2 (a 4x4 grid) - every one of which the animation below
-        // already reproduces.
-        MeshInstance3D animatedBlob = CreateEffectSprite(
-            "BlueAnimatedBlob",
-            _pulseImpactAnimatedTexture,
-            0.7f,
-            columns: 4,
-            rows: 4);
-        root.AddChild(animatedBlob);
-        AnimatePulseImpactBlob(root, animatedBlob);
-        AnimateScale(animatedBlob, 1f, 1.07f, 1d);
-
-        // `Flash Medium`: Radius 1.5, Life 6 turns = 0.3 s, Texture_Size 4 (a
-        // single cell), sun2.tga.
-        MeshInstance3D flash = CreateEffectSprite(
-            "FlashMedium",
-            _effectFlashMediumTexture,
-            1.5f);
-        root.AddChild(flash);
-        AnimateScale(flash, 1f, 0f, 0.3d);
-
-        MeshInstance3D blastSphere = CreatePulseBlastSphere(
-            _pulseImpactShockwaveTexture);
-        root.AddChild(blastSphere);
-        AnimatePulseBlast(
-            root,
-            blastSphere,
-            _particlePresentationSeconds,
-            0.5d);
+        using PackedScene scene = GD.Load<PackedScene>(PulseImpactScenePath);
+        Node3D root = scene.Instantiate<Node3D>();
+        root.Name = $"PulseImpact{targetId}-{tick}";
+        root.Position = position;
+        AddChild(root);
+        using Variant returned = root.Call("start", _particlePresentationSeconds);
+        using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
     }
 
     private void SpawnVulcanImpact(Vector3 position, int targetId, int tick)
@@ -658,151 +629,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddChild(root);
         using Variant returned = root.Call("start");
         using Godot.Collections.Dictionary result = WorldPresentationResult(returned);
-    }
-
-    private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
-    {
-        var root = new Node3D
-        {
-            Name = name,
-            Position = position,
-        };
-        AddChild(root);
-        var lifetime = new Godot.Timer
-        {
-            Name = "Lifetime",
-            OneShot = true,
-            WaitTime = lifetimeSeconds,
-        };
-        lifetime.Timeout += root.QueueFree;
-        root.AddChild(lifetime);
-        lifetime.Start();
-        return root;
-    }
-
-    /// <summary>
-    /// Builds one billboard for a sprite descriptor.
-    /// </summary>
-    /// <param name="authoredRadius">
-    /// The descriptor's <c>Radius</c>, exactly as its <c>MainSet.par</c> record
-    /// spells it. It is a HALF extent; the quad side is derived by the one
-    /// owner of that law,
-    /// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>. Pass the
-    /// authored number, never a pre-doubled one - a bare literal cannot be
-    /// traced back to the record it came from, which is exactly how this
-    /// convention came to look inconsistent (task #151).
-    /// </param>
-    private static MeshInstance3D CreateEffectSprite(
-        string name,
-        Texture2D texture,
-        float authoredRadius,
-        int columns = 1,
-        int rows = 1)
-    {
-        StandardMaterial3D material = CreateEffectMaterial(texture, billboard: true);
-        material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
-        float side = ParticleEffectResolver.BillboardQuadSide(authoredRadius);
-        return new MeshInstance3D
-        {
-            Name = name,
-            Mesh = new QuadMesh { Size = new Vector2(side, side) },
-            MaterialOverride = material,
-        };
-    }
-
-    private static MeshInstance3D CreatePulseBlastSphere(Texture2D texture)
-    {
-        StandardMaterial3D material = CreateEffectMaterial(texture, billboard: false);
-        material.Uv1Scale = new Vector3(2f, 2f, 1f);
-        return new MeshInstance3D
-        {
-            Name = "PulseBlastSphere",
-            Mesh = new SphereMesh
-            {
-                Radius = 0.5f,
-                Height = 1f,
-                RadialSegments = 10,
-                Rings = 10,
-            },
-            MaterialOverride = material,
-        };
-    }
-
-    private static void AnimatePulseBlast(
-        Node root,
-        MeshInstance3D sphere,
-        float globalSeconds,
-        double durationSeconds)
-    {
-        var material = (StandardMaterial3D)sphere.MaterialOverride;
-        float initialV = Mathf.PosMod(-2f * globalSeconds, 1f);
-        Action<float> update = normalizedAge =>
-        {
-            // MainSet's Shockwave Medium Growth is
-            // radius = 0.6*sin(normalized age)+0.4. The mesh has radius 0.5.
-            float radius = (0.6f * MathF.Sin(normalizedAge)) + 0.4f;
-            sphere.Scale = Vector3.One * (radius / 0.5f);
-            material.Uv1Offset = new Vector3(0f, initialV - normalizedAge, 0f);
-            material.AlbedoColor = Colors.White.Lerp(Colors.Black, normalizedAge);
-        };
-        update(0f);
-        root.CreateTween().TweenMethod(
-            Callable.From<float>(update),
-            0f,
-            1f,
-            durationSeconds);
-    }
-
-    private static void AnimatePulseImpactBlob(Node root, MeshInstance3D sprite)
-    {
-        var material = (StandardMaterial3D)sprite.MaterialOverride;
-        int startFrame = (int)(GD.Randi() % 15u);
-        Tween tween = root.CreateTween();
-        const int frameAdvances = 14;
-        const double frameIntervalSeconds = 1d / frameAdvances;
-        for (int step = 0; step <= frameAdvances; step++)
-        {
-            int capturedFrame = (startFrame + step) % 15;
-            tween.TweenCallback(Callable.From(() =>
-            {
-                material.Uv1Offset = new Vector3(
-                    (capturedFrame % 4) / 4f,
-                    (capturedFrame / 4) / 4f,
-                    0f);
-            }));
-            if (step < frameAdvances)
-            {
-                tween.TweenInterval(frameIntervalSeconds);
-            }
-        }
-    }
-
-    private static void AnimateScale(Node3D node, float start, float end, double durationSeconds)
-    {
-        node.Scale = Vector3.One * start;
-        node.CreateTween().TweenProperty(
-            node,
-            new NodePath("scale"),
-            Vector3.One * end,
-            durationSeconds);
-    }
-
-    private static StandardMaterial3D CreateEffectMaterial(
-        Texture2D texture,
-        bool billboard)
-    {
-        return new StandardMaterial3D
-        {
-            AlbedoTexture = texture,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
-            BillboardMode = billboard
-                ? BaseMaterial3D.BillboardModeEnum.Enabled
-                : BaseMaterial3D.BillboardModeEnum.Disabled,
-            BillboardKeepScale = billboard,
-        };
     }
 
     private void UpdateRetailPixelCentreOffset()

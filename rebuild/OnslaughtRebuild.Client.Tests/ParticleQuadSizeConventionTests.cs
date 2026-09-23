@@ -21,9 +21,9 @@ namespace OnslaughtRebuild.Client.Tests;
 /// belief was itself wrong, and these tests exist so it cannot be re-formed:
 /// the older sites were already drawing <c>2 * Radius</c>, they simply spelled
 /// it as a pre-doubled literal (<c>3f</c> for a <c>Radius 1.5</c> record) with
-/// nothing tying it back to the shipped file. There is now one owner,
-/// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>, and every call
-/// site passes the authored number.</para>
+/// nothing tying it back to the shipped file. There is now one convention,
+/// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>, and each
+/// production scene quad is checked against its authored record.</para>
 /// </summary>
 public sealed class ParticleQuadSizeConventionTests
 {
@@ -122,27 +122,17 @@ public sealed class ParticleQuadSizeConventionTests
     }
 
     /// <summary>
-    /// Every billboard the world view builds takes an authored radius through
-    /// the one owner, and each of those radii is the <c>Radius</c> the named
-    /// shipped record actually carries.
+    /// Every billboard the world view instantiates has the quad size derived
+    /// from the <c>Radius</c> its named shipped record actually carries.
     ///
-    /// <para>This is what makes the convention uniform rather than a claim about
-    /// one sprite. It fails if a literal is pre-doubled again, if a size is
-    /// invented, or if a new sprite is added whose number is not in the file.
+    /// <para>This makes the convention uniform across the production effect
+    /// scenes. It fails if a layer's literal is pre-doubled again, its size
+    /// differs from the named record, or a scene gains an unregistered mesh.
     /// </para>
     /// </summary>
     [Fact]
     public void EveryEffectSpriteSizeIsAnAuthoredRadiusFromTheShippedSet()
     {
-        // The shipped record each construction site draws, established by
-        // matching Radius, Final_Radius, Life, End_Frame, Random_Start_Frame and
-        // Texture_Size against the animation each site already reproduces.
-        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["BlueAnimatedBlob"] = "Blue Anim Blob Large Sprite",
-            ["FlashMedium"] = "Flash Medium",
-        };
-
         string source = ReadGodotSource("FirstFlightWorldView.cs");
         Assert.Matches(
             @"case\s+Level100DestructionEffectKind\.DroneDestroyed:\s*" +
@@ -159,11 +149,10 @@ public sealed class ParticleQuadSizeConventionTests
             @"SpawnDestructionScene\(\s*FacilityDestructionScenePath,\s*\$""FacilityDestruction\{facilityId\}"",\s*position\)",
             source);
 
-        // The owner is used, and the raw multiplication is not re-inlined.
-        Assert.Contains(
-            "ParticleEffectResolver.BillboardQuadSide(authoredRadius)",
-            source,
-            StringComparison.Ordinal);
+        // The final two runtime-created quads moved into PulseImpact.tscn.
+        // All production billboard sizes below now come from their actual
+        // linked scene meshes, not from an obsolete C# construction pattern.
+        Assert.DoesNotContain("CreateEffectSprite(", source, StringComparison.Ordinal);
 
         ParticleSetFile set = ParticleSetFile.Parse(File.ReadAllBytes(Locate(MainSetRelativePath)));
         ParticleDescriptor droneFlash = set.Require("Flash");
@@ -225,17 +214,11 @@ public sealed class ParticleQuadSizeConventionTests
         // against the native production controller. Here resolve each actual
         // scene node's mesh, so another layer's correct size cannot hide an
         // incorrect quad in a multi-layer destruction scene.
-        MatchCollection sites = Regex.Matches(
-            source,
-            @"CreateEffectSprite\(\s*""(?<name>[A-Za-z0-9]+)"",\s*\S+,\s*(?<radius>[0-9]*\.?[0-9]+)f",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(5));
-
-        Assert.Equal(expected.Count, sites.Count);
-
-        foreach ((string file, string node, string descriptor) in new[]
+        var layers = new[]
         {
             ("PulseMuzzleFlash.tscn", "PulseCannonMuzzleFlash", "Pulse Cannon Muzzle Flash"),
+            ("PulseImpact.tscn", "BlueAnimatedBlob", "Blue Anim Blob Large Sprite"),
+            ("PulseImpact.tscn", "FlashMedium", "Flash Medium"),
             ("VulcanImpact.tscn", "VulcanImpactSpark", "Spark Anim Sprite"),
             ("TargetTankDestruction.tscn", "TargetTankFlash", "Flash"),
             ("TargetTankDestruction.tscn", "ExplosionAnimatedSprite", "Explosion Anim Sprite Medium"),
@@ -245,7 +228,20 @@ public sealed class ParticleQuadSizeConventionTests
             ("FacilityDestruction.tscn", "FacilityFlash", "Flash Building"),
             ("FacilityDestruction.tscn", "FacilityFireball", "Fire Sprite Damped Long"),
             ("FacilityDestruction.tscn", "FacilitySmoke", "Smoke Sprite Anim Large Building"),
-        })
+        };
+        foreach (var group in layers.GroupBy(layer => layer.Item1))
+        {
+            string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/" + group.Key));
+            string[] expectedNodes = group.Select(layer => layer.Item2)
+                .Concat(group.Key == "PulseImpact.tscn" ? new[] { "PulseBlastSphere" } : [])
+                .Order(StringComparer.Ordinal).ToArray();
+            string[] actualNodes = SceneBlocks(scene, "node")
+                .Where(block => Attribute(block, "type") == "MeshInstance3D")
+                .Select(block => Attribute(block, "name")).Order(StringComparer.Ordinal).ToArray();
+            Assert.Equal(expectedNodes, actualNodes);
+        }
+
+        foreach ((string file, string node, string descriptor) in layers)
         {
             string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/" + file));
             (float width, float height) = LinkedQuadSize(scene, node);
@@ -253,22 +249,6 @@ public sealed class ParticleQuadSizeConventionTests
             float side = ParticleEffectResolver.BillboardQuadSide(radius);
             Assert.Equal(side, width);
             Assert.Equal(side, height);
-        }
-
-        foreach (Match site in sites)
-        {
-            string name = site.Groups["name"].Value;
-            float coded = float.Parse(
-                site.Groups["radius"].Value,
-                System.Globalization.CultureInfo.InvariantCulture);
-
-            Assert.True(
-                expected.TryGetValue(name, out string? descriptorName),
-                $"Effect sprite '{name}' has no recorded shipped descriptor. Identify the " +
-                "record it draws before giving it a size.");
-
-            (float authored, _) = set.Require(descriptorName!).FloatWithModifier("Radius");
-            Assert.Equal(authored, coded);
         }
     }
 

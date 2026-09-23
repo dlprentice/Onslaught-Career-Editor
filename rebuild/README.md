@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native impact/destruction scenes, frontend and world-frame orchestration).
+Last updated: 2026-09-23 (native Pulse impact and destruction scenes, frontend and world-frame orchestration).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -52,8 +52,8 @@ The frontend session/path, terrain sampler and numerical/parsing/replay foundati
 also have native owners. The complete frontend scene now owns its navigation,
 input, clocks, page assembly and loading/intro orchestration in GDScript. Native
 world-frame orchestration also joins the player, Aquila, camera, terrain, water
-and scenery components. Vulcan impact and tank/drone/facility destruction now
-use native scenes and animation. World import construction, Pulse impact, full
+and scenery components. Pulse/Vulcan impact and tank/drone/facility destruction
+now use native scenes and animation. World import construction, full
 simulation and replay entry still need their live consumers
 converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
@@ -145,14 +145,23 @@ These scripts have no automatic process or input callbacks. The editor shows
 the imported world, transforms and materials without starting their runtime
 state. The game explicitly configures the same component and submits one
 snapshot-pair batch per rendered frame. The managed world host retains import
-construction, destruction-event dispatch and the remaining Pulse impact effect;
+construction and destruction-event dispatch;
 it caches display facts for its existing diagnostics and effect creation.
 Core remains the simulation owner. A failed frame preserves preceding native
 writes, and projectile trails still observe the camera's prior pose.
 Executed comparisons and their limits are recorded in
 [validation](../VALIDATION.md#native-world-presentation--september-23).
 
-`Scenes/World/VulcanImpact.tscn` also exposes the existing direct impact spark
+`Scenes/World/PulseImpact.tscn` exposes the production animated blob, flash and
+shockwave sphere with their real textures, materials and inactive lifetime timer.
+Its native script receives the existing presentation clock at explicit start,
+then owns the atlas, scale and colour animation. The editor shows a frozen
+time-zero pose and consumes no random values. The reconstruction's `1.07f` blob
+scale endpoint is preserved; this conversion does not replace it with a newly
+calculated radius ratio. Executed bit, timing and scene checks are recorded in
+[validation](../VALIDATION.md#native-pulse-impact--september-23).
+
+`Scenes/World/VulcanImpact.tscn` exposes the existing direct impact spark
 as a selectable billboard, material and lifetime timer. Its native script owns
 the four atlas advances and scale tween. Opening it shows the real cell-11
 artwork without starting time. The shared `VulcanImpactTexture.tres` contains
@@ -163,8 +172,8 @@ are recorded in [validation](../VALIDATION.md#native-vulcan-impact--september-23
 `TargetTankDestruction.tscn`, `TargetDroneDestruction.tscn` and
 `FacilityDestruction.tscn` expose their existing flash, animated explosion,
 fireball and smoke layers as actual mesh nodes and materials. They share
-`destruction_effect.gd` and the same texture recipes used by the remaining
-managed Pulse impact. The Inspector's imported profile identifies each retained
+`destruction_effect.gd` and the same texture recipes used by native Pulse impact.
+The Inspector's imported profile identifies each retained
 definition; keep it matched to the scene's hierarchy. The editor uses frozen
 cell-zero artwork without drawing random values. Explicit runtime start selects
 the original random frames and starts the authored lifetime and animations.
@@ -842,6 +851,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/World/WorldPresentation.tscn](OnslaughtRebuild.Godot/Scenes/World/WorldPresentation.tscn) | Inactive native world-frame controller. Inspect its linked script for player/Aquila, camera and environment update order; inspect the actual geometry in the private Level 100 scene below. |
 | [Scenes/World/VulcanImpact.tscn](OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn) | Production direct-spark billboard, material and stopped lifetime timer. The frozen preview uses the same private texture recipe as gameplay; the script starts atlas/scale animation only on an explicit runtime call. |
+| [Scenes/World/PulseImpact.tscn](OnslaughtRebuild.Godot/Scenes/World/PulseImpact.tscn) | Production blob, flash and shockwave sphere. Inspect the actual meshes, materials and shared private-texture recipes before Play; the stopped timer and native animation start only on an explicit gameplay call. |
 | [Scenes/World/TargetTankDestruction.tscn](OnslaughtRebuild.Godot/Scenes/World/TargetTankDestruction.tscn), [TargetDroneDestruction.tscn](OnslaughtRebuild.Godot/Scenes/World/TargetDroneDestruction.tscn), [FacilityDestruction.tscn](OnslaughtRebuild.Godot/Scenes/World/FacilityDestruction.tscn) | Production flash, explosion, fireball and smoke layers with selectable quads, shared texture recipes and inactive timers. Native animation preserves the existing representative effects and their explicit retail gaps. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Complete native frontend root, ten authored pages, seven main-menu rows, images, guides, letterbox and cursor. `EditorPage` selects a frozen view; it does not navigate the game. The linked GDScript owns input and page/loading orchestration. |

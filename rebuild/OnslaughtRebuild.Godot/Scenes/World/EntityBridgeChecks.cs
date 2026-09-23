@@ -32,6 +32,7 @@ public sealed partial class EntityBridgeChecks : Node
             CompareMuzzleAnimation();
             CompareVulcanImpactAnimation();
             CompareDestructionAnimations();
+            ComparePulseImpactAnimation();
             var viewport = new SubViewport { Size = new(320, 240), OwnWorld3D = true,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
             AddChild(viewport);
@@ -485,17 +486,17 @@ public sealed partial class EntityBridgeChecks : Node
         }
     }
 
-    private bool CompareVulcanOwnershipStep(Tween native, Tween retained, double delta, string stage)
+    private bool CompareVulcanOwnershipStep(Tween native, Tween retained, double delta, string stage, string effect = "Vulcan")
     {
         bool nativeValid = native.IsValid(), retainedValid = retained.IsValid();
-        Check(nativeValid == retainedValid, "Vulcan tween validity matches the retained owner before " + stage + ".");
+        Check(nativeValid == retainedValid, effect + " tween validity matches the retained owner before " + stage + ".");
         bool nativeActive = nativeValid && native.CustomStep(delta);
         bool retainedActive = retainedValid && retained.CustomStep(delta);
-        Check(nativeActive == retainedActive, "Vulcan CustomStep result matches the retained owner at " + stage + ".");
-        Check(native.IsValid() == retained.IsValid(), "Vulcan tween validity matches the retained owner after " + stage + ".");
+        Check(nativeActive == retainedActive, effect + " CustomStep result matches the retained owner at " + stage + ".");
+        Check(native.IsValid() == retained.IsValid(), effect + " tween validity matches the retained owner after " + stage + ".");
         Check(BitConverter.DoubleToInt64Bits(native.GetTotalElapsedTime()) == BitConverter.DoubleToInt64Bits(retained.GetTotalElapsedTime()),
-            "Vulcan elapsed-time words match the retained owner at " + stage + ".");
-        GD.Print(FormattableString.Invariant($"VULCAN_OWNERSHIP_OBSERVATION: stage={stage}, delta={delta:R}, native_active={nativeActive}, retained_active={retainedActive}, native_valid={native.IsValid()}, retained_valid={retained.IsValid()}, native_elapsed={native.GetTotalElapsedTime():R}, retained_elapsed={retained.GetTotalElapsedTime():R}"));
+            effect + " elapsed-time words match the retained owner at " + stage + ".");
+        GD.Print(FormattableString.Invariant($"{effect.ToUpperInvariant()}_OWNERSHIP_OBSERVATION: stage={stage}, delta={delta:R}, native_active={nativeActive}, retained_active={retainedActive}, native_valid={native.IsValid()}, retained_valid={retained.IsValid()}, native_elapsed={native.GetTotalElapsedTime():R}, retained_elapsed={retained.GetTotalElapsedTime():R}"));
         return nativeActive;
     }
 
@@ -821,6 +822,521 @@ public sealed partial class EntityBridgeChecks : Node
             Compare(new Vector3(ink.R, ink.G, ink.B), new Vector3(expectedInk.R, expectedInk.G, expectedInk.B), name + " " + path + " RGB");
             Check(BitConverter.SingleToUInt32Bits(ink.A) == BitConverter.SingleToUInt32Bits(expectedInk.A), name + " " + path + " alpha word");
         }
+    }
+
+    private void ComparePulseImpactAnimation()
+    {
+        const string scenePath = "res://Scenes/World/PulseImpact.tscn";
+        const string scriptPath = "res://Scenes/World/pulse_impact.gd";
+        const ulong seed = 0x50554c5345424c42UL;
+        const float globalSeconds = 2048.3125f;
+        GD.Seed(seed);
+        uint[] expectedRandom = Enumerable.Range(0, 16).Select(_ => GD.Randi()).ToArray();
+        GD.Seed(seed);
+        var paths = new[]
+        {
+            "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
+            "res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya",
+            "res://Assets/Level100/Textures/effect-flash-medium.texture.aya",
+        };
+        byte[][] beforeHashes = paths.Select(path => System.Security.Cryptography.SHA256.HashData(
+            File.ReadAllBytes(ProjectSettings.GlobalizePath(path)))).ToArray();
+        using Texture2D blobTexture = CuratedAyaTextureLoader.Load(paths[0], 256, 256);
+        using Texture2D shockwaveTexture = CuratedAyaTextureLoader.Load(paths[1], 128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
+        using Texture2D flashTexture = CuratedAyaTextureLoader.Load(paths[2], 128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
+        using GDScript controller = GD.Load<GDScript>(scriptPath);
+        using GDScript sharedArtwork = GD.Load<GDScript>("res://Scenes/World/destruction_effect.gd");
+        foreach (string id in new[] { "animated_blob", "flash_medium" })
+        {
+            using Variant returned = sharedArtwork.Call("admit_artwork", id);
+            using Dictionary admitted = Result(returned);
+        }
+        using (Variant returned = controller.Call("admit_artwork"))
+        using (Dictionary admitted = Result(returned)) { }
+        using PackedScene scene = GD.Load<PackedScene>(scenePath);
+        var native = scene.Instantiate<Node3D>();
+        var sibling = scene.Instantiate<Node3D>();
+        var retained = new RetainedPulseImpact(blobTexture, shockwaveTexture, flashTexture);
+        var host = new FirstFlightWorldView();
+        var allTweens = new List<Tween>();
+        var sentinels = new List<StandardMaterial3D>();
+        try
+        {
+            var lifetime = native.GetNode<Godot.Timer>("Lifetime");
+            using (Variant returned = native.Call("start", globalSeconds))
+            using (Dictionary refused = returned.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    "PulseImpact explicitly refuses off-tree activation.");
+            var before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            AddChild(native);
+            AddChild(sibling);
+            AddChild(retained.Root);
+            Check(lifetime.IsStopped() && sibling.GetNode<Godot.Timer>("Lifetime").IsStopped() &&
+                !native.IsProcessing() && !native.IsProcessingInput() && !native.IsProcessingUnhandledInput() &&
+                GetTree().GetProcessedTweens().All(tween => before.Contains(tween.GetInstanceId())),
+                "PulseImpact scene entry starts no timer, tween or input owner.");
+            Check(Enumerable.Range(0, 16).Select(_ => GD.Randi()).SequenceEqual(expectedRandom),
+                "PulseImpact artwork admission, scene loading/instantiation and refused start consume no RNG.");
+            GD.Seed(seed);
+            using (Variant returned = native.Call("start", globalSeconds))
+            using (Dictionary started = Result(returned)) { }
+            Tween[] nativeTweens = NewDestructionTweens(before, allTweens, 4, "PulseImpact native");
+            Check(Enumerable.Range(0, 15).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(1)),
+                "PulseImpact starts with exactly one original blob random draw.");
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            Node3D reference = retained.Spawn(Vector3.Zero, 37, 81, globalSeconds);
+            Tween[] referenceTweens = NewDestructionTweens(before, allTweens, 4, "PulseImpact retained");
+            Check(Enumerable.Range(0, 15).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(1)),
+                "Retained PulseImpact confirms the same one-draw suffix.");
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            using (Variant returned = sibling.Call("start", globalSeconds))
+            using (Dictionary started = Result(returned)) { }
+            Tween[] siblingTweens = NewDestructionTweens(before, allTweens, 4, "PulseImpact sibling");
+            var actualMaterials = DestructionMaterials(native);
+            var referenceMaterials = DestructionMaterials(reference);
+            var siblingMaterials = DestructionMaterials(sibling);
+            Check(native.GetChildren().Select(child => child.Name.ToString()).SequenceEqual(reference.GetChildren().Select(child => child.Name.ToString())),
+                "PulseImpact preserves Timer, blob, flash and sphere creation order.");
+            CompareDestructionTimer(lifetime, reference.GetNode<Godot.Timer>("Lifetime"), 1.05d, "PulseImpact");
+            CompareDestructionFrame(native, reference, actualMaterials, referenceMaterials, "PulseImpact before first callback");
+            Compare(actualMaterials["BlueAnimatedBlob"].Uv1Offset, Vector3.Zero,
+                "PulseImpact blob random cell remains unapplied until its first tween callback");
+            Texture2D[] textures = [blobTexture, flashTexture, shockwaveTexture];
+            string[] parts = ["BlueAnimatedBlob", "FlashMedium", "PulseBlastSphere"];
+            string[] recipePaths = ["res://Scenes/World/EffectAnimatedBlobTexture.tres", "res://Scenes/World/EffectFlashMediumTexture.tres", "res://Scenes/World/PulseShockwaveTexture.tres"];
+            for (int index = 0; index < parts.Length; index++)
+            {
+                string part = parts[index];
+                var mesh = native.GetNode<MeshInstance3D>(part);
+                var referenceMesh = reference.GetNode<MeshInstance3D>(part);
+                StandardMaterial3D material = actualMaterials[part], expected = referenceMaterials[part];
+                using Texture2D recipe = GD.Load<Texture2D>(recipePaths[index]);
+                Check(material.AlbedoTexture == recipe && siblingMaterials[part].AlbedoTexture == recipe && material != siblingMaterials[part],
+                    "PulseImpact independent materials share their admitted production recipe: " + part);
+                using Image actualImage = recipe.GetImage();
+                using Image expectedImage = textures[index].GetImage();
+                Check(actualImage.GetWidth() == expectedImage.GetWidth() && actualImage.GetHeight() == expectedImage.GetHeight() &&
+                    actualImage.GetFormat() == expectedImage.GetFormat() && actualImage.HasMipmaps() == expectedImage.HasMipmaps(),
+                    "PulseImpact texture dimensions/format/mipmaps equal the retained loader: " + part);
+                Check(actualImage.GetData().AsSpan().SequenceEqual(expectedImage.GetData()),
+                    "Every PulseImpact production texture byte equals the retained loader: " + part);
+                Check(material.ShadingMode == expected.ShadingMode && material.CullMode == expected.CullMode &&
+                    material.Transparency == expected.Transparency && material.BlendMode == expected.BlendMode &&
+                    material.BillboardMode == expected.BillboardMode && material.BillboardKeepScale == expected.BillboardKeepScale,
+                    "PulseImpact material render properties retain the original recipe: " + part);
+                if (index < 2)
+                {
+                    Check(mesh.Mesh is QuadMesh && referenceMesh.Mesh is QuadMesh, "PulseImpact blob/flash retain quad meshes.");
+                    Vector2 size = ((QuadMesh)mesh.Mesh).Size, expectedSize = ((QuadMesh)referenceMesh.Mesh).Size;
+                    Compare(new Vector3(size.X, size.Y, 0f), new Vector3(expectedSize.X, expectedSize.Y, 0f), "PulseImpact authored billboard half-extent law");
+                }
+                else
+                {
+                    Check(mesh.Mesh is SphereMesh && referenceMesh.Mesh is SphereMesh, "PulseImpact blast retains its production sphere mesh.");
+                    var sphere = (SphereMesh)mesh.Mesh;
+                    var expectedSphere = (SphereMesh)referenceMesh.Mesh;
+                    Compare(new Vector3(sphere.Radius, sphere.Height, 0f), new Vector3(expectedSphere.Radius, expectedSphere.Height, 0f), "PulseImpact sphere radius/height");
+                    Check(sphere.RadialSegments == expectedSphere.RadialSegments && sphere.Rings == expectedSphere.Rings &&
+                        sphere.IsHemisphere == expectedSphere.IsHemisphere && sphere.FlipFaces == expectedSphere.FlipFaces,
+                        "PulseImpact sphere preserves the original tessellation and winding defaults.");
+                }
+            }
+
+            // Both old callbacks close over their initial material; an authored
+            // replacement must not retarget atlas or shockwave UV/colour writes.
+            var sentinelOffset = new Vector3(0.125f, 0.375f, 0.625f);
+            var sentinelColor = new Color(0.125f, 0.25f, 0.5f, 0.75f);
+            foreach (string part in new[] { "BlueAnimatedBlob", "PulseBlastSphere" })
+            {
+                var actualSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset, AlbedoColor = sentinelColor };
+                var referenceSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset, AlbedoColor = sentinelColor };
+                sentinels.Add(actualSentinel);
+                sentinels.Add(referenceSentinel);
+                native.GetNode<MeshInstance3D>(part).MaterialOverride = actualSentinel;
+                reference.GetNode<MeshInstance3D>(part).MaterialOverride = referenceSentinel;
+            }
+            var siblingOffsets = siblingMaterials.ToDictionary(row => row.Key, row => row.Value.Uv1Offset);
+            var siblingScales = sibling.GetChildren().OfType<MeshInstance3D>().ToDictionary(mesh => mesh.Name.ToString(), mesh => mesh.Scale);
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            using (Variant returned = native.Call("start", globalSeconds))
+            using (Dictionary refused = returned.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    "PulseImpact repeated start refuses before another mutation.");
+            Check(GetTree().GetProcessedTweens().All(tween => before.Contains(tween.GetInstanceId())), "PulseImpact refused restart adds no tween.");
+            bool[] nativeActive = [true, true, true, true], referenceActive = [true, true, true, true];
+            const double interval = 1d / 14;
+            var times = new[] { 0d, double.Epsilon, Math.BitDecrement(interval), interval, Math.BitIncrement(interval),
+                0.25d, Math.BitDecrement(0.3d), 0.3d, Math.BitIncrement(0.3d),
+                Math.BitDecrement(0.5d), 0.5d, Math.BitIncrement(0.5d), 0.75d,
+                Math.BitDecrement(1d), 1d, Math.BitIncrement(1d), 1.05d, 1.125d, 1.25d };
+            double previousTime = 0d;
+            foreach (double time in times)
+            {
+                double delta = time - previousTime;
+                previousTime = time;
+                for (int index = 0; index < 4; index++)
+                {
+                    if (nativeActive[index]) nativeActive[index] = nativeTweens[index].CustomStep(delta);
+                    if (referenceActive[index]) referenceActive[index] = referenceTweens[index].CustomStep(delta);
+                    Check(nativeActive[index] == referenceActive[index] && nativeTweens[index].IsValid() == referenceTweens[index].IsValid(),
+                        "PulseImpact ordered tween completion/validity matches the retained sequence.");
+                    Check(BitConverter.DoubleToInt64Bits(nativeTweens[index].GetTotalElapsedTime()) == BitConverter.DoubleToInt64Bits(referenceTweens[index].GetTotalElapsedTime()),
+                        "PulseImpact ordered tween elapsed words match the retained sequence.");
+                }
+                CompareDestructionFrame(native, reference, actualMaterials, referenceMaterials,
+                    "PulseImpact sample " + time.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                foreach (StandardMaterial3D sentinel in sentinels)
+                {
+                    Compare(sentinel.Uv1Offset, sentinelOffset, "PulseImpact replacement UV remains untouched");
+                    ComparePulseColor(sentinel.AlbedoColor, sentinelColor, "PulseImpact replacement colour remains untouched");
+                }
+                foreach (string part in parts)
+                {
+                    Compare(siblingMaterials[part].Uv1Offset, siblingOffsets[part], "Independent PulseImpact UV");
+                    Compare(sibling.GetNode<MeshInstance3D>(part).Scale, siblingScales[part], "Independent PulseImpact scale");
+                }
+            }
+            Check(nativeActive.All(active => !active) && referenceActive.All(active => !active), "Both PulseImpact owners complete within the paired observation schedule.");
+            Compare(native.GetNode<MeshInstance3D>("BlueAnimatedBlob").Scale, Vector3.One * 1.07f, "PulseImpact exact legacy blob final ratio");
+            Compare(native.GetNode<MeshInstance3D>("FlashMedium").Scale, Vector3.Zero, "PulseImpact final flash scale");
+            Check(Enumerable.Range(0, 16).Select(_ => GD.Randi()).SequenceEqual(expectedRandom), "PulseImpact rejection and animation consume no further RNG.");
+            CompareDestructionTimer(lifetime, reference.GetNode<Godot.Timer>("Lifetime"), 1.05d, "PulseImpact after manual animation");
+            Check(!native.IsQueuedForDeletion() && !reference.IsQueuedForDeletion(), "PulseImpact tween stepping never substitutes for its lifetime timer.");
+            lifetime.EmitSignal(Godot.Timer.SignalName.Timeout);
+            reference.GetNode<Godot.Timer>("Lifetime").EmitSignal(Godot.Timer.SignalName.Timeout);
+            Check(native.IsQueuedForDeletion() && reference.IsQueuedForDeletion(), "PulseImpact timeout signals queue the same lifetime roots.");
+
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            Node3D ownershipReference = retained.Spawn(Vector3.Zero, 42, 81, globalSeconds);
+            Tween[] ownershipTweens = NewDestructionTweens(before, allTweens, 4, "PulseImpact ownership reference");
+            var ownershipMaterials = DestructionMaterials(ownershipReference);
+            sibling.GetNode<MeshInstance3D>("BlueAnimatedBlob").Free();
+            ownershipReference.GetNode<MeshInstance3D>("BlueAnimatedBlob").Free();
+            sibling.GetNode<MeshInstance3D>("FlashMedium").Free();
+            ownershipReference.GetNode<MeshInstance3D>("FlashMedium").Free();
+            for (int index = 1; index <= 2; index++)
+                Check(!CompareVulcanOwnershipStep(siblingTweens[index], ownershipTweens[index], 0d, "child free " + index, "PulseImpact"),
+                    "PulseImpact child-bound scales stop with the same retained ownership semantics.");
+            Check(CompareVulcanOwnershipStep(siblingTweens[0], ownershipTweens[0], interval * 1.5d, "atlas after child free", "PulseImpact"),
+                "PulseImpact root atlas survives freeing its blob child.");
+            Compare(siblingMaterials["BlueAnimatedBlob"].Uv1Offset, ownershipMaterials["BlueAnimatedBlob"].Uv1Offset,
+                "PulseImpact root atlas retains its captured material after child removal");
+            Check(CompareVulcanOwnershipStep(siblingTweens[3], ownershipTweens[3], 0.125d, "blast with live root", "PulseImpact"),
+                "PulseImpact shockwave remains bound to the root alongside its atlas.");
+            Compare(sibling.GetNode<MeshInstance3D>("PulseBlastSphere").Scale, ownershipReference.GetNode<MeshInstance3D>("PulseBlastSphere").Scale,
+                "PulseImpact retained root-bound shockwave scale");
+            Compare(siblingMaterials["PulseBlastSphere"].Uv1Offset, ownershipMaterials["PulseBlastSphere"].Uv1Offset, "PulseImpact retained root-bound shockwave UV");
+            ComparePulseColor(siblingMaterials["PulseBlastSphere"].AlbedoColor, ownershipMaterials["PulseBlastSphere"].AlbedoColor, "PulseImpact retained root-bound shockwave colour");
+            sibling.Free();
+            ownershipReference.Free();
+            foreach (int index in new[] { 0, 3 })
+                Check(!CompareVulcanOwnershipStep(siblingTweens[index], ownershipTweens[index], interval, "root free " + index, "PulseImpact"),
+                    "PulseImpact atlas and shockwave stop after their lifetime root is freed.");
+
+            ComparePulseBlastArithmetic(controller);
+
+            AddChild(host);
+            typeof(FirstFlightWorldView).GetField("_particlePresentationSeconds", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .SetValue(host, globalSeconds);
+            var position = new Level100Vector3(12345, -6789, 4321);
+            var mapped = new Vector3(position.X * 0.001f, -position.Z * 0.001f, -position.Y * 0.001f);
+            var impact = new Level100DestructionEvent(Level100DestructionEventKind.PulseImpact, Level100DestructionEffectKind.PulseImpact, 71, 0, 0, position);
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            host.ConsumeLevel100DestructionEvents([impact], 81);
+            Node3D spawned = host.GetNode<Node3D>("PulseImpact71-81");
+            NewDestructionTweens(before, allTweens, 4, "PulseImpact public event");
+            Check(Enumerable.Range(0, 15).Select(_ => GD.Randi()).SequenceEqual(expectedRandom.Skip(1)), "PulseImpact public event retains the original single RNG draw.");
+            using (Variant script = spawned.GetScript())
+                Check(script.As<GodotObject>() == controller && spawned.SceneFilePath == scenePath && host.GetChildCount() == 1,
+                    "The PulseImpact public event instantiates the actual native scene with the original actor/tick name.");
+            Compare(spawned.Position, mapped, "PulseImpact public event X/-Z/-Y position");
+            before = GetTree().GetProcessedTweens().Select(tween => tween.GetInstanceId()).ToHashSet();
+            GD.Seed(seed);
+            Node3D expectedSpawn = retained.Spawn(mapped, 71, 81, globalSeconds);
+            NewDestructionTweens(before, allTweens, 4, "PulseImpact retained event");
+            CompareDestructionFrame(spawned, expectedSpawn, DestructionMaterials(spawned), DestructionMaterials(expectedSpawn), "PulseImpact public event initial clock");
+            CompareDestructionTimer(spawned.GetNode<Godot.Timer>("Lifetime"), expectedSpawn.GetNode<Godot.Timer>("Lifetime"), 1.05d, "PulseImpact public event");
+            for (int index = 0; index < paths.Length; index++)
+                Check(beforeHashes[index].AsSpan().SequenceEqual(System.Security.Cryptography.SHA256.HashData(
+                    File.ReadAllBytes(ProjectSettings.GlobalizePath(paths[index])))), "PulseImpact checks preserve every prepared source byte.");
+        }
+        finally
+        {
+            foreach (Tween tween in allTweens) if (tween.IsValid()) tween.Kill();
+            if (GodotObject.IsInstanceValid(native)) native.Free();
+            if (GodotObject.IsInstanceValid(sibling)) sibling.Free();
+            if (GodotObject.IsInstanceValid(retained.Root)) retained.Root.Free();
+            if (GodotObject.IsInstanceValid(host)) host.Free();
+            foreach (StandardMaterial3D sentinel in sentinels) sentinel.Dispose();
+        }
+    }
+
+    private void ComparePulseColor(Color actual, Color retained, string name)
+    {
+        Compare(new Vector3(actual.R, actual.G, actual.B), new Vector3(retained.R, retained.G, retained.B), name);
+        Check(BitConverter.SingleToUInt32Bits(actual.A) == BitConverter.SingleToUInt32Bits(retained.A), name + " alpha word");
+    }
+
+    private void ComparePulseBlastArithmetic(GDScript controller)
+    {
+        // Dense normalized-age samples detect MathF.Sin versus double-sin
+        // rounding differences without turning every clock into another full
+        // matrix. Boundary neighbours exercise the actual Single carrier.
+        var ages = new HashSet<uint>();
+        for (int index = 0; index <= 4096; index++) ages.Add(BitConverter.SingleToUInt32Bits(index / 4096f));
+        foreach (float boundary in new[] { 0f, 0.125f, 0.25f, 0.5f, 0.75f, 1f })
+        {
+            if (boundary > 0f) ages.Add(BitConverter.SingleToUInt32Bits(MathF.BitDecrement(boundary)));
+            if (boundary < 1f) ages.Add(BitConverter.SingleToUInt32Bits(MathF.BitIncrement(boundary)));
+        }
+        ages.Add(0x80000000u);
+        int cases = 0;
+        foreach (uint ageBits in ages.Order()) CheckOne(0.3125f, BitConverter.UInt32BitsToSingle(ageBits));
+        foreach (float clock in new[] { 0f, BitConverter.UInt32BitsToSingle(0x80000000u), float.Epsilon, -float.Epsilon,
+            MathF.BitDecrement(0.5f), 0.5f, MathF.BitIncrement(0.5f), -0.5f, 0.125f, -0.125f,
+            1f, -1f, 2048.3125f, -2048.3125f, 65536.5f, 16777216f,
+            float.MaxValue, -float.MaxValue, float.PositiveInfinity, float.NegativeInfinity,
+            BitConverter.UInt32BitsToSingle(0x7fc00000u), BitConverter.UInt32BitsToSingle(0xffc00000u) })
+            foreach (float age in new[] { 0f, BitConverter.UInt32BitsToSingle(0x80000000u), float.Epsilon,
+                0.25f, MathF.BitDecrement(0.5f), 0.5f, MathF.BitIncrement(0.5f), 0.75f, 1f }) CheckOne(clock, age);
+        GD.Print($"PULSE_BLAST_WORDS: {cases} exact initial-scroll/scale/UV/RGBA cases; nonfinite clock cases use pure values only.");
+
+        void CheckOne(float clock, float age)
+        {
+            float expectedInitial = Mathf.PosMod(-2f * clock, 1f);
+            using Variant initialValue = controller.Call("initial_scroll", clock);
+            float actualInitial = initialValue.AsSingle();
+            string name = $"Pulse blast clock={BitConverter.SingleToUInt32Bits(clock):x8} age={BitConverter.SingleToUInt32Bits(age):x8}";
+            Check(BitConverter.SingleToUInt32Bits(actualInitial) == BitConverter.SingleToUInt32Bits(expectedInitial), name + " initial V word");
+            using Variant values = controller.Call("blast_values", actualInitial, age);
+            using Dictionary actual = values.AsGodotDictionary();
+            // Exact operations retained from b8c1a220 AnimatePulseBlast's
+            // captured Action<float>, independently of the native helper.
+            float radius = (0.6f * MathF.Sin(age)) + 0.4f;
+            Vector3 scale = Vector3.One * (radius / 0.5f);
+            Vector3 uv = new(0f, expectedInitial - age, 0f);
+            Color colour = Colors.White.Lerp(Colors.Black, age);
+            Compare(actual["scale"].AsVector3(), scale, name + " scale");
+            Compare(actual["uv_offset"].AsVector3(), uv, name + " UV");
+            ComparePulseColor(actual["color"].AsColor(), colour, name + " colour");
+            cases++;
+        }
+    }
+
+    // Test-only b8c1a220 FirstFlightWorldView PulseImpact source. The spawn
+    // and helper bodies below are unchanged, including first atlas callback,
+    // Float32 MathF.Sin/PosMod/Color.Lerp operations and tween insertion order.
+    // Root/AddChild supplies only the former containing world node.
+    private sealed class RetainedPulseImpact
+    {
+        public Node3D Root { get; } = new();
+        private readonly Texture2D _pulseImpactAnimatedTexture;
+        private readonly Texture2D _pulseImpactShockwaveTexture;
+        private readonly Texture2D _effectFlashMediumTexture;
+        private float _particlePresentationSeconds;
+
+        public RetainedPulseImpact(Texture2D blob, Texture2D shockwave, Texture2D flash)
+        {
+            _pulseImpactAnimatedTexture = blob;
+            _pulseImpactShockwaveTexture = shockwave;
+            _effectFlashMediumTexture = flash;
+        }
+
+        public Node3D Spawn(Vector3 position, int actorId, int tick, float globalSeconds)
+        {
+            _particlePresentationSeconds = globalSeconds;
+            SpawnPulseImpact(position, actorId, tick);
+            return Root.GetChild<Node3D>(Root.GetChildCount() - 1);
+        }
+
+        private void AddChild(Node child) => Root.AddChild(child);
+
+        private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
+        {
+            Node3D root = CreateTimedEffect($"PulseImpact{targetId}-{tick}", position, 1.05d);
+            // `Blue Anim Blob Large Sprite`: Radius 0.7, Final_Radius 0.75,
+            // Life 20 turns = 1.0 s, End_Frame 14 (15 cells), Random_Start_Frame 1,
+            // Texture_Size 2 (a 4x4 grid) - every one of which the animation below
+            // already reproduces.
+            MeshInstance3D animatedBlob = CreateEffectSprite(
+                "BlueAnimatedBlob",
+                _pulseImpactAnimatedTexture,
+                0.7f,
+                columns: 4,
+                rows: 4);
+            root.AddChild(animatedBlob);
+            AnimatePulseImpactBlob(root, animatedBlob);
+            AnimateScale(animatedBlob, 1f, 1.07f, 1d);
+
+            // `Flash Medium`: Radius 1.5, Life 6 turns = 0.3 s, Texture_Size 4 (a
+            // single cell), sun2.tga.
+            MeshInstance3D flash = CreateEffectSprite(
+                "FlashMedium",
+                _effectFlashMediumTexture,
+                1.5f);
+            root.AddChild(flash);
+            AnimateScale(flash, 1f, 0f, 0.3d);
+
+            MeshInstance3D blastSphere = CreatePulseBlastSphere(
+                _pulseImpactShockwaveTexture);
+            root.AddChild(blastSphere);
+            AnimatePulseBlast(
+                root,
+                blastSphere,
+                _particlePresentationSeconds,
+                0.5d);
+        }
+
+        private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
+        {
+            var root = new Node3D
+            {
+                Name = name,
+                Position = position,
+            };
+            AddChild(root);
+            var lifetime = new Godot.Timer
+            {
+                Name = "Lifetime",
+                OneShot = true,
+                WaitTime = lifetimeSeconds,
+            };
+            lifetime.Timeout += root.QueueFree;
+            root.AddChild(lifetime);
+            lifetime.Start();
+            return root;
+        }
+
+        /// <summary>
+        /// Builds one billboard for a sprite descriptor.
+        /// </summary>
+        /// <param name="authoredRadius">
+        /// The descriptor's <c>Radius</c>, exactly as its <c>MainSet.par</c> record
+        /// spells it. It is a HALF extent; the quad side is derived by the one
+        /// owner of that law,
+        /// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>. Pass the
+        /// authored number, never a pre-doubled one - a bare literal cannot be
+        /// traced back to the record it came from, which is exactly how this
+        /// convention came to look inconsistent (task #151).
+        /// </param>
+        private static MeshInstance3D CreateEffectSprite(
+            string name,
+            Texture2D texture,
+            float authoredRadius,
+            int columns = 1,
+            int rows = 1)
+        {
+            StandardMaterial3D material = CreateEffectMaterial(texture, billboard: true);
+            material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
+            float side = ParticleEffectResolver.BillboardQuadSide(authoredRadius);
+            return new MeshInstance3D
+            {
+                Name = name,
+                Mesh = new QuadMesh { Size = new Vector2(side, side) },
+                MaterialOverride = material,
+            };
+        }
+
+        private static MeshInstance3D CreatePulseBlastSphere(Texture2D texture)
+        {
+            StandardMaterial3D material = CreateEffectMaterial(texture, billboard: false);
+            material.Uv1Scale = new Vector3(2f, 2f, 1f);
+            return new MeshInstance3D
+            {
+                Name = "PulseBlastSphere",
+                Mesh = new SphereMesh
+                {
+                    Radius = 0.5f,
+                    Height = 1f,
+                    RadialSegments = 10,
+                    Rings = 10,
+                },
+                MaterialOverride = material,
+            };
+        }
+
+        private static void AnimatePulseBlast(
+            Node root,
+            MeshInstance3D sphere,
+            float globalSeconds,
+            double durationSeconds)
+        {
+            var material = (StandardMaterial3D)sphere.MaterialOverride;
+            float initialV = Mathf.PosMod(-2f * globalSeconds, 1f);
+            Action<float> update = normalizedAge =>
+            {
+                // MainSet's Shockwave Medium Growth is
+                // radius = 0.6*sin(normalized age)+0.4. The mesh has radius 0.5.
+                float radius = (0.6f * MathF.Sin(normalizedAge)) + 0.4f;
+                sphere.Scale = Vector3.One * (radius / 0.5f);
+                material.Uv1Offset = new Vector3(0f, initialV - normalizedAge, 0f);
+                material.AlbedoColor = Colors.White.Lerp(Colors.Black, normalizedAge);
+            };
+            update(0f);
+            root.CreateTween().TweenMethod(
+                Callable.From<float>(update),
+                0f,
+                1f,
+                durationSeconds);
+        }
+
+        private static void AnimatePulseImpactBlob(Node root, MeshInstance3D sprite)
+        {
+            var material = (StandardMaterial3D)sprite.MaterialOverride;
+            int startFrame = (int)(GD.Randi() % 15u);
+            Tween tween = root.CreateTween();
+            const int frameAdvances = 14;
+            const double frameIntervalSeconds = 1d / frameAdvances;
+            for (int step = 0; step <= frameAdvances; step++)
+            {
+                int capturedFrame = (startFrame + step) % 15;
+                tween.TweenCallback(Callable.From(() =>
+                {
+                    material.Uv1Offset = new Vector3(
+                        (capturedFrame % 4) / 4f,
+                        (capturedFrame / 4) / 4f,
+                        0f);
+                }));
+                if (step < frameAdvances)
+                {
+                    tween.TweenInterval(frameIntervalSeconds);
+                }
+            }
+        }
+
+        private static void AnimateScale(Node3D node, float start, float end, double durationSeconds)
+        {
+            node.Scale = Vector3.One * start;
+            node.CreateTween().TweenProperty(
+                node,
+                new NodePath("scale"),
+                Vector3.One * end,
+                durationSeconds);
+        }
+
+        private static StandardMaterial3D CreateEffectMaterial(
+            Texture2D texture,
+            bool billboard)
+        {
+            return new StandardMaterial3D
+            {
+                AlbedoTexture = texture,
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+                BillboardMode = billboard
+                    ? BaseMaterial3D.BillboardModeEnum.Enabled
+                    : BaseMaterial3D.BillboardModeEnum.Disabled,
+                BillboardKeepScale = billboard,
+            };
+        }
+
     }
 
     // Test-only 673b630a FirstFlightWorldView source. The following spawn,

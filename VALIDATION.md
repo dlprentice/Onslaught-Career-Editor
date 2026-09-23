@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native impact/destruction scenes, world-frame and frontend orchestration).
+Last updated: 2026-09-23 (native Pulse impact and destruction scenes, world-frame and frontend orchestration).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1176,11 +1176,55 @@ display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
 
+#### Native Pulse impact — September 23
+
+`Scenes/World/PulseImpact.tscn` now supplies the production blob, flash and
+shockwave sphere. The native controller receives the existing float32
+presentation clock at explicit start. The C# host retains event dispatch and
+scene instantiation; its remaining effect construction/animation helpers are
+removed. This preserves the reconstruction's `1.07f` blob scale endpoint,
+callback-only random initial atlas cell and separate 1.05-second lifetime.
+
+Executed headless checks use fresh owned profiles under `local-data/test-runs/`:
+
+- `pulse-impact-verified-8m0p7zn8/`: supported build/private import passed with
+  zero compiler warnings/errors; all **22** affected Client tests passed with
+  zero skips. The entity harness passed **78,830 assertions**, including **4,306
+  exact shockwave arithmetic cases** for scale, UV, RGBA and initial scroll.
+  Dense float32 ages, boundary neighbours, signed zero and large/nonfinite clock
+  values match the retained `b8c1a220` operations without tolerances. Nonfinite
+  clocks are tested through the same pure production helper without assigning
+  invalid transforms to nodes.
+- The same harness compares nineteen actual native/retained tween steps,
+  initial callback timing, captured materials, parent/child lifetime ownership,
+  independent instances, one RNG draw and its unchanged suffix. All three
+  decoded texture pages match the old loader, and prepared input hashes remain
+  unchanged. The public event route preserves actor/tick naming, coordinate
+  conversion and a nonzero host clock.
+- `pulse-impact-client-final-f4qn38jb/`: all **22** affected Client tests passed
+  again after retaining the size guard's rejection of unregistered effect meshes.
+- `pulse-impact-native-ctsr0w79/`: standard-engine parsing and **195 runtime
+  assertions** passed with clean logs. **171 editor assertions** passed for
+  authored geometry/artwork, inactive timers/tweens/input and scene packing
+  without private pixels. The scripted editor still reports the same **166
+  ObjectDB instances** and RID shutdown diagnostics; its strict clean-log gate
+  remains failed.
+- `pulse-impact-smoke-aonolece/`: the normal startup/menu/Level 100/retry/
+  Main Menu smoke passed **2,148 ticks**, followed by two verified replay
+  repetitions. Recording, trace and final-state hashes match the destruction
+  milestone below; runtime logs are clean. The mission remains **Running /
+  None** with **zero targets destroyed**, so this does not establish full combat.
+
+Use the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` commands
+below. These comparisons preserve the current implementation; they do not prove
+complete retail combat, normal GPU performance, physical input, audible audio
+or Windows execution.
+
 #### Native destruction scenes — September 23
 
 Tank, drone and facility destruction now instantiate authored scenes driven by
 `Scenes/World/destruction_effect.gd`. Their retained layers share four native
-texture recipes; the remaining managed Pulse impact uses those same objects.
+texture recipes, including the blob and flash objects also used by Pulse impact.
 The original six texture-admission slots remain ordered. Existing representative
 emitter limitations are unchanged; no debris, placement, velocity or colour law
 was inferred to fill them.
@@ -1258,7 +1302,7 @@ transitions, camera/projection application and environment update order.
 `static_world_animation.gd` owns scenery's double clock and discrete rigid-part
 frames. The temporary C# facade submits one immutable snapshot pair and caches
 detached display facts. Its former camera adapter is test-only. Import
-construction, the remaining Pulse impact, full simulation and replay entry still need
+construction, full simulation and replay entry still need
 conversion; the full game still requires .NET.
 
 Executed checks use owned profiles and outputs under this worktree's ignored

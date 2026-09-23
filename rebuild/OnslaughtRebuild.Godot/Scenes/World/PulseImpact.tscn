@@ -1,0 +1,76 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://Scenes/World/pulse_impact.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectAnimatedBlobTexture.tres" id="2"]
+[ext_resource type="Texture2D" path="res://Scenes/World/EffectFlashMediumTexture.tres" id="3"]
+[ext_resource type="Texture2D" path="res://Scenes/World/PulseShockwaveTexture.tres" id="4"]
+
+[sub_resource type="StandardMaterial3D" id="BlobMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("2")
+billboard_mode = 1
+billboard_keep_scale = true
+uv1_scale = Vector3(0.25, 0.25, 1)
+
+[sub_resource type="QuadMesh" id="BlobQuad"]
+size = Vector2(1.4, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="FlashMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("3")
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="FlashQuad"]
+size = Vector2(3, 3)
+
+[sub_resource type="StandardMaterial3D" id="BlastMaterial"]
+resource_local_to_scene = true
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("4")
+uv1_scale = Vector3(2, 2, 1)
+uv1_offset = Vector3(0, -0.0, 0)
+
+[sub_resource type="SphereMesh" id="BlastSphere"]
+radius = 0.5
+height = 1.0
+radial_segments = 10
+rings = 10
+
+[node name="PulseImpact" type="Node3D"]
+script = ExtResource("1")
+metadata/definition = "Retained pulse impact: Blue Anim Blob Large Sprite, Flash Medium and Shockwave Medium Growth"
+
+[node name="Lifetime" type="Timer" parent="."]
+wait_time = 1.05
+one_shot = true
+
+[node name="BlueAnimatedBlob" type="MeshInstance3D" parent="."]
+mesh = SubResource("BlobQuad")
+material_override = SubResource("BlobMaterial")
+metadata/definition = "Blue Anim Blob Large Sprite: Radius 0.7, Life 20 turns, random-start cells 0..14; retained scale endpoint 1.07"
+
+[node name="FlashMedium" type="MeshInstance3D" parent="."]
+mesh = SubResource("FlashQuad")
+material_override = SubResource("FlashMaterial")
+metadata/definition = "Flash Medium: Radius 1.5, Life 6 turns, retained scale 1 -> 0 over 0.3 seconds"
+
+[node name="PulseBlastSphere" type="MeshInstance3D" parent="."]
+scale = Vector3(0.8, 0.8, 0.8)
+mesh = SubResource("BlastSphere")
+material_override = SubResource("BlastMaterial")
+metadata/definition = "Shockwave Medium Growth: retained radius 0.6*sin(age)+0.4, scroll from the host effect clock, white-to-black RGB over 0.5 seconds"

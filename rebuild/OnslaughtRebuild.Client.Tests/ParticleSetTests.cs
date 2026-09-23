@@ -607,7 +607,7 @@ public sealed class ParticleSetTests
         Assert.Contains(
             "SpawnDestructionScene(TargetTankDestructionScenePath, $\"TargetTankDestruction{targetId}\", position)",
             spawn, StringComparison.Ordinal);
-        string spawnScene = RequireSection(worldSource, "private void SpawnDestructionScene(", "private Node3D CreateTimedEffect(");
+        string spawnScene = RequireSection(worldSource, "private void SpawnDestructionScene(", "private void UpdateRetailPixelCentreOffset(");
         AssertSourceOrder(spawnScene,
             "GD.Load<PackedScene>(path)",
             "scene.Instantiate<Node3D>()",
@@ -838,13 +838,13 @@ public sealed class ParticleSetTests
         Assert.DoesNotContain("_vulcanImpactSparkTexture", worldSource, StringComparison.Ordinal);
 
         string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
-        // Keep all six admission slots, including the two texture recipes
-        // shared by remaining PulseImpact code and native destruction scenes.
+        // Keep all six admission slots. PulseImpact and the destruction
+        // scenes share the same blob/flash recipe objects.
         int priorAdmission = -1;
         foreach (string marker in new[]
         {
             "AdmitDestructionArtwork(\"animated_blob\")",
-            "pulse-impact-shockwave.texture.aya",
+            "pulse.Call(\"admit_artwork\")",
             "effect.Call(\"admit_artwork\")",
             "AdmitDestructionArtwork(\"flash_medium\")",
             "AdmitDestructionArtwork(\"explosion_animated\")",
@@ -856,6 +856,13 @@ public sealed class ParticleSetTests
             Assert.Equal(admission, presentation.LastIndexOf(marker, StringComparison.Ordinal));
             priorAdmission = admission;
         }
+        AssertSourceOrder(presentation,
+            "GD.Load<GDScript>(PulseImpactScriptPath)",
+            "pulse.Call(\"admit_artwork\")",
+            "WorldPresentationResult(returned)",
+            "GD.Load<GDScript>(VulcanImpactScriptPath)",
+            "effect.Call(\"admit_artwork\")",
+            "WorldPresentationResult(returned)");
 
         string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn"));
         Assert.Contains("res://Scenes/World/vulcan_impact.gd", scene, StringComparison.Ordinal);
@@ -905,6 +912,119 @@ public sealed class ParticleSetTests
             $"0, {(int)Level100DestructionEffectKind.VulcanImpact}: continue",
             audioSource[audioStart..audioEnd],
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PulseImpactUsesRetainedNativePresentation()
+    {
+        // Source-wiring checks for the retained b8c1a220 presentation, with
+        // actual tween/float-word comparisons owned by the scene checks.
+        // This does not promote its representative layers to a complete
+        // retail particle emitter or change the retained 1.07 blob scale.
+        string worldSource = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string spawn = RequireSection(worldSource, "private void SpawnPulseImpact(", "private void SpawnVulcanImpact(");
+        AssertSourceOrder(spawn,
+            "GD.Load<PackedScene>(PulseImpactScenePath)",
+            "scene.Instantiate<Node3D>()",
+            "root.Name = $\"PulseImpact{targetId}-{tick}\";",
+            "root.Position = position;",
+            "AddChild(root);",
+            "root.Call(\"start\", _particlePresentationSeconds)",
+            "WorldPresentationResult(returned)");
+        foreach (string retired in new[]
+        {
+            "CreateTimedEffect(", "CreateEffectSprite(", "CreateEffectMaterial(",
+            "CreatePulseBlastSphere(", "AnimatePulseBlast(", "AnimatePulseImpactBlob(", "AnimateScale(",
+            "_pulseImpactAnimatedTexture", "_pulseImpactShockwaveTexture", "_effectFlashMediumTexture",
+        })
+        {
+            Assert.DoesNotContain(retired, worldSource, StringComparison.Ordinal);
+        }
+
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseImpact.tscn"));
+        Assert.Contains("res://Scenes/World/pulse_impact.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/EffectAnimatedBlobTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/EffectFlashMediumTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/PulseShockwaveTexture.tres", scene, StringComparison.Ordinal);
+        string timer = RequireSection(scene, "[node name=\"Lifetime\" type=\"Timer\" parent=\".\"]", "[node ");
+        Assert.Contains("wait_time = 1.05\n", timer, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", timer, StringComparison.Ordinal);
+        Assert.DoesNotContain("autostart = true", timer, StringComparison.Ordinal);
+        string sphere = RequireSection(scene, "[sub_resource type=\"SphereMesh\" id=\"BlastSphere\"]", "[node ");
+        Assert.Contains("radius = 0.5\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("height = 1.0\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("radial_segments = 10\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("rings = 10\n", sphere, StringComparison.Ordinal);
+        Assert.Matches(
+            @"(?s)\[node name=""PulseBlastSphere"" type=""MeshInstance3D""[^\]]*\][^\[]*" +
+            @"mesh = SubResource\(""BlastSphere""\)", scene);
+        string recipe = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseShockwaveTexture.tres"));
+        Assert.Contains("res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya", recipe, StringComparison.Ordinal);
+        Assert.Contains("dimensions = Vector2i(128, 128)", recipe, StringComparison.Ordinal);
+        Assert.Contains("compression = 0", recipe, StringComparison.Ordinal);
+
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/pulse_impact.gd"));
+        Assert.Contains("ARTWORK = preload(\"res://Scenes/World/PulseShockwaveTexture.tres\")", animation, StringComparison.Ordinal);
+        Assert.Contains("ARTWORK.ensure_loaded()", animation, StringComparison.Ordinal);
+        Assert.Contains("FRAME_ADVANCES: int = 14", animation, StringComparison.Ordinal);
+        Assert.Contains("ATLAS_CELLS: int = 15", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _process(", animation, StringComparison.Ordinal);
+        string start = RequireSection(animation, "func start(", "func _layer(");
+        AssertSourceOrder(start,
+            "if Engine.is_editor_hint():",
+            "if _started or not is_inside_tree():",
+            "F.value(global_seconds)",
+            "lifetime.timeout.connect(queue_free)",
+            "lifetime.start()",
+            "_layer(\"BlueAnimatedBlob\")",
+            "_animate_blob(blob)",
+            "_animate_scale(blob, 1.0, F.value(1.07), 1.0)",
+            "_layer(\"FlashMedium\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.3)",
+            "_layer(\"PulseBlastSphere\")",
+            "_animate_blast(sphere, seconds)");
+        string layer = RequireSection(animation, "func _layer(", "func _animate_blob(");
+        Assert.Contains("sprite.material_override = sprite.material_override.duplicate(false)", layer, StringComparison.Ordinal);
+        string blob = RequireSection(animation, "func _animate_blob(", "func _animate_scale(");
+        AssertSourceOrder(blob,
+            "randi() % ATLAS_CELLS",
+            "var atlas: Tween = create_tween()",
+            "1.0 / FRAME_ADVANCES",
+            "range(FRAME_ADVANCES + 1)",
+            "(start_frame + step) % ATLAS_CELLS",
+            "atlas.tween_callback(_set_cell.bind(material, frame))",
+            "if step < FRAME_ADVANCES:",
+            "atlas.tween_interval(interval)");
+        // The first random cell remains a deferred callback; one global draw
+        // occurs when starting the blob, and no second draw occurs at a tick.
+        Assert.DoesNotContain("_set_cell(", blob, StringComparison.Ordinal);
+        Assert.Equal(animation.IndexOf("randi()", StringComparison.Ordinal), animation.LastIndexOf("randi()", StringComparison.Ordinal));
+        string blast = RequireSection(animation, "func _animate_blast(", "static func initial_scroll(");
+        AssertSourceOrder(blast,
+            "initial_scroll(global_seconds)",
+            "_apply_blast(0.0, sphere, material, initial_v)",
+            "create_tween().tween_method(_apply_blast.bind(sphere, material, initial_v), 0.0, 1.0, 0.5)");
+        string scroll = RequireSection(animation, "static func initial_scroll(", "static func blast_values(");
+        AssertSourceOrder(scroll,
+            "F.value(-2.0 * F.value(global_seconds))",
+            "F.value(fmod(value, 1.0))",
+            "F.value(remainder + 1.0) if remainder < 0.0 else remainder");
+        string values = RequireSection(animation, "static func blast_values(", "func _apply_blast(");
+        AssertSourceOrder(values,
+            "var age: float = F.value(normalized_age)",
+            "Vector2.from_angle(age).y",
+            "F.value(F.value(F.value(0.6) * sine) + F.value(0.4))",
+            "F.value(radius / 0.5)",
+            "F.value(F.value(initial_v) - age)",
+            "F.value(1.0 + F.value(F.value(0.0 - 1.0) * age))",
+            "F.value(1.0 + F.value(F.value(1.0 - 1.0) * age))");
+        string apply = RequireSection(animation, "func _apply_blast(", "func _set_cell(");
+        AssertSourceOrder(apply,
+            "blast_values(initial_v, normalized_age)",
+            "sphere.scale = values.scale",
+            "material.uv1_offset = values.uv_offset",
+            "material.albedo_color = values.color");
     }
 
     [Fact]
