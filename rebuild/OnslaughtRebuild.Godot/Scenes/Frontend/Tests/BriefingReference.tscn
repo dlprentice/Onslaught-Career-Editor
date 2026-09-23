@@ -1,0 +1,50 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/Tests/BriefingReference.cs" id="1"]
+
+[node name="BriefingReference" type="Control"]
+script = ExtResource("1")
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Background" type="Control" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Header" type="Control" parent="."]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 65.0
+offset_right = 585.0
+offset_bottom = 97.0
+mouse_filter = 2
+
+[node name="LevelName" type="Control" parent="."]
+layout_mode = 0
+offset_left = 178.5
+offset_top = 118.0
+offset_right = 585.5
+offset_bottom = 150.0
+mouse_filter = 2
+
+[node name="Body" type="Control" parent="."]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 163.5
+offset_right = 585.0
+offset_bottom = 286.0
+mouse_filter = 2
+
+[node name="Navigation" type="Control" parent="."]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 438.0
+offset_right = 632.0
+offset_bottom = 474.0
+mouse_filter = 2

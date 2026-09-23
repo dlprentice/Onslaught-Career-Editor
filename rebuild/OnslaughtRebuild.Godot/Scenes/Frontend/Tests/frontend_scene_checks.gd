@@ -20,6 +20,8 @@ func run_checks() -> void:
     var quit_dialog: Control = quit_view.get_node("Dialog")
     var career: Control = stage.get_node("CareerName")
     var career_field: Control = career.get_node("Name")
+    var briefing: Control = stage.get_node("MissionBriefing")
+    var briefing_body: Control = briefing.get_node("Body")
     var configuration: Control = stage.get_node("SelectConfiguration")
     var configuration_unit: Control = configuration.get_node("Unit")
     var row: Control = menu.get_node("NewGame")
@@ -37,6 +39,10 @@ func run_checks() -> void:
         and career.has_node("Header/Title") and career.has_node("Name/Label")
         and career.get_node("List/Rows").get_child_count() == 11,
         "Career name must expose the actual header, name field and eleven visible row slots before Ready"): return
+    if not require(briefing.has_method("set_frame") and briefing.has_method("hit_test")
+        and briefing.has_node("Background/Rock") and briefing.has_node("Header/Title")
+        and briefing.has_node("LevelName/Text") and briefing_body.get_node("Text").has_method("wrap_lines"),
+        "Briefing must expose the actual background, header, selected name and wrapping body before Ready"): return
     if not require(configuration.has_method("set_frame") and configuration.has_method("hit_test")
         and configuration.has_node("Background/Rock") and configuration.has_node("Background/Ring")
         and configuration.has_node("Unit/Name") and configuration.has_node("Walker/Primary")
@@ -56,6 +62,9 @@ func run_checks() -> void:
     if not require(career.body_font == stage.get_node("Options").body_font
         and career.title_font == stage.get_node("Options").title_font,
         "Career name must share the production frontend fonts"): return
+    if not require(briefing.body_font == stage.get_node("Options").body_font
+        and briefing.title_font == stage.get_node("Options").title_font,
+        "Briefing must share the production frontend fonts"): return
     if not require(configuration.body_font == stage.get_node("Options").body_font
         and configuration.title_font == stage.get_node("Options").title_font,
         "Configuration must share the production frontend fonts"): return
@@ -81,6 +90,9 @@ func run_checks() -> void:
             if pages[page] == "CareerName":
                 if not require(not career.get("_frame_supplied") and not career.is_processing()
                     and not career.is_processing_input(), "Career preview must not start input, navigation or a clock"): return
+            if pages[page] == "MissionBriefing":
+                if not require(not briefing.get("_frame_supplied") and not briefing.is_processing()
+                    and not briefing.is_processing_input(), "Briefing preview must not select a world, acquire input or advance navigation"): return
             if pages[page] == "SelectConfiguration":
                 if not require(not configuration.get("_frame_supplied") and not configuration.is_processing()
                     and not configuration.is_processing_input(), "Configuration preview must not select a unit, acquire input or start loading"): return
@@ -106,11 +118,17 @@ func run_checks() -> void:
     quit_dialog.size += Vector2(20, 12)
     career_field.position += Vector2(7, -3)
     career_field.size += Vector2(12, 8)
+    var briefing_rect: Rect2 = briefing_body.get_rect()
+    var briefing_lines: Array = briefing_body.get_node("Text").wrap_lines()
+    briefing_body.position += Vector2(3.5, -1.5)
+    briefing_body.size += Vector2(31, 10)
     var configuration_rect: Rect2 = configuration_unit.get_rect()
     configuration_unit.position += Vector2(4.5, -2.5)
     configuration_unit.size += Vector2(20, 8)
     await process_frame
     if not require(row.position == old_position + Vector2(10, 5), "Presentation overwrote an authored layout edit"): return
+    if not require(briefing_body.get_rect() == Rect2(briefing_rect.position + Vector2(3.5, -1.5), briefing_rect.size + Vector2(31, 10))
+        and briefing_body.get_node("Text").wrap_lines() == briefing_lines, "Briefing overwrote the requested layout edit or replaced its measured wrap ceiling with Control width"): return
     if not require(configuration_unit.get_rect() == Rect2(configuration_rect.position + Vector2(4.5, -2.5), configuration_rect.size + Vector2(20, 8)), "Configuration presentation overwrote the requested authored unit-label edit"): return
     if not require(row.get("source_rect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
     if not require(shadow.position == shadow_origin, "Animation overwrote authored shadow geometry"): return
@@ -131,6 +149,7 @@ func run_checks() -> void:
     if not require(reloaded.get_node("Stage/MainMenu/NewGame").position == row.position, "Scene roundtrip discarded authored row position"): return
     if not require(reloaded.get_node("Stage/QuitConfirm/Dialog").get_rect() == quit_dialog.get_rect(), "Scene roundtrip discarded authored quit-dialog geometry"): return
     if not require(reloaded.get_node("Stage/CareerName/Name").get_rect() == career_field.get_rect(), "Scene roundtrip discarded authored career-name field geometry"): return
+    if not require(reloaded.get_node("Stage/MissionBriefing/Body").get_rect() == briefing_body.get_rect(), "Scene roundtrip discarded authored briefing body geometry"): return
     if not require(reloaded.get_node("Stage/SelectConfiguration/Unit").get_rect() == configuration_unit.get_rect(), "Scene roundtrip discarded authored configuration unit-label geometry"): return
     reloaded.queue_free()
     print("FRONTEND_SCENE_CHECKS: 10 authored pages, 7 menu rows, native textures/guides, production assets, preserved authored edits, transient pixels, pointer unchanged; editor=", Engine.is_editor_hint())

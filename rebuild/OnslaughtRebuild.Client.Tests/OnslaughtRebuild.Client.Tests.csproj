@@ -267,6 +267,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\career_name_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\CareerName.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.CareerName.cs"
              Link="godot-career-name-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\briefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MissionBriefing.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Briefing.cs"
+             Link="godot-briefing-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/MainMenu.tscn" id="main_menu_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/QuitConfirm.tscn" id="quit_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/CareerName.tscn" id="career_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/MissionBriefing.tscn" id="briefing_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/SelectConfiguration.tscn" id="configuration_scene"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
@@ -61,67 +62,8 @@ script = ExtResource("2")
 Section = "LevelSelect.Content"
 SourceRect = Rect2(0, 0, 640, 480)
 
-[node name="MissionBriefing" type="Control" parent="Stage"]
+[node name="MissionBriefing" parent="Stage" instance=ExtResource("briefing_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Background" type="Control" parent="Stage/MissionBriefing"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Briefing.Background"
-SourceRect = Rect2(0, 0, 640, 480)
-
-[node name="Header" type="Control" parent="Stage/MissionBriefing"]
-layout_mode = 0
-offset_left = 191.0
-offset_top = 65.0
-offset_right = 585.0
-offset_bottom = 97.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Briefing.Header"
-SourceRect = Rect2(191, 65, 394, 32)
-
-[node name="LevelName" type="Control" parent="Stage/MissionBriefing"]
-layout_mode = 0
-offset_left = 178.5
-offset_top = 118.0
-offset_right = 585.5
-offset_bottom = 150.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Briefing.LevelName"
-SourceRect = Rect2(178.5, 118, 407, 32)
-
-[node name="Body" type="Control" parent="Stage/MissionBriefing"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 163.5
-offset_right = 585.0
-offset_bottom = 286.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Briefing.Body"
-SourceRect = Rect2(80, 163.5, 505, 122.5)
-
-[node name="Navigation" type="Control" parent="Stage/MissionBriefing"]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 438.0
-offset_right = 632.0
-offset_bottom = 474.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Briefing.Navigation"
-SourceRect = Rect2(9, 438, 623, 36)
 
 [node name="SelectConfiguration" parent="Stage" instance=ExtResource("configuration_scene")]
 visible = false
@@ -140,4 +82,5 @@ visible = false
 [editable path="Stage/QuitConfirm"]
 
 [editable path="Stage/CareerName"]
+[editable path="Stage/MissionBriefing"]
 [editable path="Stage/SelectConfiguration"]

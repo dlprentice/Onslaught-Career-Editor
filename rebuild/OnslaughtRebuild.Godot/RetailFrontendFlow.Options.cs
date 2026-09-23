@@ -15,7 +15,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// <item><b>SOURCE (pinned GPL drop):</b> nothing about the widget layer -
 /// <c>FEPOptions.cpp</c>, <c>MenuItem.cpp</c> and <c>PauseMenu.cpp</c> are all
 /// absent. What IS ported is the page chrome (<c>FrontEnd.cpp:1101-1105</c>
-/// header-bar constants, already consumed by <see cref="DrawHeaderBarTitle"/>)
+/// header-bar constants, also retained by the native briefing chrome)
 /// and everything behind the rows (see <see cref="RetailOptionsMenu"/>).</item>
 /// <item><b>BYTES (pristine specimen
 /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256

@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (native Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Mission Briefing, Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Select Configuration, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Mission Briefing, Select Configuration, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -220,6 +220,40 @@ exactly, including fractional window scales and edited sections. Standard
 Godot checks cover the actual scene, input inactivity, explicit overrides and
 pack/reopen without private pixels. Executed checks and remaining limits are in
 [`VALIDATION.md`](../VALIDATION.md#native-select-configuration--september-22).
+
+#### Native Mission Briefing
+
+`Scenes/Frontend/MissionBriefing.tscn` exposes the actual background, header,
+selected level name, briefing body and navigation arrows. Open it directly or
+select MissionBriefing through `Frontend.tscn`'s `EditorPage`. It shares the
+Configuration rock/ring controls and recipes, atlas fonts and arrow component.
+Gameplay supplies selected-world text through one raw UTF-16 batch; the frozen
+`editor_level_name` and `editor_paragraphs` fields use those same controls.
+
+Edit the five named section frames or their individual passes. `Body/Text`
+owns wrapping and glyph drawing; changing its Control size scales the layout
+without replacing the measured 286-pixel wrap ceiling. Its source anchor,
+ceiling, line pitch, blank-line gap and tint are visible in the Inspector.
+`override_paragraphs` explicitly selects enhanced body text; the name/header
+labels use `override_text`. These edits do not select a world, start video or
+advance the frontend. Back and Forward still use the existing session path.
+
+The conversion preserves two executable details that old comments misstated.
+An empty supplied paragraph list selects the nine-element world-100 fallback,
+while ordinary nonempty paragraph boundaries add no automatic blank line.
+Only an explicit empty paragraph advances by the shorter 10-pixel gap. Thus
+the normal two-paragraph Level 100 text and the fallback retain different
+vertical spacing. Their retail fidelity remains an open question, rather than
+a reason to change behavior during the language conversion. The missing video
+inset, header endcaps and Forseti emblem remain absent; the black inset in a
+`-skipfmv` capture is not used as replacement artwork. Original methods and
+measurement provenance remain in `Scenes/Frontend/Tests/BriefingReference*`
+from `51477f62`.
+
+The [executed Briefing checks](../VALIDATION.md#native-mission-briefing--september-23)
+cover standard-engine scene inspection, wrapping, navigation and exact native/
+live-host image equivalence. They also record the separate existing retail
+header discrepancy and editor shutdown leaks; neither is treated as resolved.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (native Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Mission Briefing, Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1004,6 +1004,91 @@ headlessly for the comparison, or add
 `--configuration-render-dir=ABS_FRESH_EMPTY_DIR` on a caller-owned isolated
 display. Outputs belong below this worktree's `local-data/`. These checks make
 no full-combat, physical-input, audible-playback, GPU-performance or Windows claim.
+
+#### Native Mission Briefing — September 23
+
+`MissionBriefing.tscn` replaces the remaining briefing draw callback with
+editable Background, Header, LevelName, Body and Navigation sections. It reuses
+the Configuration background resources and controls, atlas labels/fonts and
+signed arrow component. `Body/Text` owns raw UTF-16 paragraph layout with the
+original source rectangle, float32 width/y arithmetic and 286-pixel ceiling.
+The narrow host forwards the selected world's name and paragraphs in one batch
+and retains session/input/audio/navigation ownership. Frozen editor facts reuse
+the native world-100 text table. The former methods and measurement provenance
+remain in `Tests/BriefingReference*` from `51477f62`.
+
+The retained executable behavior splits only on ASCII space, keeps empty tokens,
+wraps when the current line is nonempty and its candidate exceeds 286, and leaves oversized words whole.
+Explicit empty paragraphs advance by 10; nonempty lines advance by 16.
+Nonempty paragraph boundaries insert no extra gap. An empty *list* chooses the
+nine-element world-100 fallback, including its explicit blank element. This
+contradicts the old renderer's comment promising to draw nothing for an empty
+session body. The normal two-paragraph Level 100 text therefore has different
+vertical spacing from that fallback. Conversion preserves both behaviors;
+neither is newly asserted as faithful retail policy. The cheapest falsifier is
+a controlled retail observation of paragraph/line submissions for the normal
+world-100 pair and a missing selected-world body, rather than another comparison
+against the C# reconstruction. The missing video inset, header endcaps and
+Forseti emblem remain open; no black video placeholder was introduced.
+
+The existing selected-world wiring test now reads the live bridge/native body
+owner. Its table-pair assertion remains unchanged, but its comment no longer
+claims to execute the separately wrapped fallback. The old renderer cited
+`RetailFrontendFlowWrapTests`; no such test exists in this tree. The new native
+and retained-reference layout harnesses directly compare those wrapping paths.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `briefing-native-n8nuftpf/result/report.json`: **317 checks**, nine groups,
+  zero failures in standard headless Godot. Includes the 286/287 width boundary,
+  explicit blanks, repeated spaces, oversized words, raw UTF-16, frozen editor
+  facts, authored edits and pack/reopen without private pixel serialization.
+  Fifteen public sources and five private inputs retained their hashes; both
+  existing-output/symlink refusal probes passed. Runtime diagnostics are clean.
+- `briefing-integrated-4pwpv8yi/`: the supported .NET build and private Level 100
+  import passed with zero build warnings/errors. `report.json` then passed
+  **2,656 checks**, sixteen states and five groups against the retained renderer
+  and actual host. Both new-career World 100 and read-only gold-fixture World 110
+  navigation preserve callback ordering and the exact career/save handoff.
+  An earlier harness attempt omitted Load's required row selection and correctly
+  stopped at the Level Select assertion; the setup now selects that row through
+  the existing input path. Production navigation was not changed to pass it.
+- `briefing-render-hafevgwd/report.json`: **2,726 checks**, **27 exact native/
+  live-host image comparisons**, zero differing RGBA bytes. Coverage includes
+  both worlds at 640×480, 1280×720, 801×601 and 320×240, empty-body fallback,
+  explicit blank paragraphs, spacing/long-word/raw-unit cases, authored body/
+  header/name edits and explicit text overrides. The World 100, World 110 and
+  edited-body host images were inspected. Isolated Xvfb used task-owned
+  credentials/profiles, software rendering and Dummy audio; credentials and
+  processes were cleaned up. Only the expected XIM/V-Sync warnings appeared.
+  The tracked save fixture and seven private inputs retained their hashes.
+- `briefing-editor-dxzv_m5b/`: import and runtime scene checks exited cleanly;
+  all ten frozen editor pages and edit/pack/reopen checks passed. Briefing
+  neither acquires input nor starts a world, and resizing its section does not
+  replace the measured wrap ceiling. The editor check still reports the same
+  **205 ObjectDB/associated RID shutdown leaks**; this is a functional pass.
+- `briefing-startup-_xalh0md/run/capture-manifest.json`: **13/13** scheduled
+  startup shots matched their expected screens through Loading, without save
+  errors, at 640×480 on the isolated display.
+- `briefing-client-tw27nast/results/briefing.trx`: **127 affected Client tests**,
+  **126 passed, one failed, zero skipped**. The fresh CareerName/LevelSelect
+  retail header gate retains the same y71..87 versus y72..88 discrepancy above.
+  It does not measure Briefing. No assertion or expected hash was weakened.
+- `briefing-smoke-s5gy8vs8/`: **2,148-step** lifecycle smoke and both recorded
+  tape replays passed. The tape, trace and final-state hashes match the
+  Configuration receipt above. Thirteen ordered message deliveries/queues,
+  synthetic focus-loss/rearm, fresh retry and Main Menu return/world release
+  passed with clean logs. Outcome remains `Running`, zero targets destroyed;
+  this is not full-combat acceptance.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/briefing_scene_checks.gd -- ABS_FRESH_OWNED_DIR` for
+the native scene. Run .NET
+`res://Scenes/Frontend/Tests/BriefingSceneChecks.tscn -- --skipfmv` headlessly,
+or add `--briefing-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned display.
+Outputs belong below this worktree's `local-data/`. Conversion equivalence is
+not full retail, full-combat, physical-input, audible-playback, GPU-performance
+or Windows acceptance.
 
 #### Live native input edges — September 22
 
