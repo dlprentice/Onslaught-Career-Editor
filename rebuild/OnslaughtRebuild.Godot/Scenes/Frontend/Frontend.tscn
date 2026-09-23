@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
-[ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/LevelSelect.tscn" id="level_select_scene"]
 [ext_resource type="Resource" path="res://Scenes/Frontend/RetailFrontendAssets.tres" id="3"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/MainMenu.tscn" id="main_menu_scene"]
@@ -44,23 +44,8 @@ visible = false
 [node name="CareerName" parent="Stage" instance=ExtResource("career_scene")]
 visible = false
 
-[node name="LevelSelect" type="Control" parent="Stage"]
+[node name="LevelSelect" parent="Stage" instance=ExtResource("level_select_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="CareerGraph" type="Control" parent="Stage/LevelSelect"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "LevelSelect.Content"
-SourceRect = Rect2(0, 0, 640, 480)
 
 [node name="MissionBriefing" parent="Stage" instance=ExtResource("briefing_scene")]
 visible = false
@@ -82,5 +67,6 @@ visible = false
 [editable path="Stage/QuitConfirm"]
 
 [editable path="Stage/CareerName"]
+[editable path="Stage/LevelSelect"]
 [editable path="Stage/MissionBriefing"]
 [editable path="Stage/SelectConfiguration"]

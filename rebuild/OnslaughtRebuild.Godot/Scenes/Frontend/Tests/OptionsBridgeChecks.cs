@@ -58,8 +58,8 @@ public sealed partial class OptionsBridgeChecks : Node
                 await CheckRenderedFonts(view);
                 Complete("font_pixels");
             }
-            // Inspector borrows above must not dispose the decoded handles
-            // still used by the retained C# frontend's ordinary draw paths.
+            // Inspector borrows must preserve the production font resources
+            // shared by all native frontend pages.
             CheckLiveFrontendFonts(view);
             view.QueueRedraw();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -94,7 +94,7 @@ public sealed partial class OptionsBridgeChecks : Node
         var samples = units.Select(unit => new[] { unit }).ToList();
         samples.AddRange([[], [65, 0, 66], [0xfeff, 65], [65, 0xd83d, 0xde80, 66],
             "Controller Options".Select(c => (int)c).ToArray(), "High (Recommended)".Select(c => (int)c).ToArray()]);
-        MethodInfo widthOracle = typeof(RetailFrontendFlow).GetMethod("MeasureGlyphWidths", BindingFlags.NonPublic | BindingFlags.Static)!;
+        MethodInfo widthOracle = typeof(LevelSelectReference).GetMethod("MeasureGlyphWidths", BindingFlags.NonPublic | BindingFlags.Static)!;
         float[] scales = [0f, 1f, 0.63f, 1.5f, -1f, 0.000001f, 5.7f];
         foreach (bool title in new[] { false, true })
         {
@@ -107,7 +107,11 @@ public sealed partial class OptionsBridgeChecks : Node
             int[] expected = (int[])widthOracle.Invoke(null, [image, cell, 16])!;
             int[] actual = font.Call("glyph_widths").AsInt32Array();
             Check(actual.SequenceEqual(expected), "Every atlas width matches the retained C# scan for " + cell);
-            Check(Field<int[]>(view, title ? "_font22Widths" : "_glyphWidths").SequenceEqual(expected), "The retained frontend consumes the same admitted width batch.");
+            using Variant liveFontValue = view.GetNode("Stage/LevelSelect").Get(title ? "title_font" : "body_font");
+            Resource liveFont = liveFontValue.As<Resource>();
+            Check(liveFont.GetInstanceId() == font.GetInstanceId()
+                && liveFont.Call("glyph_widths").AsInt32Array().SequenceEqual(expected),
+                "The live level selector shares the admitted Options font and exact widths.");
             foreach (int[] sample in samples)
             foreach (float scale in scales)
             {
@@ -127,13 +131,23 @@ public sealed partial class OptionsBridgeChecks : Node
 
     private void CheckLiveFrontendFonts(RetailFrontendFlow view)
     {
-        foreach (string field in new[] { "_titleFont", "_font22" })
+        foreach (string name in new[] { "body_font", "title_font" })
         {
-            Texture2D texture = Field<Texture2D>(view, field);
-            Check(GodotObject.IsInstanceValid(texture) && texture.GetRid().IsValid,
-                "Temporary font inspection preserves the live frontend handle " + field + ".");
-            using Image image = texture.GetImage();
-            Check(!image.IsEmpty(), "The retained frontend can still read its decoded font " + field + ".");
+            using Variant sharedValue = view.OptionsView.Get(name);
+            Resource shared = sharedValue.As<Resource>();
+            foreach (string path in new[] { "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration" })
+            {
+                using Variant fontValue = view.GetNode("Stage/" + path).Get(name);
+                Resource font = fontValue.As<Resource>();
+                Check(GodotObject.IsInstanceValid(font) && font.GetInstanceId() == shared.GetInstanceId(),
+                    "Native pages retain the same production font after inspection: " + path + "/" + name);
+                using Variant pageValue = font.Get("page");
+                Texture2D texture = pageValue.As<Texture2D>();
+                Check(GodotObject.IsInstanceValid(texture) && texture.GetRid().IsValid,
+                    "The shared native font page retains its live texture handle.");
+                using Image image = texture.GetImage();
+                Check(!image.IsEmpty(), "The production native page can still read its decoded font.");
+            }
         }
     }
 
@@ -163,7 +177,7 @@ public sealed partial class OptionsBridgeChecks : Node
         foreach (double time in seconds.Concat(Enumerable.Range(0, 90).Select(index => (index + 0.5d) / 30d)))
         {
             int actual = script.Call("frame_index", time, count).AsInt32();
-            int expected = RetailFrontendFlow.FeBackFrameIndex(time, count);
+            int expected = LevelSelectReference.FeBackFrameIndex(time, count);
             Check(actual == expected, $"FEBack phase matches C# at {time}/{count}: expected {expected}, actual {actual}.");
         }
 
@@ -189,7 +203,7 @@ public sealed partial class OptionsBridgeChecks : Node
         {
             view.OptionsView.Call("set_frame", 0.25d, time);
             Texture2D selected = view.OptionsView.GetNode<TextureRect>("Underlay/Video").Texture;
-            Check(selected.GetRid() == frames[RetailFrontendFlow.FeBackFrameIndex(time, frames.Length)].GetRid(),
+            Check(selected.GetRid() == frames[LevelSelectReference.FeBackFrameIndex(time, frames.Length)].GetRid(),
                 "Options displays the same production frame instance as the retained frontend.");
         }
     }

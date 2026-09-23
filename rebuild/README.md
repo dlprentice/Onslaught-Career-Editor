@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native Mission Briefing, Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Level Select and Mission Briefing; frontend page drawing, live input edges and weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,12 +43,12 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Mission Briefing, Select Configuration, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, Quit confirmation, career-name/load page, Level Select, Mission Briefing, Select Configuration, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
-also have native owners. The remaining frontend drawing, world assembly,
-full simulation and replay entry still need their
+also have native owners. All ten frontend page renderers are native; frontend
+orchestration, world assembly, full simulation and replay entry still need their
 live consumers converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
@@ -254,6 +254,40 @@ The [executed Briefing checks](../VALIDATION.md#native-mission-briefing--septemb
 cover standard-engine scene inspection, wrapping, navigation and exact native/
 live-host image equivalence. They also record the separate existing retail
 header discrepancy and editor shutdown leaks; neither is treated as resolved.
+
+#### Native Level Select
+
+`Scenes/Frontend/LevelSelect.tscn` exposes the production background, guides,
+three episode arcs, twelve graph-node groups, sixteen links, ring sprites,
+bracket passes, header, episode/name labels and arrows. Open it directly or
+select LevelSelect through `Frontend.tscn`'s `EditorPage`. Both use the same
+shared fonts, private texture recipes and FEBack underlay as gameplay.
+
+Graph nodes live at `Graph/Nodes/Node00` through `Node11`; each ring, link and
+arc is an ordinary inspectable Control with exported drawing inputs. The
+World 100/110 targets belong to the first two node groups, so authored group
+transforms move their art and deliberately offset hit regions together.
+Defaults retain the original full-stage coordinate frame. Explicit text
+and layout overrides are editor features; imported localized names and the
+measured defaults remain authoritative unless deliberately edited.
+
+The existing settled graph highlights node zero even when the selected name
+is World 110. Its only animation is the host-supplied FEBack clock; editor
+preview stays frozen. Selecting World 100 confirms even when already selected;
+selecting World 110 confirms only after the session accepts a change. Both
+quirks and the offset node hit regions are preserved. The Forseti emblem,
+header endcaps, amber node-center artwork and faint writing remain missing.
+
+The retired C# graph/draw helpers and measurement provenance remain in
+`Scenes/Frontend/Tests/LevelSelectReference*`, pinned to `51477f62`. No live
+`RetailFrontendPart` draw proxy remains. The root's temporary C# controller
+still owns navigation, input and loading while the native pages own their
+presentation; full standard-engine startup is not yet available.
+
+The [Level Select validation record](../VALIDATION.md#native-level-select--september-23)
+records native/editor checks, exact retained-renderer comparisons and the
+remaining retail header/art gaps. Software captures do not establish normal
+GPU performance or physical input behavior.
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,

@@ -76,13 +76,8 @@ public sealed partial class RetailFrontendFlow
         using Variant configuredAssets = _optionsView.Call("configure_assets", pathBatch, frameBatch);
         using Godot.Collections.Dictionary assetResult = configuredAssets.AsGodotDictionary();
         RequireOptionsResult(assetResult);
-        // All frontend glyph users share these production pages and widths.
-        using Variant bodyTexture = _optionsView.Call("font_texture", false);
-        using Variant titleTexture = _optionsView.Call("font_texture", true);
-        _titleFont = bodyTexture.As<Texture2D>();
-        _font22 = titleTexture.As<Texture2D>();
-        _glyphWidths = _optionsView.Call("font_widths", false).AsInt32Array();
-        _font22Widths = _optionsView.Call("font_widths", true).AsInt32Array();
+        // Native pages share the same font resources directly. There is no
+        // remaining managed glyph renderer that needs copied pages or widths.
         RetailOptionsHostCapabilities host = DescribeHost();
         ApplyOptionsResult(_optionsView.Call("configure_host", new Godot.Collections.Dictionary
         {

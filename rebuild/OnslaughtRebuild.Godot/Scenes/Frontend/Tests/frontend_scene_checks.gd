@@ -20,6 +20,8 @@ func run_checks() -> void:
     var quit_dialog: Control = quit_view.get_node("Dialog")
     var career: Control = stage.get_node("CareerName")
     var career_field: Control = career.get_node("Name")
+    var level: Control = stage.get_node("LevelSelect")
+    var level_node: Control = level.get_node("Graph/Nodes/Node00")
     var briefing: Control = stage.get_node("MissionBriefing")
     var briefing_body: Control = briefing.get_node("Body")
     var configuration: Control = stage.get_node("SelectConfiguration")
@@ -39,6 +41,11 @@ func run_checks() -> void:
         and career.has_node("Header/Title") and career.has_node("Name/Label")
         and career.get_node("List/Rows").get_child_count() == 11,
         "Career name must expose the actual header, name field and eleven visible row slots before Ready"): return
+    if not require(level.has_method("set_frame") and level.has_method("hit_test")
+        and level.get_node("Graph/Nodes").get_child_count() == 12
+        and level.get_node("Graph/Links").get_child_count() == 16
+        and level_node.has_node("Target"),
+        "Level Select must expose twelve real node groups, sixteen links and the current node's hit region before Ready"): return
     if not require(briefing.has_method("set_frame") and briefing.has_method("hit_test")
         and briefing.has_node("Background/Rock") and briefing.has_node("Header/Title")
         and briefing.has_node("LevelName/Text") and briefing_body.get_node("Text").has_method("wrap_lines"),
@@ -62,6 +69,9 @@ func run_checks() -> void:
     if not require(career.body_font == stage.get_node("Options").body_font
         and career.title_font == stage.get_node("Options").title_font,
         "Career name must share the production frontend fonts"): return
+    if not require(level.body_font == stage.get_node("Options").body_font
+        and level.title_font == stage.get_node("Options").title_font,
+        "Level Select must share the production frontend fonts"): return
     if not require(briefing.body_font == stage.get_node("Options").body_font
         and briefing.title_font == stage.get_node("Options").title_font,
         "Briefing must share the production frontend fonts"): return
@@ -90,6 +100,9 @@ func run_checks() -> void:
             if pages[page] == "CareerName":
                 if not require(not career.get("_frame_supplied") and not career.is_processing()
                     and not career.is_processing_input(), "Career preview must not start input, navigation or a clock"): return
+            if pages[page] == "LevelSelect":
+                if not require(not level.get("_frame_supplied") and not level.is_processing()
+                    and not level.is_processing_input(), "Level Select preview must not select a world, advance video or acquire input"): return
             if pages[page] == "MissionBriefing":
                 if not require(not briefing.get("_frame_supplied") and not briefing.is_processing()
                     and not briefing.is_processing_input(), "Briefing preview must not select a world, acquire input or advance navigation"): return
@@ -118,6 +131,11 @@ func run_checks() -> void:
     quit_dialog.size += Vector2(20, 12)
     career_field.position += Vector2(7, -3)
     career_field.size += Vector2(12, 8)
+    var level_rect: Rect2 = level_node.get_rect()
+    # Fullrect controls grow around their center. Set the intended size before
+    # the final position, then require that exact authored rectangle to persist.
+    level_node.size = level_rect.size + Vector2(9, 6)
+    level_node.position = level_rect.position + Vector2(5.5, -2.5)
     var briefing_rect: Rect2 = briefing_body.get_rect()
     var briefing_lines: Array = briefing_body.get_node("Text").wrap_lines()
     briefing_body.position += Vector2(3.5, -1.5)
@@ -127,6 +145,8 @@ func run_checks() -> void:
     configuration_unit.size += Vector2(20, 8)
     await process_frame
     if not require(row.position == old_position + Vector2(10, 5), "Presentation overwrote an authored layout edit"): return
+    if not require(level_node.get_rect() == Rect2(level_rect.position + Vector2(5.5, -2.5), level_rect.size + Vector2(9, 6)),
+        "Level Select node transform: before=%s, actual=%s, requested=%s" % [level_rect, level_node.get_rect(), Rect2(level_rect.position + Vector2(5.5, -2.5), level_rect.size + Vector2(9, 6))]): return
     if not require(briefing_body.get_rect() == Rect2(briefing_rect.position + Vector2(3.5, -1.5), briefing_rect.size + Vector2(31, 10))
         and briefing_body.get_node("Text").wrap_lines() == briefing_lines, "Briefing overwrote the requested layout edit or replaced its measured wrap ceiling with Control width"): return
     if not require(configuration_unit.get_rect() == Rect2(configuration_rect.position + Vector2(4.5, -2.5), configuration_rect.size + Vector2(20, 8)), "Configuration presentation overwrote the requested authored unit-label edit"): return
@@ -149,6 +169,7 @@ func run_checks() -> void:
     if not require(reloaded.get_node("Stage/MainMenu/NewGame").position == row.position, "Scene roundtrip discarded authored row position"): return
     if not require(reloaded.get_node("Stage/QuitConfirm/Dialog").get_rect() == quit_dialog.get_rect(), "Scene roundtrip discarded authored quit-dialog geometry"): return
     if not require(reloaded.get_node("Stage/CareerName/Name").get_rect() == career_field.get_rect(), "Scene roundtrip discarded authored career-name field geometry"): return
+    if not require(reloaded.get_node("Stage/LevelSelect/Graph/Nodes/Node00").get_rect() == level_node.get_rect(), "Scene roundtrip discarded authored level-select node geometry"): return
     if not require(reloaded.get_node("Stage/MissionBriefing/Body").get_rect() == briefing_body.get_rect(), "Scene roundtrip discarded authored briefing body geometry"): return
     if not require(reloaded.get_node("Stage/SelectConfiguration/Unit").get_rect() == configuration_unit.get_rect(), "Scene roundtrip discarded authored configuration unit-label geometry"): return
     reloaded.queue_free()

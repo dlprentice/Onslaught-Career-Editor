@@ -7,7 +7,8 @@ namespace OnslaughtRebuild.Client.Tests;
 
 /// <summary>
 /// Source wiring guards for selected-world display text. Executed native
-/// wrapping and live-host equivalence belong to BriefingSceneChecks.tscn;
+/// wrapping and live-host equivalence belong to the Level Select and Briefing
+/// scene harnesses;
 /// these assertions alone establish neither rendered nor retail parity.
 ///
 /// <para>1. the SELECT LEVEL name band draws the SELECTED node's row
@@ -30,7 +31,11 @@ public sealed class RetailFrontendSelectedWorldTextWiringTests
         string body = BriefingSource("briefing_body.gd");
 
         // Gap 1: the selector band follows the selection.
-        Assert.Contains("_session.SelectedLevelName", flow);
+        string levelBridge = NativeLevelSelectSource.Bridge;
+        Assert.Contains("[\"level_name\"] = _session.SelectedLevelName.Select(character => (int)character).ToArray()", levelBridge);
+        Assert.Contains("_levelSelectView.Call(\"set_frame\", batch)", levelBridge);
+        Assert.Contains("get_node(\"LevelName\").bind(name.value)", NativeLevelSelectSource.Function("set_frame"));
+        Assert.DoesNotContain("DrawLevelSelect", flow);
         // Gap 2: the briefing page composes the selected world's own copy.
         Assert.Contains("_session.SelectedLevelName", bridge);
         Assert.Contains("_session.SelectedBriefingBody", bridge);

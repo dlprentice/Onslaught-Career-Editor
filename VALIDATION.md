@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native Mission Briefing, Select Configuration and career-name pages; Main Menu, Quit confirmation, live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Level Select and Mission Briefing; frontend page drawing, live input edges and weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1089,6 +1089,92 @@ or add `--briefing-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned display.
 Outputs belong below this worktree's `local-data/`. Conversion equivalence is
 not full retail, full-combat, physical-input, audible-playback, GPU-performance
 or Windows acceptance.
+
+#### Native Level Select — September 23
+
+`LevelSelect.tscn` replaces the final legacy frontend page draw callback with
+authored background/guides, three arcs, sixteen links, twelve node groups and
+thirteen ring passes, bracket/shadow, labels and navigation. Narrow typed
+controls retain the original `draw_arc`/`draw_line` operations, float32 inputs,
+draw order and full-stage source coordinates. Ring sprites share the existing
+production component; font, underlay and texture resources are shared with
+other pages. Authored node changes update connected link endpoints and targets.
+The original renderer and measurement provenance are retained in
+`Tests/LevelSelectReference*` from `51477f62`.
+
+The host supplies only the selected name and FEBack time, and retains the
+session's selection/input/audio/loading order. The settled graph still
+highlights node zero even when World 110 supplies the name. Its node hit regions
+remain above the ring centers. Clicking World 100 confirms even when unchanged;
+World 110 confirms only when `SelectWorld` accepts the change. The other
+discarded `RetailLevelSelect*` evidence-helper results do not become newly
+invented positions, fades or animation. Missing emblem, header endcaps, amber
+node-center art and faint writing remain undrawn. The arcs retain their current
+alpha blend; the retail additive appearance is a separate unresolved gap.
+
+With no remaining consumer, the production `RetailFrontendPart` proxy, draw
+dispatch, C# glyph renderer and duplicated texture/font handles are removed.
+The root still owns frontend orchestration in C#. Existing numerical/evidence
+tests remain intact; their old source-consumption checks explicitly target the
+retained reference. Production page-fill guards now read the live native
+clear/darkener/composite owner. Options and Debriefing comparison harnesses
+use the retained, unchanged C# glyph/FEBack methods and inspect shared native
+font resources instead of removed live C# fields.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `level-select-native-y68doiup/`: **813 checks**, nine groups, zero failures
+  and clean shutdown in standard headless Godot. Covers authored content,
+  production assets, exact geometry, detached facts, half-open hit bounds,
+  node/link/target edits, frozen preview and pack/reopen without private pixels.
+  Twenty-four source hashes and eight private-input hashes stayed unchanged.
+  Both existing-output/dangling-symlink refusal probes passed. The initial
+  detached-node test incorrectly expected resolved fullrect sizes before tree
+  entry; it now checks stored anchors/offsets, then actual sizes after Ready.
+- `level-select-integrated-1ao4c4xq/`: supported .NET build/private Level 100
+  import passed with zero build warnings/errors. **7,669 headless comparisons**,
+  fourteen states and five groups passed against the retained renderer and
+  actual host. Exact arc/link/ring submissions, decoded fonts/textures, FEBack
+  phase boundaries, five-size hit bounds, actual new/load navigation, callback
+  order and original gold-fixture identity are checked. Updated Options host
+  checks passed **6,048**, including observer failure/reentry; Loading passed
+  **234**. All runtime logs are clean.
+- `level-select-render-6cmfdlzs/report.json`: **7,733 checks**, **25 exact native/
+  live-host image comparisons**, zero differing RGBA bytes. Includes World 100
+  and 110 at four viewport sizes, fractional scaling, empty/raw UTF-16 names,
+  whole-page position/size/scale/rotation edits and explicit text overrides.
+  World 100, World 110 and edited-size host images were inspected. Task-owned
+  Xvfb, separate credentials/profiles, software rendering and Dummy audio were
+  cleaned up; only expected XIM/V-Sync warnings appeared. Fixture/input hashes
+  remain unchanged. This measures equivalence to the reconstruction, not retail.
+- `level-select-editor-ca4vdy7v/`: updated Debriefing checks passed **212**,
+  and editor import exited cleanly. `level-select-editor-final-mld1ihef/` then
+  passed all ten frozen page selections and runtime/editor edit/pack/reopen.
+  The integration test initially set Position before Size on a fullrect node;
+  Godot's centered grow direction shifted that position by half the size delta.
+  It now sets Size before the final Position and still requires the exact
+  requested rectangle to persist. No production change or assertion relaxation
+  was needed. Runtime is clean; editor teardown retains the same **205 ObjectDB/
+  associated RID leaks**.
+- `level-select-startup-ltpjeizc/`: all **13/13** fresh startup shots match their
+  expected screens through Loading with no save errors. The affected Client
+  gate executed **164 tests: 163 passed, one failed, zero skipped**. The unchanged
+  CareerName/LevelSelect retail header assertion still finds y71..87 versus
+  y72..88. No expected hash, retail glyph bound or numerical assertion changed.
+- `level-select-smoke-rw3g4ll9/`: the **2,148-step** lifecycle smoke and two
+  replay runs passed with the same tape, trace and final-state hashes recorded
+  above. Thirteen ordered message deliveries/queues, synthetic focus-loss/rearm,
+  fresh retry and Main Menu return/world release passed with clean diagnostics.
+  Outcome remains `Running`, zero targets destroyed; full combat remains open.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/level_select_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native scene. Run .NET
+`res://Scenes/Frontend/Tests/LevelSelectSceneChecks.tscn -- --skipfmv` headlessly,
+or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
+display. Use this worktree's `local-data/` for outputs. These checks establish
+neither full-combat completion nor physical input, audible playback, normal
+GPU performance or Windows behavior.
 
 #### Live native input edges — September 22
 

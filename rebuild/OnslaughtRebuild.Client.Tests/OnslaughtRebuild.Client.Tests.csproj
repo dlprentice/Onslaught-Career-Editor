@@ -270,6 +270,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\briefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MissionBriefing.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.Briefing.cs"
              Link="godot-briefing-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\level_select_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\LevelSelect.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\LevelSelectReference.cs;..\OnslaughtRebuild.Godot\RetailFrontendFlow.LevelSelect.cs"
+             Link="godot-level-select-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />

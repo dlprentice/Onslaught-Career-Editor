@@ -32,27 +32,14 @@ public sealed partial class RetailFrontendFlow
         }
     }
 
-    private readonly Dictionary<string, RetailFrontendPart> _sceneParts = new(StringComparer.Ordinal);
     private Control? _stage;
-    private RetailFrontendPart? _paintingPart;
-    private string _drawingSection = string.Empty;
 
     public static RetailFrontendFlow InstantiateScene() =>
         GD.Load<PackedScene>(ProductionScenePath).Instantiate<RetailFrontendFlow>();
 
-    private void BindSceneParts()
+    private void BindSceneStage()
     {
         _stage = GetNode<Control>("Stage");
-        foreach (Node node in _stage.FindChildren("*", nameof(Control), true, false))
-        {
-            if (node is RetailFrontendPart part)
-            {
-                if (!_sceneParts.TryAdd(part.Section, part))
-                    throw new InvalidDataException($"Duplicate frontend scene section '{part.Section}'.");
-            }
-        }
-        if (_sceneParts.Count == 0)
-            throw new InvalidDataException("Frontend must be instantiated from its production scene.");
         Resized += FitSceneStage;
         FitSceneStage();
     }
@@ -125,82 +112,12 @@ public sealed partial class RetailFrontendFlow
         UpdateMainMenuFrame();
         UpdateQuitConfirmFrame();
         UpdateCareerNameFrame();
+        UpdateLevelSelectFrame();
         UpdateBriefingFrame();
         UpdateConfigurationFrame();
         UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
         UpdateDebriefingFrame();
-        foreach (RetailFrontendPart part in _sceneParts.Values)
-            part.QueueRedraw();
-    }
-
-    internal void DrawScenePart(RetailFrontendPart part)
-    {
-        if (!_initialized || part.SourceRect.Size.X <= 0f || part.SourceRect.Size.Y <= 0f) return;
-        _paintingPart = part;
-        _drawingSection = string.Empty;
-        try
-        {
-            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-            string prefix = part.Section.Split('.')[0];
-            switch (prefix)
-            {
-                case "LevelSelect": DrawLevelSelect(); break;
-                default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");
-            }
-        }
-        finally
-        {
-            _paintingPart = null;
-            _drawingSection = string.Empty;
-        }
-    }
-
-    private void SelectSceneSection(string section) => _drawingSection = section;
-    private bool DrawsSceneSection => _paintingPart is not null && _paintingPart.Section == _drawingSection;
-    private string SceneText(string importedText) =>
-        DrawsSceneSection && _paintingPart!.OverrideText ? _paintingPart.Text : importedText;
-
-    private new void DrawSetTransform(Vector2 position, float rotation = 0f, Vector2? scale = null)
-    {
-        if (_paintingPart is null) return;
-        Vector2 ratio = _paintingPart.Size / _paintingPart.SourceRect.Size;
-        var authored = new Transform2D(new Vector2(ratio.X, 0f), new Vector2(0f, ratio.Y),
-            -_paintingPart.SourceRect.Position * ratio);
-        var measured = new Transform2D(rotation, scale ?? Vector2.One, 0f, position);
-        _paintingPart.DrawSetTransformMatrix(authored * measured);
-    }
-
-    private new void DrawRect(Rect2 rect, Color color, bool filled = true, float width = -1f, bool antialiased = false)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawRect(rect, color, filled, width, antialiased);
-    }
-
-    private new void DrawTextureRect(Texture2D texture, Rect2 rect, bool tile, Color? modulate = null, bool transpose = false)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawTextureRect(texture, rect, tile, modulate, transpose);
-    }
-
-    private new void DrawTextureRectRegion(Texture2D texture, Rect2 rect, Rect2 source, Color? modulate = null,
-        bool transpose = false, bool clipUv = true)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawTextureRectRegion(texture, rect, source, modulate, transpose, clipUv);
-    }
-
-    private new void DrawLine(Vector2 from, Vector2 to, Color color, float width = -1f, bool antialiased = false)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawLine(from, to, color, width, antialiased);
-    }
-
-    private new void DrawArc(Vector2 center, float radius, float startAngle, float endAngle, int pointCount,
-        Color color, float width = -1f, bool antialiased = false)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawArc(center, radius, startAngle, endAngle, pointCount, color, width, antialiased);
-    }
-
-    private new void DrawPolyline(Vector2[] points, Color color, float width = -1f, bool antialiased = false)
-    {
-        if (DrawsSceneSection) _paintingPart!.DrawPolyline(points, color, width, antialiased);
     }
 }

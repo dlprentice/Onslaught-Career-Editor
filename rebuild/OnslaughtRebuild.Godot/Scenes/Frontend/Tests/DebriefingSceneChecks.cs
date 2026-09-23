@@ -219,7 +219,7 @@ public sealed partial class DebriefingSceneChecks : Node
         foreach (double seconds in new[] { 0d, 0.05d, 0.1d, 0.15d, 1d, 19.07d, 67.531d })
         {
             SetFrame(page, Projection(2, 1, 2, (byte)'A'), "", seconds);
-            Check(page.GetNode<TextureRect>("Underlay/Video").Texture.GetInstanceId() == frames[RetailFrontendFlow.FeBackFrameIndex(seconds, frames.Length)].GetInstanceId(),
+            Check(page.GetNode<TextureRect>("Underlay/Video").Texture.GetInstanceId() == frames[LevelSelectReference.FeBackFrameIndex(seconds, frames.Length)].GetInstanceId(),
                 "Page selects the same shared FEBack frame at the batched clock.");
         }
     }

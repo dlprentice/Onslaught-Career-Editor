@@ -244,7 +244,7 @@ public sealed partial class LoadingSceneChecks : Node
                 {
                     typeof(RetailFrontendFlow).GetField("_loadingText", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(flow, sample.Text);
                     foreach (Node part in flow.FindChildren("*", "Control", true, false))
-                        if (part is RetailFrontendPart authored) authored.QueueRedraw();
+                        if (part is Control authored) authored.QueueRedraw();
                 }
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

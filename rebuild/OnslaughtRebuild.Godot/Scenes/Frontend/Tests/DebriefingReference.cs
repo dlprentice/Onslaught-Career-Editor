@@ -368,7 +368,7 @@ public sealed partial class DebriefingReference : Control
             return;
         }
 
-        int frame = RetailFrontendFlow.FeBackFrameIndex(_feBackSeconds, _feBackFrames.Length);
+        int frame = LevelSelectReference.FeBackFrameIndex(_feBackSeconds, _feBackFrames.Length);
         DrawTextureRect(
             _feBackFrames[frame],
             new Rect2(0f, 0f, DesignWidth, DesignHeight),

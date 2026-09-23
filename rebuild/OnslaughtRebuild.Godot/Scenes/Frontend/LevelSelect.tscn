@@ -1,0 +1,947 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/level_select_presentation.gd" id="page"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_underlay.gd" id="underlay"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_surface.gd" id="surface"]
+[ext_resource type="Script" path="res://Scenes/Frontend/level_select_arc.gd" id="arc"]
+[ext_resource type="Script" path="res://Scenes/Frontend/level_select_link.gd" id="link"]
+[ext_resource type="Script" path="res://Scenes/Frontend/configuration_ring.gd" id="ring"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_bracket.gd" id="bracket"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_label.gd" id="label"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_arrow.gd" id="arrow"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_target.gd" id="target"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont13.tres" id="body_font"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont22.tres" id="title_font"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/LoadingStrings.tres" id="strings"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendUnderlay.tres" id="background_recipe"]
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/FrontendBracket.tres" id="bracket_page"]
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/LevelSelectRing01.tres" id="ring_outer"]
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/LevelSelectRing02.tres" id="ring_inner"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="recipe"]
+
+[sub_resource type="Texture2D" id="arrow_page"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/fe-arrow.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1
+
+[node name="LevelSelect" type="Control"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("page")
+body_font = ExtResource("body_font")
+title_font = ExtResource("title_font")
+strings = ExtResource("strings")
+
+[node name="Background" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("underlay")
+source_rect = Rect2(0, 0, 640, 480)
+recipe = ExtResource("background_recipe")
+
+[node name="Guides" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Vertical" type="Control" parent="Guides"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+source_rect = Rect2(0, 0, 640, 480)
+rectangle = Rect2(123, 0, 1, 480)
+ink_color = Color(0.19607843137254902, 0.2, 0.2823529411764706, 1.0)
+
+[node name="Horizontal" type="Control" parent="Guides"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+source_rect = Rect2(0, 0, 640, 480)
+rectangle = Rect2(0, 180, 640, 1)
+ink_color = Color(0.19607843137254902, 0.2, 0.2823529411764706, 1.0)
+
+[node name="SweepArcs" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Current" type="Control" parent="SweepArcs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arc")
+source_rect = Rect2(0, 0, 640, 480)
+source_center = Vector2(365.8399963378906, 320.3800048828125)
+ink_color = Color(0.5568627450980392, 0.5568627450980392, 0.6549019607843137, 1.0)
+
+[node name="Middle" type="Control" parent="SweepArcs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arc")
+source_rect = Rect2(0, 0, 640, 480)
+source_center = Vector2(485.8399963378906, 320.3800048828125)
+ink_color = Color(0.23921568627450981, 0.23921568627450981, 0.33725490196078434, 1.0)
+
+[node name="Last" type="Control" parent="SweepArcs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arc")
+source_rect = Rect2(0, 0, 640, 480)
+source_center = Vector2(725.8399658203125, 320.3800048828125)
+ink_color = Color(0.23921568627450981, 0.23921568627450981, 0.33725490196078434, 1.0)
+
+[node name="Graph" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Links" type="Control" parent="Graph"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Link00" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node00/Outer")
+to_node = NodePath("../../Nodes/Node01/Outer")
+from_radius = 27.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link01" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node01/Outer")
+to_node = NodePath("../../Nodes/Node02/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link02" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node02/Outer")
+to_node = NodePath("../../Nodes/Node03/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link03" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node02/Outer")
+to_node = NodePath("../../Nodes/Node04/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link04" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node03/Outer")
+to_node = NodePath("../../Nodes/Node05/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link05" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node04/Outer")
+to_node = NodePath("../../Nodes/Node06/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link06" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node03/Outer")
+to_node = NodePath("../../Nodes/Node06/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link07" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node04/Outer")
+to_node = NodePath("../../Nodes/Node05/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link08" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node05/Outer")
+to_node = NodePath("../../Nodes/Node07/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link09" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node06/Outer")
+to_node = NodePath("../../Nodes/Node08/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link10" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node05/Outer")
+to_node = NodePath("../../Nodes/Node08/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link11" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node06/Outer")
+to_node = NodePath("../../Nodes/Node07/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link12" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node07/Outer")
+to_node = NodePath("../../Nodes/Node09/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link13" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node08/Outer")
+to_node = NodePath("../../Nodes/Node09/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link14" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node09/Outer")
+to_node = NodePath("../../Nodes/Node10/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Link15" type="Control" parent="Graph/Links"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("link")
+source_rect = Rect2(0, 0, 640, 480)
+from_node = NodePath("../../Nodes/Node09/Outer")
+to_node = NodePath("../../Nodes/Node11/Outer")
+from_radius = 21.0
+to_radius = 21.0
+ink_color = Color(0.19215686274509805, 0.19607843137254902, 0.2784313725490196, 1.0)
+
+[node name="Nodes" type="Control" parent="Graph"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Node01" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node01"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(208, 320)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Target" type="Control" parent="Graph/Nodes/Node01"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("target")
+source_rect = Rect2(0, 0, 640, 480)
+hit_rect = Rect2(180, 265, 60, 60)
+
+[node name="Node02" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node02"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(268, 320)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node03" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node03"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(328, 290)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node04" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node04"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(328, 350)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node05" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node05"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(388, 290)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node06" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node06"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(388, 350)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node07" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node07"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(448, 290)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node08" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node08"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(448, 350)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node09" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node09"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(508, 320)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node10" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node10"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(568, 290)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node11" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node11"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(568, 350)
+source_size = Vector2(61, 61)
+ink_color = Color(1.0, 1.0, 1.0, 0.10980392156862745)
+
+[node name="Node00" type="Control" parent="Graph/Nodes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Outer" type="Control" parent="Graph/Nodes/Node00"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_outer")
+source_anchor = Vector2(148, 320)
+source_size = Vector2(80, 80)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+[node name="Inner" type="Control" parent="Graph/Nodes/Node00"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_inner")
+source_anchor = Vector2(148, 320)
+source_size = Vector2(62, 62)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+[node name="Target" type="Control" parent="Graph/Nodes/Node00"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("target")
+source_rect = Rect2(0, 0, 640, 480)
+hit_rect = Rect2(120, 265, 60, 60)
+
+[node name="Columns" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="One" type="Control" parent="Columns"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("body_font")
+text = "1"
+source_anchor = Vector2(163, 182.5)
+glyph_scale = Vector2(1.5, 1.5)
+ink_color = Color(0.23921568627450981, 0.615686274509804, 0.9921568627450981, 1.0)
+
+[node name="Two" type="Control" parent="Columns"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("body_font")
+text = "2"
+source_anchor = Vector2(283, 182.5)
+glyph_scale = Vector2(1.5, 1.5)
+ink_color = Color(0.23921568627450981, 0.615686274509804, 0.9921568627450981, 1.0)
+
+[node name="Three" type="Control" parent="Columns"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("body_font")
+text = "3"
+source_anchor = Vector2(524, 182.5)
+glyph_scale = Vector2(1.5, 1.5)
+ink_color = Color(0.23921568627450981, 0.615686274509804, 0.9921568627450981, 1.0)
+
+[node name="Decoration" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Shadow" type="Control" parent="Decoration"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("bracket")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("bracket_page")
+source_anchor = Vector2(333, 353)
+texture_scale = Vector2(1.25, 1.25)
+shadow_scale_boost = 1.05
+ink_color = Color(0.0, 0.0, 0.0, 0.24313725490196078)
+
+[node name="Body" type="Control" parent="Decoration"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("bracket")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("bracket_page")
+source_anchor = Vector2(328, 343)
+texture_scale = Vector2(1.25, 1.25)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+[node name="Header" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="Control" parent="Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+source_rect = Rect2(0, 0, 640, 480)
+rectangle = Rect2(191, 69, 394, 21)
+ink_color = Color(0.047058823529411764, 0.047058823529411764, 0.09411764705882353, 1.0)
+
+[node name="Title" type="Control" parent="Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("title_font")
+text = "SELECT LEVEL"
+source_anchor = Vector2(390, 65)
+glyph_scale = Vector2(1, 1)
+centered = true
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1.0)
+
+[node name="Episode" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("body_font")
+text = "Episode 1"
+source_anchor = Vector2(130, 130.2)
+glyph_scale = Vector2(1.4, 1.4)
+ink_color = Color(1, 1, 1, 1)
+
+[node name="LevelName" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(0, 0, 640, 480)
+atlas_font = ExtResource("body_font")
+source_anchor = Vector2(130, 156.8)
+glyph_scale = Vector2(1.4, 1.4)
+ink_color = Color(1.0, 0.8666666666666667, 0.49019607843137253, 0.9921568627450981)
+
+[node name="Navigation" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Back" type="Control" parent="Navigation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arrow")
+source_rect = Rect2(0, 0, 640, 480)
+texture = SubResource("arrow_page")
+rectangle = Rect2(9, 438, -28, 36)
+hit_rect = Rect2(0, 430, 48, 48)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+[node name="Forward" type="Control" parent="Navigation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arrow")
+source_rect = Rect2(0, 0, 640, 480)
+texture = SubResource("arrow_page")
+rectangle = Rect2(604, 437, 28, 36)
+hit_rect = Rect2(595, 430, 45, 48)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)

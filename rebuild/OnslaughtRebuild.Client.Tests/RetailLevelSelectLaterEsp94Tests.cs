@@ -261,13 +261,15 @@ public sealed class RetailLevelSelectLaterEsp94Tests
     }
 
     [Fact]
-    public void DrawLevelSelectConsumesLaterEsp94AndDoesNotPileIntoMainMenuOrOptions()
+    public void RetainedReferenceConsumesLaterEsp94AndDoesNotPileIntoMainMenuOrOptions()
     {
         string flow = File.ReadAllText(Path.Combine(
             AppContext.BaseDirectory,
             "godot-pause-source",
             "RetailFrontendFlow.cs"));
-        string level = Slice(flow, "private void DrawLevelSelect()");
+        // The pinned pre-conversion renderer preserves these evidence calls;
+        // production ownership is checked separately against the native page.
+        string level = Slice(NativeLevelSelectSource.Reference, "private void DrawLevelSelect()");
         string main = NativeMainMenuSource.Presentation;
         Assert.DoesNotContain("level_select", main, StringComparison.Ordinal);
         string quit = NativeQuitSource.Presentation;

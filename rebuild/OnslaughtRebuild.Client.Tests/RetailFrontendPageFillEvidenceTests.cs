@@ -40,11 +40,6 @@ namespace OnslaughtRebuild.Client.Tests;
 /// </summary>
 public sealed class RetailFrontendPageFillEvidenceTests
 {
-    private static readonly string FlowSource = ReadGodotSource("RetailFrontendFlow.cs");
-
-    private static string ReadGodotSource(string fileName) =>
-        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", fileName));
-
     /// <summary>
     /// Retail's page fill is two draws, and the reconstruction keeps them as two
     /// so that neither input can drift silently behind a baked answer.
@@ -63,10 +58,11 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [Fact]
     public void PageFillIsRetailsTwoTermsAndComposesToTheMeasuredFlatFill()
     {
-        int[] clear = ParseByteColor(FlowSource, "FrontendClearColor");
+        string source = NativeMainMenuSource.Read("frontend_underlay.gd");
+        int[] clear = ParseByteColor(source, "CLEAR");
         Assert.Equal([31, 31, 63], clear);
 
-        int darkenerAlpha = ParseDarkenerAlpha(FlowSource);
+        int darkenerAlpha = ParseDarkenerAlpha(source);
         Assert.Equal(0x3E, darkenerAlpha);
 
         // SRCALPHA/INVSRCALPHA of black over the clear, rounded as the device
@@ -76,7 +72,10 @@ public sealed class RetailFrontendPageFillEvidenceTests
         Assert.Equal([23, 23, 48], composed);
 
         // The baked constant the FEBack strip is added to must BE that composite.
-        Assert.Equal(composed, ParseByteColor(FlowSource, "MainUnderlayFallback"));
+        string composite = NativeMainMenuSource.Function("frontend_underlay.gd", "composite_tables");
+        Assert.Equal(composed, ParseCompositeFill(composite));
+        Assert.Contains("F.value(fill[channel] + F.value(gain[channel] * value))", composite, StringComparison.Ordinal);
+        Assert.Contains("int(clampf(F.round_even(composed), 0.0, 255.0))", composite, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -92,7 +91,7 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [InlineData("DrawOptions")]
     public void EveryFrontendPageRendererCompositesTheUnderlay(string renderer)
     {
-        if (renderer is "DrawMainMenu" or "DrawDevSelect")
+        if (renderer is "DrawMainMenu" or "DrawDevSelect" or "DrawLevelSelect")
         {
             string body = NativeMainMenuSource.Function("main_menu_underlay.gd", "_draw");
             int clear = body.IndexOf("Underlay.CLEAR", StringComparison.Ordinal);
@@ -100,14 +99,17 @@ public sealed class RetailFrontendPageFillEvidenceTests
             int video = body.IndexOf("draw_texture_rect(_frames[Underlay.frame_index", StringComparison.Ordinal);
             Assert.True(clear >= 0 && darkener > clear && video > darkener);
             Assert.Contains("fe-back-128x128x30.rgb", NativeMainMenuSource.Read("frontend_underlay.gd"), StringComparison.Ordinal);
-            if (renderer == "DrawDevSelect")
+            if (renderer is "DrawDevSelect" or "DrawLevelSelect")
             {
                 static string CareerSource(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-career-name-source", name));
                 string underlay = CareerSource("career_name_underlay.gd");
                 Assert.Contains("extends \"res://Scenes/Frontend/main_menu_underlay.gd\"", underlay, StringComparison.Ordinal);
                 Assert.Contains("load_frames(1 if Engine.is_editor_hint() else 2147483647)", underlay, StringComparison.Ordinal);
-                Assert.Contains("get_node(\"Background\").set_frame(1.0, facts.background_seconds)", CareerSource("career_name_presentation.gd"), StringComparison.Ordinal);
-                Assert.Contains("recipe = ExtResource(\"background\")", NativeMainMenuSource.Node("Background", CareerSource("CareerName.tscn")), StringComparison.Ordinal);
+                string controller = renderer == "DrawDevSelect" ? CareerSource("career_name_presentation.gd") : NativeLevelSelectSource.Controller;
+                string scene = renderer == "DrawDevSelect" ? CareerSource("CareerName.tscn") : NativeLevelSelectSource.Scene;
+                Assert.Contains("get_node(\"Background\").set_frame(1.0, facts.background_seconds)", controller, StringComparison.Ordinal);
+                string background = NativeMainMenuSource.Node("Background", scene);
+                AssertUsesCareerUnderlay(scene, background);
             }
             else
             {
@@ -130,7 +132,7 @@ public sealed class RetailFrontendPageFillEvidenceTests
             Assert.Contains("underlay.load_frames(1)", NativeOptionsSource.Read("options_presentation.gd"), StringComparison.Ordinal);
             return;
         }
-        Assert.Contains("DrawMainUnderlay(", MethodBody(FlowSource, renderer), StringComparison.Ordinal);
+        throw new InvalidOperationException("No production underlay route is checked for " + renderer);
     }
 
     /// <summary>
@@ -141,12 +143,19 @@ public sealed class RetailFrontendPageFillEvidenceTests
     [Fact]
     public void TheUnderlayDrawsTheFeBack128StripOverTheFill()
     {
-        string body = MethodBody(FlowSource, "DrawMainUnderlay");
-
-        Assert.Contains("FrontendClearColor", body, StringComparison.Ordinal);
-        Assert.Contains("FrontendFillDarkener", body, StringComparison.Ordinal);
-        Assert.Contains("DrawTextureRect(", body, StringComparison.Ordinal);
-        Assert.Contains("_feBackFrames[frame]", body, StringComparison.Ordinal);
+        string body = NativeMainMenuSource.Function("main_menu_underlay.gd", "_draw");
+        const string clearDraw = "draw_rect(Rect2(0.0, 0.0, 640.0, 480.0), Underlay.CLEAR)";
+        const string darkenerDraw = "draw_rect(Rect2(-40.0, -3.0, 720.0, 486.0), Underlay.DARKENER)";
+        const string stripDraw = "draw_texture_rect(_frames[Underlay.frame_index(_seconds, _frames.size())], Rect2(0.0, 0.0, 640.0, 480.0), false, Color(1.0, 1.0, 1.0, _alpha))";
+        int clear = body.IndexOf(clearDraw, StringComparison.Ordinal);
+        int darkener = body.IndexOf(darkenerDraw, StringComparison.Ordinal);
+        int video = body.IndexOf(stripDraw, StringComparison.Ordinal);
+        Assert.True(clear >= 0 && darkener > clear && video > darkener,
+            "Production underlay must draw the clear, black darkener, then the selected composited FEBack frame.");
+        string recipe = NativeMainMenuSource.Read("frontend_underlay.gd");
+        Assert.Contains("var tables: Array[PackedByteArray] = composite_tables()", recipe, StringComparison.Ordinal);
+        foreach (string channel in new[] { "pixels[index] = tables[0][pixels[index]]", "pixels[index + 1] = tables[1][pixels[index + 1]]", "pixels[index + 2] = tables[2][pixels[index + 2]]" })
+            Assert.Contains(channel, recipe, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -172,15 +181,15 @@ public sealed class RetailFrontendPageFillEvidenceTests
         Assert.InRange(gains[channel], low, high);
     }
 
-    /// <summary>Reads a <c>new(r / 255f, g / 255f, b / 255f, 1f)</c> declaration back as bytes.</summary>
+    /// <summary>Reads the production native Color's /255 declaration as bytes.</summary>
     private static int[] ParseByteColor(string source, string name)
     {
         Match match = Regex.Match(
             source,
-            name + @"\s*=\s*new\(\s*(?<r>\d+)f?\s*/\s*255f\s*,\s*(?<g>\d+)f?\s*/\s*255f\s*,\s*(?<b>\d+)f?\s*/\s*255f",
+            name + @"\s*:=\s*Color\(\s*(?<r>\d+)(?:\.0)?\s*/\s*255\.0\s*,\s*(?<g>\d+)(?:\.0)?\s*/\s*255\.0\s*,\s*(?<b>\d+)(?:\.0)?\s*/\s*255\.0\s*,\s*1\.0\s*\)",
             RegexOptions.None,
             TimeSpan.FromSeconds(5));
-        Assert.True(match.Success, $"{name} was not declared as a /255f byte colour.");
+        Assert.True(match.Success, $"{name} was not declared as an opaque /255 byte colour.");
 
         return
         [
@@ -190,47 +199,41 @@ public sealed class RetailFrontendPageFillEvidenceTests
         ];
     }
 
-    /// <summary>Reads the darkener's hex alpha byte back out of its declaration.</summary>
+    /// <summary>Reads the production black darkener's alpha numerator as a byte.</summary>
     private static int ParseDarkenerAlpha(string source)
     {
         Match match = Regex.Match(
             source,
-            @"FrontendFillDarkener\s*=\s*new\(\s*0f\s*,\s*0f\s*,\s*0f\s*,\s*0x(?<a>[0-9A-Fa-f]{2})u?\s*/\s*255f\s*\)",
+            @"DARKENER\s*:=\s*Color\(\s*0\.0\s*,\s*0\.0\s*,\s*0\.0\s*,\s*(?<a>\d+)(?:\.0)?\s*/\s*255\.0\s*\)",
             RegexOptions.None,
             TimeSpan.FromSeconds(5));
-        Assert.True(match.Success, "FrontendFillDarkener was not declared as black at a hex alpha over 255.");
+        Assert.True(match.Success, "Production DARKENER was not declared as black with a byte alpha over 255.");
 
-        return int.Parse(match.Groups["a"].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        return int.Parse(match.Groups["a"].Value, CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Brace-matched body of a private void method, by name.</summary>
-    private static string MethodBody(string source, string methodName)
+    private static int[] ParseCompositeFill(string source)
     {
-        Match signature = Regex.Match(
+        Match match = Regex.Match(
             source,
-            @"private\s+void\s+" + Regex.Escape(methodName) + @"\s*\([^)]*\)\s*\{",
+            @"var fill: Array\[int\] = \[(?<values>\d+\s*,\s*\d+\s*,\s*\d+)\]",
             RegexOptions.None,
             TimeSpan.FromSeconds(5));
-        Assert.True(signature.Success, $"{methodName} was not found as a private void method.");
+        Assert.True(match.Success, "The production FEBack composite fill was not found.");
+        return match.Groups["values"].Value.Split(',').Select(value => int.Parse(value.Trim(), CultureInfo.InvariantCulture)).ToArray();
+    }
 
-        int open = source.IndexOf('{', signature.Index);
-        int depth = 0;
-        for (int index = open; index < source.Length; index++)
-        {
-            if (source[index] == '{')
-            {
-                depth++;
-            }
-            else if (source[index] == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return source[open..(index + 1)];
-                }
-            }
-        }
-
-        throw new InvalidOperationException($"{methodName} has an unbalanced body.");
+    private static void AssertUsesCareerUnderlay(string scene, string background)
+    {
+        Match script = Regex.Match(scene,
+            @"\[ext_resource type=""Script"" path=""res://Scenes/Frontend/career_name_underlay\.gd"" id=""(?<id>[^""]+)""\]",
+            RegexOptions.None, TimeSpan.FromSeconds(5));
+        Assert.True(script.Success, "The page is missing its shared production underlay script.");
+        Assert.Contains("script = ExtResource(\"" + script.Groups["id"].Value + "\")", background, StringComparison.Ordinal);
+        Match recipe = Regex.Match(scene,
+            @"\[ext_resource type=""Resource"" path=""res://Scenes/Frontend/FrontendUnderlay\.tres"" id=""(?<id>[^""]+)""\]",
+            RegexOptions.None, TimeSpan.FromSeconds(5));
+        Assert.True(recipe.Success, "The page is missing its shared production underlay recipe.");
+        Assert.Contains("recipe = ExtResource(\"" + recipe.Groups["id"].Value + "\")", background, StringComparison.Ordinal);
     }
 }
