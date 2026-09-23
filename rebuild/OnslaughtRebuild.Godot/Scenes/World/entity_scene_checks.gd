@@ -169,11 +169,18 @@ func _artwork_checks() -> bool:
 			"ProjectileTrail": ["pulse-bolt-blue-trail", 64, 0]},
 		"VulcanBullet": {"ProjectileTrail": ["vulcan-bullet-trail", 64, 0]},
 		"PulseMuzzleFlash": {"PulseCannonMuzzleFlash": ["particle-alparticle5-additive", 128, 0]},
+		"VulcanImpact": {"VulcanImpactSpark": ["vulcan-impact-spark", 256, 0]},
 	}
 	for name: String in definitions:
 		var scene: PackedScene = load("res://Scenes/World/" + name + ".tscn")
 		var instance: Node3D = scene.instantiate()
 		# No tree or gameplay initialization is needed to inspect the artwork.
+		if name == "VulcanImpact":
+			var timer: Timer = instance.get_node("Lifetime")
+			_check(timer.is_stopped() and not timer.autostart and timer.one_shot and timer.wait_time == 0.25,
+				"The authored impact lifetime stays frozen until an explicit runtime start")
+			_check(not instance.get_script().is_tool() and not instance.is_processing(),
+				"Opening the impact scene cannot execute gameplay")
 		for part: String in definitions[name]:
 			var pin: Array = definitions[name][part]
 			var mesh: MeshInstance3D = instance.get_node(part)
@@ -185,7 +192,7 @@ func _artwork_checks() -> bool:
 			_check(page.ensure_loaded().ok and page.get_rid().is_valid(), "Actual retained artwork loads before Play")
 			var image: Image = page.get_image()
 			_check(image.get_width() == pin[1] and image.get_height() == pin[1] and not image.get_data().is_empty(), "The editor texture has actual image data")
-			if name != "PulseMuzzleFlash":
+			if name in ["PulseBolt", "VulcanBullet"]:
 				var authored: StandardMaterial3D = _authored_material(scene, part)
 				_check(authored != null and authored.emission_enabled and authored.emission_texture == authored.albedo_texture,
 					"The authored albedo and emission slots name the same production page")

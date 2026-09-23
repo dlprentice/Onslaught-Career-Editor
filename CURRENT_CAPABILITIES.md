@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (native rebuild frontend and world-frame orchestration; existing RE and companion evidence retains its stated limits).
+Last updated: 2026-09-23 (native rebuild Vulcan impact, frontend and world-frame orchestration; existing RE and companion evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -336,6 +336,9 @@ component comparisons cover callback interruption/reentry, font pixels,
 transforms/trails and terrain-only Sun occlusion; unresolved retail behavior
 remains unresolved. Public projectile/muzzle and Sun scenes show the same
 production texture recipes before Play, with private pixels excluded from saves.
+The direct Vulcan impact spark now also has an authored native scene, including
+its billboard, material and stopped timer; its unresolved emitter branches remain
+absent. Other destruction effects still await conversion.
 Water adds three inspectable mesh components and external production shaders.
 Its complete isolated-render comparison matches the retained component's RGBA
 bytes; terrain comparisons match every word across twelve mesh updates. These

@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native frontend and world-frame orchestration; live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Vulcan impact, frontend and world-frame orchestration).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -150,6 +150,15 @@ Core remains the simulation owner. A failed frame preserves preceding native
 writes, and projectile trails still observe the camera's prior pose.
 Executed comparisons and their limits are recorded in
 [validation](../VALIDATION.md#native-world-presentation--september-23).
+
+`Scenes/World/VulcanImpact.tscn` also exposes the existing direct impact spark
+as a selectable billboard, material and lifetime timer. Its native script owns
+the four atlas advances and scale tween. Opening it shows the real cell-11
+artwork without starting time. The shared `VulcanImpactTexture.tres` contains
+the private texture route and decoding settings; decoded pixels are transient.
+The two unresolved sibling emitter branches remain absent. Other impact/destruction
+effects still await conversion. Texture, timing, lifetime and RNG comparisons
+are recorded in [validation](../VALIDATION.md#native-vulcan-impact--september-23).
 
 #### Native cursor and asset routing
 
@@ -819,6 +828,7 @@ Use these scenes from Godot's FileSystem dock:
 | --- | --- |
 | [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
 | [Scenes/World/WorldPresentation.tscn](OnslaughtRebuild.Godot/Scenes/World/WorldPresentation.tscn) | Inactive native world-frame controller. Inspect its linked script for player/Aquila, camera and environment update order; inspect the actual geometry in the private Level 100 scene below. |
+| [Scenes/World/VulcanImpact.tscn](OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn) | Production direct-spark billboard, material and stopped lifetime timer. The frozen preview uses the same private texture recipe as gameplay; the script starts atlas/scale animation only on an explicit runtime call. |
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Complete native frontend root, ten authored pages, seven main-menu rows, images, guides, letterbox and cursor. `EditorPage` selects a frozen view; it does not navigate the game. The linked GDScript owns input and page/loading orchestration. |
 | [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |

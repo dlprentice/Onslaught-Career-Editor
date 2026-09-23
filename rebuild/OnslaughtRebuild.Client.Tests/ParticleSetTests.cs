@@ -769,36 +769,52 @@ public sealed class ParticleSetTests
             worldSource,
             "private void SpawnVulcanImpact(",
             "private void SpawnTargetTankDestruction(");
-        Assert.Contains("position,\n            0.25d);", spawn, StringComparison.Ordinal);
-        Assert.Matches(
-            @"CreateEffectSprite\(\s*""VulcanImpactSpark"",\s*" +
-            @"_vulcanImpactSparkTexture,\s*0\.3f,\s*" +
-            @"columns:\s*4,\s*rows:\s*4\);",
-            spawn);
-        Assert.Contains(
-            "AnimateVulcanImpactSpark(root, spark);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(spark, 1f, 10f / 3f, 0.25d);",
-            spawn,
-            StringComparison.Ordinal);
+        Assert.Contains("GD.Load<PackedScene>(VulcanImpactScenePath)", spawn, StringComparison.Ordinal);
+        Assert.Contains("Node3D root = scene.Instantiate<Node3D>();", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Name = $\"VulcanImpact{targetId}-{tick}\";", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Position = position;", spawn, StringComparison.Ordinal);
+        Assert.Contains("AddChild(root);", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Call(\"start\")", spawn, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateVulcanImpactSpark", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_vulcanImpactSparkTexture", worldSource, StringComparison.Ordinal);
 
-        string animation = RequireSection(
-            worldSource,
-            "private static void AnimateVulcanImpactSpark(",
-            "private static void AnimateTargetTankDelayedExplosion(");
-        Assert.Contains("const int startCell = 11;", animation, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
-        Assert.Contains(
-            "const double cellsPerTurn = 0.8d;",
-            animation,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            animation,
-            StringComparison.Ordinal);
-        Assert.Contains("cell <= endCell", animation, StringComparison.Ordinal);
+        string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
+        int shockwave = presentation.IndexOf("pulse-impact-shockwave.texture.aya", StringComparison.Ordinal);
+        int admission = presentation.IndexOf("effect.Call(\"admit_artwork\")", StringComparison.Ordinal);
+        int flash = presentation.IndexOf("effect-flash-medium.texture.aya", StringComparison.Ordinal);
+        Assert.True(shockwave >= 0 && flash > shockwave);
+        Assert.InRange(admission, shockwave + 1, flash - 1);
+
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn"));
+        Assert.Contains("res://Scenes/World/vulcan_impact.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/VulcanImpactTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("wait_time = 0.25", scene, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", scene, StringComparison.Ordinal);
+        Assert.Contains("size = Vector2(0.6, 0.6)", scene, StringComparison.Ordinal);
+        Assert.Contains("albedo_color = Color(1, 1, 1, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("blend_mode = 1", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_scale = Vector3(0.25, 0.25, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_offset = Vector3(0.75, 0.5, 0)", scene, StringComparison.Ordinal);
+        string recipe = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpactTexture.tres"));
+        Assert.Contains("res://Assets/Level100/Textures/vulcan-impact-spark.texture.aya", recipe, StringComparison.Ordinal);
+        Assert.Contains("dimensions = Vector2i(256, 256)", recipe, StringComparison.Ordinal);
+        Assert.Contains("compression = 0", recipe, StringComparison.Ordinal);
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/vulcan_impact.gd"));
+        Assert.Contains("ARTWORK = preload(\"res://Scenes/World/VulcanImpactTexture.tres\")", animation, StringComparison.Ordinal);
+        Assert.Contains("ARTWORK.ensure_loaded()", animation, StringComparison.Ordinal);
+        Assert.Contains("START_CELL: int = 11", animation, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 15", animation, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 0.8", animation, StringComparison.Ordinal);
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", animation, StringComparison.Ordinal);
+        Assert.Contains("range(START_CELL + 1, END_CELL + 1)", animation, StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_interval(interval)", animation, StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_callback(_set_cell.bind(material, cell))", animation, StringComparison.Ordinal);
+        Assert.Contains("Vector3.ONE * F.value(10.0 / 3.0), 0.25", animation, StringComparison.Ordinal);
+        Assert.Contains("spark.create_tween().tween_property", animation, StringComparison.Ordinal);
+        Assert.Contains("lifetime.timeout.connect(queue_free)", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("randi(", animation, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));

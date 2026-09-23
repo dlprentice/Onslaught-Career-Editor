@@ -141,7 +141,6 @@ public sealed class ParticleQuadSizeConventionTests
         {
             ["BlueAnimatedBlob"] = "Blue Anim Blob Large Sprite",
             ["FlashMedium"] = "Flash Medium",
-            ["VulcanImpactSpark"] = "Spark Anim Sprite",
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
             ["DroneFlash"] = "Flash",
@@ -296,16 +295,22 @@ public sealed class ParticleQuadSizeConventionTests
 
         Assert.Equal(expected.Count, sites.Count);
 
-        // Muzzle is now an actual native scene, used by the same production
-        // spawner. Its authored QuadMesh must still match the shipped radius.
-        string muzzleScene = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn"));
-        Match size = Regex.Match(muzzleScene, @"size = Vector2\((?<x>[0-9.]+), (?<y>[0-9.]+)\)");
-        Assert.True(size.Success, "The production muzzle must have an authored quad size.");
-        float radius = set.Require("Pulse Cannon Muzzle Flash").FloatWithModifier("Radius").Value;
-        float side = ParticleEffectResolver.BillboardQuadSide(radius);
-        Assert.Equal(side, float.Parse(size.Groups["x"].Value, System.Globalization.CultureInfo.InvariantCulture));
-        Assert.Equal(side, float.Parse(size.Groups["y"].Value, System.Globalization.CultureInfo.InvariantCulture));
+        // These two former construction sites now draw the actual native
+        // scene quads. Each keeps its original shipped radius identity.
+        foreach ((string file, string node, string descriptor) in new[]
+        {
+            ("PulseMuzzleFlash.tscn", "PulseCannonMuzzleFlash", "Pulse Cannon Muzzle Flash"),
+            ("VulcanImpact.tscn", "VulcanImpactSpark", "Spark Anim Sprite"),
+        })
+        {
+            string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/" + file));
+            Assert.Contains($"[node name=\"{node}\" type=\"MeshInstance3D\"", scene, StringComparison.Ordinal);
+            Match size = Assert.Single(Regex.Matches(scene, @"size = Vector2\((?<x>[0-9.]+), (?<y>[0-9.]+)\)").Cast<Match>());
+            float radius = set.Require(descriptor).FloatWithModifier("Radius").Value;
+            float side = ParticleEffectResolver.BillboardQuadSide(radius);
+            Assert.Equal(side, float.Parse(size.Groups["x"].Value, System.Globalization.CultureInfo.InvariantCulture));
+            Assert.Equal(side, float.Parse(size.Groups["y"].Value, System.Globalization.CultureInfo.InvariantCulture));
+        }
 
         foreach (Match site in sites)
         {

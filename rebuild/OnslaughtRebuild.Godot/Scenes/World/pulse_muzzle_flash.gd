@@ -24,19 +24,19 @@ func start() -> Dictionary:
 	var flash: MeshInstance3D = get_node("PulseCannonMuzzleFlash")
 	# Each live flash owns its animated UV state; the authored template and
 	# other simultaneous flashes retain their own materials.
-	flash.material_override = flash.material_override.duplicate()
-	_set_cell(START_CELL)
+	var material: StandardMaterial3D = flash.material_override.duplicate()
+	flash.material_override = material
+	_set_cell(material, START_CELL)
 	var atlas: Tween = create_tween()
 	var interval: float = 1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)
 	for cell: int in range(START_CELL + 1, END_CELL + 1):
 		atlas.tween_interval(interval)
-		atlas.tween_callback(_set_cell.bind(cell))
+		# Match the original C# closure's captured material target.
+		atlas.tween_callback(_set_cell.bind(material, cell))
 	flash.scale = Vector3.ONE
 	flash.create_tween().tween_property(flash, "scale", Vector3.ONE * 5.0, 0.5)
 	return {"ok": true}
 
 
-func _set_cell(cell: int) -> void:
-	var flash: MeshInstance3D = get_node("PulseCannonMuzzleFlash")
-	var material: StandardMaterial3D = flash.material_override
+func _set_cell(material: StandardMaterial3D, cell: int) -> void:
 	material.uv1_offset = Vector3(float(cell % COLUMNS) / COLUMNS, float(cell / COLUMNS) / ROWS, 0.0)

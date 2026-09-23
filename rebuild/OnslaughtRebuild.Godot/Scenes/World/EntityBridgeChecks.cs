@@ -30,6 +30,7 @@ public sealed partial class EntityBridgeChecks : Node
             string initialHash = StateHasher.ComputeHex(session.CurrentSnapshot);
             CompareProductionTexturePages();
             CompareMuzzleAnimation();
+            CompareVulcanImpactAnimation();
             var viewport = new SubViewport { Size = new(320, 240), OwnWorld3D = true,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
             AddChild(viewport);
@@ -222,6 +223,14 @@ public sealed partial class EntityBridgeChecks : Node
         bool[] nativeActive = [true, true], referenceActive = [true, true];
         foreach (Tween tween in nativeTweens.Concat(referenceTweens)) tween.Pause();
         var actual = native.GetNode<MeshInstance3D>("PulseCannonMuzzleFlash");
+        var actualAnimatedMaterial = (StandardMaterial3D)actual.MaterialOverride;
+        // The original callback closes over its initial material. Replacing
+        // the mesh override must not retarget either running atlas animation.
+        var sentinelOffset = new Vector3(0.125f, 0.375f, 0.625f);
+        using var actualSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset };
+        using var referenceSentinel = new StandardMaterial3D { Uv1Offset = sentinelOffset };
+        actual.MaterialOverride = actualSentinel;
+        flash.MaterialOverride = referenceSentinel;
         foreach (double delta in new[] { 0d, Math.BitDecrement(interval), interval - Math.BitDecrement(interval),
             interval, 0.01d, 0.023d, interval, 0.1d, interval, 0.15d, 0.2d })
         {
@@ -231,15 +240,295 @@ public sealed partial class EntityBridgeChecks : Node
                 if (referenceActive[index]) referenceActive[index] = referenceTweens[index].CustomStep(delta);
                 Check(nativeActive[index] == referenceActive[index], "Native muzzle tween completion follows the original schedule.");
             }
-            Compare(((StandardMaterial3D)actual.MaterialOverride).Uv1Offset, material.Uv1Offset, "muzzle atlas UV");
+            Compare(actualAnimatedMaterial.Uv1Offset, material.Uv1Offset, "muzzle captured atlas UV");
+            Compare(actualSentinel.Uv1Offset, sentinelOffset, "muzzle replacement material remains unchanged");
+            Compare(referenceSentinel.Uv1Offset, sentinelOffset, "retained muzzle replacement material remains unchanged");
+            Check(actual.MaterialOverride == actualSentinel && flash.MaterialOverride == referenceSentinel,
+                "Atlas callbacks retain their initial material without replacing the current mesh override.");
             Compare(actual.Scale, flash.Scale, "muzzle radius animation");
         }
-        Check(((StandardMaterial3D)actual.MaterialOverride).Uv1Offset == new Vector3(0.75f, 0.75f, 0f),
+        Check(actualAnimatedMaterial.Uv1Offset == new Vector3(0.75f, 0.75f, 0f),
             "The production muzzle reaches final atlas cell fifteen.");
         Compare(actual.Scale, Vector3.One * 5f, "muzzle final radius ratio");
         foreach (Tween tween in nativeTweens.Concat(referenceTweens)) tween.Kill();
         native.Free();
         reference.Free();
+    }
+
+    private void CompareVulcanImpactAnimation()
+    {
+        // Retained cb2c5b4a SpawnVulcanImpact/AnimateVulcanImpactSpark and
+        // AnimateScale are the reference. CustomStep advances the actual
+        // engine tweens synchronously; no wall clock or rendering drives them.
+        const string texturePath = "res://Assets/Level100/Textures/vulcan-impact-spark.texture.aya";
+        byte[] sourceBefore = System.Security.Cryptography.SHA256.HashData(
+            File.ReadAllBytes(ProjectSettings.GlobalizePath(texturePath)));
+        using PackedScene scene = GD.Load<PackedScene>(FirstFlightWorldView.VulcanImpactScenePath);
+        using GDScript controller = GD.Load<GDScript>("res://Scenes/World/vulcan_impact.gd");
+        const ulong seed = 0x564c43414e53504bUL;
+        GD.Seed(seed);
+        uint[] expectedRandom = Enumerable.Range(0, 16).Select(_ => GD.Randi()).ToArray();
+        GD.Seed(seed);
+        uint[] actualPrefix = Enumerable.Range(0, 4).Select(_ => GD.Randi()).ToArray();
+        Check(actualPrefix.SequenceEqual(expectedRandom.Take(4)), "The Vulcan RNG control sequence starts at its exact seeded prefix.");
+        using (Variant admittedValue = controller.Call("admit_artwork"))
+        using (Dictionary admitted = Result(admittedValue)) { }
+
+        var native = scene.Instantiate<Node3D>();
+        var sibling = scene.Instantiate<Node3D>();
+        var reference = new Node3D();
+        var ownershipReference = new Node3D();
+        var host = new FirstFlightWorldView();
+        var allTweens = new List<Tween>();
+        try
+        {
+            var spark = native.GetNode<MeshInstance3D>("VulcanImpactSpark");
+            var siblingSpark = sibling.GetNode<MeshInstance3D>("VulcanImpactSpark");
+            var authoredMaterial = (StandardMaterial3D)spark.MaterialOverride;
+            var lifetime = native.GetNode<Godot.Timer>("Lifetime");
+            Compare(spark.Scale, Vector3.One, "Vulcan authored scale");
+            Compare(authoredMaterial.Uv1Offset, new(0.75f, 0.5f, 0f), "Vulcan authored cell eleven");
+            Check(spark.Mesh is QuadMesh quad && quad.Size == new Vector2(0.6f, 0.6f),
+                "The authored Vulcan quad retains twice the .3 radius.");
+            Check(authoredMaterial.AlbedoColor == Colors.White &&
+                authoredMaterial.ShadingMode == BaseMaterial3D.ShadingModeEnum.Unshaded &&
+                authoredMaterial.CullMode == BaseMaterial3D.CullModeEnum.Disabled &&
+                authoredMaterial.Transparency == BaseMaterial3D.TransparencyEnum.Alpha &&
+                authoredMaterial.BlendMode == BaseMaterial3D.BlendModeEnum.Add &&
+                authoredMaterial.BillboardMode == BaseMaterial3D.BillboardModeEnum.Enabled && authoredMaterial.BillboardKeepScale,
+                "The native direct spark preserves the original white, additive, unshaded billboard material.");
+            Compare(authoredMaterial.Uv1Scale, new(0.25f, 0.25f, 1f), "Vulcan atlas cell size");
+            using Texture2D recipe = GD.Load<Texture2D>("res://Scenes/World/VulcanImpactTexture.tres");
+            Check(authoredMaterial.AlbedoTexture == recipe && ((StandardMaterial3D)siblingSpark.MaterialOverride).AlbedoTexture == recipe,
+                "Native admission and both scene instances share the actual production texture recipe.");
+            using (Texture2D expected = CuratedAyaTextureLoader.Load(texturePath, 256, 256, CuratedAyaTextureLoader.Compression.Dxt1))
+            using (Image expectedImage = expected.GetImage())
+            using (Image actualImage = recipe.GetImage())
+            {
+                Check(actualImage.GetWidth() == expectedImage.GetWidth() && actualImage.GetHeight() == expectedImage.GetHeight(),
+                    "The native Vulcan artwork retains the former 256x256 admission.");
+                Check(actualImage.GetFormat() == expectedImage.GetFormat() && actualImage.HasMipmaps() == expectedImage.HasMipmaps(),
+                    "The native Vulcan format and mipmap policy equal the former DXT1 loader.");
+                Check(actualImage.GetData().AsSpan().SequenceEqual(expectedImage.GetData()),
+                    "Every decoded Vulcan artwork byte matches the retained loader.");
+            }
+            using (Variant refusedValue = native.Call("start"))
+            using (Dictionary refused = refusedValue.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    "An off-tree Vulcan start refuses explicitly without starting time.");
+            Check(lifetime.IsStopped() && lifetime.OneShot && !lifetime.Autostart && lifetime.WaitTime == 0.25d &&
+                lifetime.ProcessCallback == Godot.Timer.TimerProcessCallback.Idle && !lifetime.IgnoreTimeScale,
+                "The authored lifetime retains the old quarter-second one-shot Timer defaults.");
+            var before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            AddChild(native);
+            AddChild(sibling);
+            Check(lifetime.IsStopped() && !native.IsProcessing() && !native.IsProcessingInput() &&
+                GetTree().GetProcessedTweens().All(value => before.Contains(value.GetInstanceId())),
+                "Entering the tree leaves the frozen Vulcan preview and its timer/tweens inactive.");
+            using (Variant startedValue = native.Call("start"))
+            using (Dictionary started = Result(startedValue)) { }
+            Tween[] nativeTweens = GetTree().GetProcessedTweens().Where(value => !before.Contains(value.GetInstanceId())).ToArray();
+            allTweens.AddRange(nativeTweens);
+            Check(nativeTweens.Length == 2, "A direct Vulcan spark starts exactly one atlas and one scale tween.");
+            Check(!lifetime.IsStopped() && lifetime.TimeLeft == 0.25d &&
+                lifetime.GetSignalConnectionList(Godot.Timer.SignalName.Timeout).Count == 1,
+                "Explicit start connects and starts the separate original lifetime timer exactly once.");
+            var material = (StandardMaterial3D)spark.MaterialOverride;
+            Check(material != authoredMaterial && material.AlbedoTexture == recipe,
+                "Starting a Vulcan effect detaches mutable material state while retaining its admitted texture.");
+            using (Variant refusedValue = native.Call("start"))
+            using (Dictionary refused = refusedValue.AsGodotDictionary())
+                Check(!refused["ok"].AsBool() && refused["error_type"].AsString() == "InvalidOperationException",
+                    "Repeated Vulcan start refuses instead of adding another animation owner.");
+            Check(GetTree().GetProcessedTweens().Count(value => !before.Contains(value.GetInstanceId())) == 2 &&
+                lifetime.GetSignalConnectionList(Godot.Timer.SignalName.Timeout).Count == 1,
+                "A refused repeated start leaves the original two tweens and timeout connection intact.");
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            using (Variant startedValue = sibling.Call("start"))
+            using (Dictionary started = Result(startedValue)) { }
+            Tween[] siblingTweens = GetTree().GetProcessedTweens().Where(value => !before.Contains(value.GetInstanceId())).ToArray();
+            allTweens.AddRange(siblingTweens);
+            Check(siblingTweens.Length == 2 && siblingSpark.MaterialOverride != material && siblingSpark.MaterialOverride != authoredMaterial,
+                "Simultaneous Vulcan instances own independent animated materials and two tweens each.");
+
+            AddChild(reference);
+            var referenceLifetime = new Godot.Timer { Name = "Lifetime", OneShot = true, WaitTime = 0.25d };
+            referenceLifetime.Timeout += reference.QueueFree;
+            reference.AddChild(referenceLifetime);
+            referenceLifetime.Start();
+            var referenceMaterial = new StandardMaterial3D { Uv1Scale = new(0.25f, 0.25f, 1f) };
+            var referenceSpark = new MeshInstance3D { Name = "VulcanImpactSpark",
+                Mesh = new QuadMesh { Size = new(0.6f, 0.6f) }, MaterialOverride = referenceMaterial };
+            reference.AddChild(referenceSpark);
+            Tween atlas = RetainedVulcanAtlas(reference, referenceSpark);
+            referenceSpark.Scale = Vector3.One * 1f;
+            Tween scale = referenceSpark.CreateTween();
+            scale.TweenProperty(referenceSpark, new NodePath("scale"), Vector3.One * (10f / 3f), 0.25d);
+            Tween[] referenceTweens = [atlas, scale];
+            allTweens.AddRange(referenceTweens);
+            foreach (Tween tween in allTweens) tween.Pause();
+            bool[] nativeActive = [true, true], referenceActive = [true, true];
+            const double interval = 1d / (0.8d * SimulationConstants.TicksPerSecond);
+            int sample = 0;
+            // Keep every original zero/nextafter boundary. On dev6, reaching
+            // the final atlas callback can still return active=true; another
+            // positive CustomStep observes completion without changing UV/scale
+            // or elapsed time. This is an observation horizon, not a new
+            // tween interval or a replacement for the independent .25 Timer.
+            foreach (double delta in new[] { 0d, Math.BitDecrement(interval), interval - Math.BitDecrement(interval),
+                0d, interval, Math.BitDecrement(interval), interval - Math.BitDecrement(interval),
+                Math.BitDecrement(interval), interval - Math.BitDecrement(interval), 0d, 0.03125d, interval })
+            {
+                for (int index = 0; index < 2; index++)
+                {
+                    if (nativeActive[index]) nativeActive[index] = nativeTweens[index].CustomStep(delta);
+                    if (referenceActive[index]) referenceActive[index] = referenceTweens[index].CustomStep(delta);
+                    Check(nativeActive[index] == referenceActive[index], "Native Vulcan tween completion follows the retained C# boundary schedule.");
+                }
+                Compare(material.Uv1Offset, referenceMaterial.Uv1Offset, "Vulcan atlas UV");
+                Compare(spark.Scale, referenceSpark.Scale, "Vulcan radius animation");
+                Compare(((StandardMaterial3D)siblingSpark.MaterialOverride).Uv1Offset, new(0.75f, 0.5f, 0f), "Independent Vulcan atlas");
+                Compare(siblingSpark.Scale, Vector3.One, "Independent Vulcan scale");
+                if (sample++ >= 10)
+                    GD.Print(FormattableString.Invariant($"VULCAN_TWEEN_OBSERVATION: sample={sample - 1}, delta={delta:R}, native_active={nativeActive[0]}/{nativeActive[1]}, retained_active={referenceActive[0]}/{referenceActive[1]}, native_elapsed={nativeTweens[0].GetTotalElapsedTime():R}/{nativeTweens[1].GetTotalElapsedTime():R}, retained_elapsed={referenceTweens[0].GetTotalElapsedTime():R}/{referenceTweens[1].GetTotalElapsedTime():R}"));
+            }
+            Check(nativeActive.All(value => !value) && referenceActive.All(value => !value),
+                "Both native and retained Vulcan tweens complete without being driven by the lifetime timer.");
+            Compare(material.Uv1Offset, new(0.75f, 0.75f, 0f), "Vulcan final cell fifteen");
+            Compare(spark.Scale, Vector3.One * (10f / 3f), "Vulcan final Single radius ratio");
+            Compare(authoredMaterial.Uv1Offset, new(0.75f, 0.5f, 0f), "Frozen authored Vulcan material");
+            Check(!native.IsQueuedForDeletion() && !reference.IsQueuedForDeletion() &&
+                lifetime.TimeLeft == referenceLifetime.TimeLeft && lifetime.TimeLeft == 0.25d,
+                "Stepping animation alone does not replace or advance the independent Timer owner.");
+            lifetime.EmitSignal(Godot.Timer.SignalName.Timeout);
+            referenceLifetime.EmitSignal(Godot.Timer.SignalName.Timeout);
+            Check(native.IsQueuedForDeletion() && reference.IsQueuedForDeletion(),
+                "The same explicit timeout signal queues each lifetime root for deletion.");
+
+            // Use a fresh retained instance for the ownership schedule. Tween
+            // IsValid can remain true until SceneTree cleanup after its bound
+            // node is freed; compare that timing instead of assuming it.
+            AddChild(ownershipReference);
+            var ownershipLifetime = new Godot.Timer { Name = "Lifetime", OneShot = true, WaitTime = 0.25d };
+            ownershipLifetime.Timeout += ownershipReference.QueueFree;
+            ownershipReference.AddChild(ownershipLifetime);
+            ownershipLifetime.Start();
+            var ownershipMaterial = new StandardMaterial3D { Uv1Scale = new(0.25f, 0.25f, 1f) };
+            var ownershipSpark = new MeshInstance3D { Name = "VulcanImpactSpark",
+                Mesh = new QuadMesh { Size = new(0.6f, 0.6f) }, MaterialOverride = ownershipMaterial };
+            ownershipReference.AddChild(ownershipSpark);
+            Tween ownershipAtlas = RetainedVulcanAtlas(ownershipReference, ownershipSpark);
+            ownershipSpark.Scale = Vector3.One * 1f;
+            Tween ownershipScale = ownershipSpark.CreateTween();
+            ownershipScale.TweenProperty(ownershipSpark, new NodePath("scale"), Vector3.One * (10f / 3f), 0.25d);
+            allTweens.Add(ownershipAtlas);
+            allTweens.Add(ownershipScale);
+            ownershipAtlas.Pause();
+            ownershipScale.Pause();
+            var siblingMaterial = (StandardMaterial3D)siblingSpark.MaterialOverride;
+            Compare(siblingMaterial.Uv1Offset, ownershipMaterial.Uv1Offset, "Fresh Vulcan ownership atlas");
+
+            siblingSpark.Free();
+            ownershipSpark.Free();
+            Check(!CompareVulcanOwnershipStep(siblingTweens[1], ownershipScale, 0d, "scale after child free"),
+                "Both child-bound scale tweens stop after their spark is freed.");
+            Check(CompareVulcanOwnershipStep(siblingTweens[0], ownershipAtlas, interval * 1.5d, "atlas after child free"),
+                "Both root-bound atlas tweens can still advance after their spark is freed.");
+            Compare(siblingMaterial.Uv1Offset, ownershipMaterial.Uv1Offset, "Captured Vulcan atlas after child free");
+            Check(siblingMaterial.Uv1Offset != new Vector3(0.75f, 0.5f, 0f),
+                "Both retained material targets advance beyond cell eleven after the child is freed.");
+            Vector3 capturedOffset = siblingMaterial.Uv1Offset;
+            sibling.Free();
+            ownershipReference.Free();
+            Check(!CompareVulcanOwnershipStep(siblingTweens[0], ownershipAtlas, interval, "atlas after root free"),
+                "Both atlas tweens stop when their lifetime root is freed.");
+            Check(!CompareVulcanOwnershipStep(siblingTweens[1], ownershipScale, interval, "scale after root free"),
+                "Both child-bound scale tweens remain stopped after the root is freed.");
+            Compare(siblingMaterial.Uv1Offset, ownershipMaterial.Uv1Offset, "Captured Vulcan atlas after root free");
+            Compare(siblingMaterial.Uv1Offset, capturedOffset, "Stopped Vulcan atlas retains its last material offset");
+            before = GetTree().GetProcessedTweens().Select(value => value.GetInstanceId()).ToHashSet();
+            AddChild(host);
+            var impact = new Level100DestructionEvent(Level100DestructionEventKind.VulcanImpact,
+                Level100DestructionEffectKind.VulcanImpact, 37, 0, 0, new(12345, -6789, 4321));
+            host.ConsumeLevel100DestructionEvents([impact], 81);
+            var spawned = host.GetNode<Node3D>("VulcanImpact37-81");
+            using (Variant script = spawned.GetScript())
+                Check(script.As<GodotObject>() == controller && spawned.SceneFilePath == FirstFlightWorldView.VulcanImpactScenePath,
+                    "The actual public destruction-event route instantiates the production native Vulcan scene.");
+            Check(host.GetChildCount() == 1 && spawned.Name == "VulcanImpact37-81",
+                "The host preserves the original actor/tick effect name and one direct effect root.");
+            Compare(spawned.Position, new(impact.Position.X * 0.001f,
+                -impact.Position.Z * 0.001f, -impact.Position.Y * 0.001f), "Host Vulcan X/-Z/-Y position");
+            var spawnedTimer = spawned.GetNode<Godot.Timer>("Lifetime");
+            Check(!spawnedTimer.IsStopped() && spawnedTimer.WaitTime == 0.25d && spawnedTimer.OneShot,
+                "The actual event route explicitly starts the original quarter-second lifetime.");
+            Tween[] hostTweens = GetTree().GetProcessedTweens().Where(value => !before.Contains(value.GetInstanceId())).ToArray();
+            allTweens.AddRange(hostTweens);
+            Check(hostTweens.Length == 2, "The actual event route adds exactly the native atlas and scale tweens.");
+            foreach (Tween tween in hostTweens) tween.Pause();
+            host.Free();
+            uint[] actualSuffix = Enumerable.Range(0, 12).Select(_ => GD.Randi()).ToArray();
+            Check(actualSuffix.SequenceEqual(expectedRandom.Skip(4)),
+                "Admission, instantiation, start, animation, lifetime and the actual event route consume no global presentation RNG draws.");
+            Check(sourceBefore.AsSpan().SequenceEqual(System.Security.Cryptography.SHA256.HashData(
+                File.ReadAllBytes(ProjectSettings.GlobalizePath(texturePath)))), "Vulcan asset admission and animation leave the prepared input bytes unchanged.");
+        }
+        finally
+        {
+            foreach (Tween tween in allTweens) if (tween.IsValid()) tween.Kill();
+            if (GodotObject.IsInstanceValid(native)) native.Free();
+            if (GodotObject.IsInstanceValid(sibling)) sibling.Free();
+            if (GodotObject.IsInstanceValid(reference)) reference.Free();
+            if (GodotObject.IsInstanceValid(ownershipReference)) ownershipReference.Free();
+            if (GodotObject.IsInstanceValid(host)) host.Free();
+        }
+    }
+
+    private bool CompareVulcanOwnershipStep(Tween native, Tween retained, double delta, string stage)
+    {
+        bool nativeValid = native.IsValid(), retainedValid = retained.IsValid();
+        Check(nativeValid == retainedValid, "Vulcan tween validity matches the retained owner before " + stage + ".");
+        bool nativeActive = nativeValid && native.CustomStep(delta);
+        bool retainedActive = retainedValid && retained.CustomStep(delta);
+        Check(nativeActive == retainedActive, "Vulcan CustomStep result matches the retained owner at " + stage + ".");
+        Check(native.IsValid() == retained.IsValid(), "Vulcan tween validity matches the retained owner after " + stage + ".");
+        Check(BitConverter.DoubleToInt64Bits(native.GetTotalElapsedTime()) == BitConverter.DoubleToInt64Bits(retained.GetTotalElapsedTime()),
+            "Vulcan elapsed-time words match the retained owner at " + stage + ".");
+        GD.Print(FormattableString.Invariant($"VULCAN_OWNERSHIP_OBSERVATION: stage={stage}, delta={delta:R}, native_active={nativeActive}, retained_active={retainedActive}, native_valid={native.IsValid()}, retained_valid={retained.IsValid()}, native_elapsed={native.GetTotalElapsedTime():R}, retained_elapsed={retained.GetTotalElapsedTime():R}"));
+        return nativeActive;
+    }
+
+    // Exact cb2c5b4a AnimateVulcanImpactSpark body, returning its created tween
+    // so the existing headless harness can advance it deterministically.
+    private static Tween RetainedVulcanAtlas(Node root, MeshInstance3D spark)
+    {
+        const int startCell = 11;
+        const int endCell = 15;
+        const int columns = 4;
+        const int rows = 4;
+        const double cellsPerTurn = 0.8d;
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+        var material = (StandardMaterial3D)spark.MaterialOverride;
+        material.Uv1Offset = new Vector3(
+            (startCell % columns) / (float)columns,
+            (startCell / columns) / (float)rows,
+            0f);
+
+        Tween tween = root.CreateTween();
+        for (int cell = startCell + 1; cell <= endCell; cell++)
+        {
+            int capturedCell = cell;
+            tween.TweenInterval(cellIntervalSeconds);
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
+                    0f);
+            }));
+        }
+        return tween;
     }
 
     private void CompareTargets(Node owner, Node3D world, WorldSnapshot previous, WorldSnapshot current, float alpha)

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native world-frame and frontend orchestration; live input edges and weapon foundations).
+Last updated: 2026-09-23 (native Vulcan impact, world-frame and frontend orchestration).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1175,6 +1175,42 @@ or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
 display. Use this worktree's `local-data/` for outputs. These checks establish
 neither full-combat completion nor physical input, audible playback, normal
 GPU performance or Windows behavior.
+
+#### Native Vulcan impact — September 23
+
+`Scenes/World/VulcanImpact.tscn` now supplies the production direct spark's
+billboard, material and stopped lifetime timer. Its GDScript controller retains
+cells 11–15, four binary64 intervals, the Single-rounded scale target, separate
+timer/tween ownership and zero RNG draws. The two unresolved sibling emitter
+branches are still absent. The existing muzzle controller also now retains its
+original animated material in callbacks, matching the former C# closure when a
+mesh is removed or its material override changes.
+
+All execution was headless with owned profiles under `local-data/test-runs/`:
+
+- `vulcan-impact-complete-uv1uho4u/`: supported build/private import passed with
+  zero compiler warnings/errors. The entity harness passed **23,362 assertions**,
+  including exact decoded texture bytes, boundary-step UV/scale/completion,
+  independent instance materials, captured-material behavior, child/root
+  lifetime comparisons, unchanged source bytes and seeded RNG state. The actual
+  public destruction-event path uses the native scene with the original name,
+  coordinate conversion and timer. All **21** affected Client tests passed,
+  with zero skips and unchanged descriptor/hash/radius expectations.
+- `impact-callback-native-1a_dhx8e/`: the final standard-engine runtime check
+  passed **105 assertions** with clean logs. The preceding
+  `vulcan-impact-native-2i0j1bnv/` editor check passed **81 functional assertions**,
+  including frozen artwork, inactive time/input and scene packing without private
+  pixels. It retains the same **166 ObjectDB instances** and RID diagnostics as
+  the world check below; its strict clean-log gate remains failed.
+
+Earlier harness failures assumed that reaching the final atlas cell immediately
+reported tween completion, and that freeing a bound node immediately invalidated
+its tween. The final checks compare the actual retained C# behavior through one
+additional observation step and identical frees. Production timing, numerical
+tolerances and expected hashes were not changed to satisfy those assumptions.
+Use the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` launch
+forms below. These checks establish component migration, not complete combat,
+physical input, audible playback, normal GPU performance or Windows behavior.
 
 #### Native world presentation — September 23
 
