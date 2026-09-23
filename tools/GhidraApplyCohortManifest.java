@@ -2859,10 +2859,6 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             fail(row, "arity/arityBytes not numeric");
             return;
         }
-        if (!row.customStorage && row.arityBytes != row.arity * 4) {
-            fail(row, "arityBytes/arity mismatch " + row.arityBytes + " vs "
-                + row.arity);
-        }
         if (!LEGAL_TYPE.matcher(row.get("returnType")).matches()) {
             fail(row, "illegal return type [" + row.get("returnType") + "]");
         }
@@ -2899,6 +2895,11 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             fail(row, "stack param count expected [" + row.arity + "] actual ["
                 + nstack + "]");
         }
+        if (!row.customStorage && row.arityBytes != row.arity * 4
+                && !preservesDynamicParameterShape(row, f)) {
+            fail(row, "arityBytes/arity mismatch " + row.arityBytes + " vs "
+                + row.arity);
+        }
         if (!row.customStorage && "__fastcall".equals(row.get("callingConvention")) && nstack > 0
                 && nreg < 2) {
             fail(row, "__fastcall with " + nreg + " register param(s) and "
@@ -2906,6 +2907,43 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 + " fabricate an EDX argument");
         }
         if (row.customStorage) prepareCustomStorage(row);
+    }
+
+    // Ghidra's parameter extent is not the callee's stack purge: a final char
+    // can have extent 1 while RET pops 4. Permit a non-word extent only when
+    // renaming the existing dynamic parameters, without admitting any ABI,
+    // return/parameter type, convention or varargs change through this path.
+    private boolean preservesDynamicParameterShape(Row row, Function f) {
+        if (f.hasCustomVariableStorage()
+                || !row.get("callingConvention").equals(f.getCallingConventionName())
+                || !row.get("returnType").equals(f.getReturnType().getName())
+                || !f.getReturnType().getPathName().equals("/" + row.get("returnType"))
+                || f.getReturn().isForcedIndirect()
+                || row.arityBytes != f.getStackFrame().getParameterSize()
+                || (row.varArgsWanted != null && row.varArgsWanted != f.hasVarArgs())) {
+            return false;
+        }
+        Parameter[] actual = f.getParameters();
+        if (row.params.size() != actual.length) return false;
+        int stackCount = 0;
+        for (int i = 0; i < actual.length; i++) {
+            Parameter p = actual[i];
+            String[] wanted = row.params.get(i);
+            if (!wanted[1].equals(p.getDataType().getName())
+                    || !p.getDataType().getPathName().equals("/" + wanted[1])
+                    || p.isForcedIndirect()
+                    || !wanted[3].equals(p.isAutoParameter() ? "auto" : "expl")) {
+                return false;
+            }
+            if (p.isStackVariable()) {
+                stackCount++;
+                if (!wanted[0].equals("STACK")) return false;
+            } else if (!p.isRegisterVariable() || p.getRegister() == null
+                    || !wanted[0].equals(p.getRegister().getName())) {
+                return false;
+            }
+        }
+        return row.arity == stackCount;
     }
 
     private void gateGeometryRow(Row row, Function fn, Spec spec,

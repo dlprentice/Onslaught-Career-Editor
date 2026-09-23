@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-22 (sample decode/quality RE; earlier implementation receipts retain their dates).
+Last updated: 2026-09-22 (sample decoding and saved Ghidra corrections; earlier implementation receipts retain their dates).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -77,7 +77,9 @@ and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversio
 A further 25 original caller controls resolve sample reuse, list insertion,
 name truncation and suffix selection. They distinguish a filename-route stub
 from the working buffer loader, correcting the meaning implied by inherited
-names; the database labels still await their preservation workflow. A sample
+names. The [four-function metadata correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+is now saved, independently read back and protected by restored Archive A recovery;
+all types, storage and unrelated functions are unchanged. A sample
 can be inserted after a supplied device-creation failure, so list presence alone
 does not establish playable audio. See the
 [outer sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration).

@@ -112,6 +112,15 @@ CURRENT_DEBUG_LOG_OVERLAY = REPO_ROOT / "tools/cohort-specs/debug-log-metadata.m
 CURRENT_DEBUG_LOG_OVERLAY_SHA256 = "6c9dd2b0a8d2b2ac44a093232f1f7770bcc16d6174100854ba6f6fed9fc93b17"
 CURRENT_CLI_INITIALIZER_OVERLAY = REPO_ROOT / "tools/cohort-specs/cli-initializer-ownership.manifest.tsv"
 CURRENT_CLI_INITIALIZER_OVERLAY_SHA256 = "7159872b1d29231f1c89d6fc74bf5944035e463348defec60cb26b9fb0fd893a"
+CURRENT_SAMPLE_LOADING_OVERLAY = REPO_ROOT / "tools/cohort-specs/audio-sample-loading.manifest.tsv"
+CURRENT_SAMPLE_LOADING_OVERLAY_SHA256 = "18a636d7b1c654a7b680d4ea7505e737e3438b81955de5f9979e7d21ff545d0b"
+CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS = (
+    "addr", "liveKind", "currentCommentBase64", "proposedCommentBase64",
+    "bodyStart", "bodyEndExclusive", "bodySha256", "currentSignature",
+    "currentSignatureSha256", "proposedSignature", "callingConvention",
+    "returnType", "paramSpec", "arity", "arityBytes", "currentTags",
+    "proposedTags", "currentName", "proposedName",
+)
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -802,6 +811,11 @@ def run(
                 table, CURRENT_CLI_INITIALIZER_OVERLAY,
                 expected_sha256=CURRENT_CLI_INITIALIZER_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SAMPLE_LOADING_OVERLAY,
+                expected_sha256=CURRENT_SAMPLE_LOADING_OVERLAY_SHA256,
+                expected_rows=2, expected_columns=CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

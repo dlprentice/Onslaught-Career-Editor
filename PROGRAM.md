@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-22 (sample decoding and saved audio-quality behavior rechecked)
+Last updated: 2026-09-22 (sample-loader metadata corrected from the rechecked audio path)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -104,7 +104,8 @@ The outer caller now has original-code reuse/list/name-copy controls, including
 insertion despite a supplied device-create failure. Its filename-route stub and
 working buffer loader contradict inherited semantic labels; the
 [caller contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
-records the evidence and pending metadata correction. Next, close successful
+records the evidence; the [four-function Ghidra correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+now preserves it in the working database with unchanged types and storage. Next, close successful
 bank traversal and actual sample destruction with coherent canonical ownership,
 then compose the remaining rechecked services into the preserved real-save route.
 Keep original-code evidence distinct from decoder self-tests,

@@ -393,21 +393,27 @@ returns null. No name search or sample insertion occurs on that path. The
 instrument observes the formatter arguments but deliberately emits no path
 bytes: neither tested branch reads that destination afterward.
 
-This contradicts the saved metadata name `LoadSampleFromBuffer_StubFail` at
+This contradicted the former metadata name `LoadSampleFromBuffer_StubFail` at
 `00517290`, and the filename implication of `CreateSampleFromFile` at
-`005172a0`. The caller establishes a filename-route stub and a working
-cached-buffer loader, respectively. The partial source at
+`005172a0`. The [protected correction](../ghidra/README.md#sample-loading-metadata--september-22)
+now saves `CPCSoundManager__LoadNewSample_StubFail` and
+`CPCSoundManager__LoadSampleFromBuffer`, respectively. The caller establishes a
+filename-route stub and a working cached-buffer loader. The partial source at
 `references/Onslaught` commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`
 has the opposite PC implementation availability: `pcsoundmanager.h:58` stubs
 the buffer loader, while `pcsoundmanager.cpp:151` implements filename loading.
 `SoundManager.cpp:248` also lacks retail's fourth reuse argument. Those source
-identities must not be copied onto retail mechanically. The database labels
-remain unmodified pending the scoped preservation/readback correction.
+identities must not be copied onto retail mechanically. The correction also
+renames the filename and music parameters, preserving all types, storage and
+function bodies. Original-code controls and actual device behavior remain
+separate evidence categories.
 
 Separately, the bank call at `00517e89` passes music zero and forwards its own
-argument as the reuse argument. Its saved `stream_mode` parameter name therefore
-misdescribes this policy. This caller edge is statically inspected; the complete
-bank loader has not executed in these sample controls.
+argument as the reuse argument. Its former `stream_mode` parameter is now named
+`reuse_existing`. The existing `char` type occupies one recorded parameter byte
+while the callee purges four stack bytes; both measurements remain unchanged.
+This caller edge is statically inspected; the complete bank loader has not
+executed in these sample controls.
 
 Retail tests only the reuse argument's low byte. Values `1`, `2` and `257`
 admit reuse; `0` and `256` do not. The first case-insensitive match in physical

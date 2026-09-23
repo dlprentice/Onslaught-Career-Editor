@@ -196,7 +196,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # changing any byte removes the long-Base64 allowance. All other checks remain.
 # Debug-log metadata: ten analytic comments (7,419 decoded bytes), with the
 # same exact-content requirement and all other payload/secret checks retained.
+# Sample loading/parameters: four comments each (3,673/4,227 decoded bytes),
+# reviewed as authored analysis; the same exact-content boundary applies.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/audio-sample-loading.manifest.tsv":
+        "18a636d7b1c654a7b680d4ea7505e737e3438b81955de5f9979e7d21ff545d0b",
+    "tools/cohort-specs/audio-sample-parameters.manifest.tsv":
+        "ebed1bf4c675eb4684aea0609e3f6ba05af2b373224e393c766254b2a4f38ed7",
     "tools/cohort-specs/cli-initializer-ownership.manifest.tsv":
         "7159872b1d29231f1c89d6fc74bf5944035e463348defec60cb26b9fb0fd893a",
     "tools/cohort-specs/debug-log-metadata.manifest.tsv":

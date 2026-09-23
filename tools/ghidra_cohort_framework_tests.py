@@ -214,6 +214,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # variable, type, body and non-target row; 2026-09-19.
 # cli-initializer-ownership: one name/comment/tag correction, preserving all
 # ABI, variable, type, body and non-target state; 2026-09-19.
+# audio-sample-loading and audio-sample-parameters: two loader names, four
+# formal parameter names and four comment/tag sets; 2026-09-22. Reviewed
+# rehearsal preserves all types/storage/bodies, including the bank char extent.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -247,6 +250,8 @@ LIVE_GRANTED_COHORTS = [
     "scheduled-event-constructor-boundary",
     "debug-log-metadata",
     "cli-initializer-ownership",
+    "audio-sample-loading",
+    "audio-sample-parameters",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -686,6 +691,8 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "scheduled-event-constructor-boundary",\n'
         '        "debug-log-metadata",\n'
         '        "cli-initializer-ownership",\n'
+        '        "audio-sample-loading",\n'
+        '        "audio-sample-parameters",\n'
         "    };\n",
     ),
     (
@@ -1575,6 +1582,95 @@ class CallingConventionFieldTests(unittest.TestCase):
 
 
 class CustomStorageTests(unittest.TestCase):
+    def test_subword_extent_requires_unchanged_dynamic_parameter_shape(self):
+        install = Path.home() / ".local/opt/ghidra_12.1.3_PUBLIC"
+        jars = sorted(install.glob("Ghidra/**/lib/*.jar"))
+        javac, java = shutil.which("javac"), shutil.which("java")
+        if not jars or not javac or not java:
+            self.skipTest("Pinned Ghidra API jars and Java required for subword probe")
+        program = r"""
+import java.lang.reflect.*;
+import java.util.*;
+import ghidra.program.model.address.*;
+import ghidra.program.model.data.*;
+import ghidra.program.model.lang.*;
+import ghidra.program.model.listing.*;
+import ghidra.program.model.listing.Parameter;
+class SubwordProbe extends GhidraApplyCohortManifest {
+ static String change="none";
+ interface Call {Object call(String name,Object[] args);}
+ @SuppressWarnings("unchecked") static <T>T proxy(Class<T> type,Call fn) {
+  return (T)Proxy.newProxyInstance(type.getClassLoader(),new Class[]{type},(p,m,a)->{
+   Object result=fn.call(m.getName(),a);
+   if(result==null&&m.getReturnType()==boolean.class)return false;
+   if(result==null&&m.getReturnType()==int.class)return 0;
+   return result;
+  });
+ }
+ static AddressSpace regs=new GenericAddressSpace("register",32,AddressSpace.TYPE_REGISTER,1);
+ static Register ecx=new Register("ECX","ECX",regs.getAddress(4),4,false,0);
+ static Parameter param(int i) {
+  return proxy(Parameter.class,(n,a)->switch(n){
+   case "getDataType"->i==0?new PointerDataType(VoidDataType.dataType):change.equals("parameter-type")?IntegerDataType.dataType:CharDataType.dataType;
+   case "isAutoParameter"->i==0&&!change.equals("auto-mode");
+   case "isForcedIndirect"->change.equals("indirect-parameter")&&i==1;
+   case "isStackVariable"->i==1;
+   case "isRegisterVariable"->i==0&&!change.equals("non-register");
+   case "getRegister"->change.equals("missing-register")?null:ecx;
+   default->null;
+  });
+ }
+ static Function function() {
+  return proxy(Function.class,(n,a)->switch(n){
+   case "hasCustomVariableStorage"->change.equals("custom");
+   case "getCallingConventionName"->change.equals("convention")?"__stdcall":"__thiscall";
+   case "getReturnType"->change.equals("return-type")?IntegerDataType.dataType:VoidDataType.dataType;
+   case "getReturn"->proxy(Parameter.class,(m,b)->m.equals("isForcedIndirect")&&change.equals("indirect-return"));
+   case "getStackFrame"->proxy(StackFrame.class,(m,b)->m.equals("getParameterSize")?(change.equals("extent")?4:1):null);
+   case "getParameters"->change.equals("count")?new Parameter[]{param(0)}:new Parameter[]{param(0),param(1)};
+   case "hasVarArgs"->change.equals("varargs");
+   default->null;
+  });
+ }
+ static Row row() {
+  Row r=new Row();r.cells.put("callingConvention","__thiscall");r.cells.put("returnType","void");
+  r.arity=1;r.arityBytes=1;r.varArgsWanted=false;
+  r.params.add(new String[]{"ECX","void *","this","auto"});
+  r.params.add(new String[]{"STACK","char","reuse_existing","expl"});return r;
+ }
+ public static void main(String[] args)throws Exception {
+  ghidra.util.UniversalIdGenerator.initialize();
+  Method m=GhidraApplyCohortManifest.class.getDeclaredMethod("preservesDynamicParameterShape",Row.class,Function.class);m.setAccessible(true);
+  SubwordProbe s=new SubwordProbe();
+  if(!(boolean)m.invoke(s,row(),function()))throw new AssertionError("char rename refused");
+  for(String negative:List.of("custom","convention","return-type","indirect-return","extent","count","parameter-type","auto-mode","indirect-parameter","non-register","missing-register","varargs")) {
+   change=negative;if((boolean)m.invoke(s,row(),function()))throw new AssertionError("admitted "+negative);
+  }
+  change="none";
+  for(int i=0;i<4;i++) {
+   Row r=row();if(i==0)r.arity=2;if(i==1)r.params.get(0)[0]="EDX";
+   if(i==2)r.params.get(1)[0]="ECX";if(i==3)r.params.get(1)[3]="auto";
+   if((boolean)m.invoke(s,r,function()))throw new AssertionError("admitted manifest drift "+i);
+  }
+  System.out.println("subword controls PASS: char rename admitted; 16 ABI/type/count/storage negatives refused");
+ }
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="bea-subword-", dir="/var/tmp") as scratch:
+            probe = Path(scratch) / "SubwordProbe.java"
+            probe.write_text(program, encoding="utf-8")
+            cp = os.pathsep.join(str(path) for path in jars)
+            compiled = subprocess.run([javac, "-proc:none", "-cp", cp, "-d", scratch,
+                                       str(BASE), str(LIVE), str(probe)], capture_output=True, text=True)
+            self.assertEqual(0, compiled.returncode, compiled.stdout + compiled.stderr)
+            result = subprocess.run([java, "-cp", scratch + os.pathsep + cp, "SubwordProbe"],
+                                    capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertIn("subword controls PASS", result.stdout)
+        source = BASE.read_text(encoding="utf-8")
+        self.assertIn("&& !preservesDynamicParameterShape(row, f)", source)
+        self.assertIn("arityBytes/arity mismatch", source)
+
     def test_actual_abi_serialization_storage_and_binding_guards(self):
         install = Path.home() / ".local/opt/ghidra_12.1.3_PUBLIC"
         jars = sorted(install.glob("Ghidra/**/lib/*.jar"))

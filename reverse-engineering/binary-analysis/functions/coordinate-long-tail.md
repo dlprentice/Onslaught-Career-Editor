@@ -1,8 +1,8 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
-Summary: the retained source-coordinate long-tail map with current initializer naming.
+Last updated: 2026-09-22 (sample-loader name; earlier measurement limits retained)
+Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The PC-native source-coordinate instrument covers 827 functions. The largest
@@ -486,7 +486,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x005169B0` | `CPCSoundManager__Init` | 1300 | 0 | 229 | `CDebugLog__Printf` x13; `CDXMemoryManager__Alloc` x1 |
-| `0x005172A0` | `CPCSoundManager__CreateSampleFromFile` | 411 | 3 | 679–714 | `CDXMemoryManager__Free` x4; `CDXMemoryManager__Alloc` x3 |
+| `0x005172A0` | `CPCSoundManager__LoadSampleFromBuffer` | 411 | 3 | 679–714 | `CDXMemoryManager__Free` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x005176D0` | `CPCSoundManager__CreateSampleFromData` | 184 | 4 | 753 | `CDXMemoryManager__Free` x1; `CDXMemoryManager__Alloc` x1 |
 
 ### `Player.cpp` (2)

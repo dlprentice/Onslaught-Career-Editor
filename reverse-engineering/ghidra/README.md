@@ -1,14 +1,14 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-19
+Last updated: 2026-09-22
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[CLI initializer ownership correction](#cli-initializer-ownership--september-19);
+[sample-loading correction](#sample-loading-metadata--september-22);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -901,6 +901,50 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `post-restore.json`: 5,763 bytes, SHA-256 `cac2d9e1f3ff7287899c019b9ceed3edea68ff783c2d773fe48ed8d580d7a53d`.
 The current name projection composes the exact new manifest; frozen tables and
 historical receipts remain unchanged.
+
+## Sample-loading metadata — September 22
+
+The [loading manifest](../../tools/cohort-specs/audio-sample-loading.manifest.tsv)
+and [spec](../../tools/cohort-specs/audio-sample-loading.spec.tsv) correct
+`00517290` to `CPCSoundManager__LoadNewSample_StubFail` and `005172a0` to
+`CPCSoundManager__LoadSampleFromBuffer`, with their filename/music parameter
+names. The [parameter manifest](../../tools/cohort-specs/audio-sample-parameters.manifest.tsv)
+and [spec](../../tools/cohort-specs/audio-sample-parameters.spec.tsv) rename
+the outer CreateSample music argument and bank-loader reuse argument. All four
+comments/tag sets now distinguish pristine instructions, isolated execution,
+source-drop differences and unexecuted device/lifetime behavior. The
+[compatibility contract](../binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+owns the behavioral evidence.
+
+Exactly two loader names, four formal parameter names, four nonrepeatable comments and four tag sets corrected. All return/parameter types, calling conventions, storage, locals, stack cleanup, type definitions, instructions, bodies and the 8,327 non-target function rows are preserved.
+All 32,694 other variable rows are unchanged. Of 413 selected instruction rows,
+only displayed function names change. Only `commentsSha256` moves among program
+metrics. All nine live exports exactly equal the separately reopened rehearsal;
+the internal function count remains 8,331.
+
+Fresh independent PRE equality and restored read-only opening, both isolated
+dry/apply/separate readbacks, sealed-spec readbacks, wrong-comment/extent
+read-only refusals, independent exact-cohort review, live dry/apply/separate
+readbacks and independent POST restore passed. Final POST pins came from the
+measured rehearsal; the later spec addition admits only the derived live
+applier hash. The shared framework preserves the bank's one-byte `char` extent
+and four-byte purge. Its narrow existing-shape exception passed a proxy positive
+and 16 negatives within 93 focused tests; actual database exports establish the
+unchanged storage. Review corrected a draft stub-control count and clarified
+bounded name copying before their respective rehearsal applies.
+
+Working identity: `db.18657`, 18 files / 119,016,308 bytes,
+inventory SHA-256 `188003d0a677a5db5b99eac870a343530422bfe81bebf4c8568896254916aba7`; main database
+68,714,496 bytes, SHA-256 `ebc06917631cf137aad8bd6c77827f7d278c0b27181336037a19c26d94807d36`.
+PRE was the freshly matched CLI-initializer POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-22-audio-sample-loading/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/`.
+`completion.json` records the exact live readbacks, recovery receipts and full
+export hashes. Current name lookup composes the new manifest; frozen tables
+and historical receipts remain unchanged.
 
 ## Historical Windows live-ceremony contract (suspended)
 

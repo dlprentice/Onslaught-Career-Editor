@@ -2276,13 +2276,53 @@ execute; other locales do not. Heap/COM/destruction hooks retain memory, so
 sample reuse and insertion are not proof of actual device or object lifetime.
 No bank traversal, real file access, audible behavior, Load/Save composition or
 startup acceptance is claimed. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
-distinguishes caller evidence from the pending Ghidra naming correction.
+distinguishes caller evidence from the separate Ghidra correction below.
 
 The preserved v1 outer run passed but inherited two-record receipt wording
 from direct mode and duplicated one case. V2 narrows the executed-record metadata
 to record 3 and replaces that duplicate with reuse preserving music word 256.
 The ELF is unchanged. Exact prompts and full independent reports stay in the
-existing private review owner; no Ghidra project was opened or modified.
+existing private review owner; these original-code experiments did not open or
+modify a Ghidra project.
+
+### Sample-loading Ghidra metadata — September 22
+
+The [two-stage correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+passed fresh PRE equality against independent Archive A recovery, restored
+read-only opening, isolated dry/apply/separate readbacks, sealed-spec readbacks,
+independent exact comparison, live dry/apply/separate readbacks and independent
+POST copy/restore/opening. Scope: two function names, four explicit parameter
+names, four nonrepeatable comments and four tag sets. Every return/parameter
+type, storage location, local, type definition, stack record and instruction is
+preserved, along with all 8,327 non-target functions. Exactly four of 32,698
+variable rows change their names. All nine live exports equal the reopened
+rehearsal; only `commentsSha256` changes among program metrics.
+
+The framework's former `arity * 4` rule could not represent the bank's existing
+one-byte `char` parameter extent. A narrow exception requires the existing
+dynamic types, convention, shape and extent to match; it does not widen the
+parameter or change its four-byte stack purge. A focused API-proxy positive
+and 16 negative variations execute this admission predicate. Actual saved
+database comparisons establish storage preservation separately. Wrong-comment
+and wrong-extent read-only controls also refuse with no attempted writes and
+byte-identical project inventories.
+
+Private owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/`.
+The executed entry points were `prepare_preservation.py`, `prepare.py`,
+`rehearse.py loading`, `rehearse.py parameters`, `negative_controls.py`,
+`apply_live.py`, `compare_exports.py live-post` and `finish.py`, each invoked
+with `python -P`. Exact headless commands and receipts are retained there.
+`PYTHONPATH=. python -P tools/ghidra_cohort_framework_tests.py` passed **93 tests
+without skips**, including after the reviewed live allowance. The name oracle,
+documentation and public-payload checks passed. Review corrected the draft
+stub coverage count to two cases and clarified name-copy padding before their
+respective rehearsal applies. Final specs add only the derived live-applier
+hash to the measured rehearsal pins. The tracked checkpoint is unchanged.
+
+These metadata changes preserve the preceding 44 direct and 25 outer controls;
+they do not execute successful whole-bank traversal, actual sample destruction,
+real audio-device operations or a complete startup.
 
 ### Scheduled-event constructor boundary — September 19
 
