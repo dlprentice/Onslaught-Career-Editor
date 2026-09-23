@@ -154,7 +154,7 @@ public sealed class RetailClickToStartProcessTests
             NativeLoadingSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcess",
-            Slice(flow, "private void DrawQuitConfirm()"));
+            NativeQuitSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcess",
             Slice(flow, "private bool HandleKey("));

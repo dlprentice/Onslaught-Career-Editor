@@ -184,9 +184,9 @@ public sealed class RetailMainMenuVersionOverlayEnableTests
         Assert.DoesNotContain(" - 2", NativeMainMenuSource.Label, StringComparison.Ordinal);
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayEnable", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayEnable", choice, StringComparison.Ordinal);
         string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayEnable", loading, StringComparison.Ordinal);

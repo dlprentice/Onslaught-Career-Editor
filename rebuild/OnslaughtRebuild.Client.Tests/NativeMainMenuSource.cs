@@ -30,10 +30,11 @@ internal static class NativeMainMenuSource
         if (next < 0 || nextStatic >= 0 && nextStatic < next) next = nextStatic;
         return next < 0 ? source[start..] : source[start..next];
     }
-    public static string Node(string path)
+    public static string Node(string path) => Node(path, Scene);
+    internal static string Node(string path, string source)
     {
         string[] parts = path.Split('/'); string name = parts[^1], parent = parts.Length == 1 ? "." : string.Join('/', parts[..^1]);
-        string source = Scene; int start = 0;
+        int start = 0;
         while ((start = source.IndexOf("[node name=\"" + name + "\"", start, StringComparison.Ordinal)) >= 0)
         {
             int headerEnd = source.IndexOf('\n', start);
@@ -44,7 +45,7 @@ internal static class NativeMainMenuSource
             }
             start = headerEnd;
         }
-        throw new InvalidOperationException("Missing production MainMenu node: " + path);
+        throw new InvalidOperationException("Missing production frontend node: " + path);
     }
     public static float Number(string source, string name)
     {
@@ -64,11 +65,12 @@ internal static class NativeMainMenuSource
         Assert.Equal(new[] { left, top, right, bottom }, new[] { Number(source, "offset_left"), Number(source, "offset_top"), Number(source, "offset_right"), Number(source, "offset_bottom") });
     }
     public static void HasAnchor(string path, float x, float y) => Assert.Equal(new[] { x, y }, Vector(Node(path), "source_anchor", "Vector2"));
-    public static void HasColor(string path, uint argb)
+    public static void HasColor(string path, uint argb) => HasColorIn(Node(path), argb);
+    internal static void HasColorIn(string node, uint argb)
     {
         static float Channel(uint value) => Math.Min(255u, ((value & 255u) * 255u) >> 7) / 255f;
         float[] expected = [Channel(argb >> 16), Channel(argb >> 8), Channel(argb), (argb >> 24) / 255f];
-        Assert.Equal(expected, Vector(Node(path), "ink_color", "Color"));
+        Assert.Equal(expected, Vector(node, "ink_color", "Color"));
     }
     public static void HasNoPresentationSideEffects()
     {

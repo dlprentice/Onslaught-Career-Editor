@@ -134,14 +134,18 @@ public sealed class RetailMainMenuSelectorBarZTests
         Assert.True(NativeMainMenuSource.Scene.IndexOf("[node name=\"Selector\"", StringComparison.Ordinal) < NativeMainMenuSource.Scene.IndexOf("[node name=\"NewGame\"", StringComparison.Ordinal));
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", choice, StringComparison.Ordinal);
         // The cited FEMessBox chrome replaced the reconstruction-era
         // HighlightTint/_titleTextBox markers when wt/t_7d9a828d merged.
-        Assert.Contains("RetailFeMessBox.HighlightColor", choice, StringComparison.Ordinal);
-        Assert.Contains("DrawFont22Text", choice, StringComparison.Ordinal);
+        NativeQuitSource.HasColor("Dialog/Yes/Highlight", RetailFeMessBox.HighlightColor);
+        NativeQuitSource.HasColor("Dialog/No/Highlight", RetailFeMessBox.HighlightColor);
+        Assert.Contains("FrontendFont22.tres", NativeQuitSource.Scene, StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"choice_font\")", NativeQuitSource.Node("Dialog/Yes/Label"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"choice_font\")", NativeQuitSource.Node("Dialog/No/Label"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font.draw_run(", NativeQuitSource.Read("quit_confirm_label.gd"), StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-22 (native Main Menu presentation and weapon foundations).
+Last updated: 2026-09-22 (native Main Menu and Quit confirmation; weapon foundations).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -762,6 +762,71 @@ for native editor/publication checks; `--editor` selects tool mode. Output must
 stay in this worktree's `local-data/`. The scene comparison reference preserves
 the reconstruction's existing retail evidence gaps; matching it does not close
 unmeasured retail behavior or complete Level 100 combat.
+
+#### Native Quit confirmation — September 22
+
+The actual `QuitConfirm.tscn` replaces the single C# dialog draw pass in the
+production frontend. Receipts below are in the conversion worktree's ignored
+`local-data/test-runs/`; prepared research inputs retain their recorded hashes.
+
+- `quit-confirm-native-roundtrip-m3ydb0s3/result/report.json`: **314 checks**,
+  all seven sections complete in standard headless Godot. Actual Controls,
+  font sharing, rejected input batches, detached snapshots, frozen edits,
+  half-open hit boundaries at five Stage scales and pack/reopen passed.
+  Private image storage is absent from public serialization. Two output
+  refusal probes preserved their sentinels (`quit-confirm-output-guards-9733aoml/`).
+- `quit-comparison-headless-ozjwqf6l/report.json`: **1,457 checks**, all five
+  groups and twelve states complete against the retained `5390cb11` drawing.
+  The live host preserves default No selection, keyboard/pointer behavior,
+  ordered audio/cursor/exit callbacks and unchanged input hashes. Headless
+  results make no pixel claim.
+- `quit-comparison-render-faf9mqkz/report.json`: **1,517 checks**, twelve states
+  and **24 exact native/live-host image comparisons with zero differing
+  RGBA bytes**. Coverage includes 640×480, 1280×720, 801×601 and 320×240 plus
+  authored translation, size, rotation and scale. The caller-owned Xvfb
+  display used separate credentials/profiles, software rendering and Dummy
+  audio, then stopped its own processes. The 1280×720 live-host capture was
+  inspected. Only expected virtual-display input-method/V-Sync warnings
+  appeared; there were no runtime errors or teardown leaks.
+- `quit-frontend-runtime-kiwe9kaw/` and `quit-frontend-editor-xfgx0f3p/`:
+  actual frontend asset sharing, frozen page selection, authored edits,
+  pack/reopen and unchanged pointer passed. Runtime shutdown is clean.
+  Editor shutdown still reports **205 ObjectDB/associated RID leaks**, as
+  before this conversion; this is not a clean editor-exit claim.
+- `quit-client-fixed-voidd1_c/results/quit.trx`: **256/256** affected Client
+  tests passed, zero skips. Existing numerical expectations are unchanged;
+  source-ownership guards now inspect the native production scene/scripts.
+- `quit-full-build-g0xxaoue/`: supported pinned .NET build and private Level 100
+  import passed with zero build warnings/errors. `quit-world-e6ffz5x5/` passed
+  **24,169** production world checks. `quit-smoke-vudd6qza/` completed **2,148**
+  steps, thirteen ordered message deliveries/queues, focus-loss handling,
+  fresh retry and return to Main Menu with world release. Its recorded tape
+  retains SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Two replays (`quit-replay-n6o623ra/`) retained trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no first divergence. Runtime logs are clean; mission outcome remains
+  `Running`/`None`, zero targets destroyed, so full combat remains unproven.
+
+A direct hit probe exposed a real conversion error: at 1024×768, pointer
+`(832,400)` maps to excluded design point `(520,250)`, but an extra
+design→canvas→design round-trip selected No. The adapter now passes the original
+design point directly; the native row composes only its authored transforms.
+The original half-open limits, including adjacent float values, pass in both
+standalone and actual-host checks. Before/after receipts are
+`quit-hit-before-d08piubz/` and `quit-hit-after-67821ncj/`.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/quit_confirm_scene_checks.gd -- ABS_FRESH_EMPTY_DIR`
+for native checks. The .NET `Scenes/Frontend/Tests/QuitConfirmSceneChecks.tscn`
+requires `--skipfmv`; supply `--quit-render-dir=ABS_FRESH_EMPTY_DIR` only with a
+caller-owned isolated display for pixel comparisons. Both output directories
+must be inside this worktree's `local-data/`. The actual frontend editor check
+is `--editor --headless --script
+res://Scenes/Frontend/Tests/frontend_scene_checks.gd -- --skipfmv`.
+These comparisons preserve the previous reconstruction. Retail Quit rendering,
+localization and the reconstructed dialog height remain unmeasured; software
+captures establish neither normal GPU performance nor physical input/audio.
 
 #### Native weapon foundations — September 22
 

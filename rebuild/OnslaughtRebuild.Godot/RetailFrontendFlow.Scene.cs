@@ -123,6 +123,7 @@ public sealed partial class RetailFrontendFlow
             };
         }
         UpdateMainMenuFrame();
+        UpdateQuitConfirmFrame();
         UpdateClickFrame();
         UpdateOptionsFrame();
         UpdateLoadingFrame();
@@ -145,7 +146,6 @@ public sealed partial class RetailFrontendFlow
                 case "Career": DrawDevSelect(); break;
                 case "Briefing": DrawMissionBriefing(); break;
                 case "Configuration": DrawSelectConfiguration(); break;
-                case "Quit": DrawQuitConfirm(); break;
                 case "LevelSelect": DrawLevelSelect(); break;
                 default: throw new InvalidDataException($"Unknown frontend scene section '{part.Section}'.");
             }

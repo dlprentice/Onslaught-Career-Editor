@@ -95,7 +95,7 @@ public sealed class RetailMainMenuLabelColorTests
         Assert.Contains("const ROW_PITCH: float = 20.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLabelColor", quit, StringComparison.Ordinal);
     }
 

@@ -261,6 +261,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Client\main_menu_laws.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MainMenu.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_reflection.gdshader;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_atlas_font.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_underlay.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading_strings.gd;..\OnslaughtRebuild.Godot\RetailFrontendFlow.MainMenu.cs"
              Link="godot-main-menu-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\quit_confirm_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\QuitConfirm.tscn;..\OnslaughtRebuild.Godot\RetailFrontendFlow.QuitConfirm.cs"
+             Link="godot-quit-source\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />

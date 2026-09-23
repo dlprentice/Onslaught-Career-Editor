@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://RetailFrontendFlow.cs" id="1"]
 [ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendPart.cs" id="2"]
 [ext_resource type="Resource" path="res://Scenes/Frontend/RetailFrontendAssets.tres" id="3"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/MainMenu.tscn" id="main_menu_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/Frontend/QuitConfirm.tscn" id="quit_scene"]
 
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Options.tscn" id="options_scene"]
 [ext_resource type="PackedScene" path="res://Scenes/Frontend/Debriefing.tscn" id="debriefing_scene"]
@@ -34,23 +35,8 @@ mouse_filter = 2
 [node name="ClickToStart" parent="Stage" instance=ExtResource("click_scene")]
 visible = false
 
-[node name="QuitConfirm" type="Control" parent="Stage"]
+[node name="QuitConfirm" parent="Stage" instance=ExtResource("quit_scene")]
 visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 480.0
-mouse_filter = 2
-
-[node name="Dialog" type="Control" parent="Stage/QuitConfirm"]
-layout_mode = 0
-offset_left = 110.0
-offset_top = 170.0
-offset_right = 530.0
-offset_bottom = 330.0
-mouse_filter = 2
-script = ExtResource("2")
-Section = "Quit.Dialog"
-SourceRect = Rect2(110, 170, 420, 160)
 
 [node name="CareerName" type="Control" parent="Stage"]
 visible = false
@@ -306,3 +292,5 @@ visible = false
 visible = false
 
 [editable path="Stage/MainMenu"]
+
+[editable path="Stage/QuitConfirm"]

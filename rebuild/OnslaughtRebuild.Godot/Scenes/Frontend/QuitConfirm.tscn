@@ -1,0 +1,179 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_presentation.gd" id="page"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_surface.gd" id="surface"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_label.gd" id="label"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_highlight.gd" id="highlight"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_row.gd" id="row"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont13.tres" id="body_font"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont22.tres" id="choice_font"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="recipe"]
+
+[sub_resource type="Texture2D" id="blank"]
+script = ExtResource("recipe")
+source_path = "res://Assets/PauseMenu/blank.texture.aya"
+dimensions = Vector2i(16, 16)
+compression = 0
+
+[node name="QuitConfirm" type="Control"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("page")
+body_font = ExtResource("body_font")
+choice_font = ExtResource("choice_font")
+
+[node name="Dialog" type="Control" parent="."]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 170.0
+offset_right = 530.0
+offset_bottom = 330.0
+mouse_filter = 2
+
+[node name="Panel" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+rectangle = Rect2(120, 170, 400, 140)
+texture = SubResource("blank")
+ink_color = Color(0, 0, 0, 0.6862745098039216)
+
+[node name="BorderTop" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+rectangle = Rect2(120, 170, 400, 2)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="BorderBottom" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+rectangle = Rect2(120, 308, 400, 2)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="BorderLeft" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+rectangle = Rect2(120, 170, 2, 140)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="BorderRight" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+rectangle = Rect2(518, 170, 2, 140)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Prompt" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("body_font")
+text = "Are you sure you want to quit the game?"
+source_anchor = Vector2(320, 178)
+
+[node name="Yes" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("row")
+hit_rect = Rect2(120, 194, 400, 32)
+
+[node name="Highlight" type="Control" parent="Dialog/Yes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("highlight")
+texture = SubResource("blank")
+ink_color = Color(0.4980392156862745, 1, 0.4980392156862745, 0.6862745098039216)
+
+[node name="Label" type="Control" parent="Dialog/Yes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("choice_font")
+text = "Yes"
+source_anchor = Vector2(320, 194)
+
+[node name="No" type="Control" parent="Dialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("row")
+hit_rect = Rect2(120, 226, 400, 32)
+
+[node name="Highlight" type="Control" parent="Dialog/No"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("highlight")
+texture = SubResource("blank")
+ink_color = Color(0.4980392156862745, 1, 0.4980392156862745, 0.6862745098039216)
+
+[node name="Label" type="Control" parent="Dialog/No"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+atlas_font = ExtResource("choice_font")
+text = "No"
+source_anchor = Vector2(320, 226)

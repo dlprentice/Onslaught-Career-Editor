@@ -501,7 +501,6 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _rockBackground = null!;
     private Texture2D[] _feBackFrames = [];
     private Texture2D _titleTextBox = null!;
-    private Texture2D _feBlank = null!;
     private Texture2D _symbolBracket01 = null!;
     private Texture2D _levelBracket01 = null!;
     private Texture2D _levelBracket02 = null!;
@@ -519,8 +518,6 @@ public sealed partial class RetailFrontendFlow : Control
     // nothing on its own.
     private string _level100Text = string.Empty;
     private string _loadingText = string.Empty;
-    // Localization__GetStringById(0xe4) — English table in BEA.exe, not english.dat.
-    private const string QuitConfirmPrompt = "Are you sure you want to quit the game?";
     private double _animationSeconds;
     private double _clickPulseTimer;
     private double _clickPageSeconds;
@@ -573,6 +570,7 @@ public sealed partial class RetailFrontendFlow : Control
         InitializeOptions();
         InitializeClick();
         InitializeMainMenu();
+        InitializeQuitConfirm();
         InitializeLoading();
         InitializeDebriefing();
 
@@ -1131,69 +1129,6 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         return (int)(index % frameCount);
-    }
-
-    private void DrawQuitConfirm()
-    {
-        SelectSceneSection("Quit.Dialog");
-        // Create() width/centre are pinned on RetailFeMessBox. Height is still
-        // reconstruction (the 4th stack immediate is 0.1f). Chrome below is
-        // FrontEnd.cpp DrawPanel/DrawBox plus the option_mode-2 YESNO stack,
-        // not FEMessBox.cpp tiles — that file is absent and there is no
-        // quit-confirm capture.
-        var box = new Rect2(
-            RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.BoxTop,
-            RetailFeMessBox.QuitWidth,
-            RetailFeMessBox.ReconstructionHeight);
-        DrawTextureRect(_feBlank, box, false, RetailColor(RetailFeMessBox.PanelColor));
-        DrawFeMessBoxEdges(box, RetailColor(RetailFeMessBox.BorderColor));
-
-        Color text = RetailColor(RetailFeMessBox.TextColor);
-        float promptWidth = MeasureText(QuitConfirmPrompt, 1f);
-        DrawText(
-            QuitConfirmPrompt,
-            new Vector2(RetailFeMessBox.QuitCenterX - (promptWidth * 0.5f), RetailFeMessBox.PromptTop),
-            1f,
-            text);
-
-        DrawQuitConfirmChoice(
-            RetailFeMessBox.YesLabel,
-            RetailFeMessBox.YesChoiceTop,
-            _session.SelectedQuitConfirmIndex == 1);
-        DrawQuitConfirmChoice(
-            RetailFeMessBox.NoLabel,
-            RetailFeMessBox.NoChoiceTop,
-            _session.SelectedQuitConfirmIndex == 0);
-    }
-
-    private void DrawQuitConfirmChoice(string label, float top, bool selected)
-    {
-        float width = MeasureFont22Text(label, 1f);
-        float left = RetailFeMessBox.QuitCenterX - (width * 0.5f);
-        if (selected)
-        {
-            DrawTextureRect(
-                _feBlank,
-                new Rect2(
-                    left - RetailFeMessBox.HighlightPadX,
-                    top,
-                    width + (RetailFeMessBox.HighlightPadX * 2f),
-                    RetailFeMessBox.ChoiceRowHeight),
-                false,
-                RetailColor(RetailFeMessBox.HighlightColor));
-        }
-
-        DrawFont22Text(label, new Vector2(left, top), 1f, 1f, RetailColor(RetailFeMessBox.TextColor));
-    }
-
-    private void DrawFeMessBoxEdges(Rect2 box, Color color)
-    {
-        float w = RetailFeMessBox.BoxLineWidth;
-        DrawRect(new Rect2(box.Position.X, box.Position.Y, box.Size.X, w), color);
-        DrawRect(new Rect2(box.Position.X, box.End.Y - w, box.Size.X, w), color);
-        DrawRect(new Rect2(box.Position.X, box.Position.Y, w, box.Size.Y), color);
-        DrawRect(new Rect2(box.End.X - w, box.Position.Y, w, box.Size.Y), color);
     }
 
     /// <summary>
@@ -2482,31 +2417,6 @@ public sealed partial class RetailFrontendFlow : Control
         return _mainMenuView.Call("hit_test", canvasPoint).AsInt32();
     }
 
-    private static int QuitConfirmIndexAt(Vector2 designPosition)
-    {
-        var noRow = new Rect2(
-            RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.NoChoiceTop,
-            RetailFeMessBox.QuitWidth,
-            RetailFeMessBox.ChoiceRowHeight);
-        if (noRow.HasPoint(designPosition))
-        {
-            return 0;
-        }
-
-        var yesRow = new Rect2(
-            RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.YesChoiceTop,
-            RetailFeMessBox.QuitWidth,
-            RetailFeMessBox.ChoiceRowHeight);
-        if (yesRow.HasPoint(designPosition))
-        {
-            return 1;
-        }
-
-        return -1;
-    }
-
     private void LoadLocalization()
     {
         const string resourcePath = "res://Assets/Frontend/english.json";
@@ -2557,14 +2467,6 @@ public sealed partial class RetailFrontendFlow : Control
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
         _titleTextBox = LoadTexture("title-text-box", 256, 32);
-        // FET2_BLANK — FrontEnd.cpp:755. Same 16×16 FrontEnd%v2%FE_Blank.tga
-        // the pause menu already materializes.
-        _feBlank = LoadTexture(
-            "blank",
-            16,
-            16,
-            CuratedAyaTextureLoader.Compression.Dxt1,
-            folder: "PauseMenu");
         _symbolBracket01 = LoadTexture("symbol-bracket-01", 128, 128);
         _levelBracket01 = LoadTexture("level-bracket-01", 512, 512);
         _levelBracket02 = LoadTexture("level-bracket-02", 512, 512);

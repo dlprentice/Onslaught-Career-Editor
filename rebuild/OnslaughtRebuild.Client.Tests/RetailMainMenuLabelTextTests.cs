@@ -186,9 +186,9 @@ public sealed class RetailMainMenuLabelTextTests
         Assert.Contains("const ROW_PITCH: float = 20.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLabelText", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLabelText", choice, StringComparison.Ordinal);
         string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuLabelText", loading, StringComparison.Ordinal);

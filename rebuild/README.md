@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-22 (native Main Menu presentation and weapon foundations).
+Last updated: 2026-09-22 (native Main Menu and Quit confirmation; weapon foundations).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -43,7 +43,7 @@ companion/AppCore has its own migration owner and remains a separate boundary.
 
 ### Migration state
 
-Startup, click-to-start, Main Menu, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
+Startup, click-to-start, Main Menu, Quit confirmation, HUD, pause, audio, Options, Loading, debriefing, world camera, actor/projectile presentation,
 terrain LOD/meshes/texture caches, water, Aquila and the Sun now use production GDScript owners and
 native scene definitions.
 The frontend session/path, terrain sampler and numerical/parsing/replay foundations
@@ -127,6 +127,33 @@ remain unresolved. Commands, receipts and limits are in
 [`VALIDATION.md`](../VALIDATION.md#native-main-menu--september-22).
 The September 20 interrupted checkpoint is retained there as history; its
 unfinished Main Menu checks are superseded by these executed results.
+
+#### Native Quit confirmation
+
+`Scenes/Frontend/QuitConfirm.tscn` now supplies the production panel, four
+borders, prompt, Yes/No rows and measured highlights as editable Controls.
+`Frontend.tscn` instances the same scene with editable children. Select Quit
+confirmation through `EditorPage`, or open its scene directly; the frozen
+`editor_selected_index` defaults to No. The scene shares the production atlas
+fonts and blank-texture recipe. Its GDScript owns drawing and transformed hit
+regions; the existing frontend session retains navigation, audio requests and
+the exit signal through one selection batch.
+
+Edit Dialog position/size or individual named passes in the Scene dock. Their
+overlapping selection bounds preserve the original drawing coordinate frame.
+Labels expose `source_anchor`, `text` and an explicit `override_text`; imported
+defaults remain authoritative unless that override is enabled. Layout changes
+survive pack/reopen and use the same definitions during gameplay. Editor entry
+does not acquire input, advance navigation or request exit.
+
+All 24 native/live-host image comparisons match the retained renderer exactly,
+including four window sizes and authored dialog transforms. A half-open hit
+boundary regression found during conversion was corrected without changing
+the original click rules. The existing English-only localization and unmeasured
+140-unit dialog-height reconstruction remain open retail questions. Matching
+the prior implementation does not resolve them. Executed checks and the
+unchanged headless editor shutdown leaks are recorded in
+[`VALIDATION.md`](../VALIDATION.md#native-quit-confirmation--september-22).
 
 The first GDScript foundation lives in `OnslaughtRebuild.Godot/Core/`: exact
 retail rounding and float stores, Unit Euler operations, the released RNG,
@@ -564,6 +591,7 @@ Use these scenes from Godot's FileSystem dock:
 | [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | GDScript playback scene with black surround, actual movie/splash TextureRects and an inactive audio node. `editor_cue` reads one real frame or splash from the canonical media cache; it never plays it. |
 | [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
 | [Scenes/Frontend/MainMenu.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/MainMenu.tscn) | Native title/reflection, seven rows, selector, language controls and four separately editable decoration body/shadow pairs. `editor_preview` freezes transition, selection and animation times. Row `override_text` enables deliberate enhanced text; texture recipes retain private production asset routes. |
+| [Scenes/Frontend/QuitConfirm.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/QuitConfirm.tscn) | Production panel, four borders, prompt, Yes/No rows and measured highlights. `editor_selected_index` freezes No/Yes selection; Dialog and individual passes are editable. Text overrides are explicit; the scene never handles input or requests exit itself. |
 | [Scenes/Frontend/ClickToStart.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/ClickToStart.tscn) | Actual splash, five prompt passes, sliding-logo pair, five title passes and title flash. `editor_preview` supplies frozen times. Image `center`/size and text `content_origin` expose the source layout; outer transforms and `override_prompt` support deliberate edits. |
 | [Scenes/Frontend/Options.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Options.tscn) | Four native pages with 35 rows, 22 control bindings, sliders, dropdowns, bitmap labels and production artwork. `editor_page`, `editor_selected_row` and `editor_expanded` select a frozen view. |
 | [Scenes/Frontend/Loading.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Loading.tscn) | Production background, five ordered caption passes and fixed bar. `editor_progress` supplies frozen host facts; `override_caption` marks deliberate enhanced text. The scene does not request or advance loading. |

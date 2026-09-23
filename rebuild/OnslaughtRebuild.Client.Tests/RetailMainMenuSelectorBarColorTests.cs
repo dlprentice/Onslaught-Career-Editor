@@ -60,13 +60,14 @@ public sealed class RetailMainMenuSelectorBarColorTests
         Assert.True(NativeMainMenuSource.Scene.IndexOf("[node name=\"Selector\"", StringComparison.Ordinal) < NativeMainMenuSource.Scene.IndexOf("[node name=\"NewGame\"", StringComparison.Ordinal));
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarColor", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarColor", choice, StringComparison.Ordinal);
         // Cited FEMessBox chrome marker; HighlightTint was the reconstruction
         // era marker superseded by the wt/t_7d9a828d merge.
-        Assert.Contains("RetailFeMessBox.HighlightColor", choice, StringComparison.Ordinal);
+        NativeQuitSource.HasColor("Dialog/Yes/Highlight", RetailFeMessBox.HighlightColor);
+        NativeQuitSource.HasColor("Dialog/No/Highlight", RetailFeMessBox.HighlightColor);
     }
 
     private static string Slice(string source, string signature)

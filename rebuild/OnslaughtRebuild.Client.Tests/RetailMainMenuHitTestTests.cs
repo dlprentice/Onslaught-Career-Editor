@@ -145,7 +145,7 @@ public sealed class RetailMainMenuHitTestTests
         Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandlePointerConfirm"));
         Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandleKey"));
         Assert.DoesNotContain("RetailMainMenuHitTest", NativeLoadingSource.Presentation);
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private void DrawQuitConfirm"));
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeQuitSource.Presentation);
         Assert.DoesNotContain("TWIMTBP", flow);
     }
 

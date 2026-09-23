@@ -201,9 +201,9 @@ public sealed class RetailMainMenuTitleLogoShadowZTests
         NativeMainMenuSource.HasMeasuredReflectionOnly();
 
         string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", choice, StringComparison.Ordinal);
         string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuTitleLogoShadowZ", loading, StringComparison.Ordinal);

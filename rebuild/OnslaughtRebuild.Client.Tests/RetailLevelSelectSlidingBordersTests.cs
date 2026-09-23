@@ -188,7 +188,7 @@ public sealed class RetailLevelSelectSlidingBordersTests
         string level = Slice(flow, "private void DrawLevelSelect()");
         string main = NativeMainMenuSource.Presentation;
         Assert.DoesNotContain("level_select", main, StringComparison.Ordinal);
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string quit = NativeQuitSource.Presentation;
         string loading = NativeLoadingSource.Presentation;
         string click = NativeClickSource.Presentation;
         string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");

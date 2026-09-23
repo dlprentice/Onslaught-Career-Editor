@@ -16,6 +16,8 @@ func run_checks() -> void:
     var view: Control = scene.instantiate()
     var stage: Control = view.get_node("Stage")
     var menu: Control = view.get_node("Stage/MainMenu")
+    var quit_view: Control = view.get_node("Stage/QuitConfirm")
+    var quit_dialog: Control = quit_view.get_node("Dialog")
     var row: Control = menu.get_node("NewGame")
     if not require(stage.get_child_count() == 10, "Expected 10 authored frontend pages before Ready"): return
     if not require(menu.get_node("Language/Flag") is TextureRect, "Language must be a native texture control"): return
@@ -24,6 +26,9 @@ func run_checks() -> void:
     if not require(row.get("text") == "New Game", "Main-menu production text is not authored"): return
     if not require(not row.get("override_text"), "Authored English labels must not replace imported localization"): return
     if not require(menu.has_method("set_frame") and menu.has_method("hit_test") and row.has_method("displayed_units"), "Main Menu must expose its production native component before Ready"): return
+    if not require(quit_view.has_method("set_frame") and quit_view.has_method("hit_test")
+        and quit_view.has_node("Dialog/Prompt") and quit_view.has_node("Dialog/Yes/Label")
+        and quit_view.has_node("Dialog/No/Highlight"), "Quit confirmation must expose its actual native panel and choices before Ready"): return
     var shadow: TextureRect = menu.get_node("TitleLogo/ShadowMotion/Shadow")
     var shadow_origin: Vector2 = shadow.position
     var old_pointer: int = Input.mouse_mode
@@ -34,6 +39,8 @@ func run_checks() -> void:
     if not require(view.get_node("Stage/Loading/Background").texture != null, "Loading production pixels unavailable"): return
     if not require(Input.mouse_mode == old_pointer, "Frontend scene changed pointer mode"): return
     if not require(not menu.is_processing() and not menu.is_processing_input(), "Main Menu presentation started a clock or input owner"): return
+    if not require(quit_view.body_font == stage.get_node("Options").body_font
+        and quit_view.choice_font == stage.get_node("Options").title_font, "Quit confirmation must share the production frontend fonts"): return
     if Engine.is_editor_hint():
         if not require(menu.visible and not view.is_processing() and not view.is_processing_input(), "Editor must show frozen Main Menu without processing"): return
         if not require(not view.has_node("RetailMouseCursor"), "Editor must not install the game cursor"): return
@@ -51,6 +58,8 @@ func run_checks() -> void:
                 if not require(not menu.get("_frame_supplied") and menu.view_snapshot().selected_index == 0, "Main Menu must expose its frozen native fixture"): return
             if pages[page] == "QuitConfirm":
                 if not require(menu.visible and menu.view_snapshot().selected_index == 6 and not menu.get_node("Reflection").visible, "Quit confirmation must retain its selected Quit backdrop and hidden reflection"): return
+                if not require(quit_view.view_snapshot() == {"selected_index": 0}
+                    and not quit_view.is_processing() and not quit_view.is_processing_input(), "Quit preview must show No without owning input or advancing navigation"): return
             if pages[page] == "Debriefing":
                 var report: Control = stage.get_node("Debriefing")
                 if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return
@@ -69,6 +78,8 @@ func run_checks() -> void:
     var old_position: Vector2 = row.position
     row.position += Vector2(10, 5)
     row.size += Vector2(8, 2)
+    quit_dialog.position += Vector2(11, -4)
+    quit_dialog.size += Vector2(20, 12)
     await process_frame
     if not require(row.position == old_position + Vector2(10, 5), "Presentation overwrote an authored layout edit"): return
     if not require(row.get("source_rect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
@@ -88,6 +99,7 @@ func run_checks() -> void:
     await process_frame
     if not require(reloaded.get_node("Stage/MainMenu/TitleLogo/ShadowMotion/Shadow").position == shadow_origin, "Scene roundtrip accumulated shadow animation into layout"): return
     if not require(reloaded.get_node("Stage/MainMenu/NewGame").position == row.position, "Scene roundtrip discarded authored row position"): return
+    if not require(reloaded.get_node("Stage/QuitConfirm/Dialog").get_rect() == quit_dialog.get_rect(), "Scene roundtrip discarded authored quit-dialog geometry"): return
     reloaded.queue_free()
     print("FRONTEND_SCENE_CHECKS: 10 authored pages, 7 menu rows, native textures/guides, production assets, preserved authored edits, transient pixels, pointer unchanged; editor=", Engine.is_editor_hint())
     view.queue_free()

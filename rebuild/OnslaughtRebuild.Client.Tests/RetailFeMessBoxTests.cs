@@ -33,11 +33,12 @@ public sealed class RetailFeMessBoxTests
     [Fact]
     public void DrawQuitConfirmUsesTheRecoveredWidthAndCentre()
     {
-        string flow = FlowSource();
-
-        Assert.Contains("RetailFeMessBox.QuitLeft", flow);
-        Assert.Contains("RetailFeMessBox.QuitWidth", flow);
-        Assert.DoesNotContain("new Rect2(70f, 160f, 500f, 140f)", flow);
+        AssertRectangle("Dialog/Panel", "rectangle", RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.BoxTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ReconstructionHeight);
+        Assert.Equal(new[] { RetailFeMessBox.QuitCenterX, RetailFeMessBox.PromptTop },
+            NativeMainMenuSource.Vector(NativeQuitSource.Node("Dialog/Prompt"), "source_anchor", "Vector2"));
+        Assert.Contains("Stage/QuitConfirm", NativeQuitSource.Bridge);
+        Assert.DoesNotContain("new Rect2(70f, 160f, 500f, 140f)", NativeQuitSource.Presentation);
     }
 
     [Fact]
@@ -75,29 +76,39 @@ public sealed class RetailFeMessBoxTests
     [Fact]
     public void DrawQuitConfirmUsesBlankPanelBoxAndVerticalYesNo()
     {
-        string flow = FlowSource();
-
-        Assert.Contains("RetailFeMessBox.PanelColor", flow);
-        Assert.Contains("RetailFeMessBox.BorderColor", flow);
-        Assert.Contains("RetailFeMessBox.BoxLineWidth", flow);
-        Assert.Contains("RetailFeMessBox.YesLabel", flow);
-        Assert.Contains("RetailFeMessBox.NoLabel", flow);
-        Assert.Contains("_feBlank", flow);
-        Assert.DoesNotContain("DrawQuitConfirmChoice(\"No\", 220f", flow);
-        Assert.DoesNotContain("DrawQuitConfirmChoice(\"Yes\", 420f", flow);
-        Assert.DoesNotContain("new Color(0f, 0f, 0f, 0.82f)", flow);
+        float x = RetailFeMessBox.QuitLeft, y = RetailFeMessBox.BoxTop;
+        float width = RetailFeMessBox.QuitWidth, height = RetailFeMessBox.ReconstructionHeight;
+        float line = RetailFeMessBox.BoxLineWidth;
+        AssertRectangle("Dialog/BorderTop", "rectangle", x, y, width, line);
+        AssertRectangle("Dialog/BorderBottom", "rectangle", x, y + height - line, width, line);
+        AssertRectangle("Dialog/BorderLeft", "rectangle", x, y, line, height);
+        AssertRectangle("Dialog/BorderRight", "rectangle", x + width - line, y, line, height);
+        AssertColor("Dialog/Panel", RetailFeMessBox.PanelColor);
+        foreach (string edge in new[] { "Top", "Bottom", "Left", "Right" })
+            AssertColor("Dialog/Border" + edge, RetailFeMessBox.BorderColor);
+        foreach (string row in new[] { "Yes", "No" })
+            AssertColor("Dialog/" + row + "/Highlight", RetailFeMessBox.HighlightColor);
+        Assert.Contains("text = \"" + RetailFeMessBox.YesLabel + "\"", NativeQuitSource.Node("Dialog/Yes/Label"));
+        Assert.Contains("text = \"" + RetailFeMessBox.NoLabel + "\"", NativeQuitSource.Node("Dialog/No/Label"));
+        Assert.Contains("res://Assets/PauseMenu/blank.texture.aya", NativeQuitSource.Scene);
+        Assert.Contains("dimensions = Vector2i(16, 16)", NativeQuitSource.Scene);
+        Assert.Contains("compression = 0", NativeQuitSource.Scene);
+        Assert.Contains("ink_color: Color = Color.WHITE", NativeQuitSource.Read("quit_confirm_label.gd"));
+        Assert.DoesNotContain("new Color(0f, 0f, 0f, 0.82f)", NativeQuitSource.Presentation);
     }
 
     [Fact]
     public void QuitConfirmHitRowsAreTheFullWidthYesNoStack()
     {
-        string flow = FlowSource();
-
-        Assert.DoesNotContain("new Rect2(160f, 240f, 120f, 36f)", flow);
-        Assert.DoesNotContain("new Rect2(360f, 240f, 120f, 36f)", flow);
-        Assert.Contains("RetailFeMessBox.QuitLeft", MethodBody(flow, "QuitConfirmIndexAt"));
-        Assert.Contains("RetailFeMessBox.NoChoiceTop", MethodBody(flow, "QuitConfirmIndexAt"));
-        Assert.Contains("RetailFeMessBox.YesChoiceTop", MethodBody(flow, "QuitConfirmIndexAt"));
+        AssertRectangle("Dialog/No", "hit_rect", RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.NoChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
+        AssertRectangle("Dialog/Yes", "hit_rect", RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.YesChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
+        Assert.Contains(".Call(\"hit_test\",", NativeQuitSource.Bridge);
+        Assert.Contains("hit_rect.has_point(", NativeQuitSource.Read("quit_confirm_row.gd"));
+        Assert.Contains("[\"selected_index\"] = _session.SelectedQuitConfirmIndex", NativeQuitSource.Bridge);
+        Assert.DoesNotContain(".Confirm(", NativeQuitSource.Bridge);
+        Assert.DoesNotContain("get_tree().quit", NativeQuitSource.Presentation);
     }
 
     [Fact]
@@ -141,6 +152,11 @@ public sealed class RetailFeMessBoxTests
     private static string FlowSource() =>
         File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+
+    private static void AssertRectangle(string node, string property, params float[] values) =>
+        Assert.Equal(values, NativeMainMenuSource.Vector(NativeQuitSource.Node(node), property, "Rect2"));
+
+    private static void AssertColor(string node, uint argb) => NativeQuitSource.HasColor(node, argb);
 
     private static string MethodBody(string source, string methodName)
     {
