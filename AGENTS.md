@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-12 (conditional reference routing; preservation and phase boundaries retained)
+Last updated: 2026-09-25 (any agent may work here; lane map added)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -43,8 +43,22 @@ these deliverables require it; keep the three standing outcomes. The former stor
 hold is retained as history in `developer_state.json`; it does not block this phase.
 Do not recreate Windows VM staging without a new Windows-validation task. Ghidra changes still require the preservation workflow
 and an exact declared cohort. External archive reconciliation and historical recovery
-investigation remain outside this repository's development scope. Use native subagents;
-do not use Claude Code during this phase.
+investigation remain outside this repository's development scope. Any agent may work here, Claude Code included;
+subagents follow machine rule 12 (read-only research or a taste check).
+
+## Lanes
+
+Three lanes share this repository, each in its own checkout. Merging a lane into `main` is that lane's decision.
+
+| Lane | Branch | Checkout | Where it stands (2026-09-25) |
+| --- | --- | --- | --- |
+| Reverse engineering | `codex/retail-re-20260919` (34 commits ahead of `main`, 9 behind) | the repository's main checkout | Save, settings and startup compatibility contracts for the rebuild, from controlled original-code experiments; the latest work is the sound manager's startup order. Commit `3c8292d9` saved the lane's last uncommitted notes as they were. Its `tools/godot_host.py` still selects `godot-mono` (Godot 4.7.2 .NET). |
+| Rebuild | `codex/godot-editor-48-20260919` (42 ahead, 6 behind) | `.worktrees/godot-editor-48-20260919` | Converting the production rebuild to typed GDScript and native scenes on Godot 4.8 dev6. The frontend, world and scenery presentation, and effects are converted; world assembly, simulation and the host still run in C#, so the rebuild still needs .NET (`godot48-mono`). Commit `5c8276ce` saved the lane's uncommitted work as it was, without validation. |
+| Companion | `main` (its branch `codex/companion-gdscript-20260919` is merged) | `.worktrees/main-integration-20260919` | GDScript interface on Godot 4.8 dev6 .NET with a small in-process C# adapter for protected file operations, approved by David on 2026-09-19. Save Lab open, preview, verified copy and reopen pass on Linux; Windows execution is unverified. |
+
+`main` (`c9dee49b`) is the integration branch. The merged companion worktree and the older
+`codex/camera-core-resume-20260912`, `codex/linux-playable-slices` and `codex/remote-review-20260912` branches (the last
+with its worktree) are kept as they are.
 
 ## Ground rules
 
