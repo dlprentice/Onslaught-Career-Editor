@@ -7,6 +7,10 @@ enum Compression { DXT1, DXT2, RGBA8 }
 const MAXIMUM_SOURCE_BYTES: int = 2 * 1024 * 1024
 const MAXIMUM_DDS_BYTES: int = 8 * 1024 * 1024
 const STREAM_BUFFER_BYTES: int = 65536
+const DDS_HEADER_BYTES: int = 128
+const DDSD_MIPMAPCOUNT: int = 0x20000
+const DDSC2_CUBEMAP: int = 0x200
+const DDSC2_VOLUME: int = 0x200000
 # Managed Image.Format spellings from the pinned GodotSharp 4.8 dev6 API, in
 # native enum order. Unknown cast values retain their decimal spelling.
 const FORMAT_NAMES: Array[String] = ["L8", "La8", "R8", "Rg8", "Rgb8", "Rgba8", "Rgba4444", "Rgb565",
@@ -99,6 +103,11 @@ func _decode_dds(dds: PackedByteArray, expected_width: int, expected_height: int
     # guard. The checked C# import contract instead decodes before this check.
     if not checked_import and (expected_width <= 0 or expected_height <= 0 or dds.decode_u32(16) != expected_width or dds.decode_u32(12) != expected_height):
         return _fail_image("Curated texture does not contain the expected DDS dimensions.")
+    # Godot's loader fills a short surface from uninitialized memory instead of
+    # failing, so a payload shorter than its read is refused before decoding.
+    var available: int = dds.size() - DDS_HEADER_BYTES
+    if available < dds_payload_bytes(dds, compression, available):
+        return _fail_image("Curated texture has truncated DDS pixel data.")
     var image := Image.new()
     var result: Error = image.load_dds_from_buffer(dds)
     if result != OK or image.is_empty():
@@ -124,6 +133,53 @@ func _decode_dds(dds: PackedByteArray, expected_width: int, expected_height: int
 
 static func _format_name(value: int) -> String:
     return FORMAT_NAMES[value] if value >= 0 and value < FORMAT_NAMES.size() else str(value)
+
+## Payload bytes the pinned loader (modules/dds/texture_loader_dds.cpp at
+## 8898c2b3d) reads after the header for the three admitted layouts, including
+## its cubemap faces and volume slices. Results above `limit` return limit + 1.
+static func dds_payload_bytes(dds: PackedByteArray, compression: int, limit: int) -> int:
+    var flags: int = dds.decode_u32(8)
+    var mipmaps: int = dds.decode_u32(28) if (flags & DDSD_MIPMAPCOUNT) != 0 else 1
+    var caps_2: int = dds.decode_u32(112)
+    var width: int = dds.decode_u32(16)
+    var height: int = dds.decode_u32(12)
+    var block: int = 4 if compression == Compression.RGBA8 else (8 if compression == Compression.DXT1 else 16)
+    var compressed: bool = compression != Compression.RGBA8
+    if (caps_2 & DDSC2_CUBEMAP) != 0:
+        return mini(6 * _dds_layer_bytes(width, height, mipmaps, block, compressed, limit), limit + 1)
+    if (caps_2 & DDSC2_VOLUME) == 0:
+        return _dds_layer_bytes(width, height, mipmaps, block, compressed, limit)
+    var depth: int = dds.decode_u32(24)
+    var total: int = 0
+    for _mip: int in range(mipmaps):
+        if depth > limit:
+            return limit + 1
+        total += depth * _dds_layer_bytes(width, height, 1, block, compressed, limit)
+        if total > limit:
+            return limit + 1
+        width = maxi(1, width >> 1)
+        height = maxi(1, height >> 1)
+        depth = maxi(1, depth >> 1)
+    return total
+
+static func _dds_layer_bytes(width: int, height: int, mipmaps: int, block: int, compressed: bool, limit: int) -> int:
+    if width > limit or height > limit:
+        return limit + 1
+    var w: int = width
+    var h: int = height
+    var size: int = width * height * block
+    if compressed:
+        # The loader pads by the remainder, not to a multiple of four.
+        w += w % 4
+        h += h % 4
+        size = maxi(1, (w + 3) >> 2) * maxi(1, (h + 3) >> 2) * block
+    var level: int = 1
+    while level < mipmaps and size <= limit:
+        w = maxi(1, w >> 1)
+        h = maxi(1, h >> 1)
+        size += (maxi(1, (w + 3) >> 2) * maxi(1, (h + 3) >> 2) if compressed else w * h) * block
+        level += 1
+    return mini(size, limit + 1)
 
 func inflate_aya(source: PackedByteArray) -> PackedByteArray:
     error_message = ""

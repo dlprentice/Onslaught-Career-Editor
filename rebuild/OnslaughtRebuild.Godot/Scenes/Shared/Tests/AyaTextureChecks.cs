@@ -16,6 +16,8 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class AyaTextureChecks : Node
 {
     private const string NativePath = "res://Scenes/Shared/retail_aya_texture.gd";
+    private const string TruncatedPixels = "Curated texture has truncated DDS pixel data.";
+    private const string ShortReadOrigin = "file_access_memory.cpp";
     private const string ManifestPath = "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const int SourceLimit = 2 * 1024 * 1024;
     private const int DecodedLimit = 8 * 1024 * 1024;
@@ -34,7 +36,7 @@ public sealed partial class AyaTextureChecks : Node
 
     private sealed record Spec(string Name, string Path, int Width, int Height, int Compression,
         int? TargetFormat = null, int? MipCount = null, bool MustSucceed = false,
-        string[]? DiagnosticOrigins = null, string? ExpectedNativeRefusal = null);
+        string[]? DiagnosticOrigins = null, string? ExpectedNativeRefusal = null, string[]? LegacyDiagnosticOrigins = null);
     private sealed record ImageFacts(int Width, int Height, int Format, bool HasMipmaps, int MipmapCount,
         int ByteCount, string Sha256, [property: JsonIgnore] byte[] Bytes);
     private sealed record Outcome(bool Ok, string? ErrorType = null, string? Error = null, ImageFacts? Image = null);
@@ -203,6 +205,10 @@ public sealed partial class AyaTextureChecks : Node
             Check(legacy.Ok || legacy.ErrorType == nameof(InvalidDataException), spec.Name + ": unexpected oracle failure type.");
             CheckStrictRefusal(spec.Name + "/native", actual, strictMessage);
             CheckStrictRefusal(spec.Name + "/facade", facade, strictMessage);
+            // A pixel truncation refusal is only as strict as the loader: the
+            // unchanged oracle must actually have read past the payload.
+            if (strictMessage == TruncatedPixels)
+                Check(_logger!.Logged(spec.Name, "legacy", ShortReadOrigin), spec.Name + ": truncation refused without a loader short read.");
         }
         else
         {
@@ -217,7 +223,9 @@ public sealed partial class AyaTextureChecks : Node
 
     private Outcome Phase(Spec spec, string phase, Func<Outcome> action)
     {
-        string[] origins = spec.DiagnosticOrigins ?? [];
+        string[] origins = phase == "legacy"
+            ? [.. spec.DiagnosticOrigins ?? [], .. spec.LegacyDiagnosticOrigins ?? []]
+            : spec.DiagnosticOrigins ?? [];
         GD.Print("AYA_CASE_BEGIN " + JsonSerializer.Serialize(new { name = spec.Name, phase, expected_diagnostic_origins = origins }));
         _logger!.Begin(spec.Name, phase, origins);
         Outcome outcome;
@@ -329,7 +337,10 @@ public sealed partial class AyaTextureChecks : Node
         yield return Fixture("rgba-three-mips", Frame(Compress(Dds(2, 4, 4, 3))), mips: 3, mustSucceed: true);
         yield return Fixture("rgba-header-zero-mips", Frame(Compress(Mutate(rgba, 28, 0))), mips: 0, mustSucceed: true);
         yield return Fixture("aya-two-records", Join(Frame(Compress(rgba[..73])), Frame(Compress(rgba[73..]))), mustSucceed: true);
-        yield return Fixture("aya-empty-second-record", Join(valid, Frame(Compress([]))), mustSucceed: true);
+        // The pinned .NET ZLibStream writes nothing for an empty payload, so
+        // spell out a complete empty zlib member (fixed block, Adler-32 of 1).
+        yield return Fixture("aya-empty-second-record", Join(valid, Frame([0x78, 0x9c, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01])), mustSucceed: true);
+        yield return Fixture("aya-zero-length-second-record", Join(valid, [0, 0, 0, 0]));
         yield return Fixture("empty-source", []);
         yield return Fixture("short-record-header", [1, 2, 3]);
         yield return Fixture("zero-record-length", [0, 0, 0, 0]);
@@ -341,7 +352,8 @@ public sealed partial class AyaTextureChecks : Node
         byte[] corrupt = (byte[])compressed.Clone(); corrupt[^1] ^= 1;
         yield return Fixture("bad-adler32", Frame(corrupt), origins: zlib, refusal: corruptStream);
         for (int missing = 1; missing <= 8; missing++)
-            yield return Fixture("zlib-missing-suffix-" + missing, Frame(compressed[..^missing]), origins: [.. zlib, .. ddsDiagnostic], refusal: truncated);
+            yield return Fixture("zlib-missing-suffix-" + missing, Frame(compressed[..^missing]), origins: [.. zlib, .. ddsDiagnostic], refusal: truncated,
+                legacyOrigins: [ShortReadOrigin]);
         yield return Fixture("small-trailing-bytes", Frame(Join(compressed, [7, 8])), origins: zlib, refusal: trailing);
         yield return Fixture("concatenated-members", Frame(Join(compressed, Compress([11, 22, 33]))), origins: zlib, refusal: trailing);
         foreach (int length in new[] { 8191, 8192, 8193 })
@@ -383,12 +395,25 @@ public sealed partial class AyaTextureChecks : Node
         yield return Fixture("width-mismatch", valid, width: 5);
         yield return Fixture("width-zero", valid, width: 0);
         yield return Fixture("height-negative", valid, height: -1);
+        // The loader reads a short surface from uninitialized memory. The native
+        // decoder refuses it before decoding; the oracle must show the short read.
+        string[] shortRead = [.. ddsDiagnostic, ShortReadOrigin];
         byte[] shortPixels = Frame(Compress(dxt1[..129]));
-        yield return Fixture("short-pixels", shortPixels, compression: 0, origins: ddsDiagnostic);
-        yield return Fixture("short-pixels-before-dimension", shortPixels, compression: 0, width: 5, origins: ddsDiagnostic);
+        yield return Fixture("short-pixels", shortPixels, compression: 0, refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("short-pixels-before-dimension", shortPixels, compression: 0, width: 5, refusal: TruncatedPixels, legacyOrigins: shortRead);
         yield return Fixture("format-before-short-pixels", shortPixels, compression: 1);
         yield return Fixture("mips-before-short-pixels", shortPixels, compression: 0, mips: 2);
-        yield return Fixture("decode-before-dimension", Frame(Compress(Mutate(rgba, 16, 5))), origins: ddsDiagnostic);
+        yield return Fixture("decode-before-dimension", Frame(Compress(Dds(2, 5, 4, 1))), origins: ddsDiagnostic);
+        yield return Fixture("decode-truncated-header-width", Frame(Compress(Mutate(rgba, 16, 5))), refusal: TruncatedPixels, legacyOrigins: shortRead);
+        byte[] odd = Dds(0, 5, 4, 1), mips = Dds(2, 4, 4, 3);
+        yield return Fixture("dxt1-odd-width-complete", Frame(Compress(odd)), width: 5, compression: 0, mustSucceed: true, origins: ddsDiagnostic);
+        yield return Fixture("dxt1-odd-width-short", Frame(Compress(odd[..^1])), width: 5, compression: 0, refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("rgba-three-mips-short", Frame(Compress(mips[..^1])), mips: 3, refusal: TruncatedPixels, legacyOrigins: shortRead);
+        byte[] cube = Mutate(rgba, 112, 0x200), volume = Mutate(Mutate(rgba, 112, 0x200000), 24, 2);
+        yield return Fixture("rgba-cubemap-six-faces", Frame(Compress(Join(cube, Surfaces(rgba, 5)))), mustSucceed: true);
+        yield return Fixture("rgba-cubemap-one-face", Frame(Compress(cube)), refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("rgba-volume-two-slices", Frame(Compress(Join(volume, Surfaces(rgba, 1)))), mustSucceed: true);
+        yield return Fixture("rgba-volume-one-slice", Frame(Compress(volume)), refusal: TruncatedPixels, legacyOrigins: shortRead);
         yield return Fixture("format-before-mips-and-dimension", Frame(Compress(Mutate(rgba, 92, 0))), width: 0, mips: 2);
         yield return Fixture("mips-before-dimension", valid, width: 0, mips: 2);
         yield return Fixture("dimension-before-negative-format", valid, width: 0, target: -1);
@@ -398,11 +423,12 @@ public sealed partial class AyaTextureChecks : Node
     }
 
     private Spec Fixture(string name, byte[] bytes, int width = 4, int height = 4, int compression = 2,
-        int? target = null, int? mips = null, bool mustSucceed = false, string[]? origins = null, string? refusal = null)
+        int? target = null, int? mips = null, bool mustSucceed = false, string[]? origins = null, string? refusal = null,
+        string[]? legacyOrigins = null)
     {
         string path = Path.Combine(_outputDirectory!, name + ".texture.aya");
         using (var output = new FileStream(path, FileMode.CreateNew, System.IO.FileAccess.Write, FileShare.None)) output.Write(bytes);
-        return new Spec("synthetic/" + name, path, width, height, compression, target, mips, mustSucceed, origins, refusal);
+        return new Spec("synthetic/" + name, path, width, height, compression, target, mips, mustSucceed, origins, refusal, legacyOrigins);
     }
 
     private static byte[] Dds(int compression, int width, int height, int mipCount)
@@ -476,6 +502,7 @@ public sealed partial class AyaTextureChecks : Node
         BinaryPrimitives.WriteUInt32LittleEndian(result, (uint)compressed.Length);
         compressed.CopyTo(result, 4); return result;
     }
+    private static byte[] Surfaces(byte[] dds, int count) { byte[] surface = dds[128..], value = new byte[surface.Length * count]; for (int index = 0; index < count; index++) surface.CopyTo(value, index * surface.Length); return value; }
     private static byte[] Join(byte[] first, byte[] second) { byte[] value = new byte[first.Length + second.Length]; first.CopyTo(value, 0); second.CopyTo(value, first.Length); return value; }
     private static byte[] Pad(byte[] source, int length) { if (length < source.Length) throw new ArgumentOutOfRangeException(nameof(length)); byte[] result = new byte[length]; source.CopyTo(result, 0); return result; }
     private static byte[] Mutate(byte[] source, int offset, uint value) { byte[] result = (byte[])source.Clone(); BinaryPrimitives.WriteUInt32LittleEndian(result.AsSpan(offset, 4), value); return result; }
@@ -512,6 +539,10 @@ public sealed partial class AyaTextureChecks : Node
         internal void Begin(string name, string phase, string[] origins) { lock (_gate) { _case = name; _phase = phase; _origins = origins; } }
         internal void End() { lock (_gate) { _case = "outside-case"; _phase = "outside-phase"; _origins = []; } }
         internal Diagnostic[] Snapshot() { lock (_gate) return [.. _entries]; }
+        internal bool Logged(string name, string phase, string file)
+        {
+            lock (_gate) return _entries.Any(item => item.Case == name && item.Phase == phase && item.File.Replace('\\', '/').EndsWith('/' + file, StringComparison.Ordinal));
+        }
         public override void _LogError(string function, string file, int line, string code, string rationale,
             bool editorNotify, int errorType, Godot.Collections.Array<ScriptBacktrace> scriptBacktraces)
         {

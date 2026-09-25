@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline and reconciliation; earlier dated validation retained).
+Last updated: 2026-09-25 (three-lane baseline, reconciliation and the AYA malformed-input contract; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -118,6 +118,28 @@ run was headless with Dummy audio; no window opened. Logs are in canonical
 Not run: the broad Core suite, because no lane or merge changed `OnslaughtRebuild.Core`,
 its tests or their shared inputs since `25db5b23`. Also not run: rendered or pixel
 captures, editor-mode harnesses, live input or audio, and Windows.
+
+### AYA malformed-input contract — September 25
+
+`AyaTextureChecks` now passes **1,289 checks over 142 cases** with **0 unexpected
+diagnostics**; all 47 import uses, the cursor and both fonts still decode byte-identically
+in the reference, native and facade paths. The pinned loader
+(`modules/dds/texture_loader_dds.cpp` at `8898c2b3d`) fills a short DDS surface from
+uninitialized memory, which is why the two short-pixel images differed from run to run.
+`retail_aya_texture.gd` now refuses any payload shorter than that loader's read,
+computed for the admitted layouts including its width-remainder padding, mip chains,
+cubemap faces and volume slices. Every such refusal must coincide with an actual
+`file_access_memory.cpp` short read in the unchanged reference, and complete
+odd-width, mip-chain, six-face and two-slice counterparts must decode identically.
+The empty-second-record control now contains a real empty zlib member: the pinned
+.NET compressor wrote nothing for an empty payload, so the old fixture tested a
+zero-length record, now its own refused case. The truncated-width case moved from
+`decode-before-dimension`, which again tests decode-then-dimension order with a
+complete payload. Short-read diagnostics are admitted only in the reference phase.
+The rebuild then built with zero warnings/errors and a verified Level 100 import,
+passed 77/77 headless scene checks, **24,190** world checks, **910** Client tests
+(2 known skips), and kept the smoke tape (`89ca7b4b…`) and replayed state
+(`53c1cc64…`). Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/aya-contract-afwwC2/`.
 
 ### September 19 production scene migration
 

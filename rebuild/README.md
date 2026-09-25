@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native texture imports and impact scenes; existing evidence boundaries retained).
+Last updated: 2026-09-25 (AYA malformed-input contract; native texture imports and impact scenes; existing evidence boundaries retained).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -65,11 +65,16 @@ and results; imported resources still contain ordinary `ImageTexture` objects.
 Both entrypoints enforce strict compressed-record completion and the existing
 2 MiB source and 8 MiB decoded limits. This deliberately refuses truncated or
 padded records that the old .NET importer sometimes accepted through its input
-buffering. Scene recipes keep their dimension guard before image allocation;
+buffering. Both also refuse a DDS payload shorter than the pinned Godot loader
+reads for the admitted DXT1, DXT2 and BGRA8 layouts (`dds_payload_bytes`, including
+cubemap faces and volume slices): that loader fills a short surface from
+uninitialized memory instead of failing. Scene recipes keep their dimension guard before image allocation;
 `load_texture_checked` retains the importer's nullable arguments and DDS
 decode/failure order. The exact prior decoder remains a comparison reference
 under `Scenes/Shared/Tests`; it is no longer used by production imports. The
 admission change concerns malformed inputs, not a new retail compression claim.
+`Scenes/Shared/Tests/AyaTextureChecks.tscn` compares all three paths; each pixel
+truncation refusal must coincide with an actual loader short read in the reference.
 
 `Core/actor_definitions.gd` and `Client/actor_definition_manifest.gd` now admit
 the immutable actor, spawn, waypoint and motion definitions in standard Godot.
