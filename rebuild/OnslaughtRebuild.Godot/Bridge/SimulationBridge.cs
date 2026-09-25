@@ -72,6 +72,8 @@ public sealed partial class SimulationBridge : RefCounted
         return _current.Tick;
     });
 
+    public D IsStarted() => Guard(() => _simulation is not null);
+
     public D GetTick() => Guard(() => CurrentSnapshot.Tick);
 
     public D GetStateHash() => Guard(() => StateHasher.ComputeHex(CurrentSnapshot));
@@ -107,17 +109,33 @@ public sealed partial class SimulationBridge : RefCounted
     {
         CommandTapeRecorder recorder = _recorder ?? throw new InvalidOperationException("This simulation is not recording.");
         WorldSnapshot final = CurrentSnapshot;
-        _recorder = null;
-        try
-        {
-            if (final.Tick == 0) return false;
-            TapeFile.WriteNew(path, recorder.BuildObserved($"recorded-{final.Tick}", _seed));
-            return true;
-        }
-        finally
+        if (final.Tick == 0)
         {
             recorder.Dispose();
+            _recorder = null;
+            return false;
         }
+        // A failed write keeps the recorder, so the host's later attempt (at
+        // exit) still has the whole session; nothing is dropped silently.
+        TapeFile.WriteNew(path, recorder.BuildObserved($"recorded-{final.Tick}", _seed));
+        recorder.Dispose();
+        _recorder = null;
+        return true;
+    });
+
+    /// <summary>
+    /// Writes a new file with create-new semantics and flushes it to disk; an
+    /// existing destination is never overwritten. GDScript file access has no
+    /// exclusive create (the smoke report uses this).
+    /// </summary>
+    public D WriteNewFileDurably(string path, byte[] content) => Guard(() =>
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(content);
+        using FileStream stream = new(path, System.IO.FileMode.CreateNew, System.IO.FileAccess.Write, System.IO.FileShare.None);
+        stream.Write(content);
+        stream.Flush(flushToDisk: true);
+        return default;
     });
 
     /// <summary>Discards an unwritten recording, releasing its trace hasher.</summary>
@@ -127,21 +145,6 @@ public sealed partial class SimulationBridge : RefCounted
         _recorder = null;
         return default;
     });
-
-    /// <summary>Events accumulated since the previous take, in Core order.</summary>
-    internal (IReadOnlyList<Level100MissionEvent> Mission, IReadOnlyList<AquilaFlightEvent> Flight,
-        IReadOnlyList<Level100DestructionEvent> Destruction, IReadOnlyList<Level100WeaponFireEvent> WeaponFire) TakeEvents()
-    {
-        var taken = (Mission: (IReadOnlyList<Level100MissionEvent>)[.. _missionEvents],
-            Flight: (IReadOnlyList<AquilaFlightEvent>)[.. _flightEvents],
-            Destruction: (IReadOnlyList<Level100DestructionEvent>)[.. _destructionEvents],
-            WeaponFire: (IReadOnlyList<Level100WeaponFireEvent>)[.. _weaponFireEvents]);
-        _missionEvents.Clear();
-        _flightEvents.Clear();
-        _destructionEvents.Clear();
-        _weaponFireEvents.Clear();
-        return taken;
-    }
 
     private void AppendEvents(WorldSnapshot snapshot)
     {
