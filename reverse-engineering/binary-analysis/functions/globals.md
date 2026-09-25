@@ -1,11 +1,17 @@
 # Global Variables
 
+Status: mixed — inherited mappings with scoped instruction-backed corrections
+Last updated: 2026-09-19
+Summary: legacy global map; distinguish CLI developer selection from autoconfig and its cheat-query bypass.
+Source File: multiple pinned reference files; see the CLI contract | Binary: pristine BEA.exe.original.backup, SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+
 > Global variable mappings for BEA.exe (Steam version)
 > Migrated from ghidra-analysis.md - December 2025
 
 ## Overview
 
 Global variables discovered during reverse engineering. Many are in BSS (uninitialized data) and cannot be file-patched.
+The inherited rows are not all revalidated by the September 19 correction.
 
 ---
 
@@ -13,12 +19,15 @@ Global variables discovered during reverse engineering. Many are in BSS (uniniti
 
 | Address | Name | Type | Section | Notes |
 |---------|------|------|---------|-------|
-| 0x00662df4 | g_bDevModeEnabled | BOOL | BSS | If non-zero, all cheats active |
-| 0x00679ec1 | g_bAllCheatsEnabled | BOOL | BSS | If non-zero, all cheats active |
+| 0x00662df4 | CLIParams `+3c` autoconfig-test flag | 32-bit value | BSS | Set by `-autoconfigtest`; nonzero also makes retail `IsCheatActive` return true before name/code checks. Legacy alias `g_bDevModeEnabled` conflated it with the separate `+18` selector. |
+| 0x00679ec1 | g_bAllCheatsEnabled | byte | BSS | Nonzero takes the same early true-return branch in `IsCheatActive`; `CGame__Update` sets this byte at `0046ea34`. |
 | 0x00662ab4 | g_bGodModeEnabled | BOOL | BSS | Current god mode state |
-| 0x00662f3e | DAT_00662f3e | BOOL | BSS | Guard flag for -forcewindowed |
+| 0x00662f3e | DAT_00662f3e | byte | BSS | Global guard for `-forcewindowed`; initializer clears it, `-testeur` sets it on the normal CLI receiver. |
 
 **Note:** BSS variables are zero-initialized at runtime and cannot be modified via file patching.
+
+The [cheat-query correction](FEPSaveGame.cpp/IsCheatActive.md#autoconfig-identity-correction--september-19)
+preserves the proven bypass behavior while correcting its field identity.
 
 ---
 
@@ -90,7 +99,12 @@ The following globals were discovered via automated Inquisition agents during de
 |---------|------|------|-------|
 | 0x00662b20 | g_bNewGoodieFlag | BOOL | New goodie unlock flag |
 | 0x00662b24 | g_bNewTechFlag | BOOL | New tech unlock flag |
-| 0x00662dd0 | g_FrontendState | BOOL | Frontend active flag |
+| 0x00662dd0 | CLIParams `+18` developer selector | 32-bit value | Initializer clears it; ten absolute reads span actor, water-death, scheduler, frontend, game and logger code. Some test exactly `1`, others nonzero. The old `g_FrontendState` / "Frontend active flag" label was wrong. |
+
+The [CLI consumer audit](CLIParams.cpp/CLIParams__ParseCommandLine.md#developer-selector-and-trace-consumers--september-19)
+binds the exact instructions, source counterparts and private evidence. The
+frontend is one consumer of this selector. No later deliberate writer was
+identified; this is not proof against computed-pointer writes or external changes.
 
 ### Constants
 

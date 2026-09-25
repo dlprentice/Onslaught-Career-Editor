@@ -1,7 +1,9 @@
 # CScriptObjectCode__Run
 
+Summary: existing function analysis with current CDebugLog callee naming.
+
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -31,7 +33,7 @@ are **not** in the body (neighbour starts at `0x00539c80`).
 If `[esi+0x210] == 1`, the body `push 0x00650208`
 (`ERROR: VM tryin to run VM whilst it was already running.`)
 / `push 0x0066f580` and `E8`s table
-`CConsole__PrintfNoNewline` `0x004418a0` (`0x00539b1c`,
+`CDebugLog__PrintfNoNewline` `0x004418a0` (`0x00539b1c`,
 `add esp, 8`), then `ret`. Else `[esi+0x210] = 1` and
 `+0x218` / `+0x224` / `+0x220` are zeroed.
 
@@ -41,7 +43,7 @@ Loop fetch is `instr = [[obj+4] + PC*4]` with
 `eax == 0x17` and `[esi+0x224] <= 0`, or
 `[esi+0x220] != 0`, the body exits. Else `PC++` and
 `call [vtable+0](vm, esi+0xc, symbols)`. If
-`[obj+0x60] == 1` it `E8`s table `CConsole__Printf`
+`[obj+0x60] == 1` it `E8`s table `CDebugLog__Printf`
 `0x00441740` (`0x00539bc3`) with
 `0x006501e4` (`-> %4d stack size = %d flags = %d`). After
 `0x2710` steps it `E8`s Printf (`0x00539bf1`) with

@@ -5,7 +5,7 @@
 Status: superseded identity note. Current saved name:
 `IScript__Create3PointPanCamera`.
 <!-- ghidra-name-drift-accepted: 0x00533B70 IScript__Create3PointPanCamera (2026-08-22) -->
-Last updated: 2026-08-22
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: none — absent from `references/Onslaught/` (checked
 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -51,7 +51,7 @@ calls; all direct jumps stay inside the body.
 1. Resolve args element 0 through virtual byte offset `+0x40`. Null prints
    `.data 0x0064fa9c`,
    `"FATAL ERROR: null thing passed to 'Create3PointPanCamera'"`, through
-   `CConsole__Printf`, restores SEH, and returns.
+   `CDebugLog__Printf`, restores SEH, and returns.
 2. Allocate and initialize a temporary `CSPtrSet`.
 3. For args elements 1, 2, and 3, call virtual byte offset `+0x44` to obtain
    each point, transform it by the thing's matrix (or the global matrix at

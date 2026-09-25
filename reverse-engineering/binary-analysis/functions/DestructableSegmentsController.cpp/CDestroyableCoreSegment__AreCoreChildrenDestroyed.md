@@ -3,7 +3,7 @@
 > Address: `0x004433f0`
 
 Status: active static function note
-Last updated: 2026-09-08
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: none — the reference drop has no `DestroyableSegment.cpp` source
 body (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -38,7 +38,7 @@ eax (1 = destroyed/empty, 0 = some child alive).
 
 1. **No-children arm** (`0x004433f0`–`0x00443412`): if `[this+0x30]` (the
    child-set container) is null, emit
-   `CConsole__Printf 0x00441740([0x0066f580], "Warning: First core part has
+   `CDebugLog__Printf 0x00441740([0x0066f580], "Warning: First core part has
    no children" @ .rdata 0x006285bc)` once through the shared console sink
    and return TRUE immediately.
 2. **Child walk** (`0x00443413`–`0x00443450`): iterate the child set head

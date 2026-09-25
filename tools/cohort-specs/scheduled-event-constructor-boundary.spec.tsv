@@ -1,0 +1,44 @@
+# One default function over existing decoded constructor instructions; no semantic metadata.
+# PRE and separate-process POST measured on Linux on 2026-09-19.
+cohortId	scheduled-event-constructor-boundary
+cohortTitle	Default function boundary for scheduled-event constructor
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+verb	CREATE_FUNCTION
+applierSha256	4fde6a231dc9d0eeb0a4e3272e673be2662ff271c4a0a5a2055c807413d41b47
+applierSha256	7492e5181d2726d01fbf3241819e204b826f8289f29d538d8050a814e0f33a2d
+manifestSha256	d72a96b732e884d83dddc9467d5c8be64ca181c5c1d04b92d4579d8a679c3c8a
+manifestBytes	122
+manifestRows	1
+manifestColumns	3
+manifestHeaderPipe	entry|bodyRanges|bodySha256
+col.addr	entry
+col.creationRanges	bodyRanges
+col.creationBodySha256	bodySha256
+unique	addr
+expectedTargetsChanged	0
+expectedFunctionsUntouched	8330
+expectedSymbolsAdded	1
+expectedSymbolsRemoved	0
+preFunctions	8330
+postFunctions	8331
+preInstructions	551232
+postInstructions	551232
+preReferences	234558
+postReferences	234558
+preDefinedData	48648
+postDefinedData	48648
+preUndefinedData	3907369
+postUndefinedData	3907369
+preBookmarks	2300
+postBookmarks	2300
+preFunctionNameDigest	538430258798822ec3bfcdc52d4ace01c84a4eb5412545fa61fa57db4c15f28f
+preFunctionBodyDigest	0918a924668f6dced88681160bebe1b47135d717fc4de844e452043f823f8cd9
+preFrozenDigest	03fb65ee45e0f4994d071dab0899366e2560673ed7b515917de37722723f9dc0
+postFunctionNameDigest	4cec03c016dfb3c5abbec65b9540bdd7817c2b4da67784c74e1c6440a266a132
+postFunctionBodyDigest	925e758d934af77f96702701c7db25788a202a6dd56850ec04c537df2bb5e2da
+postFrozenDigest	55efc67d8327d80d1113c8cd3fd8bfb80980a739915a1ad0f42427ea4b483adc

@@ -1,10 +1,14 @@
 # CEventManager / CScheduledEvent function map
 
-Status: active function map — bounded AddEvent runtime insertion candidate added
-Last updated: 2026-09-08 (shared weapon clock and controller-loop correction; frozen campaign unchanged)
-Source File: `C:\dev\ONSLAUGHT2\EventManager.cpp` (SEH `__FILE__` pointer `0x005d250c` in `Init`; see the map below) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — every byte below was re-read from the pristine specimen at
-file offset VA − 0x400000. The rebuild already owns one of these laws
+Status: active static, isolated-code and historical runtime contracts
+Last updated: 2026-09-19 (readiness queue, precision boundary and allocation corrections)
+Summary: event insertion, monitored ownership, dispatch timing and failure limits;
+isolated original-code results remain separate from retained runtime extracts.
+Source File: `C:\dev\ONSLAUGHT2\eventmanager.cpp` (allocator source pointer `0x00628d3c`; `0x005d250c` is the SEH handler) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Evidence: static addresses refer to that pristine specimen. September 19
+independently binds the selected complete bodies and executable controls in
+[validation](../../../VALIDATION.md#projectile-readiness-queue-and-speed-dependencies--september-19).
+The rebuild already owns one of these laws
 (`CEventManager::AddEvent(CScheduledEvent*)` → `RetailEventScheduler.AddEvent`,
 a REBUILD_READY row): the event number is a 16-bit word.
 
@@ -12,11 +16,11 @@ a REBUILD_READY row): the event number is a 16-bit word.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0044b060` | `CEventManager__Init` | `6aff 680c255d00 64a100000000 … 6a34 8bf1 683c8d6200 33ff 6a43 6a10 b9f03d9c00 … 897e08 897e10 897e14 …` | SEH prologue with `__FILE__`/`__LINE__`, allocates **0x34** bytes from pool `0x009c3df0`, and zeroes the three heads at `+0x08`, `+0x10`, `+0x14`. HIGH: a constructor/init that allocates the 52-byte manager and clears its three lists. |
+| `0x0044b060` | `CEventManager__Init` | `0044b079..0044b0a5` passes `(size=0x10, type=0x43, file=0x00628d3c, line=0x34)` to `005490e0`; `0044b0fb..0044b130` allocates `0x61a84`, stores cookie `0x4e20`, and constructs records with stride `0x14`. | Initializes the existing manager, allocates its **16-byte overflow array object** at `+0x25b0`, and constructs **20,000 event records**. `+8/+10/+14` are time/current bucket/frame, not list heads. The former “52-byte manager allocation” confused source line 52 with size. |
 | `0x0044b2a0` | `CEventManager__GetNextFreeEvent` | `56 8b7128 85f6 740a 8b4610 894128 8bc6 5ec3 68608d6200 6880f56600 e87f64ffff …` | Pops the free-list head at `+0x28`, advances it through `+0x10`, and returns the node; on empty it prints via two string references (`0x00628d60`, `0x0066f580`). HIGH: free-list pop with an error path. |
 | `0x0044b2d0` | `CEventManager__AddEvent_TimeFromNow` | `8b442404 8b542418 d94108 d800 8b442414 … 50 e870000000 c21800` | Adds the argument float to the manager's current time (`fld [ecx+8]; fadd st0`), re-packs the tuple, and forwards to `AddEvent_AtTime` (+0x70). HIGH: a time-offset wrapper. |
 | `0x0044b310` | `CEventManager__AddEvent_ScheduledEvent` | `568b742408 578bf9 85f6 7446 8b460c 53 d94708 d84610 8b16 8d5e0c 6a00 50 0fbf4604 d95c2418 … e82a000000 … c20400` | `ret 4`; arg = already-built `CScheduledEvent*`. `due = [this+8] + [event+0x10]`, then `AddEvent_AtTime` of that copy, then returns the supplied node to the free list. HIGH. This is how `Play*MessageWait` inserts its 2001 after CMessageBox event 3002. |
-| `0x0044b370` | `CEventManager__AddEvent_AtTime` | `83ec08 535556 8bf1 57 8b4604 85c0 751c 68948d6200 6880f56600 e8b163ffff … 8b6c2420 85ed 0f8403020000` | `ret 0x18`; source-void absolute scheduler. Invalid manager logs and returns; null target returns; time >1,000,000 seconds returns; pool exhaustion logs and returns. Otherwise normalize negative time, select current ring / computed ring / sorted overflow, allocate or mark reuse, store the int16 event ID, append, and increment the live count. HIGH: exact failure and insertion law; no caller-visible status. |
+| `0x0044b370` | `CEventManager__AddEvent_AtTime` | `83ec08 535556 8bf1 57 8b4604 85c0 751c 68948d6200 6880f56600 e8b163ffff … 8b6c2420 85ed 0f8403020000` | `ret 0x18`; source-void absolute scheduler. Invalid manager logs and returns; null target returns; over-limit future time returns; empty event pool logs and returns. Otherwise normalize negative time, select current ring / computed ring / sorted overflow, initialize or mark reuse, request publication, and increment the count. Overflow helper failure can leave that increment without an insertion; see the capacity control below. No caller-visible status. |
 | `0x0044b5c0` | `CEventManager__Update` | `83ec08 8b4114 56 40 bec8000000 894114 89442404 8b4110 c744240800000000 89411c 40 99 df6c2404 f7fe d80d78855d00 d95908 895110 e845000000 5e 83c408 c3` | `mov eax,[ecx+14h]; inc eax; mov [ecx+14h],eax` increments the frame counter; `mov [esp+4],eax` + `mov [esp+8],0` build the zero-extended 64-bit count that `fild qword [esp+4]` loads; **`fmul dword [0x005d8578]`** multiplies by the stored `0.05f` (`3d4ccccd` = `CLOCK_TICK`) and `fstp [ecx+8]` lands `mTime = frame × 0.05f`. Separately `mov eax,[ecx+10h]; mov [ecx+1ch],eax; inc eax; cdq; idiv esi(0xc8)` computes the ring rotation and `mov [ecx+10h],edx` lands `mCurrentBufferNum = (old + 1) % 200` with the quotient discarded. Then `call 0x0044b640` = `CEventManager__Flush`. HIGH: byte-exact; the rebuild's `RetailEventScheduler.AdvanceTime` carries the identical law. |
 | `0x0044b600` | `CEventManager__AdvanceTime` | `83ec08 8b4114 56 40 bec8000000 894114 89442404 8b4110 c744240800000000 89411c 40 99 df6c2404 f7fe d80d78855d00 d95908 5e 895110 83c408 c3` | The same conversion body as `Update` through `fstp [ecx+8]` (`d95908`), then `mov [ecx+10h],edx` and return — **no trailing call**. HIGH: the advance half of the pair; the two functions share the conversion byte-for-byte and differ only in the Flush dispatch tail (`Update = AdvanceTime + Flush`). |
 | `0x0044b640` | `CEventManager__Flush` | `83ec08 535556 8bf1 33ed 57 8b5e1c 8b460c 89442414 896e24 8d0c5b … c1e104 8d7c3138 8b47f8 3bc5 8907 …` | Drains the ready slot (`+0x1C`) in lane order, then the overflow list while `fcomp` at `0x0044b6d5` + `test ah,1 / je` at `0x0044b6d9` keeps `head.mTime < mTime` (strict — an event due exactly on the boundary waits a frame). At `0x0044b68a` / `0x0044b6f2` it passes the `CScheduledEvent*` to `mToCall->vtable[0]`; numeric interpretation belongs to that receiver. Then it frees non-rearmed events. HIGH. |
@@ -43,17 +47,111 @@ a REBUILD_READY row): the event number is a 16-bit word.
   order. The ring arm is plain FIFO per lane.
 - `Flush` overflow gate: CLOSED — `test ah,1 / je` at `0x0044b6d9` fires an
   overflow event only while its due time is **strictly less than** `mTime`.
-- The 20,000-entry pool capacity (`MAX_NUM_EVENTS`) is sourced from
-  `eventmanager.h:20`, not yet read out of the image — the exhaustion string
-  `0x00628d60` is verified, its capacity is not.
+- The 20,000-entry pool capacity: CLOSED statically on September 19 —
+  `0x61a84 = 20,000 × 0x14 + 4`; the array cookie and construction count are
+  both `0x4e20`. The final free-list link is cleared at pool `+0x61a7c`.
+- The literal array-constructor callback `[0044b190,0044b1d0)` clears only
+  event target `+0` and payload `+0c`, increments `0083cde8`, and returns.
+  Fresh read-only inspection confirmed all 15 instructions were unowned,
+  with the expected constructor-pointer reference at the entry. The
+  [preservation-gated correction](../../ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
+  now records the exact 64-byte body as default `FUN_0044b190`. All prior
+  function/variable metadata is unchanged; its prototype remains unknown.
+
+## Projectile readiness queue — September 19
+
+The [selected collision Init](collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+clears readiness `0x400` and submits component event 3000 with relative delay
+`-1.0f`. A separate **23-case original-code composition** executes the actual
+relative/absolute insertion, event initialization, monitored-reader/list
+operations, clock advance, flush and readiness-handler bodies. Its manager,
+component and resident pools are authored inputs; allocation and diagnostics
+have constrained replacements. This is not a full collision Init or retail run.
+
+For a manager already advanced to frame 1, insertion uses current bucket 1
+while the ready-to-flush bucket is still 0. Insertion and a flush of bucket 0
+leave the component unready. The next advance selects bucket 1 for delivery;
+its flush invokes component slot 0 and native event 3000 sets `0x400`. ID
+`0x12340bb8` has the same effect because the handler reads the low word; 2999
+is delivered but leaves the flag unchanged. Priority-2, bucket-wrap and
+already-ready controls distinguish those paths.
+
+Relative `-1` is first added to the stored manager clock. At clocks 1.0 and
+2.0 the resulting due values are respectively 0 and 1, not `clock+0.0001`.
+They still enter the current insertion bucket and await its flush. Negative
+absolute requests use the epsilon normalization. A computed future-bucket
+control waits two advances. Overflow due exactly at 10.0 remains pending;
+the tested sequence delivers it at frame 201, when clock time is strictly
+greater. None of these insertions delivers a target inline.
+
+### Floating-point admission boundary
+
+The quick-path comparison at `0044b3ac..0044b3c2` adds stored `0.051f` to the
+clock **without an intervening float store**. The selected x87 precision can
+therefore change which bucket receives an event:
+
+| Clock / request words | Controlled x87 word | Insertion and observed delivery |
+| --- | --- | --- |
+| frame 9 clock `3ee66667`, request `3f00418a` | `037f`, PC64/RN | computed offset 1; delivery after two advances |
+| same exact inputs | `007f`, PC24/RN | current bucket; delivery after one advance |
+| request one float step lower, `3f004189` | `037f` | current bucket; one advance |
+| request one float step higher, `3f00418b` | `007f` | computed offset 1; two advances |
+
+The finite future-time path also executes the unchanged CRT floor/control-word
+helpers. Both tested entry control words are restored. These are controlled
+precision cases, **not a measurement of the live scheduler's control word**.
+The earlier Plane observation of `007f` belongs to its named calls/backend;
+it does not automatically establish scheduler precision. A reconstruction
+must preserve the chosen retail context and expression/store boundaries,
+rather than assume wider intermediates always give equivalent event timing.
+
+### Ownership and failure boundaries
+
+Fresh insertion obtains a preconstructed event from manager `+28`; due time
+reuses that record's free-list word `+10`. `004de1f0` registers the **address
+of the target reader cell**, `&event[0]`, with the target monitor, and does the
+same for a non-null payload through `&event[0c]`. Thus insertion changes target
+monitor bookkeeping as well as scheduler state. With null data, ring insertion
+consumes one event record and two shared list nodes: a monitor head node and
+a bucket tail node. Later flush removes the reader and recycles both nodes.
+Do not zero unspecified event padding or treat a reader-cell address as its
+target pointer.
+
+Invalid-manager, null-target, empty-event-pool and over-limit controls perform
+no insertion or readiness callback. Missing monitor-list storage takes a
+16-byte allocation; missing shared list nodes takes an 8-byte fallback.
+These are different capacities from the 20,000-event pool. The experiment
+allows only the monitor-list allocation and guards other allocator branches.
+Static allocator inspection separately resolves the resident tiny-block path:
+`005490e0 → 004a1810` rounds 8/16-byte requests to 16 and pops the selected
+heap's `+8c4` list, surrounded by imported `WaitForSingleObject` / `ReleaseMutex`.
+That path has no game virtual callback or RNG call; it does mutate heap state,
+does not zero the payload and was not executed by this witness. Allocator
+failure, logging, contention and exceptions remain outside that closure.
+List-node fallback can log every twentieth allocation even if allocation
+succeeds, so ordinary allocator success does not close that diagnostic path.
+
+A deliberately full, growth-disabled overflow array exposes a distinct
+failure: `00424260` returns without publishing the pointer, but AddEvent
+still increments manager `+18`. The executed control consumes the event,
+keeps its target reader registered and reports one live event with an empty
+overflow array; no callback occurs over 200 advances. This is a bounded
+failure contract, not the normal initialized capacity or a suggested repair.
+The caller receives no status and performs no rollback.
+
+The [validation receipt](../../../VALIDATION.md#projectile-readiness-queue-and-speed-dependencies--september-19)
+binds all 18 executable bodies, constants, raw inputs/outputs and independent
+review. Competing insertions, reuse/rearming, non-null payload delivery,
+collision-event semantics, live FPU/heap state and full-shot RNG remain open.
 
 ## Bounded `AddEvent_AtTime` timed-insertion runtime proof
 
-The retained Level-100 opening trace (6,199,181,312 bytes, SHA-256
+Retained extracts from the former Level-100 opening recording (6,199,181,312 bytes, SHA-256
 `f3e677f7df5f5563ebb468f46ca6041756271f84dfc28ddf37b59210a4552b50`;
 runtime image `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`)
-now supplies a complete target census and two selected gap-free queue envelopes.
-The full replay found 12,973 call/entry pairs and 12,973 raw returns, of which
+report a target census and two selected gap-free queue envelopes.
+The recording itself was permanently deleted; these extracts cannot be
+replayed or queried anew. The historical full replay found 12,973 call/entry pairs and 12,973 raw returns, of which
 11,325 are validated gap-free returns. The terminal-padding control
 `[0x0044b5b5,0x0044b5c0)` stayed `0/0/0`.
 
@@ -200,7 +298,7 @@ This is not complete scheduler or player-experience parity.
 | `CMessageBox__StartVoiceOrFallbackTextReveal` | `0x004b7eec` | reveal pacing |
 | `CMessageBox__AdvanceRevealAndScheduleNextTick` | `0x004b8096` `0x004b80c4` `0x004b8141` `0x004b8184` `0x004b81b9` | the self-reschedule: five arms re-post the next reveal tick at a time-from-now offset |
 | `CMessageBox__VFunc_0_004b81d0` | `0x004b8263` | reveal pacing |
-| `CCSPersistentThing__Init` | `0x004269e3` | persistent-thing polling |
+| `CCSPersistentThing__Init` | `0x004269e3` | component readiness event 3000 |
 | `CFenrir__VFunc_50_0044e1c0` | `0x0044e1e9` | Fenrir virtual arm |
 | `CPlayer__GotoPanView` | `0x004d2fbe` | pan-view transition |
 | `CTree__CreateFallingTree` | `0x004f6a74` | tree fall start |

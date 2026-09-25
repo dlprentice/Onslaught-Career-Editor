@@ -1,10 +1,10 @@
 # `CPCMemoryCard` released PC save-backend semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-08-11
-Evidence: MEASURED — complete pristine retail bodies and instruction streams,
-retained `CMemoryCard`/`CPCMemoryCard` interfaces, typed frontend callers, exact
-path/mode literals, and eleven normalized-identical PC demo twins; UNKNOWN —
+Last updated: 2026-09-19
+Evidence: MEASURED — September 19 selected PC read/name/card-info bodies executed with
+intercepted file/UI services; inherited August evidence — complete retail
+bodies, retained interfaces and eleven normalized-identical PC demo twins; UNKNOWN —
 fault-injected filesystem runtime behavior, upstream filename constraints,
 console adapter parity, and rebuild-wide persistence parity.
 Verdict: the released PC build does implement the console-shaped memory-card
@@ -25,7 +25,23 @@ The retained `PCMemoryCard.cpp` is only a resource-builder hook (669 bytes,
 SHA-256
 `c5558395e79d6121d83e148f1ddb9f8e7723372b5ffc3d6bcd67e158d937efc9`).
 
-## Result and ownership correction
+## September 19 independent recheck
+
+The [menu-load controls](save-options-static-review-2026-05-26.md#original-menu-load-and-next-startup-composition)
+execute the unchanged PC `GetCardInfo`, `ReadSave` and `FromWCHAR` bodies as
+part of the original menu transaction. Twenty cases compare complete selected
+state and read/publication buffers with intercepted file, allocation and UI
+dependencies. They confirm the read path ignores card/slot, narrows wide names
+to low bytes, returns through the failure branch on incomplete reads, and makes
+two close calls on full reads. Supplied close errors do not change that branch.
+The original card-info stub reports present/formatted throughout.
+
+The write/delete/enumeration unit, demo twins and source ownership claims below
+were **not rerun or comprehensively rechecked** in this follow-up. Their August
+receipts are inherited evidence. Name constraints upstream of these readers,
+real file effects and actual CRT stream-lifetime consequences remain open.
+
+## August result and ownership correction — inherited
 
 The eleven-function unit covers 2,079 retail bytes and 711 decoded
 instructions. Every body has an independently mapped PC demo twin with zero

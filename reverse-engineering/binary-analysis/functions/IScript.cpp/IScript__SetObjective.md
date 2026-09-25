@@ -3,7 +3,7 @@
 > Address: `0x00535ED0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Source File: none — absent from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
@@ -83,7 +83,7 @@ Cross-anchors:
 
 - `0x004e5bd0` is pinned repo-wide as `CSPtrSet__Remove`
   ([`IScript.cpp.md`](../IScript.cpp.md) HandleMessage 2001 arm);
-  `0x004e5a80` is its add twin (null-pool warning via `CConsole__Printf`
+  `0x004e5a80` is its add twin (null-pool warning via `CDebugLog__Printf`
   `0x00441740`, free-list pop at `0x0083d130/34`). So `0x00855140` is a
   global `CSPtrSet` holding every currently-objective-marked thing.
 - Bit `0x20` of `[thing+0x2c]` is read back by the exact-slot predicate

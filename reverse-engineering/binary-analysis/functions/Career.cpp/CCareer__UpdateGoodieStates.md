@@ -1,11 +1,16 @@
 # CCareer__UpdateGoodieStates
 
+Status: mixed — reset-time execution rechecked; broader unlock claims retain their dated evidence
+Last updated: 2026-09-20
+Summary: original reset produces nine instruction states; canonical progression reads and separate pending/count bookkeeping matter.
+Source File: `references/Onslaught/Career.cpp` (partial-source comparison) | Binary: pristine `BEA.exe.original.backup`; selected instructions and original reset execution are linked below.
+
 > Address: 0x0041c470 | Source: `references/Onslaught/Career.cpp`
 
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** No
-- **Verified vs Source:** Yes (matches `CCareer::UpdateGoodieStates()` in `references/Onslaught/Career.cpp`; PC port differs in encoding details)
+- **Verified vs Source:** inherited partial-source comparison; the September 20 original-code reset check below does not certify all unlock rules.
 
 ## Purpose
 Complex goodie unlock logic. This is the master function that evaluates all goodie unlock conditions including kill thresholds, level completion, grade milestones, and special conditions.
@@ -30,8 +35,8 @@ void CCareer::UpdateGoodieStates(void);
 - **Historical confusion**: Earlier docs claimed Goodie 228 overlapped mCareerInProgress. In the true view, Goodie 228 is at `0x22D6` and `mCareerInProgress` is at `0x248A`. The legacy aligned view placed “goodie 228” at `0x22D4`. Do NOT write to `0x22D4` as if it were mCareerInProgress.
 - Kill totals are compared as `kills_payload = (kill_dword & 0x00FFFFFF)` (see `reverse-engineering/save-file/kill-tracking.md`). The “shift-16” appearance in some hex views is an alignment artifact, not what the binary compares.
 
-## Where The Truth Lives
-- Full unlock tables (source-of-truth): `reverse-engineering/save-file/goodies-system.md`
+## Evidence routing
+- Earlier unlock tables, subject to recheck: `reverse-engineering/save-file/goodies-system.md`
 - Source logic: `references/Onslaught/Career.cpp` (`CCareer::UpdateGoodieStates()`) and `references/Onslaught/FEPGoodies.cpp` (goodies[] data)
 - Binary: `CCareer__UpdateGoodieStates` at `0x0041c470` (uses `& 0x00FFFFFF` masks before threshold compares)
 - Supporting helpers now source-mapped:
@@ -39,6 +44,31 @@ void CCareer::UpdateGoodieStates(void);
   - `CGrade__operator_gte` (`0x00420ac0`) from `CGrade::operator >=`
   - `CCareer__GetNode` (`0x00420af0`) from inline `CCareer::GetNode(int)`
   - `CCareer__NodeArrayAt` (`0x00421970`) compiler-emitted `node_base + index*0x40` helper used in one unlock branch
+
+## September 20 original reset execution
+
+The [startup composition](../../save-options-static-review-2026-05-26.md#original-startup-reset-including-goodies)
+executes this unchanged body `[0041c470,00420aa9)`, SHA-256
+`76401a9804734cdd9b9bb6c0aaeaa24feb23ea53b8f760aea18354f2476343d7`,
+from the pristine specimen identified in that contract. It retains original
+descriptor initialization and grade/episode/index helpers. All 17 reset cases
+leave exactly slots `0, 1, 8, 14, 33, 36, 41, 42, 43` at state `1`, with the
+remaining 291 slots and both bookkeeping globals zero. This establishes the
+canonical reset result, not the entire 17,977-byte routine's semantics.
+
+Fresh instructions at `00420230–0042026c` distinguish pending extra Goodies at
+receiver `+0`, accumulated count at `00662b20`, and first-Goodie flag at
+`00662b24`. Recompute adds pending extras and the unlocked-count delta, then
+clears receiver `+0`. The old `new_goodie_count` name for that object field was
+misleading. Partial source agrees at `Career.cpp:81–83,897–902` in the pinned
+reference; these addresses were independently read from the executable.
+
+World, grade and kill predicates read canonical CAREER `00660620`, while slot
+updates use the supplied receiver. Original `0045ac30` initializes descriptor
+thresholds used by those predicates; mapping zero BSS alone is invalid. The
+controls use the canonical receiver, valid graph and reset rankings. They trap
+unexpected entry into positive-ranking CRT conversion and do not exercise
+malformed graphs, every unlock condition, actual file/device services or UI.
 
 ## 2026-05-07 Headless Read-Back
 

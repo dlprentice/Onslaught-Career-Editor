@@ -1,86 +1,60 @@
 # CText__GetStringById
 
-> Address: 0x004f2580 | Source: text.cpp (source file not present in `references/Onslaught/` snapshot)
+Status: independently rechecked static and bounded original-code contract
+Last updated: 2026-09-20
+Summary: ordered text lookup, missing-ID fallback, version-dependent stride and unchecked pool offsets.
+Source File: `text.cpp` is absent from the pinned partial-source snapshot | Binary: pristine `BEA.exe.original.backup`.
+Evidence: MEASURED — complete pristine-body inspection and original lookup execution using captured parser/copy output; legacy conversion is static-only.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Address: `0x004f2580`
 
-## Status
-- **Named in Ghidra:** Yes
-- **Signature Set:** No
-- **Verified vs Source:** No (source not available)
+## Exact selection
 
-## Purpose
-Resolves a `text_id` to a UTF-16 string pointer using the currently loaded language file.
+ECX is the text header; the one stack argument is a 32-bit ID/index and
+the body returns a pointer with `RET 4`. For signed version `>=1`, it
+searches physical records from `buffer+0xc`, stopping at the first equal ID.
+The stride is 12 bytes for versions 2/3 and eight bytes for other positive
+versions. Thus the function does not itself reject an unknown positive version.
 
-This is the primary "text lookup" routine used throughout the game once `CText__Init` has loaded `data/LANGUAGE/<lang>.DAT`.
+A hit at `004f25be` returns `textPool + 2*textOffset` through
+`004f25f3..004f25fb`, using 32-bit arithmetic. The offset counts UTF-16
+code units, not bytes. The scan uses the signed count at header `+0x10`;
+a nonpositive count or absent ID calls ordinary diagnostic `00441740`
+and then returns the text-pool base. It does not return null on a normal miss.
+Unsorted IDs work; a later duplicate never replaces the first match.
 
-## Signature
-```c
-// Thiscall convention (ECX = this)
-const wchar_t* CText::GetStringById(int text_id);
-```
+Neither the loaded flag nor allocation size admits the lookup. There is no
+table/pool bound or string-termination check. An adverse offset can produce
+an out-of-buffer pointer without a dereference by this body.
 
-## Parameters
-- `text_id` (param_1): For v1/v2/v3 this is the 32-bit `text_id` stored in the language `.dat` entry table.
+## Other versions
 
-## Key Observations
+Version zero treats a nonnegative argument below the signed count as a legacy
+offset-table index; otherwise it selects the text-pool base. It scans for a
+byte terminator, then calls `MultiByteToWideChar` at IAT `005d81b8` with
+code page/flags zero, source count `-1`, destination `0083d560` and a
+capacity derived from the scanned byte length including its terminator.
+The API result is ignored; the global scratch pointer is returned.
+The static body supplies no independent scratch-capacity check.
 
-### Version 1/2/3: Entry Table Scan
-For `mVersion > 0`, the function performs a linear scan over the entry table in `mBuffer`:
-- Entry base: `(mBuffer + 0x0C)`
-- Entry stride:
-  - v1: 2 dwords per entry
-  - v2/v3: 3 dwords per entry (`{ text_id, text_off_words, audio_off_bytes }`)
+A negative signed version simply returns the text-pool base. No legacy
+conversion call was executed by the September 20 lookup experiment.
 
-When a matching `text_id` is found, it returns:
-```c
-return (const wchar_t*)(mTextPool + text_off_words * 2);
-```
+## Executed evidence and limits
 
-`text_off_words` is measured in UTF-16 code units from the start of `mTextPool`.
+The [language lookup controls](../../../../VALIDATION.md#original-language-lookups-from-parser-output--september-20)
+import the exact active header and allocations captured after original
+Init/CopyFrom. For each of six preserved version-3 resources, all 2,571 IDs
+and one missing ID run through this body, audio lookup and adjacent-string
+lookup. Pointer results and unchanged imported memory are checked; offline
+checks validate returned strings against the declared pools.
 
-If not found, logs `ERROR: No string for id %d` and returns `mTextPool` as a fallback.
+Owned derivatives exercise duplicate-first selection, unknown/negative
+versions, nonpositive counts, a cleared loaded flag and unchecked offsets.
+They are not supported malformed-file configurations. The diagnostic is
+intercepted. No rendered text, glyph coverage, thread-safety, live filesystem
+or complete startup/save round trip is established.
 
-### Version 0: Legacy Index + MultiByteToWideChar
-For `mVersion == 0`, the parameter is treated like an **index** into a legacy offset table.
-
-The resolved multibyte string is converted to UTF-16 with `MultiByteToWideChar` into a global scratch buffer (`DAT_0083d560`), which is returned.
-
-Notes:
-- This buffer is effectively shared state (not thread-safe).
-- Retail `.dat` files are v3, so this path is likely unused in normal gameplay.
-
-## Decompiled Code (Annotated)
-```c
-const wchar_t* CText__GetStringById(int text_id)
-{
-  int stride = 2;
-  if (this->mVersion == 2 || this->mVersion == 3) {
-    stride = 3;
-  }
-
-  if (this->mVersion > 0) {
-    // v1/v2/v3: scan entry table in mBuffer
-    int* pId   = (int*)(this->mBuffer + 0x0C);
-    int* pText = (int*)(this->mBuffer + 0x10);
-
-    for (int i = 0; i < this->mCount; i++) {
-      if (text_id == *pId) {
-        return (const wchar_t*)((char*)this->mTextPool + (*pText) * 2);
-      }
-      pId   += stride;
-      pText += stride;
-    }
-
-    Log("ERROR: No string for id %d", text_id);
-    return this->mTextPool;
-  }
-
-  // v0: legacy index + offset table => convert to UTF-16 scratch buffer
-  ...
-}
-```
-
-## Related Functions
-- [CText__Init](CText__Init.md) - Loads the language `.dat` file and sets `mVersion/mCount/mTextPool/mAudioPool`
-- [CText__GetAudioNameById](CText__GetAudioNameById.md) - Audio/voice identifier lookup for v2/v3
-- [CText__GetStringByIdAfter](CText__GetStringByIdAfter.md) - Lookup relative to a matched entry (grouped strings)
-- [tools/language_dat_decode.py](/tools/language_dat_decode.py) - Offline decoder that mirrors the v3 loader and resolves `text_id` via `text.stf`
+Related: [Init](CText__Init.md), [adjacent lookup](CText__GetStringByIdAfter.md),
+[audio-name lookup](CText__GetAudioNameById.md) and
+[offline decoder](../../../../tools/language_dat_decode.py).
