@@ -227,7 +227,8 @@ public sealed class Level100HudBlendEvidenceTests
         Assert.Contains("Vector2(128, 32)", method, StringComparison.Ordinal);
         Assert.Contains("Color(fade, fade, fade, 1)", method, StringComparison.Ordinal);
         Assert.DoesNotContain("Color(1, 1, 1, alpha)", method, StringComparison.Ordinal);
-        Assert.Contains("SimulationConstants.Level100DamageFlashLifetimeTicks", Read("FirstFlightHud.cs"), StringComparison.Ordinal);
+        Assert.Contains("\"damage_flash_lifetime_ticks\": Simulation.LEVEL100_DAMAGE_FLASH_LIFETIME_TICKS",
+            Read("first_flight_hud.gd"), StringComparison.Ordinal);
     }
 
     /// <summary>
