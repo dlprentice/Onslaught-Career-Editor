@@ -128,9 +128,25 @@ Ten further controls execute original outer sound-manager setup and device Init
 together. They verify all 256 pool objects, menu/console registration, timer
 sampling and the initialized-byte distinction. Device failure clears that byte
 but retains the preceding setup; matching console names reuse their entries.
-SFX parsing and platform effects remain supplied boundaries. This is not yet
-the full startup chain or device Init composed into save loading. See the
+SFX parsing and platform effects remain supplied boundaries. This does not
+execute the full startup chain. See the
 [outer initialization contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
+
+Eight subsequent controls compose original device Init into Load/reset/Save and
+reload. An out-of-range saved device index becomes zero when devices are admitted,
+even if main-device creation later fails; no admitted devices leaves the saved
+index unchanged. Both serializers preserve every other byte of the declared
+fixture/derivatives. Failed reset keeps the initialized flag set, so a subsequent
+load can request a language-bank refresh despite null device pointers. The bank
+entry remains intercepted; this does not establish recovery or audible playback.
+See the [device/save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save).
+
+Separate controls of the original bank code reproduce a null-device dereference
+in the first sample's factory before its COM error check. A supplied valid device
+completes the same records; a zero-count bank bypasses sample creation. This is
+isolated original-code evidence, not an observed installed-game/Proton crash or
+a single executed failed-Load-to-bank chain. See the
+[missing-device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device).
 
 ## Godot Save Lab — first workflow
 

@@ -575,8 +575,8 @@ occurs at cold startup, that a French bank opens, or that wrong-language audio
 plays. This paired experiment does not execute Init. The separate
 [device controls below](#original-audio-device-initialization) now execute its
 admitted branches with supplied platform responses, including device-index
-normalization. Their composition with Load/Save and real platform effects remain
-open.
+normalization. The subsequent [composed controls](#original-device-effects-during-load-and-save)
+replace the status-only boundary; real platform effects remain open.
 
 ## Original audio-device initialization
 
@@ -584,8 +584,9 @@ The [29 isolated controls](../../VALIDATION.md#original-audio-device-initializat
 execute the complete original Init `005169b0`, enumeration callback and seven
 wrapper/import/string bodies. Heap, enumeration delivery, COM/device methods,
 `mmioClose` and diagnostics remain supplied boundaries. These results extend
-the recheck beyond the status-only Init boundary in the paired Load experiment;
-they are **not yet composed into that experiment**.
+the recheck beyond the status-only Init boundary in the first paired Load
+experiment. The [later composition](#original-device-effects-during-load-and-save)
+tests their effect on serialization separately.
 
 The original callback admits devices after successful creation and cooperative
 level, even when their capability query fails. Temporary interfaces are released
@@ -643,9 +644,10 @@ record bytes remain untouched. Empty-description localization is excluded.
 
 For compatibility, preserve the distinction between saved preferences, selected
 device and effective runtime state. A successful Init alone proves neither
-bank loading nor playable audio. Real platform effects, device-index changes
-through a composed Load/Save, startup reachability and player acceptance remain
-open; no original save or Ghidra database changed in these controls.
+bank loading nor playable audio. The composed experiment below establishes
+selected device-index changes through Load/Save; real platform effects, full
+startup reachability and player acceptance remain open. No original save or
+Ghidra database changed in these controls.
 
 ## Original outer sound-manager initialization
 
@@ -677,8 +679,8 @@ the other three bytes of that word. An existing device wrapper skips inner
 device setup but does not skip the outer setup. This outer function is therefore
 not an idempotent initialization guard. Direct device Init alone does not set
 the flag; the reset caller `00517f10` also has no corresponding flag write.
-The reset distinction is static instruction evidence, pending composition with
-actual device Init and Load/Save.
+The [composed Load/Save controls](#original-device-effects-during-load-and-save)
+also execute this reset distinction with actual device Init instructions.
 
 The original timer `005159e0` reads its **ECX receiver**, supplied by outer as
 `0088a0a8`, and returns through x87 ST0. With nonzero signed 64-bit frequency,
@@ -699,6 +701,71 @@ after options Load, campaign Blank and graphics setup. The earlier isolated
 WinMain experiment deliberately stops at failed graphics creation, so these
 separate controls still do not establish a complete executed cold-start chain,
 actual SFX loading, device behavior, playback or save compatibility.
+
+## Original device effects during Load and Save
+
+The [eight composed controls](../../VALIDATION.md#original-device-effects-during-load-and-save--september-23)
+execute original Load, reset, device Init/enumeration, Save and direct-buffer
+reload/Save. Five inputs retain every byte of the real gold fixture. Three
+private in-memory derivatives change only its known device-index word at
+`0x270a` (options-tail `+76`) from zero to seven. Original save files are untouched.
+
+With two admitted devices, the first Load normalizes index seven to zero.
+Both subsequent original serializers retain zero; their complete outputs equal
+gold, including unknown fields. Normalization also happens before a supplied
+main-device creation failure, so that failure still produces saved index zero.
+With no admitted devices, initialization fails before normalization: both saves
+retain seven and differ from gold only at that declared byte. The four full-apply
+cases starting from unchanged gold remain byte-identical to gold across both
+saves. The preservation-flag case skips device work and retains its independently
+checked live settings, yielding the same 177-byte difference from gold as the
+earlier preservation control.
+
+Reset failure leaves the authored initialized byte set to one while main-device,
+listener and wrapper pointers are null. It skips its first bank request. The
+second Load sees matching saved audio words, takes language refresh and requests
+the English bank despite those null pointers. Successful Init, including the
+supplied GetCaps-failure case, first requests the cached French path with reuse
+one; the second Load requests English with reuse zero. GetCaps failure retains
+effective method nine and defaults voices to twelve in this fixture, while
+serialized preferences remain unchanged. This is why saved options, effective
+device state, initialized state and the cached bank path must be represented
+separately.
+
+The final bank entry remains a recording boundary in this composition. Its
+request is not proof of successful parsing, safe recovery or playback after
+device failure. The separate original-bank control below resolves one
+consequential downstream dependency.
+The controls start with an authored initialized manager and empty ownership;
+they do not execute the outer startup initializer or establish that cold startup
+can reach each supplied state. Actual APIs, heap reclamation, durable retail
+file writes and complete player startup acceptance remain unproven.
+
+### Bank loading with a missing device
+
+The [four debugger-controlled variants](../../VALIDATION.md#original-bank-null-device-controls--september-23)
+reuse the already reviewed bank ELF and admitted two-record/zero-count inputs.
+Only owned process state changes before the original bank call: main-device
+pointer, initialized byte, listener and wrapper. No original instructions or
+specimen files change.
+
+With the supplied valid device, both records complete. With main-device pointer
+zero, the first sample reaches original factory instruction `00517595`,
+`mov edx,[eax]`, with EAX zero and stops on SIGSEGV. Both initialized-byte values
+one and zero produce that same fault. The factory loads canonical manager
+`+c0` at `00517582` and dereferences it before the COM call at `0051759e` and its
+HRESULT check. A null interface is therefore different from a valid interface
+whose method returns failure. The initialized byte does not protect this call.
+
+The zero-count bank completes without sample creation even with all device
+pointers null. Static inspection also shows build/compression exits and a failed
+file-Open branch before sample traversal. A truncated header is not equivalent
+to a valid zero-count bank: the two header Read return values are ignored.
+
+This establishes a conditional original-code failure, independently of the
+earlier Load/Save composition. It does not yet execute failed Load through real
+bank parsing in one process, prove the Windows exception outcome, or show a crash
+in the installed game/Proton. File, heap and COM dependencies remain supplied.
 
 ## Original save reload after reinitialization
 

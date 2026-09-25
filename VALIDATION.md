@@ -2546,6 +2546,77 @@ the existing private review owner. No real clock/device, SFX parser, Load/Save
 composition, full WinMain/shell execution or player acceptance is established.
 See the [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
 
+### Original device effects during Load and Save — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/load_device_composition_control.py`
+passed **8 cases / 89 routing and 358 device observations** under
+`local-data/test-runs/save-startup-20260919/load-device-composition-run-klssepgg/load`.
+Receipt SHA-256 `9de4fbccc9c0f879bf7ab843b74a416264de922fccfa021ba55b665ff00e65de`;
+ELF SHA-256 `537b86bf6ac0d40d6399020f62e2f73c6648aa6888a9055fcf369a02789eb3f6`;
+frozen driver SHA-256 `ebad6f2bf11401e94d3e3c9e38feb8a2978524df018af70e9028faac3bf079af`.
+The parent owner retains `load-device-composition-controls-v2.log`.
+
+The ELF combines **46 complete original bodies / 9,669 bytes** and the original
+20-byte language table. Six complete 80,392-byte selected snapshots per case,
+both 10,004-byte serializer outputs and their full capacities/guards are checked.
+The second Load reads the first native serializer buffer directly. Five inputs
+are unchanged gold; three alter only the declared device-index field. Every
+case preserves its original input and supplied platform data. ABI/stack/FS and
+x87 checks pass, as does the SIGSYS forbidden-syscall control. Generated output
+copies are created exclusively, fsynced and reread; this is Linux evidence for
+those files, not retail save-file durability.
+
+The first preserved prototype returned normally and matched its predicted full
+state, then failed an overly broad cached-path assertion. Its 64-byte capture
+contains the 52-byte path plus method/device/first-slot fields changed by Init.
+The accepted assertion predicts those adjacent fields separately and still
+checks all 64 bytes. ELF, first input and first output are unchanged. Root's
+separate `load.root-readback.json` checks source identities, all serializers,
+unknown-byte preservation, device pointers, flags and stage-specific requests
+without importing or executing the candidate. Independent read-only reviews
+remain in the existing review owner.
+
+Original outer startup and final bank parsing are excluded. Initialized state
+is authored; platform, heap, diagnostics and the final bank request are supplied
+boundaries. A failed device's later bank request does not establish usable audio
+or safe recovery. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
+separates saved preferences, live device state and pending downstream behavior.
+
+### Original bank null-device controls — September 23
+
+Four local GDB variants reuse the byte-identical original bank ELF
+`local-data/test-runs/save-startup-20260919/audio-bank-run-6yqv9knl/bank`
+(SHA-256 `7e72a16b3d946ed632f7f5b14bb939201a84807e67836f1675be08c830cce533`).
+Their commands, scripts, logs and native outputs are under
+`local-data/test-runs/save-startup-20260919/audio-bank-null-device-run-pkoygbwh/`;
+`result.json` SHA-256 is
+`937adf970408fb171119c8c3de991acde07c5608b61d3fcefe928abc81ef14fe`.
+Each recorded command is `gdb -q -nx -nh -batch -x <owned-case.gdb>`; automatic
+loading, debuginfod and history writes are disabled. Core dumps remain disabled
+and the original fixture's syscall filter remains installed.
+
+The breakpoint is in owned wrapper code immediately before the bank call,
+after its initial snapshot. GDB changes only four declared process-state fields:
+main device, initialized byte, listener and wrapper. With two real retained bank
+records and a supplied valid device, execution completes two samples/buffers.
+With a null device, initialized bytes one and zero both stop at original
+`00517595` with EAX zero/SIGSEGV, before COM dispatch. A valid zero-count input
+with a null device completes without samples. Debugger exit terminates its own
+stopped inferior; the recorded stopped PIDs were subsequently absent.
+
+Root compares **6,675,024 bytes** of the two successful outputs with retained
+parent outputs: only the nine/twelve declared final-snapshot bytes differ. All
+PCM, event and guard bytes match. The initial snapshot predates debugger writes
+and remains identical. `result.root-readback.json` records that comparison;
+independent read-only inspection checks all thirteen original body pins and
+the four debugger captures. The ELF and original inputs remain unchanged.
+
+These are isolated original-instruction observations with supplied file/heap/COM
+dependencies. They are separate from the composed Load experiment, and establish
+neither real Windows/Proton failure nor full startup reachability. The
+[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
+distinguishes null-interface dereference from a returned method failure.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

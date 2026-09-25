@@ -124,12 +124,18 @@ control. Separate original Init controls now establish device-index normalizatio
 capability-derived state, enumeration and failure cleanup under supplied API
 responses. Ten original outer-manager controls now establish pool/registration
 setup, timer sampling and the caller-owned initialized byte: failed device Init
-clears that byte without undoing setup. SFX parsing remains a boundary. Next
-compose the rechecked device service into Load/reset/Save, especially index
-normalization and failure/reload state. Actual device/playback and cold-start
-acceptance remain open. The
+clears that byte without undoing setup. SFX parsing remains a boundary. Eight
+composed Load/reset/Init/Save controls now prove that device-index normalization
+can persist even when subsequent device creation fails; zero admitted devices
+instead preserves the saved index. Failed reset retains the initialized flag,
+allowing the second Load to request a language-bank refresh with null device
+pointers. Separate original-bank controls now reproduce a null-device dereference
+before the sample factory's COM error check; a valid zero-count bank avoids it.
+Next connect this bank dependency to the composed route without replacing the
+failed manager state, and retain the full startup/save compatibility objective.
+Actual device/playback and cold-start acceptance remain open. The
 [coupled contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
-and [sound initialization contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization)
+and [device/save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
 record the exact prior state and limits.
 Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
