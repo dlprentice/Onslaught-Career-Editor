@@ -126,6 +126,7 @@ public sealed class PlatformInputEdgeStateTests
         var session = new InteractiveSession(
             0x4F4E534Cu,
             Level100TestActorDefinitions.Create());
+        Assert.IsType<PlatformInputEdgeState>(session.PlatformInput);
         const int toggleKey = 0x51;
         session.PlatformInput.ObserveKey(toggleKey, pressed: true, echo: false);
 
@@ -141,6 +142,67 @@ public sealed class PlatformInputEdgeStateTests
         session.ReleaseAllInput();
         Assert.Equal(1, session.PlatformInput.ResetGeneration);
         Assert.Equal(0, session.PlatformInput.GetHeldKey(toggleKey));
+    }
+
+    [Fact]
+    public void InteractiveSessionBorrowsTheSuppliedOwnerAcrossFramePauseAndFocusBoundaries()
+    {
+        var owner = new RecordingPlatformInputEdges();
+        const int toggleKey = 0x51;
+        owner.ObserveKey(toggleKey, pressed: true, echo: false);
+        owner.ObserveJoyButton(joypad: 0, button: 7, value: 0x80);
+        var session = new InteractiveSession(
+            0x4F4E534Cu,
+            Level100TestActorDefinitions.Create(),
+            platformInput: owner);
+
+        Assert.Same(owner, session.PlatformInput);
+        Assert.Empty(owner.Lifecycle);
+        Assert.Equal(1, session.PlatformInput.GetHeldKey(toggleKey));
+        Assert.True(session.PlatformInput.IsJoyButtonRising(0, 7));
+        if (session.PlatformInput.ConsumeKeyOnce(toggleKey) != 0)
+        {
+            session.QueueToggleMode();
+        }
+        FrameAdvanceResult first = session.AdvanceFrameTicks(500_000);
+        Assert.Equal(1, first.StepsAdvanced);
+        Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
+        Assert.Equal(1, owner.FrameIndex);
+        Assert.Equal(0x80, owner.GetPreviousJoyButton(0, 7));
+
+        session.SetAuthenticMenuPaused(true);
+        Assert.Equal(1, owner.ResetGeneration);
+        Assert.Equal(0, owner.GetHeldKey(toggleKey));
+        Assert.Equal(0, owner.GetPreviousJoyButton(0, 7));
+        session.SetAuthenticMenuPaused(true);
+        Assert.Equal(1, owner.ResetGeneration);
+        FrameAdvanceResult paused = session.AdvanceFrameTicks(500_000);
+        Assert.Equal(0, paused.StepsAdvanced);
+        Assert.Equal(first.CurrentSnapshot.Tick, paused.CurrentSnapshot.Tick);
+        Assert.Equal(2, owner.FrameIndex);
+
+        session.SetAuthenticMenuPaused(false);
+        Assert.Equal(2, owner.ResetGeneration);
+        owner.ObserveKey(toggleKey, pressed: true, echo: false);
+        session.SuspendInputUntilReleased(); // Existing focus-loss route.
+        Assert.Equal(3, owner.ResetGeneration);
+        Assert.Equal(0, owner.GetHeldKey(toggleKey));
+        Assert.Equal(0, owner.ConsumeKeyOnce(toggleKey));
+        Assert.True(session.InputSuspendedUntilReleased);
+        session.ReleaseAllInput();
+        Assert.Equal(4, owner.ResetGeneration);
+        Assert.False(session.InputSuspendedUntilReleased);
+        Assert.Equal(0, session.AdvanceFrameTicks(0).StepsAdvanced);
+        Assert.Equal(3, owner.FrameIndex);
+        Assert.Same(owner, session.PlatformInput);
+        Assert.Equal(
+            new[] { "advance", "reset", "advance", "reset", "reset", "reset", "advance" },
+            owner.Lifecycle);
+        PlatformInputEdgeSnapshot captured = session.PlatformInput.Capture();
+        Assert.Equal(owner.FrameIndex, captured.FrameIndex);
+        Assert.Equal(owner.ResetGeneration, captured.ResetGeneration);
+        Assert.Empty(captured.HeldKeys);
+        Assert.Empty(captured.CurrentJoyButtons);
     }
 
     [Fact]
@@ -202,5 +264,55 @@ public sealed class PlatformInputEdgeStateTests
             Assert.True(index >= cursor, $"Expected '{value}' at or after offset {cursor}.");
             cursor = index + value.Length;
         }
+    }
+
+    private sealed class RecordingPlatformInputEdges : IPlatformInputEdges
+    {
+        private readonly PlatformInputEdgeState _state = new();
+
+        public List<string> Lifecycle { get; } = [];
+
+        public long FrameIndex => _state.FrameIndex;
+
+        public long ResetGeneration => _state.ResetGeneration;
+
+        public void ObserveKey(int keyCode, bool pressed, bool echo) =>
+            _state.ObserveKey(keyCode, pressed, echo);
+
+        public byte GetHeldKey(int keyCode) => _state.GetHeldKey(keyCode);
+
+        public byte ConsumeKeyOnce(int keyCode) => _state.ConsumeKeyOnce(keyCode);
+
+        public void ObserveJoyButton(int joypad, int button, byte value) =>
+            _state.ObserveJoyButton(joypad, button, value);
+
+        public byte GetPreviousJoyButton(int joypad, int button) =>
+            _state.GetPreviousJoyButton(joypad, button);
+
+        public byte GetCurrentJoyButton(int joypad, int button) =>
+            _state.GetCurrentJoyButton(joypad, button);
+
+        public bool IsJoyButtonRising(int joypad, int button) =>
+            _state.IsJoyButtonRising(joypad, button);
+
+        public bool IsJoyButtonHeld(int joypad, int button) =>
+            _state.IsJoyButtonHeld(joypad, button);
+
+        public bool IsJoyButtonFalling(int joypad, int button) =>
+            _state.IsJoyButtonFalling(joypad, button);
+
+        public void AdvanceFrame()
+        {
+            Lifecycle.Add("advance");
+            _state.AdvanceFrame();
+        }
+
+        public void Reset()
+        {
+            Lifecycle.Add("reset");
+            _state.Reset();
+        }
+
+        public PlatformInputEdgeSnapshot Capture() => _state.Capture();
     }
 }

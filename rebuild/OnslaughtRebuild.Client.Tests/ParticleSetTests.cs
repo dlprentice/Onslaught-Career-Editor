@@ -604,90 +604,149 @@ public sealed class ParticleSetTests
             worldSource,
             "private void SpawnTargetTankDestruction(",
             "private void SpawnTargetDroneDestruction(");
-        Assert.Contains("position, 1.5d);", spawn, StringComparison.Ordinal);
+        Assert.Contains(
+            "SpawnDestructionScene(TargetTankDestructionScenePath, $\"TargetTankDestruction{targetId}\", position)",
+            spawn, StringComparison.Ordinal);
+        string spawnScene = RequireSection(worldSource, "private void SpawnDestructionScene(", "private void UpdateRetailPixelCentreOffset(");
+        AssertSourceOrder(spawnScene,
+            "GD.Load<PackedScene>(path)",
+            "scene.Instantiate<Node3D>()",
+            "root.Name = name;",
+            "root.Position = position;",
+            "AddChild(root);",
+            "root.Call(\"start\")",
+            "WorldPresentationResult(returned)");
+        Assert.DoesNotContain("AnimateTargetTankDelayedExplosion", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateLoopingFireball", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateFacilitySmoke", worldSource, StringComparison.Ordinal);
+
+        // These are the actual production profiles and controller, not a
+        // retained renderer. Their named mesh radii are checked separately in
+        // ParticleQuadSizeConventionTests. Actual callback and material-state
+        // parity belongs to the dedicated scene checks, beyond this source guard.
+        foreach ((string name, string profile, string lifetime) in new[]
+        {
+            ("TargetTankDestruction", "tank", "1.5"),
+            ("TargetDroneDestruction", "drone", "1.5"),
+            ("FacilityDestruction", "facility", "15.0"),
+        })
+        {
+            string scene = File.ReadAllText(Locate($"rebuild/OnslaughtRebuild.Godot/Scenes/World/{name}.tscn"));
+            Assert.Contains($"{name}ScenePath = \"res://Scenes/World/{name}.tscn\"", worldSource, StringComparison.Ordinal);
+            Assert.Contains("res://Scenes/World/destruction_effect.gd", scene, StringComparison.Ordinal);
+            Assert.Contains($"profile = \"{profile}\"", scene, StringComparison.Ordinal);
+            string timer = RequireSection(scene, "[node name=\"Lifetime\" type=\"Timer\" parent=\".\"]", "[node ");
+            Assert.Contains($"wait_time = {lifetime}\n", timer, StringComparison.Ordinal);
+            Assert.Contains("one_shot = true", timer, StringComparison.Ordinal);
+            Assert.DoesNotContain("autostart = true", timer, StringComparison.Ordinal);
+        }
+
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/destruction_effect.gd"));
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("COLUMNS: int = 4", animation, StringComparison.Ordinal);
+        Assert.Contains("ROWS: int = 4", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _process(", animation, StringComparison.Ordinal);
+        string start = RequireSection(animation, "func start()", "func _start_tank()");
+        AssertSourceOrder(start,
+            "if Engine.is_editor_hint():",
+            "if _started or not is_inside_tree():",
+            "_started = true",
+            "lifetime.timeout.connect(queue_free)",
+            "lifetime.start()",
+            "\"tank\": _start_tank()",
+            "\"drone\": _start_drone()",
+            "\"facility\": _start_facility()");
+
+        string tank = RequireSection(animation, "func _start_tank()", "func _start_drone()");
+        AssertSourceOrder(tank,
+            "_layer(\"TargetTankFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.25)",
+            "_layer(\"ExplosionAnimatedSprite\")",
+            "_animate_tank_delayed(explosion)",
+            "_layer(\"ExplosionFireball\")",
+            "_animate_looping_fireball(fireball, 30)",
+            "_animate_scale(fireball, 1.0, 0.5, 1.5)");
+        string drone = RequireSection(animation, "func _start_drone()", "func _start_facility()");
+        AssertSourceOrder(drone,
+            "_layer(\"DroneFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.25)",
+            "_layer(\"DroneFireball\")",
+            "_animate_looping_fireball(fireball, 30)",
+            "_animate_scale(fireball, 1.0, 0.5, 1.5)");
+        string facility = RequireSection(animation, "func _start_facility()", "func _layer(");
+        AssertSourceOrder(facility,
+            "_layer(\"FacilityFlash\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.3)",
+            "_layer(\"FacilityFireball\")",
+            "_animate_looping_fireball(fireball, 60)",
+            "_animate_scale(fireball, 1.0, 4.0, 3.0)",
+            "_layer(\"FacilitySmoke\")",
+            "_animate_facility_smoke(smoke)",
+            "_animate_scale(smoke, 1.0, F.value(2.0 / 3.0), 15.0)");
+        string facilityScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/FacilityDestruction.tscn"));
+        string smokeMaterial = RequireSection(facilityScene, "[sub_resource type=\"StandardMaterial3D\" id=\"SmokeMaterial\"]", "[sub_resource ");
+        Assert.Contains("blend_mode = 0", smokeMaterial, StringComparison.Ordinal);
         Assert.Matches(
-            @"CreateEffectSprite\(\s*""TargetTankFlash"",\s*" +
-            @"_effectFlashMediumTexture,\s*5f\);",
-            spawn);
-        Assert.Contains(
-            "AnimateScale(flash, 1f, 0f, 0.25d);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateTargetTankDelayedExplosion(root, animatedExplosion);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateTargetTankFireball(root, fireball);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(fireball, 1f, 0.5f, 1.5d);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("AnimateAtlas(", spawn, StringComparison.Ordinal);
-        Assert.DoesNotContain("frames: 16", spawn, StringComparison.Ordinal);
+            @"(?s)\[node name=""FacilitySmoke"" type=""MeshInstance3D""[^\]]*\][^\[]*" +
+            @"material_override = SubResource\(""SmokeMaterial""\)",
+            facilityScene);
 
-        string delayed = RequireSection(
-            worldSource,
-            "private static void AnimateTargetTankDelayedExplosion(",
-            "private static void AnimateTargetTankFireball(");
-        Assert.Contains("const int startCell = 0;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 7;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 0.7d;", delayed, StringComparison.Ordinal);
-        Assert.Contains("const double lifeSeconds = 0.5d;", delayed, StringComparison.Ordinal);
-        Assert.Contains(
-            "5d / SimulationConstants.TicksPerSecond",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "1d / (cellsPerTurn * SimulationConstants.TicksPerSecond)",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "atlasTween.TweenInterval(startDelaySeconds);",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "scaleTween.TweenInterval(startDelaySeconds);",
-            delayed,
-            StringComparison.Ordinal);
-        Assert.Contains("cell <= endCell", delayed, StringComparison.Ordinal);
-        Assert.Contains("sprite.Visible = false;", delayed, StringComparison.Ordinal);
-        Assert.Contains("sprite.Visible = true;", delayed, StringComparison.Ordinal);
-        Assert.Contains(
-            "Vector3.One * (1.3f / 1.5f)",
-            delayed,
-            StringComparison.Ordinal);
+        string layer = RequireSection(animation, "func _layer(", "func _animate_tank_delayed(");
+        Assert.Contains("sprite.material_override = sprite.material_override.duplicate(false)", layer, StringComparison.Ordinal);
+        string delayed = RequireSection(animation, "func _animate_tank_delayed(", "func _animate_looping_fireball(");
+        Assert.Contains("START_CELL: int = 0", delayed, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 7", delayed, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 0.7", delayed, StringComparison.Ordinal);
+        Assert.Contains("LIFE_SECONDS: float = 0.5", delayed, StringComparison.Ordinal);
+        Assert.Contains("5.0 / TICKS_PER_SECOND", delayed, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", delayed, StringComparison.Ordinal);
+        AssertSourceOrder(delayed,
+            "_set_cell(material, START_CELL)",
+            "sprite.visible = false",
+            "sprite.scale = Vector3.ONE",
+            "var atlas: Tween = create_tween()",
+            "atlas.tween_interval(start_delay)",
+            "atlas.tween_callback(_set_visible.bind(sprite, true))",
+            "range(START_CELL + 1, END_CELL + 1)",
+            "atlas.tween_interval(interval)",
+            "atlas.tween_callback(_set_cell.bind(material, cell))",
+            "var scaling: Tween = create_tween()",
+            "scaling.tween_interval(start_delay)",
+            "F.value(F.value(1.3) / F.value(1.5))",
+            "scaling.tween_property(sprite, \"scale\", Vector3.ONE * final_scale, LIFE_SECONDS)",
+            "scaling.tween_callback(_set_visible.bind(sprite, false))");
 
-        string loopingWrappers = RequireSection(
-            worldSource,
-            "private static void AnimateTargetTankFireball(",
-            "private static void AnimateLoopingFireball(");
-        Assert.Contains(
-            "AnimateLoopingFireball(root, sprite, lifeTurns: 30);",
-            loopingWrappers,
-            StringComparison.Ordinal);
+        string looping = RequireSection(animation, "func _animate_looping_fireball(", "func _animate_facility_smoke(");
+        string smoke = RequireSection(animation, "func _animate_facility_smoke(", "func _animate_scale(");
+        foreach ((string source, int endCell, string lifeTurns) in new[]
+        {
+            (looping, 11, "life_turns"),
+            (smoke, 14, "LIFE_TURNS"),
+        })
+        {
+            Assert.Contains("START_CELL: int = 0", source, StringComparison.Ordinal);
+            Assert.Contains($"END_CELL: int = {endCell}", source, StringComparison.Ordinal);
+            Assert.Contains("CELLS_PER_TURN: float = 0.5", source, StringComparison.Ordinal);
+            Assert.Contains("cell_count: int = END_CELL - START_CELL + 1", source, StringComparison.Ordinal);
+            AssertSourceOrder(source,
+                "initial_cell: int = START_CELL + (randi() % cell_count)",
+                "1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)",
+                $"int({lifeTurns} * CELLS_PER_TURN)",
+                "_set_cell(material, initial_cell)",
+                "var atlas: Tween = create_tween()",
+                "range(1, advances + 1)",
+                "START_CELL + ((initial_cell - START_CELL + step) % cell_count)",
+                "atlas.tween_interval(interval)",
+                "atlas.tween_callback(_set_cell.bind(material, cell))");
+        }
 
-        string looping = RequireSection(
-            worldSource,
-            "private static void AnimateLoopingFireball(",
-            "private static void AnimateScale(");
-        Assert.Contains("const int startCell = 0;", looping, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 11;", looping, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 0.5d;", looping, StringComparison.Ordinal);
-        Assert.Contains("GD.Randi() % (uint)cellCount", looping, StringComparison.Ordinal);
-        Assert.Contains("lifeTurns * cellsPerTurn", looping, StringComparison.Ordinal);
-        Assert.Contains("step <= frameAdvances", looping, StringComparison.Ordinal);
-        Assert.Contains("% cellCount", looping, StringComparison.Ordinal);
-        Assert.Contains(
-            "tween.TweenInterval(cellIntervalSeconds);",
-            looping,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            looping,
-            StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_callback(_set_visible.bind(sprite, false))", looping, StringComparison.Ordinal);
+        Assert.Contains("LIFE_TURNS: int = 300", smoke, StringComparison.Ordinal);
+        Assert.DoesNotContain("_set_visible", smoke, StringComparison.Ordinal);
+        string scaling = RequireSection(animation, "func _animate_scale(", "func _set_cell(");
+        Assert.Contains("sprite.scale = Vector3.ONE * F.value(start_scale)", scaling, StringComparison.Ordinal);
+        Assert.Contains("sprite.create_tween().tween_property(sprite, \"scale\", Vector3.ONE * F.value(end_scale), duration)", scaling, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -769,36 +828,72 @@ public sealed class ParticleSetTests
             worldSource,
             "private void SpawnVulcanImpact(",
             "private void SpawnTargetTankDestruction(");
-        Assert.Contains("position,\n            0.25d);", spawn, StringComparison.Ordinal);
-        Assert.Matches(
-            @"CreateEffectSprite\(\s*""VulcanImpactSpark"",\s*" +
-            @"_vulcanImpactSparkTexture,\s*0\.3f,\s*" +
-            @"columns:\s*4,\s*rows:\s*4\);",
-            spawn);
-        Assert.Contains(
-            "AnimateVulcanImpactSpark(root, spark);",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(spark, 1f, 10f / 3f, 0.25d);",
-            spawn,
-            StringComparison.Ordinal);
+        Assert.Contains("GD.Load<PackedScene>(VulcanImpactScenePath)", spawn, StringComparison.Ordinal);
+        Assert.Contains("Node3D root = scene.Instantiate<Node3D>();", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Name = $\"VulcanImpact{targetId}-{tick}\";", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Position = position;", spawn, StringComparison.Ordinal);
+        Assert.Contains("AddChild(root);", spawn, StringComparison.Ordinal);
+        Assert.Contains("root.Call(\"start\")", spawn, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateVulcanImpactSpark", worldSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_vulcanImpactSparkTexture", worldSource, StringComparison.Ordinal);
 
-        string animation = RequireSection(
-            worldSource,
-            "private static void AnimateVulcanImpactSpark(",
-            "private static void AnimatePulseCannonMuzzleFlash(");
-        Assert.Contains("const int startCell = 11;", animation, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
-        Assert.Contains(
-            "const double cellsPerTurn = 0.8d;",
-            animation,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            animation,
-            StringComparison.Ordinal);
-        Assert.Contains("cell <= endCell", animation, StringComparison.Ordinal);
+        string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
+        // Keep all six admission slots. PulseImpact and the destruction
+        // scenes share the same blob/flash recipe objects.
+        int priorAdmission = -1;
+        foreach (string marker in new[]
+        {
+            "AdmitDestructionArtwork(\"animated_blob\")",
+            "pulse.Call(\"admit_artwork\")",
+            "effect.Call(\"admit_artwork\")",
+            "AdmitDestructionArtwork(\"flash_medium\")",
+            "AdmitDestructionArtwork(\"explosion_animated\")",
+            "AdmitDestructionArtwork(\"fireball\")",
+        })
+        {
+            int admission = presentation.IndexOf(marker, StringComparison.Ordinal);
+            Assert.True(admission > priorAdmission, $"Texture admission '{marker}' moved before its original slot.");
+            Assert.Equal(admission, presentation.LastIndexOf(marker, StringComparison.Ordinal));
+            priorAdmission = admission;
+        }
+        AssertSourceOrder(presentation,
+            "GD.Load<GDScript>(PulseImpactScriptPath)",
+            "pulse.Call(\"admit_artwork\")",
+            "WorldPresentationResult(returned)",
+            "GD.Load<GDScript>(VulcanImpactScriptPath)",
+            "effect.Call(\"admit_artwork\")",
+            "WorldPresentationResult(returned)");
+
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpact.tscn"));
+        Assert.Contains("res://Scenes/World/vulcan_impact.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/VulcanImpactTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("wait_time = 0.25", scene, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", scene, StringComparison.Ordinal);
+        Assert.Contains("size = Vector2(0.6, 0.6)", scene, StringComparison.Ordinal);
+        Assert.Contains("albedo_color = Color(1, 1, 1, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("blend_mode = 1", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_scale = Vector3(0.25, 0.25, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_offset = Vector3(0.75, 0.5, 0)", scene, StringComparison.Ordinal);
+        string recipe = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanImpactTexture.tres"));
+        Assert.Contains("res://Assets/Level100/Textures/vulcan-impact-spark.texture.aya", recipe, StringComparison.Ordinal);
+        Assert.Contains("dimensions = Vector2i(256, 256)", recipe, StringComparison.Ordinal);
+        Assert.Contains("compression = 0", recipe, StringComparison.Ordinal);
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/vulcan_impact.gd"));
+        Assert.Contains("ARTWORK = preload(\"res://Scenes/World/VulcanImpactTexture.tres\")", animation, StringComparison.Ordinal);
+        Assert.Contains("ARTWORK.ensure_loaded()", animation, StringComparison.Ordinal);
+        Assert.Contains("START_CELL: int = 11", animation, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 15", animation, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 0.8", animation, StringComparison.Ordinal);
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", animation, StringComparison.Ordinal);
+        Assert.Contains("range(START_CELL + 1, END_CELL + 1)", animation, StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_interval(interval)", animation, StringComparison.Ordinal);
+        Assert.Contains("atlas.tween_callback(_set_cell.bind(material, cell))", animation, StringComparison.Ordinal);
+        Assert.Contains("Vector3.ONE * F.value(10.0 / 3.0), 0.25", animation, StringComparison.Ordinal);
+        Assert.Contains("spark.create_tween().tween_property", animation, StringComparison.Ordinal);
+        Assert.Contains("lifetime.timeout.connect(queue_free)", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("randi(", animation, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));
@@ -807,12 +902,129 @@ public sealed class ParticleSetTests
             materializer,
             StringComparison.Ordinal);
 
-        string audioSource = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/Level100Audio.cs"));
+        string audioSource = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-audio-layout-source", "level100_audio.gd"));
+        int audioStart = audioSource.IndexOf("func consume_destruction_events(", StringComparison.Ordinal);
+        Assert.True(audioStart >= 0);
+        int audioEnd = audioSource.IndexOf("\nfunc ", audioStart + 1, StringComparison.Ordinal);
+        Assert.True(audioEnd > audioStart);
         Assert.Contains(
-            "Level100DestructionEffectKind.VulcanImpact => null",
-            audioSource,
+            $"0, {(int)Level100DestructionEffectKind.VulcanImpact}: continue",
+            audioSource[audioStart..audioEnd],
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PulseImpactUsesRetainedNativePresentation()
+    {
+        // Source-wiring checks for the retained b8c1a220 presentation, with
+        // actual tween/float-word comparisons owned by the scene checks.
+        // This does not promote its representative layers to a complete
+        // retail particle emitter or change the retained 1.07 blob scale.
+        string worldSource = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string spawn = RequireSection(worldSource, "private void SpawnPulseImpact(", "private void SpawnVulcanImpact(");
+        AssertSourceOrder(spawn,
+            "GD.Load<PackedScene>(PulseImpactScenePath)",
+            "scene.Instantiate<Node3D>()",
+            "root.Name = $\"PulseImpact{targetId}-{tick}\";",
+            "root.Position = position;",
+            "AddChild(root);",
+            "root.Call(\"start\", _particlePresentationSeconds)",
+            "WorldPresentationResult(returned)");
+        foreach (string retired in new[]
+        {
+            "CreateTimedEffect(", "CreateEffectSprite(", "CreateEffectMaterial(",
+            "CreatePulseBlastSphere(", "AnimatePulseBlast(", "AnimatePulseImpactBlob(", "AnimateScale(",
+            "_pulseImpactAnimatedTexture", "_pulseImpactShockwaveTexture", "_effectFlashMediumTexture",
+        })
+        {
+            Assert.DoesNotContain(retired, worldSource, StringComparison.Ordinal);
+        }
+
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseImpact.tscn"));
+        Assert.Contains("res://Scenes/World/pulse_impact.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/EffectAnimatedBlobTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/EffectFlashMediumTexture.tres", scene, StringComparison.Ordinal);
+        Assert.Contains("res://Scenes/World/PulseShockwaveTexture.tres", scene, StringComparison.Ordinal);
+        string timer = RequireSection(scene, "[node name=\"Lifetime\" type=\"Timer\" parent=\".\"]", "[node ");
+        Assert.Contains("wait_time = 1.05\n", timer, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", timer, StringComparison.Ordinal);
+        Assert.DoesNotContain("autostart = true", timer, StringComparison.Ordinal);
+        string sphere = RequireSection(scene, "[sub_resource type=\"SphereMesh\" id=\"BlastSphere\"]", "[node ");
+        Assert.Contains("radius = 0.5\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("height = 1.0\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("radial_segments = 10\n", sphere, StringComparison.Ordinal);
+        Assert.Contains("rings = 10\n", sphere, StringComparison.Ordinal);
+        Assert.Matches(
+            @"(?s)\[node name=""PulseBlastSphere"" type=""MeshInstance3D""[^\]]*\][^\[]*" +
+            @"mesh = SubResource\(""BlastSphere""\)", scene);
+        string recipe = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseShockwaveTexture.tres"));
+        Assert.Contains("res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya", recipe, StringComparison.Ordinal);
+        Assert.Contains("dimensions = Vector2i(128, 128)", recipe, StringComparison.Ordinal);
+        Assert.Contains("compression = 0", recipe, StringComparison.Ordinal);
+
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/pulse_impact.gd"));
+        Assert.Contains("ARTWORK = preload(\"res://Scenes/World/PulseShockwaveTexture.tres\")", animation, StringComparison.Ordinal);
+        Assert.Contains("ARTWORK.ensure_loaded()", animation, StringComparison.Ordinal);
+        Assert.Contains("FRAME_ADVANCES: int = 14", animation, StringComparison.Ordinal);
+        Assert.Contains("ATLAS_CELLS: int = 15", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _ready(", animation, StringComparison.Ordinal);
+        Assert.DoesNotContain("func _process(", animation, StringComparison.Ordinal);
+        string start = RequireSection(animation, "func start(", "func _layer(");
+        AssertSourceOrder(start,
+            "if Engine.is_editor_hint():",
+            "if _started or not is_inside_tree():",
+            "F.value(global_seconds)",
+            "lifetime.timeout.connect(queue_free)",
+            "lifetime.start()",
+            "_layer(\"BlueAnimatedBlob\")",
+            "_animate_blob(blob)",
+            "_animate_scale(blob, 1.0, F.value(1.07), 1.0)",
+            "_layer(\"FlashMedium\")",
+            "_animate_scale(flash, 1.0, 0.0, 0.3)",
+            "_layer(\"PulseBlastSphere\")",
+            "_animate_blast(sphere, seconds)");
+        string layer = RequireSection(animation, "func _layer(", "func _animate_blob(");
+        Assert.Contains("sprite.material_override = sprite.material_override.duplicate(false)", layer, StringComparison.Ordinal);
+        string blob = RequireSection(animation, "func _animate_blob(", "func _animate_scale(");
+        AssertSourceOrder(blob,
+            "randi() % ATLAS_CELLS",
+            "var atlas: Tween = create_tween()",
+            "1.0 / FRAME_ADVANCES",
+            "range(FRAME_ADVANCES + 1)",
+            "(start_frame + step) % ATLAS_CELLS",
+            "atlas.tween_callback(_set_cell.bind(material, frame))",
+            "if step < FRAME_ADVANCES:",
+            "atlas.tween_interval(interval)");
+        // The first random cell remains a deferred callback; one global draw
+        // occurs when starting the blob, and no second draw occurs at a tick.
+        Assert.DoesNotContain("_set_cell(", blob, StringComparison.Ordinal);
+        Assert.Equal(animation.IndexOf("randi()", StringComparison.Ordinal), animation.LastIndexOf("randi()", StringComparison.Ordinal));
+        string blast = RequireSection(animation, "func _animate_blast(", "static func initial_scroll(");
+        AssertSourceOrder(blast,
+            "initial_scroll(global_seconds)",
+            "_apply_blast(0.0, sphere, material, initial_v)",
+            "create_tween().tween_method(_apply_blast.bind(sphere, material, initial_v), 0.0, 1.0, 0.5)");
+        string scroll = RequireSection(animation, "static func initial_scroll(", "static func blast_values(");
+        AssertSourceOrder(scroll,
+            "F.value(-2.0 * F.value(global_seconds))",
+            "F.value(fmod(value, 1.0))",
+            "F.value(remainder + 1.0) if remainder < 0.0 else remainder");
+        string values = RequireSection(animation, "static func blast_values(", "func _apply_blast(");
+        AssertSourceOrder(values,
+            "var age: float = F.value(normalized_age)",
+            "Vector2.from_angle(age).y",
+            "F.value(F.value(F.value(0.6) * sine) + F.value(0.4))",
+            "F.value(radius / 0.5)",
+            "F.value(F.value(initial_v) - age)",
+            "F.value(1.0 + F.value(F.value(0.0 - 1.0) * age))",
+            "F.value(1.0 + F.value(F.value(1.0 - 1.0) * age))");
+        string apply = RequireSection(animation, "func _apply_blast(", "func _set_cell(");
+        AssertSourceOrder(apply,
+            "blast_values(initial_v, normalized_age)",
+            "sphere.scale = values.scale",
+            "material.uv1_offset = values.uv_offset",
+            "material.albedo_color = values.color");
     }
 
     [Fact]
@@ -828,29 +1040,27 @@ public sealed class ParticleSetTests
         AssertBirthColour("Mech Pulse Trail Medium", "Faint grey to black", 0.3f);
         Assert.Null(set.Require("Mech Pulse Bolt Sprite Medium").Reference("Colour_Range"));
 
-        string source = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
-        string presentation = RequireSection(
-            source,
-            "private void BuildPulseCannonPresentation()",
-            "private void SpawnPulseCannonMuzzleFlash(");
-        Assert.Contains("spark,\n            billboard: true,\n            tint: Colors.White", presentation);
-        Assert.Contains(
-            "trail,\n            billboard: false,\n            tint: new Color(0.5f, 0.5f, 0.5f)",
-            presentation);
-        Assert.Contains(
-            "halo,\n            billboard: true,\n            tint: new Color(0.25f, 0.25f, 0.25f)",
-            presentation);
-        Assert.Contains(
-            "energyTrail,\n            billboard: false,\n            tint: new Color(0.3f, 0.3f, 0.3f)",
-            presentation);
+        string scene = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn"));
+        AssertMaterial("Spark", "1, 1, 1, 1", billboard: true);
+        AssertMaterial("Trail", "0.5, 0.5, 0.5, 1", billboard: false);
+        AssertMaterial("Halo", "0.25, 0.25, 0.25, 1", billboard: true);
+        AssertMaterial("Energy", "0.3, 0.3, 0.3, 1", billboard: false);
+        string owner = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        Assert.Contains("material.albedo_texture = textures[key]", owner, StringComparison.Ordinal);
+        Assert.Contains("material.emission_texture = textures[key]", owner, StringComparison.Ordinal);
 
-        string factory = RequireSection(
-            source,
-            "private static StandardMaterial3D CreatePulseParticleMaterial(",
-            "private static StandardMaterial3D CreateEffectMaterial(");
-        Assert.Contains("AlbedoColor = tint", factory, StringComparison.Ordinal);
-        Assert.Contains("Emission = tint", factory, StringComparison.Ordinal);
+        void AssertMaterial(string id, string rgba, bool billboard)
+        {
+            string material = RequireSection(scene,
+                $"[sub_resource type=\"StandardMaterial3D\" id=\"{id}\"]", "\n[");
+            Assert.Contains("albedo_color = Color(" + rgba + ")", material, StringComparison.Ordinal);
+            Assert.Contains("emission = Color(" + rgba + ")", material, StringComparison.Ordinal);
+            foreach (string property in new[] { "transparency = 1", "blend_mode = 1", "shading_mode = 0", "cull_mode = 2", "emission_enabled = true" })
+                Assert.Contains(property, material, StringComparison.Ordinal);
+            Assert.Equal(billboard, material.Contains("billboard_mode = 1", StringComparison.Ordinal));
+        }
 
         void AssertBirthColour(string descriptorName, string rangeName, float value)
         {
@@ -952,91 +1162,42 @@ public sealed class ParticleSetTests
             [2f, 3f, 4f],
             vulcanHistory.Points.Select(point => point.X).ToArray());
 
-        string source = File.ReadAllText(Locate(
-            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
-        Assert.Contains(
-            "private const float PulseBoltTrailWidthMeters = 0.08f;",
-            source,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "private const float VulcanBulletTrailWidthMeters = 0.02f;",
-            source,
-            StringComparison.Ordinal);
-
-        string update = RequireSection(
-            source,
-            "private void UpdateProjectiles(",
-            "private void BuildPulseCannonPresentation()");
-        Assert.Contains("trailHistory.Advance(", update, StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "CreatePulseBoltVisual(projectile.Id)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "CreateVulcanBulletVisual(projectile.Id)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&\n" +
-                "                    _pendingPulseCannonMuzzleFlashes > 0",
-            update,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "projectile.RemainingTicks >",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains("ToTrailVelocity(projectile)", update, StringComparison.Ordinal);
-        Assert.Contains("projectile.RemainingTicks", update, StringComparison.Ordinal);
-        Assert.Contains(
-            "trailHistory.WithRenderedHead(rendered.Position)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "ProjectileTrailWidthMeters(projectile.Kind)",
-            update,
-            StringComparison.Ordinal);
-        Assert.Contains("_projectileTrails.Remove(id);", update, StringComparison.Ordinal);
-
-        string pulseVisual = RequireSection(
-            source,
-            "private Node3D CreatePulseBoltVisual(",
-            "private Node3D CreateVulcanBulletVisual(");
-        Assert.Contains("PulseBoltSprite", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("PulseBoltHalo", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("PulseBoltEnergyTrail", pulseVisual, StringComparison.Ordinal);
-        Assert.Contains("_pulseBoltTrailMaterial", pulseVisual, StringComparison.Ordinal);
-
-        string vulcanVisual = RequireSection(
-            source,
-            "private Node3D CreateVulcanBulletVisual(",
-            "private void UpdateProjectileTrail(");
-        Assert.Contains("_vulcanBulletTrailMaterial", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltSprite", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltHalo", vulcanVisual, StringComparison.Ordinal);
-        Assert.DoesNotContain("PulseBoltEnergyTrail", vulcanVisual, StringComparison.Ordinal);
-
-        string trailUpdater = RequireSection(
-            source,
-            "private void UpdateProjectileTrail(",
-            "private static StandardMaterial3D CreatePulseParticleMaterial(");
-        Assert.Contains("Mesh.PrimitiveType.TriangleStrip", trailUpdater, StringComparison.Ordinal);
-        Assert.Contains(
-            "widthMeters * 0.5f",
-            trailUpdater,
-            StringComparison.Ordinal);
-        Assert.Contains("surface.AddVertex", trailUpdater, StringComparison.Ordinal);
+        string owner = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        Assert.Contains("PULSE_TRAIL_WIDTH_BITS: int = 0x3da3d70a", owner, StringComparison.Ordinal);
+        Assert.Contains("VULCAN_TRAIL_WIDTH_BITS: int = 0x3ca3d70a", owner, StringComparison.Ordinal);
+        Assert.Equal(0.08f, BitConverter.UInt32BitsToSingle(0x3da3d70a));
+        Assert.Equal(0.02f, BitConverter.UInt32BitsToSingle(0x3ca3d70a));
+        string update = RequireSection(owner, "func _update_projectiles(", "func _spawn_muzzle(");
+        Assert.Contains("history.advance(position, _trail_velocity(item), item.remaining_ticks)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.uses_authored_trail(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.authored_point_count(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("Interpolation.authored_lifetime_ticks(item.kind)", update, StringComparison.Ordinal);
+        Assert.Contains("history.with_rendered_head(rendered.value.position)", update, StringComparison.Ordinal);
+        Assert.Contains("_trails.erase(id)", update, StringComparison.Ordinal);
+        Assert.Contains("_projectiles.erase(id)", update, StringComparison.Ordinal);
+        Assert.DoesNotContain("item.remaining_ticks >", update, StringComparison.Ordinal);
+        string pulseScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseBolt.tscn"));
+        string vulcanScene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/VulcanBullet.tscn"));
+        foreach (string layer in new[] { "PulseBoltSprite", "PulseBoltHalo", "PulseBoltEnergyTrail" })
+        {
+            Assert.Contains(layer, pulseScene, StringComparison.Ordinal);
+            Assert.DoesNotContain(layer, vulcanScene, StringComparison.Ordinal);
+        }
+        Assert.Contains("ProjectileTrail", pulseScene, StringComparison.Ordinal);
+        Assert.Contains("ProjectileTrail", vulcanScene, StringComparison.Ordinal);
+        string trailUpdater = RequireSection(owner, "func _update_trail(", "func _result()");
+        Assert.Contains("Mesh.PRIMITIVE_TRIANGLE_STRIP", trailUpdater, StringComparison.Ordinal);
+        Assert.Contains("width * 0.5", trailUpdater, StringComparison.Ordinal);
+        Assert.Contains("surface.add_vertex", trailUpdater, StringComparison.Ordinal);
+        string world = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string controller = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_presentation.gd"));
+        Assert.Contains("WorldFrameFacts(previous, current, interpolationAlpha, frameDelta, failures)", world, StringComparison.Ordinal);
+        Assert.Contains("_worldPresentation.Call(\"render_frame\", batch)", world, StringComparison.Ordinal);
+        Assert.Contains("_aquila_stage.bind(previous, current, player_yaw, frame_delta, batch.alpha_bits, stage)", controller, StringComparison.Ordinal);
+        Assert.Contains("_call_checked(_entities, \"render_frame\", [entity_batch.value, callback], \"entity presentation\")", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100ProjectileTrailHistory", world, StringComparison.Ordinal);
+        Assert.DoesNotContain("Level100RenderInterpolation.Interpolate", world, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));
@@ -1118,13 +1279,21 @@ public sealed class ParticleSetTests
             "public void ConsumeLevel100WeaponFireEvents(",
             "private void BuildEnvironment()");
         Assert.Contains(
-            "if (item.Weapon == Level100PlayerWeapon.PulseCannonPod)",
+            "weapons.Add(item is null ? default(Variant) : (int)item.Weapon);",
             fireEvents,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes++;",
+            "_worldPresentation.Call(\"queue_weapon_events\", batch)",
             fireEvents,
             StringComparison.Ordinal);
+        string controller = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_presentation.gd"));
+        string queueEvents = RequireSection(controller, "func queue_weapon_events(", "func host_snapshot()");
+        Assert.Equal(1, (int)Level100PlayerWeapon.PulseCannonPod);
+        Assert.Contains("PULSE_CANNON_POD: int = 1", controller, StringComparison.Ordinal);
+        Assert.Contains("if weapon == PULSE_CANNON_POD:", queueEvents, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = _wrap_i32(_pending_muzzles + 1)", queueEvents, StringComparison.Ordinal);
+        Assert.Contains("\"pending_muzzles\": _pending_muzzles", controller, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = rendered.pending_muzzles", controller, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "MechTwinVulcanCannon",
             fireEvents,
@@ -1134,94 +1303,40 @@ public sealed class ParticleSetTests
             fireEvents,
             StringComparison.Ordinal);
 
-        string projectileUpdate = RequireSection(
-            worldSource,
-            "private void UpdateProjectiles(",
-            "private void BuildPulseCannonPresentation()");
-        int newProjectileBranch = projectileUpdate.IndexOf(
-            "if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))",
-            StringComparison.Ordinal);
-        int muzzleFlashSpawn = projectileUpdate.IndexOf(
-            "SpawnPulseCannonMuzzleFlash(",
-            StringComparison.Ordinal);
-        int priorStateJoin = projectileUpdate.IndexOf(
-            "Level100ProjectileVisualState? prior",
-            StringComparison.Ordinal);
+        string owner = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/world_entities.gd"));
+        string projectileUpdate = RequireSection(owner, "func _update_projectiles(", "func _spawn_muzzle(");
+        int newProjectileBranch = projectileUpdate.IndexOf("if not _projectiles.has(item.id):", StringComparison.Ordinal);
+        int muzzleFlashSpawn = projectileUpdate.IndexOf("_spawn_muzzle(_launch_position(item), item.id)", StringComparison.Ordinal);
+        int priorStateJoin = projectileUpdate.IndexOf("Interpolation.interpolate_projectile(previous.get(item.id)", StringComparison.Ordinal);
         Assert.True(newProjectileBranch >= 0);
         Assert.InRange(muzzleFlashSpawn, newProjectileBranch + 1, priorStateJoin - 1);
-        Assert.Contains(
-            "ToPulseLaunchWorld(projectile)",
-            projectileUpdate,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes--;",
-            projectileUpdate,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "_pendingPulseCannonMuzzleFlashes = 0;",
-            projectileUpdate,
-            StringComparison.Ordinal);
-
-        string presentation = RequireSection(
-            worldSource,
-            "private void BuildPulseCannonPresentation()",
-            "private void SpawnPulseCannonMuzzleFlash(");
-        Assert.Contains(
-            "particle-alparticle5-additive.texture.aya",
-            presentation,
-            StringComparison.Ordinal);
-
-        string spawn = RequireSection(
-            worldSource,
-            "private void SpawnPulseCannonMuzzleFlash(",
-            "private void SpawnPulseImpact(");
-        Assert.Contains("CreateTimedEffect(", spawn, StringComparison.Ordinal);
-        Assert.Contains("0.5d);", spawn, StringComparison.Ordinal);
-        Assert.Contains("_pulseCannonMuzzleFlashTexture", spawn, StringComparison.Ordinal);
-        Assert.Contains("0.3f", spawn, StringComparison.Ordinal);
-        Assert.Contains("columns: 4", spawn, StringComparison.Ordinal);
-        Assert.Contains("rows: 4", spawn, StringComparison.Ordinal);
-        Assert.Contains(
-            "new Color(0.5f, 1f, 1f, 1f)",
-            spawn,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "AnimateScale(flash, 1f, 5f, 0.5d);",
-            spawn,
-            StringComparison.Ordinal);
-
-        string animation = RequireSection(
-            worldSource,
-            "private static void AnimatePulseCannonMuzzleFlash(",
-            "private static void AnimateTargetTankDelayedExplosion(");
-        Assert.Contains("const int startCell = 1;", animation, StringComparison.Ordinal);
-        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
-        Assert.Contains("const double cellsPerTurn = 1.4d;", animation, StringComparison.Ordinal);
-        Assert.Contains(
-            "cellsPerTurn * SimulationConstants.TicksPerSecond",
-            animation,
-            StringComparison.Ordinal);
-
-        string launchPosition = RequireSection(
-            worldSource,
-            "private static Vector3 ToPulseLaunchWorld(",
-            "private static Vector3 ToSpawnWorld(");
-        Assert.Contains(
-            "SimulationConstants.ProjectileLifetimeTicks - projectile.RemainingTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Velocity.X * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.VerticalVelocityMillimetersPerTick * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "projectile.Velocity.Z * elapsedTicks",
-            launchPosition,
-            StringComparison.Ordinal);
+        Assert.Contains("if item.kind == 1 and _pending_muzzles > 0:", projectileUpdate, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = _i32(_pending_muzzles - 1)", projectileUpdate, StringComparison.Ordinal);
+        Assert.Contains("_pending_muzzles = 0", projectileUpdate, StringComparison.Ordinal);
+        string presentation = RequireSection(worldSource, "private void BuildPulseCannonPresentation(", "private void SpawnPulseImpact(");
+        string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/PulseMuzzleFlash.tscn"));
+        Assert.DoesNotContain("particle-alparticle5-additive.texture.aya", presentation, StringComparison.Ordinal);
+        Assert.Contains("particle-alparticle5-additive.texture.aya", scene, StringComparison.Ordinal);
+        Assert.Contains("retail_texture_page.gd", scene, StringComparison.Ordinal);
+        Assert.Contains("_admit_texture_pages()", owner, StringComparison.Ordinal);
+        Assert.Contains("wait_time = 0.5", scene, StringComparison.Ordinal);
+        Assert.Contains("one_shot = true", scene, StringComparison.Ordinal);
+        Assert.Contains("size = Vector2(0.6, 0.6)", scene, StringComparison.Ordinal);
+        Assert.Contains("albedo_color = Color(0.5, 1, 1, 1)", scene, StringComparison.Ordinal);
+        Assert.Contains("uv1_scale = Vector3(0.25, 0.25, 1)", scene, StringComparison.Ordinal);
+        string animation = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/pulse_muzzle_flash.gd"));
+        Assert.Contains("START_CELL: int = 1", animation, StringComparison.Ordinal);
+        Assert.Contains("END_CELL: int = 15", animation, StringComparison.Ordinal);
+        Assert.Contains("CELLS_PER_TURN: float = 1.4", animation, StringComparison.Ordinal);
+        Assert.Contains("TICKS_PER_SECOND: int = 20", animation, StringComparison.Ordinal);
+        Assert.Contains("1.0 / (CELLS_PER_TURN * TICKS_PER_SECOND)", animation, StringComparison.Ordinal);
+        Assert.Contains("Vector3.ONE * 5.0, 0.5", animation, StringComparison.Ordinal);
+        Assert.Contains("Engine.is_editor_hint()", animation, StringComparison.Ordinal);
+        string launchPosition = RequireSection(owner, "static func _launch_position(", "static func _trail_velocity(");
+        Assert.Contains("PULSE_LIFETIME - item.remaining_ticks", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.velocity_x * elapsed", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.vertical_velocity * elapsed", launchPosition, StringComparison.Ordinal);
+        Assert.Contains("item.velocity_z * elapsed", launchPosition, StringComparison.Ordinal);
 
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));
@@ -1345,6 +1460,17 @@ public sealed class ParticleSetTests
         int endIndex = source.IndexOf(end, startIndex + start.Length, StringComparison.Ordinal);
         Assert.True(endIndex > startIndex, $"Source section end '{end}' is missing.");
         return source[startIndex..endIndex];
+    }
+
+    private static void AssertSourceOrder(string source, params string[] statements)
+    {
+        int offset = 0;
+        foreach (string statement in statements)
+        {
+            int index = source.IndexOf(statement, offset, StringComparison.Ordinal);
+            Assert.True(index >= 0, $"Source operation '{statement}' is missing or out of order.");
+            offset = index + statement.Length;
+        }
     }
 
     private static string Locate(string repositoryRelativePath)

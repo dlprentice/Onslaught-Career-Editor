@@ -197,29 +197,44 @@ public sealed class AttachedPanCameraStateTests
     public void FirstFlightWorldView_ConsumesTheClientCameraSnapshotSeam()
     {
         string source = File.ReadAllText(Path.Combine(
-            LocateGodotDirectory(),
+            AppContext.BaseDirectory, "godot-effects-source",
             "FirstFlightWorldView.cs"));
+        string bridge = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-effects-source",
+            "FirstFlightWorldView.Presentation.cs"));
+        string owner = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory, "godot-effects-source",
+            "world_presentation.gd"));
 
         Assert.Contains(
-            "private readonly AttachedPanCameraState _cameraState = new(",
+            "_worldPresentation.Call(\"render_frame\", batch)",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_cameraState.Advance(previous, current);",
-            source,
+            "const CameraState = preload(\"res://Client/world_camera.gd\")",
+            owner,
             StringComparison.Ordinal);
         Assert.Contains(
-            "AttachedPanCameraViewSnapshot cameraSnapshot =\n            _cameraState.Sample(interpolationAlpha);",
-            source,
+            "var camera_state: RefCounted = CameraState.new()",
+            owner,
+            StringComparison.Ordinal);
+        Assert.Contains("_camera_state = camera_state", owner, StringComparison.Ordinal);
+        Assert.Contains("if Engine.is_editor_hint() or _configured:", owner, StringComparison.Ordinal);
+        Assert.Contains("_call_checked(_camera_state, \"advance\", [previous, current], \"camera\")", owner, StringComparison.Ordinal);
+        Assert.Contains("_call_checked(_camera_state, \"sample_and_bind\", [alpha_bits], \"camera\")", owner, StringComparison.Ordinal);
+        Assert.DoesNotContain("new AttachedPanCameraState(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("GdCameraState", source + bridge, StringComparison.Ordinal);
+        Assert.Contains("var _camera_state: RefCounted", owner, StringComparison.Ordinal);
+        Assert.Contains(
+            "_show_hud = stage.camera.hud_visible",
+            owner,
             StringComparison.Ordinal);
         Assert.Contains(
-            "ShowHud = cameraSnapshot.HudVisible;",
-            source,
+            "_opening_pan = stage.camera.opening_pan_active",
+            owner,
             StringComparison.Ordinal);
-        Assert.Contains(
-            "OpeningPanActive = cameraSnapshot.OpeningPanActive;",
-            source,
-            StringComparison.Ordinal);
+        Assert.Contains("ShowHud = result[\"show_hud\"].AsBool();", bridge, StringComparison.Ordinal);
+        Assert.Contains("OpeningPanActive = result[\"opening_pan\"].AsBool();", bridge, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "public bool OpeningPanActive => !ShowHud;",
             source,
@@ -263,22 +278,4 @@ public sealed class AttachedPanCameraStateTests
                     new Level100RenderVector3(1f, 0f, 0f))
                 : null);
 
-    private static string LocateGodotDirectory()
-    {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            string candidate = Path.Combine(
-                directory.FullName,
-                "OnslaughtRebuild.Godot");
-            if (File.Exists(Path.Combine(candidate, "FirstFlightWorldView.cs")))
-            {
-                return candidate;
-            }
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
-    }
 }

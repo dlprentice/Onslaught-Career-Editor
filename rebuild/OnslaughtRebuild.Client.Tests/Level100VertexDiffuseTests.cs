@@ -159,8 +159,8 @@ public sealed class Level100VertexDiffuseTests
         string loader = ReadGodotSource("CuratedObjMeshLoader.cs");
         Assert.Contains("arrays[(int)Mesh.ArrayType.Color] = colors.ToArray();", loader);
 
-        string staticWorld = ReadGodotSource("Level100StaticWorldAsset.cs");
-        Assert.Contains("vertex_light_color *= COLOR.rgb;", staticWorld);
+        string shader = ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader");
+        Assert.Contains("vertex_light_color *= COLOR.rgb;", shader);
     }
 
     /// <summary>
@@ -183,17 +183,22 @@ public sealed class Level100VertexDiffuseTests
     {
         string staticWorld = ReadGodotSource("Level100StaticWorldAsset.cs");
 
-        Assert.Contains("uniform float stage_zero_gain;", staticWorld);
-        Assert.DoesNotContain("vertex_light_color * 2.0", staticWorld);
-        Assert.Equal(2, Occurrences(staticWorld, "* vertex_light_color * stage_zero_gain,"));
+        string shader = ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader");
+        string factory = ReadGodotSource("Scenes/Shared/retail_fixed_function_material.gd");
+        Assert.Contains("uniform float stage_zero_gain;", shader);
+        Assert.DoesNotContain("vertex_light_color * 2.0", shader);
+        Assert.Equal(2, Occurrences(shader, "* vertex_light_color * stage_zero_gain,"));
 
         // The enumerant values are the Direct3D D3DTOP ones, so the source and
         // the runtime dump read alike, and the gain is exactly 1 and exactly 2.
         Assert.Contains("Modulate = 4,", staticWorld);
         Assert.Contains("Modulate2X = 5,", staticWorld);
-        Assert.Contains("RetailStageZeroColorOperation.Modulate => 1f,", staticWorld);
-        Assert.Contains("RetailStageZeroColorOperation.Modulate2X => 2f,", staticWorld);
-        Assert.Contains("material.SetShaderParameter(\"stage_zero_gain\", stageZeroGain);", staticWorld);
+        Assert.Contains("const MODULATE: int = 4", factory);
+        Assert.Contains("const MODULATE_2X: int = 5", factory);
+        Assert.Contains("MODULATE: gain = 1.0", factory);
+        Assert.Contains("MODULATE_2X: gain = 2.0", factory);
+        Assert.Contains("material.set_shader_parameter(\"stage_zero_gain\", gain)", factory);
+        Assert.Contains("script.Call(\"create\", layerInput, metadata,", staticWorld);
     }
 
     /// <summary>
@@ -246,7 +251,7 @@ public sealed class Level100VertexDiffuseTests
     [Fact]
     public void TheReflectionLayerStaysLitAndNoPerDrawUnlitFlagWasAdded()
     {
-        string staticWorld = ReadGodotSource("Level100StaticWorldAsset.cs");
+        string staticWorld = ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader");
 
         Assert.Contains(
             "reflection_color.rgb * vertex_light_color * stage_zero_gain,",
@@ -272,7 +277,7 @@ public sealed class Level100VertexDiffuseTests
     /// <see cref="Level100StaticWorldAsset"/> hangs the mesh under a
     /// <c>MeshInstance3D</c> with <c>RotationDegrees = (-90, 0, 0)</c>. The
     /// composite <c>Rx(-90) * F</c> is asserted below to be exactly
-    /// <c>RetailAquilaWalkerAsset.MapVector</c>, <c>(x, y, z) -> (x, -z, -y)</c>
+    /// <c>Client/aquila_mesh.gd: Asset.map_vector</c>, <c>(x, y, z) -> (x, -z, -y)</c>
     /// — the same orthogonal, symmetric, self-inverse map with determinant -1
     /// the cockpit uses — so the world path is not a different normal space at
     /// all, only a different factorisation of the same one.
@@ -455,7 +460,7 @@ public sealed class Level100VertexDiffuseTests
         Assert.Contains("new Basis(Vector3.Right, -Mathf.Pi / 2f)", staticWorld);
         Assert.Contains(
             "vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);",
-            staticWorld);
+            ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader"));
     }
 
     /// <summary>
@@ -587,15 +592,16 @@ public sealed class Level100VertexDiffuseTests
 
         // A call site that states no rig gets the world one.
         Assert.Contains("        RetailMeshLightRig? lightRig = null)", staticWorld);
-        Assert.Contains(
-            "        RetailMeshLightRig rig = lightRig ?? RetailMeshLightRig.StaticWorld(terrain);",
-            staticWorld);
-        Assert.Contains("material.SetShaderParameter(\"ambient_color\", rig.AmbientColor);", staticWorld);
-        Assert.Contains("material.SetShaderParameter(\"sun_color\", rig.KeyLightColor);", staticWorld);
-        Assert.Contains("material.SetShaderParameter(\"anti_sun_color\", rig.FillLightColor);", staticWorld);
-        Assert.Contains(
-            "material.SetShaderParameter(\"sunlight_direction\", rig.KeyLightDirection);",
-            staticWorld);
+        string factory = ReadGodotSource("Scenes/Shared/retail_fixed_function_material.gd");
+        Assert.Contains("if light_rig == null:", factory);
+        Assert.Contains("var selected: Dictionary = static_world_rig(facts)", factory);
+        Assert.Contains("_color_vector(facts.ambient_color_rgb24, 255.0)", factory);
+        Assert.Contains("_color_vector(facts.sun_color_rgb24, 256.0)", factory);
+        Assert.Contains("_color_vector(facts.anti_sun_color_rgb24, 256.0)", factory);
+        Assert.Contains("material.set_shader_parameter(\"ambient_color\", rig.ambient_color)", factory);
+        Assert.Contains("material.set_shader_parameter(\"sun_color\", rig.key_light_color)", factory);
+        Assert.Contains("material.set_shader_parameter(\"anti_sun_color\", rig.fill_light_color)", factory);
+        Assert.Contains("material.set_shader_parameter(\"sunlight_direction\", rig.key_light_direction)", factory);
     }
 
     /// <summary>

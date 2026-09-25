@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/frontend_atlas_font.gd" id="1"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="2"]
+
+[sub_resource type="Texture2D" id="Atlas"]
+script = ExtResource("2")
+source_path = "res://Assets/Hud/font-22.texture.aya"
+dimensions = Vector2i(512, 512)
+compression = 2
+
+[resource]
+script = ExtResource("1")
+page = SubResource("Atlas")
+cell_size = Vector2i(32, 32)
+columns = 16
+system_font = false

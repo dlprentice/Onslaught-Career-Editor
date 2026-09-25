@@ -1,0 +1,19 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Aquila/aquila_model.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Scenes/Aquila/CockpitTexture.tres" id="2"]
+[ext_resource type="Texture2D" path="res://Scenes/Aquila/BodyATexture.tres" id="3"]
+[ext_resource type="Texture2D" path="res://Scenes/Aquila/BodyBTexture.tres" id="4"]
+[ext_resource type="Texture2D" path="res://Scenes/Aquila/ChromeTexture.tres" id="5"]
+[ext_resource type="Texture2D" path="res://Scenes/Aquila/GunLightTexture.tres" id="6"]
+[ext_resource type="Material" path="res://Scenes/Aquila/GunLightMaterial.tres" id="7"]
+
+[node name="RetailAquilaWalker" type="Node3D"]
+script = ExtResource("1")
+profile = "walker"
+cockpit_texture = ExtResource("2")
+texture_a = ExtResource("3")
+texture_b = ExtResource("4")
+chrome_texture = ExtResource("5")
+gun_light_texture = ExtResource("6")
+gun_light_material = ExtResource("7")

@@ -136,34 +136,31 @@ public sealed class RetailMainMenuHitTestTests
     [Fact]
     public void HotspotMethodsDoNotCallTheHitTestHelper()
     {
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        NativeMainMenuSource.HasNativeHostBridge();
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private void DrawClickToStart"));
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandlePointerConfirm"));
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private bool HandleKey"));
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private void DrawLoading"));
-        Assert.DoesNotContain("RetailMainMenuHitTest", Slice(flow, "private void DrawQuitConfirm"));
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeClickSource.Presentation);
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeFrontendSource.RootFunction("handle_pointer_confirm"));
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeFrontendSource.RootFunction("handle_key"));
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeLoadingSource.Presentation);
+        Assert.DoesNotContain("RetailMainMenuHitTest", NativeQuitSource.Presentation);
         Assert.DoesNotContain("TWIMTBP", flow);
     }
 
     [Fact]
     public void HandlePointerMotionWiresTheHitTestGate()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-
-        string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
-        string motion = Slice(flow, "private bool HandlePointerMotion");
-
-        Assert.Contains("RetailMainMenuHitTest.SwallowsFrontendInput", input);
-        Assert.DoesNotContain("if (_mainTransitionTime > 0)", input);
-        Assert.Contains("RetailMainMenuHitTest.AcceptsHitTest", motion);
-        Assert.Contains("RetailMainMenuHitTest.LanguageHoverContains", motion);
-        Assert.DoesNotContain("Confirm()", motion);
-        Assert.DoesNotContain("SetLanguage", motion);
-        Assert.DoesNotContain("AcceptsTwinFade", motion);
-        Assert.DoesNotContain("TWIMTBP", flow);
+        string input = NativeFrontendSource.RootFunction("handle_input");
+        string motion = NativeFrontendSource.RootFunction("handle_pointer_motion");
+        Assert.Contains("if _main_transition_time > 0 and not event is InputEventMouseMotion", input);
+        Assert.Contains("if not main_menu_transition() > F.value(0.9)", motion);
+        Assert.Contains("design.x >= 119.0 and design.x < 319.0 and design.y >= 248.0 and design.y < 288.0", motion);
+        Assert.DoesNotContain("confirm()", motion);
+        Assert.DoesNotContain("set_language", motion);
+        Assert.DoesNotContain("twin_fade", motion);
+        Assert.DoesNotContain("TWIMTBP", NativeFrontendSource.Root);
     }
 
     private static string Slice(string source, string signature)

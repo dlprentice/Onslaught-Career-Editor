@@ -14,15 +14,50 @@ func require(condition: bool, message: String) -> bool:
 func run_checks() -> void:
     var scene: PackedScene = load("res://Scenes/Frontend/Frontend.tscn")
     var view: Control = scene.instantiate()
+    if not require(view.get_script() is GDScript
+        and view.get_script().resource_path == "res://Scenes/Frontend/frontend_flow.gd",
+        "The actual frontend root must own its behavior in standard-Godot GDScript"): return
     var stage: Control = view.get_node("Stage")
+    if not require(view.get_node("Letterbox") is ColorRect and view.get_node("Letterbox").color == Color.BLACK, "Outside-stage clear must be an authored black control"): return
     var menu: Control = view.get_node("Stage/MainMenu")
+    var quit_view: Control = view.get_node("Stage/QuitConfirm")
+    var quit_dialog: Control = quit_view.get_node("Dialog")
+    var career: Control = stage.get_node("CareerName")
+    var career_field: Control = career.get_node("Name")
+    var level: Control = stage.get_node("LevelSelect")
+    var level_node: Control = level.get_node("Graph/Nodes/Node00")
+    var briefing: Control = stage.get_node("MissionBriefing")
+    var briefing_body: Control = briefing.get_node("Body")
+    var configuration: Control = stage.get_node("SelectConfiguration")
+    var configuration_unit: Control = configuration.get_node("Unit")
     var row: Control = menu.get_node("NewGame")
-    if not require(stage.get_child_count() == 10, "Expected 10 authored frontend pages before Ready"): return
+    if not require(stage.get_child_count() == 10 and view.has_node("MouseCursor/Quad"), "Expected 10 authored frontend pages plus their inspectable cursor before Ready"): return
     if not require(menu.get_node("Language/Flag") is TextureRect, "Language must be a native texture control"): return
     if not require(menu.get_node("VerticalGuide") is ColorRect, "Guide must be a native color control"): return
     if not require(row.position == Vector2(99, 294) and row.size == Vector2(240, 20), "Measured default row geometry changed"): return
-    if not require(row.get("Text") == "New Game", "Main-menu production text is not authored"): return
-    if not require(not row.get("OverrideText"), "Authored English labels must not replace imported localization"): return
+    if not require(row.get("text") == "New Game", "Main-menu production text is not authored"): return
+    if not require(not row.get("override_text"), "Authored English labels must not replace imported localization"): return
+    if not require(menu.has_method("set_frame") and menu.has_method("hit_test") and row.has_method("displayed_units"), "Main Menu must expose its production native component before Ready"): return
+    if not require(quit_view.has_method("set_frame") and quit_view.has_method("hit_test")
+        and quit_view.has_node("Dialog/Prompt") and quit_view.has_node("Dialog/Yes/Label")
+        and quit_view.has_node("Dialog/No/Highlight"), "Quit confirmation must expose its actual native panel and choices before Ready"): return
+    if not require(career.has_method("set_frame") and career.has_method("hit_test")
+        and career.has_node("Header/Title") and career.has_node("Name/Label")
+        and career.get_node("List/Rows").get_child_count() == 11,
+        "Career name must expose the actual header, name field and eleven visible row slots before Ready"): return
+    if not require(level.has_method("set_frame") and level.has_method("hit_test")
+        and level.get_node("Graph/Nodes").get_child_count() == 12
+        and level.get_node("Graph/Links").get_child_count() == 16
+        and level_node.has_node("Target"),
+        "Level Select must expose twelve real node groups, sixteen links and the current node's hit region before Ready"): return
+    if not require(briefing.has_method("set_frame") and briefing.has_method("hit_test")
+        and briefing.has_node("Background/Rock") and briefing.has_node("Header/Title")
+        and briefing.has_node("LevelName/Text") and briefing_body.get_node("Text").has_method("wrap_lines"),
+        "Briefing must expose the actual background, header, selected name and wrapping body before Ready"): return
+    if not require(configuration.has_method("set_frame") and configuration.has_method("hit_test")
+        and configuration.has_node("Background/Rock") and configuration.has_node("Background/Ring")
+        and configuration.has_node("Unit/Name") and configuration.has_node("Walker/Primary")
+        and configuration.has_node("Jet/Secondary"), "Configuration must expose actual native background, unit and weapon controls before Ready"): return
     var shadow: TextureRect = menu.get_node("TitleLogo/ShadowMotion/Shadow")
     var shadow_origin: Vector2 = shadow.position
     var old_pointer: int = Input.mouse_mode
@@ -32,14 +67,60 @@ func run_checks() -> void:
     if not require(menu.get_node("TitleLogo/Body").texture != null, "Title production pixels unavailable"): return
     if not require(view.get_node("Stage/Loading/Background").texture != null, "Loading production pixels unavailable"): return
     if not require(Input.mouse_mode == old_pointer, "Frontend scene changed pointer mode"): return
+    if not require(not menu.is_processing() and not menu.is_processing_input(), "Main Menu presentation started a clock or input owner"): return
+    if not require(quit_view.body_font == stage.get_node("Options").body_font
+        and quit_view.choice_font == stage.get_node("Options").title_font, "Quit confirmation must share the production frontend fonts"): return
+    if not require(career.body_font == stage.get_node("Options").body_font
+        and career.title_font == stage.get_node("Options").title_font,
+        "Career name must share the production frontend fonts"): return
+    if not require(level.body_font == stage.get_node("Options").body_font
+        and level.title_font == stage.get_node("Options").title_font,
+        "Level Select must share the production frontend fonts"): return
+    if not require(briefing.body_font == stage.get_node("Options").body_font
+        and briefing.title_font == stage.get_node("Options").title_font,
+        "Briefing must share the production frontend fonts"): return
+    if not require(configuration.body_font == stage.get_node("Options").body_font
+        and configuration.title_font == stage.get_node("Options").title_font,
+        "Configuration must share the production frontend fonts"): return
     if Engine.is_editor_hint():
         if not require(menu.visible and not view.is_processing() and not view.is_processing_input(), "Editor must show frozen Main Menu without processing"): return
-        if not require(not view.has_node("RetailMouseCursor"), "Editor must not install the game cursor"): return
-        var pages: Array[String] = ["ClickToStart", "MainMenu", "QuitConfirm", "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration", "Loading", "Options"]
+        if not require(not view.get_node("MouseCursor").visible and not view.get_node("MouseCursor").is_processing_input(), "Editor must leave the authored game cursor inactive"): return
+        var pages: Array[String] = ["ClickToStart", "MainMenu", "QuitConfirm", "CareerName", "LevelSelect", "MissionBriefing", "SelectConfiguration", "Loading", "Options", "Debriefing"]
         for page in range(pages.size()):
             view.set("EditorPage", page)
             if not require(stage.get_node(pages[page]).visible, "Editor page selector did not expose its actual page"): return
             if not require(not view.is_processing() and not view.is_processing_input(), "Changing editor page started processing"): return
+            if pages[page] == "ClickToStart":
+                var click: Control = stage.get_node("ClickToStart")
+                if not require(not click.get("_frame_supplied") and click.get_node("Splash/Motion/Image").has_method("drawing_rect"), "Click editor page must expose its native production controls and frozen facts"): return
+                if not require(click.view_snapshot() == {"pulse_timer": 5.0, "page_seconds": 5.0}, "Editor selection must not advance Click clocks"): return
+                if not require(click.get_node("Title/Body/Motion/Image").texture == menu.get_node("TitleLogo/Body").texture, "Click and the main menu must share the production title recipe"): return
+            if pages[page] == "MainMenu":
+                if not require(not menu.get("_frame_supplied") and menu.view_snapshot().selected_index == 0, "Main Menu must expose its frozen native fixture"): return
+            if pages[page] == "QuitConfirm":
+                if not require(menu.visible and menu.view_snapshot().selected_index == 6 and not menu.get_node("Reflection").visible, "Quit confirmation must retain its selected Quit backdrop and hidden reflection"): return
+                if not require(quit_view.view_snapshot() == {"selected_index": 0}
+                    and not quit_view.is_processing() and not quit_view.is_processing_input(), "Quit preview must show No without owning input or advancing navigation"): return
+            if pages[page] == "CareerName":
+                if not require(not career.get("_frame_supplied") and not career.is_processing()
+                    and not career.is_processing_input(), "Career preview must not start input, navigation or a clock"): return
+            if pages[page] == "LevelSelect":
+                if not require(not level.get("_frame_supplied") and not level.is_processing()
+                    and not level.is_processing_input(), "Level Select preview must not select a world, advance video or acquire input"): return
+            if pages[page] == "MissionBriefing":
+                if not require(not briefing.get("_frame_supplied") and not briefing.is_processing()
+                    and not briefing.is_processing_input(), "Briefing preview must not select a world, acquire input or advance navigation"): return
+            if pages[page] == "SelectConfiguration":
+                if not require(not configuration.get("_frame_supplied") and not configuration.is_processing()
+                    and not configuration.is_processing_input(), "Configuration preview must not select a unit, acquire input or start loading"): return
+            if pages[page] == "Debriefing":
+                var report: Control = stage.get_node("Debriefing")
+                if not require(not report.get("_frame_supplied") and report.get_node("Report/LevelName").has_method("displayed_units"), "Debriefing must show its native frozen projection"): return
+            if pages[page] == "Loading":
+                var loading: Control = stage.get_node("Loading")
+                if not require(not loading.get("_frame_supplied") and loading.get_node("Caption") is Node2D
+                    and loading.get_node("Caption/Body").has_method("displayed_units"), "Loading must expose the same native fractional caption and frozen facts"): return
+                if not require(loading.view_snapshot().facts == {"loading_frames": 0, "launch_requested": false, "ready": false}, "Editor selection must not advance or request loading"): return
         view.set("EditorPage", 1)
     else:
         if not require(view.get_node("Stage/ClickToStart").visible and not menu.visible, "Runtime frontend must start on its real click page"): return
@@ -50,9 +131,30 @@ func run_checks() -> void:
     var old_position: Vector2 = row.position
     row.position += Vector2(10, 5)
     row.size += Vector2(8, 2)
+    quit_dialog.position += Vector2(11, -4)
+    quit_dialog.size += Vector2(20, 12)
+    career_field.position += Vector2(7, -3)
+    career_field.size += Vector2(12, 8)
+    var level_rect: Rect2 = level_node.get_rect()
+    # Fullrect controls grow around their center. Set the intended size before
+    # the final position, then require that exact authored rectangle to persist.
+    level_node.size = level_rect.size + Vector2(9, 6)
+    level_node.position = level_rect.position + Vector2(5.5, -2.5)
+    var briefing_rect: Rect2 = briefing_body.get_rect()
+    var briefing_lines: Array = briefing_body.get_node("Text").wrap_lines()
+    briefing_body.position += Vector2(3.5, -1.5)
+    briefing_body.size += Vector2(31, 10)
+    var configuration_rect: Rect2 = configuration_unit.get_rect()
+    configuration_unit.position += Vector2(4.5, -2.5)
+    configuration_unit.size += Vector2(20, 8)
     await process_frame
     if not require(row.position == old_position + Vector2(10, 5), "Presentation overwrote an authored layout edit"): return
-    if not require(row.get("SourceRect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
+    if not require(level_node.get_rect() == Rect2(level_rect.position + Vector2(5.5, -2.5), level_rect.size + Vector2(9, 6)),
+        "Level Select node transform: before=%s, actual=%s, requested=%s" % [level_rect, level_node.get_rect(), Rect2(level_rect.position + Vector2(5.5, -2.5), level_rect.size + Vector2(9, 6))]): return
+    if not require(briefing_body.get_rect() == Rect2(briefing_rect.position + Vector2(3.5, -1.5), briefing_rect.size + Vector2(31, 10))
+        and briefing_body.get_node("Text").wrap_lines() == briefing_lines, "Briefing overwrote the requested layout edit or replaced its measured wrap ceiling with Control width"): return
+    if not require(configuration_unit.get_rect() == Rect2(configuration_rect.position + Vector2(4.5, -2.5), configuration_rect.size + Vector2(20, 8)), "Configuration presentation overwrote the requested authored unit-label edit"): return
+    if not require(row.get("source_rect") == Rect2(99, 294, 240, 20), "Layout edit rewrote imported geometry"): return
     if not require(shadow.position == shadow_origin, "Animation overwrote authored shadow geometry"): return
     view.size = Vector2(1280, 720)
     if not require(stage.scale == Vector2(1.5, 1.5) and stage.position == Vector2(160, 0), "Widescreen changed the measured stage fit"): return
@@ -69,6 +171,11 @@ func run_checks() -> void:
     await process_frame
     if not require(reloaded.get_node("Stage/MainMenu/TitleLogo/ShadowMotion/Shadow").position == shadow_origin, "Scene roundtrip accumulated shadow animation into layout"): return
     if not require(reloaded.get_node("Stage/MainMenu/NewGame").position == row.position, "Scene roundtrip discarded authored row position"): return
+    if not require(reloaded.get_node("Stage/QuitConfirm/Dialog").get_rect() == quit_dialog.get_rect(), "Scene roundtrip discarded authored quit-dialog geometry"): return
+    if not require(reloaded.get_node("Stage/CareerName/Name").get_rect() == career_field.get_rect(), "Scene roundtrip discarded authored career-name field geometry"): return
+    if not require(reloaded.get_node("Stage/LevelSelect/Graph/Nodes/Node00").get_rect() == level_node.get_rect(), "Scene roundtrip discarded authored level-select node geometry"): return
+    if not require(reloaded.get_node("Stage/MissionBriefing/Body").get_rect() == briefing_body.get_rect(), "Scene roundtrip discarded authored briefing body geometry"): return
+    if not require(reloaded.get_node("Stage/SelectConfiguration/Unit").get_rect() == configuration_unit.get_rect(), "Scene roundtrip discarded authored configuration unit-label geometry"): return
     reloaded.queue_free()
     print("FRONTEND_SCENE_CHECKS: 10 authored pages, 7 menu rows, native textures/guides, production assets, preserved authored edits, transient pixels, pointer unchanged; editor=", Engine.is_editor_hint())
     view.queue_free()

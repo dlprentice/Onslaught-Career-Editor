@@ -27,7 +27,8 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
-    private readonly Level100PauseMenu _pauseMenu = new();
+    private GdPlatformInputEdges? _platformInput;
+    private readonly GdPauseMenuState _pauseMenu = new();
     private readonly AudioPlaybackRetirement _audioRetirement = new();
     private int? _quitExitCode;
     private ulong _audioShutdownDeadlineMs;
@@ -35,7 +36,7 @@ public sealed partial class FirstFlightGame : Node3D
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
     private FirstFlightPauseMenu _pauseView = null!;
-    private Level100HudAssetCatalog _hudAssetCatalog = null!;
+    private Godot.Collections.Dictionary _hudTextCatalog = null!;
     private RetailFrontendFlow? _frontend;
     private Exception? _frontendInitializationError;
     private RetailCareerDescriptor? _selectedCareer;
@@ -103,7 +104,7 @@ public sealed partial class FirstFlightGame : Node3D
     {
         // The production frontend is authored in Main.tscn. Initialize its data
         // before its child _Ready, without moving gameplay into an editor tool.
-        _frontend = GetNode<RetailFrontendFlow>("RetailStartupFrontend");
+        _frontend = RetailFrontendFlow.Attach(GetNode<Control>("RetailStartupFrontend"));
         _frontend.PlaybackRetirement = _audioRetirement;
         try
         {
@@ -130,7 +131,7 @@ public sealed partial class FirstFlightGame : Node3D
 
             _audio = new Level100Audio { PlaybackRetirement = _audioRetirement };
             AddChild(_audio);
-            _hudAssetCatalog = Level100HudAssetCatalog.Load();
+            _hudTextCatalog = FirstFlightHud.LoadVerifiedCatalog();
 
             _frontend!.CareerSelected += SelectCareer;
             _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
@@ -737,9 +738,14 @@ public sealed partial class FirstFlightGame : Node3D
         }
         finally
         {
+            // Also covers a native owner created before world loading failed.
+            ReleasePlatformInput();
+            _frontend?.Dispose();
+            _frontend = null;
             _tapeRecorder?.Dispose();
             _tapeRecorder = null;
             _audioRetirement.Dispose();
+            _pauseMenu.Dispose();
             if (!_smokeMode)
             {
                 ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
@@ -878,7 +884,7 @@ public sealed partial class FirstFlightGame : Node3D
         _audio.BindAquila(
             RequirePlayerAquilaActorId(snapshot.Level100Actors),
             snapshot.Level100Actors);
-        _hud = FirstFlightHud.Create(_hudAssetCatalog);
+        _hud = FirstFlightHud.Create(_hudTextCatalog);
         AddChild(_hud);
         _hud.UpdateFromSnapshot(
             _session.CurrentSnapshot,
@@ -1099,11 +1105,36 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.QueueFree();
         _pauseView.QueueFree();
         _level100WorldCreated = false;
+        ReleasePlatformInput();
         _session = null!;
     }
 
-    private static InteractiveSession CreateSession() =>
-        new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+    private InteractiveSession CreateSession()
+    {
+        if (_platformInput is not null)
+            throw new InvalidOperationException("Release the previous platform input owner before creating a session.");
+        Level100ActorDefinitionSet definitions = Level100StaticWorldAsset.LoadActorDefinitions();
+        var input = new GdPlatformInputEdges();
+        try
+        {
+            // The session borrows this one native state. Host events, pause and
+            // focus resets, and host-frame advances keep their existing order.
+            var session = new InteractiveSession(SimulationSeed, definitions, input);
+            _platformInput = input;
+            return session;
+        }
+        catch
+        {
+            input.Dispose();
+            throw;
+        }
+    }
+
+    private void ReleasePlatformInput()
+    {
+        _platformInput?.Dispose();
+        _platformInput = null;
+    }
 
     /// <summary>
     /// When --record-tape was given, the session
@@ -1350,7 +1381,7 @@ public sealed partial class FirstFlightGame : Node3D
     {
         if (_frontend is not null)
         {
-            ApplyOptionsSettings(_frontend.Options.Settings);
+            ApplyOptionsSettings(_frontend.OptionsSettings);
         }
     }
 
@@ -1429,46 +1460,33 @@ public sealed partial class FirstFlightGame : Node3D
                     _smokeAudioQueuedSpeakerIds.Add(message.SpeakerId);
                     _smokeAudioQueuedMessageIds.Add(message.MessageId);
                 }
-                _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
             }
         }
     }
 
     private void ConsumeFrameEvents(FrameAdvanceResult result)
     {
-        _audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);
-        // BattleEngine.cpp:1763-1815 checks the absolute hull warning first,
-        // then the energy warning, using strict comparisons in retail units.
-        // Core stores both values in thousandths of those units.
-        _audio.SetAquilaWarningState(
-            result.CurrentSnapshot.Hull < 7_000
-                ? AquilaWarningAudioState.HullCritical
-                : result.CurrentSnapshot.Energy < 2_000
-                    ? AquilaWarningAudioState.EnergyLow
-                    : AquilaWarningAudioState.Normal);
-        ConsumeLevel100MissionEvents(result.Level100MissionEvents);
-        _audio.ConsumeAquilaFlightEvents(
-            result.AquilaFlightEvents,
-            result.CurrentSnapshot.Tick,
-            result.CurrentSnapshot.Level100Mission.Tick);
-        _audio.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
-        _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
-        _audio.SetAquilaFlightPitch(
-            result.CurrentSnapshot.JetThrusterPermille / 1_000f);
-        _world.ConsumeLevel100DestructionEvents(
-            result.Level100DestructionEvents,
-            result.CurrentSnapshot.Tick);
-        _audio.ConsumeLevel100DestructionEvents(
-            result.Level100DestructionEvents);
-        Level100MissionSnapshot mission = result.CurrentSnapshot.Level100Mission;
-        _audio.SetGameplayMix(Level100MissionTiming.GameplayMix(
-            mission.Outcome,
-            mission.FailureReason,
-            mission.TerminalTicksRemaining));
-        _audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(
-            mission.Outcome,
-            mission.FailureReason,
-            mission.TerminalTicksRemaining));
+        // The native audio owner receives one ordered Core batch. These fixed
+        // host phases preserve the former world/HUD interleavings exactly.
+        _audio.ConsumeFrame(result, phase =>
+        {
+            switch (phase)
+            {
+                case 0:
+                    ConsumeLevel100MissionEvents(result.Level100MissionEvents);
+                    break;
+                case 1:
+                    _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
+                    break;
+                case 2:
+                    _world.ConsumeLevel100DestructionEvents(
+                        result.Level100DestructionEvents,
+                        result.CurrentSnapshot.Tick);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown native audio host phase {phase}.");
+            }
+        });
     }
 
     private void RunFocusLossHandlerSmokeProbe()
@@ -1529,7 +1547,7 @@ public sealed partial class FirstFlightGame : Node3D
         // CGame::GetIntroFMV (game.cpp:1103-1119) is one retail flag. The
         // reconstruction owner is RetailFrontendScenePath.IsStartupSuppressed
         // so --skipfmv, --smoke, capture, and --intro cannot drift from the
-        // level-cutscene gate in RetailFrontendFlow.Cutscene.
+        // level-cutscene gate in the native frontend_flow.gd owner.
         bool suppressed = RetailFrontendScenePath.IsStartupSuppressed(
             OS.GetCmdlineUserArgs());
         if (suppressed)

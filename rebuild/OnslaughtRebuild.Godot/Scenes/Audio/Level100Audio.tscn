@@ -1,0 +1,107 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Audio/level100_audio.gd" id="1"]
+[ext_resource type="Script" path="res://Scenes/Audio/retail_audio_stream.gd" id="2"]
+[ext_resource type="PackedScene" path="res://Scenes/Audio/OneShot2D.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://Scenes/Audio/SpatialVoice.tscn" id="4"]
+
+[sub_resource type="Resource" id="FrontendMusic"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Frontend/Music/frontend-track-08.ogg"
+codec = 1
+
+[sub_resource type="Resource" id="TutorialMusic"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Level100/Music/tutorial-track-03.ogg"
+codec = 1
+
+[sub_resource type="Resource" id="CharacterVoice"]
+resource_local_to_scene = true
+script = ExtResource("2")
+codec = 1
+
+[sub_resource type="Resource" id="FlightLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Aquila/SoundEffects/engine-inflight.wav"
+looping = true
+
+[sub_resource type="Resource" id="WarningLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Aquila/SoundEffects/energy-low.wav"
+looping = true
+
+[sub_resource type="Resource" id="HullWarningLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Aquila/SoundEffects/energy-critical.wav"
+looping = true
+
+[sub_resource type="Resource" id="TrainerLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Level100/SoundEffects/trainer-flyby.wav"
+looping = true
+
+[sub_resource type="Resource" id="TransportLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Level100/SoundEffects/transport-flyby.wav"
+looping = true
+
+[sub_resource type="Resource" id="RepairLoop"]
+resource_local_to_scene = true
+script = ExtResource("2")
+source_path = "res://Assets/Level100/SoundEffects/repair-idle.wav"
+looping = true
+
+[node name="Level100Audio" type="Node3D"]
+process_mode = 3
+script = ExtResource("1")
+frontend_music_recipe = SubResource("FrontendMusic")
+tutorial_music_recipe = SubResource("TutorialMusic")
+hull_warning_recipe = SubResource("HullWarningLoop")
+
+[node name="Music" parent="." instance=ExtResource("3")]
+stream_recipe = SubResource("FrontendMusic")
+
+[node name="CharacterVoice" parent="." instance=ExtResource("3")]
+stream_recipe = SubResource("CharacterVoice")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Aquila" type="Marker3D" parent="Attachments"]
+gizmo_extents = 2.0
+
+[node name="FlightLoop" parent="Attachments/Aquila" instance=ExtResource("4")]
+stream_recipe = SubResource("FlightLoop")
+
+[node name="WarningLoop" parent="Attachments/Aquila" instance=ExtResource("4")]
+stream_recipe = SubResource("WarningLoop")
+
+[node name="AirTrainer" type="Marker3D" parent="Attachments"]
+gizmo_extents = 1.0
+
+[node name="Loop" parent="Attachments/AirTrainer" instance=ExtResource("4")]
+stream_recipe = SubResource("TrainerLoop")
+
+[node name="Transport" type="Marker3D" parent="Attachments"]
+gizmo_extents = 1.0
+
+[node name="Loop" parent="Attachments/Transport" instance=ExtResource("4")]
+stream_recipe = SubResource("TransportLoop")
+
+[node name="RepairPad" type="Marker3D" parent="Attachments"]
+gizmo_extents = 1.0
+
+[node name="Loop" parent="Attachments/RepairPad" instance=ExtResource("4")]
+stream_recipe = SubResource("RepairLoop")
+
+[node name="TerminalSamples" type="Node" parent="."]
+
+[node name="FrontendSamples" type="Node" parent="."]
+
+[node name="WorldSamples" type="Node3D" parent="."]

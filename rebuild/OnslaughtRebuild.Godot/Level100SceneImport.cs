@@ -22,7 +22,9 @@ public sealed partial class Level100SceneImport : Node
     private Dictionary<string, string> _previousFiles = new(StringComparer.Ordinal);
 
     private sealed record ImportedFile(string Name, string Sha256);
-    private sealed record ImportReceipt(string CodeIdentity, string ActorManifest, ImportedFile[] Files);
+    internal sealed record ImportedInput(string ResourcePath, string Sha256);
+    private sealed record ImportReceipt(string CodeIdentity, string ActorManifest, ImportedFile[] Files,
+        ImportedInput[]? Inputs = null);
 
     public override void _Ready()
     {
@@ -45,6 +47,7 @@ public sealed partial class Level100SceneImport : Node
                 if (receipt.CodeIdentity == CurrentCodeIdentity() &&
                     receipt.ActorManifest == Level100ActorDefinitionManifest.ExpectedManifestSha256)
                 {
+                    VerifyInputs(ProjectSettings.GlobalizePath("res://"), receipt.Inputs);
                     GD.Print("Level 100 production scenes are current.");
                     GetTree().Quit();
                     return;
@@ -77,6 +80,58 @@ public sealed partial class Level100SceneImport : Node
             throw new InvalidDataException("Level 100 production scenes are stale. Run npm run build:rebuild-godot.");
         }
         VerifyFiles(receipt);
+        VerifyInputs(ProjectSettings.GlobalizePath("res://"), receipt.Inputs);
+    }
+
+    internal static ImportedInput[] CaptureTextureInputs(Node world)
+    {
+        // These actual production recipes remain external when their materials
+        // are saved. Their private source bytes are therefore dependencies of
+        // the packed world, unlike the earlier embedded ImageTexture payloads.
+        var paths = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string component in new[]
+        {
+            "PlayerVisual/BodyPivot/RetailAquilaWalker",
+            "PlayerVisual/BodyPivot/RetailAquilaJet",
+            "RetailOpeningAndFirstPersonCamera/RetailAquilaCockpit",
+        })
+        {
+            using Variant returned = world.GetNode(component).Call("texture_bindings");
+            using Godot.Collections.Dictionary bindings = returned.AsGodotDictionary();
+            foreach (Variant value in bindings.Values)
+            {
+                Texture2D texture = value.As<Texture2D>();
+                paths.Add(texture.Get("source_path").AsString());
+            }
+        }
+        string project = ProjectSettings.GlobalizePath("res://");
+        return paths.Order(StringComparer.Ordinal)
+            .Select(path => new ImportedInput(path, Hash(InputPath(project, path)))).ToArray();
+    }
+
+    internal static void VerifyInputs(string projectDirectory, ImportedInput[]? inputs)
+    {
+        if (inputs is null || inputs.Length == 0 ||
+            inputs.Select(input => input.ResourcePath).Distinct(StringComparer.Ordinal).Count() != inputs.Length)
+            throw new InvalidDataException("Incomplete Level 100 texture input receipt. Rebuild the private production scene.");
+        foreach (ImportedInput input in inputs)
+        {
+            string path = InputPath(projectDirectory, input.ResourcePath);
+            if (input.Sha256.Length != 64 || !input.Sha256.All(Uri.IsHexDigit) ||
+                !System.IO.File.Exists(path) || !string.Equals(Hash(path), input.Sha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Imported faithful texture input is missing or changed: " +
+                    input.ResourcePath + ". Restore the admitted materialization before running the private scene.");
+        }
+    }
+
+    private static string InputPath(string projectDirectory, string resourcePath)
+    {
+        if (!resourcePath.StartsWith("res://Assets/", StringComparison.Ordinal) || resourcePath.Contains('\\') ||
+            resourcePath[6..].Split('/').Any(segment => segment is "" or "." or ".."))
+            throw new InvalidDataException("Invalid Level 100 texture input path.");
+        // Materialized inputs may use the documented canonical-lab links. Read
+        // them in place; the no-link rule applies only to generated outputs.
+        return Path.Combine(projectDirectory, resourcePath[6..]);
     }
 
     private static string CurrentCodeIdentity()
@@ -87,6 +142,43 @@ public sealed partial class Level100SceneImport : Node
             // Godot loads the managed assembly from memory, so Location may be
             // empty. Deterministic .NET builds derive the module ID from content.
             hash.AppendData(type.Assembly.ManifestModule.ModuleVersionId.ToByteArray());
+        }
+        hash.AppendData(Convert.FromHexString(NativeSourceIdentity(ProjectSettings.GlobalizePath("res://"))));
+        return Convert.ToHexString(hash.GetHashAndReset());
+    }
+
+    internal static string NativeSourceIdentity(string projectDirectory)
+    {
+        // Native definitions now participate in the private bake. Managed MVIDs
+        // alone would silently accept an old world after a GDScript, template or
+        // resource edit. Hash public production inputs, never generated Assets.
+        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        foreach (string directory in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Scenes/Aquila" })
+        {
+            string root = Path.Combine(projectDirectory, directory);
+            foreach (string path in System.IO.Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                .Where(path => Path.GetExtension(path) is ".gd" or ".gdshader" or ".gdshaderinc" or ".tscn" or ".tres")
+                .OrderBy(path => Path.GetRelativePath(projectDirectory, path).Replace('\\', '/'), StringComparer.Ordinal))
+            {
+                string relative = Path.GetRelativePath(projectDirectory, path).Replace('\\', '/');
+                hash.AppendData(System.Text.Encoding.UTF8.GetBytes(relative + "\0"));
+                hash.AppendData(SHA256.HashData(System.IO.File.ReadAllBytes(path)));
+            }
+        }
+        // Original adapters remain in the GPL tree; separately licensed
+        // numerical implementations stay outside it. Their actual selected
+        // source must participate too, or an adapter could keep the same bytes
+        // while the behavior used to bake the world changes underneath it.
+        foreach ((string source, string packaged) in new[]
+        {
+            ("../../tools/godot_compat/invariant_int32_format.gd", "RuntimeDependencies/DotNetInvariantInt32Format.gd"),
+            ("../../tools/godot_compat/arm_cosf.gd", "RuntimeDependencies/ArmCosf.gd"),
+        })
+        {
+            string relative = System.IO.File.Exists(Path.Combine(projectDirectory, packaged)) ? packaged : source;
+            string path = Path.GetFullPath(Path.Combine(projectDirectory, relative));
+            hash.AppendData(System.Text.Encoding.UTF8.GetBytes(relative + "\0"));
+            hash.AppendData(SHA256.HashData(System.IO.File.ReadAllBytes(path)));
         }
         return Convert.ToHexString(hash.GetHashAndReset());
     }
@@ -146,6 +238,7 @@ public sealed partial class Level100SceneImport : Node
         AddChild(world);
         world.BuildImportedScene(session.CurrentSnapshot);
         world.AddImportedActorResources();
+        ImportedInput[] inputs = CaptureTextureInputs(world);
         world.SetMeta("source", "Faithful imported Level 100; generated by the production import recipe");
         world.SetMeta("simulation_owner", "C# Core; scene transforms never become simulation inputs");
         world.SetMeta("actor_manifest_sha256", Level100ActorDefinitionManifest.ExpectedManifestSha256);
@@ -181,7 +274,7 @@ public sealed partial class Level100SceneImport : Node
             Level100ActorDefinitionManifest.ExpectedManifestSha256,
             _writtenFiles.Distinct().Order(StringComparer.Ordinal)
                 .Select(name => new ImportedFile(name, Hash(ProjectSettings.GlobalizePath(DirectoryPath + "/" + name))))
-                .ToArray());
+                .ToArray(), inputs);
         System.IO.File.WriteAllText(ProjectSettings.GlobalizePath(ReceiptPath),
             JsonSerializer.Serialize(receipt, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         // Retire only this importer's obsolete, unchanged generated files. An
@@ -204,8 +297,12 @@ public sealed partial class Level100SceneImport : Node
         int index = node.GetIndex();
         OwnChildren(node, node);
         SaveScene(node, name);
-        Node3D instance = ResourceLoader.Load<PackedScene>(DirectoryPath + "/" + name,
-            cacheMode: ResourceLoader.CacheMode.Ignore).Instantiate<Node3D>();
+        // The instantiated tree retains its scene state. Release the temporary
+        // managed resource wrapper explicitly instead of leaving it for Mono's
+        // shutdown finalizer after the engine has destroyed the resource cache.
+        using PackedScene component = ResourceLoader.Load<PackedScene>(DirectoryPath + "/" + name,
+            cacheMode: ResourceLoader.CacheMode.Ignore);
+        Node3D instance = component.Instantiate<Node3D>();
         parent.RemoveChild(node);
         parent.AddChild(instance);
         parent.MoveChild(instance, index);

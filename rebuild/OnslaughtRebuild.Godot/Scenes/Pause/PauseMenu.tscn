@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://FirstFlightPauseMenu.cs" id="1_controller"]
-[ext_resource type="Script" path="res://Scenes/Pause/RetailBitmapLabel.cs" id="2_label"]
-[ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="3_texture"]
+[ext_resource type="Script" path="res://Scenes/Pause/pause_menu.gd" id="1_controller"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_bitmap_label.gd" id="2_label"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_rect.gd" id="3_texture"]
 
 [node name="Level100PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -75,9 +75,9 @@ offset_right = 640.0
 offset_bottom = 177.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "PAUSED"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 1)
-Shadow = false
+text = "PAUSED"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 1)
+shadow = false
 
 [node name="Rows" type="Control" parent="Surface/Native/RootRange"]
 layout_mode = 0
@@ -92,9 +92,9 @@ offset_right = 640.0
 offset_bottom = 195.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Continue"
-TextColor = Color(1, 0.8, 0, 1)
-Shadow = true
+text = "Continue"
+text_color = Color(1, 0.8, 0, 1)
+shadow = true
 
 [node name="MessageLog" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -103,9 +103,9 @@ offset_right = 640.0
 offset_bottom = 215.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Message Log"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
-Shadow = true
+text = "Message Log"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
+shadow = true
 
 [node name="Briefing" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -114,9 +114,9 @@ offset_right = 640.0
 offset_bottom = 235.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Briefing"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
-Shadow = true
+text = "Briefing"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
+shadow = true
 
 [node name="ControllerOptions" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -125,9 +125,9 @@ offset_right = 640.0
 offset_bottom = 255.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Controller Options"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
-Shadow = true
+text = "Controller Options"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
+shadow = true
 
 [node name="SoundOptions" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -136,9 +136,9 @@ offset_right = 640.0
 offset_bottom = 275.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Sound Options"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
-Shadow = true
+text = "Sound Options"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
+shadow = true
 
 [node name="VideoOptions" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -147,9 +147,9 @@ offset_right = 640.0
 offset_bottom = 295.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Video Options"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
-Shadow = true
+text = "Video Options"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 0.3137255)
+shadow = true
 
 [node name="Retry" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -158,9 +158,9 @@ offset_right = 640.0
 offset_bottom = 315.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Retry"
-TextColor = Color(0.839216, 0.839216, 0.839216, 1)
-Shadow = true
+text = "Retry"
+text_color = Color(0.839216, 0.839216, 0.839216, 1)
+shadow = true
 
 [node name="Quit" type="Control" parent="Surface/Native/RootRange/Rows"]
 layout_mode = 0
@@ -169,9 +169,9 @@ offset_right = 640.0
 offset_bottom = 335.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Quit"
-TextColor = Color(0.839216, 0.839216, 0.839216, 1)
-Shadow = true
+text = "Quit"
+text_color = Color(0.839216, 0.839216, 0.839216, 1)
+shadow = true
 
 [node name="ConfirmationRange" type="Control" parent="Surface/Native"]
 layout_mode = 0
@@ -292,9 +292,9 @@ offset_right = 640.0
 offset_bottom = 317.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Are you sure?"
-TextColor = Color(0.3137255, 0.3137255, 0.3137255, 1)
-Shadow = false
+text = "Are you sure?"
+text_color = Color(0.3137255, 0.3137255, 0.3137255, 1)
+shadow = false
 
 [node name="Rows" type="Control" parent="Surface/Native/ConfirmationRange"]
 layout_mode = 0
@@ -309,9 +309,9 @@ offset_right = 640.0
 offset_bottom = 335.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "No"
-TextColor = Color(1, 0.8, 0, 1)
-Shadow = true
+text = "No"
+text_color = Color(1, 0.8, 0, 1)
+shadow = true
 
 [node name="Yes" type="Control" parent="Surface/Native/ConfirmationRange/Rows"]
 layout_mode = 0
@@ -320,6 +320,6 @@ offset_right = 640.0
 offset_bottom = 355.0
 mouse_filter = 2
 script = ExtResource("2_label")
-Text = "Yes"
-TextColor = Color(0.839216, 0.839216, 0.839216, 1)
-Shadow = true
+text = "Yes"
+text_color = Color(0.839216, 0.839216, 0.839216, 1)
+shadow = true

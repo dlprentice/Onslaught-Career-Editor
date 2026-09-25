@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/debriefing_projection.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+world_finished = 100
+mission_status = 2
+primary_objectives = 1
+secondary_objectives = 2
+grade = 1
+fallback_level_name = ""

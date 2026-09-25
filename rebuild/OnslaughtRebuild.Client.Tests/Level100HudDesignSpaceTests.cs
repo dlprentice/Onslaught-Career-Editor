@@ -41,12 +41,8 @@ public sealed class Level100HudDesignSpaceTests
 
     private static string ReadHudSource()
     {
-        string path = Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-hud-layout-source",
-            "FirstFlightHud.cs");
-        Assert.True(File.Exists(path), $"HUD source was not copied to the test output: {path}");
-        return File.ReadAllText(path);
+        return string.Join("\n", new[] { "hud_draw.gd", "hud_base_draw.gd", "hud_glow_draw.gd", "hud_text_draw.gd", "first_flight_hud.gd" }
+            .Select(name => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-hud-layout-source", name))));
     }
 
     private static string ReadHudScene() => File.ReadAllText(Path.Combine(
@@ -73,46 +69,32 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void HudDeclaresTheSame640x480StageAsTheFrontend()
     {
-        Assert.Equal(DesignWidth, Constant(@"DesignWidth\s*=\s*(\d+(?:\.\d+)?)f"));
-        Assert.Equal(DesignHeight, Constant(@"DesignHeight\s*=\s*(\d+(?:\.\d+)?)f"));
+        Assert.Equal(DesignWidth, Constant(@"DESIGN_WIDTH:\s*float\s*=\s*(\d+(?:\.\d+)?)"));
+        Assert.Equal(DesignHeight, Constant(@"DESIGN_HEIGHT:\s*float\s*=\s*(\d+(?:\.\d+)?)"));
     }
 
     [Fact]
     public void NoLayoutOffsetIsTakenFromTheRawViewport()
     {
-        // Size.X / Size.Y may appear only inside DesignTransform, which is what
-        // converts the window into the 640x480 stage. Anywhere else it is the
-        // viewport-relative layout bug this test exists to prevent.
-        int designTransform = Source.IndexOf("protected (float Scale, Vector2 Offset) DesignTransform()", StringComparison.Ordinal);
-        Assert.True(designTransform > 0, "DesignTransform is missing from the HUD.");
-        int designTransformEnd = Source.IndexOf("protected void BeginDesignSpace()", designTransform, StringComparison.Ordinal);
-        Assert.True(designTransformEnd > designTransform, "BeginDesignSpace is missing from the HUD.");
-
-        foreach (Match match in Regex.Matches(Source, @"(?<!\w|\.)Size\s*\.\s*[XY]"))
-        {
-            Assert.True(
-                match.Index > designTransform && match.Index < designTransformEnd,
-                $"FirstFlightHud.cs lays out against the raw viewport at offset {match.Index}: '{match.Value}'. " +
-                "In-level HUD offsets must be 640x480 design pixels.");
-        }
+        // The authored stage alone owns the viewport letterbox. Instrument
+        // drawing laws may not inspect window geometry.
+        Assert.DoesNotMatch(@"get_viewport|get_visible_rect|viewport_size", Source);
+        Assert.Contains("target.retail_to_local_transform()", Source, StringComparison.Ordinal);
     }
 
     [Fact]
     public void EveryHudLayerDrawsInsideTheDesignStage()
     {
-        int drawCount = Regex.Matches(Source, @"public override void _Draw\(\)").Count;
+        int drawCount = Regex.Matches(Source, @"func render\(part: Part\)").Count;
         Assert.Equal(3, drawCount);
-        Assert.Equal(drawCount, Regex.Matches(Source, @"\bBeginDesignSpace\(\);").Count);
-        Assert.Equal(drawCount, Regex.Matches(Source, @"\bEndDesignSpace\(\);").Count);
+        Assert.Equal(drawCount, Regex.Matches(Source, @"\bbegin\(part\)").Count);
+        Assert.Equal(drawCount, Regex.Matches(Source, @"(?m)^\tend\(\)").Count);
     }
 
     [Fact]
     public void HudTexturesAreBlittedWithoutInterpolation()
     {
-        // The 640x480 retail frame renders font-13ps glyphs at their exact 16px
-        // atlas cell size with single-texel stems: the released HUD did not
-        // interpolate. Nearest reproduces that at the design resolution.
-        Assert.Matches(@"TextureFilter\s*=\s*CanvasItem\.TextureFilterEnum\.Nearest", Source);
+        Assert.Matches(@"(?s)\[node name=""Surface""[^\]]*\][^\[]*texture_filter = 1", ReadHudScene());
     }
 
     [Fact]
@@ -128,10 +110,10 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void BattleLineRingAndPortraitAreConcentricOnTheMeasuredRetailCircle()
     {
-        float ringRight = Constant(@"BattleLineInstrumentRect\(\) =>\s*new\(DesignWidth - (\d+(?:\.\d+)?)f");
-        float ringBottom = Constant(@"BattleLineInstrumentRect\(\) =>\s*new\(DesignWidth - \d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
-        float portraitRight = Constant(@"BattleLinePortraitRect\(\) =>\s*new\(DesignWidth - (\d+(?:\.\d+)?)f");
-        float portraitBottom = Constant(@"BattleLinePortraitRect\(\) =>\s*new\(DesignWidth - \d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
+        float ringRight = Constant(@"battle_line_rect\(\)[^\n]*\n\s*return Rect2\(DESIGN_WIDTH - (\d+(?:\.\d+)?)");
+        float ringBottom = Constant(@"battle_line_rect\(\)[^\n]*\n\s*return Rect2\(DESIGN_WIDTH - \d+(?:\.\d+)?, DESIGN_HEIGHT - (\d+(?:\.\d+)?)");
+        float portraitRight = Constant(@"portrait_rect\(\)[^\n]*\n\s*return Rect2\(DESIGN_WIDTH - (\d+(?:\.\d+)?)");
+        float portraitBottom = Constant(@"portrait_rect\(\)[^\n]*\n\s*return Rect2\(DESIGN_WIDTH - \d+(?:\.\d+)?, DESIGN_HEIGHT - (\d+(?:\.\d+)?)");
 
         float ringCentreX = DesignWidth - ringRight + RingContentCentre;
         float ringCentreY = DesignHeight - ringBottom + RingContentCentre;
@@ -152,7 +134,7 @@ public sealed class Level100HudDesignSpaceTests
     public void BothLowerInstrumentsShareTheMeasuredRetailBaseline()
     {
         float leftBottom = DesignHeight - ScannerSceneOffset("offset_top");
-        float rightBottom = Constant(@"BattleLineInstrumentRect\(\) =>\s*new\(DesignWidth - \d+(?:\.\d+)?f, DesignHeight - (\d+(?:\.\d+)?)f");
+        float rightBottom = Constant(@"battle_line_rect\(\)[^\n]*\n\s*return Rect2\(DESIGN_WIDTH - \d+(?:\.\d+)?, DESIGN_HEIGHT - (\d+(?:\.\d+)?)");
 
         // Retail puts both ring centres within 0.8px of the same scanline
         // (417.25 and 416.46), and both textures carry their ring at the same
@@ -163,9 +145,9 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void MessagePanelBodyMatchesItsMeasuredRetailExtent()
     {
-        float centreXOffset = Constant(@"centerX = \(DesignWidth \* 0\.5f\) \+ (\d+(?:\.\d+)?)f");
-        float centreYInset = Constant(@"centerY = DesignHeight - (\d+(?:\.\d+)?)f");
-        float pieceHeight = Constant(@"pieceHeight = (\d+(?:\.\d+)?)f");
+        float centreXOffset = Constant(@"center_x: float = \(DESIGN_WIDTH \* 0\.5\) \+ (\d+(?:\.\d+)?)");
+        float centreYInset = Constant(@"center_y: float = DESIGN_HEIGHT - (\d+(?:\.\d+)?)");
+        float pieceHeight = Constant(@"piece_height: float = (\d+(?:\.\d+)?)");
 
         float centreX = (DesignWidth * 0.5f) + centreXOffset;
         float centreY = DesignHeight - centreYInset;
@@ -183,22 +165,12 @@ public sealed class Level100HudDesignSpaceTests
     [Fact]
     public void MessageTextIsLaidOutFromTheMeasuredPanelMetricsAndNotFromLocalConstants()
     {
-        // The defect this guards: the message text used to be laid out from
-        // constants local to the text layer - a 232px wrap, five lines per
-        // page, and a rect at (226, 387) - which put the first two of five
-        // lines above the panel body's measured top edge at y 405.5. The
-        // metrics now live in Level100MessagePanel, where they are unit tested
-        // against the level100-gameplay captures, and the layer must use them.
-        Assert.DoesNotMatch(@"MessageTextWidth", Source);
-        Assert.DoesNotMatch(@"MaximumMessageLines", Source);
-        Assert.DoesNotMatch(@"\bPaginate\(", Source);
-        Assert.DoesNotMatch(@"DesignHeight - 93f", Source);
-
-        Assert.Matches(@"Level100MessagePanel\.Wrap\(", Source);
-        Assert.Matches(@"Level100MessagePanel\.Window\(", Source);
-        Assert.Matches(@"Level100MessagePanel\.TextPenLeft", Source);
-        Assert.Matches(@"Level100MessagePanel\.FirstLinePenTop", Source);
-        Assert.Matches(@"Level100MessagePanel\.LineHeightPixels", Source);
+        Assert.DoesNotMatch(@"MessageTextWidth|MaximumMessageLines|Paginate", Source);
+        Assert.Contains("MessagePanel.wrap(", Source, StringComparison.Ordinal);
+        Assert.Contains("MessagePanel.window(", Source, StringComparison.Ordinal);
+        Assert.Contains("MessagePanel.TEXT_PEN_LEFT", Source, StringComparison.Ordinal);
+        Assert.Contains("MessagePanel.FIRST_LINE_PEN_TOP", Source, StringComparison.Ordinal);
+        Assert.Contains("MessagePanel.LINE_HEIGHT_PIXELS", Source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -207,8 +179,8 @@ public sealed class Level100HudDesignSpaceTests
         // Re-derive the panel body from the art constants in the HUD source and
         // check the text block from Level100MessagePanel fits it, so the two can
         // never drift apart again.
-        float centreYInset = Constant(@"centerY = DesignHeight - (\d+(?:\.\d+)?)f");
-        float pieceHeight = Constant(@"pieceHeight = (\d+(?:\.\d+)?)f");
+        float centreYInset = Constant(@"center_y: float = DESIGN_HEIGHT - (\d+(?:\.\d+)?)");
+        float pieceHeight = Constant(@"piece_height: float = (\d+(?:\.\d+)?)");
         float top = (DesignHeight - centreYInset) - (pieceHeight * 0.5f);
         float bodyTop = top + (28f * pieceHeight / 128f);
         float bodyBottom = top + (91f * pieceHeight / 128f);

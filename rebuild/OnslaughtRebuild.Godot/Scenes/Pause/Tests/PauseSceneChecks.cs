@@ -27,21 +27,21 @@ public sealed partial class PauseSceneChecks : Node
                     throw new InvalidOperationException("Capture directory must be an existing absolute task-owned path.");
             }
             Input.MouseModeEnum pointerBefore = Input.MouseMode;
-            var model = new Level100PauseMenu();
+            using var model = new GdPauseMenuState();
             var view = FirstFlightPauseMenu.Create(model);
-            var surface = view.GetNode<Control>("Surface");
-            var native = view.GetNode<Control>("Surface/Native");
+            var surface = view.Presentation.GetNode<Control>("Surface");
+            var native = view.Presentation.GetNode<Control>("Surface/Native");
             var root = native.GetNode<Control>("RootRange");
             var prompt = native.GetNode<Control>("ConfirmationRange");
-            var rootRows = root.GetNode<Control>("Rows").GetChildren().Cast<RetailBitmapLabel>().ToArray();
-            var promptRows = prompt.GetNode<Control>("Rows").GetChildren().Cast<RetailBitmapLabel>().ToArray();
+            var rootRows = root.GetNode<Control>("Rows").GetChildren().Cast<Control>().ToArray();
+            var promptRows = prompt.GetNode<Control>("Rows").GetChildren().Cast<Control>().ToArray();
             var frame = prompt.GetNode<Control>("Frame");
             Check(rootRows.Length == 8 && promptRows.Length == 2, "Rows exist in the authored scene before _Ready.");
             Check(frame.GetChildCount() == 9, "The confirmation frame has nine authored texture controls.");
             Check(root.GetNodeOrNull("Frame") is null, "Only the confirmation has a panel frame.");
             for (int i = 0; i < rootRows.Length; i++)
             {
-                Check(rootRows[i].Text == model.RootEntries[i].Label, "Authored root order/text matches the model.");
+                Check(rootRows[i].Get("text").AsString() == model.RootEntries[i].Label, "Authored root order/text matches the model.");
                 Check(rootRows[i].Position == new Vector2(0, 175 + 20 * i) &&
                     rootRows[i].Size == new Vector2(640, 20), "Retained root row rectangles.");
             }
@@ -58,10 +58,10 @@ public sealed partial class PauseSceneChecks : Node
             viewport.AddChild(view);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(!surface.Visible && !view.InputReady && !model.IsOpen, "Standalone scene starts inactive.");
-            Check(view.GetNode<TextureRect>("Surface/Overlay").Texture is not null, "Production private atlas loaded.");
+            Check(view.Presentation.GetNode<TextureRect>("Surface/Overlay").Texture is not null, "Production private atlas loaded.");
             Check(Input.MouseMode == pointerBefore, "Scene initialization leaves pointer ownership alone.");
             var savedScene = new PackedScene();
-            Check(savedScene.Pack(view) == Error.Ok, "Production scene can be packed after private asset binding.");
+            Check(savedScene.Pack(view.Presentation) == Error.Ok, "Production scene can be packed after private asset binding.");
             SceneState savedState = savedScene.GetState();
             int transientTextures = 0;
             for (int nodeIndex = 0; nodeIndex < savedState.GetNodeCount(); nodeIndex++)
@@ -75,6 +75,8 @@ public sealed partial class PauseSceneChecks : Node
                 Check(!embedsTexture, "Packing a public scene never embeds a bound private texture.");
             }
             Check(transientTextures == 12, "All overlay/circle/frame textures participate in the publication guard.");
+            CheckSharedFontParity(root, rootRows[0]);
+            CheckSharedTextureParity(view.Presentation);
             model.Open();
             view.Open();
             Check(!view.InputReady && !root.Visible, "Opening blocks input and rows during the fade.");
@@ -83,7 +85,7 @@ public sealed partial class PauseSceneChecks : Node
             view.AdvanceAnimation(-1d);
             Check(!view.InputReady, "Invalid time deltas cannot complete opening.");
             view.AdvanceAnimation(0.2d);
-            var overlay = view.GetNode<TextureRect>("Surface/Overlay");
+            var overlay = view.Presentation.GetNode<TextureRect>("Surface/Overlay");
             var circle01 = native.GetNode<TextureRect>("Circle01");
             var circle02 = native.GetNode<TextureRect>("Circle02");
             Near(overlay.SelfModulate.A, 96f / 255f, "Half-fade overlay alpha.");
@@ -105,12 +107,12 @@ public sealed partial class PauseSceneChecks : Node
             model.ActivateSelected();
             view.Refresh();
             Check(root.Visible && prompt.Visible, "Confirmation preserves the root list underneath.");
-            Check(rootRows[6].TextColor == new Color(1f, 204f / 255f, 0f, 1f), "Underlying root selection is preserved.");
-            var title = prompt.GetNode<RetailBitmapLabel>("Title");
-            Check(!title.Shadow && promptRows.All(row => row.Shadow), "Title and item shadow policy is retained.");
-            Check(title.TextColor == new Color(80f / 255f, 80f / 255f, 80f / 255f, 1f), "Retained title colour.");
-            float rawWidth = (Math.Max(title.Measure("Are you sure?"),
-                Math.Max(promptRows[0].Measure("No"), promptRows[1].Measure("Yes"))) + 16f) * 1.1f;
+            Check(rootRows[6].Get("text_color").AsColor() == new Color(1f, 204f / 255f, 0f, 1f), "Underlying root selection is preserved.");
+            var title = prompt.GetNode<Control>("Title");
+            Check(!title.Get("shadow").AsBool() && promptRows.All(row => row.Get("shadow").AsBool()), "Title and item shadow policy is retained.");
+            Check(title.Get("text_color").AsColor() == new Color(80f / 255f, 80f / 255f, 80f / 255f, 1f), "Retained title colour.");
+            float rawWidth = (Math.Max(Measure(title, "Are you sure?"),
+                Math.Max(Measure(promptRows[0], "No"), Measure(promptRows[1], "Yes"))) + 16f) * 1.1f;
             float width = Math.Max(64f, MathF.Round(rawWidth));
             float left = MathF.Round(320f - rawWidth * 0.5f);
             var topLeft = frame.GetNode<TextureRect>("CornerTopLeft");
@@ -151,6 +153,61 @@ public sealed partial class PauseSceneChecks : Node
             GD.PushError(error.ToString());
             GetTree().Quit(1);
         }
+    }
+
+    private void CheckSharedFontParity(Control root, Control firstRow)
+    {
+        var title = root.GetNode<Control>("Title");
+        var normal = new RetailBitmapFont(LegacyCuratedAyaTextureReference.Load(
+            "res://Assets/Hud/font-22.texture.aya", 512, 512,
+            LegacyCuratedAyaTextureReference.Compression.Rgba8), 32);
+        var small = new RetailBitmapFont(LegacyCuratedAyaTextureReference.Load(
+            "res://Assets/Hud/font-13ps.texture.aya", 256, 256,
+            LegacyCuratedAyaTextureReference.Compression.Rgba8), 16);
+        string[] samples = ["", "PAUSED", "Are you sure?", "Controller Options", "No", "Yes", " ?~", "\u00a0", "\U0001f680", "\u0000\u00a0\U0001f680"];
+        foreach (string text in samples)
+        {
+            string sample = System.Text.Json.JsonSerializer.Serialize(text);
+            float actualTitle = Measure(title, text);
+            float expectedTitle = normal.Measure(text);
+            Check(actualTitle == expectedTitle,
+                $"GDScript title atlas metrics equal the retained C# renderer for {sample}: expected {expectedTitle}, actual {actualTitle}.");
+            float actualItem = Measure(firstRow, text);
+            float expectedItem = small.Measure(text);
+            Check(actualItem == expectedItem,
+                $"GDScript item atlas metrics preserve UTF-16 fallback and spacing for {sample}: expected {expectedItem}, actual {actualItem}.");
+        }
+    }
+
+    private void CheckSharedTextureParity(CanvasLayer presentation)
+    {
+        (string Node, string Asset, int Size, LegacyCuratedAyaTextureReference.Compression Compression)[] samples =
+        [
+            ("Surface/Overlay", "blank", 16, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+            ("Surface/Native/Circle01", "circle-01", 256, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            ("Surface/Native/Circle02", "circle-02", 256, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            ("Surface/Native/ConfirmationRange/Frame/CornerTopLeft", "endcurve", 32, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+        ];
+        foreach (var sample in samples)
+        {
+            Texture2D original = LegacyCuratedAyaTextureReference.Load($"res://Assets/PauseMenu/{sample.Asset}.texture.aya",
+                sample.Size, sample.Size, sample.Compression);
+            Image actual = presentation.GetNode<TextureRect>(sample.Node).Texture.GetImage();
+            Image expected = original.GetImage();
+            Check(actual.GetFormat() == expected.GetFormat() && actual.GetData().SequenceEqual(expected.GetData()),
+                "GDScript AYA decoding preserves the production texture bytes and image format.");
+        }
+    }
+
+    private static float Measure(Control label, string text)
+    {
+        // Godot's native String marshaller terminates at an embedded NUL.
+        // Preserve every .NET UTF-16 char for that binary-text edge instead of
+        // changing the retained C# expected width or silently dropping input.
+        // Unsupported BMP and astral samples still exercise the live String path.
+        if (text.Contains('\0'))
+            return (float)label.Call("measure_units", text.Select(character => (int)character).ToArray()).AsDouble();
+        return (float)label.Call("measure", text).AsDouble();
     }
 
     private async Task Capture(SubViewport viewport, string filename)

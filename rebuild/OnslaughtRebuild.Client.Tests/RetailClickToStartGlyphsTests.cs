@@ -105,13 +105,31 @@ public sealed class RetailClickToStartGlyphsTests
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-
-        Assert.Contains("RetailClickToStartGlyphs.ShouldDraw", flow);
-        Assert.Contains("RetailClickToStartGlyphs.X", flow);
-        Assert.Contains("RetailClickToStartGlyphs.Passes", flow);
+        string controller = NativeClickSource.Controller;
+        Assert.Contains("Laws.prompt_visible(timer)", controller);
+        Assert.Contains("font.measure(value)", controller);
+        Assert.Contains("320.0 - F.value(F.value(width) * 0.5)", controller);
+        Assert.Contains("set_content_offset(", controller);
+        Assert.Contains("origin += content_origin", NativeClickSource.Read("frontend_bitmap_label.gd"));
+        Assert.Contains("GLYPH_PASSES", NativeClickSource.Laws);
+        Assert.Contains("FrontendFont13.tres", NativeClickSource.Scene);
+        string[] parts = ["BottomLeft", "BottomRight", "TopLeft", "TopRight", "Body"];
+        for (int i = 0; i < RetailClickToStartGlyphs.Passes.Length; i++)
+        {
+            var pass = RetailClickToStartGlyphs.Passes[i];
+            string path = "Prompt/" + parts[i] + "/Motion/Text";
+            NativeClickSource.HasContentOrigin(path, pass.Dx, pass.Y);
+            string glyph = NativeClickSource.Node(path);
+            Assert.Contains("shadow = false", glyph);
+            Assert.Contains("body_origin = false", glyph);
+            Assert.DoesNotContain("scale =", glyph);
+            Assert.DoesNotContain("position = ", NativeClickSource.Node("Prompt/" + parts[i]));
+            Assert.DoesNotContain("position = ", NativeClickSource.Node("Prompt/" + parts[i] + "/Motion"));
+            Assert.Contains(i == 4 ? "ink_color = Color(1, 1, 1, 1)" : "ink_color = Color(0, 0, 0, 1)", glyph);
+        }
         Assert.DoesNotContain("const float textScale = 2f;", flow);
         Assert.DoesNotContain("new Vector2(320f - (width * 0.5f), 400f)", flow);
-        Assert.DoesNotContain("vectorlosttoyssplash", flow);
-        Assert.DoesNotContain("TWIMTBP", flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", NativeClickSource.Presentation + flow);
+        Assert.DoesNotContain("TWIMTBP", NativeClickSource.Presentation + flow);
     }
 }

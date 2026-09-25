@@ -1,0 +1,272 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/configuration_presentation.gd" id="page"]
+[ext_resource type="Script" path="res://Scenes/Frontend/configuration_rock.gd" id="rock"]
+[ext_resource type="Script" path="res://Scenes/Frontend/configuration_ring.gd" id="ring"]
+[ext_resource type="Script" path="res://Scenes/Frontend/quit_confirm_surface.gd" id="surface"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_label.gd" id="label"]
+[ext_resource type="Script" path="res://Scenes/Frontend/career_name_arrow.gd" id="arrow"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont13.tres" id="body_font"]
+[ext_resource type="Resource" path="res://Scenes/Frontend/FrontendFont22.tres" id="title_font"]
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/ConfigurationRock.tres" id="rock_page"]
+[ext_resource type="Texture2D" path="res://Scenes/Frontend/ConfigurationRing.tres" id="ring_page"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="recipe"]
+
+[sub_resource type="Texture2D" id="arrow_page"]
+script = ExtResource("recipe")
+source_path = "res://Assets/Frontend/fe-arrow.texture.aya"
+dimensions = Vector2i(64, 64)
+compression = 1
+
+[node name="SelectConfiguration" type="Control"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+script = ExtResource("page")
+body_font = ExtResource("body_font")
+title_font = ExtResource("title_font")
+
+[node name="Background" type="Control" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Rock" type="Control" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("rock")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("rock_page")
+ink_color = Color(0.7019607843137254, 0.7019607843137254, 0.9529411764705882, 1)
+
+[node name="Ring" type="Control" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("ring")
+source_rect = Rect2(0, 0, 640, 480)
+texture = ExtResource("ring_page")
+ink_color = Color(1.257, 0.96, 0.777, 1)
+
+[node name="Header" type="Control" parent="."]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 65.0
+offset_right = 585.0
+offset_bottom = 97.0
+mouse_filter = 2
+
+[node name="Panel" type="Control" parent="Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("surface")
+source_rect = Rect2(191, 65, 394, 32)
+rectangle = Rect2(191, 69, 394, 21)
+ink_color = Color(0, 0, 0, 0.5)
+
+[node name="Title" type="Control" parent="Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(191, 65, 394, 32)
+atlas_font = ExtResource("title_font")
+text = "SELECT CONFIGURATION"
+source_anchor = Vector2(390, 65)
+glyph_scale = Vector2(1, 1)
+centered = true
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Unit" type="Control" parent="."]
+layout_mode = 0
+offset_left = 260.5
+offset_top = 99.5
+offset_right = 580.5
+offset_bottom = 131.5
+mouse_filter = 2
+
+[node name="Name" type="Control" parent="Unit"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(260.5, 99.5, 320, 32)
+atlas_font = ExtResource("title_font")
+text = "BE:A Unit-00 'Prototype'"
+source_anchor = Vector2(260.5, 99.5)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Walker" type="Control" parent="."]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 210.0
+offset_right = 585.0
+offset_bottom = 258.0
+mouse_filter = 2
+
+[node name="Title" type="Control" parent="Walker"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 210, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Walker Mode"
+source_anchor = Vector2(280, 210)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9686274509803922, 0.8431372549019608, 0.23921568627450981, 1)
+
+[node name="Primary" type="Control" parent="Walker"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 210, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Pulse Cannon"
+source_anchor = Vector2(280, 226)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Secondary" type="Control" parent="Walker"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 210, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Vulcan Cannon"
+source_anchor = Vector2(280, 242)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Jet" type="Control" parent="."]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 274.0
+offset_right = 585.0
+offset_bottom = 322.0
+mouse_filter = 2
+
+[node name="Title" type="Control" parent="Jet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 274, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Jet Mode"
+source_anchor = Vector2(280, 274)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9686274509803922, 0.8431372549019608, 0.23921568627450981, 1)
+
+[node name="Primary" type="Control" parent="Jet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 274, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Vulcan Cannon"
+source_anchor = Vector2(280, 290)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Secondary" type="Control" parent="Jet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("label")
+source_rect = Rect2(280, 274, 305, 48)
+atlas_font = ExtResource("body_font")
+text = "Micro Missiles"
+source_anchor = Vector2(280, 306)
+glyph_scale = Vector2(1, 1)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 1)
+
+[node name="Navigation" type="Control" parent="."]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 438.0
+offset_right = 632.0
+offset_bottom = 474.0
+mouse_filter = 2
+
+[node name="Back" type="Control" parent="Navigation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arrow")
+source_rect = Rect2(9, 438, 623, 36)
+texture = SubResource("arrow_page")
+rectangle = Rect2(9, 438, -28, 36)
+hit_rect = Rect2(0, 430, 48, 48)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)
+
+[node name="Forward" type="Control" parent="Navigation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("arrow")
+source_rect = Rect2(9, 438, 623, 36)
+texture = SubResource("arrow_page")
+rectangle = Rect2(604, 437, 28, 36)
+hit_rect = Rect2(595, 430, 45, 48)
+ink_color = Color(0.9921568627450981, 0.9921568627450981, 0.9921568627450981, 0.996078431372549)

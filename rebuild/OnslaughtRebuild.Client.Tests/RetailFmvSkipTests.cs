@@ -86,14 +86,23 @@ public sealed class RetailFmvSkipTests
     }
 
     [Fact]
-    public void StartupSequenceAbortsOnlyOnTheCitedSkipSet()
+    public void StartupSequenceUsesTheActualGdscriptSceneAsItsOnlyInputOwner()
     {
         string sequence = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailStartupSequence.cs"));
+        string playback = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "startup_sequence.gd"));
+        string scene = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "Startup.tscn"));
 
-        Assert.Contains("RetailFrontendScenePath.AcceptsStartupSkip", sequence);
-        Assert.DoesNotContain("InputEventJoypadButton", sequence);
-        // The withdrawn any-key arm.
-        Assert.DoesNotContain("InputEventKey key => key.Pressed && !key.Echo,", sequence);
+        // Actual key, echo, physical-key, mouse, pad and motion behavior is
+        // exercised by Scenes/Frontend/Tests/startup_scene_checks.gd. Retain
+        // this small wiring check alongside the C# specimen-law tests above.
+        Assert.Contains("res://Scenes/Frontend/startup_sequence.gd", scene);
+        Assert.DoesNotContain("RetailStartupSequence.cs", scene);
+        Assert.DoesNotContain("public override void _Input", sequence);
+        Assert.Contains("func _input(event: InputEvent)", playback);
+        Assert.Contains("if not accepts_skip_event(event):", playback);
+        Assert.DoesNotContain("InputEventJoypadButton", playback);
     }
 }

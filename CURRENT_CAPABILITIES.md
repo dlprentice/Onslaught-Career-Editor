@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (coupled settings routing and original sound initialization; 2026-09-19 native companion workflow and rebuild editor scenes; earlier evidence retains its stated limits).
+Last updated: 2026-09-23 (native rebuild Pulse impact and destruction scenes, frontend and world-frame orchestration; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -470,19 +470,61 @@ filesystem, clock, process, network, or GPU dependencies.
 `4.8.dev6.mono.official.8898c2b3d` engine and `Godot.NET.Sdk/4.8.0-dev.6`, retaining
 `net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
 selectable Controls and resources before Play. Main-menu rows and native image
-controls expose their layout; complex level graph, options and debriefing sections
-remain custom composite Controls with their C# drawing code available. Explicit
+controls expose their layout. Options now has four native pages with selectable
+rows, binding controls, sliders and dropdowns. Loading exposes its background,
+five caption passes and fixed bar; its frozen facts never start a load.
+Debriefing exposes native report
+labels, values, grade artwork and header. Level Select now exposes twelve node
+groups, sixteen links and their hit regions as native controls. Explicit
 editor display properties select frozen states without running simulation,
 playing audio or acquiring the pointer.
 
+The full GDScript conversion is underway. Startup playback/cache admission,
+pause UI, HUD state/drawing/catalog, the complete frontend controller and pages,
+world-frame presentation and live camera state now run from native scripts and
+the same production scenes.
+The frontend owns its input, clocks, navigation and loading/intro handoffs in
+GDScript; its temporary C# facade only connects the remaining managed game host. Audio playback,
+queues, fades and actor attachments now use an authored native audio scene.
+Options state/actions, the shared frontend font/FEBack resources, actor/projectile
+presentation, Loading, debriefing, terrain LOD/mesh/texture generation, water and the Sun now have
+native production owners as well. Exact
+component comparisons cover callback interruption/reentry, font pixels,
+transforms/trails and terrain-only Sun occlusion; unresolved retail behavior
+remains unresolved. Public projectile/muzzle and Sun scenes show the same
+production texture recipes before Play, with private pixels excluded from saves.
+The direct Vulcan impact spark now also has an authored native scene, including
+its billboard, material and stopped timer; its unresolved emitter branches remain
+absent. Tank, drone and facility destruction now use native scenes with their
+existing flash, explosion, fireball and smoke layers, shared texture recipes and
+explicitly started animation. Their representative-emitter limitations remain
+open. Pulse impact now exposes its blob, flash and shockwave as native scene
+nodes driven by the same production GDScript timing and float32 calculations.
+Water adds three inspectable mesh components and external production shaders.
+Its complete isolated-render comparison matches the retained component's RGBA
+bytes; terrain comparisons match every word across twelve mesh updates. These
+are migration checks, not new claims of pristine retail pixel parity.
+Terrain texture composition also matches the fixed root bytes and selected
+higher-level fixtures; native cache checks preserve CPU/GPU contents, update
+failure order and shader/material identity. Loading matches the retained drawing
+law while correcting the old scene proxy's fractional caption placement; the
+text-only difference and unresolved bar appearance are recorded explicitly.
+Numerical, parsing,
+replay/hash, career, input, mission timing and audio policy foundations have
+focused differential checks. The remaining live simulation, world import
+construction and game host still require .NET; this is not yet a
+standard-engine-only game. See the [rebuild guide](rebuild/README.md) for the
+current boundary and [validation receipts](VALIDATION.md) for executed checks.
+
 The private Level 100 scene contains the actual terrain/materials, sky, water,
 static placements, pine instances, initial actors, camera and Aquila hierarchies.
-The build imports reusable world components from the existing production loaders;
+The build imports reusable world components from the production loaders and scenes;
 gameplay then binds those same saved nodes and resources. Geometry, texture bytes,
 selected animated poses and unchanged snapshot hashes passed the production
 round-trip check, including saved resources before runtime refresh. An isolated
 Godot editor opened and rendered the scene successfully. Imported faithful data
-is guarded against silent edits; generated retail scenes/resources remain private.
+is guarded against silent edits, including native source/recipe changes in the
+import identity; generated retail scenes/resources remain private.
 The [scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies what to
 open, what to edit and what remains generated. The [validation receipt](VALIDATION.md)
 records executed checks and editor-harness diagnostics.

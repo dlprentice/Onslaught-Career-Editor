@@ -155,38 +155,32 @@ public sealed class RetailMainMenuVersionOverlayZTests
     [Fact]
     public void DrawMainMenuKeepsVersionTintAndDoesNotTreatZeroPointZeroOneAsScaleOrDestImmediate()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawMainMenu()");
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        Assert.Contains("const VERSION_TEXT: String = \"V1.00\"", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"Version\").bind(Laws.VERSION_TEXT, font)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("Laws.retail_color(Laws.VERSION)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("const VERSION: int = 0xff102025", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"Version\").visible = not fade <= 0.0", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("F.value(version_tint.a * fade)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        NativeMainMenuSource.HasAnchor("Version", RetailMainMenuVersionOverlayZ.DestX, RetailMainMenuVersionOverlayZ.DestY(480));
+        Assert.Contains("centered = false", NativeMainMenuSource.Node("Version"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"font\")", NativeMainMenuSource.Node("Version"), StringComparison.Ordinal);
+        Assert.Contains("FrontendFont13.tres", NativeMainMenuSource.Scene, StringComparison.Ordinal);
+        Assert.Contains("active_font.draw_run", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("wrap", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("42.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("1000.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.01", NativeMainMenuSource.Label, StringComparison.Ordinal);
+        Assert.DoesNotContain(" - 2", NativeMainMenuSource.Label, StringComparison.Ordinal);
 
-        Assert.Contains("RetailMainMenuVersionOverlayZ", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuVersionOverlayZ.DestX", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuVersionOverlayZ.DestY", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuVersionOverlay.Format", draw, StringComparison.Ordinal);
-        Assert.Contains("VersionTint", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuVersionOverlay.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("464f", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DesignHeight - 16", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.01", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", choice, StringComparison.Ordinal);
-        string loading = Slice(flow, "private void DrawLoading(");
+        string loading = NativeLoadingSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", loading, StringComparison.Ordinal);
-        string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
+        string bar = NativeMainMenuSource.Selector;
         Assert.DoesNotContain("RetailMainMenuVersionOverlayZ", bar, StringComparison.Ordinal);
     }
 

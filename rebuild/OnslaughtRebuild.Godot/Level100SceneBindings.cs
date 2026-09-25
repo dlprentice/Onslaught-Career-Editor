@@ -5,39 +5,23 @@ using OnslaughtRebuild.Client;
 
 namespace OnslaughtRebuild.GodotClient;
 
-// These adapters retain the existing decoded animation/state owners and bind
-// them to production scene nodes. They do not build a hidden second world.
+// Bind the production components without constructing a second world.
 internal sealed partial class RetailAquilaWalkerAsset
 {
     public static RetailAquilaWalkerAsset BindWalker(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_walkerProfile, "res://Assets/Aquila/Source/m_f_be1.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("walker", "Walker", terrain, root);
 
     public static RetailAquilaWalkerAsset BindJet(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_jetProfile, "res://Assets/Aquila/Source/m_f_be2.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("jet", "Jet", terrain, root);
 
     public static RetailAquilaWalkerAsset BindCockpit(Node3D root, Level100HeightFieldAsset terrain) =>
-        LoadExact(s_cockpitProfile, "res://Assets/Aquila/Source/m_cockpit2.msh.aya",
-            new Dictionary<int, Texture2D>(), terrain, null, root);
+        Configure("cockpit", "Cockpit", terrain, root);
 }
 
 internal sealed partial class Level100WaterAsset
 {
-    public static Level100WaterAsset BindScene(Node3D root, Level100HeightFieldAsset terrain)
-    {
-        var grid = root.GetNode<MeshInstance3D>("RetailCameraRelativeWaterGrid");
-        var shoreline = root.GetNode<MeshInstance3D>("RetailAuthoredShorelineBands");
-        var sunGlint = root.GetNode<MeshInstance3D>("RetailCameraRelativeWaterSunGlint");
-        Vector3 horizontalSun = new(terrain.SunPosition.X, 0f, -terrain.SunPosition.Y);
-        Vector3 direction = horizontalSun.LengthSquared() > 0f
-            ? -horizontalSun.Normalized() : Vector3.Forward;
-        return new Level100WaterAsset(root, grid,
-            (ShaderMaterial)grid.MaterialOverride,
-            (ShaderMaterial)shoreline.MaterialOverride,
-            sunGlint, (ShaderMaterial)sunGlint.MaterialOverride,
-            direction, terrain.WaterRelativeHeight, SurfaceSegmentCount * 4);
-    }
+    public static Level100WaterAsset BindScene(Node3D root, Level100HeightFieldAsset terrain) =>
+        BindNativeScene(root, terrain);
 }
 
 internal sealed partial class Level100StaticWorldAsset

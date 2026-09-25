@@ -140,30 +140,24 @@ public sealed class RetailClickToStartProcessTests
 
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        int start = flow.IndexOf("private void DrawClickToStart()", StringComparison.Ordinal);
-        Assert.True(start >= 0);
-        string body = flow[start..];
-        int next = body.IndexOf("\n    private ", 1, StringComparison.Ordinal);
-        if (next >= 0)
-        {
-            body = body[..next];
-        }
+        string body = NativeClickSource.Presentation;
 
-        Assert.Contains("RetailClickToStartTitle.ShouldDrawSixth", body);
+        Assert.Contains("Laws.sixth_visible(seconds)", body);
         Assert.DoesNotContain("RetailClickToStartProcess", body);
         Assert.DoesNotContain("WriteAttractResult", body);
+        NativeClickSource.HasNoPresentationSideEffects();
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);
 
         Assert.DoesNotContain(
             "RetailClickToStartProcess",
-            Slice(flow, "private void DrawLoading()"));
+            NativeLoadingSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcess",
-            Slice(flow, "private void DrawQuitConfirm()"));
+            NativeQuitSource.Presentation);
         Assert.DoesNotContain(
             "RetailClickToStartProcess",
-            Slice(flow, "private bool HandleKey("));
+            NativeFrontendSource.RootFunction("handle_key"));
     }
 
     private static string Slice(string flow, string marker)

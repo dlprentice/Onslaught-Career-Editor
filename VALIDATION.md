@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline and reconciliation; earlier dated validation retained).
+Last updated: 2026-09-25 (three-lane baseline, reconciliation and the AYA malformed-input contract; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -39,6 +39,7 @@ are not replaced by the focused portable results below.
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
+| GDScript rebuild migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes/SHA-256, pause transitions and detached snapshots. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. The production pause scene has separate actual-scene checks described below. This is a bounded migration gate, not full simulation, performance or gameplay parity. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` builds the small integrated C# assembly and checks GDScript; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
@@ -118,6 +119,28 @@ Not run: the broad Core suite, because no lane or merge changed `OnslaughtRebuil
 its tests or their shared inputs since `25db5b23`. Also not run: rendered or pixel
 captures, editor-mode harnesses, live input or audio, and Windows.
 
+### AYA malformed-input contract — September 25
+
+`AyaTextureChecks` now passes **1,289 checks over 142 cases** with **0 unexpected
+diagnostics**; all 47 import uses, the cursor and both fonts still decode byte-identically
+in the reference, native and facade paths. The pinned loader
+(`modules/dds/texture_loader_dds.cpp` at `8898c2b3d`) fills a short DDS surface from
+uninitialized memory, which is why the two short-pixel images differed from run to run.
+`retail_aya_texture.gd` now refuses any payload shorter than that loader's read,
+computed for the admitted layouts including its width-remainder padding, mip chains,
+cubemap faces and volume slices. Every such refusal must coincide with an actual
+`file_access_memory.cpp` short read in the unchanged reference, and complete
+odd-width, mip-chain, six-face and two-slice counterparts must decode identically.
+The empty-second-record control now contains a real empty zlib member: the pinned
+.NET compressor wrote nothing for an empty payload, so the old fixture tested a
+zero-length record, now its own refused case. The truncated-width case moved from
+`decode-before-dimension`, which again tests decode-then-dimension order with a
+complete payload. Short-read diagnostics are admitted only in the reference phase.
+The rebuild then built with zero warnings/errors and a verified Level 100 import,
+passed 77/77 headless scene checks, **24,190** world checks, **910** Client tests
+(2 known skips), and kept the smoke tape (`89ca7b4b…`) and replayed state
+(`53c1cc64…`). Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/aya-contract-afwwC2/`.
+
 ### September 19 production scene migration
 
 The supported Linux build passed with zero warnings/errors and explicitly
@@ -170,6 +193,1741 @@ progress-dialog/current-window warnings and teardown RID/ObjectDB diagnostics;
 the HUD harness's teardown counts also occur with an empty editor-script control.
 These are recorded limitations, not a claim of clean interactive editor shutdown.
 No software capture proves normal GPU performance, physical input or audible audio.
+
+The subsequent GDScript pause conversion passed **1,047 model transitions** against
+the retained C# model, **115 standard-engine scene checks**, **91 editor-mode
+checks**, and **94 checks through the temporary managed host adapter**. The
+seven selected Client checks passed, including unchanged pause/resume tape,
+trace and final-hash equality and neutral-input handling after resume. The
+scene script is `res://Scenes/Pause/Tests/pause_scene_checks.gd`; run it with the
+standard pinned engine's `--headless --audio-driver Dummy --script` options and
+the rebuild project path, adding `--editor` for the frozen preview checks.
+The isolated software render passed **120 checks**; its root and confirmation
+captures each differed from the previous C# scene capture by **zero pixels**.
+Checks cover authored rows/hit regions, input gating, private texture packing,
+asset bytes and bitmap-font measurements, including raw UTF-16 code units where
+embedded NUL cannot cross the ordinary Godot string bridge intact. Deliberately
+corrupt compressed fixtures produce two expected native zlib errors. The editor
+harness also reports scan-abort and teardown RID/ObjectDB diagnostics; this is
+not a clean interactive-editor shutdown claim. Evidence is in the owned
+`local-data/test-runs/gdscript-pause-94vdiqq3/` directory. Whole-game simulation
+and the remaining frontend/HUD/world host still use C# during conversion. The
+supported headless smoke also passed after reimporting the worktree's private
+world scene: `local-data/first-flight/smoke-izxr9__1/` retains the same 2,148-step
+`53c1cc64…` hash, retry and return-to-menu behavior, with mission **Running**.
+
+The next GDScript foundation gate passed **970 JSON cases**, **7,134 startup
+schedule samples**, **269 chunk-reader operations across 52 scenarios**, and
+**370 scheduler operations across 31 scenarios**, including **362 snapshots**.
+The numerical/native-Euler and pause comparisons also passed in that run.
+JSON comparisons include exact int64 limits, escaped duplicates, Unicode/NUL,
+depth and malformed syntax, varied decimal doubles and exact halfway cases;
+they measure full string admission as well as explicit parse-stage boundaries,
+not merely lazy `JsonDocument.Parse` acceptance. Scheduler checks include
+callback interruption, reset/restore, pool exhaustion, wrap and mutation before
+failure. The parser modules and scheduler remain foundations for future live
+consumer ports; this receipt does not replace whole-game replay acceptance.
+Logs, unchanged C# expected words and reports are in the owned
+`local-data/test-runs/gdscript-parity-pfhk60nx/` directory. All six standard-engine
+check logs completed without errors; seven launcher checks passed.
+The existing C# scheduler/chunk selection also passed **51 tests**; its log is
+`local-data/test-runs/gdscript-pause-94vdiqq3/foundation-csharp.log`.
+
+The production startup playback is now GDScript. Actual-scene checks passed
+**244 .NET-host checks**, including the temporary bridge and audio-retirement
+observer, and **233 standard-engine checks**. The frozen editor view passed
+**79 checks** in the .NET editor. The whole project still needs that edition
+while world/frontend/HUD controllers remain C#: a standard-editor run can
+report missing C# loaders when restoring those scenes. The scripted editor
+exit also reports editor-owned RID/ObjectDB shutdown allocations; this is not
+evidence of a clean interactive editor shutdown.
+
+Four isolated llvmpipe startup captures passed **256 rendered checks** for
+the real logo, montage and two splash fade points. The full-brightness splash
+matches the previous C# scene capture pixel for pixel. HUD native texture
+recipes and screen fitting now use GDScript, with **44 headless checks** and
+**46 rendered checks**; both the 640×480 and 1280×720 captures match the prior
+C# output pixel for pixel. The affected existing startup/frontend source and
+behavior tests passed **57 tests**. Logs and private captures are retained in
+`local-data/test-runs/gdscript-startup-a8xurdqe/`. Rendered runs used fresh
+private X-server credentials and cleaned up their own display processes.
+These observations establish the converted components and their host boundary,
+not audible playback, physical input, GPU performance or full combat parity.
+
+Replay-hash foundations passed **286 synthetic SHA-256 streams**, including
+**873 chunk appends/current-hash reads**, and **96 exact schema-4 trace entries**.
+The checks compare current/final digests with the existing .NET implementation
+and native Godot SHA-256; repeated reads, source/result mutation, stream copies,
+padding boundaries, signed field widths, refusal and disposal are covered.
+Evidence is in `local-data/test-runs/gdscript-parity-yl94z6c5/`. This preserves
+the trace format without replacing the live complete state serializer or runner.
+
+The invariant filename formatter also passed **10,155 output comparisons**
+and **611 failure comparisons** against the current .NET library. Its raw
+UTF-16 API adds **868 output** and **37 failure** comparisons for embedded
+NUL, lone surrogates, numeric-format termination and exact alignment.
+Source-checkout loading from the separately licensed root-tools utility passed
+**9 dependency checks**; package/export loading is not established. These
+reports are in `local-data/test-runs/gdscript-parity-qpd6ptf8/`.
+Use `python rebuild/tools/gdscript_parity.py --check NAME` to rerun an affected
+group; omit `--check` for the complete bounded migration gate.
+
+Command-tape comparison passed all six sections: JSON admission, validation,
+input records, canonical strings/identities, reader/cursor behavior and explicit
+boundary refusals. It includes the tracked first-flight tape, without changing
+its input or expected hashes. The message-panel port passed **315 wraps**,
+**20,201 window samples** and **1,036 reveal-time samples**, including raw
+UTF-16, leading U+FEFF, NUL, malformed surrogate and Int32-overflow cases.
+The shared strict JSON group also passed after repairing leading-U+FEFF native
+String conversion. These reports are in
+`local-data/test-runs/gdscript-parity-aertulih/`; they do not establish a ported
+full simulation, full HUD runtime or rendered-text equivalence.
+
+All **12 migration groups** subsequently passed together in
+`local-data/test-runs/gdscript-parity-wjzad094/`. This added **135 media-load
+comparisons**, exact file-inventory checks (including literal-backslash decoys),
+**146 BinaryWriter string cases**, **597 direct float-trig cases** and **2,089
+scanner placements** compared by raw float32 words. HUD message timing and state
+projection also passed. The C# oracle now runs from the same process directory
+as Godot, so relative-path fixtures exercise the same filesystem contract.
+Eight launcher checks passed, including that directory and desktop isolation.
+The exact-byte media accessor then passed **12 additional read comparisons**
+alongside that complete media group in
+`local-data/test-runs/gdscript-parity-l7rxkeyg/`.
+
+A bounded headless SHA-stream sample appended 41,057-byte synthetic states
+twelve times. Inlining fixed rotations reduced its observed median from
+33.78 ms to 12.53 ms while preserving the native digest; receipts are in
+`local-data/test-runs/gdscript-hash-profile-dyls6119/` and
+`local-data/test-runs/gdscript-hash-profile-dd20on6h/`. These shared-machine
+microbenchmarks do not establish full-game throughput, input latency or GPU
+performance. Live simulation and full replay have not yet migrated.
+
+The production HUD then moved its model, message schedule, text reveal and all
+three drawing layers to GDScript. The actual standard-engine scene passed
+**174 headless checks** and **182 isolated rendered checks**; the temporary
+C# Core/catalog bridge passed **1,487 headless checks** and **1,489 rendered
+checks**. This includes all 51 catalog message IDs and signed extremes for
+portrait/noise phases. The two real initial-session captures, at 640×480 and
+1280×720, match `local-data/hud-editor/capture-01/` pixel for pixel. Synthetic
+optional-branch captures exercise rendering but are not retail fidelity
+references. Receipts are under
+`local-data/test-runs/gdscript-hud-render-n3spgf53/` and
+`local-data/test-runs/gdscript-hud-scene-v19y_5xj/`.
+
+The frozen HUD editor scene passed **170 checks** and startup passed **80**;
+both refuse live initialization and retain pointer ownership. The startup
+host passed **250 checks** after using the production GDScript cache provider.
+Its audio-retirement check now observes the actual weak handle against the
+same monotonic five-second deadline as the game shutdown path. The old fixed
+SceneTreeTimer could expire immediately using the long cache-loading frame's
+delta; the measured handle retired after **88 ms** with no remaining playback.
+These receipts are in
+`local-data/test-runs/gdscript-hud-startup-integration-ftp_v4m7/`. Scripted editor
+exit still reports the same editor-owned shutdown allocations described above;
+this does not establish a clean interactive editor shutdown.
+
+The affected existing HUD, message, startup and skip checks passed **127/127**
+in `local-data/test-runs/gdscript-hud-client-wxgh0rgy/client-verified.log`.
+The HUD evidence test now locates prepared links from an owned artifacts
+directory and stops at its worktree boundary when they are missing.
+
+The startup batch provider also passed **294 explicit-directory** and **294
+process-directory** path comparisons. Its actual playback helpers selected the
+correct decoded pixels and bytes from synthetic literal-backslash, normalized
+alias and ordinary PNG paths, preserving every fixture hash; evidence is in
+`local-data/test-runs/gdscript-parity-n1072_a7/`. The real admitted cache batch
+matched the earlier C# provider, including **5,378 ordered frame paths**, in
+`local-data/test-runs/gdscript-startup-provider-ew38cn7q/`. The standard-engine
+startup scene passed **239 checks** against that retained C# fixture in
+`local-data/test-runs/gdscript-startup-scene-ugcfv1yr/`.
+
+The supported headless application smoke then passed **2,148 simulation steps**,
+retry and return to the main menu with the unchanged state hash
+`53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`.
+The native HUD was ready and delivered the same 13 message IDs and one help
+event. Its owned receipt is
+`local-data/test-runs/gdscript-hud-smoke-iu5agxg_/smoke/first-flight-smoke.json`.
+Outcome was still `Running`, terminal state `None`; this is not a complete
+combat victory. World import wrote only this worktree's private generated scenes.
+
+The complete GDScript state serializer passed **55 C# snapshot envelopes**:
+**31 exact canonical payloads/hashes** across schemas **42–48**, with the
+remaining envelopes refusing invalid state. Checks retain equal-key sort order,
+Int64 limits, raw UTF-16, all mission-event arms, raw Plane words and detached
+source/output buffers. The existing 40-step `SimulationTests` fingerprint
+`0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d`
+is unchanged. This is `--check state-hash`, with evidence in
+`local-data/test-runs/gdscript-parity-n1072_a7/`; it establishes canonical
+serialization, not GDScript simulation stepping or restore behavior.
+
+The native HUD catalog passed both the retained .NET reader comparison and the
+standard-engine reader in
+`local-data/test-runs/gdscript-hud-catalog-yqylpkir/`. It retains the exact file
+SHA and source pins, all 51 messages, six help rows, eight terminal strings,
+raw UTF-16 text, refusals and detached lookups. Production now calls that native
+reader at boot. After integration, the actual HUD host again passed **1,487
+checks**, and the standard catalog check passed with no engine errors in
+`local-data/test-runs/gdscript-hud-catalog-integration-hbu89l1i/`.
+
+Career progression, host input and camera value checks passed in
+`local-data/test-runs/gdscript-parity-9mt08bqg/`. They cover objective/ranking/
+goodie/link mutations, the 43-row world table, input records and edge sequences,
+movie-zoom caching and copied viewpoint/hash state. The complete pure frontend
+session passed its transitions, constructor admission, detached getters and
+all 65,536 UTF-16 glyph inputs in
+`local-data/test-runs/gdscript-parity-tlbmrjke/`. These are comparisons against
+existing behavior, not new retail discoveries or full-game completion.
+
+The native read-only career reader passed **456 containers derived in memory
+from the real tracked gold fixture**: **139 accepted projections** and **317
+refusals**, including exact error precedence. Every accepted read preserved
+the supplied bytes; source and returned data do not alias, and the fixture
+remained unchanged. Evidence is in
+`local-data/test-runs/gdscript-parity-ejtvaa12/` (`--check career-save`). No save
+writer or AppCore replacement is part of this reader.
+
+The current attached-pan camera and Level 100 viewpoint adapter passed native
+state, interpolation, lifecycle, error-order and hash comparisons in
+`local-data/test-runs/gdscript-parity-3mxhl595/` (`--check attached-camera`). The
+fixtures include every opening tick, varied raw poses and live simulation
+snapshot pairs. This preserves the committed camera contract; the separately
+preserved camera draft remains unfinished and was not integrated by this port.
+
+The actual frontend then switched to the native session/path owners and passed
+**967 scene checks** covering original career-selection identity, transitions,
+loading/retry, cached display transport and disposal. The actual world camera
+passed **849 bridge/scene checks**, including exact pose words and hashes,
+frozen entry, reparenting and final disposal. The private world round-trip passed
+**23,864 assertions** over saved geometry, textures, placements and runtime
+bindings. Its importer now explicitly disposes four temporary PackedScene
+wrappers: the first reimport reported unsafe retained references and aborted at
+shutdown; the corrected reimport and world checks exited cleanly. Logs are in
+`local-data/test-runs/gdscript-native-front-camera-5clstjzh/`.
+
+That same invocation passed **93 existing Client tests**, **1,487 actual HUD
+host checks**, **174 standard-engine HUD scene checks** and the frontend's ten
+authored-page checks. The frozen editor checks passed for frontend and HUD
+(**170 HUD checks**); their scripted shutdown still reports the same previously
+measured editor-owned allocations, including 205 objects. Runtime checks are
+clean. The supported headless smoke again completed **2,148 steps**, retry and
+return to the main menu with unchanged `53c1cc64…` state identity and 13 delivered
+message IDs. Its `smoke/first-flight-smoke.json` still says `Running` / `None`,
+not full combat completion. No physical input or audible playback was exercised.
+
+Native control response and all **200 numeric simulation constants**, eight
+positions and foot phases passed exact comparisons in
+`local-data/test-runs/gdscript-parity-dhfq_7q2/control-response-fixed.json`.
+The control probes include 6,174 raw axes across four normalizers, the complete
+look table and signed-boundary admission. Native mission timing passed the
+existing fade, pause, terminal, message and trigger laws in
+`local-data/test-runs/gdscript-parity-9j8h7yxm/`. Native audio recipes, arithmetic,
+music actions and queue ordering passed in
+`local-data/test-runs/gdscript-parity-jfd_jga6/audio-policy-fixed.json`.
+These are `control-response`, `mission-timing` and `audio-policy` migration groups;
+the audio laws alone do not establish native scene playback or audible parity.
+
+The `render-interpolation` group passed in
+`local-data/test-runs/gdscript-parity-ron2r1pn/`: admission, exact basis and
+entity transforms, target projections, trail vertices and vector operations.
+Its three extreme retained-tail checks are explicitly source-derived; the
+original Int32-maximum loop was not run. The `options` and
+`invariant-number` groups passed together with the affected `strict-json`
+regression group in `local-data/test-runs/gdscript-parity-oll093em/`.
+The options check covers all four pages, controller side-effect ordering,
+binding input and detached settings. Number checks cover exact binary32
+midpoints and shortest round-trip output, plus parsing failures and whitespace.
+These are pure production-model comparisons; native options scene acceptance
+is separate.
+
+The `particle-set` and `particle-effects` groups passed together in
+`local-data/test-runs/gdscript-parity-9apnf0np/`. The reader compares all
+**1,479 descriptors** and numeric getter results, exact byte re-emission and
+unchanged input hashes for the three existing prepared files. Synthetic cases
+cover duplicate/raw names, field order and error precedence. Encoding checks
+compare every UTF-16 unit; effect checks compare every valid Unicode scalar
+for invariant casing, authored plans, ordered omissions, cycles, caps and
+detached results. The Int32-maximum lifetime refusal is source-derived, not
+an executed infinite-loop comparison; all **338 shipped emitter lifetimes**
+were checked and exclude that input. No corpus copy or original write occurs.
+
+Native audio integration passed **4,034 .NET reference checks** and **4,031
+standard-engine checks** in `gdscript-audio-scene-20260919-f/` and
+`gdscript-audio-scene-20260919-g/` under `local-data/test-runs/`.
+They compare 135 RNG observations, all 128 music-gain words, ordered frame
+interleavings and callback aborts, persistent/transient players and cleanup.
+The focused catalog/ownership suite passed **90 tests** in
+`audio-client-20260919-a/`; the two affected pause/particle source guards
+passed separately in `gdscript-audio-guards-bj_mov24/`.
+The supported build and refreshed private scene import passed, followed by
+`audio-smoke-20260919-a/first-flight-smoke.json`: unchanged
+`53c1cc64…096e5e` state hash, 13 ordered message IDs, retry and main-menu
+release, with no runtime errors or shutdown leaks. The .NET editor harness
+passed **67 safety assertions** but retained the known 205-object/RID shutdown
+diagnostics; its strict console gate remains red. These Dummy-audio checks
+establish control/state compatibility, not audible parity or full combat.
+
+The `terrain` group passed **45,681 checks** in
+`local-data/test-runs/gdscript-parity-7uz9cc9v/` on the pinned standard engine.
+Each of the four existing world resources was compared with its already-linked
+input without copying the corpus. Exact metadata, complete 513×513 lattice,
+512×512 subcell interpolation and 64×64 LOD-word hashes pass, together with
+edge/mask probes, 2,048 scale words, signed-64 division cases, byte admission
+failures and detachment. This validates the native owner; the subsequent Sun
+consumer integration is covered below. Other live terrain consumers remain managed.
+
+The resumed Options integration passed **1,282 standard-engine scene checks**,
+**1,292 isolated rendered checks** across four actual pages, and **1,284 editor
+assertions**. Its actual C#/GDScript frontend boundary passed **5,988 headless
+checks** and **6,005 rendered checks**, including nine exact RGBA font comparisons
+at varied scales/shadows. The same host checks cover all font widths, FEBack byte
+tables/phase boundaries, shared frame identity, settings/audio/Back handoffs,
+callback failures, partial mutation and reentrant action order. The focused
+Client selection passed **144/144**. Pure Options comparisons also passed after
+the synchronous callback change. Final receipts are
+`local-data/test-runs/options-host-tlovxf1e/`, `options-fonts-rxyrhscr/` and
+`options-client-mi9cy457/`; native page/editor receipts are `options-action-7l25qk90/`,
+`options-render-4s4gdbbu/` and `options-editor-mszwwwnv/` under that same test-runs
+owner. The actual Godot process reports `.NET 10.0.12` with unchanged `net8.0`
+targets. Explicit native casts preserve its observed FEBack overflow/NaN result.
+
+Explicit Variant-carrier disposal removed 574 retained texture allocations at
+the temporary frontend boundary. The final rendered host exits cleanly, but the
+headless Options harness still reports **one Image and one Dummy texture RID**
+at exit; its strict console gate remains red. Disposing the retained DDS loader's
+temporary Image did not resolve that final allocation. Its owner is unresolved;
+no forced GC, diagnostic suppression or weakened assertion was used. The native
+editor harness also retains scripted-editor scan/shutdown diagnostics. These
+limits are separate from the passing behavior and pixel comparisons.
+
+The entity owner passed **89 native runtime checks**, **64 editor assertions**
+and **23,038 actual managed-boundary checks**. Every actor/foot/projectile word,
+trail vertex/UV and muzzle frame retains its reference behavior; all six authored
+texture pages match the previous loader byte-for-byte, including format and
+mipmap flags. Public template saves contain recipes without decoded pixels.
+The authored albedo/emission slots share a page; the checks preserve the pinned
+engine's omission of inactive unshaded emission properties during scene-local
+duplication, while still refusing an active mismatched page. Runtime logs are
+clean; the editor has the previously recorded scripted shutdown diagnostics.
+Receipts are `entity-art-native-fixed-cthkzvbj/`, `entity-art-editor-46875jwv/`
+and `entity-art-bridge-final-oxutw64r/` under `local-data/test-runs/`.
+The particle/quad/Sun Client selection passed **25/25** in
+`entity-art-client-ofvtnlgq/results/focused.trx` under that same owner.
+
+The production Sun passed **8,081 standard-engine checks**, including 848 height
+samples and 2,348 camera cases against the unchanged, renamed C# reference, plus
+exact texture/material/mesh/colour comparisons. **104 editor assertions** cover
+inactive sampler/input, unchanged sources, public saves without pixels and
+repeated private saves retaining external resources. Runtime is clean; scripted
+editor teardown diagnostics remain. Receipts are `gdscript-sun-reference-5jfln59c/`,
+`gdscript-sun-native-final-znutlbka/` and `gdscript-sun-editor-final-du_moph1/` under
+`local-data/test-runs/`. The explicit NaN coordinate shim matches the actual
+host's current heightfield reader; it does not establish retail NaN behavior or
+resolve the existing terrain-only/VisibleSun omissions.
+
+The combined supported build and private import passed with zero warnings/errors
+in `local-data/test-runs/gdscript-resume-build-g/`. The final world check passed
+**24,132 assertions** in `gdscript-resume-world-c/`, with clean runtime shutdown.
+It covers geometry/material/texture round-trips, initial bindings, selected poses,
+retry isolation, unchanged pointer/hash state and native source/resource import
+invalidation. Exactly two authored trail slots remain empty before movement;
+their generated history is checked by the entity comparison. The unchanged
+camera bridge also passed **849 checks** in `gdscript-resume-camera-a/`.
+The supported headless smoke in `gdscript-resume-smoke-a/` again retained
+**2,148 steps**, the unchanged `53c1cc64…096e5e` hash, 13 ordered message IDs,
+fresh retry and world release at the main menu, with a clean runtime log.
+Its actual 2,148-step recording passed two Headless replays in
+`gdscript-resume-replay-a/replay.log`: both embedded live trace
+(`a4e6673b…43c58f2`) and final-state hashes verified, with no first divergence.
+Mission outcome remains **Running**, terminal state **None**; this is not full
+combat completion. All these directories are under this worktree's
+`local-data/test-runs/`, using the canonical lab read-only. Rendered checks used
+isolated credentials/displays and establish no physical-input, audible-playback
+or normal GPU-performance claim.
+
+The native terrain renderer passed **801 assertions** across **3,183,306 exact
+mesh words**, 464 height samples, all 49 stitch-index patterns and twelve full
+camera/mesh updates. The retained C# exporter passed **49,206 assertions**.
+The first comparison found a transposed complexity-grid lookup; the production
+admission now converts x-major samples to the renderer's y/x order, with no
+expected-data change. Smoothing words, ordered tile batches, FNV64 signatures,
+material retention, supplied mesh identity and resource release all match.
+The unchanged reference is in `height-field-oracle-y2kb9hoj/`; the final cached
+implementation report is `heightfield-cache-1pvzrig6/native.json` under
+`local-data/test-runs/`. Both logs are clean.
+
+The immutable actor-definition and pinned manifest ports passed **3,856 native
+assertions** and **139,848 exact canonical bytes**. The unchanged C# exporter
+passed **194 checks**, providing 275 constructor cases (160 accepted, 115
+refused), 164 lookup cases and eighteen manifest refusals. Identity formats
+6/7/8, raw UTF-16/NUL/unpaired-surrogate keys, detached inputs/snapshots/lookups,
+and ordered failure types/parameters agree. World number remains admitted but
+absent from the existing identity bytes. The actual definition identity remains
+`2fc2219881a66a4662688d69b1ab5d2b7b9e02cb6fdc63ce5a34019974fa69b2`.
+Receipts are `actor-definition-reference-tyv7nvwk/` and
+`actor-definitions-native-lo2crjol/` under `local-data/test-runs/`; both engine
+logs are clean. Run .NET `Scenes/World/Tests/ActorDefinitionReferenceChecks.tscn`
+with fresh fixture/report user paths, then standard
+`Scenes/World/Tests/actor_definition_checks.gd` with that fixture and a fresh
+report. This validates immutable definitions; the live registry is still C#.
+
+The native click-page expressions passed **68,630 exact checks** against the
+retained C# helpers: 5,703 expression rows, 144 binary64 clock rows and fifty
+Int32-width glyph rows. The initial thirty-six failures came from using
+double-precision `cos` followed by a float32 cast. The pinned Arm adaptation,
+with exact fused-operation emulation, passed **69,113 assertions** against the
+actual Godot-hosted .NET 10.0.12 `MathF.Cos` and `Math.FusedMultiplyAdd`: 21,078
+cosine words, 4,112 finite FMA inputs, and the existing click samples. No expected
+word changed. This is bounded compatibility evidence for Linux x86-64/glibc 2.44,
+not proof of every float input or of Windows/retail trigonometry. Receipts are
+`click-laws-reference-n1z2lgpw/`, `click-adopted-hl1txc21/`,
+`cosf-reference-ya7q4rwv/` and `cosf-native-0iuj4dyh/` under
+`local-data/test-runs/`.
+
+The actual native Click scene passed **136 headless assertions** and **329
+rendered assertions**, including **128 exact full-page RGBA comparisons**:
+sixteen pulse/page-time pairs at 640×480, 1280×720, 801×601 and 320×240, each
+against the retained drawing and the integrated frontend. The same comparisons
+against the pre-integration host also passed. A first parent-scale/translation
+implementation changed a few filtered color bytes by one at fractional viewport
+scales. The final small image/text controls form the original float32 rectangles
+before canvas transforms and pass the unchanged zero-difference assertion.
+Source passes, coordinates, gates, colors, private texture/font bytes and clock
+facts are retained. Captures used an isolated authenticated Xvfb display with
+llvmpipe and dummy audio, not the physical desktop. Clean headless logs and final
+render logs (only XIM/VSync warnings) are in `click-integrated-2z_igtkj/`; the
+pre-integration comparison is `click-render-surfaces-cljldf49/`. The affected
+22-class Client run passed **113/113**, with no skips or changed numerical
+expectations (`click-source-client-mtbgbjke/results/click-client.trx`).
+Loading's existing handoff/asset checks also passed **234 assertions** after the
+shared bitmap-label extension (`click-integrated-2z_igtkj/loading.log`).
+
+To reproduce the Click checks, run .NET
+`Scenes/Frontend/Tests/ClickLawReferenceChecks.tscn` with one fresh fixture
+user path, then standard `Scenes/Frontend/Tests/click_law_checks.gd` with that
+fixture and a fresh report. The cosine exporter is
+`Scenes/Shared/Tests/CosfReferenceChecks.tscn`; its two fresh fixture/report
+arguments produce the cosine fixture. Standard
+`Scenes/Shared/Tests/retail_cosf_checks.gd` takes, in order, that cosine fixture,
+the click fixture and a fresh report path. Run .NET
+`Scenes/Frontend/Tests/ClickSceneChecks.tscn -- --skipfmv` for the integrated
+component. With a caller-owned isolated display, add
+`--click-render-dir=/absolute/owned/capture-directory` for exact RGBA comparisons.
+All output paths belong under the invoking worktree's `local-data/`.
+
+The standalone native Click harness passed **658 checks** in both standard
+runtime and editor, covering actual assets, source-order drawing rectangles,
+preserved authored geometry/centers, frozen inspector facts, detached inputs,
+round-trip serialization without private pixels, and pointer/input ownership.
+The `.NET --editor` frontend check passed all ten pages plus native Click,
+frozen-time and shared-title assertions. An initial editor-only dependency
+refusal was resolved by marking the pure cosine utility `@tool`; its numerical
+implementation is unchanged. Final receipts are `click-scene-native-iemqeo_e/`,
+`click-scene-editor-t3gzsieg/` and `frontend-click-editor-ia7i3pg1/`.
+Runtime is clean. The editors retain 166 (standard) / 205 (.NET) ObjectDB
+instances and associated Canvas/viewport/texture/text RID shutdown diagnostics;
+these are not clean editor exits. Run standard
+`Scenes/Frontend/Tests/click_scene_checks.gd` with one fresh owned output directory,
+adding `--editor` for inspector/serialization checks. The integrated editor entry
+is `Scenes/Frontend/Tests/frontend_scene_checks.gd` under the .NET engine.
+
+The shared fixed-function material factory passed **1,732 native assertions**
+against 88 original factory/admission cases and 1,044 alpha words. Texture and
+shader identity, ordered failures, all parameters, public/private serialization
+and release match. Both old and native text saves reload fog density as decimal
+double `0.0084`, while preserving shader float32 word `0x3c09a027`; the checks
+compare actual old/new reloads and separately preserve original shader words.
+The external shader differs only by its SPDX line and end-of-file newline.
+Reference/native runtime logs are clean in `gdscript-fixed-material-reference-q9qpn_id/`
+and `gdscript-fixed-material-native-35t_bdpw/`. The three affected Client classes
+passed **53/53** in `gdscript-fixed-material-client-hg72ai4f/results/material.trx`.
+The .NET editor gate passed **42 functional checks**, retaining the previously
+observed 205 ObjectDB/associated RID shutdown diagnostics
+(`gdscript-fixed-material-editor-mono-hh0tc01l/`); that editor exit is not clean.
+Use .NET `Scenes/Shared/FixedFunctionMaterialChecks.tscn` with fresh fixture/report
+user arguments, then standard `Scenes/Shared/fixed_function_material_checks.gd`
+with that fixture and a fresh report; `--editor` selects its inactive-resource gate.
+
+After Click/material integration, the supported pinned build and private Level
+100 import passed with zero build warnings/errors. `WorldSceneChecks.tscn`
+passed **24,144 checks**, including the added external-dependency route/content
+and missing-input checks (`click-material-full-build-e.log` and
+`click-material-world-e.log`). The **2,148-step** smoke retained thirteen ordered
+message deliveries/queues, a fresh retry, return to Main Menu and world release.
+Its complete recorded tape is byte-identical to the prior milestone, SHA-256
+`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+Two replays verified unchanged trace hash
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+and state hash `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+with no first divergence. Receipts are `click-material-smoke-3ywj6mz6/` and
+`click-material-replay-7s41lvmd/`; runtime logs are clean. Eight voices began
+before teardown versus nine in the prior host-timed run; the ordered queue and
+simulation delivery sequence remain identical. The mission is still
+`Running`/`None` with zero targets destroyed: this is not full-combat acceptance.
+
+The native Aquila component passed **1,121 checks** against the original three
+profiles: complete decoded definitions, mesh arrays/format flags, shared
+materials, componentwise matrix interpolation, contact poses, saved resources
+and retry binding. The expanded set includes **546 pose checks**, nonfinite
+contacts and the original partial-mutation/error order. The initial Godot-native
+arc constructor sanitized some nonfinite inputs; the final explicit IEEE path
+preserves the original raw words and parameterless zero-vector error instead.
+Reference/native receipts are `gdscript-aquila-reference-56_ecpii/` and
+`gdscript-aquila-native-qu0dw_db/`, with clean runtime logs. All **19** affected
+Client material/provenance tests passed (`aquila-client-c8cd03nv/results/aquila.trx`).
+
+All **111** synthetic public source-admission comparisons also match. A separate
+uncommitted diagnostic found **21/36** differences between the old private
+`ZLibStream` helper's incomplete/trailing-record acceptance and the shared
+native strict decoder. Every affected input is rejected by both production
+entrances' length/SHA-256 pins before decompression; all three admitted streams
+decode byte-for-byte identically. The diagnostic vectors/results remain in the
+reference fixture and earlier `gdscript-aquila-reference-cnkzi_zu/` comparison
+receipts. No committed expectations were relaxed and no general unpinned
+inflater equivalence is claimed. Admitting another source requires a new review.
+
+The final .NET editor gate passed **33 functional checks**
+(`gdscript-aquila-editor-mono-5ab1tqit/`), retaining the known 205 ObjectDB/RID
+shutdown diagnostics. An isolated Xvfb/llvmpipe editor run rendered the actual
+walker, jet and cockpit as **54/58/10 surfaces** without an animation owner or
+input capture; images and source hashes are in `aquila-editor-visual-0gqofenh/`.
+These were inspected as bounded component views. That custom editor run also
+reported two progress-dialog `current_window` errors and 163 ObjectDB/associated
+RID shutdown diagnostics; it is not a clean editor exit or a normal-GPU claim.
+Run .NET `Scenes/Aquila/AquilaSceneChecks.tscn` with fresh absolute fixture/report
+paths, then standard `Scenes/Aquila/aquila_scene_checks.gd` with that fixture and
+a fresh report. Add `--editor` for the inactive preview/serialization gate.
+Both use the owned worktree's `local-data/`; comparison scenes remain private.
+
+The supported pinned build and private Level 100 import passed with zero
+warnings/errors after live Aquila adoption (`aquila-full-build-g.log`).
+`WorldSceneChecks.tscn` passed **24,169 checks** (`aquila-world-g.log`), including
+native profile/script binding before initialization, inactive animation owners,
+Aquila template edits invalidating the bake, the existing geometry/material
+round-trip, selected snapshot poses, retry isolation and unchanged state hashes.
+The receipt now also admits the five actual private texture inputs used by the
+saved Aquila recipes. Focused synthetic files exercise same-size byte changes,
+missing inputs, malformed/duplicate/empty receipt entries and normalized path
+refusals, plus read-only linked input preservation. Research inputs are untouched.
+
+The live Aquila smoke (`aquila-smoke-t56qsw2y/`) kept the **2,148-step** tape
+byte-identical to the preceding Click/material milestone
+(`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`).
+Two actual-tape replay runs (`aquila-replay-eqg57euc/`) matched trace
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+and final state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`
+with no behavioral event or state divergence. All 13 ordered message IDs, queues
+and speakers remained the same; host-timed playback had seven voice starts
+before teardown versus eight previously. Retry/return released the world, and
+the 112 exterior/10 cockpit surfaces retained their existing counts. The route
+still ends `Running`/`None` with zero targets destroyed; this does not establish
+full combat completion or audible playback.
+
+#### Interrupted conversion checkpoint — September 20
+
+At this checkpoint the native Main Menu was integrated but still under validation. The following
+receipts are retained in the conversion worktree's `local-data/test-runs/`:
+
+- `main-menu-law-fixed-njfykcp9/report.json`: **205,452** comparisons passed
+  against `main-menu-laws-1u34suyk/`, covering 5,188 expression cases and 1,040
+  packed-color cases. Ten initial overflow/negative-NaN word differences were
+  corrected in the native implementation against the unchanged fixture.
+  Subsequent harness output guards/completion metadata still need a re-run.
+- `main-menu-frontend-b.log`: the actual frontend scene checks passed after
+  enabling editable Main Menu children; the initial round-trip failure is
+  retained in `main-menu-frontend-a.log`. The checks cover all ten authored
+  pages, seven menu rows, shared resources, edits and unchanged pointer mode.
+- `main-menu-frontend-editor-a.log`: functional editor checks passed, with
+  the known 205 ObjectDB/associated RID shutdown diagnostics. This is not a
+  clean editor-exit claim.
+- `main-menu-session-a.log`: **967** session/path/admission assertions passed;
+  `main-menu-click-sharing-a.log`: **136** shared Click/title checks passed.
+  These are headless checks, not rendered Main Menu comparisons.
+- `main-menu-client-j2kczeef/results/main-menu-b.trx`: **177/177** affected
+  Client tests passed, with no skips. Existing numerical expectations remain
+  unchanged; production-source guards now inspect the native owners.
+- `safe-resume-checkpoint-build-20260920-a.log`: the supported pinned
+  `first_flight.py build --no-prepare` passed with **zero warnings/errors**,
+  including the new `MainMenuSceneChecks` and `RetailWeaponReferenceChecks`.
+  Neither new scene harness has been executed at this checkpoint.
+
+The standalone editor/publication checks, rendered comparison and integration
+review were unfinished at that checkpoint. The September 22 results below
+supersede those gaps; the earlier Aquila receipts above retain their original
+scope.
+
+The three weapon foundations had only parsed at the September 20 checkpoint;
+their subsequent comparison results are recorded below. They have no live
+consumers yet.
+Current component guidance is in [`rebuild/README.md`](rebuild/README.md#native-main-menu).
+
+#### Native Main Menu — September 22
+
+The production native page and its live frontend adapter preserve the existing
+renderer in the following executed checks. All receipts below belong to this
+worktree's ignored `local-data/test-runs/`; canonical research inputs were read
+through the existing asset routes.
+
+- `main-menu-resume-laws-zw542v2k/`: **205,454 checks**, all expression and
+  packed-color groups complete, against 5,188 expression rows and 1,040 color
+  rows from the unchanged C# comparison. Eight output-path refusals preserved
+  their sentinels and fixture hash (`main-menu-law-guards-5z2qnidd/`).
+- `main-menu-render-decor-o5hlffl3/report.json`: **2,282 checks**, all five
+  groups and **92 samples** complete. All **178 native/live-host image
+  comparisons have zero RGBA-byte differences** against the retained original
+  renderer: 640×480, 1280×720, 801×601 and 320×240 transitions, language flags,
+  raw UTF-16, reflection suppression and authored row text/geometry. The
+  isolated Xvfb display used separate credentials/profiles, Dummy audio and
+  llvmpipe (Mesa 26.2.2, LLVM 22.1.8), then stopped its owned processes.
+  Two representative captures were inspected. The log contains only the
+  expected virtual-display input-method/V-Sync warnings, with no runtime
+  errors or teardown leaks. This is software-rendered regression evidence,
+  not normal-GPU performance, physical input or audible playback.
+- `main-menu-native-pass-edit-pwuz8krr/result/report.json`: **576 checks**,
+  all ten groups complete in standard headless Godot, with a clean log.
+  It uses the actual production scene/assets, checks inactive input/clocks,
+  detached admitted facts, frozen Inspector redraws, independent decoration
+  edits and actual pack/reopen. Public serialization excludes private decoded
+  images and byte buffers. Standard headless editor also passed all **576**
+  checks (`main-menu-native-editor-shared-frame-v2tlygzz/`) but reported
+  **166 ObjectDB/associated RID teardown leaks**; this is not a clean
+  editor-exit claim. Eight native output-path refusals preserved their
+  sentinels (`main-menu-native-output-guards-be33uep4/`).
+- The actual .NET frontend scene passed its ten-page/seven-row, asset sharing,
+  edit/round-trip and pointer checks in runtime and editor modes
+  (`main-menu-frontend-runtime-final-myenqszi/` and
+  `main-menu-frontend-editor-final-ivccwh8b/`). The runtime log is clean; the
+  editor retained **205 ObjectDB/associated RID shutdown leaks**.
+- `main-menu-client-complete-mnjeui0b/results/main-menu.trx`: **177/177** affected
+  Client tests passed with zero skips. Numerical expectations remain unchanged.
+- `main-menu-full-build-f1uqiost/`: the supported pinned .NET build and private
+  Level 100 production import passed with zero warnings/errors.
+  `main-menu-world-3n78x08g/`: **24,169 world checks** passed, including saved
+  geometry/materials, native bindings, selected poses, retry isolation and
+  unchanged simulation hashes.
+- `main-menu-smoke-eaehifkc/`: the live headless frontend/world smoke completed
+  **2,148 steps**, thirteen ordered message deliveries/queues, a fresh retry
+  and return to Main Menu with world release. Its recorded tape remains
+  byte-identical to the preceding Aquila milestone, SHA-256
+  `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  `main-menu-replay-cq_in8zz/`: two actual-tape replays verified unchanged
+  trace `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no first divergence. Runtime logs are clean. The mission still ends
+  `Running`/`None` with zero targets destroyed; this is not full-combat acceptance.
+
+The rendered check exposed two canvas-structure differences at fractional
+scales. The reflection now retains the original canvas-root shader submission,
+follows frozen authored title/ancestor transforms and keeps derived pose/Z out
+of saved defaults. Decoration passes now share the original decoration canvas
+frame instead of regrouping floating-point transforms around tighter individual
+bounds. Their named Controls remain independently editable. The assertions
+still require exact pixels. Review also exposed an unknown Resource leaking
+through frame snapshots and an anchor edit requiring another frame batch;
+both are fixed and covered by the native checks.
+
+Run .NET `Scenes/Frontend/Tests/MainMenuSceneChecks.tscn` with `--skipfmv` for
+actual scene/host checks; a caller-owned isolated display plus
+`--main-menu-render-dir=ABS_FRESH_EMPTY_DIR` enables the exact image comparisons.
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/main_menu_scene_checks.gd -- ABS_FRESH_EMPTY_DIR`
+for native editor/publication checks; `--editor` selects tool mode. Output must
+stay in this worktree's `local-data/`. The scene comparison reference preserves
+the reconstruction's existing retail evidence gaps; matching it does not close
+unmeasured retail behavior or complete Level 100 combat.
+
+#### Native Quit confirmation — September 22
+
+The actual `QuitConfirm.tscn` replaces the single C# dialog draw pass in the
+production frontend. Receipts below are in the conversion worktree's ignored
+`local-data/test-runs/`; prepared research inputs retain their recorded hashes.
+
+- `quit-confirm-native-roundtrip-m3ydb0s3/result/report.json`: **314 checks**,
+  all seven sections complete in standard headless Godot. Actual Controls,
+  font sharing, rejected input batches, detached snapshots, frozen edits,
+  half-open hit boundaries at five Stage scales and pack/reopen passed.
+  Private image storage is absent from public serialization. Two output
+  refusal probes preserved their sentinels (`quit-confirm-output-guards-9733aoml/`).
+- `quit-comparison-headless-ozjwqf6l/report.json`: **1,457 checks**, all five
+  groups and twelve states complete against the retained `5390cb11` drawing.
+  The live host preserves default No selection, keyboard/pointer behavior,
+  ordered audio/cursor/exit callbacks and unchanged input hashes. Headless
+  results make no pixel claim.
+- `quit-comparison-render-faf9mqkz/report.json`: **1,517 checks**, twelve states
+  and **24 exact native/live-host image comparisons with zero differing
+  RGBA bytes**. Coverage includes 640×480, 1280×720, 801×601 and 320×240 plus
+  authored translation, size, rotation and scale. The caller-owned Xvfb
+  display used separate credentials/profiles, software rendering and Dummy
+  audio, then stopped its own processes. The 1280×720 live-host capture was
+  inspected. Only expected virtual-display input-method/V-Sync warnings
+  appeared; there were no runtime errors or teardown leaks.
+- `quit-frontend-runtime-kiwe9kaw/` and `quit-frontend-editor-xfgx0f3p/`:
+  actual frontend asset sharing, frozen page selection, authored edits,
+  pack/reopen and unchanged pointer passed. Runtime shutdown is clean.
+  Editor shutdown still reports **205 ObjectDB/associated RID leaks**, as
+  before this conversion; this is not a clean editor-exit claim.
+- `quit-client-fixed-voidd1_c/results/quit.trx`: **256/256** affected Client
+  tests passed, zero skips. Existing numerical expectations are unchanged;
+  source-ownership guards now inspect the native production scene/scripts.
+- `quit-full-build-g0xxaoue/`: supported pinned .NET build and private Level 100
+  import passed with zero build warnings/errors. `quit-world-e6ffz5x5/` passed
+  **24,169** production world checks. `quit-smoke-vudd6qza/` completed **2,148**
+  steps, thirteen ordered message deliveries/queues, focus-loss handling,
+  fresh retry and return to Main Menu with world release. Its recorded tape
+  retains SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Two replays (`quit-replay-n6o623ra/`) retained trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no first divergence. Runtime logs are clean; mission outcome remains
+  `Running`/`None`, zero targets destroyed, so full combat remains unproven.
+
+A direct hit probe exposed a real conversion error: at 1024×768, pointer
+`(832,400)` maps to excluded design point `(520,250)`, but an extra
+design→canvas→design round-trip selected No. The adapter now passes the original
+design point directly; the native row composes only its authored transforms.
+The original half-open limits, including adjacent float values, pass in both
+standalone and actual-host checks. Before/after receipts are
+`quit-hit-before-d08piubz/` and `quit-hit-after-67821ncj/`.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/quit_confirm_scene_checks.gd -- ABS_FRESH_EMPTY_DIR`
+for native checks. The .NET `Scenes/Frontend/Tests/QuitConfirmSceneChecks.tscn`
+requires `--skipfmv`; supply `--quit-render-dir=ABS_FRESH_EMPTY_DIR` only with a
+caller-owned isolated display for pixel comparisons. Both output directories
+must be inside this worktree's `local-data/`. The actual frontend editor check
+is `--editor --headless --script
+res://Scenes/Frontend/Tests/frontend_scene_checks.gd -- --skipfmv`.
+These comparisons preserve the previous reconstruction. Retail Quit rendering,
+localization and the reconstructed dialog height remain unmeasured; software
+captures establish neither normal GPU performance nor physical input/audio.
+
+#### Native career-name page — September 22
+
+`CareerName.tscn` now owns the production New/Load page's header, bracket pair,
+eleven row slots, list/scrollbar, name field/highlight and chevrons. Gameplay
+and the editor use the same typed GDScript controls and shared font/texture
+recipes. The narrow host adapter supplies detached display facts, queries hit
+regions/name extent, and retains the existing session/navigation/audio/save
+handoff. The original renderer and its measurement provenance are retained
+under `Scenes/Frontend/Tests/CareerNameReference*`, pinned to `14f6f72b`.
+
+Executed receipts under the conversion worktree's `local-data/test-runs/`:
+
+- `career-name-native-66aas6ow/result/report.json`: **495 checks**, all eight
+  sections, zero failures in standard headless Godot. Authored nodes exist
+  before Ready; frozen previews, UTF-16/width laws, overflow/refusals, transformed
+  half-open hit regions, edits and pack/reopen passed. Fourteen public sources
+  and five private production inputs retained their hashes; public scene
+  serialization contains no private image pixels. Runtime diagnostics are clean.
+  `career-output-guards-t61kzkdq/` adds two executed existing-report/symlink
+  refusal probes; the sentinel bytes and symlink target remained unchanged.
+- `career-headless-fixed-wur6ftj9/report.json`: **6,338 checks**, sixteen states
+  and all five comparison groups passed. This includes the live host, all BMP
+  input units, source-frame geometry, name editing, keyboard/pointer navigation,
+  exact selected descriptor identity and ordered callbacks. The tracked gold
+  save fixture was read through its verified parser and remained byte-identical;
+  no save was discovered, synthesized or written. No pixel claim is made here.
+- `career-comparison-render-3ryerm7e/report.json`: **6,418 checks** and **32
+  exact native/live-host image comparisons with zero differing RGBA bytes**.
+  Coverage includes 640×480, 1280×720, 801×601 and 320×240, New/Load, overflow
+  selection, raw UTF-16, edited names and authored header/list/name transforms.
+  The 1280×720 New and 801×601 Load host images were inspected. Rendering used
+  task-owned Xvfb credentials/profiles, llvmpipe and Dummy audio with process
+  cleanup. Only the expected input-method/V-Sync warnings appeared; no runtime
+  errors or teardown leaks occurred.
+- `career-frontend-runtime-zcyj78m7/` and `career-frontend-editor-wz7yhlm5/`:
+  actual frontend sharing, all ten frozen editor pages, native CareerName edits,
+  pack/reopen and unchanged pointer passed. Runtime shutdown is clean. Editor
+  shutdown retains the existing **205 ObjectDB/associated RID leaks**; it is
+  not a clean-exit claim. The separate import
+  `career-frontend-editor-import-gwf0lkdg/` completed cleanly.
+- `career-startup-capture-rijwodsj/run/capture-manifest.json`: all **13/13**
+  scheduled startup shots captured at 640×480 with the expected screen at every
+  boundary. `career-client-final-ikbjrsw9/results/career.trx` then executed
+  **127 affected Client tests: 126 passed, one failed, zero skipped**. The
+  failing retail title gate is described below; its expected values are unchanged.
+- `career-integration-final-0puv5c6w/`: supported pinned .NET build and private
+  Level 100 import passed with zero build warnings/errors. The **2,148-step**
+  smoke preserved thirteen ordered message deliveries/queues, focus-loss/rearm,
+  a fresh retry and return to Main Menu with world release. The recorded tape
+  retains SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Both replay runs verified trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`,
+  with no divergence. Logs are clean; mission outcome remains `Running`, zero
+  targets destroyed. A prior smoke correctly refused stale generated scenes
+  after the comparison harness was recompiled; the supported build refreshed
+  this worktree's private scene import before the successful final run.
+
+The fresh retail header gate is **not green**. Both CareerName and the unchanged
+LevelSelect draw title ink at **y71..87**, while the pinned retail expectation is
+**y72..88**. All glyph-run widths match. Current horizontal extents match retail
+(CareerName x263..513, LevelSelect x304..471), so the old one-pixel-right note is
+historical. `career-header-diagnosis-ovow_8tj/report.json` records the same y71..87
+result from the retained pre-conversion CareerName renderer on the same engine,
+with byte-identical native/reference comparison images. It also remeasures the
+pristine retail `local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png`
+(SHA-256 `45bd325ad9112af8323755a8aadb210f856ba3f5d1206b4293b32d4c126ea1d5`)
+at y72..88. This is an unresolved reconstruction/raster discrepancy, not evidence
+that this conversion moved the title. Its cause is still unknown. A bounded
+comparison of the same retained draw under the previous pinned engine and dev6,
+followed by the actual retail glyph submissions, can distinguish engine raster
+change from the retained drawing origin. No source constant, expected row or
+image threshold was adjusted to pass. Automatic capture selection now considers
+native frontend sources/resources as well as the C# host, preventing stale
+pre-conversion captures from satisfying this gate.
+
+An offscreen-null regression was found and corrected: the old renderer stops
+before row eleven, so the bridge must preserve a null twelfth name without
+reading or normalizing it. That case now renders exactly. Malformed *visible*
+null rows are explicitly refused at native `set_frame` admission with
+`InvalidDataException`; the retained renderer threw `NullReferenceException`
+during glyph iteration. Both session owners retain the original partial mutation
+and failure when selecting a null name. The native API rejects that resulting
+null name, while the temporary host's raw-text projection still throws
+`ArgumentNullException`, the same type as the prior draw's name-width sum.
+The comparison report records these different refusal stages; it does not claim
+identical malformed-input exception timing.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/career_name_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native component. Run .NET
+`res://Scenes/Frontend/Tests/CareerNameSceneChecks.tscn -- --skipfmv` headlessly
+for the comparison, or add `--career-render-dir=ABS_FRESH_EMPTY_DIR` only on a
+caller-owned isolated display. Output belongs under this worktree's `local-data/`.
+The missing header endcaps/Forseti art, unmeasured page transition and retail
+header discrepancy remain open. These checks establish neither full combat nor
+normal GPU, physical-device, audible playback or cross-platform parity.
+
+#### Native Select Configuration — September 22
+
+`SelectConfiguration.tscn` owns the production background passes, translucent
+header, unit name, Walker/Jet weapon rows and chevrons. Its six sections expose
+real editable controls before Ready. The shared atlas fonts and private texture
+recipes serve both gameplay and frozen editor examples. The C# host forwards
+five raw UTF-16 display fields and queries the native hit regions, retaining the
+existing session, audio and launch ordering. The original draw methods and
+their measurement provenance remain in `Tests/ConfigurationReference*`, pinned
+to `7474445c`.
+
+Executed receipts under the conversion worktree's `local-data/test-runs/`:
+
+- `configuration-native-68nn5ltn/result/report.json`: **385 checks**, all eight
+  sections and zero failures in standard headless Godot. Coverage includes
+  actual asset admission, detached UTF-16, refusal atomicity, half-open arrow
+  edges, authored transforms, frozen text overrides and pack/reopen. Thirteen
+  public sources and five private production inputs retained their hashes.
+  Saved scenes contain public recipes and layout, not decoded private pixels.
+  Runtime diagnostics are clean. The same receipt's two output-refusal probes
+  preserve an existing report-directory sentinel and a dangling scene symlink.
+- `configuration-headless-_e3rsl5k/report.json`: **1,997 checks**, eleven states
+  and all five comparison groups passed against the retained C# renderer and
+  actual frontend host. Coverage includes exact asset/glyph bytes and widths,
+  detached facts, authored source transforms, half-open targets at five window
+  sizes, the one-configuration restriction and keyboard/pointer callback order
+  through two loading handoffs. No gameplay world is constructed. Logs are clean.
+- `configuration-render-6o0d44b6/report.json`: **2,044 checks** and **18 exact
+  native/live-host image comparisons with zero differing RGBA bytes**. This
+  covers production defaults at 640×480, 1280×720, 801×601 and 320×240, raw
+  UTF-16/empty text, edited background/header/weapon sections and explicit
+  unit-name overrides. The 1280×720 production and edited Walker host images
+  were inspected. Task-owned Xvfb used separate credentials/profiles, software
+  rendering and Dummy audio; processes were cleaned up and credentials removed.
+  Only the expected input-method/V-Sync warnings appeared; runtime and shutdown
+  were otherwise clean. Six private inputs retained their hashes.
+- `configuration-editor-b84mrgvl/`: headless .NET editor import and actual
+  frontend runtime/edit/pack/reopen checks passed. All ten frozen editor-page
+  selections passed; selecting Configuration starts neither processing nor
+  loading. Pointer state remains unchanged. Import and runtime
+  exit cleanly. Editor shutdown retains the existing **205 ObjectDB/associated
+  RID leaks**, so the editor result is a functional pass, not a clean-exit claim.
+- `configuration-startup-ozo7di_i/run/capture-manifest.json`: all **13/13**
+  scheduled 640×480 startup shots matched their expected screens, including
+  entry/settled Configuration and the Loading boundary, on an isolated display.
+- `configuration-client-j0d50v19/results/configuration.trx`: **127 affected
+  Client tests executed: 126 passed, one failed, zero skipped**. The fresh
+  captures reproduce the same CareerName/LevelSelect retail header discrepancy
+  described above: y71..87 versus the unchanged y72..88 expectation. No new
+  configuration failure appeared, and no assertion or expected image was weakened.
+- `configuration-build-iskvkwcx/`: supported pinned .NET build and this
+  worktree's private Level 100 import passed with zero build warnings/errors.
+  `configuration-smoke-0s9difyy/` then passed the **2,148-step** lifecycle smoke,
+  thirteen ordered message deliveries/queues, synthetic focus-loss/rearm,
+  fresh retry and Main Menu return with world release. Its tape SHA-256 is
+  unchanged at `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Both replay runs verified trace
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`
+  without divergence. Logs are clean. Outcome remains `Running`, with zero
+  targets destroyed; this is not full-combat acceptance.
+
+The half-transparent header, ring red gain above 1.0, fractional unit-name
+origin and mirrored arrow preserve the retained rendering contract. Explicit
+label overrides are a new editor feature: the old C# configuration sections'
+text override did not affect these draw methods. The missing live unit model,
+mode icons, rating stars, Forseti emblem and header endcaps remain unresolved.
+The separate CareerName/LevelSelect retail header gate above does not measure
+this configuration page.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/configuration_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native scene. Run .NET
+`res://Scenes/Frontend/Tests/ConfigurationSceneChecks.tscn -- --skipfmv`
+headlessly for the comparison, or add
+`--configuration-render-dir=ABS_FRESH_EMPTY_DIR` on a caller-owned isolated
+display. Outputs belong below this worktree's `local-data/`. These checks make
+no full-combat, physical-input, audible-playback, GPU-performance or Windows claim.
+
+#### Native Mission Briefing — September 23
+
+`MissionBriefing.tscn` replaces the remaining briefing draw callback with
+editable Background, Header, LevelName, Body and Navigation sections. It reuses
+the Configuration background resources and controls, atlas labels/fonts and
+signed arrow component. `Body/Text` owns raw UTF-16 paragraph layout with the
+original source rectangle, float32 width/y arithmetic and 286-pixel ceiling.
+The narrow host forwards the selected world's name and paragraphs in one batch
+and retains session/input/audio/navigation ownership. Frozen editor facts reuse
+the native world-100 text table. The former methods and measurement provenance
+remain in `Tests/BriefingReference*` from `51477f62`.
+
+The retained executable behavior splits only on ASCII space, keeps empty tokens,
+wraps when the current line is nonempty and its candidate exceeds 286, and leaves oversized words whole.
+Explicit empty paragraphs advance by 10; nonempty lines advance by 16.
+Nonempty paragraph boundaries insert no extra gap. An empty *list* chooses the
+nine-element world-100 fallback, including its explicit blank element. This
+contradicts the old renderer's comment promising to draw nothing for an empty
+session body. The normal two-paragraph Level 100 text therefore has different
+vertical spacing from that fallback. Conversion preserves both behaviors;
+neither is newly asserted as faithful retail policy. The cheapest falsifier is
+a controlled retail observation of paragraph/line submissions for the normal
+world-100 pair and a missing selected-world body, rather than another comparison
+against the C# reconstruction. The missing video inset, header endcaps and
+Forseti emblem remain open; no black video placeholder was introduced.
+
+The existing selected-world wiring test now reads the live bridge/native body
+owner. Its table-pair assertion remains unchanged, but its comment no longer
+claims to execute the separately wrapped fallback. The old renderer cited
+`RetailFrontendFlowWrapTests`; no such test exists in this tree. The new native
+and retained-reference layout harnesses directly compare those wrapping paths.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `briefing-native-n8nuftpf/result/report.json`: **317 checks**, nine groups,
+  zero failures in standard headless Godot. Includes the 286/287 width boundary,
+  explicit blanks, repeated spaces, oversized words, raw UTF-16, frozen editor
+  facts, authored edits and pack/reopen without private pixel serialization.
+  Fifteen public sources and five private inputs retained their hashes; both
+  existing-output/symlink refusal probes passed. Runtime diagnostics are clean.
+- `briefing-integrated-4pwpv8yi/`: the supported .NET build and private Level 100
+  import passed with zero build warnings/errors. `report.json` then passed
+  **2,656 checks**, sixteen states and five groups against the retained renderer
+  and actual host. Both new-career World 100 and read-only gold-fixture World 110
+  navigation preserve callback ordering and the exact career/save handoff.
+  An earlier harness attempt omitted Load's required row selection and correctly
+  stopped at the Level Select assertion; the setup now selects that row through
+  the existing input path. Production navigation was not changed to pass it.
+- `briefing-render-hafevgwd/report.json`: **2,726 checks**, **27 exact native/
+  live-host image comparisons**, zero differing RGBA bytes. Coverage includes
+  both worlds at 640×480, 1280×720, 801×601 and 320×240, empty-body fallback,
+  explicit blank paragraphs, spacing/long-word/raw-unit cases, authored body/
+  header/name edits and explicit text overrides. The World 100, World 110 and
+  edited-body host images were inspected. Isolated Xvfb used task-owned
+  credentials/profiles, software rendering and Dummy audio; credentials and
+  processes were cleaned up. Only the expected XIM/V-Sync warnings appeared.
+  The tracked save fixture and seven private inputs retained their hashes.
+- `briefing-editor-dxzv_m5b/`: import and runtime scene checks exited cleanly;
+  all ten frozen editor pages and edit/pack/reopen checks passed. Briefing
+  neither acquires input nor starts a world, and resizing its section does not
+  replace the measured wrap ceiling. The editor check still reports the same
+  **205 ObjectDB/associated RID shutdown leaks**; this is a functional pass.
+- `briefing-startup-_xalh0md/run/capture-manifest.json`: **13/13** scheduled
+  startup shots matched their expected screens through Loading, without save
+  errors, at 640×480 on the isolated display.
+- `briefing-client-tw27nast/results/briefing.trx`: **127 affected Client tests**,
+  **126 passed, one failed, zero skipped**. The fresh CareerName/LevelSelect
+  retail header gate retains the same y71..87 versus y72..88 discrepancy above.
+  It does not measure Briefing. No assertion or expected hash was weakened.
+- `briefing-smoke-s5gy8vs8/`: **2,148-step** lifecycle smoke and both recorded
+  tape replays passed. The tape, trace and final-state hashes match the
+  Configuration receipt above. Thirteen ordered message deliveries/queues,
+  synthetic focus-loss/rearm, fresh retry and Main Menu return/world release
+  passed with clean logs. Outcome remains `Running`, zero targets destroyed;
+  this is not full-combat acceptance.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/briefing_scene_checks.gd -- ABS_FRESH_OWNED_DIR` for
+the native scene. Run .NET
+`res://Scenes/Frontend/Tests/BriefingSceneChecks.tscn -- --skipfmv` headlessly,
+or add `--briefing-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned display.
+Outputs belong below this worktree's `local-data/`. Conversion equivalence is
+not full retail, full-combat, physical-input, audible-playback, GPU-performance
+or Windows acceptance.
+
+#### Native Level Select — September 23
+
+`LevelSelect.tscn` replaces the final legacy frontend page draw callback with
+authored background/guides, three arcs, sixteen links, twelve node groups and
+thirteen ring passes, bracket/shadow, labels and navigation. Narrow typed
+controls retain the original `draw_arc`/`draw_line` operations, float32 inputs,
+draw order and full-stage source coordinates. Ring sprites share the existing
+production component; font, underlay and texture resources are shared with
+other pages. Authored node changes update connected link endpoints and targets.
+The original renderer and measurement provenance are retained in
+`Tests/LevelSelectReference*` from `51477f62`.
+
+The host supplies only the selected name and FEBack time, and retains the
+session's selection/input/audio/loading order. The settled graph still
+highlights node zero even when World 110 supplies the name. Its node hit regions
+remain above the ring centers. Clicking World 100 confirms even when unchanged;
+World 110 confirms only when `SelectWorld` accepts the change. The other
+discarded `RetailLevelSelect*` evidence-helper results do not become newly
+invented positions, fades or animation. Missing emblem, header endcaps, amber
+node-center art and faint writing remain undrawn. The arcs retain their current
+alpha blend; the retail additive appearance is a separate unresolved gap.
+
+With no remaining consumer, the production `RetailFrontendPart` proxy, draw
+dispatch, C# glyph renderer and duplicated texture/font handles are removed.
+The root still owns frontend orchestration in C#. Existing numerical/evidence
+tests remain intact; their old source-consumption checks explicitly target the
+retained reference. Production page-fill guards now read the live native
+clear/darkener/composite owner. Options and Debriefing comparison harnesses
+use the retained, unchanged C# glyph/FEBack methods and inspect shared native
+font resources instead of removed live C# fields.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `level-select-native-y68doiup/`: **813 checks**, nine groups, zero failures
+  and clean shutdown in standard headless Godot. Covers authored content,
+  production assets, exact geometry, detached facts, half-open hit bounds,
+  node/link/target edits, frozen preview and pack/reopen without private pixels.
+  Twenty-four source hashes and eight private-input hashes stayed unchanged.
+  Both existing-output/dangling-symlink refusal probes passed. The initial
+  detached-node test incorrectly expected resolved fullrect sizes before tree
+  entry; it now checks stored anchors/offsets, then actual sizes after Ready.
+- `level-select-integrated-1ao4c4xq/`: supported .NET build/private Level 100
+  import passed with zero build warnings/errors. **7,669 headless comparisons**,
+  fourteen states and five groups passed against the retained renderer and
+  actual host. Exact arc/link/ring submissions, decoded fonts/textures, FEBack
+  phase boundaries, five-size hit bounds, actual new/load navigation, callback
+  order and original gold-fixture identity are checked. Updated Options host
+  checks passed **6,048**, including observer failure/reentry; Loading passed
+  **234**. All runtime logs are clean.
+- `level-select-render-6cmfdlzs/report.json`: **7,733 checks**, **25 exact native/
+  live-host image comparisons**, zero differing RGBA bytes. Includes World 100
+  and 110 at four viewport sizes, fractional scaling, empty/raw UTF-16 names,
+  whole-page position/size/scale/rotation edits and explicit text overrides.
+  World 100, World 110 and edited-size host images were inspected. Task-owned
+  Xvfb, separate credentials/profiles, software rendering and Dummy audio were
+  cleaned up; only expected XIM/V-Sync warnings appeared. Fixture/input hashes
+  remain unchanged. This measures equivalence to the reconstruction, not retail.
+- `level-select-editor-ca4vdy7v/`: updated Debriefing checks passed **212**,
+  and editor import exited cleanly. `level-select-editor-final-mld1ihef/` then
+  passed all ten frozen page selections and runtime/editor edit/pack/reopen.
+  The integration test initially set Position before Size on a fullrect node;
+  Godot's centered grow direction shifted that position by half the size delta.
+  It now sets Size before the final Position and still requires the exact
+  requested rectangle to persist. No production change or assertion relaxation
+  was needed. Runtime is clean; editor teardown retains the same **205 ObjectDB/
+  associated RID leaks**.
+- `level-select-startup-ltpjeizc/`: all **13/13** fresh startup shots match their
+  expected screens through Loading with no save errors. The affected Client
+  gate executed **164 tests: 163 passed, one failed, zero skipped**. The unchanged
+  CareerName/LevelSelect retail header assertion still finds y71..87 versus
+  y72..88. No expected hash, retail glyph bound or numerical assertion changed.
+- `level-select-smoke-rw3g4ll9/`: the **2,148-step** lifecycle smoke and two
+  replay runs passed with the same tape, trace and final-state hashes recorded
+  above. Thirteen ordered message deliveries/queues, synthetic focus-loss/rearm,
+  fresh retry and Main Menu return/world release passed with clean diagnostics.
+  Outcome remains `Running`, zero targets destroyed; full combat remains open.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/level_select_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+for the native scene. Run .NET
+`res://Scenes/Frontend/Tests/LevelSelectSceneChecks.tscn -- --skipfmv` headlessly,
+or add `--level-select-render-dir=ABS_FRESH_EMPTY_DIR` on an isolated owned
+display. Use this worktree's `local-data/` for outputs. These checks establish
+neither full-combat completion nor physical input, audible playback, normal
+GPU performance or Windows behavior.
+
+#### Native Pulse impact — September 23
+
+`Scenes/World/PulseImpact.tscn` now supplies the production blob, flash and
+shockwave sphere. The native controller receives the existing float32
+presentation clock at explicit start. The C# host retains event dispatch and
+scene instantiation; its remaining effect construction/animation helpers are
+removed. This preserves the reconstruction's `1.07f` blob scale endpoint,
+callback-only random initial atlas cell and separate 1.05-second lifetime.
+
+Executed headless checks use fresh owned profiles under `local-data/test-runs/`:
+
+- `pulse-impact-verified-8m0p7zn8/`: supported build/private import passed with
+  zero compiler warnings/errors; all **22** affected Client tests passed with
+  zero skips. The entity harness passed **78,830 assertions**, including **4,306
+  exact shockwave arithmetic cases** for scale, UV, RGBA and initial scroll.
+  Dense float32 ages, boundary neighbours, signed zero and large/nonfinite clock
+  values match the retained `b8c1a220` operations without tolerances. Nonfinite
+  clocks are tested through the same pure production helper without assigning
+  invalid transforms to nodes.
+- The same harness compares nineteen actual native/retained tween steps,
+  initial callback timing, captured materials, parent/child lifetime ownership,
+  independent instances, one RNG draw and its unchanged suffix. All three
+  decoded texture pages match the old loader, and prepared input hashes remain
+  unchanged. The public event route preserves actor/tick naming, coordinate
+  conversion and a nonzero host clock.
+- `pulse-impact-client-final-f4qn38jb/`: all **22** affected Client tests passed
+  again after retaining the size guard's rejection of unregistered effect meshes.
+- `pulse-impact-native-ctsr0w79/`: standard-engine parsing and **195 runtime
+  assertions** passed with clean logs. **171 editor assertions** passed for
+  authored geometry/artwork, inactive timers/tweens/input and scene packing
+  without private pixels. The scripted editor still reports the same **166
+  ObjectDB instances** and RID shutdown diagnostics; its strict clean-log gate
+  remains failed.
+- `pulse-impact-smoke-aonolece/`: the normal startup/menu/Level 100/retry/
+  Main Menu smoke passed **2,148 ticks**, followed by two verified replay
+  repetitions. Recording, trace and final-state hashes match the destruction
+  milestone below; runtime logs are clean. The mission remains **Running /
+  None** with **zero targets destroyed**, so this does not establish full combat.
+
+Use the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` commands
+below. These comparisons preserve the current implementation; they do not prove
+complete retail combat, normal GPU performance, physical input, audible audio
+or Windows execution.
+
+#### Native destruction scenes — September 23
+
+Tank, drone and facility destruction now instantiate authored scenes driven by
+`Scenes/World/destruction_effect.gd`. Their retained layers share four native
+texture recipes, including the blob and flash objects also used by Pulse impact.
+The original six texture-admission slots remain ordered. Existing representative
+emitter limitations are unchanged; no debris, placement, velocity or colour law
+was inferred to fill them.
+
+Headless checks used fresh owned profiles under `local-data/test-runs/`:
+
+- `destruction-scenes-final-1c6ey79n/`: supported build/private import passed
+  with zero compiler warnings/errors. The entity harness passed **29,444
+  assertions**, including paired native/retained schedules for all three
+  families, raw UV/scale/colour/elapsed words, visibility, captured materials,
+  independent siblings, lifetime timers and actual public event routing.
+  Texture bytes match the retained loader and source hashes remain unchanged.
+  RNG checks preserve exactly **1 / 1 / 2** start draws for tank/drone/facility,
+  with facility fireball before smoke and no further animation draws.
+- `destruction-scenes-client-hdrlknux/`: all **21** affected Client tests passed,
+  with zero skips. Descriptor and numerical assertions are unchanged. The size
+  guard now follows each named scene layer to its own QuadMesh resource.
+- `destruction-scenes-native-71rcgquf/`: standard-engine parsing and **172
+  runtime assertions** passed with clean logs. **148 editor assertions** passed
+  for real artwork, scene round-trips, private-pixel exclusion and inactive
+  timer/tween/input state. The same **166 ObjectDB instances** and associated
+  RID shutdown diagnostics remain; the editor's strict clean-log gate failed.
+- `destruction-scenes-smoke-epp65z9f/`: the normal startup/menu/Level 100/retry/
+  Main Menu route passed **2,148 ticks**, followed by two successful replays.
+  Runtime logs are clean; recording, trace and final-state hashes are unchanged
+  from the world milestone below. This also exercises admission of the shared
+  recipes by the remaining managed host. The mission remains **Running / None**
+  with **zero targets destroyed**, so this is not combat-completion evidence.
+
+Run the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` forms
+below. These are comparisons against the retained `673b630a` reconstruction,
+not new retail-completeness or GPU-performance claims.
+
+#### Native Vulcan impact — September 23
+
+`Scenes/World/VulcanImpact.tscn` now supplies the production direct spark's
+billboard, material and stopped lifetime timer. Its GDScript controller retains
+cells 11–15, four binary64 intervals, the Single-rounded scale target, separate
+timer/tween ownership and zero RNG draws. The two unresolved sibling emitter
+branches are still absent. The existing muzzle controller also now retains its
+original animated material in callbacks, matching the former C# closure when a
+mesh is removed or its material override changes.
+
+All execution was headless with owned profiles under `local-data/test-runs/`:
+
+- `vulcan-impact-complete-uv1uho4u/`: supported build/private import passed with
+  zero compiler warnings/errors. The entity harness passed **23,362 assertions**,
+  including exact decoded texture bytes, boundary-step UV/scale/completion,
+  independent instance materials, captured-material behavior, child/root
+  lifetime comparisons, unchanged source bytes and seeded RNG state. The actual
+  public destruction-event path uses the native scene with the original name,
+  coordinate conversion and timer. All **21** affected Client tests passed,
+  with zero skips and unchanged descriptor/hash/radius expectations.
+- `impact-callback-native-1a_dhx8e/`: the final standard-engine runtime check
+  passed **105 assertions** with clean logs. The preceding
+  `vulcan-impact-native-2i0j1bnv/` editor check passed **81 functional assertions**,
+  including frozen artwork, inactive time/input and scene packing without private
+  pixels. It retains the same **166 ObjectDB instances** and RID diagnostics as
+  the world check below; its strict clean-log gate remains failed.
+
+Earlier harness failures assumed that reaching the final atlas cell immediately
+reported tween completion, and that freeing a bound node immediately invalidated
+its tween. The final checks compare the actual retained C# behavior through one
+additional observation step and identical frees. Production timing, numerical
+tolerances and expected hashes were not changed to satisfy those assumptions.
+Use the existing `EntityBridgeChecks.tscn` and `entity_scene_checks.gd` launch
+forms below. These checks establish component migration, not complete combat,
+physical input, audible playback, normal GPU performance or Windows behavior.
+
+#### Native world presentation — September 23
+
+The actual private Level 100 scene now embeds `WorldPresentation.tscn`.
+`world_presentation.gd` owns player interpolation, foot conversion, Aquila
+transitions, camera/projection application and environment update order.
+`static_world_animation.gd` owns scenery's double clock and discrete rigid-part
+frames. The temporary C# facade submits one immutable snapshot pair and caches
+detached display facts. Its former camera adapter is test-only. Import
+construction, full simulation and replay entry still need
+conversion; the full game still requires .NET.
+
+Executed checks use owned profiles and outputs under this worktree's ignored
+`local-data/test-runs/`, with the canonical lab read in place:
+
+- `world-presentation-final-r19du5l7/`: standard-engine parsing and the supported
+  .NET build/private import passed with zero compiler warnings/errors. Scenery
+  animation passed **84,395 assertions**, including raw transform words, pinned
+  private tracks, discrete frame selection, wrapping, alias order and partial
+  failures. Camera **852**, entities **23,038**, and the actual imported world
+  **24,177** checks passed. The world check covers authored geometry/materials,
+  round-trip, shared production nodes, retry isolation and unchanged snapshots.
+- `world-frame-verified-umx3qe6v/`: the final supported build/import passed.
+  The combined controller passed **112,833 assertions** against retained
+  `1bb29345` arithmetic on identical authored node state. Six completed groups
+  cover initialization, player/Aquila/camera, partial writes, deferred target
+  and projectile failures, nonfinite transition math and disposed scenery.
+  The extreme Int32-coordinate case produces the same engine `look_at` refusal
+  in both implementations. Those two diagnostics remain in the receipt; this
+  is an exact comparison pass, not a clean-log claim for that adversarial case.
+- `world-frame-client-havrl4nl/`: **72/72** affected Client tests passed, with
+  zero skips. Camera/viewpoint, interpolation, scenery, particle and measured
+  Aquila material expectations remain unchanged. Only source-wiring checks
+  moved to the actual native controller.
+- `world-frame-native-yyh3b6fb/`: standard Godot passed **95 runtime** and
+  **71 editor** assertions. Native templates retain their production artwork;
+  the world controller starts no processing, camera, clock, gameplay or input
+  owner. Editor configuration is refused before admission. The scripted editor
+  shutdown still reports the existing **166 ObjectDB instances** and associated
+  RID allocations, so its strict clean-log gate remains failed.
+- `world-frame-smoke-jkomlsmt/`: the normal headless startup→menus→Level 100→retry→
+  Main Menu smoke completed **2,148 ticks**, followed by two successful replay
+  repetitions. Runtime logs are clean. The recording, trace and final-state
+  hashes are unchanged from the frontend milestone below. Thirteen ordered
+  deliveries/queues and world release remain verified. The mission still ends
+  **Running / None**, with **zero targets destroyed**; this is not combat
+  completion.
+
+The first combined comparison exposed a fixture error: its fresh identity
+player node did not share the saved world's decomposed scale. The bounded probe
+in `world-yaw-probe-5tc9_gy3/` reproduces the one-ULP difference with the same
+yaw word and no renderer call. The final oracle captures the authored transforms
+and flags before initialization. No production arithmetic, tolerance or expected
+hash changed to resolve that fixture issue.
+
+Run .NET `res://Scenes/World/StaticAnimationChecks.tscn` and
+`res://Scenes/World/Tests/WorldPresentationChecks.tscn` with the supported
+headless launch form and Dummy audio. The existing camera, entity and world
+scene harnesses use the same form. Standard
+`--script res://Scenes/World/entity_scene_checks.gd` checks the native templates
+and inactive controller; add `--editor` for the editor guard. These comparisons
+do not establish normal GPU performance, physical input, audible playback,
+Windows behavior or full-combat completion.
+
+#### Native frontend orchestration — September 23
+
+`Frontend.tscn` now uses `frontend_flow.gd` as its actual Control script. It owns
+its one native Session, clocks, input, page binding, loading and intro completion.
+`frontend_pages.gd` configures the same ten production pages in their original
+order. `RetailFrontendFlow` is now a non-Node managed facade for coarse commands,
+verified save identities and synchronous typed host callbacks. No managed frame
+loop or per-page frame batch remains. C# scene comparison helpers live under
+`Scenes/Frontend/Tests/`; their retained numerical/pixel expectations are unchanged.
+
+The conversion preserves failure points as well as successful navigation. In
+particular, an initialization observer can replace `AssetPaths` before later page
+reads; failed localization retains the preceding Add/field writes; and a host
+observer can throw or reenter after a loading mutation. Native checked results
+stop the interrupted operation. Explicit facade calls rethrow the same managed
+observer exception and retire their temporary exception tokens. JSON reader
+failures cross that temporary facade as public `JsonException` (the original
+.NET `JsonReaderException` subtype is internal); native admission and its failure
+ordering remain checked separately.
+
+Receipts are under this worktree's ignored `local-data/test-runs/`:
+
+- `frontend-native-parse-qvcqjlll/`: standard-engine parser check and **177
+  localization assertions** across five groups passed. Partial writes, all ten
+  field boundaries, duplicate Add/retry order, last JSON property, raw UTF-16 and
+  the unchanged atomic loader APIs are covered.
+- `frontend-native-scene-kwtjx7c_/`: the complete frontend passed the existing
+  standard-engine runtime scene inspection, shared production assets, layout
+  editing, pack/reopen and private-pixel exclusion checks.
+- `frontend-flow-editor-gnibq925/`: the complete standard-engine headless editor
+  passed all ten frozen page selections, authored edits and pack/reopen, without
+  pointer, gameplay or audio ownership. The known scripted editor exit still
+  reported **166 ObjectDB instances** and associated RID allocations; this was
+  a functional pass, not a clean editor shutdown.
+- `frontend-flow-final-nl0k8ksd/`: supported .NET build and private Level 100
+  import passed with no compiler warnings or errors. All twelve managed
+  frontend harnesses passed: Session **1,025**, Options **6,048**, Loading
+  **234**, Debriefing **212**, Cursor **20**, Click **136**, Main Menu **1,832**,
+  Quit **1,457**, Career Name **6,338**, Configuration **1,997**, Briefing
+  **2,656** and Level Select **7,669** assertions. Session includes **57**
+  focused synchronous callback failure/reentry assertions, exact original
+  exception identity, partial mutations and exception-token retirement. Settled
+  native frames make no facade calls or redundant host-state notifications.
+- `frontend-flow-client-oy654utz/`: affected Client checks passed **436**, with
+  **one existing capture-dependent HeaderFont skip**, no failures and a clean
+  compile. Numerical fixtures remained unchanged; source-wiring checks now
+  inspect the actual native owners.
+- `frontend-flow-native-verified-chad7xnz/`: standard Godot passed **35** focused
+  controller assertions across route precedence, initialization failure/retry
+  and native timing/input. Its report separately exposes **one environment
+  parity gap**, described below. The runtime and editor scene checks again
+  passed all ten editable pages, shared assets and private-pixel exclusion;
+  the editor retained the same **166-instance** shutdown allocation warning.
+- `frontend-flow-render-51phmvq_/`: isolated authenticated Xvfb and llvmpipe
+  comparisons passed **2,282** Main Menu and **33** cursor assertions. All
+  **178 Main Menu** and **six cursor** image pairs matched their retained
+  C# rendering references exactly. Private captures stayed in the owned output
+  directory; the display, credentials and child processes were cleaned up.
+- `frontend-flow-smoke-19wub5xx/`: final supported build/private import passed,
+  followed by the headless startup→menus→Level 100→retry→main-menu smoke and
+  two replay repetitions. The **2,148-tick** run retained trace hash
+  `a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`
+  and state hash
+  `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`.
+  Its mission remained **Running / None**, with **zero targets destroyed**;
+  this is lifecycle/replay evidence, not combat completion.
+
+The route check initially failed **one of 34** assertions in
+`frontend-flow-native-final-3w5um7z2/`. The isolated probe
+`frontend-env-probe-igpwftri/` establishes that pinned Linux Godot's
+`OS.get_environment` removes a leading U+FEFF, including a BOM-only value.
+The .NET probe in `frontend-flow-smoke-19wub5xx/` preserves both cases and
+does not classify them as whitespace. A BOM-only native environment value can
+therefore fall through to another media owner. The final native report keeps
+the original expected bytes and actual route under `parity_gaps`; it does not
+claim equivalent environment routing. The actual prefixed command-line probe
+in `frontend-flow-native-verified-chad7xnz/` preserves U+FEFF through
+`--startup-media=`. Open question: can a later pinned engine expose environment
+values without this loss? Re-run this focused probe when reviewing that engine;
+do not change the whitespace law or infer that retail paths contain this edge.
+
+The standalone frontend has no world-construction callback; reaching Loading
+there does not establish a standard-engine game. Full combat completion remains
+unresolved. Software rendering, headless input events and synthetic handoff
+fixtures do not establish physical input, audible playback, normal GPU performance
+or Windows behavior. Existing retail header/art and editor shutdown gaps remain.
+
+Run standard `godot48 --headless --audio-driver Dummy --path
+rebuild/OnslaughtRebuild.Godot --script res://Tests/frontend_localization_checks.gd`
+for the pure admission checks. The production scene harness remains
+`res://Scenes/Frontend/Tests/frontend_scene_checks.gd`; add `--editor` for its
+frozen editor path. Run the standard engine with
+`--script res://Tests/frontend_flow_checks.gd -- --skipfmv` for controller checks;
+inspect its `parity_gaps` as well as `failure_count`. Run .NET
+`FrontendSessionSceneChecks.tscn` with `--skipfmv`
+and an explicit absolute `--gold-career-fixture=.../tests_shared/fixtures/gold_career_save.bin`
+for its managed host, exact verified object identity and read-only fixture checks.
+
+#### Native cursor and asset routing — September 23
+
+`MouseCursor.tscn` now owns the production final frontend draw; `Frontend.tscn`
+embeds that scene and an actual black `Letterbox` control. The cursor preserves
+the measured 32×32 quad, 124×124 UV region, literal white, exclusion of Loading /
+IntroCutscene / Gameplay, unclamped top-left placement and late draw order.
+Only an explicitly configured runtime source permits live pointer sampling,
+after lazy texture admission in `_draw`. Editor previews remain frozen and the
+full frontend leaves the game cursor hidden. The managed host no longer draws
+page content, the cursor or the letterbox; navigation and clocks remain there.
+The old cursor predicate and renderer remain test-only references from
+`92c1775b` with their existing provenance.
+
+`RetailFrontendAssets.tres` now uses a typed GDScript routing Resource with the
+same exported field names. Override lookup still precedes folder validation;
+nonblank override text is returned exactly and only trailing ASCII slashes are
+trimmed from a default directory. The temporary C# wrapper transports raw UTF-16
+and maps checked failures; it does not contain a second path resolver.
+
+Executed receipts under this worktree's `local-data/test-runs/`:
+
+- `cursor-native-final-xz5w3ro_/`: **104 standard-headless checks**, all eight
+  groups, clean shutdown. Covered live-source lifetime, deterministic capture
+  override, missing-file retry, actual curated DXT2→RGBA8/eight-mip admission,
+  frozen geometry edits, scene reopening and the explicit fractional draw fit.
+  Both output-refusal probes passed in the initial `mouse-cursor-native-xioyz1cs/`
+  run; all ten source hashes and the measured mouse texture hash were unchanged
+  within each native run.
+- `frontend-asset-paths-final-4rxabo62/`: **126 standard-headless checks**, all
+  six groups, clean shutdown. Exact routing, Unicode whitespace, raw UTF-16,
+  null/error order, exported metadata, resource duplication and ordinary
+  edited-resource save/reload passed. No texture or save was opened by this gate.
+  The pinned engine's `.tres` reload strips a leading U+FEFF from both built-in
+  `Resource.resource_name` and the native directory field. The receipt records
+  both carriers' before/reloaded units; direct routing keeps the same character.
+  Earlier failing resource receipts are retained. No custom serialization or
+  altered retail assertion was introduced to hide this engine limitation.
+- `cursor-final-49t3lwxo/`: the supported pinned .NET build/private Level 100
+  import passed with zero build warnings/errors. **967 frontend session checks**,
+  **20 cursor host checks**, the runtime ten-page edit/pack/reopen check and
+  **33 affected Client tests** passed with clean diagnostics. The initial
+  `cursor-host-0l6yfzk5/` integration also passed **6,048 Options checks** including
+  synchronous observer failures/reentry, and **234 Loading checks**.
+- `cursor-render-final-c2nr_vn5/`: **33 checks**, **six exact composed-image
+  comparisons**, zero differing RGBA bytes. Four viewport sizes cover the actual
+  menu reflection, fractional cursor coordinates and unclamped off-screen draws.
+  Inspection included the 801×601 image. The first rendered attempt exposed
+  Control pixel snapping of Stage's y=0.125 offset: 1,061 cursor RGBA bytes differed.
+  Keeping the native cursor beside Stage and submitting the original explicit
+  fit inside the draw callback removed that rounding, without changing expected
+  pixels or globally disabling GUI snapping. The isolated X server/client and
+  credentials were cleaned up; only the expected XIM/VSync warnings remain.
+- `cursor-editor-3xqc8m9g/`: headless editor import was clean. All ten actual
+  pages, the letterbox, inactive cursor, shared resources and authored edit /
+  pack / reopen checks passed without changing pointer mode. Scripted editor
+  teardown still reports the previously recorded **205 ObjectDB instances**
+  and associated RID allocations; runtime checks remain clean.
+- `cursor-smoke-36w1xotj/`: the supported **2,148-step** lifecycle smoke and
+  two replay runs passed with unchanged tape, trace and state hashes recorded
+  above. Thirteen ordered message/audio queues, synthetic focus-loss/rearm,
+  fresh retry, Main Menu return, world release and cursor policy all passed.
+  Outcome remains `Running`, zero targets destroyed; this is not full combat.
+
+Run standard `--headless --script
+res://Scenes/Frontend/Tests/mouse_cursor_scene_checks.gd -- ABS_FRESH_OWNED_DIR`
+or `frontend_asset_paths_checks.gd` with the same arguments. Run .NET
+`res://Scenes/Frontend/Tests/MouseCursorSceneChecks.tscn -- --skipfmv` for host
+integration; `--cursor-render-dir=ABS_FRESH_EMPTY_DIR` additionally compares
+rendered output on an isolated owned display. Outputs belong under this
+worktree's `local-data/`. These checks do not establish physical input,
+audible playback, normal GPU performance, Windows behavior or combat completion.
+
+#### Live native input edges — September 22
+
+`FirstFlightGame` now injects the existing `Client/platform_input_edges.gd`
+owner into its actual `InteractiveSession`. The temporary managed bridge has
+no mirrored key/joystick maps. Its native resource is released on retry, world
+release and shutdown, including partial-load failure paths. The standalone
+C# state remains the comparison/default for managed consumers; simulation and
+the rest of the session have not been converted by this change.
+
+The earlier standard-engine input foundation receipt remains
+`gdscript-parity-9mt08bqg/client-input.json` (**3,855 checks**). The adoption
+adds these executed checks under the same worktree's `local-data/test-runs/`:
+
+- `input-bridge-client-ewvs9xkq/`: **58** affected platform/session tests plus
+  **5** pause integration tests passed, zero skips. The new injection test
+  proves the borrowed owner receives the original frame/reset lifecycle.
+- `input-bridge-headless-b5v2o4sr/report.json`: **3,891 checks**, **526**
+  reference operations and **11** explicit session-frame calls; all five
+  groups completed with zero failures and a clean runtime log. Coverage
+  includes Echo, release-latched presses, byte values through 255, signed
+  Int32 IDs, signed Int64 counters beyond binary64 precision and overflow,
+  detached captures, refusals, disposal, actual host create/release/retry,
+  focus/pause resets and exact paired-session event/state/tape bytes.
+  The admitted manifest and source inputs retained their recorded hashes.
+  The paired-session final state was
+  `04c5aaaa7dd5de5712f4c08c343b782efb47277e28afea1118a8a0785b20543a`,
+  trace `a36d1d4e7084976e4919b51a132949f69b3c9468e62bfcffc33df630171facf6`.
+- `input-bridge-build-fixed-8h7_09jw/`: supported pinned .NET build and private
+  Level 100 import passed with zero build warnings/errors.
+- `input-bridge-smoke-25y8sm09/`: live native-input gameplay completed the
+  existing **2,148-step** smoke with focus-loss/rearm, fresh retry and world
+  release at Main Menu. Its tape remains byte-identical to the Quit milestone,
+  SHA-256 `89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+  Two replays (`input-bridge-replay-b4cfw8j5/`) verified the same full-smoke
+  trace/state hashes recorded above with no first divergence. Runtime logs
+  are clean. The mission remains `Running`/`None`, zero targets destroyed;
+  this is regression evidence, not full-combat acceptance.
+
+Run .NET `--headless --audio-driver Dummy --path GODOT_PROJECT
+res://Tests/PlatformInputBridgeChecks.tscn` with an isolated owned profile.
+The harness reports to stdout and writes no files; the caller owns its log.
+It never samples physical devices or enters the game tree. Explicit paused
+session API calls advance input history once; the actual host still returns
+before making those calls while paused. This conversion preserves that
+distinction. Retail repeat policy and joystick polling cadence remain open;
+these checks do not establish physical-device behavior or full combat parity.
+
+#### Native weapon foundations — September 22
+
+The standard-engine comparison passed **89,663 assertions** over all nine
+required groups: 1,299 charge sequences/14,331 steps, 1,521 readiness cases,
+1,788 store cases, 787 cycles and 1,106 Unit scorer/selection cases. It checks
+raw float words, aliasing, failure ordering, detached values and public input
+admission against the unchanged C# owners. The first run exposed 90 NaN-payload
+differences; explicit current-charge-first payload selection and quieting fixed
+them against the same fixture. This is managed regression evidence, not proof
+of retail behavior for synthetic NaNs.
+
+The final receipt is `retail-weapon-final-xp45flg1/native.json` under the
+conversion worktree's `local-data/test-runs/`; it records all four source
+identities and fixture SHA-256
+`9f5faddbd2d074057c252d606b9103240107f3d5cd55544ab854e84ab9573b9d`.
+The incomplete-fixture/missing-source controls and eight output refusal checks
+preserved their inputs and sentinel bytes. All **149** existing affected Core
+tests also passed, with no skips (`retail-weapon-core-ug8izsg6/core.log`).
+Runtime logs are clean. Run the .NET `Scenes/World/Tests/RetailWeaponReferenceChecks.tscn`
+with fresh absolute fixture/report paths, then standard
+`Scenes/World/Tests/retail_weapon_checks.gd` with the fixture and a fresh report;
+both outputs belong below this worktree's `local-data/`. Live weapon scheduling,
+effects, event order and full combat remain with their existing owners.
+
+#### Completed actor foundations
+
+The mutable native actor registry passed **2,756 assertions** against the
+unchanged C# owner: **190** construction/restoration cases and **333** operations
+over **12** definition sets. Checks compare full ordered snapshots after both
+successful and refused operations, authored/spawned identities, raw Plane
+creation/exit poses, lifecycle/fact ordering, UTF-16 lookups, immutable restore
+admission, signed fact-sequence wrap, detached inputs and owner lifetime.
+The fixtures include the actual 44-actor/10-spawn Level 100 definitions; no live
+consumer or simulation hash expectation changed. The guarded getters preserve
+the shared Thing/Actor allocation rather than restoring another mutable owner.
+Reference/native receipts are `actor-registry-reference-fd7qq2nu/` and
+`actor-registry-native-3k47ow66/`; both logs are clean. The source-only check is
+`actor-registry-parse-v2rb1xvb/`. Run .NET
+`Scenes/World/Tests/ActorRegistryReferenceChecks.tscn` with a fresh absolute
+`.variant` fixture and report, then standard
+`Scenes/World/Tests/actor_registry_checks.gd` with that fixture and a fresh report.
+Outputs stay under the owned worktree's `local-data/`. Live mission scheduling,
+collision handling and complete registry adoption remain unconverted.
+
+The pure Thing/Actor base-state port passed **18,548 native assertions** against
+the unchanged Core implementation on Godot-hosted .NET 10.0.12: 818 factory/restore
+cases, 993 mutation/getter operations, 2,884 projection/angular-law cases and
+349 derived-property cases. Checks retain signed float words (including signed
+zero), checked overflow, wrapped movement subtraction, flags/type words,
+current/old pose order, failure atomicity and detached snapshot ownership.
+The existing distinction between allowing a negative motion countdown at runtime
+and refusing it on restore is preserved. There is no Godot physics or live
+registry integration in this foundation.
+Run .NET `Scenes/World/Tests/ThingActorStateReferenceChecks.tscn` with two fresh
+absolute fixture/report paths under this worktree's `local-data/`, then standard
+`Tests/thing_actor_state_checks.gd` with the fixture and a fresh report path.
+Receipts `thing-actor-state-8_v6hbwr/`, `thing-actor-final-g2de2np9/` and
+`thing-actor-export-final-a1n8p3qa/` under `local-data/test-runs/` have clean runtime
+logs. Both harnesses also refused dangling output links without creating the
+target; the final exporter produced unchanged fixture SHA-256
+`efc4403db2d972cf6d02b020cbae16c82d86ec80d81d66466e67f5324a859da1`.
+
+The pure mesh-part pose port passed **53,592 native assertions**, including
+**14,058 exact raw float words**, against **2,058 unchanged-C# cases**: 1,299
+accepted results and 759 expected refusals. The four operations retain their
+PC24 evaluation order, signed zeros, intermediate overflow refusals, permitted
+final infinity stores and detached outputs. This does not select frames/caches,
+port the separate PC53 attachment operations or replace the live registry.
+Both runtime logs are clean in `mesh-part-pose-reference-xhdyoaq9/` and
+`mesh-part-pose-native-ow95mdhg/` under `local-data/test-runs/`.
+Run .NET `Scenes/World/Tests/MeshPartPoseReferenceChecks.tscn` with two fresh
+absolute fixture/report paths under the owned worktree's `local-data/`, then
+standard `Scenes/World/Tests/mesh_part_pose_checks.gd` with that fixture and a
+fresh report path. Both run headlessly with Dummy audio; no retail inputs are
+needed. The exporter preserves target framework `net8.0`.
+
+The pure Plane motion port passed **14,741 native checks** against **3,015
+direct cases**, 21 sequences with **567 steps**, and **26 restores** from the
+unchanged C# owner on Godot-hosted .NET 10.0.12. These cover raw words, PC24
+operation order, ignored fields, unusual-basis retention, checked-overflow
+failures and atomic Actor commits. Terrain clearance uses the existing sampler;
+the canonical heightfield remains unchanged. Reference and native logs are
+clean in `plane-motion-reference-ja9aqb18/` and `plane-motion-native-a0njrw3t/`;
+both include exact `command.json` invocations. Four final/ancestor output-link
+refusals also passed without creating targets (`plane-motion-output-guards-qajfvylq/`).
+Run .NET `Scenes/World/Tests/RetailPlaneMotionReferenceChecks.tscn` with two fresh
+absolute fixture/report paths, then standard `Tests/retail_plane_motion_checks.gd`
+with that fixture and a fresh report, using headless/Dummy audio and owned
+`local-data/` outputs. This foundation does not replace the live registry,
+collision/lifecycle owners or establish general cross-platform transcendental parity.
+
+The native terrain compositor passed **5,789 assertions** and **17,434,773 exact
+compared bytes** against the unchanged C# exporter, which passed **43 checks**.
+All 4,096 level-zero tiles reproduce the existing 524,288-byte root and its
+unchanged hash. Thirty-two higher-level blocks, five pine-order fixtures,
+902 blends, 162 lighting cases, admission and partial-write boundaries also
+match. Empty input initially exposed Godot's refusal of `HashingContext.update`
+with zero bytes; finishing a started empty hash preserves the original identity
+refusal without that engine error. The owner releases after the suspended
+comparison coroutine unwinds one process frame later; no forced collection or
+weakened release assertion is used. Final logs are clean in
+`terrain-compositor-native-fixed-1jn1mha8/`, against
+`terrain-compositor-reference-lix2e76b/reference.variant`, under
+`local-data/test-runs/`. The reference scene is
+`Scenes/World/TerrainCompositorSceneChecks.tscn`; its two user arguments are fresh
+owned fixture and JSON report paths. Standard Godot runs
+`Scenes/World/terrain_compositor_checks.gd` with that fixture and a fresh report.
+These compositor checks alone do not establish cache/material integration or performance.
+
+The native terrain appearance owner passed **397 checks** against **39 exact
+ordered snapshots** from eight unchanged C# scenarios. The exporter passed
+**13 checks**. Phase words, CPU/GPU cache bytes, slot ownership, alias failures,
+retry states, both complete 4,096-record APIs, supplied material/shader identity
+and public/private resource round-trips agree. The shader comparison removes
+only the added license line and final newline. Receipts are
+`gdscript-appearance-reference-wv6mqhsr/` and
+`gdscript-appearance-native-fxgx3mvc/` under `local-data/test-runs/`; both console
+logs are clean. The original compositor moved into `Scenes/World/Tests/` without
+logic changes, and the original appearance owner remains beside it.
+
+The appearance editor harness passed **53 checks** in each engine edition.
+It preserves recipe-only public materials and refuses live cache initialization
+in the editor. The standard editor scan still encounters retained C# frontend
+resources and reports 166 ObjectDB instances at shutdown; the .NET run has the
+previously observed custom-harness shutdown diagnostics (205 ObjectDB instances,
+viewport/texture/text RIDs and Canvas items). These are not clean editor exits.
+Receipts are `gdscript-appearance-editor-6rqstmyf/` and
+`gdscript-appearance-editor-mono-7tfxxan6/`. Run
+`Scenes/World/TerrainAppearanceSceneChecks.tscn` in .NET with fresh fixture/report
+user arguments, then standard `Scenes/World/terrain_appearance_checks.gd` with
+that fixture and a fresh report; adding `--editor` selects the inactive-resource
+checks. All output belongs to the invoking worktree's private `local-data/`.
+
+The allocation-free presentation float store passed **299,263 raw-word
+comparisons** against the former packed-array store, including ties, signed zero,
+subnormals, overflow and NaN payloads (`heightfield-fast-float-2szsnnpi/float.log`).
+The same bounded twelve-update headless probe measured about 36–40 ms per moving
+update before lazy geometry caching and 10–11 ms afterwards. This is a local CPU
+observation, not a normal GPU or whole-game performance result. After the shared
+store change, Options passed 1,282 scene assertions and its 5,204 pure comparisons,
+HUD passed 174 scene assertions, and Sun passed 8,081 comparisons. Pause passed
+115 assertions; its deliberate malformed gzip cases still emit engine diagnostics.
+Receipts are `float-scene-regressions-em7nufka/`, `gdscript-float-options-a/` and
+`sun-fast-float-yvhqwcse/` under `local-data/test-runs/`.
+
+The native Water scene passed **2,702 checks** against the retained C# component,
+including exact mesh arrays, decoded bytes from all five textures and **1,173
+ordered phase/placement/rebind operations**. The oracle reads surface-format bits
+through the native Int64 method; the typed C# enum had discarded bit 35 and is
+not an adequate reference for that field. Public-save/private-resource round trips
+and failed-input retries also pass. The isolated llvmpipe check passed **2,631
+assertions** with **zero differing RGBA pixels** in a 640×360 component image.
+It establishes preservation of the current water renderer, not retail pixel parity.
+The editor check passed **353 assertions** with the existing 166-object/RID
+shutdown diagnostics; automatic preview creates the real three meshes without a
+live animation/input owner. Receipts are `gdscript-water-reference-x7culyur/`,
+`gdscript-water-native-n62n9z5g/`, `gdscript-water-capture-2k3b287p/` and
+`gdscript-water-editor-0lllj7_s/`. The first integrated world check exposed missing
+child overrides when Water was nested inside StaticWorld. Water now marks its
+private instance editable in the owning parent; two-level save tests compare exact
+stored transforms, meshes and materials before binding. The production instance
+stays shared with its public template. Fresh import and the unchanged world gate
+then passed **24,134 assertions**, including the new shader identity checks,
+before-play geometry/materials, selected poses, retry isolation and unchanged
+simulation hashes (`gdscript-terrain-water-world-b/`), with clean logs.
+The related Client terrain/water selection passed
+**6 tests**, with the existing full-gameplay retail-water pixel test **skipped**
+without a qualifying capture; its thresholds are unchanged
+(`terrain-water-client-q1zscu55/results/terrain-water.trx`).
+
+The native Debriefing scene passed **2,059 runtime assertions** and **2,060 editor
+assertions**; the frontend editor selector exercises all ten pages, including
+Debriefing's frozen resource without manufacturing a Won session. The actual
+host/render comparison passed **274 checks**, with ten complete 640×480 pages
+byte-identical to the retained C# renderer. Cases include all outcome labels,
+objective-row combinations, grades A–E/S, raw UTF-16 fallback and FEBack times.
+The ring uses an authored Node2D origin to preserve the former fractional draw
+rectangle without changing GUI snapping for other pages. Client debriefing and
+frontend-path tests passed **23/23**, with zero skips. Receipts are
+`debriefing-native-1tdcg2z7/`, `debriefing-editor-u_g_ebv4/`,
+`debriefing-frontend-editor-zeeht8o1/`, `debriefing-render-8f3zk4v1/` and
+`debriefing-client-h1wgdut_/` under `local-data/test-runs/`. Runtime logs are clean;
+both editor harnesses finish their checks and filesystem scans, then report 205
+ObjectDB instances and Canvas/viewport/text RID diagnostics during teardown.
+This does not claim a clean editor-harness shutdown, retail pixels, completed
+combat or resolution of the earlier Options Image/RID gap.
+
+The integrated presentation passed the supported .NET build with zero warnings
+or errors (`gdscript-terrain-water-build-d.log`) and the headless application
+smoke (`gdscript-terrain-water-smoke-a/`). The smoke retains **2,148 steps**, all
+13 ordered message deliveries/queues, fresh retry, world release and MainMenu.
+Its state hash remains `53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e`;
+the recorded tape is byte-identical to the preceding milestone. The two actual
+headless replays in `terrain-water-replay-99w1vqgo/replay.log` verify both embedded
+expectations and retain trace hash
+`a4e6673b92e651c05fcd2ddc2c10932d325db0f7d8db1d774e9c60ede43c58f2`, with no divergence.
+Only the smoke's wall-clock audio observation advanced further: seven queued
+voices had started instead of four. Both remain the required ordered prefix;
+`FirstFlightGame.SampleSmokeVoiceProgress` and its report explicitly distinguish
+audio-mixer progress from fixed-fps simulation. Mission state remains **Running /
+None**, so this is not full-combat acceptance or an audible-playback result.
+
+The native Loading page passed **165 standard-engine checks**, followed by
+**234 integrated host checks** and **316 isolated rendered checks**. All twenty
+complete RGBA pages match the retained `DrawLoading` renderer: five loading/raw
+UTF-16 cases at 640×480, 1280×720, 801×601 and 320×240. The old composed frontend
+had snapped away the source caption's `393.5` vertical anchor. Loading now uses
+an authored Node2D origin to preserve that existing value; comparison with the
+old composition finds text-only pixel differences, explicitly recorded in
+`loading-baseline-3m4xxuni/render.log`. This corrects the scene wrapper, not the
+unresolved retail progress-bar behavior. The fixed black bar, two-frame request,
+ready handoff and root-hide ordering remain unchanged. Final runtime receipts
+are `loading-native-917fgaad/` and `loading-integrated-gp6txn4l/` under
+`local-data/test-runs/`; logs are clean apart from the isolated Xvfb driver's
+input-method/VSync warnings. These software-rendered comparisons establish no
+normal GPU, physical-input or audible-playback result.
+
+Loading passed **166 editor checks** in standard Godot. The full frontend's
+.NET editor selector also passed all ten pages, checking Loading's frozen facts,
+authored layout, pointer safety and public serialization. Both retain the
+custom editor-harness shutdown diagnostics: 166 ObjectDB instances in the
+standard run, 205 in .NET, plus Canvas, viewport, texture and text RIDs. No clean
+editor exit is claimed. Receipts are in `loading-editor-final-w3epra0x/` under
+`local-data/test-runs/`. The related Client selection passed **39/39**, with zero
+failures or skips: thirty Loading/source guards and nine terrain compositor,
+ambient and macro-cache checks (`loading-client-34tteit_/results/loading-client.trx`).
+
+The combined terrain appearance/Loading integration passed the supported .NET
+build and private scene import with zero warnings/errors
+(`gdscript-terrain-loading-build-e.log`). The regenerated Level 100 passed
+**24,134 world checks** with a clean log
+(`gdscript-terrain-loading-world-check-a.log`). The application smoke passed
+**2,148 steps**, thirteen unchanged ordered deliveries/queues, fresh retry and
+world release at MainMenu (`terrain-loading-smoke-o1oxik06/run/`). Its actual
+recording is byte-identical to the preceding milestone: SHA-256
+`89ca7b4ba0642c7fa1e68bbaf1875c724762a5d3ef6902182110da84706db14a`.
+Two Headless replays verify the embedded trace and final-state expectations
+unchanged, with no divergence (`terrain-loading-replay-yafz8_rw/replay.log`).
+The audio-mixer observation reached nine voices, still the same ordered prefix;
+it is not fixed-step simulation or an audible-playback check. Runtime logs are
+clean. Mission state remains **Running / None**, with zero destroyed targets;
+full combat acceptance is still open. These receipts are worktree-owned beneath
+`local-data/test-runs/` and consume the canonical lab read-only.
+
+Run standard `Scenes/Frontend/Tests/loading_scene_checks.gd` with
+`--headless --script`, adding `--editor` for its frozen-resource checks. The .NET
+`Scenes/Frontend/Tests/LoadingSceneChecks.tscn -- --skipfmv` checks the live host;
+`--loading-render-dir=/absolute/owned/local-data/path` enables rendered comparisons
+only when the caller provides an isolated display. The historical baseline used
+`--loading-measure-existing-composition` before integration; that mode requires
+the old production `DrawLoading` implementation. No test chooses the physical display.
+
+Run `res://Scenes/Shared/retail_float32_checks.gd` with the standard engine's
+`--headless --script` options for the focused binary32 store check. The .NET
+`Scenes/World/HeightFieldSceneChecks.tscn` exports an object-free fixture and JSON
+report to two distinct fresh absolute paths under this worktree's `local-data/`,
+passed after `--`. The standard `height_field_checks.gd` consumes that fixture and
+a fresh report path. `WaterSceneChecks.tscn` and `water_scene_checks.gd` use the
+same explicit fixture/report convention. These checks never choose a display.
+Debriefing's standard `Scenes/Frontend/Tests/debriefing_scene_checks.gd` also runs
+under `--editor`. The .NET `DebriefingSceneChecks.tscn -- --skipfmv` checks the
+actual frontend boundary; rendered comparisons require a caller-owned isolated
+display and `--debriefing-render-dir=/absolute/owned/local-data/path`.
+
+Run `res://Scenes/Frontend/Tests/OptionsBridgeChecks.tscn` and
+`res://Scenes/World/EntityBridgeChecks.tscn` using the same supported headless
+launch form as the world check above. Standard Godot accepts
+`--script res://Scenes/Frontend/Tests/options_scene_checks.gd` and
+`--script res://Scenes/World/entity_scene_checks.gd`, with `--editor` for their
+frozen editor checks. Sun's headless .NET `SunSceneChecks.tscn` requires two fresh
+absolute owned output paths after `--` (reference Variant and report JSON);
+the standard `sun_scene_checks.gd` accepts that reference and a new owned report
+path. These entry points reuse production scenes and existing comparison owners.
+
+The scheduler group additionally passed **454 checks** derived from the committed
+September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
+alongside its existing differential transcripts. The HUD model comparison also
+passed after adopting native default constants. Both reports are in
+`local-data/test-runs/gdscript-native-front-camera-5clstjzh/`. The scheduler checks
+cover delivery only, not the native component flag write, monitored allocation,
+or a measured live precision mode.
 
 The headless and isolated 640×480 software-rendered Godot smokes completed
 startup/menu/gameplay/retry/return and passed the existing full

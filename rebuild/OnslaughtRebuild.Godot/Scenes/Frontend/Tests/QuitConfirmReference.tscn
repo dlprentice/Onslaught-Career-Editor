@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Frontend/Tests/QuitConfirmReference.cs" id="1"]
+
+[node name="QuitConfirmReference" type="Control"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Dialog" type="Control" parent="."]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 170.0
+offset_right = 530.0
+offset_bottom = 330.0
+mouse_filter = 2
+script = ExtResource("1")
+SourceRect = Rect2(110, 170, 420, 160)

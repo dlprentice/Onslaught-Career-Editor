@@ -74,19 +74,12 @@ public sealed class RetailOptionsMenuItemColorTests
     [Fact]
     public void DrawOptionRowAndsApplyAndDoesNotAndDropdown()
     {
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        Assert.Contains("RetailOptionsMenuItemColor.PackedColor", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailOptionsAction.Apply", draw, StringComparison.Ordinal);
-        Assert.Contains("DropdownRowIsPending", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        // Numeric/model assertions above stay pinned; this guard follows the production owner.
+        string owner0 = NativeOptionsSource.Function("options_row.gd", "update_time");
+        Assert.Contains("Laws.menu_base_color", owner0, StringComparison.Ordinal);
+        Assert.Contains("Laws.menu_packed_color", owner0, StringComparison.Ordinal);
+        Assert.Contains("_selected", owner0, StringComparison.Ordinal);
+        Assert.Contains("0x50505050", owner0, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string header)

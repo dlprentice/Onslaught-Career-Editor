@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="RetailFrontendAssetPaths" load_steps=2 format=3]
+[gd_resource type="Resource" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scenes/Frontend/RetailFrontendAssetPaths.cs" id="1"]
+[ext_resource type="Script" path="res://Scenes/Frontend/retail_frontend_asset_paths.gd" id="1"]
 
 [resource]
 script = ExtResource("1")

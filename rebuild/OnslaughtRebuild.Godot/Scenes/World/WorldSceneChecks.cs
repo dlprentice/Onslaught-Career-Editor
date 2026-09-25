@@ -17,11 +17,19 @@ public sealed partial class WorldSceneChecks : Node
     {
         try
         {
+            CheckNativeImportIdentity();
             CheckImportOutputOwnership();
             var session = new InteractiveSession(0x4F4E534Cu, Level100StaticWorldAsset.LoadActorDefinitions());
             Input.MouseModeEnum pointer = Input.MouseMode;
             string initialHash = StateHasher.ComputeHex(session.CurrentSnapshot);
             var production = FirstFlightWorldView.InstantiateScene();
+            Node presentation = production.GetNode("WorldPresentation");
+            using (Variant script = presentation.GetScript())
+                Check(script.As<Script>().ResourcePath == "res://Scenes/World/world_presentation.gd",
+                    "The imported scene contains the actual native world presentation owner.");
+            Check(presentation.Get("_camera_state").VariantType == Variant.Type.Nil &&
+                !presentation.IsProcessing() && !presentation.IsProcessingInput(),
+                "Inspecting the authored world does not initialize a camera, clock or input owner.");
             Node[] authored = Descendants(production).ToArray();
             Check(authored.Length > 200, "World has an inspectable hierarchy before initialization.");
             Check(authored.OfType<MeshInstance3D>().Count(node => node.Mesh is not null) > 70,
@@ -31,6 +39,22 @@ public sealed partial class WorldSceneChecks : Node
                 Check(actor.GetNode<MeshInstance3D>("Geometry").Mesh is not null, "Packed actor overrides preserve geometry.");
             Check(production.GetNode<Camera3D>("RetailOpeningAndFirstPersonCamera").Far == 700f,
                 "Camera projection is authored in the production scene.");
+            foreach ((string path, string profile) in new[]
+            {
+                ("PlayerVisual/BodyPivot/RetailAquilaWalker", "walker"),
+                ("PlayerVisual/BodyPivot/RetailAquilaJet", "jet"),
+                ("RetailOpeningAndFirstPersonCamera/RetailAquilaCockpit", "cockpit"),
+            })
+            {
+                Node3D aquila = production.GetNode<Node3D>(path);
+                using Variant nativeScript = aquila.GetScript();
+                Check(nativeScript.As<Script>().ResourcePath == "res://Scenes/Aquila/aquila_model.gd",
+                    "Imported Aquila uses the production native component: " + profile);
+                Check(aquila.Get("profile").AsString() == profile && aquila.HasMethod("configure_prepared"),
+                    "Imported Aquila keeps its authored profile and native binding entry: " + profile);
+                Check(aquila.Get("_asset").VariantType == Variant.Type.Nil,
+                    "Aquila inspection does not start its runtime animation owner: " + profile);
+            }
             Mesh terrain = production.GetNode<MeshInstance3D>("RetailLevel100HeightField").Mesh;
             int countBefore = authored.Length;
             AddChild(production);
@@ -38,6 +62,8 @@ public sealed partial class WorldSceneChecks : Node
             var recipe = new FirstFlightWorldView();
             AddChild(recipe);
             recipe.BuildImportedScene(session.CurrentSnapshot);
+            Check(Level100SceneImport.CaptureTextureInputs(recipe).Length == 5,
+                "The three Aquila profiles share five actual private texture input dependencies.");
             // Check the frozen editor resources before binding refreshes the
             // terrain's runtime texture cache. A successful runtime refresh
             // alone would hide a broken saved texture from the editor check.
@@ -45,6 +71,9 @@ public sealed partial class WorldSceneChecks : Node
             _comparedMaterials.Clear();
             _comparedTextures.Clear();
             production.Initialize(session.CurrentSnapshot);
+            Check(production.GetNode("WorldPresentation") == presentation &&
+                presentation.Get("_camera_state").VariantType == Variant.Type.Object,
+                "Explicit binding configures the authored native owner without replacing it.");
             Check(Descendants(production).Count() == countBefore, "Binding does not build a second world.");
             Check(production.GetNode<MeshInstance3D>("RetailLevel100HeightField").Mesh == terrain,
                 "Runtime LOD updates the same authored terrain resource.");
@@ -84,6 +113,118 @@ public sealed partial class WorldSceneChecks : Node
         {
             GD.PushError(error.ToString());
             GetTree().Quit(1);
+        }
+    }
+
+    private void CheckNativeImportIdentity()
+    {
+        // Synthetic files in this invocation's owned profile; never edit the
+        // production source or private assets to exercise stale-import refusal.
+        string owner = Path.Combine(ProjectSettings.GlobalizePath("user://"), "native-import-identity");
+        string root = Path.Combine(owner, "rebuild/Godot");
+        string dependencies = Path.Combine(owner, "tools/godot_compat");
+        System.IO.Directory.CreateDirectory(dependencies);
+        foreach (string name in new[] { "invariant_int32_format.gd", "arm_cosf.gd" })
+            System.IO.File.WriteAllText(Path.Combine(dependencies, name), "extends RefCounted\n");
+        foreach (string relative in new[] { "Client", "Core", "Scenes/Shared", "Scenes/World", "Scenes/Aquila", "Assets" })
+            System.IO.Directory.CreateDirectory(Path.Combine(root, relative));
+        string script = Path.Combine(root, "Scenes/World/source.gd");
+        System.IO.File.WriteAllText(script, "extends Node\nconst VALUE = 1\n");
+        string before = Level100SceneImport.NativeSourceIdentity(root);
+        System.IO.File.WriteAllText(Path.Combine(root, "Assets/generated.tscn"), "private output is not an input");
+        System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/source.gd.uid"), "editor identity only");
+        Check(before == Level100SceneImport.NativeSourceIdentity(root), "Generated output and UID metadata cannot stale the import.");
+        System.IO.File.WriteAllText(script, "extends Node\nconst VALUE = 2\n");
+        string edited = Level100SceneImport.NativeSourceIdentity(root);
+        Check(before != edited, "A native script edit invalidates the private bake without a managed rebuild.");
+        string resource = Path.Combine(root, "Scenes/Shared/recipe.tres");
+        System.IO.File.WriteAllText(resource, "[gd_resource type=\"Resource\" format=3]\n");
+        string withResource = Level100SceneImport.NativeSourceIdentity(root);
+        Check(edited != withResource, "Adding a native resource invalidates the private bake.");
+        System.IO.File.Move(resource, Path.Combine(root, "Scenes/Shared/renamed.tres"));
+        string renamed = Level100SceneImport.NativeSourceIdentity(root);
+        Check(withResource != renamed, "Native resource path identity participates in the import.");
+        string shader = Path.Combine(root, "Scenes/World/water.gdshader");
+        System.IO.File.WriteAllText(shader, "shader_type spatial;\n");
+        string withShader = Level100SceneImport.NativeSourceIdentity(root);
+        Check(renamed != withShader, "External native shader source participates in the import.");
+        System.IO.File.WriteAllText(Path.Combine(root, "Scenes/World/water.gdshaderinc"), "float wave = 1.0;\n");
+        Check(withShader != Level100SceneImport.NativeSourceIdentity(root), "External shader includes participate in the import.");
+        string beforeAquila = Level100SceneImport.NativeSourceIdentity(root);
+        string aquila = Path.Combine(root, "Scenes/Aquila/Walker.tscn");
+        System.IO.File.WriteAllText(aquila, "[gd_scene format=3]\n");
+        string withAquila = Level100SceneImport.NativeSourceIdentity(root);
+        Check(beforeAquila != withAquila, "Adding an Aquila template invalidates the private bake.");
+        System.IO.File.AppendAllText(aquila, "[node name=\"Walker\" type=\"Node3D\"]\n");
+        Check(withAquila != Level100SceneImport.NativeSourceIdentity(root), "Editing an Aquila template invalidates the private bake.");
+        foreach ((string source, string packaged) in new[]
+        {
+            ("invariant_int32_format.gd", "DotNetInvariantInt32Format.gd"), ("arm_cosf.gd", "ArmCosf.gd"),
+        })
+        {
+            string beforeDependency = Level100SceneImport.NativeSourceIdentity(root);
+            string external = Path.Combine(dependencies, source);
+            System.IO.File.AppendAllText(external, "const VALUE = 2\n");
+            string afterDependency = Level100SceneImport.NativeSourceIdentity(root);
+            Check(beforeDependency != afterDependency, "Selected external dependency content invalidates the bake: " + source);
+            System.IO.Directory.CreateDirectory(Path.Combine(root, "RuntimeDependencies"));
+            string packagedPath = Path.Combine(root, "RuntimeDependencies", packaged);
+            System.IO.File.Copy(external, packagedPath);
+            string afterPackaging = Level100SceneImport.NativeSourceIdentity(root);
+            Check(afterDependency != afterPackaging, "Dependency routing participates even with identical bytes: " + source);
+            System.IO.File.AppendAllText(external, "# inactive source checkout path\n");
+            Check(afterPackaging == Level100SceneImport.NativeSourceIdentity(root), "Only the selected dependency route affects the bake: " + source);
+            System.IO.File.AppendAllText(packagedPath, "const VALUE_2 = 3\n");
+            Check(afterPackaging != Level100SceneImport.NativeSourceIdentity(root), "Selected packaged dependency content invalidates the bake: " + source);
+            System.IO.File.Delete(packagedPath);
+            System.IO.File.Delete(external);
+            bool refused = false;
+            try { Level100SceneImport.NativeSourceIdentity(root); }
+            catch (FileNotFoundException) { refused = true; }
+            Check(refused, "A missing selected dependency cannot certify the bake: " + source);
+            System.IO.File.WriteAllText(external, "extends RefCounted\n");
+        }
+        CheckTextureInputReceipt(root, owner);
+    }
+
+    private void CheckTextureInputReceipt(string project, string owner)
+    {
+        string resourcePath = "res://Assets/recipe.texture.aya";
+        string path = Path.Combine(project, "Assets/recipe.texture.aya");
+        byte[] bytes = [1, 2, 3, 4];
+        string hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+        var input = new Level100SceneImport.ImportedInput(resourcePath, hash);
+        System.IO.File.WriteAllBytes(path, bytes);
+        Level100SceneImport.VerifyInputs(project, [input]);
+        Check(true, "Unchanged recipe input bytes certify the saved world.");
+        System.IO.File.WriteAllBytes(path, [4, 3, 2, 1]);
+        Refused([input], "Same-size changed recipe bytes invalidate the world before binding.");
+        System.IO.File.Delete(path);
+        Refused([input], "A missing recipe input cannot certify the saved world.");
+        System.IO.File.WriteAllBytes(path, bytes);
+        Refused(null, "An old receipt without private input identities requires a rebuild.");
+        Refused([], "An empty private-input list cannot certify the world.");
+        Refused([input, input], "Duplicate input entries cannot hide an incomplete receipt.");
+        Refused([input with { Sha256 = "not a hash" }], "Malformed input hashes are refused.");
+        foreach (string invalid in new[] { "res://Assets/../recipe", "res://Assets//recipe", "res://Assets/", "user://recipe", "res://Assets\\recipe" })
+            Refused([input with { ResourcePath = invalid }], "Input paths must name normalized private assets: " + invalid);
+        if (OperatingSystem.IsLinux())
+        {
+            string target = Path.Combine(owner, "shared-recipe-input");
+            string link = Path.Combine(project, "Assets/shared.texture.aya");
+            System.IO.File.WriteAllBytes(target, bytes);
+            System.IO.File.CreateSymbolicLink(link, target);
+            Level100SceneImport.VerifyInputs(project, [input with { ResourcePath = "res://Assets/shared.texture.aya" }]);
+            Check(System.IO.File.ReadAllBytes(target).SequenceEqual(bytes),
+                "Canonical-lab input links are read in place without modifying their targets.");
+        }
+
+        void Refused(Level100SceneImport.ImportedInput[]? inputs, string message)
+        {
+            bool refused = false;
+            try { Level100SceneImport.VerifyInputs(project, inputs); }
+            catch (InvalidDataException) { refused = true; }
+            Check(refused, message);
         }
     }
 
@@ -143,6 +284,17 @@ public sealed partial class WorldSceneChecks : Node
             }
             if (compareGeometry && expected is MeshInstance3D mesh && actual is MeshInstance3D other)
             {
+                // Authored projectile templates have no history before play.
+                // Their two trail slots retain the material but acquire mesh
+                // vertices only from actual projectile samples (EntityBridgeChecks).
+                if (mesh.Mesh is null && path.ToString() is
+                    "EntityPresentation/Definitions/PulseBolt/ProjectileTrail" or
+                    "EntityPresentation/Definitions/VulcanBullet/ProjectileTrail")
+                {
+                    Check(other.Mesh is null, "Unplayed trail template retains its empty history at " + path);
+                    CompareMaterial(mesh.MaterialOverride, other.MaterialOverride, path);
+                    continue;
+                }
                 Check(mesh.Mesh is not null && other.Mesh is not null, "Mesh retained at " + path);
                 Check(mesh.Mesh!.GetSurfaceCount() == other.Mesh!.GetSurfaceCount(), "Surface count at " + path);
                 CompareMaterial(mesh.MaterialOverride, other.MaterialOverride, path);

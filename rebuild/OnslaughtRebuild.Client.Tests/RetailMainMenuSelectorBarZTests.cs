@@ -121,37 +121,31 @@ public sealed class RetailMainMenuSelectorBarZTests
     [Fact]
     public void DrawMainMenuSelectorBarKeepsThePackAndDoesNotScaleByZeroPointThreeThree()
     {
-        string flow = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string draw = Slice(flow, "private void DrawMainMenuSelectorBar");
+        NativeMainMenuSource.HasNoPresentationSideEffects();
+        Assert.Contains("get_node(\"Selector\").set_selection(Laws.selector_rect(selected, font.measure(rows[selected].text)), icon_fade)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
+        Assert.Contains("draw_texture_rect(texture, _rectangle", NativeMainMenuSource.Selector, StringComparison.Ordinal);
+        Assert.Contains("Color(ink_color, F.value(ink_color.a * _alpha))", NativeMainMenuSource.Selector, StringComparison.Ordinal);
+        Assert.Contains("Color(0.0, 0.0, 0.0, 0.49411764705882355)", NativeMainMenuSource.Selector, StringComparison.Ordinal);
+        Assert.Contains("title-text-box.texture.aya", NativeMainMenuSource.Scene, StringComparison.Ordinal);
+        Assert.Contains("const ROW_CENTER_X: float = 219.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.Contains("var box_width: float = F.value(F.value(width) + 31.0)", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.33", NativeMainMenuSource.Selector, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.29", NativeMainMenuSource.Selector, StringComparison.Ordinal);
+        Assert.True(NativeMainMenuSource.Scene.IndexOf("[node name=\"Selector\"", StringComparison.Ordinal) < NativeMainMenuSource.Scene.IndexOf("[node name=\"NewGame\"", StringComparison.Ordinal));
 
-        Assert.Contains("RetailMainMenuSelectorBarZ", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuSelectorBarZ.DestX", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailMainMenuSelectorBarColor.SubmittedColor", draw, StringComparison.Ordinal);
-        Assert.Contains("_titleTextBox", draw, StringComparison.Ordinal);
-        Assert.Contains("DAT_0089D89C", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "RetailMainMenuSelectorBarZ.SubmittedColor",
-            draw,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("0.33", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
-
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string quit = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", quit, StringComparison.Ordinal);
-        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
+        string choice = NativeQuitSource.Presentation;
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", choice, StringComparison.Ordinal);
         // The cited FEMessBox chrome replaced the reconstruction-era
         // HighlightTint/_titleTextBox markers when wt/t_7d9a828d merged.
-        Assert.Contains("RetailFeMessBox.HighlightColor", choice, StringComparison.Ordinal);
-        Assert.Contains("DrawFont22Text", choice, StringComparison.Ordinal);
+        NativeQuitSource.HasColor("Dialog/Yes/Highlight", RetailFeMessBox.HighlightColor);
+        NativeQuitSource.HasColor("Dialog/No/Highlight", RetailFeMessBox.HighlightColor);
+        Assert.Contains("FrontendFont22.tres", NativeQuitSource.Scene, StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"choice_font\")", NativeQuitSource.Node("Dialog/Yes/Label"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font = ExtResource(\"choice_font\")", NativeQuitSource.Node("Dialog/No/Label"), StringComparison.Ordinal);
+        Assert.Contains("atlas_font.draw_run(", NativeQuitSource.Read("quit_confirm_label.gd"), StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

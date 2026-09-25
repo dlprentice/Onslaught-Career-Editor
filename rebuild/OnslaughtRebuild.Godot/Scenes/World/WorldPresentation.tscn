@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/World/world_presentation.gd" id="1"]
+
+[node name="WorldPresentation" type="Node"]
+process_mode = 4
+script = ExtResource("1")
+metadata/presentation_owner = "Explicit native world-frame order; borrows the authored production components"
+metadata/editor_behavior = "Inactive until runtime configuration; no process, input, asset loading or simulation"

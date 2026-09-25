@@ -179,19 +179,22 @@ public sealed class RetailLevelSelectSlidingBordersTests
     }
 
     [Fact]
-    public void DrawLevelSelectConsumesSlidingBordersAndDoesNotPileIntoMainMenuOrOptions()
+    public void RetainedReferenceConsumesSlidingBordersAndDoesNotPileIntoMainMenuOrOptions()
     {
         string flow = File.ReadAllText(Path.Combine(
             AppContext.BaseDirectory,
             "godot-pause-source",
             "RetailFrontendFlow.cs"));
-        string level = Slice(flow, "private void DrawLevelSelect()");
-        string main = Slice(flow, "private void DrawMainMenu()");
-        string quit = Slice(flow, "private void DrawQuitConfirm()");
-        string loading = Slice(flow, "private void DrawLoading(");
-        string click = Slice(flow, "private void DrawClickToStart()");
-        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
-        string handleKey = Slice(flow, "private bool HandleKey(");
+        // The pinned pre-conversion renderer preserves these evidence calls;
+        // production ownership is checked separately against the native page.
+        string level = Slice(NativeLevelSelectSource.Reference, "private void DrawLevelSelect()");
+        string main = NativeMainMenuSource.Presentation;
+        Assert.DoesNotContain("level_select", main, StringComparison.Ordinal);
+        string quit = NativeQuitSource.Presentation;
+        string loading = NativeLoadingSource.Presentation;
+        string click = NativeClickSource.Presentation;
+        string pointerConfirm = NativeFrontendSource.RootFunction("handle_pointer_confirm");
+        string handleKey = NativeFrontendSource.RootFunction("handle_key");
 
         Assert.Contains("RetailLevelSelectSlidingBorders", level, StringComparison.Ordinal);
         Assert.Contains("RetailLevelSelectSlidingBorders.Applies", level, StringComparison.Ordinal);
@@ -211,15 +214,12 @@ public sealed class RetailLevelSelectSlidingBordersTests
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", pointerConfirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", handleKey, StringComparison.Ordinal);
 
-        string options = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory,
-            "godot-pause-source",
-            "RetailFrontendFlow.Options.cs"));
-        string draw = Slice(options, "private void DrawOptionRow");
-        string dropdown = Slice(options, "private void DrawOptionDropdown");
-        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
-        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
-        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string options = NativeOptionsSource.Read("options_row.gd") + NativeOptionsSource.Read("options_presentation.gd") + NativeOptionsSource.Read("options_controller.gd");
+        string draw = options;
+        string dropdown = options;
+        string motion = options;
+        string confirm = options;
+        string cancel = options;
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", dropdown, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", motion, StringComparison.Ordinal);
@@ -227,6 +227,42 @@ public sealed class RetailLevelSelectSlidingBordersTests
         Assert.DoesNotContain("RetailLevelSelectSlidingBorders", cancel, StringComparison.Ordinal);
         Assert.DoesNotContain("GetTextExtent", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("GetTextExtent", cancel, StringComparison.Ordinal);
+    }
+
+    /// <summary>Checks the production ownership boundary, not rendered parity.
+    /// The retained calls above are numerical/provenance oracles only.</summary>
+    [Fact]
+    public void NativePageOwnsPresentationWhileTheHostSuppliesSettledDisplayFacts()
+    {
+        string scene = NativeLevelSelectSource.Scene;
+        foreach (string file in new[] { "level_select_presentation.gd", "level_select_arc.gd", "level_select_link.gd" })
+            Assert.Contains("res://Scenes/Frontend/" + file, scene, StringComparison.Ordinal);
+        Assert.DoesNotContain(".cs\"", scene, StringComparison.Ordinal);
+
+        string ready = NativeLevelSelectSource.Function("_ready");
+        foreach (string statement in new[] { "set_process(false)", "set_process_input(false)", "set_process_unhandled_input(false)" })
+            Assert.Contains(statement, ready, StringComparison.Ordinal);
+        string presentation = NativeLevelSelectSource.Presentation;
+        foreach (string forbidden in new[] { "func _process(", "func _input(", "func _unhandled_input(",
+            "Input.", "Time.", "RandomNumberGenerator", "frontend_session.gd", "AudioStreamPlayer",
+            "FileAccess.WRITE", ".confirm(", ".select_world(", "set_process(true)", "set_process_input(true)" })
+            Assert.DoesNotContain(forbidden, presentation, StringComparison.Ordinal);
+
+        string frame = NativeLevelSelectSource.Function("set_frame");
+        Assert.Contains("_facts = {\"level_name\": name.value, \"background_seconds\": facts.background_seconds}", frame, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"LevelName\").bind(name.value)", frame, StringComparison.Ordinal);
+        Assert.Contains("get_node(\"Background\").set_frame(1.0, facts.background_seconds)", frame, StringComparison.Ordinal);
+        foreach (string forbidden in new[] { "selected_index", "transition", "animation_seconds", "Graph/", "SweepArcs/", "add_child(" })
+            Assert.DoesNotContain(forbidden, frame, StringComparison.Ordinal);
+        Assert.Contains("return _facts.duplicate(true)", NativeLevelSelectSource.Function("view_snapshot"), StringComparison.Ordinal);
+
+        string bridge = NativeLevelSelectSource.Bridge;
+        Assert.Contains("get_node(\"Stage/LevelSelect\")", NativeFrontendSource.PageFunction("_configure_level"), StringComparison.Ordinal);
+        Assert.Contains("EditorPage if Engine.is_editor_hint() else -1", NativeFrontendSource.RootFunction("redraw"), StringComparison.Ordinal);
+        Assert.Contains("_level.show_editor_preview()", bridge, StringComparison.Ordinal);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(bridge, @"_level\.set_frame\(", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(2)));
+        foreach (string forbidden in new[] { "draw_texture", "draw_string", "draw_rect", "draw_line", "draw_arc", "Control.new", "TextureRect.new", "Frontend.create" })
+            Assert.DoesNotContain(forbidden, bridge, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

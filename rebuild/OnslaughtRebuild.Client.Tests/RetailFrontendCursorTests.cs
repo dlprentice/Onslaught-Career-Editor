@@ -91,21 +91,34 @@ public sealed class RetailFrontendCursorTests
     [Fact]
     public void CursorLayerConsumesTheFrontendLawAndStartupSequenceDoesNotDrawMouseTga()
     {
-        string cursor = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.Cursor.cs"));
+        string cursor = NativeFrontendSource.RootFunction("_update_mouse_cursor");
+        string ready = NativeFrontendSource.RootFunction("_ready");
         string sequence = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailStartupSequence.cs"));
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "startup_sequence.gd"));
 
-        Assert.Contains("RetailFrontendCursor.ShouldDrawOnFrontend", cursor, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendCursor.QuadSize", cursor, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendCursor.SourceExtent", cursor, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendScreen.Loading or", cursor, StringComparison.Ordinal);
+        string native = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "mouse_cursor_presentation.gd"));
+        string quad = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "mouse_cursor_quad.gd"));
+        string scene = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "MouseCursor.tscn"));
+        Assert.Contains("MouseCursor", ready, StringComparison.Ordinal);
+        Assert.Contains("configure_live_pointer", ready, StringComparison.Ordinal);
+        Assert.Contains("set_frame", cursor, StringComparison.Ordinal);
+        Assert.Contains("_mouse_cursor.visible = not Engine.is_editor_hint()", ready, StringComparison.Ordinal);
+        Assert.Contains("if _mouse_cursor == null or Engine.is_editor_hint()", cursor, StringComparison.Ordinal);
+        Assert.Contains("if not editor and facts.get(\"cursor_initialized\", false):", NativeFrontendSource.PageFunction("redraw"), StringComparison.Ordinal);
+        Assert.DoesNotContain("draw_texture", cursor, StringComparison.Ordinal);
+        Assert.Contains("Session.Screen.LOADING, Session.Screen.INTRO_CUTSCENE, Session.Screen.GAMEPLAY", native, StringComparison.Ordinal);
+        Assert.Contains("Vector2(32, 32)", quad, StringComparison.Ordinal);
+        Assert.Contains("Rect2(0, 0, 124, 124)", quad, StringComparison.Ordinal);
+        Assert.Contains("z_index = 2", scene, StringComparison.Ordinal);
 
         Assert.DoesNotContain("mouse.tga", sequence, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadMouseCursorTexture", sequence, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendCursor", sequence, StringComparison.Ordinal);
-        Assert.DoesNotContain("HandleKey", cursor, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawLoading", cursor, StringComparison.Ordinal);
-        Assert.DoesNotContain("DrawQuitConfirm", cursor, StringComparison.Ordinal);
+        Assert.DoesNotContain("handle_key", cursor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Loading", cursor, StringComparison.Ordinal);
+        Assert.DoesNotContain("QuitConfirm", cursor, StringComparison.Ordinal);
     }
 }

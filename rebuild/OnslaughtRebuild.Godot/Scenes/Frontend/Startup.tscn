@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://RetailStartupSequence.cs" id="1"]
-[ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="2"]
+[ext_resource type="Script" path="res://Scenes/Frontend/startup_sequence.gd" id="1"]
+[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_rect.gd" id="2"]
 
 [node name="Startup" type="Control"]
 layout_mode = 3
@@ -11,7 +11,7 @@ offset_bottom = 480.0
 mouse_filter = 2
 z_index = 200
 script = ExtResource("1")
-EditorCue = 2
+editor_cue = 2
 
 [node name="Black" type="ColorRect" parent="."]
 layout_mode = 1
