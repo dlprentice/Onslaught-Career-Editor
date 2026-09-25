@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-25 (any agent may work here; lane map added)
+Last updated: 2026-09-25 (lane map verified; branches reconciled)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -52,17 +52,34 @@ subagents follow machine rule 12 (read-only research or a taste check).
 
 ## Lanes
 
-Three lanes share this repository, each in its own checkout. Merging a lane into `main` is that lane's decision.
+Three lanes share this repository, each in its own checkout. `main` is the integration branch; a lane merges
+into it only when its own checks pass. The 2026-09-25 baseline and its logs are in
+[VALIDATION.md](VALIDATION.md#lane-baseline--september-25).
 
-| Lane | Branch | Checkout | Where it stands (2026-09-25) |
+| Lane | Branch | Checkout | State on 2026-09-25 |
 | --- | --- | --- | --- |
-| Reverse engineering | `codex/retail-re-20260919` (34 commits ahead of `main`, 9 behind) | the repository's main checkout | Save, settings and startup compatibility contracts for the rebuild, from controlled original-code experiments; the latest work is the sound manager's startup order. Commit `3c8292d9` saved the lane's last uncommitted notes as they were. Its `tools/godot_host.py` still selects `godot-mono` (Godot 4.7.2 .NET). |
-| Rebuild | `codex/godot-editor-48-20260919` (42 ahead, 6 behind) | `.worktrees/godot-editor-48-20260919` | Converting the production rebuild to typed GDScript and native scenes on Godot 4.8 dev6. The frontend, world and scenery presentation, and effects are converted; world assembly, simulation and the host still run in C#, so the rebuild still needs .NET (`godot48-mono`). Commit `5c8276ce` saved the lane's uncommitted work as it was, without validation. |
-| Companion | `main` (its branch `codex/companion-gdscript-20260919` is merged) | `.worktrees/main-integration-20260919` | GDScript interface on Godot 4.8 dev6 .NET with a small in-process C# adapter for protected file operations, approved by David on 2026-09-19. Save Lab open, preview, verified copy and reopen pass on Linux; Windows execution is unverified. |
+| Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Merged into `main` (`ed7f5332`); work continues on the branch. Save, settings, audio and weapon contracts from controlled original-code experiments; the latest is the sound manager's startup order. The remaining backlog is open-ended (`PROGRAM.md`). Its Godot routes now come from `main` (4.8 dev6 .NET); nothing in the lane needs 4.7.2. |
+| Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | Up to date with `main`, not merged. Midway through moving all production C# to typed GDScript and native scenes: frontend, HUD, pause, audio, world presentation, effects and many Core foundations are native; world import and assembly, the simulation, replay entry and the host are still C#, so it needs `godot48-mono`. Build, world checks, smoke and replay hashes, GDScript parity and the Client suite pass. `AyaTextureChecks`, added unvalidated in `5c8276ce`, fails 15 of 1,206 synthetic malformed-input cases; settling that contract comes before the merge. |
+| Companion | `main` | `.worktrees/main-integration-20260919` | No active work. The GDScript Save Lab on Godot 4.8 dev6 .NET, with its in-process C# safety adapter (approved 2026-09-19), builds and passes `npm test`. Human interaction, Windows execution and further workflows remain (`CURRENT_CAPABILITIES.md`, `PROGRAM.md`). |
 
-`main` (`c9dee49b`) is the integration branch. The merged companion worktree and the older
-`codex/camera-core-resume-20260912`, `codex/linux-playable-slices` and `codex/remote-review-20260912` branches (the last
-with its worktree) are kept as they are.
+To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then `git pull` and
+`git merge main`. Keep Godot headless unless David has released the desktop.
+
+- Reverse engineering, in `$REPO`: `npm run test:docs`, `npm run test:safety` and
+  `python -m unittest tools.ghidra_cohort_framework_tests`. Ghidra changes go through the
+  [promotion gate](reverse-engineering/ghidra/README.md).
+- Rebuild, in `$REPO/.worktrees/godot-editor-48-20260919`: `export BEA_LOCAL_LAB=$REPO/local-lab`, then
+  `npm run build:rebuild-godot`, `npm run test:rebuild-gdscript` and `npm run test:rebuild-client` (in a worktree
+  its preparation step only verifies and links canonical inputs). World checks:
+  `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 180 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/World/WorldSceneChecks.tscn`.
+  Smoke: the same launcher's `smoke` mode with those engine arguments and `-- --record-tape=ABS_FRESH_LOCAL_DATA_PATH`,
+  then `dotnet rebuild/OnslaughtRebuild.Headless/bin/Debug/net8.0/OnslaughtRebuild.Headless.dll --tape TAPE --repeat 2`
+  after `dotnet build rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj`.
+- Companion, in `$REPO/.worktrees/main-integration-20260919`: `npm run build` and `npm test`; `npm run dev` opens a window.
+
+There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
+draft. Unique ignored data from the retired companion and remote-review worktrees is in
+`local-data/test-runs/retired-worktrees-20260925/`.
 
 ## Ground rules
 
