@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Transitional comparison oracle; expected native words stay in their existing tests.
+using System.Globalization;
 using System.Numerics;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -9,6 +10,9 @@ using OnslaughtRebuild.Core;
 using OnslaughtRebuild.Core.Tests;
 using OnslaughtRebuild.Client;
 
+// The native ports reproduce invariant .NET formatting; the host locale must not change expected text.
+CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 string output = Path.GetFullPath(args[0]);
 byte[] goldCareerContainer = File.ReadAllBytes(args[2]);
 Type fp = typeof(Simulation).Assembly.GetType("OnslaughtRebuild.Core.RetailFloat24")!;
