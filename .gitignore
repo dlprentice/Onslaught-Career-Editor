@@ -120,3 +120,5 @@ cardid.txt
 
 # machine-local project data (retail profiles, media, VM media, host attestations); was ~/ProjectData/Onslaught
 /local-data/
+# godot-offscreen evidence and its .gdignore beside the rebuild's project.godot
+/rebuild/OnslaughtRebuild.Godot/local-data/
