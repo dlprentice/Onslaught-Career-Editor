@@ -102,8 +102,29 @@ CURRENT_WEAPON_PROVIDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/weapon-provide
 CURRENT_WEAPON_PROVIDER_OVERLAY_SHA256 = "a686f08b85288db2e43cca9f82ba5b9d91a048e7c2d50b6ca0f4b32fd7b0a804"
 CURRENT_UNIT_AI_INITIALIZER_OVERLAY = REPO_ROOT / "tools/cohort-specs/unit-ai-initializer.manifest.tsv"
 CURRENT_UNIT_AI_INITIALIZER_OVERLAY_SHA256 = "d68d041e02f0d0cfe0d6453723a5a29af08913387648650292590b8a3ed2b1d8"
+CURRENT_AIM_PROVIDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/aim-provider-semantics.manifest.tsv"
+CURRENT_AIM_PROVIDER_OVERLAY_SHA256 = "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6"
+CURRENT_ASIN_HELPER_OVERLAY = REPO_ROOT / "tools/cohort-specs/asin-helper-semantics.manifest.tsv"
+CURRENT_ASIN_HELPER_OVERLAY_SHA256 = "e3a8567675054accd4045b91a623f0b291b23a7b56b40b220464d7160f99fe1e"
+CURRENT_SHARED_RETURN4_OVERLAY = REPO_ROOT / "tools/cohort-specs/shared-return4-leaf.manifest.tsv"
+CURRENT_SHARED_RETURN4_OVERLAY_SHA256 = "28d6914d29e3111fbc5acd967588ffb3a0440d4e8e55b0b746e1cc0480c296bd"
+CURRENT_DEBUG_LOG_OVERLAY = REPO_ROOT / "tools/cohort-specs/debug-log-metadata.manifest.tsv"
+CURRENT_DEBUG_LOG_OVERLAY_SHA256 = "6c9dd2b0a8d2b2ac44a093232f1f7770bcc16d6174100854ba6f6fed9fc93b17"
+CURRENT_CLI_INITIALIZER_OVERLAY = REPO_ROOT / "tools/cohort-specs/cli-initializer-ownership.manifest.tsv"
+CURRENT_CLI_INITIALIZER_OVERLAY_SHA256 = "7159872b1d29231f1c89d6fc74bf5944035e463348defec60cb26b9fb0fd893a"
+CURRENT_SAMPLE_LOADING_OVERLAY = REPO_ROOT / "tools/cohort-specs/audio-sample-loading.manifest.tsv"
+CURRENT_SAMPLE_LOADING_OVERLAY_SHA256 = "18a636d7b1c654a7b680d4ea7505e737e3438b81955de5f9979e7d21ff545d0b"
+CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS = (
+    "addr", "liveKind", "currentCommentBase64", "proposedCommentBase64",
+    "bodyStart", "bodyEndExclusive", "bodySha256", "currentSignature",
+    "currentSignatureSha256", "proposedSignature", "callingConvention",
+    "returnType", "paramSpec", "arity", "arityBytes", "currentTags",
+    "proposedTags", "currentName", "proposedName",
+)
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
+CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
+CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256 = "d72a96b732e884d83dddc9467d5c8be64ca181c5c1d04b92d4579d8a679c3c8a"
 BASELINE_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
@@ -737,6 +758,10 @@ def run(
             table = load_table(table_path)
         if use_current_overlay:
             table = apply_current_creation_overlay(apply_current_name_overlay(table))
+            table = apply_current_creation_overlay(
+                table, CURRENT_EVENT_CONSTRUCTOR_OVERLAY,
+                expected_sha256=CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256,
+            )
             table = apply_current_name_overlay(
                 table, CURRENT_BOUNDING_BOX_OVERLAY,
                 expected_sha256=CURRENT_BOUNDING_BOX_OVERLAY_SHA256,
@@ -761,6 +786,36 @@ def run(
                 table, CURRENT_UNIT_AI_INITIALIZER_OVERLAY,
                 expected_sha256=CURRENT_UNIT_AI_INITIALIZER_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_AIM_PROVIDER_OVERLAY,
+                expected_sha256=CURRENT_AIM_PROVIDER_OVERLAY_SHA256,
+                expected_rows=4, expected_columns=CURRENT_BOUNDING_BOX_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_ASIN_HELPER_OVERLAY,
+                expected_sha256=CURRENT_ASIN_HELPER_OVERLAY_SHA256,
+                expected_rows=2, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SHARED_RETURN4_OVERLAY,
+                expected_sha256=CURRENT_SHARED_RETURN4_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_DEBUG_LOG_OVERLAY,
+                expected_sha256=CURRENT_DEBUG_LOG_OVERLAY_SHA256,
+                expected_rows=5, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_CLI_INITIALIZER_OVERLAY,
+                expected_sha256=CURRENT_CLI_INITIALIZER_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_SEGMENT_CONTROLLER_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SAMPLE_LOADING_OVERLAY,
+                expected_sha256=CURRENT_SAMPLE_LOADING_OVERLAY_SHA256,
+                expected_rows=2, expected_columns=CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

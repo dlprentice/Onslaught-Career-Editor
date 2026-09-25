@@ -1,5 +1,12 @@
 # CTexture__FindTexture
 
+Source File: retained texture.cpp coordinate mapping | Binary: BEA.exe (earlier analysis, not remeasured by this callee rename)
+
+Status: active function reference; retained evidence limits apply
+Summary: existing function analysis with current CDebugLog callee naming.
+
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+
 > Address: 0x004f27f0
 > Source: texture.cpp (debug path at 0x00632ef0)
 
@@ -164,7 +171,7 @@ LAB_004f2958:
 - OID__AllocObject (memory allocation)
 - CTexture__ctor (constructor)
 - CTexture__Release (cleanup)
-- CConsole__Printf (`FUN_00441740`) (error logging)
+- CDebugLog__Printf (`FUN_00441740`) (error logging)
 
 ## Related
 - Unwind handler: [CTexture__FindTexture_Unwind](CTexture__FindTexture_Unwind.md) at 0x005d5120

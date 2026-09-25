@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Shared installed-Godot process support and the companion's Linux launcher.
+"""Shared installed-Godot process support and retained C# companion launcher.
 
-This module contains no rebuild, retail-data or simulation dependencies.
+The native companion uses companion_godot.py. This module contains no rebuild,
+retail-data or simulation dependencies.
 """
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ from pathlib import Path
 ENGINE_VERSION = "4.8.dev6.mono.official.8898c2b3d"
 ENGINE_SDK_VERSION = "4.8.0-dev.6"
 DEFAULT_ENGINE = "godot48-mono"
-# Retained MIT companion remains on its committed SDK until its own migration.
+# Retained C# companion reference pins; native production uses companion_godot.py.
 COMPANION_ENGINE_VERSION = "4.7.2.stable.mono.official.ed1daf0bf"
 COMPANION_SDK_VERSION = "4.7.2"
 COMPANION_DEFAULT_ENGINE = "godot-mono"

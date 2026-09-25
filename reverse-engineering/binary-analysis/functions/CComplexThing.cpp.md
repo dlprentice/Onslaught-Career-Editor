@@ -1,16 +1,18 @@
 # CComplexThing function map
 
-Status: active static function map
-Last updated: 2026-09-12 (aircraft model inputs, native cache population and render-stamp ownership)
+Status: active static and isolated-code function map
+Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
-including the bounded angle-update, matrix and controller arithmetic evidence.
+including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — every byte below was re-read from the pristine specimen at
-file offset VA − 0x400000 with `tools/disasm_va.py`; whole-image scans by
-`tools/call_xref_scan.py`. Architecture from pinned GPL
+Evidence: MEASURED — dated static findings and isolated original-code experiments;
+their individual scopes and receipts are identified below. Earlier static work
+used `tools/disasm_va.py` and `tools/call_xref_scan.py`; the September 19 query
+experiment verifies original bodies in actual ELF load mappings with the PE
+section-aware reader. Architecture from pinned GPL
 `references/Onslaught/thing.cpp` / `thing.h` (lines cited). Function names are
 the dated Ghidra readbacks; current name authority remains in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
@@ -68,7 +70,7 @@ These thing-event numbers are **not** the IScript `HandleMessage`
 | `0x004de700` | `Return1f` | `d90568855d00 c3` | Slot 24 (`+0x60`) of `CUnit` `0x005df998` / `CRadar` `0x005dd788` / `CSubmarine` `0x005e1490` (re-read dwords `00 e7 4d 00`). Zero-arg; `ECX` unused; zero `E8`; zero inbound `E8`/`E9`. `fld dword [0x005d8568]` (`00 00 80 3f` = `1.0f`); bare `ret`. HIGH. Child `t_416de69b` REPORT.md independently reproduced. Do not promote a CUnit-owned name — this is a folded stub. |
 | `0x0050e940` | `CGroundUnit__ReturnFloat005d85bc_0050e940` | `d905bc855d00 c3` | Slot 24 of `CGroundVehicle` `0x005e297c` is **not** `Return1f`. Same shape; `[0x005d85bc]` = `00 00 80 40` = `4.0f`. HIGH on these bytes. Subclass override, not the CUnit answer. |
 | `0x005333b0` | `IScript__Constructor` | `c706d4925d00 8d4e28 e85b24fbff … c706084f5e00 894608 894e0c 897168 … 897e24 … c20800` | `ret 8`; args `(thing, eventObj)`. Installs `CMonitor` vptr `0x005d92d4` then IScript vptr `0x005e4f08`. `CSPtrSet__Init` at `+0x28`. `[this+8]=[this+0x10]=thing`; `[this+0xc]=eventObj`; `[eventObj+0x68]=this`. Zeroes `+0x14` / `+0x18` / `+0x1c` / `+0x24` / `+0x38`. HIGH. Only `E8` is `SetScript` `0x004f42a8`. |
-| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CConsole__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
+| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CDebugLog__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
 | `0x00535c50` | `IScript__SetScript` | `8b442404 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
 
 ### Unit Euler update: isolated execution, September 8
@@ -528,6 +530,331 @@ evaluation and collision results remain required before replacing centre launch.
 The [composition validation](../../../VALIDATION.md#common-controller-and-unit-weapon-composition--september-12)
 records raw body identities and the private static receipt.
 
+#### Weapon line-query arbitration and retained result fields
+
+The complete query `[0050b030,0050b518)` was executed unchanged on September 19
+against the pristine specimen identified above. **53 finite-input scenarios /
+106 calls** passed, with each scenario using PC24/RN and PC53/RN. Terrain,
+ordered candidate supply, collision lookup/bounds, virtual radius and broad/refined
+geometry are explicit stubs. The query, array/vector construction and iterator-node
+conversion are original instructions; this is an isolated arbitration experiment,
+not a retail world or geometry test. [Validation](../../../VALIDATION.md#weapon-line-query-arbitration--september-19)
+owns the command, private outputs, byte identities and checks.
+
+The historical name `CWorld__FindFirstThingToHitLine` is not a uniform
+nearest-contact rule. After a supplied broad hit, the query computes the
+distance from line start to `Thing.position + bound.centre`, stores it as a
+float, subtracts virtual `+44`'s radius and stores the resulting **proxy distance**
+(`0050b2a6..0050b2f4`). For finite values this must be strictly less than the
+terrain distance, when present, and the current object's saved distance, when
+present (`0050b2f8..0050b31e`). A proxy tie rejects the candidate before refinement.
+The stored distance for a broad-only winner is this proxy, including negative
+values; it is not the line's geometric intersection distance.
+
+Refinement is selected when query mode is 2, or when
+`(collision.flags & 0x0c) == 8` and the child-mode argument equals 1. A null
+child collider falls back to broad acceptance. Otherwise its virtual `+10`
+must return nonzero; the query computes a new distance from its supplied contact
+point (`0050b42b..0050b473`). This refined distance may **equal** terrain and the
+saved incumbent distance (`0050b479..0050b495`). The latter starts at `99999.0f`:
+without terrain, an initial refined contact beyond that value is rejected, while
+an initial broad-only proxy beyond it can win.
+
+| Ordered supplied results | Observed winner |
+| --- | --- |
+| Broad A proxy 10; broad B proxy 10 | A; reversing order makes B win |
+| Broad A proxy 10; refined B proxy 9, contact distance 10 | B |
+| Same setup, B contact distance 11 | A |
+| Broad A proxy 10; refined B proxy 10, contact distance 9 | A; B's refinement is never called |
+| Terrain distance 10; refined proxy 9, contact distance 10 | Object |
+| Terrain distance 10; broad proxy 10 | Terrain |
+
+Result ownership also matters. Miss writes status 0 and retains preexisting
+object, subhit and distance. Terrain writes status 1 and distance, retaining
+object/subhit. Normal object selection writes all four fields: object pointer,
+subhit (`ffffffff` for broad-only), status 3 and selected distance. An accepted
+stop-early query writes **only status 3**; it retains the previous other fields,
+including terrain distance if terrain was found earlier. It returns without
+advancing the iterator. Callers must not treat those retained fields as a fresh
+object/contact result.
+
+The measured filters precede bounds/geometry: ignored pointer, Thing flag
+`+2c & 10`, any rejected type bit, no required type bit, absent collision,
+no collision flag bit in `c0`, then Thing flag `+2c & 4` unless type `+34 & 100`.
+The required mask and collision `c0` tests require **any**, not every, bit.
+Radius is returned through x87 ST0. Constructor `00402d20` does not initialize
+the local collision-result bytes; the child result is consumed only after
+the relevant callback succeeds.
+
+For the previously inspected Weapon B caller at `005090ea`, stop-early is zero,
+reject mask is 4, required mask is `ffffffff`, and the terrain flag is 1.
+Query mode is 1; its child-mode argument is zero for target type bit `100`,
+otherwise one.
+Its post-query admission requires a nonnull Unit with the target's allegiance,
+not pointer identity with the target. This query experiment does not execute
+that caller; the bounded composition below supplies its query results instead.
+Actual iterator ordering, geometry, nonfinite query behavior and live combat
+remain open. These finite, mostly exact-distance
+cases do not establish general agreement between the two precision settings.
+An implementation must preserve
+this mixture of proxy and contact distances and the unequal tie rules rather
+than substituting a generic nearest-sphere sweep.
+
+#### Target point providers and weapon prediction
+
+Unit and Plane primary vtables `005df998` and `005e1930` both bind `+168` to
+`004fd4d0` and `+6c` to `00404120`. These slots supply the target's aim point
+and native motion vector respectively; retrieving an aim point is not acquiring
+another target. `004fd4d0` delegates to the receiver's destructible-segments
+controller at `Unit+178`, or calls `004f3ac0` for its centre. The
+[segment-provider owner](DiveBomber.cpp/CDiveBomber__SelectTarget.md) records the
+ordered part selection and the withdrawn dive-bomber interpretation.
+
+`00404120` copies four words from `Actor+7c` to its output and returns that
+buffer in EAX. Pinned GPL `actor.h:24` calls this `GetVelocity`;
+`actor.cpp:114` and retail `00401757..00401775` add the vector directly to
+position for a Move operation. It therefore must retain its native movement
+units. It is not automatically a world-units-per-second vector, nor the separate
+last-frame displacement getter. The two aim-position providers above remain
+`void` output-buffer functions: their delegated EAX values are not consistently
+the output pointer. A concrete counterexample is `004f3ac0`'s plain-position
+fallback, which returns the copied fourth word in EAX.
+
+The complete endpoint helper `[0050a0e0,0050a286)` executes the following two
+paths. Absent weapon mode `+a0`, or mode `+b0==0`, it calls target virtual
+`+168` and copies four words from the local result. Otherwise it calls attachment
+position, target point, attachment orientation, then target `+6c`, in that order.
+Round `+50!=0` selects speed 1000; otherwise it uses round `+2c`, or zero when
+the reloaded mode or round is absent. It scales orientation words `+4/+14/+24` by that speed,
+storing each component as float. The mathematical prediction factor is:
+
+`20 × distance(attachment_position, target_point) / magnitude(scaled_orientation_column)`.
+
+The helper adds the target motion multiplied by that factor to the target
+point. This expression alone is insufficient for exact arithmetic: the distance
+and ratio retain x87 intermediates, and the X/Y motion products spill to float
+before adding the target point while Z does not. Predicted output writes XYZ
+and retains its preexisting fourth word. Both paths return the output pointer
+in EAX, with `RET 8`. Copying the target's four words in the other path does
+not prove that every real point provider initializes a meaningful fourth word.
+
+The isolated composition executes the unchanged endpoint, constant and Actor
+getter: **21 scenarios / 42 endpoint calls / 38 getter calls**, using PC24/RN
+and PC53/RN. With origin `(3.75,-1.25,-1.25)`, target
+`(-1.25,-1.25,-1.25)`, speed 80, orientation column `(1,0,0)` and each
+motion component `1+2^-23`, PC24 produces `2^-23` on every axis. PC53 produces
+`2^-23` on X/Y but `5×2^-25` on Z. This distinguishes the real store sequence
+from a uniform vector expression. Nonunit orientation, negative speed,
+override speed, zero motion and zero-distance controls also pass.
+
+With the supplied masked exception controls, zero divisors produce infinities
+or indefinite NaNs; no fallback clamp occurs. Attachment and point providers
+remain explicit stubs, and Actor state is synthetic. These results establish
+neither real attachment/segment poses nor the frequency and lifecycle of motion
+updates, every Weapon B path, or live combat. Other precision/rounding
+modes and unmasked faults are untested. [Validation](../../../VALIDATION.md#weapon-aim-point-and-native-motion-provider--september-19)
+owns exact inputs, outputs, checks and independent review.
+
+#### Weapon B nonballistic caller composition
+
+The first composition executes the unchanged body `[005088b0,00509135)` with the original
+endpoint, Actor getter, magnitude helper and line-copy constructor in **22
+scenarios / 44 calls**, under PC24/RN and PC53/RN. This covers a bounded
+nonballistic path, not every branch of the body. Attachment position/orientation,
+target point and world query are recording stubs; the objects are synthetic.
+The [validation receipt](../../../VALIDATION.md#weapon-b-nonballistic-caller-composition--september-19)
+owns the exact bytes, inputs and retained outputs.
+
+With prediction enabled, zero projectile speed, zero Actor motion, target point
+`(3,4,0)` and origin `(0,0,0)`, the helper produces indefinite NaNs on XYZ.
+The caller's magnitude comparisons take their unordered/zero arms and use an
+angle of zero; they do **not** replace the endpoint with a finite point.
+Mode bounds `+80 <= 0 <= +7c` admit this path, including equality at either or
+both ends. Bounds excluding zero reject before any query, including when seek
+is nonzero. These results do not
+establish the general finite-angle or ballistic calculation.
+
+| Supplied condition after the angle check | Observed caller result |
+| --- | --- |
+| Round `+48` equals 1 or 2 | Returns 1 without a world query, despite the NaN endpoint |
+| Round `+48` is zero; query returns 0, 1 or 2 | Returns 0 |
+| Query returns 3 with a distinct Unit hit of the target's allegiance | Returns 1; exact target identity is not required |
+| Query returns 3 with null hit, non-Unit hit or different allegiance | Returns 0 |
+
+The actual line constructor preserves the four computed endpoint words and
+the separately sampled attachment origin. The predicted fourth word retains
+`51515151`, the harness's stack fill, not a recovered game value.
+All 30 recording-query calls receive
+these values without sanitization, with ignored owner `weapon+8`, stop-early 0,
+mode 1, reject mask 4, terrain flag 1 and required mask `ffffffff`. Target type
+bit `100` changes the child-mode argument from 1 to 0. Result storage initially
+contains `(null, ffffffff, 0, -1.0f)`; the caller tests the query's EAX status
+before reading the returned Unit pointer and allegiance.
+
+Prediction-disabled zero-distance control supplies a finite four-word point
+and has no arithmetic exception. Enabling prediction for that same zero-distance
+point gives NaNs through `0/0`, while still admitting the supplied matching hit.
+An origin above the supplied height gate returns before endpoint generation.
+All synthetic input objects remain byte-identical, and normal-return ABI/SEH/x87
+checks pass. Exception flags are deliberately masked and recorded.
+
+Reconstruction must keep angle admission, seek bypass, endpoint contents and
+same-allegiance hit admission distinct. A generic finite-vector guard or
+exact-target-only ray test would change these measured paths. Whether authored
+gameplay reaches zero-speed prediction remains open; actual collision handling
+of a nonfinite line, real attachment/part providers, visibility/terrain/ballistic
+arms, unmasked faults and live combat are not established by this experiment.
+
+#### Weapon B finite elevation and arithmetic boundaries
+
+The extension executes the same original caller with its original `0055dcb0`
+angle wrapper, shared arithmetic core and finite CRT support. It retains the
+preceding 44 calls and adds **27 finite scenarios / 108 calls**, each under
+PC24/RN and PC53/RN and supplied CRT flag `009d08b4` values 0 and 1.
+The [finite-angle receipt](../../../VALIDATION.md#weapon-b-finite-angle-composition--september-19)
+owns the unchanged-byte pins, inputs, outputs and independent review.
+This scope uses `weapon+98==0`, nonballistic round settings, recording attachment/
+point providers and a supplied world-query result. It does not sample live game
+precision or CRT state.
+
+The routine computes an **elevation difference**, not a full three-dimensional
+angle between the two directions. For these float32 ratios, `0055dcb0` computes
+`atan2(r, sqrt((1+r)*(1-r)))`, with the original intermediate rounding. Its
+error-name literal at `00653310` is `asin`; exact `r=+1/-1` uses the original
+signed 80-bit pi/2 constant. The former `Acos` interpretation is wrong. The
+[reviewed metadata correction](../../ghidra/README.md#asin-helper-metadata-correction-2026-09-19)
+names the wrapper `CRT__AsinDispatch_ST0` and the `0055dccd` core
+`CRT__AsinCoreWithFpuGuards`, while leaving their unresolved prototypes intact.
+The wrapper classifies a saved double copy; arithmetic uses the retained ST0
+value. This experiment does not cover extended inputs that round across a
+classification boundary when copied to double.
+
+The caller's important stores are:
+
+- Endpoint minus attachment origin is stored as float32 XYZ before magnitude.
+  Each component of projectile-speed times orientation column `+4/+14/+24`
+  also stores as float32 before its magnitude.
+- Both elevation ratios store as float32 before entering the helper. Target
+  elevation then stores as float32 at `00508a04`.
+- Forward elevation remains on the x87 stack through subtraction from the
+  stored target elevation at `00508a66`; the difference stores at `00508a6c`.
+  Mode `+80` and `+7c` bound that signed difference inclusively.
+
+With flat forward `(0,1,0)`, targets `(0,4,3)`, `(0,-4,3)` and `(4,0,3)` all
+admit bounds `[0.6,0.7]`; reversing horizontal direction leaves this check
+unchanged. Target `(0,4,-3)` refuses those bounds and admits `[-0.7,-0.6]`.
+Forward vectors `(0,4,3)` and `(0,8,6)` give the same negative deflection toward
+target `(0,1,0)`, demonstrating normalization. Positive speed scaling preserves
+that result; negative speed reverses the forward elevation. This does not remove
+other controller/weapon checks or real collision occlusion.
+
+Identical target/forward directions `(0,4,3)` do **not** produce exact zero:
+
+| Supplied precision | Stored target elevation | Stored final difference |
+| --- | --- | --- |
+| PC24/RN | `3f24bc7d` | `b298d054`, approximately `-1.77898656e-8` |
+| PC53/RN | `3f24bc7e` | `32cd9612`, approximately `+2.39333851e-8` |
+
+Zero-only bounds refuse both; `[-1e-6,1e-6]` admits both. Negative-only and
+positive-only intervals admit opposite precision modes. A separate float-store
+control uses origin `(-1,0,0)` and target `(16777216,0,2)`: displacement X stores
+as 16777216, and final elevation `34000000` admits an equal upper bound but
+refuses its preceding float. With target Z changed to 1, the final words are
+`33800001` under PC24 and `33800000` under PC53; an upper bound of `33800000`
+therefore changes admission. These are deliberately constructed boundary
+controls, not evidence that shipping weapon limits encounter them.
+
+CRT flag 0 can send PC24 inexact results through the original error-record path,
+which stores/reloads the result as double; flag 1 takes the direct restore tail.
+PC53/RN `027f` bypasses that precision-handling path. Both flag settings preserve
+the same final outcomes for these controls. Original control words and empty
+x87 stacks survive every call; no modern math function substitutes for executed
+retail instructions. An independent arithmetic model predicts the selected
+boundary words, without claiming general libm/x87 equivalence.
+
+Finite prediction also composes through the real endpoint and Actor getter:
+target `(0,4,3)`, speed 25, flat forward and native motion `(0,0,1)` produce
+factor 4 and endpoint `(0,4,7)`, admitted by `[1.04,1.06]`. Disabling prediction
+or reversing that motion refuses the same interval. Predicted W retains stack
+fill; direct-copy W retains the supplied provider word. Seek still cannot
+bypass a refused angle, and skips the query only after admission.
+
+Reconstruction must preserve signed elevation, normalization, ordered stores
+and the separate query decision. Replacing the helper with `acos(dot)`, forcing
+equal directions to zero, or assuming precision modes have identical boundary
+decisions would change these measured paths. Ballistics, `weapon+98` handling,
+real attachment transforms, complete point providers, geometry and live combat
+remain outside this experiment.
+
+#### Shared unary math-error bridge
+
+The finite-angle work exposed a false saved signature at `00561547`
+(`__startOneArgErrorHandling`): its hidden output pointer and ordinary fastcall
+parameters do not describe the original instructions. The
+[bridge experiment and disposable models](../../../VALIDATION.md#shared-math-error-abi--september-19)
+establish the following entry contract. Let `H` be ESP on entry:
+
+| Location | Input |
+| --- | --- |
+| EAX | 32-bit error kind |
+| EDX | 32-bit operation identifier |
+| ECX | Operation-name pointer |
+| ST0 | Incoming extended-precision value |
+| `[H+4]` | Saved 16-bit x87 control word |
+| `[H+c]` | Original eight-byte argument |
+
+`[H+8]` is the enclosing math routine's return-address slot, not a parameter.
+The helper returns its scalar in ST0 with a bare `RET`; it does not consume
+those enclosing stack arguments. These are observed machine locations, not a
+recovered original C declaration. The experiment uses one fixed tuple of
+error kind, operation identifier, name pointer and original argument; their
+locations also follow directly from the pristine loads/stores.
+
+The helper constructs a 32-byte record: error kind at `+0`, name pointer at
+`+4`, first argument at `+8`, second argument at `+10`, and result at `+18`.
+The unary entry leaves the second-argument field uninitialized. It first stores
+ST0 as **binary64** in the result field, passes the record and saved-word pointer
+to `00569cc1`, then reloads the possibly changed result into ST0. Native
+dispatcher/adjustment instructions also establish the write path:
+`00569cc1` passes `record+18` to `005627ea`, whose overflow arm writes through
+that pointer at `005628ff`. The isolated bridge experiment substitutes a
+recording/mutating dispatcher; it does not validate that real adjustment arm.
+
+Eight original-code calls distinguish the relevant operations. Inputs immediately
+below, at and above `1 + 2^-53` reach the dispatcher as binary64 values
+`3ff0000000000000`, `3ff0000000000000` and `3ff0000000000001` under nearest-even
+rounding. Upward rounding changes the midpoint to the latter word. Supplying
+PC24 does not turn the eight-byte store into a float32 store. Replacing the
+record's result with the next double above one produces that replacement in
+ST0, including when the dispatcher returns a different EAX sentinel. Capturing
+ST0 as ten bytes prevents the harness from imposing a second double rounding.
+
+Control-word restoration is **conditional**: a saved word other than `027f`
+is loaded after dispatch; saved `027f` skips that load. A controlled dispatcher
+leaving `037f` therefore returns with `007f` when that was saved, but with
+`037f` when the saved word is `027f`. This characterizes the bridge's branch;
+it does not establish which state the real dispatcher leaves during gameplay.
+
+Disposable custom-storage models remove the invented output pointer and retain
+all six inputs plus ST0 return. Both a double-valued return and a physical
+`float10` carrier survive independent readback. Giving the dispatcher an
+observed-record pointer makes the C view show the mutable result field without
+rewriting the helper's saved local variables. Its high P-code already retained
+the call-dependent result before that type change: fragmented C was a
+presentation limitation, not proof that the dependency was lost.
+
+The [one-function live correction](../../ghidra/README.md#shared-math-error-abi-correction-2026-09-19)
+adopts the physical `float10` model with all six explicit inputs and ST0 return.
+The name, body, local variables and existing types remain unchanged. The
+dispatcher-record type model remains unpromoted; no local rewrite is needed
+for its demonstrated improvement. The asin core's earlier comment about this
+helper's hidden pointer describes its pre-correction state. The
+binary sibling at `00561530` prepares its own frame and jumps into `00561550`;
+it must not receive this entry contract by association. Sibling/outer-tail
+signatures, alternate-entry ownership, exceptional inputs and Windows exception
+delivery remain separate work. The weapon's already measured finite outcomes
+are unchanged; this finding constrains how its shared math support is modeled.
+
 #### Selected aircraft weapon mounts and runtime pose inputs
 
 The selected Steam mesh `data/resources/meshes/m_FA_F24_training.msh.aya` is
@@ -613,9 +940,21 @@ Round initializer calls Actor Init at `004d867b`; Actor Init draws at
 `0040135d` before testing its movement flag. This adds a draw beyond the two
 scatter calls at `00506e0a/00506e3e`, but does not prove an exhaustive total.
 Before Actor's draw, renderer registration `005164b0` can call a resolved
-renderer initializer at `0051654c`; the selected live registry remains an
-open dependency. Do not substitute a guessed total or omit the resulting
-Actor movement-event admission.
+renderer initializer at `0051654c`. The
+[selected-round registry check](Actor.cpp.md#selected-round-renderer-admission)
+now closes that path under the default initialized table: Forseti Missile and
+Blaster select ordinary `CRound`, whose OID 4 has no entry. Twenty-two
+original-code controls distinguish that miss from a registered or deliberately
+inserted entry. The [selected collision initialization controls](collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+also show that the component reaches its initial scan unready, preventing its
+shared response from dispatching owner Hits there. The candidate-side filter
+set is statically bounded for ordinary Round arguments, as are renderer centre
+getters for valid retail objects. The later [speed-provider census](collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+bounds finite parent chains, and [readiness queue controls](CEventManager.cpp.md#projectile-readiness-queue--september-19)
+separate actual insertion from later delivery. Allocator/diagnostic paths,
+pair-scanner events, other constructor effects and live state still prevent
+an exhaustive total.
+Do not omit the resulting Actor movement-event admission.
 
 Particle and sound randomness use separate CRT state: `0055dbfe` updates
 thread-data `+14` with `state * 0x343fd + 0x269ec3`, whereas shared gameplay

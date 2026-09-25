@@ -3,7 +3,7 @@
 > Address: `0x004011e0`
 
 Status: active bounded static/runtime note — **RED for C2 promotion**
-Last updated: 2026-09-07
+Last updated: 2026-09-19 (selected round renderer admission and collision readiness; earlier Actor evidence retained)
 Summary: exact retail `CActor__Init @ 0x004011e0` identity and two retained
 caller-family write observations are reproduced, but every observed return
 crosses a replay gap and the endpoint memory queries do not read back from the
@@ -11,7 +11,9 @@ requested return sequence. The Generation-32 grade therefore remains
 `C1_CANDIDATE_PARTIAL` / `OPEN_EXECUTED`; this note makes no VERIFIED/C2 count
 claim. The September 7 extension below resolves the complete static Actor
 body and ordered base-call boundary for World110 construction; it adds no
-runtime observation or campaign promotion.
+runtime observation or campaign promotion. The September 19 extension executes
+isolated renderer-registry bodies with controlled dependencies; it does not
+promote the Actor runtime grade.
 Evidence: MEASURED — Generation 32, pristine-body/static owners, retained
 Level-100 TTD trace, target-filtered call/entry/raw-return events, same-boundary
 Overwrite/Write pairs, and four injected verifier controls. Source names and
@@ -240,6 +242,103 @@ Additional byte-checked helper body identities (half-open ranges) are:
 | Common collision wrapper | `[0x004f39c0,0x004f3a49)` | `9894aeccb95717d2ebf26951a4ec4bc370a5cebaa498da244405beec8494c9ad` |
 | Persistent collision Init | `[0x004269b0,0x004269f6)` | `bd4cf3f803c5d5a661b2d81ef96d1c2753a6ba4be722a4d1c6673ea96dedddd4` |
 | Render-chain instantiation | `[0x005164b0,0x00516578)` | `582ec79455f2915a91620f946c9f80e7267e1d46b8d10a5ee81653c4626dc29b` |
+
+### Selected round renderer admission
+
+The September 19 static check and **22 isolated original-code cases** close
+one specific dependency before Actor's random draw: ordinary `CRound` does
+not create a renderer through the default initialized registry. This is not
+a complete shot-randomness count or a retail startup observation.
+
+The selected Steam `data/default physics.dat` is 175,603 bytes, SHA-256
+`e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
+The existing parser finds Forseti Missile and Blaster at zero-based records
+163 and 189. Neither supplies inheritance field `0x14`, missile field `0x16`
+or mesh field `0x24`; the
+[round-field owner](../physics-round-value-ids-2026-07-25.md#3-round-value-ids-statement-tag-4-factory-0x00437490)
+binds those meanings. Weapon-mode records 239/240/268 bind the training
+launcher, drone missile launcher and drone cannon to those two rounds.
+
+Pristine instructions establish this path:
+
+- Round-data construction clears `+70` at `0043010b` and mesh pointer `+0c`
+  at `00430111`. Selection at `0050f7d3..0050f7d8` takes ordinary Round when
+  `+70` is zero. Its constructor installs primary vtable `005de82c` at
+  `004d8234`; inherited construction clears renderer pointer `+30`.
+- That vtable's `+20` is `004db8c0`, exactly `MOV EAX,4; RET`; `+88` is
+  `004f35d0`. The latter passes class ID 4 and render interface `Round+8`
+  to `005164b0`, then stores its result in `Round+30`. Its caller-supplied
+  Init argument is unused, but `RET 4` still consumes it.
+- Startup call `004eff93` reaches default initializer `00515fb0`, which
+  fills 23 OIDs and writes the global count at `0051640b`. The IDs are
+  `0,9,10,6,3,7,5,16,11,17,12,14,23,20,21,10001,13,26,10002,29,31,33,34`.
+  None is 4. Lookup therefore returns zero at `005164db..005164e0`, before
+  factory `0051652f` or renderer Init `0051654c`.
+
+This absence concerns the initialized table. Static construction reaches
+`00515f30` through pointer `00622860`, constructs 47 records of stride `0x428`,
+and initializes one descriptor per record. A direct-operand survey of the
+pristine `.text` found no later OID/global-count insertion writer; descriptor
+owner injection and shutdown pointer clearing are separate writes. This
+does not rule out arbitrary indirect writes or establish a live table snapshot.
+
+The native experiment executes unchanged record/descriptor constructors,
+default initializer, lookup, caller and return-4 leaf. The harness provides
+zero-initialized globals and invokes record construction 47 times. Its
+controlled vector-constructor dependency executes the original descriptor
+constructor; renderer allocation and Init are call-recording stubs. It checks
+the complete registry and receiver bytes, stack balance, nonvolatile registers,
+owner-interface forwarding and linkage, and verifies original bytes in the
+actual ELF load mappings. The consequential controls distinguish:
+
+| Supplied state | Factory / Init calls | Result |
+| --- | --- | --- |
+| Default OID 4, direct or through the Round wrapper | 0 / 0 | Null; wrapper stores null |
+| Registered OID 0 | 1 / 1 | Controlled renderer; zero is a valid class ID |
+| Inserted OID 4 outside the active count | 0 / 0 | Null |
+| Same inserted OID admitted by the count | 1 / 1 | Controlled renderer; receives `Round+8` |
+| Registered entry with allocation failure | 1 / 0 | Null; no descriptor-owner write |
+| Matched OID 4 with per-record count 0 or -1 | 0 / 0 | Raw value 4, an anomalous input-ID return |
+
+Missing keys and nonpositive **global** count return null. The per-record
+guard instead performs `DEC` then `JS`; do not generalize the tested 0/-1
+result to `INT_MIN`, which wraps. First RTID `-1` disables the entry before
+that guard. Duplicate OIDs choose the first match. The default one-descriptor
+configuration does not validate general multi-descriptor chains.
+
+Additional body pins, alongside the lookup identity above:
+
+| Body | Half-open range | SHA-256 |
+| --- | --- | --- |
+| Default registry initialization | `[00515fb0,0051644d)` | `8b9d1fa7f0fbd757998d729b863d58fcdab6dd4a17c6cbe20f9cb1faeb1d86f5` |
+| Common render initializer | `[004f35d0,004f35f6)` | `5d9aac8e351f3de6d7603274b836fb0ee32c2cd5201f7fb7c6f0f4b630ee608a` |
+| Shared return-4 leaf | `[004db8c0,004db8c6)` | `e36623525b7c35b277173e56616b2d865cf6515aa2be1d12d6814ef725cecffb` |
+
+The leaf has 166 byte-bound, RTTI-resolved vtable pointer slots. Its return
+also serves PhysicsScript sizes, game/selector values and other classes;
+it is not exclusively a serialization helper or Round method. The common
+initializer's unused argument independently matches pinned
+`thing.cpp:92-95` and `thing.h:159`. The registry implementation and selected
+Round implementation are absent from that partial source drop.
+
+Private inputs, commands, saved outputs and hashes are in
+[validation](../../../VALIDATION.md#round-renderer-registry--september-19).
+No actual renderer, Actor Init, full projectile creation, startup, Windows
+runtime or game session executes in this experiment. Collision callbacks and
+the other constructor dependencies still prevent an exhaustive shot RNG claim.
+
+The subsequent [selected collision initialization controls](collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+close one of those callback paths: the selected Round component reaches its
+initial scan unready, so its shared response cannot dispatch owner Hits before
+Actor's draw. A separate static check closes the candidate-filter callback set
+for ordinary Round arguments, and bounds the renderer centre getters for valid
+retail objects. The later [speed-provider closure](collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+bounds normal finite parent chains, and the [readiness queue composition](CEventManager.cpp.md#projectile-readiness-queue--september-19)
+executes actual insertion and deferred delivery. The [debug-log contract](string-helpers.md#debug-log-ownership-and-history--september-19)
+now bounds the two fixed pool messages when the receiver is disabled and
+distinguishes that route from enabled file logging and possible CRT retry
+callbacks. Actual logging/allocator state, pair-scanner events and other
+constructor effects still prevent an exhaustive shot RNG claim.
 
 ### Construction and proof limits
 

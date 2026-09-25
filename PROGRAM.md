@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-12 (native aircraft cache population measured; render/camera context and firing integration remain open)
+Last updated: 2026-09-23 (coupled settings routing and original sound-manager/device initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -17,6 +17,137 @@ validation in [VALIDATION.md](VALIDATION.md), and database state in
 queue revisions remain in Git and existing evidence owners; do not recreate a diary here.
 
 ## Open work
+
+### Dedicated RE lane — current continuation
+
+David resumed this dedicated RE task on September 22 from the preserved pause.
+The interrupted language-cleanup control had watched the wrong input-state
+address. Original instructions resolve that arithmetic error; the corrected
+experiment now passes 26 cases while retaining the old address as an unchanged
+control. Failed runs remain in the existing private owner. No retail body was
+changed to make the checks pass.
+
+Separate tasks own rebuild and companion implementation. The working branch is
+`codex/retail-re-20260919`. Current database and recovery identities remain in
+`developer_state.json` → `current_re_authority.latestLiveGhidraState`; use those
+pointers rather than selecting a project by date or database number.
+
+The resumed investigation confirmed CLIParams ownership of the initializer at
+`004239f0`; its former Unit AI name is corrected through the
+[one-row preservation/readback workflow](reverse-engineering/ghidra/README.md#cli-initializer-ownership--september-19).
+Four isolated original-code cases establish its bounded defaults and preserved
+memory. The complete [parser contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+now records all 25 comparisons, sequential argument consumption, the initial
+zero windowed guard, and directory/logger-filename side effects. Retail startup
+acceptance remains separate from the isolated parser execution below.
+
+The follow-up passed 47 isolated cases through the unchanged parser and native
+CRT conversion code, with OS/printf boundaries intercepted. It identified ten
+absolute reads of the developer selector, corrected its old frontend-state
+identity, and separated autoconfig/cheat-query admission and the frontend
+startup override from `-level`. No active consumer of either trace-request
+field or later deliberate developer-selector writer was identified. That is
+bounded static evidence, not proof against computed or external writes.
+
+David's current priority is to recheck save files, settings and startup as one
+compatibility chain. Existing notes, prior agent work and this lane's earlier
+conclusions are fallible leads. Reproduce consequential claims against selected
+pristine bytes and controlled execution before carrying them forward. Keep the
+full-retail mandate and separate implementation owners.
+
+The [save/startup contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+now separates the startup reader, normal menu load and writer, active settings,
+serializer, and campaign reset. Original-code controls establish read/write
+filename differences, menu forwarding into the next boot, binding/preset effects,
+active-language ownership and volume application. Six preserved language files
+also pass bounded original parsing and lookup. File/heap/device boundaries
+remain explicit; these results do not establish complete retail startup.
+
+The audio reset/bank controls resolve caller ordering, init-return admission,
+shutdown versus Stop, Level 100 music restoration and early path caching that
+can suppress a same-path retry after a failed or skipped bank load. Actual
+platform services, lifetime effects and playback remain open; the direct sample
+decode/quality path now has the bounded original-code evidence below.
+
+Fifteen native Load/Save/reinitialize/Load/Save cases now include direct handoff
+of the first serializer buffer. Both gold controls preserve all 10,004 bytes;
+private derivatives distinguish progress-flag writes, counter normalization,
+preset restoration and preservation-mode volumes. Linux generated-copy readback
+is checked; retail file publication and full process restart are not. The
+intervening career static initializer must not be confused with Blank.
+
+Seventeen extended startup cases now execute Blank's original Goodie
+recomputation with descriptor initialization. The final canonical reset has nine
+instruction-state Goodies, no unlocked entries, preserved settings and unused
+record storage. This closes the former Goodie hook for the reset route, not the
+complete unlock table or its UI. Exact commands, artifacts and limits belong in
+[VALIDATION.md](VALIDATION.md#original-load-save-and-reload-controls--september-20).
+
+Nonnull language cleanup now executes the original outer/nested menu teardown,
+list recycling, resource decrements and monitored-pointer clearing. Composed
+SetLanguage calls retain old text throughout teardown, clear the outer owner,
+then replace the active buffer; repeat selection copies again. Heap operations
+and optional child destruction remain explicit boundaries. The
+[cleanup contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md#nonnull-cleanup-before-text-replacement)
+and [saved controls](VALIDATION.md#original-nonnull-language-cleanup--september-22)
+record exactly what this establishes.
+
+Direct sample controls now execute the original cached reader, buffer factory,
+ADPCM decoder and quality converter with two real English-bank records. They
+expose different rounding in requested versus written sizes, and distinguish
+returning a sample object from successfully decoding it. The current materializer's
+pure decoder matches both complete high-quality PCM outputs. This does not
+establish all-bank loading, real device outcomes or playback; see the
+[sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality).
+
+The outer caller now has original-code reuse/list/name-copy controls, including
+insertion despite a supplied device-create failure. Its filename-route stub and
+working buffer loader contradict inherited semantic labels; the
+[caller contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+records the evidence; the [four-function Ghidra correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+now preserves it in the working database with unchanged types and storage.
+Original destruction now has 23 standalone controls and 11 composed failed-load
+controls. A zero payload read removes a reused sample; old storage and sample
+buffers are released once, while failed fresh creation preserves existing samples
+and events. Heap reclamation, device lifetime and mutating callbacks remain
+intercepted. Original bank loading, file Open/refill/Close and decoding now pass
+11 cases: all 164 English samples, reload identity/duplication, quality changes,
+tag/trailer admission and supplied device failures. The materializer's pure
+decoder matches every complete high-quality output. The
+[bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+separates parser, publication and device success. Nine subsequent original
+Load/Save/reload controls expose a routing distinction: changing language and an
+audio word together preserves the cached old bank path, while language-only
+refresh replaces it. The same serialized result fixes the path on the next Load.
+Device Init and the final bank entry remain explicit boundaries in this paired
+control. Separate original Init controls now establish device-index normalization,
+capability-derived state, enumeration and failure cleanup under supplied API
+responses. Ten original outer-manager controls now establish pool/registration
+setup, timer sampling and the caller-owned initialized byte: failed device Init
+clears that byte without undoing setup. SFX parsing remains a boundary. Eight
+composed Load/reset/Init/Save controls now prove that device-index normalization
+can persist even when subsequent device creation fails; zero admitted devices
+instead preserves the saved index. Failed reset retains the initialized flag,
+allowing the second Load to request a language-bank refresh with null device
+pointers. Separate original-bank controls now reproduce a null-device dereference
+before the sample factory's COM error check; a valid zero-count bank avoids it.
+Next connect this bank dependency to the composed route without replacing the
+failed manager state, and retain the full startup/save compatibility objective.
+Actual device/playback and cold-start acceptance remain open. The
+[coupled contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
+and [device/save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
+record the exact prior state and limits.
+Keep original-code evidence distinct from decoder self-tests,
+retail file durability and player acceptance. The retained AppCore sensitivity
+clamp and display-mode naming discrepancy are implementation-consumer findings;
+this RE task does not own those production changes.
+
+Preserve the aircraft/weapon continuation: pool initialization precedes logger
+resets after parsing; arbitrary warning state, enabled-logger callbacks and
+complete-shot RNG remain unresolved. A read-only frontend review identified
+`00459810` as a card-selection setter and `00465f10` as the outer frontend
+constructor; their saved metadata still needs the scoped byte-backed correction
+workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
 
 ### Remote checkpoint integrated on Linux — September 12
 
@@ -234,26 +365,30 @@ The September 6 mostly idle native session passed both expected hashes across
 two replays. Recording now works; a substantial player-input tutorial recording
 and its workflow acceptance remain open.
 
-### P10 — Godot toolkit companion — FIRST WORKFLOW IN PROGRESS
+### P10 — Godot toolkit companion — NATIVE SAVE LAB IMPLEMENTED
 
-David replaced the WinUI 3 lane with a Godot companion for Linux and Windows on
-September 6. Retain the existing WinUI/AppCore source and tests as migration material;
-the merged v1.0.12 source cut and its open Windows acceptance are historical status,
-not a queued WinUI release. [README.RELEASE.md](README.RELEASE.md) retains that artifact's
-procedure. The active phase begins with the portable AppCore-backed Save Lab workflow.
+The September 19 companion lane uses Godot 4.8 dev6 .NET and native GDScript
+for editable scenes, save inspection/planning, comparison and media metadata.
+Linux headless execution now covers open → explicit preview → separate verified
+copy → reopen through the actual scene and in-process C# file adapter. Byte-identical career
+recovery copies and read-only comparisons are native workflows. See the
+[companion goal/acceptance](companion/OnslaughtToolkit.Godot/README.md#migration-goal-and-acceptance)
+and [executed evidence](CURRENT_CAPABILITIES.md#godot-save-lab--first-workflow).
 
-The companion's product direction is a focused cross-platform front door:
-locate retail data, launch the rebuild, manage careers and recovery copies, and
-explain optional patches before applying them. Finish useful end-to-end workflows
-before migrating secondary catalogs or maintainer UI. Reuse one AppCore
-implementation of file safety and save correctness. Windows and Linux packaging
-are both targets; Linux checks do not establish Windows runtime acceptance.
+GDScript lacks the required OS file identity/no-clobber primitives. David clarified
+that necessary C# should run inside Godot's .NET edition. The thin adapter links
+existing file safety unchanged, with GDScript owning save semantics and presentation.
+There is no production helper process. Unsupported protection fails closed.
+WinUI/AppCore and the old C# scene script remain reference material. The legacy
+[Windows release procedure](README.RELEASE.md) remains historical, not a release task.
 
-Convert the companion while preserving careers,
-saves, safe copies, patching, media and related toolkit capabilities. Acceptance:
-usable Godot workflows validated on Linux and Windows, preserved unknown save bytes
-and guarded writes, and current capability/provenance documentation. The shared engine
-does not collapse the companion and retail-parity rebuild into one outcome.
+Remaining coherent increments are broader career/options editing, whole-game
+safe-copy/rescue, catalog-backed patch preview/apply/restore, media playback and
+replacement, lore and asset views. Keep MIT application, GPL rebuild and private
+retail data separate. No unrelated launcher/store/community expansion is planned.
+Windows cross-export/package checks do not establish Windows execution; actual
+Windows acceptance and human desktop interaction remain open. The companion lane
+does not own retail RE/Ghidra contracts or the faithful rebuild's Godot migration.
 
 ### P11 — CLI parity — OPEN
 

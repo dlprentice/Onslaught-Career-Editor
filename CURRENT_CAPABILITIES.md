@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (native rebuild Pulse impact and destruction scenes, frontend and world-frame orchestration; existing RE and companion evidence retains its stated limits).
+Last updated: 2026-09-23 (native rebuild Pulse impact and destruction scenes, frontend and world-frame orchestration; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -20,28 +20,185 @@ re-measure before relying on one. Superseded correction narratives remain in
 Git and their dated evidence owners; they are not current operating instructions.
 
 The active preservation app is the Godot companion; retained WinUI source supplies
-migration material and AppCore owns shared file correctness. Full retail RE,
+migration material. The native companion owns GDScript save behavior and links
+existing AppCore file-safety source through its in-process C# adapter. Full retail RE,
 the 1:1 Godot rebuild and the Godot toolkit companion remain
 coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
+## Dedicated retail RE — save, settings and startup
+
+The [current compatibility recheck](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+executes selected unchanged retail bodies with preserved inputs and explicit
+OS/heap/device boundaries. It establishes startup read versus write filenames,
+campaign reset after settings load, menu-load forwarding to the next startup,
+binding/preset serialization effects and the active language field written by the serializer.
+
+The September 20 language extension passes 19 parser/cached-read/copy cases,
+then 17 lookup-composition cases. All 2,571 IDs in each of six preserved language
+files resolve through original text/audio-name/adjacent lookup code; pool bounds,
+termination and offline decoding pass. Actual file Open and allocation remain
+intercepted, and lookup imports captured state explicitly. These results do not
+establish full startup, audio playback, localized rendering, durable save round
+trips or reconstruction acceptance. The subsequent audio-volume recheck adds
+25 focused scenarios at two x87 precisions and 16 composed loader/setter/save
+cases, retaining original sound-event updates with explicit device boundaries.
+The next 26 reset/restoration and 22 language-bank controls resolve caller
+ordering and a cached-path retry limitation: a failed Open or skipped load can
+suppress the next identical request. Actual devices, lifetime services and bank
+file opening remain intercepted.
+
+The subsequent 15 native reload cases feed original Save output directly into
+original Load. Both gold controls preserve all 10,004 bytes, including unknown
+fields; named derivatives distinguish flag writes, normalization and preserved
+live settings. Private generated-copy fsync/readback succeeds on Linux. A further
+17 startup cases execute original Blank and its full reset-time Goodie call:
+exactly nine entries finish in instruction state, with no unlocked Goodies.
+These results do not establish retail writer durability, complete process startup,
+every unlock rule or player parity. Direct sample decoding is bounded separately below.
+See [executed checks](VALIDATION.md#original-load-save-and-reload-controls--september-20).
+
+The September 22 extension passes 26 original nonnull-cleanup and language-change
+controls. Existing menu destruction, list recycling, resource counts and monitored
+references are checked before the active text changes. A conditional input-state
+write is verified at its corrected address. Heap operations and optional child
+destruction are intercepted; authored objects do not establish complete menu
+construction, input-device effects or visible localization. See the
+[bounded cleanup contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md#nonnull-cleanup-before-text-replacement).
+
+The subsequent **44 sample controls** execute original cached reading, buffer
+creation, decoding and quality conversion with intercepted heap/device services.
+Two real English-bank records decode at all three normal quality values. One
+reproduces a one-byte excess at quality 1 and a one-byte unwritten tail at quality
+2 relative to the requested sizes. The current materializer's pure decoder matches
+both complete quality-0 outputs. These are controlled-memory results, not real
+device overflow, audible behavior, whole-bank loading or full startup acceptance.
+See the [sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
+and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversion--september-22).
+
+A further 25 original caller controls resolve sample reuse, list insertion,
+name truncation and suffix selection. They distinguish a filename-route stub
+from the working buffer loader, correcting the meaning implied by inherited
+names. The [four-function metadata correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+is now saved, independently read back and protected by restored Archive A recovery;
+all types, storage and unrelated functions are unchanged. A sample
+can be inserted after a supplied device-creation failure, so list presence alone
+does not establish playable audio. See the
+[outer sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration).
+
+Original sample destruction now passes **23 standalone cases** and **11 cases
+composed with the caller and loader**. A zero payload read removes a reused
+sample from the canonical list, detaches matching events, conditionally stops
+their channels and requests each old resource release once. Failed fresh creation
+preserves existing samples and events. An initially null primary channel leaves
+its secondary slot untouched.
+These are guarded ownership observations with heap/COM/callback boundaries;
+they do not establish real reclamation, playback or complete startup. See the
+[destruction contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
+and [executed checks](VALIDATION.md#original-sample-destruction-and-failed-loads--september-22).
+
+Complete original bank/Open/refill/Close/sample decoding now passes **11 cases /
+184 sample attempts**. All 164 English-bank high-quality PCM outputs also match
+the current materializer's pure decoder: **21,537,072 bytes** compared. Reuse
+preserves sample identities and list positions; disabling it prepends duplicates.
+Supplied Create/Lock failures leave a published sample without playable PCM while
+later records continue. Changed tags and a parser-unconsumed trailer are admitted;
+zero/negative counts skip samples. These are original-code observations with
+supplied filesystem/heap/COM boundaries, not real playback or complete startup.
+See the [bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+and [executed checks](VALIDATION.md#original-complete-bank-loading-and-reloads--september-22).
+
+Nine paired settings controls now connect original Load, reset/language refresh,
+Save and direct-buffer reload. With a cached French path, applying English plus
+an audio-word change presents that old path to the bank loader, although both
+serialized outputs exactly match the English gold fixture. The second Load
+corrects the path. Device Init and bank loading remain intercepted in this
+composition; these results do not demonstrate audible wrong-language playback
+or a cold-start defect. See the
+[coupled routing contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing).
+
+Separate original device Init/enumeration controls now pass **29 cases**. They
+establish conditional index normalization, exact primary formats, capability-derived
+method/count values and failure cleanup. An oversized device index becomes zero;
+a negative index survives. Failed GetCaps can still lead to successful Init, with
+different retained/defaulted state. These are isolated instruction observations
+with supplied device responses, not actual audio-device or Load/Save integration
+acceptance. See the
+[device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization).
+
+Ten further controls execute original outer sound-manager setup and device Init
+together. They verify all 256 pool objects, menu/console registration, timer
+sampling and the initialized-byte distinction. Device failure clears that byte
+but retains the preceding setup; matching console names reuse their entries.
+SFX parsing and platform effects remain supplied boundaries. This does not
+execute the full startup chain. See the
+[outer initialization contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
+
+Eight subsequent controls compose original device Init into Load/reset/Save and
+reload. An out-of-range saved device index becomes zero when devices are admitted,
+even if main-device creation later fails; no admitted devices leaves the saved
+index unchanged. Both serializers preserve every other byte of the declared
+fixture/derivatives. Failed reset keeps the initialized flag set, so a subsequent
+load can request a language-bank refresh despite null device pointers. The bank
+entry remains intercepted; this does not establish recovery or audible playback.
+See the [device/save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save).
+
+Separate controls of the original bank code reproduce a null-device dereference
+in the first sample's factory before its COM error check. A supplied valid device
+completes the same records; a zero-count bank bypasses sample creation. This is
+isolated original-code evidence, not an observed installed-game/Proton crash or
+a single executed failed-Load-to-bank chain. See the
+[missing-device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device).
+
 ## Godot Save Lab — first workflow
 
-The MIT [Godot companion](companion/OnslaughtToolkit.Godot/README.md) opens a real
-`.bes`, explains its current values and offers one kill-category edit to a new
-copy. `SaveLabService` preserves size, packed high bits and every unselected byte;
-it verifies the original and published output. Existing outputs, source changes,
-path aliases and no-op edits are refused. The UI reopens the published copy.
-Linux publication uses held directory/file descriptors and create-new linking;
-the Windows branch reuses the existing guarded mutation owner.
+The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) now uses native
+typed GDScript and **Godot 4.8.dev6.mono.official.8898c2b3d**. Its main scene,
+category-row scene, media scene and theme are editable in the Godot editor.
+It opens a protected real-career snapshot, explains identity/known/unknown data,
+previews explicitly selected counts, and writes/reopens a separate verified copy.
+Unchanged recovery copies and full byte comparison are also implemented. The
+read-only media browser inventories an explicitly selected local folder with
+bounded traversal, link skipping and partial-result reporting; it does not play media.
 
-The Linux default gate passed **24/24** AppCore Save Lab/gate tests and **14/14**
-fake-tool launcher tests. The Godot project builds with the installed 4.7.2 .NET
-engine. Its native shell and file dialog opened on September 6. **A complete
-open → edit → write → reopen flow through the visible UI is still unverified**;
-the desktop became unavailable before that check. No Windows runtime acceptance
-or broader companion feature parity is implied. Local evidence is under
-`local-data/companion/native-20260906/` and
-`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+David clarified that necessary C# should run inside Godot's .NET edition. The
+thin [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
+adapter links existing safety source unchanged. Save decoding, edit planning,
+byte comparison and UI remain GDScript. There is no helper process, JSON protocol,
+C# save codec or unchecked write fallback. Normal Godot .NET exports bundle their
+runtime. Linux publication retains
+no-follow handles, physical identities, unnamed staging and no-clobber linking.
+Malformed/changed inputs and conflicting outputs are refused; uncertain publication
+never becomes a success receipt or an automatic deletion.
+
+**September 19 executed .NET integration evidence:** `npm test` passed the
+GDScript byte suite, actual scene/control workflow, protected round trip,
+independently checked selected edits, reopen/comparison and media checks.
+Direct adapter tests cover malformed arguments, same-byte physical replacement,
+source changes, link aliases, conflicting destinations and game-tree refusal.
+Unavailable adapters and invalid managed results fail closed. All six unchanged
+transaction race/failure cases and all **12** companion tooling cases passed.
+Receipts are in canonical `local-data/companion/godot-dotnet-test-1rg3gl2k/`.
+The original worktree's C# build, headless .NET editor import and editor
+`--build-solutions` also passed:
+`local-data/companion/mono-source-editor-ps1m7phv/`.
+The exported .NET Linux app passed actual file-dialog and button input on an
+isolated Xvfb display: open, preview, publish, verified reopen, destination
+conflict refusal, unchanged recovery and open verified result. Independent byte
+comparison confirmed exactly three selected bytes changed and all 10,004 original
+and recovery bytes matched the fixture. Its managed runtime loaded from its own
+package with an empty executable search path. Receipts and own-display captures:
+`local-data/companion/dotnet-export-acceptance-d394_btv/`.
+The standard-engine/helper prototype and its earlier rendered/exported checks
+remain dated predecessor evidence in [VALIDATION.md](VALIDATION.md#native-companion-migration--september-19).
+
+The .NET Linux/Windows packages are in canonical
+`local-data/companion/godot-dotnet-export-ph2r7cmk/packages/`.
+Windows cross-export and package inspection are recorded in the companion
+[validation section](VALIDATION.md#companion-net-integration--september-19).
+**Windows execution and human click-through acceptance remain pending.**
+Broader options/rank/Goodie writes, whole-game safe-copy/rescue, patching,
+playback/replacement, lore and asset workflows remain migration work; no legacy
+feature parity or retail gameplay acceptance is implied.
 
 ## Existing WinUI toolkit — migration material
 

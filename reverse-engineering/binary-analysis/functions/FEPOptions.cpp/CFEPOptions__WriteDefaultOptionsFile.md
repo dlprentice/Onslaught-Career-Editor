@@ -1,22 +1,31 @@
 # CFEPOptions__WriteDefaultOptionsFile
 
+> Address: 0x0051f680 | Source counterpart absent from the pinned partial checkout
+
+Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Status: active bounded retail writer contract; older caller receipts remain separate
+Summary: fixed output filename and unchecked write/close results, independently rechecked against original code.
+Source File: `FEPOptions.cpp` is absent from the pinned partial source; no source-body equivalence claimed | Binary: pristine `BEA.exe.original.backup`.
+
+Last updated: 2026-09-19
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x004d2580` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
-> Address: 0x0051f680 | Source: `references/Onslaught/FEPOptions.cpp`
 
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes
-- **Verified vs Source:** Behavior-level verified (2026-02-23) from decompile + callsite/xref checks.
+- **Source comparison:** `references/Onslaught/FEPOptions.cpp` is absent; the earlier source-verification claim is withdrawn. The complete retail body is the authority here.
 
 ## Purpose
 Low-level helper that writes a serialized options/career buffer to `defaultoptions.bea`.
 
 ## Signature
 ```c
-// Binary calling convention: __cdecl, returns void, pops 8 bytes (2 args)
+// Binary calling convention: __cdecl, returns void; caller cleans up 8 bytes
 void CFEPOptions__WriteDefaultOptionsFile(void * data, int size);
 ```
 
@@ -28,9 +37,20 @@ void CFEPOptions__WriteDefaultOptionsFile(void * data, int size);
    - `fwrite(data, size, 1, file)`
    - `fclose(file)`
 3. If open fails:
-   - emits console message `"Couldn't write defaultoptions"` via `CConsole__Printf`.
+   - passes a diagnostic message `"Couldn't write defaultoptions"` via `CDebugLog__Printf`.
 
-No internal allocation or serialization happens here; caller owns `data` and `size`.
+The path is the literal at `0063fc74`, not CLI-writable buffer `0063db18`.
+`-defaultoptionsname` redirects the boot read, not this write. Both `fwrite`
+and `fclose` return values are ignored. The complete body returns with plain
+`RET`, not `RET 8`. No internal allocation or serialization happens here;
+caller owns `data` and `size`.
+
+The September 19 [controls](../../save-options-static-review-2026-05-26.md#september-19-independent-recheck)
+execute this original body with intercepted file functions under success,
+open-failure, short-write and close-error conditions. Its call is separately
+made by the driver after startup returns; these tests do not show that WinMain
+saves automatically or establish actual durable publication. The caller chains
+below remain static/dated evidence, not newly executed menu paths.
 
 ## Call Chains and Side Effects (Verified)
 

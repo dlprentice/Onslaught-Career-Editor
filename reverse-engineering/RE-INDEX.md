@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-12 (working-state routing and structural audit)
+Last updated: 2026-09-20 (composed loader/preset/language contracts; current Ghidra routing retained)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -694,7 +694,8 @@ Current local boundaries that materially change the discovery lane:
   native registry, and the 72-index coverage join. It finds 726 source `Print`
   calls, 783 compiled calls, 9,382 source native calls using 110 names, and 9,236
   compiled native calls using 108 names. The pristine binary has exactly 380
-  direct calls to `CConsole__Printf`: 253 use the dormant-debug receiver and 127
+  direct calls to the historically labeled `CConsole__Printf` (now
+  [`CDebugLog__Printf`](binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)): 253 use the dormant-debug receiver and 127
   use setup history; Ghidra maps 377, leaving call sites `0x004F22FA`,
   `0x005351F0`, and `0x00536BA9` residual-owned. The older 329-call W* export
   subset is not the binary denominator. Census membership does not prove that a
@@ -955,6 +956,7 @@ correction before acting on either.
 
 | Document | Anchor, and how far the claim reaches |
 | --- | --- |
+| [CLI defaults and complete parser](binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md) | September 19: initializer ownership corrected from Unit AI to CLIParams; four defaulting controls, 47 isolated original-parser cases and the 25-option static map. Separates developer, autoconfig/cheat-query and frontend override fields; pins parser/pool/logger ordering. OS/printf calls are intercepted; no trace-request consumer or later developer-selector writer identified. Actual startup and downstream acceptance remain open. |
 | [Windowed mode](binary-analysis/windowed-mode-analysis.md) | **Partially superseded 2026-07-28, and the withdrawn half is the half people used.** `-forcewindowed` is real and reachable, but its parser gate `DAT_00662f3e` is **BSS — zero at load** and is set only by `-testeur` appearing *earlier on the same command line*. The old "normalize the guard byte in a hex editor" recipe was false: there is no file byte to edit. The two-gate model and the startup-flow patch at file offset `0x12A644` stand. |
 | [Extra-graphics feature gate](binary-analysis/extra-graphics-feature-gate-patch.md) | `GEFORCE_FX_POWER` registers with default `0`; `0x004CDD40`, `6A 00` → `6A 01`. Carries the companion row that ignores `cardid.txt` vendor/device matching. |
 | [Version overlay](binary-analysis/version-overlay-patch.md) | The opt-in `V1.00 - PATCHED` marker as a **pair**: a visible pointer row plus a hidden cave-string payload row. One bounded copied-game title/menu run confirmed the marker; no broader overlay or parity claim. |
@@ -1041,7 +1043,7 @@ asserted here — where that table still names the 05-26 document, so does this 
 
 | Slice | Standing |
 | --- | --- |
-| [Save and options](binary-analysis/save-options-static-review-2026-05-26.md) | **Still current.** The cited owner for options and control bindings, and the contract behind the save/options persistence chains. |
+| [Save, options and startup](binary-analysis/save-options-static-review-2026-05-26.md) | September 19–20 independent recheck: original startup/serialization and menu-to-startup handoff distinguish live from next-boot settings. Direct presets and 19 composed loader cases establish binding replacement and same-process metadata effects. Sixteen composed language cases distinguish the requested selector from the active header serialized by Save. Real language loading, audio and complete real-file compatibility remain open; older evidence is identified separately. |
 | [Audio, media, cutscene](binary-analysis/audio-media-cutscene-static-review-2026-05-26.md) | **Still the cited owner** for audio, media, cutscenes, and camera. The wave counts inside it are snapshots. |
 | [Frontend, input, game loop](binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md) | Superseded for frontend/HUD by [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md). Its companion proof-plan file no longer exists in the tree; the 2026-07-28 correction inside it gives the `git show` needed to recover it. |
 | [Unit / BattleEngine gameplay](binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md) | Superseded by [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) (2026-07-16). |

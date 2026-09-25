@@ -1,5 +1,16 @@
 # ScriptEventNB.cpp - Function Mappings
 
+Source File: retained MissionScript/ScriptEventNB.cpp mapping | Binary: BEA.exe (superseded byte claims; current owners linked below)
+
+Status: retired evidence; current byte owners are linked below
+Last updated: 2026-09-19 (historical logger label identified)
+Summary: preserved script-event mapping history, superseded for current byte contracts.
+
+The retained `CConsole__Printf` label at `0x00441740` now resolves to
+`CDebugLog__Printf`; see [the current logger contract](string-helpers.md#debug-log-ownership-and-history--september-19).
+Its older table and pseudocode below remain historical evidence.
+<!-- ghidra-name-drift-accepted: 0x00441740 CConsole__Printf (2026-09-19) -->
+
 > **Superseded for current byte contracts (2026-08-17).** The active
 > byte-level maps are
 > [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) (register/post/handle,

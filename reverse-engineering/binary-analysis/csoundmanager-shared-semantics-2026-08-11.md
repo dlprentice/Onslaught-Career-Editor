@@ -1,22 +1,89 @@
 # `CSoundManager` shared audio-policy semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-08-11
-Evidence: SOURCE — pinned `SoundManager.cpp`/`.h` and Jeremy Longley's
-first-party GDC architecture deck; MEASURED — complete pristine retail bodies,
-object/list fields, constants, strings, call ordering, and thirty-four
-normalized-identical PC demo twins; UNKNOWN — live DirectSound timing, audible
-mix parity, and console implementation identity.
-Verdict: the production shared sound manager is recovered across initialization,
-sample/effect resolution, event allocation, spatial and volume policy, channel
-arbitration, fades, pitch, pause/stop, language banks, and device-loss recovery.
+Last updated: 2026-09-20
+Evidence: MEASURED — September 20 original volume/event/backend execution and fresh selected pristine instructions; earlier source/demo/deck analysis below is retained evidence, not rerun here.
+Verdict: saved master-volume application and bounded active-event updates are independently rechecked; reset, banks and audible behavior retain explicit limits.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
 
-## Result
+## September 20 independent volume/event recheck
+
+The selected executable is `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`
+with the retail hash above. The [audio controls](../../VALIDATION.md#original-audio-volume-controls--september-20)
+retain original `004e04c0`, camera getter `0046f2c0` and PC
+UpdateSound `00517ae0`. The setter stores the raw float at manager
+`+0x20`, logs, writes career `00662aac`, then recalculates both
+`+0x64/+0x68` on every event reached from manager `+0x0c` through
+event `+0x74`. Nonplaying events also change.
+
+Event gain is `event[+0x20] * event[+0x1c]`. Type 1 uses manager
+`+0x24`; every other tested type uses `+0x28`. The predistance
+conversion multiplies gain, category, master volume and 127 before x87 integer
+conversion. The tracked conversion separately uses bounded
+`(50 - length(position.xyz)) * 100 * float32(0.02)` before integer
+conversion and further gain/category/master multiplication. Although the body
+calls GetCamera, it ignores the returned pointer. The tested camera-pointer
+change does not affect the result; this does not describe other spatial-update
+functions.
+
+Each converted signed integer is multiplied by 200 using 32-bit arithmetic,
+capped above at 10000, reduced by 10000, divided by two toward zero and capped
+below at -10000 before storage. Preserve that operation order and its
+rounding points; a generic normalized-volume curve is not this implementation.
+
+Only an event's nonzero **low playing byte** and nonnegative signed channel
+enter PC UpdateSound. A null buffer slot returns there. With the tested owned
+2D COM buffer, original UpdateSound submits the predistance field, transforming
+values below -4000 by `3*v+8000`. For example -4600 becomes -5800 at
+the intercepted device call. The supplied SetVolume failure result is ignored.
+Optional frequency updates use 44100/22050/11025 for selector 0/1/other, times
+event pitch, with x87 conversion. The stopped-status and 3D COM paths remain
+outside this execution cohort.
+
+The [composed loader check](../../VALIDATION.md#original-load-audio-and-save-composition--september-20)
+now runs these setters on an authored two-event list before the actual tail,
+preset, language-copy and Save operations. Live-setting preservation modes skip
+the setters/events. This is bounded native execution, not device opening,
+playback, reset, language-bank loading or a durable save round trip.
+
+## September 20 independent reset and bank recheck
+
+The [original reset controls](../../VALIDATION.md#original-audio-reset-and-music-restoration--september-20)
+and [bank controls](../../VALIDATION.md#original-language-bank-admission-and-retry--september-20)
+separate operations formerly grouped as sound reset. DeviceShutdown releases
+and clears both 64-slot arrays, then the device/wrapper. Bank reload instead
+calls the 64-slot buffer Stop path, ignores its supplied results and retains the
+pointers. Both controls use owned virtual objects, not an audio driver.
+
+Reload `004e2c50` checks the low initialized byte, obtains the active text
+header's language name, formats the path and compares it case-insensitively.
+An equal path leaves events, samples and buffers alone. A changed path is copied
+**before** active-event recycling, sample deletion or bank admission. The tested
+two-event list is moved to the free-list head in reversed traversal order.
+
+Original loader `00517d00` then skips for nonzero `00662dd4` or zero
+`0066307c`. Otherwise its Open boundary receives the canonical manager's cached
+path. A supplied zero return runs the real buffer destructor and returns without
+cache rollback. Repeated same-path calls therefore skip even after either gate
+is enabled; changing language retries. The cache proves a requested path, not a
+successfully loaded bank. These controls exclude successful file parsing.
+
+An alternate-receiver case uses distinct buffer objects and cache names:
+event/sample/cache operations use the selected receiver while Stop and bank load
+use the canonical manager. Shared authored event/sample nodes remain a lifetime
+limitation. Embedded trace sites call `0040c640`, a one-byte RET in this
+specimen; the experiment's intercepted trace records are not retail log output.
+
+Full bank/sample decoding, nonnull language cleanup, actual object destruction,
+device setup and audible behavior remain open. See the existing
+[save/settings contract](save-options-static-review-2026-05-26.md#original-audio-reset-and-language-bank-retry-behavior)
+for composition boundaries.
+
+## Retained August 11 static report
 
 These thirty-four functions cover 10,003 retail bytes and 3,359 decoded
 instructions. Every body has an independently linked demo twin with zero
@@ -154,8 +221,9 @@ full XAP record schema and decoder behavior remain open.
 
 ## Boundary
 
-This closes the shared PC retail/demo policy and its production architectural
-split. It does not prove DirectSound worker timing, the effect-file parser
+The retained report describes the shared PC retail/demo policy and architectural
+split. Its demo comparisons and other subsystem claims have not been independently
+rerun by the September 20 volume recheck. It does not prove DirectSound worker timing, the effect-file parser
 beyond observed consumers, XAP compression details, audible amplitude/pan,
 thread races, device-driver behavior, PS2/Xbox implementation equivalence, or
 rebuild parity. No executable, Ghidra project, or archived input is mutated.

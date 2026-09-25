@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (native Pulse impact and destruction scenes, world-frame and frontend orchestration).
+Last updated: 2026-09-23 (native Pulse impact and destruction scenes, world-frame and frontend orchestration; coupled settings routing and original sound initialization; 2026-09-19 native companion gates; earlier validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -9,9 +9,10 @@ Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
 
-Linux is the active development and native Godot host. `npm test` runs the
-supported Save Lab service/gate checks and both fake-tool launcher suites without
-opening a window. `npm run build` and `npm run dev` build/run the Godot companion.
+Linux is the active development and native Godot host. `npm test` runs the native
+GDScript Save Lab scene/domain, integrated C# adapter and publication-race checks, and
+companion launcher tests without opening a window. `npm run build` and
+`npm run dev` build/run the Godot .NET companion. The latter opens a window.
 The rebuild has native Linux build/run/smoke/capture commands; live input checks
 need an available desktop. Source and headless tests alone do not establish native
 input, audio, focus or full tutorial behavior.
@@ -33,14 +34,15 @@ are not replaced by the focused portable results below.
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
 | WinUI behavior or copy | On Windows, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
-| Save, options, copied-target, or patch safety | Save Lab changes use `test:save-lab`, including the real baseline, original/unselected-byte preservation and Linux publication guards. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
+| Native companion scenes, save domain and safety | `npm run test:companion-godot` uses owned real-save copies, actual scene controls, independent byte diffs, protected round trips, changed/conflicting sources, direct C# adapter and publication-race cases. `test:companion-tools` checks pins/staging/exports. |
+| Retained save, options, copied-target, or patch safety | `test:save-lab` retains the C# service oracle and existing safety tests. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | GDScript rebuild migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes/SHA-256, pause transitions and detached snapshots. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. The production pause scene has separate actual-scene checks described below. This is a bounded migration gate, not full simulation, performance or gameplay parity. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` and `build:rebuild-godot` build without a visible app. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` builds the small integrated C# assembly and checks GDScript; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
@@ -1877,6 +1879,33 @@ attempt hit its 180-second bound and was cleaned up; reducing capture resolution
 changed no driver inputs or simulation budget.
 Full startup-to-combat-completion and Windows execution remain unresolved.
 
+September 19 main integration independently rebuilt the combined companion and
+rebuild changes with zero warnings/errors. Launcher checks passed 12 shared-host
+and 20 rebuild cases; canonical asset reuse/routing passed 17 cases. The routing fixtures
+initially failed two expected-message assertions because their supposedly external
+scratch paths were inside the checkout; all 17 passed with private `/var/tmp`
+scratch, without changing the routing implementation or assertions.
+Headless production checks passed for world (23,877 assertions, including 13 new
+import ownership checks), HUD (44), pause (70), frontend and startup. The combined
+native companion gate also passed its scene/domain workflow, 17 file-bridge
+protocol cases and 12 launcher cases. The affected Client selection passed 24
+HUD-layout, pause and existing First Flight fingerprint tests. Documentation and
+public-payload checks passed with the pinned reference submodules present.
+These are execution checks on the merged sources, not a new retail or
+human-interaction acceptance claim.
+
+The merge review found and corrected a scene-import preservation defect: a valid
+older receipt did not prevent newly generated names from overwriting unlisted
+private files. The importer now plans and checks all destinations before saving
+and repeats ownership/hash checks at each save. Actual stale-receipt runs rejected
+both a late numbered-resource collision and an Aquila component-scene collision,
+leaving all 320 existing files byte-identical in each case. A successful
+regeneration preserved an unrelated noncolliding file. Commands, logs, before/after
+hashes and the bounded reproducer are retained under
+`.worktrees/main-integration-20260919/local-data/merge-checks/rebuild-11whx7zg/`;
+the reusable ownership checks live in `WorldSceneChecks.cs`. This protects the
+observed collisions; it is not a claim of an atomic multi-file import transaction.
+
 The retained Windows `test:winui` builds one WinUI solution, then runs selected
 AppCore contracts, UI tests excluding `WinUIRuntime`/`LegacyWpf`, and CLI tests.
 It is not the Linux default or a replacement for native acceptance.
@@ -2862,6 +2891,1706 @@ attachment and line-query findings to exact bytes and the freshly hashed physics
 records. [The Unit owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)
 records the consequences and remaining production work.
 
+### Weapon line-query arbitration — September 19
+
+`python local-data/test-runs/weapon-query-20260919-4al_wt70/query_arbitration.py`
+passed **53 scenarios / 106 original-code calls**, each scenario under PC24/RN
+(`007f`) and PC53/RN (`027f`). The selected pristine executable was freshly
+verified as 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The unchanged 1,256-byte query `[0050b030,0050b518)` hashes to
+`bca08a3dabe410117feccb3538fbce08599f791794f6654555b685781b39ac2d`.
+The array constructor `[004011b0,004011da)`, vector constructor
+`[00402d20,00402d23)` and iterator-node conversion `[00492c90,00492c94)`
+also execute unchanged at their retail addresses. All four bodies were compared
+against pristine bytes through the ELF's actual load mappings.
+
+The script creates a fresh private output directory on each invocation. The
+recorded successful stem is
+`local-data/test-runs/weapon-query-20260919-4al_wt70/run-njtb3uk6/query_arbitration`;
+the ELF, assembly, `.inputs.bin`, `.outputs.bin`, `.stderr.txt` and `.results.json`
+share it. The earlier 44- and 51-scenario outputs are preserved in sibling run
+directories. The first assembler attempt rejected macro operands before any
+original-code execution; its assembly remains in the parent directory.
+
+Independent read-only review reconciled all 106 saved binary records with the
+JSON, complete result words, input immutability and exact cross-kind traces,
+including stub values and retail return addresses. It separately parsed the PE
+and ELF load mappings; it did not rerun the experiment. The final result JSON is
+104,683 bytes, SHA-256
+`62f8ce270675ab79114ff7359d64e5afc9be57e95cd7039adbbdcb1f2ff3c9d1`.
+The same private parent owns `docs-final.log` and `safety-final.log` for the
+documentation and public-payload gates.
+
+Every call checks four output words, returned status, unchanged synthetic
+receiver/input bytes outside the output record, preserved nonvolatile registers
+and stack, restored SEH chain, retained control word, empty x87 stack and absence
+of invalid-operation/stack faults. FS checks cover normal return only, without
+exceptions or unwinding. Stub checks cover the passed line, terrain flag,
+iterator endpoints, translated broad centre and refined translation, plus ordered
+candidate visits and geometry/radius/refinement calls. Reversed order and paired
+boundary cases distinguish strict proxy admission from inclusive refined ties;
+other controls cover masks, exact collision low-bit equality, missing collision/
+child, negative proxy, the initial 99999 distance limit, refined-to-broad subhit
+replacement, and output-field retention on miss/terrain/early stop. A filtered
+candidate followed by an early-stop hit also checks iterator progress. The
+initial fixture's next-call expectation did not cover that combination; it was
+replaced with complete expected call sequences before adding the case.
+
+Terrain, candidate enumeration, collision/bounds lookup, radius, broad geometry
+and refined geometry are **supplied stubs**. The result establishes arbitration
+over those inputs. It does not validate the geometry, actual world enumeration,
+Weapon B's complete caller, nonfinite behavior, gameplay, Ghidra metadata or the
+rebuild implementation. The supplied integer-distance cases do not establish
+general PC24/PC53 equivalence. No desktop or production source was used.
+The [existing Unit/weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-line-query-arbitration-and-retained-result-fields)
+records the resulting contract and remaining questions.
+
+### Weapon aim point and native motion provider — September 19
+
+`python local-data/test-runs/weapon-aim-20260919-evgb1qwd/aim_endpoint.py`
+passed **21 scenarios / 42 endpoint calls**, covering PC24/RN and PC53/RN.
+The original Actor getter executes **38 times**; four prediction-disabled calls
+never request it. The pristine specimen was freshly rechecked against the
+2,506,752-byte / SHA-256 identity in the preceding query receipt.
+
+| Original range or constant | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `[0050a0e0,0050a286)` | 422 | `5b0316361a8f4c83df55ed3a827e6aed871a1876a23db88d8d00865c94d8da7f` |
+| `[00404120,00404144)` | 36 | `34f806584d1baf2f03b3711999a46c4afc77dfab5a8a4cb760f60bb0387cb1e5` |
+| Float 20 at `005d857c` | 4 | `8502957747a29907927566be940a9b39fee0a15dd471ba428eb9eedd15aa80e7` |
+
+Final saved stem:
+`local-data/test-runs/weapon-aim-20260919-evgb1qwd/run-gpiwaker/aim_endpoint`.
+The ELF, assembly, `.inputs.bin`, `.outputs.bin`, `.stderr.txt` and `.results.json`
+share it. The prior run using a motion-copy stub remains in `run-1t02_gvq`.
+Each invocation creates a fresh output directory.
+
+The harness verifies original bytes in ELF load mappings, complete endpoint
+output, untouched input bytes, return pointer, nonvolatile registers, stack
+balance, control word, x87 stack and the specified exception flags. The motion
+shim invokes the unchanged getter and separately verifies its return pointer
+and copied fourth word. Recorded calls establish the supplied provider order
+and receivers. Independent read-only review parsed the PE and ELF separately,
+reconciled every saved record and used exact-rational PC24/PC53 rounding to
+check the arithmetic. It also reviewed the original-getter extension; endpoint
+outputs and statuses match the earlier supplied-motion experiment.
+
+The cancellation control gives output words `34000000/34000000/34000000`
+under PC24, versus `34000000/34000000/34200000` under PC53. Zero-speed controls
+deliberately test original masked exceptional arithmetic: nonzero distance
+divided by zero gives positive infinity with status `04`; subsequent zero
+motion gives indefinite NaN with status `05`; zero distance and zero speed
+give indefinite NaN with status `01`. Precision flag `20` is recorded but
+excluded from the lower-five-bit exception assertion.
+
+Attachment position/orientation and target point remain explicit stubs.
+The Actor receiver is synthetic. No real lifecycle, complete target/attachment
+provider, collision, Weapon B caller or gameplay runs. Other precision modes,
+rounding modes, denormals and unmasked faults remain untested. The
+[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
+separates these observations from the static dispatch and source-unit evidence.
+
+### Weapon B nonballistic caller composition — September 19
+
+`python local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/weapon_feasibility.py`
+passed **22 scenarios / 44 original Weapon B calls** under masked PC24/RN
+(`007f`) and PC53/RN (`027f`). The selected pristine executable was freshly
+verified against its 2,506,752-byte size and SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The endpoint and Actor-getter bodies retain the hashes in the preceding receipt.
+Additional unchanged bodies, verified in the ELF's actual load mappings:
+
+| Original range | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Weapon B `[005088b0,00509135)` | 2,181 | `3624bd4fc4565f5faa6e6b7e503a0ef5de93157a8f03574b527f597566d3fe99` |
+| Magnitude `[004026b0,004026d1)` | 33 | `7de765c91bae23f3bf44eb837806928b78cc76637b667101421546f141c3c4d4` |
+| Line copy `[004098e0,0040994f)` | 111 | `8196b18dc22fd421a8d9c2c426b44dba7c0d2d663d79075df73f78f1f35a4496` |
+
+The recorded successful stem is
+`local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/run-laerx66n/weapon_feasibility`.
+The ELF, assembly, `.driver.py`, `.cases.json`, `.input.bin`, `.output.bin`,
+`.stderr` and `.json` share it; each invocation owns a fresh run directory.
+The result JSON is 66,432 bytes, SHA-256
+`dd06c651772dcca7961e57467a4fb2a6ed49a369de165fe1d917f6e453a46627`.
+Initial disassembly used the existing system disassembler after the default
+Python environment lacked Capstone; no package or environment was changed.
+
+The original endpoint executes 42 times and the original Actor getter 40 times;
+two height-gate refusals stop before both, and two prediction-disabled controls
+skip the getter. A recording world-query stub receives 30 complete by-value
+lines and all eight subsequent arguments. Checks cover exact endpoint words,
+query arguments and initial result storage, Boolean return, call order and exact
+receiver/return-site tuples,
+unchanged 4-KiB synthetic object/input arenas, nonvolatile registers, stack,
+normal-return FS/SEH chain, retained control word and empty x87 stack.
+The displaced zero-speed/zero-motion cases retain invalid/divide-by-zero flags
+`05`; zero-distance prediction retains `01`, and direct-copy/height controls
+retain zero exception flags. No approximation substitutes for an executed
+trigonometric helper: unexpected math or skipped-branch calls exit with failure.
+The retained endpoint fourth word `51515151` is harness stack fill, not a retail
+constant or recovered value.
+
+Independent read-only review reconciled all 40 saved calls in the preceding
+20-case run (`run-sxbtfl7v`) with its inputs, JSON, assembled stubs and actual
+ELF load mappings. The final extension adds upper/lower bound refusals with seek
+enabled and makes the exact receiver/return-site oracle executable. Its ELF is
+byte-identical and the original 40 outcomes, exception words, endpoints and
+normalized traces are unchanged; `extension-comparison.json` records that check.
+The review did not rerun native code. All four added calls passed the same ABI,
+input-preservation and output checks.
+
+Paired controls establish inclusive zero-angle bounds, nonzero seek bypass,
+distinct same-allegiance Unit admission, null/non-Unit/wrong-allegiance refusal,
+target-type-dependent child mode and the difference between direct copying and
+prediction. The full original caller does not sanitize the predicted NaNs before
+the query stub. This does **not** execute the real query against those NaNs or
+show that ordinary authored gameplay supplies these inputs. Attachment/point
+providers, query results and all object state are controlled substitutes;
+finite-angle trig, ballistics, real collision, lifecycle and live combat remain
+outside this result. No Ghidra or rebuild implementation changed.
+The [weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-nonballistic-caller-composition)
+records the reconstruction implications.
+
+### Weapon B finite-angle composition — September 19
+
+The extended `weapon_feasibility.py` command above passed **49 scenarios / 152
+original caller executions**: the prior 22 scenarios under two precision modes,
+plus 27 finite scenarios under PC24/RN and PC53/RN with supplied CRT mode 0/1.
+The pristine specimen was rehashed to the same `74154bfa…7750` identity above.
+Original caller/endpoint/getter/magnitude/line-copy bytes retain their preceding
+pins. Added unmodified code, checked against actual ELF load mappings:
+
+| Original range | Bytes | SHA-256 |
+| --- | --- | --- |
+| Angle wrapper, alternate entry and core `[0055dcb0,0055dd7b)` | 203 | `750a2a1cfe8f3f3c052cdffe828c46fc37fcc3c6b52a4abc6f2b1caa7d65ba41` |
+| Error-record helper `[00561547,00561583)` | 60 | `e635df29a77e340ab58f4d27a5be9770760e0020bf076ccfc95172775a4c1eaf` |
+| Classifiers/control support `[005615a5,00561665)` | 192 | `0e63ae2de4858df9110b8f3e70a81987ad0bc29813de37dcb96d5abf0af98344` |
+| Masked-error helper `[005627ea,00562a01)` | 535 | `0036539cb836792003645031c3b392d943c9f26da34627ad0d453431ca8e1349` |
+| Error-kind dispatch `[00562a89,00562ab1)` | 40 | `f9b415ecff2961414c5c0888a3e02788d809f3678f2c7e5801911f8edb76f952` |
+| Control/status helpers `[00562c76,00562cef)` | 121 | `0b22f26a2c310176d25ac53de9dd73b4c892516c2676ef93c984dd7fce783ae2` |
+| CRT dispatcher `[00569cc1,00569d91)` | 208 | `c4475177497be476cdf6ecd75caa3a18fc35761c0abcc93513ec6e2391a2e268` |
+
+The original `asin` name literal at `00653310` and 80-bit pi/2 constant at
+`0065373a` are also mapped and pinned in the receipt. Original code handles
+finite interior and exact +/-1 inputs; selected exceptional/OS dependencies
+trap rather than supplying approximations. The global `009d08b4` is explicitly
+supplied and checked unchanged. Neither its runtime value nor the game's current
+floating-point mode is inferred from this experiment.
+
+Final stem:
+`local-data/test-runs/weapon-feasibility-20260919-v_2sqaqx/run-y3mf5pmc/weapon_feasibility`.
+Saved `.driver.py`, assembly, ELF, cases, input/output bytes, stderr and JSON
+remain together. JSON: **202,329 bytes**, SHA-256
+`d98a3ed85d68687a7948eebaa81cace30491888f93210f8259274fccb22101f5`.
+The earlier 124- and 136-call extensions remain separate receipts.
+
+Checks cover all input bytes, original body identities, exact provider call
+order/receivers, endpoints, query arguments/result initialization, return values,
+nonvolatile registers, stack, normal-return FS/SEH chain, x87 control/exception
+state and empty x87 stack. The final deflection is observed after return without
+patching the body; all 96 query calls agree with a second observation made before
+the query stub modifies its result. There are 150 endpoint and 48 Actor-getter
+executions. The prior 44 outcomes/status/endpoint/normalized call traces remain
+unchanged, and all 54 finite CRT-mode pairs agree; `extension-comparison.json`
+records that comparison.
+
+Independent arithmetic predictions were supplied before reviewing native output:
+signed/asymmetric bounds, horizontal reversal, nonunit normalization, identical-
+direction residuals, displacement stores and a precision-dependent tiny-angle
+boundary. The harness includes the separate arithmetic comparator for the
+selected final words. Original `FPATAN` still executes; the comparator is not a
+replacement or an assertion of general modern-library equivalence. The
+[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+records the derived implementation contract and measured discriminating cases.
+
+Subsequent read-only review independently reconciled all 152 saved binary
+records, all 17 original code/constant pins through ELF load mappings, and all
+14 stub/trap destinations. It checked the stack-relative angle observers and
+all 44 prior records, normalizing only the documented new observation/input
+fields and relocated harness/stack addresses. It also compared the finite
+results with its preceding arithmetic predictions. The reviewer did not rerun
+native code; this is an audit of retained execution evidence.
+
+This is finite nonballistic caller composition with controlled providers and
+query results. No production reconstruction code or Ghidra database changes in
+this experiment; real collision, special mount handling, ballistics, unmasked
+faults, other rounding modes and live combat remain unvalidated.
+
+### Shared math-error ABI — September 19
+
+`python local-data/test-runs/math-error-abi-20260919/math_error_abi.py`
+passed **eight isolated original-code calls**. The runner rehashed the pristine
+specimen and verified the unchanged 60-byte `[00561547,00561583)` body against
+its actual ELF load mapping and the pin in the finite-angle table above.
+Only its dispatcher at `00569cc1` is replaced with a declared recording/
+mutation stub, whose jump destination is also checked. No real CRT dispatcher
+or retail process executes in this experiment.
+
+Saved stem:
+`local-data/test-runs/math-error-abi-20260919/run-6h_ig7kz/math_error_abi`.
+The exact driver, assembly, ELF, command arguments, input/output bytes, cases,
+stderr and JSON are retained. JSON SHA-256:
+`193c33a2acdbd25be284239d87e0f047c453577fa31d341e01f146c7700d1cf2`;
+ELF SHA-256:
+`226be50179ae880688d34abe03d28895da1c4928586c540bcf0f038c376562f6`.
+
+The controls distinguish binary64 midpoint rounding, upward rounding, PC24
+storage behavior, post-dispatch result replacement, EAX-independent ST0 return,
+and the saved-`027f` restoration bypass. Assertions also cover all synthetic
+input bytes, every record field including untouched second-argument fill,
+the call's return address and pointer offsets, stack canaries, zero argument
+cleanup, nonvolatile registers and x87 stack depth. Independent read-only
+review reconciled all eight binary records and checked the ELF/stub mappings;
+it did not rerun native code. Numerical scope is positive inputs near this
+single boundary with supplied masked control words. The
+[function owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
+records the contract and its remaining limits.
+
+Three disposable Ghidra model projects and their scopes, commands, logs,
+exports and comparisons are retained under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/`.
+The two return-model experiments each change only `00561547`'s prototype and
+return/parameter records: all 8,329 other function rows, target locals, existing
+types, bookmarks, stack-depth exports and program metrics remain identical.
+The seven saved parameters become six explicit inputs, removing the hidden
+pointer. Separate read-only processes reproduce each model and all six C
+exports byte-for-byte; database files remain unchanged by those readbacks.
+
+The record experiment compares the untyped pointer, typed pointer and explicit
+local-record variants. The typed pointer alone already gives a complete record
+and visible result field in the C view. The helper's high P-code is identical
+across all three stages, including its call-dependent result and later reload.
+The reopened final variant changes only the dispatcher's record-parameter type,
+the declared helper locals and three added record/pointer types; all existing
+types and unrelated rows are unchanged. Its explicit-width `char *32` is an
+extra model type, not a required live addition. An explicit local rewrite is
+also unnecessary for the demonstrated improvement.
+
+No live Ghidra project, tracked checkpoint or production implementation changed
+for these experiments. The subsequent ABI-only promotion below adopts the
+physical carrier model; the record-type experiment remains unpromoted.
+Initial exploratory export/comparison failures
+were missing function ownership and comparison-format assumptions, not native
+execution failures; the retained successful readbacks and explicit comparisons
+own the results above.
+
+### Round renderer registry — September 19
+
+`python local-data/test-runs/round-render-registry-20260919/round_render_registry.py`
+passed **22 isolated original-code cases**. Six unchanged bodies, twelve
+file-backed strings, one PE zero-tail empty string and the controlled
+dependency trampolines were verified in the resulting ELF load mappings.
+The original constructors/default initializer produce the selected table;
+the harness supplies zeroed globals and the 47-record construction loop.
+Renderer allocation/Init are controlled stubs. No game, desktop, graphics
+context, actual renderer or Actor initializer runs.
+
+Default OID 4 yields no factory/Init calls, directly and through the common
+Round wrapper. OID 0 and a deliberately admitted OID 4 yield one of each;
+the latter's out-of-count control yields neither. Allocation failure yields
+one factory and zero Init calls. Controls also cover disabled entries,
+negative/zero global count, last-entry bounds, duplicate first-match, unused
+Init arguments and the malformed per-record counts 0/-1. Every case checks
+complete registry/receiver bytes, stack/nonvolatile preservation and owner
+forwarding; initialized objects link to the null prior head. The
+[Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission)
+records the interpretation and `DEC`/`JS` edge limitation.
+
+Saved stem:
+`local-data/test-runs/round-render-registry-20260919/run-ewi5pgxl/round_render_registry`.
+Its `.json` receipt SHA-256 is
+`e9efa780d57b2a60c6b8e7a475c23c9f7734f26e337ae88d1063186faae11e2a`;
+ELF SHA-256 is
+`1982c0ec40c09eff81c9de4d8c4cd46e6828ca138aae6ae2322ea47c2fff41f8`.
+The saved driver, assembly, exact build commands, input cases and raw output
+remain beside them. Independent read-only review parsed the PE/ELF mappings
+and all 22 saved outputs; it did not rerun the experiment.
+
+The separate command
+`python -B local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/round-render-registry/static_receipt.py`
+binds selected physics records, weapon-to-round references and all 166 shared
+return-4 pointer slots through RTTI. Its `static-receipt.json` SHA-256 is
+`44f11693cf446a54bd4a4ba4aadedd059894e4b3c82606efb703f49ca9df662c`.
+This establishes one renderer-admission boundary, not retail startup execution,
+an exhaustive projectile RNG count, full-combat acceptance or a campaign grade.
+
+The subsequent [two Ghidra cohorts](reverse-engineering/ghidra/README.md#renderer-arguments-and-shared-return-4-correction-2026-09-19)
+corrected the wrapper/registry arguments and the shared return-4 leaf's name.
+Each passed restored PRE, isolated dry/apply/separate readback, independent
+full comparison, live dry/apply/separate readback and independent POST restore.
+All nine live exports match the corresponding rehearsals byte-for-byte;
+the tracked checkpoint is unchanged. Exact commands, final sealed specs and
+recovery receipts are under the same private `round-render-registry/` owner.
+`python tools/ghidra_cohort_framework_tests.py` passed **92 tests** after the
+two live allowlist entries were generated; the base framework did not change.
+`python tools/re_function_doc_names_check.py --self-test` passed with the new
+one-row current-name overlay. Its intentional missing-table control emits
+`UNAVAILABLE`; that expected refusal is not an untested name projection.
+Documentation checks passed. The first public-payload check rejected the new
+encoded comments; all six were decoded and reviewed as analytic prose, then
+admitted by exact manifest hashes using the existing mechanism. Its unchanged
+mutation/path/secret refusal controls and the public-payload check passed.
+
+### Round collision initialization — September 19
+
+`python local-data/test-runs/round-collision-init-20260919/round_collision_init.py`
+passed **20 isolated original-code cases**. Six unchanged bodies cover Round
+collision Init, base/persistent Init, response, readiness event and the persistent
+mask filter. Every body and the original `0.05f` constant were checked against
+their executable ELF load mappings. The harness controls allocation, centre,
+radius, maximum speed, movement delta, shape selection, scan, geometry, event
+request and owner-Hit dependencies. It does not launch a game or open Ghidra.
+
+Selected delayed configuration reaches the controlled scan with flags `0x56`;
+its response is called but stops before geometry/Hits. Ready positive controls
+reach geometry and both ordered Hits. Event 2999 stays blocked; event 3000 and
+`0x12340bb8` restore readiness. Negative geometry, each ignore-pointer direction
+and each owner's dead flag distinguish their gates. The native persistent
+predicate admits peer type `02000000` for the selected Forseti mask and rejects
+it for Blaster; zero-type and Round-bit controls cover both masks. Radius is
+`1.75` during scan and `4.0` afterward, or `6.5` with controlled length `2.5`.
+These numeric inputs are synthetic controls, not retail observations.
+
+Saved stem:
+`local-data/test-runs/round-collision-init-20260919/run-_podygs2/round_collision_init`.
+The `.json` receipt SHA-256 is
+`dd3585729618177452d7e46c67cf634abd633a8aab24c3de8ca9113144c0e8d7`;
+ELF SHA-256 is
+`1dcd8bf138d8a0cd7c27333c5112b8edff5ea0f57bd80a74c505d251d5c88a43`.
+The driver, assembly, exact build commands, input cases and raw output remain
+beside it. Independent read-only review checked PE/ELF binding, all 20 saved
+outputs, callback ABI/order and protected storage; it did not rerun the code.
+Native helper padding at `+10/+20/+30` remains unconstrained.
+
+`python -B local-data/test-runs/round-collision-init-20260919/selected_static.py`
+separately rechecked the authored records and byte-bound factory/vtable chain.
+Its `selected-static-receipt.json` SHA-256 is
+`df835d4e0a7a96771c6f825bec2ba11da3132d6d7428cdf3deec3b4fdbf0fb79`.
+Blaster's nested type ID 3 reaches a getter returning 2; the Round prefix uses
+that result to add its extra exclusion bit. Both selected ordinary zero-radius
+Round definitions retain the default collision-readiness delay. The
+[collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+records the full contract and distinction between the native persistent
+predicate and concrete Round trajectory filter. The same static receipt and
+full bodies bind all five collision-component vtables and three distinct
+candidate-side filters; their paths for ordinary Round arguments reach no
+RNG or unresolved virtual call. This is static closure, separate from the
+20 native cases. Five compatible renderer tables additionally close the centre
+getters through four pointer-reading bodies, under the valid-object/resource
+preconditions recorded by the owner. The next section records the subsequent
+speed/queue investigation; it is not part of these 20 controls. Actual scanning, scheduler
+cadence, geometry/damage, full Round/Actor execution and total RNG consumption
+remain outside these controls; no campaign grade or parity assertion changes.
+
+### Projectile readiness queue and speed dependencies — September 19
+
+`python -B local-data/test-runs/round-collision-dependencies-20260919/readiness_queue.py`
+passed **23 isolated original-code cases**, using 18 unchanged scheduler,
+monitor/list, finite CRT floor/control-word and readiness-handler bodies.
+The executable's load mappings contain the exact pristine bytes and constants.
+Inputs are authored initialized manager/component/event/node storage. Only the
+16-byte monitor-list allocator and selected diagnostics have recording
+replacements; other allocation, resize and floating-point exception paths
+are guarded. Private Linux TLS supports the tested FS chain; this does not
+execute Windows exception handling or take desktop control.
+
+The controls cover delayed readiness, wrong/high-word IDs, priority 2, existing
+monitor storage, already-ready state, null/invalid/empty/over-limit refusals,
+relative-clock crossings, ring wrap, computed buckets and strict overflow time.
+They also expose a one-update admission difference between controlled x87
+PC24/PC64 at one exact float boundary, with neighboring-float controls, and a
+growth-disabled overflow failure that increments the count without publishing
+the event. The [scheduler owner](reverse-engineering/binary-analysis/functions/CEventManager.cpp.md#projectile-readiness-queue--september-19)
+records inputs, ordering, ownership and limits. Live scheduler precision was
+not measured and no reconstruction implementation changed.
+
+Accepted stem:
+`local-data/test-runs/round-collision-dependencies-20260919/queue-run-nmtsnc4k/readiness_queue`.
+Receipt SHA-256:
+`5cfaf280ce4b94aa8f8b04a0d6ded98dec61bc6e00bbb017f9171f70ba72704a`;
+ELF SHA-256:
+`54ee0feceb022b22335d0bf9edd22724661556ca759ff60371eae7179a4c40c8`.
+Saved driver/assembly/build commands and per-case inputs, outputs and stderr
+sit beside the combined receipt. The earlier 17-case run remains preserved
+under `queue-run-zyh47lht/`. Compiled guards check arguments/receiver, stack,
+nonvolatile registers, x87 state and private FS-chain restoration. The driver
+asserts the snapshot observations and complete component storage; independent
+read-only review additionally checks the saved full memory regions.
+
+`python -B local-data/test-runs/round-collision-dependencies-20260919/selected_dependencies.py`
+separately binds 62 compatible primary speed-provider tables, 14 targets, 43
+complete exported bodies and the constructor candidate absent from the
+function export. Its `selected-dependencies.json` SHA-256 is
+`a3accd11b68cba11959a68406149403a1152ed8eb95f34781afaa05258afc658`.
+The [collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+records the normal parent-assignment/type closure and unresolved global
+acyclicity. The same receipt binds scheduler allocation arguments, the explicit
+20,000-event count, allocator bodies and mutex imports. No Ghidra database was
+opened or changed for these findings; no full-shot RNG, retail session,
+campaign-grade or parity completion is claimed.
+
+### Debug-log ownership and initialization — September 19
+
+The [logger contract](reverse-engineering/binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)
+separates static control flow, isolated initialization/reset, and unresolved
+live file/heap state. All byte findings select pristine SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Private owner: `local-data/test-runs/round-logging-boundary-20260919/`.
+
+- `python -B <owner>/inspect.py`: pins nine complete contiguous bodies and
+  the explicitly identified three-range heap-body envelope. The envelope is
+  not a recovered complete contiguous function.
+- `python -B <owner>/literal_paths.py`: all **111** bytes of the two fixed
+  pool messages remain on the pristine formatter's literal path. Receipt
+  `literal-paths.json`, SHA-256
+  `392a9a557cca37800ce288e813d1cef9b1726f7e9b9b3752b6acf932ba854e92`.
+  This is static table/instruction analysis, not a retail execution.
+- `python -B <owner>/initializer_reset.py`: **24/24** original-code controls
+  passed. Accepted stem `initializer-run-ar33gbxm/initializer_reset`; receipt
+  `.json` SHA-256
+  `e2541be24011d1e9d03226d0e0246a0f4f8a535398b64d9b19083f518319f830`;
+  executable SHA-256
+  `59bc2ddb14c4086f5ce82e0f209841d5ba9aad38bc414885bb2ec21ceb323af1`.
+  The saved driver, assembly/link commands, actual load-byte comparison and
+  each input/output are retained beside it.
+
+The three complete bodies are `[004415b0,0044161a)`,
+`[00441630,0044169a)` and `[004416e0,0044172c)`. Authored adjacent logger
+objects and selector values exercise initial output-off/output-on, selectors
+0/1/2/`FFFFFFFF`, and initialized/1/7 flag states. A recording exit-registration
+hook is the only substituted dependency. Four full 5,120-byte snapshots per
+case distinguish each initialization, the authored pre-reset state and the
+reset result. The reset preserves the other logger, filename, vptr,
+first-attempt flag, text interiors and guards; nonvolatile registers and stack
+sentinels also pass. Independent read-only review reconstructed those exact
+writes from the saved bytes and outputs; it did not rerun the experiment.
+
+The function names and corrected comments belong to the separate
+[five-row Ghidra cohort](reverse-engineering/ghidra/README.md#debug-log-metadata--september-19).
+The warning-specific disabled route does not establish arbitrary-format
+safety. Enabled file logging may reach a CRT allocation-failure handler before
+a successful retry. Actual enable, locale, heap mode, retry/handler state,
+startup/parser execution, file I/O, rendering and complete-shot RNG remain
+outside these results. No desktop or game session was used.
+
+### CLI initialization and parser ownership — September 19
+
+`python local-data/test-runs/cli-startup-20260919/inspect.py` pinned the complete
+initializer, startup wrapper, parser and WinMain bodies against pristine
+`74154bfa…7750`. The complete parser review identified 25 comparisons and their
+direct actions; `parser-static.json` binds the literals and five complete
+helper bodies. This was static review, not execution of all options.
+
+`python local-data/test-runs/cli-startup-20260919/initializer_control.py`
+passed **4/4** original-code cases: zeroed/poisoned receiver memory crossed
+with the external `0066e94e` byte at `0/1`. Accepted stem:
+`local-data/test-runs/cli-startup-20260919/initializer-run-48y5v5ma/cli_defaults`.
+Its receipt SHA-256 is
+`917010a27b097282015b3b71821cebece4099fe47d091f2b41f5fea4655422a6`;
+the actual ELF SHA-256 is
+`8fde3fcd2aa5ccf3dd177c1ade38bcccce622edf068f50faa847c12a624a7cfc`.
+All 459 original body bytes and 26 literal-range bytes remain unchanged at
+their original addresses. Each case compares a full 864-byte guarded
+postimage, returned receiver, stack/nonvolatile registers and external-byte
+preservation. No dependency stubs are needed: this body makes no calls.
+An independent reviewer reconstructed all outputs from the saved instructions;
+that review did not rerun them. Static disassembly commands are retained in the
+private body receipts.
+
+The [one-row Ghidra correction](reverse-engineering/ghidra/README.md#cli-initializer-ownership--september-19)
+passed fresh PRE equality/restore-open, isolated dry/apply/separate readback,
+independent exact-cohort review, live dry/apply/separate readback and independent
+Archive A POST restore-open. Exactly one name, nonrepeatable comment and tag
+set changes; all 8,330 other functions, every ABI/variable/type/stack record
+and program structure stay unchanged. Only the comment digest moves among
+program metrics; all nine live exports equal rehearsal. The initial unsupported
+`dry-run` mode refused before writes and the replica stayed unchanged; corrected
+`dry` passed. Stale-comment and name-collision controls both refused before
+writes. The final spec seals the measured rehearsal; no second sealed rehearsal
+is claimed.
+
+`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**;
+`python tools/re_function_doc_names_check.py --self-test` passed.
+Commands, logs, comparisons, refusals and recovery receipts are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-initializer-ownership/`.
+`compare_exports.py rehearsal-post` and `compare_exports.py live-post` compare
+the complete exports. The [parser owner](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+records the source/retail distinctions and unresolved consumers. No full parser,
+retail startup, later selector values, file I/O, desktop or gameplay acceptance
+was exercised.
+
+### Original parser and startup selectors — September 19
+
+`python local-data/test-runs/cli-startup-20260919/parser_control.py` passed
+**47 isolated original-code cases**, retaining the complete parser, initializer,
+native ASCII scanner and helper bodies at original addresses. Accepted stem:
+`local-data/test-runs/cli-startup-20260919/parser-run-m20ei0zy/cli_parser`.
+Receipt SHA-256 `e6dca9f618862716ac0c129f151335938b3d81e8e72e441146a4a499173a1296`;
+ELF SHA-256 `9d785de30b3e49cb1a24ad7b38b2fa5f40474a9d894ae23336a151497f5104cf`.
+Each case compares 8,400 bytes of selected state, including input immutability,
+both guarded receivers and both complete logger extents. Forty-six verify
+normal-return ABI preservation; the version case takes an intercepted
+nonreturning exit. A forbidden syscall control terminates with SIGSYS.
+
+The [CLI contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md#isolated-parser-execution--september-19)
+records argument ordering, conversion failure, windowed guard, timeout,
+resolution, directory-prefix and version-exit controls. Independent read-only
+review checked all saved bytes, inputs, outputs and the compiled syscall filter;
+it did not rerun them. Initial setup refused an incorrect single-range assumption
+for `strchr`; the next harness returned 99 with a malformed filter descriptor.
+Both were corrected before accepted execution. The intermediate 45-case run
+and all failed attempts are retained separately; they are not added to the
+47-case pass count.
+
+`trace_consumers.py` then reproduced ten absolute developer-selector reads,
+the startup call chain and the bounded absence of identified trace-field
+consumers. `trace-consumers.json` and `selector-neighbors.json` retain body
+pins and disassembly commands. These corrections change documentation only;
+the Ghidra working project and tracked checkpoint were not opened or modified.
+Native review records are retained under the existing audit owner in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-parser-review.json`.
+
+OS/printf boundaries are authored hooks. The false directory result uses last
+error zero and does not cover normal nonzero Win32 error handling. Original-code
+checks use authored startup memory/default locale and are not a retail launch,
+whole-process write audit, console rendering, full startup or gameplay acceptance.
+
+### Original save and startup controls — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/startup_control.py`
+passed **17 isolated original-code scenarios**, retaining 38 code envelopes
+(10,828 bytes; 10,817 body bytes plus the already identified 11-byte `strchr`
+alignment envelope). Accepted stem:
+`local-data/test-runs/save-startup-20260919/startup-run-o3zcj6ov/startup`.
+Receipt SHA-256 `9639d263d59a96532c7f182d1e0b209f20b4faa90bc9e4acc519c8dd938a45f7`;
+ELF SHA-256 `1a3ea8c014e2e7f9e8fe16b4dd8bbe0a2b6b0223d6a843aadcdc85ed04b7694a`.
+`startup-controls-v5.log` retains the command result; the immutable driver,
+assembler/linker commands, inputs, output buffers and stderr live beside the receipt.
+
+The original WinMain, parser, career initializer/load/Blank, binding-table
+initializer and options-tail reader execute. The driver supplies Windows
+version/system-query, file and allocation boundaries, plus a controlled
+adapter/device/mode context. WinMain returns through its ordinary failure
+return after an intercepted graphics-create call. No window, actual game-file
+operation or desktop control occurs.
+
+Cases cover missing/empty/short/wrong-version inputs, successful settings load,
+the CLI read-name override, changed/unchanged audio settings, noncanonical
+boolean bytes, integer/float conversion loss, conditional graphics-reset
+request, and matching-second/unavailable/empty display-mode lists. Three
+snapshots compare the selected career/binding/settings state, complete input
+immutability and read-buffer guards. Conversion uses `fninit`'s default x87
+state. The preset hook's copied tail is taken from an authored address; it does
+not independently measure the reader's cursor or returned end pointer.
+
+**After WinMain returns**, the driver separately calls original Save,
+SaveWithFlag and the default-options writer. It compares both complete
+10,004-byte serializer outputs and guards in every scenario, and observes the
+packed-mode refresh and live progress word. Full state snapshots precede those
+serializer calls; only the explicitly captured fields establish their observed
+live-state effects. The file writer receives the original fixture-derived
+buffer, not either serializer output. This is neither a serialize→file→reload
+round trip nor evidence that startup automatically writes settings. Writer
+success/open-failure/short-write/close-error results are supplied by hooks;
+actual publication durability is untested.
+
+Audio, preset/language actions, diagnostics and final Goodie recomputation stay
+intercepted. The raw original Goodie dependency and complete normal menu-load
+transaction were not executed. A Linux seccomp negative control attempts
+`getpid`, terminates with SIGSYS (`-31`), and produces no output. The admitted
+syscalls are only read/write/exit. The pristine executable and real tracked save
+fixture are rehashed unchanged after execution.
+
+The first 10-case experiment intercepted the whole tail reader. The following
+attempt retained that reader but failed an expectation that the real fixture's
+audio choices equaled CLI defaults; they differ. That failure remains in
+`startup-controls-v2.log` and `startup-run-drggwcgp/`. Subsequent 14- and 17-case
+intermediate results remain separate, not added to the final pass count.
+Independent read-only reviews checked saved code/input/output identities,
+compiled sandbox instructions and the serializer extension; they did not rerun
+the experiment. Records use the existing ignored aircraft-audit owner.
+
+The [subsystem contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+separates executed findings, fresh static checks, inherited receipts and pending
+cross-runtime acceptance. This tranche changes RE documentation; it does not
+modify Ghidra or either implementation lane.
+
+### Original menu load and next startup — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/menu_control.py`
+passed **20 isolated composed menu-load cases**, retaining 18 unchanged original
+bodies (2,974 bytes). Accepted stem:
+`local-data/test-runs/save-startup-20260919/menu-run-47t_hlhy/menu`.
+Receipt SHA-256 `720608d9374496a1341259191136537c6a903c725a468e1eafb60c8092159211`;
+ELF SHA-256 `bc6212a7849c6fa9c6880de80c0e95f92e194e371c635b3058a49f1669985ee9`.
+`menu-controls-v1.log`, saved driver, assembler/linker commands, inputs, full
+outputs and stderr retain the invocation. No failed experiment preceded this
+accepted set.
+
+The complete original menu body calls the real PC card-info/read/name-conversion
+code, career Load(flag 1) and conditional default-options writer. Cases cover no
+selection, missing/empty/short/version-failing reads, successful load, supplied
+writer open/write/close failures, reader close errors, low-byte publication
+gating, changed device/slot and low-byte filename alias/truncation. Two explicit
+dependency controls make the intercepted page callback set/clear the gate;
+these prove the test occurs after the callback, not that an actual page callback
+has those effects.
+
+Complete selected career/binding state, input and read-buffer immutability,
+guards, attempted publication payload, call order and preserved calling
+convention are compared. Font lookup pops one argument; the remaining pushed
+values belong to the subsequent eleven-argument dialog call. The original PC
+card-info stub reports present/formatted, so unavailable-card branches are not
+claimed executed. Latest-world selection, text/font/dialog/page behavior and
+file/allocation services are intercepted. Only read/write/exit syscalls remain
+admitted; forbidden `getpid` again terminates with SIGSYS and no output.
+
+`python -P local-data/test-runs/save-startup-20260919/menu_to_startup.py`
+then passed the successful menu case's exact captured payload to the earlier
+original WinMain executable. Accepted stem `menu-boot-qssmorvv/chain` in the same
+owner; receipt SHA-256
+`533c72da0958207b18b1eb5ea20ec378598226a3c0ca5065451d71906f2f3639`;
+command result `menu-to-startup-v1.log`. It checks the preserved menu-live volume
+bits, changed next-startup volume bits and audio-action arguments, binding copy,
+sensitivity, progress reset and immutable input. A comparison with the earlier
+checked startup case is a continuity check, not an independent semantic oracle.
+The startup driver's separately invoked post-WinMain serializers/writer are
+outside this chain claim.
+
+The storage handoff is supplied and assumes successful publication. These
+experiments establish neither durable writes nor actual CRT double-close
+effects, desktop startup, input/audio acceptance or complete save compatibility.
+Pristine executable and real tracked fixture identities are checked unchanged
+after execution. No Ghidra or implementation-lane code was changed.
+
+### Original control preset behavior — September 19
+
+`python -P local-data/test-runs/save-startup-20260919/preset_control.py`
+passed **20 direct original-code cases**, retaining nine unchanged bodies
+(2,499 bytes) with no intercepted callees. Accepted stem
+`local-data/test-runs/save-startup-20260919/preset-run-viieck2x/preset`;
+receipt SHA-256 `e69513d9c0cec731d786cd2ca8933a63b12ec7c28bc9af6f03da45b2a1ee2c70`;
+ELF SHA-256 `c9a28da4f3120e00a7f76e99a3473da41d9947bfb54957b5c473040c38eea51d`.
+`preset-controls-v2.log`, immutable driver, commands, inputs, outputs and stderr
+retain the invocation. No failed execution preceded the accepted cases. An
+earlier inspection tried to read the fallback table directly from the PE and
+was correctly refused because the addresses are BSS; the experiment instead
+executes its actual initializer.
+
+The original single/dual/fallback initializers, three entry helpers, FindById,
+ApplyPreset and GetSaveSize execute. The driver copies real fixture binding
+rows into the initialized runtime table; it does not call Load. BSS retains
+ordinary zero initialization, with explicit surrounding guards. Authored
+detected counts stay within `0..4`; flags include enabled, disabled,
+out-of-count and noncanonical-nonzero examples. Schemes cover 0, 1, 2, 3, 4,
+65535 and a negative direct-call value that cannot arise from the saved u16.
+
+Comparisons cover complete runtime and preset tables, guards, immutable input,
+size before/after and the calling convention. One/two/three-device cases
+distinguish actual selected indices and the clearing of secondary-slot field0
+across inactive rows. The initial 19-case artifact remains at
+`preset-run-8ook0_le/preset`; its inactive rows already had field0 `-1`, so
+unchanged output alone did not demonstrate those writes. Read-only review
+identified that limitation. The final added control seeds all 31 inactive
+secondary slots to `(3, 0x44556677, 0x12345678)` and verifies exactly
+`(-1, 0x44556677, 0x12345678)` afterward. It also asserts nonzero-scheme
+preset-cursor destinations. Missing/duplicate/inactive/early-sentinel runtime IDs
+exercise lookup and size effects. A deliberately changed preset with absent
+secondary slots exercises the general fallback branch; it is explicitly not
+the untouched shipped group. The read/write/exit-only syscall filter again
+rejects a forbidden `getpid` with SIGSYS and no output. Fixture and specimen
+identities remain unchanged.
+
+This establishes the selected helper behavior, not device enumeration, key
+delivery, selector/remap UI execution, full loader/preset composition or
+arbitrary malformed-save safety. The [binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md)
+separates these executions from fresh UI instruction checks and inherited
+historical mappings. No Ghidra or implementation code changed.
+
+### Original loader, preset and serialization composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_preset_control.py`
+passed **19 composed original-code cases**, retaining 19 unchanged bodies
+(4,976 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/load-preset-run-k8m1uqgd/load`;
+receipt SHA-256 `2235a9b50f4d537e1ec45c5fabc2c491ca6c73450d59d0608496e2c2fcab8610`;
+ELF SHA-256 `e8a67606bbf1c716b2509442682e681a1415a34b567b5732de6059161a0f727e`.
+`load-preset-controls-v1.log`, immutable driver, assembler/linker commands and
+complete input/output/stderr files retain the invocation.
+
+Original table initializers, Load, TailRead, ApplyPreset and helpers execute;
+original Save/TailWrite run after the final Load. Cases cover ordinary custom
+and preset settings, authored enabled-device inputs, low-byte flags, version
+rejection, incoming inactive/sentinel/duplicate metadata, preset restoration,
+preexisting inactive/sentinel rows and an alternate career receiver. Both
+direct repeated loads use the same input in the same process. Actual ESI at
+the intercepted language call measures the tail-end cursor; Load's return
+does not expose TailRead's return value.
+
+The selected before/after snapshots, complete source, table guards and entire
+serializer capacity are compared. Incoming inactive metadata changes sizes
+`10004 → 9972 → 9940` over two direct loads; incoming first ID `-1` makes the
+next size 9492. The preset-one case restores the tested active row. These
+results do not establish drift across fresh startups, which initialize the
+tables again. Audio actions read canonical career globals even with an
+alternate receiver. The serialized result is not reloaded, and post-Save
+whole-memory state is not claimed measured.
+
+Language/audio/latest-world services and diagnostics remain intercepted here.
+No Blank, file caller, real input or process restart occurs. A read/write/exit
+seccomp filter rejects forbidden `getpid` with SIGSYS and empty output; fixture
+and pristine executable are rehashed unchanged. A read-only review separately
+checked the bodies, instruction-shaped table oracle and saved results without
+rerunning original code.
+
+### Original language copy and save composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_control.py`
+passed **16 composed original-code cases**, retaining 22 unchanged bodies
+(5,207 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/language-run-n__ph8sw/language`;
+receipt SHA-256 `016b415f9846f13e02fc2c290e5c96c52e01f1af9cc245d30d119cf507fde5dd`;
+ELF SHA-256 `f2db062ad045c30ae35d067cc986bb6b30d8888856bbfba470e3477890949ebf`.
+`language-controls-v1.log`, immutable driver, commands and saved inputs/outputs
+retain the invocation under the same private owner.
+
+This extends the actual Load/TailRead/preset/Save chain with original language
+selection `00466ab0`, cleanup `0051f8e0` and text copy `004f2660`. Cleanup takes
+its real null-object path. Five cache slots, an adjacent-state negative header,
+source byte buffers and allocation destinations are explicitly authored;
+allocator/free calls are intercepted and recorded. Their preserved argument
+cleanup is checked along with the caller's stack/register guards.
+
+Cases distinguish copied header language from requested selector, low-WORD
+serialization of a full language DWORD, repeat selection, null/existing prior
+buffers, sizes 0/1/3/4/7/17, original preset composition and flag/version skips.
+Index 5 and out-of-buffer source-pointer controls exercise unchecked selection
+and pointer rebasing without calling those supported configurations. Complete
+selected headers, buffers, guards, input and serialization capacity are compared.
+Events capture active-header and mirror values before freeing, during allocation
+and after copy; actual ESI at the audio-service boundary measures the tail end.
+The last 16 header bytes survive, and Save consumes the copied language field,
+not the input mirror. The repeated case frees the first returned buffer before
+receiving a distinct second allocation.
+
+The same syscall restriction/forbidden-call negative and original-input hash
+checks pass. These controls establish neither actual language-file parsing nor
+allocation failure, nonnull object destruction, audio output, durable save
+publication or localized presentation. The complete loader/preset and language
+review records use the existing ignored aircraft-audit owner. No Ghidra or
+implementation-lane source changes accompany this documentation tranche.
+
+The subsequent static dependency inspection reads complete `CText__Init`
+`[004f21f0,004f2497)`, SHA-256
+`f208b0fcea5393790160ea84b43bd07d441566d7f264b2ea77251b3badb499ca`,
+and the actual fatal chain `0042c750 → 0042cfa0 → ExitProcess` plus cached-read,
+size, ctor/dtor and close helpers. Selected disassembly is retained as
+`language-<address>.asm` in this same owner. That static phase did not execute
+the initializer or fatal chain. `language-file-inputs.json` pins six bounded
+preserved-file reads and their version-3/count-2571 headers. The following
+experiments supply the later executed evidence.
+
+### Original language file parsing — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_file_control.py`
+passed **19 original-code cases**, retaining ten unchanged function bodies
+(1,982 bytes) plus Init's one alignment byte and 20-byte switch table.
+Accepted stem `local-data/test-runs/save-startup-20260919/language-file-run-8clnw9rt/file`;
+receipt SHA-256 `a3bebcc872a6df436cbbdd01351ea4ab0599c55fa48954ef8d48f1ba46d3aaec`;
+ELF SHA-256 `50afc2b7a9a9d7ec9755dfd2b2c88f3b8bb73e99622e016f73b06a359626a57e`.
+`language-file-controls-v2.log` records the passing invocation. The first
+build failed because output overlapped TLS/arena; no original code ran.
+`language-file-run-s2cqn14x/` and `language-file-controls-v1.log` retain
+that failure. The accepted output base is `0x0a000000`.
+
+Original Init, ctor/dtor, file-size/cached Read/Close and SetLanguage/null
+cleanup/CopyFrom execute against the six admitted files and owned derivatives.
+Open supplies the byte-backed final-prefetch object shape; formatting,
+allocation/free and GetFileSize/CloseHandle are explicit hooks. No refill,
+decompression, real file access or heap failure is exercised.
+
+The 19 cases cover six language files, American override of a French selector,
+invalid Init selector/English fallback, 16-byte and empty cache reads,
+unknown versions with/without the high bit, v1/v2/legacy header derivatives,
+two header guard skips, Open failure and a CloseHandle error. Full selected
+state, allocations/guards and complete input are compared. Copied bytes and
+the logical count at Close measure the short reads; Read's EAX is not separately
+captured. Short/empty cases use declared zero allocation fill, so loaded state
+does not establish usable text. Version derivatives establish arithmetic only;
+high-bit v2/v3 auxiliary parsing remains outside this cohort.
+
+The Open-failure child stops at the fatal call with exit 17; it does not
+manufacture cleanup/unwind. Normal Init restores the valid `FS:[0]` sentinel
+provided through i386 TLS; stack and callee-saved registers are checked.
+The invalid Init selector is 65535 but the later SetLanguage cache slot is zero.
+Actual SetLanguage bounds safety is not established. A forbidden-call negative
+ends with SIGSYS; original specimen/resources remain unchanged.
+Independent read-only review reproduced embedded bytes and saved state
+without rerunning the experiment.
+
+### Original language lookups from parser output — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_lookup_control.py`
+passed **17 cases**, with three unchanged lookup bodies (420 bytes).
+Accepted stem `local-data/test-runs/save-startup-20260919/language-lookup-run-ekd5wuja/lookup`;
+receipt SHA-256 `13dff5555778153c3971046d8771c99ddd66c6114332df6dcc9c8c83e102db7b`;
+ELF SHA-256 `208d8bef42c1c8ba62c70e716c714690aaff9784579d4cd67c7dea53b396a079`.
+`language-lookup-controls-v1.log`, immutable driver/assembly, commands and
+all inputs/outputs preserve the accepted run.
+
+The experiment imports exact active headers and allocation snapshots from the
+previous parser/copy outputs, with producer receipt/output hashes checked.
+For each of six resources, all 2,571 record IDs and one absent ID pass through
+original text, audio and After lookup. After uses +1 for each nonfinal record,
+zero for the final/missing controls. Eleven owned derivatives test duplicate-first
+selection, negative/excess/wrapped displacement, cleared loaded state,
+v1/unknown/negative versions, nonpositive counts and unchecked pool offsets.
+There are 46,338 native calls; this is a call count, not extra independent
+acceptance cases or a parity percentage.
+
+The entire imported header/arena/input remains unchanged. Results match ordered
+pointer selection; real-file pointers are also checked offline against declared
+pools, termination, UTF-16LE and ASCII decoding. All six files have unique IDs.
+Adverse returned pointers are compared without dereferencing. The ordinary
+logger is intercepted; legacy MultiByteToWideChar is not exercised.
+Stack/register guards and forbidden-syscall negative pass. The logger records
+its first three arguments; After's fourth diagnostic argument (requested offset)
+is not captured. Independent read-only review checked all returned pointers,
+saved memory, embedded bytes and decoded rows without rerunning native code.
+
+This establishes bounded parser-output/lookup compatibility, not continuous
+startup, actual audio assets/playback, glyph rendering or save publication.
+The separate four-probe decoder check reproduces missing offline bounds and
+termination validation using only in-memory derivatives; private receipt
+`language-lookup-consumer-probe.json` SHA-256
+`39b6ba91c73b1b164efafa3cb31733074361ea8a0a7b86c122b32241a3c02bf3`.
+No production decoder/rebuild/companion source is changed by these contracts.
+
+### Original audio volume controls — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/audio_volume_control.py`
+passed **50 cases**: 25 scenario/rounding combinations, each at PC53 and PC64.
+Accepted stem `local-data/test-runs/save-startup-20260919/audio-volume-run-vra1oais/volume`;
+receipt SHA-256 `80a944c49b0e54c3ee76cd128d7f314dcd440a935a14dbd1874a4775e85f29a0`;
+ELF SHA-256 `7cc622a08f0df338ca075fd585e40983cce52eb0d8247d152af8426333ce10b9`.
+`audio-volume-controls-v2.log` records the invocation. Earlier 25 PC64-only
+cases passed at `audio-volume-run-jcl2i1js/volume`; v2 expands precision
+coverage, rather than repairing a failed case.
+
+Four unchanged bodies (917 bytes) execute with original constants: music and
+sound setters, GetCamera and PC UpdateSound. Authored lists include both
+categories, playing-byte/channel variants, tracked positions, null buffer slots
+and an owned 2D COM object. Intercepted methods record SetVolume, SetFrequency
+and GetStatus; the sole failed HRESULT case is SetVolume. GetStatus supplies
+a playing status. The stopped-buffer and 3D COM routes are excluded.
+
+Complete before/after-music/after-sound selected snapshots, guards and input
+copies match an exact-rational oracle. Chosen intermediates fit both precisions
+and distances have exact integral square roots; agreement does not prove
+precision equivalence for arbitrary inputs. Four rounding modes produce distinct
+integer results. Manager fields change before the logger, career globals after
+it; event fields and 28 COM observations across the 50 cases match.
+The saved fixture supplies raw music/sound words from offsets `0x2492/0x248e`.
+
+Native integer ABI guards and Python x87 control/TOP checks pass; no full x87
+tag audit is claimed. A forbidden getpid ends with SIGSYS, and specimen/fixture
+bytes remain unchanged. Independent read-only review checked all saved results
+without rerunning the executable. There is no audio-device creation, playback,
+Load/TailRead, Save, reset/bank execution or full-process preservation claim.
+
+Fresh static inspection follows entry `00560181` through
+`0055dd7b → [006532e8]=0055da76 → 00560cb1` to the control-word helpers
+`0056947e/00569449/00569494/00569526`. The configured mask changes precision
+to 53 bits while preserving rounding-direction bits. This does not establish
+the initial rounding direction or FPU state after device calls. Complete selected
+disassembly is retained as `audio-<address>.asm` in the same private owner.
+
+### Original Load, audio and Save composition — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_audio_control.py`
+passed **16 composed cases**, retaining 26 unchanged bodies (6,124 bytes).
+Accepted stem `local-data/test-runs/save-startup-20260919/load-audio-run-ehbe0h_d/load`;
+receipt SHA-256 `3f92794e90da6d0728787ecfe6be39f3e8cd441ab43a1baec5352a962b74a972`;
+ELF SHA-256 `347f511146830f5a9ec25996958234a6e0d5e9dd345a43a30e76706de6bab1e5`.
+`load-audio-controls-v1.log` and immutable driver/assembly/input/output files
+retain the command and result. The unchanged parent language driver is pinned
+in the receipt.
+
+The original music/sound setters replace the former hooks inside the accepted
+Load/TailRead/preset/language-copy chain, followed by original Save. One authored
+playing event reaches original PC UpdateSound's null-buffer return; a second,
+nonplaying tracked event still receives both volume-field updates. Manager/event
+state is compared in full alongside existing career, binding, language, guards,
+input and entire serialization capacity. Real setter logs are observed as
+double arguments; the old intercepted-call argument layout is not reused.
+This logger layout omits music's additional integer argument; the direct controls
+capture it separately. The 16 cases vary composition/language conditions using
+one volume pair. Every active case reaches the bank hook, so the reset branch
+is not covered by this run.
+
+The fixture gives configured music 51 and sound master bits `0x3f19999a`;
+the tracked event's fields become `(-3600,-4000)` in this declared state.
+Repeated loads, low-byte flag modes, version rejection and the existing
+language-copy controls retain expected results. The preservation mode and
+wrong-version cases leave sound-event state unchanged. PC53 nearest is supplied
+and checked after execution. These are not measurements of a real detected
+audio device or initialized game scene.
+
+Reset/language-bank, allocator/free, diagnostics and latest-world remain
+explicit hooks. No real language-file parsing is added here, and the output
+is not fed back through a durable file round trip. Input/specimen preservation
+and forbidden-syscall controls pass. Independent read-only review checked the
+complete saved composition without rerunning it. No Ghidra or implementation-lane
+source changes accompany this tranche.
+
+### Original audio reset and music restoration — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/audio_reset_control.py`
+passed **26 cases**, with nine unchanged original bodies (985 bytes) and the
+20-byte original selection table. Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-reset-run-qi8cblpe/reset`;
+receipt SHA-256 `1261c203280b093848bec7f080419e941a9e6e1558b3e84458d7d9b98a71a74e`;
+ELF SHA-256 `981c2131385de9664167f629664994cd8931a5cf5415310dc5dd78be016b90f5`.
+`audio-reset-controls-v1.log` retains the command result.
+
+Complete selected snapshots, guards, input copies and **625 ordered hook
+observations** match. The original wrapper/reinitializer, sample deletion,
+music shutdown/Init/selection, level selection, device shutdown and message
+voice helper execute. Supplied Init returns distinguish AL from higher bits;
+wrapper/playing flags use low bytes, while music-enable and refresh-suppression
+use full words. Cases include failed initialization, empty/short/new playlists,
+Level 100/110/frontend selection, repeated reset, cutscene admission and an
+alternate receiver's canonical sample refresh.
+
+The preserved fixture supplies music volume bits, producing configured integer
+51 under the supplied PC53-nearest mode. Music's current-song pointer can remain
+after the recorded playlist frees. Shared authored pointers in the alternate
+case and hooks that preserve their memory do not establish valid lifetime after
+real destruction. Integer ABI and x87 control/TOP checks pass; full x87 tag words
+and whole-process preservation are not asserted. A forbidden syscall ends in
+SIGSYS, and original specimen/fixture bytes remain unchanged.
+
+Device Init, music-platform/playlist construction, sample-bank publication,
+allocation/free/destructors, sample lookup, voice stopping, virtual playback,
+RNG and formatting remain declared hooks. These exercise caller behavior under
+supplied results, not real API failures, devices or playback. Trace hooks observe
+calls to `0040c640`, whose original body is RET; they do not recover retail logs.
+Selection categories 1/3, active-track transitions, negative RNG and the separate
+byte music override are not covered. Load/TailRead and Save remain separate.
+Independent read-only review reproduced saved results without rerunning them.
+
+### Original language-bank admission and retry — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/language_bank_control.py`
+passed **22 cases**, retaining seven complete bodies (1,166 bytes) and the
+20-byte language-name switch table. Final stem
+`local-data/test-runs/save-startup-20260919/language-bank-run-7p1_0_ep/bank`;
+receipt SHA-256 `c121f8a7da97a19c327eda2966db9d7d8db300a0b8867284177718d9b678d8fb`;
+ELF SHA-256 `9ca10744f39c7cfd80cc245b91245d68140f4f4b2a1f1e5820c5381215805270`.
+`language-bank-controls-v3.log` records this final run.
+
+Original Reload, GetLanguageName, ASCII stricmp, 64-slot buffer Stop,
+compressed-bank admission and file ctor/dtor execute. Open always returns zero
+at an explicit boundary. All selected snapshots and **223 ordered observations**
+match: early cache writes, full list relinking, Stop without pointer clearing,
+sample-destructor calls, failed-open cleanup and preserved input/guards.
+Same-path retries skip after failure or admission changes; a different language
+retries. Case-only path changes also skip. All five names, unknown/negative-ID
+fallback and the American-text distinction are checked.
+
+The alternate receiver has distinct buffer objects and cache text: Stop and
+Open use the canonical manager, while the selected manager owns event/sample/cache
+updates. Event/sample nodes remain shared authored objects, not independent
+healthy managers. The formatter supplies only the verified two-string bank path;
+original sprintf and non-C locale behavior are excluded. Normal FS registration
+restoration, integer ABI and forbidden-syscall controls pass. Original specimen
+bytes remain unchanged. There is no actual file-open error, allocation/free,
+COM Stop/destruction, successful bank parsing, codec, playback, Windows exception
+dispatch, Load/TailRead or Save execution in this cohort.
+
+The initial `language-bank-controls-v1.log` preserves one oracle failure at
+`language-bank-run-ydd_0rts`: the second destructor free-return site was written
+as `00547db0`. Fresh inspection of the five-byte CALL at `00547daa` establishes
+`00547daf`; v2 fixes only that expected address and passes at
+`language-bank-run-18wy3l8i`. V3 adds distinct alternate buffer objects to make
+Stop ownership discriminating, with no original-byte change. Independent
+read-only review reproduced the final saved results and this correction history.
+Exact prompts and full reports remain in the existing private review owner.
+
+### Original Load, Save and reload controls — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/load_roundtrip_control.py`
+passed **15 cases** with 27 unchanged original bodies (6,236 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/load-roundtrip-run-a29vv1kx/load`;
+receipt SHA-256 `5a89bc7561ebcb69baeac9f684311d139d79c39ce0f9bf8a003be4d2451a9c20`;
+ELF SHA-256 `c3bdb6b3ba35bb1cce7b891c47b4b955c0c7c8b6f36e005cfae61c13faac6169`.
+`load-roundtrip-controls-v2.log` records the accepted run.
+
+The second native Load reads the first original serializer buffer directly.
+Six selected snapshots, all supplied input bytes, both complete serializer
+capacities/guards, integer ABI, x87 CW/TOP and **126 ordered observations** pass.
+Both gold controls compare each native 10,004-byte output directly with the real
+fixture, with/without career reinitialization. Named private derivatives cover
+counter normalization, binding reinitialization/preset application, low-byte
+Load flags and discriminating zero-to-one progress-flag writes. Setting only
+the second SaveWithFlag changes exactly file byte `0x248a`.
+
+The original career static initializer restores career volume words to `.8/.9`;
+it is not Blank or a complete audio reset. Preserve-mode Load retains those
+words and skips volume setters, leaving the prior audio-manager state. Original
+reset/bank, allocation/free, diagnostics and latest-world remain hooks. Language
+cache headers and audio objects are authored. Binding reinitialization is
+compared with captured original-initializer output; this review did not rederive
+every initial binding constant. These are not whole-memory, general malformed
+input, real-device or full process-startup guarantees.
+
+Each generated output is created privately, flushed/fsynced and reread with
+Python. No original save is overwritten. This is Linux private-copy readback,
+not retail-writer, Windows or crash-durability acceptance. The forbidden syscall
+control terminates with SIGSYS; selected specimen and fixture remain unchanged.
+Independent review reconstructed saved results without rerunning them.
+
+The retained first run (`load-roundtrip-controls-v1.log`,
+`load-roundtrip-run-6q_xyqop/load`) passed 12 cases. Its SaveWithFlag inputs already
+had the progress flag set, so they did not discriminate the mutation; its full
+save payload was checked but its preceding control header was not snapshotted.
+V2 adds those checks, three zero-scalar cases and the corrected low-byte label.
+No original body bytes changed. Both iterations remain private evidence.
+
+### Original startup reset with Goodies — September 20
+
+`python -P local-data/test-runs/save-startup-20260919/startup_goodies_control.py`
+passed **17 cases**, with 53 unchanged original functions and the 36-byte episode
+jump table. Their copied extents total 37,597 bytes: 37,586 inventoried body bytes
+plus 11 preserved inter-range bytes around the existing `0055e2d0` CRT extent.
+Accepted stem
+`local-data/test-runs/save-startup-20260919/startup-goodies-run-0e30s139/startup`;
+receipt SHA-256 `97bc4eb4bb6544e04735878cbb56d85623b9f74d44c109b3ef4a0e0fecea0f97`;
+ELF SHA-256 `41e4493e7894a5807d8ba67e885989ed7ef661cdf18f74e7099f8ecab6dea57b`.
+`startup-goodies-controls-v1.log` records the run. The retained original
+`startup_control.py` remains unchanged, SHA-256
+`557915d737c6b7e3ba55823d30960e7d7976f7e0f56ac416ad851b5bdc7a56a1`.
+
+WinMain calls original Load/Blank; the final Goodie call now executes with
+original descriptor initialization, grade/episode/index helpers and text scratch
+conversion. Complete career comparisons include every Goodie: precisely slots
+`0, 1, 8, 14, 33, 36, 41, 42, 43` finish at state one; all others and both badge
+bookkeeping globals are zero. The valid, missing, short and invalid-version
+cases retain their expected settings and untouched record storage. Original
+Save/SaveWithFlag and default-options writer are separately invoked afterward;
+that is not a claim that startup automatically saves settings. This separately
+invoked writer receives the original input buffer, not the reset serialization.
+
+Three selected snapshots include the full input, guarded descriptor table and
+text scratch. Descriptor preservation and threshold 40 are checked; the original
+initializer, rather than guessed zero BSS, supplies other descriptor values.
+Scratch contents and guards match, except its final rotating index is checked
+only within `0..3` (observed 3), not independently derived from a call count.
+Positive-ranking CRT conversion traps unexpected entry; its absence is expected
+for the reset graph. ABI, PC53-nearest CW/TOP, buffer capacities and the SIGSYS
+negative control pass. Original inputs remain unchanged.
+
+File/allocator/version/system services, graphics, audio and preset/language
+actions remain intercepted. The experiment returns through the declared
+graphics-create failure. It does not cover general unlock rules, malformed
+graphs, alternate receivers, retail storage, real devices, visible startup or UI.
+The byte-backed static dependency review and final instrument review are retained
+with exact prompts and full reports in the existing private review owner.
+
+### Original nonnull language cleanup — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/language_cleanup_control.py`
+passed **26 cases**, retaining 16 complete single-range original bodies
+(1,081 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/language-cleanup-run-f_nhvrni/cleanup`;
+receipt SHA-256 `a971620046afeb991e507b2d43a4ffce4b033d3c3e4254323b06c16186a64b5a`;
+ELF SHA-256 `90a56a903bea39990c8c20d743019a191f8832dc83ee6962f34a9b3cbd1a712b`.
+`language-cleanup-controls-v3.log` records the run. The saved driver, assembler/
+linker commands and complete input/output/stderr files retain the instrument.
+The selected pristine executable remains SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Original Cleanup/SetLanguage, outer and nested menu/base/controller-item
+destruction, pooled-list clear, resource decrement, monitored-base invalidation,
+key-sink adapter/store and CText copy execute. The real constructor is excluded;
+objects, references, resources, cache headers and buffers are authored. The
+constructor/vtable ownership link is separately instruction-backed, not executed.
+
+Cases cover null/empty/populated owners, optional child dispatch, repeated
+cleanup, aliased/absent/zero-count resources, absent monitors, embedded-null
+payloads/cells, a zero list count with live nodes, controller flag states,
+deleting-wrapper bit admission and repeated/changed language selection. These
+adverse states are explicit controls, not evidence that retail creates them.
+Complete selected state is compared before/after calls and at **185 ordered
+hook observations**, including the old active text throughout destruction and
+the owner clearing before text-buffer free. Repeated language calls allocate
+distinct buffers; their second cleanup sees null rather than recreating menus.
+
+The key-sink word at `00889008`, its guards, the untouched `00888008` word,
+complete input, unused output capacity and normal FS-chain restoration are
+checked. Integer stack/register guards and PC53-nearest x87 CW/TOP pass. The
+read/write/exit restriction rejects forbidden `getpid` with SIGSYS and no output.
+Original specimen bytes are rechecked unchanged. No Windows exception dispatch,
+whole-process memory preservation or actual input-device behavior is claimed.
+
+The saved v1 failure at `language-cleanup-run-7x9im6kj/cleanup` watched the wrong
+word: a private static review and oracle had misadded `00855bb0 + 33458` as
+`00888008`. Fresh selected instructions establish `00889008`. V2 reran the
+unchanged failing driver after an inspection helper used a string instead of
+the Path required by PeImage. V3 corrects the captured/expected address, seeds
+it nonzero and retains the previous word as an unchanged control. No original
+instructions or expected final hash were substituted to force agreement.
+
+Heap allocation/free and optional child virtual calls remain recording hooks
+with their checked argument cleanup. The large constructor, other derived item
+and actual optional child destructors, real memory reclamation, exception
+unwinding, reentrancy, language-format admission, Load/Save composition and live
+menu recreation/rendering remain outside this cohort. Exact reviewer prompts
+and reports are retained in the existing private review owner.
+
+### Original sample decode and quality conversion — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_sample_control.py`
+passed **44 cases**, retaining five complete single-range original bodies
+(2,002 bytes). Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-sample-run-czk0ur1j/sample`;
+receipt SHA-256 `1edefa0d58727cc6b9f4631ee1f8a233d0d9cbc1fefeb661a296e141e4116bd4`;
+ELF SHA-256 `7755ab7a4c603414a20b071dbc2b389cd6982ad63fc43729aede410e7a0b377d`.
+`audio-sample-controls-v2.log` records the invocation. The saved driver,
+assembly/link commands, complete input/output/stderr and selected body/table
+hashes preserve the instrument. The selected pristine executable remains
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Original sample loading, cached Read, buffer creation, ADPCM decoding and
+quality conversion execute. Two complete real English-bank size/payload records
+run at qualities 0, 1 and 2. Authored size residues, quality 3/negative quality,
+fresh/reused objects, supplied Create/Lock/Unlock failures, zero/short reads,
+short returned lock span and descriptor flag/GUID selection cover adverse paths.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
+identifies the bank and separates its 164 framed records from the two decoded.
+
+Complete selected state, the entire guarded allocation arena and unchanged input
+are compared, with **310 ordered hook snapshots**. Device descriptor/format and
+meaningful method arguments are checked; incidental stack-pointer values are
+captured rather than modeled. Unused event capacity, integer ABI guards and
+PC53-nearest x87 CW/TOP pass. The syscall restriction rejects `getpid` with
+SIGSYS and no output. Executable and bank are rechecked unchanged.
+
+The preserved v1 failure expected zero after the 16-byte PCM format prefix.
+Original stack instructions place the 36-byte buffer descriptor immediately
+after that prefix, so an 18-byte capture includes its size's low word `0x24`.
+V2 corrects that observation boundary; it does not claim an initialized
+`WAVEFORMATEX.cbSize` or alter retail instructions to obtain agreement.
+
+One real 29,490-byte record requests/writes 14,745/14,746 bytes at quality 1
+and 3,687/3,686 at quality 2. The full arena comparisons include the excess byte
+and unchanged trailing byte. Heap/COM hooks retain oversized owned memory;
+supplied failures and span lengths do not establish actual driver behavior,
+real overflow/crashes, lifetime safety or audible results. Open/refill, complete
+bank traversal, outer CreateSample/reuse lookup, allocation failure, malformed
+huge lengths, exceptions, Load/Save composition and full startup remain outside
+this experiment.
+
+A separate `python -P -` read-only AST comparison selected only the current
+materializer's two literal tables and pure decoder. The private
+`audio-sample-materializer-comparison.json` records exact source hash
+`710c3843f533af18e9b634ed40051da2ab1f1a6cb71fab0db716e13081566081`, selected lines
+and output hashes. Both complete real quality-0 outputs match; an authored odd
+size differs only at its final byte. The full materializer was not invoked or
+edited. Review prompts, full reports and root dispositions remain in the existing
+private save-loader/language review record. No Ghidra database was opened.
+
+### Original sample admission and registration — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_sample_control.py --outer`
+passed **25 cases / 172 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/audio-sample-outer-run-rmgj4y_q/sample`;
+receipt SHA-256 `487ca48200e953807f5527b4bb9dc6e48679d2c3d99cded176c75b0748f722ae`;
+ELF SHA-256 `b9ee0618c1cdc74b5283190b8d3d7ed79e9a48cf262b404326283900cec8fc86`.
+`audio-sample-outer-controls-v2.log` retains the result. Nine complete original
+bodies total 2,827 bytes; the new four are CreateSample, two CRT string helpers
+and the null-stream stub. Specimen identity is unchanged from the preceding
+sample cohort. The original 44-case receipt and saved driver remain immutable.
+
+This mode executes only English-bank record 3. Cases cover fresh insertion,
+case-insensitive head/second/duplicate selection, byte versus word reuse flags,
+music-word preservation, null streams, name truncation, stored-name suffix
+boundaries, create/lock failures, zero payload reads and composed quality-1
+conversion. Complete selected state, arena, guards and input plus all ordered
+snapshots are checked. Integer ABI, PC53-nearest CW/TOP, unused output capacity,
+specimen/bank identity and the forbidden-syscall negative control pass.
+
+Formatter/logger calls only record arguments and return; no formatted path
+bytes are produced. The destination is unused by the tested compressed route
+and original null-stream stub. The original ASCII-locale comparison/copy does
+execute; other locales do not. Heap/COM/destruction hooks retain memory, so
+sample reuse and insertion are not proof of actual device or object lifetime.
+No bank traversal, real file access, audible behavior, Load/Save composition or
+startup acceptance is claimed. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+distinguishes caller evidence from the separate Ghidra correction below.
+
+The preserved v1 outer run passed but inherited two-record receipt wording
+from direct mode and duplicated one case. V2 narrows the executed-record metadata
+to record 3 and replaces that duplicate with reuse preserving music word 256.
+The ELF is unchanged. Exact prompts and full independent reports stay in the
+existing private review owner; these original-code experiments did not open or
+modify a Ghidra project.
+
+### Sample-loading Ghidra metadata — September 22
+
+The [two-stage correction](reverse-engineering/ghidra/README.md#sample-loading-metadata--september-22)
+passed fresh PRE equality against independent Archive A recovery, restored
+read-only opening, isolated dry/apply/separate readbacks, sealed-spec readbacks,
+independent exact comparison, live dry/apply/separate readbacks and independent
+POST copy/restore/opening. Scope: two function names, four explicit parameter
+names, four nonrepeatable comments and four tag sets. Every return/parameter
+type, storage location, local, type definition, stack record and instruction is
+preserved, along with all 8,327 non-target functions. Exactly four of 32,698
+variable rows change their names. All nine live exports equal the reopened
+rehearsal; only `commentsSha256` changes among program metrics.
+
+The framework's former `arity * 4` rule could not represent the bank's existing
+one-byte `char` parameter extent. A narrow exception requires the existing
+dynamic types, convention, shape and extent to match; it does not widen the
+parameter or change its four-byte stack purge. A focused API-proxy positive
+and 16 negative variations execute this admission predicate. Actual saved
+database comparisons establish storage preservation separately. Wrong-comment
+and wrong-extent read-only controls also refuse with no attempted writes and
+byte-identical project inventories.
+
+Private owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/`.
+The executed entry points were `prepare_preservation.py`, `prepare.py`,
+`rehearse.py loading`, `rehearse.py parameters`, `negative_controls.py`,
+`apply_live.py`, `compare_exports.py live-post` and `finish.py`, each invoked
+with `python -P`. Exact headless commands and receipts are retained there.
+`PYTHONPATH=. python -P tools/ghidra_cohort_framework_tests.py` passed **93 tests
+without skips**, including after the reviewed live allowance. The name oracle,
+documentation and public-payload checks passed. Review corrected the draft
+stub coverage count to two cases and clarified name-copy padding before their
+respective rehearsal applies. Final specs add only the derived live-applier
+hash to the measured rehearsal pins. The tracked checkpoint is unchanged.
+
+These metadata changes preserve the preceding 44 direct and 25 outer controls;
+they do not execute successful whole-bank traversal, actual sample destruction,
+real audio-device operations or a complete startup.
+
+### Original sample destruction and failed loads — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/sample_destruction_control.py`
+passed **23 cases / 112 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/sample-destruction-run-1waarils/destruction`;
+receipt SHA-256 `6105827101f7cba36147e6b60f75fb63c498ac4cb6644ac5bcfdd392f63e95fc`;
+ELF SHA-256 `6c056ab660b46afbd538f23c43992f9b24dd917861cf692edaa1330f46620c01`.
+`sample-destruction-controls-v2.log` records the result. Seven complete original
+bodies total 615 bytes. The saved driver preserves the exact source used; the current
+driver subsequently gained the composition mode below.
+
+Cases cover deletion flags, all canonical list positions, matching/nonmatching
+events, zero playing state, negative channels, strict notification flags,
+null primary/secondary slots, owner-list removal and deliberately inconsistent
+ownership. Independent review recomputed all final captured bytes and hook
+snapshots from actual saved inputs. It caught four fixtures labeled singleton
+that actually inherited a middle position. V2 explicitly supplies singleton
+ownership: all four now clear the canonical head. The ELF/assembly are unchanged;
+the other 19 inputs are identical, and their outputs differ only in captured
+per-process FS addresses. V1 remains preserved, not counted as singleton evidence.
+
+`python -P local-data/test-runs/save-startup-20260919/sample_destruction_control.py --load-failure`
+then passed **11 cases / 84 ordered hook snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/sample-load-failure-run-0gj_94uh/destruction`;
+receipt SHA-256 `77bbc859158828ba198e2a8c3bbc09bedc8db99e96a52b27998835c059d61bc3`;
+ELF SHA-256 `d4188bf8a6adb55a854aef8c17e9a0f9bfd32cb147e38282949731b972e9bdca`.
+`sample-load-failure-controls-v3.log` records the result. Four additional complete
+bodies retain 2,278 original bytes in total: CreateSample, ASCII name comparison,
+the buffer loader and cached Read now reach the original destructor. Authored
+headers declare 32 or zero decoded bytes, with no following payload. This is
+failure-path composition, not successful bank loading or a decoded retail record.
+
+The selected pristine specimen remains SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Both instruments check original bodies/data/BSS, nonoverlapping ELF segments,
+full selected guarded state, unchanged input, ordered snapshots, unused output
+storage, integer ABI, PC53-nearest CW/TOP and normal FS-chain restoration.
+The forbidden-syscall control terminates with SIGSYS and empty output. Root
+separately decoded failure outputs to check exact release counts, canonical
+unlinking, fresh-case preservation and zero-size versus EOF error state.
+
+The composed instrument's preserved v1 syntax failure executed no experiment.
+V2 exposed an incorrect expected incidental ECX value at the loader's Release:
+`005172da` loads its vtable into EDX, leaving the supplied heap hook's ECX intact.
+V3 corrects that expectation from the instructions, without changing original
+bytes. Formatter/logger hooks validate stable arguments; the formatter writes
+no path bytes because this route does not consume them. Heap and COM storage
+is retained, and owner callbacks only record. These checks do not establish
+actual reclamation, device lifetime, callback side effects, exception dispatch,
+successful bank traversal, file publication, playback or complete startup.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
+records observed ordering and adverse-fixture limits. Exact review prompts,
+reports and primary dispositions remain in the existing private review owner.
+No Ghidra project was opened for these experiments.
+
+### Original complete bank loading and reloads — September 22
+
+`python -P local-data/test-runs/save-startup-20260919/audio_bank_control.py --all`
+passed **11 cases / 184 sample attempts / 2,009 ordered hook snapshots**.
+Accepted stem `local-data/test-runs/save-startup-20260919/audio-bank-run-6yqv9knl/bank`;
+receipt SHA-256 `bfb45043109560269cca4385d05fd181ed05d1c92e06938be59563a412f3d71a`;
+ELF SHA-256 `7e72a16b3d946ed632f7f5b14bb939201a84807e67836f1675be08c830cce533`.
+The frozen driver, exact inputs/outputs and `audio-bank-controls-v5.log` retain
+the executed work. Thirteen complete bodies total 4,709 unchanged original bytes
+from pristine SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+The full English bank at quality zero exercises all 164 records and six actual
+original-code refill requests. Ten bounded variants use private two-record
+derivatives or complete empty headers: reuse on/off across two loads, qualities
+one/two, altered tags with trailer, counts zero/negative, first-sample Create/Lock
+failure and CloseHandle false. Full PCM destinations/guards, final object/global/
+cache/scratch regions, complete samples at every progress event, file state,
+resource ordering and all nine per-event cursor/counter/liveness words are checked.
+The stack is owned initialized storage; integer ABI, normal SEH restoration and
+x87 control/stack state pass. Raw final status `0x220` for the full bank is a
+this-host observation, not a portable whole-status-register guarantee. The
+forbidden-syscall control terminates with SIGSYS and empty output.
+
+Independent read-only review parsed saved bytes without running/importing the
+driver. Root separately checked admitted bodies, source and output identities,
+every progress name/size/buffer/link/head, refill indices and consumed versus
+prefetched lengths. A separate read-only AST extraction of the materializer's
+two tables and pure decoder matches **all 164 PCM outputs / 21,537,072 bytes**;
+source SHA-256 `710c3843f533af18e9b634ed40051da2ab1f1a6cb71fab0db716e13081566081`.
+`audio-bank-materializer-comparison.json` records each comparison; it is not a
+full materializer run or a lower-quality/playback validation.
+
+Earlier attempts remain preserved. V1 failed assembly because `GS` collided
+with a register name; no original code ran. V2 passed the first whole-bank
+control but omitted the intended per-event I/O cursor capture. V3 corrected
+that capture and strengthened checks, then exposed an incorrect x87 expectation:
+the final `FSTP` rounds `163/164` upward to float32, setting C1 as well as precision.
+V4 corrected the oracle from that instruction sequence. V5 replaces the skipped
+intermediate reload comparison and checks exact release/publication order.
+Its ELF and all 33 case input/output/stderr files equal V4 byte-for-byte.
+
+Heap, filesystem imports, COM/device behavior, formatting and frontend progress
+remain explicit supplied boundaries. The trailer is prefetched but not parsed;
+CloseHandle false tests ignored return behavior, not actual closure. No Ghidra
+project, original save or production implementation was changed. The
+[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+records reconstruction implications and remaining composition/playback limits.
+Exact review prompts and reports remain in the existing private review owner.
+
+### Original coupled settings and audio routing — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/load_audio_routing_control.py`
+passed **nine cases / 105 ordered boundary snapshots**. Accepted stem
+`local-data/test-runs/save-startup-20260919/load-audio-routing-run-k7s4slkl/load`;
+receipt SHA-256 `cf4e5f977337b48c6708092c16f3bd1f70b6d0a554b25090155f917656f9ef3c`;
+ELF SHA-256 `32f3706cf90767612102048337a6e8cc07c2eb407353488d44e772cc737dc859`.
+The frozen driver and `load-audio-routing-controls-v2.log` retain this run.
+Thirty-seven complete original bodies total 7,257 bytes; the language-name
+getter also uses its original 20-byte jump table. Pristine and unchanged gold
+identities remain those recorded above.
+
+Cases vary prior language/path, each of four audio comparison words, both
+preservation flags and supplied Init success/failure. All use the same real
+fixture. Eight full-settings cases preserve all 10,004 bytes in both original
+serializer outputs. The ninth preserves live settings and checks their complete
+expected serialization. Six complete selected-state snapshots, source/serializer
+guards, all recorded paths, bank arguments/return sites, integer ABI, owned stack
+and x87 control/TOP pass. The forbidden-syscall control terminates with SIGSYS.
+
+Root independently compares original bodies/data/zero BSS, nonoverlapping ELF
+regions and the read-only jump table against the pristine file. Saved-output
+readback checks all source/control bytes, complete serializers and guards,
+immutable music vtable and all 44 CLI-tail bytes at every observation phase.
+Full review and root readback remain private. The retained v1 failure caught
+Python/assembler escaping removing the authored path separators; v2 uses numeric
+string bytes and verifies their exact loaded representation. Retail bytes are
+unchanged.
+
+This composition executes reset/shutdown and language-path construction, with
+actual bank loading at a **recording boundary**; it is not the preceding full-bank
+experiment embedded into Load. Device Init supplies status without state effects;
+its failure leaves the authored initialized flag set, admitting the later refresh.
+That case does not establish real device failure recovery.
+The formatter produces only the admitted bank-path template; heap, music-platform
+shutdown, diagnostics and latest-world remain supplied boundaries. No actual file
+Open, device normalization, playback or cold-start reachability is established.
+The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
+records the stale-path result, second-load correction and serialization limits.
+
+### Original audio-device initialization — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/audio_device_init_control.py`
+passed **29 cases / 3,213 ordered observations** in
+`local-data/test-runs/save-startup-20260919/audio-device-init-run-6_s044v6/init`.
+Receipt SHA-256 `5730c451811c14b1d7e5ac18f4de80435d0751328088dea1cdd9d669f2a720f9`;
+ELF SHA-256 `2d7e3083761c5a856cc0d4ce49221a030fd4cbdae63726e9463e83f329ac2d56`.
+The frozen driver SHA-256 is
+`dd8a21137262a162074829051063f21b798e21afe04d1904b723507740a7ccec`;
+`audio-device-init-controls-v1.log` retains the command outcome.
+
+Nine complete original bodies total 2,412 bytes, including Init, actual callback,
+wrapper construction/destruction and description conversion/copy. The loaded
+bodies/data/zero BSS match the pinned pristine specimen. Each case compares two
+complete 39,300-byte selected-state snapshots, intact input, immutable vtables,
+ordered consequential boundary calls, manager/CLI/wrapper state, GUID/capability/
+descriptor/format payloads and exact stack-relative output locations. The owned
+initialized stack, integer ABI, FS-chain restoration and x87 control/status pass.
+The forbidden-syscall negative control terminates with SIGSYS and empty output.
+
+Cases include every main failure stage, positive HRESULTs, null allocation,
+existing-wrapper early return, filtered enumeration, eleven callbacks versus ten
+records, returned enumeration failure, index boundaries, all format branches,
+automatic/explicit method/count values, high-bit count arithmetic, and bounded
+high-byte/49/50-byte descriptions. Supplied failures normally write null output;
+the second QueryInterface failure deliberately leaves its prior output unchanged.
+The existing-wrapper case retains an authored table-count sentinel; the receipt's
+`admittedDevices` field there is **not an enumeration count**.
+
+Root independently reads the saved bytes without importing/running the driver;
+`root-output-review.json` records original-byte identity, index/GUID selection,
+unchanged settings and manager regions, exact format requests and selected failure
+results. Independent read-only reviews also reconstructed every selected-state
+byte and all 3,213 event positions; full prompts/reports remain in the existing
+private review owner. Acquisition counters describe this invocation's resources,
+excluding pre-existing authored pointers. These are isolated original-code controls with supplied heap, API, COM,
+logger and narrow hex formatter behavior. No real device, playback, save Load/Save
+composition, empty-description localization or complete startup acceptance is
+established. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
+records the reconstruction implications and remaining boundaries.
+
+### Original outer sound-manager initialization — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/audio_manager_init_control.py`
+passed **10 cases / 3,595 observations**; the accepted frozen owner is
+`local-data/test-runs/save-startup-20260919/audio-manager-init-run-3gzsvdhh/init`.
+Receipt SHA-256 `b076063fe41d4d232f1a5e2faa732eeabbc68ba464c36801c12cb51fe421cfa0`;
+ELF SHA-256 `fb9b1d9edf9cf75fcece6ebc5a7cac954c6efa9190acb535afd22a467fd38f34`;
+driver SHA-256 `d836eabc774d830862342da5d2001ae8d064229dd0a7b047f998bd055f507a73`.
+The command log is `audio-manager-init-controls-v2.log` in the parent owner.
+
+Seventeen complete bodies total **4,148 original bytes**. Two 84,804-byte selected
+snapshots per case cover the guarded pool/menu/console objects, manager/device
+state, master volume, timer/baseline, registry, locale and excluded effect-list
+region. Ordered events check original receiver/stack conventions, all 256 pool
+allocations, before-call manager state and timer output-pointer locations.
+The fixture verifies normal-return integer ABI, stack guards, FS restoration,
+the x87 control word and permitted status bits. The forbidden-syscall control
+terminates with SIGSYS and empty output. Actual APIs are intercepted.
+
+Cases cover successful setup, failed device creation, empty device enumeration,
+existing and null wrappers, pre-existing registry/uppercase console entries,
+first and established performance-counter baselines, zero API return status
+with supplied counter output, and unsigned millisecond fallback. Pool/menu/
+console allocations succeed by construction. The SFX parser is excluded at its
+exact call boundary; effect-list state is unchanged, not populated successfully.
+
+Root readback independently checks body/data identity, all outer object bytes
+and guards, registration links/fields, initialized high bytes, sampled values,
+event ordering and snapshot pins without running/importing the driver.
+`init.root-readback.json` records it. All 30 input/output/stderr artifacts equal
+the preserved first run; the second version replaces unused excluded-locale
+traps with their verified targets and adds pointer/logger assertions. Neither
+version alters original instructions. Full read-only review reports remain in
+the existing private review owner. No real clock/device, SFX parser, Load/Save
+composition, full WinMain/shell execution or player acceptance is established.
+See the [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
+
+### Original device effects during Load and Save — September 23
+
+`python -P local-data/test-runs/save-startup-20260919/load_device_composition_control.py`
+passed **8 cases / 89 routing and 358 device observations** under
+`local-data/test-runs/save-startup-20260919/load-device-composition-run-klssepgg/load`.
+Receipt SHA-256 `9de4fbccc9c0f879bf7ab843b74a416264de922fccfa021ba55b665ff00e65de`;
+ELF SHA-256 `537b86bf6ac0d40d6399020f62e2f73c6648aa6888a9055fcf369a02789eb3f6`;
+frozen driver SHA-256 `ebad6f2bf11401e94d3e3c9e38feb8a2978524df018af70e9028faac3bf079af`.
+The parent owner retains `load-device-composition-controls-v2.log`.
+
+The ELF combines **46 complete original bodies / 9,669 bytes** and the original
+20-byte language table. Six complete 80,392-byte selected snapshots per case,
+both 10,004-byte serializer outputs and their full capacities/guards are checked.
+The second Load reads the first native serializer buffer directly. Five inputs
+are unchanged gold; three alter only the declared device-index field. Every
+case preserves its original input and supplied platform data. ABI/stack/FS and
+x87 checks pass, as does the SIGSYS forbidden-syscall control. Generated output
+copies are created exclusively, fsynced and reread; this is Linux evidence for
+those files, not retail save-file durability.
+
+The first preserved prototype returned normally and matched its predicted full
+state, then failed an overly broad cached-path assertion. Its 64-byte capture
+contains the 52-byte path plus method/device/first-slot fields changed by Init.
+The accepted assertion predicts those adjacent fields separately and still
+checks all 64 bytes. ELF, first input and first output are unchanged. Root's
+separate `load.root-readback.json` checks source identities, all serializers,
+unknown-byte preservation, device pointers, flags and stage-specific requests
+without importing or executing the candidate. Independent read-only reviews
+remain in the existing review owner.
+
+Original outer startup and final bank parsing are excluded. Initialized state
+is authored; platform, heap, diagnostics and the final bank request are supplied
+boundaries. A failed device's later bank request does not establish usable audio
+or safe recovery. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
+separates saved preferences, live device state and pending downstream behavior.
+
+### Original bank null-device controls — September 23
+
+Four local GDB variants reuse the byte-identical original bank ELF
+`local-data/test-runs/save-startup-20260919/audio-bank-run-6yqv9knl/bank`
+(SHA-256 `7e72a16b3d946ed632f7f5b14bb939201a84807e67836f1675be08c830cce533`).
+Their commands, scripts, logs and native outputs are under
+`local-data/test-runs/save-startup-20260919/audio-bank-null-device-run-pkoygbwh/`;
+`result.json` SHA-256 is
+`937adf970408fb171119c8c3de991acde07c5608b61d3fcefe928abc81ef14fe`.
+Each recorded command is `gdb -q -nx -nh -batch -x <owned-case.gdb>`; automatic
+loading, debuginfod and history writes are disabled. Core dumps remain disabled
+and the original fixture's syscall filter remains installed.
+
+The breakpoint is in owned wrapper code immediately before the bank call,
+after its initial snapshot. GDB changes only four declared process-state fields:
+main device, initialized byte, listener and wrapper. With two real retained bank
+records and a supplied valid device, execution completes two samples/buffers.
+With a null device, initialized bytes one and zero both stop at original
+`00517595` with EAX zero/SIGSEGV, before COM dispatch. A valid zero-count input
+with a null device completes without samples. Debugger exit terminates its own
+stopped inferior; the recorded stopped PIDs were subsequently absent.
+
+Root compares **6,675,024 bytes** of the two successful outputs with retained
+parent outputs: only the nine/twelve declared final-snapshot bytes differ. All
+PCM, event and guard bytes match. The initial snapshot predates debugger writes
+and remains identical. `result.root-readback.json` records that comparison;
+independent read-only inspection checks all thirteen original body pins and
+the four debugger captures. The ELF and original inputs remain unchanged.
+
+These are isolated original-instruction observations with supplied file/heap/COM
+dependencies. They are separate from the composed Load experiment, and establish
+neither real Windows/Proton failure nor full startup reachability. The
+[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
+distinguishes null-interface dereference from a returned method failure.
+
+### Scheduled-event constructor boundary — September 19
+
+The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
+passed fresh PRE equality/restore-open, isolated dry/apply, separate readback,
+independent comparison, live dry/apply/separate readback, and independent
+Archive A POST restore-open. Both actual-database negative controls rejected
+their inputs before writes: wrong body hash and a clipped final return.
+The replica remained byte-identical after both refusals. All nine live
+exports equal rehearsal; all 8,330 prior functions, 32,697 prior variables,
+types, bookmarks and prior stack records are unchanged. The sole addition is
+the default 64-byte, 15-instruction function at `0044b190`, with its default
+return and unknown-purge stack records. Only the function-count metric moves.
+
+`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**.
+The initial direct-file invocation could not import the repository package;
+the module invocation is the executed passing command. The base applier is
+unchanged; the derived live applier admits only the additional declared cohort.
+`python tools/re_function_doc_names_check.py --self-test` passed after the
+current-name projection gained the new default function. Frozen tables stay
+unchanged. These checks establish the bounded correction, not a recovered
+semantic prototype or retail runtime behavior.
+
+Private owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/event-constructor-boundary/`.
+`*.command.json` records the actual headless arguments; corresponding logs
+and receipts preserve outcomes. `compare_exports.py rehearsal-post` and
+`compare_exports.py live-post` independently check the full exported records.
+The first comparison stopped at the added default return record; inspection
+confirmed its meaning and the final comparison admits exactly that new
+record while preserving all existing variables. `live-readback.json` and
+`post-restore.json` identities are recorded in the Ghidra owner above.
+
+### Shared math-error Ghidra correction — September 19
+
+The [one-function correction](reverse-engineering/ghidra/README.md#shared-math-error-abi-correction-2026-09-19)
+replaces `00561547`'s fabricated hidden-pointer/fastcall description with six
+explicit register/x87/stack inputs and a `float10` ST0 return. It changes only
+the prototype, nonrepeatable comment and tags. The binary64 spill/reload and
+conditional control-word restore remain explicit in the comment; this is a
+physical ABI model, not a recovered C declaration.
+
+`python -m unittest tools.ghidra_cohort_framework_tests -v` passed **92 tests**.
+The optional custom-storage route adds exact PRE/POST ABI pins, parameter
+name/storage conflict checks with `force=false`, and a protected census of
+program bytes, all locals, unrelated internal/external ABIs and datatype
+definitions/settings. The historical dynamic-storage census is unchanged.
+Independent opens exposed the built-in `ImageBaseOffset32` type's process-local
+ID; pinned Ghidra source and a complete field comparison justified excluding
+built-in IDs, while persistent type and source-archive identities remain bound.
+
+Ten actual-Ghidra negative controls refused before writes: conflicting local
+names/storage, target/unrelated local comments, same-rendered input-register,
+stack-offset and return-register changes, incomplete bindings, width mismatch,
+and overlapping inputs. Three additional database-backed controls detect enum,
+function-definition and argument comments that the rendered definitions omit.
+All control projects were opened read-only and retained identical project bytes.
+
+Fresh isolated dry/apply/separate readback and the sealed repetition passed;
+the live dry/apply/separate readback produced identical full exports. Only
+one of 8,330 function rows changed; all 8,329 other rows and every local
+variable remain identical. Removing the invented parameter reduces variable
+records from 32,697 to 32,696. Types, bookmarks, saved stack details, Plane-depth
+and all target instructions are unchanged; only `commentsSha256` moves among
+29 program metrics. Independent review also reconciled all 8,965 protected
+census entries. The scoped source correction does not validate the real CRT
+dispatcher, exceptional inputs, Windows behavior or gameplay.
+
+Commands, exact manifests, logs, full comparisons and PRE/POST recovery receipts
+belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/promotion/`.
+The Ghidra correction record above owns the live-readback and recovery identities;
+no tracked-checkpoint refresh is included.
+
+### Asin-helper Ghidra correction — September 19
+
+The two-function [correction record](reverse-engineering/ghidra/README.md#asin-helper-metadata-correction-2026-09-19)
+owns the exact manifest/spec and working/recovery identities. Fresh exports
+matched 194 pristine bytes across 54 instructions. The final rehearsal and
+independent full comparison changed only names, nonrepeatable comments and tag
+sets at two entries; all prototypes, 32,697 variable records, 8,328 non-target
+function rows and program structure remain unchanged. Only the program comment
+digest moves. All nine live exports match the separately reopened rehearsal.
+
+The existing framework passed isolated dry/apply, stale-second-comment refusal
+before writes, sealed readback, live dry/apply/separate readback, and independent
+Archive A POST restore/read-only reopen. The refusal control used the initial
+draft with the same PRE guards; final wording was rehearsed on a fresh PRE copy.
+`python -m tools.ghidra_cohort_framework_tests` passed **91 tests**. Direct script
+invocation first failed to resolve the existing `tools` package; module invocation
+passed without a framework behavior change. The only live-applier change is the
+exact new cohort grant. Private commands, logs and comparison records are under
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/asin-helper-semantics/`.
+
+The tracked checkpoint is unchanged. Implicit x87 inputs, the shared error helper's
+signature and alternate-entry ownership remain separate open work; the corrected
+names do not certify those prototypes or live gameplay.
+
+### Aim-provider Ghidra correction — September 19
+
+The four-function [correction record](reverse-engineering/ghidra/README.md#aim-provider-metadata-correction-2026-09-19)
+owns the immutable manifest/spec and measured working/recovery identities.
+Fresh body exports matched all 731 pristine bytes, covering 239 instructions.
+Independent read-only review checked the semantic corrections and compared all
+8,330 internal function rows and 32,697 variable records. Exactly four function
+metadata rows and two return-type/storage records changed; every formal
+parameter/local and all non-target rows stayed unchanged. The only program
+metric change was `commentsSha256`; types/bookmarks/stack/Plane-depth held.
+
+The existing framework ran read-only dry, isolated apply, separate readback,
+stale-PRE refusal, sealed readback, live dry/apply/separate readback and independent
+POST restore/reopen. All nine live exports equal the reviewed rehearsal. The
+stale-PRE control reports failure with `writesAttempted=false`; headless exit zero
+alone was not treated as success. Framework checks passed **91 tests** with
+`python -m tools.ghidra_cohort_framework_tests`; the live twin differs only by the
+new exact cohort grant. Current-name projection and public-safety self-tests
+also passed. Raw commands, logs, manifests, comparisons and restore receipts are
+under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/aim-provider-semantics/`.
+
+The tracked checkpoint payload remains byte-identical. Neither the metadata
+correction nor the isolated endpoint experiment above establishes actual segment
+poses, live combat or reconstruction acceptance.
+
 ### UnitAI exit comment correction — September 12
 
 The exact one-comment manifest passed the preserved rehearsal/live/readback/
@@ -3130,3 +4859,144 @@ execution, complete dying flight, contacts, avoidance, full event/RNG order,
 or the player-input tutorial and Save Lab UI acceptance routes. No desktop
 control, visible launch, asset regeneration or gameplay-constant adjustment was
 used. Schema 48 binds spawned exit ownership; unspawned schema 47 stays intact.
+
+## Native companion migration — September 19
+
+This section records the standard-engine/standalone-helper predecessor at
+`9764e585`. The active architecture and subsequent checks are in the
+[.NET integration section](#companion-net-integration--september-19).
+
+`npm test` runs the standard-engine native scene/domain and media tests, followed
+by the explicit file bridge's **17** protocol cases (including six Linux
+transaction race/failure cases) and **12** focused launcher/package tests.
+The completed run is canonical `local-data/companion/gdscript-test-xc1i0e2n/`.
+The fixture was copied before use. Tests independently compare all 10,004 bytes,
+selected low-24-bit counts and packed/unselected bytes; source content and physical
+identity replacement, aliases, destination conflicts, failed staging and invalid
+receipts are meaningful negative cases. Test-only race hooks are absent from the
+production protocol. Shared AppCore source remains unchanged.
+
+The isolated Xvfb/llvmpipe render run at
+`local-data/companion/gdscript-render-p5wuchkj/` exercised the actual scene and
+protected publication before capturing its own viewport. It confirms rendering
+and programmatic controls; it does not claim human click-through, audio or Windows
+execution. No physical desktop was used. Engine and template identities are pinned
+in the companion's `toolchain.json`, verified against the shared installation.
+
+Use `npm run export:companion-godot -- --platform both` for standard Linux/Windows
+x86_64 packages with separate self-contained file-bridge directories and licenses.
+The September 19 packages are in canonical
+`local-data/companion/gdscript-export-pdsz2xf4/packages/`. The final scene suite
+also passed against that staged source and its packaged helper after the result
+scroll/column-label changes: `local-data/companion/gdscript-final-scene-lfre5ykz/`.
+
+The exported Linux application passed a separate actual-input workflow on isolated
+Xvfb with software OpenGL. XTest events reached only that virtual display. The
+real file dialog opened an owned golden-fixture copy; controls selected Aircraft
+3221 → 123456, displayed the byte preview, explicitly published and reopened the
+result, refused an existing destination, created an unchanged recovery copy, and
+opened that verified copy as the next source. An independent byte comparison found
+exactly offsets `0x23F6`–`0x23F8` changed; all 10,004 bytes of the original and
+recovery matched, and all unselected/packed bytes in the edited copy were preserved.
+The source SHA-256 is `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`;
+the edited SHA-256 is `84fee8d5db1967b38788e363e314be5dce2c1ef276cbc11fd5fa12eb2f43a51e`.
+`ONSLAUGHT_FILE_BRIDGE` was unset, `PATH` was `/usr/bin:/bin`, and `DOTNET_ROOT`
+pointed to a nonexistent directory, exercising the sibling self-contained helper.
+Receipts and own-display captures are in
+`local-data/companion/export-acceptance-nx_j5ynz/`. The app and virtual server were
+stopped after the check. Only virtual input-method/V-Sync warnings occurred.
+
+Both package hash inventories verified all 194 listed files. The Linux inventory
+covers 152,222,368 bytes and Windows 185,773,971 bytes, excluding the inventory
+file itself. ELF/PE x86_64 identities, runtime 8.0.30 and licenses were inspected.
+Mounted package resource views contained no legacy C# project, tests, saves,
+retail or GPL rebuild payloads. This is Windows cross-export/package evidence;
+Windows execution, its retained guarded staging handoff, human usability and
+audio acceptance remain open. No physical desktop, VM, release or hosted CI was
+used.
+
+The original worktree project also passed a headless standard-editor import,
+including its retained C# reference files. Its ten GDScript UID files are tracked
+so opening the source preserves stable editor identities. Import receipt:
+`local-data/companion/gdscript-source-editor-o1jyr6ug/logs/source-import.log`.
+
+## Companion .NET integration — September 19
+
+David clarified that any necessary C# belongs inside Godot's .NET edition, while
+GDScript should own as much application behavior as possible. The companion now
+uses the existing shared **4.8.dev6.mono.official.8898c2b3d** editor and matching
+templates. The standard `godot48` install was not changed. The active C# assembly
+contains a thin RefCounted adapter, compatibility stubs and the two unchanged MIT
+file-safety sources. Scenes, save interpretation, edit plans, comparison, media
+inventory and workflow remain GDScript. The subprocess protocol, base64 transport,
+helper-path environment hook and sibling production helper are gone.
+
+`npm test` passed in canonical `local-data/companion/godot-dotnet-test-1rg3gl2k/`:
+the actual scene workflow, byte-domain and media cases, direct adapter tests, six
+publication races and twelve launcher tests. Adapter cases include exact owned
+round trips, independently prepared byte edits, malformed lengths/hashes/paths,
+same-byte source identity replacement, changed content, hard/symbolic links,
+existing/dangling destinations and game-tree refusal. The scene verifies raw
+managed byte-array results and independently reopens successful publications.
+No legacy JSON protocol test is counted as current application acceptance.
+
+The subsequent main integration independently reran `npm test` against the
+combined tree: the Godot .NET build had zero warnings/errors, headless import and
+all GDScript checks passed, the actual scene/domain/adapter workflow reported zero
+failures, and all six publication race cases and twelve launcher tests passed.
+Runtime output is canonical `local-data/companion/godot-dotnet-test-fa1cjhbm/`;
+the integration command/log owner is
+`.worktrees/main-integration-20260919/local-data/merge-checks/companion-dotnet-ym7xiwqf/`.
+The integration did not rerun the exported-app interaction or Windows acceptance
+described below. Rebuild production files and the separate RE checkout were not
+changed by this companion merge.
+
+The UI awaits one worker thread without falsely treating a timeout as cancellation.
+Normal closing while busy is deferred until the transaction returns; shutdown
+joins an outstanding worker. A read-only integration review found no actionable
+ownership, thread-lifetime, uncertainty or unchecked-write issue. The unchanged
+filesystem code's Windows staging-handoff and power-loss limitations remain as
+documented in the [API/safety record](companion/OnslaughtToolkit.FileBridge/README.md).
+
+The actual worktree source built with zero warnings/errors and imported headlessly
+with the .NET editor: `local-data/companion/mono-source-editor-ps1m7phv/`.
+The same source also passed the editor's `--build-solutions` command, recorded in
+`editor-build.log`. This validates the source project a user opens, as well as the
+isolated snapshots.
+
+Normal Godot .NET Linux and Windows x86_64 exports completed in canonical
+`local-data/companion/godot-dotnet-export-ph2r7cmk/packages/`. Both hash inventories
+verified all 194 entries, covering 158,347,590 Linux bytes and 191,890,481 Windows
+bytes, excluding the inventories themselves. Package inspection confirmed ELF/PE
+x86_64 executables, the integrated assembly, runtime 8.0.30 and notices. No helper,
+AppCore assembly, WinUI assembly or test harness is shipped. The mounted resource
+views omit retained SaveLab/test resources; the two active C# script resources are
+Godot's one-newline managed-script placeholders, not source text.
+
+The exported Linux .NET application passed real file-dialog and button input on
+isolated Xvfb/software OpenGL. XTest reached only that private display. The flow
+opened an owned real-fixture copy, selected Aircraft 3221 → 123456, previewed the
+three changed bytes, explicitly published and verified/reopened the edited copy,
+refused an existing destination without changing it, created an unchanged recovery
+copy and opened that verified result. Independent full-byte checks found only
+`0x23F6`–`0x23F8` changed. The original and recovery matched all 10,004 fixture bytes
+(SHA-256 `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`);
+the edited copy hashed to
+`84fee8d5db1967b38788e363e314be5dce2c1ef276cbc11fd5fa12eb2f43a51e`.
+`PATH` was an empty directory, both `DOTNET_ROOT` variables pointed to nonexistent
+directories and the old helper environment hook was unset. `/proc` mappings
+confirmed `libcoreclr`, `libhostfxr` and `libhostpolicy` loaded from the exported
+package's own runtime directory. Receipt, package inspection and own-display
+captures: `local-data/companion/dotnet-export-acceptance-d394_btv/`.
+
+Normal exported-app closing through `WM_DELETE_WINDOW` on a separate private
+display exited with code 0 and no error lines:
+`local-data/companion/dotnet-close-wm-atoms-_gnw9ww7/receipt.json`.
+The bare virtual display needed the standard window-manager atoms initialized
+before launch. The earlier forced-SIGTERM cleanup emitted engine teardown
+diagnostics and is retained separately, not counted as clean closing. Both runs'
+owned app/server processes, display sockets and private cookies were cleaned up.
+
+This is executed Linux workflow evidence and Windows cross-export/package
+inspection. Windows execution, human usability and audio acceptance remain pending.
+No physical desktop, VM, release or hosted CI was used.

@@ -27,8 +27,12 @@ baseline report, David authorized the first Godot Save Lab workflow. Existing Wi
 release procedures describe the retained implementation, not a queued WinUI release.
 
 Linux owns development and native Godot execution. The rebuild now has Linux build/run/smoke/capture
-commands, and the companion has a native Save Lab shell backed by portable AppCore. The complete player
-walkthrough and Save Lab UI write/reopen acceptance remain unfinished; read `CURRENT_CAPABILITIES.md`.
+commands. The companion uses editable native GDScript scenes on Godot 4.8 dev6 .NET (`godot48-mono`);
+a thin in-process C# adapter links existing file-safety source for OS guarantees unavailable to GDScript.
+David clarified that necessary production C# belongs inside the .NET edition; the standalone helper
+prototype is retained reference source, not the active build or export route.
+Native scene/write/reopen checks passed on Linux; human interaction, the complete player walkthrough
+and Windows runtime acceptance remain separate; read `CURRENT_CAPABILITIES.md`.
 The full legacy AppCore suite, WinUI, Windows-targeted CLI and portable ZIP retain Windows dependencies.
 David retired the never-built Windows VM and its installer media on September 12. No local Windows
 validation environment is provisioned; Linux evidence does not establish Windows behavior.

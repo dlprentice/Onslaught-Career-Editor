@@ -1,8 +1,13 @@
 # DXParticleTexture.cpp Function Mappings
 
+Source File: retained DXParticleTexture.cpp coordinate mapping | Binary: BEA.exe (earlier analysis, not remeasured by this callee rename)
+
+Status: active function reference; retained evidence limits apply
+Summary: existing function analysis with current CDebugLog callee naming.
+
 > Debug path: `[maintainer-local-source-export-root]\DXParticleTexture.cpp` (0x00651dcc)
 > Functions found: 8
-> Last updated: 2026-05-20
+> Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
 
 ## Name corrections — 2026-07-28
 
@@ -143,7 +148,7 @@ Releases GPU resources for all particle textures without destroying the objects.
 Restores GPU resources for all particle textures after device reset. Recreates textures and shaders.
 
 **Key Operations:**
-1. Logs "CPT__RAS__" marker via `CConsole__Printf` (`FUN_00441740`)
+1. Logs "CPT__RAS__" marker via `CDebugLog__Printf` (`FUN_00441740`)
 2. Iterates through linked list at DAT_009c64d0
 3. For each object:
    - Determines texture format (2 or 5) based on type
@@ -322,7 +327,7 @@ Instance method that renders this particle texture's geometry.
 | 0x00549220 | CDXMemoryManager__Free | Free object memory |
 | 0x00558690 | CDXTexture__GetAnimatedFrame | Get texture surface |
 | 0x00568390 | stricmp (`FUN_00568390`) | Case-insensitive string compare |
-| 0x00441740 | CConsole__Printf (`FUN_00441740`) | Debug log marker |
+| 0x00441740 | CDebugLog__Printf (`FUN_00441740`) | Debug log marker |
 | 0x004725d0 | CGame__IsMultiplayer | Check multiplayer/current-level render condition |
 | 0x00515970 | PlatformInput__GetKeyOn | Check render pass |
 

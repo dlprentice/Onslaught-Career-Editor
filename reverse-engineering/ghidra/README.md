@@ -1,14 +1,14 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-12
+Last updated: 2026-09-22
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[UnitAI exit contract comment](#unitai-exit-contract-comment-2026-09-12);
+[sample-loading correction](#sample-loading-metadata--september-22);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -535,6 +535,264 @@ Copy, separate restore and read-only reopen passed without file mismatches;
 The full tracked checkpoint payload still matches its recorded inventory.
 No checkpoint refresh, name-projection change or runtime-parity claim follows.
 
+## Aim-provider metadata correction (2026-09-19)
+
+The exact [manifest](../../tools/cohort-specs/aim-provider-semantics.manifest.tsv)
+and [spec](../../tools/cohort-specs/aim-provider-semantics.spec.tsv) correct these
+four function names, nonrepeatable comments and semantic tags:
+
+| Address | Previous name | Corrected name | Native return |
+| --- | --- | --- | --- |
+| `00404120` | `CAnimal__CopyVector7CToOut` | `CActor__GetVelocity` | `void *`, EAX output buffer |
+| `00445070` | `CDiveBomber__SelectTarget` | `CDestructableSegmentsController__GetAimPosition` | `void`, unchanged |
+| `004fd4d0` | `CUnit__SelectTarget` | `CUnit__GetAimPosition` | `void`, unchanged |
+| `0050a0e0` | `OID__ComputeForwardProjectedPointTowardTarget` | `CWeapon__ComputeTargetAimPoint` | `void *`, EAX output buffer |
+
+The two pointer returns express observed native output-buffer ABI, not original
+C++ pointer-return declarations. All formal parameters and locals remain intact.
+[Provider ownership and ordered part selection](../binary-analysis/functions/DiveBomber.cpp/CDiveBomber__SelectTarget.md)
+and [endpoint prediction](../binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
+own the static and isolated-execution findings and their limits.
+
+Fresh PRE matched the independent September 12 exit-contract recovery, which was
+restored and reopened read-only. Rehearsal dry/apply, separate readback and an
+independent comparison passed: exactly four of 8,330 internal function rows,
+two return records among 32,697 variable records, and only the program comment
+digest changed. Types, bookmarks, saved stack, Plane-depth and all 239 selected
+instructions remain unchanged. A stale-PRE dry control refused before writes.
+The sealed live dry/apply/separate-readback passed; all nine exports match the
+reviewed rehearsal byte-for-byte.
+
+Measured working POST is `db.18648`: 18 files / 118,983,540 bytes, inventory
+SHA-256 `2176c30bd69c5b2be5ba60beae1498491f4df4b7f4eefed75608031c6afe823b`.
+The main database is 68,681,728 bytes, SHA-256
+`16f40a8a8c3f2bd2b4260939f873d55d186456b782d1bd7493c1e77e51d41025`.
+Independent POST recovery at
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-aim-provider-semantics/post-working/`
+was copied, hash-compared, restored elsewhere and reopened read-only successfully.
+The tracked checkpoint payload is unchanged; it was not writable-opened.
+
+Receipts and exports are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/aim-provider-semantics/`.
+`live-readback.json`: 2,402 bytes, SHA-256
+`f01d3a76a8b5f147bc2a032a9af986df82093f3318218d25f49e3a512ba36e6f`.
+`post-working-restore.json`: 5,778 bytes, SHA-256
+`6fd0bc9a4ce89fd5b9958b97135a1e51fff4706cc9bb7c8c7724328a4e293883`.
+This corrects analysis metadata; it does not establish retail gameplay acceptance.
+
+## Asin-helper metadata correction (2026-09-19)
+
+The exact [manifest](../../tools/cohort-specs/asin-helper-semantics.manifest.tsv)
+and [spec](../../tools/cohort-specs/asin-helper-semantics.spec.tsv) correct two
+misleading names, nonrepeatable comments and semantic tags:
+
+| Address | Previous name | Corrected name |
+| --- | --- | --- |
+| `0055dcb0` | `CRT__AcosDispatch_ST0` | `CRT__AsinDispatch_ST0` |
+| `0055dccd` | `CRT__Acos` | `CRT__AsinCoreWithFpuGuards` |
+
+The [Weapon B finite experiment](../binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+executes the original helper closure and establishes signed elevation behavior
+under its supplied inputs and floating-point state. The wrapper classifies a
+saved double copy while the core uses retained ST0 for arithmetic. Comments
+distinguish these paths, and obsolete verified-signature tags are removed.
+All prototypes and parameter/local storage remain frozen and explicitly
+unresolved. This does not repair the shared error helper at `00561547` or define
+the alternate entry at `0055dcc4`; those require separate structural/ABI work.
+
+Fresh PRE matched the independent aim-provider POST above and was restored and
+opened read-only. The final rehearsal and independent comparison changed only
+two of 8,330 internal function rows. All 32,697 variable records, types,
+bookmarks, saved stack, Plane-depth and the 54 selected instructions/194 bytes
+remain unchanged; only the program comment digest moves. A stale second-row
+comment control refused before writes. Sealed readback, live dry/apply and a
+separate readback passed. All nine live exports equal the reviewed rehearsal.
+
+Measured working POST is `db.18649`: 18 files / 118,983,540 bytes, inventory
+SHA-256 `a38825aab32f3741d826740381c19284c6f79f44ac830618cf831482ef342345`.
+The main database is 68,681,728 bytes, SHA-256
+`ed633e07053ad8e51104842cf6e2124da449160a34207ab2c47b9382a63e8591`.
+Independent POST at
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-asin-helper-semantics/post-working/`
+was copied, hash-compared, restored elsewhere and reopened read-only. The tracked
+checkpoint payload remains byte-identical and was not writable-opened.
+
+Commands, comparisons and receipts are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/asin-helper-semantics/`.
+`live-readback.json`: 2,306 bytes, SHA-256
+`d8d8ca16a4a4df45e4eca52c9184a8a3e80a4ed15ffe69d6670801fb07a49bde`.
+`post-working-restore.json`: 5,773 bytes, SHA-256
+`e42a86cf77d6b115c28435e529a96fda0d30a980cc77b6e4dd439bebd8a3625f`.
+This is an analysis correction, not retail gameplay or full math-library acceptance.
+
+## Shared math-error ABI correction (2026-09-19)
+
+The working project now measures `db.18650`: 18 payload files, 118,999,924 bytes,
+inventory SHA-256
+`dc3df9fdb2cc9c390f70421e47f2a25ecbcb18db5f8adcbb6763140a3a305c65`.
+Its main database is 68,698,112 bytes, SHA-256
+`f750ca22556143ee48fb2075f0715f4620e12ecb1b354e718b50b85c5ade86ec`.
+The [manifest](../../tools/cohort-specs/math-error-custom-abi.manifest.tsv) and
+[spec](../../tools/cohort-specs/math-error-custom-abi.spec.tsv) correct only
+`00561547`'s prototype, nonrepeatable comment and tags. Its retained name is
+`__startOneArgErrorHandling`. The physical ABI uses EAX, EDX, ECX and ST0 plus
+the two actual enclosing-frame arguments at stack offsets `+4` and `+c`, with
+ST0 return and zero purge. It removes the invented hidden-result pointer and
+keeps the enclosing return-address slot out of the parameter list.
+
+The [contract and original-code controls](../binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
+distinguish the `float10` register carrier from the binary64 spill/reload.
+Eight controlled calls establish the observed bridge behavior; they do not
+validate the actual CRT dispatcher, exceptional inputs, Windows or gameplay.
+The related record-type model, sibling ABI and outer entries remain separate.
+
+The existing framework now supports explicitly pinned custom storage. Its
+92 tests passed, as did ten actual-database refusals before writes and three
+datatype-comment controls. The fresh independent PRE matched working exactly,
+was restored elsewhere and reopened read-only. Isolated dry/apply/separate
+readback, independent full review and the sealed repetition all passed.
+Live dry/apply/separate readback equals that rehearsal in all nine exports.
+Only the declared function row changes; all 8,329 others, every local variable,
+type definition, body, byte, bookmark and saved stack offset remain unchanged.
+The removed auto parameter reduces saved variable records by one. Only the
+comment digest changes among 29 program metrics. Exact ABI and protected-state
+pins also cover storage, hidden/indirect flags, local first-use offsets,
+unrelated external functions and datatype metadata omitted by rendered text.
+
+PRE recovery is the verified asin-helper POST above. New independent POST is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-math-error-custom-abi/post-working/`.
+It was copied, hash-compared, independently restored and opened read-only;
+the restored bytes equal working. The tracked checkpoint remains the exact
+`745c00ad…` payload; no refresh occurred. Commands and comparisons belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/math-error-abi/promotion/`.
+`live-readback.json`: 2,490 bytes, SHA-256
+`f426dfc5ac9a8e93a93f0fadf52ab8e93d0a7b09d3fdcddcd915de61ec92d456`.
+`post-working-restore.json`: 5,779 bytes, SHA-256
+`c89ebc6389d77a9465759f1f174610727df56d3923bdd6577877f402d5f1a999`.
+
+## Renderer arguments and shared return-4 correction (2026-09-19)
+
+Two sequential, independently recovered cohorts correct the three functions
+used by the [selected-round registry investigation](../binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission).
+The [argument manifest](../../tools/cohort-specs/render-registry-arguments.manifest.tsv)
+and [spec](../../tools/cohort-specs/render-registry-arguments.spec.tsv) correct
+`004f35d0` to `void __thiscall CThing__InitRenderThing(void *this, void *init)`:
+ECX carries the receiver, the unused initializer occupies stack `+4`, and the
+callee purges four bytes. `005164b0` retains its existing name, return type and
+cdecl convention, with arguments `int class_id, void *render_interface`.
+Its old descriptor-table/owner-tag parameter labels described the wrong inputs.
+Both receive evidence-bound nonrepeatable comments and additive tags.
+
+The first POST measured `db.18651`: 18 files, 118,999,924 bytes, inventory SHA-256
+`122c67e9919e250b2b8515973f980e4b4dcde4c49dc1fee4e456f5e05236e8d6`.
+The main database was 68,698,112 bytes, SHA-256
+`1f4b7eb5472ee7cef522515a5e260e9c7c1f0ac7498fbdd2a1f48578cd456d36`.
+Exactly two function rows changed; 8,328 did not. The recovered initializer
+adds one parameter record; all locals and returns remain unchanged.
+
+The [leaf manifest](../../tools/cohort-specs/shared-return4-leaf.manifest.tsv)
+and [spec](../../tools/cohort-specs/shared-return4-leaf.spec.tsv) then rename
+`004db8c0` from `CPhysicsScriptValue__GetScalarSerializedSize4` to
+`SharedVFunc__Return4_004db8c0`, with contextual comment and additive tags.
+Its two instructions return 4 at 166 RTTI-resolved vtable slots, including
+Round's object ID and several unrelated meanings. The former name remains
+valid context for some PhysicsScript callers, not a unique implementation owner.
+The existing prototype/storage are preserved: a leaf that reads no arguments
+cannot distinguish thiscall from fastcall. All 8,329 other function rows and
+every variable record remain unchanged.
+
+The final working project measures `db.18652`: 18 files, 118,999,924 bytes,
+inventory SHA-256
+`4f82e35962a3db179afa71da1ee4712017b16cb89d6e87bf27d3f8c0eec98830`.
+Its main database is 68,698,112 bytes, SHA-256
+`600baa3b1fd9ef97634e047320fc70ba9e69ba3d41e8183f8634eb41ac5355d9`.
+Each cohort passed restored PRE, isolated dry/apply/separate readback,
+independent full comparison, live dry/apply/separate readback and independent
+POST restore. Each live result equals its rehearsal in all nine exports.
+Final spec pins were sealed from those measured rehearsals before live work;
+no second sealed rehearsal is claimed. Across both cohorts, types, locals,
+bookmarks, saved stack offsets, instructions, bytes and function boundaries
+are unchanged; only the comment digest moves among 29 program metrics.
+The framework implementation is unchanged; its live allowlist admits these
+two manifests, and all 92 focused framework tests passed.
+
+Independent POST copies are
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-render-registry-arguments/post-working/`
+and `/srv/archive-a/onslaught-ghidra-cold/2026-09-19-shared-return4-leaf/post-working/`.
+The verified math-error POST served as the first PRE, and the restored argument
+POST as the second. Each new cold copy was hash-compared, restored elsewhere
+and reopened read-only. The tracked checkpoint still matches `745c00ad…`;
+no refresh occurred. Evidence and commands belong to
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/round-render-registry/`:
+
+| Receipt | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `arguments-live-readback.json` | 2,395 | `f75e3ccea72ed342fba3f76fbf06cffcfc26a543c8eef4428b92b8cc142a0386` |
+| `arguments-post-restore.json` | 5,799 | `53b5ee067709899330329813d7a1736b06417a842cfb81da3c321e30ff88679b` |
+| `leaf-live-readback.json` | 2,300 | `ce2bb08babf1602053905505f1c94ad9ed946ff3028b52c3f6df9a36f4c68d03` |
+| `leaf-post-restore.json` | 5,778 | `2c7337330c05a9d58b63026ed22072610253ec505f1acd08f2c3bd938a66df9b` |
+
+The current-name projection now includes the neutral leaf manifest. Frozen
+tables and explicit-table consumers remain unchanged. These metadata repairs
+and the 22 isolated registry cases do not establish complete shot ordering,
+renderer execution or player-observed parity.
+
+## Scheduled-event constructor boundary (2026-09-19)
+
+The [manifest](../../tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv)
+and [spec](../../tools/cohort-specs/scheduled-event-constructor-boundary.spec.tsv)
+create exactly one default function, `FUN_0044b190`, over existing instructions
+at `[0044b190,0044b1d0)`: 64 bytes, 15 instructions, pristine body SHA-256
+`ac037f0505dbe8d73f87d932a80e3bfd59551027bb49926cd041dccefe391adc`.
+Fresh read-only inspection found no function owner for these instructions.
+Scheduler Init supplies this literal callback to construct 20,000 records
+of size `0x14`; the iterator supplies each record in ECX. The body clears only
+target `+0` and payload `+0c`, increments the construction count, and restores
+its exception linkage before returning. Source and byte evidence belong to
+the [scheduler owner](../binary-analysis/functions/CEventManager.cpp.md).
+Its semantic role does not establish a complete prototype: the new function
+retains default name, undefined return, unknown calling convention, no formal
+arguments, no comments and no tags.
+
+The working project now measures `db.18653`: 18 files, 118,999,924 bytes,
+inventory SHA-256
+`867862c7ef056d685ce8cdf622da83e2e85a1e5bcb2b66d850048c11989c8e0e`.
+The main database is 68,698,112 bytes, SHA-256
+`879afcf636bc5305cac2304e16e7a8b26f5a28462ce315e57b817708f65cb871`.
+All 8,330 prior function rows, 32,697 prior variable records and prior stack
+records are unchanged. The new function contributes only its default return
+and unknown-purge stack records. Types, bookmarks and saved Plane stack-depth
+observations remain identical. Of 29 program metrics, only the internal
+function count changes, to 8,331; instructions, bytes, references, data and
+existing metadata are preserved. The open probe reports 8,555 including
+224 external functions, a different count from the internal inventory.
+
+The preceding shared-leaf POST matched working bytes and was restored/opened
+as PRE. Isolated dry/apply/separate readback and independent comparison passed;
+wrong-hash and clipped-final-RET controls both failed before writes with an
+unchanged replica. Final spec pins were sealed from that separately reopened
+rehearsal; no second sealed rehearsal is claimed. Live dry/apply/separate
+readback passed, and all nine live exports equal rehearsal exports exactly.
+The unchanged base framework and derived live allowlist passed 92 tests.
+
+The new independent recovery is
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-scheduled-event-constructor/post-working/`.
+It was copied, hash-compared, restored elsewhere and opened read-only; the
+restored payload is stable and matches the working project. The tracked
+checkpoint still matches `745c00ad…`; no checkpoint refresh occurred.
+Commands and evidence are in
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/event-constructor-boundary/`:
+
+| Receipt | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `live-readback.json` | 2,286 | `39ae2910f25fcc99f18f061d36bce51f170876ab712291332f9715e6d6d2300a` |
+| `post-restore.json` | 5,767 | `238e5af4d7bc2b7b631599748e85260ced3846b38b240606552f7957643b374b` |
+
+The current-name checker composes this second default-function manifest with
+its existing overlays, preserving frozen tables and explicit-table consumers.
+This closes a demonstrated analysis boundary gap; no retail execution,
+complete scheduler audit or reconstruction parity is claimed.
+
 Related (not this folder):
 
 | Role | Path |
@@ -561,6 +819,132 @@ Ghidra may update project metadata when opening or upgrading it. Static database
 evidence, not a claim that every inferred signature or semantic label is
 correct; controlled copied-runtime observation continues to own behavioral
 claims.
+
+## Debug-log metadata — September 19
+
+The [manifest](../../tools/cohort-specs/debug-log-metadata.manifest.tsv) and
+[spec](../../tools/cohort-specs/debug-log-metadata.spec.tsv) correct exactly five
+names, nonrepeatable comments and tag sets. Four functions at `004416e0`,
+`00441740`, `004418a0` and `004419e0` now identify `CDebugLog` history/reset,
+formatting and rendering. The generic store at `00441730` has the neutral name
+`StoreField04_00441730`; its known setup-history use does not establish an
+exclusive class owner. RTTI, initialization, output gating and evidence limits
+are documented in the [logger contract](../binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19).
+
+All 8,326 non-target functions and every prototype, variadic flag, parameter,
+local, type, stack record, function body and instruction remain unchanged.
+The old parameter spelling `console` remains intentionally frozen. The full
+program export changes only `commentsSha256`; all nine live exports equal the
+separately reopened final rehearsal. The default constructor boundary from the
+preceding cohort remains present; internal function count stays 8,331.
+
+PRE was the freshly matched and restored scheduled-event-constructor POST.
+Isolated rehearsal, stale-comment/name-collision refusals, independent review,
+live dry/apply/separate readback and independent POST recovery passed. Review
+narrowed two comments before live application; the original and revised
+rehearsals remain preserved. An initial census with missing column bindings
+refused before writes; the corrected census passed and the replica remained
+unchanged. This is not a new full-game semantic audit or runtime acceptance.
+
+Working identity: `db.18654`, 18 files / 118,999,924 bytes,
+inventory SHA-256 `09872845704237ea08b32e678aad961510f0e20756e10229b27774c1594b6326`; main database
+68,698,112 bytes, SHA-256 `c3c294fa7b94b3f64e03b34d32feca928b57eeda80d98e865081641802681df7`.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-19-debug-log-metadata/post-working`. It was copied, hash-compared, restored elsewhere
+and reopened read-only. The tracked `db.18634` checkpoint remains exactly
+`745c00ad…`; no refresh occurred.
+
+Private evidence owner:
+`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/debug-log-metadata/`.
+`live-readback.json`: 2,298 bytes, SHA-256 `9bad6511c12e60a5f07f742a93ae420d0833c8c0b3bd10060bceafe9ac66aa78`.
+`post-restore.json`: 5,742 bytes, SHA-256 `9edea84ddd1f2be128a4c9107109aa1694616d9b1ec1c82e3a2f1707c98e274d`.
+Current name projection uses this manifest; frozen logger census tools,
+explicit name tables and historical receipt schemas remain unchanged.
+
+## CLI initializer ownership — September 19
+
+The [manifest](../../tools/cohort-specs/cli-initializer-ownership.manifest.tsv) and
+[spec](../../tools/cohort-specs/cli-initializer-ownership.spec.tsv) correct exactly
+one name, nonrepeatable comment and tag set: `004239f0` is now
+`CLIParams__InitDefaults`. Its startup wrapper and WinMain/parser share the
+same receiver; the previous Unit AI ownership and missing-caller-boundary
+claims were wrong. Complete byte and isolated execution evidence belongs to
+the [CLI owner](../binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md).
+
+All 8,330 other function rows and all ABI, parameters, locals, types, stack
+records, instructions and bodies remain unchanged. The target's displayed
+signature changes only its name. Of 825 exported instruction rows, 113 change
+only the displayed initializer name. Only `commentsSha256` moves among the
+program metrics. All nine live exports exactly match the separately reopened
+rehearsal; the internal function count remains 8,331.
+
+Fresh PRE equality and restored read-only opening, isolated dry/apply/separate
+readback, two stale-comment/name-collision refusals, independent exact-cohort
+review, live dry/apply/separate readback and independent POST recovery passed.
+The first dry invocation used unsupported mode `dry-run` and refused before
+writes; the replica remained byte-identical and the corrected `dry` route
+passed. Final spec pins came from the measured rehearsal; no second sealed
+rehearsal is claimed. The unchanged base framework and extended live allowance
+passed 92 focused tests. Four isolated initializer cases are separate from
+the complete static parser audit; no full parser or retail runtime acceptance
+is claimed.
+
+Working identity: `db.18655`, 18 files / 118,999,924 bytes,
+inventory SHA-256 `5d1f226fc00b44409429edbdb53e2f57ec8d98e16fb1ff7a3add6e1782fb4f31`; main database
+68,698,112 bytes, SHA-256 `38577307e6858ecbd3ad72fb43f7f6f371bf8e406a7475ab5aa43bbde0481bb3`.
+PRE was the freshly matched debug-log POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-19-cli-initializer-ownership/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-initializer-ownership/`.
+`live-readback.json`: 2,318 bytes, SHA-256 `c466a5dc45e2e238880aa50e098481f00f8e9e630cd7520f76618e3b4d07b91e`.
+`post-restore.json`: 5,763 bytes, SHA-256 `cac2d9e1f3ff7287899c019b9ceed3edea68ff783c2d773fe48ed8d580d7a53d`.
+The current name projection composes the exact new manifest; frozen tables and
+historical receipts remain unchanged.
+
+## Sample-loading metadata — September 22
+
+The [loading manifest](../../tools/cohort-specs/audio-sample-loading.manifest.tsv)
+and [spec](../../tools/cohort-specs/audio-sample-loading.spec.tsv) correct
+`00517290` to `CPCSoundManager__LoadNewSample_StubFail` and `005172a0` to
+`CPCSoundManager__LoadSampleFromBuffer`, with their filename/music parameter
+names. The [parameter manifest](../../tools/cohort-specs/audio-sample-parameters.manifest.tsv)
+and [spec](../../tools/cohort-specs/audio-sample-parameters.spec.tsv) rename
+the outer CreateSample music argument and bank-loader reuse argument. All four
+comments/tag sets now distinguish pristine instructions, isolated execution,
+source-drop differences and unexecuted device/lifetime behavior. The
+[compatibility contract](../binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+owns the behavioral evidence.
+
+Exactly two loader names, four formal parameter names, four nonrepeatable comments and four tag sets corrected. All return/parameter types, calling conventions, storage, locals, stack cleanup, type definitions, instructions, bodies and the 8,327 non-target function rows are preserved.
+All 32,694 other variable rows are unchanged. Of 413 selected instruction rows,
+only displayed function names change. Only `commentsSha256` moves among program
+metrics. All nine live exports exactly equal the separately reopened rehearsal;
+the internal function count remains 8,331.
+
+Fresh independent PRE equality and restored read-only opening, both isolated
+dry/apply/separate readbacks, sealed-spec readbacks, wrong-comment/extent
+read-only refusals, independent exact-cohort review, live dry/apply/separate
+readbacks and independent POST restore passed. Final POST pins came from the
+measured rehearsal; the later spec addition admits only the derived live
+applier hash. The shared framework preserves the bank's one-byte `char` extent
+and four-byte purge. Its narrow existing-shape exception passed a proxy positive
+and 16 negatives within 93 focused tests; actual database exports establish the
+unchanged storage. Review corrected a draft stub-control count and clarified
+bounded name copying before their respective rehearsal applies.
+
+Working identity: `db.18657`, 18 files / 119,016,308 bytes,
+inventory SHA-256 `188003d0a677a5db5b99eac870a343530422bfe81bebf4c8568896254916aba7`; main database
+68,714,496 bytes, SHA-256 `ebc06917631cf137aad8bd6c77827f7d278c0b27181336037a19c26d94807d36`.
+PRE was the freshly matched CLI-initializer POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-22-audio-sample-loading/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/`.
+`completion.json` records the exact live readbacks, recovery receipts and full
+export hashes. Current name lookup composes the new manifest; frozen tables
+and historical receipts remain unchanged.
 
 ## Historical Windows live-ceremony contract (suspended)
 

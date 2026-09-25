@@ -1,7 +1,8 @@
 # CBattleEngine__UpdateAutoAim
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-19 (shared asin alias; the August 19 caller findings are not rerun)
+Summary: static auto-aim caller envelope with a corrected shared-math name and dated evidence limits.
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -45,7 +46,8 @@ Pinned prologue, with `esi = ecx`:
 4. Counted, not contracted: eight `E8` `Vec3__SetXYZ`
    `0x00401ec0`; two `E8` `Vec3__Magnitude` `0x004026b0`; one
    `E8` `AngleDifference` `0x0040b660`; two `E8`
-   `CRT__AcosDispatch_ST0` `0x0055dcb0`. Other of the 7 targets
+   `CRT__AsinDispatch_ST0` `0x0055dcb0` (the August note used the incorrect
+   `Acos` alias; see the [shared-helper correction](../../../ghidra/README.md#asin-helper-metadata-correction-2026-09-19)). Other of the 7 targets
    are counted, not contracted.
 
 One inbound `.text` `E8`/`E9`: `CALL` at `0x00409637` inside

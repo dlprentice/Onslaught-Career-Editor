@@ -187,10 +187,34 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # UnitAI initializer/event arguments contain two/four analytic comments
 # (2,226/3,536 decoded bytes).
 # UnitAI exit contract contains two analytic comments (3,509 decoded bytes).
+# Aim-provider semantics contains eight analytic comments (7,662 decoded bytes).
+# Asin-helper semantics contains four analytic comments (4,607 decoded bytes).
+# Renderer arguments/shared return-4 contain four/two analytic comments
+# (3,846/1,101 decoded bytes).
 # All were decoded/reviewed without control, secret or payload findings.
 # Encoding preserves exact PRE/POST text;
 # changing any byte removes the long-Base64 allowance. All other checks remain.
+# Debug-log metadata: ten analytic comments (7,419 decoded bytes), with the
+# same exact-content requirement and all other payload/secret checks retained.
+# Sample loading/parameters: four comments each (3,673/4,227 decoded bytes),
+# reviewed as authored analysis; the same exact-content boundary applies.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/audio-sample-loading.manifest.tsv":
+        "18a636d7b1c654a7b680d4ea7505e737e3438b81955de5f9979e7d21ff545d0b",
+    "tools/cohort-specs/audio-sample-parameters.manifest.tsv":
+        "ebed1bf4c675eb4684aea0609e3f6ba05af2b373224e393c766254b2a4f38ed7",
+    "tools/cohort-specs/cli-initializer-ownership.manifest.tsv":
+        "7159872b1d29231f1c89d6fc74bf5944035e463348defec60cb26b9fb0fd893a",
+    "tools/cohort-specs/debug-log-metadata.manifest.tsv":
+        "6c9dd2b0a8d2b2ac44a093232f1f7770bcc16d6174100854ba6f6fed9fc93b17",
+    "tools/cohort-specs/render-registry-arguments.manifest.tsv":
+        "35aa28c32dec8183e92d441afb9287e5204c98420b2de12a6cb5c93d2af4e121",
+    "tools/cohort-specs/shared-return4-leaf.manifest.tsv":
+        "28d6914d29e3111fbc5acd967588ffb3a0440d4e8e55b0b746e1cc0480c296bd",
+    "tools/cohort-specs/asin-helper-semantics.manifest.tsv":
+        "e3a8567675054accd4045b91a623f0b291b23a7b56b40b220464d7160f99fe1e",
+    "tools/cohort-specs/aim-provider-semantics.manifest.tsv":
+        "9efc2b4a31c908219384576963d9cb79c89f2d3767e74a9fb2735214777284c6",
     "tools/cohort-specs/unit-ai-exit-contract.manifest.tsv":
         "3cf43cd18e2c7ad0ed62613e649642feaad0ad19e53a29d9b2c4df609fa9cf71",
     "tools/cohort-specs/unit-ai-initializer.manifest.tsv":

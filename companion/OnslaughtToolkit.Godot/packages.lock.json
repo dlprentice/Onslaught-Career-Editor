@@ -4,58 +4,23 @@
     "net8.0": {
       "Godot.SourceGenerators": {
         "type": "Direct",
-        "requested": "[4.7.2, )",
-        "resolved": "4.7.2",
-        "contentHash": "PeYESFlRxlmeClrPhlMINhVvt2HiKnx2Ux/FYA10rimDevHljji3/jmRZOMo9XDNQsZzPH4uQmDyPgQgzTFvAg=="
+        "requested": "[4.8.0-dev.6, )",
+        "resolved": "4.8.0-dev.6",
+        "contentHash": "kb6QZaXiPYume0xtCVJQErsEuGZeEM+Zr6vmulYvuUsYsDoVFWenCxjz3DnsOY1ZTYDKm+FLNcimxYImOEiaIg=="
       },
       "GodotSharp": {
         "type": "Direct",
-        "requested": "[4.7.2, )",
-        "resolved": "4.7.2",
-        "contentHash": "EPvfayB7b7MrBNdASvy86jRS5AbM9dprkVivcRD80g+ngn2M8KAIrBQH4NhyQL+pwxni0xVnuqhD9AFpZeNQpw=="
+        "requested": "[4.8.0-dev.6, )",
+        "resolved": "4.8.0-dev.6",
+        "contentHash": "GSQl05YRYISNrqjc0BUqjFX+zQL55IKEty3Rs688GVIFoz94f0f5W3JmEv7g4ux928SIsCse+7XSggLFS7byDw=="
       },
       "GodotSharpEditor": {
         "type": "Direct",
-        "requested": "[4.7.2, )",
-        "resolved": "4.7.2",
-        "contentHash": "Fuf2rNvajla9N8Z+ksxsSIt326wsjpB2F2uZCtxkdfWIsApabCHy5fsE2EKxOlQ4NaINGdgMIv62D0n583qe1A==",
+        "requested": "[4.8.0-dev.6, )",
+        "resolved": "4.8.0-dev.6",
+        "contentHash": "9O9gkzxh0u+M2tHHLcUNnTt+M1pwfMnTiCH7MG29FFEvXZ5eu6WjbKjg7Q1rmp0QxMkx06T0fLNXhDZodJKk+A==",
         "dependencies": {
-          "GodotSharp": "4.7.2"
-        }
-      },
-      "Markdig": {
-        "type": "Transitive",
-        "resolved": "0.34.0",
-        "contentHash": "kUS8Y/oW2Cshwq3kv08Lz5hpMjt9MuAaDIGxv86d0RtEUUe4xKKXxdZYS7bV0ZXRfeAAOfjYIrt7zybcIOYvmg=="
-      },
-      "NAudio.Core": {
-        "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "knmGOIYbzn9ZGkFcVs5d3zEYvi50jVriyEirVtAHjkcDoo2ziK32bZb7KkFARLD4lhCGkqp6uT0+0fc4JIfQcw=="
-      },
-      "NAudio.Vorbis": {
-        "type": "Transitive",
-        "resolved": "1.5.0",
-        "contentHash": "llJMmUnFf0FGf4G1FKNftxt+Vc1CvBCSul0Ugbv/RahGbpKF2p+ujSEJHybPjl9b4FjbK8O2vRFIcRGcVfAooA==",
-        "dependencies": {
-          "NAudio.Core": "2.0.0",
-          "NVorbis": "0.10.4"
-        }
-      },
-      "NVorbis": {
-        "type": "Transitive",
-        "resolved": "0.10.4",
-        "contentHash": "WYnil3DhQHzjCY0dM9I2B3r1vWip90AOuQd25KE4NrjPQBg0tBJFluRLm5YPnO5ZLDmwrfosY8jCQGQRmWI/Pg==",
-        "dependencies": {
-          "System.Memory": "4.5.3",
-          "System.ValueTuple": "4.5.0"
-        }
-      },
-      "onslaughtcareereditor.appcore": {
-        "type": "Project",
-        "dependencies": {
-          "Markdig": "[0.34.0, )",
-          "NAudio.Vorbis": "[1.5.0, )"
+          "GodotSharp": "4.8.0-dev.6"
         }
       }
     }

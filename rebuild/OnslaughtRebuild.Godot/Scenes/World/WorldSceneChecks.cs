@@ -18,6 +18,7 @@ public sealed partial class WorldSceneChecks : Node
         try
         {
             CheckNativeImportIdentity();
+            CheckImportOutputOwnership();
             var session = new InteractiveSession(0x4F4E534Cu, Level100StaticWorldAsset.LoadActorDefinitions());
             Input.MouseModeEnum pointer = Input.MouseMode;
             string initialHash = StateHasher.ComputeHex(session.CurrentSnapshot);
@@ -224,6 +225,47 @@ public sealed partial class WorldSceneChecks : Node
             try { Level100SceneImport.VerifyInputs(project, inputs); }
             catch (InvalidDataException) { refused = true; }
             Check(refused, message);
+        }
+    }
+
+    private void CheckImportOutputOwnership()
+    {
+        string resourceDirectory = Level100SceneImport.DirectoryPath + "/ownership-check-" + Guid.NewGuid().ToString("N");
+        string directory = ProjectSettings.GlobalizePath(resourceDirectory);
+        System.IO.Directory.CreateDirectory(directory);
+        try
+        {
+            string[] files = ["0000_Mesh.res", "0211_ShaderMaterial.res", "AquilaWalker.tscn", "changed.res", "notes.txt"];
+            foreach (string name in files) System.IO.File.WriteAllText(Path.Combine(directory, name), "Keep " + name);
+            System.IO.Directory.CreateDirectory(Path.Combine(directory, "StaticWorld.tscn"));
+            string Hash(string name) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                System.IO.File.ReadAllBytes(Path.Combine(directory, name))));
+            var before = files.ToDictionary(name => name, Hash, StringComparer.Ordinal);
+            var owned = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["0000_Mesh.res"] = before["0000_Mesh.res"],
+                ["changed.res"] = "stale hash"
+            };
+            foreach (string collision in new[] { "0211_ShaderMaterial.res", "AquilaWalker.tscn", "changed.res", "StaticWorld.tscn" })
+            {
+                bool rejected = false;
+                try
+                {
+                    Level100SceneImport.VerifyOutputOwnership(resourceDirectory, owned,
+                        ["0000_Mesh.res", "new.res", collision]);
+                }
+                catch (InvalidDataException) { rejected = true; }
+                Check(rejected, "Import refuses an unowned, edited or directory destination: " + collision);
+                Check(files.All(name => Hash(name) == before[name]), "Preflight refusal leaves every output unchanged.");
+                Check(!System.IO.File.Exists(Path.Combine(directory, "new.res")), "Preflight does not publish partial output.");
+            }
+            Level100SceneImport.VerifyOutputOwnership(resourceDirectory, owned, ["0000_Mesh.res", "new.res"]);
+            Check(files.All(name => Hash(name) == before[name]), "Unrelated noncolliding private files are preserved.");
+        }
+        finally
+        {
+            // Only this check's uniquely named fixture directory is disposable.
+            System.IO.Directory.Delete(directory, recursive: true);
         }
     }
 

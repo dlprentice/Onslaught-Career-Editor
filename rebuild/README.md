@@ -938,7 +938,10 @@ import receipt checks the managed build, native script/scene/resource/shader ide
 and each output file; faithful runtime
 refuses modified or stale generated files. A deliberate enhanced variation must
 be saved separately as private work, not silently substituted for imported defaults.
-Preserve it before regenerating. Scene transforms never become Core spawn data.
+Regeneration checks every resource and scene destination before writing: an
+existing file must be an unchanged output owned by the previous receipt.
+Unrelated files that do not collide are preserved. Preserve deliberate edits
+separately before regenerating. Scene transforms never become Core spawn data.
 
 All conversion lives in the explicit `ImportLevel100.tscn` import entry. Opening
 that scene in the editor performs no import; playing it without the explicit

@@ -1,14 +1,17 @@
 # CPhysicsScriptStatements.cpp function map
 
 Status: active static function map
-Last updated: 2026-08-28
+Last updated: 2026-09-19 (shared constant-return ownership and nested state values)
 Summary: the canonical address, registry, serialization, property-apply, copy,
 and teardown map for retail PhysicsScript definition records.
 
 This page retains the address, signature, serialization, registry, apply, and
 destructor relationships that support the PhysicsScript parser/schema and
-rebuild interface. Current metadata corrections are owned by the
-[reviewed correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json).
+rebuild interface. Current Ghidra state follows `developer_state.json` →
+`current_re_authority.latestLiveGhidraState` and the
+[Ghidra guide](../../ghidra/README.md). The
+[July correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json)
+retains its historical scope.
 
 The debug-path anchor points to a maintainer-local `CPhysicsScriptStatements.cpp`
 export. It is provenance context, not copied source and not proof of exact retail
@@ -116,7 +119,7 @@ the invented method spelling, nothing else.
 | `0x0043ddc0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType12(int valueType)` | Type-12/behaviour factory over ids `0x1..0x19`; exact leaf RTTI, vtables, and returned Unit selectors are closed below. |
 | `0x0043e310` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType13(int valueType)` | Type-13/alligence value factory over observed ids `1..3`; exact value classes/layouts remain unproven. |
 | `0x0043e400` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType14(int valueType)` | Type-14/navmap value factory over observed ids `1..4`; exact value classes/layouts remain unproven. |
-| `0x0043e540` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType15(int valueType)` | Type-15/state value factory over observed ids `1..3`; exact value classes/layouts remain unproven. |
+| `0x0043e540` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType15(int valueType)` | Nested state factory: type IDs `1/2/3` produce getter values `0/1/2`; see the [selected collision mapping](collisionseekingthing.cpp.md#selected-collision-configuration-and-nested-values). |
 
 ## Unit-behaviour type-to-selector closure
 
@@ -295,7 +298,14 @@ The concrete class and spawner-policy consumer of `+0xE0` is closed in
 | `0x0043a7b0` | `CSpawnerInfinite__ApplyToSpawnerByName` | Recovered spawner infinite apply helper. |
 | `0x0043a840` | `void * __thiscall CPhysicsSpawnerValueLeaf_T3_0043a840(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper for spawner value vtables; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
 | `0x0043b1a0` | `void __thiscall CPhysicsScriptValue_T3_0043b1a0(void * this, void * memBuffer)` | Recovered shared owned-string load boundary. |
-| `0x004db8c0` | `int __fastcall CPhysicsScriptValue__GetScalarSerializedSize4(void * this)` | Recovered shared scalar serialized-size helper returning fixed size `4`. |
+| `0x004db8c0` | `int __fastcall SharedVFunc__Return4_004db8c0(void * this)` | Shared constant-return leaf; PhysicsScript serialized sizes are one caller-specific meaning. |
+
+The September 19 [166-slot ownership check](Actor.cpp.md#selected-round-renderer-admission)
+also binds this two-instruction body to Round class-ID and unrelated game,
+selector and renderer vtables. The former
+`CPhysicsScriptValue__GetScalarSerializedSize4` name overstated exclusive
+ownership. The neutral label preserves its valid serialization use; the
+existing formal prototype is unchanged because this body reads no arguments.
 
 ## Explosion Value Helpers
 
@@ -359,7 +369,7 @@ The concrete class and spawner-policy consumer of `+0xE0` is closed in
 | `0x0043e3a0` / `0x0043e3c0` / `0x0043e3d0` | `CPhysicsAlligenceTypeLeaf__shared_scalar_deleting_dtor`, `CPhysicsAlligenceType__dtor_base`, and `CPhysicsAlligenceType__scalar_deleting_dtor` | Recovered the base scalar-deleting destructor boundary and separated shared leaf wrapper, base destructor body, and base scalar-deleting wrapper evidence. |
 | `0x0043e400` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType14(int valueType)` | Hardened the type-14/navmap value factory over ids `1..4`; factory vtable evidence spans `0x005dac94` through `0x005dacb8`, with exact classes/layouts still unproven. |
 | `0x0043e4e0` / `0x0043e500` / `0x0043e530` | `CPhysicsNavMapTypeLeaf__shared_scalar_deleting_dtor`, `CPhysicsNavMapType__scalar_deleting_dtor`, and `CPhysicsNavMapType__dtor_base` | Recovered the base scalar-deleting destructor boundary and corrected stale constructor/vfunc evidence to navmap-value destructor evidence. |
-| `0x0043e540` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType15(int valueType)` | Hardened the type-15/state value factory over ids `1..3`; factory vtable evidence spans `0x005dacd0` through `0x005dace8`, with exact classes/layouts still unproven. |
+| `0x0043e540` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType15(int valueType)` | Factory vtables `0x005dacd0/0x005dacdc/0x005dace8` now bind the three nested state types and their distinct getter values; the [September 19 mapping](collisionseekingthing.cpp.md#selected-collision-configuration-and-nested-values) supersedes the former class-identity uncertainty. |
 | `0x0043e5d0` / `0x0043e5f0` / `0x0043e620` | `CPhysicsStateTypeLeaf__shared_scalar_deleting_dtor`, `CPhysicsStateType__scalar_deleting_dtor`, and `CPhysicsStateType__dtor_base` | Recovered the base scalar-deleting destructor boundary and corrected stale constructor/vfunc evidence to state-value destructor evidence. |
 | `0x0043e630` | `void __cdecl CFlexArray__SkipBytesFromMemBuffer(void * memBuffer, int byteCount)` | Hardened the adjacent shared serialization helper as a byte-count skip loop over `CDXMemBuffer__Read`. |
 

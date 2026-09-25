@@ -17,8 +17,9 @@ public sealed partial class Level100SceneImport : Node
     internal const string DirectoryPath = "res://Assets/Level100/Scenes";
     private const string ReceiptPath = DirectoryPath + "/import.json";
     private readonly HashSet<ulong> _savedResources = [];
+    private readonly List<(Resource Resource, string Name)> _plannedResources = [];
     private readonly List<string> _writtenFiles = [];
-    private int _resourceNumber;
+    private Dictionary<string, string> _previousFiles = new(StringComparer.Ordinal);
 
     private sealed record ImportedFile(string Name, string Sha256);
     internal sealed record ImportedInput(string ResourcePath, string Sha256);
@@ -229,6 +230,8 @@ public sealed partial class Level100SceneImport : Node
 
     private void Import(ImportReceipt? previous)
     {
+        _previousFiles = (previous?.Files ?? []).ToDictionary(file => file.Name, file => file.Sha256,
+            StringComparer.Ordinal);
         System.IO.Directory.CreateDirectory(ProjectSettings.GlobalizePath(DirectoryPath));
         var session = new InteractiveSession(0x4F4E534Cu, Level100StaticWorldAsset.LoadActorDefinitions());
         var world = new FirstFlightWorldView();
@@ -240,7 +243,24 @@ public sealed partial class Level100SceneImport : Node
         world.SetMeta("simulation_owner", "C# Core; scene transforms never become simulation inputs");
         world.SetMeta("actor_manifest_sha256", Level100ActorDefinitionManifest.ExpectedManifestSha256);
         world.GetNode<MeshInstance3D>("RetailLevel100HeightField").Mesh.ResourceLocalToScene = true;
-        SaveNodeResources(world);
+        PlanNodeResources(world);
+        // A valid older receipt owns only its listed files. Check the complete
+        // new destination set before replacing even the first owned output.
+        VerifyOutputOwnership(DirectoryPath, _previousFiles,
+            _plannedResources.Select(item => item.Name).Concat(new[]
+            {
+                "AquilaWalker.tscn", "AquilaJet.tscn", "AquilaCockpit.tscn", "StaticWorld.tscn", "Level100.tscn"
+            }));
+        foreach ((Resource resource, string name) in _plannedResources)
+        {
+            if (resource is Material) resource.ResourceLocalToScene = true;
+            VerifyOutputOwnership(DirectoryPath, _previousFiles, [name]);
+            RequireOk(ResourceSaver.Save(resource, DirectoryPath + "/" + name,
+                ResourceSaver.SaverFlags.Compress | ResourceSaver.SaverFlags.ChangePath), "save " + name);
+            // Preserve child-before-parent order and external references.
+            resource.TakeOverPath(DirectoryPath + "/" + name);
+            _writtenFiles.Add(name);
+        }
 
         // Gameplay loads these actual packed components through Level100.tscn.
         // The editor can open each independently without any runtime bootstrap.
@@ -301,24 +321,40 @@ public sealed partial class Level100SceneImport : Node
 
     private void SaveScene(Node root, string name)
     {
-        RequireLocalOutput(DirectoryPath + "/" + name);
         using var scene = new PackedScene();
         RequireOk(scene.Pack(root), "pack " + name);
+        VerifyOutputOwnership(DirectoryPath, _previousFiles, [name]);
         RequireOk(ResourceSaver.Save(scene, DirectoryPath + "/" + name), "save " + name);
         _writtenFiles.Add(name);
     }
 
-    private void SaveNodeResources(Node node)
+    internal static void VerifyOutputOwnership(string directoryPath,
+        IReadOnlyDictionary<string, string> previousFiles, IEnumerable<string> names)
+    {
+        foreach (string name in names)
+        {
+            string resourcePath = directoryPath + "/" + name;
+            RequireLocalOutput(resourcePath);
+            string path = ProjectSettings.GlobalizePath(resourcePath);
+            if (System.IO.Directory.Exists(path) ||
+                (System.IO.File.Exists(path) &&
+                    (!previousFiles.TryGetValue(name, out string? expectedHash) || Hash(path) != expectedHash)))
+                throw new InvalidDataException("Scene import would replace an unowned or changed output: " + name +
+                    ". Preserve it separately before importing.");
+        }
+    }
+
+    private void PlanNodeResources(Node node)
     {
         foreach (Godot.Collections.Dictionary property in node.GetPropertyList())
         {
             if (((PropertyUsageFlags)property["usage"].AsInt64() & PropertyUsageFlags.Storage) != 0)
-                SaveVariant(node.Get(property["name"].AsStringName()));
+                PlanVariant(node.Get(property["name"].AsStringName()));
         }
-        foreach (Node child in node.GetChildren()) SaveNodeResources(child);
+        foreach (Node child in node.GetChildren()) PlanNodeResources(child);
     }
 
-    private void SaveVariant(Variant value)
+    private void PlanVariant(Variant value)
     {
         if (value.VariantType == Variant.Type.Object && value.AsGodotObject() is Resource resource)
         {
@@ -332,23 +368,17 @@ public sealed partial class Level100SceneImport : Node
                 return;
             foreach (Godot.Collections.Dictionary property in resource.GetPropertyList())
                 if (((PropertyUsageFlags)property["usage"].AsInt64() & PropertyUsageFlags.Storage) != 0)
-                    SaveVariant(resource.Get(property["name"].AsStringName()));
-            if (resource is Material) resource.ResourceLocalToScene = true;
-            string name = $"{_resourceNumber++:D4}_{resource.GetClass()}.res";
-            RequireLocalOutput(DirectoryPath + "/" + name);
-            RequireOk(ResourceSaver.Save(resource, DirectoryPath + "/" + name,
-                ResourceSaver.SaverFlags.Compress | ResourceSaver.SaverFlags.ChangePath), "save " + name);
-            // Keep the live object external when its containing scene is packed.
-            resource.TakeOverPath(DirectoryPath + "/" + name);
-            _writtenFiles.Add(name);
+                    PlanVariant(resource.Get(property["name"].AsStringName()));
+            string name = $"{_plannedResources.Count:D4}_{resource.GetClass()}.res";
+            _plannedResources.Add((resource, name));
         }
         else if (value.VariantType == Variant.Type.Array)
         {
-            foreach (Variant item in value.AsGodotArray()) SaveVariant(item);
+            foreach (Variant item in value.AsGodotArray()) PlanVariant(item);
         }
         else if (value.VariantType == Variant.Type.Dictionary)
         {
-            foreach (Variant item in value.AsGodotDictionary().Values) SaveVariant(item);
+            foreach (Variant item in value.AsGodotDictionary().Values) PlanVariant(item);
         }
     }
 
