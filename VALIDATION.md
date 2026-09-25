@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-23 (coupled settings routing and original sound initialization; 2026-09-19 native companion gates and rebuild production scenes; earlier validation retained).
+Last updated: 2026-09-25 (three-lane baseline and reconciliation; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -68,6 +68,55 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Lane baseline — September 25
+
+Each lane was built and checked in its own checkout on Linux: Godot 4.8 dev6 .NET
+(`godot48-mono`), with the standard edition for the GDScript-only gates. Every Godot
+run was headless with Dummy audio; no window opened. Logs are in canonical
+`local-data/test-runs/lane-baseline-20260925-H8dhmW/`; rebuild-owned runs are under
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/lane-baseline-*`.
+
+- **Companion (`main` `996d6109`).** `npm run build` had zero warnings/errors.
+  `npm test` ran the native Save Lab with **0 failures**, **6/6** publication races and
+  **12/12** launcher tests. `test:save-lab` passed **24/24**, `test:godot-host` **12 + 20**,
+  plus `test:docs` and `test:safety`. Main's rebuild also built with its Level 100 import verified.
+- **Reverse engineering.** Before its merge, the lane passed `test:docs`, `test:safety`,
+  the cohort framework (**93/93**, `python -m unittest tools.ghidra_cohort_framework_tests`),
+  `test:save-lab` and its 4.7.2 .NET companion build. Its own commits never touched Godot
+  code; the 4.7.2 selection came from its merge base. After merging `main` (`eeb4d1f6`),
+  the same checks plus `npm run build` and `npm test` passed on 4.8 dev6 .NET, and the
+  lane merged into `main` (`ed7f5332`).
+- **Rebuild.** Checkpoint `9559f1f4` built with zero warnings/errors and passed
+  **24,177** world checks, the headless smoke (tape SHA-256 `89ca7b4b…`, state
+  `53c1cc64…`) and two replays with trace `a4e6673b…` verified. Two gates failed for
+  known causes, fixed in `94223492` and `172d6ad7`. The `particle-effects` parity group
+  failed 2 cases because the C# oracle formatted ±∞ with the host culture (`∞` under
+  `en_US.UTF-8`) while the GDScript port writes invariant `Infinity`; every earlier
+  receipt recorded an invariant oracle culture, which the oracle now pins. The Client
+  suite failed 1 of 912 because `Level100HudBlendEvidenceTests` still read
+  `FirstFlightHud.cs` for the flash lifetime that `4b519d6f` moved to
+  `first_flight_hud.gd`; the guard now reads the native owner.
+- **Rebuild after merging `main` (`23c8f8c8`).** Build zero warnings/errors; **24,190**
+  world checks (main adds 13 import-ownership checks); smoke tape and state hashes and
+  both replays unchanged; parity **29/29** groups; Client **910** passed with the two
+  known skips; companion `npm test`, `test:docs` and `test:safety` passed. A headless
+  sweep of **77** component scene checks, run in their documented `.NET`-reference and
+  standard-engine forms, had **73** clean passes. `PauseSceneChecks` and
+  `WorldPresentationChecks` logged their documented engine errors (deliberate zlib
+  fixtures, extreme-coordinate `look_at`). `CareerNameSceneChecks` logged one
+  "resources still in use at exit" line in 1 of 7 runs.
+  `AyaTextureChecks`, added unvalidated in `5c8276ce`, fails **15 of 1,206**
+  checks, all synthetic malformed inputs: 12 undeclared `file_access_memory.cpp`
+  short-read diagnostics; 2 short-pixel cases whose image bytes differ between the
+  retained C# decoder and `retail_aya_texture.gd`, both reading past a 129-byte DDS;
+  and an empty second AYA record that the harness's own oracle refuses. All 47 real
+  import uses, the cursor and fonts decode identically. Settling that malformed-input
+  contract is the lane's unfinished step, so the rebuild lane is not merged.
+
+Not run: the broad Core suite, because no lane or merge changed `OnslaughtRebuild.Core`,
+its tests or their shared inputs since `25db5b23`. Also not run: rendered or pixel
+captures, editor-mode harnesses, live input or audio, and Windows.
 
 ### September 19 production scene migration
 
