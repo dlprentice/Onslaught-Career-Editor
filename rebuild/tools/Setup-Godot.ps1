@@ -15,7 +15,7 @@ if (-not $IsWindows) {
 
 Import-Module (Join-Path $PSScriptRoot 'GodotToolchain.psm1') -Force
 
-$ManifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'
+$ManifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.8-dev6-win-x64.json'
 
 function Remove-ControlledCachePath {
     param([Parameter(Mandatory)][string]$Path)

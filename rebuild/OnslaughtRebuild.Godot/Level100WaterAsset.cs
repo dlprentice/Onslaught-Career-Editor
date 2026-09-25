@@ -11,7 +11,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// camera-relative presentation; the serialized SURF contours remain fixed in
 /// retail world space.
 /// </summary>
-internal sealed class Level100WaterAsset
+internal sealed partial class Level100WaterAsset
 {
     private const int GridCellsPerAxis = 24;
     private const int GridVerticesPerAxis = GridCellsPerAxis + 1;

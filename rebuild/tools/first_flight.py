@@ -17,7 +17,7 @@ import materialize_retail_assets as materializer
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-from godot_host import ENGINE_VERSION, build_project, engine_path as _engine_path, print_process_output, run_process
+from godot_host import DEFAULT_ENGINE, ENGINE_VERSION, build_project, engine_path as _engine_path, output_directory, print_process_output, run_process
 PROJECT = Path("rebuild/OnslaughtRebuild.Godot")
 PREPARATION_TIMEOUT = 1200
 
@@ -30,6 +30,19 @@ def _prepare(
     env: dict[str, str],
 ) -> None:
     script = str(materializer.ROOT / "rebuild/tools/materialize_retail_assets.py")
+    canonical = materializer._canonical_repository_root()
+    if materializer.ROOT.resolve() != canonical.resolve():
+        # A child checkout reads the current verified payloads. It does not
+        # become a second staging owner or regenerate another lane's media.
+        if not materializer._outputs_ready():
+            run_process([sys.executable, script, "--reuse-canonical-assets"],
+                        cwd=cwd, env=env, timeout=PREPARATION_TIMEOUT)
+        if media_root is not None and not materializer._startup_media_ready(game_root, media_root):
+            raise RuntimeError(
+                "canonical startup media is absent or out of date; prepare it in an authorized "
+                "canonical-checkout task before running from this worktree"
+            )
+        return
     if not materializer._outputs_ready():
         run_process(
             [sys.executable, script, "--host-default-work-root", "--game-root", str(game_root)],
@@ -42,19 +55,6 @@ def _prepare(
              "--startup-media-root", str(media_root)],
             cwd=cwd, env=env, timeout=PREPARATION_TIMEOUT,
         )
-
-
-def _output_directory(canonical: Path, requested: Path | None, mode: str) -> Path:
-    owner = canonical / "local-data/first-flight"
-    owner.mkdir(parents=True, exist_ok=True)
-    if requested is None:
-        return Path(tempfile.mkdtemp(prefix=f"{mode}-", dir=owner))
-    output = requested.expanduser().absolute()
-    if not output.resolve().is_relative_to((canonical / "local-data").resolve()):
-        raise RuntimeError("--output-root must be below the canonical checkout's local-data")
-    # Each invocation owns fresh output; never overwrite an earlier capture.
-    output.mkdir(parents=True, exist_ok=False)
-    return output
 
 
 def _runtime_command(
@@ -81,6 +81,18 @@ def _runtime_command(
         command.append(f"--capture-dir={output}")
     command.extend(user_args)
     return command
+
+
+def _prepare_world_scene(engine: Path, project: Path, output: Path, env: dict[str, str]) -> None:
+    # Explicit offline import, with no game bootstrap or editor tool callbacks.
+    # Every generated resource remains under this checkout's ignored Assets.
+    import_env = dict(env)
+    import_env.pop("ONSLAUGHT_TERRAIN_PROBE", None)
+    run_process([
+        str(engine), "--headless", "--audio-driver", "Dummy", "--path", str(project),
+        "--log-file", str(output / "level100-import.log"),
+        "res://Scenes/World/ImportLevel100.tscn", "--", "--prepare-level100-scene",
+    ], cwd=project, env=import_env, timeout=PREPARATION_TIMEOUT)
 
 
 def _validate_smoke_completion(output: Path) -> None:
@@ -111,12 +123,12 @@ def main(argv: list[str] | None = None) -> int:
     user_args = arguments[split + 1:]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("build", "run", "smoke", "capture"), nargs="?", default="run")
-    parser.add_argument("--engine", default="godot-mono", help="installed Godot Mono executable")
+    parser.add_argument("--engine", default=DEFAULT_ENGINE, help="installed pinned Godot .NET executable")
     parser.add_argument("--game-root", type=Path, help="retail installation; otherwise discover Linux Steam")
     parser.add_argument("--no-build", action="store_true", help="run the existing managed build")
     parser.add_argument("--no-prepare", action="store_true",
-                        help="reuse prepared assets and startup media without validation or materialization")
-    parser.add_argument("--output-root", type=Path, help="fresh directory below canonical local-data")
+                        help="reuse prepared assets, production scenes and startup media without importing")
+    parser.add_argument("--output-root", type=Path, help="fresh directory below this checkout's local-data")
     parser.add_argument("--timeout", type=float, help="runtime limit in seconds (smoke: 75; capture: 300)")
     parser.add_argument("--engine-arg", action="append", default=[], help="Godot option; use --engine-arg=VALUE")
     args = parser.parse_args(arguments[:split])
@@ -136,7 +148,6 @@ def main(argv: list[str] | None = None) -> int:
 
     prior_term = signal.signal(signal.SIGTERM, interrupt)
     try:
-        canonical = materializer._canonical_repository_root()
         project = materializer.ROOT / PROJECT
         engine = _engine_path(args.engine)
         game_root = None
@@ -149,14 +160,14 @@ def main(argv: list[str] | None = None) -> int:
             media_root = materializer._resolve_work_root(
                 materializer._default_startup_media_root(), game_root=game_root
             )
-        scratch_owner = canonical / "local-data/first-flight"
-        scratch_owner.mkdir(parents=True, exist_ok=True)
-        for child in ("user-data", "cache"):
+        scratch_owner = output_directory(materializer.ROOT, args.output_root, "first-flight", args.mode)
+        for child in ("user-data", "cache", "config"):
             (scratch_owner / child).mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="scratch-", dir=scratch_owner) as scratch:
             env = dict(os.environ, TMPDIR=scratch, TMP=scratch, TEMP=scratch,
                        XDG_DATA_HOME=str(scratch_owner / "user-data"),
                        XDG_CACHE_HOME=str(scratch_owner / "cache"),
+                       XDG_CONFIG_HOME=str(scratch_owner / "config"),
                        DOTNET_CLI_TELEMETRY_OPTOUT="1", DOTNET_NOLOGO="1")
             version = run_process([str(engine), "--version"], cwd=project, env=env,
                                   timeout=30, capture=True).stdout.strip()
@@ -167,10 +178,12 @@ def main(argv: list[str] | None = None) -> int:
                 _prepare(game_root, media_root, cwd=materializer.ROOT, env=env)
             if not args.no_build:
                 build_project(project, engine, env)
+            if not args.no_prepare:
+                _prepare_world_scene(engine, project, scratch_owner, env)
             if args.mode == "build":
                 return 0
             assert media_root is not None
-            output = _output_directory(canonical, args.output_root, args.mode)
+            output = scratch_owner
             command = _runtime_command(engine, project, media_root, output, args.mode,
                                        args.engine_arg, user_args)
             print(f"First Flight {args.mode} output: {output}", flush=True)

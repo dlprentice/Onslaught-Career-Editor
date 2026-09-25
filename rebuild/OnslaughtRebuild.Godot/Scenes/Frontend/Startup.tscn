@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://RetailStartupSequence.cs" id="1"]
+[ext_resource type="Script" path="res://Scenes/Shared/RetailTextureRect.cs" id="2"]
+
+[node name="Startup" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+z_index = 200
+script = ExtResource("1")
+EditorCue = 2
+
+[node name="Black" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Stage" type="Control" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Video" type="TextureRect" parent="Stage"]
+visible = false
+layout_mode = 0
+offset_top = 40.0
+offset_right = 640.0
+offset_bottom = 440.0
+mouse_filter = 2
+expand_mode = 1
+self_modulate = Color(0.996078431372549, 0.996078431372549, 0.996078431372549, 1)
+script = ExtResource("2")
+
+[node name="SplashFade" type="Control" parent="Stage"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+
+[node name="Splash" type="TextureRect" parent="Stage/SplashFade"]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+expand_mode = 1
+script = ExtResource("2")
+
+[node name="RetailFmvVoice" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+volume_db = 0.0
+autoplay = false
+bus = &"Master"

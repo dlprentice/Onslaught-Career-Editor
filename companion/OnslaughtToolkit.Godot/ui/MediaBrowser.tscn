@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/media_browser.gd" id="1"]
+
+[node name="Media" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+script = ExtResource("1")
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "Browse local media"
+
+[node name="Purpose" type="Label" parent="."]
+layout_mode = 2
+text = "Choose your game or media folder to inspect its audio, video and image filenames, sizes and locations. This browser lists metadata only; it does not play, decode, import or change the files."
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChooseFolder" type="Button" parent="Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose media folder…"
+
+[node name="Rescan" type="Button" parent="Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rescan"
+disabled = true
+
+[node name="CancelScan" type="Button" parent="Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel scan"
+disabled = true
+
+[node name="FolderPath" type="LineEdit" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+editable = false
+placeholder_text = "No folder selected"
+tooltip_text = "The folder you explicitly selected. Files remain in place."
+
+[node name="ScanSummary" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose a folder to begin. Linked files and folders are skipped."
+autowrap_mode = 3
+
+[node name="MediaFiles" type="Tree" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 240)
+size_flags_vertical = 3
+columns = 5
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="FileDetails" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 108)
+fit_content = true
+selection_enabled = true
+scroll_active = false
+text = "Select a file to inspect its relative path and reported format. Formats are identified by filename extension; their contents have not been validated."
+
+[node name="ScanLimits" type="Label" parent="."]
+layout_mode = 2
+text = "Each scan covers up to 8 folder levels, 5,000 media files and 30,000 entries. A cancelled or limited scan is labelled as a partial list."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 14
+
+[node name="FolderDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Choose a local media folder"
+size = Vector2i(840, 560)
+file_mode = 2
+access = 2
+deleting_enabled = false
+folder_creation_enabled = false
+overwrite_warning_enabled = false
+recent_list_enabled = false
+favorites_enabled = false

@@ -1716,6 +1716,47 @@ def _outputs_ready() -> bool:
         return False
 
 
+def _reuse_canonical_assets() -> int:
+    """Read verified canonical inputs through file links; never copy or publish there.
+
+    Link files, not directories: Godot's adjacent .import files and all derived
+    resources must belong to the current checkout. Validate the complete input
+    set and every destination before creating the first link.
+    """
+    canonical = _canonical_repository_root()
+    configured_lab = os.environ.get("BEA_LOCAL_LAB")
+    if configured_lab and Path(configured_lab).resolve() != (canonical / "local-lab").resolve():
+        raise RuntimeError("BEA_LOCAL_LAB must name this worktree's canonical local-lab")
+    outputs = tuple(dict.fromkeys(_all_outputs(canonical)))
+    pending: list[tuple[Path, Path]] = []
+    for relative, expected in outputs:
+        source = canonical / relative
+        if source.is_symlink() or _sha256(source.read_bytes()) != expected:
+            raise RuntimeError(f"canonical input is not the current exact regular file: {relative}")
+        destination = ROOT / relative
+        if ROOT.resolve() == canonical.resolve():
+            continue
+        # A directory link could redirect Godot imports or later publications
+        # into the canonical corpus even when the leaf link is correct.
+        parent = destination.parent
+        while parent != ROOT:
+            if parent.is_symlink():
+                raise RuntimeError(f"asset destination traverses a directory link: {parent}")
+            parent = parent.parent
+        if destination.is_symlink():
+            if destination.resolve(strict=True) != source.resolve(strict=True):
+                raise RuntimeError(f"asset destination points to another input: {relative}")
+        elif destination.exists():
+            if not destination.is_file() or _sha256(destination.read_bytes()) != expected:
+                raise RuntimeError(f"refusing to replace existing asset destination: {relative}")
+        else:
+            pending.append((source, destination))
+    for source, destination in pending:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.symlink_to(source)
+    return len(outputs)
+
+
 def _steam_roots() -> list[Path]:
     roots: list[Path] = []
     if sys.platform.startswith("linux"):
@@ -6698,6 +6739,8 @@ def main() -> int:
         ),
     )
     parser.add_argument("--force", action="store_true", help="reverify source data and regenerate every asset")
+    parser.add_argument("--reuse-canonical-assets", action="store_true",
+                        help="verify and link canonical materialized inputs read-only; no corpus copy")
     parser.add_argument(
         "--startup-media",
         action="store_true",
@@ -6718,6 +6761,20 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+
+    # Child worktrees consume committed-contract inputs. A stale canonical
+    # conversion is an explicit conflict, never permission to replace it.
+    if args.reuse_canonical_assets or (not args.startup_media and (ROOT / ".git").is_file()):
+        if args.force or args.startup_media:
+            print("canonical reuse cannot force regeneration or write startup media", file=sys.stderr)
+            return 2
+        try:
+            count = _reuse_canonical_assets()
+        except (OSError, RuntimeError, ValueError, KeyError) as error:
+            print(f"canonical asset reuse failed: {error}", file=sys.stderr)
+            return 2
+        print(f"canonical retail inputs verified: {count} files; checkout-local file links ready")
+        return 0
 
     requested_work_root = (
         _host_default_work_root_request()

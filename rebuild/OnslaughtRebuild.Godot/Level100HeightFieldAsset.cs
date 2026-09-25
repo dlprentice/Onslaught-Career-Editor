@@ -54,8 +54,9 @@ internal sealed class Level100HeightFieldAsset
     private Vector3 _smoothedForward;
     private ulong _meshSignature;
 
-    private Level100HeightFieldAsset(Level100Terrain terrain)
+    private Level100HeightFieldAsset(Level100Terrain terrain, ArrayMesh? sceneMesh = null)
     {
+        Mesh = sceneMesh ?? new ArrayMesh();
         _terrain = terrain;
         MixerSet = terrain.MixerSet;
         SkyCube = terrain.SkyCube;
@@ -106,7 +107,7 @@ internal sealed class Level100HeightFieldAsset
         }
     }
 
-    public ArrayMesh Mesh { get; } = new();
+    public ArrayMesh Mesh { get; }
 
     public int VertexCount { get; private set; }
 
@@ -161,7 +162,8 @@ internal sealed class Level100HeightFieldAsset
     /// </summary>
     public Vector3 SunPosition { get; }
 
-    public static Level100HeightFieldAsset Load() => new(Level100Terrain.Instance);
+    public static Level100HeightFieldAsset Load(ArrayMesh? sceneMesh = null) =>
+        new(Level100Terrain.Instance, sceneMesh);
 
     /// <summary>
     /// The ground support used by the released static placement clamp. This is

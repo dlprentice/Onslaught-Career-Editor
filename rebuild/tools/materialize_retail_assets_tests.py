@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import struct
+import os
 import tempfile
 import unittest
 import zlib
@@ -874,6 +875,80 @@ class LinuxSteamDiscoveryTests(unittest.TestCase):
         self.assertTrue(any(r"D:\SteamLibrary" in str(path) for path in candidates))
 
 
+class CanonicalAssetReuseTests(unittest.TestCase):
+    def test_verifies_then_links_files_without_copying_or_shared_import_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            canonical = Path(temporary) / "canonical"
+            child = Path(temporary) / "child"
+            child.mkdir()
+            relative = Path("rebuild/OnslaughtRebuild.Godot/Assets/Hud/a.bin")
+            source = canonical / relative
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"exact input")
+            outputs = ((relative, materializer._sha256(b"exact input")),) * 2
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer, "_canonical_repository_root", return_value=canonical),
+                mock.patch.object(materializer, "_all_outputs", return_value=outputs),
+                mock.patch.dict(os.environ, {"BEA_LOCAL_LAB": str(canonical / "local-lab")}),
+            ):
+                self.assertEqual(1, materializer._reuse_canonical_assets())
+                self.assertEqual(1, materializer._reuse_canonical_assets())
+            destination = child / relative
+            self.assertTrue(destination.is_symlink())
+            self.assertFalse(destination.parent.is_symlink())
+            self.assertEqual(source, destination.resolve())
+            destination.with_suffix(".import").write_text("owned import")
+            self.assertFalse(source.with_suffix(".import").exists())
+            self.assertEqual(b"exact input", source.read_bytes())
+
+    def test_stale_input_refuses_before_any_link_is_created(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            canonical = Path(temporary) / "canonical"
+            child = Path(temporary) / "child"
+            canonical.mkdir()
+            child.mkdir()
+            (canonical / "first").write_bytes(b"good")
+            (canonical / "second").write_bytes(b"stale")
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer, "_canonical_repository_root", return_value=canonical),
+                mock.patch.object(materializer, "_all_outputs", return_value=(
+                    (Path("first"), materializer._sha256(b"good")),
+                    (Path("second"), materializer._sha256(b"current")))),
+                mock.patch.dict(os.environ, {"BEA_LOCAL_LAB": ""}),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "current exact"):
+                    materializer._reuse_canonical_assets()
+            self.assertEqual([], list(child.iterdir()))
+
+    def test_refuses_a_linked_destination_directory_or_conflicting_existing_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            canonical = Path(temporary) / "canonical"
+            child = Path(temporary) / "child"
+            source = canonical / "assets/input"
+            source.parent.mkdir(parents=True)
+            child.mkdir()
+            source.write_bytes(b"good")
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer, "_canonical_repository_root", return_value=canonical),
+                mock.patch.object(materializer, "_all_outputs", return_value=(
+                    (Path("assets/input"), materializer._sha256(b"good")),)),
+                mock.patch.dict(os.environ, {"BEA_LOCAL_LAB": ""}),
+            ):
+                (child / "assets").symlink_to(source.parent, target_is_directory=True)
+                with self.assertRaisesRegex(RuntimeError, "directory link"):
+                    materializer._reuse_canonical_assets()
+                (child / "assets").unlink()
+                (child / "assets").mkdir()
+                destination = child / "assets/input"
+                destination.write_bytes(b"unique")
+                with self.assertRaisesRegex(RuntimeError, "refusing to replace"):
+                    materializer._reuse_canonical_assets()
+                self.assertEqual(b"unique", destination.read_bytes())
+
+
 class WorkRootRoutingTests(unittest.TestCase):
     @staticmethod
     def _canonical_lab(parent: Path) -> tuple[Path, Path]:
@@ -963,6 +1038,7 @@ class WorkRootRoutingTests(unittest.TestCase):
                 return ()
 
             with (
+                mock.patch.object(materializer, "ROOT", repository),
                 mock.patch.object(
                     materializer.sys,
                     "argv",
@@ -1033,6 +1109,7 @@ class WorkRootRoutingTests(unittest.TestCase):
             repository, lab = self._canonical_lab(Path(temporary))
             work_root = lab / "rebuild-godot"
             with (
+                mock.patch.object(materializer, "ROOT", repository),
                 mock.patch.object(
                     materializer.sys,
                     "argv",

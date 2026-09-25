@@ -13,7 +13,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// their authored part hierarchies. This is intentionally not a general AYA or
 /// CMSH importer.
 /// </summary>
-internal sealed class RetailAquilaWalkerAsset
+internal sealed partial class RetailAquilaWalkerAsset
 {
     private const string ExpectedSourceSha256 =
         "D4C8FA752229AF4111B31EFA5FF5928C892736FAA6A807915412767F3CD3C6B2";
@@ -245,7 +245,8 @@ internal sealed class RetailAquilaWalkerAsset
         string resourcePath,
         IReadOnlyDictionary<int, Texture2D> textures,
         Level100HeightFieldAsset terrain,
-        IReadOnlyDictionary<string, Material>? materialOverrides)
+        IReadOnlyDictionary<string, Material>? materialOverrides,
+        Node3D? sceneRoot = null)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         string hash = Convert.ToHexString(SHA256.HashData(source));
@@ -272,13 +273,27 @@ internal sealed class RetailAquilaWalkerAsset
         ResolveAndValidateHierarchy(parsed.Parts, profile.BasePoseValidationFrame, profile.InitialFrame, profile.DisplayName);
         float[][] legFrameLengths = profile.IsWalker ? BuildLegFrameLengths(parsed.Parts) : [];
         float standingClearance = profile.IsWalker ? BuildStandingClearance(parsed.Parts) : 0f;
-        Node3D[] partNodes = BuildPartNodes(
-            parsed,
-            textures,
-            terrain,
-            profile,
-            materialOverrides,
-            out Node3D root);
+        Node3D root;
+        Node3D[] partNodes;
+        if (sceneRoot is null)
+        {
+            partNodes = BuildPartNodes(parsed, textures, terrain, profile, materialOverrides, out root);
+        }
+        else
+        {
+            root = sceneRoot;
+            partNodes = new Node3D[parsed.Parts.Length];
+            for (int index = 0; index < parsed.Parts.Length; index++)
+            {
+                Part part = parsed.Parts[index];
+                Node3D parent = part.Parent is int parentIndex ? partNodes[parentIndex] : root;
+                partNodes[index] = parent.GetNode<Node3D>($"Part{index:D2}-{SanitizeNodeName(part.Name)}");
+                if (part.Geometry is not null && partNodes[index].GetNode<MeshInstance3D>("Geometry").Mesh is null)
+                {
+                    throw new InvalidDataException($"Scene lost {profile.DisplayName} geometry at part {index}.");
+                }
+            }
+        }
         return new RetailAquilaWalkerAsset(
             parsed.Parts,
             partNodes,

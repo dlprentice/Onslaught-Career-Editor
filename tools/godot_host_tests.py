@@ -36,7 +36,7 @@ class CompanionLauncherTests(unittest.TestCase):
             f"#!{sys.executable}\n"
             "import json, os, pathlib, sys\n"
             "if '--version' in sys.argv:\n"
-            f"    print(os.environ.get('FAKE_VERSION', {host.ENGINE_VERSION!r}))\n"
+            f"    print(os.environ.get('FAKE_VERSION', {host.COMPANION_ENGINE_VERSION!r}))\n"
             "    raise SystemExit(0)\n"
             "with open(os.environ['FAKE_CALLS'], 'a') as output:\n"
             "    output.write(json.dumps({'tool': pathlib.Path(sys.argv[0]).name, "
@@ -93,6 +93,17 @@ class CompanionLauncherTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"FAKE_VERSION": "4.7.1.stable.mono.official.old"}):
             self.assertEqual(2, self.invoke("build"))
         self.assertFalse(self.calls.exists())
+
+    def test_default_engine_preserves_the_committed_companion_sdk(self) -> None:
+        self.assertEqual(0, host.companion_main(["run", "--no-build"]))
+        self.assertEqual("godot-mono", self.read_calls()[0]["tool"])
+
+    def test_rebuild_sdk_resolution_rejects_legacy_package_only_engine(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "4.8.0-dev.6 bundled SDK package is missing"):
+            host.engine_path(str(self.engine))
+        self.assertEqual(self.engine, host.engine_path(str(self.engine), sdk_version=host.COMPANION_SDK_VERSION))
+        (self.engine.parent / "GodotSharp/Tools/nupkgs/Godot.NET.Sdk.4.8.0-dev.6.nupkg").touch()
+        self.assertEqual(self.engine, host.engine_path(str(self.engine)))
 
 
     def test_timeout_prints_captured_diagnostics_and_keeps_failure_status(self) -> None:

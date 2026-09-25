@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-12 (unused Windows VM retired; native Linux routes unchanged).
+Last updated: 2026-09-19 (Godot 4.8 dev6 and production scene architecture).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -148,7 +148,11 @@ live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
 
 ## Run on Linux
 
-Use the installed pinned Godot 4.7.2 .NET engine and its bundled C# packages:
+Use the installed pinned Godot 4.8 dev6 .NET engine (`godot48-mono`) and its
+bundled `Godot.NET.Sdk/4.8.0-dev.6` packages. The launcher requires the exact
+identity `4.8.dev6.mono.official.8898c2b3d`; the project remains `net8.0`.
+The standard `godot48` edition is installed for GDScript-only work, but this
+C# rebuild requires the .NET edition.
 
 ```bash
 npm run build:rebuild-godot
@@ -156,18 +160,26 @@ npm run run:rebuild-godot
 ```
 
 `rebuild/tools/first_flight.py` discovers the user's Linux Steam libraries or
-accepts `--game-root "/absolute/game/root"`. It prepares the exact supported
-retail inputs under canonical `local-lab/rebuild-godot/` and startup media under
-`local-lab/startup-media/`, restores against bundled Godot packages with the lock
-file, and launches from this checkout. Required non-Godot NuGet dependencies must
+accepts `--game-root "/absolute/game/root"`. In the canonical checkout it prepares
+the supported retail inputs through `local-lab/rebuild-godot/` and startup media
+under `local-lab/startup-media/`. A child worktree verifies the current exact
+canonical asset files and links individual inputs into its ignored asset paths;
+it reads existing startup media without regenerating it. Set `BEA_LOCAL_LAB` to
+the canonical absolute lab path. Missing or stale inputs fail explicitly.
+The launcher restores against bundled Godot packages with the lock file and
+launches from this checkout. Required non-Godot NuGet dependencies must
 already be available in the package cache. It never downloads or installs an engine.
 A genuinely fresh canonical clone needs its private `local-lab/` owner first;
 child worktrees reuse that canonical owner instead of creating a second corpus.
 
-The launcher owns scratch, user data/cache and fresh run logs under canonical
-`local-data/first-flight/`, including from a worktree. `--no-build` reuses the
-managed build; `--no-prepare` also skips asset validation/preparation and therefore
-requires already current inputs. Engine flags use `--engine-arg=VALUE`; game
+The launcher owns scratch, user data/config/cache and fresh run logs under this
+checkout's `local-data/first-flight/`; every invocation has its own profile.
+`--output-root` may name a fresh directory under this checkout's `local-data/`.
+Individual input file links leave adjacent Godot import files checkout-local.
+`--no-build` reuses the
+managed build; `--no-prepare` also skips asset validation and the production scene
+import, so it requires current inputs and an import made with the current build.
+Engine flags use `--engine-arg=VALUE`; game
 arguments follow a separate `--`. The launcher stops only its own process group
 on exit, interruption or timeout.
 
@@ -186,15 +198,121 @@ session passed two replays on September 6. A substantial tutorial playthrough is
 still required; synthetic smoke and captured screenshots do not meet that acceptance.
 
 `prepare:rebuild-assets`, Core/Client tests and headless replay do not open a
-window. Run/smoke/capture require an available desktop. The September 6 native
+window. Run/smoke/capture require an explicitly available desktop or an isolated
+virtual display with its own credentials and profile; never fall back to the
+physical desktop. Software rendering establishes bounded visual observations,
+not GPU performance, physical input or audible playback. The September 6 native
 smoke and live startup into Level 100 establish Linux runtime execution; complete
 controls/audio/tutorial parity remains unverified.
 
-Historical Windows PowerShell launchers remain under `tools/`, with explicit
+Retained Windows PowerShell launchers remain under `tools/`, with explicit
 `run:rebuild-godot:windows` and `test:rebuild-godot-smoke:windows` aliases. Their
-4.7.1 engine manifest needs revalidation against the current 4.7.2 managed SDK
-before new Windows acceptance. The unused Windows VM staging was retired on September 12;
-Windows acceptance would need a separately provided Windows environment. Linux development continues natively.
+active [Windows manifest](toolchains/godot-4.8-dev6-win-x64.json) pins the matching
+4.8 dev6 official archive and every extracted file. Archive hashes and manifest
+validation have been checked on Linux; Windows execution remains unverified.
+The previous [4.7.1 manifest](toolchains/godot-4.7-stable-win-x64.json) is retained
+for recovery and is rejected by current setup. The unused Windows VM staging was
+retired on September 12; Windows acceptance needs a separately provided Windows
+environment. Linux development continues natively.
+
+### Inspect and edit in Godot
+
+Build first with `npm run build:rebuild-godot`, then open
+`rebuild/OnslaughtRebuild.Godot/project.godot` in the pinned .NET editor. The build
+imports the actual production world headlessly after compiling. In a worktree,
+set `BEA_LOCAL_LAB` to the canonical lab as described above. Opening a scene does
+not start simulation, play startup movies, acquire the pointer or read/write saves.
+Use these scenes from Godot's FileSystem dock:
+
+| Scene relative to the Godot project | What is present before Play |
+| --- | --- |
+| [Main.tscn](OnslaughtRebuild.Godot/Main.tscn) | The application host with its actual frontend instance. Open the frontend below for its 2D layout. |
+| [Scenes/Frontend/Startup.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Startup.tscn) | Black surround, actual movie/splash TextureRects and an inactive audio node. `EditorCue` reads one real frame or splash from the canonical media cache; it never plays it. |
+| [Scenes/Frontend/Frontend.tscn](OnslaughtRebuild.Godot/Scenes/Frontend/Frontend.tscn) | Startup and menu pages, seven main-menu rows, image controls, guides and page sections. `EditorPage` selects a frozen view; it does not navigate the game. |
+| [Scenes/Hud/FirstFlightHud.tscn](OnslaughtRebuild.Godot/Scenes/Hud/FirstFlightHud.tscn) | Production instruments, scanner, compass, crosshairs, messages and the three ordered blend groups. Editor display values feed presentation only. |
+| [Scenes/Pause/PauseMenu.tscn](OnslaughtRebuild.Godot/Scenes/Pause/PauseMenu.tscn) | Overlay, rotating circles, root rows and confirmation frame/rows. Preview controls choose an inspectable state without running the pause controller. |
+| `Assets/Level100/Scenes/Level100.tscn` (private, generated) | Native terrain mesh/material, sky, water, 33 static placements, all 1,481 pine transforms, initial target actors, camera and Aquila hierarchy. Select a node and use Godot's frame-selection action to navigate it. |
+| `Assets/Level100/Scenes/{StaticWorld,AquilaWalker,AquilaJet,AquilaCockpit}.tscn` (private, generated) | The reusable production instances used by Level 100. Meshes, decoded textures and shader materials are external private `.res` resources beside them. |
+
+These are the gameplay definitions. The game binds its existing C# presentation
+controllers to these nodes; it does not build an approximate second preview.
+The deterministic Core remains the single simulation owner. Actor poses, camera
+timing, terrain LOD, animation and transient effects continue to update through
+the existing adapters. The public actor scene supplies later spawned actors.
+
+Edit UI Control positions, sizes, text, resource routes and base appearance in
+their scenes. Frontend text keeps imported localization by default; an explicit
+`OverrideText` enables a deliberate authored replacement. HUD `Base`, `Glow` and
+`Text` groups expose the measured blend passes; corresponding halves of an
+instrument are separate selectable controls, with imported `Part`/`SourceRect`
+identity read-only in the Inspector. Narrow C# controls retain the measured bitmap-glyph and compositing
+laws where replacing them with a generic widget would change the image. They
+remain ordinary selectable Controls; their script and exported properties are
+available in the editor. Runtime animation applies its existing state over those
+definitions. Preview state is explicitly separate from game state, with no second
+simulation or per-object cross-language bridge.
+The level graph, options and debriefing are composite Controls: move or resize
+their section in the 2D editor and inspect their drawing/interaction code for
+internal layout. They are not yet individual native controls for every row.
+
+The tracked scenes contain code, layout and asset recipes, not retail pixels.
+Private atlas binding is transient: saving a public UI scene does not serialize
+the decoded texture. Generated world scenes/resources remain ignored. Their
+import receipt checks the build identity and each output file; faithful runtime
+refuses modified or stale generated files. A deliberate enhanced variation must
+be saved separately as private work, not silently substituted for imported defaults.
+Regeneration checks every resource and scene destination before writing: an
+existing file must be an unchanged output owned by the previous receipt.
+Unrelated files that do not collide are preserved. Preserve deliberate edits
+separately before regenerating. Scene transforms never become Core spawn data.
+
+All conversion lives in the explicit `ImportLevel100.tscn` import entry. Opening
+that scene in the editor performs no import; playing it without the explicit
+preparation argument only prints instructions. The supported build/run launcher
+owns preparation and verifies current files. Rebuild after code changes before
+using `--no-prepare`. Native physics bodies do not replace the custom simulation.
+
+Frontend/HUD/pause editor previews need the prepared private textures and compiled
+C# assembly. Missing data is reported rather than replaced with invented retail
+content. Runtime effects and later spawned actors naturally appear during play;
+their reusable definitions remain available in source and resources. Full combat
+completion, physical input/audio and normal GPU performance retain the acceptance
+limits stated below. Companion editor work belongs to its separate lane.
+
+### Engine updates and recovery
+
+The shared pinned toolchain owns installed engines and matching export templates;
+Onslaught owns its exact runtime resolver, managed SDK/lock and project feature
+version. On September 19 both installed 4.8 dev6 editions and both template trees
+passed the shared toolchain's payload hash verification. The preceding 4.7.2
+standard/.NET engines and templates remain installed; their previous Onslaught
+SDK/project pins remain recoverable from Git. Downgrading requires that matching
+source baseline and a fresh checkout-local import cache, not pointing current
+4.8 managed assemblies at an older executable.
+
+The official development notes identify relevant cumulative changes: the
+[dev1](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-1/) and
+[dev2](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-2/) editor/game
+view and resource workflows; [dev3](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-3/)
+editor resource defaults and Windows mouse processing;
+[dev4](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-4/) dock changes
+and Compatibility-renderer decals;
+[dev5](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-5/) texture import
+options and automatic Control focus;
+[dev6](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-6/) Linux touchpad
+scrolling fixes. These changes select compatibility checks; they do not authorize
+new visuals, altered imported retail defaults or replacement simulation physics.
+
+Subsequent official 4.8 development and beta releases are eligible after reviewing
+the cumulative [official changelog](https://godotengine.github.io/godot-interactive-changelog/)
+from the current pin, including intermediate releases and known regressions.
+Keep the previous installed version and a recoverable source commit, verify the
+new engine/templates, then update the resolver, SDK lock, feature version and
+retained Windows manifest together. Run the affected launcher, build, headless
+scene, deterministic replay and presentation checks selected by
+[VALIDATION.md](../VALIDATION.md); input/audio or GPU claims still require their
+actual environment. Do not defer a compatible update solely because it is a
+development build. No monitoring automation is implied.
 
 Controls:
 

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-23 (coupled settings routing and original sound initialization; earlier implementation receipts retain their dates).
+Last updated: 2026-09-23 (coupled settings routing and original sound initialization; 2026-09-19 native companion workflow and rebuild editor scenes; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -20,7 +20,8 @@ re-measure before relying on one. Superseded correction narratives remain in
 Git and their dated evidence owners; they are not current operating instructions.
 
 The active preservation app is the Godot companion; retained WinUI source supplies
-migration material and AppCore owns shared file correctness. Full retail RE,
+migration material. The native companion owns GDScript save behavior and links
+existing AppCore file-safety source through its in-process C# adapter. Full retail RE,
 the 1:1 Godot rebuild and the Godot toolkit companion remain
 coequal outcomes; the unshipped CLI and focused tools are support surfaces.
 
@@ -150,22 +151,54 @@ a single executed failed-Load-to-bank chain. See the
 
 ## Godot Save Lab — first workflow
 
-The MIT [Godot companion](companion/OnslaughtToolkit.Godot/README.md) opens a real
-`.bes`, explains its current values and offers one kill-category edit to a new
-copy. `SaveLabService` preserves size, packed high bits and every unselected byte;
-it verifies the original and published output. Existing outputs, source changes,
-path aliases and no-op edits are refused. The UI reopens the published copy.
-Linux publication uses held directory/file descriptors and create-new linking;
-the Windows branch reuses the existing guarded mutation owner.
+The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) now uses native
+typed GDScript and **Godot 4.8.dev6.mono.official.8898c2b3d**. Its main scene,
+category-row scene, media scene and theme are editable in the Godot editor.
+It opens a protected real-career snapshot, explains identity/known/unknown data,
+previews explicitly selected counts, and writes/reopens a separate verified copy.
+Unchanged recovery copies and full byte comparison are also implemented. The
+read-only media browser inventories an explicitly selected local folder with
+bounded traversal, link skipping and partial-result reporting; it does not play media.
 
-The Linux default gate passed **24/24** AppCore Save Lab/gate tests and **14/14**
-fake-tool launcher tests. The Godot project builds with the installed 4.7.2 .NET
-engine. Its native shell and file dialog opened on September 6. **A complete
-open → edit → write → reopen flow through the visible UI is still unverified**;
-the desktop became unavailable before that check. No Windows runtime acceptance
-or broader companion feature parity is implied. Local evidence is under
-`local-data/companion/native-20260906/` and
-`local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+David clarified that necessary C# should run inside Godot's .NET edition. The
+thin [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
+adapter links existing safety source unchanged. Save decoding, edit planning,
+byte comparison and UI remain GDScript. There is no helper process, JSON protocol,
+C# save codec or unchecked write fallback. Normal Godot .NET exports bundle their
+runtime. Linux publication retains
+no-follow handles, physical identities, unnamed staging and no-clobber linking.
+Malformed/changed inputs and conflicting outputs are refused; uncertain publication
+never becomes a success receipt or an automatic deletion.
+
+**September 19 executed .NET integration evidence:** `npm test` passed the
+GDScript byte suite, actual scene/control workflow, protected round trip,
+independently checked selected edits, reopen/comparison and media checks.
+Direct adapter tests cover malformed arguments, same-byte physical replacement,
+source changes, link aliases, conflicting destinations and game-tree refusal.
+Unavailable adapters and invalid managed results fail closed. All six unchanged
+transaction race/failure cases and all **12** companion tooling cases passed.
+Receipts are in canonical `local-data/companion/godot-dotnet-test-1rg3gl2k/`.
+The original worktree's C# build, headless .NET editor import and editor
+`--build-solutions` also passed:
+`local-data/companion/mono-source-editor-ps1m7phv/`.
+The exported .NET Linux app passed actual file-dialog and button input on an
+isolated Xvfb display: open, preview, publish, verified reopen, destination
+conflict refusal, unchanged recovery and open verified result. Independent byte
+comparison confirmed exactly three selected bytes changed and all 10,004 original
+and recovery bytes matched the fixture. Its managed runtime loaded from its own
+package with an empty executable search path. Receipts and own-display captures:
+`local-data/companion/dotnet-export-acceptance-d394_btv/`.
+The standard-engine/helper prototype and its earlier rendered/exported checks
+remain dated predecessor evidence in [VALIDATION.md](VALIDATION.md#native-companion-migration--september-19).
+
+The .NET Linux/Windows packages are in canonical
+`local-data/companion/godot-dotnet-export-ph2r7cmk/packages/`.
+Windows cross-export and package inspection are recorded in the companion
+[validation section](VALIDATION.md#companion-net-integration--september-19).
+**Windows execution and human click-through acceptance remain pending.**
+Broader options/rank/Goodie writes, whole-game safe-copy/rescue, patching,
+playback/replacement, lore and asset workflows remain migration work; no legacy
+feature parity or retail gameplay acceptance is implied.
 
 ## Existing WinUI toolkit — migration material
 
@@ -432,6 +465,31 @@ generic automation workbench.
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
+
+**September 19 editor integration.** The rebuild builds on the exact
+`4.8.dev6.mono.official.8898c2b3d` engine and `Godot.NET.Sdk/4.8.0-dev.6`, retaining
+`net8.0`. Startup, frontend, HUD and pause are production Godot scenes with
+selectable Controls and resources before Play. Main-menu rows and native image
+controls expose their layout; complex level graph, options and debriefing sections
+remain custom composite Controls with their C# drawing code available. Explicit
+editor display properties select frozen states without running simulation,
+playing audio or acquiring the pointer.
+
+The private Level 100 scene contains the actual terrain/materials, sky, water,
+static placements, pine instances, initial actors, camera and Aquila hierarchies.
+The build imports reusable world components from the existing production loaders;
+gameplay then binds those same saved nodes and resources. Geometry, texture bytes,
+selected animated poses and unchanged snapshot hashes passed the production
+round-trip check, including saved resources before runtime refresh. An isolated
+Godot editor opened and rendered the scene successfully. Imported faithful data
+is guarded against silent edits; generated retail scenes/resources remain private.
+The [scene guide](rebuild/README.md#inspect-and-edit-in-godot) identifies what to
+open, what to edit and what remains generated. The [validation receipt](VALIDATION.md)
+records executed checks and editor-harness diagnostics.
+
+This is rebuild presentation work. It does not complete the companion lane,
+full-combat Level 100, World 110, physical-input/audio, Windows or normal GPU
+acceptance. No desktop input or desktop capture was used.
 
 **September 6 native Linux evidence.** Godot 4.7.2 .NET built and ran through
 the native synthetic First Flight smoke with no Godot error. A separate normal

@@ -143,7 +143,7 @@ internal sealed class Level100SunAsset
     /// Decodes <c>Sun Sprite</c> out of the shipped particle set and builds the
     /// billboard for it.
     /// </summary>
-    public static Level100SunAsset Create(Level100HeightFieldAsset terrain)
+    public static Level100SunAsset Create(Level100HeightFieldAsset terrain, MeshInstance3D? sceneRoot = null)
     {
         ArgumentNullException.ThrowIfNull(terrain);
 
@@ -186,6 +186,12 @@ internal sealed class Level100SunAsset
             throw new InvalidDataException(
                 $"'{DescriptorName}' authors Blend_Mode {layer.BlendMode}; only the " +
                 "additive mode-0 copy of its texture is retained.");
+        }
+
+        if (sceneRoot is not null)
+        {
+            return new Level100SunAsset(terrain, layer, sceneRoot,
+                ToGodotDirection(terrain.SunPosition) * RetailSunScale);
         }
 
         Texture2D texture = CuratedAyaTextureLoader.Load(
