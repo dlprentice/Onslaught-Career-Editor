@@ -26,10 +26,10 @@ public sealed partial class LoadingReference : Control
 
     internal void Initialize()
     {
-        _loadingScreen = CuratedAyaTextureLoader.Load("res://Assets/Frontend/loading-screen.texture.aya", 512, 512,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        _font22 = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-22.texture.aya", 512, 512,
-            CuratedAyaTextureLoader.Compression.Rgba8);
+        _loadingScreen = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/loading-screen.texture.aya", 512, 512,
+            LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        _font22 = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-22.texture.aya", 512, 512,
+            LegacyCuratedAyaTextureReference.Compression.Rgba8);
         using Image image = _font22.GetImage();
         _font22Widths = MeasureGlyphWidths(image, Font22CellSize, Font22Columns);
         Size = new Vector2(640, 480);

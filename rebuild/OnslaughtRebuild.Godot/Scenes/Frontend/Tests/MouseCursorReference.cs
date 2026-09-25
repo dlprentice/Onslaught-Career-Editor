@@ -140,7 +140,7 @@ public sealed partial class MouseCursorReference : Node2D
     {
         const string path = "res://Assets/Frontend/mouse-cursor.texture.aya";
         return Godot.FileAccess.FileExists(path)
-            ? CuratedAyaTextureLoader.Load(path, 128, 128, CuratedAyaTextureLoader.Compression.Dxt2,
+            ? LegacyCuratedAyaTextureReference.Load(path, 128, 128, LegacyCuratedAyaTextureReference.Compression.Dxt2,
                 expectedTargetFormat: Image.Format.Rgba8, expectedMipCount: 8)
             : null;
     }

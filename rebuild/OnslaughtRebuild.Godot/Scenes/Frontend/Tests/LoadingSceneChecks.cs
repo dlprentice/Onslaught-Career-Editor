@@ -138,7 +138,7 @@ public sealed partial class LoadingSceneChecks : Node
         Check(nativeBackground.GetSize() == expectedBackground.GetSize() && nativeBackground.GetData().SequenceEqual(expectedBackground.GetData()),
             "Every LoadingScreen pixel equals the original admitted DXT1 decode.");
         using Variant compression = background.Get("compression");
-        Check(compression.AsInt32() == (int)CuratedAyaTextureLoader.Compression.Dxt1, "The actual production background keeps DXT1 admission.");
+        Check(compression.AsInt32() == (int)LegacyCuratedAyaTextureReference.Compression.Dxt1, "The actual production background keeps DXT1 admission.");
     }
 
     private void CheckReceiptAdmission()

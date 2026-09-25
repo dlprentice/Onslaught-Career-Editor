@@ -158,7 +158,7 @@ public sealed partial class DebriefingSceneChecks : Node
             {
                 Check(actual.GetSize() == expected.GetSize() && actual.GetData().SequenceEqual(expected.GetData()),
                     "Every private art pixel equals the retained C# decode: " + name);
-                Check(native.Get("compression").AsInt32() == (int)CuratedAyaTextureLoader.Compression.Dxt2,
+                Check(native.Get("compression").AsInt32() == (int)LegacyCuratedAyaTextureReference.Compression.Dxt2,
                     "Retained DXT2 admission is explicit: " + name);
             }
         }

@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Test-only snapshot of CuratedAyaTextureLoader.cs at 09f0c08b.
+// Keep the original C# admission/inflate/image implementation independent
+// of the production native texture loader and its temporary facade.
+
+using System.Buffers.Binary;
+using System.IO.Compression;
+using Godot;
+
+namespace OnslaughtRebuild.GodotClient;
+
+internal static class LegacyCuratedAyaTextureReference
+{
+    internal enum Compression
+    {
+        Dxt1,
+        Dxt2,
+        Rgba8,
+    }
+
+    private const int MaximumSourceBytes = 2 * 1024 * 1024;
+    private const int MaximumDdsBytes = 8 * 1024 * 1024;
+
+    public static Texture2D Load(
+        string resourcePath,
+        int expectedWidth,
+        int expectedHeight,
+        Compression expectedCompression = Compression.Dxt2,
+        Image.Format? expectedTargetFormat = null,
+        int? expectedMipCount = null)
+    {
+        byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
+        if (source.Length is 0 or > MaximumSourceBytes)
+        {
+            throw new InvalidDataException($"Curated texture '{resourcePath}' is missing or exceeds the source limit.");
+        }
+
+        byte[] dds = InflateAya(source);
+        if (dds.Length < 128 || !dds.AsSpan(0, 4).SequenceEqual("DDS "u8))
+        {
+            throw new InvalidDataException(
+                "Curated texture is not an AYA-wrapped DDS image.");
+        }
+        bool expectedPixelFormat = expectedCompression switch
+        {
+            Compression.Dxt1 => dds.AsSpan(84, 4).SequenceEqual("DXT1"u8),
+            Compression.Dxt2 => dds.AsSpan(84, 4).SequenceEqual("DXT2"u8),
+            Compression.Rgba8 =>
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(80, 4)) == 0x41 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(84, 4)) == 0 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(88, 4)) == 32 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(92, 4)) == 0x00FF0000 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(96, 4)) == 0x0000FF00 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(100, 4)) == 0x000000FF &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(104, 4)) == 0xFF000000,
+            _ => false,
+        };
+        if (!expectedPixelFormat)
+        {
+            throw new InvalidDataException(
+                $"Curated texture does not match the expected {expectedCompression} DDS pixel format.");
+        }
+        if (expectedMipCount is int mipCount &&
+            BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(28, 4)) != (uint)mipCount)
+        {
+            throw new InvalidDataException(
+                $"Curated texture '{resourcePath}' does not contain the expected {mipCount} DDS mip levels.");
+        }
+
+        using var image = new Image();
+        Error result = image.LoadDdsFromBuffer(dds);
+        if (result != Error.Ok || image.IsEmpty())
+        {
+            throw new InvalidDataException($"Godot could not decode curated texture '{resourcePath}' ({result}).");
+        }
+        if (image.GetWidth() != expectedWidth || image.GetHeight() != expectedHeight)
+        {
+            throw new InvalidDataException(
+                $"Curated texture '{resourcePath}' decoded as {image.GetWidth()}x{image.GetHeight()}, " +
+                $"expected {expectedWidth}x{expectedHeight}.");
+        }
+        if (expectedTargetFormat is Image.Format targetFormat && image.GetFormat() != targetFormat)
+        {
+            if (image.IsCompressed() && image.Decompress() != Error.Ok)
+            {
+                throw new InvalidDataException(
+                    $"Curated texture '{resourcePath}' could not be decompressed for {targetFormat} upload.");
+            }
+            image.Convert(targetFormat);
+        }
+        if (expectedTargetFormat is Image.Format requiredFormat && image.GetFormat() != requiredFormat)
+        {
+            throw new InvalidDataException(
+                $"Curated texture '{resourcePath}' could not be converted to {requiredFormat}.");
+        }
+
+        return ImageTexture.CreateFromImage(image);
+    }
+
+    private static byte[] InflateAya(byte[] source)
+    {
+        using var output = new MemoryStream();
+        int position = 0;
+        int records = 0;
+        byte[] buffer = new byte[16 * 1024];
+
+        while (position < source.Length)
+        {
+            if (source.Length - position < sizeof(uint))
+            {
+                throw new InvalidDataException("Curated texture has a truncated AYA record header.");
+            }
+
+            uint declaredLength = BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(position, sizeof(uint)));
+            position += sizeof(uint);
+            if (declaredLength is 0 or > int.MaxValue || declaredLength > source.Length - position)
+            {
+                throw new InvalidDataException("Curated texture has invalid AYA record framing.");
+            }
+
+            int compressedLength = checked((int)declaredLength);
+            using var compressed = new MemoryStream(
+                source,
+                position,
+                compressedLength,
+                writable: false,
+                publiclyVisible: false);
+            using (var inflater = new ZLibStream(compressed, CompressionMode.Decompress, leaveOpen: true))
+            {
+                int read;
+                while ((read = inflater.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    if (output.Length + read > MaximumDdsBytes)
+                    {
+                        throw new InvalidDataException("Curated texture exceeds the decoded DDS limit.");
+                    }
+                    output.Write(buffer, 0, read);
+                }
+            }
+
+            if (compressed.Position != compressed.Length)
+            {
+                throw new InvalidDataException("Curated texture AYA record contains trailing compressed data.");
+            }
+
+            position += compressedLength;
+            records++;
+        }
+
+        if (records == 0)
+        {
+            throw new InvalidDataException("Curated texture contains no AYA records.");
+        }
+
+        return output.ToArray();
+    }
+}

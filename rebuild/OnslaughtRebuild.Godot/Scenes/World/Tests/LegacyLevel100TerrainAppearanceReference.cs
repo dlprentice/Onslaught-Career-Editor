@@ -370,16 +370,16 @@ internal sealed class LegacyLevel100TerrainAppearanceReference
             Godot.FileAccess.GetFileAsBytes(hierarchyResourcePath),
             heightField.SunColorRgb24,
             heightField.AmbientColorRgb24);
-        Texture2D detailTexture = CuratedAyaTextureLoader.Load(
+        Texture2D detailTexture = LegacyCuratedAyaTextureReference.Load(
             detailTextureResourcePath,
             512,
             512,
-            CuratedAyaTextureLoader.Compression.Dxt1);
-        Texture2D cloudShadowTexture = CuratedAyaTextureLoader.Load(
+            LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        Texture2D cloudShadowTexture = LegacyCuratedAyaTextureReference.Load(
             cloudShadowResourcePath,
             256,
             256,
-            CuratedAyaTextureLoader.Compression.Dxt1);
+            LegacyCuratedAyaTextureReference.Compression.Dxt1);
         return new LegacyLevel100TerrainAppearanceReference(
             compositor,
             rootTexture,

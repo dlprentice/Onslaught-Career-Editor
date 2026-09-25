@@ -13,10 +13,10 @@ public sealed partial class ClickReference : Control
     private double _clickPulseTimer, _clickPageSeconds;
     internal void Initialize()
     {
-        _clickBackground = CuratedAyaTextureLoader.Load("res://Assets/Frontend/Backgrounds/click-to-start.texture.aya", 1024, 1024, CuratedAyaTextureLoader.Compression.Dxt1);
-        _clickSlide = CuratedAyaTextureLoader.Load("res://Assets/Frontend/click-slide.texture.aya", 128, 128);
-        _titleLogo = CuratedAyaTextureLoader.Load("res://Assets/Frontend/title-logo.texture.aya", 512, 256);
-        _titleFont = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, CuratedAyaTextureLoader.Compression.Rgba8);
+        _clickBackground = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/Backgrounds/click-to-start.texture.aya", 1024, 1024, LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        _clickSlide = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/click-slide.texture.aya", 128, 128);
+        _titleLogo = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/title-logo.texture.aya", 512, 256);
+        _titleFont = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, LegacyCuratedAyaTextureReference.Compression.Rgba8);
         using Image image = _titleFont.GetImage();
         // Same scanner retained by LoadingReference, with the original font13 cell.
         _glyphWidths = (int[])typeof(LoadingReference).GetMethod("MeasureGlyphWidths",

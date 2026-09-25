@@ -54,9 +54,9 @@ public sealed partial class QuitConfirmReference : Control
     internal void Initialize()
     {
         if (_initialized) throw new InvalidOperationException("The retained dialog is already initialized.");
-        _feBlank = CuratedAyaTextureLoader.Load("res://Assets/PauseMenu/blank.texture.aya", 16, 16, CuratedAyaTextureLoader.Compression.Dxt1);
-        _titleFont = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, CuratedAyaTextureLoader.Compression.Rgba8);
-        _font22 = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-22.texture.aya", 512, 512, CuratedAyaTextureLoader.Compression.Rgba8);
+        _feBlank = LegacyCuratedAyaTextureReference.Load("res://Assets/PauseMenu/blank.texture.aya", 16, 16, LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        _titleFont = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, LegacyCuratedAyaTextureReference.Compression.Rgba8);
+        _font22 = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-22.texture.aya", 512, 512, LegacyCuratedAyaTextureReference.Compression.Rgba8);
         using Image body = _titleFont.GetImage(); using Image choice = _font22.GetImage();
         _glyphWidths = MeasureGlyphWidths(body, GlyphCellSize, GlyphColumns);
         _font22Widths = MeasureGlyphWidths(choice, Font22CellSize, Font22Columns);

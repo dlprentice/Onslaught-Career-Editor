@@ -158,12 +158,12 @@ public sealed partial class PauseSceneChecks : Node
     private void CheckSharedFontParity(Control root, Control firstRow)
     {
         var title = root.GetNode<Control>("Title");
-        var normal = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
+        var normal = new RetailBitmapFont(LegacyCuratedAyaTextureReference.Load(
             "res://Assets/Hud/font-22.texture.aya", 512, 512,
-            CuratedAyaTextureLoader.Compression.Rgba8), 32);
-        var small = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
+            LegacyCuratedAyaTextureReference.Compression.Rgba8), 32);
+        var small = new RetailBitmapFont(LegacyCuratedAyaTextureReference.Load(
             "res://Assets/Hud/font-13ps.texture.aya", 256, 256,
-            CuratedAyaTextureLoader.Compression.Rgba8), 16);
+            LegacyCuratedAyaTextureReference.Compression.Rgba8), 16);
         string[] samples = ["", "PAUSED", "Are you sure?", "Controller Options", "No", "Yes", " ?~", "\u00a0", "\U0001f680", "\u0000\u00a0\U0001f680"];
         foreach (string text in samples)
         {
@@ -181,16 +181,16 @@ public sealed partial class PauseSceneChecks : Node
 
     private void CheckSharedTextureParity(CanvasLayer presentation)
     {
-        (string Node, string Asset, int Size, CuratedAyaTextureLoader.Compression Compression)[] samples =
+        (string Node, string Asset, int Size, LegacyCuratedAyaTextureReference.Compression Compression)[] samples =
         [
-            ("Surface/Overlay", "blank", 16, CuratedAyaTextureLoader.Compression.Dxt1),
-            ("Surface/Native/Circle01", "circle-01", 256, CuratedAyaTextureLoader.Compression.Dxt2),
-            ("Surface/Native/Circle02", "circle-02", 256, CuratedAyaTextureLoader.Compression.Dxt2),
-            ("Surface/Native/ConfirmationRange/Frame/CornerTopLeft", "endcurve", 32, CuratedAyaTextureLoader.Compression.Dxt2),
+            ("Surface/Overlay", "blank", 16, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+            ("Surface/Native/Circle01", "circle-01", 256, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            ("Surface/Native/Circle02", "circle-02", 256, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            ("Surface/Native/ConfirmationRange/Frame/CornerTopLeft", "endcurve", 32, LegacyCuratedAyaTextureReference.Compression.Dxt2),
         ];
         foreach (var sample in samples)
         {
-            Texture2D original = CuratedAyaTextureLoader.Load($"res://Assets/PauseMenu/{sample.Asset}.texture.aya",
+            Texture2D original = LegacyCuratedAyaTextureReference.Load($"res://Assets/PauseMenu/{sample.Asset}.texture.aya",
                 sample.Size, sample.Size, sample.Compression);
             Image actual = presentation.GetNode<TextureRect>(sample.Node).Texture.GetImage();
             Image expected = original.GetImage();

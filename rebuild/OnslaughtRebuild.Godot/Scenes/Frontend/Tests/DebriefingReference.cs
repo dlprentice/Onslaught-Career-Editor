@@ -56,8 +56,8 @@ public sealed partial class DebriefingReference : Control
     internal void Initialize(Texture2D[] frames)
     {
         _feBackFrames = frames;
-        _titleFont = LoadTexture("font-13ps", 256, 256, CuratedAyaTextureLoader.Compression.Rgba8, "Hud");
-        _font22 = LoadTexture("font-22", 512, 512, CuratedAyaTextureLoader.Compression.Rgba8, "Hud");
+        _titleFont = LoadTexture("font-13ps", 256, 256, LegacyCuratedAyaTextureReference.Compression.Rgba8, "Hud");
+        _font22 = LoadTexture("font-22", 512, 512, LegacyCuratedAyaTextureReference.Compression.Rgba8, "Hud");
         using Image body = _titleFont.GetImage();
         using Image title = _font22.GetImage();
         _glyphWidths = MeasureGlyphWidths(body, GlyphCellSize, GlyphColumns);
@@ -108,23 +108,23 @@ public sealed partial class DebriefingReference : Control
             "Debriefing/metal-ring-transition",
             512,
             512,
-            CuratedAyaTextureLoader.Compression.Dxt2);
+            LegacyCuratedAyaTextureReference.Compression.Dxt2);
         _debriefingGradeTextures =
         [
-            LoadTexture("Debriefing/ranking-a", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
-            LoadTexture("Debriefing/ranking-b", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
-            LoadTexture("Debriefing/ranking-c", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
-            LoadTexture("Debriefing/ranking-d", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
-            LoadTexture("Debriefing/ranking-e", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
-            LoadTexture("Debriefing/ranking-s", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-a", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-b", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-c", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-d", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-e", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-s", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
         ];
     }
 
     private Texture2D LoadTexture(string name, int width, int height,
-        CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2,
+        LegacyCuratedAyaTextureReference.Compression compression = LegacyCuratedAyaTextureReference.Compression.Dxt2,
         string folder = "Frontend")
     {
-        Texture2D texture = CuratedAyaTextureLoader.Load($"res://Assets/{folder}/{name}.texture.aya", width, height, compression);
+        Texture2D texture = LegacyCuratedAyaTextureReference.Load($"res://Assets/{folder}/{name}.texture.aya", width, height, compression);
         _ownedTextures.Add(texture);
         return texture;
     }

@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-23 (native Pulse impact and destruction scenes, frontend and world-frame orchestration).
+Last updated: 2026-09-23 (native texture imports and impact scenes; existing evidence boundaries retained).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -58,6 +58,18 @@ simulation and replay entry still need their live consumers
 converted. The complete project therefore still requires .NET.
 The component checks below preserve existing reconstruction behavior; full retail
 combat completion and cross-platform parity remain open.
+
+`Scenes/Shared/retail_aya_texture.gd` also owns texture decoding for the remaining
+world import callers. `CuratedAyaTextureLoader.cs` only transports their arguments
+and results; imported resources still contain ordinary `ImageTexture` objects.
+Both entrypoints enforce strict compressed-record completion and the existing
+2 MiB source and 8 MiB decoded limits. This deliberately refuses truncated or
+padded records that the old .NET importer sometimes accepted through its input
+buffering. Scene recipes keep their dimension guard before image allocation;
+`load_texture_checked` retains the importer's nullable arguments and DDS
+decode/failure order. The exact prior decoder remains a comparison reference
+under `Scenes/Shared/Tests`; it is no longer used by production imports. The
+admission change concerns malformed inputs, not a new retail compression claim.
 
 `Core/actor_definitions.gd` and `Client/actor_definition_manifest.gd` now admit
 the immutable actor, spawn, waypoint and motion definitions in standard Godot.

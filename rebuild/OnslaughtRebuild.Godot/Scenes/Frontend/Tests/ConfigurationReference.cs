@@ -109,11 +109,11 @@ public sealed partial class ConfigurationReference : Control
     internal void Initialize()
     {
         if (_initialized) return;
-        _rockBackground = CuratedAyaTextureLoader.Load("res://Assets/Frontend/Backgrounds/rock.texture.aya", 1024, 512, CuratedAyaTextureLoader.Compression.Dxt1);
-        _levelBracket02 = CuratedAyaTextureLoader.Load("res://Assets/Frontend/level-bracket-02.texture.aya", 512, 512, CuratedAyaTextureLoader.Compression.Dxt2);
-        _feArrow = CuratedAyaTextureLoader.Load("res://Assets/Frontend/fe-arrow.texture.aya", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2);
-        _titleFont = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, CuratedAyaTextureLoader.Compression.Rgba8);
-        _font22 = CuratedAyaTextureLoader.Load("res://Assets/Hud/font-22.texture.aya", 512, 512, CuratedAyaTextureLoader.Compression.Rgba8);
+        _rockBackground = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/Backgrounds/rock.texture.aya", 1024, 512, LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        _levelBracket02 = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/level-bracket-02.texture.aya", 512, 512, LegacyCuratedAyaTextureReference.Compression.Dxt2);
+        _feArrow = LegacyCuratedAyaTextureReference.Load("res://Assets/Frontend/fe-arrow.texture.aya", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt2);
+        _titleFont = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-13ps.texture.aya", 256, 256, LegacyCuratedAyaTextureReference.Compression.Rgba8);
+        _font22 = LegacyCuratedAyaTextureReference.Load("res://Assets/Hud/font-22.texture.aya", 512, 512, LegacyCuratedAyaTextureReference.Compression.Rgba8);
         using Image body = _titleFont.GetImage(); using Image title = _font22.GetImage();
         _glyphWidths = MeasureGlyphWidths(body, GlyphCellSize, GlyphColumns);
         _font22Widths = MeasureGlyphWidths(title, Font22CellSize, Font22Columns);

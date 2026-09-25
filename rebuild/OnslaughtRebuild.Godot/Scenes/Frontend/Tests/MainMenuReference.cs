@@ -335,18 +335,18 @@ public sealed partial class MainMenuReference : Control
         JsonElement rows = strings.RootElement.GetProperty("strings");
         string[] keys = ["newGame", "continueGame", "loadGame", "multiplayer", "goodies", "options", "quit"];
         for (int index = 0; index < keys.Length; index++) _menuText.Add((RetailFrontendMenuItemKind)index, rows.GetProperty(keys[index]).GetString()!);
-        _titleFont = LoadTexture("font-13ps", 256, 256, CuratedAyaTextureLoader.Compression.Rgba8, "Hud");
+        _titleFont = LoadTexture("font-13ps", 256, 256, LegacyCuratedAyaTextureReference.Compression.Rgba8, "Hud");
         using (Image atlas = _titleFont.GetImage()) _glyphWidths = MeasureGlyphWidths(atlas, 16, 16);
         _forsetiWritingLarge = LoadTexture("forseti-writing-large", 128, 512);
         _titleLogo = LoadTexture("title-logo", 512, 256);
-        _reflectionMap = LoadTexture("reflection-map", 512, 128, CuratedAyaTextureLoader.Compression.Dxt1);
+        _reflectionMap = LoadTexture("reflection-map", 512, 128, LegacyCuratedAyaTextureReference.Compression.Dxt1);
         _titleBracket01 = LoadTexture("title-bracket-01", 256, 256);
         _titleBracket02 = LoadTexture("title-bracket-02", 256, 256);
         _titleTextBox = LoadTexture("title-text-box", 256, 32);
         _symbolBracket01 = LoadTexture("symbol-bracket-01", 128, 128);
         _symbolBracket02 = LoadTexture("symbol-bracket-02", 128, 128);
         _feArrow = LoadTexture("fe-arrow", 64, 64);
-        _languageFlags = new[] { "uk", "fr", "gr", "it", "sp" }.Select(name => LoadTexture("Flags/flag-" + name, 128, 128, CuratedAyaTextureLoader.Compression.Dxt1)).ToArray();
+        _languageFlags = new[] { "uk", "fr", "gr", "it", "sp" }.Select(name => LoadTexture("Flags/flag-" + name, 128, 128, LegacyCuratedAyaTextureReference.Compression.Dxt1)).ToArray();
         _menuIcons = new[] { "new-game", "continue-game", "load-game", "multiplayer", "goodies", "options", "quit" }.Select(name => LoadTexture("Icons/" + name, 128, 128)).ToArray();
         using Resource recipe = GD.Load<Resource>("res://Scenes/Frontend/FrontendUnderlay.tres");
         using Godot.Collections.Dictionary loaded = recipe.Call("load_frames").AsGodotDictionary();
@@ -425,8 +425,8 @@ public sealed partial class MainMenuReference : Control
         result["decorations"] = rows;
         return result;
     }
-    private Texture2D LoadTexture(string name, int width, int height, CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2, string folder = "Frontend") =>
-        CuratedAyaTextureLoader.Load($"res://Assets/{folder}/{name}.texture.aya", width, height, compression);
+    private Texture2D LoadTexture(string name, int width, int height, LegacyCuratedAyaTextureReference.Compression compression = LegacyCuratedAyaTextureReference.Compression.Dxt2, string folder = "Frontend") =>
+        LegacyCuratedAyaTextureReference.Load($"res://Assets/{folder}/{name}.texture.aya", width, height, compression);
     internal void DrawScenePart(MainMenuReferencePart part)
     {
         if (!_initialized || part.SourceRect.Size.X <= 0f || part.SourceRect.Size.Y <= 0f) return;

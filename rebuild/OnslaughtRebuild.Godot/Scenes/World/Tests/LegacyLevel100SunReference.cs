@@ -197,11 +197,11 @@ internal sealed class LegacyLevel100SunReference
                 ToGodotDirection(terrain.SunPosition) * RetailSunScale);
         }
 
-        Texture2D texture = CuratedAyaTextureLoader.Load(
+        Texture2D texture = LegacyCuratedAyaTextureReference.Load(
             SunTexturePath,
             SunTextureSize,
             SunTextureSize,
-            CuratedAyaTextureLoader.Compression.Dxt1);
+            LegacyCuratedAyaTextureReference.Compression.Dxt1);
 
         var root = new MeshInstance3D
         {

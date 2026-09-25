@@ -14,12 +14,12 @@ public sealed partial class WaterSceneChecks : Node
     private const string SurfacePath = "res://Assets/Level100/StaticWorld/Source/level100-water-surface.surf.bin";
     private const string SurfaceHash = "C3177354FED3EB5A94DC72DEBF2465C32AB1D931DE79E5E88AC431043D3E917D";
     private static readonly string[] Children = ["RetailCameraRelativeWaterGrid", "RetailAuthoredShorelineBands", "RetailCameraRelativeWaterSunGlint"];
-    private static readonly (string Uniform, string File, int Width, int Height, CuratedAyaTextureLoader.Compression Compression)[] Textures = [
-        ("reflection_texture", "water-reflection-00.texture.aya", 512, 512, CuratedAyaTextureLoader.Compression.Dxt1),
-        ("caustic_texture", "water-caustic-00.texture.aya", 64, 64, CuratedAyaTextureLoader.Compression.Dxt1),
-        ("waves_texture", "water-waves.texture.aya", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
-        ("sun_blob_texture", "water-sun-blob.texture.aya", 128, 128, CuratedAyaTextureLoader.Compression.Rgba8),
-        ("sun_reflection_texture", "water-sun-reflection.texture.aya", 64, 64, CuratedAyaTextureLoader.Compression.Rgba8) ];
+    private static readonly (string Uniform, string File, int Width, int Height, LegacyCuratedAyaTextureReference.Compression Compression)[] Textures = [
+        ("reflection_texture", "water-reflection-00.texture.aya", 512, 512, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+        ("caustic_texture", "water-caustic-00.texture.aya", 64, 64, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+        ("waves_texture", "water-waves.texture.aya", 128, 128, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+        ("sun_blob_texture", "water-sun-blob.texture.aya", 128, 128, LegacyCuratedAyaTextureReference.Compression.Rgba8),
+        ("sun_reflection_texture", "water-sun-reflection.texture.aya", 64, 64, LegacyCuratedAyaTextureReference.Compression.Rgba8) ];
     private int _checks;
 
     public override async void _Ready()
@@ -39,7 +39,7 @@ public sealed partial class WaterSceneChecks : Node
                 "OnslaughtRebuild.Core", "Assets", "Level100", "level100-heightfield.hfld.bin"));
             D hashes = InputHashes(terrainPath);
             terrain = LegacyLevel100HeightFieldReference.Load();
-            var textures = Textures.Select(spec => CuratedAyaTextureLoader.Load(TexturePath(spec.File), spec.Width, spec.Height, spec.Compression)).ToArray();
+            var textures = Textures.Select(spec => LegacyCuratedAyaTextureReference.Load(TexturePath(spec.File), spec.Width, spec.Height, spec.Compression)).ToArray();
             water = LegacyLevel100WaterReference.Create(terrain, textures[0], textures[1], textures[2], textures[3], textures[4], SurfacePath, SurfaceHash);
             AddChild(water.Root);
             D visual = Visual(water.Root);

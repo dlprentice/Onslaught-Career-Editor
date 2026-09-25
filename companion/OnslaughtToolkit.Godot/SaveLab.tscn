@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://SaveLab.cs" id="1_save_lab"]
+[ext_resource type="Theme" path="res://Themes/SaveLabTheme.tres" id="2_theme"]
 
 [node name="SaveLab" type="Control"]
 layout_mode = 3
@@ -9,4 +10,423 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_save_lab")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.043, 0.063, 0.09, 1)
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
+
+[node name="Page" type="VBoxContainer" parent="Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Eyebrow" type="Label" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"EyebrowLabel"
+text = "ONSLAUGHT TOOLKIT"
+autowrap_mode = 3
+
+[node name="PageTitle" type="Label" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"PageTitle"
+text = "Save Lab"
+autowrap_mode = 3
+
+[node name="Summary" type="Label" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Inspect a career and change one kill count in a new, verified copy."
+autowrap_mode = 3
+
+[node name="SourceCard" type="PanelContainer" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"SaveLabCard"
+
+[node name="Content" type="VBoxContainer" parent="Scroll/Margin/Page/SourceCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Scroll/Margin/Page/SourceCard/Content"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "1   Open a career"
+autowrap_mode = 3
+
+[node name="OpenRow" type="HBoxContainer" parent="Scroll/Margin/Page/SourceCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OpenButton" type="Button" parent="Scroll/Margin/Page/SourceCard/Content/OpenRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+tooltip_text = "Choose a real .bes file. Ctrl+O"
+text = "Open career…"
+
+[node name="SourceHint" type="Label" parent="Scroll/Margin/Page/SourceCard/Content/OpenRow"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Your chosen file is the source for each new copy."
+autowrap_mode = 3
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="SourcePathCaption" type="Label" parent="Scroll/Margin/Page/SourceCard/Content"]
+layout_mode = 2
+theme_type_variation = &"PathCaption"
+text = "Original file"
+autowrap_mode = 3
+
+[node name="SourcePath" type="LineEdit" parent="Scroll/Margin/Page/SourceCard/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"PathField"
+placeholder_text = "No career selected"
+editable = false
+
+[node name="SourceDetails" type="Label" parent="Scroll/Margin/Page/SourceCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Open a supported career save to inspect its contents."
+autowrap_mode = 3
+
+[node name="SourceHashCaption" type="Label" parent="Scroll/Margin/Page/SourceCard/Content"]
+layout_mode = 2
+theme_type_variation = &"PathCaption"
+text = "Original SHA-256"
+autowrap_mode = 3
+
+[node name="SourceHash" type="LineEdit" parent="Scroll/Margin/Page/SourceCard/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"PathField"
+placeholder_text = "Shown after opening"
+editable = false
+
+[node name="EditCard" type="PanelContainer" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"SaveLabCard"
+
+[node name="Content" type="VBoxContainer" parent="Scroll/Margin/Page/EditCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Scroll/Margin/Page/EditCard/Content"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "2   Prepare a new copy"
+autowrap_mode = 3
+
+[node name="Columns" type="HBoxContainer" parent="Scroll/Margin/Page/EditCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Counts" type="GridContainer" parent="Scroll/Margin/Page/EditCard/Content/Columns"]
+custom_minimum_size = Vector2(290, 0)
+layout_mode = 2
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="Aircraft" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Aircraft"
+autowrap_mode = 3
+custom_minimum_size = Vector2(150, 0)
+
+[node name="AircraftCount" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+custom_minimum_size = Vector2(105, 0)
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="Vehicles" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Vehicles"
+autowrap_mode = 3
+custom_minimum_size = Vector2(150, 0)
+
+[node name="VehiclesCount" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+custom_minimum_size = Vector2(105, 0)
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="Emplacements" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Emplacements"
+autowrap_mode = 3
+custom_minimum_size = Vector2(150, 0)
+
+[node name="EmplacementsCount" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+custom_minimum_size = Vector2(105, 0)
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="Infantry" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Infantry"
+autowrap_mode = 3
+custom_minimum_size = Vector2(150, 0)
+
+[node name="InfantryCount" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+custom_minimum_size = Vector2(105, 0)
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="Mechs" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Mechs"
+autowrap_mode = 3
+custom_minimum_size = Vector2(150, 0)
+
+[node name="MechsCount" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Counts"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+custom_minimum_size = Vector2(105, 0)
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="Controls" type="VBoxContainer" parent="Scroll/Margin/Page/EditCard/Content/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 9
+
+[node name="CategoryCaption" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Controls"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "Category to change"
+autowrap_mode = 3
+
+[node name="Category" type="OptionButton" parent="Scroll/Margin/Page/EditCard/Content/Columns/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+disabled = true
+item_count = 5
+selected = 0
+popup/item_0/text = "Aircraft"
+popup/item_0/id = 0
+popup/item_1/text = "Vehicles"
+popup/item_1/id = 1
+popup/item_2/text = "Emplacements"
+popup/item_2/id = 2
+popup/item_3/text = "Infantry"
+popup/item_3/id = 3
+popup/item_4/text = "Mechs"
+popup/item_4/id = 4
+
+[node name="KillsCaption" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Controls"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "New kill count"
+autowrap_mode = 3
+
+[node name="Kills" type="SpinBox" parent="Scroll/Margin/Page/EditCard/Content/Columns/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+max_value = 16777215.0
+rounded = true
+editable = false
+select_all_on_focus = true
+update_on_text_changed = true
+
+[node name="ChangeSummary" type="Label" parent="Scroll/Margin/Page/EditCard/Content/Columns/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Choose a career first."
+autowrap_mode = 3
+
+[node name="OutputCaption" type="Label" parent="Scroll/Margin/Page/EditCard/Content"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "New output filename"
+autowrap_mode = 3
+
+[node name="OutputRow" type="HBoxContainer" parent="Scroll/Margin/Page/EditCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OutputPath" type="LineEdit" parent="Scroll/Margin/Page/EditCard/Content/OutputRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Choose a new .bes filename…"
+editable = false
+
+[node name="ChooseOutput" type="Button" parent="Scroll/Margin/Page/EditCard/Content/OutputRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+tooltip_text = "Choose where to create the new .bes file."
+disabled = true
+text = "Choose output…"
+
+[node name="OutputIssue" type="Label" parent="Scroll/Margin/Page/EditCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "Choose an existing folder and a fresh filename."
+autowrap_mode = 3
+
+[node name="ActionRow" type="HBoxContainer" parent="Scroll/Margin/Page/EditCard/Content"]
+layout_mode = 2
+
+[node name="WriteButton" type="Button" parent="Scroll/Margin/Page/EditCard/Content/ActionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+tooltip_text = "Create the selected new file, then reopen and verify it."
+disabled = true
+text = "Write verified copy"
+
+[node name="ResultCard" type="PanelContainer" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"SaveLabCard"
+
+[node name="Content" type="VBoxContainer" parent="Scroll/Margin/Page/ResultCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Scroll/Margin/Page/ResultCard/Content"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "3   Verification"
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="Scroll/Margin/Page/ResultCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Ready to open a career save."
+autowrap_mode = 3
+
+[node name="Verification" type="Label" parent="Scroll/Margin/Page/ResultCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "A successful write checks the original and every byte outside the selected count."
+autowrap_mode = 3
+
+[node name="VerifiedPathCaption" type="Label" parent="Scroll/Margin/Page/ResultCard/Content"]
+layout_mode = 2
+theme_type_variation = &"PathCaption"
+text = "Output file"
+autowrap_mode = 3
+
+[node name="VerifiedPath" type="LineEdit" parent="Scroll/Margin/Page/ResultCard/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"PathField"
+placeholder_text = "No copy written"
+editable = false
+
+[node name="VerifiedHashCaption" type="Label" parent="Scroll/Margin/Page/ResultCard/Content"]
+layout_mode = 2
+theme_type_variation = &"PathCaption"
+text = "Reopened output SHA-256"
+autowrap_mode = 3
+
+[node name="VerifiedHash" type="LineEdit" parent="Scroll/Margin/Page/ResultCard/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"PathField"
+placeholder_text = "Shown after verification"
+editable = false
+
+[node name="KeyboardHelp" type="Label" parent="Scroll/Margin/Page"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "Ctrl+O: open career     •     Tab / Shift+Tab: move between controls     •     Enter: activate"
+autowrap_mode = 3
+
+[node name="OpenDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Open a career save"
+size = Vector2i(880, 620)
+exclusive = true
+dialog_hide_on_ok = true
+mode_overrides_title = false
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.bes ; Battle Engine Aquila career saves")
+show_hidden_files = false
+deleting_enabled = false
+folder_creation_enabled = false
+recent_list_enabled = false
+
+[node name="OutputDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Choose a new copy filename"
+size = Vector2i(880, 620)
+exclusive = true
+dialog_hide_on_ok = true
+mode_overrides_title = false
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.bes ; Battle Engine Aquila career saves")
+show_hidden_files = false
+deleting_enabled = false
+folder_creation_enabled = false
+recent_list_enabled = false
+overwrite_warning_enabled = false

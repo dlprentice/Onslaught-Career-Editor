@@ -7,6 +7,17 @@ enum Compression { DXT1, DXT2, RGBA8 }
 const MAXIMUM_SOURCE_BYTES: int = 2 * 1024 * 1024
 const MAXIMUM_DDS_BYTES: int = 8 * 1024 * 1024
 const STREAM_BUFFER_BYTES: int = 65536
+# Managed Image.Format spellings from the pinned GodotSharp 4.8 dev6 API, in
+# native enum order. Unknown cast values retain their decimal spelling.
+const FORMAT_NAMES: Array[String] = ["L8", "La8", "R8", "Rg8", "Rgb8", "Rgba8", "Rgba4444", "Rgb565",
+    "Rf", "Rgf", "Rgbf", "Rgbaf", "Rh", "Rgh", "Rgbh", "Rgbah", "Rgbe9995", "Dxt1", "Dxt3", "Dxt5",
+    "RgtcR", "RgtcRg", "BptcRgba", "BptcRgbf", "BptcRgbfu", "Etc", "Etc2R11", "Etc2R11S",
+    "Etc2Rg11", "Etc2Rg11S", "Etc2Rgb8", "Etc2Rgba8", "Etc2Rgb8A1", "Etc2RaAsRg", "Dxt5RaAsRg",
+    "Astc4X4", "Astc4X4Hdr", "Astc8X8", "Astc8X8Hdr", "R16", "Rg16", "Rgb16", "Rgba16",
+    "R16I", "Rg16I", "Rgb16I", "Rgba16I", "Astc6X6", "Astc6X6Hdr", "Max"]
+const DECODE_ERROR_NAMES: Dictionary = {OK: "Ok", FAILED: "Failed", ERR_UNAVAILABLE: "Unavailable",
+    ERR_OUT_OF_MEMORY: "OutOfMemory", ERR_FILE_UNRECOGNIZED: "FileUnrecognized", ERR_FILE_CORRUPT: "FileCorrupt",
+    ERR_INVALID_DATA: "InvalidData", ERR_INVALID_PARAMETER: "InvalidParameter", ERR_PARSE_ERROR: "ParseError"}
 
 var error_message: String = ""
 
@@ -24,11 +35,44 @@ func load_texture(resource_path: String, expected_width: int, expected_height: i
     var image: Image = decode_image(source, expected_width, expected_height, compression, target_format, mip_count)
     return ImageTexture.create_from_image(image) if image != null else null
 
+## Checked import boundary for the original CuratedAyaTextureLoader.Load at
+## 09f0c08b. Its nullable C# arguments differ from the strict recipe API's -1
+## sentinels, and its dimension check deliberately follows the Godot decode.
+func load_texture_checked(resource_path: String, expected_width: int, expected_height: int,
+        compression: int = Compression.DXT2, target_format: Variant = null, mip_count: Variant = null) -> Dictionary:
+    error_message = ""
+    if target_format != null and (typeof(target_format) != TYPE_INT or target_format < -0x80000000 or target_format > 0x7fffffff):
+        return _fail_checked("Curated texture target format requires an Int32 enum value or null.")
+    if mip_count != null and (typeof(mip_count) != TYPE_INT or mip_count < -0x80000000 or mip_count > 0x7fffffff):
+        return _fail_checked("Curated texture mip count requires an Int32 value or null.")
+    var file: FileAccess = FileAccess.open(resource_path, FileAccess.READ)
+    if file == null:
+        return _fail_checked("Curated texture '%s' is missing or exceeds the source limit." % resource_path)
+    var source_length: int = file.get_length()
+    if source_length == 0 or source_length > MAXIMUM_SOURCE_BYTES:
+        file.close()
+        return _fail_checked("Curated texture '%s' is missing or exceeds the source limit." % resource_path)
+    var source: PackedByteArray = file.get_buffer(source_length)
+    file.close()
+    if source.is_empty() or source.size() > MAXIMUM_SOURCE_BYTES:
+        return _fail_checked("Curated texture '%s' is missing or exceeds the source limit." % resource_path)
+    var dds: PackedByteArray = inflate_aya(source)
+    if not error_message.is_empty():
+        return _fail_checked(error_message)
+    var image: Image = _decode_dds(dds, expected_width, expected_height, compression,
+        target_format, mip_count, true, resource_path)
+    return _fail_checked(error_message) if image == null else {"ok": true, "value": ImageTexture.create_from_image(image)}
+
 func decode_image(source: PackedByteArray, expected_width: int, expected_height: int,
         compression: Compression = Compression.DXT2, target_format: int = -1, mip_count: int = -1) -> Image:
     var dds: PackedByteArray = inflate_aya(source)
     if not error_message.is_empty():
         return null
+    return _decode_dds(dds, expected_width, expected_height, compression,
+        target_format if target_format >= 0 else null, mip_count if mip_count >= 0 else null, false, "")
+
+func _decode_dds(dds: PackedByteArray, expected_width: int, expected_height: int, compression: int,
+        target_format: Variant, mip_count: Variant, checked_import: bool, resource_path: String) -> Image:
     if dds.size() < 128 or dds.slice(0, 4) != "DDS ".to_ascii_buffer():
         return _fail_image("Curated texture is not an AYA-wrapped DDS image.")
     var expected_pixel_format: bool = false
@@ -43,24 +87,43 @@ func decode_image(source: PackedByteArray, expected_width: int, expected_height:
                 dds.decode_u32(96) == 0x0000ff00 and dds.decode_u32(100) == 0x000000ff and \
                 dds.decode_u32(104) == 0xff000000
     if not expected_pixel_format:
+        if checked_import:
+            var name: String = ["Dxt1", "Dxt2", "Rgba8"][compression] if compression >= 0 and compression <= 2 else str(compression)
+            return _fail_image("Curated texture does not match the expected %s DDS pixel format." % name)
         return _fail_image("Curated texture does not match the expected DDS pixel format.")
-    if mip_count >= 0 and dds.decode_u32(28) != mip_count:
+    if mip_count != null and dds.decode_u32(28) != ((int(mip_count) & 0xffffffff) if checked_import else int(mip_count)):
+        if checked_import:
+            return _fail_image("Curated texture '%s' does not contain the expected %d DDS mip levels." % [resource_path, mip_count])
         return _fail_image("Curated texture does not contain the expected DDS mip levels.")
-    # Refuse dimension mismatches before asking the native decoder to allocate.
-    if expected_width <= 0 or expected_height <= 0 or dds.decode_u32(16) != expected_width or dds.decode_u32(12) != expected_height:
+    # Existing recipe callers retain their stricter header-first allocation
+    # guard. The checked C# import contract instead decodes before this check.
+    if not checked_import and (expected_width <= 0 or expected_height <= 0 or dds.decode_u32(16) != expected_width or dds.decode_u32(12) != expected_height):
         return _fail_image("Curated texture does not contain the expected DDS dimensions.")
     var image := Image.new()
-    if image.load_dds_from_buffer(dds) != OK or image.is_empty():
+    var result: Error = image.load_dds_from_buffer(dds)
+    if result != OK or image.is_empty():
+        if checked_import:
+            return _fail_image("Godot could not decode curated texture '%s' (%s)." % [resource_path, DECODE_ERROR_NAMES.get(result, str(result))])
         return _fail_image("Godot could not decode the curated DDS image.")
     if image.get_width() != expected_width or image.get_height() != expected_height:
+        if checked_import:
+            return _fail_image("Curated texture '%s' decoded as %dx%d, expected %dx%d." %
+                [resource_path, image.get_width(), image.get_height(), expected_width, expected_height])
         return _fail_image("Decoded curated texture dimensions differ from their contract.")
-    if target_format >= 0 and image.get_format() != target_format:
+    if target_format != null and image.get_format() != target_format:
         if image.is_compressed() and image.decompress() != OK:
+            if checked_import:
+                return _fail_image("Curated texture '%s' could not be decompressed for %s upload." % [resource_path, _format_name(target_format)])
             return _fail_image("Curated texture could not be decompressed for upload.")
-        image.convert(target_format)
-    if target_format >= 0 and image.get_format() != target_format:
+        image.convert(int(target_format))
+    if target_format != null and image.get_format() != target_format:
+        if checked_import:
+            return _fail_image("Curated texture '%s' could not be converted to %s." % [resource_path, _format_name(target_format)])
         return _fail_image("Curated texture could not be converted to its required format.")
     return image
+
+static func _format_name(value: int) -> String:
+    return FORMAT_NAMES[value] if value >= 0 and value < FORMAT_NAMES.size() else str(value)
 
 func inflate_aya(source: PackedByteArray) -> PackedByteArray:
     error_message = ""
@@ -136,3 +199,7 @@ func _fail_image(message: String) -> Image:
 func _fail_texture(message: String) -> Texture2D:
     error_message = message
     return null
+
+func _fail_checked(message: String) -> Dictionary:
+    error_message = message
+    return {"ok": false, "error_type": "InvalidDataException", "error": message}

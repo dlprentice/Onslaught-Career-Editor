@@ -390,10 +390,10 @@ public sealed class RetailFrontendScenePathTests
         Assert.Equal(
             7,
             debriefingLoads.Split(
-                "CuratedAyaTextureLoader.Compression.Dxt2",
+                "LegacyCuratedAyaTextureReference.Compression.Dxt2",
                 StringSplitOptions.None).Length - 1);
         Assert.DoesNotContain(
-            "CuratedAyaTextureLoader.Compression.Rgba8",
+            "LegacyCuratedAyaTextureReference.Compression.Rgba8",
             debriefingLoads,
             StringComparison.Ordinal);
         Assert.Contains("unmeasured score/time", reference, StringComparison.Ordinal);

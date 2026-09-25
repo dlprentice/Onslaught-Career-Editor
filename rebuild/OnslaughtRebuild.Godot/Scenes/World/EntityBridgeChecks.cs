@@ -147,14 +147,14 @@ public sealed partial class EntityBridgeChecks : Node
         Node owner = scene.Instantiate();
         try
         {
-            foreach ((string part, string file, int size, CuratedAyaTextureLoader.Compression compression) in new[]
+            foreach ((string part, string file, int size, LegacyCuratedAyaTextureReference.Compression compression) in new[]
             {
-                ("PulseBolt/PulseBoltSprite", "pulse-bolt-blue-spark", 64, CuratedAyaTextureLoader.Compression.Dxt2),
-                ("PulseBolt/PulseBoltHalo", "mech-pulse-medium-halo", 64, CuratedAyaTextureLoader.Compression.Dxt1),
-                ("PulseBolt/PulseBoltEnergyTrail", "mech-pulse-medium-energy-trail", 64, CuratedAyaTextureLoader.Compression.Dxt1),
-                ("PulseBolt/ProjectileTrail", "pulse-bolt-blue-trail", 64, CuratedAyaTextureLoader.Compression.Dxt1),
-                ("VulcanBullet/ProjectileTrail", "vulcan-bullet-trail", 64, CuratedAyaTextureLoader.Compression.Dxt1),
-                ("MuzzleFlash/PulseCannonMuzzleFlash", "particle-alparticle5-additive", 128, CuratedAyaTextureLoader.Compression.Dxt1),
+                ("PulseBolt/PulseBoltSprite", "pulse-bolt-blue-spark", 64, LegacyCuratedAyaTextureReference.Compression.Dxt2),
+                ("PulseBolt/PulseBoltHalo", "mech-pulse-medium-halo", 64, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+                ("PulseBolt/PulseBoltEnergyTrail", "mech-pulse-medium-energy-trail", 64, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+                ("PulseBolt/ProjectileTrail", "pulse-bolt-blue-trail", 64, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+                ("VulcanBullet/ProjectileTrail", "vulcan-bullet-trail", 64, LegacyCuratedAyaTextureReference.Compression.Dxt1),
+                ("MuzzleFlash/PulseCannonMuzzleFlash", "particle-alparticle5-additive", 128, LegacyCuratedAyaTextureReference.Compression.Dxt1),
             })
             {
                 var visual = owner.GetNode<MeshInstance3D>("Definitions/" + part);
@@ -163,7 +163,7 @@ public sealed partial class EntityBridgeChecks : Node
                 Check(actual is not null && actual.HasMethod("ensure_loaded"), "Each production material owns its native private-page recipe.");
                 using Variant loadedValue = actual!.Call("ensure_loaded");
                 using Dictionary loaded = Result(loadedValue);
-                using Texture2D expected = CuratedAyaTextureLoader.Load(
+                using Texture2D expected = LegacyCuratedAyaTextureReference.Load(
                     "res://Assets/Level100/Textures/" + file + ".texture.aya", size, size, compression);
                 using Image referenceImage = expected.GetImage();
                 using Image actualImage = actual.GetImage();
@@ -303,7 +303,7 @@ public sealed partial class EntityBridgeChecks : Node
             using Texture2D recipe = GD.Load<Texture2D>("res://Scenes/World/VulcanImpactTexture.tres");
             Check(authoredMaterial.AlbedoTexture == recipe && ((StandardMaterial3D)siblingSpark.MaterialOverride).AlbedoTexture == recipe,
                 "Native admission and both scene instances share the actual production texture recipe.");
-            using (Texture2D expected = CuratedAyaTextureLoader.Load(texturePath, 256, 256, CuratedAyaTextureLoader.Compression.Dxt1))
+            using (Texture2D expected = LegacyCuratedAyaTextureReference.Load(texturePath, 256, 256, LegacyCuratedAyaTextureReference.Compression.Dxt1))
             using (Image expectedImage = expected.GetImage())
             using (Image actualImage = recipe.GetImage())
             {
@@ -546,10 +546,10 @@ public sealed partial class EntityBridgeChecks : Node
         using GDScript controller = GD.Load<GDScript>("res://Scenes/World/destruction_effect.gd");
         var inputs = new[]
         {
-            (Id: "animated_blob", File: "pulse-impact-animated-blob", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt2),
-            (Id: "flash_medium", File: "effect-flash-medium", Size: 128, Compression: CuratedAyaTextureLoader.Compression.Dxt1),
-            (Id: "explosion_animated", File: "target-tank-explosion-animated", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt1),
-            (Id: "fireball", File: "target-tank-explosion-fireball", Size: 256, Compression: CuratedAyaTextureLoader.Compression.Dxt2),
+            (Id: "animated_blob", File: "pulse-impact-animated-blob", Size: 256, Compression: LegacyCuratedAyaTextureReference.Compression.Dxt2),
+            (Id: "flash_medium", File: "effect-flash-medium", Size: 128, Compression: LegacyCuratedAyaTextureReference.Compression.Dxt1),
+            (Id: "explosion_animated", File: "target-tank-explosion-animated", Size: 256, Compression: LegacyCuratedAyaTextureReference.Compression.Dxt1),
+            (Id: "fireball", File: "target-tank-explosion-fireball", Size: 256, Compression: LegacyCuratedAyaTextureReference.Compression.Dxt2),
         };
         var paths = inputs.Select(row => "res://Assets/Level100/Textures/" + row.File + ".texture.aya").ToArray();
         byte[][] beforeHashes = paths.Select(path => System.Security.Cryptography.SHA256.HashData(
@@ -560,7 +560,7 @@ public sealed partial class EntityBridgeChecks : Node
         {
             for (int index = 0; index < inputs.Length; index++)
             {
-                textures[index] = CuratedAyaTextureLoader.Load(paths[index], inputs[index].Size, inputs[index].Size, inputs[index].Compression);
+                textures[index] = LegacyCuratedAyaTextureReference.Load(paths[index], inputs[index].Size, inputs[index].Size, inputs[index].Compression);
                 using Variant returned = controller.Call("admit_artwork", inputs[index].Id);
                 using Dictionary admitted = Result(returned);
                 recipes[index] = admitted["value"].As<Texture2D>();
@@ -841,9 +841,9 @@ public sealed partial class EntityBridgeChecks : Node
         };
         byte[][] beforeHashes = paths.Select(path => System.Security.Cryptography.SHA256.HashData(
             File.ReadAllBytes(ProjectSettings.GlobalizePath(path)))).ToArray();
-        using Texture2D blobTexture = CuratedAyaTextureLoader.Load(paths[0], 256, 256);
-        using Texture2D shockwaveTexture = CuratedAyaTextureLoader.Load(paths[1], 128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
-        using Texture2D flashTexture = CuratedAyaTextureLoader.Load(paths[2], 128, 128, CuratedAyaTextureLoader.Compression.Dxt1);
+        using Texture2D blobTexture = LegacyCuratedAyaTextureReference.Load(paths[0], 256, 256);
+        using Texture2D shockwaveTexture = LegacyCuratedAyaTextureReference.Load(paths[1], 128, 128, LegacyCuratedAyaTextureReference.Compression.Dxt1);
+        using Texture2D flashTexture = LegacyCuratedAyaTextureReference.Load(paths[2], 128, 128, LegacyCuratedAyaTextureReference.Compression.Dxt1);
         using GDScript controller = GD.Load<GDScript>(scriptPath);
         using GDScript sharedArtwork = GD.Load<GDScript>("res://Scenes/World/destruction_effect.gd");
         foreach (string id in new[] { "animated_blob", "flash_medium" })

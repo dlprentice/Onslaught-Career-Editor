@@ -32,7 +32,7 @@ public sealed partial class AquilaSceneChecks : Node
             Check(fixturePath != reportPath, "Distinct output paths.");
             terrain = LegacyLevel100HeightFieldReference.Load();
             var pointer = Input.MouseMode;
-            Texture2D Texture(string path, int size) { Texture2D value = CuratedAyaTextureLoader.Load(path, size, size); ownedTextures.Add(value); return value; }
+            Texture2D Texture(string path, int size) { Texture2D value = LegacyCuratedAyaTextureReference.Load(path, size, size); ownedTextures.Add(value); return value; }
             Texture2D cockpit = Texture("res://Assets/Aquila/Textures/cockpit.texture.aya", 512);
             Texture2D a = Texture("res://Assets/Aquila/Textures/be-tex-a.texture.aya", 512);
             Texture2D b = Texture("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024);
