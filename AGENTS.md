@@ -132,6 +132,12 @@ draft. Unique ignored data from the retired companion and remote-review worktree
   clock, process, network and GPU APIs.
   Using Godot for the companion does not merge MIT application code, GPL rebuild code
   and private retail material into one licensing boundary.
+- Language: GDScript by default. Each subsystem has one production owner, never a C# and a GDScript copy of
+  the same behavior. C# stays only where a recorded measurement shows optimized GDScript cannot hold a simulation
+  tick under 5 ms on this laptop, on Level 100 and on a stress scenario sized to the largest retail battle (from RE,
+  else 10x Level 100's objects), or where GDScript lacks an OS guarantee (the companion's file-safety adapter).
+  The September 25 measurement in `VALIDATION.md` keeps the deterministic simulation Core in C#, with its replay,
+  trace hashing and headless replay CLI; the Godot side reaches it through one thin bridge.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.

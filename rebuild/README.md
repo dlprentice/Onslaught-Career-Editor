@@ -37,11 +37,18 @@ of readiness tooling.
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The production rebuild is migrating fully to typed GDScript. The target includes
-simulation, replay/hash and binary contracts as well as presentation. C# stays
-available as a comparison implementation while replacements are validated; a
-permanent production exception needs a demonstrated parity blocker. The MIT
-companion/AppCore has its own migration owner and remains a separate boundary.
+The production rebuild is migrating to typed GDScript under the repository's
+language rule: one production owner per subsystem and C# only where a recorded
+measurement requires it. The September 25 measurement
+([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
+keeps `OnslaughtRebuild.Core` in C#: projectile launch and flight already cost
+up to about 100 ms per tick in Release C#, and matched GDScript kernels run 10–68x
+slower. The Core's replay runner, trace/state hashing and `OnslaughtRebuild.Headless`
+stay with it. The host, frontend, HUD, pause, audio, world presentation, world
+import and assembly, and recording entry move to GDScript behind one thin C#
+bridge; C# comparison copies and GDScript ports of Core logic are retired as each
+owner is settled. The MIT companion/AppCore has its own migration owner and
+remains a separate boundary.
 
 ### Migration state
 

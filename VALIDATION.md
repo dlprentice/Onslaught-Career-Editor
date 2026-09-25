@@ -141,6 +141,39 @@ passed 77/77 headless scene checks, **24,190** world checks, **910** Client test
 (2 known skips), and kept the smoke tape (`89ca7b4b…`) and replayed state
 (`53c1cc64…`). Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/aya-contract-afwwC2/`.
 
+### Simulation language measurement — September 25
+
+The repository language rule needs a recorded measurement before any subsystem stays
+in C#. A scratch Release benchmark (`net8.0`, tiered PGO) replayed the 2,148-tick
+Level 100 smoke tape through `Simulation.Step`, reproduced final state `53c1cc64…`,
+and timed the warm last of six replays. The typical tick is cheap (median **0.08 ms**,
+p95 **0.11 ms**), but p99 is **4.1–7.8 ms** and the maximum **98–226 ms**. Canonical
+serialization plus SHA-256 adds **0.11 ms** per tick for 50,536 bytes. An instrumented
+scratch copy of `Simulation.Step` attributes **380–414 ms** of the ~0.7 s run to
+`TryFire`: four launches of about **95–100 ms**, all inside `ReticleAdjustedLaunchAngles`,
+whose `TrySweepRoundWithTerrain` sweeps a 1,000-unit ray against terrain and every
+active actor's contact geometry. `UpdateProjectiles` costs **146–153 ms**, about 1 ms
+per live projectile per tick. Every other phase totals at most 26 ms for the run; the
+typical tick is mostly snapshot creation.
+
+Matched kernels on identical inputs produced identical results in both languages.
+The terrain fixed-point lookup costs **6.0 ns** in C# and **410 ns** in GDScript (68x).
+PC24 multiply-and-add costs **12.1 ns** in C#, **403 ns** in the current GDScript port
+(33x), **122 ns** with an allocation-free helper (10x) and **24 ns** fully inlined; the
+last form is not maintainable across the Core. Applying the measured 10–68x to the
+measured C# phases gives a GDScript Level 100 tick of roughly 1–5 ms when idle,
+3–7 s per launch and 10–70 ms per live projectile per tick. RE could not quickly
+establish the largest retail battle's unit count, so the stress case is 10x Level 100's
+45–48 actors. The Level 100 Core cannot construct it without mission-level changes;
+scaling the measured per-actor work puts even the idle GDScript tick at 10–56 ms.
+
+**Decision:** `OnslaughtRebuild.Core` stays in C# with its replay runner, trace/state
+hashing and `OnslaughtRebuild.Headless`. Everything else moves to GDScript behind one
+thin bridge. The same numbers show that Release C# already misses 5 ms on launch and
+flight ticks (about a 100 ms hitch per shot); that contact-sweep cost is an existing
+performance defect, open outside this migration. Sources and logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
+
 ### September 19 production scene migration
 
 The supported Linux build passed with zero warnings/errors and explicitly
