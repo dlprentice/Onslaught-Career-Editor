@@ -25,6 +25,7 @@ const CareerSelections = preload("res://Client/career_selections.gd")
 const Startup = preload("res://Scenes/Frontend/startup_sequence.gd")
 const CaptureRig = preload("res://Scenes/Game/frontend_capture_rig.gd")
 const F = preload("res://Scenes/Shared/retail_float32.gd")
+const WorldImport = preload("res://Scenes/World/level100_scene_import.gd")
 
 const SIMULATION_SEED: int = 0x4F4E534C
 const SMOKE_FRAME_ELAPSED_TICKS: int = 500_000
@@ -286,7 +287,7 @@ func _advance_gameplay_frame(delta: float) -> Dictionary:
 	var consumed: Dictionary = _consume_frame_events()
 	if not consumed.ok:
 		return consumed
-	var rendered: Dictionary = _world.RenderFromBridge(_bridge, advanced.value.interpolation_alpha, delta)
+	var rendered: Dictionary = _world.render(advanced.value.interpolation_alpha, delta)
 	if not rendered.ok:
 		return rendered
 	var hud: Dictionary = _update_hud()
@@ -753,12 +754,12 @@ static func _to_milli_pixels(value: float) -> int:
 func _create_level100_world() -> Dictionary:
 	if _level100_world_created:
 		return {"ok": false, "error_type": "InvalidOperationException", "error": "The Level 100 world is already created."}
-	var verified: Dictionary = _bridge.VerifyWorldImport()
+	var verified: Dictionary = WorldImport.verify_current_import(_bridge)
 	if not verified.ok:
 		return verified
 	_world = (ResourceLoader.load(WORLD_SCENE_PATH) as PackedScene).instantiate()
 	add_child(_world)
-	var initialized: Dictionary = _world.InitializeFromBridge(_bridge)
+	var initialized: Dictionary = _world.initialize(_bridge)
 	if not initialized.ok:
 		return initialized
 	var binding: Dictionary = _bridge.AquilaBinding()
@@ -1234,9 +1235,9 @@ func _interleave_frame_phase(phase: int) -> Dictionary:
 		0:
 			return _consume_level100_mission_events(_frame_events.mission_events)
 		1:
-			return _world.ConsumeWeaponFireFacts(_frame_events.weapon_events)
+			return _world.consume_weapon_fire_facts(_frame_events.weapon_events)
 		2:
-			return _world.ConsumeDestructionFacts(_frame_events.destruction_events, _frame_events.tick)
+			return _world.consume_destruction_facts(_frame_events.destruction_events, _frame_events.tick)
 	return {"ok": false, "error_type": "InvalidOperationException", "error": "Unknown native audio host phase %d." % phase}
 
 
@@ -1404,7 +1405,7 @@ func _capture_smoke_report() -> Dictionary:
 	var facts: Dictionary = _bridge.SmokeFacts()
 	if not facts.ok:
 		return facts
-	var world: Dictionary = _world.PresentationFacts()
+	var world: Dictionary = _world.presentation_facts()
 	var core: Dictionary = facts.value
 	var metrics: Dictionary = _session.metrics()
 	var playback: Dictionary = _audio.character_message_playback()

@@ -137,13 +137,6 @@ public sealed partial class SimulationBridge
         return allegiance;
     });
 
-    /// <summary>The imported Level 100 scene must match its receipt before it is instantiated.</summary>
-    public D VerifyWorldImport() => Guard(() =>
-    {
-        Level100SceneImport.VerifyCurrentImport();
-        return default;
-    });
-
     private static A MissionEventFacts(IReadOnlyList<Level100MissionEvent> events)
     {
         var batch = new A();
