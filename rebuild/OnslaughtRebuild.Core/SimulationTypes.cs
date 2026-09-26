@@ -86,6 +86,12 @@ public enum Level100PlayerWeapon : byte
     /// (payload @0x13303) as the walker Twin Vulcan.
     /// </summary>
     MechVulcanCannon = 3,
+
+    /// <summary>
+    /// `Missile Pod` (data/default physics.dat @0x17746), the jet's second
+    /// weapon; one Micro Missile per burst event.
+    /// </summary>
+    MissilePod = 4,
 }
 
 /// <summary>
@@ -219,9 +225,11 @@ public enum SimActions : ushort
     /// <list type="bullet">
     ///   <item>Space <c>0x39</c> — row 9, <c>BUTTON_MECH_MORPH</c>
     ///   <c>0x21</c>, KEY_ONCE, <c>active=1</c>;</item>
-    ///   <item>Enter <c>0x1c</c> and Numpad Enter <c>0x9c</c> — row 20,
-    ///   <c>BUTTON_SKIP_CUTSCENE</c>
-    ///   (<c>reverse-engineering/source-code/frontend/fep-systems.md:19</c>);</item>
+    ///   <item>Enter <c>0x1c</c> — row 19, and Numpad Enter <c>0x9c</c> —
+    ///   row 21, both on button 7 (the RE lane's decode of the default rows at
+    ///   <c>0x00514210</c>, whose button-7 rows are 18 Space, 19 Enter,
+    ///   20 Escape and 21 Numpad Enter;
+    ///   <c>reverse-engineering/source-code/frontend/fep-systems.md:19</c>);</item>
     ///   <item>Escape <c>0x01</c> — rows 17 <c>BUTTON_FRONTEND_MENU_BACK</c>,
     ///   20 <c>BUTTON_SKIP_CUTSCENE</c> and 34 <c>BUTTON_PAUSE</c>.</item>
     /// </list>
@@ -416,6 +424,12 @@ public enum Level100ProjectileKind : byte
     MechBullet = 2,
     MechAirBullet = 3,
     MechPulseBoltLarge = 4,
+
+    /// <summary>
+    /// The Missile Pod's <c>Micro Missile</c> (<c>data/default physics.dat</c>
+    /// @<c>0x8e74</c>), a seeking round with wiggle.
+    /// </summary>
+    MicroMissile = 5,
 }
 
 public sealed record ProjectileSnapshot(
@@ -425,7 +439,24 @@ public sealed record ProjectileSnapshot(
     SimVector2 Velocity,
     int ElevationMillimeters,
     int VerticalVelocityMillimetersPerTick,
-    int RemainingTicks);
+    int RemainingTicks)
+{
+    /// <summary>
+    /// A seeking round's retained heading, launch time and bound target;
+    /// null for the straight rounds.
+    /// </summary>
+    public Level100SeekingRoundSnapshot? Seeking { get; init; }
+}
+
+/// <summary>
+/// A seeking player round's heading, its launch time (<c>+0xf4</c>) and the
+/// target its reader still binds, if any.
+/// </summary>
+public sealed record Level100SeekingRoundSnapshot(
+    int YawMicroRadians,
+    int PitchMicroRadians,
+    uint LaunchTimeBits,
+    Level100ActorId? Target);
 
 public sealed record WalkerFootContactSnapshot(
     int Id,
@@ -546,6 +577,47 @@ public readonly record struct Level100PlayerWeaponStateSnapshot(
         0, 0xc3480000, 0xc3480000, 0xc3480000, 0xc3480000);
 }
 
+/// <summary>
+/// The Aquila's six store values as float bits, its overheat flags as a mask,
+/// the walker's shields-recharging flag, the ammunition-depleted and
+/// overheated cue times, and the Pulse Cannon Pod's last Fire level
+/// (<c>+0x68</c>, whose nonzero value makes a heat shot free).
+/// </summary>
+public readonly record struct Level100PlayerStoresSnapshot(
+    uint Store0Bits,
+    uint Store1Bits,
+    uint Store2Bits,
+    uint Store3Bits,
+    uint Store4Bits,
+    uint Store5Bits,
+    int OverheatMask,
+    bool ShieldsRecharging,
+    uint AmmoDepletedTimeBits,
+    uint WeaponOverheatedTimeBits,
+    int PulseModeLevel)
+{
+    /// <summary>Construction: ammo stores full, heat stores empty, cues at -99999.</summary>
+    public static Level100PlayerStoresSnapshot Initial => new(
+        0x44fa0000, 0x42c80000, 0, 0x43480000, 0, 0, 0, true,
+        0xc7c34f80, 0xc7c34f80, 0);
+}
+
+/// <summary>
+/// The Missile Pod's live charge, Fire level, whether a mode has been set,
+/// burst counter and launch-sequence and launch-angle counters.
+/// </summary>
+public readonly record struct Level100MissilePodSnapshot(
+    uint ChargeBits,
+    int ModeLevel,
+    bool HasMode,
+    int BurstCount,
+    int SequenceCounter,
+    int AngleCounter)
+{
+    /// <summary>Construction: no charge, no mode, both launch counters at -1.</summary>
+    public static Level100MissilePodSnapshot Initial => new(0, 0, false, 0, -1, -1);
+}
+
 public sealed record WorldSnapshot(
     int Tick,
     uint Seed,
@@ -636,6 +708,25 @@ public sealed record WorldSnapshot(
 
     public Level100PlayerWeaponStateSnapshot Level100PlayerWeaponState { get; init; } =
         Level100PlayerWeaponStateSnapshot.Initial;
+
+    /// <summary>
+    /// The Battle Engine's crosshair readers, retained crosshair line report
+    /// and lock sets.
+    /// </summary>
+    public Level100BattleEngineTargetingSnapshot Level100BattleEngineTargeting { get; init; } =
+        Level100BattleEngineTargetingSnapshot.Initial;
+
+    /// <summary>The Aquila's six weapon stores and their firing cues.</summary>
+    public Level100PlayerStoresSnapshot Level100PlayerStores { get; init; } =
+        Level100PlayerStoresSnapshot.Initial;
+
+    /// <summary>The Battle Engine's shake offsets and phase.</summary>
+    public Level100BattleEngineShakeSnapshot Level100BattleEngineShake { get; init; } =
+        Level100BattleEngineShakeSnapshot.Initial;
+
+    /// <summary>The Missile Pod's charge, Fire level, burst and launch counters.</summary>
+    public Level100MissilePodSnapshot Level100MissilePod { get; init; } =
+        Level100MissilePodSnapshot.Initial;
 
     public bool Level100PlayerControlEnabled =>
         Level100PlayerActive && Level100OpeningTicksRemaining == 0;

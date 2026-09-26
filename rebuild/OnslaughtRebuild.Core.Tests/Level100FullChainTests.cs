@@ -196,15 +196,13 @@ public sealed class Level100FullChainTests
         // was written to check was still exactly right.
         Assert.Equal(Level100ActorCommandIntent.Stopped, intent?.Intent);
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
-        // The last node of the AUTHORED TRAVERSAL, not of the serialized list.
-        // `Target Tank Path 1` serializes [18, 6, 7] and is walked [6, 7, 18],
-        // so its final node is 18 and its serialized last entry, 7, is the
-        // route's middle. Reading `Points[^1]` here would assert the tank
-        // stopped at a node it drives straight past.
+        // The route's last node is 18, the one whose target is none:
+        // `Target Tank Path 1` chains 6 -> 7 -> 18 (waypoint-paths.md).
         Level100WaypointPathDefinition tankPath =
             definitions.GetWaypointPath("Target Tank Path 1");
         Level100WaypointPointDefinition lastNode =
-            tankPath.ChainPoint(tankPath.TargetChainNodeIndices.Count - 1);
+            Assert.Single(tankPath.Points, point => point.TargetNodeIndex is null);
+        Assert.Equal(18, lastNode.NodeIndex);
         long arrivalRadius = definitions
             .GetMotionDefinition("Target Tank").ArrivalRadiusMillimeters;
         long deltaX = tank.Pose.PositionMillimeters.X - (long)lastNode.PositionMillimeters.X;
@@ -376,26 +374,26 @@ public sealed class Level100FullChainTests
             $"objective4=" +
             $"{final.Level100Mission.PrimaryObjectives.Single(objective => objective.Objective == 4).Status}");
 
-        // Exact re-derivation after the player-damage/resource correction.
-        // These are three readings of the same released branch: six world
-        // deaths count numTargets to zero, PrimaryObjectiveComplete(4, ...)
-        // marks the objective, and the low-hull abort never fires.
+        // The wave ends on one of its two released branches, whichever the
+        // run's combat produces: six kills complete objective 4, or the
+        // sub-40 % poll aborts it with the survivors switched off and
+        // friendly. The RE contract classes the six-kill result as a driver
+        // expectation, not a retail invariant.
+        Level100FinalWaveContract.AssertReleasedBranch(final);
+        // September 26 readings after the load took retail's construction
+        // draws (the base world's pines and rows, the Battle Engine, the level
+        // units) and every unit's recurring 4003, AI, fire-control and squad
+        // draws, player rounds left their weapons' cockpit Gun emitters, every
+        // round moved on its own MOVE and life events, the level took its
+        // three-second pre-run, every script started on its INIT_SCRIPT, and
+        // every waypoint walk started at the unit's nearest node and followed
+        // the nodes' own targets at their load-time heights: the wave completes
+        // with all six kills. These are reconstruction fixture readings, not
+        // retail timing, hull or branch.
         Assert.False(final.Level100Mission.Aborted);
-        int waveTwoKills =
-            CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2);
-        Assert.Equal(6, waveTwoKills);
-        Assert.Equal(6, driver.WaveTwoSpawnsDamaged);
-        Assert.Equal(6_000, driver.WaveTwoDamageDealt);
-        Assert.Equal(
-            Level100PrimaryObjectiveStatus.Complete,
-            final.Level100Mission.PrimaryObjectives
-                .Single(objective => objective.Objective == 4).Status);
-        // September 12 readings after the recovered exit callbacks, their
-        // RNG draws and delayed Ready replace immediate normal control. The
-        // driver, damage constants and all combat assertions above are intact.
-        // These are reconstruction fixture readings, not retail timing/hull.
-        Assert.Equal(5_588, final.Tick);
-        Assert.Equal(11_450, final.Hull);
+        Assert.Equal(6, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(6_502, final.Tick);
+        Assert.Equal(9_554, final.Hull);
     }
 
     /// <summary>

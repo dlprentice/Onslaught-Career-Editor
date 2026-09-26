@@ -76,7 +76,37 @@ public sealed record Level100ActorDefinition(
     Level100ActorPoseSnapshot InitialPose,
     Level100MissionTargetGroup TargetGroup,
     int TargetOrdinal,
-    Level100MissionTrigger? Trigger);
+    Level100MissionTrigger? Trigger,
+    int Allegiance = 0);
+
+/// <summary>
+/// A type-28 squad row: a <c>CNormalSquad</c> whose members are the actor
+/// definitions <paramref name="MemberIdentities"/>, in order. The squad keeps
+/// its own script; <c>CSquad::Init</c> clears its members' scripts and names
+/// (<c>0x004e6049-0x004e6076</c>;
+/// <c>reverse-engineering/game-mechanics/world-110-construction-order.md</c>,
+/// "Type-28 squads").
+/// </summary>
+public sealed record Level100SquadDefinition(
+    string DefinitionIdentity,
+    string Name,
+    string DefinitionName,
+    IReadOnlyList<string> MemberIdentities,
+    string? ScriptName,
+    bool Active,
+    int Allegiance,
+    int Mode,
+    Level100AuthoredTransform AuthoredTransform);
+
+/// <summary>
+/// A component built inside its parent's construction, after the parent's
+/// Actor draw: a landing craft's "Dropship Gun Turret" (the World 110
+/// construction contract, "Landing craft and their turrets").
+/// </summary>
+public sealed record Level100ComponentDefinition(
+    string ChildIdentity,
+    string ParentIdentity,
+    string DefinitionName);
 
 public sealed record Level100SpawnDefinition(
     int AuthoredOrder,
@@ -96,92 +126,63 @@ public sealed record Level100SpawnDefinition(
     int MaximumGroupActors,
     IReadOnlyList<Level100SpawnerExitPoint>? SpawnerExitWaypoints = null);
 
+/// <summary>
+/// One node of a named path: the <c>CWaypoint</c> at level row
+/// <paramref name="NodeIndex"/>, and the node its own <c>target</c> names
+/// (<c>CWaypoint::InitAndLink</c> <c>0x005057b0</c> binds it at <c>+0x3c</c>),
+/// or null when it names none.
+/// </summary>
 public sealed record Level100WaypointPointDefinition(
     int NodeIndex,
     SimVector3 PositionMillimeters,
-    Level100FloatVector4Bits RetailComponentsFloatBits)
+    Level100FloatVector4Bits RetailComponentsFloatBits,
+    int? TargetNodeIndex = null)
 {
     public SimVector2 HorizontalPositionMillimeters =>
         new(PositionMillimeters.X, PositionMillimeters.Z);
 }
 
 /// <summary>
-/// One named released waypoint path: the nodes it owns, in the order the level
-/// file SERIALIZES them, plus the order retail actually WALKS them.
+/// One named waypoint path as retail loads it
+/// (<c>reverse-engineering/game-mechanics/waypoint-paths.md</c>, pristine
+/// specimen <c>74154BFA…</c>).
 /// </summary>
 /// <remarks>
 /// <para>
-/// The two differ, and the difference is the whole point of this type carrying
-/// both. <c>Flyby Path</c> serializes <c>[43, 42, 41]</c> and is walked
-/// <c>[41, 42, 43]</c>.
+/// <c>CWaypointManager::LoadWaypoints</c> (<c>0x00505ae0</c>, per path
+/// <c>0x00505960</c>) keeps a listed row only when it is a <c>CWaypoint</c> and
+/// prepends it (<c>0x004e5a80</c>), so <see cref="Points"/> runs in reverse
+/// file order. The list decides only where following starts:
+/// <c>FollowWaypointWait</c> (<c>0x00537e40</c>) takes the node nearest the
+/// unit (<see cref="NearestPoint"/>), and
+/// <c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>) then moves
+/// on to each node's own target (<c>0x005384dc</c>) until one has none. A chain
+/// can loop (Level 100's <c>Drone Path 1</c> and <c>Target Tank Path 2</c>), and
+/// one path can hold several chains (World 110's <c>Fighter Path 1</c>).
 /// </para>
 /// <para>
-/// <b>Retail does not walk the serialized list at all.</b> Read from the
-/// pristine specimen
-/// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
-/// <c>74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750</c>:
-/// </para>
-/// <list type="number">
-///   <item><c>CWaypoint::InitAndLink</c> (<c>0x005057b0</c>) binds each
-///   waypoint's <c>this+0x3c</c> from its own spawn record's <c>+0xa4</c> —
-///   <c>mov eax,[ebx+0xa4]</c> / <c>lea ecx,[esi+0x3c]</c> at
-///   <c>0x005057fc</c>..<c>0x00505802</c>. That is the marker's successor
-///   pointer, and the shipped source of it is the marker record's own
-///   <c>target</c> ordinal.</item>
-///   <item><c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>)
-///   advances with <c>mov eax,[esi+0x14]</c> / <c>mov ecx,[eax+0x3c]</c> at
-///   <c>0x005384dc</c>, then <c>mov [esi+0x14],ecx</c> at <c>0x005384fd</c>.
-///   The cursor is a POINTER to the current waypoint and the next one comes
-///   from that waypoint itself. The serialized index list is never consulted
-///   after the first node.</item>
-///   <item>The self-reference guard three instructions later pushes the
-///   developer-authored string at <c>0x0064fe50</c> — <c>"ERROR: Waypoint
-///   points to previous"</c> — which only makes sense for waypoints that point
-///   at each other.</item>
-///   <item>Both script natives seed that cursor with the SINGLE pointer the
-///   shared path lookup at <c>0x00505c30</c> returns — no array, so there is
-///   nowhere for a serialized order to enter. <c>FollowWaypointWait</c>
-///   (<c>0x00537e40</c>) stores it with <c>mov [ebx+0x14],eax</c> at
-///   <c>0x00537e73</c> immediately after the call at <c>0x00537e6b</c>;
-///   <c>FollowWaypoint</c> (<c>0x00537d70</c>) does the same at
-///   <c>0x00537dfe</c> after the call at <c>0x00537d8c</c>, having first
-///   pushed the node's <c>+0x1c..+0x28</c> to the unit guide through vtable
-///   <c>+0xf4</c>. The wait variant is the one Level 100 actually uses: in the
-///   TTD recording of a real Level 100 opening
-///   (<c>G:\bea-ttd\play-level100\play-level100.run</c>) <c>0x00537e40</c>
-///   executes 3 times and <c>0x00537d70</c> 0 times.</item>
-/// </list>
-/// <para>
-/// A NULL successor ends the walk, which is the shipped <c>target == -1</c>
-/// terminator. A chain that closes on its own head therefore never ends;
-/// <see cref="IsClosed"/> is that fact, and two of the eight Level 100 paths
-/// carry it.
+/// Retail lets a target leave its path. The levels the rebuild admits keep every
+/// target inside its own path, and the definition set holds them to it.
 /// </para>
 /// </remarks>
 /// <param name="Name">The authored path name scripts call it by.</param>
-/// <param name="Points">
-/// The nodes in SERIALIZED order. Deliberately not re-sorted: this is what the
-/// level file holds, and re-sorting it here would destroy the ability to see
-/// that the two orders differ.
-/// </param>
-/// <param name="TargetChainNodeIndices">
-/// The same node indices in <c>target</c>-chain order — the traversal order.
-/// A permutation of <see cref="Points"/>' node indices.
-/// </param>
-/// <param name="IsClosed">Whether the chain closes back on its head.</param>
+/// <param name="Points">The path's nodes in retail list order.</param>
 public sealed record Level100WaypointPathDefinition(
     string Name,
-    IReadOnlyList<Level100WaypointPointDefinition> Points,
-    IReadOnlyList<int> TargetChainNodeIndices,
-    bool IsClosed)
+    IReadOnlyList<Level100WaypointPointDefinition> Points)
 {
     /// <summary>
-    /// The node visited at step <paramref name="chainIndex"/> of the authored
-    /// traversal. This — not <c>Points[i]</c> — is what a follower steers at.
+    /// A path from the rows its file lists, every one a <c>CWaypoint</c>: the
+    /// loader prepends each (<c>0x004e5a80</c>), so the list runs in reverse.
     /// </summary>
-    public Level100WaypointPointDefinition ChainPoint(int chainIndex)
+    public static Level100WaypointPathDefinition FromFileOrder(
+        string name,
+        IEnumerable<Level100WaypointPointDefinition> fileOrder) =>
+        new(name, Array.AsReadOnly(fileOrder.Reverse().ToArray()));
+
+    /// <summary>The path's node at level row <paramref name="nodeIndex"/>.</summary>
+    public Level100WaypointPointDefinition Point(int nodeIndex)
     {
-        int nodeIndex = TargetChainNodeIndices[chainIndex];
         foreach (Level100WaypointPointDefinition point in Points)
         {
             if (point.NodeIndex == nodeIndex)
@@ -191,8 +192,53 @@ public sealed record Level100WaypointPathDefinition(
         }
 
         throw new InvalidOperationException(
-            $"Level 100 waypoint path '{Name}' has no node {nodeIndex}.");
+            $"Waypoint path '{Name}' has no node {nodeIndex}.");
     }
+
+    public bool HasNode(int nodeIndex) =>
+        Points.Any(point => point.NodeIndex == nodeIndex);
+
+    /// <summary>
+    /// The node <c>0x00505c30</c> returns for a unit at
+    /// <paramref name="position"/> (its <c>+0x1c..+0x24</c>): walking the list in
+    /// order, a node whose squared distance is strictly below the running
+    /// minimum (from 9999999.0, kept as a float32) replaces it, so a tie keeps
+    /// the earlier node. Null when no node is that close.
+    /// </summary>
+    public Level100WaypointPointDefinition? NearestPoint(
+        Level100FloatVector3Bits position)
+    {
+        float minimum = 9999999.0f;
+        Level100WaypointPointDefinition? nearest = null;
+        foreach (Level100WaypointPointDefinition point in Points)
+        {
+            double distance = SquaredDistance(point.RetailComponentsFloatBits, position);
+            if (distance < minimum)
+            {
+                minimum = (float)distance;
+                nearest = point;
+            }
+        }
+
+        return nearest;
+    }
+
+    // On the x87 stack at the game's PC24 precision: dx, dy, dz (waypoint
+    // minus unit), then (dx*dx + dz*dz) + dy*dy, so the second horizontal
+    // term is added last.
+    private static double SquaredDistance(
+        Level100FloatVector4Bits node,
+        Level100FloatVector3Bits unit)
+    {
+        double dx = RetailFloat24.Subtract(Float(node.X), Float(unit.X));
+        double dy = RetailFloat24.Subtract(Float(node.Y), Float(unit.Y));
+        double dz = RetailFloat24.Subtract(Float(node.Z), Float(unit.Z));
+        return RetailFloat24.Add(
+            RetailFloat24.Add(RetailFloat24.Multiply(dx, dx), RetailFloat24.Multiply(dz, dz)),
+            RetailFloat24.Multiply(dy, dy));
+    }
+
+    private static double Float(int bits) => BitConverter.Int32BitsToSingle(bits);
 }
 
 public enum Level100ActorMotionClass
@@ -243,6 +289,8 @@ public sealed class Level100ActorDefinitionSet
     private readonly IReadOnlyList<Level100SpawnDefinition> _spawns;
     private readonly IReadOnlyList<Level100WaypointPathDefinition> _waypointPaths;
     private readonly IReadOnlyList<Level100ActorMotionDefinition> _motionDefinitions;
+    private readonly IReadOnlyList<Level100SquadDefinition> _squads;
+    private readonly IReadOnlyList<Level100ComponentDefinition> _components;
     private readonly Dictionary<string, Level100ActorDefinition> _actorsByIdentity;
     private readonly Dictionary<string, Level100SpawnDefinition> _spawnsByIdentity;
     private readonly Dictionary<SpawnKey, Level100SpawnDefinition> _spawnsByRequest;
@@ -254,10 +302,15 @@ public sealed class Level100ActorDefinitionSet
         IEnumerable<Level100SpawnDefinition> spawns,
         IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null,
         IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null,
-        int worldNumber = RetailWorldCatalog.RootWorldNumber)
+        int worldNumber = RetailWorldCatalog.RootWorldNumber,
+        int baseWorldPineCount = 0,
+        IEnumerable<Level100SquadDefinition>? squads = null,
+        IEnumerable<Level100ComponentDefinition>? components = null)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
+        ArgumentOutOfRangeException.ThrowIfNegative(baseWorldPineCount);
+        BaseWorldPineCount = baseWorldPineCount;
         if (RetailWorldCatalog.Find(worldNumber) is null)
         {
             throw new ArgumentOutOfRangeException(
@@ -347,26 +400,19 @@ public sealed class Level100ActorDefinitionSet
             }
 
             Level100WaypointPointDefinition[] points = path.Points.ToArray();
-            // The traversal chain must be a permutation of the path's own
-            // serialized nodes. Retail cannot express anything else: the
-            // successor pointer each marker carries is a pointer to another
-            // marker of the same path, and a path lookup returns one head. A
-            // chain that named a node the path does not own, repeated one, or
-            // dropped one would be a decode defect, and this is where it stops.
-            int[] chain = (path.TargetChainNodeIndices ?? []).ToArray();
+            // A node appears once, and its target, when it names one, is
+            // another node of the same path: the admitted levels keep every
+            // chain inside its path (waypoint-paths.md), so anything else is a
+            // decode defect and stops here.
             if (points.Any(point =>
                     point.NodeIndex < 0 ||
-                    !HasFiniteWaypointComponents(point.RetailComponentsFloatBits)) ||
-                chain.Length != points.Length ||
-                chain.Distinct().Count() != chain.Length ||
-                chain.Any(node => !points.Any(point => point.NodeIndex == node)) ||
+                    !HasFiniteWaypointComponents(point.RetailComponentsFloatBits) ||
+                    point.TargetNodeIndex is { } target &&
+                        !points.Any(other => other.NodeIndex == target)) ||
+                points.Select(point => point.NodeIndex).Distinct().Count() != points.Length ||
                 !_waypointPathsByName.TryAdd(
                     path.Name,
-                    new Level100WaypointPathDefinition(
-                        path.Name,
-                        Array.AsReadOnly(points),
-                        Array.AsReadOnly(chain),
-                        path.IsClosed)))
+                    new Level100WaypointPathDefinition(path.Name, Array.AsReadOnly(points))))
             {
                 throw new ArgumentException(
                     $"Invalid or duplicate Level 100 waypoint path '{path.Name}'.",
@@ -414,12 +460,80 @@ public sealed class Level100ActorDefinitionSet
         }
 
         _motionDefinitions = Array.AsReadOnly(motionDefinitionArray);
+        _squads = Array.AsReadOnly(AdmitSquads(squads));
+        _components = Array.AsReadOnly(AdmitComponents(components));
         IdentitySha256 = ComputeIdentity(
             actorArray,
             spawnArray,
             _waypointPaths,
-            _motionDefinitions);
+            _motionDefinitions,
+            baseWorldPineCount,
+            _squads,
+            _components);
     }
+
+    private Level100SquadDefinition[] AdmitSquads(IEnumerable<Level100SquadDefinition>? squads)
+    {
+        Level100SquadDefinition[] squadArray = squads?.ToArray() ?? [];
+        var members = new HashSet<string>(StringComparer.Ordinal);
+        var identities = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < squadArray.Length; index++)
+        {
+            Level100SquadDefinition squad = squadArray[index] ??
+                throw new ArgumentException("Squad definitions cannot contain null.", nameof(squads));
+            squad = squad with { MemberIdentities = Array.AsReadOnly(squad.MemberIdentities?.ToArray() ?? []) };
+            squadArray[index] = squad;
+            if (string.IsNullOrWhiteSpace(squad.DefinitionIdentity) ||
+                _actorsByIdentity.ContainsKey(squad.DefinitionIdentity) ||
+                !identities.Add(squad.DefinitionIdentity) ||
+                string.IsNullOrWhiteSpace(squad.Name) ||
+                string.IsNullOrWhiteSpace(squad.DefinitionName) ||
+                squad.MemberIdentities.Count == 0 ||
+                squad.Allegiance is < 0 or > 2 ||
+                squad.AuthoredTransform is null ||
+                !HasFiniteAuthoredTransform(squad.AuthoredTransform) ||
+                squad.MemberIdentities.Any(member =>
+                    !_actorsByIdentity.TryGetValue(member, out Level100ActorDefinition? actor) ||
+                    !members.Add(member) ||
+                    actor.IsStatic ||
+                    actor.ScriptName is not null ||
+                    actor.Allegiance != squad.Allegiance ||
+                    !StringComparer.Ordinal.Equals(actor.DefinitionName, squad.DefinitionName)))
+            {
+                throw new ArgumentException($"Invalid squad definition at {index}.", nameof(squads));
+            }
+        }
+
+        return squadArray;
+    }
+
+    private Level100ComponentDefinition[] AdmitComponents(IEnumerable<Level100ComponentDefinition>? components)
+    {
+        Level100ComponentDefinition[] componentArray = components?.ToArray() ?? [];
+        var children = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Level100ComponentDefinition component in componentArray)
+        {
+            if (component is null ||
+                !_actorsByIdentity.TryGetValue(component.ChildIdentity, out Level100ActorDefinition? child) ||
+                !_actorsByIdentity.ContainsKey(component.ParentIdentity) ||
+                !children.Add(component.ChildIdentity) ||
+                children.Contains(component.ParentIdentity) ||
+                child.ScriptName is not null ||
+                !StringComparer.Ordinal.Equals(child.DefinitionName, component.DefinitionName))
+            {
+                throw new ArgumentException("Invalid component definition.", nameof(components));
+            }
+        }
+
+        return componentArray;
+    }
+
+    /// <summary>
+    /// The base world's pines, each of which takes one draw from the gameplay
+    /// stream when <c>LoadWorld</c> initialises it (the RE lane's construction
+    /// order). Zero for a definition set without the base world's trees.
+    /// </summary>
+    public int BaseWorldPineCount { get; }
 
     public IReadOnlyList<Level100ActorDefinition> Actors => _actors;
 
@@ -429,6 +543,12 @@ public sealed class Level100ActorDefinitionSet
 
     public IReadOnlyList<Level100ActorMotionDefinition> MotionDefinitions =>
         _motionDefinitions;
+
+    /// <summary>The level's type-28 squads, in row order.</summary>
+    public IReadOnlyList<Level100SquadDefinition> Squads => _squads;
+
+    /// <summary>The components built inside their parents' construction.</summary>
+    public IReadOnlyList<Level100ComponentDefinition> Components => _components;
 
     public string IdentitySha256 { get; }
 
@@ -486,6 +606,7 @@ public sealed class Level100ActorDefinitionSet
             !HasFinitePose(definition.InitialPose) ||
             (definition.ThingTypeMask & ~Level100ReleasedThingTypeMasks.ProvenBits) != 0 ||
             definition.InitialHealth < 0 ||
+            definition.Allegiance is < 0 or > 2 ||
             definition.TargetOrdinal < 0 ||
             (definition.TargetGroup == Level100MissionTargetGroup.None) !=
                 (definition.TargetOrdinal == 0) ||
@@ -643,7 +764,10 @@ public sealed class Level100ActorDefinitionSet
         IReadOnlyList<Level100ActorDefinition> actors,
         IReadOnlyList<Level100SpawnDefinition> spawns,
         IReadOnlyList<Level100WaypointPathDefinition> waypointPaths,
-        IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions)
+        IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions,
+        int baseWorldPineCount,
+        IReadOnlyList<Level100SquadDefinition> squads,
+        IReadOnlyList<Level100ComponentDefinition> components)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
@@ -651,9 +775,16 @@ public sealed class Level100ActorDefinitionSet
             writer.Write(s_identityMagic);
             bool hasSpawnerExits = spawns.Any(spawn => spawn.SpawnerExitWaypoints is not null);
             bool hasWeaponMounts = motionDefinitions.Any(definition => definition.WeaponMounts is not null);
-            // Formats 6/7 remain byte-exact without mount input. Format 8
-            // includes the format-7 exit fields even when all exits are null.
-            writer.Write(hasWeaponMounts ? 8 : hasSpawnerExits ? 7 : 6);
+            // Format 7 adds spawner exits and 8 weapon mounts, and 8 includes
+            // the exit fields even when all exits are null. Format 9 appends
+            // the base world's pine count, and only a set that carries pines
+            // selects it. Formats 10-13 are 6-9 with each path's nodes in
+            // retail list order and each node's own target. Format 14 is 13
+            // plus each actor's allegiance, the squads and the components, and
+            // only a set that carries any of them selects it.
+            bool hasSides = squads.Count > 0 || components.Count > 0 ||
+                actors.Any(actor => actor.Allegiance != 0);
+            writer.Write(hasSides ? 14 : baseWorldPineCount > 0 ? 13 : hasWeaponMounts ? 12 : hasSpawnerExits ? 11 : 10);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -730,21 +861,10 @@ public sealed class Level100ActorDefinitionSet
                     writer.Write(point.RetailComponentsFloatBits.Y);
                     writer.Write(point.RetailComponentsFloatBits.Z);
                     writer.Write(point.RetailComponentsFloatBits.W);
+                    // The target decides the route, so it is part of the
+                    // identity; -1 is a node with none.
+                    writer.Write(point.TargetNodeIndex ?? -1);
                 }
-
-                // Version 6. The traversal chain and the loop flag are hashed
-                // because they DECIDE MOTION: two definition sets with the same
-                // 30 node positions and different chains produce different
-                // routes. Leaving them out would let exactly the class of
-                // defect this pair was added to fix - a route silently walked
-                // in the wrong order - carry an unchanged definition identity.
-                writer.Write(path.TargetChainNodeIndices.Count);
-                foreach (int nodeIndex in path.TargetChainNodeIndices)
-                {
-                    writer.Write(nodeIndex);
-                }
-
-                writer.Write(path.IsClosed);
             }
 
             writer.Write(motionDefinitions.Count);
@@ -781,6 +901,48 @@ public sealed class Level100ActorDefinitionSet
                             WriteBasis(writer, mount.ModelPose.BasisFloatBits);
                         }
                     }
+                }
+            }
+
+            if (baseWorldPineCount > 0)
+            {
+                writer.Write(baseWorldPineCount);
+            }
+
+            if (hasSides)
+            {
+                foreach (Level100ActorDefinition actor in actors)
+                {
+                    writer.Write(actor.Allegiance);
+                }
+
+                writer.Write(squads.Count);
+                foreach (Level100SquadDefinition squad in squads)
+                {
+                    writer.Write(squad.DefinitionIdentity);
+                    writer.Write(squad.Name);
+                    writer.Write(squad.DefinitionName);
+                    writer.Write(squad.MemberIdentities.Count);
+                    foreach (string member in squad.MemberIdentities)
+                    {
+                        writer.Write(member);
+                    }
+
+                    WriteNullableString(writer, squad.ScriptName);
+                    writer.Write(squad.Active);
+                    writer.Write(squad.Allegiance);
+                    writer.Write(squad.Mode);
+                    WriteVector(writer, squad.AuthoredTransform.RetailPositionFloatBits);
+                    WriteVector(writer, squad.AuthoredTransform.RetailEulerFloatBits);
+                    WriteBasis(writer, squad.AuthoredTransform.RetailBasisFloatBits);
+                }
+
+                writer.Write(components.Count);
+                foreach (Level100ComponentDefinition component in components)
+                {
+                    writer.Write(component.ChildIdentity);
+                    writer.Write(component.ParentIdentity);
+                    writer.Write(component.DefinitionName);
                 }
             }
         }
@@ -1790,7 +1952,13 @@ public sealed class Level100ActorRegistry
             RetailUnitEuler.BuildBasis(input.AuthoredTransform.RetailEulerFloatBits));
     }
 
-    private Level100FloatVector3Bits SeatRetailPosition(Level100FloatVector3Bits position)
+    /// <summary>
+    /// <c>CThing::Init</c>'s height clamps: a thing below the heightfield sample
+    /// (<c>0x0047eb80</c>) is raised to it, then one below the water level to
+    /// that (<c>0x004f34ea-0x004f3559</c>). Waypoints take the same two
+    /// (<c>reverse-engineering/game-mechanics/waypoint-paths.md</c>, "Loading").
+    /// </summary>
+    internal Level100FloatVector3Bits SeatRetailPosition(Level100FloatVector3Bits position)
     {
         float height = RetailWorldTerrain.SampleRetailHeight(_terrain.Heightfield, position);
         float z = BitConverter.Int32BitsToSingle(position.Z);

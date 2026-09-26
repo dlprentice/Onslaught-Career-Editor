@@ -730,7 +730,7 @@ public sealed class ParticleSetTests
             "rebuild/OnslaughtRebuild.Core/Simulation.cs"));
         string projectileUpdate = RequireSection(
             simulationSource,
-            "private void UpdateProjectiles()",
+            "private bool MovePlayerRound(MutableProjectile projectile)",
             "private void ResetDynamicState()");
         Assert.Contains("projectile.Kind switch", projectileUpdate, StringComparison.Ordinal);
         Assert.Contains(

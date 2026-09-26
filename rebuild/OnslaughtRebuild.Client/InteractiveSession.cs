@@ -54,14 +54,16 @@ public sealed class InteractiveSession
     // The scalar is exactly 13/3000. Verified in the PRISTINE specimen
     // (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
     // 74154bfa...) at VA 0x005d97c8 -> file 0x001d97c8, float32
-    // 0.004333333112299442. Read it from that file and no other: the installed
-    // Steam executable is e7881829... and carries four local patches - see
-    // reverse-engineering/binary-analysis/retail-specimen-baseline.md.
+    // 0.004333333112299442. Read it from that file. The installed Steam
+    // executable on this Linux host hashed 74154bfa... (pristine) on 2026-09-26;
+    // the Windows-era Steam copy was e7881829... with four local patches - see
+    // reverse-engineering/binary-analysis/retail-specimen-baseline.md. Measure
+    // the exact file before relying on either.
     //
     // "Four" was queried in review 2026-07-27 and is CONFIRMED, but only for
-    // the STEAM executable - do not carry the number across specimens. Measured
-    // by byte diff against its own neighbouring pristine backup: 28 differing
-    // bytes in exactly four contiguous runs -
+    // that Windows-era STEAM executable - do not carry the number across
+    // specimens. Measured by byte diff against its own neighbouring pristine
+    // backup: 28 differing bytes in exactly four contiguous runs -
     //     0x06416F..0x064171   3 bytes   version-string pointer
     //     0x129696             1 byte
     //     0x12A644..0x12A647   4 bytes   force_windowed

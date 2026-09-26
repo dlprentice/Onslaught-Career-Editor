@@ -104,9 +104,9 @@ public sealed class Level100SkipPanningTests
         Assert.Equal(0, skipped.Level100OpeningTicksRemaining);
         // CGame::StartPlayingState posts ALLOWED_TO_PLAY_MESSAGES NEXT_FRAME
         // (game.cpp:3030), so the gate is the skip tick plus one released
-        // 20 Hz event frame.
+        // 20 Hz event frame, on the mission clock that the pre-run started.
         Assert.Equal(
-            SkipTick + Level100MissionTiming.ReleasedEventFrameTicks,
+            SimulationConstants.Level100PreRunTicks + SkipTick + Level100MissionTiming.ReleasedEventFrameTicks,
             skipped.Level100Mission.MessageBoxAllowedTick);
     }
 
@@ -275,9 +275,11 @@ public sealed class Level100SkipPanningTests
 
         // The unskipped chain is the measured retail one: the two fresh
         // uninterrupted Steam runs in rebuild/PROVENANCE.md put the first
-        // message boundary at 182.
+        // message boundary at 182 30 Hz ticks after the pan began.
         Assert.Equal(Level100MissionTiming.MessageBoxAllowedTick, unskipped[0]);
-        Assert.Equal(SkipTick + Level100MissionTiming.ReleasedEventFrameTicks, skipped[0]);
+        Assert.Equal(
+            SimulationConstants.Level100PreRunTicks + SkipTick + Level100MissionTiming.ReleasedEventFrameTicks,
+            skipped[0]);
 
         // Every message in the chain moves by the same amount, because the
         // whole chain is anchored on the gate and then paced by the message
@@ -324,8 +326,9 @@ public sealed class Level100SkipPanningTests
             simulation.Step(SimInput.Idle);
         }
 
+        // The fresh mission clock has run the new level's pre-run.
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
-        Assert.Equal(0, reset.Level100Mission.Tick);
+        Assert.Equal(SimulationConstants.Level100PreRunTicks, reset.Level100Mission.Tick);
         Assert.NotEqual(reset.Level100Mission.Tick, reset.Tick);
         Assert.Equal(
             SimulationConstants.Level100OpeningPanTicks,
@@ -342,9 +345,9 @@ public sealed class Level100SkipPanningTests
         WorldSnapshot skipped = simulation.Step(Skip);
 
         Assert.Equal(0, skipped.Level100OpeningTicksRemaining);
-        Assert.Equal(SkipTick, skipped.Level100Mission.Tick);
+        Assert.Equal(SimulationConstants.Level100PreRunTicks + SkipTick, skipped.Level100Mission.Tick);
         Assert.Equal(
-            SkipTick + Level100MissionTiming.ReleasedEventFrameTicks,
+            SimulationConstants.Level100PreRunTicks + SkipTick + Level100MissionTiming.ReleasedEventFrameTicks,
             skipped.Level100Mission.MessageBoxAllowedTick);
     }
 

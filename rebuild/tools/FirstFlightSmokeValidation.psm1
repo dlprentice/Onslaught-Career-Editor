@@ -164,11 +164,12 @@ function Test-FirstFlightSmokeEvidence {
     # and format-7 fingerprints. The former bc5d99c7 pin predated those changes.
     # Linux Godot smoke and the C# headless replayer reproduce it; Windows
     # execution of this retained gate remains pending.
-    Assert-SmokeValue 'stateHash' '53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e' $report.stateHash
+    Assert-SmokeValue 'stateHash' '8649ff2bba9b327bfd925e6b60e07f8c7769d4d10e54bbd04229be64a3f96942' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
-    Assert-SmokeValue 'level100MissionTick' 2148 $report.level100MissionTick
+    # The mission clock also counts the level's 60 pre-run frames.
+    Assert-SmokeValue 'level100MissionTick' 2208 $report.level100MissionTick
     Assert-SmokeValue 'level100MissionOutcome' 'Running' $report.level100MissionOutcome
     Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
     # The message sequence the released script has requested by this tick is a

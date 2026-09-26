@@ -603,6 +603,38 @@ public sealed class RetailEventScheduler
     }
 
     /// <summary>
+    /// A deleted listener's readers all lose their target at once: every
+    /// filed ring or overflow event of <paramref name="listener"/> goes
+    /// through <see cref="ClearListener"/>.
+    /// </summary>
+    public void ClearListenerEvents(int listener)
+    {
+        if (listener == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(listener), "A filed event has no null listener to clear.");
+        }
+
+        foreach (List<int> lane in _ring)
+        {
+            foreach (int handle in lane)
+            {
+                if (_pool[handle].Listener == listener)
+                {
+                    ClearListener(handle);
+                }
+            }
+        }
+
+        foreach (int handle in _overflow)
+        {
+            if (_pool[handle].Listener == listener)
+            {
+                ClearListener(handle);
+            }
+        }
+    }
+
+    /// <summary>
     /// <c>CEventManager::AddEvent(CScheduledEvent*)</c> —
     /// <c>eventmanager.cpp:152-162</c>, <c>0x0044B310</c>. Re-files an owned
     /// event at <c>its own time + mTime</c>, always at

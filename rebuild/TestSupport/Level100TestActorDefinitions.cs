@@ -26,9 +26,17 @@ internal static class Level100TestActorDefinitions
         Level100ActorMechanics = state.Level100ActorMechanics with
         {
             PlaneEvents = null,
+            // The unit callbacks' state is the schema-52 extension; their
+            // events went with the event pool.
+            UnitCallbacks = null,
             Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with
                 { PlaneGuide = null, PlaneSpawnerExit = null }).ToArray(),
         },
+        // The Battle Engine's refresh events went with the event pool above;
+        // its targeting state is the schema-49 extension.
+        Level100BattleEngineTargeting = Level100BattleEngineTargetingSnapshot.Initial,
+        Level100PlayerStores = Level100PlayerStoresSnapshot.Initial,
+        Level100BattleEngineShake = Level100BattleEngineShakeSnapshot.Initial,
     };
 
     private static readonly Lazy<Level100ActorDefinitionSet> s_materialized = new(LoadMaterialized);
@@ -37,6 +45,10 @@ internal static class Level100TestActorDefinitions
         Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(Path.Combine(
             AppContext.BaseDirectory, "Assets", "Level100", "StaticWorld",
             "level100-static-world.json")));
+
+    internal static Level100ActorDefinitionSet LoadMaterializedWorld110() =>
+        Level100ActorDefinitionManifest.DecodeWorld110(File.ReadAllBytes(Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Level110", "level110-static-world.json")));
 
     internal static Level100ActorDefinitionSet Create()
     {
@@ -275,13 +287,9 @@ internal static class Level100TestActorDefinitions
     // materialized manifest, which is what would have caught this drift the day
     // it appeared.
     // The second argument of each row is the manifest's
-    // `targetChainNodeIndices` and the third its `isClosed`. Both were shipped
-    // by schema v14 on 2026-07-27 and consumed by nobody until #146: the
-    // product walked the serialized `points` order, so six of these eight
-    // routes ran backwards or rotated. `Flyby Path` is the visible one - its
-    // serialized head, node 43, is the chain's TAIL and the only node of that
-    // path at ground level, so the ambient Air Trainer left its 15 m cruise and
-    // dived for the deck as its FIRST move.
+    // `targetChainNodeIndices` and the third its `isClosed`; the points are in
+    // the manifest's (file) order. ExactPath turns them into retail's list and
+    // each node's own target (waypoint-paths.md).
     private static IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths() =>
     [
         ExactPath("Flyby Path", [41, 42, 43], false,
@@ -402,23 +410,31 @@ internal static class Level100TestActorDefinitions
     /// float components. Nothing here is reconstructed or renumbered.
     /// </summary>
     /// <param name="chain">
-    /// The manifest's <c>targetChainNodeIndices</c> - the order retail walks -
-    /// which is NOT the serialized order of <paramref name="points"/> on six of
-    /// these eight paths.
+    /// The manifest's <c>targetChainNodeIndices</c>: each node's target is the
+    /// next entry.
     /// </param>
-    /// <param name="isClosed">The manifest's <c>isClosed</c>.</param>
+    /// <param name="isClosed">
+    /// The manifest's <c>isClosed</c>: the last node targets the first.
+    /// </param>
     private static Level100WaypointPathDefinition ExactPath(
         string name,
         int[] chain,
         bool isClosed,
-        params (int Node, int X, int Y, int Z, int B0, int B1, int B2, int B3)[] points) => new(
-        name,
-        Array.AsReadOnly(points
-            .Select(point => new Level100WaypointPointDefinition(
-                point.Node,
-                new SimVector3(point.X, point.Y, point.Z),
-                new Level100FloatVector4Bits(point.B0, point.B1, point.B2, point.B3)))
-            .ToArray()),
-        Array.AsReadOnly(chain),
-        isClosed);
+        params (int Node, int X, int Y, int Z, int B0, int B1, int B2, int B3)[] points) =>
+        Level100WaypointPathDefinition.FromFileOrder(
+            name,
+            points.Select(point =>
+            {
+                int index = Array.IndexOf(chain, point.Node);
+                if (index < 0)
+                {
+                    throw new InvalidOperationException($"Path '{name}' node {point.Node} is off its chain.");
+                }
+                int? target = index + 1 < chain.Length ? chain[index + 1] : isClosed ? chain[0] : null;
+                return new Level100WaypointPointDefinition(
+                    point.Node,
+                    new SimVector3(point.X, point.Y, point.Z),
+                    new Level100FloatVector4Bits(point.B0, point.B1, point.B2, point.B3),
+                    target);
+            }));
 }

@@ -59,6 +59,26 @@ public static class SimulationConstants
     // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
     // so player actions are rejected for the first 120 Core ticks.
     public const int Level100OpeningPanTicks = 6 * TicksPerSecond;
+    // World 110's pan: its level world's settings word 4 (stored at
+    // 0x0050d2c5) is 2.0 (the RE lane's World 110 construction contract,
+    // "Player start"), against Level 100's 6.0.
+    public const int World110OpeningPanTicks = 2 * TicksPerSecond;
+    // CGame::InitRestartLoop files FINISHED_PRE_RUN at now + mPreRunTime before
+    // the world loads (game.cpp:371-373, 0x0046c5f0), and CGame::PreRun runs
+    // whole updates, unrendered, until it arrives (game.cpp:2063-2071). The
+    // world's own pre-run word arrives after that event is filed, so every
+    // level pre-runs 3.0 s: frames 1-60, whose last flush starts the pan (the
+    // RE lane's World 110 construction contract; the Steam pan began at event
+    // time 3.0, rebuild/PROVENANCE.md).
+    public const int Level100PreRunTicks = 3 * TicksPerSecond;
+
+    /// <summary>The opening pan of a career world, in ticks.</summary>
+    public static int OpeningPanTicks(int worldNumber) => worldNumber switch
+    {
+        100 => Level100OpeningPanTicks,
+        110 => World110OpeningPanTicks,
+        _ => throw new ArgumentOutOfRangeException(nameof(worldNumber), $"World {worldNumber} has no admitted pan length."),
+    };
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // Core is now at that same 20 Hz, so the measured sequence IS the
@@ -622,7 +642,6 @@ public static class SimulationConstants
     // Energy uses the accepted milli-retail policy (1000 Core units == one
     // retail energy unit), so one Core energy unit is 1000 micro-retail.
     public const int MicroRetailEnergyPerCoreEnergyUnit = 1_000;
-    public const int FireEnergyCost = 30;
     // Measured 2026-07-31:
     // weapon `Pulse Cannon Pod` @0x17463 of data/default physics.dat (sha256
     // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14,
@@ -630,9 +649,6 @@ public static class SimulationConstants
     // `Mech Pulse Cannon Charged` @0x134E3, whose CWeaponReloadTime is 0.1 s
     // (0x3DCCCCCD @0x1351D), exactly two released 20 Hz updates.
     public const int PulseCannonReloadTicks = 2;
-    // The same charged mode carries CWeaponInaccuracy 0.008726646 rad
-    // (0x3C0EFA35), rounded here to deterministic integer microradians.
-    public const int PulseCannonInaccuracyMicroRadians = 8_727;
     // Fresh copied-Steam Level 100 runs independently repeated four
     // lowest-charge Pulse Cannon rounds against each of the three training
     // tanks. Every round carried definition speed 35 and moved exactly 1.75
@@ -691,17 +707,6 @@ public static class SimulationConstants
     // every 3 to average the released 20 volleys per second rather than
     // rounding it to 15 or 30. The unit has no reason to exist at 20 Hz.
     public const int TwinVulcanReloadTicks = 1;
-    // CWeaponConsumption is 2.0 for the Twin Vulcan against 4.0 for the Pulse
-    // Cannon Pod. The absolute Core cost of a pulse shot (FireEnergyCost) is
-    // not dual-accepted retail truth, so only the byte-read 2.0/4.0 ratio is
-    // carried across.
-    public const int TwinVulcanFireEnergyCost = FireEnergyCost / 2;
-    // A same-return capture of Steam CBattleEngine::GetLaunchPosition resolved
-    // cockpit emitter "Gun" index 1 relative to the live BattleEngine basis.
-    // Values are rounded to deterministic integer millimetres.
-    public const int PulseCannonEmitterRightMillimeters = -6;
-    public const int PulseCannonEmitterForwardMillimeters = 80;
-    public const int PulseCannonEmitterUpMillimeters = 259;
     // The released definitions retain life in float units. Registry health
     // carries the same values in milli-life while the contact owner applies
     // exact 1.8 medium-pulse damage to the contacted part.

@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace OnslaughtRebuild.Core;
 
-public sealed class Simulation
+public sealed partial class Simulation
 {
     internal readonly record struct TerrainGroundImpactResponse(
         int SpeedMillimetersPerTick,
@@ -20,10 +20,19 @@ public sealed class Simulation
         public required int Id { get; init; }
         public required Level100ProjectileKind Kind { get; init; }
         public SimVector2 Position { get; set; }
-        public required SimVector2 Velocity { get; init; }
+        public required SimVector2 Velocity { get; set; }
         public int ElevationMillimeters { get; set; }
-        public required int VerticalVelocityMillimetersPerTick { get; init; }
+        public required int VerticalVelocityMillimetersPerTick { get; set; }
         public int RemainingTicks { get; set; }
+        // A seeking round's heading, launch time (+0xf4) and bound target.
+        public bool Seeks => Kind == Level100ProjectileKind.MicroMissile;
+        public int YawMicroRad { get; set; }
+        public int PitchMicroRad { get; set; }
+        public uint LaunchTimeBits { get; init; }
+        public Level100ActorId? SeekTarget { get; set; }
+        // Set by the life event. Every player round's life ends in the ring,
+        // before that frame's MOVE, so the flag never outlives the flush.
+        public bool Dying { get; set; }
         // Immutable Kind is already in the snapshot/hash. It owns these
         // configured parameters for both launch and sweep, so no separate
         // mutable or unhashed radius/damage copy can drift from the round.
@@ -34,6 +43,8 @@ public sealed class Simulation
             Level100ProjectileKind.MechPulseBoltMedium or
                 Level100ProjectileKind.MechBullet or Level100ProjectileKind.MechAirBullet =>
                 Level100ContactMechanics.PulseRadiusMillimeters,
+            // Micro Missile carries no CRoundRadius (record default 0).
+            Level100ProjectileKind.MicroMissile => 0,
             _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
         };
         public uint DamageBits => Kind switch
@@ -42,6 +53,7 @@ public sealed class Simulation
             Level100ProjectileKind.MechPulseBoltLarge => Level100DestructionState.LargePulseDirectDamageBits,
             Level100ProjectileKind.MechBullet => Level100DestructionState.MechBulletDamageBits,
             Level100ProjectileKind.MechAirBullet => SimulationConstants.MechAirBulletDamageBits,
+            Level100ProjectileKind.MicroMissile => Level100MissilePod.DamageBits,
             _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
         };
     }
@@ -59,10 +71,6 @@ public sealed class Simulation
     private readonly uint _seed;
     private readonly List<MutableProjectile> _projectiles = [];
     private readonly List<MutableWalkerFoot> _walkerFeet = [];
-    private Level100ContactActor[] _reticleContactActors = [];
-    private int _reticleLaunchAnglesTick = int.MinValue;
-    private int _reticleLaunchYawMicroRad;
-    private int _reticleLaunchPitchMicroRad;
     private readonly List<Level100MissionEvent> _level100MissionEvents = [];
     private readonly List<Level100ActorScriptCommand> _level100ActorScriptCommands = [];
     private readonly Level100TutorialProgress _level100TutorialProgress;
@@ -285,13 +293,13 @@ public sealed class Simulation
 
     /// <summary>
     /// Causal-probe seam for supported released player round kinds. It queues one
-    /// round across a caller-supplied contact segment; the next normal
-    /// <see cref="Step"/> still owns movement, contact selection, impact-kind
-    /// routing, event production and removal.
+    /// round across a caller-supplied contact segment, with a two-frame life;
+    /// the next normal <see cref="Step"/> still owns movement, contact
+    /// selection, impact-kind routing, event production and removal.
     /// </summary>
     /// <remarks>
     /// No shipped path calls this. The seam exists so the production
-    /// <c>UpdateProjectiles</c> kind switch can be falsified without replacing
+    /// <c>MovePlayerRound</c> kind switch can be falsified without replacing
     /// it with a manually injected destruction effect.
     /// </remarks>
     internal void QueueRoundForContactMeasurement(
@@ -314,9 +322,10 @@ public sealed class Simulation
                 nameof(end));
         }
 
+        int id = _nextProjectileId++;
         _projectiles.Add(new MutableProjectile
         {
-            Id = _nextProjectileId++,
+            Id = id,
             Kind = kind,
             Position = new SimVector2(start.X, start.Z),
             Velocity = new SimVector2(
@@ -326,6 +335,7 @@ public sealed class Simulation
             VerticalVelocityMillimetersPerTick = checked(end.Y - start.Y),
             RemainingTicks = 2,
         });
+        FilePlayerRoundEvents(id, 2);
     }
 
     /// <summary>
@@ -369,6 +379,19 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
+        AdvanceFrame(input, level100Facts);
+        return CreateSnapshot();
+    }
+
+    /// <summary>
+    /// One <c>CGame::Update</c>: the event clock, the controller, the flush and
+    /// the Moves. <see cref="Step"/> runs one per tick, and level construction
+    /// runs the pre-run's frames through it before the first tick.
+    /// </summary>
+    private void AdvanceFrame(
+        SimInput input,
+        IReadOnlyList<Level100SimulationFact>? level100Facts)
+    {
         // CGame::Update (0x0046EB37-0x0046EBCE) advances the manager before
         // controller Flush and event Flush, unless already paused. Therefore
         // the update that delivers PAUSE_GAME advances the clock; subsequent
@@ -435,7 +458,7 @@ public sealed class Simulation
         ApplyLevel100Facts(level100Facts);
         if (_level100Mission.GameplayPaused)
         {
-            return CreateSnapshot();
+            return;
         }
 
         ProcessLevel100DamageFlashes();
@@ -482,7 +505,9 @@ public sealed class Simulation
         }
 
         UpdateZoom();
+        HandleLocks();
         UpdateMovement(playerInput);
+        AdvanceBattleEngineRotationTail();
         UpdateWalkerHydraulicCue();
         UpdateWalkerFeet();
         // hit() InJetMode reads the actor-script flight state.
@@ -492,10 +517,7 @@ public sealed class Simulation
         SyncLevel100PlayerState();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
-        UpdateProjectiles();
         SyncLevel100PlayerState();
-
-        return CreateSnapshot();
     }
 
     /// <summary>
@@ -994,7 +1016,8 @@ public sealed class Simulation
             {
                 _level100Destruction.StartPlaneDeathAfterSpawnerLoss(actorId);
                 DrainAndDispatchLevel100ActorFacts();
-            });
+            }, HandleBattleEngineEvent,
+            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z));
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(
@@ -1049,6 +1072,12 @@ public sealed class Simulation
                 _level100PlayerActorId,
                 otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
             DrainAndDispatchLevel100ActorFacts();
+            if (receipt.ContactOnly)
+            {
+                // A dying round's last step: the script hit only.
+                PumpLevel100EventBus();
+                continue;
+            }
 
             if (ApplyLevel100PlayerDamage(
                 impact.IncomingDamageMilliLife,
@@ -2426,7 +2455,10 @@ public sealed class Simulation
         int ForwardZ,
         int RightX,
         int RightY,
-        int RightZ);
+        int RightZ,
+        int UpX = 0,
+        int UpY = 0,
+        int UpZ = 0);
 
     private FixedBodyBasis GetBodyBasis()
     {
@@ -2447,13 +2479,20 @@ public sealed class Simulation
         int rightY = MultiplyFixed(baseUpY, rollSin);
         int rightZ = MultiplyFixed(baseRightZ, rollCos) +
             MultiplyFixed(baseUpZ, rollSin);
+        // The same roll turns up away from right.
+        int upX = MultiplyFixed(baseUpX, rollCos) - MultiplyFixed(baseRightX, rollSin);
+        int upY = MultiplyFixed(baseUpY, rollCos);
+        int upZ = MultiplyFixed(baseUpZ, rollCos) - MultiplyFixed(baseRightZ, rollSin);
         return new FixedBodyBasis(
             forwardX,
             forwardY,
             forwardZ,
             rightX,
             rightY,
-            rightZ);
+            rightZ,
+            upX,
+            upY,
+            upZ);
     }
 
     private static int MultiplyFixed(int left, int right) =>
@@ -3461,10 +3500,17 @@ public sealed class Simulation
         {
             if (CanRechargeWalkerEnergy(_ticksSinceGroundContact))
             {
+                // BattleEngineWalkerPart.cpp:376-388: a heat shot or charge this
+                // update cleared mShieldsRecharging, which halves the recharge
+                // (0x00413804); 0.05 / 2 is exactly 25 milli-units.
+                int recharge = _level100PlayerWeapons.ShieldsRecharging
+                    ? SimulationConstants.WalkerEnergyRegenerationPerTick
+                    : SimulationConstants.WalkerEnergyRegenerationPerTick / 2;
                 _energy = Math.Min(
                     SimulationConstants.MaximumEnergy,
-                    _energy + SimulationConstants.WalkerEnergyRegenerationPerTick);
+                    _energy + recharge);
             }
+            _level100PlayerWeapons.ResumeShieldsRecharging();
             if (_energy == SimulationConstants.MaximumEnergy)
             {
                 _jetEnergyDrainRemainderMicro = 0;
@@ -3559,6 +3605,13 @@ public sealed class Simulation
             result.ShieldAbsorbedMilliLife,
             result.LifeDamageMilliLife,
             result.RequestsDeath));
+        // CBattleEngine::Damage ends with AddShockShake of the life lost
+        // times 0.125, halved while shields remain (0x0040ab75-0x0040abc2).
+        _shake.Add(
+            RetailBattleEngineShake.DamageAmount(
+                result.LifeDamageMilliLife,
+                result.State.ShieldMilli != 0),
+            _level100ActorMechanics.NextReleasedRandom);
         requestsDeath = result.RequestsDeath;
         return true;
     }
@@ -3582,28 +3635,34 @@ public sealed class Simulation
             return;
         }
 
+        // CBattleEngine::FireWeapon (BattleEngine.cpp:1958-1970): record the
+        // lock count the burst's targets round-robin over, then the part fires.
+        _playerLocks.RecordFireWeapon();
         FireCurrentWeapon();
     }
 
+    /// <summary>
+    /// The part's <c>FireWeapon</c> then <c>CWeapon::Fire</c> (<c>0x00506010</c>):
+    /// sample and clear charge, check readiness, stamp the reload from the
+    /// burst's start, zero the Battle Engine's target cursor and spawn the
+    /// first burst event.
+    /// </summary>
     private void FireCurrentWeapon()
     {
-        // Both a release and the held non-chargeable arm reach CWeapon::Fire.
-        // Sampling/clearing charge precedes readiness and the remaining
-        // bounded resource/launch checks; integer countdowns are not gates.
         if (!_level100PlayerWeapons.TryPrepareFire(
             _mode, _transition, EngineTimeSeconds, out Level100ProjectileKind pulseRound))
         {
             return;
         }
 
+        float now = EngineTimeSeconds;
         if (_mode == VehicleMode.Jet)
         {
             Level100MissionWeapon selected =
                 _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Jet);
-            // Missile Pod selection is now represented exactly, but its
-            // released launch/round law is not. Do not synthesize a shot.
             if (selected == Level100MissionWeapon.MissilePod)
             {
+                FireMissilePod();
                 return;
             }
             if (selected != Level100MissionWeapon.MechVulcanCannon)
@@ -3612,35 +3671,23 @@ public sealed class Simulation
                     $"Unsupported Level 100 jet weapon {selected}.");
             }
 
-            // Aquila Prototype's JetPart owns Mech Vulcan Cannon followed by Missile
-            // Pod. ResetConfiguration selects slot zero and jet fire never
-            // routes through the walker-only primary Pulse Cannon.
-            EmitFlightEvent(
-                AquilaFlightEvents.JetWeaponFireRequested,
-                AquilaJetWeapon.MechVulcanCannon);
-            EmitWeaponFireEvent(
-                Level100PlayerWeapon.MechVulcanCannon,
-                SimulationConstants.MechVulcanVolleySize);
             _fireCooldownTicksRemaining = SimulationConstants.MechVulcanReloadTicks;
-            _level100PlayerWeapons.StampReadyAt(selected, EngineTimeSeconds);
-
-            // Mech Vulcan Cannon fires two Mech Air Bullet rounds. The two
-            // authored muzzle offsets remain unmodelled. Jet ammo/heat stores
-            // are also open; no invented energy cost is spent here.
-            for (int round = 0;
-                 round < SimulationConstants.MechVulcanVolleySize;
-                 round++)
-            {
-                (int yawInaccuracy, int pitchInaccuracy) =
-                    _level100ActorMechanics.NextWeaponInaccuracy(
-                        SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
-                LaunchWalkerRound(
-                    Level100ProjectileKind.MechAirBullet,
-                    SimulationConstants.MechAirBulletSpeedPerTick,
-                    SimulationConstants.MechAirBulletLifetimeTicks,
-                    yawInaccuracy,
-                    pitchInaccuracy);
-            }
+            _level100PlayerWeapons.StampReadyAt(selected, now);
+            _playerLocks.ResetCurrentTarget();
+            // Mech Vulcan Cannon fires two Mech Air Bullet rounds per event.
+            // The two authored muzzle offsets remain unmodelled.
+            SpawnPlayerBurst(
+                selected,
+                jetPart: true,
+                SimulationConstants.MechVulcanVolleySize,
+                Level100ProjectileKind.MechAirBullet,
+                SimulationConstants.MechAirBulletSpeedPerTick,
+                SimulationConstants.MechAirBulletLifetimeTicks,
+                SimulationConstants.PlayerVulcanInaccuracyMicroRadians,
+                MechVulcanPower,
+                () => EmitFlightEvent(
+                    AquilaFlightEvents.JetWeaponFireRequested,
+                    AquilaJetWeapon.MechVulcanCannon));
             return;
         }
 
@@ -3648,81 +3695,141 @@ public sealed class Simulation
             _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Walker);
         if (walkerSelected == Level100MissionWeapon.PulseCannonPod)
         {
-            if (_energy < SimulationConstants.FireEnergyCost)
-            {
-                return;
-            }
-
-            _energy -= SimulationConstants.FireEnergyCost;
             // Legacy countdown is a nominal-duration projection. Raw stored
             // per-weapon float time above owns the strict readiness decision.
             _fireCooldownTicksRemaining = pulseRound == Level100ProjectileKind.MechPulseBoltLarge
                 ? (int)(Level100PulseCannonCharge.ChargedReloadTime * SimulationConstants.TicksPerSecond)
                 : SimulationConstants.PulseCannonReloadTicks;
-            _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds, pulseRound);
+            _level100PlayerWeapons.StampReadyAt(walkerSelected, now, pulseRound);
+            _playerLocks.ResetCurrentTarget();
+            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
-            EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
-            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
-            // Charged2 field 1 @0x135DF in the pinned physics.dat is +0
-            // CWeaponInaccuracy. The retail scatter block still draws twice
-            // (0x00506E0A/0x00506E3E), then multiplies each by mode+0x34.
-            // Preserve those draws even when both angular offsets are zero.
-            (int yawInaccuracy, int pitchInaccuracy) =
-                _level100ActorMechanics.NextWeaponInaccuracy(
-                    largePulse ? 0 : SimulationConstants.PulseCannonInaccuracyMicroRadians);
-            LaunchWalkerRound(
-                // Large carries its own physical scalars and zero scatter.
-                // Its spatial blast, launch sound and impact presentation
-                // remain open; this is not complete parity.
+            // Both charge levels' first node is +0 CWeaponInaccuracy (Charged
+            // @0x134E3, Charged 2 @0x135B3 in the pinned physics.dat); the
+            // 0x3C0EFA35 once used here is `Mech Pulse Cannon` @0x13473, the
+            // Small bolt's mode, which the Pulse Cannon Pod never selects. The
+            // scatter block still draws twice. Large carries its own physical
+            // scalars; its spatial blast, launch sound and impact presentation
+            // remain open, so this is not complete parity.
+            SpawnPlayerBurst(
+                walkerSelected,
+                jetPart: false,
+                1,
                 pulseRound,
                 largePulse ? SimulationConstants.LargePulseSpeedPerTick :
                     SimulationConstants.ProjectileSpeedPerTick,
                 largePulse ? SimulationConstants.LargePulseLifetimeTicks :
                     SimulationConstants.ProjectileLifetimeTicks,
-                yawInaccuracy,
-                pitchInaccuracy);
+                0,
+                largePulse ? PulseChargedTwoPower : PulseChargedPower,
+                null);
             return;
         }
 
         // The released script disables the Pulse Cannon Pod and enables the
         // Mech Twin Vulcan Cannon at the end of the first firing-range
-        // exercise, so from that point the walker's only weapon is the Twin
-        // Vulcan. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet rounds
-        // per CWeaponReloadTime 0.05 s. CWeaponInaccuracy 0.006981317 rad is
-        // applied through the same global two-draw path as actor weapons. The
-        // four CWeaponLaunchSequence muzzle entries remain unmodelled, so the
-        // volley leaves the one evidenced BattleEngine emitter.
+        // exercise. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet
+        // rounds per CWeaponReloadTime 0.05 s. The four CWeaponLaunchSequence
+        // muzzle entries remain unmodelled, so the volley leaves the one
+        // evidenced BattleEngine emitter.
         if (walkerSelected != Level100MissionWeapon.MechTwinVulcanCannon)
         {
             throw new InvalidOperationException(
                 $"Unsupported Level 100 walker weapon {walkerSelected}.");
         }
-        if (_energy < SimulationConstants.TwinVulcanFireEnergyCost)
+
+        _twinVulcanReloadTicksRemaining =
+            SimulationConstants.TwinVulcanReloadTicks;
+        _level100PlayerWeapons.StampReadyAt(walkerSelected, now);
+        _playerLocks.ResetCurrentTarget();
+        SpawnPlayerBurst(
+            walkerSelected,
+            jetPart: false,
+            SimulationConstants.TwinVulcanVolleySize,
+            Level100ProjectileKind.MechBullet,
+            SimulationConstants.MechBulletSpeedPerTick,
+            SimulationConstants.MechBulletLifetimeTicks,
+            SimulationConstants.PlayerVulcanInaccuracyMicroRadians,
+            TwinVulcanPower,
+            null);
+    }
+
+    /// <summary>
+    /// The emitter of a burst event's <paramref name="round"/>-th round, from
+    /// the mode's launch sequence (<see cref="Level100CockpitEmitters"/>).
+    /// </summary>
+    internal static int LaunchGun(Level100MissionWeapon weapon, int round) => weapon switch
+    {
+        Level100MissionWeapon.PulseCannonPod => Level100CockpitEmitters.PulseGun,
+        Level100MissionWeapon.MechTwinVulcanCannon =>
+            Level100CockpitEmitters.TwinVulcanSequence[round % Level100CockpitEmitters.TwinVulcanSequence.Length],
+        Level100MissionWeapon.MechVulcanCannon =>
+            Level100CockpitEmitters.MechVulcanSequence[round % Level100CockpitEmitters.MechVulcanSequence.Length],
+        _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+    };
+
+    // CWeaponPower (mode +0x40, default 0 at 0x0042fb81) from the pinned
+    // physics.dat: Mech Pulse Cannon Charged 0x3cf5c28f, Charged 2 0x3d4ccccd;
+    // neither Vulcan mode carries the node.
+    private static readonly float PulseChargedPower = BitConverter.UInt32BitsToSingle(0x3cf5c28fu);
+    private static readonly float PulseChargedTwoPower = BitConverter.UInt32BitsToSingle(0x3d4ccccdu);
+    private const float TwinVulcanPower = 0.0f;
+    private const float MechVulcanPower = 0.0f;
+
+    /// <summary>
+    /// One burst event of <c>ProjectileBurst__SpawnFromCurrentPreset</c>
+    /// (<c>0x005069f0</c>) for a Battle Engine weapon, in the RE lane's order
+    /// (<c>reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md</c>):
+    /// the part's <c>WeaponFired</c> once, before the volley (a refusal ends the
+    /// event with no round, draw, lock, recoil or sound); then per round the
+    /// pitch and yaw scatter draws, the target from <c>GetCurrentTarget</c>,
+    /// <c>FireLock</c> when this is the current weapon, the round's Actor Init
+    /// draw, and <c>RecoilWeapon</c>'s shake draws.
+    /// </summary>
+    private void SpawnPlayerBurst(
+        Level100MissionWeapon weapon,
+        bool jetPart,
+        int volleySize,
+        Level100ProjectileKind kind,
+        int speedPerTick,
+        int lifetimeTicks,
+        int inaccuracyMicroRadians,
+        float power,
+        Action? launchCue)
+    {
+        float now = EngineTimeSeconds;
+        if (!_level100PlayerWeapons.WeaponFired(weapon, jetPart, now))
         {
             return;
         }
 
-        _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
-        _twinVulcanReloadTicksRemaining =
-            SimulationConstants.TwinVulcanReloadTicks;
-        _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds);
-        EmitWeaponFireEvent(
-            Level100PlayerWeapon.MechTwinVulcanCannon,
-            SimulationConstants.TwinVulcanVolleySize);
-        for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
+        launchCue?.Invoke();
+        EmitWeaponFireEvent(PlayerWeaponIdentity(weapon), volleySize);
+        for (int round = 0; round < volleySize; round++)
         {
             (int yawInaccuracy, int pitchInaccuracy) =
-                _level100ActorMechanics.NextWeaponInaccuracy(
-                    SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
-            LaunchWalkerRound(
-                Level100ProjectileKind.MechBullet,
-                SimulationConstants.MechBulletSpeedPerTick,
-                SimulationConstants.MechBulletLifetimeTicks,
-                yawInaccuracy,
-                pitchInaccuracy);
+                _level100ActorMechanics.NextWeaponInaccuracy(inaccuracyMicroRadians);
+            Level100ActorId? target = _playerLocks.GetCurrentTarget(now);
+            if (weapon == RetailCurrentWeapon)
+            {
+                _playerLocks.FireLock(target, now);
+            }
+            // CRound::Init -> CActor::Init takes the round's Move-phase draw.
+            _ = _level100ActorMechanics.NextReleasedRandom();
+            LaunchWalkerRound(kind, speedPerTick, lifetimeTicks, yawInaccuracy, pitchInaccuracy,
+                LaunchGun(weapon, round));
+            _shake.Add(power, _level100ActorMechanics.NextReleasedRandom);
         }
     }
+
+    private static Level100PlayerWeapon PlayerWeaponIdentity(Level100MissionWeapon weapon) => weapon switch
+    {
+        Level100MissionWeapon.PulseCannonPod => Level100PlayerWeapon.PulseCannonPod,
+        Level100MissionWeapon.MechTwinVulcanCannon => Level100PlayerWeapon.MechTwinVulcanCannon,
+        Level100MissionWeapon.MechVulcanCannon => Level100PlayerWeapon.MechVulcanCannon,
+        _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+    };
 
     private void TryChargeWeapon(SimInput input)
     {
@@ -3766,47 +3873,28 @@ public sealed class Simulation
         int speedPerTick,
         int lifetimeTicks,
         int yawInaccuracyMicroRadians,
-        int pitchInaccuracyMicroRadians)
+        int pitchInaccuracyMicroRadians,
+        int gun,
+        Level100ActorId? seekTarget = null,
+        uint launchTimeBits = 0,
+        (int YawMicroRad, int PitchMicroRad)? launchAngle = null)
     {
-        // Retail samples the retained cockpit emitter before correcting its
+        // Retail samples the cockpit's Gun emitter before correcting its
         // launch orientation. CBattleEngine::GetLaunchPosition (0x0040c990,
-        // BattleEngine.cpp:3000-3069) traces from the camera view and, for an
-        // adjustable weapon, rotates this emitter toward that first contact.
-        // Inaccuracy rotates the corrected direction, never the emitter.
-        (int emitterSin, int emitterCos) = FixedSinCos(_facingYawMicroRad);
-        (int emitterPitchSin, int emitterPitchCos) =
-            FixedSinCos(_facingPitchMicroRad);
-        int emitterForwardPlane = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                emitterPitchCos) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
-                emitterPitchSin),
-            FixedTrigScale);
-        int emitterVerticalOffset = DivideRoundNearest(
-            (-(long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                emitterPitchSin) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
-                emitterPitchCos),
-            FixedTrigScale);
-        int emitterOffsetX = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
-                emitterCos) -
-            ((long)emitterForwardPlane * emitterSin),
-            FixedTrigScale);
-        int emitterOffsetZ = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
-                emitterSin) +
-            ((long)emitterForwardPlane * emitterCos),
-            FixedTrigScale);
-
-        SimVector2 playerPosition = PlayerPosition;
-        var emitter = new SimVector3(
-            playerPosition.X + emitterOffsetX,
-            PlayerElevationMillimeters + emitterVerticalOffset,
-            playerPosition.Z + emitterOffsetZ);
+        // BattleEngine.cpp:3000-3069) takes the emitter's world pose, p = M·p
+        // + P, with M the body orientation (+0x3c, roll included) and P the
+        // Battle Engine's position, then reuses the distance the last
+        // crosshair refresh (event 6002) retained and rotates this emitter
+        // toward that point on the current view line. Inaccuracy rotates the
+        // corrected direction, never the emitter.
+        SimVector3 emitter = CockpitEmitterWorldPosition(
+            Level100CockpitEmitters.Gun(gun, walkPose: _mode == VehicleMode.Walker));
         (int baseYaw, int basePitch) = ReticleAdjustedLaunchAngles(emitter);
-        int launchYaw = NormalizeMicroRad(baseYaw + yawInaccuracyMicroRadians);
-        int launchPitch = NormalizeMicroRad(basePitch + pitchInaccuracyMicroRadians);
+        (int launchYaw, int launchPitch) = Level100ActorMechanics.ComposeLaunchDirection(
+            baseYaw,
+            basePitch,
+            launchAngle ?? Level100ActorMechanics.DefaultLaunchAngle,
+            (yawInaccuracyMicroRadians, pitchInaccuracyMicroRadians));
         (int launchSin, int launchCos) = FixedSinCos(launchYaw);
         (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
         int horizontalSpeed = DivideRoundNearest(
@@ -3822,239 +3910,254 @@ public sealed class Simulation
             -(long)launchPitchSin * speedPerTick,
             FixedTrigScale);
 
+        int id = _nextProjectileId++;
         _projectiles.Add(new MutableProjectile
         {
-            Id = _nextProjectileId++,
+            Id = id,
             Kind = kind,
             Position = new SimVector2(emitter.X, emitter.Z),
             Velocity = new SimVector2(velocityX, velocityZ),
             ElevationMillimeters = emitter.Y,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = lifetimeTicks,
+            YawMicroRad = launchYaw,
+            PitchMicroRad = launchPitch,
+            LaunchTimeBits = launchTimeBits,
+            SeekTarget = seekTarget,
         });
+        FilePlayerRoundEvents(id, lifetimeTicks);
     }
 
+    /// <summary>
+    /// <c>CRound::Init</c>'s MOVE and life events for a Battle Engine round,
+    /// on the level's one event manager. Every player round's life span is a
+    /// whole number of seconds, so ticks / 20 is its exact float.
+    /// </summary>
+    private void FilePlayerRoundEvents(int roundId, int lifetimeTicks) =>
+        _level100ActorMechanics.FileRoundEvents(
+            Level100ActorMechanics.PlayerRoundListener(roundId),
+            lifetimeTicks / (float)SimulationConstants.TicksPerSecond);
+
+    /// <summary>
+    /// A cockpit emitter's world position: the Battle Engine's position plus
+    /// the body orientation times the emitter's model position. Retail's model
+    /// z points down, so it enters Core's up axis negated. The cockpit tilt S
+    /// and the render-fraction lerp of the pose are open (the RE lane's aiming
+    /// contract), so this is the current pose with S the identity.
+    /// </summary>
+    private SimVector3 CockpitEmitterWorldPosition(Level100CockpitEmitters.Emitter model)
+    {
+        FixedBodyBasis body = GetBodyBasis();
+        long Axis(int right, int forward, int up) =>
+            ((long)model.XMicrometres * right) +
+            ((long)model.YMicrometres * forward) -
+            ((long)model.ZMicrometres * up);
+        const long Scale = (long)FixedTrigScale * 1000;
+        SimVector2 position = PlayerPosition;
+        return new SimVector3(
+            checked(position.X + DivideRoundNearest(Axis(body.RightX, body.ForwardX, body.UpX), Scale)),
+            checked(PlayerElevationMillimeters + DivideRoundNearest(Axis(body.RightY, body.ForwardY, body.UpY), Scale)),
+            checked(position.Z + DivideRoundNearest(Axis(body.RightZ, body.ForwardZ, body.UpZ), Scale)));
+    }
+
+    /// <summary>
+    /// <c>CBattleEngine::GetLaunchPosition</c> (<c>0x0040c990</c>,
+    /// <c>BattleEngine.cpp:3016-3067</c>) for a gravity-free weapon that
+    /// adjusts its aim: with a retained crosshair report the round is aimed
+    /// at the point the current view line reaches at that report's distance
+    /// (<c>mWlcr.mDistToImpact</c>, written by the last 6002 refresh, not a
+    /// fresh trace); without one it keeps <c>mOrientation</c> times the
+    /// auto-aim matrix.
+    /// </summary>
     private (int YawMicroRad, int PitchMicroRad) ReticleAdjustedLaunchAngles(
         SimVector3 emitter)
     {
-        // One released crosshair report feeds every round in a same-tick
-        // volley. Core models all current player muzzle slots with this one
-        // retained emitter, so the derived orientation is identical too.
-        if (_reticleLaunchAnglesTick == _tick)
+        if (_crosshairHitKind == Level100CrosshairHitKind.Nothing)
         {
-            return (_reticleLaunchYawMicroRad, _reticleLaunchPitchMicroRad);
+            return (_facingYawMicroRad, _facingPitchMicroRad);
         }
 
-        // CalcUnitOverCrossHair traces 1,000 retail units. The launch owner uses
-        // its retained distance to reconstruct the hit point from a 200-unit
-        // camera vector; tracing the complete 1,000-unit line is equivalent.
-        const int ReticleRayLengthMillimeters = 1_000_000;
-        (int yawSin, int yawCos) = FixedSinCos(_facingYawMicroRad);
-        (int pitchSin, int pitchCos) = FixedSinCos(_facingPitchMicroRad);
-        int horizontalLength = DivideRoundNearest(
-            (long)pitchCos * ReticleRayLengthMillimeters,
-            FixedTrigScale);
-        var cameraStart = new SimVector3(
-            PlayerPosition.X,
-            PlayerElevationMillimeters,
-            PlayerPosition.Z);
-        var cameraEnd = new SimVector3(
-            checked(cameraStart.X + DivideRoundNearest(
-                -(long)yawSin * horizontalLength,
-                FixedTrigScale)),
-            checked(cameraStart.Y + DivideRoundNearest(
-                -(long)pitchSin * ReticleRayLengthMillimeters,
-                FixedTrigScale)),
-            checked(cameraStart.Z + DivideRoundNearest(
-                (long)yawCos * horizontalLength,
-                FixedTrigScale)));
-
-        Level100ActorRegistrySnapshot registry = _level100Actors.Snapshot;
-        Level100DestructionRuntimeSnapshot destruction = _level100Destruction.Snapshot;
-        if (_reticleContactActors.Length < registry.Actors.Count)
-        {
-            Array.Resize(ref _reticleContactActors, registry.Actors.Count);
-        }
-
-        int contactActorCount = 0;
-        foreach (Level100ActorSnapshot actor in registry.Actors)
-        {
-            if (!actor.Active ||
-                actor.Lifecycle == Level100ActorLifecycle.Destroyed ||
-                actor.DefinitionName is null ||
-                !Level100ContactCatalog.Instance.TryGetDefinition(
-                    actor.DefinitionName,
-                    out Level100ContactDefinition? definition) ||
-                definition is null)
-            {
-                continue;
-            }
-            if (!StringComparer.OrdinalIgnoreCase.Equals(
-                    actor.MeshBinding,
-                    definition.Mesh))
-            {
-                throw new InvalidDataException(
-                    $"Level 100 actor {actor.ActorId.Value} definition/mesh binding changed.");
-            }
-
-            ReadOnlyMemory<byte> partActivity = destruction.Actors
-                .FirstOrDefault(item => item.ActorId == actor.ActorId.Value)
-                ?.PartActivity ?? default;
-            _reticleContactActors[contactActorCount++] = new Level100ContactActor(
-                actor.ActorId.Value,
-                active: true,
-                ToReticleContactTransform(actor.Pose),
-                Level100Vector3.Zero,
-                definition,
-                partActivity);
-        }
-
-        if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
-                ToReticleContactVector(cameraStart),
-                ToReticleContactVector(cameraEnd),
-                contactRadiusMillimeters: 0,
-                _reticleContactActors.AsSpan(0, contactActorCount),
-                out Level100ContactHit hit))
-        {
-            return CacheReticleLaunchAngles(
-                _facingYawMicroRad,
-                _facingPitchMicroRad);
-        }
-
+        const long LineLengthMillimeters = 1_000_000;
+        (SimVector3 start, SimVector3 end) = CrosshairLine();
+        long distance = _crosshairHitDistanceMillimeters;
         var contact = new SimVector3(
-            hit.ImpactCenter.X,
-            checked(-hit.ImpactCenter.Z),
-            hit.ImpactCenter.Y);
+            checked(start.X + DivideRoundNearest((end.X - (long)start.X) * distance, LineLengthMillimeters)),
+            checked(start.Y + DivideRoundNearest((end.Y - (long)start.Y) * distance, LineLengthMillimeters)),
+            checked(start.Z + DivideRoundNearest((end.Z - (long)start.Z) * distance, LineLengthMillimeters)));
         int deltaX = checked(contact.X - emitter.X);
         int deltaY = checked(contact.Y - emitter.Y);
         int deltaZ = checked(contact.Z - emitter.Z);
         int horizontal = Magnitude2D(deltaX, deltaZ);
         if (horizontal == 0 && deltaY == 0)
         {
-            return CacheReticleLaunchAngles(
-                _facingYawMicroRad,
-                _facingPitchMicroRad);
+            return (_facingYawMicroRad, _facingPitchMicroRad);
         }
 
-        return CacheReticleLaunchAngles(
+        return (
             FixedAtan2(-deltaX, deltaZ),
             FixedAtan2(-deltaY, Math.Max(1, horizontal)));
     }
 
-    private (int YawMicroRad, int PitchMicroRad) CacheReticleLaunchAngles(
-        int yawMicroRad,
-        int pitchMicroRad)
+    /// <summary>
+    /// A Battle Engine round's MOVE or life event, delivered in the level
+    /// event manager's flush (the RE lane's round Frames contract). The life
+    /// event comes first in its frame: a <c>CRoundExplode</c> round (the Micro
+    /// Missile) bursts in the air where it is (<c>0x004d9a54</c> →
+    /// <c>0x004d9f30</c>), and every round starts dying. The MOVE delivered
+    /// after it still takes one last step and is not re-filed, so a round
+    /// makes k + 1 Moves; that step can meet things but hits nothing.
+    /// </summary>
+    private void HandlePlayerRoundEvent(RetailEventScheduler events, RetailEventDispatch dispatch)
     {
-        _reticleLaunchAnglesTick = _tick;
-        _reticleLaunchYawMicroRad = yawMicroRad;
-        _reticleLaunchPitchMicroRad = pitchMicroRad;
-        return (yawMicroRad, pitchMicroRad);
+        int roundId = Level100ActorMechanics.PlayerRoundId(dispatch.Listener);
+        MutableProjectile projectile = _projectiles.Find(round => round.Id == roundId) ??
+            throw new InvalidOperationException($"Round {roundId} has an event but no round.");
+        switch (dispatch.EventNum)
+        {
+            case Level100ActorMechanics.RoundLifeEvent:
+                if (projectile.Kind == Level100ProjectileKind.MicroMissile)
+                {
+                    _level100Destruction.ReportAirBurst(
+                        new SimVector3(
+                            projectile.Position.X,
+                            projectile.ElevationMillimeters,
+                            projectile.Position.Z),
+                        Level100DestructionEffectKind.MicroMissileImpact);
+                }
+                projectile.Dying = true;
+                return;
+            case Level100ActorMechanics.RoundMoveEvent:
+                if (MovePlayerRound(projectile) || projectile.Dying)
+                {
+                    // CRound::Shutdown calls the owning Battle Engine's LockHit
+                    // for the bound target (0x004d8e00).
+                    if (projectile.Seeks)
+                    {
+                        _playerLocks.LockHit(projectile.SeekTarget);
+                    }
+                    _projectiles.Remove(projectile);
+                    events.ClearListenerEvents(dispatch.Listener);
+                    return;
+                }
+
+                Level100ActorMechanics.RefileRoundMove(events, dispatch);
+                return;
+            default:
+                throw new InvalidOperationException($"Unadmitted round event {dispatch.EventNum}.");
+        }
     }
 
-    private static Level100Transform3 ToReticleContactTransform(
-        Level100ActorPoseSnapshot pose) =>
-        new(
-            ToReticleContactVector(pose.PositionMillimeters),
-            ToReticleContactBasis(pose.BasisFloatBits));
-
-    private static Level100Vector3 ToReticleContactVector(SimVector3 vector) =>
-        new(vector.X, vector.Z, checked(-vector.Y));
-
-    private static Level100Basis3 ToReticleContactBasis(Level100FloatBasis3Bits core)
+    /// <summary>
+    /// One <c>CRound::Move</c> of a Battle Engine round: a seeking round's two
+    /// wiggle draws and guidance, the step, and its contact sweep. Returns
+    /// whether the round hit.
+    /// </summary>
+    private bool MovePlayerRound(MutableProjectile projectile)
     {
-        static int Component(int bits)
+        if (projectile.Seeks)
         {
-            float value = BitConverter.Int32BitsToSingle(bits);
-            if (!float.IsFinite(value))
-            {
-                throw new InvalidDataException(
-                    "A Level 100 actor basis contains a non-finite component.");
-            }
-            return checked((int)MathF.Round(
-                value * Level100Basis3.Scale,
-                MidpointRounding.AwayFromZero));
+            // CRound::Move takes its two wiggle draws first, then guides;
+            // the wiggle bends only this step's travel (the actor rounds'
+            // shared law).
+            (int wiggleYaw, int wigglePitch) =
+                _level100ActorMechanics.NextWiggle(Level100MissilePod.WiggleMicroRadians);
+            SteerSeekingPlayerRound(projectile);
+            (SimVector2 velocity, int vertical) = VelocityFromAngles(
+                NormalizeMicroRad(projectile.YawMicroRad + wiggleYaw),
+                NormalizeMicroRad(projectile.PitchMicroRad + wigglePitch),
+                Level100MissilePod.SpeedMillimetersPerTick);
+            projectile.Velocity = velocity;
+            projectile.VerticalVelocityMillimetersPerTick = vertical;
         }
 
-        // Core is (retail X, up=-retail Z, retail Y); contact is retail XYZ.
-        var result = new Level100Basis3(
-            Component(core.Row0X),
-            Component(core.Row0Z),
-            -Component(core.Row0Y),
-            Component(core.Row2X),
-            Component(core.Row2Z),
-            -Component(core.Row2Y),
-            -Component(core.Row1X),
-            -Component(core.Row1Z),
-            Component(core.Row1Y));
-        return result.IsOrthonormal
-            ? result
-            : throw new InvalidDataException(
-                "A Level 100 actor basis cannot be represented by contact mechanics.");
-    }
+        var start = new SimVector3(
+            projectile.Position.X,
+            projectile.ElevationMillimeters,
+            projectile.Position.Z);
+        var end = new SimVector3(
+            checked(projectile.Position.X + projectile.Velocity.X),
+            checked(projectile.ElevationMillimeters +
+                projectile.VerticalVelocityMillimetersPerTick),
+            checked(projectile.Position.Z + projectile.Velocity.Z));
+        projectile.Position = new SimVector2(end.X, end.Z);
+        projectile.ElevationMillimeters = end.Y;
+        projectile.RemainingTicks--;
 
-    private void UpdateProjectiles()
-    {
-        for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
+        Level100DestructionEffectKind impactEffectKind = projectile.Kind switch
         {
-            MutableProjectile projectile = _projectiles[projectileIndex];
-            var start = new SimVector3(
-                projectile.Position.X,
-                projectile.ElevationMillimeters,
-                projectile.Position.Z);
-            var end = new SimVector3(
-                checked(projectile.Position.X + projectile.Velocity.X),
-                checked(projectile.ElevationMillimeters +
-                    projectile.VerticalVelocityMillimetersPerTick),
-                checked(projectile.Position.Z + projectile.Velocity.Z));
-            projectile.Position = new SimVector2(end.X, end.Z);
-            projectile.ElevationMillimeters = end.Y;
-            projectile.RemainingTicks--;
-
-            Level100DestructionEffectKind impactEffectKind = projectile.Kind switch
-            {
-                Level100ProjectileKind.MechPulseBoltMedium =>
-                    Level100DestructionEffectKind.PulseImpact,
-                Level100ProjectileKind.MechPulseBoltLarge =>
-                    // Retained Medium presentation placeholder; Large's
-                    // actual effect/audio assets are not admitted here.
-                    Level100DestructionEffectKind.PulseImpact,
-                Level100ProjectileKind.MechBullet or
-                    Level100ProjectileKind.MechAirBullet =>
-                    Level100DestructionEffectKind.VulcanImpact,
-                _ => throw new InvalidDataException(
-                    $"Projectile {projectile.Id} has unsupported impact kind " +
-                    $"{projectile.Kind}."),
-            };
-            // Only Medium retains the older fixed second damage stage.
-            // Large applies its configured direct amount through the common
-            // sweep; a spatial blast cannot be replaced with another fixed 4.
-            bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
-                ? _level100Destruction.TryApplyPulseSweep(start, end, out _, _retailEventFrameCount)
-                : _level100Destruction.TryApplyRoundSweep(
-                    start,
-                    end,
-                    projectile.ContactRadiusMillimeters,
-                    projectile.DamageBits,
-                    impactEffectKind,
-                    out _,
-                    _retailEventFrameCount);
-            if (hit)
+            Level100ProjectileKind.MechPulseBoltMedium =>
+                Level100DestructionEffectKind.PulseImpact,
+            Level100ProjectileKind.MechPulseBoltLarge =>
+                // Retained Medium presentation placeholder; Large's
+                // actual effect/audio assets are not admitted here.
+                Level100DestructionEffectKind.PulseImpact,
+            Level100ProjectileKind.MechBullet or
+                Level100ProjectileKind.MechAirBullet =>
+                Level100DestructionEffectKind.VulcanImpact,
+            Level100ProjectileKind.MicroMissile =>
+                Level100DestructionEffectKind.MicroMissileImpact,
+            _ => throw new InvalidDataException(
+                $"Projectile {projectile.Id} has unsupported impact kind " +
+                $"{projectile.Kind}."),
+        };
+        if (projectile.Dying)
+        {
+            // A dying round still meets things, but its own Hit (slot 39,
+            // 0x004d8ae0) returns at 0x004d8af7 while the dying bit is set: no
+            // damage, no impact explosion, no death. Only the struck thing's
+            // script hit notification remains (the RE lane's "No hit while
+            // dying").
+            if (_level100Destruction.TryReportDyingRoundContact(start, end, projectile.ContactRadiusMillimeters))
             {
                 DrainAndDispatchLevel100ActorFacts();
             }
-
-            if (hit || projectile.RemainingTicks <= 0)
-            {
-                _projectiles.RemoveAt(projectileIndex);
-            }
+            return false;
         }
+
+        // Only Medium retains the older fixed second damage stage.
+        // Large applies its configured direct amount through the common
+        // sweep; a spatial blast cannot be replaced with another fixed 4.
+        bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
+            ? _level100Destruction.TryApplyPulseSweep(start, end, out _, _retailEventFrameCount)
+            : _level100Destruction.TryApplyRoundSweep(
+                start,
+                end,
+                projectile.ContactRadiusMillimeters,
+                projectile.DamageBits,
+                impactEffectKind,
+                out _,
+                _retailEventFrameCount);
+        if (hit)
+        {
+            DrainAndDispatchLevel100ActorFacts();
+        }
+
+        return hit;
+    }
+
+    /// <summary>
+    /// A round's per-tick displacement along (yaw, pitch), in the same fixed
+    /// arithmetic <see cref="LaunchWalkerRound"/> uses.
+    /// </summary>
+    private static (SimVector2 Velocity, int Vertical) VelocityFromAngles(
+        int yawMicroRad,
+        int pitchMicroRad,
+        int speedPerTick)
+    {
+        (int sin, int cos) = FixedSinCos(yawMicroRad);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRad);
+        int horizontal = DivideRoundNearest((long)pitchCos * speedPerTick, FixedTrigScale);
+        return (
+            new SimVector2(
+                DivideRoundNearest(-(long)sin * horizontal, FixedTrigScale),
+                DivideRoundNearest((long)cos * horizontal, FixedTrigScale)),
+            DivideRoundNearest(-(long)pitchSin * speedPerTick, FixedTrigScale));
     }
 
     private void ResetDynamicState()
     {
         _retailEventFrameCount = 0;
         _nextProjectileId = 1;
-        _reticleLaunchAnglesTick = int.MinValue;
         _mode = VehicleMode.Walker;
         _transition = VehicleTransition.None;
         SimVector2 initialPosition = SimVector2.Zero;
@@ -4099,7 +4202,8 @@ public sealed class Simulation
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
         _twinVulcanReloadTicksRemaining = 0;
-        _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
+        // The pan starts when the pre-run ends (RunPreRun).
+        _level100OpeningTicksRemaining = 0;
         // A configured weapon starts ACTIVE.
         //
         // CORRECTION, recorded here because a commit message cannot be edited:
@@ -4168,9 +4272,13 @@ public sealed class Simulation
         _jetMovedThisTick = false;
         _projectiles.Clear();
         _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        // The Battle Engine is built inline by level-world row 0, so its
+        // 6002/6003 draws come at that point of the load, after the base world.
+        ResetBattleEngineTargeting();
         _level100ActorMechanics = new Level100ActorMechanics(
             _level100Actors,
-            _level100ActorDefinitions);
+            _level100ActorDefinitions,
+            InitializeBattleEngineRefreshEvents);
         _level100Destruction = new Level100DestructionRuntime(_level100Actors);
         _level100PlayerActorId = _level100Actors.GetThingRef("Player 1") ??
             throw new InvalidOperationException("Level 100 Player is missing.");
@@ -4189,7 +4297,9 @@ public sealed class Simulation
             _level100PlayerActorId,
             RegisterSpawnedLevel100Actor,
             () => BitConverter.SingleToInt32Bits(EngineTimeSeconds));
-        _level100ActorScripts.InitializeReleasedScripts();
+        // Scripts are bound now and run their init() when the pre-run's first
+        // flush delivers each INIT_SCRIPT the load filed.
+        _level100ActorScripts.AttachReleasedScripts(_level100ActorMechanics.FileScriptInit);
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
         _level100Mission = new Level100Mission(
@@ -4197,9 +4307,49 @@ public sealed class Simulation
             _level100PlayerActorId,
             _level100TutorialProgress,
             PlayerHull,
-            _worldNumber);
+            _worldNumber,
+            runInit: false);
         SyncLevel100PlayerState();
         PumpLevel100EventBus();
+        LoadSnapshotForMeasurement = CreateSnapshot();
+        RunPreRun();
+    }
+
+    /// <summary>
+    /// The state at the end of the load, before the pre-run's frames: an
+    /// internal measurement receipt for construction tests, not snapshot,
+    /// replay or state-hash material.
+    /// </summary>
+    internal WorldSnapshot? LoadSnapshotForMeasurement { get; private set; }
+
+    /// <summary>
+    /// <c>CGame::PreRun</c> (<c>game.cpp:2063-2071</c>): whole updates, with
+    /// nothing rendered and no player input, from frame 1 until frame 60's
+    /// flush delivers FINISHED_PRE_RUN (filed at now + 3.0 before the load,
+    /// <c>game.cpp:371-373</c>) and <c>CGame::StartPanState</c> starts the pan.
+    /// Level construction includes them, so tick 0 is retail frame 60 and
+    /// the first tick's update is frame 61. What the frames report (mission
+    /// events, script commands, flight and weapon logs) is kept for the first
+    /// tick, as retail shows it once the visuals start.
+    /// </summary>
+    private void RunPreRun()
+    {
+        var missionEvents = new List<Level100MissionEvent>(_level100MissionEvents);
+        var scriptCommands = new List<Level100ActorScriptCommand>(_level100ActorScriptCommands);
+        for (int frame = 0; frame < SimulationConstants.Level100PreRunTicks; frame++)
+        {
+            AdvanceFrame(SimInput.Idle, level100Facts: null);
+            missionEvents.AddRange(_level100MissionEvents);
+            scriptCommands.AddRange(_level100ActorScriptCommands);
+        }
+
+        _level100MissionEvents.Clear();
+        _level100MissionEvents.AddRange(missionEvents);
+        _level100ActorScriptCommands.Clear();
+        _level100ActorScriptCommands.AddRange(scriptCommands);
+        // FINISHED_PRE_RUN -> CGame::StartPanState: FINISHED_PANNING files at
+        // now + the world's pan length, so the pan ends on frame 60 + its ticks.
+        _level100OpeningTicksRemaining = SimulationConstants.OpeningPanTicks(_worldNumber);
     }
 
     private WorldSnapshot CreateSnapshot()
@@ -4220,7 +4370,16 @@ public sealed class Simulation
                 projectile.Velocity,
                 projectile.ElevationMillimeters,
                 projectile.VerticalVelocityMillimetersPerTick,
-                projectile.RemainingTicks))
+                projectile.RemainingTicks)
+            {
+                Seeking = projectile.Seeks
+                    ? new Level100SeekingRoundSnapshot(
+                        projectile.YawMicroRad,
+                        projectile.PitchMicroRad,
+                        projectile.LaunchTimeBits,
+                        projectile.SeekTarget)
+                    : null,
+            })
             .ToArray();
         WalkerFootContactSnapshot[] walkerFeet = _walkerFeet
             .OrderBy(foot => foot.Id)
@@ -4314,6 +4473,10 @@ public sealed class Simulation
         {
             RetailEventFrameCount = _retailEventFrameCount,
             Level100PlayerWeaponState = _level100PlayerWeapons.Snapshot,
+            Level100BattleEngineTargeting = TargetingSnapshot,
+            Level100PlayerStores = _level100PlayerWeapons.StoresSnapshot,
+            Level100BattleEngineShake = _shake.Snapshot,
+            Level100MissilePod = _level100PlayerWeapons.PodSnapshot,
         };
     }
 

@@ -10,6 +10,7 @@ public enum Level100DestructionEventKind : byte
     ActiveSubtreeBelowHalf = 3,
     Terminal = 4,
     VulcanImpact = 5,
+    MicroMissileImpact = 6,
 }
 
 public enum Level100DestructionEffectKind : byte
@@ -20,6 +21,7 @@ public enum Level100DestructionEffectKind : byte
     FacilityDestroyed = 3,
     DroneDestroyed = 4,
     VulcanImpact = 5,
+    MicroMissileImpact = 6,
 }
 
 public readonly record struct Level100DestructionEvent(
@@ -186,6 +188,21 @@ public sealed class Level100DestructionRuntime
         SynchronizeActors(requireInitialState: false);
     }
 
+    /// <summary>
+    /// Event 4000's delivery for a round that carries <c>CRoundExplode</c>: it
+    /// explodes in the air where it is (<c>0x004d9a54</c>, then
+    /// <c>0x004d9f30</c> in mode 0) and dies. Only the explosion's effect is
+    /// reported; its radius damage is not modelled.
+    /// </summary>
+    internal void ReportAirBurst(SimVector3 position, Level100DestructionEffectKind effectKind) =>
+        _events.Add(new Level100DestructionEvent(
+            Level100DestructionState.RoundImpactEventKind(effectKind),
+            effectKind,
+            0,
+            -1,
+            0,
+            ToContactVector(position)));
+
     internal void FlushStartOfFrame(uint eventFrameCount)
     {
         // CEventManager drains the selected ring bucket without comparing
@@ -309,15 +326,65 @@ public sealed class Level100DestructionRuntime
             eventFrameCount,
             out hit);
 
-    private bool TryApplyRoundSweep(
+    /// <summary>
+    /// A dying round's step (the RE lane's "No hit while dying"): the contact
+    /// still reaches both things' Hit, but the round's own Hit returns before
+    /// damage, its impact explosion and its death. Only the struck thing's
+    /// script notification remains, which <see cref="TryApplyRoundSweep(SimVector3, SimVector3, int, uint, Level100DestructionEffectKind, out Level100ContactHit, uint)"/>
+    /// reports for the same things. Returns whether the step met anything.
+    /// </summary>
+    internal bool TryReportDyingRoundContact(SimVector3 start, SimVector3 end, int contactRadiusMillimeters)
+    {
+        int contactActorCount = GatherContactActors(isCandidate: null, atRest: false);
+        if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
+                ToContactVector(start),
+                ToContactVector(end),
+                contactRadiusMillimeters,
+                _contactActors.AsSpan(0, contactActorCount),
+                out Level100ContactHit hit))
+        {
+            return false;
+        }
+
+        if (hit.ActorId != 0)
+        {
+            var actorId = new Level100ActorId(hit.ActorId);
+            if (_states.ContainsKey(hit.ActorId) || _registry.GetActor(actorId).ScriptName is not null)
+            {
+                _registry.ReportHit(actorId, otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// The crosshair's line query: <c>CWorld::FindFirstThingToHitLine</c>
+    /// (<c>0x0050b030</c>) at mesh level, which traces the heightfield first and
+    /// takes a thing only when it is not farther than the ground. The line is
+    /// instantaneous, so every candidate is presented at rest. The caller
+    /// supplies retail's candidate filter (<c>BattleEngine.cpp:2320</c> skips
+    /// the Battle Engine, trees and rounds; the query skips dying
+    /// non-buildings). The hit's time is parts per million of the line.
+    /// </summary>
+    internal bool TryFindFirstThingOnLine(
         SimVector3 start,
         SimVector3 end,
-        int contactRadiusMillimeters,
-        uint damageBits,
-        Level100DestructionEffectKind impactEffectKind,
-        bool preservePulseDamageStages,
-        uint eventFrameCount,
+        Func<Level100ActorSnapshot, Level100ContactDefinition, bool> isCandidate,
         out Level100ContactHit hit)
+    {
+        ArgumentNullException.ThrowIfNull(isCandidate);
+        int contactActorCount = GatherContactActors(isCandidate, atRest: true);
+        return Level100ContactMechanics.TrySweepRoundWithTerrain(
+            ToContactVector(start),
+            ToContactVector(end),
+            contactRadiusMillimeters: 0,
+            _contactActors.AsSpan(0, contactActorCount),
+            out hit);
+    }
+
+    private int GatherContactActors(
+        Func<Level100ActorSnapshot, Level100ContactDefinition, bool>? isCandidate,
+        bool atRest)
     {
         SynchronizeActors(requireInitialState: false);
         Level100ActorRegistrySnapshot registrySnapshot = _registry.Snapshot;
@@ -348,6 +415,10 @@ public sealed class Level100DestructionRuntime
                 throw new InvalidDataException(
                     $"Level 100 actor {actor.ActorId.Value} definition/mesh binding changed.");
             }
+            if (isCandidate is not null && !isCandidate(actor, definition))
+            {
+                continue;
+            }
 
             ReadOnlyMemory<byte> partActivity =
                 _states.TryGetValue(
@@ -359,11 +430,27 @@ public sealed class Level100DestructionRuntime
                 actor.ActorId.Value,
                 active: true,
                 ToContactTransform(actor.Pose),
-                ToContactVector(actor.Pose.LinearVelocityMillimetersPerTick),
+                atRest
+                    ? Level100Vector3.Zero
+                    : ToContactVector(actor.Pose.LinearVelocityMillimetersPerTick),
                 definition,
                 partActivity: partActivity);
         }
 
+        return contactActorCount;
+    }
+
+    private bool TryApplyRoundSweep(
+        SimVector3 start,
+        SimVector3 end,
+        int contactRadiusMillimeters,
+        uint damageBits,
+        Level100DestructionEffectKind impactEffectKind,
+        bool preservePulseDamageStages,
+        uint eventFrameCount,
+        out Level100ContactHit hit)
+    {
+        int contactActorCount = GatherContactActors(isCandidate: null, atRest: false);
         if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
                 ToContactVector(start),
                 ToContactVector(end),
@@ -621,13 +708,15 @@ public sealed class Level100DestructionState
     /// </summary>
     public const uint PulseDamageBits = 0x3FE66666;
     /// <summary>
-    /// Legacy Mech Bullet approximation: configured direct damage <c>0.08</c>
-    /// plus explosion maximum <c>0.001</c>. The round/explosion contract
-    /// requires separate spatial eligibility and falloff; Pulse observations
-    /// do not prove a fixed combined Mech Bullet amount. This remains pending
-    /// the shared explosion resolver, even where existing tutorial tests pass.
+    /// The Mech Bullet round's direct damage, 0.08 (field 2 of round
+    /// "Mech Bullet", <c>default physics.dat</c>). Its "Mech Bullet Hit"
+    /// explosion adds nothing: its damage, 0.001 (<c>0x3a83126f</c>), is at or
+    /// below the double 0.0015 that <c>CExplosion::Init</c> compares
+    /// (<c>0x0044b9e8-0x0044ba02</c>, pristine <c>74154bfa…</c>), so its
+    /// collision mask becomes −1 and the filter at <c>0x00426900</c> never
+    /// lets it touch anything.
     /// </summary>
-    public const uint MechBulletDamageBits = 0x3DA5E354;
+    public const uint MechBulletDamageBits = 0x3DA3D70A;
     // The admitted Warehouse has 28 parts. Reserve one detach per part plus
     // impact, direct damage and the two existing threshold/terminal projections.
     public const int MaximumEventsPerHit = 28 + 4;
@@ -853,27 +942,29 @@ public sealed class Level100DestructionState
 
     internal static Level100DestructionEvent CreateRoundImpactEvent(
         in Level100ContactHit hit,
-        Level100DestructionEffectKind effectKind)
-    {
-        Level100DestructionEventKind eventKind = effectKind switch
-        {
-            Level100DestructionEffectKind.PulseImpact =>
-                Level100DestructionEventKind.PulseImpact,
-            Level100DestructionEffectKind.VulcanImpact =>
-                Level100DestructionEventKind.VulcanImpact,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(effectKind),
-                effectKind,
-                "A round contact requires a released impact effect."),
-        };
-        return new Level100DestructionEvent(
-            eventKind,
+        Level100DestructionEffectKind effectKind) =>
+        new(
+            RoundImpactEventKind(effectKind),
             effectKind,
             hit.ActorId,
             hit.PartIndex,
             0,
             hit.SurfacePoint);
-    }
+
+    internal static Level100DestructionEventKind RoundImpactEventKind(
+        Level100DestructionEffectKind effectKind) => effectKind switch
+        {
+            Level100DestructionEffectKind.PulseImpact =>
+                Level100DestructionEventKind.PulseImpact,
+            Level100DestructionEffectKind.VulcanImpact =>
+                Level100DestructionEventKind.VulcanImpact,
+            Level100DestructionEffectKind.MicroMissileImpact =>
+                Level100DestructionEventKind.MicroMissileImpact,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(effectKind),
+                effectKind,
+                "A round contact requires a released impact effect."),
+        };
 
     public Level100DestructionSnapshot CaptureSnapshot()
     {

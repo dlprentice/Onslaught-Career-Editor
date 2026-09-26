@@ -18,11 +18,9 @@ public sealed record Level100ActorCommandIntentSnapshot(
     Level100ActorCommandIntent Intent,
     Level100ActorId? TargetActorId,
     string? WaypointPath,
-    // How far along the path's AUTHORED TRAVERSAL CHAIN the follower is - an
-    // index into Level100WaypointPathDefinition.TargetChainNodeIndices, NOT
-    // into Points. The two orders differ on six of the eight Level 100 paths.
-    // Resolve it with Level100WaypointPathDefinition.ChainPoint.
-    int WaypointPointIndex,
+    // The level row of the node the follower is steering at; the next one is
+    // that node's own target (Level100WaypointPathDefinition).
+    int? WaypointNodeIndex,
     int WaypointCommandScalar,
     bool WaitForWaypointCompletion,
     int GroundFullGuideBaseTickPhase)
@@ -40,6 +38,9 @@ public sealed record Level100ActorMechanicsSnapshot(
     IReadOnlyList<Level100ActorRoundSnapshot> ActorRounds)
 {
     public RetailEventSchedulerSnapshot? PlaneEvents { get; init; }
+
+    /// <summary>Every constructed unit's callback state, by actor.</summary>
+    public IReadOnlyList<Level100UnitCallbackSnapshot>? UnitCallbacks { get; init; }
 }
 
 public sealed record Level100ActorMechanicsWaitCompletion(
@@ -98,7 +99,7 @@ public sealed partial class Level100ActorMechanics
         internal Level100ActorCommandIntent Intent { get; set; }
         internal Level100ActorId? TargetActorId { get; set; }
         internal string? WaypointPath { get; set; }
-        internal int WaypointPointIndex { get; set; }
+        internal int? WaypointNodeIndex { get; set; }
         internal int WaypointCommandScalar { get; set; }
         internal bool WaitForWaypointCompletion { get; set; }
         internal int GroundFullGuideBaseTickPhase { get; set; }
@@ -108,29 +109,68 @@ public sealed partial class Level100ActorMechanics
 
     private readonly Level100ActorRegistry _actors;
     private readonly Level100ActorDefinitionSet _definitions;
+    private readonly Dictionary<string, Level100WaypointPathDefinition> _waypointPaths;
     private readonly SortedDictionary<int, ActorState> _states = [];
     private long _lastConsumedCommandSequence;
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
-        Level100ActorDefinitionSet definitions) : this(actors, definitions, initializePlanes: true)
+        Level100ActorDefinitionSet definitions) : this(actors, definitions, construct: true)
     {
     }
 
+    /// <summary>
+    /// Constructs the level with the Battle Engine's own 6002/6003 draws
+    /// supplied by its owner, at the Battle Engine's place in the load order.
+    /// </summary>
+    internal Level100ActorMechanics(
+        Level100ActorRegistry actors,
+        Level100ActorDefinitionSet definitions,
+        Action<RetailEventScheduler, Func<int>> battleEngineRefresh) : this(actors, definitions, construct: false)
+    {
+        ArgumentNullException.ThrowIfNull(battleEngineRefresh);
+        ConstructLevel(battleEngineRefresh);
+    }
+
     private Level100ActorMechanics(Level100ActorRegistry actors,
-        Level100ActorDefinitionSet definitions, bool initializePlanes)
+        Level100ActorDefinitionSet definitions, bool construct)
     {
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
         ValidateDefinitionIdentity();
-        if (initializePlanes) InitializePlanes();
+        _waypointPaths = _definitions.WaypointPaths.ToDictionary(
+            path => path.Name, SeatWaypoints, StringComparer.Ordinal);
+        if (construct) ConstructLevel(null);
     }
+
+    /// <summary>
+    /// A path with its waypoints at the height they take at load: raised to
+    /// the ground, then to the water, when below them. Only z changes; a
+    /// third sample in <c>CWaypoint::InitAndLink</c> (<c>0x005057d4</c>)
+    /// cannot change it again (<c>waypoint-paths.md</c>, "Loading").
+    /// </summary>
+    private Level100WaypointPathDefinition SeatWaypoints(Level100WaypointPathDefinition path) =>
+        path with
+        {
+            Points = Array.AsReadOnly(path.Points.Select(point =>
+            {
+                Level100FloatVector4Bits authored = point.RetailComponentsFloatBits;
+                Level100FloatVector3Bits seated =
+                    _actors.SeatRetailPosition(new(authored.X, authored.Y, authored.Z));
+                return point with { RetailComponentsFloatBits = authored with { Z = seated.Z } };
+            }).ToArray()),
+        };
+
+    private Level100WaypointPathDefinition GetWaypointPath(string name) =>
+        _waypointPaths.TryGetValue(name, out Level100WaypointPathDefinition? path)
+            ? path
+            : throw new KeyNotFoundException($"Waypoint path '{name}' does not exist.");
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
         Level100ActorDefinitionSet definitions,
         Level100ActorMechanicsSnapshot snapshot)
-        : this(actors, definitions, initializePlanes: false)
+        : this(actors, definitions, construct: false)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(snapshot.Actors);
@@ -158,6 +198,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         RestoreArmament(snapshot);
+        RestoreUnitCallbacks(snapshot);
         RestorePlaneEvents(snapshot);
     }
 
@@ -167,7 +208,11 @@ public sealed partial class Level100ActorMechanics
         _releasedRandom.Seed,
         _nextActorRoundId,
         SnapshotActorWeapons(),
-        SnapshotActorRounds()) { PlaneEvents = _planeEvents?.Snapshot };
+        SnapshotActorRounds())
+    {
+        PlaneEvents = _planeEvents?.Snapshot,
+        UnitCallbacks = _unitCallbacks.Count == 0 ? null : UnitCallbackSnapshots,
+    };
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>
         kind is
@@ -201,16 +246,31 @@ public sealed partial class Level100ActorMechanics
         Action<Level100ActorId>? startPlaneDeath = null)
     {
         _planeEvents?.AdvanceTime();
-        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
+        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, null);
     }
 
+    /// <param name="cameraPosition">
+    /// Player 0's current camera position, which each unit's 4003 compares
+    /// with its own. Core has no pan camera, so the caller supplies the Battle
+    /// Engine's position, which is exactly the first-person camera's.
+    /// </param>
     internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount,
         Action<Level100ActorId>? dispatchReady = null,
-        Action<Level100ActorId>? startPlaneDeath = null)
+        Action<Level100ActorId>? startPlaneDeath = null,
+        Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent = null,
+        SimVector3? cameraPosition = null)
     {
         if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
             throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
-        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
+        _cameraPosition = cameraPosition;
+        try
+        {
+            return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, battleEngineEvent);
+        }
+        finally
+        {
+            _cameraPosition = null;
+        }
     }
 
     private void ConsumeCommand(
@@ -272,11 +332,13 @@ public sealed partial class Level100ActorMechanics
     }
 
     private IReadOnlyList<Level100ActorMechanicsWaitCompletion>
-        AdvanceRetailBaseTick(Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath)
+        AdvanceRetailBaseTick(Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath,
+            Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent)
     {
         var completions = new List<Level100ActorMechanicsWaitCompletion>();
         InvalidatePlaneReferences();
-        _planeEvents?.Flush((events, item) => DispatchPlaneEvent(events, item, dispatchReady, startPlaneDeath));
+        _planeEvents?.Flush((events, item) =>
+            DispatchPlaneEvent(events, item, dispatchReady, startPlaneDeath, battleEngineEvent));
         foreach (ActorState state in _states.Values)
         {
             Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);
@@ -285,14 +347,21 @@ public sealed partial class Level100ActorMechanics
             if (motion?.MotionClass ==
                 Level100ActorMotionClass.GroundVehicle)
             {
+                // The Actor's MOVE/LF_MOVE cadence runs every frame from the
+                // frame after construction, active or not, until the unit is
+                // deleted; what a Move does depends on the unit's state.
+                if (actor.Lifecycle == Level100ActorLifecycle.Destroyed ||
+                    ConstructedThisFrame(state.ActorId))
+                {
+                    continue;
+                }
+
+                bool fullGuideUpdate = state.GroundFullGuideBaseTickPhase == 0;
+                state.GroundFullGuideBaseTickPhase =
+                    (state.GroundFullGuideBaseTickPhase + 1) % motion.FullGuideBaseTicks!.Value;
                 if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown ||
                     (actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive))
                 {
-                    bool fullGuideUpdate =
-                        state.GroundFullGuideBaseTickPhase == 0;
-                    state.GroundFullGuideBaseTickPhase =
-                        (state.GroundFullGuideBaseTickPhase + 1) %
-                        motion.FullGuideBaseTicks!.Value;
                     if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown)
                     {
                         AdvanceDyingGroundVehicle(state, motion, fullGuideUpdate);
@@ -330,12 +399,9 @@ public sealed partial class Level100ActorMechanics
             ObserveWaypointArrival(state, actor, motion, completions);
         }
 
-        // Released ordering inside one base tick is: things move, then rounds
-        // move (CRound vtable slot 66), then weapons that are due spawn new
-        // rounds. Advancing live rounds before this tick's launches is what
-        // stops a round from travelling on the tick it is created, which is
-        // what retail's event-scheduled creation also produces.
-        AdvanceActorRounds();
+        // Rounds move on their own MOVE events inside the flush above. A round
+        // these weapons launch files its first MOVE into the current bucket,
+        // so it first moves in the next frame.
         AdvanceActorWeapons();
 
         return Array.AsReadOnly(completions.ToArray());
@@ -446,9 +512,9 @@ public sealed partial class Level100ActorMechanics
         Level100ActorPoseSnapshot pose)
     {
         Level100WaypointPathDefinition path =
-            _definitions.GetWaypointPath(state.WaypointPath!);
+            GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.ChainPoint(state.WaypointPointIndex);
+            path.Point(state.WaypointNodeIndex!.Value);
         long deltaX =
             (long)point.PositionMillimeters.X -
             pose.PositionMillimeters.X;
@@ -498,9 +564,9 @@ public sealed partial class Level100ActorMechanics
         Level100ActorPoseSnapshot pose)
     {
         Level100WaypointPathDefinition path =
-            _definitions.GetWaypointPath(state.WaypointPath!);
+            GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.ChainPoint(state.WaypointPointIndex);
+            path.Point(state.WaypointNodeIndex!.Value);
         long deltaX =
             (long)point.PositionMillimeters.X -
             pose.PositionMillimeters.X;
@@ -543,9 +609,9 @@ public sealed partial class Level100ActorMechanics
         List<Level100ActorMechanicsWaitCompletion> completions)
     {
         Level100WaypointPathDefinition path =
-            _definitions.GetWaypointPath(state.WaypointPath!);
+            GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.ChainPoint(state.WaypointPointIndex);
+            path.Point(state.WaypointNodeIndex!.Value);
         long deltaX =
             (long)point.PositionMillimeters.X -
             actor.Pose.PositionMillimeters.X;
@@ -559,31 +625,29 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
-        if (++state.WaypointPointIndex < path.TargetChainNodeIndices.Count)
+        // On arrival the next node is the waypoint's own target
+        // (UpdateWaypointFollowing 0x00538470, `mov ecx,[eax+0x3c]` at
+        // 0x005384dc). A chain that loops never ends; one that targets itself
+        // logs an error and ends the walk.
+        if (point.TargetNodeIndex is { } next && next != point.NodeIndex)
         {
+            state.WaypointNodeIndex = next;
             SetPlaneWaypointDestination(state);
             return;
         }
 
-        // A closed chain has no end. Retail's cursor is a pointer that it
-        // replaces with the current waypoint's own successor
-        // (CScriptEventNB::UpdateWaypointFollowing 0x00538470,
-        // `mov ecx,[eax+0x3c]` / `mov [esi+0x14],ecx`), and it stops only when
-        // that successor is NULL. When the tail points back at the head there
-        // is no NULL to reach, so the walk restarts at the head and the
-        // FollowWaypointWait completion below never fires - which is the
-        // shipped behaviour of the two Level 100 paths whose chains close.
-        if (path.IsClosed)
-        {
-            state.WaypointPointIndex = 0;
-            SetPlaneWaypointDestination(state);
-            return;
-        }
-
+        // With no next node the unit's slot 64 runs and the script resumes
+        // (waypoint-paths.md, "Following"). A CDropship's slot 64 is a bare
+        // `ret` (0x00459990): it keeps its last goal and its velocity. A
+        // CPlane resets its guide (0x00422750 -> 0x0047e3d0) and a ground
+        // vehicle also stops (0x004fcf00); ZeroActorVelocity is both.
         bool waited = state.WaitForWaypointCompletion;
         string completedPath = state.WaypointPath!;
         SetStoppedIntent(state);
-        ZeroActorVelocity(state.ActorId);
+        if (motion.MotionClass != Level100ActorMotionClass.Dropship)
+        {
+            ZeroActorVelocity(state.ActorId);
+        }
         if (waited)
         {
             completions.Add(new Level100ActorMechanicsWaitCompletion(
@@ -599,15 +663,23 @@ public sealed partial class Level100ActorMechanics
         string pathName = command.Argument ??
             throw new InvalidOperationException(
                 "Released waypoint command has no path.");
-        _ = _definitions.GetWaypointPath(pathName);
+        Level100WaypointPathDefinition path = GetWaypointPath(pathName);
         Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);
         _ = _definitions.FindMotionDefinition(actor.DefinitionName) ??
             throw new InvalidOperationException(
                 $"Released waypoint actor {actor.ActorId} has no class motion definition.");
+        // FollowWaypointWait (0x00537e40) starts at the node nearest the
+        // unit's own position (0x00505c30), not at the list's first node.
+        Level100FloatVector3Bits position =
+            _actors.GetBaseState(state.ActorId).RetailPoses?.Current.PositionFloatBits ??
+            RetailPositionFromProjection(actor.Pose.PositionMillimeters);
+        Level100WaypointPointDefinition start = path.NearestPoint(position) ??
+            throw new NotSupportedException(
+                $"No node of waypoint path '{pathName}' is within reach of actor {actor.ActorId}.");
         state.Intent = Level100ActorCommandIntent.FollowingWaypoint;
         state.TargetActorId = null;
         state.WaypointPath = pathName;
-        state.WaypointPointIndex = 0;
+        state.WaypointNodeIndex = start.NodeIndex;
         // The released command scalar is canonical replay state, but its
         // actor-specific movement meaning is not established by this slice.
         state.WaypointCommandScalar = command.Scalar;
@@ -694,7 +766,7 @@ public sealed partial class Level100ActorMechanics
     private static void ClearWaypoint(ActorState state)
     {
         state.WaypointPath = null;
-        state.WaypointPointIndex = 0;
+        state.WaypointNodeIndex = null;
         state.WaypointCommandScalar = 0;
         state.WaitForWaypointCompletion = false;
     }
@@ -728,7 +800,6 @@ public sealed partial class Level100ActorMechanics
         ValidatePlaneGuide(source);
         if (source.ActorId.Value <= 0 ||
             !Enum.IsDefined(source.Intent) ||
-            source.WaypointPointIndex < 0 ||
             !validGroundPhase)
         {
             throw new ArgumentException(
@@ -748,8 +819,8 @@ public sealed partial class Level100ActorMechanics
                     nameof(snapshot));
             }
             Level100WaypointPathDefinition path =
-                _definitions.GetWaypointPath(source.WaypointPath);
-            if (source.WaypointPointIndex >= path.TargetChainNodeIndices.Count)
+                GetWaypointPath(source.WaypointPath);
+            if (source.WaypointNodeIndex is not { } node || !path.HasNode(node))
             {
                 throw new ArgumentException(
                     "Level 100 actor mechanics snapshot has invalid waypoint progress.",
@@ -759,7 +830,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         if (source.WaypointPath is not null ||
-            source.WaypointPointIndex != 0 ||
+            source.WaypointNodeIndex is not null ||
             source.WaypointCommandScalar != 0 ||
             source.WaitForWaypointCompletion)
         {
@@ -796,7 +867,7 @@ public sealed partial class Level100ActorMechanics
             state.Intent,
             state.TargetActorId,
             state.WaypointPath,
-            state.WaypointPointIndex,
+            state.WaypointNodeIndex,
             state.WaypointCommandScalar,
             state.WaitForWaypointCompletion,
             state.GroundFullGuideBaseTickPhase)
@@ -812,7 +883,7 @@ public sealed partial class Level100ActorMechanics
             Intent = source.Intent,
             TargetActorId = source.TargetActorId,
             WaypointPath = source.WaypointPath,
-            WaypointPointIndex = source.WaypointPointIndex,
+            WaypointNodeIndex = source.WaypointNodeIndex,
             WaypointCommandScalar = source.WaypointCommandScalar,
             WaitForWaypointCompletion =
                 source.WaitForWaypointCompletion,

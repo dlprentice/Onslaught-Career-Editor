@@ -175,7 +175,15 @@ internal sealed record Level100ActorRoundData(
     int TurnRateMicroRadians,
     int SeekDelayBaseTicks,
     int SeekAngleMicroRadians,
-    int WiggleMicroRadians);
+    int WiggleMicroRadians)
+{
+    /// <summary>
+    /// The payload's life span in seconds, the float <c>CRound::Init</c> adds
+    /// to the event time for its 4000. Both actor rounds live whole seconds.
+    /// </summary>
+    internal float LifeSpanSeconds =>
+        LifeSpanBaseTicks / (float)Level100ActorMechanics.RetailBaseTicksPerSecond;
+}
 
 internal static class Level100ActorArmament
 {

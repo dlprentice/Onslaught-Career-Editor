@@ -318,6 +318,51 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
             game / materializer.WORLD110_LANDING_CRAFT_MESH,
             materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
 
+    def test_real110_static_world_reproduces_its_pin_and_the_construction_contract(self) -> None:
+        data = materializer._world110_static_world_bytes(self.raw_world, self.physics)
+        self.assertEqual(materializer.WORLD110_STATIC_WORLD_SHA256, materializer._sha256(data))
+        self.assertEqual(data, materializer._world110_static_world_bytes(self.raw_world, self.physics))
+        self.assertIn((materializer.LEVEL110_STATIC_WORLD, materializer.WORLD110_STATIC_WORLD_SHA256),
+                      materializer._fixed_outputs())
+        document = json.loads(data)
+        self.assertEqual(("onslaught.world110-static-world.v1", 110),
+                         (document["schema"], document["worldNumber"]))
+        actors = {actor["definitionIdentity"]: actor for actor in document["actorDefinitions"]}
+        self.assertEqual(72, len(actors))
+        # The shared base world reads exactly as Level 100's.
+        base100, _ = materializer._parse_static_world_inputs(self.raw100)
+        self.assertEqual(
+            [(f"wres:bswd:{int(item['ordinal']):04d}", item["name"], item["definition"]) for item in base100],
+            [(identity, actor["name"], actor["definitionName"])
+             for identity, actor in actors.items() if identity.startswith("wres:bswd:")])
+        self.assertEqual(150_000, actors["wres:bswd:0013"]["initialHealth"])
+        self.assertEqual(("Player 1", "BattleEngine", 8),
+                         (actors["wres:rlwd:0001"]["name"], actors["wres:rlwd:0001"]["definitionName"],
+                          actors["wres:rlwd:0001"]["thingTypeMask"]))
+        self.assertFalse(actors["wres:rlwd:0005"]["active"])
+        squads = {squad["definitionIdentity"]: squad for squad in document["squads"]}
+        self.assertEqual({14: 5, 16: 5, 17: 3, 18: 5, 19: 4},
+                         {int(identity[-4:]): len(squad["memberIdentities"]) for identity, squad in squads.items()})
+        self.assertEqual({14: 1, 16: 1, 17: 0, 18: 1, 19: 0},
+                         {int(identity[-4:]): squad["allegiance"] for identity, squad in squads.items()})
+        self.assertEqual("Scout", squads["wres:rlwd:0019"]["scriptName"])
+        self.assertTrue(all(actors[member]["scriptName"] is None
+                            for squad in squads.values() for member in squad["memberIdentities"]))
+        self.assertEqual(["wres:rlwd:0008", "wres:rlwd:0012", "wres:rlwd:0013", "wres:rlwd:0020"],
+                         [component["parentIdentity"] for component in document["components"]])
+        paths = {path["name"]: path for path in document["waypointPaths"]}
+        lander = paths["Lander Path 1"]
+        self.assertEqual([8], lander["droppedNodeIndices"])
+        targets = {point["nodeIndex"]: point["targetNodeIndex"] for point in lander["points"]}
+        self.assertEqual((11, 15, None), (targets[10], targets[11], targets[15]))
+        self.assertEqual((22, 24, None), (targets[21], targets[22], targets[24]))
+        self.assertEqual([25], paths["Fighter Path 1"]["droppedNodeIndices"])
+        self.assertEqual([5], paths["Fighter Path 2"]["droppedNodeIndices"])
+        self.assertEqual(0x40000000, document["settings"]["panLengthFloatBits"])
+        self.assertEqual({"Dropship", "GroundVehicle", "Plane"},
+                         {row["motionClass"] for row in document["motionDefinitions"]})
+        self.assertEqual(1_481, document["pineInstanceCount"])
+
     def test_real110_player_inputs_use_rlwd_names_and_exact_configuration_fields(self) -> None:
         data = materializer._world110_player_input_bytes(self.raw_world, self.configurations)
         self.assertEqual(materializer.WORLD110_PLAYER_INPUTS_SHA256, materializer._sha256(data))
@@ -947,6 +992,30 @@ class CanonicalAssetReuseTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "refusing to replace"):
                     materializer._reuse_canonical_assets()
                 self.assertEqual(b"unique", destination.read_bytes())
+
+
+    def test_keeps_an_exact_local_output_the_canonical_checkout_has_not_published(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            canonical = Path(temporary) / "canonical"
+            child = Path(temporary) / "child"
+            canonical.mkdir()
+            destination = child / "assets/new"
+            destination.parent.mkdir(parents=True)
+            destination.write_bytes(b"pinned")
+            outputs = ((Path("assets/new"), materializer._sha256(b"pinned")),)
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer, "_canonical_repository_root", return_value=canonical),
+                mock.patch.object(materializer, "_all_outputs", return_value=outputs),
+                mock.patch.dict(os.environ, {"BEA_LOCAL_LAB": ""}),
+            ):
+                self.assertEqual(1, materializer._reuse_canonical_assets())
+                self.assertFalse(destination.is_symlink())
+                self.assertEqual(b"pinned", destination.read_bytes())
+                destination.write_bytes(b"other")
+                with self.assertRaisesRegex(RuntimeError, "canonical input is missing"):
+                    materializer._reuse_canonical_assets()
+                self.assertEqual(b"other", destination.read_bytes())
 
 
 class WorkRootRoutingTests(unittest.TestCase):

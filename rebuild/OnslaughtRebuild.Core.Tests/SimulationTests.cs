@@ -32,7 +32,9 @@ public sealed class SimulationTests
     }
 
     /// <summary>
-    /// The living Plane's raw state, guide and callbacks select schema 47.
+    /// The living Plane's raw state, guide and callbacks select schema 47;
+    /// the Battle Engine's retained crosshair report then selects 49, and
+    /// the unit callbacks of a world built in the retail load order 52.
     /// Legacy mission-only envelopes still select schema 43 and bind all
     /// ten secondary slots; changing the native-88 text dword must therefore
     /// change the world hash even when every older field is equal.
@@ -71,14 +73,14 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("5a71982008e1a30f1684030e562fd45580cde149a3bcd3c3a4649201d4bb2750",
+        Assert.Equal("aebeceb53df8c45f77370e82220ce3679512884d480154625340796f0364d3ed",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8",
+        Assert.Equal("d19b7cbc8a527d77ba438dc7aa9fa2718fdbacb7aa2be4a2bd7f58e4cc2d2aa5",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d",
+        Assert.True(hash == "ea2000d20a4e845544afab24e6a0919ae19d6fecee99e97859996df6464cb179",
             $"Canonical state hash: {hash}");
-        Assert.Equal(47, CanonicalSchemaVersion(rootState));
+        Assert.Equal(52, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
         var world110 = new Level100Mission(actors, actors.GetThingRef("Player 1")!.Value,
@@ -120,33 +122,120 @@ public sealed class SimulationTests
     [Fact]
     public void RetailEventClock_UsesStoredFloatMultiplierAndRestartsWithoutRewindingReplay()
     {
+        // Construction includes the 3.0 s pre-run: frames 1-60.
         var simulation = new Simulation(
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
-        Assert.Equal(0u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(60u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(60, simulation.Snapshot.Level100Mission.Tick);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
-        for (int tick = 0; tick < 9; tick++)
+        for (int tick = 0; tick < 2; tick++)
             simulation.Step(SimInput.Idle);
 
         // Pristine 0x0044B624/0x0044B62A/0x0044B630: zero-extended integer
         // FILD, multiply stored 0x3D4CCCCD, one FSTP dword. Division by 20
-        // instead produces 0x3EE66666 here; repeated addition also diverges.
-        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0x3ee66667u,
+        // instead produces 0x40466666 at frame 62, and repeated addition
+        // 0x4046665F.
+        Assert.Equal(62u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x40466667u,
             BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
-        Assert.Equal(10, reset.Tick);
-        Assert.Equal(0, reset.Level100Mission.Tick);
-        Assert.Equal(0u, reset.RetailEventFrameCount);
-        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(3, reset.Tick);
+        Assert.Equal(60, reset.Level100Mission.Tick);
+        Assert.Equal(60u, reset.RetailEventFrameCount);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
-        for (int tick = 0; tick < 9; tick++)
+        for (int tick = 0; tick < 2; tick++)
             simulation.Step(SimInput.Idle);
-        Assert.Equal(19, simulation.Snapshot.Tick);
-        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0x3ee66667u,
+        Assert.Equal(5, simulation.Snapshot.Tick);
+        Assert.Equal(62u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x40466667u,
             BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+    }
+
+    /// <summary>
+    /// <c>CGame::PreRun</c> (<c>game.cpp:2063-2071</c>): the load files
+    /// FINISHED_PRE_RUN at now + 3.0, and whole updates run unrendered until
+    /// frame 60's flush delivers it and starts the pan, which FINISHED_PANNING
+    /// ends on frame 180 (the RE lane's construction-order contract, "Pre-run,
+    /// pan and the first rendered frame"). Tick 0 is frame 60.
+    /// </summary>
+    [Fact]
+    public void Construction_RunsTheThreeSecondPreRunBeforeThePan()
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
+        WorldSnapshot load = simulation.LoadSnapshotForMeasurement!;
+        WorldSnapshot start = simulation.Snapshot;
+        Assert.Equal(0u, load.RetailEventFrameCount);
+        Assert.Equal(0, load.Level100Mission.Tick);
+
+        // Sixty whole frames: both clocks, and the world's draws.
+        Assert.Equal(0, start.Tick);
+        Assert.Equal(60u, start.RetailEventFrameCount);
+        Assert.Equal(60, start.Level100Mission.Tick);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.NotEqual(load.Level100ActorMechanics.ReleasedRandomSeed, start.Level100ActorMechanics.ReleasedRandomSeed);
+
+        // The pan starts with the pre-run's end and runs its full six seconds.
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks, start.Level100OpeningTicksRemaining);
+        Assert.Equal(181, start.Level100Mission.MessageBoxAllowedTick);
+        WorldSnapshot state = start;
+        for (int tick = 1; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            Assert.True(state.Level100OpeningTicksRemaining > 0);
+        }
+
+        state = simulation.Step(SimInput.Idle);
+        Assert.Equal(0, state.Level100OpeningTicksRemaining);
+        Assert.Equal(180u, state.RetailEventFrameCount);
+
+        // What the load and the pre-run reported reaches the first tick: the
+        // cold career's LevelScript deactivated the player.
+        Assert.Contains(start.Level100MissionEvents, item => item is Level100PlayerActivationChanged { Active: false });
+    }
+
+    /// <summary>
+    /// Scripts start on their INIT_SCRIPT events (the RE lane's construction
+    /// contract, "Scripts in the first frames"): each scripted row files its
+    /// 2001 first in its construction sequence, and the LevelScript and Setup
+    /// carriers file theirs at rows 5 and 17, so the first flush runs them in
+    /// row order. Setup's SetScript bindings run a frame later, which is when
+    /// the Tank Factory spawns its first Target Tank.
+    /// </summary>
+    [Fact]
+    public void Construction_StartsEveryScriptOnItsInitScriptEvent()
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
+        WorldSnapshot load = simulation.LoadSnapshotForMeasurement!;
+        RetailEventSchedulerSnapshot events = load.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        Dictionary<Level100ActorId, Level100ActorSnapshot> actors =
+            load.Level100Actors.Actors.ToDictionary(actor => actor.ActorId);
+        string[] inits = events.Lanes.Single(lane => lane.LaneIndex == events.CurrentBufferNum * RetailEventScheduler.PriorityLanes)
+            .Handles.Select(handle => slots[handle])
+            .Where(slot => slot.EventNum == Level100ActorMechanics.InitScriptEvent &&
+                Level100ActorMechanics.IsScriptListener(slot.Listener))
+            .Select(slot => Level100ActorMechanics.IsCarrierScriptListener(slot.Listener)
+                ? $"row {Level100ActorMechanics.CarrierScriptRow(slot.Listener)}"
+                : actors[Level100ActorMechanics.ScriptListenerActor(slot.Listener)].DefinitionIdentity)
+            .ToArray();
+        Assert.Equal(
+        [
+            "row 5", "wres:rlwd:0009", "wres:rlwd:0011", "wres:rlwd:0012", "wres:rlwd:0013",
+            "wres:rlwd:0014", "wres:rlwd:0015", "wres:rlwd:0016", "row 17", "wres:rlwd:0019",
+            "wres:rlwd:0021", "wres:rlwd:0040",
+        ], inits);
+        Assert.DoesNotContain(load.Level100Actors.Actors, actor => actor.SpawnOwnerId.HasValue);
+
+        // After the pre-run: the Tank Factory's init ran on frame 2 and built
+        // its first Target Tank there.
+        WorldSnapshot start = simulation.Snapshot;
+        Level100ActorSnapshot tank = Assert.Single(start.Level100Actors.Actors, actor => actor.ScriptName == "TargetTank1");
+        Assert.Equal(2, Assert.Single(start.Level100ActorMechanics.UnitCallbacks!, unit => unit.ActorId == tank.ActorId)
+            .ConstructionFrame);
+        Assert.All(start.Level100ActorScripts.Instances, instance => Assert.True(instance.Initialized));
     }
 
     [Fact]
@@ -156,8 +245,9 @@ public sealed class SimulationTests
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
         simulation.Step(SimInput.Idle);
         WorldSnapshot baseline = Level100TestActorDefinitions.LegacyHashEnvelope(simulation.Snapshot);
-        Assert.Equal(1, baseline.Level100Mission.Tick);
-        Assert.Equal(1u, baseline.RetailEventFrameCount);
+        // The pre-run's 60 frames advance both clocks alike.
+        Assert.Equal(61, baseline.Level100Mission.Tick);
+        Assert.Equal(61u, baseline.RetailEventFrameCount);
         Assert.Equal(42, CanonicalSchemaVersion(baseline));
         string baselineHash = StateHasher.ComputeHex(baseline);
         var hashes = new HashSet<string>();
@@ -176,27 +266,47 @@ public sealed class SimulationTests
     {
         var simulation = new Simulation(
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
-        for (int tick = 0; tick < 20; tick++)
+
+        // The level clock starts after the pre-run. Find its first frame whose
+        // stamped Vulcan ready time the next frame's stored word passes, and
+        // whose next ready time the frame after lands on exactly (level time
+        // 1.0 s shows the pattern, which the pre-run now precedes).
+        static bool PassesNextFrame(uint frame, out uint readyBits)
+        {
+            var probe = new Level100PlayerWeaponRuntime();
+            probe.StampReadyAt(Level100MissionWeapon.MechVulcanCannon, RetailEventScheduler.TimeAtFrameCount(frame));
+            readyBits = probe.Snapshot.MechVulcanReadyAtTimeBits;
+            return probe.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
+                RetailEventScheduler.TimeAtFrameCount(frame + 1), out _);
+        }
+        uint first = simulation.Snapshot.RetailEventFrameCount;
+        uint frame = first;
+        while (!(PassesNextFrame(frame, out _) && !PassesNextFrame(frame + 1, out uint landing) &&
+            landing == BitConverter.SingleToUInt32Bits(RetailEventScheduler.TimeAtFrameCount(frame + 2))))
+        {
+            frame++;
+            Assert.True(frame < first + 400, "No frame passes a ready time and then lands on the next.");
+        }
+        while (simulation.Snapshot.RetailEventFrameCount < frame)
             simulation.Step(SimInput.Idle);
 
         // Compose the actual level clock with an isolated configured weapon.
-        // This is not a claim that the tutorial enables Jet input at frame 20.
+        // This is not a claim that the tutorial enables Jet input at that frame.
         var weapons = new Level100PlayerWeaponRuntime();
         weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
             simulation.EngineTimeSeconds);
-        Assert.Equal(0x3f800000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
-        Assert.Equal(0x3f866666u, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+        uint firstReady = weapons.Snapshot.MechVulcanReadyAtTimeBits;
 
         simulation.Step(SimInput.Idle);
-        Assert.Equal(0x3f866667u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.True(BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds) > firstReady);
         Assert.True(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
             simulation.EngineTimeSeconds, out _));
         weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
             simulation.EngineTimeSeconds);
-        Assert.Equal(0x3f8ccccdu, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+        uint secondReady = weapons.Snapshot.MechVulcanReadyAtTimeBits;
 
         simulation.Step(SimInput.Idle);
-        Assert.Equal(0x3f8ccccdu, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(secondReady, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
         Assert.False(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
             simulation.EngineTimeSeconds, out _));
     }
@@ -503,7 +613,10 @@ public sealed class SimulationTests
                 .OfType<Level100MessageRequested>()
                 .Select(message => message.MessageId)));
 
-        Assert.Equal(812, simulation.Snapshot.Level100Mission.Tick);
+        // Tick 812 of the session; the mission clock also counts the 60
+        // pre-run frames before the pan.
+        Assert.Equal(812, simulation.Snapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100PreRunTicks + 812, simulation.Snapshot.Level100Mission.Tick);
 
         // TUTORIAL_01 and TUTORIAL_SCANNER are both PlayCharMessage - the
         // script does not wait for them - so the objective is set before either
@@ -1284,7 +1397,7 @@ public sealed class SimulationTests
             BitConverter.SingleToInt32Bits(0.5f).ToString(
                 System.Globalization.CultureInfo.InvariantCulture),
             targetZonePause.WaitArgument);
-        Assert.Equal(10, targetZonePause.DueTick - simulation.Snapshot.Tick);
+        Assert.Equal(10, targetZonePause.DueTick - simulation.Snapshot.Level100ActorScripts.Tick);
 
         // The released Pause is 0.5 s, which is ten ticks at 20 Hz.
         for (int tick = 1; tick < 10; tick++)
@@ -1304,7 +1417,7 @@ public sealed class SimulationTests
         Level100ActorScriptContinuationSnapshot firingRangePause =
             DriveUntilTriggerPause(simulation, Level100MissionTrigger.FiringRange);
         Assert.Equal(Level100ActorScriptWaitKind.Pause, firingRangePause.WaitKind);
-        Assert.Equal(10, firingRangePause.DueTick - simulation.Snapshot.Tick);
+        Assert.Equal(10, firingRangePause.DueTick - simulation.Snapshot.Level100ActorScripts.Tick);
         for (int tick = 0; tick < 10; tick++)
         {
             simulation.Step(SimInput.Idle);
@@ -1591,7 +1704,8 @@ public sealed class SimulationTests
         Assert.Equal(paused.RetailEventFrameCount, held.RetailEventFrameCount);
         Assert.Equal(paused.Level100Mission.Tick + 1, held.Level100Mission.Tick);
         Assert.Equal(pausedTimeBits, BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds));
-        Assert.Equal(47, CanonicalSchemaVersion(held));
+        // The unit callbacks of the retail load order select schema 52.
+        Assert.Equal(52, CanonicalSchemaVersion(held));
         Assert.Equal(held.RetailEventFrameCount, held.Level100ActorMechanics.PlaneEvents!.FrameCount);
         Assert.Equal(0x3dcccb3b, MixBits(held));
 
@@ -1746,14 +1860,21 @@ public sealed class SimulationTests
     public void PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder()
     {
         Simulation pulse = CreateFiringRangeExerciseSimulation();
+        Simulation pulseTwin = CreateFiringRangeExerciseSimulation();
         int pulseSeed = pulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var pulseRandom = new Level100ReleasedRandom(pulseSeed);
-        (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(
-            pulseRandom,
-            SimulationConstants.PulseCannonInaccuracyMicroRadians);
+        // `Mech Pulse Cannon Charged` carries +0 CWeaponInaccuracy: the pair
+        // is drawn and scaled to nothing.
+        (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(pulseRandom, 0);
+        Assert.Equal((0, 0), pulseOffset);
+        // Per round the spawner then takes the round's Actor Init draw and,
+        // for a Battle Engine weapon with CWeaponPower >= 0.001, RecoilWeapon's
+        // three shake draws (Mech Pulse Cannon Charged: 0.03).
+        AdvanceAfterScatter(pulseRandom, recoil: true);
 
         WorldSnapshot pulseBefore = pulse.Snapshot;
         WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        AdvanceByEventDraws(pulseRandom, pulseTwin);
         Assert.Equal(
             pulseRandom.Seed,
             pulseShot.Level100ActorMechanics.ReleasedRandomSeed);
@@ -1764,8 +1885,12 @@ public sealed class SimulationTests
             pulseOffset);
 
         Simulation chargedPulse = CreateFiringRangeExerciseSimulation();
+        Simulation chargedTwin = CreateFiringRangeExerciseSimulation();
         for (int sample = 0; sample < 10; sample++)
+        {
             chargedPulse.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+            chargedTwin.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        }
         int chargedSeed = chargedPulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var chargedRandom = new Level100ReleasedRandom(chargedSeed);
         // The pristine scatter block calls the shared stream at 0x00506E0A
@@ -1774,41 +1899,56 @@ public sealed class SimulationTests
         // that bounded scatter stage, not every retail constructor/effect draw.
         chargedRandom.Next();
         chargedRandom.Next();
+        // Charged 2 carries CWeaponPower 0.05, so its recoil draws too.
+        AdvanceAfterScatter(chargedRandom, recoil: true);
         Assert.NotEqual(chargedSeed, chargedRandom.Seed);
         WorldSnapshot chargedBefore = chargedPulse.Snapshot;
         WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot chargedRound = Assert.Single(chargedShot.Projectiles);
         Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge, chargedRound.Kind);
+        AdvanceByEventDraws(chargedRandom, chargedTwin);
         Assert.Equal(chargedRandom.Seed, chargedShot.Level100ActorMechanics.ReleasedRandomSeed);
         AssertDirection(chargedRound, chargedBefore.FacingYawMicroRad,
             chargedBefore.FacingPitchMicroRad, (0, 0));
 
         Simulation jet = CreatePlayingSimulation();
-        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
-        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
-        for (int tick = 0;
-             jet.Snapshot.Mode != VehicleMode.Jet ||
-                 jet.Snapshot.Transition != VehicleTransition.None;
-             tick++)
+        Simulation jetTwin = CreatePlayingSimulation();
+        foreach (Simulation flight in new[] { jet, jetTwin })
         {
-            Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
-            jet.Step(SimInput.Idle);
+            flight.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+            flight.Step(new SimInput(0, 0, SimActions.ToggleMode));
+            for (int tick = 0;
+                 flight.Snapshot.Mode != VehicleMode.Jet ||
+                     flight.Snapshot.Transition != VehicleTransition.None;
+                 tick++)
+            {
+                Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
+                flight.Step(SimInput.Idle);
+            }
         }
 
         int jetSeed = jet.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var jetRandom = new Level100ReleasedRandom(jetSeed);
+        // Each bullet takes its scatter pair then its Actor Init draw; the
+        // Mech Vulcan Cannon has no CWeaponPower, so no recoil draws.
         (int Yaw, int Pitch)[] jetOffsets = Enumerable.Range(
                 0,
                 SimulationConstants.MechVulcanVolleySize)
-            .Select(_ => NextOffsets(
-                jetRandom,
-                SimulationConstants.PlayerVulcanInaccuracyMicroRadians))
+            .Select(_ =>
+            {
+                (int Yaw, int Pitch) offsets = NextOffsets(
+                    jetRandom,
+                    SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
+                AdvanceAfterScatter(jetRandom, recoil: false);
+                return offsets;
+            })
             .ToArray();
 
         // Controller Fire samples the retained emitter. Jet Move changes the
         // facing later in this same update, after the round already exists.
         WorldSnapshot jetBefore = jet.Snapshot;
         WorldSnapshot jetShot = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        AdvanceByEventDraws(jetRandom, jetTwin);
         Assert.Equal(jetRandom.Seed, jetShot.Level100ActorMechanics.ReleasedRandomSeed);
         ProjectileSnapshot[] rounds = jetShot.Projectiles.OrderBy(item => item.Id).ToArray();
         Assert.Equal(jetOffsets.Length, rounds.Length);
@@ -1825,6 +1965,38 @@ public sealed class SimulationTests
             rounds[0].VerticalVelocityMillimetersPerTick,
             rounds[1].VerticalVelocityMillimetersPerTick);
 
+        // The controller fires before the event flush, so scatter takes the
+        // first draws of the update. The flush's own draws (the Battle
+        // Engine's refreshes, the aircraft callbacks and every unit callback)
+        // do not depend on the shot, so an identical twin stepped idle takes
+        // exactly as many; count them along the stream.
+        static void AdvanceByEventDraws(Level100ReleasedRandom random, Simulation twin)
+        {
+            var probe = new Level100ReleasedRandom(twin.Snapshot.Level100ActorMechanics.ReleasedRandomSeed);
+            int after = twin.Step(SimInput.Idle).Level100ActorMechanics.ReleasedRandomSeed;
+            int draws = 0;
+            while (probe.Seed != after)
+            {
+                probe.Next();
+                Assert.True(++draws < 10_000, "The idle twin's draws were not found on the stream.");
+            }
+            for (int draw = 0; draw < draws; draw++)
+            {
+                random.Next();
+            }
+        }
+
+        static void AdvanceAfterScatter(Level100ReleasedRandom random, bool recoil)
+        {
+            random.Next();
+            if (recoil)
+            {
+                random.Next();
+                random.Next();
+                random.Next();
+            }
+        }
+
         static (int Yaw, int Pitch) NextOffsets(
             Level100ReleasedRandom random,
             int inaccuracyMicroRadians)
@@ -1834,12 +2006,21 @@ public sealed class SimulationTests
             return (second, first);
         }
 
+        // Every one of these modes lacks CWeaponLaunchAngle entries, so its
+        // basis is facing × FMatrix(0, 2π/4096, 0) × the scatter matrix.
         static void AssertDirection(
             ProjectileSnapshot projectile,
             int facingYaw,
             int facingPitch,
             (int Yaw, int Pitch) offset)
         {
+            (double expectedYaw, double expectedPitch) = RetailLaunchHeading(
+                facingYaw / 1e6,
+                facingPitch / 1e6,
+                0.0,
+                2.0 * Math.PI / 4096.0,
+                offset.Yaw / 1e6,
+                offset.Pitch / 1e6);
             int actualYaw = (int)Math.Round(
                 Math.Atan2(-projectile.Velocity.X, projectile.Velocity.Z) * 1_000_000d,
                 MidpointRounding.AwayFromZero);
@@ -1853,11 +2034,11 @@ public sealed class SimulationTests
                 MidpointRounding.AwayFromZero);
 
             Assert.InRange(
-                Normalize(actualYaw - Normalize(facingYaw + offset.Yaw)),
+                Normalize(actualYaw - (int)Math.Round(expectedYaw * 1e6)),
                 -500,
                 500);
             Assert.InRange(
-                Normalize(actualPitch - Normalize(facingPitch + offset.Pitch)),
+                Normalize(actualPitch - (int)Math.Round(expectedPitch * 1e6)),
                 -500,
                 500);
         }
@@ -1949,7 +2130,9 @@ public sealed class SimulationTests
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
         Assert.Equal(expectedKind, projectile.Kind);
-        Assert.Equal(lifetimeTicks - 1, projectile.RemainingTicks);
+        // CActor::Init files the round's MOVE for the next frame, so the
+        // launch frame leaves it at its emitter (the RE lane's round Frames).
+        Assert.Equal(lifetimeTicks, projectile.RemainingTicks);
         Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);
         Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
         long speedSquared =
@@ -1960,50 +2143,40 @@ public sealed class SimulationTests
         Assert.InRange(speedSquared,
             (long)(speedPerTick - 1) * (speedPerTick - 1),
             (long)(speedPerTick + 1) * (speedPerTick + 1));
+        // Gun 1 of cockpit2.msh through the body orientation, roll included.
         double yaw = fired.FacingYawMicroRad / 1_000_000d;
         double pitch = fired.FacingPitchMicroRad / 1_000_000d;
-        double emitterForwardPlane =
-            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
-        int expectedEmitterOffsetX = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
-            (emitterForwardPlane * Math.Sin(yaw)),
-            MidpointRounding.AwayFromZero);
-        int expectedEmitterOffsetZ = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
-            (emitterForwardPlane * Math.Cos(yaw)),
-            MidpointRounding.AwayFromZero);
+        double roll = fired.BodyRollMicroRad / 1_000_000d;
+        (double X, double Y, double Z) gunOffset = CockpitEmitterOffset(
+            Level100CockpitEmitters.Gun(Level100CockpitEmitters.PulseGun, walkPose: true), yaw, pitch, roll);
+        int expectedEmitterOffsetX = (int)Math.Round(gunOffset.X, MidpointRounding.AwayFromZero);
+        int expectedEmitterOffsetZ = (int)Math.Round(gunOffset.Z, MidpointRounding.AwayFromZero);
         Assert.InRange(
-            (projectile.Position.X - projectile.Velocity.X) - fired.PlayerPosition.X,
+            projectile.Position.X - fired.PlayerPosition.X,
             expectedEmitterOffsetX - 1,
             expectedEmitterOffsetX + 1);
         Assert.InRange(
-            (projectile.Position.Z - projectile.Velocity.Z) - fired.PlayerPosition.Z,
+            projectile.Position.Z - fired.PlayerPosition.Z,
             expectedEmitterOffsetZ - 1,
             expectedEmitterOffsetZ + 1);
-        int emitterVerticalOffset = (int)Math.Round(
-            (-SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                Math.Sin(fired.FacingPitchMicroRad / 1_000_000d)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters *
-                Math.Cos(fired.FacingPitchMicroRad / 1_000_000d)),
-            MidpointRounding.AwayFromZero);
+        int emitterVerticalOffset = (int)Math.Round(gunOffset.Y, MidpointRounding.AwayFromZero);
         Assert.Equal(
-            fired.PlayerElevationMillimeters +
-                emitterVerticalOffset +
-                projectile.VerticalVelocityMillimetersPerTick,
+            fired.PlayerElevationMillimeters + emitterVerticalOffset,
             projectile.ElevationMillimeters);
 
-        int firstElevation = projectile.ElevationMillimeters;
+        int launchElevation = projectile.ElevationMillimeters;
         projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
-        Assert.Equal(lifetimeTicks - 2, projectile.RemainingTicks);
+        Assert.Equal(lifetimeTicks - 1, projectile.RemainingTicks);
         Assert.Equal(
-            firstElevation + projectile.VerticalVelocityMillimetersPerTick,
+            launchElevation + projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
-        for (int remaining = lifetimeTicks - 3; remaining >= 1; remaining--)
+        for (int remaining = lifetimeTicks - 2; remaining >= 1; remaining--)
         {
             projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
             Assert.Equal(remaining, projectile.RemainingTicks);
         }
+        // Frame N + L delivers the life event, then the last MOVE: L Moves
+        // in all (k + 1, k = floor((life - 0.001) x 20)).
         Assert.Empty(simulation.Step(SimInput.Idle).Projectiles);
 
         Assert.Equal(
@@ -2242,8 +2415,9 @@ public sealed class SimulationTests
     {
         Level100ActorScriptContinuationSnapshot pause =
             DriveUntilTriggerPause(simulation, trigger);
+        // The due tick is on the scripts' clock, which the pre-run started.
         int dueTick = Assert.IsType<int>(pause.DueTick);
-        while (simulation.Snapshot.Tick < dueTick)
+        while (simulation.Snapshot.Level100ActorScripts.Tick < dueTick)
         {
             simulation.Step(SimInput.Idle);
         }
@@ -2291,6 +2465,414 @@ public sealed class SimulationTests
             $"controlEnabled={simulation.Snapshot.Level100PlayerControlEnabled}; " +
             $"navigation={simulation.Snapshot.Level100Mission.NavigationObjective}; " +
             $"playerScript={stalledPlayer.ScriptName}.");
+    }
+
+    /// <summary>
+    /// The jet Missile Pod's launcher burst: Fire spawns the first missile at
+    /// once and files event 5001 at now + <c>CWeaponBurstDelay</c>; each
+    /// delivery spawns one more until the mode's five. Every missile spends
+    /// one from store 3 and is one launch-sound event, and its heading is the
+    /// launch orientation times its launch-angle slot as retail matrices
+    /// (the RE lane's burst-spawner contract, steps 2, 5 and 7).
+    /// </summary>
+    [Fact]
+    public void MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots()
+    {
+        Simulation simulation = CreateJetWithMissilePod();
+        int yaw = simulation.Snapshot.FacingYawMicroRad;
+        const int Pitch = -300_000;
+        LookIntoOpenSky(simulation, yaw, Pitch);
+
+        simulation.SetFacingForMeasurement(yaw, Pitch);
+        float firedAt = RetailEventScheduler.TimeAtFrameCount(simulation.Snapshot.RetailEventFrameCount + 1);
+        WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        RetailEventSchedulerSnapshot events = fired.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        RetailEventSlotSnapshot burst = Assert.Single(
+            events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow).Select(handle => slots[handle]),
+            slot => slot.Listener == Level100ActorMechanics.MissilePodListener);
+        Assert.Equal(Level100ActorMechanics.WeaponBurstEvent, (int)burst.EventNum);
+        Assert.Equal(
+            BitConverter.SingleToUInt32Bits(firedAt + BitConverter.UInt32BitsToSingle(0x3dcccccdu)),
+            burst.TimeBits);
+        // The pod selects schema 51 on its own; a world built in the retail
+        // load order always carries the unit callbacks of 52 as well.
+        Assert.Equal(52, CanonicalSchemaVersion(fired));
+
+        var spawnTicks = new List<int>();
+        var headings = new List<Level100SeekingRoundSnapshot>();
+        var seen = new HashSet<int>();
+        int fireEvents = 0;
+        WorldSnapshot state = fired;
+        for (int step = 0; step < 30; step++)
+        {
+            fireEvents += state.Level100WeaponFireEvents.Count(item =>
+                item.Weapon == Level100PlayerWeapon.MissilePod);
+            foreach (ProjectileSnapshot missile in state.Projectiles.Where(item =>
+                         item.Kind == Level100ProjectileKind.MicroMissile && seen.Add(item.Id)))
+            {
+                spawnTicks.Add(state.Tick);
+                headings.Add(Assert.IsType<Level100SeekingRoundSnapshot>(missile.Seeking));
+                Assert.Null(missile.Seeking!.Target);
+            }
+            simulation.SetFacingForMeasurement(yaw, Pitch);
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(5, spawnTicks.Count);
+        Assert.Equal(5, fireEvents);
+        Assert.Equal([0, 2, 4, 6, 8], spawnTicks.Select(tick => tick - spawnTicks[0]));
+        Assert.Equal(195.0f, BitConverter.UInt32BitsToSingle(state.Level100PlayerStores.Store3Bits));
+        Assert.Equal(new Level100MissilePodSnapshot(0, 0, true, 5, 4, 4), state.Level100MissilePod);
+
+        for (int slot = 0; slot < 5; slot++)
+        {
+            (double expectedYaw, double expectedPitch) = RetailLaunchHeading(
+                yaw / 1e6,
+                Pitch / 1e6,
+                BitConverter.UInt32BitsToSingle(Level100MissilePod.LaunchAngleYawBits[slot]),
+                BitConverter.UInt32BitsToSingle(Level100MissilePod.LaunchAnglePitchBits[slot]));
+            Assert.InRange(headings[slot].YawMicroRadians - (expectedYaw * 1e6), -40, 40);
+            Assert.InRange(headings[slot].PitchMicroRadians - (expectedPitch * 1e6), -40, 40);
+        }
+
+        // A pitched launch is not the angle sum: slot 5's 12-degree yaw turns
+        // about the pitched frame's own up axis.
+        Assert.True(Math.Abs(headings[4].PitchMicroRadians - Pitch) > 5_000);
+
+        // Unbound and aimed at open sky, each missile lives out its span and,
+        // carrying CRoundExplode, bursts in the air on its life event, which
+        // comes before that frame's last step: exactly where the previous
+        // frame left it (the RE lane's round Frames contract).
+        var lastPositions = new Dictionary<int, Level100Vector3>();
+        int airBursts = 0;
+        for (int step = 0; step < 200 && (step == 0 || lastPositions.Count > 0); step++)
+        {
+            foreach (Level100DestructionEvent burstEvent in state.Level100DestructionEvents.Where(item =>
+                         item.Kind == Level100DestructionEventKind.MicroMissileImpact))
+            {
+                // Contact axes: Core z forward, retail z down.
+                Assert.Equal(0, burstEvent.ActorId);
+                Assert.Contains(burstEvent.Position, lastPositions.Values);
+                airBursts++;
+            }
+            lastPositions = state.Projectiles
+                .Where(item => item.Kind == Level100ProjectileKind.MicroMissile)
+                .ToDictionary(item => item.Id, item => new Level100Vector3(
+                    item.Position.X, item.Position.Z, -item.ElevationMillimeters));
+            simulation.SetFacingForMeasurement(yaw, Pitch);
+            state = simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(5, airBursts);
+    }
+
+    /// <summary>
+    /// With the pod selected and a script-enemy static target under the
+    /// crosshair within 100 m, <c>HandleLocks</c> starts a lock that finishes
+    /// after <c>CWeaponLockTime</c>; the burst's missiles bind it through
+    /// <c>GetCurrentTarget</c>, <c>FireLock</c> moves it to the fired set, and
+    /// the round's release calls <c>LockHit</c>, which clears it again
+    /// (<c>BattleEngine.cpp:586-1010</c>; the RE lane's Missile Pod answer).
+    /// </summary>
+    [Fact]
+    public void MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        EnterJetWithMissilePod(simulation);
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Where(actor => actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
+                actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive)
+            .OrderBy(actor => SquaredDistance(simulation.Snapshot, actor.Pose.PositionMillimeters))
+            .First();
+        Assert.True(SquaredDistance(simulation.Snapshot, target.Pose.PositionMillimeters) < 100_000L * 100_000L);
+
+        WorldSnapshot state = simulation.Snapshot;
+        for (int step = 0; step < 20 && state.Level100BattleEngineTargeting.Locks.Locks.Count == 0; step++)
+        {
+            FaceActor(simulation, target);
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Level100PlayerLockSnapshot started = Assert.Single(state.Level100BattleEngineTargeting.Locks.Locks);
+        Assert.Equal(target.ActorId, started.Unit);
+        Assert.True(started.DirectLock);
+        Assert.Equal(
+            BitConverter.SingleToUInt32Bits(BitConverter.UInt32BitsToSingle(started.StartBits) +
+                BitConverter.UInt32BitsToSingle(0x3e4ccccdu)),
+            started.FinishBits);
+
+        // Let the lock finish (strictly after its finish time), then fire.
+        for (int step = 0; step < 5; step++)
+        {
+            FaceActor(simulation, target);
+            state = simulation.Step(SimInput.Idle);
+        }
+        FaceActor(simulation, target);
+        state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot first = Assert.Single(state.Projectiles,
+            item => item.Kind == Level100ProjectileKind.MicroMissile);
+        Assert.Equal(target.ActorId, first.Seeking!.Target);
+        Assert.Empty(state.Level100BattleEngineTargeting.Locks.Locks);
+        Assert.Equal(target.ActorId, Assert.Single(state.Level100BattleEngineTargeting.Locks.FiredLocks).Unit);
+
+        // Every later missile of the burst finds the target in the fired set.
+        var boundIds = new HashSet<int>();
+        int impacts = 0;
+        for (int step = 0; step < 12; step++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            impacts += CheckFirstImpact(state, impacts);
+            foreach (ProjectileSnapshot missile in state.Projectiles.Where(item =>
+                         item.Kind == Level100ProjectileKind.MicroMissile))
+            {
+                Assert.True(missile.Seeking!.Target is null || missile.Seeking.Target == target.ActorId);
+                if (missile.Seeking.Target == target.ActorId)
+                {
+                    boundIds.Add(missile.Id);
+                }
+            }
+        }
+        Assert.Equal(5, boundIds.Count + impacts);
+
+        // The seeking missiles strike it; each bound missile's release removes
+        // one fired entry, and the burst's five releases leave none.
+        for (int step = 0; step < 200 && state.Projectiles.Any(item =>
+                 item.Kind == Level100ProjectileKind.MicroMissile); step++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            impacts += CheckFirstImpact(state, impacts);
+        }
+        Assert.DoesNotContain(state.Projectiles, item => item.Kind == Level100ProjectileKind.MicroMissile);
+        Assert.Equal(5, impacts);
+        Assert.Empty(state.Level100BattleEngineTargeting.Locks.FiredLocks);
+
+        // The first strike's shutdown releases the one fired entry while the
+        // target still lives; no other release can have emptied it yet.
+        int CheckFirstImpact(WorldSnapshot state, int earlier)
+        {
+            int now = state.Level100DestructionEvents.Count(item =>
+                item.Kind == Level100DestructionEventKind.MicroMissileImpact && item.ActorId == target.ActorId.Value);
+            if (earlier == 0 && now > 0)
+            {
+                Assert.Equal(Level100ActorLifecycle.Alive, state.Level100Actors.Actors
+                    .Single(actor => actor.ActorId == target.ActorId).Lifecycle);
+                Assert.Empty(state.Level100BattleEngineTargeting.Locks.FiredLocks);
+            }
+            return now;
+        }
+    }
+
+    /// <summary>
+    /// The jet's Mech Vulcan fires its two rounds from cockpit Guns 13 and 14,
+    /// in its launch sequence's order, through the body orientation (the RE
+    /// lane's aiming contract; <c>CWeaponLaunchSequence</c> (1, 13) (2, 14)).
+    /// </summary>
+    [Fact]
+    public void MechVulcanRounds_LeaveGunsThirteenAndFourteenInSequence()
+    {
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(jet, state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None, 100);
+        WorldSnapshot before = jet.Snapshot;
+        WorldSnapshot fired = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot[] rounds = fired.Projectiles.OrderBy(item => item.Id).ToArray();
+        Assert.Equal(2, rounds.Length);
+        for (int index = 0; index < 2; index++)
+        {
+            (double X, double Y, double Z) offset = CockpitEmitterOffset(
+                Level100CockpitEmitters.Gun(13 + index, walkPose: false),
+                before.FacingYawMicroRad / 1e6, before.FacingPitchMicroRad / 1e6, before.BodyRollMicroRad / 1e6);
+            // The launch frame leaves each round at its emitter.
+            ProjectileSnapshot round = rounds[index];
+            Assert.InRange(round.Position.X - (before.PlayerPosition.X + offset.X), -2, 2);
+            Assert.InRange(round.Position.Z - (before.PlayerPosition.Z + offset.Z), -2, 2);
+            Assert.InRange(round.ElevationMillimeters - (before.PlayerElevationMillimeters + offset.Y), -2, 2);
+        }
+    }
+
+    /// <summary>
+    /// Rounds move in the level event manager's insertion order (the RE lane's
+    /// round Frames contract). A round a controller Fire makes is filed into
+    /// the current bucket before the flush re-files the MOVEs of the rounds
+    /// already in flight, so in the next frame it moves ahead of them.
+    /// </summary>
+    [Fact]
+    public void ControllerRounds_MoveAheadOfRoundsAlreadyInFlight()
+    {
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(jet, state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None, 100);
+        int[] older = jet.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles
+            .Select(round => round.Id).Order().ToArray();
+        Assert.Equal(2, older.Length);
+        for (int tick = 0; tick < 4; tick++)
+        {
+            jet.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot fired = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        int[] newer = fired.Projectiles.Select(round => round.Id).Except(older).Order().ToArray();
+        Assert.Equal(2, newer.Length);
+        Assert.Equal(4, fired.Projectiles.Count);
+
+        RetailEventSchedulerSnapshot events = fired.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        int[] moveOrder = events.Lanes
+            .Single(lane => lane.LaneIndex == events.CurrentBufferNum * RetailEventScheduler.PriorityLanes)
+            .Handles.Select(handle => slots[handle])
+            .Where(slot => slot.EventNum == Level100ActorMechanics.RoundMoveEvent &&
+                Level100ActorMechanics.IsPlayerRoundListener(slot.Listener))
+            .Select(slot => Level100ActorMechanics.PlayerRoundId(slot.Listener))
+            .ToArray();
+        Assert.Equal(newer.Concat(older), moveOrder);
+    }
+
+    /// <summary>
+    /// A dying round's last step still meets things but hits nothing (the RE
+    /// lane's "No hit while dying"). The probe round lives two frames: its
+    /// first step ends 10 m above the tank, and its second, taken after its
+    /// life event, drops through it.
+    /// </summary>
+    [Fact]
+    public void DyingRound_LastStepCrossesATargetWithoutDamagingIt()
+    {
+        var simulation = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank 2");
+        SimVector3 position = target.Pose.PositionMillimeters;
+        simulation.QueueRoundForContactMeasurement(
+            Level100ProjectileKind.MechBullet,
+            position with { Y = position.Y + 20_000 },
+            position with { Y = position.Y + 10_000 });
+
+        WorldSnapshot first = simulation.Step(SimInput.Idle);
+        Assert.Single(first.Projectiles);
+        WorldSnapshot last = simulation.Step(SimInput.Idle);
+        Assert.Empty(last.Projectiles);
+        Assert.DoesNotContain(
+            first.Level100DestructionEvents.Concat(last.Level100DestructionEvents),
+            item => item.Kind == Level100DestructionEventKind.VulcanImpact);
+        Assert.Equal(target.Health, last.Level100Actors.Actors
+            .Single(actor => actor.ActorId == target.ActorId).Health);
+
+        // The same drop taken by a live step hits and damages the tank.
+        var control = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        control.QueueRoundForContactMeasurement(
+            Level100ProjectileKind.MechBullet,
+            position with { Y = position.Y + 10_000 },
+            position);
+        WorldSnapshot hit = control.Step(SimInput.Idle);
+        Assert.Contains(hit.Level100DestructionEvents, item =>
+            item.Kind == Level100DestructionEventKind.VulcanImpact && item.ActorId == target.ActorId.Value);
+        Assert.True(hit.Level100Actors.Actors.Single(actor => actor.ActorId == target.ActorId).Health <
+            target.Health);
+    }
+
+    /// <summary>
+    /// A cockpit emitter's offset from the Battle Engine in Core millimetres:
+    /// model x right, y forward and z down through yaw, nose-down pitch and
+    /// roll, in double precision.
+    /// </summary>
+    private static (double X, double Y, double Z) CockpitEmitterOffset(
+        Level100CockpitEmitters.Emitter gun, double yaw, double pitch, double roll)
+    {
+        (double X, double Y, double Z) forward = (-Math.Sin(yaw) * Math.Cos(pitch), -Math.Sin(pitch), Math.Cos(yaw) * Math.Cos(pitch));
+        (double X, double Y, double Z) baseRight = (Math.Cos(yaw), 0.0, Math.Sin(yaw));
+        (double X, double Y, double Z) baseUp = (-Math.Sin(pitch) * Math.Sin(yaw), Math.Cos(pitch), Math.Sin(pitch) * Math.Cos(yaw));
+        (double X, double Y, double Z) right = (
+            (baseRight.X * Math.Cos(roll)) + (baseUp.X * Math.Sin(roll)),
+            baseUp.Y * Math.Sin(roll),
+            (baseRight.Z * Math.Cos(roll)) + (baseUp.Z * Math.Sin(roll)));
+        (double X, double Y, double Z) up = (
+            (baseUp.X * Math.Cos(roll)) - (baseRight.X * Math.Sin(roll)),
+            baseUp.Y * Math.Cos(roll),
+            (baseUp.Z * Math.Cos(roll)) - (baseRight.Z * Math.Sin(roll)));
+        double x = gun.XMicrometres / 1000.0, y = gun.YMicrometres / 1000.0, z = gun.ZMicrometres / 1000.0;
+        return (
+            (x * right.X) + (y * forward.X) - (z * up.X),
+            (x * right.Y) + (y * forward.Y) - (z * up.Y),
+            (x * right.Z) + (y * forward.Z) - (z * up.Z));
+    }
+
+    private static Simulation CreateJetWithMissilePod()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        EnterJetWithMissilePod(simulation);
+        return simulation;
+    }
+
+    private static void EnterJetWithMissilePod(Simulation simulation)
+    {
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(
+            simulation,
+            state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None,
+            100);
+        WorldSnapshot selected = simulation.Step(new SimInput(0, 0, SimActions.ChangeWeapon));
+        Assert.Equal(Level100MissionWeapon.MissilePod, selected.Level100JetSelectedWeapon);
+    }
+
+    /// <summary>Holds the view on open sky until a crosshair refresh reports nothing.</summary>
+    private static void LookIntoOpenSky(Simulation simulation, int yaw, int pitch)
+    {
+        for (int step = 0; step < 12; step++)
+        {
+            simulation.SetFacingForMeasurement(yaw, pitch);
+            simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(
+            Level100CrosshairHitKind.Nothing,
+            simulation.Snapshot.Level100BattleEngineTargeting.CrosshairHitKind);
+    }
+
+    private static void FaceActor(Simulation simulation, Level100ActorSnapshot actor)
+    {
+        WorldSnapshot state = simulation.Snapshot;
+        SimVector3 point = state.Level100Actors.Actors
+            .Single(item => item.ActorId == actor.ActorId).Pose.PositionMillimeters;
+        double dx = point.X - (double)state.PlayerPosition.X;
+        double dy = point.Y + 500 - (double)state.PlayerElevationMillimeters;
+        double dz = point.Z - (double)state.PlayerPosition.Z;
+        simulation.SetFacingForMeasurement(
+            (int)Math.Round(Math.Atan2(-dx, dz) * 1e6),
+            (int)Math.Round(Math.Atan2(-dy, Math.Sqrt((dx * dx) + (dz * dz))) * 1e6));
+    }
+
+    private static long SquaredDistance(WorldSnapshot state, SimVector3 point)
+    {
+        long dx = point.X - (long)state.PlayerPosition.X;
+        long dy = point.Y - (long)state.PlayerElevationMillimeters;
+        long dz = point.Z - (long)state.PlayerPosition.Z;
+        return (dx * dx) + (dy * dy) + (dz * dz);
+    }
+
+    /// <summary>
+    /// The forward column of <c>FMatrix(yaw, pitch, 0) × FMatrix(a, b, 0)</c>
+    /// in retail axes (x right, y forward, z down), as Core's yaw and
+    /// nose-down pitch.
+    /// </summary>
+    private static (double Yaw, double Pitch) RetailLaunchHeading(
+        double yaw,
+        double pitch,
+        double angleYaw,
+        double anglePitch,
+        double jitterYaw = 0.0,
+        double jitterPitch = 0.0)
+    {
+        static (double X, double Y, double Z) Rotate(double y, double p, (double X, double Y, double Z) v) => (
+            (Math.Cos(y) * v.X) - (Math.Cos(p) * Math.Sin(y) * v.Y) + (Math.Sin(p) * Math.Sin(y) * v.Z),
+            (Math.Sin(y) * v.X) + (Math.Cos(p) * Math.Cos(y) * v.Y) - (Math.Sin(p) * Math.Cos(y) * v.Z),
+            (Math.Sin(p) * v.Y) + (Math.Cos(p) * v.Z));
+        (double x, double yy, double z) = Rotate(yaw, pitch,
+            Rotate(angleYaw, anglePitch, Rotate(jitterYaw, jitterPitch, (0.0, 1.0, 0.0))));
+        return (Math.Atan2(-x, yy), Math.Atan2(z, Math.Sqrt((x * x) + (yy * yy))));
     }
 
     private static Simulation CreatePlayingSimulation(uint seed = 1)

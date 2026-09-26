@@ -121,7 +121,9 @@ public sealed class Level100PlayerWeaponRuntimeTests
         if (legacyEnvelope) initial = Level100TestActorDefinitions.LegacyHashEnvelope(initial);
         Assert.Equal(Level100PlayerWeaponStateSnapshot.Initial, initial.Level100PlayerWeaponState);
         const int schemaOffset = 23; // ASCII ONSLAUGHT-REBUILD-STATE.
-        Assert.Equal(legacyEnvelope ? 42 : 47, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(initial), schemaOffset));
+        // Every world built in the retail load order carries unit callbacks,
+        // which select schema 52.
+        Assert.Equal(legacyEnvelope ? 42 : 52, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(initial), schemaOffset));
         string baseline = StateHasher.ComputeHex(initial);
         Level100PlayerWeaponStateSnapshot weapons = initial.Level100PlayerWeaponState;
         Level100PlayerWeaponStateSnapshot[] variants =
@@ -136,7 +138,7 @@ public sealed class Level100PlayerWeaponRuntimeTests
         foreach (Level100PlayerWeaponStateSnapshot variant in variants)
         {
             WorldSnapshot changed = initial with { Level100PlayerWeaponState = variant };
-            Assert.Equal(legacyEnvelope ? 44 : 47, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(changed), schemaOffset));
+            Assert.Equal(legacyEnvelope ? 44 : 52, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(changed), schemaOffset));
             Assert.NotEqual(baseline, StateHasher.ComputeHex(changed));
         }
         Assert.Equal(variants.Length, variants.Select(variant => StateHasher.ComputeHex(

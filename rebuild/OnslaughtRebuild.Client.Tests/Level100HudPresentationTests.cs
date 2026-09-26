@@ -295,7 +295,7 @@ public sealed class Level100HudPresentationTests
             Level100ActorCommandIntent.Stopped,
             TargetActorId: null,
             WaypointPath: null,
-            WaypointPointIndex: 0,
+            WaypointNodeIndex: null,
             WaypointCommandScalar: 0,
             WaitForWaypointCompletion: false,
             GroundFullGuideBaseTickPhase: 0);

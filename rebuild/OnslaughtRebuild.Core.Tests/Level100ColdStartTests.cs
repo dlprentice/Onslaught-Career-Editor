@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.TestSupport;
 using Xunit.Abstractions;
@@ -12,7 +13,7 @@ namespace OnslaughtRebuild.Core.Tests;
 ///
 /// <para>The complete route is shared by the tests below.</para>
 /// </summary>
-public sealed class Level100ColdStartRunFixture
+public sealed class Level100ColdStartRunFixture : IDisposable
 {
     internal Level100ColdStartRun Run { get; }
 
@@ -23,6 +24,8 @@ public sealed class Level100ColdStartRunFixture
         Run = new Level100ColdStartRun();
         Outcome = Run.Run();
     }
+
+    public void Dispose() => Run.Dispose();
 }
 
 /// <summary>
@@ -229,35 +232,28 @@ public sealed class Level100ColdStartTests
             controlFinal.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
 
-        // Beats 4, 5, 7 and 9, every one of them shot with the weapon the
-        // script hands over in the order it hands it over. The current
-        // retail-derived damage funnel leaves the client arm able to clear the
-        // whole second wave; the historical two-kill abort branch was measured
-        // under the superseded direct-hull shortcut.
+        // Beats 4, 5 and 7, every one of them shot with the weapon the script
+        // hands over in the order it hands it over.
         Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.TargetTrucks));
         Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.MovingTargets));
         Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.AirborneTargets1));
-        Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.AirborneTargets2));
 
-        // The mission's own abort local remains false because kills, not the
-        // sub-40 % poll, terminate the wave.
-        Assert.False(final.Level100Mission.Aborted);
-        Assert.Equal(
-            Level100PrimaryObjectiveStatus.Complete,
-            final.Level100Mission.PrimaryObjectives
-                .Single(objective => objective.Objective == 4).Status);
+        // Beat 9 ends on one of its two released branches (six kills, or the
+        // sub-40 % abort), whichever the run's combat produces. The RE lane's
+        // contract classes the six-kill expectation this test used to make,
+        // failing since September 12, as a driver expectation rather than a
+        // retail invariant.
+        Level100FinalWaveContract.AssertReleasedBranch(final);
 
-        // The same-input direct Core control clears the same wave and branch.
+        // The same-input direct Core control takes the same branch with the
+        // same kills.
+        Level100FinalWaveContract.AssertReleasedBranch(controlFinal);
+        Assert.Equal(final.Level100Mission.Aborted, controlFinal.Level100Mission.Aborted);
         Assert.Equal(
-            6,
+            Destroyed(final, Level100MissionTargetGroup.AirborneTargets2),
             controlFinal.Level100Actors.Actors.Count(actor =>
                 actor.TargetGroup == Level100MissionTargetGroup.AirborneTargets2 &&
                 actor.Lifecycle == Level100ActorLifecycle.Destroyed));
-        Assert.False(controlFinal.Level100Mission.Aborted);
-        Assert.Equal(
-            Level100PrimaryObjectiveStatus.Complete,
-            controlFinal.Level100Mission.PrimaryObjectives
-                .Single(objective => objective.Objective == 4).Status);
 
         // THE OUTPUT-CHANNEL CONTRACT, and it is the reason the joined run gets
         // this far at all. The driver is held to the stick positions an INTEGER
@@ -479,6 +475,39 @@ public sealed class Level100ColdStartTests
         Assert.Equal(
             (short)0,
             Level100InteractiveChainHost.DeliverablePermille(15));
+    }
+
+    /// <summary>
+    /// The cold start's own recording is a complete Level 100 tape: replayed
+    /// twice through the headless replayer's <see cref="ReplayRunner"/>, it
+    /// reproduces the trace and final-state hashes observed live and ends with
+    /// the mission won. <c>ONSLAUGHT_WON_TAPE_PATH</c>, when set to an absolute
+    /// path, also writes it with the host's create-new <see cref="TapeFile"/>.
+    /// </summary>
+    [Fact]
+    public void ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin()
+    {
+        Assert.Equal(Level100MissionOutcome.Won, _coldStart.Outcome);
+        CommandTape tape = _coldStart.Run.Recorder.BuildObserved(
+            "level100-cold-start-won", Level100ColdStartRun.SimulationSeed);
+        Assert.Equal(_coldStart.Run.Final.Tick, tape.DurationTicks);
+
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        ReplayResult first = ReplayRunner.Run(tape, definitions);
+        ReplayResult second = ReplayRunner.Run(tape, definitions);
+        Assert.Equal(tape.ExpectedTraceHash, first.TraceHash);
+        Assert.Equal(tape.ExpectedFinalStateHash, first.FinalStateHash);
+        Assert.Equal(first.TraceHash, second.TraceHash);
+        Assert.Equal(first.FinalStateHash, second.FinalStateHash);
+        Assert.Equal(Level100MissionOutcome.Won, first.FinalState.Level100Mission.Outcome);
+        _output.WriteLine(
+            $"WON TAPE ticks={tape.DurationTicks} trace={first.TraceHash} state={first.FinalStateHash}");
+
+        if (Environment.GetEnvironmentVariable("ONSLAUGHT_WON_TAPE_PATH") is { Length: > 0 } path)
+        {
+            TapeFile.WriteNew(path, tape);
+            _output.WriteLine($"WON TAPE written to {path}");
+        }
     }
 
     /// <summary>

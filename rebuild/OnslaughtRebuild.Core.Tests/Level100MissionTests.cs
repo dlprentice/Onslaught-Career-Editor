@@ -711,8 +711,10 @@ public sealed class Level100MissionTests
         const double RetailColumnTicksPerSecond = 30d;
         static double RetailMs(int tick) =>
             tick * 1_000d / RetailColumnTicksPerSecond;
+        // The retail column counts from the pan's start at event time 3.0; the
+        // mission clock counts from the load, 3.0 s of pre-run earlier.
         static double CoreMs(int tick) =>
-            tick * 1_000d / SimulationConstants.TicksPerSecond;
+            (tick - SimulationConstants.Level100PreRunTicks) * 1_000d / SimulationConstants.TicksPerSecond;
 
         // Three 50 ms retail samples. Stated in milliseconds so it cannot
         // silently loosen when the Core rate moves: the old form was "4 Core
@@ -748,13 +750,13 @@ public sealed class Level100MissionTests
 
         Assert.Equal(retail.Length, delivered.Count);
 
-        // 1. The greeting exists, and it is delivered after the opening pan
-        //    rather than behind it. CPanCamera::GetShowHUD is false for the
-        //    whole pan, so a delivery before tick 180 is invisible.
+        // 1. The greeting exists, and it is delivered after the pre-run and
+        //    the opening pan rather than behind them. CPanCamera::GetShowHUD
+        //    is false for the whole pan, so an earlier delivery is invisible.
         Assert.Equal(292562, delivered[0].MessageId);
         Assert.Equal(Level100MissionTiming.MessageBoxAllowedTick, delivered[0].Tick);
         Assert.True(
-            delivered[0].Tick >= SimulationConstants.Level100OpeningPanTicks,
+            delivered[0].Tick >= SimulationConstants.Level100PreRunTicks + SimulationConstants.Level100OpeningPanTicks,
             "the greeting must not be delivered behind the opening pan");
 
         int previousEnd = int.MinValue;

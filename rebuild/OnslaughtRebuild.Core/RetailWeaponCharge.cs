@@ -326,6 +326,40 @@ public static class RetailWeaponCharge
     }
 
     /// <summary>
+    /// The charge-level mode a weapon's mode getters and Fire select
+    /// (<c>CWeapon::Fire</c> <c>0x00506010</c>; the lock getters
+    /// <c>0x00506350</c>-<c>0x00506800</c>; <c>GetActualMaxRange</c>
+    /// <c>0x00509c80</c>): <c>fistp</c> the live charge under the ambient
+    /// round-to-nearest-even control word, divide by 100 with truncation, and
+    /// fall back to the nearest present lower level.
+    /// </summary>
+    /// <returns>The level index, or -1 when no level at or below it is present.</returns>
+    public static int ModeLevel(RetailWeaponChargeTable weapon)
+    {
+        if (weapon is null)
+        {
+            throw new ArgumentNullException(nameof(weapon));
+        }
+
+        double rounded = Math.Round((double)weapon.Charge, MidpointRounding.ToEven);
+        if (!(rounded >= 0.0) || rounded >= (double)(RetailWeaponChargeTable.LevelCount * RetailWeaponChargeTable.ValuePerLevel))
+        {
+            throw new InvalidOperationException(
+                "A weapon charge outside the five-level table has no admitted mode.");
+        }
+
+        for (int level = (int)rounded / RetailWeaponChargeTable.ValuePerLevel; level >= 0; level--)
+        {
+            if (weapon.Levels[level] != RetailWeaponChargeTable.AbsentLevel)
+            {
+                return level;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
     /// The ordered strict comparison shared by Fire and ReadyToCharge after
     /// a current mode is resolved. <c>test ah,0x41 / jz</c> accepts only
     /// C0|C3 clear; NaN, equality and earlier time all refuse.

@@ -239,21 +239,17 @@ public sealed class Level100TutorialProgressionTests
     }
 
     /// <summary>
-    /// The Twin Vulcan's Mech Bullet against the released Target Tank life.
-    /// This is what the second firing-range exercise depends on, and it also
-    /// bounds the open sum-versus-round-only damage question: the two
-    /// surviving models differ by a single bullet out of seventy-five against
-    /// a Target Tank, so tutorial progression cannot distinguish them, while
-    /// the already-killed explosion-only model would need six thousand.
+    /// The Twin Vulcan's Mech Bullet against the released Target Tank life,
+    /// which the second firing-range exercise depends on. The round does its
+    /// direct 0.08 only: its hit explosion's 0.001 is under
+    /// <c>CExplosion::Init</c>'s collision gate (see
+    /// <see cref="Level100DestructionState.MechBulletDamageBits"/>).
     /// </summary>
-    [Theory]
-    [InlineData(Level100DestructionState.MechBulletDamageBits, 75)]
-    [InlineData(0x3DA3D70Au, 76)]
-    public void MechBullet_NeedsTheSameOrderOfHitsUnderBothSurvivingDamageModels(
-        uint damageBits,
-        int expectedHits)
+    [Fact]
+    public void MechBullet_DestroysATargetTankInSeventySixHits()
     {
-        Assert.Equal(expectedHits, HitsToDestroyATargetTank(damageBits));
+        Assert.Equal(0x3DA3D70Au, Level100DestructionState.MechBulletDamageBits);
+        Assert.Equal(76, HitsToDestroyATargetTank(Level100DestructionState.MechBulletDamageBits));
     }
 
     /// <summary>
@@ -321,9 +317,8 @@ public sealed class Level100TutorialProgressionTests
             hits++;
         }
 
-        // 3.0 life against the 0.081 Mech Bullet round is 37.03 rounds, so the
-        // thirty-eighth carries it terminal - the count the note in
-        // Level100DestructionState already predicts.
+        // 3.0 life against the 0.08 Mech Bullet round is 37.5 rounds, so the
+        // thirty-eighth carries it terminal.
         Assert.Equal(38, hits);
         Assert.True(registry.GetActor(truckId).Active);
         Assert.Equal(Level100ActorLifecycle.DiedAwaitingShutdown, registry.GetActor(truckId).Lifecycle);
@@ -344,17 +339,14 @@ public sealed class Level100TutorialProgressionTests
     }
 
     /// <summary>
-    /// The same truck is destroyed in the same number of rounds under both
-    /// surviving Mech Bullet damage models, so beat 4 does not depend on the
-    /// unsettled sum-versus-round-only question.
+    /// Beat 4's Target Truck takes 38 Mech Bullet rounds at the round's direct
+    /// 0.08.
     /// </summary>
-    [Theory]
-    [InlineData(Level100DestructionState.MechBulletDamageBits, 38)]
-    [InlineData(0x3DA3D70Au, 38)]
-    public void TargetTruck_NeedsTheSameRoundsUnderBothSurvivingDamageModels(
-        uint damageBits,
-        int expectedHits)
+    [Fact]
+    public void TargetTruck_TakesThirtyEightMechBulletRounds()
     {
+        const uint damageBits = Level100DestructionState.MechBulletDamageBits;
+        const int expectedHits = 38;
         var state = new Level100DestructionState(
             1,
             Level100ContactCatalog.Instance.GetDefinition("Target Truck"));
@@ -525,7 +517,7 @@ public sealed class Level100TutorialProgressionTests
             hits++;
         }
 
-        // 1.0 life against the 0.081 Mech Bullet round is 12.35 rounds, so the
+        // 1.0 life against the 0.08 Mech Bullet round is 12.5 rounds, so the
         // thirteenth carries it terminal.
         _output.WriteLine($"mech bullet hits to destroy the drone: {hits}");
         Assert.Equal(13, hits);

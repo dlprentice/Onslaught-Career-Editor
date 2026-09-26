@@ -100,15 +100,22 @@ public sealed class Level100TerrainCompositorTests
         string shaderSource = ReadSourceText(
             "rebuild/OnslaughtRebuild.Godot/Level100TerrainAppearanceAsset.cs");
 
-        // .rdata 0x005d858c = 0.25 (stage-3 scale) and 0x005d87e0 = 0.0
-        // (stage-3 rotation angle). The image has no .reloc section, so both are
-        // fixed for the life of the process: stage 3 is an axis-aligned quarter
-        // scale with offset (0.3, 0.3), never a rotation.
+        // Stage 3 (0x005459a4-0x005459fd): the angle is the double at
+        // 0x005d87e0, 1.0 (`fld qword`; read as a float32 its low dword is
+        // 0.0, which an earlier reading took for the angle). sin is stored as a
+        // float32, then both are scaled by 0x005d858c = 0.25: _11 = _22 =
+        // 0x3e0a5140, _12 = -_21 = 0x3e576aa4, offset (0.3, 0.3).
+        Assert.Equal(0x3e0a5140, BitConverter.SingleToInt32Bits((float)(Math.Cos(1.0) * 0.25)));
+        Assert.Equal(0x3e576aa4, BitConverter.SingleToInt32Bits((float)Math.Sin(1.0) * 0.25f));
+        Assert.Equal(0x3e0a5140, BitConverter.SingleToInt32Bits(0.13507557f));
+        Assert.Equal(0x3e576aa4, BitConverter.SingleToInt32Bits(0.21036774f));
         Assert.Contains(
-            "vec2 detail_secondary_uv = (retail_world_uv * 0.25) + vec2(0.3);",
+            "0.13507557 * retail_world_uv.x - 0.21036774 * retail_world_uv.y + 0.3,",
             shaderSource);
-        Assert.DoesNotContain("0.1350755765", shaderSource);
-        Assert.DoesNotContain("0.2103677462", shaderSource);
+        Assert.Contains(
+            "0.21036774 * retail_world_uv.x + 0.13507557 * retail_world_uv.y + 0.3);",
+            shaderSource);
+        Assert.DoesNotContain("(retail_world_uv * 0.25) + vec2(0.3)", shaderSource);
 
         // The scroll rate is MEASURED, not read from .rdata. 0x005d8580 = 0.001
         // and 0x005e50e4 = 0.0005 are per-advance rates multiplied by

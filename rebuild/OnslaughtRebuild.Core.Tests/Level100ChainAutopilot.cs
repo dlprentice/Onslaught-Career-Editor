@@ -1066,7 +1066,7 @@ internal sealed class Level100ChainAutopilot
     /// hull instead of 1000, which is most of the margin the six attacking
     /// drones then eat.
     /// </summary>
-    private static SimInput Hold(WorldSnapshot state)
+    private SimInput Hold(WorldSnapshot state)
     {
         if (state.Transition != VehicleTransition.None)
         {
@@ -1075,6 +1075,19 @@ internal sealed class Level100ChainAutopilot
 
         if (state.Mode != VehicleMode.Walker)
         {
+            // Never come down over the sea (the rule the sorties follow). A
+            // jet can be left with nothing to shoot mid-wave: measured with the
+            // retail construction draws, the first wave's third drone was still
+            // unflagged as an objective when the second died over the water,
+            // and the unguarded morph lost the level at tick 4,162.
+            if (OverWater(state.PlayerPosition))
+            {
+                double homeYawError = YawErrorTo(state, _lastDryGround.X, _lastDryGround.Z);
+                double levelPitchError = -(state.FacingPitchMicroRad / 1_000_000d);
+                return new SimInput(0, 1, SimActions.None, 0, 0,
+                    LookAxis(homeYawError, 2_000), LookAxis(levelPitchError, 4_000));
+            }
+
             return new SimInput(0, 0, SimActions.ToggleMode);
         }
 
@@ -1311,17 +1324,23 @@ internal sealed class Level100ChainAutopilot
     /// flown and landed by <see cref="FlyLeg"/>, and in both cases the airframe
     /// is grounded when the walker branch is first asked for.</para>
     /// </summary>
-    private bool ClearedToLeaveJetMode(WorldSnapshot state)
+    internal bool ClearedToLeaveJetMode(WorldSnapshot state)
     {
         if (_horizontalOnlyZoneHandoff || state.PlayerOnGround)
         {
             return true;
         }
 
+        // A cruise hand-off must also come down on dry land. An approach can
+        // reach the walk-in radius straight from a fight, at speed, without
+        // ever committing to a landing; with the level's three-second pre-run
+        // the cold career did that at Target Zone 4 and drifted 13 m into the
+        // sea from 12 m up.
         if (!_flightLegCommittedToLanding)
         {
             return state.PlayerAltitudeAboveSurfaceMillimeters <=
-                ZoneHandoffClearanceMillimeters;
+                ZoneHandoffClearanceMillimeters &&
+                BallisticTouchdownIsDryLand(state);
         }
 
         return state.PlayerAltitudeAboveSurfaceMillimeters <=
@@ -2895,8 +2914,9 @@ internal sealed class Level100ChainAutopilot
     {
         double startX = state.PlayerPosition.X;
         double startZ = state.PlayerPosition.Z;
-        double startY = state.PlayerElevationMillimeters +
-            SimulationConstants.PulseCannonEmitterUpMillimeters;
+        // Gun 1 sits 258 mm above the Battle Engine (cockpit2.msh, z down).
+        double startY = state.PlayerElevationMillimeters -
+            (Level100CockpitEmitters.Gun(Level100CockpitEmitters.PulseGun, walkPose: true).ZMicrometres / 1000.0);
         double deltaX = aim.X - startX;
         double deltaY = aim.Y - startY;
         double deltaZ = aim.Z - startZ;

@@ -38,8 +38,9 @@ public sealed class Level100SkipPanningClientTests
         FrameAdvanceResult skipped = session.AdvanceFrameTicks(OneCoreStepTicks);
 
         Assert.Equal(0, skipped.CurrentSnapshot.Level100OpeningTicksRemaining);
+        // The gate is on the mission clock, which counts the pre-run.
         Assert.Equal(
-            skipped.CurrentSnapshot.Tick + Level100MissionTiming.ReleasedEventFrameTicks,
+            skipped.CurrentSnapshot.Level100Mission.Tick + Level100MissionTiming.ReleasedEventFrameTicks,
             skipped.CurrentSnapshot.Level100Mission.MessageBoxAllowedTick);
         Assert.False(session.HasHeldOrPendingInput);
     }

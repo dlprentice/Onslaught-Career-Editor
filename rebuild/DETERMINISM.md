@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-25 (the GDScript numerical foundation is retired with the return to C#; existing behavior boundaries retained)
+Last updated: 2026-09-26 (scripts on their INIT_SCRIPT events; the level's pre-run and the clocks; round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -98,6 +98,47 @@ Scenes with no spawned Plane retain schema 47 bytes. The recorded 838-step
 Headless fingerprint changed only because of the earlier exit-input definition
 identity; its test compares every tick's canonical bytes after substituting
 only the previous identity and recovers the previous complete trace.
+
+Since September 26 the same level event manager also carries the player
+Battle Engine's two self-refreshes, 6002 (crosshair) and 6003 (auto-aim), under
+a reserved listener identity, so the scheduler now exists from construction
+whether or not an aircraft does. Each construction and delivery takes one
+shared draw. Schema 49 adds the Battle Engine's targeting state: both
+crosshair readers, the retained crosshair line report (hit class and distance)
+and the lock sets. Schema 50 adds the Aquila's six weapon stores, their
+overheat flags, the walker's shields-recharging flag, the ammunition-depleted
+and overheated cue times, the Pulse's last Fire level and the Battle Engine's
+shake offsets and phase; it is selected only once any differs from
+construction, so a run that never fires or takes a hit keeps its schema.
+Schema 51 adds the jet Missile Pod (its charge, Fire level, mode flag, burst
+counter and both launch-slot counters) and, for each seeking round in flight,
+its heading, launch time and bound target. It is selected only once the pod
+differs from construction or a seeking round flies. The pod's burst
+continuation (event 5001) shares the same level event manager under its own
+reserved listener. Schema 52 adds every constructed unit's callback state (its
+near-camera flag, construction frame and first full Move); the callbacks
+themselves (4003, the AI's 3000/3001/3003, fire control's 4001 and the squads'
+4000-4002) are ordinary events on that manager. Every world built in the retail
+load order selects it. The definition identity's format 9 adds the base world's
+pine count, whose draws open the load. A set with the base world also takes the
+influence map's two draws and the warm-up units' draws during the load, and its
+two influence 1000 chains run on the same manager under their own reserved
+listener; they add no snapshot fields. Every round, the Battle Engine's and
+the drones', files its MOVE and its life event 4000 there too, under a round
+listener (0x1000_0000 + 2 × id, + 1 for a drone's), and moves when its MOVE is
+delivered. A round is dying once its life event is no longer filed, so
+snapshots and hashes gain no round fields.
+
+Level construction includes the 3.0 s pre-run: 60 whole frames with no input,
+as `CGame::PreRun` runs them before the visuals start. Tick 0 is retail frame
+60. The event clock and the mission clock count from the load, so both read 60
+at tick 0, and a session's tick differs from them by the pre-run (and, after
+`SimActions.Reset`, by the reset's tick as well). Code that compares a script
+or mission due tick must use that clock, never the session's tick. Replays and
+tapes are unchanged: the pre-run is part of constructing the level. Scripts
+start on INIT_SCRIPT (2001) and `ready()` (2003) events in that manager, under
+script listeners (0x0800_0000 + actor id, 0x0C00_0000 + a carrier's level row),
+so a script's `init()` and its draws take their place in the flush's order.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The
