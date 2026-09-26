@@ -189,6 +189,7 @@ export before calling a label wrong.
 | `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
 | `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
 | `00407a50` | `CBattleEngine__UpdateCameraVectorsAndInput` | `CBattleEngine::UpdateRotation` (builds `+0x3c` from yaw, pitch, roll and the shake terms) | [aiming](reverse-engineering/game-mechanics/battle-engine-aiming.md#launch-position-and-direction) |
+| `004f99b0` | `CUnit__PlayRespawnVoiceCueIfAvailable` | `CUnit::StartPlayingInitNoise` (starts the profile's `+0x34` looping sample; called for every unit after the pre-run) | [construction order](reverse-engineering/game-mechanics/level100-construction-order.md#pre-run-pan-and-the-first-rendered-frame) |
 
 ### RE record audit — requested September 25
 

@@ -1,7 +1,7 @@
 # Level 100 construction order: shared draws and queued events
 
 Status: active static contract for the rebuild's Level 100 start
-Last updated: 2026-09-26 (influence-map draws, warm-up units and Battle Engine events added)
+Last updated: 2026-09-26 (influence-map draws, warm-up units, Battle Engine events, and the pre-run and first rendered frame)
 Summary: the order in which Level 100's construction consumes the shared gameplay
 random stream and queues events, from the base-world pines to the last level-world
 row, and what each event's first delivery draws.
@@ -500,6 +500,57 @@ guide below.
 - The dropship guide update (`0x00448930`, guide slot 3) switches on the unit's
   `+0x27c`. It draws only in state 3 (`0x00448d4c`) and state 5 (`0x004491a1`), and
   the U-17 starts in state 0 or 6.
+
+## Pre-run, pan and the first rendered frame
+
+- **Pre-run.** `RestartLoopRunLevel` calls `CGame::Update` while the game state is 1
+  (`0x0046e040-0x0046e05d`, `game.cpp:2063-2071`). It skips the loop only when
+  `0x00662dd4` (resource building) is set.
+  - Each pass is a whole update: the frame counter, `AdvanceTime` (`0x0046eb5d`),
+    each controller's `Flush`, the event flush (`0x0046ebce`) and
+    `CAtmospherics::ProcessAll`.
+  - Nothing is rendered: `CGame::Render` (`0x0046e460`) has one caller, `MainLoop`
+    (`0x0046f151`).
+- **Frame 60.** FINISHED_PRE_RUN is the first lane-0 event of bucket 59.
+  - `InitRestartLoop` files it (`0x0046c5f0`) straight after resetting the event
+    manager (`0x0046c587`), and the calls in between reach no `AddEvent`.
+  - Its handler (`0x0046ff5a`) sets state 2, starts each player's pan
+    (`0x004d2c10`) and files FINISHED_PANNING at now + pan (`0x00470018`).
+  - The rest of frame 60's flush and update run in state 2. The loop then exits.
+- **After the pre-run.** These run before any frame is rendered, and none reaches a
+  shared-stream draw:
+  - every unit in `0x008550d0` starts its looping noise (`0x004f99b0`, the GPL
+    source's `StartPlayingInitNoise`, `game.cpp:1414-1420`);
+  - the level music starts when `0x00662dcc` is set (`0x0046e0ba`);
+  - the loading screen is switched off (`0x0046e0c7`).
+  Then `MainLoop` starts. Each pass runs `Update` (`0x0046efd7`) before `Render`, so
+  the first rendered frame shows frame 61's update.
+- **Pan end.** FINISHED_PANNING arrives on frame 180 in Level 100 (a 6.0 s pan) and on
+  frame 100 in World 110 (2.0 s). Its handler (`0x00470024`) sets state 3 and posts
+  "game playing".
+- **What differs while the state is 1.** Of the 61 reads of the game state
+  (`0x008a9ac0`), three touch simulation:
+  - The Battle Engine's motion controller always runs its full per-frame update in
+    state 1 (`0x004988b0`, from its own 3000). From state 2 on, it returns early
+    once idle for five updates (`+0x50` = 0 and `+0xcc` ≥ 5, `0x004988c9`). Neither
+    path reaches a shared draw. What the pose feeds besides rendering is not traced.
+  - `CBattleEngine::Move` zeroes the controller's animation blend `+0x2c` from state 3
+    on (`0x004084a6`, `BattleEngine.cpp:1343`). The blend starts at 0
+    (`0x0049849e`). `CBattleEngine::Init` sets it to 1.0 only on levels 221, 222,
+    231, 232, 331, 332, 523 and 524 (`0x00405458-0x00405493`), so Level 100 and
+    World 110 are unaffected.
+  - Engine effects (`0x0040ebf0`, from `Move`) run only while panning or in
+    multiplayer. They reach no draw.
+
+  The other reads concern input, sound or presentation:
+  - the reconnect check and the guide counter `0x00854d90`, which is written only
+    and never read (`0x0046ea7c`);
+  - mouse look and rotation input, which run only in state 3;
+  - player buttons, ignored in states 1 and below (`Player.cpp:286-287`);
+  - non-repeating sounds, dropped in state 1 (`0x004e0b57`);
+  - vibration and pause.
+
+  Script events run in every state up to 3, pre-run included (`0x004f438c`).
 
 ## Open questions
 
