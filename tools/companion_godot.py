@@ -354,7 +354,8 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         f"It bundles Microsoft.NETCore.App {pins['dotnet']['runtimeVersion']}; no installed .NET runtime is needed.\n"
         "The application MIT license, Godot notices and .NET notices are included here.\n"
         "This package contains no retail assets or saves; it reads your own copy of the game.\n" +
-        ("This Windows build was made on Linux and has not yet been run on Windows. Cross-export is not Windows\n"
+        ("This Windows build is not code-signed, so Windows SmartScreen may call it an unrecognised app.\n"
+         "It was made on Linux and has not yet been run on Windows. Cross-export is not Windows\n"
          "execution acceptance.\n" if platform == "windows" else ""),
         encoding="utf-8")
     # A package inventory records the concrete cross-export, without claiming platform execution.

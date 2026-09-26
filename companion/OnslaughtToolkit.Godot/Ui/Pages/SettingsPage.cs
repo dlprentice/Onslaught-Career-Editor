@@ -36,7 +36,7 @@ internal sealed class SettingsPage : Page
     private (int EntryId, int Slot)? _capturing;
     private bool _loading;
 
-    internal SettingsPage(AppServices app) : base("settings", "Settings", "settings")
+    internal SettingsPage(AppServices app) : base("settings", "Game settings", "settings")
     {
         _app = app;
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
