@@ -359,13 +359,11 @@ session carries the released 43-node career graph
 measured ReCalcLinks unlock admits it — the root always, any other world once a
 completed incoming link points at it. The launch edge was renamed
 `LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
-*constructs* is still Level 100 only: world-110's compiled scripts, heightfield,
-identity-only authored-definition projection, and exact serialized player-1
-start are admitted by Core (below), and direct mission tests execute its
-LevelScript through the first wait. The old relabeled-Level100 Simulation route
-is explicitly unsupported. A
-construction-ready world-110 actor/player/Battle Engine set and Godot lifecycle
-still do not exist, so the host cannot build that world. After a Level 100 Won
+*constructs* is still Level 100 only. Core builds World 110 from retail data
+through its start state, with the career's carry-over from Level 100 (below),
+and the Client session can launch it, but the Godot host has no World 110
+lifecycle or presentation yet. The old relabeled-Level100 Simulation route is
+explicitly unsupported. After a Level 100 Won
 reaches `FrontEndHandoffReady`, Client applies
 the pinned FillOut/Career update, consumes the two Career Goodie latches in
 retail order, and opens `FEP_DEBRIEFING`. The settled page projects the measured

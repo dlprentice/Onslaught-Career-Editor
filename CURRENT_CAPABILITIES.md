@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-26 (companion rebuilt around players; rebuild constructs World 110; earlier entries keep their stated limits).
+Last updated: 2026-09-26 (companion rebuilt around players; rebuild wins Level 100, builds World 110 and matches its final capture; earlier entries keep their stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -476,6 +476,33 @@ reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
+**September 26: Level 100 won, World 110 built, final capture.** The RE lane's
+contracts for Level 100 are carried in C#, each with a focused test: the
+Battle Engine's crosshair and auto-aim refresh, weapon stores and recoil shake,
+the jet Missile Pod with locks and seeking rounds, every round's launch basis
+and its own MOVE and life events, the cockpit Gun emitters, the retail load
+order with every unit's callbacks, the influence map and warm-up draws, the
+three-second pre-run, scripts starting on their INIT_SCRIPT events, waypoint
+walks, the U-17's flight and the planes' move orders and retreat. The cold-start
+route plays Level 100 through the player-input surface and wins it, and its
+recorded tape replays deterministically to the same win
+(`Level100ColdStartTests`; `npm run check:rebuild` replays it twice). World 110
+is built in Core from retail data through its start state, and a Level 100 win
+carries its surviving base world into World 110's load through the one Won
+career update; the Client session launches World 110 with that carry-over
+(`World110ConstructionTests`, `World110CarryOverTests`,
+`Level100WonCareerHandoffTests`, `RetailCampaignFlowTests`). The Godot host
+still plays only world 100, and World 110's landing craft do not fly yet. A
+final offscreen capture of `main` matched the September 25 baseline except
+differences traced to evidence
+([VALIDATION.md](VALIDATION.md#return-to-all-code-c--september-25)): the
+baseline's missing pines, the terrain's stage-3 detail matrix and the September
+26 simulation contracts. The rebuild's Windows PowerShell launchers were retired
+the same day; the Linux launcher carries their smoke and capture checks. Still
+open: World 110 in the host, the friendly turrets and parts of auto-aim,
+physical input and audible audio, a side-by-side comparison with a retail run,
+and Windows.
+
 **September 25 return to all-code C#.** The rebuild is C# only and built in
 code again (David's direction), on the exact `4.8.dev6.mono.official.8898c2b3d`
 engine and `Godot.NET.Sdk/4.8.0-dev.6` with `net8.0`. Its code is the last
@@ -487,9 +514,8 @@ records the identical smoke tape (`89ca7b4b…`), the C# headless replayer
 reproduces its trace and final state (`a4e6673b…`, `53c1cc64…`) and the first
 flight fingerprint, and an offscreen Movie Maker capture of startup, menus and
 Level 100 matches the September 25 baseline's audio byte for byte and its frames
-except the evidenced differences in [VALIDATION.md](VALIDATION.md). Full-combat
-Level 100, World 110, physical-input/audio, Windows and normal GPU acceptance
-remain open. No desktop input or desktop capture was used.
+except the evidenced differences in [VALIDATION.md](VALIDATION.md). Level 100 and
+World 110 moved on September 26 (above). No desktop input or desktop capture was used.
 
 **September 6 native Linux evidence.** Godot 4.7.2 .NET built and ran through
 the native synthetic First Flight smoke with no Godot error. A separate normal
@@ -965,29 +991,18 @@ actor scripts keep the spawn-registration and clock hooks; the pending Hangar
 spawn regression first failed without those hooks, then passed with them.
 Aircraft event arithmetic and its mode are retained in schema 47.
 
-Complete cold combat still fails. After the September 12 exit integration,
-the shipping-manifest route reaches `Won` at tick 8141 with hull 4400 through
-the low-health abort at tick 7805, with one of six final-wave kills. Both cold
-input adapters match throughout, including hash
-`b163d10bbd55bf1f183cad36c146f41c5cfa8016ff4a1480a05ab3b5faf6dc30`.
-The six-kill/no-abort assertions remain. The camera-origin firing correction
-is retained; its earlier tick-7194/hull-7050 result predates raw free flight.
-Neither a winning terminal state nor input-adapter equality closes this gap.
-
-The separate returning-career driver retains reduced fixture definitions.
-After the exit integration it reaches `Won` at tick 5588 with hull 11450,
-destroys all 22 targets including all six final drones, deals their full 6000
-damage and completes objective 4 without abort. The repeated run and three
-related combat/accounting checks pass. Its earlier zero-kill abort is superseded
-for this driver; the shipping-manifest cold route above remains failing.
-The changed exit timing and random consumption do not isolate which part of
-the correction affected each shot. The
-[full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs)
-retain the independent naive and trigger-disabled controls. The retired
-unquantized cold control used different commands and lost to water after two
-final-wave kills; forcing both different bot trajectories to win was not a
-client-adapter correctness contract. No steering gains or production water
-rules were changed to recover that outcome.
+Cold combat wins. The cold-start route clears the firing range, flies and
+lands all three flight legs, destroys the Target Trucks, Moving Targets and the
+first airborne wave with the weapons in the order the script hands them over,
+and ends the final wave on one of its two released branches, six kills or the
+sub-40 % abort. The six-kill assertion that failed from September 12 was a
+driver expectation, not a retail invariant (the RE lane's final-wave contract).
+The returning-career chain autopilot, on reduced fixture definitions, also
+reaches `Won` by input alone. Current ticks, hull and kill counts are pinned in
+[`Level100ColdStartTests`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs)
+and the [full-chain tests](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs),
+which also retain the independent naive and trigger-disabled controls; they
+are not copied here.
 
 These are synthetic in-process regressions. The driver reads exact health,
 poses and terrain visibility; its commands cross the player-input surface but
