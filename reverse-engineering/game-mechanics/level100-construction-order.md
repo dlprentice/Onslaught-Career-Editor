@@ -1,7 +1,7 @@
 # Level 100 construction order: shared draws and queued events
 
 Status: active static contract for the rebuild's Level 100 start
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (influence-map draws, warm-up units and Battle Engine events added)
 Summary: the order in which Level 100's construction consumes the shared gameplay
 random stream and queues events, from the base-world pines to the last level-world
 row, and what each event's first delivery draws.
@@ -54,9 +54,17 @@ unless stated.
    - initialises the explicit trees: ferns are skipped by name, and each of the
      1,481 pines takes one shared draw and then queues collision 3000
      ([World 110 owner](world-110-initial-constructor-seeds.md#connected-base-tree-prefix-and-numerical-limits));
+   - loads the influence map (`CInfluenceMapManager::Load` `0x0048b010`, called at
+     `0x0050cf38` because this is the base pass). Its last step, `0x0048b8e0`,
+     takes one draw (`0x0048bf0f`, on every path) and queues 1000 at now + 1.0 +
+     (r mod 65536) × 2⁻¹⁶ (`0x0048bf5a`); `0x0048bf70` then queues 1002 at now + 0.5
+     (`0x0048bfee`);
    - runs ordinary `Init` for rows 0-34 in file order. The career gate
      `DoesBaseThingExist(world, row)` (`0x0050cf8f`) passes every row on a fresh
      career.
+   - The level world's scripts were loaded before this recursive call
+     (`LoadScriptEvents` at `0x0050bbde`), so the base pass's end already collects
+     the unit names the scripts spawn (see step 3).
 2. The level world then allocates its 45 rows, reads past its tree tables and runs
    `Init` for rows 0-44 in file order, with no career gate.
    - Row 0 is the Start (type 15). `CStart::Init` (`0x004eae10`) ends in
@@ -64,7 +72,14 @@ unless stated.
      and calls its `Init` inline (`0x004eaf6a`). So the Battle Engine's
      construction draws come straight after base-world row 34 and before level-world
      row 1.
-3. `CPlayer` is allocated after `LoadWorld` returns (`0x0046cea9`/`0x0046cf2d`).
+3. After the last level-world row, the loader's tail (`0x0050d417-0x0050d449`,
+   level pass only) runs:
+   - `SpawnInitialThings` (`0x0050dcb0`) warms up script-spawned unit types
+     ([below](#warm-up-units));
+   - `0x0048b8e0(0)`: one draw (`0x0048bf0f`) and a new 1000 at now + 1.0 +
+     (r mod 65536) × 2⁻¹⁶;
+   - `0x0048b7d0`: 1001 at now + 0.25 (`0x0048b8cf`).
+4. `CPlayer` is allocated after `LoadWorld` returns (`0x0046cea9`/`0x0046cf2d`).
    `CGame::PostLoadProcess` then runs `CPlayer::Init` (`0x0046d1b3`) and sorts
    MapWho (`0x0046d23a`).
 
@@ -144,7 +159,7 @@ neighbour scan; the scan's later-time 2000s are listed under
 
 | Rows | Class | Construction sequence |
 | --- | --- | --- |
-| 0 | `CStart` | nothing for the Start itself, then the Battle Engine: collision; draw (Actor); MOVE; 4003; draw; 6002; draw; 6003 |
+| 0 | `CStart` | nothing for the Start itself, then the Battle Engine: motion controller 3000; collision; draw (Actor); MOVE; 4003; cockpit 2001 (priority 2); receiver 4000 (priority 2); draw; 6002; draw; 6003 |
 | 1-4, 6-8, 10, 18, 22-38, 41-44 | `CWaypoint` | nothing |
 | 5 (`LevelScript`), 17 (`Setup`) | `CLevelScriptThing` | 2001 |
 | 9, 12 (`Target Tank`) | `CNormalSquad` with one `CGroundVehicle` | member: 2001; collision; draw (Actor); MOVE or LF_MOVE; 4003; draw (hover); 2003; AI 3000. Squad: draw; 4000; draw; 4001; draw; 4002 |
@@ -159,8 +174,18 @@ neighbour scan; the scan's later-time 2000s are listed under
 - **Script carriers.** `CLevelScriptThing::Init` (`0x004900d0`) also sets mask −1.
 - **Zones.** `CSphereTrigger::Init` (`0x004e5500`) sets mask `0x20`, so a zone
   gets a collision component after its script event.
-- **Battle Engine.** Its Unit Init takes the Actor draw
-  ([final-wave contract](level100-final-drone-wave.md#crosshair-and-auto-aim-refresh)).
+- **Battle Engine.** `CBattleEngine::Init` runs in this order:
+  - the motion controller (`CMCMech` constructor at `0x00405402`) queues 3000 at −1
+    (`0x004984d3`), before the engine's own collision;
+  - `CUnit::Init` (`0x004054c6`) takes the Actor draw
+    ([final-wave contract](level100-final-drone-wave.md#crosshair-and-auto-aim-refresh))
+    and queues MOVE and 4003;
+  - the cockpit constructor (`0x004055dc`) queues 2001 at −1, priority 2 (`0x00424685`);
+  - the radar-warning receiver (`0x00405710`) queues 4000 at now + 0.03, priority 2
+    (`0x004d65da`);
+  - then the 6002 and 6003 draws.
+  None of the three new events draws at delivery (handlers `0x00424a00` and
+  `0x004d6a10` reach no draw site).
   The spawn uses the Start's initializer, whose script is empty, so it queues no
   2001, and its spawn particle effect draws nothing from the shared stream. Its
   6002 lands in buckets 1-5 and its 6003 in buckets 3-5, so neither is in the
@@ -298,6 +323,37 @@ Results, from static positions:
 - The other zones see no mover. The Battle Engine's own scan (mask 0) may pair with
   nearby pines and buildings; that count is open.
 
+### Warm-up units
+
+`SpawnInitialThings` builds one instance of every unit type the level's scripts
+spawn, then destroys it at once, before play starts.
+- The names come from `CollectSpawnThings` (`0x005392a0`, run for every loaded
+  script at the end of each load pass). For each native call to `SpawnThing` it
+  takes the first argument, the unit-name constant; the compiled scripts confirm it,
+  including `LevelScript`'s `GetThingRef("Airfield").SpawnThing("Air Trainer", …)`.
+- `CWorldMeshList::Add` (`0x0050d9e0`) keeps only unit profiles, skips names already
+  listed, prepends (`CSPtrSet::AddToHead`) and recursively adds the units made by
+  that profile's attached spawners.
+- `CUnit::Init` calls `MarkUsed` (`0x0050dc20`, at `0x004f908e`) for every unit it
+  builds, and `SpawnInitialThings` skips marked names. Because the names are
+  collected before the level rows are built, a type that a row already built is
+  skipped.
+- Each remaining name is created by `0x0050df80` with a fresh `CUnitInitThing` at
+  (256, 256, 0), allegiance 2 and no script, fully initialised (slot 9), then shut
+  down (slot 2 → `CThing::Shutdown` `0x004f3600`, which deletes it). Its queued events
+  keep null targets, and `Flush` skips them (`0x0044b67d-0x0044b68a`), but its
+  construction draws stand.
+
+Level 100's scripts spawn Target Drone (`Hangar`), Air Trainer (`LevelScript`),
+Target Tank and Target Truck (`TankFactory`), in the scripts' file order, so the list
+runs Target Truck, Target Tank, Air Trainer, Target Drone. Rows 9 and 12 build Target
+Tanks and row 40 the Air Trainer, so two warm-ups remain:
+
+| Order | Unit | Class | Draws |
+| ---: | --- | --- | --- |
+| 1 | Target Truck | `CGroundVehicle` | Actor draw (multiplier 4), hover draw |
+| 2 | Target Drone | `CPlane` | Actor draw, final draw (`0x004d1bae`) |
+
 ## Allegiance at construction
 
 A unit's allegiance `+0x138` is its initializer's `+0xa0`, copied by `CUnit::Init`
@@ -343,6 +399,8 @@ reads it from the row, after the mesh number. `onsldef.msl` names 0 friendly,
   events.
 - It then delivers lane 1: the Warehouse's overlap 2000 (row 11), then Target Zone
   4's (row 16).
+- Lane 2 follows: the Battle Engine's cockpit 2001 and radar-warning receiver 4000
+  (0.03 is inside the current bucket's 0.051 window). Neither draws.
   - Each delivery (`0x004812d0`) re-runs `HandleCollisionEnter` with both components
     now ready, so the response runs.
   - While the pair still overlaps, it queues another 2000 at −1, which lands in
@@ -416,6 +474,10 @@ At frame 2:
 | AI target search (inside `Update`) | slot 4 (`0x004ff4f0`) calls slot 11 when the AI has no target (`0x004ff6fe`) | `CUnitAI`'s selector (`0x004ff710`) draws once per candidate that passes the side, activity and range tests, and only for a `CUnitIndiscriminate` profile (`0x004ff8c2-0x004ff8d8`). `CRepairPadAI` (Health Pad) differs only in this slot (`0x004d6d10`), which draws nothing. No Level 100 profile is Indiscriminate, so the search draws nothing here |
 | AI 3001 (Warehouse) | `0x004feac0` | one (`0x004feb80`) when no target is found, then 3001 at now + 1.0 + (r mod 65536) × 2⁻¹⁶ |
 | script 2003 | `0x005335a0` | none; it calls the script's `ready()` event |
+| influence 1000 | `CInfluenceMap` handler (`0x0048c120`) → `0x0048b8e0(1)` | one (`0x0048bf0f`), then a new 1000 at now + 1.0 + (r mod 65536) × 2⁻¹⁶. Load starts two such chains (base pass and tail), so about two draws per 1-2 s all level |
+| influence 1001 / 1002 | `0x0048c120` | none; 1001 requeues at now + 0.25 (`0x0048c2a8`) |
+| cockpit 2001, receiver 4000 | `0x00424a00`, `0x004d6a10` | none; each requeues its own event |
+| motion controller 3000 (Battle Engine) | `0x00498870` | none; requeues its own event (`0x004988a6`) |
 | squad 4000 | `CNormalSquad` slot 0 (`0x004e7040`) → `0x004e8100` | refreshes the target reader when `+0x114` is set and `+0x120` ≠ 1 (search `0x00477cb0`, no draw), then one draw (`0x004e8177`) and a new 4000 at now + 2.0 + (r mod 65536) × 2⁻¹⁵ |
 | squad 4001 | slot 0 → prune(1) (`0x004e83b0`) | drops dead members, resolves formation slots (`0x004e84e0`, no draw), then one draw (`0x004e8486`) and a new 4001 at now + 1.0 + (r mod 65536) × 2⁻¹⁶ |
 | squad 4002 | `0x004e65e0` → slot 66 (`0x004e7070`) | runs `Process`; when it returns 0, one draw (`0x004e709c`) and 4002 at now + 0.99 + (r mod 65536) × 1.5258789e-7, otherwise 4002 at −1 with no draw. It returns 1 only on its formation path (destination more than 1 unit away or an active path); a squad that has a target takes a branch not traced here |
@@ -443,6 +505,7 @@ guide below.
 
 | Question | Cheapest falsifier |
 | --- | --- |
+| Whether both influence 1000 chains persist, and the receiver's 0.03 delay (read from its initializer, not traced end to end) | Count hits on `0x0048bf0f` per second, and log the receiver's first 4000, in a copied runtime |
 | Whether this static order matches retail end to end, from the first pine draw through frame 2 | Log the return address of every `Random__NextLCGAbs` call on `0x008a9d9c` from level load through frame 2 in a copied runtime |
 | What the response `0x004264a0` does in the first flush for the two overlapping pairs, including its virtual callees | Trace the response's virtual calls for `CBuilding`/`CGroundVehicle` and `CSphereTrigger`/`CBattleEngine` pairs, or read lane 1 in the draw log |
 | Which pairs the Battle Engine's and the units' first scans find, and their 2000 times | Recompute the scans with the Level 100 heightfield in Core, or log `0x00480ed0` arguments during load |
