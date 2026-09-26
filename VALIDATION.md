@@ -70,6 +70,30 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Level 100 won tape — September 25
+
+The cold-start Level 100 run (frontend by clicks, then the chain autopilot on
+the client's own `InteractiveSession`) now records its command tape from tick 0,
+as the Godot host's `--record-tape` does. `Level100ColdStartTests.
+ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin` builds that tape and
+replays it twice through `ReplayRunner`; both replays reproduce the live trace
+and final-state hashes and end with the mission **Won**. The tape covers
+**8,141 ticks**, trace `885ae25b…`, final state `0a656b1c…`; the C# headless CLI
+(`--repeat 2`) reproduces both with no divergence
+(`.worktrees/godot-editor-48-20260919/local-data/test-runs/level100-won-tape-20260925-225339/`).
+
+The win goes through retail's designed abort branch: the final drone wave aborts
+after one kill once the player's life falls below 40 %, and `LevelWon()` still
+follows. The RE lane's contract
+([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md))
+shows the rebuild lacks two retail helps in that wave, the four friendly turrets
+that Help Player activates and the jet Missile Pod, and that every base-world
+Building and Cannon draws shared RNG from level start. Until those land, this
+tape is a deterministic, won run of the current rebuild, not a retail-parity
+playthrough. `ColdStart_PlaysLevel100ThroughThePlayerInputSurface` still fails
+on its six-kill expectation, which the contract classes as a driver
+expectation, not a retail invariant.
+
 ### Return to all-code C# — September 25
 
 David directed that the project be 100% C# and built in code. The rebuild's
