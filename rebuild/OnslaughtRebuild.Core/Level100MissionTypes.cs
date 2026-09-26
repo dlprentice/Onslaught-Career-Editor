@@ -324,7 +324,12 @@ public sealed record Level100HelpRequested(int Tick, int HelpMessageId)
 public sealed record Level100ScoreChanged(int Tick, int Delta, int TotalDelta)
     : Level100MissionEvent(Tick);
 
-public sealed record Level100TutorialSlotSaved(int Tick, int Slot)
+/// <summary>
+/// <c>IScript::SetSlotSave</c> (<c>0x00533900</c>) stored a tutorial slot; it
+/// also calls <c>CCareer::SetSlot</c> at once, which the career's owner
+/// applies from this event (<see cref="RetailSetSlotSave.PersistCareerSlot"/>).
+/// </summary>
+public sealed record Level100TutorialSlotSaved(int Tick, int Slot, bool Value = true)
     : Level100MissionEvent(Tick);
 
 public sealed record Level100PrimaryObjectiveChanged(

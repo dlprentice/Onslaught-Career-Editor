@@ -20,15 +20,19 @@ public sealed class SimulationTests
 
     /// <summary>
     /// A world's session starts at its Start row, so a definition set without
-    /// one (the partial World 110 admission's) is refused before anything is
-    /// constructed.
+    /// one is refused before anything is constructed.
     /// </summary>
     [Fact]
     public void Constructor_RejectsAWorldWithoutItsStart()
     {
-        var world = RetailWorld110InitialConstruction.Create();
+        Level100ActorDefinitionSet world = Level100TestActorDefinitions.LoadMaterializedWorld110();
+        var withoutStart = new Level100ActorDefinitionSet(
+            world.Actors.Where(actor => actor.Name != "Player 1")
+                .Select((actor, order) => actor with { AuthoredOrder = order }), world.Spawns, world.WaypointPaths,
+            world.MotionDefinitions, worldNumber: 110, baseWorldPineCount: world.BaseWorldPineCount,
+            squads: world.Squads, components: world.Components);
         NotSupportedException error = Assert.Throws<NotSupportedException>(() =>
-            new Simulation(1, world.ActorDefinitions, worldNumber: 110));
+            new Simulation(1, withoutStart, worldNumber: 110));
         Assert.Contains("no Start", error.Message);
     }
 
@@ -74,12 +78,12 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("5ec17b036443cbd88e576d0b0e5db210a384d8a156eccf5a216bdade5440c311",
+        Assert.Equal("9267f6a7d83403582b2216c9881b1274916706f7fae7478d4d3aeb65f6140967",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("92a1fcce5c8cc5ce523bd982f6fdcac3ad37b35f97d5f500cbe5488ee5f9b064",
+        Assert.Equal("eaadf29f32ea0b4c02f6d11a648e030558a8830a39a160c63ef7268fd2732ec0",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "9a3271f06004ee1407f86d95e5b0ef67d4ef03bd35799da0bf99a1c6709cf020",
+        Assert.True(hash == "6fb8f61179c0844b685e019f29eaff19a17b5ea99c62839ae7f044c3d525ff23",
             $"Canonical state hash: {hash}");
         Assert.Equal(52, CanonicalSchemaVersion(rootState));
 
@@ -704,11 +708,17 @@ public sealed class SimulationTests
     {
         Simulation simulation = CreatePlayingSimulation();
 
+        // The opposite hard press three event frames earlier: inside retail's
+        // window on every frame (walker-dash.md).
         WorldSnapshot backward = simulation.Step(new SimInput(0, -1));
         Assert.Equal(new SimVector2(34, -61), backward.PlayerVelocity);
+        simulation.Step(SimInput.Idle);
+        simulation.Step(SimInput.Idle);
 
         WorldSnapshot triggered = simulation.Step(new SimInput(0, 1));
-        Assert.Equal(new SimVector2(-831, 1_485), triggered.PlayerVelocity);
+        // The backward velocity retained over the two idle frames, (11, -20),
+        // plus the dash's acceleration, (-854, 1527).
+        Assert.Equal(new SimVector2(-843, 1_507), triggered.PlayerVelocity);
         Assert.Equal(14, triggered.WalkerDashTicksRemaining);
         Assert.Single(
             triggered.AquilaFlightEventLog,
@@ -733,12 +743,16 @@ public sealed class SimulationTests
 
         WorldSnapshot released = simulation.Step(new SimInput(0, -1));
         Assert.Equal(-1_000, released.WalkerLastMoveZPermille);
-        Assert.Equal(released.Tick, released.WalkerLastHardBackwardTick);
+        Assert.Equal(
+            BitConverter.SingleToInt32Bits(RetailEventScheduler.TimeAtFrameCount(released.RetailEventFrameCount)),
+            released.WalkerLastHardBackwardTimeBits);
 
         // The retail lateral pair is asymmetric: left assigns +0.08 roll
         // velocity, while right subtracts 0.08 from whatever residual remains.
         var lateral = CreatePlayingSimulation();
         lateral.Step(new SimInput(1, 0));
+        lateral.Step(SimInput.Idle);
+        lateral.Step(SimInput.Idle);
         WorldSnapshot leftDash = lateral.Step(new SimInput(-1, 0));
         Assert.Equal(
             SimulationConstants.WalkerDashRollVelocityMicroRadPerTick,
@@ -751,9 +765,11 @@ public sealed class SimulationTests
             lateral.Step(SimInput.Idle);
         }
         lateral.Step(SimInput.Idle);
-        WorldSnapshot hardLeft = lateral.Step(new SimInput(-1, 0));
+        lateral.Step(new SimInput(-1, 0));
+        lateral.Step(SimInput.Idle);
+        WorldSnapshot beforeRight = lateral.Step(SimInput.Idle);
         int expectedRightRoll =
-            (int)((long)hardLeft.RollVelocityMicroRadPerTick *
+            (int)((long)beforeRight.RollVelocityMicroRadPerTick *
                 SimulationConstants.WalkerYawRetentionNumerator /
                 SimulationConstants.WalkerYawRetentionDenominator) -
             SimulationConstants.WalkerDashRollVelocityMicroRadPerTick;
@@ -763,6 +779,46 @@ public sealed class SimulationTests
         Assert.Single(
             rightDash.AquilaFlightEventLog,
             item => item.Kind == AquilaFlightEvents.WalkerDashRequested);
+    }
+
+    /// <summary>
+    /// Retail's dash window (walker-dash.md) compares float32 event times:
+    /// now - 0.2f &lt; last &lt; now - 0.1f, each difference rounded to float32.
+    /// With the hard backward press k event frames before the forward edge on
+    /// frame n: k = 3 always dashes; k = 1 and k = 5 never do; k = 2 and k = 4
+    /// dash only where the rounding admits them. The frames are the RE lane's
+    /// table extended past the pre-run and pan: from frame 185, k = 2 admits
+    /// only frame 321 before 400, and k = 4 first admits frame 325.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 200, false)]
+    [InlineData(3, 200, true)]
+    [InlineData(5, 200, false)]
+    [InlineData(2, 320, false)]
+    [InlineData(2, 321, true)]
+    [InlineData(2, 322, false)]
+    [InlineData(4, 324, false)]
+    [InlineData(4, 325, true)]
+    [InlineData(4, 326, false)]
+    public void WalkerDash_AdmitsTheOppositePressOnlyInsideRetailsFloatWindow(int k, int frame, bool dashes)
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        while (simulation.Snapshot.RetailEventFrameCount < frame - k - 1)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot backward = simulation.Step(new SimInput(0, -1));
+        Assert.Equal((uint)(frame - k), backward.RetailEventFrameCount);
+        for (int idle = 1; idle < k; idle++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot forward = simulation.Step(new SimInput(0, 1));
+        Assert.Equal((uint)frame, forward.RetailEventFrameCount);
+        Assert.Equal(dashes, forward.AquilaFlightEventLog.Any(item => item.Kind == AquilaFlightEvents.WalkerDashRequested));
+        Assert.Equal(dashes, forward.WalkerDashTicksRemaining > 0);
     }
 
     [Fact]

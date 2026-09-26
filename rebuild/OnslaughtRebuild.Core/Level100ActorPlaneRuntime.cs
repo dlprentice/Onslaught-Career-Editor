@@ -244,6 +244,12 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
+        if (dispatch.Listener % 2 == 0 && dispatch.EventNum == 3000 && IsDropship(actorId))
+        {
+            DispatchDropshipMove(events, dispatch, state, actor);
+            return;
+        }
+
         if (dispatch.Listener % 2 == 0 && dispatch.EventNum == 3000)
         {
             if (actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive)
@@ -291,6 +297,16 @@ public sealed partial class Level100ActorMechanics
 
     private void SetPlaneWaypointDestination(ActorState state)
     {
+        if (state.PlaneGuide is not null && state.WaypointPath is not null && IsDropship(state.ActorId))
+        {
+            // FollowWaypointWait (0x00537ed9) and the follower (0x005385b2)
+            // send the unit on with an unforced move order (slot 61).
+            Level100FloatVector4Bits node = GetWaypointPath(state.WaypointPath)
+                .Point(state.WaypointNodeIndex!.Value).RetailComponentsFloatBits;
+            IssueAirMoveOrder(state, new(node.X, node.Y, node.Z), force: false);
+            return;
+        }
+
         if (!PlaneScriptControlAvailable(state) ||
             state.PlaneGuide is not { ControllerState: not 2 } guide || state.WaypointPath is null) return;
         Level100FloatVector4Bits point = GetWaypointPath(state.WaypointPath)
@@ -392,20 +408,10 @@ public sealed partial class Level100ActorMechanics
         if (squared < 6.25f)
             state.PlaneSpawnerExit = exit with { Selector = checked(exit.Selector + 1) };
 
-        // The old selector's point is still sent on the arrival update.
-        // AirUnit GoTo (403a90) adds an INTEGER terrain/water/profile clamp
-        // after the above arrival test. Guide 47e2d0 receives override=TRUE,
-        // allowing it to write mode 1 even while controller state is 2.
-        int x = checked((int)Math.Round(Read(destination.X), MidpointRounding.ToEven));
-        int y = checked((int)Math.Round(Read(destination.Y), MidpointRounding.ToEven));
-        double terrain = RetailFloat24.Multiply(Level100Terrain.Instance.SampleAirGuideHeightUnits(x, y),
-            Level100Terrain.Instance.HeightScale);
-        double minimumAltitude = RetailFloat24.Subtract(Math.Min(terrain, Level100Terrain.Instance.WaterLevel), 4.0f);
-        // Profile default +15c is 4.0f; field42 is absent from selected rows
-        // Air Trainer601 / Target Drone660 and their Base Air Unit570 parent.
-        if (Read(destination.Z) > minimumAltitude)
-            destination = destination with { Z = BitConverter.SingleToInt32Bits((float)minimumAltitude) };
-        state.PlaneGuide = state.PlaneGuide with { Mode = 1, Destination = destination };
+        // The old selector's point is still sent on the arrival update, as a
+        // forced move order (slot 61): guide 47e2d0 then writes mode 1 even
+        // while controller state is 2.
+        IssueAirMoveOrder(state, destination, force: true);
 
         int sample = _releasedRandom.Next() % 65536;
         double jitter = RetailFloat24.Multiply(sample, BitConverter.Int32BitsToSingle(0x35cccccd));
@@ -576,7 +582,7 @@ public sealed partial class Level100ActorMechanics
         if (!Finite(guide.Destination.X) || !Finite(guide.Destination.Y) || !Finite(guide.Destination.Z) ||
             !Finite(guide.ClearanceFloatBits) || guide.Mode is < 0 or > 3 ||
             (source.PlaneSpawnerExit is null ? guide.ControllerState != 1 : guide.ControllerState is not (1 or 2)) ||
-            guide.SpeedMode != 0)
+            guide.SpeedMode is not 0 && !(IsDropship(source.ActorId) && guide.SpeedMode is 1 or 2))
             throw new ArgumentException("Unsupported aircraft guide state.", nameof(source));
         if (source.PlaneSpawnerExit is not { } exit) return;
         int tag = actor.SpawnerName == "SpawnerA" ? 15 : actor.SpawnerName == "SpawnerB" ? 16 : 0;

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (one owner for the Won career update; the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -40,7 +40,8 @@ are not replaced by the focused portable results below.
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
-| Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
+| Rebuild, the whole lane | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
+| Rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle. The larger `npm run test:rebuild` aggregate adds Windows-only Godot/capture gates and needs a Windows host. |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
@@ -69,6 +70,195 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### One owner for the Won career update — September 26
+
+Two owners applied the Level 100 Won update to a career. The frontend's Won
+re-entry updates the player's career in the product. `Level100Mission` kept a
+private cold career of its own that the product never read, and it also stored
+`SetSlotSave`'s tutorial bits only there. So in the product, a slot saved
+mid-mission reached the real career only through FillOut at a win.
+- `Level100WonCareerHandoff.TryApply` is now a static Core function taking the
+  career. It is the only place the Won snapshot is applied, and it returns the
+  snapshot. `RetailFrontendSession.TryAcceptWonHandoff` calls it.
+- The mission keeps no career. `SetSlotSave` (`0x00533900`, which calls
+  `CCareer::SetSlot` at once) now reports `Level100TutorialSlotSaved` with its
+  value. The Godot host forwards that event to the frontend, which stores it at
+  once (`RetailFrontendSession.SaveSlot`).
+- The handoff tests and the chain fixture follow their runs' mission events the
+  same way.
+
+Five mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/one-career-owner-20260926/mutation-kills/`):
+- the frontend dropping a slot save;
+- `TryApply` ignoring the outcome;
+- `TryApply` ignoring the terminal state;
+- the slot event losing its value;
+- the Won update dropping FillOut's survivors.
+
+Suites: Core 1,477, Client 918 with the two known skips, and the Godot build.
+The Level 100 pins are unchanged (the event's value is not hashed).
+
+### Retiring the separate World 110 stage — September 26
+
+World 110 had two construction owners in Core. `Simulation` builds it for the
+product (see "World 110 construction and start state"). A separate stage from
+August and early September never ran in the product: it had its own
+admissions of the materialized seeds, definitions and player start, a
+tree/Building/SAT/Feature construction prefix, turret-child inputs,
+start-list resolution and assignment, and the `CStart::Init` height prefix.
+The goal allows one owner per subsystem, so that stage is retired:
+- Core: 16 files (`RetailWorld110InitialConstruction` and its
+  `…Actor/…Building/…Cannon/…Feature/…Tree/…Unit/…LevelActors/…PlayerConstruction`,
+  `RetailUnitConstructionAttachments`, `RetailBuildingSegments`, and the
+  `RetailWorld…Admission`, start-assignment and height-clamp owners);
+- their 8 test classes (101 cases);
+- the three prototype-only embedded assets (`level110-initial-object-seeds.json`,
+  `level110-initial-actors.json`, `level110-player-inputs.json`). The
+  materializer still writes them; no Core code reads them.
+
+Production kept what it uses. `RetailUnitConstructionUse` moved to its own file
+(the Level 100 weapon mounts), and `RetailWorldTerrain`, `Level100Terrain.World110`,
+the world-200 admission, `RetailMapWho` and `RetailPlayerBattleEngineAssignment`
+stay with their tests. The Start refusal test now removes Player 1 from the
+materialized World 110 set, and the world-200 test pins the shared BSWD
+(54,669 bytes, `04c5a383…10f4`) literally.
+
+The retail evidence stays in the RE lane's
+`world-110-initial-constructor-seeds.md` and `world-110-player-start-admission.md`.
+The code and its mutation receipts stay in Git history (last present at
+`df392cb4`) and in the ignored `local-lab/rebuild-world110-*` receipts. Nine
+PARITY rows whose owners are gone were removed; the `CPlayer::AssignBattleEngine`
+row stays.
+
+Suites: Core 1,477 (was 1,578), Client 917 with the two known skips, and the
+Godot build. The Level 100 first-flight, smoke and won-tape pins are unchanged.
+
+### World 110's base-world carry-over from Level 100 — September 26
+
+A Level 100 win now hands World 110 its surviving base world, following the RE
+lane's contracts: `world-110-initial-constructor-seeds.md` ("Level 100 to World
+110: base-world carry-over") and `world-110-construction-order.md` ("From a
+Level 100 win to World 110"). Each address below was re-read from the pristine
+specimen (`74154bfa…`).
+- **FillOut.** `RetailFillOutEndLevelData.BaseThingsLeft` reads the 35
+  base-world rows from a level's end state (`0x0046d4cb-0x0046d4d1`). A row is
+  1 when the load built it and it is not dying; a skipped row reads 0. The two
+  SafeSides (rows 21 and 22, type 37) have no actor in Core; they are built and
+  never die. The frontend's Won handoff and the Godot host now pass this list.
+  Before, they assumed a first play that loses nothing.
+- **Career.** `ReCalcLinks` already copied the list onto World 110's node.
+  `RetailCareerNodeTable.LostBaseRows` reads back the rows whose
+  `CCareer::DoesBaseThingExist` (`0x0041bb20`) is false. Levels 850-899 keep
+  every row (`0x004725d0` tests 849 < level < 900), as does a world with no
+  node.
+- **Load.** `Simulation` and `InteractiveSession` take the lost rows, and the
+  registry does not build them. `GetThingRef` then finds nothing, so Setup's
+  `Exists` checks skip them.
+  - The load's building check (`0x0050d066-0x0050d073`) tests the type bit that
+    the building setter `0x00417660` sets (it ORs `0x40100120`). Cannons
+    (`0x40040220`) and features (`0x80500023`) lack it.
+  - A lost building runs ten iterations of two shared draws, the first for Y
+    and the second for X (`0x0050d09c-0x0050d123`). Each iteration stamps
+    landscape damage type 6 (`0x005475d0`) at the row's position plus
+    ((r mod 65536)·2⁻¹⁶ − 0.5) × 5.0, at single precision (constants
+    `0x37800000`, `0x3f000000`, `0x40a00000`).
+  - The mechanics keep the stamps; nothing renders them yet.
+- **Hashes.** The registry snapshot records the lost rows. A world with lost rows
+  or stamps has no hash schema, so the canonical hash refuses it, as it
+  already refuses every World 110 state.
+
+Tests: `World110CarryOverTests` (5), and
+`RetailCampaignFlowTests.WonHandoff_CarriesTheLevel100SurvivorsIntoWorld110sSession`,
+which carries a Tank Factory lost in Level 100 into World 110's session. What
+they pin:
+- a full carry-over keeps World 110's 1,622 load draws;
+- a lost Tank Factory takes 1,641, with its ten stamps pinned from the stream;
+- a lost Turret 03 takes 1,620 and leaves no stamp;
+- FillOut reads a dying building as 0.
+
+Eight mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/world110-carry-over-20260926/mutation-kills/`):
+- no draws for a lost building;
+- X drawn before Y;
+- cannons stamping;
+- the registry building lost rows;
+- FillOut ignoring the dying bit;
+- FillOut dropping the SafeSides;
+- levels 850-899 reading their node;
+- a 2.5 spread.
+
+Level 100 is unchanged: its construction has no lost rows, and the
+first-flight, smoke and won-tape pins pass unchanged. Suites: Core 1,578,
+Client 917 with the two known skips, and the Godot build.
+
+Open:
+- which Level 100 rows a player can actually destroy (the RE lane's falsifier
+  is a copied-retail run that destroys one base building);
+- the stamps' rendering;
+- the Godot host still plays only Level 100. SELECT LEVEL offers World 110
+  after a win, then returns to the selector because World 110 has no
+  presentation yet: its unit meshes, landing craft and fighters.
+
+### Walker dash window — September 26
+
+The RE lane's walker-dash contract
+(`reverse-engineering/game-mechanics/walker-dash.md`) found a second bound in
+retail's dash window that the source lacks. Re-read here from the pristine
+specimen (`74154bfa…`):
+- `Forward` (`0x00412e1f-0x00412e58`) and its three twins need
+  now − mDashTime < last < now − 0.5 · mDashTime. Both bounds are strict
+  (`test ah,0x41` / `jne`, then `test ah,0x01` / `je`), and each difference is
+  rounded to float32.
+- `mDashTime` is 0.2f (`0x006236ac`) and the multiplier is 0.5f (`0x005d85ec`).
+- The walker part starts its four hard-press times at −10.0f
+  (`0x00412c14-0x00412c3e`).
+
+Core now keeps the four hard-press times as float32 event times (the
+snapshot's `WalkerLastHard*TimeBits`) and applies that predicate. The time it
+stamps is the one the frame's input sees, the same `now` the weapons use.
+Before, it compared ticks against the source's single 0.2 s bound: an opposite
+press one or two frames earlier always dashed, and one four frames earlier
+never did. Now:
+- k = 3 always dashes;
+- k = 1 and k = 5 never do;
+- k = 2 and k = 4 dash only where the rounding admits them.
+
+`SimulationTests.WalkerDash_AdmitsTheOppositePressOnlyInsideRetailsFloatWindow`
+pins k = 2 at frames 320, 321 and 322 and k = 4 at frames 324, 325 and 326,
+from the RE lane's table recomputed past the pan. `WalkerOppositeFlick_…` now
+flicks with k = 3. The table itself reproduces here: the first admitted frames
+are 3, 6, 9, 21 and 42 for k = 2 and 5, 7, 25, 28 and 30 for k = 4, at the
+table's rates (10.5% and 12.1%; 22.3% and 6.1%).
+
+Five mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/walker-dash-20260926/mutation-kills/`):
+- the source's window alone;
+- the differences at double precision;
+- either bound made inclusive;
+- the hard press stamped a frame late.
+
+No tape changed behavior. A probe of the first-flight, smoke and won tapes found
+no opposite flick with k ≤ 4 (the won tape has one with k = 5). Only the four
+history words moved, since they now hold float32 times:
+- `first-flight.v1.json` replays to trace `ead3c485…` and state `6bbb8a1d…`;
+- the in-process smoke and its validator reach state `46ea8d17…`;
+- the headless Godot smoke records tape `8dee9d87…` (trace `75007ab5…`, state
+  `46ea8d17…`). Its inputs are identical to `ed3b77b5…`'s, and it replays
+  twice;
+- the won tape replays twice to trace `746e2e38…` and state `b1a82b2e…`, still
+  at hull 3,350;
+- the canonical-hash fingerprints moved.
+
+The chain autopilot does flick, so it now wins at tick 5,688 with hull 4,991 on
+the abort branch. That is a fixture reading.
+
+Suites: Core 1,573, Client 916 with the two known skips, pause checks 56 and
+AYA checks 447.
+
+Open, with the RE lane's falsifiers: the runtime precision mode, and whether
+one input sample reaches the walker per event frame. Core's input is digital,
+so the 0.9 and 0.8 analog thresholds also remain open.
 
 ### World 110 construction and start state — September 26
 

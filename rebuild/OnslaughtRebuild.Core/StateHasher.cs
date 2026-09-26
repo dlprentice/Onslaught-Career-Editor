@@ -31,6 +31,11 @@ public static class StateHasher
             // no hash schema yet; its fighters are already refused below.
             if (state.Level100ActorMechanics.Actors.Any(actor => actor.DropshipLandingState != 0))
                 throw new NotSupportedException("A landed dropship has no admitted hash schema.");
+            // A world built from a partial carry-over (lost base rows and their
+            // landscape damage) has no hash schema yet either.
+            if (state.Level100Actors.LostBaseRows.Count != 0 ||
+                state.Level100ActorMechanics.LandscapeDamageStamps.Count != 0)
+                throw new NotSupportedException("A world with lost base rows has no admitted hash schema.");
             int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
                 .Select(item => item.ActorId.Value).Order().ToArray();
             bool usesPlaneMotionSchema = rawActors.Length != 0 ||
@@ -233,10 +238,10 @@ public static class StateHasher
             writer.Write(state.RollVelocityMicroRadPerTick);
             writer.Write(state.WalkerLastMoveXPermille);
             writer.Write(state.WalkerLastMoveZPermille);
-            writer.Write(state.WalkerLastHardLeftTick);
-            writer.Write(state.WalkerLastHardRightTick);
-            writer.Write(state.WalkerLastHardForwardTick);
-            writer.Write(state.WalkerLastHardBackwardTick);
+            writer.Write(state.WalkerLastHardLeftTimeBits);
+            writer.Write(state.WalkerLastHardRightTimeBits);
+            writer.Write(state.WalkerLastHardForwardTimeBits);
+            writer.Write(state.WalkerLastHardBackwardTimeBits);
             writer.Write(state.WalkerDashTicksRemaining);
             writer.Write(state.WalkerSoundTravelMillimeters);
             writer.Write(state.WalkerSoundRolloverCount);
@@ -757,7 +762,8 @@ public static class StateHasher
                 if (state.RetailPlane is { } plane)
                 {
                     Level100ActorSnapshot actor = actors.Single(value => value.ActorId == item.ActorId);
-                    if (actor.DefinitionName is not ("Air Trainer" or "Target Drone"))
+                    // Level 100's two planes and its U-17 dropship.
+                    if (actor.DefinitionName is not ("Air Trainer" or "Target Drone" or "U-17 Highside Transporter"))
                         throw new NotSupportedException("Raw Plane hashing requires an admitted aircraft definition.");
                     _ = new ThingActorBaseState(state);
                     if (actor.Pose.PositionMillimeters != state.CurrentPose.PositionMillimeters ||

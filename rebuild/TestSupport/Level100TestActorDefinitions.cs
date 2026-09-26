@@ -71,8 +71,9 @@ internal static class Level100TestActorDefinitions
         {
             // These creation inputs are now consumed as raw retail state.
             // Keep fixture identity/script policy, but do not invent zero
-            // transforms for the authored Plane or its immutable spawn owner.
-            Level100ActorDefinition? released = name is "Airfield" or "Air Trainer"
+            // transforms for the authored air units or the Plane's immutable
+            // spawn owner.
+            Level100ActorDefinition? released = name is "Airfield" or "Air Trainer" or "Transporter"
                 ? s_materialized.Value.Actors.Single(item => item.Name == name)
                 : null;
             actors.Add(new Level100ActorDefinition(
@@ -133,7 +134,8 @@ internal static class Level100TestActorDefinitions
             actors,
             spawns,
             WaypointPaths(),
-            MotionDefinitions());
+            MotionDefinitions(),
+            safeSides: s_materialized.Value.SafeSides);
 
         void AddTrigger(Level100MissionTrigger trigger, string name, string script)
         {
@@ -344,49 +346,16 @@ internal static class Level100TestActorDefinitions
             (4, -20_688, 0, -54_250, 1_132_855_296, 1_128_071_168, -2_147_483_648, 0)),
     ];
 
+    // The air units' rows are the materialized ones: their flight scalars
+    // come only from the unit records.
     private static IReadOnlyList<Level100ActorMotionDefinition>
         MotionDefinitions() =>
     [
         GroundMotion(0, "Target Tank"),
         GroundMotion(1, "Target Truck"),
-        new Level100ActorMotionDefinition(
-            2,
-            "Air Trainer",
-            Level100ActorMotionClass.Plane,
-            9,
-            8,
-            0x005E1930,
-            5_000,
-            null,
-            null,
-            null,
-            null,
-            s_materialized.Value.GetMotionDefinition("Air Trainer").WeaponMounts),
-        new Level100ActorMotionDefinition(
-            3,
-            "Target Drone",
-            Level100ActorMotionClass.Plane,
-            9,
-            8,
-            0x005E1930,
-            5_000,
-            null,
-            null,
-            null,
-            null,
-            s_materialized.Value.GetMotionDefinition("Target Drone").WeaponMounts),
-        new Level100ActorMotionDefinition(
-            4,
-            "U-17 Highside Transporter",
-            Level100ActorMotionClass.Dropship,
-            12,
-            12,
-            0x005E1DD8,
-            8_000,
-            null,
-            null,
-            null,
-            null),
+        s_materialized.Value.GetMotionDefinition("Air Trainer"),
+        s_materialized.Value.GetMotionDefinition("Target Drone"),
+        s_materialized.Value.GetMotionDefinition("U-17 Highside Transporter"),
     ];
 
     private static Level100ActorMotionDefinition GroundMotion(

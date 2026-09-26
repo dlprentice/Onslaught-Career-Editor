@@ -229,19 +229,14 @@ public sealed class Level100AmbientAircraftTests
     }
 
     /// <summary>
-    /// The Air Trainer flies its authored route and the Transporter does not
-    /// move at all.
-    ///
-    /// <para>Both are consequences of what is implemented, not of anything this
-    /// task added: definition <c>Air Trainer</c> resolves to motion class
-    /// <c>Plane</c>, which <c>Level100ActorMechanics.AdvancePlane</c>
-    /// implements, while <c>U-17 Highside Transporter</c> resolves to
-    /// <c>Dropship</c>, which is declared and never implemented. The renderer
+    /// The Air Trainer and the Transporter both fly: the Air Trainer its
+    /// authored route as a <c>Plane</c>, the U-17 its "Transporter Path" as a
+    /// <c>CDropship</c> (<c>Level100ActorDropshipRuntime</c>). The renderer
     /// draws what Core reports, so this test states the expected on-screen
-    /// difference rather than leaving it to a screenshot.</para>
+    /// movement rather than leaving it to a screenshot.
     /// </summary>
     [Fact]
-    public void TheAirTrainerFliesItsRouteWhileTheTransporterStaysFrozen()
+    public void TheAirTrainerAndTheTransporterBothFly()
     {
         var session = new InteractiveSession(
             Seed,
@@ -259,7 +254,7 @@ public sealed class Level100AmbientAircraftTests
             target => target.DefinitionName == "Air Trainer" &&
                 target.Id >= 100);
 
-        Assert.Equal(
+        Assert.NotEqual(
             s_authoredTransporterPosition,
             transporter.Pose.PositionMillimeters);
         Assert.NotEqual(

@@ -424,6 +424,8 @@ public sealed class Level100ActorScriptRuntime
             Level100ActorFactKind.StartedDying => 5,
             Level100ActorFactKind.Died => 3,
             Level100ActorFactKind.TriggerDispatchReady => 4,
+            // IScript::Shutdown (0x00533810) runs built-in 7, shutdown().
+            Level100ActorFactKind.ShutDown => 7,
             _ => throw new ArgumentOutOfRangeException(nameof(fact)),
         };
         Level100ScriptValue? parameter = builtInIndex == 4
@@ -473,6 +475,12 @@ public sealed class Level100ActorScriptRuntime
             // the listener is gone - so the released outcome is the
             // `LevelLostString(LOSE_TUTORIAL_BROKE)` that `Broke Tutorial` was
             // already on its way to producing.
+            _instances.Remove(fact.ActorId.Value);
+        }
+        else if (fact.Kind == Level100ActorFactKind.ShutDown)
+        {
+            // The thing leaves the world after its script's shutdown(); the
+            // script object goes with it (thing.cpp:573-579).
             _instances.Remove(fact.ActorId.Value);
         }
     }

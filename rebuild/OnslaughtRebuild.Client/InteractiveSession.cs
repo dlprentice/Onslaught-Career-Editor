@@ -141,8 +141,21 @@ public sealed class InteractiveSession
     private int _recordedTicks;
 
     public InteractiveSession(uint seed, Level100ActorDefinitionSet level100ActorDefinitions)
+        : this(seed, level100ActorDefinitions, RetailWorldCatalog.RootWorldNumber, [])
     {
-        _simulation = new Simulation(seed, level100ActorDefinitions);
+    }
+
+    /// <summary>
+    /// A session of <paramref name="worldNumber"/>, built with the base-world
+    /// rows the career marks lost (<paramref name="lostBaseRows"/>).
+    /// </summary>
+    public InteractiveSession(
+        uint seed,
+        Level100ActorDefinitionSet level100ActorDefinitions,
+        int worldNumber,
+        IReadOnlyCollection<int> lostBaseRows)
+    {
+        _simulation = new Simulation(seed, level100ActorDefinitions, worldNumber: worldNumber, lostBaseRows: lostBaseRows);
         PreviousSnapshot = _simulation.Snapshot;
         CurrentSnapshot = PreviousSnapshot;
         _undeliveredLevel100MissionEvents.AddRange(

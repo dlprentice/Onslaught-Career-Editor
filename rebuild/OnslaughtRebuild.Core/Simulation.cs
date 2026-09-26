@@ -110,10 +110,10 @@ public sealed partial class Simulation
     private int _rollVelocityMicroRadPerTick;
     private int _walkerLastMoveXPermille;
     private int _walkerLastMoveZPermille;
-    private int _walkerLastHardLeftTick;
-    private int _walkerLastHardRightTick;
-    private int _walkerLastHardForwardTick;
-    private int _walkerLastHardBackwardTick;
+    private int _walkerLastHardLeftTimeBits;
+    private int _walkerLastHardRightTimeBits;
+    private int _walkerLastHardForwardTimeBits;
+    private int _walkerLastHardBackwardTimeBits;
     private int _walkerDashTicksRemaining;
     private int _walkerSoundTravelMillimeters;
     private int _walkerSoundRolloverCount;
@@ -144,11 +144,17 @@ public sealed partial class Simulation
     private int _jetEnergyDrainThisTick;
     private bool _jetMovedThisTick;
 
+    /// <param name="lostBaseRows">
+    /// The base-world rows the career marks lost (<c>CCareer::DoesBaseThingExist</c>
+    /// false for this world), which the load skips: World 110's carry-over from
+    /// Level 100. Empty for a full base world.
+    /// </param>
     public Simulation(
         uint seed,
         Level100ActorDefinitionSet level100ActorDefinitions,
         Level100TutorialProgress tutorialProgress = default,
-        int worldNumber = Level100MissionProgram.WorldNumber100)
+        int worldNumber = Level100MissionProgram.WorldNumber100,
+        IReadOnlyCollection<int>? lostBaseRows = null)
     {
         if (seed == 0)
         {
@@ -175,20 +181,17 @@ public sealed partial class Simulation
 
         _worldNumber = worldNumber;
         _level100TutorialProgress = tutorialProgress;
+        _lostBaseRows = Array.AsReadOnly((lostBaseRows ?? []).ToArray());
         ResetDynamicState();
     }
+
+    private IReadOnlyList<int> _lostBaseRows = [];
 
     /// <summary>The career world whose mission program this session executes.</summary>
     public int WorldNumber => _worldNumber;
 
     public WorldSnapshot Snapshot => CreateSnapshot();
 
-    /// <summary>
-    /// The live training career <see cref="Level100Mission"/> hands to
-    /// <c>CCareer::Update</c> when Won reaches
-    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/>.
-    /// </summary>
-    internal RetailCareerCampaign Level100Career => _level100Mission.Career;
 
     /// <summary>
     /// Measurement seam. Applies exactly the two <em>capability grants</em> the
@@ -1032,7 +1035,8 @@ public sealed partial class Simulation
                 _level100Destruction.StartPlaneDeathAfterSpawnerLoss(actorId);
                 DrainAndDispatchLevel100ActorFacts();
             }, HandleBattleEngineEvent,
-            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z));
+            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z),
+            DrainAndDispatchLevel100ActorFacts);
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(
@@ -2298,16 +2302,16 @@ public sealed partial class Simulation
 
         if (hardForward)
         {
-            _walkerLastHardForwardTick = _tick;
+            _walkerLastHardForwardTimeBits = BitConverter.SingleToInt32Bits(EngineTimeSeconds);
         }
         if (hardBackward)
         {
-            _walkerLastHardBackwardTick = _tick;
+            _walkerLastHardBackwardTimeBits = BitConverter.SingleToInt32Bits(EngineTimeSeconds);
         }
 
         bool dash =
-            (forwardEdge && WalkerDashWindowContains(_walkerLastHardBackwardTick)) ||
-            (backwardEdge && WalkerDashWindowContains(_walkerLastHardForwardTick));
+            (forwardEdge && WalkerDashWindowContains(_walkerLastHardBackwardTimeBits)) ||
+            (backwardEdge && WalkerDashWindowContains(_walkerLastHardForwardTimeBits));
         _walkerLastMoveZPermille = movePermille;
         if (dash)
         {
@@ -2333,15 +2337,15 @@ public sealed partial class Simulation
 
         if (hardRight)
         {
-            _walkerLastHardRightTick = _tick;
+            _walkerLastHardRightTimeBits = BitConverter.SingleToInt32Bits(EngineTimeSeconds);
         }
         if (hardLeft)
         {
-            _walkerLastHardLeftTick = _tick;
+            _walkerLastHardLeftTimeBits = BitConverter.SingleToInt32Bits(EngineTimeSeconds);
         }
 
-        bool dashRight = rightEdge && WalkerDashWindowContains(_walkerLastHardLeftTick);
-        bool dashLeft = leftEdge && WalkerDashWindowContains(_walkerLastHardRightTick);
+        bool dashRight = rightEdge && WalkerDashWindowContains(_walkerLastHardLeftTimeBits);
+        bool dashLeft = leftEdge && WalkerDashWindowContains(_walkerLastHardRightTimeBits);
         _walkerLastMoveXPermille = movePermille;
         if (dashRight || dashLeft)
         {
@@ -2363,8 +2367,20 @@ public sealed partial class Simulation
         return false;
     }
 
-    private bool WalkerDashWindowContains(int hardMoveTick) =>
-        hardMoveTick > _tick - SimulationConstants.WalkerDashWindowTicks;
+    /// <summary>
+    /// Retail's dash window (walker-dash.md): the opposite hard press's event
+    /// time lies strictly between now - mDashTime and now - 0.5 * mDashTime.
+    /// Each difference is rounded to float32, as the x87 does at the single
+    /// precision Direct3D leaves it in (<c>0x00412e1f-0x00412e58</c>; the
+    /// same pair in Backward, StrafeLeft and StrafeRight).
+    /// </summary>
+    private bool WalkerDashWindowContains(int hardPressTimeBits)
+    {
+        float now = EngineTimeSeconds;
+        float last = BitConverter.Int32BitsToSingle(hardPressTimeBits);
+        float dashTime = BitConverter.Int32BitsToSingle(SimulationConstants.WalkerDashTimeFloatBits);
+        return last > (float)(now - dashTime) && last < (float)(now - (dashTime * 0.5f));
+    }
 
     private static int RetainWalkerVelocity(int velocity) =>
         (int)((long)velocity * SimulationConstants.WalkerVelocityRetentionNumerator /
@@ -4199,12 +4215,10 @@ public sealed partial class Simulation
         _rollVelocityMicroRadPerTick = 0;
         _walkerLastMoveXPermille = 0;
         _walkerLastMoveZPermille = 0;
-        int initialHardMoveTick =
-            _tick - SimulationConstants.WalkerDashInitialHistoryTicks;
-        _walkerLastHardLeftTick = initialHardMoveTick;
-        _walkerLastHardRightTick = initialHardMoveTick;
-        _walkerLastHardForwardTick = initialHardMoveTick;
-        _walkerLastHardBackwardTick = initialHardMoveTick;
+        _walkerLastHardLeftTimeBits = SimulationConstants.WalkerDashInitialHistoryFloatBits;
+        _walkerLastHardRightTimeBits = SimulationConstants.WalkerDashInitialHistoryFloatBits;
+        _walkerLastHardForwardTimeBits = SimulationConstants.WalkerDashInitialHistoryFloatBits;
+        _walkerLastHardBackwardTimeBits = SimulationConstants.WalkerDashInitialHistoryFloatBits;
         _walkerDashTicksRemaining = 0;
         _walkerSoundTravelMillimeters = 0;
         _walkerSoundRolloverCount = 0;
@@ -4286,7 +4300,7 @@ public sealed partial class Simulation
         _jetEnergyDrainThisTick = 0;
         _jetMovedThisTick = false;
         _projectiles.Clear();
-        _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions, _lostBaseRows);
         // The Battle Engine is built inline by level-world row 0, so its
         // 6002/6003 draws come at that point of the load, after the base world.
         ResetBattleEngineTargeting();
@@ -4458,10 +4472,10 @@ public sealed partial class Simulation
             _rollVelocityMicroRadPerTick,
             _walkerLastMoveXPermille,
             _walkerLastMoveZPermille,
-            _walkerLastHardLeftTick,
-            _walkerLastHardRightTick,
-            _walkerLastHardForwardTick,
-            _walkerLastHardBackwardTick,
+            _walkerLastHardLeftTimeBits,
+            _walkerLastHardRightTimeBits,
+            _walkerLastHardForwardTimeBits,
+            _walkerLastHardBackwardTimeBits,
             _walkerDashTicksRemaining,
             _walkerSoundTravelMillimeters,
             _walkerSoundRolloverCount,

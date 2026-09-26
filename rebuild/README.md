@@ -1,16 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (World 110 constructed in Core through its start state; waypoint walks from the nearest node along each node's target, at load-time heights; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up load draws; cockpit Gun emitters; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
-The bounded world-110 all-40 serialized
-initial-object seed, authored-definition, serialized player-start, complete
-ordered start-list resolution, adapter-supplied every-match assignment
-composition, and
-`CStart::Init` terrain-height projections, plus the standalone ordered
-player/Battle Engine assignment,
-native-88 direct mission execution, career read/load frontend slice, and world-admission
-claims below are the newly re-reviewed surface.
-Other sections retain their narrower dated evidence boundaries.
+Last updated: 2026-09-26 (the U-17 flies; one gate command)
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
@@ -42,12 +33,9 @@ check scenes). From September 19 to 25 much of the Godot side was ported to
 typed GDScript and editor scenes. On September 25 it returned to the last
 all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
 and the later C# changes that carry evidence: the strict AYA texture admission
-below, the 2,148-step smoke-validator pin (`53c1cc64…`, re-pinned on September 26 to `8649ff2b…`
-as the Battle Engine's refresh, recoil and round Init draws, every round's launch basis, the retail
-load order's construction draws and unit callbacks, the cockpit Gun emitters, the influence map's
-and warm-up units' load draws, the rounds' own MOVE and life events, the level's three-second
-pre-run, scripts started on their INIT_SCRIPT events and waypoint walks from the nearest node
-changed the run), and two refusals of
+below, the 2,148-step smoke validator's state pin (re-pinned whenever an
+evidenced retail law changes the run; `rebuild/tools/FirstFlightSmokeValidation.psm1`
+holds the current value), and two refusals of
 impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
 cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
@@ -196,6 +184,14 @@ npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
+`npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`) runs the lane's whole
+gate: the build, the Core and Client suites (the cold-start test writes its won
+tape), the pause and AYA checks in headless Godot, the headless smoke with its
+recorded tape, and two C# replays of each tape. Its summary prints the suite
+counts and the tapes' trace and state hashes; logs go to a fresh
+`local-data/test-runs/rebuild-gate-*` directory. `--only core,client` runs a
+subset.
+
 `rebuild/tools/first_flight.py` discovers the user's Linux Steam libraries or
 accepts `--game-root "/absolute/game/root"`. In the canonical checkout it prepares
 the supported retail inputs through `local-lab/rebuild-godot/` and startup media
@@ -310,42 +306,22 @@ squads, landing craft and turret children, fighters and scripts, then the
 pre-run and the start state, where the player is activated on frame 140. It
 follows the RE lane's construction contract. VALIDATION.md's "World 110
 construction and start state" lists what is carried and what is open:
-landing-craft flight, landing and cargo, squad formation and the transition
-from a Level 100 win. The Godot host still starts only Level 100.
+landing-craft flight, landing and cargo, and squad formation. Level 100's U-17
+flies its path, retreats to its side's nearest safe side and leaves
+(`Level100ActorDropshipRuntime`, from the RE lane's dropship contracts); World
+110's landing craft wait for the landing states, since one lands at once. A Level 100 win
+hands World 110 its surviving base world through the career ("World 110's
+base-world carry-over from Level 100"). The Godot host still starts only
+Level 100; World 110 has no presentation yet.
 
-Before that, an incomplete construction stage was built separately:
-[`RetailWorld110InitialConstruction`](OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)
-uses its own terrain and 43 admitted direct actors; its player overload constructs
-detached Start/engine/player shells with real configuration fields and distinct
-reader cells. It also prepares four landing-craft turret inputs from their exact
-mesh attachment and parent pose, including float-store order and the Euler
-conversion before child Init. The arithmetic matches a native x87 probe; these
-inputs do not allocate or initialize turret children. Both explicit-tree tables
-are retained, with the 1,481 base-world pine Init calls distinguished from
-skipped ferns and repeated level-world records. Its explicit base-tree factory
-now constructs those pines with actual spatial membership and collision-readiness
-events. It takes the incoming RNG seed and states its nearest/53-bit numerical
-assumption; the retail call's FP environment and final tree orientation remain
-open. `CreateWithInitialBuildings(seed)` extends this fresh resource-route prefix
-through the Tower, factory and repair pad, using the same Actor owners, live
-pines, 64 destructible segments, shared RNG and 15 pending events. The factory
-prepares its attached Sabre template without spawning; the repair weapon uses
-shared charge/selection state and two empty effect nodes without firing.
-Their AI has real reader cells and the separate world memberships retain their
-insertion rules. `CreateWithControlTower(seed)` stops the same path after one Building.
-`CreateThroughInitialIcebergs(seed)` continues in authored order through the
-inactive SAT turret and six Features. Shared Actor/Unit initialization retains
-the SAT weapon and inactive animation, Feature current/old pose differences,
-type-dependent collision spheres and mesh bindings. The complete prefix has
-1,491 spatial owners and 1,513 pending events; no event is delivered.
-Renderer/resource caches, full collision response, remaining ordinary actors
-and frame delivery are unfinished; legacy mutation, restore and hashing reject
-the incomplete initialized Actor state.
-This stage does not initialize all actor classes, publish a complete world,
-run squads/spawners or construct a playable session; `Simulation` does not use
-it. Static admission and the unresolved Init dependencies
-are recorded in
-[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+An earlier, separate World 110 construction stage
+(`RetailWorld110InitialConstruction` with its own admission, player-start and
+construction-prefix owners) was retired on 2026-09-26 in favour of this one
+owner; it never ran in the product. Its retail evidence stays in
+[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
+and
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md),
+and its code in Git history.
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
@@ -521,16 +497,6 @@ refills energy from configuration on the selected concrete virtual path; this
 owner emits only the raw call intent and reports no final vulnerability,
 infinite-energy, or energy state.
 
-`RetailWorldPlayerAuthoredStartAssignmentSequence` now composes that bounded
-function owner once per admitted `MatchingAuthoredStarts` row, in order, over a
-complete caller-supplied binding snapshot. It validates count/order, reader
-roles, engine↔cell aliases, required cells, and current reverse memberships
-before the first graph write. The player's forward reader retains the final
-engine and earlier engine backlinks remain; exact repeated engine/cell tuples
-still produce one outer step per start. This is deterministic post-load call
-composition only. The adapter still owns object construction and proves that
-the player/cell and each start/engine/cell identity belong together.
-
 `RetailSpawnerCycleTransaction` closes the nested spawner boundary that the
 live UnitAI probe can invoke. It preserves strict admission time, finite amount
 versus infinite mode, empty-squad publication before cycle commit, amount-slot
@@ -561,55 +527,11 @@ first `Pause`. Native 88 writes the measured failed secondary
 slot, and StateHasher schema 43 binds the non-root world and all ten secondary
 records in synthetic snapshot envelopes while default world 100 stays
 byte-identical on schema 42. The direct mission tests use stamped Level100
-definitions as native-call instruments. Simulation rejects World110 before
-the Level100 initialization path; no product/Godot simulation consumes
-world-110 terrain or authored actors, and no world-110
-FillOut or full mission run exists. The level-world initial-object table is
-measured (40 RLWD serialized rows, header `(2, 0, 40)`; types 19 and 28 have tails
-Level 100 does not use) and the BSWD island is byte-identical to Level 100
-(`04c5a383…10f4`). `RetailWorldActorDefinitionAdmission` now admits the exact
-archive identity plus 49 ordered definition-bearing object identities under the
-existing `wres:bswd:NNNN` / `wres:rlwd:NNNN` law: 33 shared-BSWD actor rows,
-15 world-110 RLWD actor rows, and one type-19 spawner row. Wrong world, archive,
-object, definition, count, or row shape fails closed. This is an identity/shape
-projection only: it carries no authored pose, mesh, health, runtime class,
-player binding, actor registry, or session construction. RLWD ordinal 0 is the
-LevelScript object. Separately,
-`RetailWorldInitialObjectSeedAdmission.World110` hash-pins the ignored
-`onslaught.world110-initial-object-seeds.v1` asset (21,651 bytes, SHA-256
-`51e51f5e…04e5a`) and admits all 40 rows in exact serialized order with raw
-pose words, common fields, record identities, and closed unit/start/waypoint/
-spawner/script/squad/volume tails. The five squad rows retain amounts
-`(5, 5, 3, 5, 4)` rather than becoming five ordinary units, and the inactive
-spawner remains configuration rather than three cold-spawned fighters. This is
-immutable constructor-input evidence only: it supplies no coordinate
-conversion, actor IDs, nested construction, registry, state hash, session, or
-Godot integration. See
-[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
-RLWD ordinal 1 is an exact 59-byte type-15
-`CStartInitThing` for player 1. `RetailWorldPlayerStartAdmission` retains its
-authored position/orientation bits, plane mode, and player number under the same
-archive identity, while keeping it separate from the 49 definition-bearing
-rows because it carries no Battle Engine definition. The projection can also
-return the released type-15 `(256, 256, 0)` pre-init fallback plan for an
-unmatched player. Its immutable resolver walks every stored row, retains all
-matching serialized starts in order, and uses the final match for the effective
-pre-init fields; fallback is zero-match-only. A synthetic friend-test proves
-that list law without widening public exact-world-110 admission or claiming
-runtime Battle Engine assignments. This closes serialized placement and list
-resolution, not the whole of `CStart::Init`. A separate deterministic owner
-carries only its
-37-byte `[0x004eae27, 0x004eae4c)` terrain-height prefix: exact world-110 XY
-becomes fixed `(67,776, 66,256)`, the pinned HFLD samples `-10,485` units, and
-the strict clamp stores the second sample as Z bits `0xc1199926`. It stops
-before `CComplexThing::Init` and does not add player/Battle Engine construction,
-actor-registry, `InteractiveSession`, or Godot ownership. The standalone
-assignment owner is now composed across the resolution by the ordered sequence
-owner when an adapter supplies already-constructed identities. The exact
-`wres:rlwd:0001` resolution exercises that seam with deterministic test tokens,
-but no World-110 construction owner supplies the real player/engine/cell values
-or invokes it from a live post-load path; see
-[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
+definitions as native-call instruments. The level-world table is measured (40
+RLWD serialized rows, header `(2, 0, 40)`; types 19 and 28 have tails Level 100
+does not use) and the BSWD island is byte-identical to Level 100
+(`04c5a383…10f4`). `Simulation` builds World 110 from the materialized static
+world (see "Current truth" above).
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the
 shared law needed refining: `data/resources/200_res_PC.aya` (SHA-256

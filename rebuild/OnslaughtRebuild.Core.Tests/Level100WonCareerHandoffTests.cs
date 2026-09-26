@@ -59,7 +59,7 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerCampaign career = mission.Career;
+        RetailCareerCampaign career = CareerOf(mission);
         RetailCareerNode training = career.Nodes.Find(100)!;
         RetailCareerNode next = career.Nodes.Find(110)!;
         RetailCareerNodeLink lower = career.GetLink(training.LowerLink)!;
@@ -95,8 +95,8 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode training = CareerOf(mission).Nodes.Find(100)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(1.0f, training.Ranking);
         Assert.Equal(
             RetailCareerGrade.PerfectGrade,
@@ -132,23 +132,23 @@ public sealed class Level100WonCareerHandoffTests
         RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
         Assert.Equal(
             snapshot.SlotWords,
-            mission.Career.Slots.Words);
-        Assert.Equal(0, mission.Career.Slots.GetSlot(1));
+            CareerOf(mission).Slots.Words);
+        Assert.Equal(0, CareerOf(mission).Slots.GetSlot(1));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialIntroductionSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialPulseCannonSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialStatusBarsSlot));
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
@@ -172,22 +172,22 @@ public sealed class Level100WonCareerHandoffTests
             mission.Snapshot.TerminalState);
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
         Assert.Equal(
             RetailCareerGrade.PerfectGrade,
-            RetailCareerGrade.GradeByteFromRanking(mission.Career.Nodes.Find(100)!.Ranking));
+            RetailCareerGrade.GradeByteFromRanking(CareerOf(mission).Nodes.Find(100)!.Ranking));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -216,11 +216,11 @@ public sealed class Level100WonCareerHandoffTests
         Assert.Equal(
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
-        Assert.Equal(5, mission.Career.Counters.NewGoodieCount);
-        Assert.Equal(1, mission.Career.Counters.FirstGoodie);
+        Assert.Equal(5, CareerOf(mission).Counters.NewGoodieCount);
+        Assert.Equal(1, CareerOf(mission).Counters.FirstGoodie);
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -259,7 +259,7 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode leftover = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode leftover = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(1, leftover.Complete);
         Assert.Equal(0.0f, leftover.Ranking);
         Assert.Equal(
@@ -269,8 +269,8 @@ public sealed class Level100WonCareerHandoffTests
                 {
                     new RetailWorldGradeNode(
                         RetailCareerReCalcLinks.TrainingWorldNumber,
-                        mission.Career.Nodes.Find(100)!.Complete,
-                        mission.Career.Nodes.Find(100)!.Ranking),
+                        CareerOf(mission).Nodes.Find(100)!.Complete,
+                        CareerOf(mission).Nodes.Find(100)!.Ranking),
                     new RetailWorldGradeNode(
                         leftover.WorldNumber,
                         leftover.Complete,
@@ -279,10 +279,10 @@ public sealed class Level100WonCareerHandoffTests
                 leftover.WorldNumber));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -319,7 +319,7 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode leftover = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode leftover = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(1, leftover.Complete);
         Assert.Equal(0.25f, leftover.Ranking);
         Assert.Equal(
@@ -329,8 +329,8 @@ public sealed class Level100WonCareerHandoffTests
                 {
                     new RetailWorldGradeNode(
                         RetailCareerReCalcLinks.TrainingWorldNumber,
-                        mission.Career.Nodes.Find(100)!.Complete,
-                        mission.Career.Nodes.Find(100)!.Ranking),
+                        CareerOf(mission).Nodes.Find(100)!.Complete,
+                        CareerOf(mission).Nodes.Find(100)!.Ranking),
                     new RetailWorldGradeNode(
                         leftover.WorldNumber,
                         leftover.Complete,
@@ -339,7 +339,7 @@ public sealed class Level100WonCareerHandoffTests
                 leftover.WorldNumber));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -374,7 +374,7 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode leftover = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode leftover = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(1, leftover.Complete);
         Assert.Equal(0.25f, leftover.Ranking);
         Assert.Equal(
@@ -384,8 +384,8 @@ public sealed class Level100WonCareerHandoffTests
                 {
                     new RetailWorldGradeNode(
                         RetailCareerReCalcLinks.TrainingWorldNumber,
-                        mission.Career.Nodes.Find(100)!.Complete,
-                        mission.Career.Nodes.Find(100)!.Ranking),
+                        CareerOf(mission).Nodes.Find(100)!.Complete,
+                        CareerOf(mission).Nodes.Find(100)!.Ranking),
                     new RetailWorldGradeNode(
                         leftover.WorldNumber,
                         leftover.Complete,
@@ -394,10 +394,10 @@ public sealed class Level100WonCareerHandoffTests
                 leftover.WorldNumber));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -432,11 +432,11 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(
             RetailCareerGrade.PerfectGrade,
             RetailCareerGrade.GradeByteFromRanking(
-                mission.Career.Nodes.Find(100)!.Ranking));
+                CareerOf(mission).Nodes.Find(100)!.Ranking));
         Assert.Equal(0, next.Complete);
         Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
         Assert.Equal(
@@ -446,8 +446,8 @@ public sealed class Level100WonCareerHandoffTests
                 {
                     new RetailWorldGradeNode(
                         RetailCareerReCalcLinks.TrainingWorldNumber,
-                        mission.Career.Nodes.Find(100)!.Complete,
-                        mission.Career.Nodes.Find(100)!.Ranking),
+                        CareerOf(mission).Nodes.Find(100)!.Complete,
+                        CareerOf(mission).Nodes.Find(100)!.Ranking),
                     new RetailWorldGradeNode(
                         next.WorldNumber,
                         next.Complete,
@@ -456,10 +456,10 @@ public sealed class Level100WonCareerHandoffTests
                 next.WorldNumber));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -495,11 +495,11 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(
             RetailCareerGrade.PerfectGrade,
             RetailCareerGrade.GradeByteFromRanking(
-                mission.Career.Nodes.Find(100)!.Ranking));
+                CareerOf(mission).Nodes.Find(100)!.Ranking));
         Assert.Equal(0, next.Complete);
         Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
         Assert.Equal(
@@ -509,8 +509,8 @@ public sealed class Level100WonCareerHandoffTests
                 {
                     new RetailWorldGradeNode(
                         RetailCareerReCalcLinks.TrainingWorldNumber,
-                        mission.Career.Nodes.Find(100)!.Complete,
-                        mission.Career.Nodes.Find(100)!.Ranking),
+                        CareerOf(mission).Nodes.Find(100)!.Complete,
+                        CareerOf(mission).Nodes.Find(100)!.Ranking),
                     new RetailWorldGradeNode(
                         next.WorldNumber,
                         next.Complete,
@@ -519,13 +519,13 @@ public sealed class Level100WonCareerHandoffTests
                 next.WorldNumber));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -556,19 +556,19 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(
             RetailCareerGrade.PerfectGrade,
             RetailCareerGrade.GradeByteFromRanking(
-                mission.Career.Nodes.Find(100)!.Ranking));
+                CareerOf(mission).Nodes.Find(100)!.Ranking));
         Assert.Equal(0, next.Complete);
         Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -604,15 +604,15 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode training = CareerOf(mission).Nodes.Find(100)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(1, training.Complete);
         Assert.Equal(1.0f, training.Ranking);
         Assert.Equal(7, training.NumAttempts);
         Assert.Equal(0, next.Complete);
         Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
         Assert.Equal(11, next.NumAttempts);
-        Assert.Equal(1, mission.Career.CareerInProgress);
+        Assert.Equal(1, CareerOf(mission).CareerInProgress);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -669,22 +669,22 @@ public sealed class Level100WonCareerHandoffTests
 
         Assert.Equal(
             RetailCareerGoodieState.Old,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
         Assert.Equal(
             RetailCareerGoodieState.Old,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
         Assert.Equal(
             RetailCareerGoodieState.Old,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.Old,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.Old,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
-        Assert.Equal(0, mission.Career.Counters.NewGoodieCount);
-        Assert.Equal(0, mission.Career.Counters.FirstGoodie);
-        Assert.Equal(1, mission.Career.Nodes.Find(100)!.Complete);
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(0, CareerOf(mission).Counters.NewGoodieCount);
+        Assert.Equal(0, CareerOf(mission).Counters.FirstGoodie);
+        Assert.Equal(1, CareerOf(mission).Nodes.Find(100)!.Complete);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -742,22 +742,22 @@ public sealed class Level100WonCareerHandoffTests
 
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
         Assert.Equal(
             RetailCareerGoodieState.New,
-            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
-        Assert.Equal(5, mission.Career.Counters.NewGoodieCount);
-        Assert.Equal(1, mission.Career.Counters.FirstGoodie);
-        Assert.Equal(1, mission.Career.Nodes.Find(100)!.Complete);
+            CareerOf(mission).Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(5, CareerOf(mission).Counters.NewGoodieCount);
+        Assert.Equal(1, CareerOf(mission).Counters.FirstGoodie);
+        Assert.Equal(1, CareerOf(mission).Nodes.Find(100)!.Complete);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -781,8 +781,8 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
-        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        RetailCareerNode training = CareerOf(mission).Nodes.Find(100)!;
+        RetailCareerNode next = CareerOf(mission).Nodes.Find(110)!;
         Assert.Equal(
             RetailCareerReCalcLinks.TrainingPrimaryBaseThingsWorldNumber,
             next.WorldNumber);
@@ -816,13 +816,14 @@ public sealed class Level100WonCareerHandoffTests
     [Fact]
     public void SuccessCountdownDoesNotApplyFillOutEvenIfWonIsClaimed()
     {
-        var handoff = new Level100WonCareerHandoff();
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
 
-        Assert.False(handoff.TryApply(
+        Assert.Null(Level100WonCareerHandoff.TryApply(
+            career,
             Level100MissionOutcome.Won,
             Level100MissionTerminalState.SuccessCountdown));
 
-        AssertCareerStillCold(handoff.Career);
+        AssertCareerStillCold(career);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
@@ -846,7 +847,7 @@ public sealed class Level100WonCareerHandoffTests
         Assert.Equal(
             RetailGameEndCountdown.WonTicks,
             mission.Snapshot.TerminalTicksRemaining);
-        AssertCareerStillCold(mission.Career);
+        AssertCareerStillCold(CareerOf(mission));
 
         for (int tick = 0; tick < RetailGameEndCountdown.WonTicks; tick++)
         {
@@ -857,10 +858,10 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
         Assert.Equal(0, mission.Snapshot.TerminalTicksRemaining);
-        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
-        RetailCareerNodeLink lower = mission.Career.GetLink(training.LowerLink)!;
+        RetailCareerNode training = CareerOf(mission).Nodes.Find(100)!;
+        RetailCareerNodeLink lower = CareerOf(mission).GetLink(training.LowerLink)!;
         Assert.Equal(1, training.Complete);
-        Assert.Equal(1, mission.Career.CareerInProgress);
+        Assert.Equal(1, CareerOf(mission).CareerInProgress);
         Assert.Equal(RetailCareerNodeLink.Complete, lower.LinkType);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
@@ -889,22 +890,22 @@ public sealed class Level100WonCareerHandoffTests
         Assert.Equal(
             Level100MissionTerminalState.SuccessCountdown,
             mission.Snapshot.TerminalState);
-        AssertCareerStillCold(mission.Career);
+        AssertCareerStillCold(CareerOf(mission));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialIntroductionSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialPulseCannonSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
         Assert.Equal(
             1,
-            mission.Career.Slots.GetSlot(
+            CareerOf(mission).Slots.GetSlot(
                 RetailCareerSlotHandoff.TutorialStatusBarsSlot));
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
@@ -1097,16 +1098,17 @@ public sealed class Level100WonCareerHandoffTests
     [Fact]
     public void LostDoesNotApplyFillOutEvenIfFrontEndHandoffReadyIsClaimed()
     {
-        var handoff = new Level100WonCareerHandoff();
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
 
-        Assert.False(handoff.TryApply(
+        Assert.Null(Level100WonCareerHandoff.TryApply(
+            career,
             Level100MissionOutcome.Lost,
             Level100MissionTerminalState.FrontEndHandoffReady));
 
-        RetailCareerNode training = handoff.Career.Nodes.Find(100)!;
-        RetailCareerNodeLink lower = handoff.Career.GetLink(training.LowerLink)!;
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNodeLink lower = career.GetLink(training.LowerLink)!;
         Assert.Equal(0, training.Complete);
-        Assert.Equal(0, handoff.Career.CareerInProgress);
+        Assert.Equal(0, career.CareerInProgress);
         Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
     }
 
@@ -1149,14 +1151,50 @@ public sealed class Level100WonCareerHandoffTests
             Level100MissionTerminalState.FrontEndHandoffReady,
             mission.Snapshot.TerminalState);
 
-        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
-        RetailCareerNodeLink lower = mission.Career.GetLink(training.LowerLink)!;
+        RetailCareerNode training = CareerOf(mission).Nodes.Find(100)!;
+        RetailCareerNodeLink lower = CareerOf(mission).GetLink(training.LowerLink)!;
         Assert.Equal(0, training.Complete);
-        Assert.Equal(0, mission.Career.CareerInProgress);
+        Assert.Equal(0, CareerOf(mission).CareerInProgress);
         Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
         Assert.All(
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
+    }
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Level100Mission, FrontendCareer> s_careers = new();
+
+    /// <summary>
+    /// The career a mission's run reaches, followed the way the frontend
+    /// follows the host's mission events: each <c>SetSlotSave</c> stored at
+    /// once (<see cref="RetailSetSlotSave.PersistCareerSlot"/>), and the Won
+    /// update applied once when the mission stands at its handoff
+    /// (<see cref="Level100WonCareerHandoff.TryApply"/>).
+    /// </summary>
+    private static RetailCareerCampaign CareerOf(Level100Mission mission)
+    {
+        FrontendCareer frontend = s_careers.GetValue(mission, _ => new FrontendCareer());
+        foreach (Level100MissionEvent missionEvent in mission.DrainEvents())
+        {
+            if (missionEvent is Level100TutorialSlotSaved saved)
+            {
+                RetailSetSlotSave.PersistCareerSlot(frontend.Career.Slots, saved.Slot, saved.Value);
+            }
+        }
+
+        if (!frontend.Applied)
+        {
+            frontend.Applied = Level100WonCareerHandoff.TryApply(
+                frontend.Career, mission.Snapshot.Outcome, mission.Snapshot.TerminalState) is not null;
+        }
+
+        return frontend.Career;
+    }
+
+    private sealed class FrontendCareer
+    {
+        public RetailCareerCampaign Career { get; } = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+
+        public bool Applied { get; set; }
     }
 
     private static void AssertCareerStillCold(RetailCareerCampaign career)
@@ -1223,7 +1261,7 @@ public sealed class Level100WonCareerHandoffTests
             player,
             new Level100TutorialProgress(false, false, false, false),
             initialPlayerHealth: SimulationConstants.MaximumHull);
-        seedCareer?.Invoke(mission.Career);
+        seedCareer?.Invoke(CareerOf(mission));
         return mission;
     }
 

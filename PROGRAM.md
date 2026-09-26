@@ -409,21 +409,14 @@ proposal is not a prerequisite for the active playable slices.
 
 ### P7 — World-110 generalization — PARTIAL; NOT PLAYABLE
 
-Accepted pieces include exact serialized player-start admission, the bounded
-height-clamp prefix, ordered start-list selection, standalone player/engine assignment,
-ordered composition over adapter-supplied identities, and all-40 initial-object seed
-admission. These deterministic pieces do not construct a playable world.
-
 Since 2026-09-26 `Simulation` constructs World 110 from its materialized static
-world, in the retail load order, through its start state (VALIDATION.md, "World
-110 construction and start state"). Still open: the landing craft's flight,
-landing and cargo, squad formation, the 100→110 transition and the Godot host.
-Separately, the active phase constructs an explicitly incomplete World 110 stage from
-its own terrain and 43 admitted direct actors, with real authored transforms,
-behavior selectors and physics life. It also owns detached Start/engine/player
-shells with measured configuration and reader fields. Concrete class Init,
-ordinary-object publication and event ordering are still missing; these shells
-are not a completed session or a reason to claim 100→110 play.
+world, in the retail load order, through its start state, and a Level 100 win
+carries its surviving base world into it through the career (VALIDATION.md,
+"World 110 construction and start state" and "World 110's base-world carry-over
+from Level 100"). The earlier, separate World 110 stage (its admissions,
+player-start owners and construction prefix) was retired the same day in favour
+of that one owner. Still open: the landing craft's flight, landing and cargo,
+squad formation, and World 110's presentation in the Godot host.
 
 The complete static Actor/base and Unit initialization order is now recorded in
 the existing [Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md)

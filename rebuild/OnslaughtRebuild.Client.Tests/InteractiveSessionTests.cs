@@ -1772,10 +1772,11 @@ public sealed class InteractiveSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+        // The U-17 retreats inside the smoke, so the prior set keeps the safe sides.
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
             definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
-            baseWorldPineCount: definitions.BaseWorldPineCount);
+            baseWorldPineCount: definitions.BaseWorldPineCount, safeSides: definitions.SafeSides);
         var priorSession = new InteractiveSession(Seed, priorDefinitions);
         var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
@@ -1823,7 +1824,9 @@ public sealed class InteractiveSessionTests
         // and every unit's callbacks; then the Pulse left cockpit Gun 1
         // through the full body orientation; then every waypoint walk started
         // at the unit's nearest node and followed the nodes' own targets at
-        // their load-time heights. Controller calls now precede callbacks and Move, so the four releases
+        // their load-time heights; then the walker's dash history became
+        // float32 event times (no flick in this tape comes near the window).
+        // Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1844,14 +1847,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("a09c24e8bd67a8a97bd93c9b066b7eb648b9dc53a3d254ba4b96e849b63ab939",
+        Assert.Equal("1a1768635eec50df41f735f56a921a577078671313eb11e69e5e369401774c42",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("d7faf68f1b37ea1927308be4d6276ca25aa4ccdb2d2245d37fbe48b7518e8e9a",
+        Assert.Equal("235efb1ea617aeff589e45bf7ea0fb084ffcfd9aceb944707cb48bd3bb9ebc09",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "8649ff2bba9b327bfd925e6b60e07f8c7769d4d10e54bbd04229be64a3f96942",
+            finalStateHash == "97f51bc66b5cad87f8076dc1169380a235fea88f4b5fe37522a55a1d0fa0c3fb",
             $"First-flight final state hash: {finalStateHash}");
     }
 

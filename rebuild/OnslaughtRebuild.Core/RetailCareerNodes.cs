@@ -292,6 +292,24 @@ public sealed class RetailCareerNodeTable
     }
 
     /// <summary>
+    /// The base-world rows a load of <paramref name="worldNumber"/> skips: those
+    /// whose <c>CCareer::DoesBaseThingExist</c> (<c>0x0041bb20</c>, called for
+    /// each row at <c>0x0050cf8f</c>) is false. Levels 850-899 keep every row
+    /// (<c>0x004725d0</c> tests <c>849 &lt; level &lt; 900</c>), as does a
+    /// world with no node (<c>0x0041bb9f</c>).
+    /// </summary>
+    public IReadOnlyList<int> LostBaseRows(int worldNumber, int rowCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(rowCount);
+        if (worldNumber is > 849 and < 900 || Find(worldNumber) is not { } node)
+        {
+            return [];
+        }
+
+        return Enumerable.Range(0, rowCount).Where(row => node.DoesBaseThingExist(row) == 0).ToArray();
+    }
+
+    /// <summary>
     /// The <c>mComplete</c> read every episode gate performs. Throws where
     /// retail dereferences the null the lookup just returned.
     /// </summary>

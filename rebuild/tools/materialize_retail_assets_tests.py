@@ -319,13 +319,14 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
             materializer.WORLD110_LANDING_CRAFT_MESH_SHA256)
 
     def test_real110_static_world_reproduces_its_pin_and_the_construction_contract(self) -> None:
-        data = materializer._world110_static_world_bytes(self.raw_world, self.physics)
+        data = materializer._world110_static_world_bytes(self.raw_world, self.physics, self.landing_craft_mesh)
         self.assertEqual(materializer.WORLD110_STATIC_WORLD_SHA256, materializer._sha256(data))
-        self.assertEqual(data, materializer._world110_static_world_bytes(self.raw_world, self.physics))
+        self.assertEqual(data, materializer._world110_static_world_bytes(
+            self.raw_world, self.physics, self.landing_craft_mesh))
         self.assertIn((materializer.LEVEL110_STATIC_WORLD, materializer.WORLD110_STATIC_WORLD_SHA256),
                       materializer._fixed_outputs())
         document = json.loads(data)
-        self.assertEqual(("onslaught.world110-static-world.v1", 110),
+        self.assertEqual(("onslaught.world110-static-world.v2", 110),
                          (document["schema"], document["worldNumber"]))
         actors = {actor["definitionIdentity"]: actor for actor in document["actorDefinitions"]}
         self.assertEqual(77, len(actors))
@@ -364,7 +365,32 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual(0x40000000, document["settings"]["panLengthFloatBits"])
         self.assertEqual({"Dropship", "GroundVehicle", "Plane"},
                          {row["motionClass"] for row in document["motionDefinitions"]})
+        # The landing craft are Big, with the lander mesh's radius 13.585.
+        self.assertEqual(
+            {"Muspell Light Landing Craft": (0x41000000, 0x3C8EFA35, True, 0x41595C52),
+             "Muspell Light Landing Empty": (0x40E00000, 0x3C8EFA35, True, 0x41595C52),
+             "Muspell Fighter": (0x41200000, 0x3CE4C388, False, None),
+             "Muspell Light Fighter": (0x41000000, 0x3CC82B17, False, None)},
+            {row["definitionName"]: (row["airVelocityFloatBits"], row["airTurnRateFloatBits"],
+                                     row["big"], row["meshRadiusFloatBits"])
+             for row in document["motionDefinitions"] if row["motionClass"] != "GroundVehicle"})
+        self.assertTrue(all(row["minimumAltitudeFloatBits"] == 0x40800000
+                            for row in document["motionDefinitions"] if row["motionClass"] != "GroundVehicle"))
+        # The level world has no CSafeSide; the base world's two are its list.
+        self.assertEqual([("base", 21, 1, [235.0, 504.0, -0.0]), ("base", 22, 1, [288.0, 9.0, -0.0])],
+                         [(side["world"], side["row"], side["allegiance"],
+                           list(struct.unpack("<3f", struct.pack("<3i", *side["retailPositionFloatBits"]))))
+                          for side in document["safeSides"]])
         self.assertEqual(1_481, document["pineInstanceCount"])
+
+    def test_real100_safe_sides_are_the_base_worlds_then_the_levels(self) -> None:
+        level_actors, _ = materializer._parse_level_world_actors_and_waypoints(self.raw100)
+        self.assertEqual(
+            [("base", 21, 1, [235.0, 504.0, -0.0]), ("base", 22, 1, [288.0, 9.0, -0.0]),
+             ("level", 20, 0, [501.0, 296.0, -0.0]), ("level", 39, 0, [207.0, 503.5, -0.0])],
+            [(side["world"], side["row"], side["allegiance"],
+              list(struct.unpack("<3f", struct.pack("<3i", *side["retailPositionFloatBits"]))))
+             for side in materializer._level100_safe_sides(self.raw100, level_actors)])
 
     def test_real110_player_inputs_use_rlwd_names_and_exact_configuration_fields(self) -> None:
         data = materializer._world110_player_input_bytes(self.raw_world, self.configurations)
@@ -714,6 +740,10 @@ class AircraftWeaponMountMaterializationTests(unittest.TestCase):
         cls.physics = materializer._physics_records(materializer._read_exact(
             game / materializer.PHYSICS_DEFINITIONS, materializer.PHYSICS_DEFINITIONS_SHA256))
         cls.fields = materializer._physics_record(cls.physics, 1, "Target Drone")
+        _, lifter, lifter_hash = next(item for item in materializer.DIRECT_ASSETS
+                                      if item[1] == "data/resources/meshes/m_f_lifter.msh.aya")
+        cls.transporter_radius_bits = materializer._cmsh_radius_bits(
+            inflate_aya(materializer._read_exact(game / lifter, lifter_hash)))
 
     def changed_mesh(self, *, bindings=None, parts=None):
         return SimpleNamespace(
@@ -722,8 +752,20 @@ class AircraftWeaponMountMaterializationTests(unittest.TestCase):
             siblings=self.parsed.siblings)
 
     def test_selected_model_words_and_ordered_uses_reach_motion_definitions(self):
-        rows = materializer._level100_actor_motion_definitions(self.physics, self.parsed)
+        rows = materializer._level100_actor_motion_definitions(
+            self.physics, self.parsed, self.transporter_radius_bits)
         self.assertEqual(5, len(rows))
+        # The air units' flight scalars; only the U-17 is Big, with the
+        # lifter mesh's radius 7.6559.
+        self.assertEqual(
+            {"Air Trainer": (0x41133333, 0x3D32B8C2, False, None),
+             "Target Drone": (0x40B00000, 0x3D32B8C2, False, None),
+             "U-17 Highside Transporter": (0x40A00000, 0x3BE4C388, True, 0x40F4FCFE)},
+            {row["definitionName"]: (row["airVelocityFloatBits"], row["airTurnRateFloatBits"],
+                                     row["big"], row["meshRadiusFloatBits"])
+             for row in rows if row["motionClass"] != "GroundVehicle"})
+        self.assertTrue(all(row["minimumAltitudeFloatBits"] == 0x40800000
+                            for row in rows if row["motionClass"] != "GroundVehicle"))
         trainer, drone = [row["weaponMounts"] for row in rows if "weaponMounts" in row]
         self.assertEqual(["Forseti Missile Trainer Launcher"], [m["use"]["definitionName"] for m in trainer])
         self.assertEqual(["Drone Vulcan Cannon", "Forseti Drone Missile Launcher"],
@@ -1026,6 +1068,33 @@ class CanonicalAssetReuseTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "canonical input is missing"):
                     materializer._reuse_canonical_assets()
                 self.assertEqual(b"other", destination.read_bytes())
+
+    def test_lists_outputs_from_the_checkouts_own_exact_static_world_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            canonical = Path(temporary) / "canonical"
+            child = Path(temporary) / "child"
+            canonical.mkdir()
+            manifest = child / materializer.STATIC_WORLD_MANIFEST
+            manifest.parent.mkdir(parents=True)
+            listed: list[Path] = []
+
+            def outputs(root: Path) -> tuple[tuple[Path, str], ...]:
+                listed.append(root)
+                return ((materializer.STATIC_WORLD_MANIFEST, materializer._sha256(b"new manifest")),)
+
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer, "_canonical_repository_root", return_value=canonical),
+                mock.patch.object(materializer, "_all_outputs", side_effect=outputs),
+                mock.patch.object(materializer, "STATIC_WORLD_MANIFEST_SHA256", materializer._sha256(b"new manifest")),
+                mock.patch.dict(os.environ, {"BEA_LOCAL_LAB": ""}),
+            ):
+                manifest.write_bytes(b"new manifest")
+                self.assertEqual(1, materializer._reuse_canonical_assets())
+                manifest.write_bytes(b"old manifest")
+                with self.assertRaisesRegex(RuntimeError, "canonical input is missing"):
+                    materializer._reuse_canonical_assets()
+            self.assertEqual([child, canonical], listed)
 
 
 class WorkRootRoutingTests(unittest.TestCase):

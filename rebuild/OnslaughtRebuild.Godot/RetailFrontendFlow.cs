@@ -712,12 +712,16 @@ public sealed partial class RetailFrontendFlow : Control
     /// <see cref="ReturnToMainMenuRequested"/> seam; SELECT LEVEL follows only
     /// after the player acknowledges the debriefing page.
     /// </summary>
+    /// <summary>A mission's <c>SetSlotSave</c>, stored on the career at once.</summary>
+    public void SaveSlot(Level100TutorialSlotSaved saved) => _session.SaveSlot(saved);
+
     public void AcceptWonHandoff(
         Level100MissionOutcome outcome,
-        Level100MissionTerminalState terminalState)
+        Level100MissionTerminalState terminalState,
+        IReadOnlyList<int> baseThingsLeft)
     {
         RetailFrontendScreen origin = _session.Screen;
-        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState))
+        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState, baseThingsLeft))
         {
             return;
         }

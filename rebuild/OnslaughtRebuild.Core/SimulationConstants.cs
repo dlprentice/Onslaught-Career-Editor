@@ -102,19 +102,23 @@ public static class SimulationConstants
     // mMaxWalkVelocity 0.15 verbatim (BattleEngineWalkerPart.cpp:417).
     public const int WalkerMaximumSpeedPerTick = 150;
     // BattleEngineWalkerPart.cpp:30-35,119-304,361-429. A hard input in one
-    // direction followed by its opposite within a strict 0.2-second window
-    // multiplies that opposite acceleration by 25 and locks movement input for
-    // 15 released updates. Core's current input seam is digital, so the exact
-    // 0.9/0.8 analog threshold behavior remains open while the shipped full-axis
-    // gesture and lifecycle are represented without floating-point state.
+    // direction followed by its opposite inside the dash window multiplies
+    // that opposite acceleration by 25 and locks movement input for 15
+    // released updates. Retail's window has two bounds on float32 event times
+    // (0x00412e1f-0x00412e58 and its three twins; walker-dash.md), where the
+    // source has one. Core's current input seam is digital, so the exact
+    // 0.9/0.8 analog threshold behavior remains open.
     public const int WalkerDashStartPermille = 900;
     public const int WalkerDashEndPermille = 800;
-    public const int WalkerDashWindowTicks = TicksPerSecond / 5;
+    // mDashTime 0.2f (0x006236ac).
+    public const int WalkerDashTimeFloatBits = 0x3E4C_CCCD;
     public const int WalkerDashLengthTicks = 15;
     public const int WalkerDashFrictionThresholdTicks = 5;
     public const int WalkerDashAccelerationMultiplier = 25;
     public const int WalkerDashRollVelocityMicroRadPerTick = 80_000;
-    public const int WalkerDashInitialHistoryTicks = 10 * TicksPerSecond;
+    // The walker part's four hard-press times start at -10.0f
+    // (0x00412c14-0x00412c3e; BattleEngineWalkerPart.cpp:77-80).
+    public const int WalkerDashInitialHistoryFloatBits = unchecked((int)0xC120_0000);
     // BattleEngine.cpp:1871-1884. While grounded in Walker state, HandleSounds
     // accumulates the full velocity magnitude, rolls once on strict >1.5,
     // counts those rollovers, then plays `BE Hydraulics 02` on a later strict
@@ -723,46 +727,15 @@ public static class SimulationConstants
     // ---------------------------------------------------------------------
     // Plane (behaviour class 9) motion.
     //
-    // Every value below is a shipped byte. `data/default physics.dat`
-    // (sha256 e1fb3ded...ada14, 175,603 bytes, 777 statements):
-    //
-    //   Unit  Target Drone @0x24e76 (name string @0x24e7e)
-    //           [39] CUnitBasedOn        "Base Air Unit"
-    //           [ 8] CUnitBehaviour      9
-    //           [ 2] CUnitAirVelocity    5.5   (0x40B00000)
-    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
-    //           [ 3] CUnitLife           1.0   (0x3F800000)
-    //           [22] CUnitStrafeChange   0.01  (0x3C23D70A)
-    //           [23] CUnitMaxTargetRange 500.0 (0x43FA0000)
-    //   Unit  Air Trainer  @0x1e198 (name string @0x1e1a0)
-    //           [ 2] CUnitAirVelocity    9.2   (0x41133333)
-    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
-    //           [ 3] CUnitLife           3.0   (0x40400000)
-    //           [23] CUnitMaxTargetRange 300.0 (0x43960000)
-    //
-    // The value-id -> class map is
-    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md;
-    // ids 2/6 write unit-record +0xb4/+0xb8. CAirUnit Init copies +0xb8 to
-    // all three Euler rate fields at 0x00402b0c..0x00402b32. The factor 1/3
-    // at 0x00402fc5 applies only while TF_DYING; living Plane motion uses
-    // the full rate. The air and ground guides have different move paths.
-    //
-    // Level 100's Plane path reads these constants; its manifest motion
-    // scalars remain null. materialize_retail_assets.py validates these exact
-    // profile words in _level100_actor_motion_definitions. Other worlds'
-    // motion rows carry their planes' ids 2 and 6 themselves.
-    //
-    // CAirGuide slot 3 writes drive using GetMaxVelocity() * 0.05 * 4.0.
-    // AirUnit motion subsequently clamps velocity to GetMaxVelocity() * 0.05
-    // before Unit moves the Actor. The current reconstruction uses that cap
-    // as constant speed; it does not yet reproduce the retained drive,
-    // friction, gravity and velocity transaction. Plane's multiplier is 1.0;
-    // the guide's factor 4 is not GroundVehicle's four-tick cadence.
-    public const int Level100TargetDroneAirSpeedMillimetersPerSecond = 5_500;
-    public const int Level100AirTrainerAirSpeedMillimetersPerSecond = 9_200;
-    public const int Level100PlaneAirTurnRateFloatBits = 0x3D32B8C2;
-    public const int Level100AirTrainerAirVelocityFloatBits = 0x41133333;
-    public const int Level100TargetDroneAirVelocityFloatBits = 0x40B00000;
+    // Each air unit's CUnitAirVelocity (id 2, unit record +0xb4) and
+    // CUnitAirTurnRate (id 6, +0xb8) come from its unit record in
+    // `data/default physics.dat` (sha256 e1fb3ded...ada14) through its
+    // manifest motion row (materialize_retail_assets.py,
+    // _air_unit_motion_fields); the value-id -> class map is
+    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md.
+    // CAirUnit Init copies +0xb8 to all three Euler rate fields at
+    // 0x00402b0c..0x00402b32. The factor 1/3 at 0x00402fc5 applies only while
+    // TF_DYING; living Plane motion uses the full rate.
 
     // Air-guide altitude band, read out of the pristine BEA.exe
     // (sha256 74154bfa...7750). CAirGuide__UpdateGroundClearanceCache
