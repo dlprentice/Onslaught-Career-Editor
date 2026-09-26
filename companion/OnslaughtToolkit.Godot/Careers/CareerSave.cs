@@ -23,24 +23,36 @@ public static class CareerSave
     public const int MaxKills = 0x00FFFFFF;
     public const int MissionOffset = 0x0006, MissionStride = 64, MissionCount = 100;
     public const int LinkOffset = 0x1906, LinkStride = 8, LinkCount = 200;
-    public const int GoodieOffset = 0x1F46, GoodieSlots = 300, DisplayableGoodies = 233;
+    /// <summary>Slots 0–232 are the game's Goodie table; the save keeps 300, and 233–299 are reserved.</summary>
+    public const int GoodieOffset = 0x1F46, GoodieSlots = 300, GoodieTable = 233;
     public const int KillsOffset = 0x23F6;
     public const int TechOffset = 0x240A, TechSlotCount = 32;
     public const int CareerInProgressOffset = 0x248A, SoundVolumeOffset = 0x248E;
-    public const int MusicVolumeOffset = 0x2492, GodModeOffset = 0x2496, OptionsOffset = 0x24BE;
+    public const int MusicVolumeOffset = 0x2492, OptionsOffset = 0x24BE;
+
+    /// <summary>CCareer::mIsGod[2]: player 1's and player 2's god flags (Career.h:204; RE lane save audit, 2026-09-26).</summary>
+    public static IReadOnlyList<int> GodFlagOffsets { get; } = [0x2496, 0x249A];
+
     public const uint UnusedLink = 0xFFFFFFFF;
 
     public static IReadOnlyList<string> CategoryNames { get; } = ["Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs"];
 
-    public static IReadOnlyList<string> Notes { get; } =
+    /// <summary>
+    /// The game's Goodie gallery, row by row, in the order its wall mapper places slots (retail 0x0045cb80,
+    /// identical to the developers' FEPGoodies.cpp:393-437). 230 slots; 071–073 have no cell.
+    /// </summary>
+    public static IReadOnlyList<IReadOnlyList<int>> GalleryRows { get; } =
     [
-        "The version word and length recognize this container; they do not prove its origin or gameplay validity.",
-        "Packed bytes above the five kill counts are preserved. The first two store screen-position data; the other three have no known consumer.",
-        "Reserved Goodie slots 233–299, options and all unselected bytes remain unchanged.",
-        "Rank letters follow the game's own rule (static evidence): exactly 1.0 or NaN is S, 0 or below is E, otherwise D, C, B or A by quarters.",
-        "Raw tech slots and god-mode state are inspection only. A save flag does not establish active game cheats.",
-        "Stored sound/music values do not establish the settings that a running game will apply.",
+        [.. Enumerable.Range(0, 8), .. Enumerable.Range(66, 5), .. Enumerable.Range(74, 4)],
+        [.. Enumerable.Range(8, 58)],
+        [.. Enumerable.Range(201, 32)],
+        [.. Enumerable.Range(78, 123)],
     ];
+
+    /// <summary>Slots in the game's table that its gallery never shows, though the game can still mark them new.</summary>
+    public static IReadOnlyList<int> NeverShown { get; } = [71, 72, 73];
+
+    public static bool IsShown(int index) => index is >= 0 and < GoodieTable && index is < 71 or > 73;
 
     /// <summary>
     /// The letter the game derives from a stored rank float (retail 0x00421470, matching the
@@ -104,12 +116,10 @@ public static class CareerSave
                 links.Count(record => record.Used), Count(links, LinkState.Locked), Count(links, LinkState.Complete),
                 Count(links, LinkState.AlternateRoute), Count(links, LinkState.Unknown), Count(links, LinkState.Unused)),
             Goodies = goodies,
-            GoodieCensus = new GoodieCensus(DisplayableGoodies,
-                Count(goodies, GoodieState.Locked), Count(goodies, GoodieState.Hint), Count(goodies, GoodieState.New),
-                Count(goodies, GoodieState.Old), Count(goodies, GoodieState.Unknown), Count(goodies, GoodieState.Reserved)),
+            GoodieCensus = Census(goodies),
             TechSlots = tech,
             CareerInProgressRaw = U32(bytes, CareerInProgressOffset),
-            GodModeRaw = U32(bytes, GodModeOffset),
+            GodFlags = [U32(bytes, GodFlagOffsets[0]), U32(bytes, GodFlagOffsets[1])],
             SoundVolume = StoredFloat.Read(bytes, SoundVolumeOffset),
             MusicVolume = StoredFloat.Read(bytes, MusicVolumeOffset),
         };
@@ -124,7 +134,7 @@ public static class CareerSave
     /// <summary>
     /// Plans a copy with explicitly selected changes. A kill count changes exactly its low three bytes
     /// (the packed fourth byte is never authored); a Goodie changes exactly its own four-byte state and
-    /// only for displayable slots 0–232. Every other byte is copied unchanged.
+    /// only for a slot the game's gallery shows. Every other byte is copied unchanged.
     /// </summary>
     public static Outcome<EditPlan> Preview(ReadOnlySpan<byte> original, EditRequest request)
     {
@@ -145,8 +155,9 @@ public static class CareerSave
         }
         foreach ((int index, GoodieState state) in request.Goodies)
         {
-            if (index < 0 || index >= DisplayableGoodies)
-                return Outcome<EditPlan>.Refusal("Only Goodies 000 to 232 can change; reserved slots are always preserved.");
+            if (!IsShown(index))
+                return Outcome<EditPlan>.Refusal("Only Goodies the game's gallery shows can change (000–070 and 074–232); " +
+                    "071–073 and the reserved slots are always preserved.");
             if (StoredValue(state) is not uint value)
                 return Outcome<EditPlan>.Refusal("A Goodie can only become locked, hint shown, new or viewed.");
             if (U32(original, GoodieOffset + index * 4) == value)
@@ -217,10 +228,10 @@ public static class CareerSave
         // Node +0x14..+0x37 is mBaseThingsExists[9]: which of the world's base buildings load next time (RE lane, 1470876e).
         < LinkOffset => (offset - MissionOffset) % MissionStride is >= 0x14 and < 0x38 ? "Surviving base buildings" : "Mission records",
         < GoodieOffset => "Campaign links",
-        < KillsOffset => offset < GoodieOffset + DisplayableGoodies * 4 ? "Goodie states" : "Reserved Goodie slots",
+        < KillsOffset => offset < GoodieOffset + GoodieTable * 4 ? "Goodie states" : "Reserved Goodie slots",
         < TechOffset => (offset - KillsOffset) % 4 == 3 ? "Packed kill bytes" : "Kill counts",
         < CareerInProgressOffset => "Raw tech slots",
-        < OptionsOffset => "Career settings",
+        < OptionsOffset => offset is >= 0x2496 and < 0x249E ? "God flags" : "Career settings",
         < Size => "Stored options",
         _ => "Outside supported length",
     };
@@ -233,11 +244,19 @@ public static class CareerSave
         return version == VersionWord ? null : $"Unsupported version word 0x{version:X4}; expected 0x4BD1.";
     }
 
+    private static GoodieCensus Census(IReadOnlyList<GoodieRecord> goodies)
+    {
+        GoodieRecord[] shown = goodies.Where(goodie => goodie.Shown).ToArray();
+        int Of(GoodieState state) => shown.Count(goodie => goodie.State == state);
+        return new GoodieCensus(shown.Length, Of(GoodieState.Locked), Of(GoodieState.Hint), Of(GoodieState.New), Of(GoodieState.Old),
+            Of(GoodieState.Unknown), NeverShown.Count(index => goodies[index].State is GoodieState.New or GoodieState.Old),
+            goodies.Count(goodie => goodie.Reserved));
+    }
+
     internal static uint U32(ReadOnlySpan<byte> bytes, int offset) => BinaryPrimitives.ReadUInt32LittleEndian(bytes[offset..]);
 
     private static int Count(IEnumerable<LinkRecord> records, LinkState state) => records.Count(record => record.State == state);
 
-    private static int Count(IEnumerable<GoodieRecord> records, GoodieState state) => records.Count(record => record.State == state);
 }
 
 /// <summary>An immutable read of every interpreted career region. Raw values stay visible.</summary>
@@ -258,11 +277,16 @@ public sealed class CareerInspection
     public required GoodieCensus GoodieCensus { get; init; }
     public required IReadOnlyList<uint> TechSlots { get; init; }
     public required uint CareerInProgressRaw { get; init; }
-    public required uint GodModeRaw { get; init; }
+    /// <summary>Player 1's and player 2's stored god flags.</summary>
+    public required IReadOnlyList<uint> GodFlags { get; init; }
     public required StoredFloat SoundVolume { get; init; }
     public required StoredFloat MusicVolume { get; init; }
 }
 
+/// <summary>
+/// One campaign node. <see cref="Attempts"/> is mNumAttempts (+0x38), which the game only ever zeroes
+/// (Career.cpp:99 and retail's Blank paths), so it is shown as a stored field, never as a count of tries.
+/// </summary>
 public sealed record MissionRecord(int Index, int Offset, uint World, uint CompleteRaw, uint Attempts, uint RankBits, float RankValue)
 {
     public bool Used => World != 0;
@@ -299,7 +323,10 @@ public enum GoodieState { Locked, Hint, New, Old, Unknown, Reserved }
 
 public sealed record GoodieRecord(int Index, int Offset, uint RawState)
 {
-    public bool Reserved => Index >= CareerSave.DisplayableGoodies;
+    public bool Reserved => Index >= CareerSave.GoodieTable;
+
+    /// <summary>False for 071–073 and reserved slots: the game's gallery has no cell for them.</summary>
+    public bool Shown => CareerSave.IsShown(Index);
 
     public GoodieState State => Reserved ? GoodieState.Reserved : RawState switch
     {
@@ -311,7 +338,8 @@ public sealed record GoodieRecord(int Index, int Offset, uint RawState)
     };
 }
 
-public sealed record GoodieCensus(int Displayable, int Locked, int Hint, int New, int Old, int Unknown, int Reserved);
+/// <summary>States of the 230 Goodies the game's gallery shows, how many of 071–073 are earned anyway, and the reserved slots.</summary>
+public sealed record GoodieCensus(int Shown, int Locked, int Hint, int New, int Old, int Unknown, int NeverShownEarned, int Reserved);
 
 public sealed record StoredFloat(int Offset, uint RawBits, float Value)
 {

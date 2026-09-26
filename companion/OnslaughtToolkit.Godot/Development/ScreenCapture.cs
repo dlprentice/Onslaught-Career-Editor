@@ -76,8 +76,9 @@ public partial class ScreenCapture : SceneTree
         Root.AddChild(viewport);
         // A fake Steam library by default; --steam-root points at a real one, which is only read.
         FakeInstall install = FakeInstall.Create(Path.Combine(work, "install"), File.ReadAllBytes(fixture));
+        // The fake install is closed by definition; a real library keeps the real running-game check.
         CompanionEnvironment environment = new([_steamRoot.Length > 0 ? _steamRoot : install.SteamRoot],
-            Path.Combine(work, "settings", "settings.json"));
+            Path.Combine(work, "settings", "settings.json"), _steamRoot.Length > 0 ? null : () => false);
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
         viewport.AddChild(app);
         await Settle();

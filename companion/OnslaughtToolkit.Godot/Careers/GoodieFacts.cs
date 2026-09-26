@@ -3,7 +3,7 @@ using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtToolkit.Companion.Careers;
 
-public enum GoodieEvidence { SeenInGame, GameCodeChecked, DeveloperSource, Reserved }
+public enum GoodieEvidence { SeenInGame, GameCodeChecked, DeveloperSource, NeverShown, Reserved }
 
 /// <summary>
 /// What is known about one Goodie: its unlock rule (the linked MIT GoodieUnlockRequirementService,
@@ -18,7 +18,8 @@ public static class GoodieFacts
 
     public static GoodieEvidence Evidence(int index) => index switch
     {
-        >= CareerSave.DisplayableGoodies => GoodieEvidence.Reserved,
+        >= CareerSave.GoodieTable => GoodieEvidence.Reserved,
+        >= 71 and <= 73 => GoodieEvidence.NeverShown,
         2 => GoodieEvidence.SeenInGame,
         0 or 8 or (>= 74 and <= 78) or 121 or 164 => GoodieEvidence.GameCodeChecked,
         _ => GoodieEvidence.DeveloperSource,
@@ -30,6 +31,8 @@ public static class GoodieFacts
             "Seen in the game: a career with this Goodie new loaded, showed it gold and marked it viewed when opened (Steam release).",
         GoodieEvidence.GameCodeChecked => "Checked in the game's code: this rule matches the retail executable. Not yet watched in play.",
         GoodieEvidence.DeveloperSource => "From the developers' source code; not yet checked in the retail game.",
+        GoodieEvidence.NeverShown => "The game's gallery has no cell for this slot: its wall mapper skips 071–073 (the retail code " +
+            "matches the developers' source). The game can still mark it new, so the save keeps a state for it; that state is preserved.",
         _ => "A reserved slot the game never displays; its bytes are preserved.",
     };
 

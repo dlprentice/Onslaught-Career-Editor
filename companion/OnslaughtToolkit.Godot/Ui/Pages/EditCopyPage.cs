@@ -43,7 +43,7 @@ internal sealed class EditCopyPage : Page
 
         (PanelContainer kills, VBoxContainer killBody) = Build.Card("Kill counts");
         killBody.Add(Build.Text("Tick a category to change it. Only the three count bytes change; the fourth byte, which " +
-            "the game uses for a screen position on the first two rows, is kept.", "Muted"));
+            "holds the stored screen-position setting on the first two rows, is kept.", "Muted"));
         HBoxContainer header = killBody.Add(Build.Row(16));
         header.Add(Build.Spacer()).CustomMinimumSize = new Vector2(34, 0);
         header.Add(Build.Text("CATEGORY", "Eyebrow", false, 150));
@@ -65,7 +65,7 @@ internal sealed class EditCopyPage : Page
         _goodieRows = goodieBody.Add(Build.Column(6));
         HBoxContainer addRow = goodieBody.Add(Build.Row(10));
         addRow.Add(Build.Text("Goodie number", "Muted", wrap: false));
-        _goodieIndex = addRow.Add(new SpinBox { MaxValue = CareerSave.DisplayableGoodies - 1, CustomMinimumSize = new Vector2(110, 0) });
+        _goodieIndex = addRow.Add(new SpinBox { MaxValue = CareerSave.GoodieTable - 1, CustomMinimumSize = new Vector2(110, 0) });
         _addGoodie = addRow.Add(Build.Button("Add Goodie", disabled: true));
         _addGoodie.Pressed += () => AddGoodie((int)_goodieIndex.Value);
         _needsCareer.Add(content.Add(goodies));
@@ -163,7 +163,12 @@ internal sealed class EditCopyPage : Page
     /// <summary>Adds a Goodie to the plan, aiming at a different state than it has now.</summary>
     internal void AddGoodie(int index)
     {
-        if (_workspace.Session is not SaveSession session || index < 0 || index >= CareerSave.DisplayableGoodies) return;
+        if (_workspace.Session is not SaveSession session || index < 0 || index >= CareerSave.GoodieTable) return;
+        if (!CareerSave.IsShown(index))
+        {
+            _status.Show($"Goodie {index:D3} is never shown in the game's gallery, so its state is kept as it is.", StatusKind.Failure);
+            return;
+        }
         if (!_goodieTargets.ContainsKey(index))
             _goodieTargets[index] = session.Analysis.Goodies[index].State == GoodieState.New ? GoodieState.Old : GoodieState.New;
         ShowGoodieRows();

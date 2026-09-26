@@ -36,11 +36,9 @@ public static class GameProcess
                 if (!int.TryParse(Path.GetFileName(folder), out _)) continue;
                 try
                 {
-                    // Under Proton the game's arguments name BEA.exe with a Windows-style path.
-                    foreach (string argument in File.ReadAllText(Path.Combine(folder, "cmdline")).Split('\0'))
-                    {
-                        if (argument.EndsWith("BEA.exe", StringComparison.OrdinalIgnoreCase)) return true;
-                    }
+                    string comm = File.ReadAllText(Path.Combine(folder, "comm"));
+                    string[] argv = File.ReadAllText(Path.Combine(folder, "cmdline")).Split('\0', StringSplitOptions.RemoveEmptyEntries);
+                    if (IsGame(comm, argv)) return true;
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException)
                 {
@@ -52,6 +50,24 @@ public static class GameProcess
         }
         return false;
     }
+
+    /// <summary>
+    /// Whether a Linux process is the game itself. Wine names a Windows program's process after its
+    /// executable (comm <c>BEA.exe</c>) and shows its Windows path as argv[0]; a Wine loader may carry the
+    /// path as an argument while it starts. A tool that only names the file (a disassembler, a hash, a
+    /// copy) is not the game. Not yet observed against a live game on Linux.
+    /// </summary>
+    public static bool IsGame(string comm, IReadOnlyList<string> argv)
+    {
+        if (comm.Trim().Equals("BEA.exe", StringComparison.OrdinalIgnoreCase)) return true;
+        if (argv.Count == 0) return false;
+        if (IsExecutable(argv[0])) return true;
+        return FileName(argv[0]).StartsWith("wine", StringComparison.OrdinalIgnoreCase) && argv.Skip(1).Any(IsExecutable);
+    }
+
+    private static bool IsExecutable(string argument) => FileName(argument).Equals("BEA.exe", StringComparison.OrdinalIgnoreCase);
+
+    private static string FileName(string path) => path[(path.LastIndexOfAny(['/', '\\']) + 1)..];
 }
 
 /// <summary>
