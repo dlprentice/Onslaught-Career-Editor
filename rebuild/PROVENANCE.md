@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-08 (raw contact geometry and segmented explosion evidence; earlier claims retain their dated evidence).
+Last updated: 2026-09-25 (GDScript-era provenance notes retired with the return to C#; earlier claims retain their dated evidence).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`

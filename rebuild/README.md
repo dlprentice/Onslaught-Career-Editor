@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-19 (Godot 4.8 dev6 engine and managed package pins).
+Last updated: 2026-09-25 (C# only and built in code: restored from b0b9c5e7 with the later evidenced fixes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -34,6 +34,38 @@ of readiness tooling.
 - `OnslaughtRebuild.Headless` replays command tapes and verifies versioned final
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
+
+The rebuild is C# only and built in code (David, 2026-09-25; see the repository
+`AGENTS.md`): no GDScript, no editor-authored scenes or resources, shader source
+inside C#. Its scene files are one-node entry wrappers (`Main.tscn` and the
+check scenes). From September 19 to 25 much of the Godot side was ported to
+typed GDScript and editor scenes. On September 25 it returned to the last
+all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
+and the later C# changes that carry evidence: the strict AYA texture admission
+below, the 2,148-step smoke-validator pin (`53c1cc64…`), and two refusals of
+impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
+cannot end, and an invalid terrain-compositor level, refused before its shifted
+block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
+September 25 measurement
+([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
+stays as the Core's performance record: projectile launch and flight cost up to
+about 100 ms per tick in Release C#, an open defect.
+
+`CuratedAyaTextureLoader` admits curated AYA textures strictly. It inflates each
+AYA record through Godot's zlib stream, which reports the bytes zlib actually
+consumed, so it refuses an invalid zlib stream, a stream missing its end and
+compressed data left inside a record; .NET's `ZLibStream` reads ahead and
+accepted the last two. It also refuses DDS pixel data shorter than the pinned
+loader reads for the admitted DXT1, DXT2 and BGRA8 layouts, counting
+width-remainder padding, mip chains, cubemap faces and volume slices, because
+that loader fills a short surface from uninitialized memory instead of failing
+(`modules/dds/texture_loader_dds.cpp` at `8898c2b3d`).
+`Scenes/Shared/Tests/AyaTextureChecks.tscn` admits all 51 actual import uses at
+their expected sizes, pins the outcome of 91 synthetic malformed or boundary
+files, and requires every truncated-pixel refusal to coincide with a real
+loader short read; `--aya-expect=REPORT` also compares every case, including
+the decoded bytes of the actual textures, with a prior report. These rules
+change malformed input only.
 
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
@@ -151,8 +183,7 @@ live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
 Use the installed pinned Godot 4.8 dev6 .NET engine (`godot48-mono`) and its
 bundled `Godot.NET.Sdk/4.8.0-dev.6` packages. The launcher requires the exact
 identity `4.8.dev6.mono.official.8898c2b3d`; the project remains `net8.0`.
-The standard `godot48` edition is installed for GDScript-only work, but this
-C# rebuild requires the .NET edition.
+Only the .NET edition runs this C# rebuild.
 
 ```bash
 npm run build:rebuild-godot
