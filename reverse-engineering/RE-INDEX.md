@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-25 (Level 100 final-wave contract; composed loader/preset/language contracts; current Ghidra routing retained)
+Last updated: 2026-09-26 (Level 100 and World 110 construction-order contracts, final-wave contract; composed loader/preset/language contracts; current Ghidra routing retained)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -989,7 +989,11 @@ flat inventory.
 | Units, movement, weapons | [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) |
 | Local multiplayer | [local-multiplayer-static-runtime-contract.md](binary-analysis/local-multiplayer-static-runtime-contract.md) |
 | Career progression bridge | [career-progression-static-bridge-contract.md](binary-analysis/career-progression-static-bridge-contract.md) |
-| Level 100 final wave, turrets and RNG-drawing AI owners | [level100-final-drone-wave.md](game-mechanics/level100-final-drone-wave.md) |
+| Level 100 final wave: turrets, Missile Pod locks, crosshair refresh, seeking rounds and RNG-drawing owners | [level100-final-drone-wave.md](game-mechanics/level100-final-drone-wave.md) |
+| Battle Engine weapon stores, charge law and firing state | [battle-engine-weapon-stores.md](game-mechanics/battle-engine-weapon-stores.md) |
+| Battle Engine auto-aim, launch position and cockpit Gun emitters | [battle-engine-aiming.md](game-mechanics/battle-engine-aiming.md) |
+| Level 100 construction order: shared draws, queued events and the first event flush | [level100-construction-order.md](game-mechanics/level100-construction-order.md) |
+| World 110 construction order, the Level 100 to World 110 transition, first flush and player start | [world-110-construction-order.md](game-mechanics/world-110-construction-order.md) |
 | CMSH `CPOS`/`CORI` identity | [cmsh-cpos-cori-identity-2026-07-25.md](binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) |
 
 Machine-readable siblings, for consumers that should not be parsing prose:

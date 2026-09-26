@@ -2,7 +2,7 @@
 
 Status: accepted authored-data and bounded static construction contracts;
 detached Start/engine/player shells implemented, complete initialization open
-Last updated: 2026-09-06
+Last updated: 2026-09-26 (engine construction draws linked; script control of the player; "game playing" moved to frame 100 after the pan; admission dated 2026-09-06)
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
 admits its serialized pre-initialization fields, the complete ordered-match
 selection law, the released no-match fallback plan, and the exact
@@ -427,12 +427,37 @@ Review of the **complete** 2,858-byte engine Init and pinned
   position/time state;
 - the state-dependent part/mesh switch, Random call at `0x0040586e`, initial
   event `0x1772` scheduled at `0x004058b2`, and HandleAutoAim at `0x004058ba`.
+  Those three are now contracted in the
+  [final-wave contract](level100-final-drone-wave.md#crosshair-and-auto-aim-refresh):
+  the engine's construction takes the Actor draw inside `CUnit::Init`, then the
+  6002 draw (6002 at time + 0.1 + (r mod 65536) × 0.2/65536), then the
+  `HandleAutoAim` draw (6003 at time + 0.2 + (r mod 65536) × 0.1/65536). The
+  [Level 100 construction order](level100-construction-order.md) places them in
+  the load sequence; World 110 builds its engine the same way from its own Start.
 
 Source-only defaults or top-level RNG counts do not discharge those nested
 dependencies. Start's own base Init also calls resource-chain instantiation
 for OID 15; its concrete descriptor result remains unadmitted. Consequently
 the new constructor does not claim completed native Init, full call ordering,
 post-load readiness or final engine position.
+
+## Script control of the player in World 110
+
+World 110's `LevelScript` starts with `GetPlayer(1).Deactivate()`, so the
+player's engine is inactive from its script's first run in the first event
+flush.
+- **Frame 60.** The pre-run ends, and FINISHED_PRE_RUN starts a 2.0 s pan (the
+  level world's pan length).
+- **Frame 100.** The FINISHED_PANNING handler (`0x00470024`, an inlined
+  `CGame::StartPlayingState`; standalone copy `0x0046fec0`, `game.cpp:3025-3031`)
+  sets game state 3 and posts the script event "game playing"
+  ([timing](world-110-construction-order.md#player-start)).
+- **Control.** The `Scout` script (on RLWD row 19's squad) answers with
+  `PostEvent("Enemy Engaged")`. `LevelScript`'s handler waits two seconds
+  (`Pause(2.0)`), then activates the Airfield and the player.
+
+The engine is built in walker state (plane mode 0), and `LevelScript` restricts no
+weapon or flight mode, unlike Level 100's.
 
 ## Detached production construction and focused checks
 

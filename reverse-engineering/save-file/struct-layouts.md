@@ -2,8 +2,8 @@
 
 Status: superseded in part — [save-format.md](save-format.md) owns the supported layout; this December 2025 map is retained for reference
 Last updated: 2026-09-25
-Summary: memory map of the 10,004-byte BES file compiled from Ghidra analysis, source and testing; the `0x0002` field and kill-counter top-byte notes are corrected to the September rechecks.
-Evidence: MEASURED for the corrected `0x0002` and kill-counter top-byte notes (pristine bytes `0x0042126a`-`0x00421280` and the September original-code reset control); the rest keeps its December 2025 evidence, partly INFERRED.
+Summary: memory map of the 10,004-byte BES file compiled from Ghidra analysis, source and testing; the `0x0002` field, kill-counter top-byte and base-thing bitmap notes are corrected to the September rechecks.
+Evidence: MEASURED for the corrected `0x0002`, kill-counter top-byte and base-thing bitmap notes (pristine bytes `0x0042126a`-`0x00421280`, the September original-code reset control, and the career table and loader gate read 2026-09-25); the rest keeps its December 2025 evidence, partly INFERRED.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -84,9 +84,11 @@ In the retail/Steam build, `mRanking` is stored directly as raw IEEE-754 float b
 | E | 0.0 | 0x00000000 |
 | NONE | -1.0 | 0xBF800000 |
 
-### mBaseThingsExists[9] - Objective State Tracking
+### mBaseThingsExists[9] - base-world survivors
 
-The 288 bits (9 × 32-bit ints = 36 bytes) at offset +0x14 track which "base things" (objectives/objects) exist for each mission.
+The 288 bits (9 × 32-bit ints = 36 bytes) at offset +0x14 record which rows of the
+node's base world still exist. Bit *i* is ordinary row *i* of the base world file
+(BSWD) in serialized order, not an objective.
 
 **From Career.cpp:**
 ```cpp
@@ -100,13 +102,29 @@ int m = 1 << b;
 return ((mBaseThingsExists[i] & m) != 0);
 ```
 
-**Purpose**: When a level is completed, `UpdateBaseWorldExistsStuffForNode()` copies `END_LEVEL_DATA.mBaseThingsLeft[]` into this field. Each bit represents a specific object/objective in the level.
+**Retail use** (pristine specimen `74154bfa…7750`, static reads 2026-09-25):
+- A fresh career sets every bit (`CCareerNode::Blank`).
+- At level end `FillOutEndLevelData` (`0x0046d470`) marks each base-world row
+  alive or dead: alive when it was created and is not dying.
+- When the level is won, `CCareer::ReCalcLinks` (`0x0041bdf0`) copies those
+  flags into the bitmap of the **next** node named by the career table
+  (`0x00623e28`, `Career.cpp:24-60`): column 3 on primary completion, column 4
+  only when every secondary objective is complete. Winning Level 100, for
+  example, writes node 110's bitmap from Level 100's 35 base rows; node 100's own
+  bitmap is untouched.
+- The world loader tests bit *i* before initialising base row *i*
+  (`CCareer::DoesBaseThingExist`, called at `0x0050cf8f`). A cleared row is
+  skipped, and a skipped building leaves ten landscape-damage stamps and costs
+  twenty shared draws. See the
+  [World 110 carry-over](../game-mechanics/world-110-initial-constructor-seeds.md#level-100-to-world-110-base-world-carry-over).
 
 **Pattern observations**:
-- `0xFFFFFFFF...` = All bits set = Level not played or all objectives preserved
-- Mixed patterns = Level played, some objectives destroyed
+- `0xFFFFFFFF...` = all bits set: a fresh node, or every base row survived the
+  previous level.
+- Mixed patterns = the previous level destroyed some base-world rows.
 
-**Important**: DO NOT modify this field - it contains level-specific objective state that the game tracks.
+**Important**: preserve this field unless the edit is deliberate. Clearing a bit
+removes that base-world row from the next load of that world.
 
 ---
 

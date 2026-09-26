@@ -401,7 +401,6 @@ reverse-engineering/quick-reference/source-hierarchy.md
 reverse-engineering/quick-reference/source-key-functions.md
 reverse-engineering/save-file/README.md
 reverse-engineering/save-file/_index.md
-reverse-engineering/save-file/career-graph.md
 reverse-engineering/save-file/career-links.md
 reverse-engineering/save-file/career-unlock-recipes.md
 reverse-engineering/save-file/goodies-system.md
