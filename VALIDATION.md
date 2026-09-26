@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,87 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Jet Missile Pod, locks and seeking rounds — September 26
+
+The jet's second weapon did nothing in the rebuild: Core refused to invent a
+shot. It now fires as retail's records and the RE lane's contracts describe.
+The records are `data/default physics.dat` (SHA-256 `e1fb3ded…`): `Weapon
+"Missile Pod"` @`0x17746`, its modes `Mech Micro Missile Launcher` @`0x13e49`
+and `… Salvo` @`0x14093`, `Round "Micro Missile"` @`0x8e74` and `Explosion
+"Micro Missile Hit"` @`0x3a59`. The contracts, on the RE branch, are the weapon
+stores and charge law (`05d5ed86`), the burst spawner's launch sequence, launch
+angle and Euler matrices (`d5ad5c9a`, `056c56d7`, `84193799`) and the final-wave
+contract's lock, seeking-round and round-lifetime sections (`35056883`,
+`c477f220`). The lock code follows `BattleEngine.cpp:586-1010`.
+
+- **Charge and Fire.** Holding charge adds 8 per call from 0, so the 13th call
+  reaches 104: level 1, the salvo, and full. Fire takes the level and mode before
+  its reload check, so a press during a salvo's 0.8 s reload switches the rest of
+  that burst to the launcher's five. The reload runs from the burst's start.
+- **Burst.** The first missile leaves at once and event 5001 is filed at now +
+  `CWeaponBurstDelay` on the level event manager; each delivery launches one more
+  until the mode's burst size (5 × 0.1 s, or 10 × 0.05 s).
+- **Each missile, in retail order.** Store 3 pays 1 (`WeaponFired`); one launch
+  sound per event; the launch-sequence and launch-angle counters advance (both
+  start at −1); two scatter draws; `GetCurrentTarget`; `FireLock`; the round's
+  Init draw; the recoil's three shake draws (power 0.01).
+- **Launch direction.** It is the launch orientation × `FMatrix(angle yaw, angle
+  pitch, 0)` × the scatter matrix, composed as retail's matrices. Retail's z axis
+  points down, so Core's nose-down player pitch is retail's own; the shared
+  seeking law measures pitch nose-up, and the Battle Engine's rounds convert.
+- **Locks.** `HandleLocks` runs every Move before movement. It returns while the
+  jet's pod is mid-burst. It prunes by the current mode's deflection cone,
+  acquires the crosshair unit (or the outer-sphere probe's) inside 100 m and the
+  cone, and starts a lock that finishes after 0.2 s. The pod's lock unit
+  `0x000e8400` takes planes, ground vehicles and cannons, never buildings or
+  features.
+- **Flight.** Each Move takes two wiggle draws. After the 0.05 s seek delay the
+  missile steers toward its bound target's centre, 0.0349 rad per step, inside a
+  0.785 rad cone. Leaving the cone, the target dying, a hit and the end of life
+  each release the target, and every release calls `LockHit`.
+- **Life's end.** At the end of its 8 s span the missile bursts in the air, as
+  `CRoundExplode` rounds do at event 4000. A contact makes the same `Micro
+  Missile Hit` effect and sound; direct damage is 1.5 plus the explosion's 0.5.
+
+Presentation follows the records.
+- **The missile** is `Micro Missile Effect`'s sprite layer (`Blue Spark 2.tga`,
+  radius 0.1). Its `Pulsate` modifier, its `f_micromissile` mesh layer and its
+  `Blue Trail` (`Blue Beam.tga`, not retained) are not drawn.
+- **The impact** is `Blue Explosion`'s `Flash Small` (`sun2.tga`, radius 0.7 to
+  0 over four turns) and `Blast Anim Sprite Medium` (`alparticle5.tga`, cells
+  0-8 played once at 0.8 cells a turn, radius 0.5 to 1, cyan to black). The
+  ten-particle `Blue Debris Emitter Medium` is not drawn.
+- **Sound.** `BE Micro Missile Fire` (sounds.sfx record 34) plays once per burst
+  event, and `Explosion Medium` (record 104) plays per impact or air burst.
+
+No Godot run fires the pod yet, so nobody has seen or heard these effects.
+
+Tests:
+- `Level100MissilePodTests` (6 cases) pins the charge steps and the salvo, the
+  Fire quirk and reload, the counters, the lock parameters, the lock-unit
+  classes and the charge losses.
+- `SimulationTests.MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots`
+  pins the filed 5001 time, five missiles two frames apart, store 3 at 195, the
+  pod state, every heading against a double-precision matrix product, and five
+  air bursts.
+- `SimulationTests.MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock`
+  locks a script-enemy static target at the firing range. The lock finishes
+  0.2 s after it starts, all five missiles bind and strike the target, and the
+  fired set empties again.
+
+Eleven mutations were each killed and restored byte-identical
+(`local-data/test-runs/missile-pod-20260926/mutation-kills/`).
+
+Core passes 1,522; the Client suite passes 912 with the two known skips, once
+the two new impact sprites are registered with their shipped records. Schema 51
+is selected only when the pod or a seeking round differs from construction, so
+no route that leaves the pod alone changes its bytes. The headless Godot smoke
+records the same tape as the previous change (`7c7ca639…`), and the C# replayer
+reproduces it twice (trace `248b326a…`, state `89b9ada6…`). The cold-start won
+tape is byte-identical too (`c5050fa0…`, 7,813 ticks, trace `613489cc…`, state
+`278af3f3…`). No pin moved. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/missile-pod-20260926/`.
 
 ### Weapon stores, recoil shake and the round's Init draw — September 26
 

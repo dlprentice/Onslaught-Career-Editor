@@ -32,7 +32,12 @@ internal sealed class Level100PlayerWeaponRuntime
     private int _pulseModeLevel;
     private float _twinVulcanReadyAt;
     private float _mechVulcanReadyAt;
-    private float _missilePodReadyAt;
+    private RetailWeaponChargeTable _missilePod = Level100MissilePod.CreateCharge();
+    private int _podModeLevel;
+    private bool _podHasMode;
+    private int _podBurstCount;
+    private int _podSequenceCounter;
+    private int _podAngleCounter;
     private readonly RetailWeaponStores _stores = new();
     private bool _shieldsRecharging;
     private float _ammoDepletedTime;
@@ -75,7 +80,21 @@ internal sealed class Level100PlayerWeaponRuntime
         BitConverter.SingleToUInt32Bits(_pulseCharge.ReadyAtTime),
         BitConverter.SingleToUInt32Bits(_twinVulcanReadyAt),
         BitConverter.SingleToUInt32Bits(_mechVulcanReadyAt),
-        BitConverter.SingleToUInt32Bits(_missilePodReadyAt));
+        BitConverter.SingleToUInt32Bits(_missilePod.ReadyAtTime));
+
+    /// <summary>
+    /// The Missile Pod's charge (<c>+0x60</c>), Fire level (<c>+0x68</c>),
+    /// whether a mode has been set (<c>+0xa0</c>), burst counter
+    /// (<c>+0x6c</c>) and launch-sequence and launch-angle counters
+    /// (<c>+0x70</c>, <c>+0x74</c>).
+    /// </summary>
+    internal Level100MissilePodSnapshot PodSnapshot => new(
+        BitConverter.SingleToUInt32Bits(_missilePod.Charge),
+        _podModeLevel,
+        _podHasMode,
+        _podBurstCount,
+        _podSequenceCounter,
+        _podAngleCounter);
 
     internal Level100PlayerStoresSnapshot StoresSnapshot => new(
         BitConverter.SingleToUInt32Bits(_stores.StoreValue[0]),
@@ -109,7 +128,15 @@ internal sealed class Level100PlayerWeaponRuntime
         _pulseModeLevel = 0;
         _twinVulcanReadyAt = InitialReadyAt;
         _mechVulcanReadyAt = InitialReadyAt;
-        _missilePodReadyAt = InitialReadyAt;
+        _missilePod = Level100MissilePod.CreateCharge();
+        _missilePod.ReadyAtTime = InitialReadyAt;
+        _podModeLevel = 0;
+        _podHasMode = false;
+        _podBurstCount = 0;
+        // The CWeapon constructor 0x00505e00 stores -1 in +0x70 and +0x74
+        // (0x00505e7b/0x00505e7e), so the first round uses the first slot.
+        _podSequenceCounter = -1;
+        _podAngleCounter = -1;
         for (int store = 0; store < RetailWeaponStores.StoreCount; store++)
         {
             _stores.StoreOverheat[store] = 0;
@@ -146,21 +173,19 @@ internal sealed class Level100PlayerWeaponRuntime
             return true;
         }
 
-        if (selected != Level100MissionWeapon.PulseCannonPod)
-        {
-            return false;
-        }
-
+        RetailWeaponChargeTable charge = selected == Level100MissionWeapon.MissilePod
+            ? _missilePod
+            : _pulseCharge;
         (int store, float consumption) = StoreOf(selected);
         bool heat = _stores.StoreHeat[store] != 0;
         if (!(heat || _stores.StoreValue[store] > 0.0f) ||
-            RetailWeaponCharge.FullyCharged(_pulseCharge) ||
+            RetailWeaponCharge.FullyCharged(charge) ||
             _stores.StoreOverheat[store] != 0)
         {
             return false;
         }
 
-        RetailWeaponCharge.Charge(_pulseCharge);
+        RetailWeaponCharge.Charge(charge);
         if (mode == VehicleMode.Walker)
         {
             _shieldsRecharging = false;
@@ -205,6 +230,15 @@ internal sealed class Level100PlayerWeaponRuntime
             _pulseModeLevel = RetailWeaponCharge.ModeLevel(_pulseCharge);
             RetailWeaponCharge.LoseCharge(_pulseCharge);
         }
+        else if (selected == Level100MissionWeapon.MissilePod)
+        {
+            // Fire rewrites the level and mode before its reload check, so a
+            // second press during a salvo switches the rest of that burst to
+            // the launcher (the RE lane's stores contract, 0x00506952).
+            _podModeLevel = RetailWeaponCharge.ModeLevel(_missilePod);
+            _podHasMode = true;
+            RetailWeaponCharge.LoseCharge(_missilePod);
+        }
         return ReadyToFire(selected, now);
     }
 
@@ -214,7 +248,7 @@ internal sealed class Level100PlayerWeaponRuntime
             Level100MissionWeapon.PulseCannonPod => _pulseCharge.ReadyAtTime,
             Level100MissionWeapon.MechTwinVulcanCannon => _twinVulcanReadyAt,
             Level100MissionWeapon.MechVulcanCannon => _mechVulcanReadyAt,
-            Level100MissionWeapon.MissilePod => _missilePodReadyAt,
+            Level100MissionWeapon.MissilePod => _missilePod.ReadyAtTime,
             _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
         });
 
@@ -235,7 +269,8 @@ internal sealed class Level100PlayerWeaponRuntime
             },
             Level100MissionWeapon.MechTwinVulcanCannon or
                 Level100MissionWeapon.MechVulcanCannon => VulcanReloadTime,
-            _ => throw new NotSupportedException("The Missile Pod launch is not admitted."),
+            Level100MissionWeapon.MissilePod => PodMode.ReloadTime,
+            _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
         };
         float readyAt = (float)((double)now + (double)reload);
         switch (weapon)
@@ -249,7 +284,65 @@ internal sealed class Level100PlayerWeaponRuntime
             case Level100MissionWeapon.MechVulcanCannon:
                 _mechVulcanReadyAt = readyAt;
                 break;
+            case Level100MissionWeapon.MissilePod:
+                _missilePod.ReadyAtTime = readyAt;
+                break;
         }
+    }
+
+    /// <summary>The pod's mode as Fire last set it, through <c>+0x68</c>.</summary>
+    internal Level100MissilePodMode PodMode => Level100MissilePod.Mode(_podModeLevel);
+
+    /// <summary>The pod's burst counter, <c>+0x6c</c>.</summary>
+    internal int PodBurstCount
+    {
+        get => _podBurstCount;
+        set => _podBurstCount = value;
+    }
+
+    /// <summary>
+    /// <c>CWeapon::IsFiring</c> (<c>0x0050a290</c>): a mode is set, the burst
+    /// counter is nonzero and below the mode's burst size. Burst-size-1
+    /// weapons never count, so of Level 100's weapons only the pod can.
+    /// </summary>
+    internal bool PodIsFiring =>
+        _podHasMode && _podBurstCount != 0 && _podBurstCount < PodMode.BurstSize;
+
+    /// <summary>
+    /// The lock parameters the current charge selects: the getters round the
+    /// live charge, divide by 100 and take that level's mode, so a charging
+    /// pod reads the salvo's parameters from 104 onward.
+    /// </summary>
+    internal Level100LockParameters LockParameters(Level100MissionWeapon weapon)
+    {
+        if (weapon != Level100MissionWeapon.MissilePod)
+        {
+            return Level100LockParameters.RecordDefaults;
+        }
+
+        Level100MissilePodMode mode = Level100MissilePod.Mode(RetailWeaponCharge.ModeLevel(_missilePod));
+        return new Level100LockParameters(
+            mode.MaxLocks, mode.LockTime, mode.LockDeflection, mode.LockRange, mode.LockUnitMask);
+    }
+
+    /// <summary>
+    /// The spawner's launch-sequence and launch-angle counters (<c>+0x70</c>,
+    /// <c>+0x74</c>): each advances before the round and wraps to 0 when it is
+    /// not below its list's count.
+    /// </summary>
+    internal (int Emitter, int AngleSlot) AdvancePodLaunchCounters()
+    {
+        _podSequenceCounter++;
+        if (_podSequenceCounter >= Level100MissilePod.LaunchSlots)
+        {
+            _podSequenceCounter = 0;
+        }
+        _podAngleCounter++;
+        if (_podAngleCounter >= Level100MissilePod.LaunchSlots)
+        {
+            _podAngleCounter = 0;
+        }
+        return (Level100MissilePod.LaunchSequenceEmitters[_podSequenceCounter], _podAngleCounter);
     }
 
     /// <summary>
@@ -380,15 +473,18 @@ internal sealed class Level100PlayerWeaponRuntime
     /// <summary>
     /// The common pre-direction work in retail <c>CBattleEngine::Morph</c>
     /// calls <c>LoseWeaponCharge</c> on both vehicle parts. Each part clears
-    /// only its currently selected weapon. Level 100's Pulse Cannon Pod is the
-    /// only represented charge accumulator; the modelled jet weapons have no
-    /// charge table to clear.
+    /// only its currently selected weapon: the Pulse Cannon Pod on the walker
+    /// and the Missile Pod on the jet are Level 100's charge accumulators.
     /// </summary>
     internal void LoseCurrentWeaponChargesForMorph()
     {
         if (WalkerSelectedWeapon == Level100MissionWeapon.PulseCannonPod)
         {
             RetailWeaponCharge.LoseCharge(_pulseCharge);
+        }
+        if (JetSelectedWeapon == Level100MissionWeapon.MissilePod)
+        {
+            RetailWeaponCharge.LoseCharge(_missilePod);
         }
     }
 
@@ -492,11 +588,15 @@ internal sealed class Level100PlayerWeaponRuntime
                 }
 
                 // ChangeWeapon's aftermath: LoseCharge on the newly selected
-                // weapon. Level 100 only accumulates charge on the Pulse
-                // Cannon Pod; resetting that table matches the store of +0.0f.
+                // weapon (0x00411f96). Level 100 accumulates charge on the two
+                // pods; resetting a table matches the store of +0.0f.
                 if (weapon == Level100MissionWeapon.PulseCannonPod)
                 {
                     RetailWeaponCharge.LoseCharge(_pulseCharge);
+                }
+                else if (weapon == Level100MissionWeapon.MissilePod)
+                {
+                    RetailWeaponCharge.LoseCharge(_missilePod);
                 }
                 return true;
             }

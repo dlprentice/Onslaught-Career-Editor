@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-26 (weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
+Last updated: 2026-09-26 (the jet Missile Pod: charge and Fire, burst and launch slots, locks, seeking flight and air burst; weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -276,12 +276,18 @@ Owner paths are relative to the repository root; test names are relative to
 | Aquila weapon stores and `WeaponFired` | Config `0x35f`: (0, 2000) (0, 100) (1, 150) (0, 200) (1, 100) (1, 100). Jet ammo `0x0041215d-0x00412192` −consumption clamped at 0; jet heat `0x00412135` +consumption − `kWeaponCoolRate` (int 1 at `0x006236a4`); walker heat +consumption; `Charged()` is `+0x68 > 0`; once per burst event, before the volley | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.WeaponFired`, `.StoreOf` | `Level100PlayerStoresTests` | 12 | Mech Vulcan consumption 1→2; a charged heat shot pays heat — each RED, restored, GREEN |
 | `CBattleEngine::Move` heat-store cooling | `0x004095d6-0x00409633`: each heat store −1.0 (`fild [0x00622f08]`), below 0 → 0, else overheat cleared when strictly below `0.75 × capacity` (`0x005d8bc4`) | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.CoolStores` | `Level100PlayerStoresTests.Cooling_TakesOneEveryMoveAndClearsOverheatStrictlyBelowThreeQuarters` | 1 | cool rate 1→2; clear threshold 0.75→0.8 — each RED, restored, GREEN |
 | `CBattleEngine::AddShockShake` and the round's Init draw | `0x00407940`: return below 0.001 (double `0x005d8bc8`), cap 0.75, three draws `(r mod 32)/(16/a) − a`; called per spawned round with `CWeaponPower` (`0x0040c340`) and from `Damage` (`0x0040ab75-0x0040abc2`). `CRound::Init` `0x004d8410` → `CActor::Init` `0x004d867b` takes one draw per round | `rebuild/OnslaughtRebuild.Core/RetailBattleEngineShake.cs`, `Simulation.cs`, `Level100ActorWeaponRuntime.cs` | `RetailBattleEngineShake.Add`/`.Decay`/`.DamageAmount`, `Simulation.SpawnPlayerBurst` | `Level100PlayerStoresTests.Shake_TakesThreeDrawsAboveTheThresholdAndDecaysEachMove`, `SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder` | 1, 1 | threshold 0.001→0.1; the round Init draw removed — each RED, restored, GREEN |
+| Missile Pod charge and Fire | `Weapon "Missile Pod"` @`0x17746`: `CWeaponChargeRate` `0x41000000` (8.0), levels 0 and 1, store 3, consumption 1. `CWeapon::Fire` `0x00506010` writes the rounded level and mode (`0x00506952`) before its reload check and stamps `now + 0x3f4ccccd` from the burst's start | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs`, `Level100MissilePod.cs` | `Level100PlayerWeaponRuntime.AdvanceCharge`, `.TryPrepareFire`, `.StampReadyAt` | `Level100MissilePodTests.Charge_ReachesTheSalvoOnItsThirteenthCallAndStopsThere`, `.Fire_SetsTheModeBeforeItsReloadCheck` | 2 | charge rate 8→10; the level taken only after the reload check — each RED, restored, GREEN |
+| Missile Pod burst event and launch slots | `CWeapon__HandleFireBurstEvent` `0x00506930` re-files 5001 at now + `CWeaponBurstDelay` (`0x3dcccccd` launcher, `0x3d4ccccd` salvo) while the counter is below the burst size; the counters `+0x70`/`+0x74` start at −1 (`0x00505e7b`) and advance before each round; the basis is orientation × `FMatrix(a, b, 0)` × jitter (`0x00506ed1-0x005072d0`), with the five `CWeaponLaunchAngle` pairs from the mode records | `rebuild/OnslaughtRebuild.Core/SimulationBattleEngine.cs`, `Simulation.cs` | `Simulation.FireMissilePod`, `.HandleMissilePodBurst`, `.SpawnPodBurst`, `.ComposeLaunchDirection` | `SimulationTests.MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots`, `Level100MissilePodTests.LaunchCounters_StartAtTheFirstSlotAndWrapAfterFive` | 2 | burst delay 0.1→0.2; sequence counter starts at 0; angles added to the aim instead of composed — each RED, restored, GREEN |
+| Battle Engine locks for the pod | `HandleLocks` `BattleEngine.cpp:586-800` (lock loss `0x00406724`, direct acquisition `0x00406ce4`), `StartLock` `0x00406fc0`, `FireLock` `0x00407060` from the spawner at `0x005074c9`, `LockHit` `0x00407140`; parameters from the current charge level (`0x00506350`-`0x00506800`); `CWeaponLockUnit` `0x000e8400` | `rebuild/OnslaughtRebuild.Core/SimulationBattleEngine.cs`, `Level100PlayerLocks.cs` | `Simulation.HandleLocks`, `Level100PlayerLocks.StartLock`/`.FireLock`/`.LockHit` | `SimulationTests.MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock`, `Level100MissilePodTests.LockUnitMask_TakesPlanesVehiclesAndCannonsButNotBuildings` | 2 | lock time ignored; `FireLock` skipped; `LockHit` skipped at shutdown; lock unit narrowed to planes — each RED, restored, GREEN |
+| Seeking Micro Missile flight and end of life | `CRound::Move` `0x004d8e40`: two wiggle draws (`0x004d8ffc`, `0x004d9036`), release on a dying target, steering after the seek delay inside the seek cone (`0x004d93cc-0x004d9838`); `CRound::Init` files 4000 at now + life (`0x004d86a6`), whose delivery bursts a `CRoundExplode` round in the air (`0x004d9a54` → `0x004d9f30`); `Micro Missile` @`0x8e74`, `Micro Missile Hit` @`0x3a59` | `rebuild/OnslaughtRebuild.Core/Simulation.cs`, `SimulationBattleEngine.cs`, `Level100Destruction.cs` | `Simulation.UpdateProjectiles`, `.SteerSeekingPlayerRound`, `Level100DestructionRuntime.ReportAirBurst` | `SimulationTests.MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock`, `.MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots` | 2 | nose-down pitch fed to the nose-up steering law; no air burst at the end of life — each RED, restored, GREEN |
 
 The September 26 Battle Engine rows have their mutation receipts in the
 rebuild worktree's ignored
 `local-data/test-runs/be-refresh-20260926/mutation-kills/` (the refresh rows:
 four mutations) and `local-data/test-runs/stores-shake-20260926/mutation-kills/`
-(the store, cooling and shake rows: six mutations), each with `mutate.py` and
+(the store, cooling and shake rows: six mutations) and
+`local-data/test-runs/missile-pod-20260926/mutation-kills/` (the four Missile
+Pod rows: eleven mutations), each with `mutate.py` and
 `mutation-results.json`; every mutation went RED, was restored byte-identical by
 SHA-256, then went GREEN. The shake offsets are not yet applied to the Battle
 Engine's orientation (`BattleEngine.cpp:1222-1224`), and the damage shake's
@@ -294,6 +300,22 @@ read of `CPlayer::GetCurrentViewPoint` in cockpit view); whether the line
 query skips inactive things, as every Core contact query does (a static read
 of `0x0050b030`'s candidate walk); and whether `CSimpleBuilding` city
 buildings carry the unit and building type bits (their class type mask).
+The Missile Pod rows leave six more:
+- Its missiles leave from the Pulse Cannon's evidenced emitter, not the pod's
+  Gun 2-6 emitters. Falsifier: the cockpit mesh's measured emitter positions.
+- Core moves a player round in its launch frame and removes it after 160 Moves.
+  Retail's first Move frame and its 4000 delivery frame are open. Falsifier: a
+  static read of `CRound::Init`'s Move event and the frame order.
+- Steering keeps only yaw and pitch: it drops the roll a composed launch basis
+  carries, and the wiggle bends one step's travel. Falsifier: a static read of
+  how `0x004d93cc-0x004d9838` rebuilds the orientation.
+- The air burst's 1.0-radius, 0.5-damage explosion damages nothing. Falsifier:
+  the explosion's damage walk at `0x004d9f30`.
+- `weapon->ReadyToFire` (`0x00509f70`) is taken as the strict now > `+0x64`
+  test. Falsifier: a static read of `0x00509f70`.
+- A lock needs a side set by the target's script, because Core has no authored
+  allegiance for the other level things. Falsifier: the world file's side field
+  for those rows.
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and

@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
+Last updated: 2026-09-26 (the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -293,7 +293,7 @@ Controls:
 | `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
 | Mouse or trackpad | Turn the body and aim the attached first-person view |
 | Mouse wheel down/up during walker gameplay | Zoom in/out with the released `1.0` to `0.4` Battle Engine law |
-| Middle mouse or `;` during gameplay | Cycle to the next active weapon; the released heat/store eligibility extension and Missile Pod firing remain incomplete |
+| Middle mouse or `;` during gameplay | Cycle to the next active weapon whose store can pay for a shot; in the jet this selects the Missile Pod, whose HUD icon is not drawn yet |
 | `Space` | Fire the selected implemented weapon after the tutorial enables it |
 | `R` | Reset the slice |
 

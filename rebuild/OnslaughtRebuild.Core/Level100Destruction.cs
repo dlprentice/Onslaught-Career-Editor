@@ -10,6 +10,7 @@ public enum Level100DestructionEventKind : byte
     ActiveSubtreeBelowHalf = 3,
     Terminal = 4,
     VulcanImpact = 5,
+    MicroMissileImpact = 6,
 }
 
 public enum Level100DestructionEffectKind : byte
@@ -20,6 +21,7 @@ public enum Level100DestructionEffectKind : byte
     FacilityDestroyed = 3,
     DroneDestroyed = 4,
     VulcanImpact = 5,
+    MicroMissileImpact = 6,
 }
 
 public readonly record struct Level100DestructionEvent(
@@ -185,6 +187,21 @@ public sealed class Level100DestructionRuntime
         _events.Clear();
         SynchronizeActors(requireInitialState: false);
     }
+
+    /// <summary>
+    /// Event 4000's delivery for a round that carries <c>CRoundExplode</c>: it
+    /// explodes in the air where it is (<c>0x004d9a54</c>, then
+    /// <c>0x004d9f30</c> in mode 0) and dies. Only the explosion's effect is
+    /// reported; its radius damage is not modelled.
+    /// </summary>
+    internal void ReportAirBurst(SimVector3 position, Level100DestructionEffectKind effectKind) =>
+        _events.Add(new Level100DestructionEvent(
+            Level100DestructionState.RoundImpactEventKind(effectKind),
+            effectKind,
+            0,
+            -1,
+            0,
+            ToContactVector(position)));
 
     internal void FlushStartOfFrame(uint eventFrameCount)
     {
@@ -892,27 +909,29 @@ public sealed class Level100DestructionState
 
     internal static Level100DestructionEvent CreateRoundImpactEvent(
         in Level100ContactHit hit,
-        Level100DestructionEffectKind effectKind)
-    {
-        Level100DestructionEventKind eventKind = effectKind switch
-        {
-            Level100DestructionEffectKind.PulseImpact =>
-                Level100DestructionEventKind.PulseImpact,
-            Level100DestructionEffectKind.VulcanImpact =>
-                Level100DestructionEventKind.VulcanImpact,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(effectKind),
-                effectKind,
-                "A round contact requires a released impact effect."),
-        };
-        return new Level100DestructionEvent(
-            eventKind,
+        Level100DestructionEffectKind effectKind) =>
+        new(
+            RoundImpactEventKind(effectKind),
             effectKind,
             hit.ActorId,
             hit.PartIndex,
             0,
             hit.SurfacePoint);
-    }
+
+    internal static Level100DestructionEventKind RoundImpactEventKind(
+        Level100DestructionEffectKind effectKind) => effectKind switch
+        {
+            Level100DestructionEffectKind.PulseImpact =>
+                Level100DestructionEventKind.PulseImpact,
+            Level100DestructionEffectKind.VulcanImpact =>
+                Level100DestructionEventKind.VulcanImpact,
+            Level100DestructionEffectKind.MicroMissileImpact =>
+                Level100DestructionEventKind.MicroMissileImpact,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(effectKind),
+                effectKind,
+                "A round contact requires a released impact effect."),
+        };
 
     public Level100DestructionSnapshot CaptureSnapshot()
     {

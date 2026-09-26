@@ -531,12 +531,9 @@ public sealed partial class Level100ActorMechanics
             int travelPitch = round.PitchMicroRadians;
             if (data.WiggleMicroRadians > 0)
             {
-                int wiggleFirst =
-                    _releasedRandom.NextSignedUnitScaled(data.WiggleMicroRadians);
-                int wiggleSecond =
-                    _releasedRandom.NextSignedUnitScaled(data.WiggleMicroRadians);
-                travelYaw = NormalizeMicroRad(travelYaw + wiggleSecond);
-                travelPitch = NormalizeMicroRad(travelPitch + wiggleFirst);
+                (int wiggleYaw, int wigglePitch) = NextWiggle(data.WiggleMicroRadians);
+                travelYaw = NormalizeMicroRad(travelYaw + wiggleYaw);
+                travelPitch = NormalizeMicroRad(travelPitch + wigglePitch);
                 (sin, cos) = FixedSinCos(travelYaw);
                 (pitchSin, pitchCos) = FixedSinCos(travelPitch);
             }
@@ -623,24 +620,63 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
-        Level100ActorPoseSnapshot targetPose = _actors.GetPose(round.TargetActorId);
-        long deltaX = (long)targetPose.PositionMillimeters.X -
-            round.PositionMillimeters.X;
-        long deltaY = (long)targetPose.PositionMillimeters.Y -
-            round.PositionMillimeters.Y;
-        long deltaZ = (long)targetPose.PositionMillimeters.Z -
-            round.PositionMillimeters.Z;
+        int yaw = round.YawMicroRadians;
+        int pitch = round.PitchMicroRadians;
+        if (SteerTowards(
+                ref yaw,
+                ref pitch,
+                round.PositionMillimeters,
+                _actors.GetPose(round.TargetActorId).PositionMillimeters,
+                data.TurnRateMicroRadians,
+                data.SeekAngleMicroRadians) == SeekSteering.LeftTheCone)
+        {
+            round.Locked = false;
+            return;
+        }
+
+        round.YawMicroRadians = yaw;
+        round.PitchMicroRadians = pitch;
+    }
+
+    /// <summary>The outcome of one <see cref="SteerTowards"/> step.</summary>
+    internal enum SeekSteering
+    {
+        Steered,
+        NoDirection,
+        LeftTheCone,
+    }
+
+    /// <summary>
+    /// One steering step of <c>CRound::Move</c>'s guidance
+    /// (<c>0x004d93cc-0x004d9838</c>) for a round without
+    /// <c>CRoundWeirdoSeek</c>: take the aim point into the round's frame; when
+    /// its forward component is below <c>cos(CRoundSeekAngle)</c> the target
+    /// is dropped; otherwise turn by the yaw error <c>-atan2(x, y)</c> and the
+    /// pitch error <c>atan2(z, √(x² + y²))</c>, each clamped to the turn rate.
+    /// Shared by the actors' rounds and the Battle Engine's.
+    /// </summary>
+    internal static SeekSteering SteerTowards(
+        ref int yawMicroRadians,
+        ref int pitchMicroRadians,
+        SimVector3 position,
+        SimVector3 aimPoint,
+        int turnRateMicroRadians,
+        int seekAngleMicroRadians)
+    {
+        long deltaX = (long)aimPoint.X - position.X;
+        long deltaY = (long)aimPoint.Y - position.Y;
+        long deltaZ = (long)aimPoint.Z - position.Z;
         long length = IntegerSquareRoot(
             (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
         if (length == 0)
         {
-            return;
+            return SeekSteering.NoDirection;
         }
 
         // The round's own frame, from its (yaw, pitch): forward is the third
         // basis column and up is the second in the Core pose projection.
-        (int yawSin, int yawCos) = FixedSinCos(round.YawMicroRadians);
-        (int pitchSin, int pitchCos) = FixedSinCos(round.PitchMicroRadians);
+        (int yawSin, int yawCos) = FixedSinCos(yawMicroRadians);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRadians);
         long rightX = yawCos;
         long rightY = 0;
         long rightZ = yawSin;
@@ -659,11 +695,10 @@ public sealed partial class Level100ActorMechanics
             ((deltaX * forwardX) + (deltaY * forwardY) + (deltaZ * forwardZ)) /
             length;
 
-        (_, int seekCosine) = FixedSinCos(data.SeekAngleMicroRadians);
+        (_, int seekCosine) = FixedSinCos(seekAngleMicroRadians);
         if (localForward < seekCosine)
         {
-            round.Locked = false;
-            return;
+            return SeekSteering.LeftTheCone;
         }
 
         int yawError = FixedAtan2(localRight, localForward);
@@ -673,12 +708,12 @@ public sealed partial class Level100ActorMechanics
                 (localForward * localForward)));
         int cappedYaw = Math.Clamp(
             yawError,
-            -data.TurnRateMicroRadians,
-            data.TurnRateMicroRadians);
+            -turnRateMicroRadians,
+            turnRateMicroRadians);
         int cappedPitch = Math.Clamp(
             pitchError,
-            -data.TurnRateMicroRadians,
-            data.TurnRateMicroRadians);
+            -turnRateMicroRadians,
+            turnRateMicroRadians);
 
         // New forward = right*sin(cy)cos(cp) + up*sin(cp) + forward*cos(cy)cos(cp).
         // When neither axis clamps this reproduces the direction to the target
@@ -700,10 +735,23 @@ public sealed partial class Level100ActorMechanics
             MultiplyFixed((int)upZ, cpSin) +
             MultiplyFixed((int)forwardZ, alongForward);
 
-        round.YawMicroRadians = FixedAtan2(-nextX, nextZ);
-        round.PitchMicroRadians = FixedAtan2(
+        yawMicroRadians = FixedAtan2(-nextX, nextZ);
+        pitchMicroRadians = FixedAtan2(
             nextY,
             IntegerSquareRoot(((long)nextX * nextX) + ((long)nextZ * nextZ)));
+        return SeekSteering.Steered;
+    }
+
+    /// <summary>
+    /// <c>CRoundWiggle</c>: two shared draws with the scatter law, the first
+    /// for pitch and the second for yaw, taken first in every Move of a round
+    /// whose wiggle is above zero (<c>0x004d8ffc</c>, <c>0x004d9036</c>).
+    /// </summary>
+    internal (int YawMicroRadians, int PitchMicroRadians) NextWiggle(int wiggleMicroRadians)
+    {
+        int first = _releasedRandom.NextSignedUnitScaled(wiggleMicroRadians);
+        int second = _releasedRandom.NextSignedUnitScaled(wiggleMicroRadians);
+        return (second, first);
     }
 
     /// <summary>

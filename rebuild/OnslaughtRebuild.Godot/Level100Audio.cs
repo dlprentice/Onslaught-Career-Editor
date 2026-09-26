@@ -530,6 +530,10 @@ public sealed partial class Level100Audio : Node3D
                 Level100PlayerWeapon.MechTwinVulcanCannon or
                 Level100PlayerWeapon.MechVulcanCannon =>
                     Level100EffectCue.VulcanCannonFire,
+                // Both pod modes name `BE Micro Missile Fire`; with
+                // CWeaponSoundPerBurst 0 it plays once per burst event.
+                Level100PlayerWeapon.MissilePod =>
+                    Level100EffectCue.MicroMissileFire,
                 _ => throw new InvalidDataException(
                     $"Core released an unknown Level 100 player weapon " +
                     $"{fireEvent.Weapon}."),
@@ -651,6 +655,9 @@ public sealed partial class Level100Audio : Node3D
                 // CExplosionSound field. Its direct visual sprite is consumed
                 // by FirstFlightWorldView without inventing an impact sample.
                 Level100DestructionEffectKind.VulcanImpact => null,
+                // `Micro Missile Hit` carries CExplosionSound `Explosion Medium`.
+                Level100DestructionEffectKind.MicroMissileImpact =>
+                    Level100EffectCue.MissileImpact,
                 Level100DestructionEffectKind.TargetDestroyed =>
                     Level100EffectCue.TargetOrTrainerDestroyed,
                 Level100DestructionEffectKind.DroneDestroyed =>

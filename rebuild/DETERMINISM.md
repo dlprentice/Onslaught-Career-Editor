@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -110,6 +110,12 @@ overheat flags, the walker's shields-recharging flag, the ammunition-depleted
 and overheated cue times, the Pulse's last Fire level and the Battle Engine's
 shake offsets and phase; it is selected only once any differs from
 construction, so a run that never fires or takes a hit keeps its schema.
+Schema 51 adds the jet Missile Pod (its charge, Fire level, mode flag, burst
+counter and both launch-slot counters) and, for each seeking round in flight,
+its heading, launch time and bound target. It is selected only once the pod
+differs from construction or a seeking round flies. The pod's burst
+continuation (event 5001) shares the same level event manager under its own
+reserved listener.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

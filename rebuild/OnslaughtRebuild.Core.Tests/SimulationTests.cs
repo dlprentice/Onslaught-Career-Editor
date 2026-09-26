@@ -2353,6 +2353,273 @@ public sealed class SimulationTests
             $"playerScript={stalledPlayer.ScriptName}.");
     }
 
+    /// <summary>
+    /// The jet Missile Pod's launcher burst: Fire spawns the first missile at
+    /// once and files event 5001 at now + <c>CWeaponBurstDelay</c>; each
+    /// delivery spawns one more until the mode's five. Every missile spends
+    /// one from store 3 and is one launch-sound event, and its heading is the
+    /// launch orientation times its launch-angle slot as retail matrices
+    /// (the RE lane's burst-spawner contract, steps 2, 5 and 7).
+    /// </summary>
+    [Fact]
+    public void MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots()
+    {
+        Simulation simulation = CreateJetWithMissilePod();
+        int yaw = simulation.Snapshot.FacingYawMicroRad;
+        const int Pitch = -300_000;
+        LookIntoOpenSky(simulation, yaw, Pitch);
+
+        simulation.SetFacingForMeasurement(yaw, Pitch);
+        float firedAt = RetailEventScheduler.TimeAtFrameCount(simulation.Snapshot.RetailEventFrameCount + 1);
+        WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        RetailEventSchedulerSnapshot events = fired.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        RetailEventSlotSnapshot burst = Assert.Single(
+            events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow).Select(handle => slots[handle]),
+            slot => slot.Listener == Level100ActorMechanics.MissilePodListener);
+        Assert.Equal(Level100ActorMechanics.WeaponBurstEvent, (int)burst.EventNum);
+        Assert.Equal(
+            BitConverter.SingleToUInt32Bits(firedAt + BitConverter.UInt32BitsToSingle(0x3dcccccdu)),
+            burst.TimeBits);
+        Assert.Equal(51, CanonicalSchemaVersion(fired));
+
+        var spawnTicks = new List<int>();
+        var headings = new List<Level100SeekingRoundSnapshot>();
+        var seen = new HashSet<int>();
+        int fireEvents = 0;
+        WorldSnapshot state = fired;
+        for (int step = 0; step < 30; step++)
+        {
+            fireEvents += state.Level100WeaponFireEvents.Count(item =>
+                item.Weapon == Level100PlayerWeapon.MissilePod);
+            foreach (ProjectileSnapshot missile in state.Projectiles.Where(item =>
+                         item.Kind == Level100ProjectileKind.MicroMissile && seen.Add(item.Id)))
+            {
+                spawnTicks.Add(state.Tick);
+                headings.Add(Assert.IsType<Level100SeekingRoundSnapshot>(missile.Seeking));
+                Assert.Null(missile.Seeking!.Target);
+            }
+            simulation.SetFacingForMeasurement(yaw, Pitch);
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(5, spawnTicks.Count);
+        Assert.Equal(5, fireEvents);
+        Assert.Equal([0, 2, 4, 6, 8], spawnTicks.Select(tick => tick - spawnTicks[0]));
+        Assert.Equal(195.0f, BitConverter.UInt32BitsToSingle(state.Level100PlayerStores.Store3Bits));
+        Assert.Equal(new Level100MissilePodSnapshot(0, 0, true, 5, 4, 4), state.Level100MissilePod);
+
+        for (int slot = 0; slot < 5; slot++)
+        {
+            (double expectedYaw, double expectedPitch) = RetailLaunchHeading(
+                yaw / 1e6,
+                Pitch / 1e6,
+                BitConverter.UInt32BitsToSingle(Level100MissilePod.LaunchAngleYawBits[slot]),
+                BitConverter.UInt32BitsToSingle(Level100MissilePod.LaunchAnglePitchBits[slot]));
+            Assert.InRange(headings[slot].YawMicroRadians - (expectedYaw * 1e6), -40, 40);
+            Assert.InRange(headings[slot].PitchMicroRadians - (expectedPitch * 1e6), -40, 40);
+        }
+
+        // A pitched launch is not the angle sum: slot 5's 12-degree yaw turns
+        // about the pitched frame's own up axis.
+        Assert.True(Math.Abs(headings[4].PitchMicroRadians - Pitch) > 5_000);
+
+        // Unbound and aimed at open sky, each missile lives out its span and,
+        // carrying CRoundExplode, bursts in the air where it last was.
+        var lastPositions = new Dictionary<int, Level100Vector3>();
+        int airBursts = 0;
+        for (int step = 0; step < 200 && (step == 0 || lastPositions.Count > 0); step++)
+        {
+            foreach (Level100DestructionEvent burstEvent in state.Level100DestructionEvents.Where(item =>
+                         item.Kind == Level100DestructionEventKind.MicroMissileImpact))
+            {
+                // One 750 mm step (bent by the wiggle) past a missile's last
+                // snapshot, in contact axes (Core z forward, retail z down).
+                Assert.Equal(0, burstEvent.ActorId);
+                Assert.Contains(lastPositions.Values, last =>
+                    Math.Abs(burstEvent.Position.X - last.X) <= 760 &&
+                    Math.Abs(burstEvent.Position.Y - last.Y) <= 760 &&
+                    Math.Abs(burstEvent.Position.Z - last.Z) <= 760);
+                airBursts++;
+            }
+            lastPositions = state.Projectiles
+                .Where(item => item.Kind == Level100ProjectileKind.MicroMissile)
+                .ToDictionary(item => item.Id, item => new Level100Vector3(
+                    item.Position.X, item.Position.Z, -item.ElevationMillimeters));
+            simulation.SetFacingForMeasurement(yaw, Pitch);
+            state = simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(5, airBursts);
+    }
+
+    /// <summary>
+    /// With the pod selected and a script-enemy static target under the
+    /// crosshair within 100 m, <c>HandleLocks</c> starts a lock that finishes
+    /// after <c>CWeaponLockTime</c>; the burst's missiles bind it through
+    /// <c>GetCurrentTarget</c>, <c>FireLock</c> moves it to the fired set, and
+    /// the round's release calls <c>LockHit</c>, which clears it again
+    /// (<c>BattleEngine.cpp:586-1010</c>; the RE lane's Missile Pod answer).
+    /// </summary>
+    [Fact]
+    public void MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        EnterJetWithMissilePod(simulation);
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Where(actor => actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
+                actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive)
+            .OrderBy(actor => SquaredDistance(simulation.Snapshot, actor.Pose.PositionMillimeters))
+            .First();
+        Assert.True(SquaredDistance(simulation.Snapshot, target.Pose.PositionMillimeters) < 100_000L * 100_000L);
+
+        WorldSnapshot state = simulation.Snapshot;
+        for (int step = 0; step < 20 && state.Level100BattleEngineTargeting.Locks.Locks.Count == 0; step++)
+        {
+            FaceActor(simulation, target);
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Level100PlayerLockSnapshot started = Assert.Single(state.Level100BattleEngineTargeting.Locks.Locks);
+        Assert.Equal(target.ActorId, started.Unit);
+        Assert.True(started.DirectLock);
+        Assert.Equal(
+            BitConverter.SingleToUInt32Bits(BitConverter.UInt32BitsToSingle(started.StartBits) +
+                BitConverter.UInt32BitsToSingle(0x3e4ccccdu)),
+            started.FinishBits);
+
+        // Let the lock finish (strictly after its finish time), then fire.
+        for (int step = 0; step < 5; step++)
+        {
+            FaceActor(simulation, target);
+            state = simulation.Step(SimInput.Idle);
+        }
+        FaceActor(simulation, target);
+        state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot first = Assert.Single(state.Projectiles,
+            item => item.Kind == Level100ProjectileKind.MicroMissile);
+        Assert.Equal(target.ActorId, first.Seeking!.Target);
+        Assert.Empty(state.Level100BattleEngineTargeting.Locks.Locks);
+        Assert.Equal(target.ActorId, Assert.Single(state.Level100BattleEngineTargeting.Locks.FiredLocks).Unit);
+
+        // Every later missile of the burst finds the target in the fired set.
+        var boundIds = new HashSet<int>();
+        int impacts = 0;
+        for (int step = 0; step < 12; step++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            impacts += CheckFirstImpact(state, impacts);
+            foreach (ProjectileSnapshot missile in state.Projectiles.Where(item =>
+                         item.Kind == Level100ProjectileKind.MicroMissile))
+            {
+                Assert.True(missile.Seeking!.Target is null || missile.Seeking.Target == target.ActorId);
+                if (missile.Seeking.Target == target.ActorId)
+                {
+                    boundIds.Add(missile.Id);
+                }
+            }
+        }
+        Assert.Equal(5, boundIds.Count + impacts);
+
+        // The seeking missiles strike it; each bound missile's release removes
+        // one fired entry, and the burst's five releases leave none.
+        for (int step = 0; step < 200 && state.Projectiles.Any(item =>
+                 item.Kind == Level100ProjectileKind.MicroMissile); step++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            impacts += CheckFirstImpact(state, impacts);
+        }
+        Assert.DoesNotContain(state.Projectiles, item => item.Kind == Level100ProjectileKind.MicroMissile);
+        Assert.Equal(5, impacts);
+        Assert.Empty(state.Level100BattleEngineTargeting.Locks.FiredLocks);
+
+        // The first strike's shutdown releases the one fired entry while the
+        // target still lives; no other release can have emptied it yet.
+        int CheckFirstImpact(WorldSnapshot state, int earlier)
+        {
+            int now = state.Level100DestructionEvents.Count(item =>
+                item.Kind == Level100DestructionEventKind.MicroMissileImpact && item.ActorId == target.ActorId.Value);
+            if (earlier == 0 && now > 0)
+            {
+                Assert.Equal(Level100ActorLifecycle.Alive, state.Level100Actors.Actors
+                    .Single(actor => actor.ActorId == target.ActorId).Lifecycle);
+                Assert.Empty(state.Level100BattleEngineTargeting.Locks.FiredLocks);
+            }
+            return now;
+        }
+    }
+
+    private static Simulation CreateJetWithMissilePod()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        EnterJetWithMissilePod(simulation);
+        return simulation;
+    }
+
+    private static void EnterJetWithMissilePod(Simulation simulation)
+    {
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(
+            simulation,
+            state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None,
+            100);
+        WorldSnapshot selected = simulation.Step(new SimInput(0, 0, SimActions.ChangeWeapon));
+        Assert.Equal(Level100MissionWeapon.MissilePod, selected.Level100JetSelectedWeapon);
+    }
+
+    /// <summary>Holds the view on open sky until a crosshair refresh reports nothing.</summary>
+    private static void LookIntoOpenSky(Simulation simulation, int yaw, int pitch)
+    {
+        for (int step = 0; step < 12; step++)
+        {
+            simulation.SetFacingForMeasurement(yaw, pitch);
+            simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(
+            Level100CrosshairHitKind.Nothing,
+            simulation.Snapshot.Level100BattleEngineTargeting.CrosshairHitKind);
+    }
+
+    private static void FaceActor(Simulation simulation, Level100ActorSnapshot actor)
+    {
+        WorldSnapshot state = simulation.Snapshot;
+        SimVector3 point = state.Level100Actors.Actors
+            .Single(item => item.ActorId == actor.ActorId).Pose.PositionMillimeters;
+        double dx = point.X - (double)state.PlayerPosition.X;
+        double dy = point.Y + 500 - (double)state.PlayerElevationMillimeters;
+        double dz = point.Z - (double)state.PlayerPosition.Z;
+        simulation.SetFacingForMeasurement(
+            (int)Math.Round(Math.Atan2(-dx, dz) * 1e6),
+            (int)Math.Round(Math.Atan2(-dy, Math.Sqrt((dx * dx) + (dz * dz))) * 1e6));
+    }
+
+    private static long SquaredDistance(WorldSnapshot state, SimVector3 point)
+    {
+        long dx = point.X - (long)state.PlayerPosition.X;
+        long dy = point.Y - (long)state.PlayerElevationMillimeters;
+        long dz = point.Z - (long)state.PlayerPosition.Z;
+        return (dx * dx) + (dy * dy) + (dz * dz);
+    }
+
+    /// <summary>
+    /// The forward column of <c>FMatrix(yaw, pitch, 0) × FMatrix(a, b, 0)</c>
+    /// in retail axes (x right, y forward, z down), as Core's yaw and
+    /// nose-down pitch.
+    /// </summary>
+    private static (double Yaw, double Pitch) RetailLaunchHeading(
+        double yaw,
+        double pitch,
+        double angleYaw,
+        double anglePitch)
+    {
+        static (double X, double Y, double Z) Rotate(double y, double p, (double X, double Y, double Z) v) => (
+            (Math.Cos(y) * v.X) - (Math.Cos(p) * Math.Sin(y) * v.Y) + (Math.Sin(p) * Math.Sin(y) * v.Z),
+            (Math.Sin(y) * v.X) + (Math.Cos(p) * Math.Cos(y) * v.Y) - (Math.Sin(p) * Math.Cos(y) * v.Z),
+            (Math.Sin(p) * v.Y) + (Math.Cos(p) * v.Z));
+        (double x, double yy, double z) = Rotate(yaw, pitch, Rotate(angleYaw, anglePitch, (0.0, 1.0, 0.0)));
+        return (Math.Atan2(-x, yy), Math.Atan2(z, Math.Sqrt((x * x) + (yy * yy))));
+    }
+
     private static Simulation CreatePlayingSimulation(uint seed = 1)
     {
         var simulation = new Simulation(

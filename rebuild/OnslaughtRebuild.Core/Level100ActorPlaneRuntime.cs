@@ -29,6 +29,19 @@ public sealed partial class Level100ActorMechanics
     internal const int BattleEngineListener = int.MaxValue;
 
     /// <summary>
+    /// The player's Missile Pod as a listener: its burst continuation, event
+    /// 5001 (<c>CWeapon__HandleFireBurstEvent</c> <c>0x00506930</c>), is filed
+    /// against the weapon, not the Battle Engine.
+    /// </summary>
+    internal const int MissilePodListener = int.MaxValue - 1;
+
+    /// <summary>The weapon burst-continuation event, <c>0x1389</c>.</summary>
+    internal const int WeaponBurstEvent = 5001;
+
+    private static bool IsPlayerListener(int listener) =>
+        listener is BattleEngineListener or MissilePodListener;
+
+    /// <summary>
     /// The level's one event manager. Retail has a single <c>CEventManager</c>
     /// shared by every thing, so the player's Battle Engine files its events
     /// in the same pool and lanes as the aircraft; insertion order between
@@ -43,6 +56,16 @@ public sealed partial class Level100ActorMechanics
     /// same stream.
     /// </summary>
     internal int NextReleasedRandom() => _releasedRandom.Next();
+
+    /// <summary>
+    /// An actor's allegiance when a script's <c>SetAllegiance</c> has set it,
+    /// or null. Level-world authored allegiance is not admitted yet, so a
+    /// null here means "not established", not friendly.
+    /// </summary>
+    internal int? ScriptAllegiance(Level100ActorId actorId) =>
+        _states.TryGetValue(actorId.Value, out ActorState? state) && state.HasAllegianceOverride
+            ? state.Allegiance
+            : null;
 
     /// <summary>
     /// <c>CALC_UNIT_OVER_CROSSHAIR</c> (6002, <c>0x1772</c>) and
@@ -128,7 +151,7 @@ public sealed partial class Level100ActorMechanics
         Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath,
         Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent)
     {
-        if (dispatch.Listener == BattleEngineListener)
+        if (IsPlayerListener(dispatch.Listener))
         {
             if (battleEngineEvent is null)
                 throw new InvalidOperationException("A Battle Engine event has no owner in this update.");
@@ -352,7 +375,7 @@ public sealed partial class Level100ActorMechanics
         foreach (int handle in snapshot.Lanes.SelectMany(lane => lane.Handles).Concat(snapshot.Overflow))
         {
             int listener = slots[handle].Listener;
-            if (listener == BattleEngineListener) continue;
+            if (IsPlayerListener(listener)) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -385,6 +408,12 @@ public sealed partial class Level100ActorMechanics
             {
                 if (!IsBattleEngineEvent(slot.EventNum))
                     throw new ArgumentException("Battle Engine queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
+            if (slot.Listener == MissilePodListener)
+            {
+                if (slot.EventNum != WeaponBurstEvent)
+                    throw new ArgumentException("Missile Pod queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
             if (slot.Listener is 1 or int.MinValue)

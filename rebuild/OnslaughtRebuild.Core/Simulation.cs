@@ -20,10 +20,16 @@ public sealed partial class Simulation
         public required int Id { get; init; }
         public required Level100ProjectileKind Kind { get; init; }
         public SimVector2 Position { get; set; }
-        public required SimVector2 Velocity { get; init; }
+        public required SimVector2 Velocity { get; set; }
         public int ElevationMillimeters { get; set; }
-        public required int VerticalVelocityMillimetersPerTick { get; init; }
+        public required int VerticalVelocityMillimetersPerTick { get; set; }
         public int RemainingTicks { get; set; }
+        // A seeking round's heading, launch time (+0xf4) and bound target.
+        public bool Seeks => Kind == Level100ProjectileKind.MicroMissile;
+        public int YawMicroRad { get; set; }
+        public int PitchMicroRad { get; set; }
+        public uint LaunchTimeBits { get; init; }
+        public Level100ActorId? SeekTarget { get; set; }
         // Immutable Kind is already in the snapshot/hash. It owns these
         // configured parameters for both launch and sweep, so no separate
         // mutable or unhashed radius/damage copy can drift from the round.
@@ -34,6 +40,8 @@ public sealed partial class Simulation
             Level100ProjectileKind.MechPulseBoltMedium or
                 Level100ProjectileKind.MechBullet or Level100ProjectileKind.MechAirBullet =>
                 Level100ContactMechanics.PulseRadiusMillimeters,
+            // Micro Missile carries no CRoundRadius (record default 0).
+            Level100ProjectileKind.MicroMissile => 0,
             _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
         };
         public uint DamageBits => Kind switch
@@ -42,6 +50,7 @@ public sealed partial class Simulation
             Level100ProjectileKind.MechPulseBoltLarge => Level100DestructionState.LargePulseDirectDamageBits,
             Level100ProjectileKind.MechBullet => Level100DestructionState.MechBulletDamageBits,
             Level100ProjectileKind.MechAirBullet => SimulationConstants.MechAirBulletDamageBits,
+            Level100ProjectileKind.MicroMissile => Level100MissilePod.DamageBits,
             _ => throw new InvalidDataException($"Unsupported player round {Kind}."),
         };
     }
@@ -478,6 +487,7 @@ public sealed partial class Simulation
         }
 
         UpdateZoom();
+        HandleLocks();
         UpdateMovement(playerInput);
         AdvanceBattleEngineRotationTail();
         UpdateWalkerHydraulicCue();
@@ -3618,10 +3628,9 @@ public sealed partial class Simulation
         {
             Level100MissionWeapon selected =
                 _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Jet);
-            // Missile Pod selection is now represented exactly, but its
-            // released launch/round law is not. Do not synthesize a shot.
             if (selected == Level100MissionWeapon.MissilePod)
             {
+                FireMissilePod();
                 return;
             }
             if (selected != Level100MissionWeapon.MechVulcanCannon)
@@ -3814,7 +3823,10 @@ public sealed partial class Simulation
         int speedPerTick,
         int lifetimeTicks,
         int yawInaccuracyMicroRadians,
-        int pitchInaccuracyMicroRadians)
+        int pitchInaccuracyMicroRadians,
+        Level100ActorId? seekTarget = null,
+        uint launchTimeBits = 0,
+        (int YawMicroRad, int PitchMicroRad)? launchAngle = null)
     {
         // Retail samples the retained cockpit emitter before correcting its
         // launch orientation. CBattleEngine::GetLaunchPosition (0x0040c990,
@@ -3854,8 +3866,14 @@ public sealed partial class Simulation
             PlayerElevationMillimeters + emitterVerticalOffset,
             playerPosition.Z + emitterOffsetZ);
         (int baseYaw, int basePitch) = ReticleAdjustedLaunchAngles(emitter);
-        int launchYaw = NormalizeMicroRad(baseYaw + yawInaccuracyMicroRadians);
-        int launchPitch = NormalizeMicroRad(basePitch + pitchInaccuracyMicroRadians);
+        (int launchYaw, int launchPitch) = launchAngle is { } angle
+            ? ComposeLaunchDirection(
+                baseYaw,
+                basePitch,
+                angle,
+                (yawInaccuracyMicroRadians, pitchInaccuracyMicroRadians))
+            : (NormalizeMicroRad(baseYaw + yawInaccuracyMicroRadians),
+                NormalizeMicroRad(basePitch + pitchInaccuracyMicroRadians));
         (int launchSin, int launchCos) = FixedSinCos(launchYaw);
         (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
         int horizontalSpeed = DivideRoundNearest(
@@ -3880,7 +3898,59 @@ public sealed partial class Simulation
             ElevationMillimeters = emitter.Y,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = lifetimeTicks,
+            YawMicroRad = launchYaw,
+            PitchMicroRad = launchPitch,
+            LaunchTimeBits = launchTimeBits,
+            SeekTarget = seekTarget,
         });
+    }
+
+    /// <summary>
+    /// The burst spawner's launch basis, orientation × launch angle × jitter
+    /// (<c>0x00506ed1-0x005072d0</c>), reduced to the forward column its
+    /// velocity uses. Each factor is <c>FMatrix(yaw, pitch, 0)</c>; retail's z
+    /// axis points down, so Core's pitch (positive nose-down) is retail's.
+    /// <c>GetLaunchPosition</c> hands a zero-roll orientation whenever a
+    /// crosshair report exists (the RE lane's aiming contract).
+    /// </summary>
+    private static (int YawMicroRad, int PitchMicroRad) ComposeLaunchDirection(
+        int baseYawMicroRad,
+        int basePitchMicroRad,
+        (int Yaw, int Pitch) launchAngle,
+        (int Yaw, int Pitch) jitter)
+    {
+        // Retail axes: x right, y forward, z down. Core X = x, Z = y, up = -z.
+        (long x, long y, long z) = RotateByEuler(jitter.Yaw, jitter.Pitch, 0, FixedTrigScale, 0);
+        (x, y, z) = RotateByEuler(launchAngle.Yaw, launchAngle.Pitch, x, y, z);
+        (x, y, z) = RotateByEuler(baseYawMicroRad, basePitchMicroRad, x, y, z);
+        return (
+            FixedAtan2(-x, y),
+            FixedAtan2(z, IntegerSquareRoot((x * x) + (y * y))));
+    }
+
+    /// <summary>
+    /// <c>FMatrix(yaw, pitch, 0)</c> times a Q30 vector: columns
+    /// (cos y, sin y, 0), (−cos p sin y, cos p cos y, sin p) and
+    /// (sin p sin y, −sin p cos y, cos p), the words <c>RetailUnitEuler</c>
+    /// builds with zero roll.
+    /// </summary>
+    private static (long X, long Y, long Z) RotateByEuler(
+        int yawMicroRad,
+        int pitchMicroRad,
+        long x,
+        long y,
+        long z)
+    {
+        (int yawSin, int yawCos) = FixedSinCos(yawMicroRad);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRad);
+        long forwardX = -MultiplyFixed(pitchCos, yawSin);
+        long forwardY = MultiplyFixed(pitchCos, yawCos);
+        long upX = MultiplyFixed(pitchSin, yawSin);
+        long upY = -MultiplyFixed(pitchSin, yawCos);
+        return (
+            DivideRoundNearest((x * yawCos) + (y * forwardX) + (z * upX), FixedTrigScale),
+            DivideRoundNearest((x * yawSin) + (y * forwardY) + (z * upY), FixedTrigScale),
+            DivideRoundNearest((y * pitchSin) + (z * pitchCos), FixedTrigScale));
     }
 
     /// <summary>
@@ -3926,6 +3996,22 @@ public sealed partial class Simulation
         for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
         {
             MutableProjectile projectile = _projectiles[projectileIndex];
+            if (projectile.Seeks)
+            {
+                // CRound::Move takes its two wiggle draws first, then guides;
+                // the wiggle bends only this step's travel (the actor rounds'
+                // shared law).
+                (int wiggleYaw, int wigglePitch) =
+                    _level100ActorMechanics.NextWiggle(Level100MissilePod.WiggleMicroRadians);
+                SteerSeekingPlayerRound(projectile);
+                (SimVector2 velocity, int vertical) = VelocityFromAngles(
+                    NormalizeMicroRad(projectile.YawMicroRad + wiggleYaw),
+                    NormalizeMicroRad(projectile.PitchMicroRad + wigglePitch),
+                    Level100MissilePod.SpeedMillimetersPerTick);
+                projectile.Velocity = velocity;
+                projectile.VerticalVelocityMillimetersPerTick = vertical;
+            }
+
             var start = new SimVector3(
                 projectile.Position.X,
                 projectile.ElevationMillimeters,
@@ -3950,6 +4036,8 @@ public sealed partial class Simulation
                 Level100ProjectileKind.MechBullet or
                     Level100ProjectileKind.MechAirBullet =>
                     Level100DestructionEffectKind.VulcanImpact,
+                Level100ProjectileKind.MicroMissile =>
+                    Level100DestructionEffectKind.MicroMissileImpact,
                 _ => throw new InvalidDataException(
                     $"Projectile {projectile.Id} has unsupported impact kind " +
                     $"{projectile.Kind}."),
@@ -3974,9 +4062,41 @@ public sealed partial class Simulation
 
             if (hit || projectile.RemainingTicks <= 0)
             {
+                // A Micro Missile carries CRoundExplode, so the end of its
+                // life span bursts in the air (the RE lane's round-lifetime
+                // contract); the bolts and bullets just die.
+                if (!hit && projectile.Kind == Level100ProjectileKind.MicroMissile)
+                {
+                    _level100Destruction.ReportAirBurst(end, impactEffectKind);
+                }
+                // CRound::Shutdown calls the owning Battle Engine's LockHit
+                // for the bound target (0x004d8e00).
+                if (projectile.Seeks)
+                {
+                    _playerLocks.LockHit(projectile.SeekTarget);
+                }
                 _projectiles.RemoveAt(projectileIndex);
             }
         }
+    }
+
+    /// <summary>
+    /// A round's per-tick displacement along (yaw, pitch), in the same fixed
+    /// arithmetic <see cref="LaunchWalkerRound"/> uses.
+    /// </summary>
+    private static (SimVector2 Velocity, int Vertical) VelocityFromAngles(
+        int yawMicroRad,
+        int pitchMicroRad,
+        int speedPerTick)
+    {
+        (int sin, int cos) = FixedSinCos(yawMicroRad);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRad);
+        int horizontal = DivideRoundNearest((long)pitchCos * speedPerTick, FixedTrigScale);
+        return (
+            new SimVector2(
+                DivideRoundNearest(-(long)sin * horizontal, FixedTrigScale),
+                DivideRoundNearest((long)cos * horizontal, FixedTrigScale)),
+            DivideRoundNearest(-(long)pitchSin * speedPerTick, FixedTrigScale));
     }
 
     private void ResetDynamicState()
@@ -4150,7 +4270,16 @@ public sealed partial class Simulation
                 projectile.Velocity,
                 projectile.ElevationMillimeters,
                 projectile.VerticalVelocityMillimetersPerTick,
-                projectile.RemainingTicks))
+                projectile.RemainingTicks)
+            {
+                Seeking = projectile.Seeks
+                    ? new Level100SeekingRoundSnapshot(
+                        projectile.YawMicroRad,
+                        projectile.PitchMicroRad,
+                        projectile.LaunchTimeBits,
+                        projectile.SeekTarget)
+                    : null,
+            })
             .ToArray();
         WalkerFootContactSnapshot[] walkerFeet = _walkerFeet
             .OrderBy(foot => foot.Id)
@@ -4247,6 +4376,7 @@ public sealed partial class Simulation
             Level100BattleEngineTargeting = TargetingSnapshot,
             Level100PlayerStores = _level100PlayerWeapons.StoresSnapshot,
             Level100BattleEngineShake = _shake.Snapshot,
+            Level100MissilePod = _level100PlayerWeapons.PodSnapshot,
         };
     }
 

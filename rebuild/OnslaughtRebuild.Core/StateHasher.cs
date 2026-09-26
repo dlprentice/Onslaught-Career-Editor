@@ -72,6 +72,13 @@ public static class StateHasher
             bool usesStoresAndShakeSchema =
                 state.Level100PlayerStores != Level100PlayerStoresSnapshot.Initial ||
                 state.Level100BattleEngineShake != Level100BattleEngineShakeSnapshot.Initial;
+            // 51: the jet Missile Pod's charge, Fire level, mode flag, burst
+            // counter and launch counters, and each seeking round's heading,
+            // launch time and bound target. Selected whenever the pod differs
+            // from construction or a seeking round is in flight.
+            bool usesMissilePodSchema =
+                state.Level100MissilePod != Level100MissilePodSnapshot.Initial ||
+                state.Projectiles.Any(projectile => projectile.Seeking is not null);
             // 48: retained spawning-owner reader, exit selector/deadline and
             // explicit handoff to the existing approximate normal-control
             // bridge. Unspawned scenes retain schema 47 byte-for-byte.
@@ -172,7 +179,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesMissilePodSchema ? 51 : usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -339,12 +346,12 @@ public static class StateHasher
                 writer.Write(foot.LiftMillimeters);
             }
 
-            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema)
+            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema || usesMissilePodSchema)
             {
                 WriteBattleEngineTargeting(writer, state.Level100BattleEngineTargeting);
             }
 
-            if (usesStoresAndShakeSchema)
+            if (usesStoresAndShakeSchema || usesMissilePodSchema)
             {
                 Level100PlayerStoresSnapshot stores = state.Level100PlayerStores;
                 writer.Write(stores.Store0Bits);
@@ -363,6 +370,30 @@ public static class StateHasher
                 writer.Write(shake.PitchBits);
                 writer.Write(shake.RollBits);
                 writer.Write(shake.PhaseBits);
+            }
+
+            if (usesMissilePodSchema)
+            {
+                Level100MissilePodSnapshot pod = state.Level100MissilePod;
+                writer.Write(pod.ChargeBits);
+                writer.Write(pod.ModeLevel);
+                writer.Write(pod.HasMode);
+                writer.Write(pod.BurstCount);
+                writer.Write(pod.SequenceCounter);
+                writer.Write(pod.AngleCounter);
+                ProjectileSnapshot[] seeking = projectiles
+                    .Where(projectile => projectile.Seeking is not null)
+                    .ToArray();
+                writer.Write(seeking.Length);
+                foreach (ProjectileSnapshot projectile in seeking)
+                {
+                    Level100SeekingRoundSnapshot round = projectile.Seeking!;
+                    writer.Write(projectile.Id);
+                    writer.Write(round.YawMicroRadians);
+                    writer.Write(round.PitchMicroRadians);
+                    writer.Write(round.LaunchTimeBits);
+                    WriteNullableActorId(writer, round.Target);
+                }
             }
         }
 
