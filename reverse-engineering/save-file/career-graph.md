@@ -1,7 +1,7 @@
 # Career Graph (Nodes + Links) and Safe Unlocking
 
 Status: active reference for companion career edits
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (RE audit: the level-select helper's name and the gate's no-node exit)
 Summary: how the campaign graph (nodes, links and base-world survivor bitmaps) sits in the fixed-size Steam save, and how to unlock missions without corrupting it.
 Evidence: SOURCE-INFORMED from the pinned `Career.cpp`/`Career.h` with retail cross-references; on 2026-09-25 the retail career table at `0x00623e28` was compared word for word with `Career.cpp:24-60` and matched.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -60,7 +60,8 @@ Observed behavior (decompile):
 - If `IsCheatActive(..., 1)` (TURKEY) is enabled, it returns **true** for any world.
 - World `100` (training) is always treated as **unlocked**.
 - Otherwise it resolves the node by world number and checks **incoming** links:
-  1. `node = CCareer__GetNodeFromWorld(&CAREER, world)` (`0x0041b8f0`)
+  1. `node = CCareer__GetNodeFromWorld(&CAREER, world)` (`0x0041b8f0`); when no node has the
+     world it returns **false** (`0x00461aba`)
   2. `parent_links = CCareerNode__GetParentLinks(node)` (`0x0041b9f0`)
   3. Returns **true** if any `CCareerNodeLink` in `parent_links` has `mLinkType == CN_COMPLETE (1)`.
 
@@ -81,7 +82,7 @@ Caller argument provenance (retail xrefs to `0x00461a50`):
 So the gate is called with **world ids**, not node indices.
 
 Retail post-load behavior note (inferred from decompile):
-- `CCareer__Load(..., flag!=0)` calls `FUN_00460a40` (with `ECX=0x0089dab8`, likely a frontend map object) to scan the map table backward and pick the most recent world where `Career_IsWorldUnlocked(world)` is true.
+- `CCareer__Load(..., flag!=0)` calls `CFEPLevelSelect__SelectLatestUnlockedWorld` (`0x00460a40`, with `ECX=0x0089dab8`) to scan the map table backward, column by column, and pick the most recent world where `Career_IsWorldUnlocked(world)` is true (gate call at `0x00460a7f`).
 - This means link-state edits can influence not only visibility but also which map world is auto-selected after a career load.
 
 ## Link-Type Write Sites (Retail `BEA.exe`)

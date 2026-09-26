@@ -1,11 +1,17 @@
 # Career Link Index Map (Steam)
 
+Status: active reference for companion career edits
+Last updated: 2026-09-26 (RE audit: unused links can hold state 1)
+Summary: every campaign link index, its parent and target nodes, and the invariants the companion relies on.
+Evidence: SOURCE — `Career.cpp` `level_structure`; MEASURED — the tracked gold save and retail `ReCalcLinks`.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; gold save `tests_shared/fixtures/gold_career_save.bin`.
+
 This table enumerates the **campaign** link table indices (`CCareerNodeLink[200]`) for the Steam `.bes` format.
 It is derived from `references/Onslaught/Career.cpp` `level_structure` and validated against real Steam saves (node/link indices and `mToNode` targets match on disk).
 
 Key invariants (campaign tree only):
 - Node index `i` uses link indices `2*i` (lower) and `2*i+1` (higher).
-- A link is considered unused when `mToNode == -1`.
+- A link is considered unused when `mToNode == -1`. An unused link can still hold state 1: `CCareer::ReCalcLinks` writes the state (`0x0041c091`) before it tests `mToNode` (gold-save links 3, 80 and 84 show this).
 
 | Link Idx | From Node | From World | Tier | To Node | To World | Normal Unlock Condition |
 |---------:|----------:|----------:|------|--------:|---------:|------------------------|
