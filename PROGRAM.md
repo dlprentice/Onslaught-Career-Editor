@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-25 (Level 100 final-wave contract for the rebuild; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-26 (Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -146,9 +146,24 @@ The rebuild's failing cold full-combat route now has a
 [final-wave contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md):
 the abort is a designed retail branch, and retail adds friendly turrets after
 Help Player and the jet Missile Pod. An original-code control shows activated
-turrets can select the script-spawned enemy drones. Open: turret aim/fire law,
-the Missile Pod lock and micro-missile laws, and the ordered RNG draws of the 22
-base-world AI owners.
+turrets can select the script-spawned enemy drones. The turret aim, Missile Pod
+lock, crosshair and auto-aim refresh, seeking-round, round-lifetime and per-round
+draw laws are static contracts there.
+
+The [Level 100](reverse-engineering/game-mechanics/level100-construction-order.md)
+and [World 110](reverse-engineering/game-mechanics/world-110-construction-order.md)
+construction-order contracts give:
+- the load order;
+- every construction draw and queued event;
+- what the first event flush delivers and draws;
+- World 110's transition from a Level 100 win, and its player start.
+
+Every Level 100 and World 110 question the rebuild lane has sent is answered there,
+or recorded as an open question with its cheapest falsifier. Still open:
+- a copied-runtime log of shared draws and queued events, to confirm the static
+  order from load through the first frames of both levels;
+- which arm World 110's units take at their first think;
+- composed runtime controls of the final-wave laws.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and
@@ -156,6 +171,51 @@ complete-shot RNG remain unresolved. A read-only frontend review identified
 `00459810` as a card-selection setter and `00465f10` as the outer frontend
 constructor; their saved metadata still needs the scoped byte-backed correction
 workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
+These labels are still wrong in the working project, as its 2026-09-22 export
+(`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/live-post/functions.tsv`,
+db.18657) shows. Each is disproved by the bytes cited in the named owner, and all
+queue for the same workflow. The tracked 2026-08-31 name table is older still:
+the working project had already renamed `0055dcb0` to `CRT__AsinDispatch_ST0`,
+`00506010` to `CWeapon__Fire` and `004fe710` to `CUnitAI__Init`. Check the live
+export before calling a label wrong.
+
+| Address | Saved label | What it is | Owner |
+| --- | --- | --- | --- |
+| `0042efd0` | `CUnitAI__InitDefaults` | Unit profile defaults (turret yaw limit `+0xdc` = 2π) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
+| `00509c80` | `CBattleEngine__ComputeProjectileMetricFromTargetProfile` | `CWeapon::GetActualMaxRange` | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#crosshair-and-auto-aim-refresh) |
+| `004f8140` | `Mat34__SetFromEulerDegrees` | Euler matrix from integer angles in units of 2π/4096 | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
+| `0040c2e0` | `CBattleEngine__CanSpawnBurstForResolvedEntry` | `CBattleEngine::WeaponFired` | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
+| `0040c340` | `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` | `CBattleEngine::RecoilWeapon` | same |
+| `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
+| `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
+| `00407a50` | `CBattleEngine__UpdateCameraVectorsAndInput` | `CBattleEngine::UpdateRotation` (builds `+0x3c` from yaw, pitch, roll and the shake terms) | [aiming](reverse-engineering/game-mechanics/battle-engine-aiming.md#launch-position-and-direction) |
+| `004f99b0` | `CUnit__PlayRespawnVoiceCueIfAvailable` | `CUnit::StartPlayingInitNoise` (starts the profile's `+0x34` looping sample; called for every unit after the pre-run) | [construction order](reverse-engineering/game-mechanics/level100-construction-order.md#pre-run-pan-and-the-first-rendered-frame) |
+
+### RE record audit — requested September 25
+
+David asked for a quality once-over of the existing RE record. Most of it was
+produced by earlier, less capable agents, and parts are known to be wrong. The
+record holds 8,330 saved Ghidra function names and about 1,980 RE documents
+(354 contracts, 807 function notes). Items found while answering lane questions
+on September 25 include:
+- wrong saved labels (the table above);
+- a factory contract that called the burst spawner a one-argument fastcall;
+- a save-field name and the kill-counter reset rule;
+- the base-thing bitmap's meaning;
+- World 110's turret fire-control statement.
+
+Order: answer the rebuild and companion lanes' blocking questions first, then
+audit by consumer:
+1. The 26 RE documents the rebuild tree cites.
+2. The save-file documents the companion reads.
+3. The queued Ghidra labels, as one declared cohort through the
+   [promotion gate](reverse-engineering/ghidra/README.md).
+4. A sample of the factory-drafted contracts, re-derived from pristine bytes,
+   to measure their error rate before any wider pass.
+
+Correct each document in place from the bytes, the pinned source or an
+original-code run; treat existing names, comments and reports as leads, not
+evidence.
 
 ### Remote checkpoint integrated on Linux — September 12
 
