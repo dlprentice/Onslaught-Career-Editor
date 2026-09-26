@@ -15,7 +15,11 @@ internal static class Palette
     internal static readonly Color Text = Color.FromHtml("dce8ef");
     internal static readonly Color Muted = Color.FromHtml("8ba3b3");
     internal static readonly Color Quote = Color.FromHtml("b9cad6");
-    internal static readonly Color Faint = Color.FromHtml("5c7486");
+    /// <summary>Small secondary text; at least 4.5:1 against every surface it sits on.</summary>
+    internal static readonly Color Faint = Color.FromHtml("7e96a8");
+
+    /// <summary>Text and icons of controls that cannot be used right now.</summary>
+    internal static readonly Color Disabled = Color.FromHtml("5c7486");
     internal static readonly Color Accent = Color.FromHtml("f2a93b");
     internal static readonly Color AccentHover = Color.FromHtml("f7bf66");
     internal static readonly Color AccentText = Color.FromHtml("1a1204");
@@ -73,7 +77,8 @@ internal static class CompanionTheme
     private static void GoodieCells(Theme theme)
     {
         GoodieCell(theme, "GoodieNew", Palette.NewGold, Palette.NewGold, 1, Palette.AccentText);
-        GoodieCell(theme, "GoodieViewed", Palette.ViewedBlue, Palette.ViewedBlue, 1, Colors.White);
+        // Dark numbers on the game's blue: white on it measures only 3.2:1.
+        GoodieCell(theme, "GoodieViewed", Palette.ViewedBlue, Palette.ViewedBlue, 1, Palette.Background);
         GoodieCell(theme, "GoodieHint", Palette.Field, new Color(Palette.Text, 0.8f), 2, Palette.Text);
         GoodieCell(theme, "GoodieLocked", Palette.Field, Palette.Border, 1, Palette.Faint);
         GoodieCell(theme, "GoodieUnknown", Palette.Field, Palette.Bad, 2, Palette.Bad);
@@ -177,20 +182,20 @@ internal static class CompanionTheme
     private static void Buttons(Theme theme)
     {
         ButtonStyles(theme, "Button", Palette.Raised, Palette.Hover, Palette.Border, Palette.Text);
-        theme.SetColor("font_disabled_color", "Button", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Button", Palette.Disabled);
         theme.SetFont("font", "Button", StrongFont);
         theme.SetConstant("h_separation", "Button", 8);
         theme.SetConstant("icon_max_width", "Button", Icons.Size);
-        IconColors(theme, "Button", Palette.Text, Palette.Text, Palette.Faint);
+        IconColors(theme, "Button", Palette.Text, Palette.Text, Palette.Disabled);
 
         theme.SetTypeVariation("Primary", "Button");
         ButtonStyles(theme, "Primary", Palette.Accent, Palette.AccentHover, Palette.Accent, Palette.AccentText);
-        IconColors(theme, "Primary", Palette.AccentText, Palette.AccentText, Palette.Faint);
+        IconColors(theme, "Primary", Palette.AccentText, Palette.AccentText, Palette.Disabled);
 
         // A write into the game folder: amber outline, never mistaken for an ordinary action.
         theme.SetTypeVariation("Caution", "Button");
         ButtonStyles(theme, "Caution", Palette.Surface, new Color(Palette.Warn, 0.14f), Palette.Warn, Palette.Warn);
-        IconColors(theme, "Caution", Palette.Warn, Palette.Warn, Palette.Faint);
+        IconColors(theme, "Caution", Palette.Warn, Palette.Warn, Palette.Disabled);
 
         theme.SetTypeVariation("Nav", "Button");
         StyleBoxFlat nav = Box(new Color(0, 0, 0, 0), 6, padX: 14, padY: 8);
@@ -204,10 +209,10 @@ internal static class CompanionTheme
         theme.SetColor("font_color", "Nav", Palette.Muted);
         theme.SetColor("font_hover_color", "Nav", Palette.Text);
         theme.SetColor("font_pressed_color", "Nav", Palette.Text);
-        theme.SetColor("font_disabled_color", "Nav", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Nav", Palette.Disabled);
         theme.SetFont("font", "Nav", ThemeDB.FallbackFont);
         theme.SetConstant("h_separation", "Nav", 12);
-        IconColors(theme, "Nav", Palette.Muted, Palette.Text, Palette.Faint);
+        IconColors(theme, "Nav", Palette.Muted, Palette.Text, Palette.Disabled);
 
         theme.SetTypeVariation("NavActive", "Button");
         StyleBoxFlat active = Box(Palette.Raised, 6, padX: 14, padY: 8);
@@ -236,7 +241,7 @@ internal static class CompanionTheme
         theme.SetFont("font", "NavGroup", Variation(ThemeDB.FallbackFont, 0.3f, 2));
         theme.SetFontSize("font_size", "NavGroup", 11);
         theme.SetConstant("icon_max_width", "NavGroup", 14);
-        IconColors(theme, "NavGroup", Palette.Faint, Palette.Muted, Palette.Faint);
+        IconColors(theme, "NavGroup", Palette.Faint, Palette.Muted, Palette.Disabled);
 
         // A quiet text action inside cards.
         theme.SetTypeVariation("Link", "Button");
@@ -247,7 +252,7 @@ internal static class CompanionTheme
         theme.SetColor("font_color", "Link", Palette.Data);
         theme.SetColor("font_hover_color", "Link", Palette.Text);
         theme.SetColor("font_pressed_color", "Link", Palette.Accent);
-        theme.SetColor("font_disabled_color", "Link", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Link", Palette.Disabled);
     }
 
     private static void IconColors(Theme theme, string type, Color normal, Color hover, Color disabled)
@@ -273,7 +278,7 @@ internal static class CompanionTheme
         theme.SetColor("font_pressed_color", type, text);
         theme.SetColor("font_hover_pressed_color", type, text);
         theme.SetColor("font_focus_color", type, text);
-        theme.SetColor("font_disabled_color", type, Palette.Faint);
+        theme.SetColor("font_disabled_color", type, Palette.Disabled);
     }
 
     private static StyleBoxFlat Focus(int radius)
@@ -300,7 +305,7 @@ internal static class CompanionTheme
             theme.SetColor("font_hover_color", type, Palette.Text);
             theme.SetColor("font_pressed_color", type, Palette.Text);
             theme.SetColor("font_hover_pressed_color", type, Palette.Text);
-            theme.SetColor("font_disabled_color", type, Palette.Faint);
+            theme.SetColor("font_disabled_color", type, Palette.Disabled);
             theme.SetConstant("h_separation", type, 8);
         }
         theme.SetIcon("unchecked", "CheckBox", CheckIcon(checkedState: false, enabled: true));
@@ -357,7 +362,7 @@ internal static class CompanionTheme
         }
         if (checkedState)
         {
-            Color tick = enabled ? Palette.AccentText : Palette.Faint;
+            Color tick = enabled ? Palette.AccentText : Palette.Disabled;
             (int X, int Y)[] strokes = [(4, 9), (5, 10), (6, 11), (7, 12), (8, 11), (9, 10), (10, 9), (11, 8), (12, 7), (13, 6)];
             foreach ((int x, int y) in strokes)
             {
@@ -476,7 +481,7 @@ internal static class CompanionTheme
         theme.SetStylebox("hover", "PopupMenu", Box(Palette.Hover, 4, chamfer: false));
         theme.SetColor("font_color", "PopupMenu", Palette.Text);
         theme.SetColor("font_hover_color", "PopupMenu", Palette.Text);
-        theme.SetColor("font_disabled_color", "PopupMenu", Palette.Faint);
+        theme.SetColor("font_disabled_color", "PopupMenu", Palette.Disabled);
         theme.SetConstant("v_separation", "PopupMenu", 8);
 
         theme.SetStylebox("panel", "TooltipPanel", Box(Palette.Raised, 6, Palette.Border, padX: 10, padY: 7));
