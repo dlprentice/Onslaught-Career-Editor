@@ -45,15 +45,14 @@ namespace OnslaughtRebuild.Client.Tests;
 /// cover the pages' backgrounds, which are measured separately — see
 /// <c>local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md</c> §5.1.</para>
 ///
-/// <para><b>Current residual, not an adjusted expectation.</b> The September 22
-/// Godot 4.8 dev6 isolated llvmpipe startup capture reproduces both pages'
-/// glyph runs and retail horizontal extents, but ink occupies y71..87 instead
-/// of y72..88. The retained pre-conversion CareerName renderer at 14f6f72b
-/// produces the same result; LevelSelect drawing is unchanged. This gate
-/// therefore remains red for those captures. The earlier one-pixel-right
-/// observation is historical, not a current measurement. See VALIDATION.md's
-/// native career-name receipt. The cause of the vertical discrepancy remains
-/// unresolved; source origin constants and the retail assertion stay pinned.</para>
+/// <para><b>Known residual, deliberately not closed here.</b> The reconstruction
+/// reproduces every run width exactly but sits <b>one pixel right</b> of retail
+/// on all four pages (264 vs 263, 305 vs 304, 250 vs 249). That offset is a
+/// property of the shared <c>DrawHeaderBarTitle</c> origin rounding and predates
+/// this change; it is recorded rather than tuned, because correcting it moves
+/// four pinned baselines at once and <c>HEADER_BAR_X = 390</c> is a source
+/// constant (FrontEnd.cpp:1103) that should not be bent to absorb a raster
+/// rounding difference.</para>
 /// </summary>
 public sealed class RetailFrontendHeaderFontTests
 {
@@ -209,7 +208,7 @@ public sealed class RetailFrontendHeaderFontTests
     /// always wins — naming a directory is the operator taking responsibility
     /// for what is in it. Otherwise the newest directory under
     /// <c>local-lab/godot-captures/</c> that holds a startup plan's shots and is
-    /// at least as new as the production frontend sources/resources is used; a capture that
+    /// at least as new as <c>RetailFrontendFlow.cs</c> is used; a capture that
     /// predates the current frontend source describes a build that no longer
     /// exists, so it is ignored rather than judged.
     /// </summary>
@@ -233,18 +232,11 @@ public sealed class RetailFrontendHeaderFontTests
             return null;
         }
 
-        string godotRoot = Path.Combine(repoRoot, "rebuild", "OnslaughtRebuild.Godot");
-        string frontendRoot = Path.Combine(godotRoot, "Scenes", "Frontend");
-        // Native scene/font edits can change the title without touching the
-        // C# host. A pre-conversion capture must not satisfy the current gate.
-        IEnumerable<string> sources = Directory.EnumerateFiles(godotRoot, "RetailFrontendFlow*.cs");
-        if (Directory.Exists(frontendRoot))
-        {
-            sources = sources.Concat(Directory.EnumerateFiles(frontendRoot, "*", SearchOption.AllDirectories)
-                .Where(path => !Path.GetRelativePath(frontendRoot, path).StartsWith("Tests" + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-                .Where(path => Path.GetExtension(path) is ".cs" or ".gd" or ".gdshader" or ".tscn" or ".tres"));
-        }
-        DateTime floor = sources.Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
+        string flowSource = Path.Combine(
+            repoRoot, "rebuild", "OnslaughtRebuild.Godot", "RetailFrontendFlow.cs");
+        DateTime floor = File.Exists(flowSource)
+            ? File.GetLastWriteTimeUtc(flowSource)
+            : DateTime.MinValue;
 
         return Directory.EnumerateDirectories(captureRoot)
             .Where(HasStartupShots)

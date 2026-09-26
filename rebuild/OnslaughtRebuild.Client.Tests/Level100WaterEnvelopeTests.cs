@@ -242,26 +242,16 @@ public sealed class Level100WaterEnvelopeTests
     [Fact]
     public void ShorelineCompositionKeepsTheOperandOrderTheEnvelopeDependsOn()
     {
-        string[] files = ["water.gd", "water_recipe.gd", "water_mesh.gd", "Water.tscn",
-            "water_grid.gdshader", "water_shoreline.gdshader", "water_sun_glint.gdshader"];
-        // The production native scene owns the implementation. Comment lines
-        // describe retained omissions and must not be mistaken for shader code.
-        string source = string.Join('\n', files.SelectMany(file =>
-        {
-            string path = Path.Combine(AppContext.BaseDirectory, "godot-water-source", file);
-            Assert.True(File.Exists(path), $"Water source was not copied to the test output: {path}");
-            return File.ReadLines(path).Where(line =>
-                !line.TrimStart().StartsWith("//", StringComparison.Ordinal) &&
-                !line.TrimStart().StartsWith("#", StringComparison.Ordinal));
-        }));
-        string bridge = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
-            "godot-water-source", "Level100WaterAsset.cs"));
-        Assert.Contains("res://Scenes/World/Water.tscn", bridge, StringComparison.Ordinal);
-        Assert.Contains("Root.Call(\"update_camera\", cameraPosition, frameDelta)", bridge, StringComparison.Ordinal);
-        Assert.DoesNotContain("BuildGridMesh", bridge, StringComparison.Ordinal);
-        Assert.Contains("base_material = SubResource(\"GridMaterial\")", source, StringComparison.Ordinal);
-        Assert.Contains("base_material = SubResource(\"ShorelineMaterial\")", source, StringComparison.Ordinal);
-        Assert.Contains("base_material = SubResource(\"SunGlintMaterial\")", source, StringComparison.Ordinal);
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-water-source",
+            "Level100WaterAsset.cs");
+        Assert.True(File.Exists(path), $"Water source was not copied to the test output: {path}");
+        // Comment lines are dropped: the file documents the removed passes by
+        // name, and a note about a defect must not read as the defect.
+        string source = string.Join(
+            '\n',
+            File.ReadLines(path).Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
 
         // D3DTOP_MULTIPLYADD is result = Arg1 * Arg2 + Arg0, i.e.
         // waves * diffuse + current. Adding the wave term outside the modulate
@@ -293,28 +283,28 @@ public sealed class Level100WaterEnvelopeTests
         Assert.Contains("glint_alpha < (192.0 / 255.0)", source, StringComparison.Ordinal);
         Assert.DoesNotContain("glint_alpha <=", source, StringComparison.Ordinal);
         Assert.Contains("vec3(232.0 / 255.0, 232.0 / 255.0, 1.0)", source, StringComparison.Ordinal);
-        Assert.Contains("const SUN_GLINT_CENTER_HEIGHT_SCALE: float = 6.0", source, StringComparison.Ordinal);
-        Assert.Contains("const SUN_GLINT_HALF_WIDTH_HEIGHT_SCALE: float = 2.0", source, StringComparison.Ordinal);
-        Assert.Contains("const SUN_GLINT_HALF_LENGTH_HEIGHT_SCALE: float = 8.0", source, StringComparison.Ordinal);
-        Assert.Contains("const SUN_GLINT_DEPTH_BIAS_INDEX: int = 6", source, StringComparison.Ordinal);
-        Assert.Contains("float(Recipe.SUN_GLINT_DEPTH_BIAS_INDEX) * F.value(Recipe.RETAIL_DEPTH_BIAS_SCALE)", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintCenterHeightScale = 6f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintHalfWidthHeightScale = 2f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintHalfLengthHeightScale = 8f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const int SunGlintDepthBiasIndex = 6;", source, StringComparison.Ordinal);
+        Assert.Contains("SunGlintDepthBiasIndex * RetailDepthBiasScale", source, StringComparison.Ordinal);
         Assert.Contains(
-            "glint.material_override.set_shader_parameter(\"glint_phase\", _caustic_phase)",
+            "_sunGlintMaterial.SetShaderParameter(\"glint_phase\", _causticPhase)",
             source,
             StringComparison.Ordinal);
-        Assert.DoesNotContain("SUN_GLINT_PHASE_RADIANS_PER_SECOND", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("camera_height > 0.0", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("SunGlintPhaseRadiansPerSecond", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("cameraHeight > 0f", source, StringComparison.Ordinal);
 
         // CDXSurf requests projection depth-bias index 4 while drawing the
         // authored shoreline. Retail's cardid value is 0.00014, and
         // CDXEngine applies index * scale to projection slot 14. Keep that in
         // clip space; the former 0.002 world-space lift was a different law.
-        Assert.Contains("const RETAIL_DEPTH_BIAS_SCALE: float = 0.00014", source, StringComparison.Ordinal);
-        Assert.Contains("const SHORELINE_DEPTH_BIAS_INDEX: int = 4", source, StringComparison.Ordinal);
+        Assert.Contains("private const float RetailDepthBiasScale = 0.00014f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const int ShorelineDepthBiasIndex = 4;", source, StringComparison.Ordinal);
         Assert.Contains("uniform float projection_depth_bias;", source, StringComparison.Ordinal);
         Assert.Contains("POSITION.z += projection_depth_bias * POSITION.w;", source, StringComparison.Ordinal);
-        Assert.Contains("float(Recipe.SHORELINE_DEPTH_BIAS_INDEX) * F.value(Recipe.RETAIL_DEPTH_BIAS_SCALE)", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("position = Vector3.UP *", source, StringComparison.Ordinal);
+        Assert.Contains("ShorelineDepthBiasIndex * RetailDepthBiasScale", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Position = Vector3.Up *", source, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -326,7 +316,7 @@ public sealed class Level100WaterEnvelopeTests
     ///
     /// <para>Otherwise the newest capture under
     /// <c>local-lab/godot-captures/</c> is taken, subject to two filters. It
-    /// must be at least as new as the native scene, recipe, shaders and temporary host adapter - a capture that
+    /// must be at least as new as <c>Level100WaterAsset.cs</c> - a capture that
     /// predates the current water source describes a build that no longer
     /// exists, so it is ignored rather than judged. And its manifest must
     /// declare <c>"capturePurpose": "production"</c>.</para>
@@ -362,13 +352,11 @@ public sealed class Level100WaterEnvelopeTests
             return null;
         }
 
-        string godot = Path.Combine(repoRoot, "rebuild", "OnslaughtRebuild.Godot");
-        string[] sources = ["Level100WaterAsset.cs", "Scenes/World/Water.tscn",
-            "Scenes/World/water.gd", "Scenes/World/water_recipe.gd", "Scenes/World/water_mesh.gd",
-            "Scenes/World/water_grid.gdshader", "Scenes/World/water_shoreline.gdshader",
-            "Scenes/World/water_sun_glint.gdshader"];
-        DateTime floor = sources.Select(file => Path.Combine(godot, file))
-            .Where(File.Exists).Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
+        string waterSource = Path.Combine(
+            repoRoot, "rebuild", "OnslaughtRebuild.Godot", "Level100WaterAsset.cs");
+        DateTime floor = File.Exists(waterSource)
+            ? File.GetLastWriteTimeUtc(waterSource)
+            : DateTime.MinValue;
 
         return Directory.EnumerateDirectories(captureRoot)
             .Where(HasGameplayFrames)

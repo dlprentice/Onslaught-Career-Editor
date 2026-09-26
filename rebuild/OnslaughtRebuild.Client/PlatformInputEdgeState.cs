@@ -31,7 +31,7 @@ public sealed record PlatformInputEdgeSnapshot(
 /// pause, and focus-loss boundaries. Retail key-repeat policy and joystick poll
 /// cadence remain unresolved.</para>
 /// </remarks>
-public sealed class PlatformInputEdgeState : IPlatformInputEdges
+public sealed class PlatformInputEdgeState
 {
     private readonly Dictionary<int, byte> _heldKeys = [];
     private readonly Dictionary<int, byte> _consumeOnceKeys = [];

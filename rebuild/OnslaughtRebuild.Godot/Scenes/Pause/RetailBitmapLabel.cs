@@ -5,10 +5,9 @@ using Godot;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// An editor-visible text control for the retained bitmap-font law. It reads
-/// a curated atlas only; no simulation, input handling or file mutation occurs.
+/// A text control for the retained bitmap-font law. It reads a curated atlas
+/// only; no simulation, input handling or file mutation occurs.
 /// </summary>
-[Tool]
 public sealed partial class RetailBitmapLabel : Control
 {
     private string _text = string.Empty;
@@ -16,21 +15,18 @@ public sealed partial class RetailBitmapLabel : Control
     private bool _shadow;
     private RetailBitmapFont? _font;
 
-    [Export(PropertyHint.MultilineText)]
     public string Text
     {
         get => _text;
         set { _text = value; QueueRedraw(); }
     }
 
-    [Export]
     public Color TextColor
     {
         get => _textColor;
         set { _textColor = value; QueueRedraw(); }
     }
 
-    [Export]
     public bool Shadow
     {
         get => _shadow;
@@ -51,7 +47,7 @@ public sealed partial class RetailBitmapLabel : Control
 
 /// <summary>
 /// The pause renderer's existing atlas measurement/drawing law, extracted
-/// unchanged so authored text controls use the same glyphs in editor and game.
+/// unchanged for the pause text controls.
 /// </summary>
 public sealed class RetailBitmapFont
 {

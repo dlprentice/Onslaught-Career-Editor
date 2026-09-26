@@ -142,15 +142,13 @@ public sealed class Level100PineRepresentationTests
         // Mesh material discards beyond the distance; the box discards at or
         // inside it. Complementary, hard, no fade — matching the byte-authored
         // hard swap with no cross-dissolve anywhere in the data or shaders.
-        string meshShader = ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader");
         Assert.Contains(
             "horizontal_distance_squared > maximum_horizontal_distance_squared",
-            meshShader);
+            StaticWorldSource);
         Assert.Contains(
             "horizontal_distance_squared <= mesh_distance_squared",
             StaticWorldSource);
         Assert.DoesNotContain("smoothstep", StaticWorldSource);
-        Assert.DoesNotContain("smoothstep", meshShader);
         Assert.DoesNotContain("RenderPriority = far", StaticWorldSource);
     }
 

@@ -95,18 +95,13 @@ public sealed class RetailClickToStartSplashTests
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.Contains("Laws.splash_x(timer)", NativeClickSource.Controller);
-        Assert.Contains("Laws.splash_y(timer)", NativeClickSource.Controller);
-        Assert.Contains("Laws.splash_scale(timer)", NativeClickSource.Controller);
-        Assert.Contains("texture = ExtResource(\"splash\")", NativeClickSource.Node("Splash/Motion/Image"));
-        NativeClickSource.HasCenter("Splash/Motion/Image", 320f, 240f);
-        Assert.Contains("offset_right = 1024.0", NativeClickSource.Node("Splash/Motion/Image"));
-        Assert.Contains("offset_bottom = 1024.0", NativeClickSource.Node("Splash/Motion/Image"));
-        Assert.Contains("Backgrounds/click-to-start.texture.aya", NativeClickSource.Read("ClickSplash.tres"));
-        Assert.DoesNotContain("get_node(\"Splash\").visible", NativeClickSource.Controller);
+
+        Assert.Contains("RetailClickToStartSplash.X", flow);
+        Assert.Contains("RetailClickToStartSplash.Y", flow);
+        Assert.Contains("RetailClickToStartSplash.Scale", flow);
         Assert.DoesNotContain("(558f - (splashScale * 238f)) - 126.4375f", flow);
         Assert.DoesNotContain("135.9375f + (222f * splashScale)", flow);
-        Assert.DoesNotContain("vectorlosttoyssplash", NativeClickSource.Presentation + flow);
-        Assert.DoesNotContain("TWIMTBP", NativeClickSource.Presentation + flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
     }
 }

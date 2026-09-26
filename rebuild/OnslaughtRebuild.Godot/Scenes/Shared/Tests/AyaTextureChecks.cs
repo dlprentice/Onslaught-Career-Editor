@@ -11,11 +11,14 @@ using D = Godot.Collections.Dictionary;
 
 namespace OnslaughtRebuild.GodotClient;
 
-/// <summary>Exact import-decoder comparison. The retained C# implementation is
-/// the independent oracle; all malformed files are synthetic, fresh and user-local.</summary>
+/// <summary>AYA texture admission contract for <see cref="CuratedAyaTextureLoader"/>:
+/// every actual import use decodes at its expected size; every synthetic
+/// malformed file (fresh and user-local) gets its pinned outcome; every
+/// truncated-pixel refusal coincides with a real short read in Godot's DDS
+/// loader. <c>--aya-expect=REPORT</c> also compares each case with a prior
+/// report, including the decoded bytes of the actual textures.</summary>
 public sealed partial class AyaTextureChecks : Node
 {
-    private const string NativePath = "res://Scenes/Shared/retail_aya_texture.gd";
     private const string TruncatedPixels = "Curated texture has truncated DDS pixel data.";
     private const string ShortReadOrigin = "file_access_memory.cpp";
     private const string ManifestPath = "res://Assets/Level100/StaticWorld/level100-static-world.json";
@@ -28,7 +31,7 @@ public sealed partial class AyaTextureChecks : Node
     private readonly Dictionary<string, string> _inputHashes = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _inputHashesAfter = new(StringComparer.Ordinal);
     private int _checks;
-    private long _comparedBytes;
+    private int _priorCompared;
     private string? _outputDirectory;
     private string _godotVersion = "unavailable";
     private string _godotHash = "unavailable";
@@ -36,16 +39,16 @@ public sealed partial class AyaTextureChecks : Node
 
     private sealed record Spec(string Name, string Path, int Width, int Height, int Compression,
         int? TargetFormat = null, int? MipCount = null, bool MustSucceed = false,
-        string[]? DiagnosticOrigins = null, string? ExpectedNativeRefusal = null, string[]? LegacyDiagnosticOrigins = null);
+        string[]? DiagnosticOrigins = null, [property: JsonIgnore] byte[]? LoaderProbe = null);
     private sealed record ImageFacts(int Width, int Height, int Format, bool HasMipmaps, int MipmapCount,
-        int ByteCount, string Sha256, [property: JsonIgnore] byte[] Bytes);
+        int ByteCount, string Sha256);
     private sealed record Outcome(bool Ok, string? ErrorType = null, string? Error = null, ImageFacts? Image = null);
-    private sealed record CaseReceipt(Spec Spec, Outcome Legacy, Outcome Native, Outcome Facade,
-        bool ContractPassed, bool IntentionalAdmissionDifference);
+    private sealed record CaseReceipt(Spec Spec, Outcome Actual, bool ContractPassed);
     private sealed record Diagnostic(string Case, string Phase, string Function, string File, int Line,
         string Code, string Rationale, int ErrorType, bool Expected);
+    private sealed record Expected(bool Ok, string? Error, ImageFacts? Image);
 
-    public override async void _Ready()
+    public override void _Ready()
     {
         try
         {
@@ -68,31 +71,20 @@ public sealed partial class AyaTextureChecks : Node
             Require(string.Equals(_inputHashes[ManifestPath], Level100ActorDefinitionManifest.ExpectedManifestSha256,
                 StringComparison.OrdinalIgnoreCase), "The actual static manifest must retain its pinned identity.");
 
-            using (GDScript script = GD.Load<GDScript>(NativePath))
-            using (Variant created = script.New())
-            using (RefCounted native = created.As<RefCounted>())
+            foreach (Spec spec in imports) Admit(spec, null);
+            _completed.Add("47_import_uses");
+            foreach (Spec spec in extras) Admit(spec, null);
+            _completed.Add("cursor_and_fonts");
+            List<Spec> synthetic = SyntheticSpecs().ToList();
+            Check(synthetic.Count == SyntheticOutcomes.Count && synthetic.All(spec => SyntheticOutcomes.ContainsKey(spec.Name["synthetic/".Length..])),
+                "Every synthetic fixture must have exactly one pinned outcome.");
+            foreach (Spec spec in synthetic) Admit(spec, SyntheticOutcomes.GetValueOrDefault(spec.Name["synthetic/".Length..]));
+            _completed.Add("synthetic_admission");
+            if (PriorReport() is string prior)
             {
-                foreach (Spec spec in imports) Compare(spec, native);
-                _completed.Add("47_import_uses");
-                foreach (Spec spec in extras) Compare(spec, native);
-                _completed.Add("cursor_and_fonts");
-                foreach (Spec spec in SyntheticSpecs()) Compare(spec, native);
-                _completed.Add("synthetic_admission");
+                CompareWithPrior(prior);
+                _completed.Add("prior_report");
             }
-
-            var released = new List<(ulong Texture, ulong Image)>();
-            foreach (Spec spec in extras)
-                released.Add(ProbeFacadeLifetime(spec));
-            // Godot may retain script call-stack temporaries until the next
-            // process frame. Observe bounded release; do not force managed GC.
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            foreach ((ulong texture, ulong image) in released)
-            {
-                Check(!GodotObject.IsInstanceIdValid(texture), "Disposed facade texture remains in ObjectDB: " + texture);
-                Check(!GodotObject.IsInstanceIdValid(image), "Disposed facade image remains in ObjectDB: " + image);
-            }
-            _completed.Add("facade_lifetime");
             Check(Input.MouseMode == pointer, "Texture admission changed pointer ownership.");
         }
         catch (Exception error)
@@ -101,8 +93,8 @@ public sealed partial class AyaTextureChecks : Node
         }
         finally
         {
-            // Preserve these checks even when an individual comparison or
-            // fixture construction unexpectedly aborts the remaining sections.
+            // Preserve these checks even when an individual case or fixture
+            // construction unexpectedly aborts the remaining sections.
             foreach ((string path, string before) in _inputHashes)
             {
                 try
@@ -124,17 +116,14 @@ public sealed partial class AyaTextureChecks : Node
             }
             foreach (Diagnostic diagnostic in diagnostics.Where(item => !item.Expected))
                 _failures.Add($"Unexpected engine diagnostic in {diagnostic.Case}/{diagnostic.Phase}: {diagnostic.File}:{diagnostic.Line} {diagnostic.Code} {diagnostic.Rationale}");
-            string[] required = ["47_import_uses", "cursor_and_fonts", "synthetic_admission", "facade_lifetime", "private_inputs_unchanged"];
+            string[] required = ["47_import_uses", "cursor_and_fonts", "synthetic_admission", "private_inputs_unchanged"];
             Check(required.All(_completed.Contains), "One or more required AYA sections did not complete.");
             var report = new
             {
-                schema = 1, failureCount = _failures.Count, checks = _checks, caseCount = _cases.Count,
+                schema = 2, failureCount = _failures.Count, checks = _checks, caseCount = _cases.Count,
                 runtime = RuntimeInformation.FrameworkDescription, godot = _godotVersion, godotHash = _godotHash,
-                comparedBytes = _comparedBytes, completed = _completed, inputHashes = _inputHashes, inputHashesAfter = _inputHashesAfter,
-                exactMatchCount = _cases.Count(item => item.ContractPassed && !item.IntentionalAdmissionDifference),
-                intentionalAdmissionDifferenceCount = _cases.Count(item => item.IntentionalAdmissionDifference),
-                intentionalAdmissionDifferences = _cases.Where(item => item.IntentionalAdmissionDifference).Select(item => item.Spec.Name).ToArray(),
-                cases = _cases, diagnostics, failures = _failures,
+                completed = _completed, priorCompared = _priorCompared, inputHashes = _inputHashes,
+                inputHashesAfter = _inputHashesAfter, cases = _cases, diagnostics, failures = _failures,
             };
             try
             {
@@ -146,9 +135,8 @@ public sealed partial class AyaTextureChecks : Node
             {
                 failure_count = _failures.Count, checks = _checks, case_count = _cases.Count,
                 runtime = RuntimeInformation.FrameworkDescription, godot = _godotVersion, godot_hash = _godotHash,
-                compared_bytes = _comparedBytes, expected_diagnostics = diagnostics.Count(item => item.Expected),
+                prior_compared = _priorCompared, expected_diagnostics = diagnostics.Count(item => item.Expected),
                 unexpected_diagnostics = diagnostics.Count(item => !item.Expected), completed = _completed,
-                intentional_admission_difference_count = _cases.Count(item => item.IntentionalAdmissionDifference),
                 report = _outputDirectory is null ? null : Path.Combine(_outputDirectory, "report.json"),
             }));
             foreach (string failure in _failures) GD.Print("AYA_FAILURE " + failure);
@@ -166,7 +154,7 @@ public sealed partial class AyaTextureChecks : Node
         {
             JsonElement entry = row.Value;
             string compression = Property(entry, "compression").GetString()!;
-            Require(Enum.TryParse(compression, false, out LegacyCuratedAyaTextureReference.Compression parsed),
+            Require(Enum.TryParse(compression, false, out CuratedAyaTextureLoader.Compression parsed),
                 "Unknown actual manifest compression: " + compression);
             result.Add(new Spec("static/" + row.Name, Property(entry, "resourcePath").GetString()!,
                 Property(entry, "width").GetInt32(), Property(entry, "height").GetInt32(), (int)parsed, MustSucceed: true));
@@ -178,7 +166,7 @@ public sealed partial class AyaTextureChecks : Node
         result.Add(new Spec("shared/overlay", "res://Assets/Level100/Textures/material-overlay-a8trust5.texture.aya", 128, 128, 1, MustSucceed: true));
         foreach (string name in new[] { "target-tank", "target-truck", "target-warehouse-m001", "target-warehouse-m002", "transporter-lifter01", "transporter-lifter02" })
             result.Add(new Spec("actor/" + name, $"res://Assets/Level100/Textures/{name}.texture.aya", 512, 512, 1, MustSucceed: true));
-        Require(result.Count == 47, "All 47 actual import uses, including repeated shared inputs, must be compared.");
+        Require(result.Count == 47, "All 47 actual import uses, including repeated shared inputs, must be admitted.");
         return result;
     }
 
@@ -190,42 +178,48 @@ public sealed partial class AyaTextureChecks : Node
         new("pause/dxt2-circle", "res://Assets/PauseMenu/circle-01.texture.aya", 256, 256, 1, MustSucceed: true),
     ];
 
-    private void Compare(Spec spec, RefCounted native)
+    private void Admit(Spec spec, Expected? expected)
     {
-        Outcome legacy = Phase(spec, "legacy", () => Managed(spec, legacy: true));
-        Outcome actual = Phase(spec, "native", () => Native(spec, native));
-        Outcome facade = Phase(spec, "facade", () => Managed(spec, legacy: false));
         int failuresBefore = _failures.Count;
-        if (spec.MustSucceed) Check(legacy.Ok, spec.Name + ": admitted control failed in independent C# oracle: " + legacy.Error);
-        if (spec.ExpectedNativeRefusal is string strictMessage)
+        Outcome actual = Phase(spec, "decode", spec.DiagnosticOrigins ?? [], () => Decode(spec));
+        if (spec.MustSucceed)
         {
-            // The shared strict decoder intentionally refuses malformed zlib
-            // that the legacy .NET reader sometimes accepted via read-ahead.
-            // This is an explicit stronger-admission assertion, never a skip.
-            Check(legacy.Ok || legacy.ErrorType == nameof(InvalidDataException), spec.Name + ": unexpected oracle failure type.");
-            CheckStrictRefusal(spec.Name + "/native", actual, strictMessage);
-            CheckStrictRefusal(spec.Name + "/facade", facade, strictMessage);
+            Check(actual.Ok, spec.Name + ": admitted import failed: " + actual.Error);
+            Check(actual.Image is { } image && image.Width == spec.Width && image.Height == spec.Height,
+                spec.Name + ": admitted import has the wrong dimensions.");
+        }
+        if (expected is not null)
+        {
+            Check(actual.Ok == expected.Ok, $"{spec.Name}: success {actual.Ok}, pinned {expected.Ok}; {actual.Error}");
+            if (!expected.Ok)
+            {
+                Check(actual.ErrorType == nameof(InvalidDataException), spec.Name + ": refusal changed exception type: " + actual.ErrorType);
+                Check(actual.Error == expected.Error!.Replace("{path}", spec.Path, StringComparison.Ordinal),
+                    $"{spec.Name}: refusal '{actual.Error}', pinned '{expected.Error}'.");
+            }
+            else
+            {
+                Check(actual.Image == expected.Image, $"{spec.Name}: image {actual.Image}, pinned {expected.Image}.");
+            }
+        }
+        if (spec.LoaderProbe is byte[] dds)
+        {
             // A pixel truncation refusal is only as strict as the loader: the
-            // unchanged oracle must actually have read past the payload.
-            if (strictMessage == TruncatedPixels)
-                Check(_logger!.Logged(spec.Name, "legacy", ShortReadOrigin), spec.Name + ": truncation refused without a loader short read.");
+            // same bytes must make Godot's DDS loader read past the payload.
+            Check(actual.Error == TruncatedPixels, spec.Name + ": loader probe given to a case that is not a truncation refusal.");
+            Phase(spec, "loader", ["texture_loader_dds.cpp", "image.cpp", ShortReadOrigin], () =>
+            {
+                using var image = new Image();
+                image.LoadDdsFromBuffer(dds);
+                return new Outcome(true);
+            });
+            Check(_logger!.Logged(spec.Name, "loader", ShortReadOrigin), spec.Name + ": truncation refused without a loader short read.");
         }
-        else
-        {
-            CompareOutcome(spec.Name + "/native", legacy, actual);
-            CompareOutcome(spec.Name + "/facade", legacy, facade);
-        }
-        bool passed = failuresBefore == _failures.Count;
-        bool difference = spec.ExpectedNativeRefusal is not null && passed &&
-            (legacy.Ok != actual.Ok || legacy.ErrorType != actual.ErrorType || legacy.Error != actual.Error);
-        _cases.Add(new CaseReceipt(spec, WithoutBytes(legacy), WithoutBytes(actual), WithoutBytes(facade), passed, difference));
+        _cases.Add(new CaseReceipt(spec, actual, failuresBefore == _failures.Count));
     }
 
-    private Outcome Phase(Spec spec, string phase, Func<Outcome> action)
+    private Outcome Phase(Spec spec, string phase, string[] origins, Func<Outcome> action)
     {
-        string[] origins = phase == "legacy"
-            ? [.. spec.DiagnosticOrigins ?? [], .. spec.LegacyDiagnosticOrigins ?? []]
-            : spec.DiagnosticOrigins ?? [];
         GD.Print("AYA_CASE_BEGIN " + JsonSerializer.Serialize(new { name = spec.Name, phase, expected_diagnostic_origins = origins }));
         _logger!.Begin(spec.Name, phase, origins);
         Outcome outcome;
@@ -236,89 +230,63 @@ public sealed partial class AyaTextureChecks : Node
         return outcome;
     }
 
-    private static Outcome Managed(Spec spec, bool legacy)
-    {
-        Image.Format? target = spec.TargetFormat is int format ? (Image.Format)format : null;
-        using Texture2D texture = legacy
-            ? LegacyCuratedAyaTextureReference.Load(spec.Path, spec.Width, spec.Height,
-                (LegacyCuratedAyaTextureReference.Compression)spec.Compression, target, spec.MipCount)
-            : CuratedAyaTextureLoader.Load(spec.Path, spec.Width, spec.Height,
-                (CuratedAyaTextureLoader.Compression)spec.Compression, target, spec.MipCount);
-        return new Outcome(true, Image: Capture(texture));
-    }
-
-    private static Outcome Native(Spec spec, RefCounted loader)
-    {
-        using Variant target = spec.TargetFormat is int format ? Variant.From(format) : default;
-        using Variant mips = spec.MipCount is int count ? Variant.From(count) : default;
-        using Variant returned = loader.Call("load_texture_checked", spec.Path, spec.Width, spec.Height, spec.Compression, target, mips);
-        if (returned.VariantType != Variant.Type.Dictionary)
-            throw new InvalidOperationException("Native checked texture call did not return its result dictionary.");
-        using D result = returned.AsGodotDictionary();
-        using Variant ok = result["ok"];
-        if (ok.VariantType != Variant.Type.Bool)
-            throw new InvalidOperationException("Native checked texture call returned a non-Boolean ok field.");
-        if (!ok.AsBool())
-        {
-            using Variant errorType = result["error_type"];
-            using Variant error = result["error"];
-            if (errorType.VariantType != Variant.Type.String || error.VariantType != Variant.Type.String)
-                throw new InvalidOperationException("Native checked texture failure lacks explicit type/message.");
-            return new Outcome(false, errorType.AsString(), error.AsString());
-        }
-        using Variant value = result["value"];
-        using ImageTexture texture = value.As<ImageTexture>();
-        return new Outcome(true, Image: Capture(texture));
-    }
-
-    private static ImageFacts Capture(Texture2D texture)
-    {
-        using Image image = texture.GetImage();
-        byte[] bytes = image.GetData();
-        return new ImageFacts(image.GetWidth(), image.GetHeight(), (int)image.GetFormat(), image.HasMipmaps(),
-            image.GetMipmapCount(), bytes.Length, Hex(bytes), bytes);
-    }
-
-    private void CompareOutcome(string name, Outcome expected, Outcome actual)
-    {
-        Check(expected.Ok == actual.Ok, $"{name}: success differs; legacy={expected.Ok} native={actual.Ok}; {actual.Error}");
-        if (!expected.Ok || !actual.Ok)
-        {
-            if (!expected.Ok && !actual.Ok)
-            {
-                Check(expected.ErrorType == actual.ErrorType, $"{name}: error type legacy='{expected.ErrorType}', actual='{actual.ErrorType}'.");
-                Check(expected.Error == actual.Error, $"{name}: error message legacy='{expected.Error}', actual='{actual.Error}'.");
-            }
-            return;
-        }
-        ImageFacts left = expected.Image!, right = actual.Image!;
-        Check(left.Width == right.Width && left.Height == right.Height, name + ": image dimensions differ.");
-        Check(left.Format == right.Format, $"{name}: image format legacy={left.Format}, actual={right.Format}.");
-        Check(left.HasMipmaps == right.HasMipmaps && left.MipmapCount == right.MipmapCount,
-            $"{name}: mip chain legacy={left.HasMipmaps}/{left.MipmapCount}, actual={right.HasMipmaps}/{right.MipmapCount}.");
-        _comparedBytes += left.Bytes.Length;
-        Check(left.Bytes.AsSpan().SequenceEqual(right.Bytes),
-            $"{name}: full image bytes differ; legacy={left.ByteCount}/{left.Sha256}, actual={right.ByteCount}/{right.Sha256}.");
-    }
-
-    private static Outcome WithoutBytes(Outcome value) => value.Image is null ? value : value with { Image = value.Image with { Bytes = [] } };
-
-    private void CheckStrictRefusal(string name, Outcome actual, string message)
-    {
-        Check(!actual.Ok, name + ": malformed zlib must be refused by the shared strict decoder.");
-        Check(actual.ErrorType == nameof(InvalidDataException), name + ": strict refusal changed exception type: " + actual.ErrorType);
-        Check(actual.Error == message, $"{name}: strict diagnostic expected='{message}', actual='{actual.Error}'.");
-    }
-
-    private (ulong Texture, ulong Image) ProbeFacadeLifetime(Spec spec)
+    private static Outcome Decode(Spec spec)
     {
         using Texture2D texture = CuratedAyaTextureLoader.Load(spec.Path, spec.Width, spec.Height,
             (CuratedAyaTextureLoader.Compression)spec.Compression,
             spec.TargetFormat is int format ? (Image.Format)format : null, spec.MipCount);
         using Image image = texture.GetImage();
-        Check(!image.IsEmpty() && image.GetWidth() == spec.Width && image.GetHeight() == spec.Height,
-            "Facade result survives its loader/result disposal: " + spec.Name);
-        return (texture.GetInstanceId(), image.GetInstanceId());
+        byte[] bytes = image.GetData();
+        return new Outcome(true, Image: new ImageFacts(image.GetWidth(), image.GetHeight(), (int)image.GetFormat(),
+            image.HasMipmaps(), image.GetMipmapCount(), bytes.Length, Hex(bytes)));
+    }
+
+    private static string? PriorReport()
+    {
+        string[] choices = OS.GetCmdlineUserArgs().Where(argument => argument.StartsWith("--aya-expect=", StringComparison.Ordinal)).ToArray();
+        Require(choices.Length <= 1, "Supply at most one --aya-expect.");
+        return choices.Length == 0 ? null : choices[0]["--aya-expect=".Length..];
+    }
+
+    // A prior report is either this check's (schema 2, "actual") or the
+    // retired three-decoder comparison's (schema 1, whose "native" outcome was
+    // the production decoder). Messages are compared with each run's own paths.
+    private void CompareWithPrior(string path)
+    {
+        using JsonDocument prior = JsonDocument.Parse(File.ReadAllBytes(path));
+        JsonElement root = prior.RootElement;
+        string outcomeName = root.GetProperty("schema").GetInt32() == 1 ? "native" : "actual";
+        var previous = new Dictionary<string, (string Path, JsonElement Outcome)>(StringComparer.Ordinal);
+        foreach (JsonElement item in root.GetProperty("cases").EnumerateArray())
+        {
+            JsonElement spec = item.GetProperty("spec");
+            previous.Add(spec.GetProperty("name").GetString()!, (spec.GetProperty("path").GetString()!, item.GetProperty(outcomeName).Clone()));
+        }
+        Check(previous.Count == _cases.Count, $"Prior report has {previous.Count} cases; this run has {_cases.Count}.");
+        foreach (CaseReceipt receipt in _cases)
+        {
+            if (!previous.TryGetValue(receipt.Spec.Name, out var entry))
+            {
+                Check(false, receipt.Spec.Name + ": missing from the prior report.");
+                continue;
+            }
+            JsonElement old = entry.Outcome;
+            Outcome actual = receipt.Actual;
+            Check(old.GetProperty("ok").GetBoolean() == actual.Ok, receipt.Spec.Name + ": success differs from the prior report.");
+            string? oldError = old.TryGetProperty("error", out JsonElement error) && error.ValueKind == JsonValueKind.String
+                ? error.GetString()!.Replace(entry.Path, "{path}", StringComparison.Ordinal) : null;
+            Check(oldError == actual.Error?.Replace(receipt.Spec.Path, "{path}", StringComparison.Ordinal),
+                $"{receipt.Spec.Name}: refusal '{actual.Error}' differs from the prior '{oldError}'.");
+            if (actual.Image is { } image && old.TryGetProperty("image", out JsonElement facts) && facts.ValueKind == JsonValueKind.Object)
+            {
+                var before = new ImageFacts(facts.GetProperty("width").GetInt32(), facts.GetProperty("height").GetInt32(),
+                    facts.GetProperty("format").GetInt32(), facts.GetProperty("has_mipmaps").GetBoolean(),
+                    facts.GetProperty("mipmap_count").GetInt32(), facts.GetProperty("byte_count").GetInt32(),
+                    facts.GetProperty("sha256").GetString()!);
+                Check(before == image, $"{receipt.Spec.Name}: decoded image {image} differs from the prior {before}.");
+            }
+            _priorCompared++;
+        }
     }
 
     private IEnumerable<Spec> SyntheticSpecs()
@@ -328,9 +296,6 @@ public sealed partial class AyaTextureChecks : Node
         string[] zlib = ["stream_peer_gzip.cpp"];
         string[] ddsDiagnostic = ["texture_loader_dds.cpp", "image.cpp"];
         string[] formatDiagnostic = ["image.cpp"];
-        const string truncated = "Curated texture has a truncated zlib stream.";
-        const string trailing = "Curated texture AYA record contains trailing compressed data.";
-        const string corruptStream = "Curated texture contains an invalid zlib stream.";
         yield return Fixture("rgba-control", valid, mustSucceed: true);
         yield return Fixture("dxt1-control", Frame(Compress(dxt1)), compression: 0, mustSucceed: true);
         yield return Fixture("dxt2-control", Frame(Compress(dxt2)), compression: 1, mustSucceed: true);
@@ -348,24 +313,23 @@ public sealed partial class AyaTextureChecks : Node
         yield return Fixture("record-past-input", [8, 0, 0, 0, 1]);
         yield return Fixture("trailing-partial-record", Join(valid, [1]));
         yield return Fixture("empty-dds", Frame(Compress([])));
-        yield return Fixture("invalid-zlib", Frame([0xff, 0, 0, 0]), origins: zlib, refusal: corruptStream);
+        yield return Fixture("invalid-zlib", Frame([0xff, 0, 0, 0]), origins: zlib);
         byte[] corrupt = (byte[])compressed.Clone(); corrupt[^1] ^= 1;
-        yield return Fixture("bad-adler32", Frame(corrupt), origins: zlib, refusal: corruptStream);
+        yield return Fixture("bad-adler32", Frame(corrupt), origins: zlib);
         for (int missing = 1; missing <= 8; missing++)
-            yield return Fixture("zlib-missing-suffix-" + missing, Frame(compressed[..^missing]), origins: [.. zlib, .. ddsDiagnostic], refusal: truncated,
-                legacyOrigins: [ShortReadOrigin]);
-        yield return Fixture("small-trailing-bytes", Frame(Join(compressed, [7, 8])), origins: zlib, refusal: trailing);
-        yield return Fixture("concatenated-members", Frame(Join(compressed, Compress([11, 22, 33]))), origins: zlib, refusal: trailing);
+            yield return Fixture("zlib-missing-suffix-" + missing, Frame(compressed[..^missing]), origins: [.. zlib, .. ddsDiagnostic]);
+        yield return Fixture("small-trailing-bytes", Frame(Join(compressed, [7, 8])), origins: zlib);
+        yield return Fixture("concatenated-members", Frame(Join(compressed, Compress([11, 22, 33]))), origins: zlib);
         foreach (int length in new[] { 8191, 8192, 8193 })
-            yield return Fixture("short-member-record-" + length, Frame(Pad(compressed, length)), origins: zlib, refusal: trailing);
+            yield return Fixture("short-member-record-" + length, Frame(Pad(compressed, length)), origins: zlib);
         byte[] exactBlock = Exact8192ByteMember();
         yield return Fixture("exact8192-member-no-tail", Frame(exactBlock));
-        yield return Fixture("exact8192-member-one-tail-byte", Frame(Join(exactBlock, [0])), origins: zlib, refusal: trailing);
+        yield return Fixture("exact8192-member-one-tail-byte", Frame(Join(exactBlock, [0])), origins: zlib);
         byte[] largeDds = Dds(2, 64, 64, 1), largeCompressed = Compress(largeDds);
         Require(largeCompressed.Length > 8192, "Deterministic noisy DDS must exercise more than one managed input buffer.");
         int boundary = (largeCompressed.Length + 8191) / 8192 * 8192;
         foreach (int length in new[] { boundary - 1, boundary, boundary + 1 })
-            yield return Fixture("large-member-record-" + length, Frame(Pad(largeCompressed, length)), width: 64, height: 64, origins: zlib, refusal: trailing);
+            yield return Fixture("large-member-record-" + length, Frame(Pad(largeCompressed, length)), width: 64, height: 64, origins: zlib);
         yield return Fixture("source-at-limit", Frame(Pad(compressed, SourceLimit - 4)), origins: zlib);
         yield return Fixture("source-over-limit", new byte[SourceLimit + 1]);
         // No allocation exceeds the accepted 8 MiB output limit. The extra
@@ -374,7 +338,7 @@ public sealed partial class AyaTextureChecks : Node
         yield return Fixture("decoded-over-limit", Frame(CompressWithPadding(rgba, DecodedLimit + 1)), origins: zlib);
         byte[] overLimitBadChecksum = CompressWithPadding(rgba, DecodedLimit + 1);
         overLimitBadChecksum[^1] ^= 1;
-        yield return Fixture("decoded-over-limit-bad-checksum", Frame(overLimitBadChecksum), origins: zlib, refusal: corruptStream);
+        yield return Fixture("decoded-over-limit-bad-checksum", Frame(overLimitBadChecksum), origins: zlib);
         yield return Fixture("second-record-crosses-decoded-limit",
             Join(Frame(CompressWithPadding(rgba, DecodedLimit - 1)), Frame(Compress([0, 0]))), origins: zlib);
         yield return Fixture("dds-short-header", Frame(Compress(rgba[..127])));
@@ -395,25 +359,26 @@ public sealed partial class AyaTextureChecks : Node
         yield return Fixture("width-mismatch", valid, width: 5);
         yield return Fixture("width-zero", valid, width: 0);
         yield return Fixture("height-negative", valid, height: -1);
-        // The loader reads a short surface from uninitialized memory. The native
-        // decoder refuses it before decoding; the oracle must show the short read.
-        string[] shortRead = [.. ddsDiagnostic, ShortReadOrigin];
-        byte[] shortPixels = Frame(Compress(dxt1[..129]));
-        yield return Fixture("short-pixels", shortPixels, compression: 0, refusal: TruncatedPixels, legacyOrigins: shortRead);
-        yield return Fixture("short-pixels-before-dimension", shortPixels, compression: 0, width: 5, refusal: TruncatedPixels, legacyOrigins: shortRead);
+        // The loader reads a short surface from uninitialized memory, so the
+        // decoder refuses it first; each probe shows the loader's short read.
+        byte[] shortDxt1 = dxt1[..129];
+        byte[] shortPixels = Frame(Compress(shortDxt1));
+        yield return Fixture("short-pixels", shortPixels, compression: 0, probe: shortDxt1);
+        yield return Fixture("short-pixels-before-dimension", shortPixels, compression: 0, width: 5, probe: shortDxt1);
         yield return Fixture("format-before-short-pixels", shortPixels, compression: 1);
         yield return Fixture("mips-before-short-pixels", shortPixels, compression: 0, mips: 2);
         yield return Fixture("decode-before-dimension", Frame(Compress(Dds(2, 5, 4, 1))), origins: ddsDiagnostic);
-        yield return Fixture("decode-truncated-header-width", Frame(Compress(Mutate(rgba, 16, 5))), refusal: TruncatedPixels, legacyOrigins: shortRead);
+        byte[] wideHeader = Mutate(rgba, 16, 5);
+        yield return Fixture("decode-truncated-header-width", Frame(Compress(wideHeader)), probe: wideHeader);
         byte[] odd = Dds(0, 5, 4, 1), mips = Dds(2, 4, 4, 3);
         yield return Fixture("dxt1-odd-width-complete", Frame(Compress(odd)), width: 5, compression: 0, mustSucceed: true, origins: ddsDiagnostic);
-        yield return Fixture("dxt1-odd-width-short", Frame(Compress(odd[..^1])), width: 5, compression: 0, refusal: TruncatedPixels, legacyOrigins: shortRead);
-        yield return Fixture("rgba-three-mips-short", Frame(Compress(mips[..^1])), mips: 3, refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("dxt1-odd-width-short", Frame(Compress(odd[..^1])), width: 5, compression: 0, probe: odd[..^1]);
+        yield return Fixture("rgba-three-mips-short", Frame(Compress(mips[..^1])), mips: 3, probe: mips[..^1]);
         byte[] cube = Mutate(rgba, 112, 0x200), volume = Mutate(Mutate(rgba, 112, 0x200000), 24, 2);
         yield return Fixture("rgba-cubemap-six-faces", Frame(Compress(Join(cube, Surfaces(rgba, 5)))), mustSucceed: true);
-        yield return Fixture("rgba-cubemap-one-face", Frame(Compress(cube)), refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("rgba-cubemap-one-face", Frame(Compress(cube)), probe: cube);
         yield return Fixture("rgba-volume-two-slices", Frame(Compress(Join(volume, Surfaces(rgba, 1)))), mustSucceed: true);
-        yield return Fixture("rgba-volume-one-slice", Frame(Compress(volume)), refusal: TruncatedPixels, legacyOrigins: shortRead);
+        yield return Fixture("rgba-volume-one-slice", Frame(Compress(volume)), probe: volume);
         yield return Fixture("format-before-mips-and-dimension", Frame(Compress(Mutate(rgba, 92, 0))), width: 0, mips: 2);
         yield return Fixture("mips-before-dimension", valid, width: 0, mips: 2);
         yield return Fixture("dimension-before-negative-format", valid, width: 0, target: -1);
@@ -422,13 +387,114 @@ public sealed partial class AyaTextureChecks : Node
         yield return new Spec("synthetic/missing-file", absent, 4, 4, 2, DiagnosticOrigins: ["file_access.cpp"]);
     }
 
+    // Outcomes of the production decoder on 2026-09-25 (report of the retired
+    // three-decoder check at 37cf89b3, its "native" column): every refusal
+    // message ({path} is the fixture's own path) and every decoded image.
+    private static readonly Dictionary<string, Expected> SyntheticOutcomes = new(StringComparer.Ordinal)
+    {
+        ["rgba-control"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["dxt1-control"] = Pass(4, 4, 17, false, 0, 8, "aaa530fa0b5178230efe904c27e31f8d148a08c95f3900d6c3f2258d9867c369"),
+        ["dxt2-control"] = Pass(4, 4, 18, false, 0, 16, "4a39f6245708ed68c8068b1eb4ca77a1a226d2aec6cde894bf1f61d964b3b418"),
+        ["rgba-three-mips"] = Pass(4, 4, 5, true, 2, 84, "2127f4770d758c5a9c36c0eadfb911aab42210dd3eb643289816b3650fbb471a"),
+        ["rgba-header-zero-mips"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["aya-two-records"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["aya-empty-second-record"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["aya-zero-length-second-record"] = Refuse("Curated texture has invalid AYA record framing."),
+        ["empty-source"] = Refuse("Curated texture '{path}' is missing or exceeds the source limit."),
+        ["short-record-header"] = Refuse("Curated texture has a truncated AYA record header."),
+        ["zero-record-length"] = Refuse("Curated texture has invalid AYA record framing."),
+        ["oversized-record-length"] = Refuse("Curated texture has invalid AYA record framing."),
+        ["record-past-input"] = Refuse("Curated texture has invalid AYA record framing."),
+        ["trailing-partial-record"] = Refuse("Curated texture has a truncated AYA record header."),
+        ["empty-dds"] = Refuse("Curated texture has invalid AYA record framing."),
+        ["invalid-zlib"] = Refuse("Curated texture contains an invalid zlib stream."),
+        ["bad-adler32"] = Refuse("Curated texture contains an invalid zlib stream."),
+        ["zlib-missing-suffix-1"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-2"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-3"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-4"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-5"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-6"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-7"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["zlib-missing-suffix-8"] = Refuse("Curated texture has a truncated zlib stream."),
+        ["small-trailing-bytes"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["concatenated-members"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["short-member-record-8191"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["short-member-record-8192"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["short-member-record-8193"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["exact8192-member-no-tail"] = Refuse("Curated texture is not an AYA-wrapped DDS image."),
+        ["exact8192-member-one-tail-byte"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["large-member-record-24575"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["large-member-record-24576"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["large-member-record-24577"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["source-at-limit"] = Refuse("Curated texture AYA record contains trailing compressed data."),
+        ["source-over-limit"] = Refuse("Curated texture '{path}' is missing or exceeds the source limit."),
+        ["decoded-at-limit"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["decoded-over-limit"] = Refuse("Curated texture exceeds the decoded DDS limit."),
+        ["decoded-over-limit-bad-checksum"] = Refuse("Curated texture contains an invalid zlib stream."),
+        ["second-record-crosses-decoded-limit"] = Refuse("Curated texture exceeds the decoded DDS limit."),
+        ["dds-short-header"] = Refuse("Curated texture is not an AYA-wrapped DDS image."),
+        ["dds-header-size"] = Refuse("Godot could not decode curated texture '{path}' (ParseError)."),
+        ["dds-pixel-format-size"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["dds-bad-magic"] = Refuse("Curated texture is not an AYA-wrapped DDS image."),
+        ["rgba-mask-word-80"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-84"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-88"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-92"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-96"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-100"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["rgba-mask-word-104"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["wrong-fourcc"] = Refuse("Curated texture does not match the expected Dxt2 DDS pixel format."),
+        ["compression--1"] = Refuse("Curated texture does not match the expected -1 DDS pixel format."),
+        ["compression-3"] = Refuse("Curated texture does not match the expected 3 DDS pixel format."),
+        ["compression-2147483647"] = Refuse("Curated texture does not match the expected 2147483647 DDS pixel format."),
+        ["mip-option-null"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["mip-option-0"] = Refuse("Curated texture '{path}' does not contain the expected 0 DDS mip levels."),
+        ["mip-option-1"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["mip-option-2"] = Refuse("Curated texture '{path}' does not contain the expected 2 DDS mip levels."),
+        ["mip-option--1"] = Refuse("Curated texture '{path}' does not contain the expected -1 DDS mip levels."),
+        ["mip-option--2"] = Refuse("Curated texture '{path}' does not contain the expected -2 DDS mip levels."),
+        ["mip-option--2147483648"] = Refuse("Curated texture '{path}' does not contain the expected -2147483648 DDS mip levels."),
+        ["target-option-null"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["target-option-5"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["target-option-4"] = Pass(4, 4, 4, false, 0, 48, "87452893af805b0047378dd915fc8ba7186d983fa231277028e0e67bb83f8489"),
+        ["target-option--1"] = Refuse("Curated texture '{path}' could not be converted to -1."),
+        ["target-option--2147483648"] = Refuse("Curated texture '{path}' could not be converted to -2147483648."),
+        ["target-option-2147483647"] = Refuse("Curated texture '{path}' could not be converted to 2147483647."),
+        ["dxt2-rgba-conversion"] = Pass(4, 4, 5, false, 0, 64, "93ca9d66637eda17fc5211bed231c33179cf7994e3adac0539117d73124cb474"),
+        ["width-mismatch"] = Refuse("Curated texture '{path}' decoded as 4x4, expected 5x4."),
+        ["width-zero"] = Refuse("Curated texture '{path}' decoded as 4x4, expected 0x4."),
+        ["height-negative"] = Refuse("Curated texture '{path}' decoded as 4x4, expected 4x-1."),
+        ["short-pixels"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["short-pixels-before-dimension"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["format-before-short-pixels"] = Refuse("Curated texture does not match the expected Dxt2 DDS pixel format."),
+        ["mips-before-short-pixels"] = Refuse("Curated texture '{path}' does not contain the expected 2 DDS mip levels."),
+        ["decode-before-dimension"] = Refuse("Curated texture '{path}' decoded as 5x4, expected 4x4."),
+        ["decode-truncated-header-width"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["dxt1-odd-width-complete"] = Pass(5, 4, 17, false, 0, 16, "4a39f6245708ed68c8068b1eb4ca77a1a226d2aec6cde894bf1f61d964b3b418"),
+        ["dxt1-odd-width-short"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["rgba-three-mips-short"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["rgba-cubemap-six-faces"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["rgba-cubemap-one-face"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["rgba-volume-two-slices"] = Pass(4, 4, 5, false, 0, 64, "269467f2c1b00aa1862265b9dcac100824eef1539a687c624d758cafb9bff1e7"),
+        ["rgba-volume-one-slice"] = Refuse("Curated texture has truncated DDS pixel data."),
+        ["format-before-mips-and-dimension"] = Refuse("Curated texture does not match the expected Rgba8 DDS pixel format."),
+        ["mips-before-dimension"] = Refuse("Curated texture '{path}' does not contain the expected 2 DDS mip levels."),
+        ["dimension-before-negative-format"] = Refuse("Curated texture '{path}' decoded as 4x4, expected 0x4."),
+        ["magic-before-negative-options"] = Refuse("Curated texture is not an AYA-wrapped DDS image."),
+        ["missing-file"] = Refuse("Curated texture '{path}' is missing or exceeds the source limit."),
+    };
+
+    private static Expected Pass(int width, int height, int format, bool hasMipmaps, int mipmapCount, int byteCount, string sha256) =>
+        new(true, null, new ImageFacts(width, height, format, hasMipmaps, mipmapCount, byteCount, sha256));
+    private static Expected Refuse(string error) => new(false, error, null);
+
     private Spec Fixture(string name, byte[] bytes, int width = 4, int height = 4, int compression = 2,
-        int? target = null, int? mips = null, bool mustSucceed = false, string[]? origins = null, string? refusal = null,
-        string[]? legacyOrigins = null)
+        int? target = null, int? mips = null, bool mustSucceed = false, string[]? origins = null, byte[]? probe = null)
     {
         string path = Path.Combine(_outputDirectory!, name + ".texture.aya");
         using (var output = new FileStream(path, FileMode.CreateNew, System.IO.FileAccess.Write, FileShare.None)) output.Write(bytes);
-        return new Spec("synthetic/" + name, path, width, height, compression, target, mips, mustSucceed, origins, refusal, legacyOrigins);
+        return new Spec("synthetic/" + name, path, width, height, compression, target, mips, mustSucceed, origins, probe);
     }
 
     private static byte[] Dds(int compression, int width, int height, int mipCount)

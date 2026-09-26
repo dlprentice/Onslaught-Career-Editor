@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://Scenes/Frontend/Tests/MouseCursorSceneChecks.cs" id="1"]
-
-[node name="MouseCursorSceneChecks" type="Node"]
-script = ExtResource("1")
