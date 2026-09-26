@@ -28,19 +28,24 @@ public sealed record InstallReceipt(bool Ok, string Message, string Target, stri
 /// <summary>Whether the game is running; the companion never writes into its folder while it is.</summary>
 public static class GameProcess
 {
-    public static bool IsRunning()
+    public static bool IsRunning() => Running().Count > 0;
+
+    /// <summary>The processes the check counts as the game, as "pid: name (first argument)"; read-only.</summary>
+    public static IReadOnlyList<string> Running()
     {
+        List<string> found = [];
         try
         {
-            if (OperatingSystem.IsWindows()) return System.Diagnostics.Process.GetProcessesByName("BEA").Length > 0;
+            if (OperatingSystem.IsWindows())
+                return System.Diagnostics.Process.GetProcessesByName("BEA").Select(process => $"{process.Id}: {process.ProcessName}").ToArray();
             foreach (string folder in Directory.EnumerateDirectories("/proc"))
             {
-                if (!int.TryParse(Path.GetFileName(folder), out _)) continue;
+                if (!int.TryParse(Path.GetFileName(folder), out int pid)) continue;
                 try
                 {
                     string comm = File.ReadAllText(Path.Combine(folder, "comm"));
                     string[] argv = File.ReadAllText(Path.Combine(folder, "cmdline")).Split('\0', StringSplitOptions.RemoveEmptyEntries);
-                    if (IsGame(comm, argv)) return true;
+                    if (IsGame(comm, argv)) found.Add($"{pid}: {comm.Trim()} ({(argv.Length > 0 ? argv[0] : "")})");
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException)
                 {
@@ -50,7 +55,7 @@ public static class GameProcess
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
         }
-        return false;
+        return found;
     }
 
     /// <summary>

@@ -179,6 +179,16 @@ public partial class ScreenCapture : SceneTree
         await Shot(viewport, label, "open-dialog");
         app.Home.OpenDialog.Hide();
 
+        if (fake)
+        {
+            // A career partway through the campaign, so the map's open and not-yet-reached missions are seen too.
+            File.WriteAllBytes(Path.Combine(install.Game, "savegames", "Career Two.bes"), MidCampaign(File.ReadAllBytes(fixture)));
+            await app.Game.RescanAsync();
+            await app.OpenCareerAsync(Path.Combine(install.Game, "savegames", "Career Two.bes"));
+            app.Navigate("summary");
+            await Shot(viewport, label, "summary-mid-campaign");
+        }
+
         viewport.QueueFree();
         await Settle();
     }
@@ -201,6 +211,29 @@ public partial class ScreenCapture : SceneTree
         for (int frame = 0; frame < 600 && (app.Game.Busy || (steamRoots.Count > 0 && app.Game.Folder is null && frame < 60)); frame++)
             await Settle();
         return (viewport, app);
+    }
+
+    /// <summary>
+    /// The real fixture as a career that has finished chapters 1 to 4 and reached 5.00: every mission from
+    /// 5.00 on loses its win and rank, and every route leading past 5.00 is closed again. Length and every other
+    /// byte are the fixture's. Written only into this capture's own fake install.
+    /// </summary>
+    private static byte[] MidCampaign(byte[] career)
+    {
+        byte[] bytes = career.ToArray();
+        uint World(int node) => BitConverter.ToUInt32(bytes, 0x0006 + node * 0x40 + 0x10);
+        for (int node = 0; node < 100; node++)
+        {
+            if (World(node) < 500) continue;
+            Array.Clear(bytes, 0x0006 + node * 0x40 + 0x04, 4);
+            Array.Clear(bytes, 0x0006 + node * 0x40 + 0x3C, 4);
+        }
+        for (int link = 0; link < 200; link++)
+        {
+            uint to = BitConverter.ToUInt32(bytes, 0x1906 + link * 8 + 4);
+            if (to < 100 && World((int)to) > 500) Array.Clear(bytes, 0x1906 + link * 8, 4);
+        }
+        return bytes;
     }
 
     private static string MediaFixture(string work)
