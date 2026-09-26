@@ -2,7 +2,7 @@
 
 Status: accepted authored-data and bounded static construction contracts;
 detached Start/engine/player shells implemented, complete initialization open
-Last updated: 2026-09-26 (engine construction draws linked; script control of the player; admission dated 2026-09-06)
+Last updated: 2026-09-26 (engine construction draws linked; script control of the player; "game playing" moved to frame 100 after the pan; admission dated 2026-09-06)
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
 admits its serialized pre-initialization fields, the complete ordered-match
 selection law, the released no-match fallback plan, and the exact
@@ -445,13 +445,19 @@ post-load readiness or final engine position.
 
 World 110's `LevelScript` starts with `GetPlayer(1).Deactivate()`, so the
 player's engine is inactive from its script's first run in the first event
-flush. At the end of the 60-frame pre-run, `CGame::StartPlayingState`
-(`0x0046fec0`, `game.cpp:3025-3029`) sets game state 3 and posts the script
-event "game playing". The `Scout` script (on RLWD row 19's squad) answers with
-`PostEvent("Enemy Engaged")`, and `LevelScript`'s handler waits two seconds
-(`Pause(2.0)`), then activates the Airfield and the player. The engine is built
-in walker state (plane mode 0), and `LevelScript` restricts no weapon or flight
-mode, unlike Level 100's.
+flush.
+- **Frame 60.** The pre-run ends, and FINISHED_PRE_RUN starts a 2.0 s pan (the
+  level world's pan length).
+- **Frame 100.** The FINISHED_PANNING handler (`0x00470024`, an inlined
+  `CGame::StartPlayingState`; standalone copy `0x0046fec0`, `game.cpp:3025-3031`)
+  sets game state 3 and posts the script event "game playing"
+  ([timing](world-110-construction-order.md#player-start)).
+- **Control.** The `Scout` script (on RLWD row 19's squad) answers with
+  `PostEvent("Enemy Engaged")`. `LevelScript`'s handler waits two seconds
+  (`Pause(2.0)`), then activates the Airfield and the player.
+
+The engine is built in walker state (plane mode 0), and `LevelScript` restricts no
+weapon or flight mode, unlike Level 100's.
 
 ## Detached production construction and focused checks
 

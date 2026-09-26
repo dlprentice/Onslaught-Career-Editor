@@ -16,6 +16,7 @@ support product or deterministic-Core behavior.
 - [Battle Engine weapon stores, charge and firing state](battle-engine-weapon-stores.md)
 - [Battle Engine auto-aim, launch position and Gun emitters](battle-engine-aiming.md)
 - [Level 100 construction order: shared draws and queued events](level100-construction-order.md)
+- [World 110 construction order, transition and first frames](world-110-construction-order.md)
 - [World 110 serialized initial-object seed admission](world-110-initial-constructor-seeds.md)
 - [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)
