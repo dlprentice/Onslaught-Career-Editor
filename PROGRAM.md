@@ -158,12 +158,19 @@ construction-order contracts give:
 - what the first event flush delivers and draws;
 - World 110's transition from a Level 100 win, and its player start.
 
+[Waypoint paths](reverse-engineering/game-mechanics/waypoint-paths.md) and the
+dropship [flight](reverse-engineering/game-mechanics/dropship-flight.md) and
+[landing](reverse-engineering/game-mechanics/dropship-landing.md) contracts cover the
+U-17's route and retreat and the World 110 landing craft: flight, `Land()`, unloading
+(25 Light Gun Tanks and 20 Muspell Grunts per full craft), take-off and removal.
+
 Every Level 100 and World 110 question the rebuild lane has sent is answered there,
 or recorded as an open question with its cheapest falsifier. Still open:
 - a copied-runtime log of shared draws and queued events, to confirm the static
   order from load through the first frames of both levels;
 - which arm World 110's units take at their first think;
-- composed runtime controls of the final-wave laws.
+- composed runtime controls of the final-wave laws;
+- a copied-runtime log of a landing craft's speed, descent and unload counts.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and
