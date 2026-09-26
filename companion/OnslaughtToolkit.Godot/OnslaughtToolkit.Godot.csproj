@@ -17,7 +17,7 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Media/**/*.cs;Ui/**/*.cs" />
+    <Compile Include="Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Media/**/*.cs;Options/**/*.cs;Ui/**/*.cs" />
     <!-- Contract tests and development entries (captures, license metadata) never enter a release export. -->
     <Compile Include="Tests/**/*.cs;Development/**/*.cs" Condition="'$(Configuration)' != 'ExportRelease'" />
     <!-- Share the existing safety implementation unchanged, without the AppCore codec or services. -->

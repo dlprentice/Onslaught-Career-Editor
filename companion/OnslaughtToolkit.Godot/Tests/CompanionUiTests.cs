@@ -263,6 +263,40 @@ internal static class CompanionUiTests
         InstallReceipt cheatInstall = await cheats.ConfirmAddAsync();
         check.That(cheatInstall.Ok && File.ReadAllBytes(Path.Combine(install.Game, "savegames", "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
             "the confirmed cheat career is added to savegames after a verified backup");
+
+        // Options: read the game's defaultoptions.bea, change music and one key, write a verified .bea, then install it.
+        app.Navigate("options");
+        OptionsPage optionsPage = app.Options;
+        check.That(!optionsPage.OpenGameOptions.Disabled, "the game's options file can be opened");
+        byte[] optionsBefore = File.ReadAllBytes(install.Options);
+        Outcome<SaveSession> openedOptions = await optionsPage.OpenAsync(install.Options);
+        check.That(openedOptions.Ok && optionsPage.Reading is not null && app.Workspace.Session?.Path != install.Options,
+            "the options file opens read-only without replacing the open career");
+        double newMusic = optionsPage.Music.Value > 50 ? 20 : 80;
+        optionsPage.Music.Value = newMusic;
+        optionsPage.StartCapture(0x21, 1);
+        check.That(optionsPage.Capture(Key.T), "a captured key is accepted");
+        check.That(optionsPage.PreviewText.Contains("Music volume") && optionsPage.PreviewText.Contains("transform → T"),
+            "the preview names the music change and the new key");
+        string optionsCopy = Path.Combine(outputDirectory, "options-copy.bea");
+        optionsPage.Destination.Text = optionsCopy;
+        PublicationReceipt optionsWritten = await optionsPage.WriteCopyAsync();
+        byte[] optionsBytes = File.Exists(optionsCopy) ? File.ReadAllBytes(optionsCopy) : [];
+        int transformRow = optionsPage.Reading!.Bindings.Single(row => row.EntryId == 0x21).Offset;
+        bool optionsConfined = optionsBytes.Length == optionsBefore.Length;
+        for (int offset = 0; optionsConfined && offset < optionsBefore.Length; offset++)
+        {
+            bool allowed = offset is >= 0x2492 and < 0x2496 || (offset >= transformRow + 0x18 && offset < transformRow + 0x20);
+            if (!allowed && optionsBytes[offset] != optionsBefore[offset]) optionsConfined = false;
+        }
+        check.That(optionsWritten.Ok && optionsConfined && Math.Abs(BinaryPrimitives.ReadSingleLittleEndian(optionsBytes.AsSpan(0x2492)) -
+            (float)(newMusic / 100)) < 1e-6, "the options copy changes only the music float and the chosen key's two dwords");
+        optionsPage.AskToInstall();
+        check.That(optionsPage.Confirm.Visible && File.ReadAllBytes(install.Options).AsSpan().SequenceEqual(optionsBefore),
+            "installing the options asks first and writes nothing yet");
+        InstallReceipt optionsInstalled = await optionsPage.ConfirmInstallAsync();
+        check.That(optionsInstalled is { Ok: true, Replaced: true } && File.ReadAllBytes(install.Options).AsSpan().SequenceEqual(optionsBytes),
+            "the confirmed options copy replaces defaultoptions.bea after a verified backup");
         await Frame(tree);
     }
 

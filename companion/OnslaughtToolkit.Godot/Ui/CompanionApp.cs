@@ -49,6 +49,7 @@ public partial class CompanionApp : Control
     internal GoodiesPage Goodies { get; private set; } = null!;
     internal InstallPage Install { get; private set; } = null!;
     internal CheatsPage Cheats { get; private set; } = null!;
+    internal OptionsPage Options { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -78,11 +79,12 @@ public partial class CompanionApp : Control
         MediaFiles = new MediaFilesPage(Status, this);
         Install = new InstallPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         Cheats = new CheatsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
+        Options = new OptionsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
             ("Career", [Overview, Goodies, EditCopy, Cheats, Compare, StoredValues]),
-            ("Game", [Install]),
+            ("Game", [Options, Install]),
             ("Library", [MediaFiles]),
         ];
 
@@ -238,6 +240,7 @@ public partial class CompanionApp : Control
         Compare.Refresh();
         if (Current == Install) Install.Refresh();
         if (Current == Cheats) Cheats.Refresh();
+        if (Current == Options) Options.Refresh();
         RefreshHeader();
     }
 

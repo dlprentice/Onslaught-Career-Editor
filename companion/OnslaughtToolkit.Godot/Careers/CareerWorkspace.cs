@@ -52,9 +52,29 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// Publishes prepared bytes to a new file, checks the receipt independently, then reads the
     /// result again through the protected route. The original stays the open source.
     /// </summary>
-    public async Task<PublicationReceipt> PublishAsync(string destination, byte[] prepared)
+    public Task<PublicationReceipt> PublishAsync(string destination, byte[] prepared) =>
+        Session is SaveSession session ? PublishFromAsync(session, destination, prepared)
+            : Task.FromResult(new PublicationReceipt(false, "Open a career first."));
+
+    /// <summary>Opens a file as a read-only snapshot without changing the open career (the options page's source).</summary>
+    public async Task<Outcome<SaveSession>> ReadSnapshotAsync(string path)
     {
-        if (Busy || Session is not SaveSession session) return new PublicationReceipt(false, "Open a career first.");
+        if (Busy) return Outcome<SaveSession>.Refusal("A file operation is already running.");
+        SetBusy(true);
+        try
+        {
+            return SaveSession.FromRead(await worker.OpenCareerAsync(path));
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>Publishes prepared bytes as a new file whose protected source is the given snapshot, then reopens it.</summary>
+    public async Task<PublicationReceipt> PublishFromAsync(SaveSession session, string destination, byte[] prepared)
+    {
+        if (Busy) return new PublicationReceipt(false, "A file operation is already running.");
         SetBusy(true);
         LastVerifiedOutput = "";
         try
