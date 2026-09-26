@@ -2,7 +2,8 @@
 
 Why this exists
 ---------------
-`rebuild/tools/Capture-Frontend.ps1` reported PASS iff the capture run itself was
+The capture gate (`Capture-Frontend.ps1` then, `rebuild/tools/first_flight.py
+capture` since 2026-09-26) reported PASS iff the capture run itself was
 healthy: every shot landed on the expected screen, every file saved, every frame
 was the requested size, and the plan ran to the end. Every one of those is a
 property of OUR OWN run. The gate proved the capture executed. **It never
@@ -14,8 +15,8 @@ than an individual pixel defect: while it stands, every frontend change is
 unguarded against regression, and "13 startup shots byte-identical" means only
 that we have not changed, not that we are right.
 
-This tool supplies the missing half. `Capture-Frontend.ps1` calls it, and its
-verdict is folded into the PASS condition.
+This tool supplies the missing half. `first_flight.py capture` calls it, and
+its verdict is folded into the capture's status.
 
 What is scored, and what deliberately is not
 --------------------------------------------
@@ -277,7 +278,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--capture-dir", required=True, type=Path,
-                    help="a directory written by Capture-Frontend.ps1")
+                    help="a directory written by first_flight.py capture")
     ap.add_argument("--plan", type=Path, default=DEFAULT_PLAN)
     ap.add_argument("--json-out", type=Path)
     ap.add_argument("--tolerance-ms", type=int, default=25,

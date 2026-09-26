@@ -3,14 +3,15 @@
 """The rebuild lane's whole gate in one command.
 
 Runs, in order: the Godot build; the Core suite (whose cold-start test also
-writes its won tape); the Client suite; the pause and AYA checks in headless
+writes its won tape); the Core ferry-landing sweep, the expensive oracle the
+default Core filter leaves out; the Client suite; the pause and AYA checks in headless
 Godot; the headless smoke, recording its tape; and the C# headless replayer
 twice over the smoke tape and the won tape. Every log goes to a fresh
 directory under this checkout's local-data/test-runs, and the summary prints
 the suite counts and the tapes' hashes, so pins are read from one place.
 
 Usage: python rebuild/tools/rebuild_gate.py [--only STEP[,STEP...]]
-Steps: build, core, client, pause, aya, smoke, replay.
+Steps: build, core, ferry, client, pause, aya, smoke, replay.
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-STEPS = ("build", "core", "client", "pause", "aya", "smoke", "replay")
+STEPS = ("build", "core", "ferry", "client", "pause", "aya", "smoke", "replay")
 GODOT_CHECK = ("python", "rebuild/tools/first_flight.py", "run", "--no-build", "--no-prepare",
                "--timeout", "600", "--engine-arg=--headless", "--engine-arg=--audio-driver",
                "--engine-arg=Dummy")
@@ -82,6 +83,8 @@ def main(argv: list[str]) -> int:
             step("build", ["npm", "run", "build:rebuild-godot"])
         if "core" in steps:
             summary["core"] = dotnet_counts(step("core", ["npm", "run", "test:rebuild-core"]))
+        if "ferry" in steps:
+            summary["ferry"] = dotnet_counts(step("ferry", ["npm", "run", "test:rebuild-ferry-sweep"]))
         if "client" in steps:
             summary["client"] = dotnet_counts(step("client", ["npm", "run", "test:rebuild-client"]))
         if "pause" in steps:

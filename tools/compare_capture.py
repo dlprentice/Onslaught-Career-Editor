@@ -192,7 +192,7 @@ def main(argv: list[str]) -> int:
             f"REFUSED: size mismatch reference={ref.size} candidate={cmp_.size}.\n"
             "These frames are not comparable. Rescaling would conceal exactly the\n"
             "layout error this tool exists to find. Re-capture the reconstruction at\n"
-            f"{ref.size[0]}x{ref.size[1]} (Capture-Frontend.ps1 -Resolution "
+            f"{ref.size[0]}x{ref.size[1]} (first_flight.py capture --size "
             f"{ref.size[0]}x{ref.size[1]}).",
             file=sys.stderr,
         )

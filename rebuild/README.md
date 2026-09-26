@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (the U-17 flies; one gate command)
+Last updated: 2026-09-26 (PowerShell retired; the capture gate runs on Linux)
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
@@ -34,8 +34,8 @@ typed GDScript and editor scenes. On September 25 it returned to the last
 all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
 and the later C# changes that carry evidence: the strict AYA texture admission
 below, the 2,148-step smoke validator's state pin (re-pinned whenever an
-evidenced retail law changes the run; `rebuild/tools/FirstFlightSmokeValidation.psm1`
-holds the current value), and two refusals of
+evidenced retail law changes the run; the smoke report contract in
+`rebuild/tools/first_flight.py` holds the current value), and two refusals of
 impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
 cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
@@ -185,8 +185,8 @@ npm run run:rebuild-godot
 ```
 
 `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`) runs the lane's whole
-gate: the build, the Core and Client suites (the cold-start test writes its won
-tape), the pause and AYA checks in headless Godot, the headless smoke with its
+gate: the build, the Core suite (the cold-start test writes its won tape), the
+Core ferry-landing sweep, the Client suite, the pause and AYA checks in headless Godot, the headless smoke with its
 recorded tape, and two C# replays of each tape. Its summary prints the suite
 counts and the tapes' trace and state hashes; logs go to a fresh
 `local-data/test-runs/rebuild-gate-*` directory. `--only core,client` runs a
@@ -217,7 +217,7 @@ on exit, interruption or timeout.
 
 ```bash
 npm run test:rebuild-godot-smoke
-npm run capture:rebuild-godot -- -- --capture-plan=mainmenu
+npm run capture:rebuild-godot -- --plan mainmenu
 npm run run:rebuild-godot -- -- --record-tape="$PWD/local-data/first-flight/my-session.json"
 npm run run:rebuild-headless -- --tape "$PWD/local-data/first-flight/my-session.json" --repeat 2
 ```
@@ -230,22 +230,19 @@ session passed two replays on September 6. A substantial tutorial playthrough is
 still required; synthetic smoke and captured screenshots do not meet that acceptance.
 
 `prepare:rebuild-assets`, Core/Client tests and headless replay do not open a
-window. Run/smoke/capture require an explicitly available desktop or an isolated
-virtual display with its own credentials and profile; never fall back to the
-physical desktop. Software rendering establishes bounded visual observations,
+window, and neither does a smoke given `--engine-arg=--headless`. A capture draws
+through `godot-offscreen` on a hidden output behind the machine-wide GPU lock.
+`run` opens a window, so it needs a desktop David has released; never fall back
+to the physical desktop. Software rendering establishes bounded visual observations,
 not GPU performance, physical input or audible playback. The September 6 native
 smoke and live startup into Level 100 establish Linux runtime execution; complete
 controls/audio/tutorial parity remains unverified.
 
-Retained Windows PowerShell launchers remain under `tools/`, with explicit
-`run:rebuild-godot:windows` and `test:rebuild-godot-smoke:windows` aliases. Their
-active [Windows manifest](toolchains/godot-4.8-dev6-win-x64.json) pins the matching
-4.8 dev6 official archive and every extracted file. Archive hashes and manifest
-validation have been checked on Linux; Windows execution remains unverified.
-The previous [4.7.1 manifest](toolchains/godot-4.7-stable-win-x64.json) is retained
-for recovery and is rejected by current setup. The unused Windows VM staging was
-retired on September 12; Windows acceptance needs a separately provided Windows
-environment. Linux development continues natively.
+The Windows PowerShell launchers, their toolchain manifests and the Windows
+capture scripts were retired on 2026-09-26 (David: no PowerShell); Git keeps them.
+The smoke's report contract and the capture's provenance stamp, health checks and
+scoring now live in the Linux launcher. There is no Windows launcher, so Windows
+acceptance needs a separately provided Windows environment and a launcher for it.
 
 ### Engine updates and recovery
 
@@ -765,12 +762,16 @@ checks focus/cursor policy, a fresh retry, and return to the same Main Menu with
 the Level 100 world released. It writes structured report and log evidence
 only; it has no screenshot or visual-parity machinery.
 
-Visual regression is a separate gate. Linux `capture:rebuild-godot` produces
-the frames; score them with the relevant retail references. The historical
-Windows `rebuild/tools/Capture-Frontend.ps1` combines capture and scoring through
-`tools/score_frontend_capture.py`, folding that verdict into `Status`: a
-frontend regression returns `FAIL`, and a run with nothing to score against
-returns `UNSCORED` rather than `PASS`. Its thresholds live in
+Visual regression is a separate gate. `npm run capture:rebuild-godot -- --plan
+PLAN` (`startup`, `gameplay`, `mainmenu` or `options`; `--size`, default
+640x480, retail's frontend) draws the rig's shots through `godot-offscreen`,
+stamps the manifest's provenance (`--purpose production` holds only for committed
+Godot source; dirty or unknown source is a `probe`), refuses shots on the wrong
+screen, unsaved, resized or missing, and scores the run with
+`tools/score_frontend_capture.py` into `capture-status.json`: a frontend
+regression returns `FAIL`, and a run with nothing to score against returns
+`UNSCORED` rather than `PASS`. `--retail-offset-manifest` samples the gameplay
+plan at retail's realised level offsets. Its thresholds live in
 `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
 parity claims. Reference frames are retail-derived and live under ignored local
 paths, so a fresh clone scores nothing.

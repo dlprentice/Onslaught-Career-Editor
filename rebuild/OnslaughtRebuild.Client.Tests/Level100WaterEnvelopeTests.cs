@@ -70,9 +70,12 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <para><b>Scope.</b> This gate needs a locally produced gameplay capture,
 /// which lives on an ignored path:</para>
 /// <code>
-///   pwsh -File rebuild/tools/Capture-Frontend.ps1 -Plan gameplay -Purpose production `
-///       -RetailOffsetManifest local-lab/retail-reference-pristine/level100-gameplay/manifest.json
+///   npm run capture:rebuild-godot -- --plan gameplay --purpose production \
+///       --retail-offset-manifest local-lab/retail-reference-pristine/level100-gameplay/manifest.json
 /// </code>
+/// <para>The launcher writes it under <c>local-data/first-flight/</c>; point
+/// <c>ONSLAUGHT_WATER_CAPTURE_DIR</c> at that directory, or keep it under
+/// <c>local-lab/godot-captures/</c>, where this gate looks by itself.</para>
 /// <para>If no capture is scored the pixel assertions cannot run, and
 /// <see cref="ShorelineCompositionKeepsTheOperandOrderTheEnvelopeDependsOn"/>
 /// is the always-on backstop for the specific regressions above.</para>
@@ -327,7 +330,7 @@ public sealed class Level100WaterEnvelopeTests
     /// <c>ALBEDO = macro_color</c>, and it scored captures from a camera FOV
     /// sweep - deliberately modified builds, judged as if they were the
     /// product, purely because they were the newest directory on disk.
-    /// <c>Capture-Frontend.ps1 -Purpose production</c> writes the marker, and
+    /// <c>first_flight.py capture --purpose production</c> writes the marker, and
     /// refuses to write it when <c>rebuild/OnslaughtRebuild.Godot</c> has
     /// uncommitted changes. An unmarked capture is never auto-scored: the
     /// failure mode was an unlabelled experiment being mistaken for evidence,

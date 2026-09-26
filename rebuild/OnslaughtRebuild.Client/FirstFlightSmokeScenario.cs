@@ -50,7 +50,7 @@ public static class FirstFlightSmokeScenario
     // The smoke report carries three fields derived from the Godot audio
     // mixer, which advances on the audio thread in wall-clock seconds while
     // --fixed-fps advances the simulation as fast as the host allows. The gate
-    // in FirstFlightSmokeValidation.psm1 asserts
+    // in the smoke report contract (rebuild/tools/first_flight.py) asserts
     // `level100MessagePlaybackAvailable` IMPLIES `level100PlayingMessageId`,
     // and those two are not the same kind of fact: the first is the
     // deterministic Core message schedule, the second is whichever clip the

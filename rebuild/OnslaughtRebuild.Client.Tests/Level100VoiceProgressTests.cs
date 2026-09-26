@@ -19,7 +19,8 @@ namespace OnslaughtRebuild.Client.Tests;
 public sealed class Level100VoiceProgressTests
 {
     // The ordered IDs Core requests during the smoke window, as pinned by
-    // FirstFlightSmokeValidation.psm1 for level100DeliveredMessageIds.
+    // the smoke report contract (rebuild/tools/first_flight.py) for
+    // level100DeliveredMessageIds.
     private static readonly int[] SmokeRequestedMessageIds =
     [
         292_562, 293_386, 296_682, -1_575_499_396, -257_967_449, 82_987_417,

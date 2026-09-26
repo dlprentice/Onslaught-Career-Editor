@@ -197,7 +197,7 @@ internal sealed class Level100TerrainAppearanceAsset
     // against retail's own frame. Selected by the ONSLAUGHT_TERRAIN_PROBE
     // environment variable; unset (the shipping path) leaves the shader byte
     // for byte as above. Captures taken with it set are stamped 'probe' by
-    // Capture-Frontend.ps1 because the working tree is dirty, which is the
+    // the capture launcher because the working tree is dirty, which is the
     // intended and correct outcome - none of these frames describe the build.
     private static readonly Dictionary<string, string> s_probeTails = new(StringComparer.Ordinal)
     {

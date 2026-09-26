@@ -21,8 +21,8 @@ The retained WinUI default is `npm run test:winui`. The full legacy AppCore suit
 WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated. The unused
 evaluation VM was retired; no Windows host is provisioned here. The Windows entries
 below require a separately provided Windows validation host, not a Linux prerequisite
-or an instruction to recreate the VM. Historical rebuild launchers use explicit `:windows` aliases
-and pin the matching 4.8 dev6 engine manifest and managed SDK. Archive/manifest
+or an instruction to recreate the VM. The rebuild's Windows PowerShell launchers were retired on
+2026-09-26; its only launcher is the Linux one. Archive/manifest
 verification on Linux does not establish Windows runtime behavior.
 No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
 run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
@@ -40,11 +40,11 @@ are not replaced by the focused portable results below.
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
-| Rebuild, the whole lane | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
-| Rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle. The larger `npm run test:rebuild` aggregate adds Windows-only Godot/capture gates and needs a Windows host. |
+| Rebuild, the whole lane | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, the ferry-landing sweep, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
+| Rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle, and `check:rebuild` runs both. |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
-| Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
+| Frontend page drawing | `npm run capture:rebuild-godot -- --plan mainmenu` (or `startup`, `gameplay`, `options`) draws through `godot-offscreen`, stamps provenance, checks the shots and scores them with `tools/score_frontend_capture.py` into `capture-status.json` (`PASS`, `FAIL`, `UNSCORED` or `SUSPECT`); capture success alone is not parity. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
 | Campaign ledger / generation TSVs | The externally pinned frozen bootstrap in `current_re_authority.verify`; a generation number, matching ledgers, self-derived pins, integrity-only success, or candidate reducer is not authority |
