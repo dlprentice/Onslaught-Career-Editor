@@ -235,13 +235,13 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertNotIn("--output",call["args"]);self.assertIsNone(call["lock"])
         fixture=Path(next(a.split("=",1)[1] for a in call["args"] if a.startswith("--fixture=")))
         self.assertNotEqual(fixture,self.fixture);self.assertEqual(self.fixture.read_bytes(),fixture.read_bytes())
-        # Beside another GPU job: its own hidden output and a lock of its own inside its output directory.
+        # Beside a job on the NVIDIA card: its own hidden output, queued on the lanes' shared iGPU lock.
         with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
             code=host.companion_main(["capture","--beside-gpu-jobs","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)])
         self.assertEqual(0,code)
         beside=[call for call in self.calls_read() if call["tool"]=="godot-offscreen"][-1]
         self.assertEqual("--output",beside["args"][0]);self.assertRegex(beside["args"][1],r"^COMPANION-[A-Za-z0-9-]+$")
-        self.assertTrue(beside["lock"].endswith("/companion-gpu.lock"));self.assertNotEqual(beside["lock"],"/var/tmp/godot-gpu.lock")
+        self.assertEqual("/var/tmp/godot-igpu.lock",beside["lock"])
         with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(2,host.companion_main(["capture","--sizes","big","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)]))
             for script in ("/abs/Capture.cs","Development/Missing.cs","../Capture.cs"):

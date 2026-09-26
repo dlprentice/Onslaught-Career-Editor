@@ -33,6 +33,9 @@ EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
 # The companion is C# built in code: no GDScript, saved resources or editor-authored scenes.
 EDITOR_ONLY_SUFFIXES = {".gd", ".tres", ".res", ".scn", ".gdshader"}
 DEVELOPMENT_NAMESPACES = (b"OnslaughtToolkit.Companion.Tests", b"OnslaughtToolkit.Companion.Development")
+# The lock the lanes share for jobs that render on the laptop's Intel iGPU (the rebuild lane's A/B runs use it
+# too); the NVIDIA card keeps godot-offscreen's default lock.
+IGPU_LOCK = "/var/tmp/godot-igpu.lock"
 # The eight bytes every PNG file starts with, written as numbers: this tool checks an icon, it embeds no image.
 PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PLATFORMS = {
@@ -375,9 +378,9 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
                     extra: list[str] | None = None, beside: bool = False) -> Path:
     # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
     # the capture entry draws each screen through fixed-size SubViewports. With beside=True the run gets
-    # its own hidden output and a lock of its own, so it renders next to another GPU job instead of
-    # queuing behind it (David, 2026-09-26: the companion is light enough; its Compatibility renderer
-    # ran on the Intel iGPU through Mesa while a film rendered on the NVIDIA card).
+    # its own hidden output and queues on the Intel iGPU's lock instead of the NVIDIA one, so it renders
+    # next to a film on the NVIDIA card (David, 2026-09-26: the companion is light enough; its
+    # Compatibility renderer runs on the iGPU through Mesa) while never overlapping another iGPU job.
     offscreen = shutil.which(os.path.expanduser(offscreen_tool))
     if offscreen is None:
         raise RuntimeError(f"godot-offscreen was not found: {offscreen_tool}")
@@ -390,7 +393,7 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
     wrapper: list[str] = []
     if beside:
         wrapper = ["--output", "COMPANION-" + output.name.rsplit("-", 1)[-1].replace("_", "-")]
-        env = {**env, "GODOT_GPU_LOCK": str(output / "companion-gpu.lock")}
+        env = {**env, "GODOT_GPU_LOCK": IGPU_LOCK}
     run_logged([offscreen, *wrapper, "--path", str(project), "--qa", str(output / "offscreen"),
                 "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
                 "--script", "res://" + entry.as_posix(), "--",
@@ -418,7 +421,7 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
     parser.add_argument("--capture-arg", action="append", default=[], help="argument for the capture entry, e.g. --capture-arg=--steam-root=DIR")
     parser.add_argument("--beside-gpu-jobs", action="store_true",
-                        help="capture on its own hidden output and lock, next to another GPU job instead of queuing behind it")
+                        help="capture on its own hidden output, queued on the Intel iGPU's lock rather than the NVIDIA one")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
