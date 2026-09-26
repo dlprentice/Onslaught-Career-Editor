@@ -62,7 +62,7 @@ internal sealed record ColdStartStage(
 internal sealed class Level100ColdStartRun : IDisposable
 {
     /// <summary>
-    /// Frontend frame time. <c>rebuild/tools/Smoke-FirstFlight.ps1</c> launches
+    /// Frontend frame time. <c>rebuild/tools/first_flight.py smoke</c> launches
     /// the client with <c>--fixed-fps 60</c>, so this is the client's own
     /// frontend cadence.
     /// </summary>

@@ -65,7 +65,12 @@ catching up after the game closes.
 `npm run capture:companion-godot` renders every page and state at 1280×800 and
 1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
-library instead; that library is only read, and nothing is saved into it in that mode.
+library instead; that library is only read, and nothing is saved into it in that mode. Add
+`--beside-gpu-jobs` to render next to a job on the NVIDIA card instead of queuing behind the
+machine-wide GPU lock: the run gets its own hidden output and queues on the lanes' shared Intel
+GPU lock, `/var/tmp/godot-igpu.lock`. The companion's Compatibility renderer runs on the laptop's
+Intel GPU through Mesa, so it does not compete with a film rendering on the NVIDIA card, and it
+never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 
 ## What it does
 
@@ -140,7 +145,10 @@ Home makes three promises, and the code keeps them:
   displaced is not the one backed up, it is swapped back.
 - **Nothing is written while the game is running.** A write is refused while `BEA.exe`
   runs; on Linux that is a process Wine names `BEA.exe` (a tool that merely opens the file
-  does not count), a check not yet seen against a live game.
+  does not count). On 2026-09-26, with the Steam game running under Proton, the check found
+  exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
+  Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
+  `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Any earlier version can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first.
 

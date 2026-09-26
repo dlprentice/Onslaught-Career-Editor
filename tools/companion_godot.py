@@ -33,6 +33,9 @@ EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
 # The companion is C# built in code: no GDScript, saved resources or editor-authored scenes.
 EDITOR_ONLY_SUFFIXES = {".gd", ".tres", ".res", ".scn", ".gdshader"}
 DEVELOPMENT_NAMESPACES = (b"OnslaughtToolkit.Companion.Tests", b"OnslaughtToolkit.Companion.Development")
+# The lock the lanes share for jobs that render on the laptop's Intel iGPU (the rebuild lane's A/B runs use it
+# too); the NVIDIA card keeps godot-offscreen's default lock.
+IGPU_LOCK = "/var/tmp/godot-igpu.lock"
 # The eight bytes every PNG file starts with, written as numbers: this tool checks an icon, it embeds no image.
 PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PLATFORMS = {
@@ -372,9 +375,12 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
 
 def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: str, timeout: float | None,
                     env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs",
-                    extra: list[str] | None = None) -> Path:
+                    extra: list[str] | None = None, beside: bool = False) -> Path:
     # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
-    # the capture entry draws each screen through fixed-size SubViewports.
+    # the capture entry draws each screen through fixed-size SubViewports. With beside=True the run gets
+    # its own hidden output and queues on the Intel iGPU's lock instead of the NVIDIA one, so it renders
+    # next to a film on the NVIDIA card (David, 2026-09-26: the companion is light enough; its
+    # Compatibility renderer runs on the iGPU through Mesa) while never overlapping another iGPU job.
     offscreen = shutil.which(os.path.expanduser(offscreen_tool))
     if offscreen is None:
         raise RuntimeError(f"godot-offscreen was not found: {offscreen_tool}")
@@ -384,7 +390,11 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
     if entry.is_absolute() or ".." in entry.parts or entry.suffix != ".cs" or not (project / entry).is_file():
         raise RuntimeError("--capture-script must name an existing relative C# capture entry")
     captures = output / "captures"
-    run_logged([offscreen, "--path", str(project), "--qa", str(output / "offscreen"),
+    wrapper: list[str] = []
+    if beside:
+        wrapper = ["--output", "COMPANION-" + output.name.rsplit("-", 1)[-1].replace("_", "-")]
+        env = {**env, "GODOT_GPU_LOCK": IGPU_LOCK}
+    run_logged([offscreen, *wrapper, "--path", str(project), "--qa", str(output / "offscreen"),
                 "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
                 "--script", "res://" + entry.as_posix(), "--",
                 f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}", *(extra or [])],
@@ -410,6 +420,8 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--offscreen", default="~/.local/bin/godot-offscreen", help="shared hidden-output GPU runner")
     parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
     parser.add_argument("--capture-arg", action="append", default=[], help="argument for the capture entry, e.g. --capture-arg=--steam-root=DIR")
+    parser.add_argument("--beside-gpu-jobs", action="store_true",
+                        help="capture on its own hidden output, queued on the Intel iGPU's lock rather than the NVIDIA one")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
@@ -440,7 +452,7 @@ def companion_main(argv: list[str] | None = None) -> int:
             return 0
         if args.mode == "capture":
             capture_screens(project, copy_fixture(args.fixture, output), args.offscreen, args.sizes, args.timeout, env,
-                            output, args.capture_script, args.capture_arg)
+                            output, args.capture_script, args.capture_arg, beside=args.beside_gpu_jobs)
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)

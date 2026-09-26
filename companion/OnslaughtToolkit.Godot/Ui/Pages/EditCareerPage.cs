@@ -25,6 +25,7 @@ internal sealed class EditCareerPage : Page
     private readonly Label _intro;
     private readonly SaveChoice _saveChoice;
     private readonly ScrollContainer _scroll;
+    private readonly FileDetails _details;
     private Outcome<EditPlan> _plan = Outcome<EditPlan>.Refusal("No changes yet.");
 
     internal EditCareerPage(AppServices app) : base("edit", "Edit career", "edit")
@@ -66,14 +67,7 @@ internal sealed class EditCareerPage : Page
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");
         ChangesCard = summary;
         _changes = summaryBody.Add(Build.Column(4));
-        Button details = summaryBody.Add(Build.Button("Show exactly what changes in the file", "Link"));
-        Details = summaryBody.Add(Build.Detail("", bbcode: true));
-        Details.Visible = false;
-        details.Pressed += () =>
-        {
-            Details.Visible = !Details.Visible;
-            details.Text = Details.Visible ? "Hide the file details" : "Show exactly what changes in the file";
-        };
+        _details = new FileDetails(summaryBody);
         (ResultPanel, Result) = Build.Notice("");
         ResultPanel.Visible = false;
         summaryBody.Add(ResultPanel);
@@ -121,7 +115,7 @@ internal sealed class EditCareerPage : Page
     internal Button UndoAll => Bar.Undo;
     internal PanelContainer ChangesCard { get; }
     internal Button OpenResult { get; }
-    internal RichTextLabel Details { get; }
+    internal RichTextLabel Details => _details.Panel;
     internal PanelContainer ResultPanel { get; }
     internal Label Result { get; }
     internal FileDialog OutputDialog { get; }
@@ -230,7 +224,7 @@ internal sealed class EditCareerPage : Page
         {
             _changes.Add(Build.Text(_plan.Message == "No changes yet." ? "No changes yet. Change a count or a Goodie above." : _plan.Message,
                 _plan.Message == "No changes yet." ? "Muted" : "Bad"));
-            Details.Text = "";
+            _details.Show(null);
         }
         else
         {
@@ -241,9 +235,9 @@ internal sealed class EditCareerPage : Page
                 string names = group.Count() <= 3 ? string.Join(", ", group.Select(edit => GoodieName(edit.Index))) : "";
                 _changes.Add(Build.Text($"•  {Build.Count(group.Count(), "Goodie")} {Verb(group.Key)}{(names.Length > 0 ? $": {names}" : "")}", "Strong"));
             }
-            Details.Text = $"[color=#{Palette.Data.ToHtml(false)}]{plan.ChangedBytes} bytes change;[/color] the file keeps its length " +
+            _details.Show($"[color=#{Palette.Data.ToHtml(false)}]{plan.ChangedBytes} bytes change;[/color] the file keeps its length " +
                 "and every other byte.\n[code]" + string.Join("   ", plan.Changes.Select(change =>
-                    $"0x{change.Offset:X4} {change.Before:X2}→{change.After:X2}")) + "[/code]";
+                    $"0x{change.Offset:X4} {change.Before:X2}→{change.After:X2}")) + "[/code]");
         }
         UpdateActions();
     }

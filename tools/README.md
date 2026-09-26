@@ -105,8 +105,8 @@ fidelity.
   frame per region. It refuses mismatched sizes rather than resampling.
 - `pair_gameplay_capture.py` and `score_frontend_capture.py` pair whole capture
   runs against the retail reference by offset. `score_frontend_capture.py` is a
-  **gate**: `rebuild/tools/Capture-Frontend.ps1` folds its verdict into `Status`,
-  so a frontend regression fails the capture. Its thresholds live in
+  **gate**: `rebuild/tools/first_flight.py capture` folds its verdict into the
+  capture's `status`, so a frontend regression fails the capture. Its thresholds live in
   `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
   parity claims. The plan stores each measured value plus the single
   `marginPp: 2.0` regression allowance used to derive its ceiling.

@@ -73,7 +73,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--rebuild-manifest", required=True, type=Path,
-                    help="capture-manifest.json from Capture-Frontend.ps1 -Plan gameplay")
+                    help="capture-manifest.json from first_flight.py capture --plan gameplay")
     ap.add_argument("--retail-root", type=Path, default=DEFAULT_RETAIL_ROOT)
     ap.add_argument("--runs", default=",".join(DEFAULT_RUNS))
     ap.add_argument("--regions", type=Path,

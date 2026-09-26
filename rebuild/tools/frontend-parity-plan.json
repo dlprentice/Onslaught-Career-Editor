@@ -2,7 +2,7 @@
   "_doc": [
     "Which frontend pages the capture gate scores against retail, and what each",
     "scored when it was last measured. Consumed by",
-    "tools/score_frontend_capture.py, which Capture-Frontend.ps1 calls.",
+    "tools/score_frontend_capture.py, which first_flight.py capture calls.",
     "",
     "`measured` is the FACT. The gate's ceiling is DERIVED from it as",
     "min(measured + marginPp, 100) at load time and is deliberately NOT stored",

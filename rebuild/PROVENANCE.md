@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-26 (the separate World 110 construction stage retired in favour of the one construction owner; 2026-09-25 GDScript-era provenance notes retired with the return to C#; earlier claims retain their dated evidence).
+Last updated: 2026-09-26 (World 110 on the one construction owner; earlier claims keep their dated evidence).
 The 2026-08-31 world-110 admissions and the separate construction stage built
 on them were retired on 2026-09-26, when World 110 moved onto the one
 construction owner; the standalone ordered `CPlayer::AssignBattleEngine`
@@ -561,8 +561,11 @@ poses. The current Level 100 walker, jet, and cockpit callers supply integral
 frames, so the separate `0x004B24D0` adjuster/round/wrap path remains explicitly
 unmodeled rather than being guessed into this API.
 
-Steam `Math__InterpolateVec4ByRatio` at `0x00577EAA` separately establishes a
-shortest-sign, sine-weighted spherical interpolation law for unit four-vectors.
+`c_D3DXQuaternionSlerp` at `0x00577EAA` (pristine `74154bfa…`; linked D3DX
+library code that the RE lane matched byte for byte to `d3dx9.lib` on
+2026-09-26, formerly labelled `Math__InterpolateVec4ByRatio`) separately
+establishes a shortest-sign, sine-weighted spherical interpolation law for unit
+quaternions.
 The presentation-only proper-rotation path now uses that law, retaining its
 near-parallel normalized-linear and non-orthonormal componentwise fallbacks.
 The static body does not yet prove that this exact retail helper owned every
@@ -843,10 +846,12 @@ wiring remain outside Core; no runtime or console equivalence is claimed.
 Deletion-aware reader feedback is now its own deterministic owner. Pristine PC
 `CGenericActiveReader__SetReader` `[0x00401000,0x00401034)` (52 bytes, SHA-256
 `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)
-and `CMonitor__Shutdown` `[0x004BAC40,0x004BACA7)` (103 bytes, SHA-256
-`3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf`)
-establish same-target no-op, detach/publish/attach rebind order, newest-first
-reverse membership, direct reader-cell zeroing, and clear-after-walk shutdown.
+and `CMonitor__dtor_base` `[0x004BAC40,0x004BACA7)` (103 bytes, SHA-256
+`3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf`; the
+RE lane's second label cohort renamed it from `CMonitor__Shutdown` on
+2026-09-26) establish same-target no-op, detach/publish/attach rebind order,
+newest-first reverse membership, direct reader-cell zeroing, and
+clear-after-walk teardown.
 The 159-byte PC UnitAI destructor independently orders outbound detachments as
 `+0x28`, `+0x24`, `+0x0C` before invalidating inbound readers. PC demo closes
 the same lifecycle, Xbox closes target-death behavior, and all three PS2

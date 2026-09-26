@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-25 (C# only, by David's direction; lane map updated)
+Last updated: 2026-09-26 (companion lane paused; C# only by David's 2026-09-25 direction)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -58,8 +58,8 @@ into it only when its own checks pass. The 2026-09-25 baseline and its logs are 
 | Lane | Branch | Checkout | State on 2026-09-25 |
 | --- | --- | --- | --- |
 | Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Answers the rebuild's and companion's retail questions from pristine bytes, the pinned GPL source and original-code runs; contracts are in `reverse-engineering/game-mechanics/`. Every Level 100 and World 110 question so far is answered or recorded as an open question with its falsifier; the companion has none open. Next: the rest of the RE record audit (`PROGRAM.md`), starting with the queued label cohort. Runs no Godot. |
-| Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | C# only and built in code: no GDScript or editor-authored scenes. `npm run check:rebuild` runs its whole gate (build, Core, Client, the Godot checks, the smoke and both tapes' replays). Level 100 runs in the retail load order with the RE lane's contracts for its units' callbacks, weapons, aircraft, the U-17's flight, waypoint walks, scripts and pre-run; the cold-start route and its recorded tape win it and replay deterministically. World 110 is built in Core from retail data through its start state, with Level 100's surviving base world carried in. Next: World 110's landing craft (flight and landing), World 110 in the Godot host, the friendly turrets and auto-aim, then the final capture against the September 25 baseline. |
-| Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Rebuilt around players on 2026-09-26 at David's direction and merged into `main`; work continues on the branch. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. `npm test`, renders of every screen at two sizes and both exports pass (evidence in the lane's commit messages). Patching the installed `BEA.exe` is a later phase. Windows execution (the portable write path has run only on Linux), a human click-through and listening to the audio remain. |
+| Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | C# only and built in code: no GDScript or editor-authored scenes. `npm run check:rebuild` runs its whole gate (build, Core with its ferry-landing sweep, Client, the Godot checks, the smoke and both tapes' replays). Level 100 runs in the retail load order with the RE lane's contracts for its units' callbacks, weapons, aircraft, the U-17's flight, waypoint walks, scripts and pre-run; the cold-start route and its recorded tape win it and replay deterministically. World 110 is built in Core from retail data through its start state, with Level 100's surviving base world carried in. The final capture matches the September 25 baseline except differences traced to evidence ([VALIDATION.md](VALIDATION.md#return-to-all-code-c--september-25)). Next: World 110's landing craft (flight and landing), World 110 in the Godot host, the friendly turrets and auto-aim. |
+| Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Rebuilt around players on 2026-09-26 at David's direction and merged into `main`; David closed that goal the same day and paused the lane, which resumes on the branch when he sets new requirements. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. `npm test`, renders of every screen at two sizes and both exports pass (evidence in the lane's commit messages). Patching the installed `BEA.exe` is a later phase. Windows execution (the portable write path has run only on Linux), a human click-through and listening to the audio remain. |
 
 To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then `git pull` and
 `git merge main`. Keep Godot headless unless David has released the desktop.
@@ -71,7 +71,9 @@ To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Care
   `npm run check:rebuild`, the whole gate in one command (`-- --only core,client` runs a subset; VALIDATION.md
   lists the individual commands).
 - Companion, in `$REPO/.worktrees/companion-csharp-20260925`: `npm run build` and `npm test`;
-  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen`; `npm run dev` opens a window.
+  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen` (add
+  `-- --beside-gpu-jobs` to render beside an NVIDIA job, queued on the shared iGPU lock); `npm run dev`
+  opens a window.
 
 There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
 draft. Unique ignored data from the retired companion and remote-review worktrees is in

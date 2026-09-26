@@ -201,9 +201,8 @@ The former Windows defaults remain `test:winui`, `dev:winui` and `build:winui`;
 `test:appcore`, `test:ui`, `test:cli` and `release:winui-zip` also retain Windows
 dependencies. `tools/require_windows_host.py` makes Windows-only scripts fail fast
 on Linux; they are not Linux prerequisites.
-Historical Windows rebuild launchers have explicit `:windows` aliases and now pin
-the matching 4.8 dev6 engine/SDK. Their archive manifest was verified on Linux;
-Windows execution remains unverified. This phase does not activate the VM.
+The rebuild's Windows PowerShell launchers were retired on 2026-09-26; its only
+launcher is the Linux one. This phase does not activate the VM.
 
 ## Data and mutation safety
 

@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (scripts on their INIT_SCRIPT events; the level's pre-run and the clocks; round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (the retail load order, the pre-run, INIT_SCRIPT events and round events; earlier entries keep their dates)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in

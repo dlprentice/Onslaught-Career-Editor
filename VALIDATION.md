@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (one owner for the Won career update; the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the rebuild's final capture recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -21,8 +21,8 @@ The retained WinUI default is `npm run test:winui`. The full legacy AppCore suit
 WinUI, Windows-targeted CLI and ZIP procedures remain Windows-gated. The unused
 evaluation VM was retired; no Windows host is provisioned here. The Windows entries
 below require a separately provided Windows validation host, not a Linux prerequisite
-or an instruction to recreate the VM. Historical rebuild launchers use explicit `:windows` aliases
-and pin the matching 4.8 dev6 engine manifest and managed SDK. Archive/manifest
+or an instruction to recreate the VM. The rebuild's Windows PowerShell launchers were retired on
+2026-09-26; its only launcher is the Linux one. Archive/manifest
 verification on Linux does not establish Windows runtime behavior.
 No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
 run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
@@ -40,11 +40,11 @@ are not replaced by the focused portable results below.
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
-| Rebuild, the whole lane | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
-| Rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle. The larger `npm run test:rebuild` aggregate adds Windows-only Godot/capture gates and needs a Windows host. |
+| Rebuild, the whole lane | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, the ferry-landing sweep, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
+| Rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle, and `check:rebuild` runs both. |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
-| Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
+| Frontend page drawing | `npm run capture:rebuild-godot -- --plan mainmenu` (or `startup`, `gameplay`, `options`) draws through `godot-offscreen`, stamps provenance, checks the shots and scores them with `tools/score_frontend_capture.py` into `capture-status.json` (`PASS`, `FAIL`, `UNSCORED` or `SUSPECT`); capture success alone is not parity. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
 | Campaign ledger / generation TSVs | The externally pinned frozen bootstrap in `current_re_authority.verify`; a generation number, matching ledgers, self-derived pins, integrity-only success, or candidate reducer is not authority |
@@ -1280,20 +1280,27 @@ Executed at the restored state:
   decoded bytes of all 51 actual textures.
 
 Capture. godot-offscreen Movie Maker at 60 fps and 1280x720 recorded startup,
-menus, Level 100, a retry and the return to the main menu, exactly as the
+Level 100, a retry and the return to the main menu, exactly as the
 September 25 baseline (`migration-baseline-20260925/run-2`, from `d5e002d0`).
 The restored build recorded the identical tape and state, and its WAV is
 byte-identical to the baseline's (`932b25a9…`). All 15,334 frames are identical
-to a capture of `b0b9c5e7` itself. Against the baseline, frames 0–13,179
-(startup, menus and the whole first Level 100 session) are identical; the
-2,154 frames from 13,180 differ for two evidenced reasons:
-- **Pines after the retry (frames 13,180–15,330).** The baseline shows no pine
-  trees in the retry session, although the first session draws them and a
-  retry builds a fresh world. A capture of `29b40721` (September 19 C# with the
-  `29727e2b` scene-imported world) reproduces the loss and matches the
-  baseline on 15,330 frames, so the scene import introduced it; the all-code
-  world builds its pines on every construction. This restores the earlier
-  behavior rather than inventing one.
+to a capture of `b0b9c5e7` itself. Against the baseline, frames 0–13,179 are
+identical: the startup movies and logos (0–5,748), Level 100's loading screen
+(5,749–5,750) and its intro movie (5,751–13,179). The smoke confirms each menu
+as it arrives, so no menu is drawn on the way in. The 2,154 frames from 13,180
+differ for two evidenced reasons:
+- **Pines (frames 13,180–15,330).** Frames 13,180–15,327 are the Level 100
+  session, one tick per frame; 15,328–15,329 are the retry's loading screen
+  with the HUD drawn over it, and 15,330 is the retry's first frame. The
+  baseline draws no pine trees in the session or the retry. A capture of
+  `29b40721` (September 19 C# with the `29727e2b` scene-imported world)
+  reproduces the loss and matches the baseline on 15,330 frames, every session
+  frame included, so the scene conversion introduced it; the all-code world
+  builds its pines on every construction. This restores the earlier behavior
+  rather than inventing one. The same conversion also moved 3–10 pixels of the
+  HUD's central reticle by 1–2 of 255 levels, which is the loading screen's
+  only difference. (Corrected September 26: this paragraph first placed the
+  session in frames 0–13,179 and the loss after a retry.)
 - **The last three frames (15,331–15,333).** They are drawn after the smoke
   completes: `RequestQuit` freezes every child node and the root keeps
   rendering only while real audio retires, which is why headless runs (dummy
@@ -1314,6 +1321,28 @@ Other differences: none. Logs: `local-data/test-runs/csharp-allcode-lane-2026092
 `csharp-pre-b0b9c5e7/`, `csharp-scenes-29b40721/`, `order-experiment-20260925-223458/`,
 `feback-trace-20260925-222356/`
 and the worktree's `local-data/test-runs/csharp-allcode-20260925-215316/`.
+
+**Final capture, September 26.** `main` at `455ed6f4`, from a frozen checkout, with the command above
+(`final-capture-455ed6f4/capture.sh`): the smoke completed and returned to the main menu, the Godot log
+has no error, and the WAV is again byte-identical to the baseline's (`932b25a9…`; integrated −13.0 LUFS,
+true peak +0.2 dBFS). Frames 0–13,179 and the three main-menu frames match the capture above. Frames
+13,180–15,330 differ from it for two evidenced reasons, besides the pines and reticle rounding they
+already had against the baseline:
+- **The terrain's stage-3 detail matrix** ([Terrain detail rotation](#terrain-detail-rotation--september-26))
+  changes every frame that draws terrain. Two no-intro smoke captures of the same checkout on the Intel
+  iGPU (Mesa, `gl_compatibility`), one with the matrix as committed and one with only the old
+  quarter-scale matrix restored, reach the same state and tape and differ on exactly the frames that draw
+  terrain; their loading screens and menus are identical. Their gameplay frames are bit-identical to the
+  NVIDIA captures: the committed run to this capture on all 2,151, and the old-matrix run to the capture
+  above on its first 40 (13,180–13,219). Those 40 frames therefore differ by the matrix alone, and the
+  shader compiles and draws on both renderers.
+- **The simulation's September 26 contracts** (the sections above: the pre-run, the retail load order,
+  waypoint walks, rounds, the U-17's flight and the planes' retreat), which moved the smoke's state from
+  `53c1cc64…` to `79fc338c…`. The old-matrix run differs from the capture above only on 13,220–15,329:
+  first where the U-17 enters the frame in a different pose, then in the units, rounds and the HUD's
+  scanner and crosshair.
+
+Logs and comparisons: `local-data/test-runs/final-capture-455ed6f4/` (the Intel pair in `ab-rotation/igpu/`).
 
 ### Lane baseline — September 25
 

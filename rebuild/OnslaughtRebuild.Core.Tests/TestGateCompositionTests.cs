@@ -2,6 +2,7 @@
 
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using OnslaughtRebuild.Core;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace OnslaughtRebuild.Core.Tests;
 /// <summary>
 /// Guards PROGRAM P9's Core-gate split. The default command runs the full Core
 /// assembly except the expensive ferry class; an explicit command retains that
-/// class's unchanged forty-run oracle; and the broad rebuild gate chains both.
+/// class's unchanged forty-run oracle; and the lane's one gate runs both.
 /// </summary>
 public class TestGateCompositionTests
 {
@@ -78,30 +79,26 @@ public class TestGateCompositionTests
     }
 
     /// <summary>
-    /// The opt-in sweep is not orphaned: the broad rebuild gate runs it after
-    /// the default Core gate and before client/adaptor checks.
+    /// The opt-in sweep is not orphaned: the lane's one gate,
+    /// <c>npm run check:rebuild</c> (<c>rebuild/tools/rebuild_gate.py</c>),
+    /// runs it after the default Core suite and before the Client suite.
     /// </summary>
     [Fact]
-    public void TheCrossCuttingRebuildGateStillChainsTheFerrySweep()
+    public void TheRebuildGateRunsTheFerrySweepBetweenCoreAndClient()
     {
-        string rebuild = ReadScript("test:rebuild");
-        int core = rebuild.IndexOf(
-            "npm run test:rebuild-core",
-            StringComparison.Ordinal);
-        int sweep = rebuild.IndexOf(
-            "npm run test:rebuild-ferry-sweep",
-            StringComparison.Ordinal);
-        int client = rebuild.IndexOf(
-            "npm run test:rebuild-client",
-            StringComparison.Ordinal);
+        Assert.Contains("rebuild/tools/rebuild_gate.py", ReadScript("check:rebuild"), StringComparison.Ordinal);
+        string gate = File.ReadAllText(Path.Combine(FindRepoRoot(), "rebuild", "tools", "rebuild_gate.py"));
+        string steps = gate.Split('\n').Single(line => line.StartsWith("STEPS = (", StringComparison.Ordinal));
+        string[] names = Regex.Matches(steps, "\"([a-z]+)\"").Select(match => match.Groups[1].Value).ToArray();
+        int core = Array.IndexOf(names, "core");
+        int ferry = Array.IndexOf(names, "ferry");
+        int client = Array.IndexOf(names, "client");
 
-        Assert.True(core >= 0, "test:rebuild no longer chains test:rebuild-core.");
-        Assert.True(
-            sweep > core,
-            "test:rebuild must chain the ferry sweep after the default Core gate.");
-        Assert.True(
-            client > sweep,
-            "test:rebuild must chain client/adaptor checks after the ferry sweep.");
+        Assert.True(core >= 0, "check:rebuild no longer runs the Core suite.");
+        Assert.True(ferry > core, "check:rebuild must run the ferry sweep after the default Core suite.");
+        Assert.True(client > ferry, "check:rebuild must run the Client suite after the ferry sweep.");
+        Assert.Contains("step(\"ferry\", [\"npm\", \"run\", \"test:rebuild-ferry-sweep\"])", gate,
+            StringComparison.Ordinal);
     }
 
     private static string ReadSingleFilter(string script)

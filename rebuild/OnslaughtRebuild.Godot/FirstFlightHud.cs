@@ -1981,11 +1981,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// none of them carries anything that could serve as coverage.
     ///
     /// Retail has nowhere to derive coverage from either. Every
-    /// D3DXCreateTextureFromFileEx call site passes ColorKey=0, so the binary's
-    /// only colour-key routine (0x00581E1C) is inert; and its luminance code is
-    /// all L8/A8L8/A4L4/L16 surface-format packing, none of which writes
-    /// luminance into alpha. There is no luminance-keying and no colour-keying in
-    /// the released engine.
+    /// D3DXCreateTextureFromFileEx call site passes ColorKey=0, so the only
+    /// routine that applies a colour key, the linked D3DX
+    /// D3DXTex::CCodec::ColorKey (0x00581E1C), is inert; and the binary's
+    /// luminance code is all L8/A8L8/A4L4/L16 surface-format packing, none of
+    /// which writes luminance into alpha. There is no luminance-keying and no
+    /// colour-keying in the released engine.
     ///
     /// And retail selects FOUR blends, not the three this comment used to
     /// claim. Across 6,429 exported decompilations, SRCBLEND/DESTBLEND take
