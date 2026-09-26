@@ -6694,3 +6694,48 @@ first 190-row comment seal was never applied live and is retained under
 The current comment plan still requires fresh preservation/rehearsal and live
 promotion. Private commands/results and independent check are in that owner's
 parent; these checks do not validate prototypes or retail runtime behavior.
+
+## RE library evidence comments — September 26
+
+The `library-verified-20260926` cohort changes exactly 191 plate comments and
+verification tag sets. No function name, prototype, body or instruction changes.
+All 8,140 non-target function rows are unchanged. The six protected analysis
+exports are byte-identical; all nine live exports equal the separately reopened
+rehearsal. This verifies the declared annotation change, not full library ABI,
+game semantics, Godot behavior or Windows/device acceptance.
+
+Private receipts and exact headless commands:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-verified/`.
+The replacement seal preserves the rejected first seal under `rejected-v1/`.
+Root reproduced the `_strdup`/`_wcsdup` mismatch before resealing; independent
+LLVM/GNU checking covers all 191 comments, 1,542 masked-byte code comparisons,
+118 data sections, 14 layout assertions, 15 folded aliases and three import
+thunks. Data-reference traversal reached a fixed point; no conflicting reference
+or under-corroborated relocation match remains in that admitted set.
+
+Executed after the corrected seal:
+
+- `python -B .../prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+  `compare_exports.py rehearsal-post`: PASS; fresh PRE matches live, prior cold
+  POST and an independently restored/read-only-opened copy.
+- `python -B .../negative_controls.py`: five intended refusals, no writes or
+  commits, and unchanged project inventories.
+- Independent read-only review of decoded comment payloads, exact rows,
+  selected object evidence, rehearsal exports and refusal receipts: bounded GO;
+  root reproduced the consequential byte and matcher claims.
+- `python -B .../apply_live.py`: dry/apply/readback PASS; nine live/rehearsal
+  exports equal. Manifest SHA-256
+  `b9b307b6fc50cf53a65676f82c41da1919a0f7e65e8504047c4e91b9fcda6495`;
+  final live-pinned spec
+  `55cdfd664813ee39b1a5623c1bff6950f391cde9e5480160d112331aa6ef7c80`.
+- `python -B .../finish.py`: independent Archive A POST copied, restored elsewhere
+  and opened read-only; live/cold/restored byte equality PASS. Measured working
+  `db.18664`, inventory
+  `55b2bffa9d76a3eeea15acd0f50ae94a774539bb156bc21141cb0ede02761025`.
+  Tracked checkpoint inventory remains `745c00ad…`; no checkpoint refresh.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests`: 93 tests PASS.
+- `python -B tools/public_allowlist_safety_check.py --self-test`,
+  `npm run test:docs`, `npm run test:safety`, `git diff --check`: PASS.
+
+The canonical mutable-owner pointer and recovery README were updated only after
+POST restoration. The broader game-name/prototype/document audit remains open.

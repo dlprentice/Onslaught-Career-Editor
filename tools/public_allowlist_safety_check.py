@@ -213,7 +213,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (4,178/7,871 decoded bytes), reviewed with the same exact-content boundary.
 # NvTriStrip identity cohort: 71 current/72 proposed analytic comments
 # (38,389/80,580 decoded bytes), reviewed with the same exact-content boundary.
+# Verified library comments: 191 current/191 proposed authored comments
+# (133,185/175,548 decoded bytes); identifiers/provenance, no program/library bytes.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/library-verified-20260926.manifest.tsv":
+        "b9b307b6fc50cf53a65676f82c41da1919a0f7e65e8504047c4e91b9fcda6495",
     "tools/cohort-specs/library-nvtristrip-20260926.manifest.tsv":
         "183c67901469967fe26220a1d3701925911e05d71aef55d23482de39bb96540d",
     "tools/cohort-specs/label-audit-3-20260926.manifest.tsv":

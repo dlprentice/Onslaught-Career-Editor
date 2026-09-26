@@ -304,6 +304,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "library-crt-20260926",
         "label-audit-3-20260926",
         "library-nvtristrip-20260926",
+        "library-verified-20260926",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

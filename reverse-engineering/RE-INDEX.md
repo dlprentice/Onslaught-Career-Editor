@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (NvTriStrip identities and contracts; broader audit unfinished)
+Last updated: 2026-09-26 (library comments re-grounded; game input/startup audit next; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -20,6 +20,12 @@ now identifies 72 linked-library/STL functions, including 57 wrongly attributed
 to CFastVB. Fifteen contracts and the PrimitiveGroup constructor note record
 retail/reference differences and corrected return meanings. These are structural
 identities; unchanged prototypes and complete runtime behavior remain unverified.
+The [library-comment correction](ghidra/README.md#re-audit-verified-library-comments--september-26)
+re-grounded 191 evidence comments and tag sets without renaming functions or
+changing prototypes or code. The live exports match the isolated rehearsal and
+independently restored Archive A recovery passed. Controller input and startup
+are the next focused game-code audit; library identity coverage does not imply
+semantic coverage of the game's own code.
 
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or
