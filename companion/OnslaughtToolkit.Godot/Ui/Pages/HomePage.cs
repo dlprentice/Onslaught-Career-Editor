@@ -107,12 +107,12 @@ internal sealed class HomePage : Page
             ExecutableState.Missing => ("●  No BEA.exe was found.", "Bad"),
             _ => ("●  BEA.exe could not be read.", "Bad"),
         };
-        List<string> inventory = [$"{folder.Careers.Count} career{(folder.Careers.Count == 1 ? "" : "s")}"];
+        List<string> inventory = [Build.Count(folder.Careers.Count, "career")];
         if (folder.Options is not null) inventory.Add("options file");
         if (folder.Languages.Count > 0) inventory.Add("text: " + string.Join(", ", folder.Languages));
-        if (folder.MusicTracks > 0) inventory.Add($"{folder.MusicTracks} music track{(folder.MusicTracks == 1 ? "" : "s")}");
-        if (folder.VoiceLines > 0) inventory.Add($"{folder.VoiceLines:N0} voice lines");
-        if (folder.Cutscenes > 0) inventory.Add($"{folder.Cutscenes} cutscenes");
+        if (folder.MusicTracks > 0) inventory.Add(Build.Count(folder.MusicTracks, "music track"));
+        if (folder.VoiceLines > 0) inventory.Add(Build.Count(folder.VoiceLines, "voice line"));
+        if (folder.Cutscenes > 0) inventory.Add(Build.Count(folder.Cutscenes, "cutscene"));
         _inventory.Text = string.Join("  ·  ", inventory);
 
         _careersCard.Visible = _optionsCard.Visible = true;

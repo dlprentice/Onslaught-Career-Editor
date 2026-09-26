@@ -113,9 +113,10 @@ internal sealed class OverviewPage : Page
         foreach (MissionRecord mission in career.Missions.Where(record => record.Used))
         {
             string name = text?.LevelName(mission.World) is string display && display.IndexOf(" - ", StringComparison.Ordinal) is int dash && dash > 0
-                ? display[(dash + 3)..] : "";
+                ? display[(dash + 3)..] : "—";
             TreeItem row = Build.TableRow(Missions, root, mission.World.ToString(), name, mission.Completed ? "Complete" : "Open",
                 mission.RankLetter ?? "?", mission.Attempts.ToString("N0"));
+            if (name == "—") row.SetCustomColor(1, Palette.Faint);
             row.SetCustomColor(2, mission.Completed ? Palette.Good : Palette.Muted);
             row.SetCustomColor(3, Palette.Accent);
         }

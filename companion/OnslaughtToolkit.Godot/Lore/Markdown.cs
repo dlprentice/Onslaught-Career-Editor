@@ -90,13 +90,19 @@ public static partial class Markdown
             }
             if (trimmed.StartsWith('>'))
             {
-                // Quoted memos and interviews keep their line breaks (headers, signatures).
-                List<string> quote = [];
+                // A bare ">" separates quoted paragraphs. A memo header, a signature or an attribution keeps
+                // its line breaks; wrapped prose is joined as Markdown does.
+                List<List<string>> quote = [[]];
                 for (; index < lines.Length && lines[index].Trim().StartsWith('>'); index++)
-                    quote.Add(lines[index].Trim()[1..].Trim());
+                {
+                    string text = lines[index].Trim()[1..].Trim();
+                    if (text.Length > 0) quote[^1].Add(text);
+                    else if (quote[^1].Count > 0) quote.Add([]);
+                }
                 index--;
-                Emit($"[indent][color=#{style.Quote}]{string.Join("\n", quote.Select(text => Inline(text, link, style)))}[/color][/indent]",
-                    Plain(string.Join(" ", quote)));
+                string body = string.Join("\n", quote.Where(part => part.Count > 0).Select(part => LineStructured(part)
+                    ? string.Join("\n", part.Select(text => Inline(text, link, style))) : Inline(string.Join(" ", part), link, style)));
+                Emit($"[indent][color=#{style.Quote}]{body}[/color][/indent]", Plain(string.Join(" ", quote.SelectMany(part => part))));
                 continue;
             }
             if (ListItem().IsMatch(line))
@@ -154,6 +160,11 @@ public static partial class Markdown
         return slug.ToString();
     }
 
+    private static bool LineStructured(List<string> lines) =>
+        lines.Skip(1).Select((line, previous) => (Line: line, Previous: lines[previous])).All(pair =>
+            pair.Line.StartsWith("**", StringComparison.Ordinal) || pair.Line.StartsWith('—') || pair.Line.StartsWith('–') ||
+            Plain(pair.Previous).Length < 48);
+
     private static string List(List<(int Depth, bool Ordered, string Text)> items, Func<string, string?> link, LoreStyle style)
     {
         StringBuilder list = new();
@@ -169,7 +180,9 @@ public static partial class Markdown
                 list.Append(ordered ? "[ol type=1]" : "[ul]");
                 open.Push(ordered);
             }
-            list.Append(Inline(text, link, style));
+            // A zero-width space in the body font first, so the bullet takes the body font even when
+            // the item opens with code.
+            list.Append('\u200B').Append(Inline(text, link, style));
             first = false;
         }
         while (open.Count > 0) list.Append(open.Pop() ? "[/ol]" : "[/ul]");

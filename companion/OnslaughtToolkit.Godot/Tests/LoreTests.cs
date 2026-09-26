@@ -93,7 +93,12 @@ internal static partial class LoreTests
         check.That(sample.Bbcode.Contains("[lb]b]not markup[lb]/b]"), "Brackets in article text are escaped, never markup.");
         check.That(sample.Anchors.ContainsKey("same") && sample.Anchors.ContainsKey("same-1") && sample.Anchors.ContainsKey("here"),
             "Repeated headings get GitHub's numbered anchors; HTML anchors are kept.");
-        check.That(sample.Bbcode.Contains("[ol type=1][b]One[/b]\n[ul]sub a\nsub b[/ul]\nTwo[/ol]"), "Nested and numbered lists keep their structure.");
+        check.That(sample.Bbcode.Contains("[ol type=1]\u200B[b]One[/b]\n[ul]\u200Bsub a\n\u200Bsub b[/ul]\n\u200BTwo[/ol]"),
+            "Nested and numbered lists keep their structure.");
+        RenderedArticle prose = Markdown.Render("> **Note.** This is wrapped prose that goes on long enough to be a line\n" +
+            "> of its own and then continues here.\n>\n> A second paragraph.\n\n> \"A quote.\"\n> — Someone", _ => null, Style);
+        check.That(prose.Bbcode.Contains("be a line of its own") && prose.Bbcode.Contains("continues here.\nA second paragraph.") &&
+            prose.Bbcode.Contains("\"A quote.\"\n— Someone"), "Wrapped quoted prose is joined; paragraphs and attributions keep their breaks.");
         check.That(sample.Bbcode.Contains("[table=2]") && sample.Bbcode.Contains("x | y"), "Tables keep escaped bars inside cells.");
         check.That(sample.Bbcode.Contains("[b]From[/b]: A\n[b]To[/b]: B"), "Quoted memo lines keep their line breaks.");
         check.That(Markdown.Slug("3. Planning Localization and Porting in Advance") == "3-planning-localization-and-porting-in-advance",
@@ -101,6 +106,8 @@ internal static partial class LoreTests
 
         check.Suite("lore search and missions");
         IReadOnlyList<LoreHit> hits = LoreLibrary.Search("Kiralova");
+        check.That(hits.All(hit => !hit.Snippet.Contains("|--", StringComparison.Ordinal) && !hit.Snippet.Contains("###", StringComparison.Ordinal) &&
+            !hit.Snippet.Contains("> ", StringComparison.Ordinal)), "Search snippets read as text, without table or heading markup.");
         check.That(hits.Any(hit => hit.Article.Id == "characters") && hits.Any(hit => hit.Article.Id == "battle-engine-tech") &&
             hits.All(hit => hit.Snippet.Contains("Kiralova", StringComparison.OrdinalIgnoreCase)) &&
             hits.Zip(hits.Skip(1)).All(pair => pair.First.Matches >= pair.Second.Matches),

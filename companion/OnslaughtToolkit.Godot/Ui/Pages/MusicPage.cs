@@ -78,7 +78,8 @@ internal sealed class MusicPage : Page
 
     internal override Control Root { get; }
     internal override string Subtitle => _items.Count == 0 ? "The game's soundtrack and voice lines, from your install"
-        : $"{_items.Count(item => item.Kind == AudioKind.Music)} tracks · {_items.Count(item => item.Kind == AudioKind.Voice):N0} voice lines";
+        : $"{Build.Count(_items.Count(item => item.Kind == AudioKind.Music), "track")} · " +
+          Build.Count(_items.Count(item => item.Kind == AudioKind.Voice), "voice line");
     internal LineEdit Search { get; }
     internal Tree List { get; }
     internal Button PlayPause { get; }

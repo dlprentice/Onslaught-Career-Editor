@@ -161,6 +161,9 @@ internal static class CareerSaveTests
             check.That(CareerSave.RankLetter(value) == letter, $"Rank {value:R} reads as {letter ?? "no letter"}.");
         check.That(info.PendingGoodiesRaw == BinaryPrimitives.ReadUInt32LittleEndian(original.AsSpan(0x0002)),
             "The pending extra Goodies dword is read from offset 0x0002.");
+        check.That(CareerSave.RegionOf(0x0006 + 0x40 + 0x14) == "Surviving base buildings" && CareerSave.RegionOf(0x0006 + 0x40 + 0x37) ==
+            "Surviving base buildings" && CareerSave.RegionOf(0x0006 + 0x40 + 0x38) == "Mission records",
+            "A node's base-building bitmap is named apart from its mission fields.");
         check.That(CareerSave.RegionOf(0x0002) == "Pending extra Goodies" && CareerSave.RegionOf(0x0006) == "Mission records",
             "Byte regions name the pending Goodies dword.");
         GoodieEdits(original, info, check);

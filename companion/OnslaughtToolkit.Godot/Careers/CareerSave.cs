@@ -214,7 +214,8 @@ public static class CareerSave
     {
         < PendingGoodiesOffset => "Version word",
         < MissionOffset => "Pending extra Goodies",
-        < LinkOffset => "Mission records",
+        // Node +0x14..+0x37 is mBaseThingsExists[9]: which of the world's base buildings load next time (RE lane, 1470876e).
+        < LinkOffset => (offset - MissionOffset) % MissionStride is >= 0x14 and < 0x38 ? "Surviving base buildings" : "Mission records",
         < GoodieOffset => "Campaign links",
         < KillsOffset => offset < GoodieOffset + DisplayableGoodies * 4 ? "Goodie states" : "Reserved Goodie slots",
         < TechOffset => (offset - KillsOffset) % 4 == 3 ? "Packed kill bytes" : "Kill counts",

@@ -100,7 +100,7 @@ internal sealed class EditCopyPage : Page
         ChooseOutput.Pressed += ChooseDestination;
         OutputDialog.FileSelected += path =>
         {
-            Destination.Text = path;
+            Build.ShowPath(Destination, path);
             UpdateActions();
         };
         Destination.TextChanged += _ => UpdateActions();

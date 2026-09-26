@@ -17,7 +17,7 @@ internal sealed class OptionsPage : Page
     private readonly GameLibrary _game;
     private readonly StatusLine _status;
     private readonly Func<bool> _gameRunning;
-    private readonly Label _empty, _fileLine, _rawLine, _previewLines, _resultText;
+    private readonly Label _empty, _fileLine, _rawLine, _previewLines, _resultText, _needsBackups;
     private readonly RichTextLabel _previewBytes;
     private readonly PanelContainer _result;
     private readonly List<Control> _needsFile = [];
@@ -140,6 +140,8 @@ internal sealed class OptionsPage : Page
         HBoxContainer writeActions = writeBody.Add(Build.Row(10));
         WriteCopy = writeActions.Add(Build.Button("Write verified copy", "Primary", disabled: true));
         InstallCopy = writeActions.Add(Build.Button("Use this copy as the game's options…", "Caution", disabled: true));
+        _needsBackups = writeBody.Add(Build.Text("Using a copy as the game's options backs up first: choose a backup folder on " +
+            "Install & backups.", "Faint"));
         (_result, _resultText) = Build.Notice("");
         writeBody.Add(_result).Visible = false;
         _needsFile.Add(content.Add(write));
@@ -158,7 +160,7 @@ internal sealed class OptionsPage : Page
         ChooseDestination.Pressed += () => SaveDialog.PopupCenteredRatio(0.75f);
         SaveDialog.FileSelected += path =>
         {
-            Destination.Text = path;
+            Build.ShowPath(Destination, path);
             Refresh();
         };
         Destination.TextChanged += _ => Refresh();
@@ -268,9 +270,9 @@ internal sealed class OptionsPage : Page
         }
         bool ready = !_workspace.Busy;
         WriteCopy.Disabled = !ready || !_plan.Ok || Destination.Text.Trim().Length == 0;
-        InstallCopy.Disabled = !ready || LastCopy.Length == 0 || _game.Folder is null ||
-            string.IsNullOrEmpty(_game.Settings.Load().BackupFolder);
-        InstallCopy.TooltipText = string.IsNullOrEmpty(_game.Settings.Load().BackupFolder) ? "Choose a backup folder on Install & backups first." : "";
+        bool backups = !string.IsNullOrEmpty(_game.Settings.Load().BackupFolder);
+        InstallCopy.Disabled = !ready || LastCopy.Length == 0 || _game.Folder is null || !backups;
+        _needsBackups.Visible = !backups;
     }
 
     internal async Task<PublicationReceipt> WriteCopyAsync()
@@ -290,7 +292,7 @@ internal sealed class OptionsPage : Page
 
     internal void AskToInstall()
     {
-        if (LastCopy.Length == 0 || _game.Folder is null) return;
+        if (LastCopy.Length == 0 || _game.Folder is null || string.IsNullOrEmpty(_game.Settings.Load().BackupFolder)) return;
         Confirm.DialogText = $"Replace the game's defaultoptions.bea with\n{LastCopy}?\n\nFirst, every career and the options file are " +
             $"copied and verified into a new set in\n{_game.Settings.Load().BackupFolder}\n\nThe current options file is compared with " +
             "that backup immediately before an atomic swap. Close Battle Engine Aquila first; nothing is written while it runs.";

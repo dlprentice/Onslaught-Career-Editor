@@ -29,6 +29,8 @@ public static partial class LoreLibrary
     public const string MoreShelf = "Also in the library";
 
     private static readonly Lazy<(IReadOnlyList<LoreArticle> Articles, IReadOnlyList<LoreShelf> Shelves)> Loaded = new(Load);
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> SearchText = new();
+    private static readonly LoreStyle TextOnly = new("", "", "", "");
 
     /// <summary>Every article in reading order: the front door, then BOOK.md's list, then anything it does not list.</summary>
     public static IReadOnlyList<LoreArticle> Articles => Loaded.Value.Articles;
@@ -88,7 +90,8 @@ public static partial class LoreLibrary
         List<LoreHit> hits = [];
         foreach (LoreArticle article in Articles)
         {
-            string plain = Spaces().Replace(Markdown.Plain(Comment().Replace(article.Markdown, "")), " ");
+            string plain = SearchText.GetOrAdd(article.Id, _ => Spaces().Replace(string.Join(" ", Markdown.Render(
+                Comment().Replace(article.Markdown, ""), _ => null, TextOnly).Blocks.Select(block => block.Text)), " "));
             int first = plain.IndexOf(term, StringComparison.OrdinalIgnoreCase);
             if (first < 0) continue;
             int count = 0;

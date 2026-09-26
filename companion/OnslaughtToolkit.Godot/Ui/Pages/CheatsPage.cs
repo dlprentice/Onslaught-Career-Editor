@@ -19,7 +19,7 @@ internal sealed class CheatsPage : Page
     private readonly StatusLine _status;
     private readonly Func<bool> _gameRunning;
     private readonly List<(CheatCode Cheat, CheckBox Box)> _choices = [];
-    private readonly Label _empty, _preview, _switches, _resultText;
+    private readonly Label _empty, _preview, _switches, _resultText, _needsBackups;
     private readonly PanelContainer _result;
     private readonly List<Control> _needsCareer = [];
 
@@ -59,6 +59,7 @@ internal sealed class CheatsPage : Page
         HBoxContainer actions = makeBody.Add(Build.Row(10));
         WriteCopy = actions.Add(Build.Button("Write a verified copy to a folder…", "Primary", disabled: true));
         AddToGame = actions.Add(Build.Button("Add to the game's savegames…", "Caution", disabled: true));
+        _needsBackups = makeBody.Add(Build.Text("Adding a copy to the game backs up first: choose a backup folder on Install & backups.", "Faint"));
         (_result, _resultText) = Build.Notice("");
         makeBody.Add(_result).Visible = false;
         _needsCareer.Add(content.Add(make));
@@ -113,8 +114,8 @@ internal sealed class CheatsPage : Page
 
     internal void AskToAdd()
     {
-        if (_workspace.Session is not SaveSession session || _game.Folder is null || Problem() is not null) return;
         string backups = _game.Settings.Load().BackupFolder ?? "";
+        if (_workspace.Session is not SaveSession session || _game.Folder is null || Problem() is not null || backups.Length == 0) return;
         Confirm.DialogText = $"Add {Composed.FileName} to your game's savegames folder, as a byte-identical copy of\n{session.Path}?\n\n" +
             $"First, every career and the options file are copied and verified into a new set in\n{backups}\n\n" +
             "Close Battle Engine Aquila before continuing; nothing is written while it runs.";
@@ -153,9 +154,9 @@ internal sealed class CheatsPage : Page
         _switches.ThemeTypeVariation = problem is null ? "Muted" : "Bad";
         bool ready = problem is null && _workspace.Session is not null && !_workspace.Busy;
         WriteCopy.Disabled = !ready;
-        AddToGame.Disabled = !ready || _game.Folder is null || string.IsNullOrEmpty(_game.Settings.Load().BackupFolder);
-        AddToGame.TooltipText = string.IsNullOrEmpty(_game.Settings.Load().BackupFolder)
-            ? "Choose a backup folder on Install & backups first." : "";
+        bool backups = !string.IsNullOrEmpty(_game.Settings.Load().BackupFolder);
+        AddToGame.Disabled = !ready || _game.Folder is null || !backups;
+        _needsBackups.Visible = !backups;
     }
 
     private void ShowResult(string text, bool ok)

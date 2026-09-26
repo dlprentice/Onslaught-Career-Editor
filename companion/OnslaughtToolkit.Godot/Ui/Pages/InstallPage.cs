@@ -118,7 +118,7 @@ internal sealed class InstallPage : Page
     internal override void Refresh()
     {
         string? saved = _game.Settings.Load().BackupFolder;
-        if (BackupFolder.Text.Length == 0 && saved is not null) BackupFolder.Text = saved;
+        if (BackupFolder.Text.Length == 0 && saved is not null) Build.ShowPath(BackupFolder, saved);
         _noGame.Visible = _game.Folder is null;
         ShowTargets();
         ShowSets();
@@ -127,7 +127,7 @@ internal sealed class InstallPage : Page
 
     internal void SetBackupFolder(string path)
     {
-        BackupFolder.Text = path;
+        Build.ShowPath(BackupFolder, path);
         CompanionSettings settings = _game.Settings.Load();
         settings.BackupFolder = path;
         _game.Settings.Save(settings);
@@ -137,7 +137,7 @@ internal sealed class InstallPage : Page
 
     internal void SetSource(string path)
     {
-        Source.Text = path;
+        Build.ShowPath(Source, path);
         ShowTargets();
         UpdateActions();
     }
@@ -201,7 +201,7 @@ internal sealed class InstallPage : Page
 
     private string? ChosenTarget()
     {
-        if (Target.Selected < 0 || Target.ItemCount == 0) return null;
+        if (Target.Disabled || Target.Selected < 0 || Target.ItemCount == 0) return null;
         string item = Target.GetItemText(Target.Selected);
         if (item != NewCareer) return item;
         string name = NewName.Text.Trim();
@@ -210,7 +210,7 @@ internal sealed class InstallPage : Page
 
     private void ShowTargets()
     {
-        string previous = Target.Selected >= 0 && Target.ItemCount > 0 ? Target.GetItemText(Target.Selected) : "";
+        string previous = !Target.Disabled && Target.Selected >= 0 && Target.ItemCount > 0 ? Target.GetItemText(Target.Selected) : "";
         Target.Clear();
         if (_game.Folder is GameFolder game && Source.Text.Length > 0)
         {
@@ -223,6 +223,12 @@ internal sealed class InstallPage : Page
                 foreach (GameFile career in game.Careers.Where(file => file.Supported)) Target.AddItem(career.Name);
                 Target.AddItem(NewCareer);
             }
+        }
+        Target.Disabled = Target.ItemCount == 0;
+        if (Target.Disabled)
+        {
+            Target.AddItem(_game.Folder is null ? "Choose your game folder first" : "Choose a file to install first");
+            Target.SetItemDisabled(0, true);
         }
         for (int index = 0; index < Target.ItemCount; index++)
         {
@@ -268,7 +274,7 @@ internal sealed class InstallPage : Page
         bool ready = _game.Folder is not null && !_workspace.Busy && !_game.Busy;
         BackUpNow.Disabled = !ready || BackupFolder.Text.Length == 0;
         UseLastCopy.Disabled = _workspace.LastVerifiedOutput.Length == 0;
-        _newNameRow.Visible = Target.ItemCount > 0 && Target.GetItemText(Math.Max(0, Target.Selected)) == NewCareer;
+        _newNameRow.Visible = !Target.Disabled && Target.GetItemText(Math.Max(0, Target.Selected)) == NewCareer;
         Install.Disabled = !ready || BackupFolder.Text.Length == 0 || Source.Text.Length == 0 || ChosenTarget() is null;
     }
 

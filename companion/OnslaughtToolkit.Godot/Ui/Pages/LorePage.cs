@@ -206,8 +206,8 @@ internal sealed class LorePage : Page
         item.SetTooltipText(0, blurb.Length > 0 ? blurb : article.Title);
         item.SetMetadata(0, article.Id);
         if (article != Current || Rendered is null) return;
-        // The open article lists its sections beneath it, as an outline.
-        foreach (LoreHeading heading in Rendered.Headings.Where(heading => heading.Level == 2))
+        // The open article lists its sections beneath it, as an outline; the front door's sections are the shelves.
+        foreach (LoreHeading heading in Rendered.Headings.Where(heading => heading.Level == 2 && article.Id != LoreLibrary.HomeId))
         {
             TreeItem section = Library.CreateItem(item);
             section.SetText(0, heading.Text);

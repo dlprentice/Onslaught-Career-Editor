@@ -36,6 +36,18 @@ internal static class Build
         return label;
     }
 
+    /// <summary>Shows a path in a one-line field with its file name in view and the whole path as a tooltip.</summary>
+    internal static void ShowPath(LineEdit field, string path)
+    {
+        field.Text = path;
+        field.TooltipText = path;
+        field.CaretColumn = path.Length;
+    }
+
+    /// <summary>"1 voice line", "2,340 voice lines".</summary>
+    internal static string Count(int count, string singular, string? plural = null) =>
+        $"{count:N0} {(count == 1 ? singular : plural ?? singular + "s")}";
+
     /// <summary>Spaced capitals for headings, the Flight-deck signature.</summary>
     internal static Label Heading(string text, string variation = "Section") =>
         Text(text.ToUpperInvariant(), variation, wrap: false);
@@ -104,7 +116,7 @@ internal static class Build
     {
         ScrollContainer scroll = new()
         {
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, SizeFlagsVertical = Control.SizeFlags.ExpandFill,
         };
         // A right margin keeps cards clear of the scroll bar.
@@ -154,7 +166,7 @@ internal static class Build
     /// <summary>A filesystem dialog that cannot delete, create folders or offer to overwrite.</summary>
     internal static FileDialog FilePicker(string title, FileDialog.FileModeEnum mode, params string[] filters) => new()
     {
-        Title = title, FileMode = mode, Access = Godot.FileDialog.AccessEnum.Filesystem, Filters = filters,
+        Title = title, ModeOverridesTitle = false, FileMode = mode, Access = Godot.FileDialog.AccessEnum.Filesystem, Filters = filters,
         Size = new Vector2I(860, 580), DeletingEnabled = false, FolderCreationEnabled = false,
         OverwriteWarningEnabled = false, RecentListEnabled = false, FavoritesEnabled = false,
     };

@@ -125,6 +125,91 @@ public partial class ScreenCapture : SceneTree
         await Shot(viewport, label, "open-dialog");
         app.OpenDialog.Hide();
 
+        // Game writes are only confirmed against the fake install; a real --steam-root is only read.
+        bool fake = _steamRoot.Length == 0;
+        app.Navigate("cheats");
+        app.Cheats.BaseName.Text = "Pilot";
+        app.Cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "Pilot");
+        app.Cheats.Choices[0].ButtonPressed = true;
+        await Settle();
+        if (app.Cheats.Root is ScrollContainer cheatsScroll) cheatsScroll.ScrollVertical = (int)cheatsScroll.GetVScrollBar().MaxValue;
+        await Shot(viewport, label, "cheats-needs-backup-folder");
+        string backups = Path.Combine(work, "backups");
+        Directory.CreateDirectory(backups);
+        app.Install.SetBackupFolder(backups);
+        app.Cheats.Refresh();
+        app.Cheats.AskToAdd();
+        await Shot(viewport, label, "cheats-confirm");
+        app.Cheats.Confirm.Hide();
+
+        app.Navigate("options");
+        app.Options.OpenGameOptions.EmitSignal(BaseButton.SignalName.Pressed);
+        for (int frame = 0; frame < 600 && (app.Options.Reading is null || app.Workspace.Busy); frame++) await Settle();
+        await Shot(viewport, label, "options-open");
+        app.Options.Music.Value = app.Options.Music.Value > 50 ? 20 : 80;
+        app.Options.StartCapture(0x21, 1);
+        await Shot(viewport, label, "options-capturing-key");
+        app.Options.Capture(Key.T);
+        app.Options.Destination.Text = Path.Combine(work, "options-copy.bea");
+        await app.Options.WriteCopyAsync();
+        await Reveal(app.Options.InstallCopy);
+        await Shot(viewport, label, "options-verified-copy");
+        app.Options.AskToInstall();
+        await Shot(viewport, label, "options-confirm");
+        app.Options.Confirm.Hide();
+
+        app.Navigate("install");
+        await app.Install.BackUpAsync();
+        await Shot(viewport, label, "install-backed-up");
+        app.Install.SetSource(Path.Combine(work, "career-edited.bes"));
+        int newItem = Enumerable.Range(0, app.Install.Target.ItemCount).FirstOrDefault(item => app.Install.Target.GetItemText(item) == "A new career…", -1);
+        if (newItem >= 0)
+        {
+            app.Install.Target.Select(newItem);
+            app.Install.Target.EmitSignal(OptionButton.SignalName.ItemSelected, newItem);
+        }
+        app.Install.NewName.Text = "Edited Career";
+        app.Install.NewName.EmitSignal(LineEdit.SignalName.TextChanged, app.Install.NewName.Text);
+        await Reveal(app.Install.Install);
+        await Shot(viewport, label, "install-ready");
+        app.Install.AskToInstall();
+        await Shot(viewport, label, "install-confirm");
+        if (fake)
+        {
+            await app.Install.ConfirmAsync();
+            await Reveal(app.Install.Install);
+            await Shot(viewport, label, "install-done");
+        }
+        else
+        {
+            app.Install.Confirm.Hide();
+        }
+
+        app.Navigate("music");
+        if (app.Music.Items.FirstOrDefault(item => item.Kind == Media.AudioKind.Voice) is Media.GameAudioItem voice)
+        {
+            // Only loaded to show the player; nothing is played during a capture.
+            app.Music.Load(voice);
+            for (TreeItem? group = app.Music.List.GetRoot()?.GetFirstChild(); group is not null; group = group.GetNext())
+                if (group.GetText(0) == voice.Group) group.Collapsed = false;
+        }
+        await Shot(viewport, label, "music-voice-selected");
+
+        app.Navigate("lore");
+        app.Lore.Open("battle-engine-tech");
+        await Shot(viewport, label, "lore-memo");
+        app.Lore.Open("worlds", "world-500--career-node-23");
+        await Shot(viewport, label, "lore-section");
+        app.Lore.Open("community-preservation", "active-community-contacts");
+        await Shot(viewport, label, "lore-table");
+        app.Lore.Open("the-campaign", "the-missions");
+        await Shot(viewport, label, "lore-campaign-missions");
+        app.Lore.Search.Text = "Kiralova";
+        app.Lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "Kiralova");
+        await Shot(viewport, label, "lore-search");
+        app.Lore.Search.Text = "";
+        app.Lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
+
         viewport.QueueFree();
         await Settle();
     }
@@ -150,6 +235,18 @@ public partial class ScreenCapture : SceneTree
         Error saved = image.SavePng(path);
         if (saved != Error.Ok) throw new IOException($"Could not save {path}: {saved}");
         GD.Print($"CAPTURE {path}");
+    }
+
+    /// <summary>Scrolls the page so a control is on screen, as a player would before looking at it.</summary>
+    private async Task Reveal(Control control)
+    {
+        await Settle();
+        for (Node? node = control.GetParent(); node is not null; node = node.GetParent())
+        {
+            if (node is not ScrollContainer scroll) continue;
+            scroll.EnsureControlVisible(control);
+            break;
+        }
     }
 
     private async Task Settle()
