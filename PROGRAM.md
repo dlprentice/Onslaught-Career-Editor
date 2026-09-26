@@ -157,10 +157,20 @@ complete-shot RNG remain unresolved. A read-only frontend review identified
 `00459810` as a card-selection setter and `00465f10` as the outer frontend
 constructor; their saved metadata still needs the scoped byte-backed correction
 workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
-Two more saved labels are wrong and queue for the same workflow:
-`CRT__AcosDispatch_ST0` (`0055dcb0`) computes asin (its error record at
-`00653310` names `asin`), and `CUnitAI__InitDefaults` (`0042efd0`) sets Unit
-profile defaults, including turret yaw limit `+0xdc` = 2π.
+These saved labels are also wrong, each shown by the bytes cited in the named
+owner, and queue for the same workflow:
+
+| Address | Saved label | What it is | Owner |
+| --- | --- | --- | --- |
+| `0055dcb0` | `CRT__AcosDispatch_ST0` | CRT asin (error record `00653310` names `asin`) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
+| `0042efd0` | `CUnitAI__InitDefaults` | Unit profile defaults (turret yaw limit `+0xdc` = 2π) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
+| `00506010` | `ProjectileBurst__SpawnFromPercentBucketFallback` | `CWeapon::Fire` | [stores](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#fire-empty-stores-and-locks) |
+| `00509c80` | `CBattleEngine__ComputeProjectileMetricFromTargetProfile` | `CWeapon::GetActualMaxRange` | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#crosshair-and-auto-aim-refresh) |
+| `004f8140` | `Mat34__SetFromEulerDegrees` | Euler matrix from integer angles in units of 2π/4096 | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
+| `0040c2e0` | `CBattleEngine__CanSpawnBurstForResolvedEntry` | `CBattleEngine::WeaponFired` | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
+| `0040c340` | `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` | `CBattleEngine::RecoilWeapon` | same |
+| `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
+| `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
 
 ### Remote checkpoint integrated on Linux — September 12
 
