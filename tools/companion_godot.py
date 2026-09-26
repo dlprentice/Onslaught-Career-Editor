@@ -33,6 +33,8 @@ EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
 # The companion is C# built in code: no GDScript, saved resources or editor-authored scenes.
 EDITOR_ONLY_SUFFIXES = {".gd", ".tres", ".res", ".scn", ".gdshader"}
 DEVELOPMENT_NAMESPACES = (b"OnslaughtToolkit.Companion.Tests", b"OnslaughtToolkit.Companion.Development")
+# The eight bytes every PNG file starts with, written as numbers: this tool checks an icon, it embeds no image.
+PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PLATFORMS = {
     "linux": ("linux-x64", "Linux", "OnslaughtToolkit.x86_64"),
     "windows": ("win-x64", "Windows", "OnslaughtToolkit.exe"),
@@ -288,7 +290,7 @@ def prepare_icon(engine: Path, project: Path, env: dict[str, str], output: Path)
     icon = project / "icon.png"
     run_logged([str(engine), "--headless", "--path", str(project), "--script", "res://Development/IconWriter.cs", "--",
                 f"--output={icon}"], cwd=project, env=env, timeout=60, log=output / "logs/icon.log", godot=True)
-    if not icon.is_file() or icon.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
+    if not icon.is_file() or icon.read_bytes()[:8] != PNG_SIGNATURE:
         raise RuntimeError("The application icon was not written")
     settings = project / "project.godot"
     settings.write_text(with_project_icon(settings.read_text(encoding="utf-8")), encoding="utf-8")

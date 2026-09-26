@@ -72,7 +72,7 @@ class CompanionLauncherTests(unittest.TestCase):
             " if sys.argv[1]=='build':\n"
             "  target=project/'.godot/mono/temp/bin/Debug'; target.mkdir(parents=True,exist_ok=True); (target/'OnslaughtToolkit.Godot.dll').write_text('integrated assembly')\n"
             "if 'res://Development/LicenseMetadata.cs' in sys.argv: print(json.dumps({'license':'Godot MIT','components':[{'name':'component'}],'licenses':{'MIT':'notice'}}))\n"
-            "if 'res://Development/IconWriter.cs' in sys.argv: pathlib.Path(next(a for a in sys.argv if a.startswith('--output='))[9:]).write_bytes(b'\\x89PNG\\r\\n\\x1a\\n fake icon')\n"
+            "if 'res://Development/IconWriter.cs' in sys.argv: pathlib.Path(next(a for a in sys.argv if a.startswith('--output='))[9:]).write_bytes(bytes((137, 80, 78, 71, 13, 10, 26, 10)) + b' fake icon')\n"
             "if '--import' in sys.argv and os.environ.get('FAKE_PARSE_ERROR'): print('SCRIPT ERROR: Parse Error: broken source')\n"
             "if '--export-release' in sys.argv:\n"
             " target=pathlib.Path(sys.argv[sys.argv.index('--export-release')+2]); target.write_text('native exe'); target.with_suffix('.pck').write_text('native resources')\n"
@@ -211,7 +211,7 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertEqual(1,len(icon))
         staged=Path(icon[0]["cwd"])
         self.assertIn('config/icon="res://icon.png"',(staged/"project.godot").read_text())
-        self.assertTrue((staged/"icon.png").read_bytes().startswith(b"\x89PNG"))
+        self.assertTrue((staged/"icon.png").read_bytes().startswith(host.PNG_SIGNATURE))
 
     def test_framework_dependent_export_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_FRAMEWORK_DEPENDENT":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
