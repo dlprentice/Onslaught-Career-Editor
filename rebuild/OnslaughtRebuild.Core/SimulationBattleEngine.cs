@@ -69,6 +69,12 @@ public sealed partial class Simulation
     /// <summary><c>CBattleEngine::HandleEvent</c> for 6002 and 6003 (<c>0x0040c180</c>).</summary>
     private void HandleBattleEngineEvent(RetailEventScheduler events, RetailEventDispatch dispatch)
     {
+        if (Level100ActorMechanics.IsScriptListener(dispatch.Listener))
+        {
+            HandleScriptEvent(dispatch);
+            return;
+        }
+
         if (Level100ActorMechanics.IsPlayerRoundListener(dispatch.Listener))
         {
             HandlePlayerRoundEvent(events, dispatch);
@@ -110,6 +116,45 @@ public sealed partial class Simulation
                 throw new InvalidOperationException(
                     $"Unadmitted Battle Engine event {dispatch.EventNum}.");
         }
+    }
+
+    /// <summary>
+    /// A script's INIT_SCRIPT (2001) or <c>ready()</c> (2003), delivered in the
+    /// level event manager's flush: a script carrier's runs its level script,
+    /// a thing's its own. Their commands settle before the next delivery.
+    /// </summary>
+    private void HandleScriptEvent(RetailEventDispatch dispatch)
+    {
+        if (Level100ActorMechanics.IsCarrierScriptListener(dispatch.Listener))
+        {
+            int row = Level100ActorMechanics.CarrierScriptRow(dispatch.Listener);
+            string script = Level100ScriptCarriers.For(_worldNumber).Single(carrier => carrier.LevelRow == row).ScriptName;
+            switch (script)
+            {
+                case "LevelScript":
+                    _level100Mission.RunInit();
+                    break;
+                case "Setup":
+                    _level100ActorScripts.RunSetupInit();
+                    break;
+                default:
+                    throw new NotSupportedException($"Script carrier {script} has no Core owner.");
+            }
+        }
+        else
+        {
+            Level100ActorId actorId = Level100ActorMechanics.ScriptListenerActor(dispatch.Listener);
+            if (dispatch.EventNum == Level100ActorMechanics.InitScriptEvent)
+            {
+                _level100ActorScripts.RunScriptInit(actorId);
+            }
+            else
+            {
+                _level100ActorScripts.DispatchReady(actorId);
+            }
+        }
+
+        PumpLevel100EventBus();
     }
 
     /// <summary>

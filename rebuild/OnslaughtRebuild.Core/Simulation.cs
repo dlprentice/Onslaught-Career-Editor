@@ -4297,7 +4297,9 @@ public sealed partial class Simulation
             _level100PlayerActorId,
             RegisterSpawnedLevel100Actor,
             () => BitConverter.SingleToInt32Bits(EngineTimeSeconds));
-        _level100ActorScripts.InitializeReleasedScripts();
+        // Scripts are bound now and run their init() when the pre-run's first
+        // flush delivers each INIT_SCRIPT the load filed.
+        _level100ActorScripts.AttachReleasedScripts(_level100ActorMechanics.FileScriptInit);
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
         _level100Mission = new Level100Mission(
@@ -4305,7 +4307,8 @@ public sealed partial class Simulation
             _level100PlayerActorId,
             _level100TutorialProgress,
             PlayerHull,
-            _worldNumber);
+            _worldNumber,
+            runInit: false);
         SyncLevel100PlayerState();
         PumpLevel100EventBus();
         LoadSnapshotForMeasurement = CreateSnapshot();

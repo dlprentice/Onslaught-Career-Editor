@@ -81,15 +81,14 @@ public sealed class Level100BattleEngineRefreshTests
         // rows 0-34, then level row 0's Battle Engine: its Actor draw, 6002's
         // draw and HandleAutoAim(NULL)'s 6003 draw, and then the rest of the
         // level world's rows, the Target Truck and Target Drone warm-ups (two
-        // draws each) and the influence map's tail draw. Core then runs every
-        // script's init at construction, so the Tank Factory's
-        // SpawnThing("Target Tank") takes its squad's five draws here; retail
-        // runs that init on frame 2, which is an open difference.
+        // draws each) and the influence map's tail draw. No script runs at the
+        // load: the Tank Factory's SpawnThing("Target Tank") waits for its
+        // INIT_SCRIPT, which Setup files in frame 1 for frame 2.
         var random = new Level100ReleasedRandom();
         Skip(definitions.BaseWorldPineCount + 1 + Level100ActorWeaponTests.RowDraws(rows[..battleEngine]) + 1);
         float crosshairDue = RetailBattleEngineRefresh.CrosshairDueTime(random.Next(), 0.0f);
         float autoAimDue = RetailBattleEngineRefresh.AutoAimDueTime(random.Next(), 0.0f);
-        Skip(Level100ActorWeaponTests.RowDraws(rows[(battleEngine + 1)..]) + 4 + 1 + 5);
+        Skip(Level100ActorWeaponTests.RowDraws(rows[(battleEngine + 1)..]) + 4 + 1);
         Assert.Equal(random.Seed, state.Level100ActorMechanics.ReleasedRandomSeed);
 
         void Skip(int draws)

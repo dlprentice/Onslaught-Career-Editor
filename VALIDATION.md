@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,75 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Scripts start on their INIT_SCRIPT events — September 26
+
+Core used to run every script's `init()` during the load: Setup first, the
+authored scripts in actor-id order, then LevelScript. Retail starts each script
+on an event (the RE lane's construction contract, "Level-world rows" and
+"Scripts in the first frames", with its answers on the carriers and on World
+110's Setup):
+- `SetScript` binds the VM and files INIT_SCRIPT 2001 at −1 for the thing itself
+  (`0x004f42b1-0x004f42da`).
+- A constructed thing's script is bound first in its construction sequence.
+- A script carrier (`CLevelScriptThing`: Level 100's LevelScript and Setup at
+  rows 5 and 17, World 110's rows 0, 2 and 39) files only that event, at its
+  row position.
+- A scripted unit's AI constructor also files the 2003 for its `ready()`
+  before its AI.
+- So the first flush runs the inits in row order. Setup's own `SetScript`
+  bindings file for frame 2, which is when the Tank Factory runs its init and
+  builds its first Target Tank. World 110 depends on this: Setup activates
+  five inactive base units after their first AI events.
+
+Core now files these events during the load and lets the flush run them:
+- a scripted row's 2001 first in its sequence, and its 2003 before its AI;
+- each carrier's 2001 at its row, placed by the definitions' level-row
+  identities;
+- `SetScript` and spawned units' 2001 for the next frame.
+
+The Simulation owns the handlers: a thing's init or `ready()`, LevelScript's
+`init()` (the mission now takes it on its event), and Setup's. An authored
+plane's `ready()` now runs on its 2003; a spawned plane's still comes from its
+exit handoff. Standalone script and mission tests keep the immediate path.
+
+Tests:
+- `SimulationTests.Construction_StartsEveryScriptOnItsInitScriptEvent` pins
+  the load's 2001 order: row 5, rows 9-16, row 17, then rows 19, 21 and 40. It
+  also pins the Tank Factory's first spawn to frame 2 and every script
+  initialized after the pre-run.
+- `Level100UnitCallbackTests` now expect the Warehouse's 2001 and 2003 in its
+  sequence, and set the world's carriers aside.
+- The load-draw count no longer includes the Tank Factory's spawn, which
+  closes the open difference recorded with the construction order.
+
+Five mutations were killed and restored byte-identical
+(`local-data/test-runs/script-inits-20260926/mutation-kills/`): no INIT_SCRIPT
+for a scripted row, carriers after every row, `SetScript` running at once, no
+`ready()` event, and a spawned script starting at once.
+
+Other tests that moved:
+- A Client test read the Target Tank's guide phase as if at its construction.
+  It is now read 58 frames later, since the tank is built on frame 2.
+- The truck-spawn test stopped as soon as the trucks settled. It now waits for
+  their scripts, a frame later, to send them down their paths.
+
+Core passes 1,555, the ferry sweep 6/6, and Client 912 with the two known
+skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `7d4a41a7…` and state `ab0c274b…`;
+- the in-process smoke and its validator: state `629076b4…`;
+- the canonical-hash fingerprints;
+- the chain autopilot, still on the abort branch after two kills, at tick 5,793
+  with hull 4,750.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`ec218626…`, trace `cb556aa4…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 7,750 ticks (trace `45c72494…`, state `00616ef4…`), on
+the abort branch with no second-wave kills and hull 1,293, and it replays
+twice.
+
+Open: World 110's Weather carrier has no Core owner yet, and its handler
+refuses it.
 
 ### The level's three-second pre-run — September 26
 

@@ -211,8 +211,17 @@ public sealed partial class Level100ActorMechanics
 
         Dictionary<string, Level100ActorId> byIdentity = _actors.Snapshot.Actors
             .ToDictionary(actor => actor.DefinitionIdentity, actor => actor.ActorId, StringComparer.Ordinal);
+        // The level world's script carriers file their INIT_SCRIPT at their own
+        // row positions among the level rows (after the rest when the set
+        // carries no level-row identities).
+        int nextCarrier = 0;
         foreach (Level100ActorDefinition definition in _definitions.Actors.OrderBy(item => item.AuthoredOrder))
         {
+            if (LevelWorldRow(definition) is { } levelRow)
+            {
+                FileCarrierScriptInits(ref nextCarrier, levelRow);
+            }
+
             Level100ActorId actorId = byIdentity[definition.DefinitionIdentity];
             Level100ConstructionClass kind = Level100ConstructionClasses.Of(definition.DefinitionName);
             if (kind == Level100ConstructionClass.BattleEngine)
@@ -231,6 +240,7 @@ public sealed partial class Level100ActorMechanics
             ConstructUnit(actorId, kind);
         }
 
+        FileCarrierScriptInits(ref nextCarrier, levelRow: null);
         if (baseWorldPass)
         {
             WarmUpUnusedSpawnTypes();
@@ -287,6 +297,12 @@ public sealed partial class Level100ActorMechanics
     private void ConstructUnit(Level100ActorId actorId, Level100ConstructionClass kind)
     {
         RetailEventScheduler events = _planeEvents!;
+        // CComplexThing::Init binds the thing's script first (0x004f42da).
+        if (HasScript(actorId))
+        {
+            FileScriptInit(actorId);
+        }
+
         switch (kind)
         {
             case Level100ConstructionClass.Trigger:
@@ -311,6 +327,7 @@ public sealed partial class Level100ActorMechanics
         {
             case Level100ConstructionClass.Building:
                 FileUnitRefresh(events, actorId);
+                FileScriptReady(actorId);
                 FileInitialAi(events, actorId, _actors.GetActor(actorId).DefinitionName == "Warehouse");
                 break;
             case Level100ConstructionClass.Cannon:
@@ -318,6 +335,7 @@ public sealed partial class Level100ActorMechanics
                 // one draw and 4001, before the 4003 and the AI.
                 FileFireControl(events, actorId, _releasedRandom.Next(), reuseHandle: -1);
                 FileUnitRefresh(events, actorId);
+                FileScriptReady(actorId);
                 FileInitialAi(events, actorId, hasTarget: false);
                 break;
             case Level100ConstructionClass.SimpleBuilding:
@@ -329,6 +347,7 @@ public sealed partial class Level100ActorMechanics
                 // CGroundUnit::Init's hover draw (0x0047c869): profile +0x10c
                 // is 1 from CUnitHover, so +0x25c = (r mod 65536) × 2π/65536.
                 _ = _releasedRandom.Next();
+                FileScriptReady(actorId);
                 FileInitialAi(events, actorId, hasTarget: false);
                 // CNormalSquad::Init: 4000, 4001, then slot 66's 4002.
                 FileSquadEvent(events, actorId, 4000, -1);
@@ -337,6 +356,7 @@ public sealed partial class Level100ActorMechanics
                 break;
             case Level100ConstructionClass.Dropship:
                 FileUnitRefresh(events, actorId);
+                FileScriptReady(actorId);
                 FileInitialAi(events, actorId, hasTarget: false);
                 break;
             default:

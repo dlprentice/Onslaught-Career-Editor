@@ -112,6 +112,12 @@ public sealed partial class Level100ActorMechanics
                 (float)RetailFloat24.Add(_planeEvents?.Time ?? 0, 10.0f)), false);
         }
         _planeEvents ??= new(useFloat24Arithmetic: true);
+        // CComplexThing::Init binds the thing's script first (0x004f42da).
+        if (HasScript(actorId))
+        {
+            FileScriptInit(actorId);
+        }
+
         // Actor Init consumes this draw even though the Plane divisor is 1.
         _ = _releasedRandom.Next();
         _states.Add(actorId.Value, new ActorState
@@ -134,7 +140,12 @@ public sealed partial class Level100ActorMechanics
         if (exit is not null)
             _planeEvents.AddEvent(3002, PlaneControllerListener(actorId), _planeEvents.Time);
         else
+        {
+            // An authored plane's AI constructor files its script's ready()
+            // before the AI; a spawner exit hands that over when it completes.
+            FileScriptReady(actorId);
             FileInitialAi(_planeEvents, actorId, hasTarget: false);
+        }
         // CPlane::Init's last draw (0x004d1bae) sets +0x284 to 0.8 when
         // (r mod 65536)/65536 > 0.5, else -0.8.
         _ = _releasedRandom.Next();
@@ -172,6 +183,13 @@ public sealed partial class Level100ActorMechanics
         if (IsUnitListener(dispatch.Listener))
         {
             DispatchUnitCallback(events, dispatch);
+            return;
+        }
+        if (IsScriptListener(dispatch.Listener))
+        {
+            // Scripts belong to the Simulation; a mechanics-only consumer has
+            // no script runtime, so their events find no reader.
+            battleEngineEvent?.Invoke(events, dispatch);
             return;
         }
         if (IsRoundListener(dispatch.Listener))
@@ -412,7 +430,7 @@ public sealed partial class Level100ActorMechanics
         {
             int listener = slots[handle].Listener;
             if (IsPlayerListener(listener) || IsUnitListener(listener) || IsRoundListener(listener) ||
-                listener == InfluenceMapListener) continue;
+                IsScriptListener(listener) || listener == InfluenceMapListener) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -468,6 +486,14 @@ public sealed partial class Level100ActorMechanics
             {
                 if (slot.EventNum != 1000)
                     throw new ArgumentException("Influence map queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
+            if (IsScriptListener(slot.Listener))
+            {
+                // Scripts belong to the Simulation, which owns their dispatch.
+                if (slot.EventNum is not (InitScriptEvent or ScriptReadyEvent) ||
+                    IsCarrierScriptListener(slot.Listener) && slot.EventNum != InitScriptEvent)
+                    throw new ArgumentException("Script queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
             if (IsRoundListener(slot.Listener))

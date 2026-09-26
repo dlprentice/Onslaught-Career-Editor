@@ -1433,13 +1433,18 @@ public sealed class InteractiveSessionTests
         Assert.Equal("Target Tank Path 1", intent.WaypointPath);
         Assert.True(intent.WaitForWaypointCompletion);
         // The phase reaches 0 on the first full Move, which the tank's Actor
-        // draw places one to three frames after its construction.
+        // draw places one to three frames after its construction, and then
+        // advances once a frame: the Tank Factory built it on frame 2 of the
+        // pre-run, which ends on frame 60.
         Level100UnitCallbackSnapshot unit = Assert.Single(
             snapshot.Level100ActorMechanics.UnitCallbacks!,
             item => item.ActorId == target.ActorId);
         int lowFrequencyMoves = unit.FirstMoveFrame - (unit.ConstructionFrame + 1);
         Assert.InRange(lowFrequencyMoves, 0, 2);
-        Assert.Equal((4 - lowFrequencyMoves) % 4, intent.GroundFullGuideBaseTickPhase);
+        Assert.Equal(2, unit.ConstructionFrame);
+        Assert.Equal(
+            ((4 - lowFrequencyMoves) + (int)snapshot.RetailEventFrameCount - unit.ConstructionFrame) % 4,
+            intent.GroundFullGuideBaseTickPhase);
         Assert.Contains(
             snapshot.Level100ActorScriptCommands,
             command =>
@@ -1645,6 +1650,8 @@ public sealed class InteractiveSessionTests
                     Level100MissionTargetGroup.TargetTrucks)
                 .OrderBy(actor => actor.ScriptName)
                 .ToArray();
+            // Each truck's script starts on its INIT_SCRIPT, the frame after
+            // it is built, and only then sends it down its path.
             if (trucks.Length == 3 &&
                 trucks.All(actor =>
                 {
@@ -1653,7 +1660,10 @@ public sealed class InteractiveSessionTests
                             definition.ScriptName ==
                             actor.ScriptName);
                     return actor.Pose.PositionMillimeters !=
-                        spawn.InitialPose.PositionMillimeters;
+                        spawn.InitialPose.PositionMillimeters &&
+                        session.CurrentSnapshot.Level100ActorMechanics.Actors
+                            .Single(item => item.ActorId == actor.ActorId).Intent ==
+                            Level100ActorCommandIntent.FollowingWaypoint;
                 }))
             {
                 break;
@@ -1837,14 +1847,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("22854e3866ef19531896223fc74dc8dade1ca54bb397a2c0e3c7194b4562c6bd",
+        Assert.Equal("f189c7c2a95d055e4e7c10fde0188feb851575783ff0d7ee947352ba04f38a12",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("58f32bcd7836143ddbe29e3869873b5d44a78c85c6a8eb29d1ec0467ca4a4330",
+        Assert.Equal("b731dba41229cd7a7729b5a32a3c7cf3723cdf7733c86c568c453a6dc5c43491",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "3582db72a17cb8eb8a341e6fc3ae2c65ea68e2dfee813bd73a09c62c3baffab3",
+            finalStateHash == "629076b43b7573de9871ee827238a15da1f663842b9694236d172b7de162983d",
             $"First-flight final state hash: {finalStateHash}");
     }
 

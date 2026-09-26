@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (the level's pre-run and the clocks; round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (scripts on their INIT_SCRIPT events; the level's pre-run and the clocks; round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -135,7 +135,10 @@ as `CGame::PreRun` runs them before the visuals start. Tick 0 is retail frame
 at tick 0, and a session's tick differs from them by the pre-run (and, after
 `SimActions.Reset`, by the reset's tick as well). Code that compares a script
 or mission due tick must use that clock, never the session's tick. Replays and
-tapes are unchanged: the pre-run is part of constructing the level.
+tapes are unchanged: the pre-run is part of constructing the level. Scripts
+start on INIT_SCRIPT (2001) and `ready()` (2003) events in that manager, under
+script listeners (0x0800_0000 + actor id, 0x0C00_0000 + a carrier's level row),
+so a script's `init()` and its draws take their place in the flush's order.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

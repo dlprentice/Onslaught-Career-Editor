@@ -386,14 +386,14 @@ public sealed class Level100FullChainTests
         // draws (the base world's pines and rows, the Battle Engine, the level
         // units) and every unit's recurring 4003, AI, fire-control and squad
         // draws, player rounds left their weapons' cockpit Gun emitters, every
-        // round moved on its own MOVE and life events, and the level took its
-        // three-second pre-run: the wave ends on the abort branch after two
-        // kills. These are reconstruction fixture readings, not retail timing,
-        // hull or branch.
+        // round moved on its own MOVE and life events, the level took its
+        // three-second pre-run, and every script started on its INIT_SCRIPT:
+        // the wave ends on the abort branch after two kills. These are
+        // reconstruction fixture readings, not retail timing, hull or branch.
         Assert.True(final.Level100Mission.Aborted);
         Assert.Equal(2, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_618, final.Tick);
-        Assert.Equal(6_050, final.Hull);
+        Assert.Equal(5_793, final.Tick);
+        Assert.Equal(4_750, final.Hull);
     }
 
     /// <summary>

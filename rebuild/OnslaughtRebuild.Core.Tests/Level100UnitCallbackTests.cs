@@ -35,12 +35,18 @@ public sealed class Level100UnitCallbackTests
         return new Level100ActorMechanics(registry, definitions);
     }
 
+    /// <summary>
+    /// The filed events, less the world's script carriers: those belong to the
+    /// level, not to the one row these worlds build.
+    /// </summary>
     private static RetailEventSlotSnapshot[] Filed(Level100ActorMechanics mechanics)
     {
         RetailEventSchedulerSnapshot events = mechanics.Snapshot.PlaneEvents!;
         Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
         return events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow)
-            .Select(handle => slots[handle]).ToArray();
+            .Select(handle => slots[handle])
+            .Where(slot => !Level100ActorMechanics.IsCarrierScriptListener(slot.Listener))
+            .ToArray();
     }
 
     private static uint Bits(double value) => BitConverter.SingleToUInt32Bits((float)value);
@@ -144,8 +150,13 @@ public sealed class Level100UnitCallbackTests
     [Fact]
     public void Warehouse_StartsWithItsTargetAndRefreshesThreeThousandOne()
     {
-        Level100ActorMechanics mechanics = World("Target Warehouse", out _, out _);
-        Assert.Equal([4003, 3001], Filed(mechanics).Select(slot => (int)slot.EventNum));
+        // Its script's INIT_SCRIPT first, then 4003, its ready() and the AI
+        // (the construction contract's row 11: 2001; ...; 4003; 2003; AI 3001).
+        Level100ActorMechanics mechanics = World("Target Warehouse", out _, out Level100ActorId warehouse);
+        Assert.Equal([2001, 4003, 2003, 3001], Filed(mechanics).Select(slot => (int)slot.EventNum));
+        Assert.Equal(
+            [Level100ActorMechanics.ActorScriptListener(warehouse), Level100ActorMechanics.ActorScriptListener(warehouse)],
+            Filed(mechanics).Where(slot => slot.EventNum is 2001 or 2003).Select(slot => slot.Listener));
         var random = new Level100ReleasedRandom();
         random.Next();
         mechanics.AdvanceTick();

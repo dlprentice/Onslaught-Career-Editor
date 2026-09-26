@@ -93,6 +93,22 @@ public sealed class Level100Mission
         Level100TutorialProgress tutorialProgress = default,
         int initialPlayerHealth = SimulationConstants.MaximumHull,
         int worldNumber = Level100MissionProgram.WorldNumber100)
+        : this(actors, playerActorId, tutorialProgress, initialPlayerHealth, worldNumber, runInit: true)
+    {
+    }
+
+    /// <param name="runInit">
+    /// False on the retail path: LevelScript's <c>init()</c> then waits for
+    /// its carrier's INIT_SCRIPT (<see cref="RunInit"/>), which the first
+    /// flush delivers at the carrier's row position.
+    /// </param>
+    internal Level100Mission(
+        Level100ActorRegistry actors,
+        Level100ActorId playerActorId,
+        Level100TutorialProgress tutorialProgress,
+        int initialPlayerHealth,
+        int worldNumber,
+        bool runInit)
     {
         if (initialPlayerHealth <= 0)
         {
@@ -138,8 +154,25 @@ public sealed class Level100Mission
 
         RunNewExecution("<global initializer>", 0);
         _initializerRan = true;
+        if (runInit)
+        {
+            RunInit();
+        }
+    }
+
+    /// <summary>LevelScript's INIT_SCRIPT: its <c>init()</c>, once.</summary>
+    internal void RunInit()
+    {
+        if (_initRan)
+        {
+            throw new InvalidOperationException("LevelScript's init() already ran.");
+        }
+
+        _initRan = true;
         RunNewExecution("init", _program.BuiltInEventInstructionPointers[0]);
     }
+
+    private bool _initRan;
 
     /// <summary>
     /// The cold training career this mission hands to

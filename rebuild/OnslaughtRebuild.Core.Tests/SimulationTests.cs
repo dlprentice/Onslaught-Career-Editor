@@ -73,12 +73,12 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("29accfab12587ede2d18b26ae4fabd64256a3a8559447b15706dc21d14037a03",
+        Assert.Equal("2d0acb7397a29c1653b82394c89873def22c05c8efc5205147fe1b52e1017a5c",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("a91e824d2ab71cbad39b67c48826a08f853dbbfa2ab39eca315b5d9859655dc8",
+        Assert.Equal("d9889b70c1e47f37e59ffde2cdc740523a1b691abbfe18102888e6ed2bdee939",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "28bb890e159a6322b1ac006000f9856dfd00471da4c5c4fa883fccc1966b4075",
+        Assert.True(hash == "92f1fa0f8fbe538ed98661376808a662a7d428feea2bb443aa6c3630d56e6352",
             $"Canonical state hash: {hash}");
         Assert.Equal(52, CanonicalSchemaVersion(rootState));
 
@@ -194,6 +194,48 @@ public sealed class SimulationTests
         // What the load and the pre-run reported reaches the first tick: the
         // cold career's LevelScript deactivated the player.
         Assert.Contains(start.Level100MissionEvents, item => item is Level100PlayerActivationChanged { Active: false });
+    }
+
+    /// <summary>
+    /// Scripts start on their INIT_SCRIPT events (the RE lane's construction
+    /// contract, "Scripts in the first frames"): each scripted row files its
+    /// 2001 first in its construction sequence, and the LevelScript and Setup
+    /// carriers file theirs at rows 5 and 17, so the first flush runs them in
+    /// row order. Setup's SetScript bindings run a frame later, which is when
+    /// the Tank Factory spawns its first Target Tank.
+    /// </summary>
+    [Fact]
+    public void Construction_StartsEveryScriptOnItsInitScriptEvent()
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
+        WorldSnapshot load = simulation.LoadSnapshotForMeasurement!;
+        RetailEventSchedulerSnapshot events = load.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        Dictionary<Level100ActorId, Level100ActorSnapshot> actors =
+            load.Level100Actors.Actors.ToDictionary(actor => actor.ActorId);
+        string[] inits = events.Lanes.Single(lane => lane.LaneIndex == events.CurrentBufferNum * RetailEventScheduler.PriorityLanes)
+            .Handles.Select(handle => slots[handle])
+            .Where(slot => slot.EventNum == Level100ActorMechanics.InitScriptEvent &&
+                Level100ActorMechanics.IsScriptListener(slot.Listener))
+            .Select(slot => Level100ActorMechanics.IsCarrierScriptListener(slot.Listener)
+                ? $"row {Level100ActorMechanics.CarrierScriptRow(slot.Listener)}"
+                : actors[Level100ActorMechanics.ScriptListenerActor(slot.Listener)].DefinitionIdentity)
+            .ToArray();
+        Assert.Equal(
+        [
+            "row 5", "wres:rlwd:0009", "wres:rlwd:0011", "wres:rlwd:0012", "wres:rlwd:0013",
+            "wres:rlwd:0014", "wres:rlwd:0015", "wres:rlwd:0016", "row 17", "wres:rlwd:0019",
+            "wres:rlwd:0021", "wres:rlwd:0040",
+        ], inits);
+        Assert.DoesNotContain(load.Level100Actors.Actors, actor => actor.SpawnOwnerId.HasValue);
+
+        // After the pre-run: the Tank Factory's init ran on frame 2 and built
+        // its first Target Tank there.
+        WorldSnapshot start = simulation.Snapshot;
+        Level100ActorSnapshot tank = Assert.Single(start.Level100Actors.Actors, actor => actor.ScriptName == "TargetTank1");
+        Assert.Equal(2, Assert.Single(start.Level100ActorMechanics.UnitCallbacks!, unit => unit.ActorId == tank.ActorId)
+            .ConstructionFrame);
+        Assert.All(start.Level100ActorScripts.Instances, instance => Assert.True(instance.Initialized));
     }
 
     [Fact]

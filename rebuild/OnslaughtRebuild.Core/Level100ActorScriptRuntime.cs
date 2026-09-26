@@ -92,6 +92,14 @@ public sealed class Level100ActorScriptRuntime
     private readonly Level100ActorId _playerActorId;
     private readonly Action<Level100ActorId>? _afterSpawn;
     private readonly Func<int>? _eventTimeFloatBits;
+
+    /// <summary>
+    /// Files a thing's INIT_SCRIPT on the level event manager. With it, every
+    /// init() and ready() waits for its event (the Simulation's retail path);
+    /// without it, the runtime initializes at once, as its standalone tests
+    /// drive it.
+    /// </summary>
+    private Action<Level100ActorId>? _requestInit;
     private readonly SortedDictionary<int, Instance> _instances = [];
     private readonly List<Level100ActorScriptEventPosted> _postedEvents = [];
     private readonly List<Level100ActorScriptCommand> _commands = [];
@@ -157,6 +165,52 @@ public sealed class Level100ActorScriptRuntime
             .ToArray()),
         Array.AsReadOnly(_postedEvents.OrderBy(item => item.Sequence).ToArray()),
         Array.AsReadOnly(_commands.OrderBy(item => item.Sequence).ToArray()));
+
+    /// <summary>
+    /// The retail path: binds Setup and every authored script without running
+    /// any <c>init()</c>. Each runs when the level event manager delivers its
+    /// INIT_SCRIPT (<see cref="RunScriptInit"/>, <see cref="RunSetupInit"/>),
+    /// and a script bound later by <c>SetScript</c> or <c>SpawnThing</c> has
+    /// its INIT_SCRIPT filed through <paramref name="requestInit"/>.
+    /// </summary>
+    public void AttachReleasedScripts(Action<Level100ActorId> requestInit)
+    {
+        ArgumentNullException.ThrowIfNull(requestInit);
+        if (_initializing || _instances.Count != 0 || _setup is not null)
+        {
+            throw new InvalidOperationException("Level 100 actor scripts were attached twice.");
+        }
+
+        _requestInit = requestInit;
+        _setup = new Instance(default, Level100MissionProgram.LoadEmbedded("Setup"));
+        foreach (Level100ActorSnapshot actor in _actors.Snapshot.Actors
+            .Where(actor => actor.ScriptName is not null)
+            .OrderBy(actor => actor.ActorId.Value))
+        {
+            Attach(actor.ActorId, actor.ScriptName!);
+        }
+    }
+
+    /// <summary>A thing's INIT_SCRIPT: its script's <c>init()</c>.</summary>
+    internal void RunScriptInit(Level100ActorId actorId)
+    {
+        if (!_instances.TryGetValue(actorId.Value, out Instance? instance))
+        {
+            // The thing lost its script, or was deleted, before the event.
+            return;
+        }
+
+        InitializeInstance(instance);
+        PumpEvents(instance);
+    }
+
+    /// <summary>The Setup carrier's INIT_SCRIPT.</summary>
+    internal void RunSetupInit()
+    {
+        Instance setup = _setup ?? throw new InvalidOperationException("Setup was never attached.");
+        InitializeInstance(setup);
+        PumpEvents(setup);
+    }
 
     public void InitializeReleasedScripts()
     {
@@ -289,6 +343,12 @@ public sealed class Level100ActorScriptRuntime
         }
 
         Attach(actorId, scriptName);
+        if (_requestInit is not null)
+        {
+            // Its construction filed its INIT_SCRIPT and ready().
+            return;
+        }
+
         Instance instance = RequireInstance(actorId);
         InitializeInstance(instance);
         RunImmediateReadyForLegacySpawn(instance);
@@ -533,10 +593,11 @@ public sealed class Level100ActorScriptRuntime
                     Level100ActorLifecycle.StartedDying)
             .Select(actor => actor.ActorId.Value)
             .ToArray();
-        if (_setup is null || !_setup.Initialized ||
+        // A script still waiting for its INIT_SCRIPT is legitimately
+        // uninitialized; the event is in the level event manager.
+        if (_setup is null ||
             _instances.Keys.Any(id => !scriptedActorIds.Contains(id)) ||
-            undestroyedScriptedActorIds.Any(id => !_instances.ContainsKey(id)) ||
-            _instances.Values.Any(instance => !instance.Initialized))
+            undestroyedScriptedActorIds.Any(id => !_instances.ContainsKey(id)))
         {
             throw new ArgumentException(
                 "Actor-script snapshot does not contain the complete released binding set.",
@@ -714,7 +775,8 @@ public sealed class Level100ActorScriptRuntime
         RunBuiltIn(instance, 0, null);
     }
 
-    private void Attach(Level100ActorId actorId, string scriptName)
+    /// <summary>Binds a script; false when the thing already runs it.</summary>
+    private bool Attach(Level100ActorId actorId, string scriptName)
     {
         if (_instances.TryGetValue(actorId.Value, out Instance? existing))
         {
@@ -723,10 +785,11 @@ public sealed class Level100ActorScriptRuntime
                 throw new InvalidOperationException(
                     $"Actor {actorId} changed script after execution began.");
             }
-            return;
+            return false;
         }
 
         _instances.Add(actorId.Value, new Instance(actorId, Level100MissionProgram.LoadEmbedded(scriptName)));
+        return true;
     }
 
     private void RunBuiltIn(
@@ -1010,11 +1073,16 @@ public sealed class Level100ActorScriptRuntime
                 {
                     // Physical/guide/destruction admission precedes the new
                     // script's initializer, just as for mission-owned spawns.
+                    // On the retail path that construction also filed the
+                    // script's INIT_SCRIPT and ready() for the next frame.
                     _afterSpawn?.Invoke(actorId);
                     Attach(actorId, arguments[3].AsString());
-                    Instance spawnedInstance = RequireInstance(actorId);
-                    InitializeInstance(spawnedInstance);
-                    RunImmediateReadyForLegacySpawn(spawnedInstance);
+                    if (_requestInit is null)
+                    {
+                        Instance spawnedInstance = RequireInstance(actorId);
+                        InitializeInstance(spawnedInstance);
+                        RunImmediateReadyForLegacySpawn(spawnedInstance);
+                    }
                 }
                 return NativeResult.Void;
             case 4: // Pause — IScript__Pause 0x00537c70
@@ -1116,7 +1184,12 @@ public sealed class Level100ActorScriptRuntime
                 Level100ActorId scriptActor = RequireContext(execution).AsActorId();
                 string scriptName = arguments[0].AsString();
                 _actors.SetScript(scriptActor, scriptName);
-                Attach(scriptActor, scriptName);
+                // SetScript binds the VM, then files the INIT_SCRIPT at -1
+                // (0x004f42b1-0x004f42da), so the bound init() runs next frame.
+                if (Attach(scriptActor, scriptName))
+                {
+                    _requestInit?.Invoke(scriptActor);
+                }
                 return NativeResult.Void;
             case 49: // GetPos
                 return new NativeResult(
