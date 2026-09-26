@@ -145,7 +145,10 @@ Home makes three promises, and the code keeps them:
   displaced is not the one backed up, it is swapped back.
 - **Nothing is written while the game is running.** A write is refused while `BEA.exe`
   runs; on Linux that is a process Wine names `BEA.exe` (a tool that merely opens the file
-  does not count), a check not yet seen against a live game.
+  does not count). On 2026-09-26, with the Steam game running under Proton, the check found
+  exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
+  Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
+  `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Any earlier version can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first.
 

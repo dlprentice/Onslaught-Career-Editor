@@ -181,7 +181,8 @@ safe for their game and saves. Its sidebar follows that:
 A change reaches the game only through one dialog that offers a new career, replacing the
 one that was opened, or a copy elsewhere. Before anything in the game changes, every career
 and the settings file are copied to a verified backup set; nothing is written while it finds
-`BEA.exe` running (the Linux process check has not yet been seen against a live game); a
+`BEA.exe` running (on Linux, seen on 2026-09-26 to find the Steam game's own process under
+Proton and nothing else); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
 `File.Replace` with the same comparison) and verified. When the game closes, or the player

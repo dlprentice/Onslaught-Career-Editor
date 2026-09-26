@@ -62,7 +62,10 @@ public static class GameProcess
     /// Whether a Linux process is the game itself. Wine names a Windows program's process after its
     /// executable (comm <c>BEA.exe</c>) and shows its Windows path as argv[0]; a Wine loader may carry the
     /// path as an argument while it starts. A tool that only names the file (a disassembler, a hash, a
-    /// copy) is not the game. Not yet observed against a live game on Linux.
+    /// copy) is not the game. Seen on 2026-09-26 with the Steam game under Proton: the game's process has
+    /// comm <c>BEA.exe</c> and argv[0] <c>S:\steamapps\common\Battle Engine Aquila\BEA.exe</c>, while
+    /// Steam's <c>steam.exe</c> shim, the Proton script and the runtime wrapper, which name the file, are not
+    /// counted.
     /// </summary>
     public static bool IsGame(string comm, IReadOnlyList<string> argv)
     {
