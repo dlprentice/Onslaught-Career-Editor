@@ -9,9 +9,9 @@ Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
 
-Linux is the active development and native Godot host. `npm test` runs the native
-GDScript Save Lab scene/domain, integrated C# adapter and publication-race checks, and
-companion launcher tests without opening a window. `npm run build` and
+Linux is the active development and native Godot host. `npm test` runs the companion's
+C# contract suite (career codec, media inventory, protected adapter, publication races
+and the code-built interface) and its launcher tests without opening a window. `npm run build` and
 `npm run dev` build/run the Godot .NET companion. The latter opens a window.
 The rebuild has native Linux build/run/smoke/capture commands; live input checks
 need an available desktop. Source and headless tests alone do not establish native
@@ -34,7 +34,7 @@ are not replaced by the focused portable results below.
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
 | WinUI behavior or copy | On Windows, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
-| Native companion scenes, save domain and safety | `npm run test:companion-godot` uses owned real-save copies, actual scene controls, independent byte diffs, protected round trips, changed/conflicting sources, direct C# adapter and publication-race cases. `test:companion-tools` checks pins/staging/exports. |
+| Companion (C# built in code) and its file safety | `npm run test:companion-godot` runs `Tests/CompanionTestRunner.cs` on owned real-save copies: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` checks pins, the code-only policy, staging and exports. |
 | Retained save, options, copied-target, or patch safety | `test:save-lab` retains the C# service oracle and existing safety tests. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
@@ -42,7 +42,7 @@ are not replaced by the focused portable results below.
 | Rebuild Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` builds the small integrated C# assembly and checks GDScript; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
@@ -5212,7 +5212,7 @@ Normal closing while busy is deferred until the transaction returns; shutdown
 joins an outstanding worker. A read-only integration review found no actionable
 ownership, thread-lifetime, uncertainty or unchecked-write issue. The unchanged
 filesystem code's Windows staging-handoff and power-loss limitations remain as
-documented in the [API/safety record](companion/OnslaughtToolkit.FileBridge/README.md).
+documented in the [API/safety record](https://github.com/dlprentice/Onslaught-Career-Editor/blob/d5e002d00aa8b7d2fb6d745aa1775285d957f2fd/companion/OnslaughtToolkit.FileBridge/README.md), retired with the prototype on September 25.
 
 The actual worktree source built with zero warnings/errors and imported headlessly
 with the .NET editor: `local-data/companion/mono-source-editor-ps1m7phv/`.
@@ -5256,3 +5256,84 @@ owned app/server processes, display sockets and private cookies were cleaned up.
 This is executed Linux workflow evidence and Windows cross-export/package
 inspection. Windows execution, human usability and audio acceptance remain pending.
 No physical desktop, VM, release or hosted CI was used.
+
+## Companion C# migration — September 25
+
+Branch `claude/companion-csharp-20260925` replaced the companion's GDScript domain,
+interface and tests with one C# application built in code. `Main.tscn` is a one-node
+wrapper attaching `Ui/CompanionApp.cs`; the build now refuses `.gd`, saved resources and
+any scene with more than that node. Each former GDScript contract moved to a C# suite
+run inside headless Godot by `Tests/CompanionTestRunner.cs`: the codec checks to
+`CareerSaveTests`, the media checks to `MediaCatalogTests`, the direct adapter checks to
+`ProtectedFilesTests`, the scene workflow to `CompanionUiTests`, and the retired
+FileBridge harness's six Linux publication races to `TransactionRaceTests`, which calls
+the linked transaction's internal hook in-process. GDScript's string-key, float and
+boolean selection refusals have no C# equivalent because selections are typed; every
+representable invalid selection is still refused. New checks cover plan immutability,
+the preview's byte count, one listed row per differing byte, a receipt whose bytes
+differ from the plan, a worker with no protected access, scan-limit and relative-path
+refusal, and explicitly reopening a verified result. `Tests/` and `Development/`
+compile only into development builds; the export launcher refuses a release assembly
+that contains either namespace.
+
+`npm test` passed in canonical `local-data/companion/godot-dotnet-test-6r33pbap/`:
+**302 checks, 0 failures**, then all **15** launcher cases, in 9.3 s. The C# build
+reported zero warnings and errors with warnings treated as errors. Two deliberate
+defects — authoring the packed fourth kill byte and accepting a receipt without
+original verification — turned the same suite red with exit code 1 and ten named
+failures: `local-data/companion/godot-dotnet-test-6862alcj/`. The standalone FileBridge
+prototype and its Python protocol test were removed; their Windows staging-handoff and
+power-loss limits now live in the [companion README](companion/OnslaughtToolkit.Godot/README.md#file-safety-boundary).
+
+## Companion approved workflows — September 26
+
+David approved four feature groups and the Flight-deck look on 2026-09-25 (careers and
+Goodies; copies and options; install and backups; music, voices and lore), with patching
+the installed `BEA.exe` left for a later phase. Branch `claude/companion-csharp-20260925`
+built all four in C# and in code; the [companion README](companion/OnslaughtToolkit.Godot/README.md)
+describes them and [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-options-install-music-and-lore)
+states their limits.
+
+**Suite.** `npm test` passed in canonical `local-data/companion/godot-dotnet-test-mzmgwefv/`:
+**596 checks, 0 failures**, then all **16** launcher cases, in 13 s, with zero build warnings
+under warnings-as-errors. New suites cover Steam discovery on a fake library, the game's
+text decoded from a synthetic v3 language table, backup sets and installs (a new career, a
+replaced career and options file, refusals for unsafe target names, a running game, an
+unsupported source and a backup folder inside the game, a career that changes after its
+backup, and a file that takes the target's name just before the exchange), the options
+block and key table, music and voice grouping and the Vorbis header check, and the lore
+library: reading order, header removal, balanced markup and every link in every article.
+
+**Falsifiers.** Disabling the check that the file displaced by `RENAME_EXCHANGE` is the one
+backed up turned the suite red with the named swap-back failure, exit 1:
+`local-data/companion/godot-dotnet-test-3_qidnty/`. The lore link check failed on a real
+anchor, `lore/units-and-mechs.md:173` → `worlds.md#world-500-career-node-23`, which GitHub
+never resolved either (the em dash leaves `world-500--career-node-23`); the link was
+corrected in `a0246a39`.
+
+**Screens.** `npm run capture:companion-godot` rendered 76 screens through `godot-offscreen`
+at 1280×800 and 1920×1080 against a fake install —
+`local-data/companion/godot-dotnet-capture-y9reye8p/captures/` — and 74 against the real
+Steam library with `--capture-arg=--steam-root=$HOME/.local/share/Steam` —
+`local-data/companion/godot-dotnet-capture-l1d7rpel/captures/`. The real install's
+`BEA.exe`, `defaultoptions.bea` and its one career hashed identically before and after
+that run, and `savegames/` gained no file. Every page and state was reviewed first-hand at
+both sizes: each page empty, the career pages with the fixture open, cheat names with and
+without a backup folder, options from open to a captured key and a verified copy, backup
+sets, an install into the fake game, each confirmation dialog, a loaded voice line, and
+the lore reader's front door, memo, section link, tables, mission list and search. The
+review led to the fixes in `da660c0a`. The real install showed the Steam `BEA.exe`
+recognised, the game's mission names and Goodie titles, voice transcripts, and the
+campaign page's mission table read from the game's text.
+
+**Packages.** `npm run export:companion-godot -- --platform both` built
+`local-data/companion/godot-dotnet-export-qnwi9ous/packages/linux` (152 MB) and `windows`
+(184 MB). Each release `OnslaughtToolkit.Godot.dll` (635,392 bytes) carries the embedded
+lore and neither the `Tests` nor the `Development` namespace. The Linux package ran
+`--headless --quit-after 240` with isolated XDG directories and exited 0 with no error
+output; no core dump from the companion appeared.
+
+**Not verified.** Windows execution, including the Windows file path for copies and
+backups; a human click-through with a mouse and keyboard; listening to the music and voice
+playback (the audio was decoded, never heard); and anything the game does with a copy
+beyond the options, Goodie and cheat behaviour the RE lane has already watched.
