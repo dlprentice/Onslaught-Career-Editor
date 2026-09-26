@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 using Godot;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Tests;
 using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Development;
@@ -14,6 +15,7 @@ namespace OnslaughtToolkit.Companion.Development;
 public partial class ScreenCapture : SceneTree
 {
     private string _output = "";
+    private string _steamRoot = "";
     private int _shots;
 
     public override void _Initialize() => _ = RunAsync();
@@ -23,13 +25,15 @@ public partial class ScreenCapture : SceneTree
         int exitCode = 1;
         try
         {
-            string fixture = "", sizes = "1280x800,1920x1080";
+            string fixture = "", sizes = "1280x800,1920x1080", steamRoot = "";
             foreach (string argument in OS.GetCmdlineUserArgs())
             {
                 if (argument.StartsWith("--output=", StringComparison.Ordinal)) _output = argument["--output=".Length..];
                 if (argument.StartsWith("--fixture=", StringComparison.Ordinal)) fixture = argument["--fixture=".Length..];
                 if (argument.StartsWith("--sizes=", StringComparison.Ordinal)) sizes = argument["--sizes=".Length..];
+                if (argument.StartsWith("--steam-root=", StringComparison.Ordinal)) steamRoot = argument["--steam-root=".Length..];
             }
+            _steamRoot = steamRoot;
             if (_output.Length == 0 || fixture.Length == 0 || !File.Exists(fixture))
             {
                 GD.PrintErr("--output=DIR and an owned --fixture=COPY are required.");
@@ -70,9 +74,14 @@ public partial class ScreenCapture : SceneTree
             GuiEmbedSubwindows = true,
         };
         Root.AddChild(viewport);
-        CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false);
+        // A fake Steam library by default; --steam-root points at a real one, which is only read.
+        FakeInstall install = FakeInstall.Create(Path.Combine(work, "install"), File.ReadAllBytes(fixture));
+        CompanionEnvironment environment = new([_steamRoot.Length > 0 ? _steamRoot : install.SteamRoot],
+            Path.Combine(work, "settings", "settings.json"));
+        CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
         viewport.AddChild(app);
         await Settle();
+        for (int frame = 0; frame < 600 && (app.Game.Busy || app.Game.Folder is null); frame++) await Settle();
         foreach (string page in new[] { "home", "edit", "compare", "stored", "media" })
         {
             app.Navigate(page);

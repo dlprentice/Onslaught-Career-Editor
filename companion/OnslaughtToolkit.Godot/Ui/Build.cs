@@ -12,6 +12,16 @@ internal static class Build
         return child;
     }
 
+    /// <summary>Detaches and frees every child at once, so a rebuilt list never shows stale rows.</summary>
+    internal static void Clear(this Node parent)
+    {
+        foreach (Node child in parent.GetChildren())
+        {
+            parent.RemoveChild(child);
+            child.QueueFree();
+        }
+    }
+
     /// <summary>A label using one of the theme's label variations (Title, Section, Eyebrow, Muted, Mono…).</summary>
     /// <param name="clip">Trim with an ellipsis instead of growing; give the label room (ExpandFill or a width).</param>
     internal static Label Text(string text, string variation = "", bool wrap = true, float width = 0, bool clip = false)

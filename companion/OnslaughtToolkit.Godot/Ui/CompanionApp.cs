@@ -2,6 +2,7 @@
 using Godot;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
@@ -10,21 +11,30 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// script to one node. It owns the sidebar, page header, pages, dialogs and status bar, and defers
 /// closing while a protected file transaction is still running.
 /// </summary>
+/// <summary>Where the companion looks for Steam and keeps its settings; tests and captures supply their own.</summary>
+internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath)
+{
+    internal static CompanionEnvironment Default() =>
+        new(SteamLibraries.DefaultRoots(), ProjectSettings.GlobalizePath("user://settings.json"));
+}
+
 public partial class CompanionApp : Control
 {
     private readonly IProtectedSaveFiles? _files;
     private readonly bool _managesWindow;
+    private readonly CompanionEnvironment? _environment;
     private readonly Dictionary<string, Page> _pages = [];
 
     public CompanionApp() : this(new ProtectedSaveFiles(), managesWindow: true)
     {
     }
 
-    /// <summary>Hosts the companion inside another tree (tests, captures) with the given file access.</summary>
-    internal CompanionApp(IProtectedSaveFiles? files, bool managesWindow)
-        => (_files, _managesWindow) = (files, managesWindow);
+    /// <summary>Hosts the companion inside another tree (tests, captures) with the given file access and environment.</summary>
+    internal CompanionApp(IProtectedSaveFiles? files, bool managesWindow, CompanionEnvironment? environment = null)
+        => (_files, _managesWindow, _environment) = (files, managesWindow, environment);
 
     internal CareerWorkspace Workspace { get; private set; } = null!;
+    internal GameLibrary Game { get; private set; } = null!;
     internal StatusLine Status { get; private set; } = null!;
     internal Sidebar Sidebar { get; private set; } = null!;
     internal Label PageTitle { get; private set; } = null!;
@@ -45,11 +55,13 @@ public partial class CompanionApp : Control
         Theme = CompanionTheme.Build();
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         Workspace = new CareerWorkspace(new SaveFileWorker(_files));
+        CompanionEnvironment environment = _environment ?? CompanionEnvironment.Default();
+        Game = new GameLibrary(environment.SteamRoots, new SettingsStore(environment.SettingsPath));
         Status = new StatusLine();
         this.Add(new ColorRect { Color = Palette.Background, MouseFilter = MouseFilterEnum.Ignore })
             .SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 
-        Home = new HomePage(ShowOpenDialog);
+        Home = new HomePage(Game, Status, this, ShowOpenDialog, OpenCareerAsync);
         EditCopy = new EditCopyPage(Workspace, Status, this, OpenCareerAsync);
         Compare = new ComparePage(Workspace, Status, this);
         StoredValues = new StoredValuesPage(Workspace);
@@ -103,6 +115,7 @@ public partial class CompanionApp : Control
         OpenDialog.FileSelected += path => Status.Track(OpenCareerAsync(path));
         Workspace.Changed += RefreshActions;
         Workspace.SessionOpened += ShowSession;
+        Game.Changed += ShowGameSummary;
 
         if (_managesWindow)
         {
@@ -117,6 +130,7 @@ public partial class CompanionApp : Control
         if (!Workspace.IsAvailable) Status.Show(SaveFileWorker.UnavailableMessage, StatusKind.Failure);
         Navigate("home");
         RefreshActions();
+        Status.Track(Game.DetectAsync());
     }
 
     public override void _ExitTree()
@@ -180,6 +194,14 @@ public partial class CompanionApp : Control
         RefreshHeader();
     }
 
+    private void ShowGameSummary()
+    {
+        Status.Game.Text = Game.Busy ? "Checking the game folder…" : Game.Folder is GameFolder folder
+            ? (folder.Executable.State == ExecutableState.Retail ? "Game: Steam release" : "Game: BEA.exe differs from the Steam release")
+            : "No game folder";
+        RefreshHeader();
+    }
+
     private void RefreshHeader()
     {
         if (Current is null) return;
@@ -190,7 +212,6 @@ public partial class CompanionApp : Control
     private void RefreshActions()
     {
         OpenButton.Disabled = Workspace.Busy;
-        Home.OpenCareer.Disabled = Workspace.Busy;
         EditCopy.UpdateActions();
         Compare.Refresh();
         RefreshHeader();

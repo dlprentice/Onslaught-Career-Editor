@@ -17,12 +17,15 @@ internal static class CompanionUiTests
     {
         check.Suite("companion interface");
         SwitchableSaveFiles files = new(new ProtectedSaveFiles());
-        CompanionApp app = new(files, managesWindow: false);
+        FakeInstall install = FakeInstall.Create(Path.Combine(outputDirectory, "ui-install"), original);
+        CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"));
+        CompanionApp app = new(files, managesWindow: false, environment);
         tree.Root.AddChild(app);
         await Frame(tree);
+        for (int frame = 0; frame < 600 && (app.Game.Busy || app.Game.Folder is null); frame++) await Frame(tree);
         try
         {
-            await Drive(app, files, tree, fixture, outputDirectory, original, check);
+            await Drive(app, files, tree, install, fixture, outputDirectory, original, check);
         }
         finally
         {
@@ -33,9 +36,12 @@ internal static class CompanionUiTests
         await UnavailableWorker(outputDirectory, original, check);
     }
 
-    private static async Task Drive(CompanionApp app, SwitchableSaveFiles files, SceneTree tree, string fixture,
-        string outputDirectory, byte[] original, Checks check)
+    private static async Task Drive(CompanionApp app, SwitchableSaveFiles files, SceneTree tree, FakeInstall install,
+        string fixture, string outputDirectory, byte[] original, Checks check)
     {
+        check.That(app.Game.Folder?.Root == install.Game && app.Home.OpenButtons.Count == 1 && !app.Home.OpenButtons[0].Disabled,
+            "Home finds the game through Steam and lists its career with an Open button.");
+        check.That(app.Status.Game.Text.Contains("differs"), "The status bar says the test executable is not the Steam release.");
         EditCopyPage lab = app.EditCopy;
         check.That(app.Pages.Count >= 5 && app.Sidebar.Items.Count == app.Pages.Count, "every page has one sidebar item");
         check.That(app.Current == app.Home && app.Home.Root.Visible, "the companion starts on Home");
@@ -54,10 +60,14 @@ internal static class CompanionUiTests
                 "file dialog has no mutation actions: " + dialog.Title);
         }
 
+        app.Home.OpenButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+        for (int frame = 0; frame < 600 && app.Workspace.Session?.Path != install.Career; frame++) await Frame(tree);
+        check.That(app.Workspace.Session?.Path == install.Career && app.Current == app.EditCopy && app.CareerName.Text == "Career One.bes",
+            "opening a career from Home shows it in the header and moves to its page");
+        check.That(File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original), "opening a game career changes nothing");
+
         Outcome<SaveSession> opened = await app.OpenCareerAsync(fixture);
-        check.That(opened.Ok, "companion opens the protected real fixture");
-        check.That(app.Current == app.EditCopy && app.CareerName.Text == Path.GetFileName(fixture),
-            "opening from Home shows the career in the header and moves to its page");
+        check.That(opened.Ok && app.CareerName.Text == Path.GetFileName(fixture), "companion opens the protected real fixture");
         if (app.Workspace.Session is not SaveSession session)
         {
             check.Fail("open failed: " + opened.Message);
