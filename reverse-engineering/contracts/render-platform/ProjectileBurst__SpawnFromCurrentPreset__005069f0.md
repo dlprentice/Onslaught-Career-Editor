@@ -45,12 +45,12 @@ One call is one burst event. In order:
 2. No mode: return 0. A mode with a launch sample (`+0xc`) and `CWeaponSoundPerBurst` 0 plays it once (`0x00506a96`).
 3. `CWeaponVolleySize` not positive: return. Otherwise, for each round of the volley (`0x00506aaa`-`0x0050788b`):
    1. `CreateProjectile(mode round)`; null skips to the next round with no draw.
-   2. Launch-sequence counter +1, wrapping at the sequence count `+0x58`; its entry is the emitter index. Launch-angle counter +1, wrapping at `+0x68`.
+   2. Launch-sequence counter `+0x70` +1, reset to 0 when not below the sequence count `+0x58`; slot `[counter]` of the list at `+0x4c` is the emitter index (`0x005078b0`, 0 for a missing slot). `CWeaponLaunchSequence` pairs (index, emitter) fill slot index − 1 with fistp(emitter) (`0x00435a00`). Launch-angle counter `+0x74` +1, reset at `+0x68`. The weapon constructor sets both counters to −1 (`0x00505e7b`), so a new weapon's first round uses the first slots.
    3. Owner slot 75 fills the launch position and orientation for that emitter.
-   4. With weapon `+0x80`, the weapon orientation `+0x30` replaces it. It is first re-aimed at the weapon target's centre (yaw −atan2(dx, dy), pitch asin(dz/|d|)) when `CWeaponTrack` is set, a target exists and the round is gravity-free, beam or torpedo.
-   5. The launch-angle entry gives an Euler matrix. Speed is `CRoundVelocity` × 0.05, or `0x005099a0` for a beam.
+   4. With weapon `+0x80`, the weapon orientation `+0x30` replaces it, first re-aimed at the weapon target's centre (yaw −atan2(dx, dy), pitch asin(dz/|d|)) when `CWeaponTrack` is set, a target exists and the round is gravity-free, beam or torpedo. Only `0x00509140` sets the flag (`0x0050945f`, together with the aim orientation, aim point `+0x84` and target `+0x2c`), and only AI code reaches it (through `0x004fb650`), so player weapons never use it.
+   5. `CWeaponLaunchAngle` triples (index, a, b) fill slot index − 1 of the list at `+0x5c` with (a, b) (`0x00435b50`). A found slot gives `Mat34__SetFromEulerAngles(yaw a, pitch b, roll 0)` (`0x004062d0`). With no slot, including every mode that has no entries, the matrix is `0x004f8140(0, 1, 0)`, the integer-angle constructor in units of 2π/4096. That is a pitch of 2π/4096, with words rows (`3f800000 0 0`, `0 3f7fffec bac90fd6`, `0 3ac90fd6 3f7fffec`). Speed is `CRoundVelocity` × 0.05, or `0x005099a0` for a beam.
    6. Two draws, pitch then yaw (`0x00506e0a`, `0x00506e3e`): ((r mod 65536) × 2/65536 − 1) × `CWeaponInaccuracy`, taken whatever the inaccuracy.
-   7. Start position = launch position + owner velocity (slot 27); orientation and velocity from steps 3-6; allegiance = owner `+0x138`; life = `CRoundLifeSpan`.
+   7. The launch basis is orientation × angle × jitter, each product row by column (`0x00506ed1-0x005070db`, then `0x005070e0-0x005072d0`), with jitter = `FMatrix(yaw second draw, pitch first draw, 0)`. The velocity is speed × the basis's column 1 (the local forward axis), and the round's orientation is the basis. Start position = launch position + owner velocity (slot 27); allegiance = owner `+0x138`; life = `CRoundLifeSpan`.
    8. Target = owner slot 81. The round's owner reader `+0xec` = owner.
    9. `CRoundFlak` round (`+0x4c`) with a target and speed × life > distance: one draw resets the life (`0x00507453`).
    10. Battle Engine owner: player `+0x574` → `+0x34` += 1, then `FireLock(target)` (`0x005074c9`) when `0x00407310` finds this weapon current.
@@ -81,6 +81,7 @@ One call is one burst event. In order:
 ## Runtime corroboration (TTD, bounded)
 - The 2026-08-23 draft recorded coverage presence of this body in 7/10, 7/10, 8/10, 2/10, 5/10, 5/11, 2/7, 1/4 and 2/3 sessions of `contract-round-impact` batches 1-9 (level openings, Level 521 native runs and the Level 742 pilot); batch 10 had no coverage bitmap. Coverage proves execution only.
 - No capture has replayed the per-round order, the draw count or the recoil in this contract.
+- Original-code control `local-data/test-runs/player-launch-20260925/euler_constructors_control.py` ran the unchanged `0x004f8140` (with `0x00401ec0`, `0x00401f10`, `0x0040d320`) and `0x004062d0` under control words `0x027f` and `0x007f`. For every tested argument, `0x004f8140(a, b, c)` equals `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096), up to the sign of zero words; the integer version leaves each row's fourth word unwritten. Receipt `euler-run-9ks6dz5x/euler_constructors.json` SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`; ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`.
 
 ## Evidence
 - Pristine specimen objdump over the body and the callees named above, 2026-09-25.
@@ -90,8 +91,8 @@ One call is one burst event. In order:
 - Level 100 use: `reverse-engineering/game-mechanics/level100-final-drone-wave.md`.
 
 ## Confidence
-2 — every branch, draw site and callee named here was read from the pristine body; the exact matrix composition order in steps 4-7 and the payload field layout were not re-derived, and nothing here has been replayed.
+2 — every branch, draw site, callee and product named here was read from the pristine body, and the two Euler constructors were executed unchanged; the full init-payload layout was not re-derived and the spawner itself has not been replayed.
 
 ## Unresolved questions
-- The exact product order of the launch orientation (weapon or emitter orientation, launch angle and jitter) and the full init-payload layout. Cheapest falsifier: an original-code run of this body with a synthetic weapon, owner and round, comparing the payload against a model.
+- The full init-payload layout. Cheapest falsifier: an original-code run of this body with a synthetic weapon, owner and round, comparing the payload against a model.
 - The launch-position providers `0x0040c990` and `0x004fc3c0` and the parts' `WeaponFired` stores are separate contracts.
