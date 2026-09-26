@@ -499,7 +499,15 @@ public sealed class Level100ActorWeaponTests
     /// refreshes), Dropship 1 and Plane 2 (Actor, <c>+0x284</c>).
     /// </summary>
     internal static int ConstructionDraws(Level100ActorDefinitionSet definitions) =>
-        definitions.BaseWorldPineCount + RowDraws(definitions.Actors);
+        definitions.BaseWorldPineCount + RowDraws(definitions.Actors) +
+        (definitions.BaseWorldPineCount > 0 ? BaseWorldPassExtraDraws : 0);
+
+    /// <summary>
+    /// With the base world's pass: the influence map's two draws (after the
+    /// pines and at the load's tail) and the Target Truck and Target Drone
+    /// warm-ups, two draws each.
+    /// </summary>
+    internal const int BaseWorldPassExtraDraws = 6;
 
     /// <summary>The construction draws of the given rows, by class.</summary>
     internal static int RowDraws(IEnumerable<Level100ActorDefinition> rows) =>

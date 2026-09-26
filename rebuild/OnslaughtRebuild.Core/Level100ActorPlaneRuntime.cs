@@ -174,6 +174,14 @@ public sealed partial class Level100ActorMechanics
             DispatchUnitCallback(events, dispatch);
             return;
         }
+        if (dispatch.Listener == InfluenceMapListener)
+        {
+            if (dispatch.EventNum != 1000)
+                throw new InvalidOperationException("Unadmitted influence map callback.");
+            // 0x0048c120 -> 0x0048b8e0(1): one draw and the chain's next 1000.
+            FileInfluenceMapRefresh(events, dispatch.Handle);
+            return;
+        }
         var actorId = new Level100ActorId(dispatch.Listener < 0 ? checked(-dispatch.Listener) : dispatch.Listener / 2);
         if (!_states.TryGetValue(actorId.Value, out ActorState? state) || state.PlaneGuide is null)
             throw new InvalidOperationException("Aircraft event has no guide owner.");
@@ -391,7 +399,7 @@ public sealed partial class Level100ActorMechanics
         foreach (int handle in snapshot.Lanes.SelectMany(lane => lane.Handles).Concat(snapshot.Overflow))
         {
             int listener = slots[handle].Listener;
-            if (IsPlayerListener(listener) || IsUnitListener(listener)) continue;
+            if (IsPlayerListener(listener) || IsUnitListener(listener) || listener == InfluenceMapListener) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -436,6 +444,12 @@ public sealed partial class Level100ActorMechanics
             {
                 if (!AdmitsUnitCallback(slot))
                     throw new ArgumentException("Unit queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
+            if (slot.Listener == InfluenceMapListener)
+            {
+                if (slot.EventNum != 1000)
+                    throw new ArgumentException("Influence map queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
             if (slot.Listener is 1 or int.MinValue)

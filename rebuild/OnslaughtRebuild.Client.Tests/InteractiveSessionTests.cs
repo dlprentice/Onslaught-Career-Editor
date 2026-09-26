@@ -1432,7 +1432,14 @@ public sealed class InteractiveSessionTests
         Assert.Equal(Level100ActorCommandIntent.FollowingWaypoint, intent.Intent);
         Assert.Equal("Target Tank Path 1", intent.WaypointPath);
         Assert.True(intent.WaitForWaypointCompletion);
-        Assert.Equal(0, intent.GroundFullGuideBaseTickPhase);
+        // The phase reaches 0 on the first full Move, which the tank's Actor
+        // draw places one to three frames after its construction.
+        Level100UnitCallbackSnapshot unit = Assert.Single(
+            snapshot.Level100ActorMechanics.UnitCallbacks!,
+            item => item.ActorId == target.ActorId);
+        int lowFrequencyMoves = unit.FirstMoveFrame - (unit.ConstructionFrame + 1);
+        Assert.InRange(lowFrequencyMoves, 0, 2);
+        Assert.Equal((4 - lowFrequencyMoves) % 4, intent.GroundFullGuideBaseTickPhase);
         Assert.Contains(
             snapshot.Level100ActorScriptCommands,
             command =>
@@ -1830,14 +1837,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("03f4e35e9e0dbf6947c06955c6d93df6eb3b69a4f8052c3ad2adb65f772c6121",
+        Assert.Equal("3b558e18ae54f0d333a4953e9b9d692fe222db94f1a269bc9999a2ef71a6f56d",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("79fcba86f2a8c9eabd2b2b8dc39925eabb457870e29281a7f785547121e2a111",
+        Assert.Equal("fc31478637e65ee5b533fce49d1d73a9b0f1b316ab801b311e23381aff1347a8",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "cb9281fc827cf66e046b6c2c7644aab0e697a49b5a6c0707c10e4bdd21f50dab",
+            finalStateHash == "0df3dd5c28f7904cec420abfa54b5b4848b7a0c76223994cabb3de5556562136",
             $"First-flight final state hash: {finalStateHash}");
     }
 

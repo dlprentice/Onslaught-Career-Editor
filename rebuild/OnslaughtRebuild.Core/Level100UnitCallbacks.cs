@@ -156,7 +156,23 @@ public sealed partial class Level100ActorMechanics
         checked(UnitListenerBase + (actorId.Value * UnitListenerSlots) + (int)owner);
 
     private static bool IsUnitListener(int listener) =>
-        listener >= UnitListenerBase && listener < MissilePodListener;
+        listener >= UnitListenerBase && listener < InfluenceMapListener;
+
+    /// <summary>
+    /// The influence map manager's refresh, event 1000 (<c>0x48c120</c>). The
+    /// load starts two chains of it; each delivery takes one draw.
+    /// </summary>
+    internal const int InfluenceMapListener = int.MaxValue - 2;
+
+    /// <summary>
+    /// The unit types <c>SpawnInitialThings</c> (<c>0x0050dcb0</c>) warms up
+    /// at the end of the load, in its list order: every type named as the
+    /// first argument of a <c>SpawnThing</c> call in Level 100's compiled
+    /// scripts, prepended as <c>LoadScriptEvents</c> (<c>0x0050bbde</c>) meets
+    /// them (the RE lane's construction-order correction).
+    /// </summary>
+    private static readonly string[] s_warmUpCandidates =
+        ["Target Truck", "Target Tank", "Air Trainer", "Target Drone"];
 
     private static (Level100ActorId ActorId, UnitCallbackOwner Owner) DecodeUnitListener(int listener)
     {
@@ -179,9 +195,18 @@ public sealed partial class Level100ActorMechanics
     private void ConstructLevel(Action<RetailEventScheduler, Func<int>>? battleEngineRefresh)
     {
         _planeEvents ??= new(useFloat24Arithmetic: true);
+        // The base world's pass: the pines, then CInfluenceMapManager::Load
+        // (0x0048b010), whose 0x0048b8e0 takes one unconditional draw and
+        // starts a 1000 chain; its 1002 draws nothing. Only a definition set
+        // that carries the base world's trees represents that pass.
+        bool baseWorldPass = _definitions.BaseWorldPineCount > 0;
         for (int pine = 0; pine < _definitions.BaseWorldPineCount; pine++)
         {
             _ = _releasedRandom.Next();
+        }
+        if (baseWorldPass)
+        {
+            FileInfluenceMapRefresh(_planeEvents, reuseHandle: -1);
         }
 
         Dictionary<string, Level100ActorId> byIdentity = _actors.Snapshot.Actors
@@ -205,6 +230,53 @@ public sealed partial class Level100ActorMechanics
 
             ConstructUnit(actorId, kind);
         }
+
+        if (baseWorldPass)
+        {
+            WarmUpUnusedSpawnTypes();
+            // LoadWorld's tail: 0x0048b8e0(0) takes one more draw and starts a
+            // second 1000 chain; 0x0048b7d0's 1001 draws nothing.
+            FileInfluenceMapRefresh(_planeEvents, reuseHandle: -1);
+        }
+    }
+
+    /// <summary>
+    /// <c>SpawnInitialThings</c>: every warm-up type no load row used
+    /// (<c>CUnit::Init</c> marks its type used, <c>0x004f908e</c>) is created
+    /// at (256, 256, 0) with no script, fully initialised and shut down at
+    /// once, so only its construction draws remain: a ground vehicle's Actor
+    /// and hover draws, a plane's Actor and <c>CPlane::Init</c> draws. Its
+    /// queued events have no reader and are skipped.
+    /// </summary>
+    private void WarmUpUnusedSpawnTypes()
+    {
+        HashSet<string> used = _unitCallbacks.Values
+            .Select(unit => _actors.GetActor(unit.ActorId).DefinitionName)
+            .OfType<string>()
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (string name in s_warmUpCandidates.Where(name => !used.Contains(name)))
+        {
+            if (Level100ConstructionClasses.Of(name) is not
+                (Level100ConstructionClass.SquadGroundVehicle or Level100ConstructionClass.Plane))
+            {
+                throw new InvalidOperationException($"Unadmitted warm-up type {name}.");
+            }
+
+            // The Actor draw, then the hover draw or CPlane::Init's last draw.
+            _ = _releasedRandom.Next();
+            _ = _releasedRandom.Next();
+        }
+    }
+
+    /// <summary>
+    /// <c>0x0048b8e0</c>: one draw, then 1000 at now + 1.0 + (r mod
+    /// 65536)·2⁻¹⁶ (<c>0x0048bf0f</c>, <c>0x0048bf5a</c>).
+    /// </summary>
+    private void FileInfluenceMapRefresh(RetailEventScheduler events, int reuseHandle)
+    {
+        int sample = _releasedRandom.Next() % 65536;
+        float delay = (float)RetailFloat24.Add(1.0, RetailFloat24.Multiply(sample, 1.0 / 65536.0));
+        events.AddEventTimeFromNow(delay, 1000, InfluenceMapListener, reuseHandle: reuseHandle);
     }
 
     /// <summary>

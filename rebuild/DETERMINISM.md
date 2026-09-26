@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -120,7 +120,10 @@ near-camera flag, construction frame and first full Move); the callbacks
 themselves (4003, the AI's 3000/3001/3003, fire control's 4001 and the squads'
 4000-4002) are ordinary events on that manager. Every world built in the retail
 load order selects it. The definition identity's format 9 adds the base world's
-pine count, whose draws open the load.
+pine count, whose draws open the load. A set with the base world also takes the
+influence map's two draws and the warm-up units' draws during the load, and its
+two influence 1000 chains run on the same manager under their own reserved
+listener; they add no snapshot fields.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

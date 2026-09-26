@@ -75,18 +75,20 @@ public sealed class Level100BattleEngineRefreshTests
             Level100ConstructionClasses.Of(row.DefinitionName) == Level100ConstructionClass.BattleEngine);
         Assert.Equal(1_481, definitions.BaseWorldPineCount);
 
-        // The load order (the RE lane's construction-order contract): the
-        // base world's pines, its rows 0-34, then level row 0's Battle
-        // Engine: its Actor draw, 6002's draw and HandleAutoAim(NULL)'s 6003
-        // draw, and then the rest of the level world's rows. Core then runs
-        // every script's init at construction, so the Tank Factory's
+        // The load order (the RE lane's construction-order contract and its
+        // correction): the base world's pines, the influence map's draw, its
+        // rows 0-34, then level row 0's Battle Engine: its Actor draw, 6002's
+        // draw and HandleAutoAim(NULL)'s 6003 draw, and then the rest of the
+        // level world's rows, the Target Truck and Target Drone warm-ups (two
+        // draws each) and the influence map's tail draw. Core then runs every
+        // script's init at construction, so the Tank Factory's
         // SpawnThing("Target Tank") takes its squad's five draws here; retail
         // runs that init on frame 2, which is an open difference.
         var random = new Level100ReleasedRandom();
-        Skip(definitions.BaseWorldPineCount + Level100ActorWeaponTests.RowDraws(rows[..battleEngine]) + 1);
+        Skip(definitions.BaseWorldPineCount + 1 + Level100ActorWeaponTests.RowDraws(rows[..battleEngine]) + 1);
         float crosshairDue = RetailBattleEngineRefresh.CrosshairDueTime(random.Next(), 0.0f);
         float autoAimDue = RetailBattleEngineRefresh.AutoAimDueTime(random.Next(), 0.0f);
-        Skip(Level100ActorWeaponTests.RowDraws(rows[(battleEngine + 1)..]) + 5);
+        Skip(Level100ActorWeaponTests.RowDraws(rows[(battleEngine + 1)..]) + 4 + 1 + 5);
         Assert.Equal(random.Seed, state.Level100ActorMechanics.ReleasedRandomSeed);
 
         void Skip(int draws)

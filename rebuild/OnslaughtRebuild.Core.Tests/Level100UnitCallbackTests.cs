@@ -199,6 +199,43 @@ public sealed class Level100UnitCallbackTests
     }
 
     [Fact]
+    public void BaseWorldPass_StartsTwoInfluenceChainsAroundTheWarmUps()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var registry = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(registry, definitions);
+
+        // Pines, then the influence map's first draw and 1000; the rows; the
+        // Target Truck and Target Drone warm-ups; the tail's draw and 1000.
+        var random = new Level100ReleasedRandom();
+        for (int pine = 0; pine < definitions.BaseWorldPineCount; pine++) random.Next();
+        int first = random.Next() % 65536;
+        int rows = Level100ActorWeaponTests.RowDraws(definitions.Actors);
+        for (int draw = 0; draw < rows + 4; draw++) random.Next();
+        int tail = random.Next() % 65536;
+        Assert.Equal(random.Seed, mechanics.Snapshot.ReleasedRandomSeed);
+        RetailEventSlotSnapshot[] influence = Filed(mechanics)
+            .Where(slot => slot.Listener == Level100ActorMechanics.InfluenceMapListener).ToArray();
+        Assert.Equal(2, influence.Length);
+        Assert.All(influence, slot => Assert.Equal(1000, slot.EventNum));
+        Assert.Equal(
+            new[] { first, tail }.Select(sample => TimeFromNow(0.0f, Add(1.0, Multiply(sample, 1.0 / 65536.0)))).Order(),
+            influence.Select(slot => slot.TimeBits).Order());
+
+        // Each delivery takes one draw and files the chain's next 1000.
+        int delivered = 0;
+        for (int frame = 0; frame < 30 && delivered == 0; frame++)
+        {
+            mechanics.AdvanceTick();
+            delivered = Filed(mechanics).Count(slot =>
+                slot.Listener == Level100ActorMechanics.InfluenceMapListener &&
+                BitConverter.UInt32BitsToSingle(slot.TimeBits) > 2.0f);
+        }
+        Assert.Equal(1, delivered);
+        Assert.Equal(2, Filed(mechanics).Count(slot => slot.Listener == Level100ActorMechanics.InfluenceMapListener));
+    }
+
+    [Fact]
     public void UnitCallbacks_RestoreFromTheSnapshotAndReplayIdentically()
     {
         Level100ActorMechanics mechanics = World("Turret 01", out Level100ActorRegistry registry, out _);

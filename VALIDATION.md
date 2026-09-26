@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,60 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Influence map and warm-up draws in Level 100's load — September 26
+
+The RE lane corrected its construction-order contract
+(`reverse-engineering/game-mechanics/level100-construction-order.md`, commit
+`ec29ffa4`). Retail's load takes six draws that Core did not:
+- After the base world's pines, `CInfluenceMapManager::Load` (`0x0048b010`)
+  ends in `0x0048b8e0`. It takes one draw (`0x0048bf0f`, on every path) and
+  files an influence 1000 at now + 1.0 + (r mod 65536) × 2⁻¹⁶.
+- After the last level row, `SpawnInitialThings` (`0x0050dcb0`) builds one unit
+  of each script-spawned type that no row built, then destroys it at once; only
+  its construction draws remain. Level 100's scripts spawn Target Truck, Target
+  Tank, Air Trainer and Target Drone. The rows already built the tanks and the
+  Air Trainer, so two warm-ups are left: the Target Truck (Actor and hover
+  draws) and the Target Drone (Actor draw and `CPlane::Init`'s last draw).
+- The load's tail calls `0x0048b8e0(0)` again: one draw and a second 1000.
+
+Each 1000 delivery takes one draw and files that chain's next 1000, so the two
+chains draw every one to two seconds for the whole level. Core now takes these
+draws and runs both chains on the level's event manager under a reserved
+listener. The influence map's 1001 and 1002 and the Battle Engine's new
+motion-controller 3000, cockpit 2001 and receiver 4000 draw nothing, so Core
+still does not file them. The base-world pass exists only for a definition set
+that carries the base world's pines, which the materialized retail set does and
+the small test fixture does not.
+
+Tests:
+- `Level100UnitCallbackTests.BaseWorldPass_StartsTwoInfluenceChainsAroundTheWarmUps`
+  pins both 1000s' due times against the draw sequence (pines, first draw, rows,
+  four warm-up draws, tail draw) and one delivery's draw and re-file.
+- `Level100BattleEngineRefreshTests` and the construction draw count
+  (`Level100ActorWeaponTests.ConstructionDraws`) take the six new draws.
+- A Client test pinned the first Target Tank's move phase at 0. That value
+  came from where its Actor draw fell, so the test now derives the phase from
+  the tank's construction and first-Move frames.
+
+Six mutations were killed and restored byte-identical
+(`local-data/test-runs/influence-warmup-20260926/mutation-kills/`): no draw
+after the pines, no warm-ups, warm-ups of types the rows built, no tail draw, a
+2⁻¹⁵ delay scale, and a chain that stops after one delivery.
+
+Core passes 1,540 and Client 912 with the two known skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `79a4db1b…` and state `77a71d70…`.
+- The in-process smoke and its validator: state `0df3dd5c…`.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`7136d58b…`, trace `c44be61a…`), and the C# replayer reproduces it twice. The
+chain autopilot runs on the fixture and keeps six kills at tick 6,254 with hull
+11,564. The cold-start won tape is 8,220 ticks (trace `de6af83a…`, state
+`2bce3c9c…`), on the abort branch with no second-wave kills and hull 9,450, and
+it replays twice.
+
+Open: whether both 1000 chains persist all level, and the receiver's 0.03 s
+delay; the contract names a draw-count log in a copied runtime as the check.
 
 ### Cockpit Gun emitters for player rounds — September 26
 
