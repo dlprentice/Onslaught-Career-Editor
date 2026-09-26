@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-25 (rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
+Last updated: 2026-09-26 (companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -149,40 +149,49 @@ isolated original-code evidence, not an observed installed-game/Proton crash or
 a single executed failed-Load-to-bank chain. See the
 [missing-device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device).
 
-## Godot companion — C# Save Lab
+## Godot companion — careers, options, install, music and lore
 
 The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
 built entirely in code on **Godot 4.8.dev6.mono.official.8898c2b3d**. Its one scene only
-attaches the root script; the interface, theme, career codec, media inventory and
-file-safety boundary are C#. The build refuses GDScript, saved resources and
-multi-node scenes. It opens a protected real-career snapshot, explains
-identity/known/unknown data, previews explicitly selected kill counts, and writes and
-reopens a separate verified copy. Unchanged recovery copies and full byte comparison
-are also implemented. The read-only media browser inventories an explicitly chosen
-local folder with bounded traversal, link skipping and partial-result reporting; it
-does not play media.
+attaches the root script; the build refuses GDScript, saved resources and multi-node
+scenes. David approved its feature set and Flight-deck look on 2026-09-25; all of it is
+built:
+
+- **Home** finds the game through Steam (native, Flatpak or Snap libraries) or a chosen
+  folder, checks `BEA.exe` against the Steam release by SHA-256, and lists careers and the
+  options file.
+- **Careers** open read-only: overview with the game's own mission names, rank letters by
+  the game's rule and campaign links; all 233 Goodies in the game's colours with titles
+  from the player's text, unlock rules and how each rule is known; kill-count and Goodie
+  edits to a verified copy; cheat-name copies for the three cheats seen working in the
+  Steam game; byte comparison named by region; raw stored values.
+- **Options** reads `defaultoptions.bea` and writes a verified copy with audio, invert,
+  vibration, controller preset, mouse sensitivity, screen shape and captured key changes.
+- **Install & backups** makes verified backup sets of every career and the options file,
+  restores them, and puts a verified copy into the game after a confirmation, never while
+  `BEA.exe` runs, with an atomic exchange that swaps back if the displaced file is not the
+  one backed up. Game-folder writes are Linux only; Windows refuses them.
+- **Music & voices** plays the game's soundtrack and voice lines from the install with
+  the game's transcripts; Bink cutscenes are listed only. **Lore** reads the repository's
+  lore library offline with search and a mission list read from the player's game.
+  **Media files** inventories a chosen folder.
 
 The in-process [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs)
 adapter links the existing AppCore safety source unchanged. Linux publication retains
 no-follow handles, physical identities, unnamed staging and no-clobber linking.
 Malformed or changed inputs and conflicting outputs are refused; uncertain publication
-never becomes a success receipt or an automatic deletion. There is no helper process,
-JSON protocol or unchecked write fallback, and normal Godot .NET exports bundle their
-runtime.
+never becomes a success receipt or an automatic deletion. There is no helper process or
+unchecked write fallback, and normal Godot .NET exports bundle their runtime.
 
-**September 25 C# migration evidence:** `npm test` runs one C# contract suite inside
-headless Godot — the real-fixture codec contracts, media inventory, direct adapter
-cases (malformed arguments, same-byte physical replacement, source changes, links,
-conflicting and game-tree destinations), six Linux publication-race cases through the
-linked transaction's hook, and the code-built interface driving its real controls —
-followed by the launcher's own cases. Receipts and screen review are in the
-[validation section](VALIDATION.md#companion-c-migration--september-25).
-The September 19 GDScript implementation and its exported-app Xvfb acceptance remain
-dated predecessor evidence in [VALIDATION.md](VALIDATION.md#companion-net-integration--september-19).
-**Windows execution and human click-through acceptance remain pending.**
-Broader options/rank/Goodie writes, whole-game safe-copy/rescue, patching,
-playback/replacement, lore and asset workflows remain migration work; no legacy
-feature parity or retail gameplay acceptance is implied.
+**September 26 evidence:** `npm test` runs one C# contract suite inside headless Godot
+and the launcher's own cases; every screen was rendered at 1280×800 and 1920×1080 against
+a fake install and against the real Steam install (left byte-identical), and reviewed;
+Linux and Windows packages were exported and the Linux package started and quit cleanly.
+Receipts are in the [validation section](VALIDATION.md#companion-approved-workflows--september-26);
+the migration's are in [its section](VALIDATION.md#companion-c-migration--september-25).
+**Windows execution, a human click-through and listening to the audio remain pending.**
+Patching the installed `BEA.exe` is a later phase; mission, rank and link edits are not
+offered; no legacy feature parity or retail gameplay acceptance is implied.
 
 ## Existing WinUI toolkit — migration material
 

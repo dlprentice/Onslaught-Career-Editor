@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-25 (C# only direction; the legacy 4.7.2 companion launcher removed)
+Last updated: 2026-09-26 (companion route covers its game, options, install and lore owners; C# only direction)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -21,9 +21,10 @@ counts here.
 ```mermaid
 flowchart LR
     W["Retained WinUI 3 shell"] --> A["AppCore"]
-    T["GDScript companion"] --> D["Native save domain"]
+    T["C# companion"] --> D["Companion career codec"]
     T --> B["In-process C# file adapter"]
     B --> S["Linked AppCore file safety"]
+    T --> L["Linked AppCore readers: game text, Goodie rules, cheat names, lore mission list"]
     C["Maintainer CLI"] --> A
     AT["AppCore tests"] --> A
     CT["CLI tests"] --> C
@@ -73,11 +74,19 @@ whole interface and theme in code. [`CareerSave`](companion/OnslaughtToolkit.God
 owns format interpretation, selected-byte previews and comparison;
 [`SaveSession`](companion/OnslaughtToolkit.Godot/Careers/SaveSession.cs) owns the opened
 snapshot and [`CareerWorkspace`](companion/OnslaughtToolkit.Godot/Careers/CareerWorkspace.cs)
-the open, publish and compare workflows. The in-process
+the open, publish, compare, backup and install workflows. The in-process
 [adapter](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs) links
-`SaveLabFileTransaction` and `FileMutationSafety` unchanged. The
-[media catalog](companion/OnslaughtToolkit.Godot/Media/MediaCatalog.cs) performs read-only
-metadata inventory of explicitly selected folders. Contract tests live in
+`SaveLabFileTransaction` and `FileMutationSafety` unchanged;
+[`GameWrites`](companion/OnslaughtToolkit.Godot/Files/GameWrites.cs) owns backup sets, the
+running-game check and verified installs into the game folder.
+[`GameLibrary`](companion/OnslaughtToolkit.Godot/Game/GameLibrary.cs) finds the game through
+Steam and reads its text through the linked `GameTextCatalog`;
+[`OptionsFile`](companion/OnslaughtToolkit.Godot/Options/OptionsFile.cs) owns the options block;
+[`GameAudio`](companion/OnslaughtToolkit.Godot/Media/GameAudio.cs) lists the game's music and
+voice lines, and the [media catalog](companion/OnslaughtToolkit.Godot/Media/MediaCatalog.cs)
+inventories chosen folders; [`LoreLibrary`](companion/OnslaughtToolkit.Godot/Lore/LoreLibrary.cs)
+embeds `lore/` and `lore-book/BOOK.md`. Pages live in
+[`Ui/Pages/`](companion/OnslaughtToolkit.Godot/Ui/Pages/). Contract tests live in
 [`Tests/`](companion/OnslaughtToolkit.Godot/Tests/) and never enter a release export.
 
 ## Retained WinUI route map
@@ -114,15 +123,15 @@ tests rather than assuming the representative list is exhaustive.
 | Media, assets, and Goodies | `MediaCatalogService`, `AssetCatalog*`, `AssetModel*`, `Goodie*`, `FbxModelSummaryReader`, `PngHeaderReader` |
 | Lore and game text | `LoreBrowserService`, `LoreDocument*`, `CampaignLoreComposer`, `GameTextCatalog` |
 
-Retained WinUI and CLI keep their shared AppCore correctness. The native companion
-owns its GDScript format/domain behavior and links only the existing file-safety
-source through its in-process C# adapter; it does not run a second C# codec.
+Retained WinUI and CLI keep their shared AppCore correctness. The companion owns its
+C# career codec and links unchanged AppCore source only for file safety, game text, Goodie
+rules, cheat names and the lore mission list; it imports no AppCore assembly.
 
 ## Repository owners
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, GDScript domain and narrow C# file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes; `tools/godot_host.py` supplies shared engine discovery and process support. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. `ghidra/` holds the tracked checkpoint; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, campaign generations, captures, reviewer reports, frozen proof graphs, the working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
@@ -166,7 +175,7 @@ wrong — fix the rows, not the document.
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
   + canonical-checkout `local-lab/INDEX.md`
-- **App lane:** [`Godot Save Lab`](companion/OnslaughtToolkit.Godot/README.md) /
+- **App lane:** [`Godot companion`](companion/OnslaughtToolkit.Godot/README.md) /
   [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) /
   [`CLI.md`](CLI.md) / [`README.RELEASE.md`](README.RELEASE.md) /
   [`CHANGELOG.md`](CHANGELOG.md)

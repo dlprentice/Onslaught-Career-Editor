@@ -5265,3 +5265,56 @@ original verification — turned the same suite red with exit code 1 and ten nam
 failures: `local-data/companion/godot-dotnet-test-6862alcj/`. The standalone FileBridge
 prototype and its Python protocol test were removed; their Windows staging-handoff and
 power-loss limits now live in the [companion README](companion/OnslaughtToolkit.Godot/README.md#file-safety-boundary).
+
+## Companion approved workflows — September 26
+
+David approved four feature groups and the Flight-deck look on 2026-09-25 (careers and
+Goodies; copies and options; install and backups; music, voices and lore), with patching
+the installed `BEA.exe` left for a later phase. Branch `claude/companion-csharp-20260925`
+built all four in C# and in code; the [companion README](companion/OnslaughtToolkit.Godot/README.md)
+describes them and [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-options-install-music-and-lore)
+states their limits.
+
+**Suite.** `npm test` passed in canonical `local-data/companion/godot-dotnet-test-mzmgwefv/`:
+**596 checks, 0 failures**, then all **16** launcher cases, in 13 s, with zero build warnings
+under warnings-as-errors. New suites cover Steam discovery on a fake library, the game's
+text decoded from a synthetic v3 language table, backup sets and installs (a new career, a
+replaced career and options file, refusals for unsafe target names, a running game, an
+unsupported source and a backup folder inside the game, a career that changes after its
+backup, and a file that takes the target's name just before the exchange), the options
+block and key table, music and voice grouping and the Vorbis header check, and the lore
+library: reading order, header removal, balanced markup and every link in every article.
+
+**Falsifiers.** Disabling the check that the file displaced by `RENAME_EXCHANGE` is the one
+backed up turned the suite red with the named swap-back failure, exit 1:
+`local-data/companion/godot-dotnet-test-3_qidnty/`. The lore link check failed on a real
+anchor, `lore/units-and-mechs.md:173` → `worlds.md#world-500-career-node-23`, which GitHub
+never resolved either (the em dash leaves `world-500--career-node-23`); the link was
+corrected in `a0246a39`.
+
+**Screens.** `npm run capture:companion-godot` rendered 76 screens through `godot-offscreen`
+at 1280×800 and 1920×1080 against a fake install —
+`local-data/companion/godot-dotnet-capture-y9reye8p/captures/` — and 74 against the real
+Steam library with `--capture-arg=--steam-root=$HOME/.local/share/Steam` —
+`local-data/companion/godot-dotnet-capture-l1d7rpel/captures/`. The real install's
+`BEA.exe`, `defaultoptions.bea` and its one career hashed identically before and after
+that run, and `savegames/` gained no file. Every page and state was reviewed first-hand at
+both sizes: each page empty, the career pages with the fixture open, cheat names with and
+without a backup folder, options from open to a captured key and a verified copy, backup
+sets, an install into the fake game, each confirmation dialog, a loaded voice line, and
+the lore reader's front door, memo, section link, tables, mission list and search. The
+review led to the fixes in `da660c0a`. The real install showed the Steam `BEA.exe`
+recognised, the game's mission names and Goodie titles, voice transcripts, and the
+campaign page's mission table read from the game's text.
+
+**Packages.** `npm run export:companion-godot -- --platform both` built
+`local-data/companion/godot-dotnet-export-qnwi9ous/packages/linux` (152 MB) and `windows`
+(184 MB). Each release `OnslaughtToolkit.Godot.dll` (635,392 bytes) carries the embedded
+lore and neither the `Tests` nor the `Development` namespace. The Linux package ran
+`--headless --quit-after 240` with isolated XDG directories and exited 0 with no error
+output; no core dump from the companion appeared.
+
+**Not verified.** Windows execution, including the Windows file path for copies and
+backups; a human click-through with a mouse and keyboard; listening to the music and voice
+playback (the audio was decoded, never heard); and anything the game does with a copy
+beyond the options, Goodie and cheat behaviour the RE lane has already watched.

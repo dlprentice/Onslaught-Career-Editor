@@ -1,8 +1,8 @@
 # Onslaught Toolkit companion
 
-Status: C# Save Lab built entirely in code on Godot 4.8 dev6 .NET; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-09-25
-Summary: the MIT companion is a C# application whose interface, theme, career codec, media inventory and file-safety boundary are all code; its one scene only attaches the root script.
+Status: C# application built entirely in code on Godot 4.8 dev6 .NET; careers, Goodies, copies, options, install and backups, music, voices and lore; Linux executed checks, Windows runtime acceptance pending
+Last updated: 2026-09-26
+Summary: the MIT companion for Battle Engine Aquila players: it reads careers and the game's own files, writes changes only to verified copies, puts a copy into the game only after a confirmed, verified backup, and plays and explains the game's own music, voices and lore.
 
 The companion owns careers, saves, recovery copies, supported patches, media and
 related preservation tools. Retail reverse engineering and the faithful GPL game
@@ -17,87 +17,133 @@ editor-authored scene, and `npm run build` refuses to stage one.
 
 | Folder | Owner of |
 | --- | --- |
-| [Careers](Careers/) | The career byte codec (`CareerSave`), immutable open snapshots (`SaveSession`) and the open/publish/compare workflow (`CareerWorkspace`) |
-| [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles`) and the worker that keeps it off the interface thread |
-| [Media](Media/) | The bounded, read-only media filename inventory |
-| [Ui](Ui/) | The code-built interface: theme, root, pages and rows |
+| [Careers](Careers/) | The career byte codec (`CareerSave`), immutable open snapshots (`SaveSession`), the open/publish/compare/install workflow (`CareerWorkspace`) and each Goodie's rule and evidence (`GoodieFacts`) |
+| [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles`), its worker thread, and game-folder writes: backup sets, the running-game check and the verified install (`GameWrites`) |
+| [Game](Game/) | Steam library discovery, the game folder and its files, and the game's own text read from the install (`GameText`) |
+| [Options](Options/) | The `defaultoptions.bea` reader and editor (`OptionsFile`) and the physical-key table |
+| [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) and the bounded folder inventory |
+| [Lore](Lore/) | The embedded lore library and its Markdown renderer |
+| [Ui](Ui/) | The Flight-deck theme, the shell and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
-| [Development](Development/) | Development-only entries such as export license metadata |
+| [Development](Development/) | Development-only entries: screen captures and export license metadata |
 
 `Tests/` and `Development/` compile only into development builds; release exports
 exclude them from both the assembly and the package.
 
-## Build, test, run and export
+## Build, test, capture, run and export
 
 From the repository or this lane's worktree:
 
 ```bash
 npm run build:companion-godot
-npm run test:companion-godot
+npm test
+npm run capture:companion-godot
 npm run run:companion-godot
 npm run export:companion-godot -- --platform both
 ```
 
-Build, test and export are headless. **Run opens a window**; use it when the desktop is
-available. Each command stages the project and its two linked MIT safety source files
-into a unique canonical `local-data/companion/` directory with isolated imports, profiles,
-scratch and logs, and prints that directory. Worktrees use the
-[canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus is copied.
+Build, test, capture and export never open a window on the desktop. **Run opens a
+window**; use it when the desktop is available. Each command stages the project, its
+linked MIT AppCore sources and the lore into a unique canonical `local-data/companion/`
+directory with isolated imports, profiles, scratch and logs, and prints that directory.
+Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus
+is copied.
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
-[real-save fixture](../../tests_shared/fixtures/README.md), then the launcher's own checks.
-The suite covers the codec on the real bytes (all categories, 0/24-bit limits, immutable
-plans, unknown bytes, link and Goodie states), the media inventory, the protected adapter
-(round trips, malformed arguments, changed or replaced sources, conflicting and game-tree
-destinations, symbolic and hard links), six Linux publication-race cases through the linked
-transaction's internal hook, and the code-built interface driving its real controls.
+[real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
+from tiny original bytes, then the launcher's own checks. It covers the codec on the real
+bytes, Goodie edits, options edits and the key table, the protected adapter and six Linux
+publication races, Steam discovery, the game's text on a synthetic language table,
+backups and installs (including a file that takes the name just before the swap), music
+and voice grouping, every lore article and link, and the interface driving its real
+controls.
 
-## Use Save Lab
+`npm run capture:companion-godot` renders every page and state at 1280×800 and
+1920×1080 through `godot-offscreen`, against the same fake install. Add
+`--capture-arg=--steam-root=DIR` to render against a real Steam library instead; that
+library is only read, and no game write is confirmed in that mode.
 
-1. **Open career…** selects a real `.bes`. A supported container is exactly
-   10,004 bytes with version word `0x4BD1`. The app shows its full path, SHA-256,
-   physical file identity and stored values. This shape check is format recognition,
-   not proof of authenticity or game acceptance.
-2. **Career inspector** lists mission records, links (broken and unknown states are never
-   called complete), raw ranks, Goodies, reserved slots and stored settings. Unsupported
-   fields stay read-only; no guessed names or implicit unlocks are applied.
-3. Check each count to change and enter its target. The preview names every selected
-   old/new value and differing byte. Only the low three bytes of each selected category
-   may change; the fourth packed byte is preserved.
-4. Choose a fresh `.bes` filename in an existing folder outside the game. Choosing a
-   filename does not write. **Write verified edit** publishes the preview; **Make
-   unchanged recovery copy** ignores edit selections and publishes a byte-identical copy.
-5. Publication re-checks the original's identity and content, stages and verifies all
-   bytes, publishes without replacing any existing entry and reopens the result. The
-   companion compares the returned and independently reopened bytes with the plan and
-   reports path, hash and preservation checks. The original stays the source until
-   **Open verified result** is chosen.
-6. **Compare copies** opens another supported career read-only and lists every differing
-   byte, including bytes without a known interpretation.
+## What it does
 
-Malformed inputs, changed sources, same-path or linked sources, existing or dangling
-link destinations and unavailable protected access fail closed; there is no ordinary
-write fallback. The file dialogs cannot delete or create folders. Post-publication
-uncertainty says that a copy may exist; it is never deleted or reported as verified.
-A receipt concerns that operation, not later changes by another program or behavior
-inside the game. File work runs on one worker thread; the interface stays responsive,
-waits for the result and defers closing while a transaction is running.
+**Home** finds the game through Steam (libraries, Flatpak and Snap), or a folder you
+choose, and checks `BEA.exe` against the Steam release by SHA-256. It lists the game's
+careers with an Open button, the options file, and what the install holds.
 
-**Media** inventories an explicitly chosen local folder: names, relative paths,
-formats and sizes. It skips links, bounds traversal and reports partial results.
-It does not decode or play media.
+**Career** pages open a career read-only. A supported career is exactly 10,004 bytes
+with version word `0x4BD1`; the app records its path, SHA-256 and physical file identity.
+- **Overview**: missions with the game's own names, rank letters by the game's rule,
+  attempts, Goodies, kill counts and campaign links.
+- **Goodies**: all 233 slots in the game's colours (gold new, blue viewed), each with its
+  title from your game's text, its unlock rule, and how that rule is known: seen in the
+  game, checked in the game's code, or from the developers' source only.
+- **Edit a copy**: kill counts (only the three count bytes; the fourth byte is kept) and
+  Goodie states. The preview lists every changed byte.
+- **Cheat names**: a byte-identical copy whose name carries one of the three cheats seen
+  working in the Steam game (`MALLOY`, `TURKEY`, `Maladim`).
+- **Compare** lists every differing byte between two careers, named by region;
+  **Stored values** shows the raw values read-only.
+
+**Options** opens `defaultoptions.bea` (or another `.bea`) read-only and edits sound and
+music volume, invert flight and walker, vibration, controller preset, mouse sensitivity
+(the game's own slider steps), screen shape and keyboard bindings captured from a key
+press. Controller and mouse bindings are kept unless replaced; language and display mode
+are shown but not offered.
+
+**Install & backups** is the one page that writes into the game folder. See the next
+section.
+
+**Music & voices** plays the game's soundtrack and voice lines from your install, grouped
+by mission with the game's own transcripts. Only files with an Ogg Vorbis header
+reach the decoder. Cutscenes are Bink video and are listed, not played.
+
+**Lore** reads the repository's lore library offline: the front door's shelves and reading
+order, a section outline, search, Back, Forward and Home (Alt+Left, Alt+Right; Ctrl+F
+searches). Links between articles stay in the reader; links to other repository files open
+their public GitHub page in your browser. The campaign's mission list is read from your
+game's text when the page opens, never shipped.
+
+**Media files** inventories an explicitly chosen folder: names, formats and sizes, with
+bounded traversal, links skipped and partial results reported.
+
+## How files stay safe
+
+- Careers and options open read-only. Every edit is written to a **new** file in a folder
+  you choose outside the game: publication re-checks the original's identity and content,
+  stages and verifies all bytes, publishes without replacing any existing entry, reopens
+  the result and compares it with the preview. The original stays the source until you
+  open the copy.
+- Writing into the game folder (a career into `savegames`, or a `.bea` as
+  `defaultoptions.bea`, including a restore from a backup) needs a backup folder outside
+  the game and a confirmation that names the exact file, source and backup folder. It is
+  refused while `BEA.exe` is running. It first makes a new backup set of every career and
+  the options file, each copy verified and listed in a manifest. A file being replaced
+  must still match its fresh backup; the new file is staged, verified and exchanged
+  atomically (`renameat2` with `RENAME_EXCHANGE`). If the file displaced by the exchange
+  is not the one that was backed up, it is swapped back and the new file withdrawn. The
+  written file is reopened and verified.
+- Installing into the game folder runs on Linux only; on Windows it is refused until it has
+  been tested there. Reading, copies and backups on Windows use the linked Windows file
+  path, which has not been executed here either.
+- Malformed inputs, changed sources, same-path or linked sources, existing destinations
+  and unavailable protected access fail closed; there is no ordinary write fallback. File
+  dialogs cannot delete or create folders. An uncertain result says a file may exist; it
+  is never deleted or reported as verified. File work runs on one worker thread, and
+  closing waits for it.
+
+A receipt concerns that operation, not later changes by another program or what the game
+does with the file. These checks do not prove behavior after power loss.
 
 ## File-safety boundary
 
 [ProtectedSaveFiles](Files/ProtectedSaveFiles.cs) links the MIT
 [`SaveLabFileTransaction.cs`](../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs) and
 [`FileMutationSafety.cs`](../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs) unchanged; it
-imports no AppCore assembly, save codec or media library. On Linux it opens sources
-descriptor-relative without following links, compares physical identity and link count,
-stages into an unnamed file, flushes it, and publishes with a no-clobber link.
-These checks do not prove behavior after power loss. The Windows implementation locks
-ancestors and verifies identity, but releases its staging quarantine and closes the handle
-before a path-based move, then verifies the published identity; Windows execution remains
+imports no AppCore assembly or media library. On Linux it opens sources descriptor-relative
+without following links, compares physical identity and link count, stages into an unnamed
+file, flushes it, and publishes with a no-clobber link. [GameWrites](Files/GameWrites.cs)
+builds game-folder installs on the same primitives. The Windows copy path locks ancestors
+and verifies identity, but releases its staging quarantine and closes the handle before a
+path-based move, then verifies the published identity; Windows execution remains
 unverified here, and a Windows cross-export is not acceptance.
 
 ## Exact toolchain and rollback
