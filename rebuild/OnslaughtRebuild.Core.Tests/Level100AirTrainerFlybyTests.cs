@@ -16,7 +16,7 @@ namespace OnslaughtRebuild.Core.Tests;
 /// node's own target (<c>reverse-engineering/game-mechanics/waypoint-paths.md</c>,
 /// pristine specimen <c>74154BFA…</c>): <c>FollowWaypointWait</c>
 /// (<c>0x00537e40</c>) takes the nearest node from <c>0x00505c30</c>, and
-/// <c>UpdateWaypointFollowing</c> (<c>0x00538470</c>) moves to
+/// <c>IScript::UpdateWaypointFollowing</c> (<c>0x00538470</c>) moves to
 /// the current waypoint's <c>+0x3c</c> on arrival (<c>0x005384dc</c>). The
 /// serialized list only picks the start.
 /// </para>
@@ -196,7 +196,7 @@ public sealed class Level100AirTrainerFlybyTests
     /// </para>
     /// <para>
     /// This is not a design choice, it is what the released cursor cannot avoid
-    /// doing. <c>UpdateWaypointFollowing</c> (<c>0x00538470</c>,
+    /// doing. <c>IScript::UpdateWaypointFollowing</c> (<c>0x00538470</c>,
     /// pristine specimen sha256 <c>74154BFA…</c>) ends the walk on exactly one
     /// condition: the successor it loaded from <c>[current+0x3c]</c> is NULL
     /// (<c>mov eax,[esi+0x14]</c> / <c>cmp eax,edi</c> at <c>0x00538500</c>

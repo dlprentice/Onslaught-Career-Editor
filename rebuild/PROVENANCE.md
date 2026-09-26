@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-26 (the separate World 110 construction stage retired in favour of the one construction owner; 2026-09-25 GDScript-era provenance notes retired with the return to C#; earlier claims retain their dated evidence).
+Last updated: 2026-09-26 (World 110 on the one construction owner; earlier claims keep their dated evidence).
 The 2026-08-31 world-110 admissions and the separate construction stage built
 on them were retired on 2026-09-26, when World 110 moved onto the one
 construction owner; the standalone ordered `CPlayer::AssignBattleEngine`
@@ -561,8 +561,11 @@ poses. The current Level 100 walker, jet, and cockpit callers supply integral
 frames, so the separate `0x004B24D0` adjuster/round/wrap path remains explicitly
 unmodeled rather than being guessed into this API.
 
-Steam `Math__InterpolateVec4ByRatio` at `0x00577EAA` separately establishes a
-shortest-sign, sine-weighted spherical interpolation law for unit four-vectors.
+`c_D3DXQuaternionSlerp` at `0x00577EAA` (pristine `74154bfa…`; linked D3DX
+library code that the RE lane matched byte for byte to `d3dx9.lib` on
+2026-09-26, formerly labelled `Math__InterpolateVec4ByRatio`) separately
+establishes a shortest-sign, sine-weighted spherical interpolation law for unit
+quaternions.
 The presentation-only proper-rotation path now uses that law, retaining its
 near-parallel normalized-linear and non-orthonormal componentwise fallbacks.
 The static body does not yet prove that this exact retail helper owned every
