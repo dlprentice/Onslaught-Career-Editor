@@ -103,6 +103,7 @@ public partial class CompanionApp : Control
             Workspace = Workspace, Game = Game, Status = Status, Backups = new BackupLocation(settings, environment.BackupFolder()),
             GameRunning = () => _gameRunning(), OpenUrl = openUrl, Navigate = Navigate, OpenCareer = OpenCareerAsync, Popups = popups,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
+            OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
         };
 
         Home = new HomePage(Services);

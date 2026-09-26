@@ -21,6 +21,9 @@ internal sealed class AppServices
     internal required Action<string> Navigate { get; init; }
     internal required Func<string, Task<Outcome<SaveSession>>> OpenCareer { get; init; }
 
+    /// <summary>Asks for a career file anywhere on the computer and opens it read-only.</summary>
+    internal required Action OpenCareerFile { get; init; }
+
     /// <summary>The node dialogs are added to, so they draw above every page.</summary>
     internal required Node Popups { get; init; }
 

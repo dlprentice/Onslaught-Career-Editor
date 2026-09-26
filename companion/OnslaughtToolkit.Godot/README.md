@@ -84,8 +84,10 @@ careers as cards with their progress, adding a career file to the game, the safe
 Lore, Music & voices and the game's own manual. The career saved most recently opens by
 itself, read-only.
 
-- **Summary**: missions with the game's own names, status and rank letters by the game's
-  grading, the Goodie strip, kills and campaign routes.
+- **Summary**: the career's path through the campaign as a map, from 1.00 to 8.00: each
+  mission's rank, the routes the career took and the routes the game recorded as not taken,
+  read from the links the career stores. Below it, missions with the game's own names,
+  status and rank letters by the game's grading, the Goodie strip and kills.
 - **Goodies**: the 230 Goodies the game's gallery shows, row by row as on its wall, in the
   game's colours (gold new, blue viewed), with filters and, for each, its title from your
   game's text, its unlock rule and how that rule is known. Slots 071–073 are stored and can

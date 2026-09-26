@@ -4,15 +4,19 @@ using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
-/// <summary>The game's careers as cards with their progress and an Open button. Used on Home and wherever a career is needed.</summary>
+/// <summary>
+/// The game's careers as cards with their progress and an Open button. Used on Home and wherever a career
+/// is needed; away from Home it also offers to open a career file from anywhere.
+/// </summary>
 internal sealed class CareerCards
 {
     private readonly AppServices _app;
+    private readonly bool _onHome;
     private readonly List<Button> _open = [];
 
-    internal CareerCards(AppServices app)
+    internal CareerCards(AppServices app, bool onHome = false)
     {
-        _app = app;
+        (_app, _onHome) = (app, onHome);
         Root = Build.Column(10);
     }
 
@@ -25,12 +29,15 @@ internal sealed class CareerCards
         _open.Clear();
         if (_app.Game.Folder is not GameFolder folder)
         {
-            Root.Add(Build.Text(_app.Game.Busy ? "Looking for your game…" : "Choose your game folder on Home to see your careers.", "Muted"));
+            Root.Add(Build.Text(_app.Game.Busy ? "Looking for your game…" : _onHome
+                ? "Choose your game folder above to see your careers here." : "Choose your game folder on Home to see your careers here.", "Muted"));
+            OfferFile();
             return;
         }
         if (folder.Careers.Count == 0)
         {
             Root.Add(Build.Text("No careers yet. Start a career in the game and save it; it appears here.", "Muted"));
+            OfferFile();
             return;
         }
         string? open = _app.Workspace.Session?.Path;
@@ -67,5 +74,15 @@ internal sealed class CareerCards
             _open.Add(action);
             Root.Add(card);
         }
+        OfferFile();
+    }
+
+    /// <summary>Away from Home, a way to open a career kept anywhere else (Home has its own).</summary>
+    private void OfferFile()
+    {
+        if (_onHome) return;
+        Button file = Root.Add(Build.Button("Open a career file…", "Link", "Look at a career file anywhere on your computer, read-only."));
+        file.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        file.Pressed += _app.OpenCareerFile;
     }
 }

@@ -68,7 +68,7 @@ internal sealed class HomePage : Page
         careersCard.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         careersCard.SizeFlagsStretchRatio = 1.4f;
         careers.Add(Build.Text("Open a career to see its missions and Goodies, change it, or add cheats. Opening only reads it.", "Muted"));
-        Careers = new CareerCards(app);
+        Careers = new CareerCards(app, onHome: true);
         careers.Add(Careers.Root);
         HBoxContainer careerLinks = careers.Add(Build.Row(16));
         AddCareer = careerLinks.Add(Build.Button("Add a career file to your game…", "Link",
