@@ -1292,17 +1292,18 @@ public sealed class InteractiveSessionTests
         // retail (248.75, 275.0, -0.0).
         Level100WaypointPathDefinition truckPath =
             definitions.GetWaypointPath("Target Truck Path 1");
-        Assert.Equal([25, 26, 27, 28], truckPath.Points.Select(point => point.NodeIndex));
+        // Retail's list is the file order reversed (waypoint-paths.md).
+        Assert.Equal([28, 27, 26, 25], truckPath.Points.Select(point => point.NodeIndex));
         Assert.Equal(
             new SimVector3(-39_938, 0, 31_750),
-            truckPath.Points[0].PositionMillimeters);
+            truckPath.Point(25).PositionMillimeters);
         Assert.Equal(
             new Level100FloatVector4Bits(
                 BitConverter.SingleToInt32Bits(248.75f),
                 BitConverter.SingleToInt32Bits(275.0f),
                 BitConverter.SingleToInt32Bits(-0.0f),
                 BitConverter.SingleToInt32Bits(0.0f)),
-            truckPath.Points[0].RetailComponentsFloatBits);
+            truckPath.Point(25).RetailComponentsFloatBits);
         // No two of the 30 authored markers resolve to one position any more.
         // Before the correction these 30 points collapsed onto 11, and this
         // assertion is the regression guard for that specific failure.
@@ -1326,21 +1327,20 @@ public sealed class InteractiveSessionTests
         // the Air Trainer's markers sit at retail z = -15 and the Transporter's
         // at z = -20. Every node used to be flattened to Y = +10000 mm.
         Assert.Equal(
-            [0, -15_000, -15_000],
+            [-15_000, -15_000, 0],
             definitions.GetWaypointPath("Flyby Path").Points
                 .Select(point => point.PositionMillimeters.Y));
-        // The decoder reads the schema v14 traversal fields. They shipped on
-        // 2026-07-27 and were dropped on the floor here until #146, which is
-        // why the Air Trainer flew this route from its far end: `Points` is the
-        // SERIALIZED order and the chain is the order retail walks.
+        // The decoder turns the manifest's file order and target chain into
+        // retail's list (the file order reversed) and each node's own target.
         Assert.Equal(
             [41, 42, 43],
-            definitions.GetWaypointPath("Flyby Path").TargetChainNodeIndices);
-        Assert.False(definitions.GetWaypointPath("Flyby Path").IsClosed);
-        Assert.True(definitions.GetWaypointPath("Drone Path 1").IsClosed);
+            definitions.GetWaypointPath("Flyby Path").Points.Select(point => point.NodeIndex));
         Assert.Equal(
-            41,
-            definitions.GetWaypointPath("Flyby Path").ChainPoint(0).NodeIndex);
+            [42, 43, null],
+            definitions.GetWaypointPath("Flyby Path").Points.Select(point => point.TargetNodeIndex));
+        Assert.All(
+            definitions.GetWaypointPath("Drone Path 1").Points,
+            point => Assert.NotNull(point.TargetNodeIndex));
         Level100SpawnDefinition[] trainingTrucks = definitions.Spawns
             .Where(spawn => spawn.ScriptName is
                 "TargetTruck1" or "TargetTruck2" or "TargetTruck3")
@@ -1350,26 +1350,27 @@ public sealed class InteractiveSessionTests
             Assert.Equal(SimulationConstants.Level100TrainingTruckLife, spawn.InitialHealth));
         Level100WaypointPathDefinition transporterPath =
             definitions.GetWaypointPath("Transporter Path");
-        Assert.Equal([44, 22, 23], transporterPath.Points.Select(point => point.NodeIndex));
+        // Retail's list is the file order [44, 22, 23] reversed.
+        Assert.Equal([23, 22, 44], transporterPath.Points.Select(point => point.NodeIndex));
         // This pair used to assert the defect: nodes 44 and 22 resolved to the
         // SAME point, because the navigation graph they were read from repeats
         // its 11 positions. They are 92.2 m apart in the authored data, and
         // node 22 carries the Transporter's own -20 m cruise altitude.
         Assert.NotEqual(
-            transporterPath.Points[0].PositionMillimeters,
-            transporterPath.Points[1].PositionMillimeters);
+            transporterPath.Point(44).PositionMillimeters,
+            transporterPath.Point(22).PositionMillimeters);
         Assert.NotEqual(
-            transporterPath.Points[0].RetailComponentsFloatBits,
-            transporterPath.Points[1].RetailComponentsFloatBits);
+            transporterPath.Point(44).RetailComponentsFloatBits,
+            transporterPath.Point(22).RetailComponentsFloatBits);
         Assert.Equal(
             new SimVector3(68_313, 0, 28_750),
-            transporterPath.Points[0].PositionMillimeters);
+            transporterPath.Point(44).PositionMillimeters);
         Assert.Equal(
             new SimVector3(-47_688, -20_000, 36_500),
-            transporterPath.Points[1].PositionMillimeters);
+            transporterPath.Point(22).PositionMillimeters);
         Assert.Equal(
             new SimVector3(-20_188, -20_000, 23_250),
-            transporterPath.Points[2].PositionMillimeters);
+            transporterPath.Point(23).PositionMillimeters);
         Assert.Equal(64, definitions.IdentitySha256.Length);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Airfield").ScriptName);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Hangar").ScriptName);
@@ -1432,7 +1433,19 @@ public sealed class InteractiveSessionTests
         Assert.Equal(Level100ActorCommandIntent.FollowingWaypoint, intent.Intent);
         Assert.Equal("Target Tank Path 1", intent.WaypointPath);
         Assert.True(intent.WaitForWaypointCompletion);
-        Assert.Equal(0, intent.GroundFullGuideBaseTickPhase);
+        // The phase reaches 0 on the first full Move, which the tank's Actor
+        // draw places one to three frames after its construction, and then
+        // advances once a frame: the Tank Factory built it on frame 2 of the
+        // pre-run, which ends on frame 60.
+        Level100UnitCallbackSnapshot unit = Assert.Single(
+            snapshot.Level100ActorMechanics.UnitCallbacks!,
+            item => item.ActorId == target.ActorId);
+        int lowFrequencyMoves = unit.FirstMoveFrame - (unit.ConstructionFrame + 1);
+        Assert.InRange(lowFrequencyMoves, 0, 2);
+        Assert.Equal(2, unit.ConstructionFrame);
+        Assert.Equal(
+            ((4 - lowFrequencyMoves) + (int)snapshot.RetailEventFrameCount - unit.ConstructionFrame) % 4,
+            intent.GroundFullGuideBaseTickPhase);
         Assert.Contains(
             snapshot.Level100ActorScriptCommands,
             command =>
@@ -1455,42 +1468,36 @@ public sealed class InteractiveSessionTests
         Level100ActorId targetId =
             snapshot.Level100Actors.Actors.Single(actor =>
                 actor.ScriptName == "TargetTank1").ActorId;
-        bool reachedSecondNode = false;
-        bool reachedThirdNode = false;
+        var route = new List<int>();
         bool completed = false;
 
         for (int tick = 0; tick < 3_000; tick++)
         {
-            snapshot = simulation.Step(SimInput.Idle);
             Level100ActorCommandIntentSnapshot intent =
                 snapshot.Level100ActorMechanics.Actors.Single(item =>
                     item.ActorId == targetId);
-            reachedSecondNode |=
-                intent.WaypointPointIndex >= 1;
-            reachedThirdNode |=
-                intent.WaypointPointIndex >= 2;
+            if (intent.WaypointNodeIndex is { } node && (route.Count == 0 || route[^1] != node))
+            {
+                route.Add(node);
+            }
             if (intent.Intent ==
                 Level100ActorCommandIntent.Stopped)
             {
                 completed = true;
                 break;
             }
+            snapshot = simulation.Step(SimInput.Idle);
         }
 
-        Assert.True(reachedSecondNode);
-        Assert.True(reachedThirdNode);
+        // From the node nearest the tank's spawn along the targets 6 -> 7 -> 18.
+        Assert.Equal([6, 7, 18], route);
         Assert.True(completed);
         Level100ActorSnapshot target =
             snapshot.Level100Actors.Actors.Single(actor =>
                 actor.ActorId == targetId);
-        // The end of the AUTHORED TRAVERSAL, which is the last entry of the
-        // `target` chain and not of the serialized list. `Target Tank Path 1`
-        // serializes [18, 6, 7] and is walked [6, 7, 18]; `Points[^1]` is node
-        // 7, the route's MIDDLE, which the tank drives straight through.
-        Level100WaypointPathDefinition route =
-            definitions.GetWaypointPath("Target Tank Path 1");
+        // The end of the walk, node 18, whose target is none.
         Level100WaypointPointDefinition destination =
-            route.ChainPoint(route.TargetChainNodeIndices.Count - 1);
+            definitions.GetWaypointPath("Target Tank Path 1").Point(18);
         long deltaX =
             (long)destination.PositionMillimeters.X -
             target.Pose.PositionMillimeters.X;
@@ -1638,6 +1645,8 @@ public sealed class InteractiveSessionTests
                     Level100MissionTargetGroup.TargetTrucks)
                 .OrderBy(actor => actor.ScriptName)
                 .ToArray();
+            // Each truck's script starts on its INIT_SCRIPT, the frame after
+            // it is built, and only then sends it down its path.
             if (trucks.Length == 3 &&
                 trucks.All(actor =>
                 {
@@ -1646,7 +1655,10 @@ public sealed class InteractiveSessionTests
                             definition.ScriptName ==
                             actor.ScriptName);
                     return actor.Pose.PositionMillimeters !=
-                        spawn.InitialPose.PositionMillimeters;
+                        spawn.InitialPose.PositionMillimeters &&
+                        session.CurrentSnapshot.Level100ActorMechanics.Actors
+                            .Single(item => item.ActorId == actor.ActorId).Intent ==
+                            Level100ActorCommandIntent.FollowingWaypoint;
                 }))
             {
                 break;
@@ -1762,7 +1774,8 @@ public sealed class InteractiveSessionTests
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
-            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }));
+            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         var priorSession = new InteractiveSession(Seed, priorDefinitions);
         var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
@@ -1800,7 +1813,17 @@ public sealed class InteractiveSessionTests
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
         Assert.Equal(4, session.Metrics.FirePulseEdgesConsumed);
         // This fingerprint belongs to the 2,148-step in-process input tape.
-        // Controller calls now precede callbacks and Move, so the four releases
+        // September 26: the Battle Engine's 6002/6003 refresh draws and its
+        // retained crosshair report joined the canonical state; then the
+        // Aquila's weapon stores, recoil shake draws and every round's Actor
+        // Init draw (the four Pulse releases each take six draws now); then
+        // every round's launch basis took retail's default 2π/4096 pitch and
+        // matrix composition, and the Pulse's level-0 mode lost the Small
+        // bolt's scatter; then the load took the retail construction draws
+        // and every unit's callbacks; then the Pulse left cockpit Gun 1
+        // through the full body orientation; then every waypoint walk started
+        // at the unit's nearest node and followed the nodes' own targets at
+        // their load-time heights. Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1812,7 +1835,8 @@ public sealed class InteractiveSessionTests
         // both older definition formats' fingerprints without changing input.
         var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            definitions.WaypointPaths, priorDefinitions.MotionDefinitions);
+            definitions.WaypointPaths, priorDefinitions.MotionDefinitions,
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         WorldSnapshot priorState = priorSession.CurrentSnapshot;
         WorldSnapshot priorIdentityOnly = session.CurrentSnapshot with
         {
@@ -1820,14 +1844,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de",
+        Assert.Equal("a09c24e8bd67a8a97bd93c9b066b7eb648b9dc53a3d254ba4b96e849b63ab939",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+        Assert.Equal("d7faf68f1b37ea1927308be4d6276ca25aa4ccdb2d2245d37fbe48b7518e8e9a",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e",
+            finalStateHash == "8649ff2bba9b327bfd925e6b60e07f8c7769d4d10e54bbd04229be64a3f96942",
             $"First-flight final state hash: {finalStateHash}");
     }
 
@@ -2028,23 +2052,23 @@ public sealed class InteractiveSessionTests
     private static Level100ActorPoseSnapshot PlaceTargetCenterAtPulseEmitter(
         WorldSnapshot state)
     {
+        // Gun 1 of cockpit2.msh (x right, y forward, z down, micrometres)
+        // through yaw, nose-down pitch and roll.
         double yaw = state.FacingYawMicroRad / 1_000_000d;
         double pitch = state.FacingPitchMicroRad / 1_000_000d;
-        double emitterForwardPlane =
-            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
-        int emitterOffsetX = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
-            (emitterForwardPlane * Math.Sin(yaw)),
-            MidpointRounding.AwayFromZero);
-        int emitterOffsetZ = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
-            (emitterForwardPlane * Math.Cos(yaw)),
-            MidpointRounding.AwayFromZero);
-        int emitterVerticalOffset = (int)Math.Round(
-            (-SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Sin(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Cos(pitch)),
-            MidpointRounding.AwayFromZero);
+        double roll = state.BodyRollMicroRad / 1_000_000d;
+        const double gunX = 0.092, gunY = 84.264, gunZ = -258.033;
+        double forwardX = -Math.Sin(yaw) * Math.Cos(pitch), forwardY = -Math.Sin(pitch), forwardZ = Math.Cos(yaw) * Math.Cos(pitch);
+        double baseUpX = -Math.Sin(pitch) * Math.Sin(yaw), baseUpY = Math.Cos(pitch), baseUpZ = Math.Sin(pitch) * Math.Cos(yaw);
+        double rightX = (Math.Cos(yaw) * Math.Cos(roll)) + (baseUpX * Math.Sin(roll));
+        double rightY = baseUpY * Math.Sin(roll);
+        double rightZ = (Math.Sin(yaw) * Math.Cos(roll)) + (baseUpZ * Math.Sin(roll));
+        double upX = (baseUpX * Math.Cos(roll)) - (Math.Cos(yaw) * Math.Sin(roll));
+        double upY = baseUpY * Math.Cos(roll);
+        double upZ = (baseUpZ * Math.Cos(roll)) - (Math.Sin(yaw) * Math.Sin(roll));
+        int emitterOffsetX = (int)Math.Round((gunX * rightX) + (gunY * forwardX) - (gunZ * upX), MidpointRounding.AwayFromZero);
+        int emitterOffsetZ = (int)Math.Round((gunX * rightZ) + (gunY * forwardZ) - (gunZ * upZ), MidpointRounding.AwayFromZero);
+        int emitterVerticalOffset = (int)Math.Round((gunX * rightY) + (gunY * forwardY) - (gunZ * upY), MidpointRounding.AwayFromZero);
         var emitter = new SimVector3(
             state.PlayerPosition.X + emitterOffsetX,
             state.PlayerGroundElevationMillimeters +

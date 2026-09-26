@@ -59,6 +59,32 @@ public static class StateHasher
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 49: the Battle Engine's crosshair readers, retained crosshair
+            // line report and lock sets. Selected whenever any of them differs
+            // from construction; the report and cursors then decide later
+            // launches, locks and targets.
+            bool usesBattleEngineTargetingSchema =
+                !IsInitialTargeting(state.Level100BattleEngineTargeting);
+            // 50: the Aquila's six weapon stores, their overheat flags, the
+            // walker's shields-recharging flag, the depleted/overheated cue
+            // times, the Pulse's last Fire level and the Battle Engine's shake.
+            // Selected whenever any differs from construction.
+            bool usesStoresAndShakeSchema =
+                state.Level100PlayerStores != Level100PlayerStoresSnapshot.Initial ||
+                state.Level100BattleEngineShake != Level100BattleEngineShakeSnapshot.Initial;
+            // 51: the jet Missile Pod's charge, Fire level, mode flag, burst
+            // counter and launch counters, and each seeking round's heading,
+            // launch time and bound target. Selected whenever the pod differs
+            // from construction or a seeking round is in flight.
+            bool usesMissilePodSchema =
+                state.Level100MissilePod != Level100MissilePodSnapshot.Initial ||
+                state.Projectiles.Any(projectile => projectile.Seeking is not null);
+            // 52: every constructed unit's callback state (+0x110, its
+            // construction frame and its first full Move). Selected whenever
+            // the level was constructed in the retail load order; the
+            // callbacks themselves are in the event manager above.
+            bool usesUnitCallbackSchema =
+                state.Level100ActorMechanics.UnitCallbacks is { Count: > 0 };
             // 48: retained spawning-owner reader, exit selector/deadline and
             // explicit handoff to the existing approximate normal-control
             // bridge. Unspawned scenes retain schema 47 byte-for-byte.
@@ -159,7 +185,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesUnitCallbackSchema ? 52 : usesMissilePodSchema ? 51 : usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -325,9 +351,115 @@ public static class StateHasher
                 writer.Write(foot.PhaseThirds);
                 writer.Write(foot.LiftMillimeters);
             }
+
+            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema || usesMissilePodSchema ||
+                usesUnitCallbackSchema)
+            {
+                WriteBattleEngineTargeting(writer, state.Level100BattleEngineTargeting);
+            }
+
+            if (usesStoresAndShakeSchema || usesMissilePodSchema || usesUnitCallbackSchema)
+            {
+                Level100PlayerStoresSnapshot stores = state.Level100PlayerStores;
+                writer.Write(stores.Store0Bits);
+                writer.Write(stores.Store1Bits);
+                writer.Write(stores.Store2Bits);
+                writer.Write(stores.Store3Bits);
+                writer.Write(stores.Store4Bits);
+                writer.Write(stores.Store5Bits);
+                writer.Write(stores.OverheatMask);
+                writer.Write(stores.ShieldsRecharging);
+                writer.Write(stores.AmmoDepletedTimeBits);
+                writer.Write(stores.WeaponOverheatedTimeBits);
+                writer.Write(stores.PulseModeLevel);
+                Level100BattleEngineShakeSnapshot shake = state.Level100BattleEngineShake;
+                writer.Write(shake.YawBits);
+                writer.Write(shake.PitchBits);
+                writer.Write(shake.RollBits);
+                writer.Write(shake.PhaseBits);
+            }
+
+            if (usesMissilePodSchema || usesUnitCallbackSchema)
+            {
+                Level100MissilePodSnapshot pod = state.Level100MissilePod;
+                writer.Write(pod.ChargeBits);
+                writer.Write(pod.ModeLevel);
+                writer.Write(pod.HasMode);
+                writer.Write(pod.BurstCount);
+                writer.Write(pod.SequenceCounter);
+                writer.Write(pod.AngleCounter);
+                ProjectileSnapshot[] seeking = projectiles
+                    .Where(projectile => projectile.Seeking is not null)
+                    .ToArray();
+                writer.Write(seeking.Length);
+                foreach (ProjectileSnapshot projectile in seeking)
+                {
+                    Level100SeekingRoundSnapshot round = projectile.Seeking!;
+                    writer.Write(projectile.Id);
+                    writer.Write(round.YawMicroRadians);
+                    writer.Write(round.PitchMicroRadians);
+                    writer.Write(round.LaunchTimeBits);
+                    WriteNullableActorId(writer, round.Target);
+                }
+            }
+
+            if (usesUnitCallbackSchema)
+            {
+                Level100UnitCallbackSnapshot[] units = state.Level100ActorMechanics.UnitCallbacks!
+                    .OrderBy(unit => unit.ActorId.Value)
+                    .ToArray();
+                writer.Write(units.Length);
+                foreach (Level100UnitCallbackSnapshot unit in units)
+                {
+                    writer.Write(unit.ActorId.Value);
+                    writer.Write((byte)unit.Class);
+                    writer.Write(unit.NearCamera);
+                    writer.Write(unit.ConstructionFrame);
+                    writer.Write(unit.FirstMoveFrame);
+                }
+            }
         }
 
         return stream.ToArray();
+    }
+
+    private static bool IsInitialTargeting(Level100BattleEngineTargetingSnapshot targeting)
+    {
+        ArgumentNullException.ThrowIfNull(targeting);
+        return targeting.CrosshairUnit is null &&
+            targeting.CrosshairUnitRegardlessOfRange is null &&
+            targeting.CrosshairHitKind == Level100CrosshairHitKind.Nothing &&
+            targeting.CrosshairHitDistanceMillimeters == 0 &&
+            targeting.Locks.Locks.Count == 0 &&
+            targeting.Locks.FiredLocks.Count == 0 &&
+            targeting.Locks.RecentLocks == 0 &&
+            targeting.Locks.CurrentTarget == 0;
+    }
+
+    private static void WriteBattleEngineTargeting(
+        BinaryWriter writer,
+        Level100BattleEngineTargetingSnapshot targeting)
+    {
+        WriteNullableActorId(writer, targeting.CrosshairUnit);
+        WriteNullableActorId(writer, targeting.CrosshairUnitRegardlessOfRange);
+        writer.Write((byte)targeting.CrosshairHitKind);
+        writer.Write(targeting.CrosshairHitDistanceMillimeters);
+        WriteLocks(targeting.Locks.Locks);
+        WriteLocks(targeting.Locks.FiredLocks);
+        writer.Write(targeting.Locks.RecentLocks);
+        writer.Write(targeting.Locks.CurrentTarget);
+
+        void WriteLocks(IReadOnlyList<Level100PlayerLockSnapshot> locks)
+        {
+            writer.Write(locks.Count);
+            foreach (Level100PlayerLockSnapshot item in locks)
+            {
+                writer.Write(item.Unit.Value);
+                writer.Write(item.StartBits);
+                writer.Write(item.FinishBits);
+                writer.Write(item.DirectLock);
+            }
+        }
     }
 
     private static bool UsesWorldMissionSchema(Level100MissionSnapshot mission)
@@ -437,7 +569,7 @@ public static class StateHasher
             writer.Write((int)actor.Intent);
             WriteNullableActorId(writer, actor.TargetActorId);
             WriteNullableString(writer, actor.WaypointPath);
-            writer.Write(actor.WaypointPointIndex);
+            writer.Write(actor.WaypointNodeIndex ?? -1);
             writer.Write(actor.WaypointCommandScalar);
             writer.Write(actor.WaitForWaypointCompletion);
             writer.Write(actor.GroundFullGuideBaseTickPhase);

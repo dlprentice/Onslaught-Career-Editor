@@ -255,9 +255,11 @@ public sealed class Level100MessageScheduleTests
         int levelOffsetMs,
         bool expectText)
     {
-        // The capture rig keys its shots on Core ticks, so a retail level
-        // offset maps to a tick by the simulation rate alone.
-        int tick = (int)(levelOffsetMs / 1000d * SimulationConstants.TicksPerSecond);
+        // The retail frames are timed from the first visible frame, where the
+        // pan starts; the mission clock starts at the load, the 3.0 s pre-run
+        // earlier. Beyond that, a level offset maps to a tick by the rate alone.
+        int tick = SimulationConstants.Level100PreRunTicks +
+            (int)(levelOffsetMs / 1000d * SimulationConstants.TicksPerSecond);
 
         var session = new InteractiveSession(
             Seed,

@@ -59,7 +59,7 @@ internal sealed record ColdStartStage(
 /// decode cache is a machine-local materialization of the user's retail
 /// install and a gate cannot depend on it.</para>
 /// </summary>
-internal sealed class Level100ColdStartRun
+internal sealed class Level100ColdStartRun : IDisposable
 {
     /// <summary>
     /// Frontend frame time. <c>rebuild/tools/Smoke-FirstFlight.ps1</c> launches
@@ -86,6 +86,13 @@ internal sealed class Level100ColdStartRun
 
     private InteractiveSession? _session;
     private Level100InteractiveChainHost? _host;
+
+    /// <summary>
+    /// The session's command tape, recorded from its first tick exactly as
+    /// <c>FirstFlightGame</c>'s <c>--record-tape</c> records it. Recording is
+    /// in-process only and changes nothing the session computes.
+    /// </summary>
+    internal CommandTapeRecorder Recorder { get; } = new();
     private int _frame;
     private double _seconds;
     private int _loadRequestFrame = -1;
@@ -188,6 +195,7 @@ internal sealed class Level100ColdStartRun
             // session, build the world, then tell the frontend it is ready. The
             // seed is the client's own SimulationSeed.
             _session = CreateSession();
+            _session.EnableRecording(Recorder);
             // The driver is held to what a hand on a mouse can issue. Retail's
             // CController::DoMappings maps an INTEGER pixel displacement, so
             // the reachable axis is {0, +-30, +-61, +-91, ...} permille - and
@@ -277,6 +285,8 @@ internal sealed class Level100ColdStartRun
 
     /// <summary><c>FirstFlightGame.SimulationSeed</c> (:13), ASCII "ONSL".</summary>
     internal const uint SimulationSeed = 0x4F4E534Cu;
+
+    public void Dispose() => Recorder.Dispose();
 
     private void RequireClick(
         double x,

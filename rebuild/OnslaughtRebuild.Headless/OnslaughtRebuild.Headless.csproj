@@ -22,6 +22,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world.json"
              Link="Assets\Level100\StaticWorld\level100-static-world.json"
              CopyToOutputDirectory="Always" />
+    <Content Include="..\OnslaughtRebuild.Core\Assets\Level110\level110-static-world.json"
+             Link="Assets\Level110\level110-static-world.json"
+             CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>

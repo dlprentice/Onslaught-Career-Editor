@@ -253,9 +253,11 @@ public static class RetailCareerRecordLayout
     public const int MusicVolumeOffset = 0x2490;
 
     /// <summary>
-    /// <c>mIsGod</c> — the one two-dword pair <c>0x0041B6A0</c> never writes, so its position
-    /// is the header's declaration order rather than a store. The Steam build repurposes
-    /// <c>+0x2494</c> as the pause-menu god-mode toggle state.
+    /// <c>mIsGod[2]</c> — one flag per player, the one two-dword pair <c>0x0041B6A0</c> never
+    /// writes, so its position is the header's declaration order rather than a store. The
+    /// <c>CPlayer</c> constructor loads it (<c>0x004d27f3</c>), <c>AssignBattleEngine</c> applies a
+    /// nonzero flag (<c>0x004d30a1-0x004d30ba</c>: not vulnerable, infinite energy), and
+    /// <c>SetIsGod</c> (<c>0x004d3020</c>) writes both copies.
     /// </summary>
     public const int IsGodArrayOffset = 0x2494;
 

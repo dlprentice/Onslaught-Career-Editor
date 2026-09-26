@@ -12,33 +12,19 @@ namespace OnslaughtRebuild.Core.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>The defect these pin.</b> <c>Flyby Path</c> serializes its nodes
-/// <c>[43, 42, 41]</c> and its markers' own <c>target</c> pointers chain them
-/// <c>[41, 42, 43]</c>. Until #146 the follower indexed
-/// <c>Level100WaypointPathDefinition.Points</c> — the serialized list — so the
-/// Air Trainer began its authored route at the chain's TAIL and flew the whole
-/// thing backwards.
+/// Retail walks a path from the node nearest the unit and then along each
+/// node's own target (<c>reverse-engineering/game-mechanics/waypoint-paths.md</c>,
+/// pristine specimen <c>74154BFA…</c>): <c>FollowWaypointWait</c>
+/// (<c>0x00537e40</c>) takes the nearest node from <c>0x00505c30</c>, and
+/// <c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>) moves to
+/// the current waypoint's <c>+0x3c</c> on arrival (<c>0x005384dc</c>). The
+/// serialized list only picks the start.
 /// </para>
 /// <para>
-/// <b>Why chain order is retail.</b> Read from the pristine specimen
-/// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
-/// <c>74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750</c>:
-/// <c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>) holds a
-/// POINTER to the current waypoint at <c>this+0x14</c> and advances it with
-/// <c>mov eax,[esi+0x14]</c> / <c>mov ecx,[eax+0x3c]</c> (<c>0x005384dc</c>)
-/// followed by <c>mov [esi+0x14],ecx</c> (<c>0x005384fd</c>) — the successor
-/// comes from the waypoint itself. <c>CWaypoint::InitAndLink</c>
-/// (<c>0x005057b0</c>) is what fills that <c>+0x3c</c>, from the marker's own
-/// spawn record at <c>+0xa4</c>. And the two script natives seed the cursor
-/// with the single pointer the shared path lookup at <c>0x00505c30</c> returns,
-/// never with a list — <c>FollowWaypointWait</c> (<c>0x00537e40</c>) at
-/// <c>mov [ebx+0x14],eax</c>, <c>0x00537e73</c>. There is no serialized index
-/// anywhere in that loop.
-/// </para>
-/// <para>
-/// The corroborating shipped string, at VA <c>0x0064fe50</c> in the same
-/// specimen: <c>"ERROR: Waypoint points to previous"</c>. Waypoints point at
-/// waypoints.
+/// <c>Flyby Path</c> chains 41 → 42 → 43. The Air Trainer is authored nearer
+/// 42 (squared distance 10,430.8 against 21,186.1 for 41), so it flies 42 → 43
+/// and never visits 41. Until 2026-09-26 the rebuild started every walk at the
+/// chain head and flew 41 → 42 → 43.
 /// </para>
 /// </remarks>
 public sealed class Level100AirTrainerFlybyTests
@@ -88,14 +74,13 @@ public sealed class Level100AirTrainerFlybyTests
     /// <remarks>
     /// The visited node is identified by asking which authored point the
     /// aircraft is inside the arrival radius of at the moment the cursor moves.
-    /// That reads <c>Points</c> — the serialized list — and the plane's pose,
-    /// and never reads <c>TargetChainNodeIndices</c>. So the assertion is not
-    /// the chain restated: it is where the aeroplane actually went.
+    /// That reads the points and the plane's pose, never the targets, so the
+    /// assertion is where the aeroplane actually went.
     /// </remarks>
     [Fact]
-    public void AirTrainer_VisitsFlybyPathNodesInAuthoredChainOrder()
+    public void AirTrainer_FliesFromItsNearestNodeAlongTheTargets()
     {
-        Assert.Equal([41, 42, 43], FlyTheAuthoredRoute().Visited);
+        Assert.Equal([42, 43], FlyTheAuthoredRoute().Visited);
     }
 
     /// <summary>
@@ -138,34 +123,61 @@ public sealed class Level100AirTrainerFlybyTests
         // is +16,160 mm of clearance, and it is inside the released band from
         // the first tick rather than climbing out of the ground into it.
         Assert.Equal(16_160, authored.ClearanceAtSpawn);
-        Assert.Equal(
-            authored.ClearanceAtSpawn,
-            FlyTheAuthoredRoute(SerializedOrderAsChain).ClearanceAtSpawn);
     }
 
     /// <summary>
-    /// The mutation proof for both tests above, kept as a test so it cannot rot:
-    /// re-introducing the defect - steering at <c>Points[cursor]</c> instead of
-    /// <c>ChainPoint(cursor)</c> - produces a DIFFERENT visit order.
+    /// The start is the node nearest the unit, not the chain's head: the same
+    /// aircraft placed on node 41 walks the whole chain.
     /// </summary>
-    /// <remarks>
-    /// The reversal is re-introduced here by handing the mechanics a definition
-    /// set whose chain has been overwritten with the serialized order, which is
-    /// exactly the state the product was in before #146. If someone reverts
-    /// <c>ChainPoint</c> back to <c>Points</c> indexing, this test and
-    /// <see cref="AirTrainer_VisitsFlybyPathNodesInAuthoredChainOrder"/> assert
-    /// the same sequence and this one fails.
-    /// </remarks>
     [Fact]
-    public void ReintroducingTheReversal_ChangesTheVisitOrder()
+    public void TheStartIsTheNodeNearestTheUnit()
     {
-        int[] authored = FlyTheAuthoredRoute().Visited;
-        int[] reversed = FlyTheAuthoredRoute(SerializedOrderAsChain).Visited;
+        Assert.Equal([41, 42, 43], FlyTheAuthoredRoute(startOnNode: 41).Visited);
+    }
 
-        _output.WriteLine($"authored chain visit order: [{string.Join(", ", authored)}]");
-        _output.WriteLine($"serialized-order visit order: [{string.Join(", ", reversed)}]");
-        Assert.NotEqual(authored, reversed);
-        Assert.Equal([43, 42, 41], reversed);
+    /// <summary>
+    /// Waypoints take their load-time height: <c>CThing::Init</c> raises one
+    /// below the heightfield sample to it, then one below the water level to
+    /// that (<c>waypoint-paths.md</c>, "Loading"; z grows downward). Flyby node
+    /// 42 is authored at z = -15, 3.1 m inside the hillside (ground -18.10), so
+    /// it is raised to the ground; node 43 is authored at z = 0 over the sea
+    /// (ground +1.16), so it is raised to the water level (-8.84).
+    /// </summary>
+    [Fact]
+    public void Waypoints_TakeTheirLoadTimeGroundOrWaterHeight()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(actors, definitions);
+        Level100ActorId trainer = actors.GetThingRef("Air Trainer")!.Value;
+        Level100WaypointPathDefinition path = definitions.GetWaypointPath("Flyby Path");
+        Level100FloatVector4Bits node42 = path.Point(42).RetailComponentsFloatBits;
+        Level100FloatVector4Bits node43 = path.Point(43).RetailComponentsFloatBits;
+        float ground42 = RetailWorldTerrain.SampleRetailHeight(
+            Level100Terrain.Instance, new(node42.X, node42.Y, node42.Z));
+        float ground43 = RetailWorldTerrain.SampleRetailHeight(
+            Level100Terrain.Instance, new(node43.X, node43.Y, node43.Z));
+        float water = Level100Terrain.Instance.WaterLevel;
+        Assert.Equal(-15f, BitConverter.Int32BitsToSingle(node42.Z));
+        Assert.True(ground42 < -15f && water > ground42);
+        Assert.Equal(0f, BitConverter.Int32BitsToSingle(node43.Z));
+        Assert.True(ground43 > 0f && water < 0f);
+
+        actors.GetPlaneState(trainer).TeleportRetailPosition(
+            new(node42.X, node42.Y, BitConverter.SingleToInt32Bits(ground42)));
+        mechanics.ApplyCommand(new Level100ActorScriptCommand(
+            1, 0, trainer, Level100ActorScriptCommandKind.FollowWaypointWait, null, path.Name, 0));
+        Level100PlaneGuideSnapshot Guide() =>
+            mechanics.Snapshot.Actors.Single(actor => actor.ActorId == trainer).PlaneGuide!;
+        Assert.Equal(
+            new Level100FloatVector3Bits(node42.X, node42.Y, BitConverter.SingleToInt32Bits(ground42)),
+            Guide().Destination);
+
+        mechanics.AdvanceTick();
+        Assert.Equal(43, mechanics.Snapshot.Actors.Single(actor => actor.ActorId == trainer).WaypointNodeIndex);
+        Assert.Equal(
+            new Level100FloatVector3Bits(node43.X, node43.Y, BitConverter.SingleToInt32Bits(water)),
+            Guide().Destination);
     }
 
     /// <summary>
@@ -201,12 +213,13 @@ public sealed class Level100AirTrainerFlybyTests
         Level100WaypointPathDefinition path;
         (int[] visited, var completions, var final) = WalkByTeleport("Drone Path 1", out path);
 
-        Assert.True(path.IsClosed);
-        Assert.Equal([1, 2, 3, 4], path.TargetChainNodeIndices);
+        Assert.Equal([4, 3, 2, 1], path.Points.Select(point => point.NodeIndex));
+        Assert.Equal([1, 4, 3, 2], path.Points.Select(point => point.TargetNodeIndex!.Value));
 
-        // Round the ring and past the seam, twice over: 1,2,3,4,1,2,3,4...
+        // From the node nearest the aircraft, round the ring and past the seam
+        // twice over.
         Assert.Equal(
-            [1, 2, 3, 4, 1, 2, 3, 4, 1],
+            [3, 4, 1, 2, 3, 4, 1, 2, 3],
             visited.Take(9));
 
         // No wait completion is ever raised, even though the command was
@@ -226,12 +239,39 @@ public sealed class Level100AirTrainerFlybyTests
         Level100WaypointPathDefinition path;
         (int[] visited, var completions, var final) = WalkByTeleport("Flyby Path", out path);
 
-        Assert.False(path.IsClosed);
-        Assert.Equal([41, 42, 43], visited);
+        Assert.Null(path.Point(43).TargetNodeIndex);
+        Assert.Equal([42, 43], visited);
 
         Level100ActorMechanicsWaitCompletion completion = Assert.Single(completions);
         Assert.Equal(path.Name, completion.Argument);
         Assert.Equal(Level100ActorScriptWaitKind.FollowWaypoint, completion.WaitKind);
+        Assert.Equal(Level100ActorCommandIntent.Stopped, final.Intent);
+    }
+
+    /// <summary>
+    /// A waypoint that targets itself logs an error and ends the walk
+    /// (<c>UpdateWaypointFollowing</c> <c>0x00538470</c>; waypoint-paths.md,
+    /// "Following"). No admitted level carries one, so the path is rewritten.
+    /// </summary>
+    [Fact]
+    public void SelfTargetingWaypoint_EndsTheWalk()
+    {
+        (int[] visited, var completions, var final) = WalkByTeleport("Flyby Path", out _,
+            definitions => new Level100ActorDefinitionSet(
+                definitions.Actors,
+                definitions.Spawns,
+                definitions.WaypointPaths.Select(path => path.Name != "Flyby Path"
+                    ? path
+                    : path with
+                    {
+                        Points = path.Points.Select(point => point.NodeIndex == 42
+                            ? point with { TargetNodeIndex = 42 }
+                            : point).ToArray(),
+                    }).ToArray(),
+                definitions.MotionDefinitions));
+
+        Assert.Equal([42], visited);
+        Assert.Single(completions);
         Assert.Equal(Level100ActorCommandIntent.Stopped, final.Intent);
     }
 
@@ -243,9 +283,14 @@ public sealed class Level100AirTrainerFlybyTests
     private (int[] Visited,
         IReadOnlyList<Level100ActorMechanicsWaitCompletion> Completions,
         Level100ActorCommandIntentSnapshot Final)
-        WalkByTeleport(string pathName, out Level100WaypointPathDefinition path)
+        WalkByTeleport(string pathName, out Level100WaypointPathDefinition path,
+            Func<Level100ActorDefinitionSet, Level100ActorDefinitionSet>? rewrite = null)
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        if (rewrite is not null)
+        {
+            definitions = rewrite(definitions);
+        }
         var actors = new Level100ActorRegistry(definitions);
         var mechanics = new Level100ActorMechanics(actors, definitions);
         Level100ActorId trainer = actors.GetThingRef("Air Trainer")!.Value;
@@ -265,10 +310,10 @@ public sealed class Level100AirTrainerFlybyTests
 
         var visited = new List<int>();
         var completions = new List<Level100ActorMechanicsWaitCompletion>();
-        int cursor = 0;
+        int? cursor = null;
         // Three core ticks per base tick is the worst case, and nine laps of the
         // longest path is more headroom than any assertion here needs.
-        int budget = 9 * 3 * (path.TargetChainNodeIndices.Count + 1);
+        int budget = 9 * 3 * (path.Points.Count + 1);
         for (int tick = 0; tick < budget; tick++)
         {
             Level100ActorCommandIntentSnapshot before = State();
@@ -277,19 +322,19 @@ public sealed class Level100AirTrainerFlybyTests
                 break;
             }
 
-            Level100FloatVector4Bits point = path.ChainPoint(before.WaypointPointIndex).RetailComponentsFloatBits;
+            Level100FloatVector4Bits point = path.Point(before.WaypointNodeIndex!.Value).RetailComponentsFloatBits;
             actors.GetPlaneState(trainer).TeleportRetailPosition(new(point.X, point.Y, point.Z));
             completions.AddRange(mechanics.AdvanceTick());
 
             Level100ActorCommandIntentSnapshot after = State();
             bool advanced =
-                after.WaypointPointIndex != before.WaypointPointIndex ||
+                after.WaypointNodeIndex != before.WaypointNodeIndex ||
                 after.Intent != Level100ActorCommandIntent.FollowingWaypoint;
             if (advanced)
             {
                 // The node just reached is the one the cursor named going in.
-                visited.Add(path.TargetChainNodeIndices[before.WaypointPointIndex]);
-                cursor = after.WaypointPointIndex;
+                visited.Add(before.WaypointNodeIndex.Value);
+                cursor = after.WaypointNodeIndex;
             }
         }
 
@@ -298,24 +343,6 @@ public sealed class Level100AirTrainerFlybyTests
             $"completions={completions.Count} finalCursor={cursor}");
         return (visited.ToArray(), completions, State());
     }
-
-    /// <summary>
-    /// The pre-#146 definition set: every path's traversal chain replaced by its
-    /// own serialized node order.
-    /// </summary>
-    private static Level100ActorDefinitionSet SerializedOrderAsChain(
-        Level100ActorDefinitionSet definitions) =>
-        new(
-            definitions.Actors,
-            definitions.Spawns,
-            definitions.WaypointPaths
-                .Select(path => new Level100WaypointPathDefinition(
-                    path.Name,
-                    path.Points,
-                    path.Points.Select(point => point.NodeIndex).ToArray(),
-                    path.IsClosed))
-                .ToArray(),
-            definitions.MotionDefinitions);
 
     /// <param name="Visited">
     /// The node indices the aircraft actually arrived at, in order.
@@ -340,15 +367,9 @@ public sealed class Level100AirTrainerFlybyTests
         int MinimumClearanceAfterClimb,
         int FirstLegTicks);
 
-    private FlightProfile FlyTheAuthoredRoute(
-        Func<Level100ActorDefinitionSet, Level100ActorDefinitionSet>? rewrite = null)
+    private FlightProfile FlyTheAuthoredRoute(int? startOnNode = null)
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
-        if (rewrite is not null)
-        {
-            definitions = rewrite(definitions);
-        }
-
         var actors = new Level100ActorRegistry(definitions);
         var mechanics = new Level100ActorMechanics(actors, definitions);
         Level100ActorId trainer = actors.GetThingRef("Air Trainer")!.Value;
@@ -363,6 +384,11 @@ public sealed class Level100AirTrainerFlybyTests
         Assert.Equal(initial.RetailPlane.CurrentEuler, initial.RetailPlane.DesiredEuler);
         Assert.Equal(default, initial.RetailPlane.Velocity);
         Assert.Equal(default, initial.RetailPlane.Drive);
+        if (startOnNode is { } node)
+        {
+            Level100FloatVector4Bits start = path.Point(node).RetailComponentsFloatBits;
+            actors.GetPlaneState(trainer).TeleportRetailPosition(new(start.X, start.Y, start.Z));
+        }
         mechanics.ApplyCommand(new Level100ActorScriptCommand(
             1,
             0,
@@ -375,7 +401,7 @@ public sealed class Level100AirTrainerFlybyTests
         int clearanceAtSpawn = Clearance(actors.GetActor(trainer).Pose);
 
         var visited = new List<int>();
-        int cursor = 0;
+        int? cursor = mechanics.Snapshot.Actors.Single(actor => actor.ActorId == trainer).WaypointNodeIndex;
         int climbedOutAtTick = 0;
         int minimumClearanceAfterClimb = int.MaxValue;
         int firstLegTicks = 0;
@@ -404,7 +430,7 @@ public sealed class Level100AirTrainerFlybyTests
                 }
             }
 
-            bool advanced = state.WaypointPointIndex != cursor;
+            bool advanced = state.WaypointNodeIndex != cursor;
             bool finished = state.Intent != Level100ActorCommandIntent.FollowingWaypoint;
             if (!advanced && !finished)
             {
@@ -428,7 +454,7 @@ public sealed class Level100AirTrainerFlybyTests
             _output.WriteLine(
                 $"tick {coreTick + 1}: arrived node {visited[^1]} at " +
                 $"{pose.PositionMillimeters}");
-            cursor = state.WaypointPointIndex;
+            cursor = state.WaypointNodeIndex;
             if (finished)
             {
                 break;

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,857 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### World 110's static world from retail data — September 26
+
+The materializer now writes World 110's level for the Simulation:
+`rebuild/OnslaughtRebuild.Core/Assets/Level110/level110-static-world.json`
+(schema `onslaught.world110-static-world.v1`, SHA-256 `7b201943…`, ignored like
+the other Level110 outputs). It is built from the pristine specimen's
+`110_res_PC.aya` and `default physics.dat` and follows the RE lane's
+construction contract
+(`reverse-engineering/game-mechanics/world-110-construction-order.md`):
+- the shared base world's 33 objects and 1,481 pines, identical to Level 100's
+  manifest, with each building's life from its unit record;
+- the level rows in file order: Player 1 at the Start (row 1), the inactive
+  spawner (row 5), the four landing craft each followed by its "Dropship Gun
+  Turret" child, the volume (row 9), the 22 members of the five type-28 squads
+  and the six fighters, each with its authored allegiance;
+- the five squads (members, script, allegiance, mode, authored transform) and
+  the four turret children;
+- the four named paths, with the rows the loader drops (8, 25 and 5) and each
+  waypoint's own target (`waypoint-paths.md`);
+- each unit type's motion class and the settings words (pan 2.0).
+
+`Level100ActorDefinitionManifest.DecodeWorld110` decodes it into a world-110
+definition set, and Core's set now carries squads, components and each actor's
+allegiance; identity format 14 hashes them, and Level 100's identities do not
+move. Until the canonical checkout publishes the file, a worktree keeps an
+exact local copy: the asset preparation accepts a missing canonical output only
+when the local file has the pinned bytes.
+
+Tests: `materialize_retail_assets_tests` (95, including the builder against the
+pristine inputs and the missing-canonical rule), `World110StaticWorldManifestTests`
+(4), Core 1,551 and Client 916 with the two known skips, and the safety gate
+(4,085 files).
+
+Open: the turret child's life (its component record's field map is not
+established); member formation slots, which the squad sets at runtime
+(`0x004e9600`, `0x004e8730`); dropship motion (the RE lane's contract is in
+progress).
+
+### Audit corrections: Mech Bullet damage and comments — September 26
+
+The RE lane's record audit found these in rebuild code; each was re-read here
+from the pristine specimen (`74154bfa…`).
+- **Mech Bullet damage is 0.08, not 0.081.** `CExplosion::Init` compares an
+  explosion's damage with the double 0.0015 (`0x0044b9e8-0x0044ba02`, `0x5db298`).
+  At or below it, the explosion's collision mask becomes −1, and the filter at
+  `0x00426900` then never collides. "Mech Bullet Hit" deals 0.001
+  (`0x3a83126f`, `default physics.dat`), so a Mech Bullet does only its round's
+  0.08 (`0x3DA3D70A`). The old value added the explosion. A Target Tank now takes
+  76 rounds (was 75); a truck still takes 38 and a drone 13. No pinned run lands
+  a Mech Bullet, so no pin moved. The cold-start run fires the Vulcan: it still
+  wins at tick 8,540 with hull 3,350 on the abort branch, and its won tape now
+  ends at state `c6017343…` (trace `b44844e6…`), replayed twice.
+- **Comments only:** `CGame::SetSlot` and `CCareer::SetSlot` set a slot bit only
+  for 1 (`0x0046d3c5`, `0x00421505`); the image has 146 `mov ecx, 0x008a9a98`
+  (149 operand references); Enter is binding row 19 and Numpad Enter row 21;
+  the installed Steam executable hashes pristine today; `+0x2494` is
+  `mIsGod[2]`; the stop flag's readers and writers in `Run`, `CopyState` and
+  Pause; the terrain scroll advances per `RenderTerrain` call for view 0 and
+  wraps only above 1.0 (`0x005455f5`). Whether a second mission in the same
+  process restarts the scroll phase is open.
+
+### Terrain detail rotation — September 26
+
+The terrain shader's second detail layer used an axis-aligned quarter scale. The
+RE lane's audit found that stage 3's angle is the double at `0x005d87e0`,
+re-read here from the pristine specimen (`74154bfa…`, `0x005459a4-0x005459fd`).
+`fld qword` loads 1.0, one radian; read as a float32, its low dword is the 0.0
+the old comment cited. `fcos` and `fsin` of it are scaled by `0x005d858c`
+(0.25), with sin stored as a float32 first. That gives _11 = _22 = `0x3e0a5140`
+(0.13507557), _12 = −_21 = `0x3e576aa4` (0.21036774) and offset (0.3, 0.3).
+Stage 3 is COUNT2 (`0x0054599f`). The shader now applies that matrix to
+(u, v, 1), and `Level100TerrainCompositorTests` pins both words and the shader
+lines. Only a GPU render compiles the shader; the final capture is its check.
+
+### Waypoint walks from the nearest node — September 26
+
+Core started every waypoint walk at the head of its path's target chain and
+steered at waypoints' authored heights. The RE lane's contract
+(`reverse-engineering/game-mechanics/waypoint-paths.md`, commits `1e7bc137` and
+`d0709d36`) was re-read here from the pristine specimen (`74154bfa…`):
+- The loader keeps a path's `CWaypoint` rows (flag bit `0x1000`,
+  `0x00505a29-0x00505a35`) and prepends each one (`0x004e5a80` links the new
+  node ahead of the head). A path's list therefore runs in reverse file order.
+- `0x00505c30` returns the listed node nearest the unit. It takes dx, dy and dz
+  as waypoint minus unit (`+0x1c/+0x20/+0x24`) and sums (dx² + dz²) + dy² on the
+  x87 stack. The sum is compared with `fcom` (C0, a strict `<`) against a
+  float32 minimum that starts at 9999999.0 (`0x4b18967f`); a new minimum is
+  stored with `fstp`.
+- On arrival the next node is the current waypoint's `+0x3c` (`0x005384dc`). A
+  waypoint that targets itself logs `0x0064fe50` and ends the walk.
+- `CThing::Init` raises a waypoint below the heightfield sample (`0x0047eb80`,
+  `0x004f34fb-0x004f3534`) to it, then one below the water level (`0x006fbdfc`,
+  `0x004f3549-0x004f3559`) to that. `InitAndLink`'s second sample
+  (`0x005057db-0x005057f6`) cannot move it again.
+- When a walk ends, `CDropship`'s slot 64 is a bare `ret` (`0x00459990`).
+  `CPlane`'s (`0x00422750`) resets its guide: slot 8 (`0x0047e3d0`) clears the
+  mode word, sets the goal to the position and zeroes `+0x14c`'s xyz. A ground
+  vehicle takes the Unit default (`0x004fcf00`).
+
+Core now loads each path as retail's list, with each node's own target
+(`Level100WaypointPathDefinition.FromFileOrder`), and seats the waypoints at
+their load-time heights (`Level100ActorMechanics.SeatWaypoints`). A walk starts
+at `NearestPoint` from the unit's position and follows the targets. A dropship
+keeps its velocity at the end of a walk. The definition identity carries each
+node's target (formats 10-13). What moved in Level 100:
+- The Air Trainer is authored nearer node 42 than 41, so it flies 42 → 43
+  instead of 41 → 42 → 43.
+- Flyby node 42 lies 3.1 m inside the hillside and rises to the ground
+  (z −18.10). The nodes over the sea rise to the water level (z −8.84): Flyby
+  43, Transporter 44 and all four drone nodes. The truck and tank nodes rise to
+  the ground.
+- Spawned targets start from the node nearest their spawn. Target Tank #23
+  still drives 6 → 7 → 18.
+
+Six mutations were killed and restored byte-identical
+(`local-data/test-runs/waypoint-routes-20260926/mutation-kills/`): a start at
+the list head; no load-time lift; a dropship that stops at the walk's end; a
+self-target that keeps walking; the file order kept; and a tie that keeps the
+later node.
+
+Tests that moved read the retail list and node targets instead of the chain.
+The Transporter test now places the craft at its authored position, since the
+fixture's origin is nearer node 23.
+
+Core passes 1,553, the ferry sweep 6/6, and Client 912 with the two known
+skips. The pause checks (56) and AYA checks (447) pass. Re-pinned:
+- `first-flight.v1.json` replays to trace `fe219cb2…` and state `5e51c9a6…`;
+- the in-process smoke and its validator: state `8649ff2b…`;
+- the canonical-hash fingerprints;
+- the chain autopilot, now on the six-kill branch: Won at tick 6,502 with hull
+  9,554.
+
+The headless Godot smoke records tape `ed3b77b5…` (trace `97cf1e7c…`, state
+`8649ff2b…`). The C# replayer reproduces it twice, and the smoke validator
+module accepts the report. The cold-start won tape is 8,540 ticks (trace
+`d6df9a59…`, state `fdf132e6…`), on the abort branch after two second-wave kills
+with hull 3,350, and it replays twice.
+
+Open: Core has no dropship motion, so the U-17 and World 110's landing craft do
+not fly their paths yet. The RE lane's runtime check of the start nodes is still
+open.
+
+### Scripts start on their INIT_SCRIPT events — September 26
+
+Core used to run every script's `init()` during the load: Setup first, the
+authored scripts in actor-id order, then LevelScript. Retail starts each script
+on an event (the RE lane's construction contract, "Level-world rows" and
+"Scripts in the first frames", with its answers on the carriers and on World
+110's Setup):
+- `SetScript` binds the VM and files INIT_SCRIPT 2001 at −1 for the thing itself
+  (`0x004f42b1-0x004f42da`).
+- A constructed thing's script is bound first in its construction sequence.
+- A script carrier (`CLevelScriptThing`: Level 100's LevelScript and Setup at
+  rows 5 and 17, World 110's rows 0, 2 and 39) files only that event, at its
+  row position.
+- A scripted unit's AI constructor also files the 2003 for its `ready()`
+  before its AI.
+- So the first flush runs the inits in row order. Setup's own `SetScript`
+  bindings file for frame 2, which is when the Tank Factory runs its init and
+  builds its first Target Tank. World 110 depends on this: Setup activates
+  five inactive base units after their first AI events.
+
+Core now files these events during the load and lets the flush run them:
+- a scripted row's 2001 first in its sequence, and its 2003 before its AI;
+- each carrier's 2001 at its row, placed by the definitions' level-row
+  identities;
+- `SetScript` and spawned units' 2001 for the next frame.
+
+The Simulation owns the handlers: a thing's init or `ready()`, LevelScript's
+`init()` (the mission now takes it on its event), and Setup's. An authored
+plane's `ready()` now runs on its 2003; a spawned plane's still comes from its
+exit handoff. Standalone script and mission tests keep the immediate path.
+
+Tests:
+- `SimulationTests.Construction_StartsEveryScriptOnItsInitScriptEvent` pins
+  the load's 2001 order: row 5, rows 9-16, row 17, then rows 19, 21 and 40. It
+  also pins the Tank Factory's first spawn to frame 2 and every script
+  initialized after the pre-run.
+- `Level100UnitCallbackTests` now expect the Warehouse's 2001 and 2003 in its
+  sequence, and set the world's carriers aside.
+- The load-draw count no longer includes the Tank Factory's spawn, which
+  closes the open difference recorded with the construction order.
+
+Five mutations were killed and restored byte-identical
+(`local-data/test-runs/script-inits-20260926/mutation-kills/`): no INIT_SCRIPT
+for a scripted row, carriers after every row, `SetScript` running at once, no
+`ready()` event, and a spawned script starting at once.
+
+Other tests that moved:
+- A Client test read the Target Tank's guide phase as if at its construction.
+  It is now read 58 frames later, since the tank is built on frame 2.
+- The truck-spawn test stopped as soon as the trucks settled. It now waits for
+  their scripts, a frame later, to send them down their paths.
+
+Core passes 1,555, the ferry sweep 6/6, and Client 912 with the two known
+skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `7d4a41a7…` and state `ab0c274b…`;
+- the in-process smoke and its validator: state `629076b4…`;
+- the canonical-hash fingerprints;
+- the chain autopilot, still on the abort branch after two kills, at tick 5,793
+  with hull 4,750.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`ec218626…`, trace `cb556aa4…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 7,750 ticks (trace `45c72494…`, state `00616ef4…`), on
+the abort branch with no second-wave kills and hull 1,293, and it replays
+twice.
+
+Open: World 110's Weather carrier has no Core owner yet, and its handler
+refuses it.
+
+### The level's three-second pre-run — September 26
+
+Core started Level 100's six-second pan at its first tick, so its world had
+run 60 frames less than retail's when the player first saw it.
+- `CGame::InitRestartLoop` files FINISHED_PRE_RUN at now + 3.0 before the world
+  loads (`game.cpp:371-373`).
+- `CGame::PreRun` then runs whole updates, unrendered, until it arrives
+  (`game.cpp:2063-2071`).
+- The RE lane confirmed the frames (`reverse-engineering/game-mechanics/level100-construction-order.md`,
+  "Pre-run, pan and the first rendered frame", commit `2035942b`):
+  - frames 1-60 run in the pre-run, and frame 60's flush starts the pan;
+  - FINISHED_PANNING lands on frame 180 for Level 100 and frame 100 for World 110;
+  - no state-1 check changes a draw. Script events run as usual; only
+    presentation, sounds and input differ.
+- The Steam measurements of the pan (installed at event time 3.0, playing at
+  9.0) and of the message boundaries already count from the pan's start.
+
+Level construction now runs those 60 frames with no input, so tick 0 is frame
+60 and the first tick is frame 61:
+- The pan starts after them, and the event and mission clocks both read 60 at
+  tick 0.
+- The message box's gate is 181 mission ticks, the same instant as before on
+  the session's clock.
+- The load's and the pre-run's mission events and script commands reach the
+  first tick, as retail shows them once the visuals start.
+- An internal receipt keeps the state at the end of the load for construction
+  tests.
+
+Tests that compared the session's tick with a script or mission clock now use
+one clock:
+- the trigger helpers and the reference-frame text gate;
+- the skip-panning gates;
+- the Godot audio's mission-start guard. It rejected a mission clock ahead of
+  the session's, which the first headless smoke caught before the guard was
+  changed.
+
+Construction and at-rest tests read the load receipt. The Vulcan-ready clock
+test now finds the first frame after the pre-run that shows its rounding
+pattern.
+
+`SimulationTests.Construction_RunsTheThreeSecondPreRunBeforeThePan` pins:
+- both clocks at 60 and the draws the pre-run took;
+- the pan's full 120 ticks, ending on frame 180, and the gate at 181;
+- the cold career's deactivation reaching the first tick.
+
+Five mutations were killed and restored byte-identical
+(`local-data/test-runs/pre-run-20260926/mutation-kills/`): no pre-run, 59
+frames, no pan after it, the pre-run's mission events dropped, and a message
+gate without it. A sixth, the pan also set at the load, is equivalent, since
+the pre-run's end resets it.
+
+The pre-run moved the chain autopilot and the cold-start route:
+- **Cold start.** It first lost to water at Target Zone 4. After the drone
+  abort it dropped out of jet mode 2.75 m from the zone, 12 m up at 5.7 m/s,
+  and drifted 13 m into the sea. The autopilot's cruise hand-off now also
+  requires a dry-land ballistic touchdown, which its committed hand-off
+  already did.
+- **Chain autopilot.** It wins on the abort branch after two kills, at tick
+  5,618 with hull 6,050. The test calls the branch a fixture reading, and it
+  still checks the result is a released branch.
+
+Core passes 1,554 (the ferry sweep 6/6 among them) and Client 912 with the two
+known skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `d956053b…` and state `6b49e986…`;
+- the in-process smoke and its validator: state `3582db72…`, with a mission
+  tick of 2,208;
+- the canonical-hash fingerprints.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`633e782f…`, trace `a1be972b…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 7,557 ticks (trace `9aa196fc…`, state `15a4c22f…`), on
+the abort branch with one second-wave kill and hull 5,700, and it replays
+twice.
+
+Open:
+- **First rendered frame.** Retail's shows frame 61's update with its render
+  fraction; the Godot host draws tick 0 first.
+- **Script inits.** Core still runs them at the load, not in frame 1's flush.
+  The Tank Factory's spawn draws therefore still come before frame 1 rather
+  than in frame 2.
+
+### Rounds on their own MOVE and life events — September 26
+
+Core used to move player rounds at the end of every update, starting on the
+launch frame, newest first. Drone rounds moved after the flush, also newest
+first. Every round lived a fixed tick count. The RE lane's round contract
+(`reverse-engineering/game-mechanics/level100-final-drone-wave.md`, "Frames"
+and "No hit while dying", commits `0827d186` and `6c966df3`, with its message
+on insertion order) says:
+- `CRound::Init` files the Actor MOVE at −1 and the life event 4000 at now +
+  the life span. A round built in frame N first moves in frame N+1's flush,
+  then every frame.
+- Each delivered MOVE re-files itself as it is delivered, so rounds move in the
+  manager's insertion order. A round made by a controller Fire goes in before
+  the MOVEs its flush re-files, so it moves ahead of older rounds. One made by
+  a 5001 burst goes in at that point of the flush.
+- The life event lands k = floor((life − 0.001) × 20) buckets out and comes
+  before that frame's MOVE. A `CRoundExplode` round (the Micro Missile) bursts
+  in the air where it is, then every round starts dying. The MOVE still takes
+  one last step and is not re-filed: k + 1 Moves, 160 for 8.0 s.
+- A dying round's last step still meets things, but its own Hit returns before
+  damage, its impact explosion and its death. Only the struck thing's script
+  hit notification remains.
+
+Core now files both events for every round, player and drone, on the level's
+event manager under round listeners, and moves each round when its MOVE is
+delivered. A life of 9.9 s or more is past the ring and waits in the overflow
+list, which is delivered after the lanes. So the Forseti Missile (10 s) takes
+that frame's MOVE, then its last step in the next frame. The dying state is the
+absence of a filed life event, so snapshots gain no fields. Not modelled:
+- the Forseti's own air burst;
+- the next frame's SHUTDOWN. Core removes a round on its last step or its
+  impact, so a hit round's `LockHit` comes one frame early, and a round that
+  impacts one frame before its life ends does not burst a second time, as the
+  contract says retail does.
+
+Tests:
+- `SimulationTests`:
+  - `PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits`
+    pins a round at its emitter on the launch frame and gone after L Moves;
+  - `ControllerRounds_MoveAheadOfRoundsAlreadyInFlight` reads the next
+    bucket's MOVE order;
+  - `DyingRound_LastStepCrossesATargetWithoutDamagingIt` checks the dying step
+    against a live control;
+  - the pod launcher test now pins each air burst exactly at the missile's
+    previous-frame position.
+- `Level100ActorWeaponTests`:
+  - `ActorRounds_MoveOnTheirOwnEventsUntilTheirLifeEnds`: the Blaster's 60
+    Moves, and the Forseti's overflow count computed from its filed due time;
+  - `ActorRound_LastStepMeetsThePlayerWithoutDamage`: a contact-only receipt
+    on the dying step, a damaging one a step earlier.
+- `Level100DestructionContactTests.DyingRoundContact_ReportsTheHitButLeavesTheTargetUnharmed`.
+
+Eight mutations were killed and restored byte-identical
+(`local-data/test-runs/round-frames-20260926/mutation-kills/`): a first Move
+two frames late; a new round queued behind the re-filed MOVEs; player and
+drone rounds that outlive their life event; the air burst where the last step
+ends; dying player and drone steps that damage; and a dying contact the
+target's script never hears.
+
+Core passes 1,547, the ferry sweep 6/6, and Client 912 with the two known
+skips. First-flight fires nothing and keeps its pins. Re-pinned:
+- the in-process smoke and its validator: state `7191f986…`;
+- the chain autopilot, which still wins on the six-kill branch, at tick 6,286
+  with hull 12,450.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`167b17b0…`, trace `274aecdf…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 8,188 ticks (trace `cc34aaec…`, state `fa0ea6ce…`), on
+the abort branch with one second-wave kill and hull 7,377, and it replays
+twice.
+
+### Influence map and warm-up draws in Level 100's load — September 26
+
+The RE lane corrected its construction-order contract
+(`reverse-engineering/game-mechanics/level100-construction-order.md`, commit
+`ec29ffa4`). Retail's load takes six draws that Core did not:
+- After the base world's pines, `CInfluenceMapManager::Load` (`0x0048b010`)
+  ends in `0x0048b8e0`. It takes one draw (`0x0048bf0f`, on every path) and
+  files an influence 1000 at now + 1.0 + (r mod 65536) × 2⁻¹⁶.
+- After the last level row, `SpawnInitialThings` (`0x0050dcb0`) builds one unit
+  of each script-spawned type that no row built, then destroys it at once; only
+  its construction draws remain. Level 100's scripts spawn Target Truck, Target
+  Tank, Air Trainer and Target Drone. The rows already built the tanks and the
+  Air Trainer, so two warm-ups are left: the Target Truck (Actor and hover
+  draws) and the Target Drone (Actor draw and `CPlane::Init`'s last draw).
+- The load's tail calls `0x0048b8e0(0)` again: one draw and a second 1000.
+
+Each 1000 delivery takes one draw and files that chain's next 1000, so the two
+chains draw every one to two seconds for the whole level. Core now takes these
+draws and runs both chains on the level's event manager under a reserved
+listener. The influence map's 1001 and 1002 and the Battle Engine's new
+motion-controller 3000, cockpit 2001 and receiver 4000 draw nothing, so Core
+still does not file them. The base-world pass exists only for a definition set
+that carries the base world's pines, which the materialized retail set does and
+the small test fixture does not.
+
+Tests:
+- `Level100UnitCallbackTests.BaseWorldPass_StartsTwoInfluenceChainsAroundTheWarmUps`
+  pins both 1000s' due times against the draw sequence (pines, first draw, rows,
+  four warm-up draws, tail draw) and one delivery's draw and re-file.
+- `Level100BattleEngineRefreshTests` and the construction draw count
+  (`Level100ActorWeaponTests.ConstructionDraws`) take the six new draws.
+- A Client test pinned the first Target Tank's move phase at 0. That value
+  came from where its Actor draw fell, so the test now derives the phase from
+  the tank's construction and first-Move frames.
+
+Six mutations were killed and restored byte-identical
+(`local-data/test-runs/influence-warmup-20260926/mutation-kills/`): no draw
+after the pines, no warm-ups, warm-ups of types the rows built, no tail draw, a
+2⁻¹⁵ delay scale, and a chain that stops after one delivery.
+
+Core passes 1,540 and Client 912 with the two known skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `79a4db1b…` and state `77a71d70…`.
+- The in-process smoke and its validator: state `0df3dd5c…`.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`7136d58b…`, trace `c44be61a…`), and the C# replayer reproduces it twice. The
+chain autopilot runs on the fixture and keeps six kills at tick 6,254 with hull
+11,564. The cold-start won tape is 8,220 ticks (trace `de6af83a…`, state
+`2bce3c9c…`), on the abort branch with no second-wave kills and hull 9,450, and
+it replays twice.
+
+Open: whether both 1000 chains persist all level, and the receiver's 0.03 s
+delay; the contract names a draw-count log in a copied runtime as the check.
+
+### Cockpit Gun emitters for player rounds — September 26
+
+Core launched every player round from one point: a live capture of the Pulse's
+emitter relative to the Battle Engine (right −6 mm, forward 80 mm, up 259 mm),
+turned by yaw and pitch only. The RE lane's aiming contract
+(`reverse-engineering/game-mechanics/battle-engine-aiming.md`, "Gun emitters",
+commits `0827d186` and `0aa1ceac`) gives each weapon its own emitters on the
+cockpit mesh `cockpit2.msh`. Their model positions are x right, y forward and z
+down, and the world pose is the body orientation `+0x3c`, roll included, times
+that position plus the Battle Engine's position.
+
+The weapon modes' launch sequences name the emitters: Pulse, Gun 1; Twin
+Vulcan, Guns 9-12 (walk pose); Mech Vulcan, Guns 13-14; pod, Guns 4, 3, 5, 2,
+6. Gun 1 comes out at (0.09, 84, 258 above) mm. The captured (−6, 80, 259)
+differs by the cockpit tilt and render-fraction terms that the contract leaves
+open, so the model value is used.
+
+Tests:
+- `Level100CockpitEmitterTests` (9 cases) pins the Gun table against the
+  contract's composed poses and each weapon's sequence.
+- `SimulationTests.MechVulcanRounds_LeaveGunsThirteenAndFourteenInSequence`
+  checks the jet Vulcan's two rounds leave Guns 13 and 14 in order, through the
+  full body basis.
+- The Pulse emitter tests now expect Gun 1.
+
+Four mutations were killed and restored byte-identical
+(`local-data/test-runs/emitters-20260926/mutation-kills/`).
+
+Core passes 1,539 and Client 912 with the two known skips. First-flight fires
+nothing and keeps its pins. The in-process smoke and validator now read state
+`cb9281fc…`. The headless Godot smoke records inputs equal to the previous tape's
+(tape `add3de61…`, trace `06af5907…`), and the C# replayer reproduces it twice.
+The chain autopilot wins through six kills at tick 6,254 with hull 11,564. The
+cold-start won tape is 8,139 ticks (trace `c430525d…`, state `6e1f75a0…`), on
+the abort branch with no second-wave kills, and it replays twice.
+
+Open:
+- The cockpit tilt S and the render-fraction lerp of the pose.
+- The cockpit's own offsets `+0x1c` and `+0xc`, taken as zero.
+- The body shake term of `+0x3c`, not yet applied.
+
+Correction to the previous change's commit message: retail takes 1,535 draws
+before its first frame, not 1,540. Core's other five are the Tank Factory
+spawn, which retail takes on frame 2.
+
+### Level 100 construction order and unit callbacks — September 26
+
+Core used to take three draws while building Level 100 (the Air Trainer's Actor
+draw, then the Battle Engine's 6002 and 6003) and no unit callbacks at all. The RE
+lane's construction-order contract
+(`reverse-engineering/game-mechanics/level100-construction-order.md`, commits
+`b8a19b68`, `c3fff6c4` and `0aa1ceac`) gives the retail load: the base world's
+1,481 pines, one draw each; base rows 0-34 in file order; then the level world's
+rows. Row 0's Start builds the Battle Engine inline, so its draws follow base row
+34.
+
+Per class, in load order:
+- **Buildings:** one Actor draw, then a 4003 and an AI.
+- **Cannons:** the Actor draw, which also phases their four-frame Move, and the
+  fire-control refresh's draw with its 4001; then a 4003 and an AI.
+- **Features and city buildings:** one Actor draw; city buildings also get a 4003.
+- **Battle Engine:** its Actor draw and a 4003, then 6002's and 6003's draws.
+- **Target Tanks:** the Actor draw, which phases the squad member's Move; a
+  4003; the hover draw; an AI; then three squad draws for 4000, 4001 and 4002.
+- **Warehouse:** one draw; its AI starts on 3001 because its authored target is a
+  waypoint.
+- **U-17:** one Actor draw, a 4003 and an AI.
+- **Air Trainer:** the Actor draw, a 4003, the guide callbacks, an AI and
+  `CPlane::Init`'s last draw.
+
+Core files the callbacks that draw, on the level's one event manager, and delivers
+them with the contract's draws and requeues:
+- **4003** takes one draw and re-files at now + 3 + r/65536. It sets
+  `+0x110` when the camera is strictly within 50 units.
+- **A polling AI** (inactive or switched off) draws and files 3003 two to four
+  seconds out; the 3003 files 3000 for the next frame.
+- **An active AI with no target** takes Update's idle arm: one draw, then 1.5 to
+  2.5 s when `+0x110` is set, else 3 to 5 s. With a target the delay is 0.5 to
+  1.5 s.
+- **The Warehouse's 3001** draws and re-files one to two seconds out.
+- **Turret fire control** draws and re-files within 0.1 s, and stops once the
+  turret is dying.
+- **The tank squads** re-file 4000, 4001 and 4002 with one draw each. While the
+  member follows a waypoint, 4002 re-files for the next frame without a draw.
+
+Ground vehicles' mechanics state now exists from construction, with the full-guide
+phase set by the Actor draw. It advances every frame, active or not. A unit moves
+first on the frame after its construction, so a spawned tank no longer moves on
+its spawn frame. A spawned drone keeps its exit controller, and its AI loop after
+the exit is not filed yet.
+
+Schema 52 carries the callbacks' state. The definition identity gains format 9,
+the pine count, which the manifest decoder now validates (1,481).
+
+Tests:
+- `Level100UnitCallbackTests` (7 cases) builds one-row worlds from the
+  materialized definitions and pins every draw and due time: a building, the
+  inactive Tank Factory's poll, a turret, the Warehouse, a Target Tank's squad
+  draws and Move phase, the camera rule and the snapshot restore.
+- `Level100BattleEngineRefreshTests` pins the whole load draw sequence around
+  the Battle Engine's refreshes.
+
+Eleven mutations were killed and restored byte-identical
+(`local-data/test-runs/construction-order-20260926/mutation-kills/`).
+
+The new draws moved the test autopilot's timing enough to expose a gap in it,
+not in Core. In the first drone wave the third drone was still unflagged as an
+objective when the second died over the sea, so the autopilot had nothing to
+shoot. Its `Hold` then morphed to walker and lost the level to water. `Hold` now
+follows the sorties' existing rule: never come down over water, and head for the
+last dry ground.
+
+Core passes 1,529 and the Client suite 912 with the two known skips. The explicit
+ferry sweep passes 6/6 over its twenty perturbations; no run drowns. One of its
+assertions was too strong and is weakened: it claimed the two hand-off arms
+separate only when the adverse ferry hands off above the 20 m tier. On this route
+both arms hand off at 19.3 m, and they still separate twelve ticks later through
+the driver's re-launch, which the same clearance term governs. Re-pinned:
+- `first-flight.v1.json` replays to trace `2564e760…` and state `66cab706…`.
+- The in-process smoke and its validator: state `afc552db…`.
+- The canonical-hash fingerprints.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`85338db6…`, trace `3971f7fe…`), and the C# replayer reproduces it twice.
+
+The chain autopilot now wins through the six-kill branch at tick 5,901 with hull
+10,650. The cold-start route's won tape is 7,759 ticks (trace `a65fb9ec…`, state
+`40493662…`), on the abort branch after three kills, and it replays twice.
+
+Open, each also listed in PARITY.md:
+- Core runs every script's init at construction, so the Tank Factory's first
+  `SpawnThing` takes its squad's five draws before frame 1; retail runs that init
+  on frame 2.
+- Core has no pan camera, so `+0x110` uses the Battle Engine's position, which
+  is only exact for the first-person camera.
+- The drones' AI loop after their exit is not filed.
+- The squads' target branch is not modelled.
+- The Air Trainer's `+0x284` draw is taken but the value is unused.
+
+Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/construction-order-20260926/`.
+
+### Launch basis for every round — September 26
+
+The burst spawner builds each round's basis as orientation × launch angle ×
+scatter, every factor an `FMatrix(yaw, pitch, 0)` (the RE lane's burst-spawner
+contract, steps 5-7, and its 36-case Euler-constructor control, commit
+`84193799`). Before this change Core added the scatter to the aim as angles, which
+matches the product only when the aim is level, and gave modes without launch-angle
+entries no launch angle at all. Three corrections:
+- **Default launch angle.** A mode without `CWeaponLaunchAngle` entries uses
+  `0x004f8140(0, 1, 0)`: a pitch of float(2π/4096). Retail's z axis points down,
+  so every Pulse, Vulcan and drone round now leaves 1,534 µrad nose-down of its aim.
+- **Matrix composition.** Player rounds and the drones' rounds now compose aim,
+  angle and scatter through the one function the Missile Pod already uses. The
+  drones' rounds keep pitch nose-up internally, so their aim and wiggle pitch
+  convert to retail's nose-down pitch at the boundary. Before, the drones'
+  scatter and wiggle pitch had the opposite sign to retail's.
+- **Pulse scatter.** The Pulse Cannon Pod's level-0 mode, `Mech Pulse Cannon
+  Charged` @`0x134e3` in `data/default physics.dat` (`e1fb3ded…`), has
+  `CWeaponInaccuracy` 0; its first node's payload is `00000000`. Core scattered
+  its bolts by 0.5° (`0x3c0efa35`), which belongs to `Mech Pulse Cannon`
+  @`0x13473`, the Small bolt's mode, and the pod never selects that mode. The two
+  scatter draws are still taken and now scale to nothing.
+
+`SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder` now
+checks every Pulse and Vulcan heading against a double-precision matrix
+product. Four mutations were killed and restored byte-identical
+(`local-data/test-runs/launch-basis-20260926/mutation-kills/`): no default
+pitch, the Small bolt's scatter restored, and the drones' pitch sign flipped at
+either end of the composition.
+
+Core passes 1,522 and the Client suite 912 with the two known skips.
+`first-flight.v1.json` and the canonical fingerprints do not move, because they
+fire nothing. The smoke fires the Pulse four times, so its pins move: the
+in-process fingerprints and the smoke validator now read state `aaf7bba9…`. The
+headless Godot smoke records a tape whose inputs equal the previous tape's;
+only its expected hashes differ (tape `0923ca41…`, trace `e3ed327f…`). The C#
+replayer reproduces it twice.
+
+The chain autopilot still wins on the final wave's abort branch, now after one
+kill at tick 5,543 with hull 7,950. The cold-start route records a won tape of
+7,347 ticks (trace `25332a14…`, state `6dd3c819…`), also on the abort branch
+with two kills, and it replays twice. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/launch-basis-20260926/`.
+
+### Jet Missile Pod, locks and seeking rounds — September 26
+
+The jet's second weapon did nothing in the rebuild: Core refused to invent a
+shot. It now fires as retail's records and the RE lane's contracts describe.
+The records are `data/default physics.dat` (SHA-256 `e1fb3ded…`): `Weapon
+"Missile Pod"` @`0x17746`, its modes `Mech Micro Missile Launcher` @`0x13e49`
+and `… Salvo` @`0x14093`, `Round "Micro Missile"` @`0x8e74` and `Explosion
+"Micro Missile Hit"` @`0x3a59`. The contracts, on the RE branch, are the weapon
+stores and charge law (`05d5ed86`), the burst spawner's launch sequence, launch
+angle and Euler matrices (`d5ad5c9a`, `056c56d7`, `84193799`) and the final-wave
+contract's lock, seeking-round and round-lifetime sections (`35056883`,
+`c477f220`). The lock code follows `BattleEngine.cpp:586-1010`.
+
+- **Charge and Fire.** Holding charge adds 8 per call from 0, so the 13th call
+  reaches 104: level 1, the salvo, and full. Fire takes the level and mode before
+  its reload check, so a press during a salvo's 0.8 s reload switches the rest of
+  that burst to the launcher's five. The reload runs from the burst's start.
+- **Burst.** The first missile leaves at once and event 5001 is filed at now +
+  `CWeaponBurstDelay` on the level event manager; each delivery launches one more
+  until the mode's burst size (5 × 0.1 s, or 10 × 0.05 s).
+- **Each missile, in retail order.** Store 3 pays 1 (`WeaponFired`); one launch
+  sound per event; the launch-sequence and launch-angle counters advance (both
+  start at −1); two scatter draws; `GetCurrentTarget`; `FireLock`; the round's
+  Init draw; the recoil's three shake draws (power 0.01).
+- **Launch direction.** It is the launch orientation × `FMatrix(angle yaw, angle
+  pitch, 0)` × the scatter matrix, composed as retail's matrices. Retail's z axis
+  points down, so Core's nose-down player pitch is retail's own; the shared
+  seeking law measures pitch nose-up, and the Battle Engine's rounds convert.
+- **Locks.** `HandleLocks` runs every Move before movement. It returns while the
+  jet's pod is mid-burst. It prunes by the current mode's deflection cone,
+  acquires the crosshair unit (or the outer-sphere probe's) inside 100 m and the
+  cone, and starts a lock that finishes after 0.2 s. The pod's lock unit
+  `0x000e8400` takes planes, ground vehicles and cannons, never buildings or
+  features.
+- **Flight.** Each Move takes two wiggle draws. After the 0.05 s seek delay the
+  missile steers toward its bound target's centre, 0.0349 rad per step, inside a
+  0.785 rad cone. Leaving the cone, the target dying, a hit and the end of life
+  each release the target, and every release calls `LockHit`.
+- **Life's end.** At the end of its 8 s span the missile bursts in the air, as
+  `CRoundExplode` rounds do at event 4000. A contact makes the same `Micro
+  Missile Hit` effect and sound; direct damage is 1.5 plus the explosion's 0.5.
+
+Presentation follows the records.
+- **The missile** is `Micro Missile Effect`'s sprite layer (`Blue Spark 2.tga`,
+  radius 0.1). Its `Pulsate` modifier, its `f_micromissile` mesh layer and its
+  `Blue Trail` (`Blue Beam.tga`, not retained) are not drawn.
+- **The impact** is `Blue Explosion`'s `Flash Small` (`sun2.tga`, radius 0.7 to
+  0 over four turns) and `Blast Anim Sprite Medium` (`alparticle5.tga`, cells
+  0-8 played once at 0.8 cells a turn, radius 0.5 to 1, cyan to black). The
+  ten-particle `Blue Debris Emitter Medium` is not drawn.
+- **Sound.** `BE Micro Missile Fire` (sounds.sfx record 34) plays once per burst
+  event, and `Explosion Medium` (record 104) plays per impact or air burst.
+
+No Godot run fires the pod yet, so nobody has seen or heard these effects.
+
+Tests:
+- `Level100MissilePodTests` (6 cases) pins the charge steps and the salvo, the
+  Fire quirk and reload, the counters, the lock parameters, the lock-unit
+  classes and the charge losses.
+- `SimulationTests.MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots`
+  pins the filed 5001 time, five missiles two frames apart, store 3 at 195, the
+  pod state, every heading against a double-precision matrix product, and five
+  air bursts.
+- `SimulationTests.MissilePod_LocksAStaticTargetAndItsMissilesSeekItThenReleaseTheLock`
+  locks a script-enemy static target at the firing range. The lock finishes
+  0.2 s after it starts, all five missiles bind and strike the target, and the
+  fired set empties again.
+
+Eleven mutations were each killed and restored byte-identical
+(`local-data/test-runs/missile-pod-20260926/mutation-kills/`).
+
+Core passes 1,522; the Client suite passes 912 with the two known skips, once
+the two new impact sprites are registered with their shipped records. Schema 51
+is selected only when the pod or a seeking round differs from construction, so
+no route that leaves the pod alone changes its bytes. The headless Godot smoke
+records the same tape as the previous change (`7c7ca639…`), and the C# replayer
+reproduces it twice (trace `248b326a…`, state `89b9ada6…`). The cold-start won
+tape is byte-identical too (`c5050fa0…`, 7,813 ticks, trace `613489cc…`, state
+`278af3f3…`). No pin moved. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/missile-pod-20260926/`.
+
+### Weapon stores, recoil shake and the round's Init draw — September 26
+
+The rebuild charged every walker Pulse shot 30 milli-units of walker energy
+(and the Twin Vulcan 15), a placeholder the code itself called unaccepted. Retail
+spends no energy on weapons. The RE lane's contract
+(`reverse-engineering/game-mechanics/battle-engine-weapon-stores.md` on the RE
+branch, commit `05d5ed86`, with the GPL part bodies) gives the Aquila's six stores from
+`data/battle engine configurations.dat` offset `0x35f`: ammo 2000 (both Vulcans),
+ammo 100, heat 150 (Pulse Cannon Pod), ammo 200 (Missile Pod), heat 100, heat
+100. Ammo starts full and heat empty; a burst event's `WeaponFired` spends once,
+before its volley (jet ammo −consumption, walker heat +consumption, jet heat
++consumption − 1); every Move cools each heat store by the integer
+`kWeaponCoolRate` 1 and clears overheat strictly below three quarters of capacity;
+a charged heat shot costs nothing; charging a heat weapon adds its consumption
+per call and, at capacity, overheats and forces a Fire; `ChangeWeapon` skips an
+ammo weapon that cannot pay. A walker heat shot or charge clears
+`mShieldsRecharging`, which halves that update's ground recharge — the arm the
+rebuild had left out only because stores were unmodelled.
+
+The burst spawner's order (the RE lane's Q12 answer and correction, commits
+`d5ad5c9a` and `35056883`) adds four things per round of a Battle Engine weapon:
+`GetCurrentTarget` (its cursor zeroed by each successful `Fire`), `FireLock` for
+the current weapon, the round's `CRound::Init` → `CActor::Init` draw, and
+`RecoilWeapon`'s `AddShockShake(CWeaponPower)`, three draws when the power is at
+least 0.001 (Pulse Charged 0.03, Charged 2 0.05; both Vulcans 0).
+`CBattleEngine::Damage` ends with `AddShockShake` of the life lost times 0.125,
+halved while shields remain, capped at 0.25. The drones' rounds take their
+Actor Init draw too, so every spawned round costs three launch draws. The shake
+offsets, phase and decay are kept exactly; applying them to the Battle Engine's
+orientation (`UpdateRotation`) is not done yet.
+
+`Level100PlayerStoresTests` (12 cases) pins the stores, spend, refusal and cue
+stamps, cooling and the overheat clear, the charged shot, the charge overheat,
+the store-gated weapon change, the shake draws and decay, and the damage amount.
+Six mutations were each killed and restored byte-identical
+(`local-data/test-runs/stores-shake-20260926/mutation-kills/`). The scatter-order
+test now counts six draws per Pulse release and three per bullet.
+
+With these draws the re-rolled final wave now ends on retail's abort branch in
+both driven routes. The chain autopilot wins at tick 5,982 after two kills; the
+cold-start route wins after none, taking the abort at the first sub-40 % poll.
+The RE contract classes the six-kill, no-abort result both tests demanded as a
+driver expectation, so they now assert the released final-wave contract
+(`Level100FinalWaveContract`: six kills with objective 4 complete, or the abort
+with objective 4 failed and every surviving drone switched to AI off and
+friendly). `ColdStart_PlaysLevel100ThroughThePlayerInputSurface`, failing since
+September 12, passes on that contract. Core passes all 1,508; the Client suite
+passes 912 with the two known skips. First-flight and the canonical-hash
+fingerprints do not move (no shot or hit). The in-process smoke and validator
+re-pin to state `89b9ada6…`; the headless Godot smoke records a tape whose inputs
+equal the September 25 tape's (tape `7c7ca639…`, trace `248b326a…`), and the C#
+replayer reproduces it twice. The cold-start won tape is 7,813 ticks, trace
+`613489cc…`, state `278af3f3…`, replayed twice. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/stores-shake-20260926/`.
+
+### Battle Engine crosshair and auto-aim refresh — September 26
+
+Retail's player Battle Engine files two refresh events for itself that the
+rebuild never had, and both draw from the one gameplay stream: event 6002
+(`CALC_UNIT_OVER_CROSSHAIR`) and event 6003 (`HANDLE_AUTO_AIM`). The RE lane's
+static contract ([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md),
+"Crosshair and auto-aim refresh", commit `f23dcc28`, and its due-time answer
+from the pristine `74154bfa…` bytes) gives: `CBattleEngine::Init` takes one draw
+and files 6002, then `HandleAutoAim(NULL)` takes one draw and files 6003; each
+delivery re-files the same way with one draw; 6002's due time is
+`(sample × 0x364ccccd + mTime) + 0.1f` and 6003's `(sample × 0x35cccccd + mTime) + 0.2f`.
+Core now files both on the level's one event manager (the scheduler the
+aircraft already used, now created with the Battle Engine), under a reserved
+listener identity, so insertion order between them and the aircraft callbacks
+is the delivery order.
+
+Each 6002 delivery runs `CalcUnitOverCrossHair`'s event path: it clears both
+crosshair readers, casts the 1,000-unit view line through the shared contact
+query (terrain first, a thing only when not farther, dying non-buildings
+skipped), retains the line report and returns the struck unit when the current
+weapon's `GetActualMaxRange` exceeds the hit distance (Pulse 210 or 140,
+Vulcans 60, Missile Pod 100, from the RE lane's Q14 answer). The launch
+correction (`GetLaunchPosition`) now reads that retained distance along the
+current view line, as retail does, instead of the rebuild's former per-shot
+fresh trace. The auto-aim candidate search is not implemented yet, so its
+offsets stay zero; its draw and requeue are exact. The Battle Engine's Init
+draws follow the Air Trainer's Actor Init draw until the RE lane's first-flush
+order places them. Core has no camera, so the view line starts at the Battle
+Engine's position along its facing, as the launch correction always assumed.
+
+`Level100BattleEngineRefreshTests` (22 cases) pins the due-time arithmetic bit
+for bit, the range and side-gate tables, the construction order and draws, the
+one-of-each queue invariant over 200 frames, the crosshair unit and report
+against the Control Tower, features occluding without becoming units, and the
+launch correction's use of the retained distance (a fresh trace would keep the
+facing). Core passes except the known cold-start six-kill expectation; the
+Client suite passes 912 with the two known skips.
+
+The new draws move every Level 100 hash. Re-pinned with this change:
+`first-flight.v1.json` now replays to trace `a59321dc…` / state `63b241d6…`;
+the in-process 2,148-step smoke and the smoke validator to state `a8c2209d…`;
+the canonical-hash and older-definition fingerprints in `SimulationTests`,
+`HeadlessApplicationTests` and `InteractiveSessionTests`; schema 49 where
+targeting state exists. The headless Godot smoke records a tape whose seed,
+duration and every input span equal the September 25 tape's (`89ca7b4b…`); only
+its embedded expected hashes differ (tape `43d63bd0…`, trace `33ebdaee…`, state
+`a8c2209d…`), and the C# replayer reproduces it twice with no divergence. The
+chain autopilot still wins with six kills, now at tick 5,803 with hull 12,500.
+The cold-start run records a won tape of 7,374 ticks (trace `ca2209e7…`, state
+`0a8e7972…`), still through the abort branch, which replays twice. The ferry
+sweep's twenty runs all still win without water loss, but the re-rolled final
+wave now brings every ferry in 13.9 m up, below the 20 m tier where the two
+hand-off rules differ. The route-level adverse control therefore compares
+identical runs, so the rule itself is now pinned directly
+(`Level100ZoneHandoffTests`, in the default Core gate). The divergence
+check asserts that the arms separate exactly when an adverse hand-off exceeds
+the tier. Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/be-refresh-20260926/`.
+
+### Terrain contact sweep pruning — September 25
+
+The recorded launch hitch came from the terrain half of
+`Level100ContactMechanics.TrySweepRoundWithTerrain`: a scratch benchmark at the
+smoke tape's four firing ticks timed the whole crosshair sweep at 78–82 ms, the
+terrain search alone at the same, and the 34 actors' mesh sweep at 0.01 ms. The
+terrain search bisects the ray down to one part per million and prunes only
+spans whose ends share a terrain cell, so a 1,000-unit ray toward the horizon
+walks every cell.
+
+It now also skips any span whose lowest point, plus the contact radius, clears
+the highest ground its box can sample. Each sample interpolates between the four
+samples of its own tile's cell, the elevation conversion is monotonic and
+interpolation along the ray is monotonic, so every test inside such a span would
+report no contact; `Level100Terrain` keeps a min/max pyramid over the 512 x 512
+cells to bound them. `Level100TerrainSweepPruningTests` compares 400
+deterministic random rays (radii 0–2.5 m, lengths to 1,000 units, 247
+contacts, some starting past the map edge) with and without the pruning: every
+contact record is identical, in 17 ms against 36,339 ms.
+
+At the four firing ticks the crosshair sweep now takes **0.06 ms**. The 2,148-tick
+smoke replay (Release, warm) has **no tick over 1 ms**: median 0.0745 ms, p99
+0.36 ms, maximum 0.48 ms, and about 28 µs per live projectile per tick. The
+smoke tape and `first-flight.v1.json` still replay to trace `a4e6673b…` / state
+`53c1cc64…` and `0872e009…` / `69bd64ac…`; the Core suite (1,471 of 1,472, the
+known cold-start route) now runs in 1 m 32 s instead of 7 m 55 s and the Client
+suite (912 passed) in 16 s. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/reticle-sweep-profile-20260925/`,
+`sim-benchmark-20260925/after-terrain-prune.log` and
+`terrain-prune-suites-20260925-231708/`.
+
+### Level 100 won tape — September 25
+
+The cold-start Level 100 run (frontend by clicks, then the chain autopilot on
+the client's own `InteractiveSession`) now records its command tape from tick 0,
+as the Godot host's `--record-tape` does. `Level100ColdStartTests.
+ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin` builds that tape and
+replays it twice through `ReplayRunner`; both replays reproduce the live trace
+and final-state hashes and end with the mission **Won**. The tape covers
+**8,141 ticks**, trace `885ae25b…`, final state `0a656b1c…`; the C# headless CLI
+(`--repeat 2`) reproduces both with no divergence
+(`.worktrees/godot-editor-48-20260919/local-data/test-runs/level100-won-tape-20260925-225339/`).
+
+The win goes through retail's designed abort branch: the final drone wave aborts
+after one kill once the player's life falls below 40 %, and `LevelWon()` still
+follows. The RE lane's contract
+([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md))
+shows the rebuild lacks two retail helps in that wave, the four friendly turrets
+that Help Player activates and the jet Missile Pod, and that every base-world
+Building and Cannon draws shared RNG from level start. Until those land, this
+tape is a deterministic, won run of the current rebuild, not a retail-parity
+playthrough. `ColdStart_PlaysLevel100ThroughThePlayerInputSurface` still fails
+on its six-kill expectation, which the contract classes as a driver
+expectation, not a retail invariant.
 
 ### Return to all-code C# — September 25
 
@@ -235,10 +1086,9 @@ establish the largest retail battle's unit count, so the stress case is 10x Leve
 scaling the measured per-actor work puts even the idle GDScript tick at 10–56 ms.
 
 **Decision:** superseded the same evening. David directed C# only for the whole
-repository (`AGENTS.md`), so no subsystem needs a measured exception. The numbers stay
-as the performance record: Release C# already misses 5 ms on launch and flight ticks
-(about a 100 ms hitch per shot); that contact-sweep cost is an existing, open
-performance defect. Sources and logs:
+repository (`AGENTS.md`), so no subsystem needs a measured exception. The launch and
+flight costs above were the terrain contact sweep; the pruning recorded in "Terrain
+contact sweep pruning — September 25" removed them without changing any result. Sources and logs:
 `.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
 
 ### September 19 production scene migration

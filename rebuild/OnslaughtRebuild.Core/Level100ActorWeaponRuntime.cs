@@ -12,7 +12,8 @@ namespace OnslaughtRebuild.Core;
 /// </summary>
 internal readonly record struct Level100ActorRoundImpactReceipt(
     Level100ActorRoundImpact Impact,
-    int? RoundId);
+    int? RoundId,
+    bool ContactOnly = false);
 
 /// <summary>
 /// Actor-owned weapons and rounds, in the current 20 Hz firing approximation.
@@ -78,6 +79,9 @@ public sealed partial class Level100ActorMechanics
         internal int RemainingBaseTicks { get; set; }
         internal int ElapsedBaseTicks { get; set; }
         internal bool Locked { get; set; }
+        // Set by the life event. The scheduler implies it (a live round whose
+        // life event is no longer filed), so the snapshot carries no copy.
+        internal bool Dying { get; set; }
     }
 
     private readonly List<ActorWeaponState> _actorWeapons = [];
@@ -101,9 +105,10 @@ public sealed partial class Level100ActorMechanics
         }
 
         Level100ActorRoundImpact[] drained = receipts
+            .Where(receipt => !receipt.ContactOnly)
             .Select(receipt => receipt.Impact)
             .ToArray();
-        return Array.AsReadOnly(drained);
+        return drained.Length == 0 ? Array.Empty<Level100ActorRoundImpact>() : Array.AsReadOnly(drained);
     }
 
     /// <summary>
@@ -469,111 +474,246 @@ public sealed partial class Level100ActorMechanics
         // regardless of the scatter magnitude.
         (int yawInaccuracy, int pitchInaccuracy) =
             NextWeaponInaccuracy(mode.InaccuracyMicroRadians);
+        // The spawner then runs the round's Init: CRound::Init 0x004d8410 calls
+        // CActor::Init at 0x004d867b, which takes one more shared draw for the
+        // round's Move phase. Every spawned round therefore costs three draws.
+        _ = _releasedRandom.Next();
 
-        Level100ActorRoundData round = Level100ActorArmament.Round(mode.Round);
+        // The actor rounds keep pitch nose-up; retail's basis is nose-down.
+        // Neither drone weapon mode names a CWeaponLaunchAngle.
+        (int launchYaw, int launchPitch) = ComposeLaunchDirection(
+            yaw, -pitch, DefaultLaunchAngle, (yawInaccuracy, pitchInaccuracy));
+        _ = AddActorRound(
+            weapon.ActorId,
+            targetId,
+            mode.Round,
+            ownerPose.PositionMillimeters,
+            launchYaw,
+            NormalizeMicroRad(-launchPitch));
+        _ = state;
+    }
+
+    /// <summary>
+    /// A new actor round in flight from <paramref name="position"/> along
+    /// (yaw, nose-up pitch), and <c>CRound::Init</c>'s MOVE and life events.
+    /// </summary>
+    private int AddActorRound(
+        Level100ActorId ownerId,
+        Level100ActorId targetId,
+        Level100ActorRoundKind kind,
+        SimVector3 position,
+        int yawMicroRadians,
+        int pitchMicroRadians)
+    {
+        Level100ActorRoundData round = Level100ActorArmament.Round(kind);
+        int roundId = _nextActorRoundId++;
         _actorRounds.Add(new ActorRoundState
         {
-            Id = _nextActorRoundId++,
-            OwnerActorId = weapon.ActorId,
+            Id = roundId,
+            OwnerActorId = ownerId,
             TargetActorId = targetId,
             Kind = round.Kind,
-            PositionMillimeters = ownerPose.PositionMillimeters,
-            YawMicroRadians = NormalizeMicroRad(yaw + yawInaccuracy),
-            PitchMicroRadians = NormalizeMicroRad(pitch + pitchInaccuracy),
+            PositionMillimeters = position,
+            YawMicroRadians = yawMicroRadians,
+            PitchMicroRadians = pitchMicroRadians,
             RemainingBaseTicks = round.LifeSpanBaseTicks,
             ElapsedBaseTicks = 0,
             Locked = round.Seeks,
         });
-        _ = state;
+        FileRoundEvents(ActorRoundListener(roundId), round.LifeSpanSeconds);
+        return roundId;
     }
+
+    /// <summary>
+    /// Causal-probe seam: one actor round placed in flight exactly as a weapon
+    /// launch places it, without the weapon's aim, scatter or draws. No
+    /// shipped path calls this; it lets a test put a round's last step where
+    /// it wants.
+    /// </summary>
+    internal int QueueActorRoundForMeasurement(
+        Level100ActorId ownerId,
+        Level100ActorId targetId,
+        Level100ActorRoundKind kind,
+        SimVector3 position,
+        int yawMicroRadians,
+        int pitchMicroRadians) =>
+        AddActorRound(ownerId, targetId, kind, position, yawMicroRadians, pitchMicroRadians);
 
     // ------------------------------------------------------------------
     // Rounds
     // ------------------------------------------------------------------
 
-    private void AdvanceActorRounds()
+    /// <summary>
+    /// Round listeners on the level event manager: 0x1000_0000 + 2·id for a
+    /// Battle Engine round, + 1 for an actor's; below the unit range.
+    /// </summary>
+    private const int RoundListenerBase = 0x1000_0000;
+
+    /// <summary><c>CActor</c>'s MOVE, which <c>CActor::Init</c> files for the next frame.</summary>
+    internal const int RoundMoveEvent = 3000;
+
+    /// <summary>The end of a round's life span, filed by <c>CRound::Init</c> (<c>0x004d86a6</c>).</summary>
+    internal const int RoundLifeEvent = 4000;
+
+    internal static int PlayerRoundListener(int roundId) => checked(RoundListenerBase + (roundId * 2));
+
+    internal static int ActorRoundListener(int roundId) => checked(RoundListenerBase + (roundId * 2) + 1);
+
+    private static bool IsRoundListener(int listener) =>
+        listener >= RoundListenerBase && listener < UnitListenerBase;
+
+    internal static bool IsPlayerRoundListener(int listener) =>
+        IsRoundListener(listener) && (listener - RoundListenerBase) % 2 == 0;
+
+    internal static int PlayerRoundId(int listener) => (listener - RoundListenerBase) / 2;
+
+    /// <summary>
+    /// <c>CRound::Init</c>'s two events (the RE lane's round Frames contract):
+    /// <c>CActor::Init</c> files the MOVE at −1 (multiplier 1.0, so never
+    /// LF_MOVE), into the current bucket, so the round first moves in the next
+    /// frame's flush; then the 4000 at now + the life span, which lands
+    /// k = floor((life − 0.001) × 20) buckets later. Each delivered MOVE
+    /// re-files itself as it is delivered, so rounds move in the manager's
+    /// insertion order: a round made by a controller Fire before the flush goes
+    /// ahead of every MOVE that flush re-files, and one made by a 5001 burst
+    /// goes in at that point of the flush.
+    /// </summary>
+    internal void FileRoundEvents(int listener, float lifeSpanSeconds)
     {
-        if (_actorRounds.Count == 0)
+        if (!(lifeSpanSeconds > RetailEventScheduler.ImmediateWindow))
         {
-            return;
+            throw new ArgumentOutOfRangeException(
+                nameof(lifeSpanSeconds), "A round's life must end after its first Move.");
         }
 
-        for (int index = _actorRounds.Count - 1; index >= 0; index--)
+        RetailEventScheduler events = LevelEvents;
+        events.AddEvent(RoundMoveEvent, listener, RetailEventScheduler.NextFrame);
+        events.AddEventTimeFromNow(lifeSpanSeconds, RoundLifeEvent, listener);
+    }
+
+    /// <summary>
+    /// Re-files a delivered round MOVE for the next frame on its own record
+    /// (<c>CActor::HandleEvent</c>, <c>0x00401b41</c>).
+    /// </summary>
+    internal static void RefileRoundMove(RetailEventScheduler events, RetailEventDispatch dispatch) =>
+        events.AddEvent(
+            RoundMoveEvent,
+            dispatch.Listener,
+            RetailEventScheduler.NextFrame,
+            RetailEventPriority.StartOfFrame,
+            reuseHandle: dispatch.Handle);
+
+    /// <summary>
+    /// An actor round's MOVE or life event. The round starts dying on its life
+    /// event; its next MOVE takes one last step and is not re-filed. A ring
+    /// life event comes before that frame's MOVE, because it was filed at
+    /// launch and the MOVE was re-filed in the frame before, so the round makes
+    /// k + 1 Moves. A life of 9.9 s or more files into the overflow list, which
+    /// is delivered after the lanes, so the last step falls in the next frame.
+    /// The Forseti Missile's <c>CRoundExplode</c> air burst on the life event
+    /// (<c>0x004d9a54</c>) is not modelled.
+    /// </summary>
+    private void DispatchActorRoundEvent(RetailEventScheduler events, RetailEventDispatch dispatch)
+    {
+        int roundId = (dispatch.Listener - RoundListenerBase - 1) / 2;
+        int index = _actorRounds.FindIndex(round => round.Id == roundId);
+        if (index < 0)
         {
-            ActorRoundState round = _actorRounds[index];
-            Level100ActorRoundData data = Level100ActorArmament.Round(round.Kind);
-
-            // Seek, before the move: the shipped body runs the guidance block
-            // after CActor__Move, so the round travels one tick on its launch
-            // heading before homing can act. That is the same ordering as
-            // steering here and integrating below, because the steering result
-            // is only used by the next integration.
-            if (data.Seeks && round.Locked)
-            {
-                SteerSeekingRound(round, data);
-            }
-
-            (int sin, int cos) = FixedSinCos(round.YawMicroRadians);
-            (int pitchSin, int pitchCos) = FixedSinCos(round.PitchMicroRadians);
-
-            // CRoundWiggle: two draws with the same [-1,+1) law as the weapon
-            // scatter, applied to the travel direction for this integration
-            // step only and then undone. Retail composes it as a matrix on the
-            // velocity vector; Core composes the identical pair of Euler
-            // samples onto the round's own (yaw, pitch), which leaves the
-            // round's stored attitude bit-identical either way and differs only
-            // within the single step by O(wiggle * pitch).
-            int travelYaw = round.YawMicroRadians;
-            int travelPitch = round.PitchMicroRadians;
-            if (data.WiggleMicroRadians > 0)
-            {
-                int wiggleFirst =
-                    _releasedRandom.NextSignedUnitScaled(data.WiggleMicroRadians);
-                int wiggleSecond =
-                    _releasedRandom.NextSignedUnitScaled(data.WiggleMicroRadians);
-                travelYaw = NormalizeMicroRad(travelYaw + wiggleSecond);
-                travelPitch = NormalizeMicroRad(travelPitch + wiggleFirst);
-                (sin, cos) = FixedSinCos(travelYaw);
-                (pitchSin, pitchCos) = FixedSinCos(travelPitch);
-            }
-
-            int speed = data.SpeedMillimetersPerBaseTick;
-            var step = new SimVector3(
-                DivideRoundNearest(
-                    (long)-MultiplyFixed(sin, pitchCos) * speed,
-                    FixedTrigScale),
-                DivideRoundNearest((long)pitchSin * speed, FixedTrigScale),
-                DivideRoundNearest(
-                    (long)MultiplyFixed(cos, pitchCos) * speed,
-                    FixedTrigScale));
-
-            SimVector3 start = round.PositionMillimeters;
-            var end = new SimVector3(
-                checked(start.X + step.X),
-                checked(start.Y + step.Y),
-                checked(start.Z + step.Z));
-            round.PositionMillimeters = end;
-            round.ElapsedBaseTicks++;
-            round.RemainingBaseTicks--;
-
-            if (TryReportActorRoundImpact(round, data, start, end))
-            {
-                _actorRounds.RemoveAt(index);
-                continue;
-            }
-
-            // The shipped round collides with the world through
-            // CCollisionSeekingRound. The reconstruction models only the
-            // terrain half of that: a round below the height field is spent.
-            // No damage is produced, which matches a terrain impact.
-            if (end.Y <
-                    Level100Terrain.Instance.SampleGroundElevationMillimeters(
-                        new SimVector2(end.X, end.Z)) ||
-                round.RemainingBaseTicks <= 0)
-            {
-                _actorRounds.RemoveAt(index);
-            }
+            throw new InvalidOperationException($"Actor round {roundId} has an event but no round.");
         }
+
+        ActorRoundState round = _actorRounds[index];
+        switch (dispatch.EventNum)
+        {
+            case RoundLifeEvent:
+                round.Dying = true;
+                return;
+            case RoundMoveEvent:
+                if (!StepActorRound(round) || round.Dying)
+                {
+                    _actorRounds.RemoveAt(index);
+                    events.ClearListenerEvents(dispatch.Listener);
+                    return;
+                }
+
+                RefileRoundMove(events, dispatch);
+                return;
+            default:
+                throw new InvalidOperationException($"Unadmitted actor round event {dispatch.EventNum}.");
+        }
+    }
+
+    /// <summary>
+    /// One <c>CRound::Move</c> of an actor round. Returns false when the round
+    /// is spent: it reached its target, or it went below the height field.
+    /// </summary>
+    private bool StepActorRound(ActorRoundState round)
+    {
+        Level100ActorRoundData data = Level100ActorArmament.Round(round.Kind);
+
+        // Seek, before the move: the shipped body runs the guidance block
+        // after CActor__Move, so the round travels one tick on its launch
+        // heading before homing can act. That is the same ordering as
+        // steering here and integrating below, because the steering result
+        // is only used by the next integration.
+        if (data.Seeks && round.Locked)
+        {
+            SteerSeekingRound(round, data);
+        }
+
+        (int sin, int cos) = FixedSinCos(round.YawMicroRadians);
+        (int pitchSin, int pitchCos) = FixedSinCos(round.PitchMicroRadians);
+
+        // CRoundWiggle: two draws with the same [-1,+1) law as the weapon
+        // scatter, applied to the travel direction for this integration
+        // step only and then undone. Retail composes it as a matrix on the
+        // velocity vector; Core composes the identical pair of Euler
+        // samples onto the round's own (yaw, pitch), which leaves the
+        // round's stored attitude bit-identical either way and differs only
+        // within the single step by O(wiggle * pitch).
+        int travelYaw = round.YawMicroRadians;
+        int travelPitch = round.PitchMicroRadians;
+        if (data.WiggleMicroRadians > 0)
+        {
+            (int wiggleYaw, int wigglePitch) = NextWiggle(data.WiggleMicroRadians);
+            travelYaw = NormalizeMicroRad(travelYaw + wiggleYaw);
+            // NextWiggle's pitch is retail's nose-down draw.
+            travelPitch = NormalizeMicroRad(travelPitch - wigglePitch);
+            (sin, cos) = FixedSinCos(travelYaw);
+            (pitchSin, pitchCos) = FixedSinCos(travelPitch);
+        }
+
+        int speed = data.SpeedMillimetersPerBaseTick;
+        var step = new SimVector3(
+            DivideRoundNearest(
+                (long)-MultiplyFixed(sin, pitchCos) * speed,
+                FixedTrigScale),
+            DivideRoundNearest((long)pitchSin * speed, FixedTrigScale),
+            DivideRoundNearest(
+                (long)MultiplyFixed(cos, pitchCos) * speed,
+                FixedTrigScale));
+
+        SimVector3 start = round.PositionMillimeters;
+        var end = new SimVector3(
+            checked(start.X + step.X),
+            checked(start.Y + step.Y),
+            checked(start.Z + step.Z));
+        round.PositionMillimeters = end;
+        round.ElapsedBaseTicks++;
+        round.RemainingBaseTicks--;
+
+        if (TryReportActorRoundImpact(round, data, start, end))
+        {
+            return false;
+        }
+
+        // The shipped round collides with the world through
+        // CCollisionSeekingRound. The reconstruction models only the
+        // terrain half of that: a round below the height field is spent.
+        // No damage is produced, which matches a terrain impact.
+        return end.Y >=
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                new SimVector2(end.X, end.Z));
     }
 
     /// <summary>
@@ -619,24 +759,121 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
-        Level100ActorPoseSnapshot targetPose = _actors.GetPose(round.TargetActorId);
-        long deltaX = (long)targetPose.PositionMillimeters.X -
-            round.PositionMillimeters.X;
-        long deltaY = (long)targetPose.PositionMillimeters.Y -
-            round.PositionMillimeters.Y;
-        long deltaZ = (long)targetPose.PositionMillimeters.Z -
-            round.PositionMillimeters.Z;
+        int yaw = round.YawMicroRadians;
+        int pitch = round.PitchMicroRadians;
+        if (SteerTowards(
+                ref yaw,
+                ref pitch,
+                round.PositionMillimeters,
+                _actors.GetPose(round.TargetActorId).PositionMillimeters,
+                data.TurnRateMicroRadians,
+                data.SeekAngleMicroRadians) == SeekSteering.LeftTheCone)
+        {
+            round.Locked = false;
+            return;
+        }
+
+        round.YawMicroRadians = yaw;
+        round.PitchMicroRadians = pitch;
+    }
+
+    /// <summary>
+    /// The launch angle of a weapon mode with no <c>CWeaponLaunchAngle</c>
+    /// entries: <c>0x004f8140(0, 1, 0)</c>, the integer-angle constructor in
+    /// units of 2π/4096, which equals the float constructor at a pitch of
+    /// float(2π/4096) (the RE lane's Euler-constructor control, 36 cases).
+    /// Retail's z axis points down, so it tips every such round 1,534 µrad
+    /// nose-down.
+    /// </summary>
+    internal static (int Yaw, int Pitch) DefaultLaunchAngle => (0, 1_534);
+
+    /// <summary>
+    /// The burst spawner's launch basis, orientation × launch angle × jitter
+    /// (<c>0x00506ed1-0x005072d0</c>), reduced to the forward column its
+    /// velocity uses. Each factor is <c>FMatrix(yaw, pitch, 0)</c> with
+    /// retail's nose-down pitch; the jitter is the scatter pair, yaw from the
+    /// second draw and pitch from the first. Shared by the Battle Engine's
+    /// rounds and the actors'.
+    /// </summary>
+    internal static (int YawMicroRadians, int PitchMicroRadians) ComposeLaunchDirection(
+        int baseYawMicroRadians,
+        int basePitchMicroRadians,
+        (int Yaw, int Pitch) launchAngle,
+        (int Yaw, int Pitch) jitter)
+    {
+        // Retail axes: x right, y forward, z down. Core X = x, Z = y, up = -z.
+        (long x, long y, long z) = RotateByEuler(jitter.Yaw, jitter.Pitch, 0, FixedTrigScale, 0);
+        (x, y, z) = RotateByEuler(launchAngle.Yaw, launchAngle.Pitch, x, y, z);
+        (x, y, z) = RotateByEuler(baseYawMicroRadians, basePitchMicroRadians, x, y, z);
+        return (
+            FixedAtan2(-x, y),
+            FixedAtan2(z, IntegerSquareRoot((x * x) + (y * y))));
+    }
+
+    /// <summary>
+    /// <c>FMatrix(yaw, pitch, 0)</c> times a Q30 vector: columns
+    /// (cos y, sin y, 0), (−cos p sin y, cos p cos y, sin p) and
+    /// (sin p sin y, −sin p cos y, cos p), the words <c>RetailUnitEuler</c>
+    /// builds with zero roll.
+    /// </summary>
+    private static (long X, long Y, long Z) RotateByEuler(
+        int yawMicroRadians,
+        int pitchMicroRadians,
+        long x,
+        long y,
+        long z)
+    {
+        (int yawSin, int yawCos) = FixedSinCos(yawMicroRadians);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRadians);
+        long forwardX = -MultiplyFixed(pitchCos, yawSin);
+        long forwardY = MultiplyFixed(pitchCos, yawCos);
+        long upX = MultiplyFixed(pitchSin, yawSin);
+        long upY = -MultiplyFixed(pitchSin, yawCos);
+        return (
+            DivideRoundNearest((x * yawCos) + (y * forwardX) + (z * upX), FixedTrigScale),
+            DivideRoundNearest((x * yawSin) + (y * forwardY) + (z * upY), FixedTrigScale),
+            DivideRoundNearest((y * pitchSin) + (z * pitchCos), FixedTrigScale));
+    }
+
+    /// <summary>The outcome of one <see cref="SteerTowards"/> step.</summary>
+    internal enum SeekSteering
+    {
+        Steered,
+        NoDirection,
+        LeftTheCone,
+    }
+
+    /// <summary>
+    /// One steering step of <c>CRound::Move</c>'s guidance
+    /// (<c>0x004d93cc-0x004d9838</c>) for a round without
+    /// <c>CRoundWeirdoSeek</c>: take the aim point into the round's frame; when
+    /// its forward component is below <c>cos(CRoundSeekAngle)</c> the target
+    /// is dropped; otherwise turn by the yaw error <c>-atan2(x, y)</c> and the
+    /// pitch error <c>atan2(z, √(x² + y²))</c>, each clamped to the turn rate.
+    /// Shared by the actors' rounds and the Battle Engine's.
+    /// </summary>
+    internal static SeekSteering SteerTowards(
+        ref int yawMicroRadians,
+        ref int pitchMicroRadians,
+        SimVector3 position,
+        SimVector3 aimPoint,
+        int turnRateMicroRadians,
+        int seekAngleMicroRadians)
+    {
+        long deltaX = (long)aimPoint.X - position.X;
+        long deltaY = (long)aimPoint.Y - position.Y;
+        long deltaZ = (long)aimPoint.Z - position.Z;
         long length = IntegerSquareRoot(
             (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
         if (length == 0)
         {
-            return;
+            return SeekSteering.NoDirection;
         }
 
         // The round's own frame, from its (yaw, pitch): forward is the third
         // basis column and up is the second in the Core pose projection.
-        (int yawSin, int yawCos) = FixedSinCos(round.YawMicroRadians);
-        (int pitchSin, int pitchCos) = FixedSinCos(round.PitchMicroRadians);
+        (int yawSin, int yawCos) = FixedSinCos(yawMicroRadians);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRadians);
         long rightX = yawCos;
         long rightY = 0;
         long rightZ = yawSin;
@@ -655,11 +892,10 @@ public sealed partial class Level100ActorMechanics
             ((deltaX * forwardX) + (deltaY * forwardY) + (deltaZ * forwardZ)) /
             length;
 
-        (_, int seekCosine) = FixedSinCos(data.SeekAngleMicroRadians);
+        (_, int seekCosine) = FixedSinCos(seekAngleMicroRadians);
         if (localForward < seekCosine)
         {
-            round.Locked = false;
-            return;
+            return SeekSteering.LeftTheCone;
         }
 
         int yawError = FixedAtan2(localRight, localForward);
@@ -669,12 +905,12 @@ public sealed partial class Level100ActorMechanics
                 (localForward * localForward)));
         int cappedYaw = Math.Clamp(
             yawError,
-            -data.TurnRateMicroRadians,
-            data.TurnRateMicroRadians);
+            -turnRateMicroRadians,
+            turnRateMicroRadians);
         int cappedPitch = Math.Clamp(
             pitchError,
-            -data.TurnRateMicroRadians,
-            data.TurnRateMicroRadians);
+            -turnRateMicroRadians,
+            turnRateMicroRadians);
 
         // New forward = right*sin(cy)cos(cp) + up*sin(cp) + forward*cos(cy)cos(cp).
         // When neither axis clamps this reproduces the direction to the target
@@ -696,10 +932,23 @@ public sealed partial class Level100ActorMechanics
             MultiplyFixed((int)upZ, cpSin) +
             MultiplyFixed((int)forwardZ, alongForward);
 
-        round.YawMicroRadians = FixedAtan2(-nextX, nextZ);
-        round.PitchMicroRadians = FixedAtan2(
+        yawMicroRadians = FixedAtan2(-nextX, nextZ);
+        pitchMicroRadians = FixedAtan2(
             nextY,
             IntegerSquareRoot(((long)nextX * nextX) + ((long)nextZ * nextZ)));
+        return SeekSteering.Steered;
+    }
+
+    /// <summary>
+    /// <c>CRoundWiggle</c>: two shared draws with the scatter law, the first
+    /// for pitch and the second for yaw, taken first in every Move of a round
+    /// whose wiggle is above zero (<c>0x004d8ffc</c>, <c>0x004d9036</c>).
+    /// </summary>
+    internal (int YawMicroRadians, int PitchMicroRadians) NextWiggle(int wiggleMicroRadians)
+    {
+        int first = _releasedRandom.NextSignedUnitScaled(wiggleMicroRadians);
+        int second = _releasedRandom.NextSignedUnitScaled(wiggleMicroRadians);
+        return (second, first);
     }
 
     /// <summary>
@@ -731,6 +980,10 @@ public sealed partial class Level100ActorMechanics
             return false;
         }
 
+        // A dying round still meets its target, but its own Hit (slot 39,
+        // 0x004d8ae0) returns at 0x004d8af7 while the dying bit is set: no
+        // damage, no impact explosion, no death. Only the target's script hit
+        // notification remains (the RE lane's "No hit while dying").
         _actorRoundImpacts.Add(new Level100ActorRoundImpactReceipt(
             new Level100ActorRoundImpact(
                 round.TargetActorId,
@@ -738,7 +991,8 @@ public sealed partial class Level100ActorMechanics
                 round.Kind,
                 selectedPosition,
                 data.IncomingDamageMilliLife),
-            round.Id));
+            round.Id,
+            ContactOnly: round.Dying));
         return true;
     }
 

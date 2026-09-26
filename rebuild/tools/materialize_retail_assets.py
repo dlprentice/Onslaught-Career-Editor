@@ -317,6 +317,10 @@ WORLD110_INITIAL_MESHES = (
     ("iceberg4.msh", "data/resources/meshes/m_iceberg4.msh.aya",
      "3add5f0cb80a954e029016a1f9a9825888f3e88b0d049260216e3a1231408347", 1),
 )
+LEVEL110_STATIC_WORLD = CORE_ASSETS / "Level110/level110-static-world.json"
+WORLD110_STATIC_WORLD_SHA256 = (
+    "7b20194324e0f75eac9b12ca0a71a292b631314afca09377a04fd64daf118105"
+)
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
     "3bcd5eac3bf17474f60e67d3f4aa135dd239de9a896d63f64f23c494fe339c7d"
@@ -1559,6 +1563,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
         *later_worlds,
         (LEVEL110_INITIAL_OBJECT_SEEDS, WORLD110_INITIAL_OBJECT_SEEDS_SHA256),
         (LEVEL110_INITIAL_ACTORS, WORLD110_INITIAL_ACTORS_SHA256),
+        (LEVEL110_STATIC_WORLD, WORLD110_STATIC_WORLD_SHA256),
         (LEVEL110_PLAYER_INPUTS, WORLD110_PLAYER_INPUTS_SHA256),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
         (FRONTEND_WORLD_STRINGS, FRONTEND_WORLD_STRINGS_SHA256),
@@ -1731,9 +1736,16 @@ def _reuse_canonical_assets() -> int:
     pending: list[tuple[Path, Path]] = []
     for relative, expected in outputs:
         source = canonical / relative
+        destination = ROOT / relative
+        if (not source.exists() and not source.is_symlink() and not destination.is_symlink()
+                and destination.is_file() and _sha256(destination.read_bytes()) == expected):
+            # An output the canonical checkout has not published yet, already
+            # materialized here with its exact pinned bytes: keep it.
+            continue
+        if not source.exists() and not source.is_symlink():
+            raise RuntimeError(f"canonical input is missing: {relative}")
         if source.is_symlink() or _sha256(source.read_bytes()) != expected:
             raise RuntimeError(f"canonical input is not the current exact regular file: {relative}")
-        destination = ROOT / relative
         if ROOT.resolve() == canonical.resolve():
             continue
         # A directory link could redirect Godot imports or later publications
@@ -4018,6 +4030,333 @@ def _world110_initial_actor_bytes(
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
+WORLD110_STATIC_WORLD_SCHEMA = "onslaught.world110-static-world.v1"
+
+# World 110's level rows as the RE lane's construction contract classes them
+# (reverse-engineering/game-mechanics/world-110-construction-order.md,
+# "Level-world rows"). The script carriers and the waypoints have no body;
+# every other row is a thing the level constructs.
+WORLD110_SCRIPT_CARRIERS = {0: "LevelScript", 2: "Setup", 39: "Weather"}
+WORLD110_LANDING_CRAFT = {
+    8: ("Muspell Light Landing Craft", "Lander"),
+    12: ("Muspell Light Landing Craft", "Lander2"),
+    13: ("Muspell Light Landing Empty", "Lander3"),
+    20: ("Muspell Light Landing Craft", "Lander"),
+}
+WORLD110_SQUADS = {
+    14: ("Light Gun Tank", 5, ""),
+    16: ("Light Gun Tank", 5, ""),
+    17: ("AV-14B Sabre Pulse Tank", 3, ""),
+    18: ("Light Gun Tank", 5, ""),
+    19: ("AV-14B Sabre Pulse Tank", 4, "Scout"),
+}
+WORLD110_FIGHTERS = {
+    25: "Muspell Fighter",
+    34: "Muspell Light Fighter",
+    35: "Muspell Light Fighter",
+    36: "Muspell Light Fighter",
+    37: "Muspell Light Fighter",
+    38: "Muspell Light Fighter",
+}
+WORLD110_NAMED_PATHS = {
+    "Fighter Path 2": (6, 7, 5),
+    "Fighter Path 1": (25, 33, 32, 31, 30, 29, 28, 27, 26),
+    "Transport Path 1": (4, 3),
+    "Lander Path 1": (23, 22, 21, 15, 11, 10, 8, 24),
+}
+
+
+def _seed_float(bits: int) -> float:
+    return struct.unpack("<f", struct.pack("<i", _signed_int32_bits(bits)))[0]
+
+
+def _unit_mesh_binding(fields: _PhysicsFields) -> str:
+    """Level 100's naming: "m_" + the record's mesh (field 9) lower-cased + ".aya"."""
+    mesh = fields.get(9)
+    if mesh is None or 0 not in mesh:
+        raise RuntimeError("unit mesh field changed")
+    return "m_" + mesh[: mesh.index(0)].decode("ascii").lower() + ".aya"
+
+
+def _unit_life_millis(fields: _PhysicsFields) -> int:
+    # Unit Init copies profile+c0 into life+f8 before Actor Init (004f8b29).
+    life = fields.get(3)
+    if life is None:
+        raise RuntimeError("unit life field changed")
+    return _round_away_from_zero(struct.unpack("<f", life)[0] * 1000)
+
+
+def _parse_world110_paths_and_settings(
+    raw_world: bytes, seeds: tuple[_WorldInitialObject, ...],
+) -> tuple[list[dict[str, object]], dict[str, int]]:
+    """The level world's named paths and its settings words, after its trees.
+
+    The RLWD continues past the level world's tree tables with the
+    navigation graph (a uint16 1, 187 four-float nodes and 306 enabled edges),
+    then the named paths: a uint16 count and, per path, a string8 name, an
+    int32 count and that many uint16 row ordinals. Only the CWaypoint rows
+    (thing type 18) are path nodes; the loader drops the others
+    (waypoint-paths.md, "Loading"), and each node keeps its row's target. The
+    settings follow; words 3 and 4 are the pre-run and pan lengths
+    (0x0050d2b8, 0x0050d2c5; world-110-construction-order.md, "Load order").
+    """
+    rlwd = _chunk_payload(_chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"), b"RLWD")
+    reader = _WorldReader(rlwd)
+    reader.position = WORLD110_TREE_GROUP_HEADER_OFFSET
+    _require_snow_tree_groups(_read_explicit_tree_groups(reader))
+    if reader.uint16() != 1 or reader.int32() != 187:
+        raise RuntimeError("world 110 navigation node table changed")
+    nodes = [tuple(reader.single() for _ in range(4)) for _ in range(187)]
+    if reader.int32() != 306:
+        raise RuntimeError("world 110 navigation edge table changed")
+    for _ in range(306):
+        start, end, enabled = reader.int32(), reader.int32(), reader.int32()
+        if start not in range(len(nodes)) or end not in range(len(nodes)) or enabled != 1:
+            raise RuntimeError("world 110 navigation edge changed")
+    by_ordinal = {item.ordinal: item for item in seeds}
+    if reader.uint16() != len(WORLD110_NAMED_PATHS):
+        raise RuntimeError("world 110 named path count changed")
+    paths: list[dict[str, object]] = []
+    for _ in WORLD110_NAMED_PATHS:
+        name = reader.string8()
+        count = reader.int32()
+        indices = tuple(reader.uint16() for _ in range(count))
+        if WORLD110_NAMED_PATHS.get(name) != indices:
+            raise RuntimeError(f"world 110 named path {name!r} changed")
+        points = []
+        dropped = []
+        for index in indices:
+            row = by_ordinal[index]
+            if row.thing_type != 18:
+                dropped.append(index)
+                continue
+            if row.target != -1 and by_ordinal[row.target].thing_type != 18:
+                raise RuntimeError(f"world 110 waypoint {index} targets a non-waypoint")
+            position = [_seed_float(bits) for bits in row.position_bits]
+            points.append({
+                "nodeIndex": index,
+                "positionMillimeters": [
+                    _round_away_from_zero((position[0] - LEVEL100_PLAYER_START_X) * 1_000.0),
+                    _round_away_from_zero(position[2] * 1_000.0),
+                    _round_away_from_zero((position[1] - LEVEL100_PLAYER_START_Y) * 1_000.0),
+                ],
+                # As Level 100's manifest fills a marker's three components:
+                # the fourth slot is the float bits of 0.0f.
+                "retailComponentsFloatBits": [
+                    *(_signed_int32_bits(bits) for bits in row.position_bits),
+                    _float_bits(0.0),
+                ],
+                "targetNodeIndex": None if row.target == -1 else row.target,
+            })
+        paths.append({"droppedNodeIndices": dropped, "name": name, "points": points})
+    words = [reader.int32() for _ in range(5)]
+    if words[3] != 0 or words[4] != _float_bits(2.0):
+        raise RuntimeError("world 110 pre-run or pan length changed")
+    return paths, {"panLengthFloatBits": words[4], "preRunWordBits": words[3]}
+
+
+def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes:
+    """World 110's level for the Simulation, in Level 100's manifest shape.
+
+    The shared base world's 33 objects and 1,481 pines as Level 100's manifest
+    reads them, with each building's life from its unit record; then the level
+    rows in file order: the Start (as Player 1), the inactive spawner, the four
+    landing craft each followed by its turret child, the volume, the members
+    of the five type-28 squads and the six fighters. The squads, the turret
+    children, the named paths, each unit type's motion and the settings words
+    follow. Squad members start on their squad's point; placing them on their
+    formation slots is the squad's own work at runtime (0x004e9600,
+    0x004e8730). Names of rows the file leaves unnamed follow Level 100's
+    manifest ("Level Actor NN"); member and turret-child names are labels.
+    """
+    if _sha256(physics_data) != PHYSICS_DEFINITIONS_SHA256:
+        raise RuntimeError("world 110 physics source identity changed")
+    physics = _physics_records(physics_data)
+    base_objects, base_trees = _parse_static_world_inputs(raw_world)
+    seeds = _parse_world110_initial_object_seeds(raw_world)
+    paths, settings = _parse_world110_paths_and_settings(raw_world, seeds)
+
+    actors: list[dict[str, object]] = []
+
+    def add(identity, name, definition, script, mesh, static, active, health, allegiance,
+            position, orientation, thing_type_mask=0):
+        actors.append({
+            "active": active,
+            "allegiance": allegiance,
+            "authoredOrder": len(actors),
+            "authoredTransform": _authored_transform(position, orientation),
+            "definitionIdentity": identity,
+            "definitionName": definition,
+            "initialHealth": health,
+            "initialPose": _actor_pose(position, orientation),
+            "isStatic": static,
+            "meshBinding": mesh,
+            "name": name,
+            "scriptName": script or None,
+            "targetGroup": "None",
+            "targetOrdinal": 0,
+            "thingTypeMask": thing_type_mask,
+            "trigger": None,
+        })
+
+    for item in base_objects:
+        definition = str(item["definition"])
+        health = (_unit_life_millis(_physics_record(physics, 1, definition))
+                  if int(item["thingType"]) == 8 else 0)
+        add(f"wres:bswd:{int(item['ordinal']):04d}", str(item["name"]), definition,
+            str(item["script"]), str(item["mesh"]), True, bool(item["active"]), health,
+            int(item["allegiance"]), item["retailPosition"], item["retailOrientation"])
+
+    turret = _physics_record(physics, 7, "Dropship Gun Turret")
+    turret_mesh = turret.get(3)
+    if turret_mesh != b"hiveturret.msh\0":
+        raise RuntimeError("world 110 Dropship Gun Turret mesh changed")
+    squads: list[dict[str, object]] = []
+    components: list[dict[str, object]] = []
+    motion_names: list[str] = []
+    for seed in seeds:
+        ordinal = seed.ordinal
+        identity = f"wres:rlwd:{ordinal:04d}"
+        position = [_seed_float(bits) for bits in seed.position_bits]
+        orientation = [_seed_float(bits) for bits in seed.orientation_bits]
+        active = seed.active != 0
+        if ordinal in WORLD110_SCRIPT_CARRIERS:
+            if seed.thing_type != 27 or seed.script != WORLD110_SCRIPT_CARRIERS[ordinal]:
+                raise RuntimeError(f"world 110 script carrier {ordinal} changed")
+        elif seed.thing_type == 18:
+            continue
+        elif seed.thing_type == 15:
+            if ordinal != 1:
+                raise RuntimeError("world 110 Start row changed")
+            add(identity, "Player 1", "BattleEngine", "", "m_f_be1.msh.aya", False, True, 0,
+                seed.allegiance, position, orientation, thing_type_mask=8)
+        elif seed.thing_type == 19:
+            tail = seed.tail
+            if (ordinal != 5 or active or seed.name != "Fighter Second Wave"
+                    or tail.spawn_unit != "Muspell Fighter" or seed.spawn_script != "MuspellFighter2"):
+                raise RuntimeError("world 110 spawner row changed")
+            add(identity, seed.name, "Level Actor Type 19", "", None, True, False, 0,
+                seed.allegiance, position, orientation)
+        elif ordinal in WORLD110_LANDING_CRAFT:
+            definition, script = WORLD110_LANDING_CRAFT[ordinal]
+            if seed.thing_type != 8 or seed.tail.definition_name != definition or seed.script != script:
+                raise RuntimeError(f"world 110 landing craft {ordinal} changed")
+            fields = _physics_record(physics, 1, definition)
+            if struct.unpack("<i", fields[8])[0] != 12:
+                raise RuntimeError(f"world 110 {definition} behaviour changed")
+            add(identity, f"Level Actor {ordinal:02d}", definition, script, _unit_mesh_binding(fields),
+                False, active, _unit_life_millis(fields), seed.allegiance, position, orientation)
+            child = f"{identity}:turret"
+            # Built inside the craft's construction, after its Actor draw
+            # (world-110-construction-order.md, "Landing craft and their turrets").
+            # The component record's life field is not established; 0 here.
+            add(child, f"Level Actor {ordinal:02d} Turret", "Dropship Gun Turret", "",
+                "m_hiveturret.msh.aya", False, active, 0, seed.allegiance, position, orientation)
+            components.append({"childIdentity": child, "definitionName": "Dropship Gun Turret",
+                               "parentIdentity": identity})
+            motion_names.append(definition)
+        elif seed.thing_type == 36:
+            if ordinal != 9 or seed.script or _seed_float(seed.tail.radius_bits) != 50.0:
+                raise RuntimeError("world 110 volume changed")
+            add(identity, f"Level Actor {ordinal:02d}", "General Volume", "", None, True, active, 0,
+                seed.allegiance, position, orientation)
+        elif ordinal in WORLD110_SQUADS:
+            definition, amount, script = WORLD110_SQUADS[ordinal]
+            tail = seed.tail
+            if (seed.thing_type != 28 or tail.definition_name != definition or tail.amount != amount
+                    or tail.mode != 0 or seed.script != script):
+                raise RuntimeError(f"world 110 squad row {ordinal} changed")
+            fields = _physics_record(physics, 1, definition)
+            if struct.unpack("<i", fields[8])[0] != 3:
+                raise RuntimeError(f"world 110 {definition} behaviour changed")
+            members = []
+            for member in range(amount):
+                member_identity = f"{identity}:{member}"
+                # CSquad::Init clears a member's script and name (0x004e6049-0x004e6076).
+                add(member_identity, f"Level Actor {ordinal:02d} Member {member + 1}", definition, "",
+                    _unit_mesh_binding(fields), False, active, _unit_life_millis(fields),
+                    seed.allegiance, position, orientation)
+                members.append(member_identity)
+            squads.append({
+                "active": active,
+                "allegiance": seed.allegiance,
+                "authoredTransform": _authored_transform(position, orientation),
+                "definitionIdentity": identity,
+                "definitionName": definition,
+                "memberIdentities": members,
+                "mode": tail.mode,
+                "name": f"Level Actor {ordinal:02d}",
+                "scriptName": script or None,
+            })
+            motion_names.append(definition)
+        elif ordinal in WORLD110_FIGHTERS:
+            definition = WORLD110_FIGHTERS[ordinal]
+            if seed.thing_type != 8 or seed.tail.definition_name != definition or seed.script:
+                raise RuntimeError(f"world 110 fighter {ordinal} changed")
+            fields = _physics_record(physics, 1, definition)
+            if struct.unpack("<i", fields[8])[0] != 9:
+                raise RuntimeError(f"world 110 {definition} behaviour changed")
+            add(identity, f"Level Actor {ordinal:02d}", definition, "", _unit_mesh_binding(fields),
+                False, active, _unit_life_millis(fields), seed.allegiance, position, orientation)
+            motion_names.append(definition)
+        else:
+            raise RuntimeError(f"world 110 row {ordinal} (type {seed.thing_type}) is not admitted")
+
+    # The same class dispatch as Level 100's motion rows
+    # (_level100_actor_motion_definitions): the ground fields come from the
+    # unit record; the air classes keep them null.
+    motion: list[dict[str, object]] = []
+    for definition in dict.fromkeys(motion_names):
+        fields = _physics_record(physics, 1, definition)
+        behaviour = struct.unpack("<i", fields[8])[0]
+        row: dict[str, object] = {
+            "authoredOrder": len(motion),
+            "behaviorInternalId": _unit_behavior_selector(fields),
+            "behaviorSerializedType": behaviour,
+            "coreGroundOriginOffsetMillimeters": None,
+            "definitionName": definition,
+            "fullGuideBaseTicks": None,
+            "maximumSpeedFloatBits": None,
+            "maximumTurnRadiansPerBaseTickFloatBits": None,
+        }
+        if behaviour == 3:
+            row.update({"arrivalRadiusMillimeters": 2_000, "coreGroundOriginOffsetMillimeters": 100,
+                        "fullGuideBaseTicks": 4, "maximumSpeedFloatBits": struct.unpack("<i", fields[1])[0],
+                        "maximumTurnRadiansPerBaseTickFloatBits": struct.unpack("<i", fields[5])[0],
+                        "motionClass": "GroundVehicle", "steamClassVtableAddress": 0x005E297C})
+        elif behaviour == 9:
+            row.update({"arrivalRadiusMillimeters": 5_000, "motionClass": "Plane",
+                        "steamClassVtableAddress": 0x005E1930})
+        elif behaviour == 12:
+            row.update({"arrivalRadiusMillimeters": 8_000, "motionClass": "Dropship",
+                        "steamClassVtableAddress": 0x005E1DD8})
+        else:
+            raise RuntimeError(f"world 110 {definition} behaviour {behaviour} is not admitted")
+        motion.append(row)
+
+    ferns, pines = base_trees.groups
+    if (len(actors) != 33 + 1 + 1 + 4 * 2 + 1 + 22 + 6 or len(squads) != 5
+            or len(components) != 4 or len(pines.placements) != 1_481):
+        raise RuntimeError("world 110 static world counts changed")
+    document = {
+        "actorDefinitions": actors,
+        "components": components,
+        "motionDefinitions": motion,
+        "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
+        "pineInstanceCount": len(pines.placements),
+        "pines": [[*struct.unpack("<2f", struct.pack("<2i", x, y)), variant]
+                  for x, y, variant in pines.placements],
+        "schema": WORLD110_STATIC_WORLD_SCHEMA,
+        "settings": settings,
+        "sourceArchiveSha256": WORLD110_ARCHIVE_SHA256,
+        "squads": squads,
+        "suppressedFernCount": len(ferns.placements),
+        "waypointPaths": paths,
+        "worldNumber": 110,
+    }
+    return (json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
 def _build_actor_definition_set(
     objects: list[dict[str, object]],
     level_actors: list[dict[str, object]],
@@ -5957,6 +6296,17 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
                     f"(SHA-256 {actor_hash})"
                 )
             (stage / LEVEL110_INITIAL_ACTORS).write_bytes(actor_data)
+            static_data = _world110_static_world_bytes(
+                raw_world,
+                _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256),
+            )
+            static_hash = _sha256(static_data)
+            if static_hash != WORLD110_STATIC_WORLD_SHA256:
+                raise RuntimeError(
+                    "world 110 static world did not reproduce exactly "
+                    f"(SHA-256 {static_hash})"
+                )
+            (stage / LEVEL110_STATIC_WORLD).write_bytes(static_data)
             player_data = _world110_player_input_bytes(
                 raw_world, (game_root / BATTLE_ENGINE_CONFIGURATIONS).read_bytes()
             )

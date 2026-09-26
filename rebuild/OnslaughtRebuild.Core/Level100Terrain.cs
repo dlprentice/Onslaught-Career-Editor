@@ -58,6 +58,7 @@ public sealed class Level100Terrain
     private readonly short[] _heightSamples;
     private readonly int _heightScaleSignificand;
     private readonly long _heightScaleDenominator;
+    private HeightBounds? _heightBounds;
 
     private Level100Terrain(
         short[] heightSamples,
@@ -393,15 +394,147 @@ public sealed class Level100Terrain
 
     internal int SampleGroundElevationMillimetersAtFixed(
         int retailXFixed,
-        int retailYFixed)
+        int retailYFixed) =>
+        GroundElevationMillimetersFromHeightUnits(
+            SampleHeightUnitsAtFixed(retailXFixed, retailYFixed));
+
+    private int GroundElevationMillimetersFromHeightUnits(int heightUnits)
     {
-        int heightUnits = SampleHeightUnitsAtFixed(retailXFixed, retailYFixed);
         long relativeGroundNumerator =
             ((long)PlayerStartReferenceElevationMillimeters * _heightScaleDenominator) -
             ((long)heightUnits * _heightScaleSignificand * 1_000L);
         return checked((int)RoundDivideAwayFromZero(
             relativeGroundNumerator,
             _heightScaleDenominator));
+    }
+
+    /// <summary>
+    /// An upper bound on <see cref="SampleGroundElevationMillimetersAtFixed"/>
+    /// anywhere in the fixed-coordinate rectangle [x0, x1] x [y0, y1]. Each
+    /// sample interpolates, with truncation, between the four samples of its
+    /// own tile's lattice cell, so it stays within their range; outside the
+    /// map the sampler returns height zero; and the elevation conversion is
+    /// monotonic in height units. Sweeps use this only to skip spans that
+    /// cannot touch the ground, never to decide a contact.
+    /// </summary>
+    internal int MaximumGroundElevationMillimetersAtFixed(int x0, int y0, int x1, int y1)
+    {
+        int minimumUnits = int.MaxValue;
+        int maximumUnits = int.MinValue;
+        if (x0 < 0 || y0 < 0 || x1 >= MaximumFixedCoordinate || y1 >= MaximumFixedCoordinate)
+        {
+            minimumUnits = 0;
+            maximumUnits = 0;
+        }
+
+        int cellX0 = Math.Max(x0, 0) >> 8;
+        int cellY0 = Math.Max(y0, 0) >> 8;
+        int cellX1 = Math.Min(x1, MaximumFixedCoordinate - 1) >> 8;
+        int cellY1 = Math.Min(y1, MaximumFixedCoordinate - 1) >> 8;
+        if (x1 >= 0 && y1 >= 0 && x0 < MaximumFixedCoordinate && y0 < MaximumFixedCoordinate)
+        {
+            _heightBounds ??= new HeightBounds(_heightSamples);
+            (int minimum, int maximum) = _heightBounds.Query(cellX0, cellY0, cellX1, cellY1);
+            minimumUnits = Math.Min(minimumUnits, minimum);
+            maximumUnits = Math.Max(maximumUnits, maximum);
+        }
+
+        return Math.Max(
+            GroundElevationMillimetersFromHeightUnits(minimumUnits),
+            GroundElevationMillimetersFromHeightUnits(maximumUnits));
+    }
+
+    /// <summary>
+    /// Minimum and maximum HFLD height units over power-of-two blocks of the
+    /// 512 x 512 lattice cells, each cell bounded by the four samples its own
+    /// tile stores (a tile's edge samples need not equal its neighbour's).
+    /// </summary>
+    private sealed class HeightBounds
+    {
+        private const int Cells = MapExtentRetailUnits;
+        private readonly short[][] _minimum;
+        private readonly short[][] _maximum;
+
+        internal HeightBounds(short[] samples)
+        {
+            int levels = 1;
+            while ((Cells >> (levels - 1)) > 1)
+            {
+                levels++;
+            }
+
+            _minimum = new short[levels][];
+            _maximum = new short[levels][];
+            _minimum[0] = new short[Cells * Cells];
+            _maximum[0] = new short[Cells * Cells];
+            for (int cellX = 0; cellX < Cells; cellX++)
+            {
+                for (int cellY = 0; cellY < Cells; cellY++)
+                {
+                    int index =
+                        ((((cellX >> 3) * TileCountPerAxis) + (cellY >> 3)) * SamplesPerTile) +
+                        ((cellY & 7) * SamplesPerTileAxis) +
+                        (cellX & 7);
+                    short a = samples[index];
+                    short b = samples[index + 1];
+                    short c = samples[index + SamplesPerTileAxis];
+                    short d = samples[index + SamplesPerTileAxis + 1];
+                    _minimum[0][(cellX * Cells) + cellY] = Math.Min(Math.Min(a, b), Math.Min(c, d));
+                    _maximum[0][(cellX * Cells) + cellY] = Math.Max(Math.Max(a, b), Math.Max(c, d));
+                }
+            }
+
+            for (int level = 1; level < levels; level++)
+            {
+                int side = Cells >> level;
+                int childSide = side * 2;
+                _minimum[level] = new short[side * side];
+                _maximum[level] = new short[side * side];
+                for (int x = 0; x < side; x++)
+                {
+                    for (int y = 0; y < side; y++)
+                    {
+                        int c00 = ((2 * x) * childSide) + (2 * y);
+                        int c10 = c00 + childSide;
+                        short[] minimum = _minimum[level - 1];
+                        short[] maximum = _maximum[level - 1];
+                        _minimum[level][(x * side) + y] = Math.Min(
+                            Math.Min(minimum[c00], minimum[c00 + 1]),
+                            Math.Min(minimum[c10], minimum[c10 + 1]));
+                        _maximum[level][(x * side) + y] = Math.Max(
+                            Math.Max(maximum[c00], maximum[c00 + 1]),
+                            Math.Max(maximum[c10], maximum[c10 + 1]));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Bounds over the cell rectangle [x0, x1] x [y0, y1] from at most
+        /// four blocks of the finest level at which it spans two blocks per
+        /// axis; the blocks cover a superset, so the bounds are conservative.
+        /// </summary>
+        internal (int Minimum, int Maximum) Query(int x0, int y0, int x1, int y1)
+        {
+            int level = 0;
+            while (((x1 >> level) - (x0 >> level)) > 1 || ((y1 >> level) - (y0 >> level)) > 1)
+            {
+                level++;
+            }
+
+            int side = Cells >> level;
+            int minimum = int.MaxValue;
+            int maximum = int.MinValue;
+            for (int x = x0 >> level; x <= x1 >> level; x++)
+            {
+                for (int y = y0 >> level; y <= y1 >> level; y++)
+                {
+                    minimum = Math.Min(minimum, _minimum[level][(x * side) + y]);
+                    maximum = Math.Max(maximum, _maximum[level][(x * side) + y]);
+                }
+            }
+            return (minimum, maximum);
+        }
     }
 
     /// <summary>

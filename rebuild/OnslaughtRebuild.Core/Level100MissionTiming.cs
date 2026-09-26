@@ -243,12 +243,14 @@ public static class Level100MissionTiming
     /// six-second pan (<c>SimulationConstants.Level100OpeningPanTicks</c> =
     /// 120 at the current 20 Hz, and <c>CPanCamera::GetShowHUD</c> is false for all of it), and
     /// <c>ALLOWED_TO_PLAY_MESSAGES</c> is one released event frame later.
-    /// At 20 Hz that is 120 + 1 = <b>121</b>. At 30 Hz it was 180 + 2 = 182,
-    /// which is exactly the tick two fresh uninterrupted app-owned Steam runs
-    /// measured for the first message boundary
+    /// At 20 Hz that is 120 + 1 = 121 ticks after the pan starts. At 30 Hz it
+    /// was 180 + 2 = 182, which is exactly the tick two fresh uninterrupted
+    /// app-owned Steam runs measured for the first message boundary
     /// (<c>rebuild/PROVENANCE.md</c>, "HUD introduction 182..351") - those
-    /// measurements are recorded in 30 Hz Core ticks, and 121 x 1.5 = 181.5,
-    /// so 121 is the same instant to within the sampler.
+    /// measurements are recorded in 30 Hz Core ticks from the pan's start at
+    /// event time 3.0, and 121 x 1.5 = 181.5, so 121 is the same instant to
+    /// within the sampler. The mission clock starts at the load, before the
+    /// 3.0 s pre-run, so the gate is <b>181</b> mission ticks.
     /// </para>
     /// <para>
     /// This is why the reconstruction showed no greeting at all: the script
@@ -273,7 +275,19 @@ public static class Level100MissionTiming
     /// </para>
     /// </remarks>
     public const int MessageBoxAllowedTick =
-        SimulationConstants.Level100OpeningPanTicks + ReleasedEventFrameTicks;
+        SimulationConstants.Level100PreRunTicks + SimulationConstants.Level100OpeningPanTicks +
+        ReleasedEventFrameTicks;
+
+    /// <summary>
+    /// <see cref="MessageBoxAllowedTick"/> for a career world's own pan: the
+    /// mission clock counts from the load, so the 3.0 s pre-run comes first
+    /// (<see cref="SimulationConstants.Level100PreRunTicks"/>), then the pan,
+    /// then one released event frame. Level 100 gives 181; World 110, whose
+    /// pan is 2.0 s, gives 101.
+    /// </summary>
+    public static int MessageBoxAllowedTickFor(int worldNumber) =>
+        SimulationConstants.Level100PreRunTicks + SimulationConstants.OpeningPanTicks(worldNumber) +
+        ReleasedEventFrameTicks;
 
     /// <summary>
     /// The gap between one character message clearing and the next queued one

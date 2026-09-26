@@ -87,13 +87,16 @@ internal sealed class Level100TerrainAppearanceAsset
             int macro_level = int(clamp(floor(UV2.x + 0.5), 0.0, 4.0));
             vec3 macro_color = sample_macro_map(macro_level, retail_world_uv);
             vec3 detail_primary = texture(detail_map, retail_world_uv).rgb;
-            // Retail's stage-3 texture matrix is
-            // [k*cos(t), k*sin(t); -k*sin(t), k*cos(t)] with offset (0.3, 0.3),
-            // k = *(float *)0x005d858c = 0.25 and t = *(float *)0x005d87e0 = 0.0.
-            // Both live in .rdata (0x005d8000..0x00622000) in a .reloc-free image,
-            // so the angle is fixed at zero for the life of the process and the
-            // matrix is a pure uniform quarter-scale aligned with stage 1.
-            vec2 detail_secondary_uv = (retail_world_uv * 0.25) + vec2(0.3);
+            // Retail's stage-3 texture matrix (0x005459a4-0x005459fd, pristine
+            // 74154bfa...) is [k*cos(t), k*sin(t); -k*sin(t), k*cos(t)] with
+            // offset (0.3, 0.3): k = *(float *)0x005d858c = 0.25, and t is the
+            // DOUBLE *(double *)0x005d87e0 = 1.0 (`fld qword`), one radian. sin
+            // is stored as a float32 before the scale, so _11 = _22 = 0x3e0a5140
+            // and _12 = -_21 = 0x3e576aa4. With COUNT2 (0x0054599f) D3D
+            // multiplies the row vector (u, v, 1) by it.
+            vec2 detail_secondary_uv = vec2(
+                0.13507557 * retail_world_uv.x - 0.21036774 * retail_world_uv.y + 0.3,
+                0.21036774 * retail_world_uv.x + 0.13507557 * retail_world_uv.y + 0.3);
             vec3 detail_secondary = texture(detail_map, detail_secondary_uv).rgb;
             // Stage 2's texture matrix is written at 0x0054591a-0x00545967:
             // _11 (0x628258) = _22 (0x62826c) = 0x3b800000 = 1/256, _12/_21
@@ -103,9 +106,10 @@ internal sealed class Level100TerrainAppearanceAsset
             // of CDXLandscape__RenderTerrain (0x005455d2-0x0054563a) by
             //   u += dt * *(float *)0x005d8580 (0x3a83126f = 0.001)
             //   v += dt * *(float *)0x005e50e4 (0x3a03126f = 0.0005)
-            // each followed by a single `if (x >= 1.0) x -= 1.0` against
-            // *(float *)0x005d8568 (0x3f800000 = 1.0), which for a monotonic
-            // accumulator is fract().
+            // each followed by a single `if (x > 1.0) x -= 1.0` against
+            // *(float *)0x005d8568 (0x3f800000 = 1.0; strict: `fcomp; test
+            // ah,0x41; jne` at 0x005455f5), which for a monotonic accumulator
+            // is fract() except that exactly 1.0 stays 1.0.
             //
             // BOTH HALVES OF THE PARAGRAPH BELOW WERE WRONG, and it is retained
             // only because it is the reasoning that led here. The rate was NOT
@@ -145,7 +149,10 @@ internal sealed class Level100TerrainAppearanceAsset
             // is the level's first frame, not process start. Back-extrapolating
             // u from three samples puts u = 0 at process uptime 26.15 s against
             // a level start of about 26.3 s. So resetting the phase at level
-            // entry, as this asset does, is retail's behaviour.
+            // entry, as this asset does, is retail's behaviour for a process's
+            // first level. Nothing in the image resets the accumulators between
+            // levels (5 + 5 references, all in RenderTerrain), so whether a
+            // second mission in the same process starts from zero is open.
             //
             // The rate, however, was NOT what the .rdata constants suggested —
             // see the remarks on CloudScrollRateU.
@@ -240,12 +247,13 @@ internal sealed class Level100TerrainAppearanceAsset
     /// <c>0x008c0298</c> at three level times on the safe copy: u =
     /// 0.058181878 / 0.20878051 / 0.35480464, giving du/dt = 0.0199944 and
     /// 0.0200088 per second over the two intervals — 0.07 % apart. v is
-    /// exactly u/2 at all three samples. Note the accumulator advances once
-    /// per terrain DRAW and terrain draws many tiles per frame, which is why
-    /// the per-second rate is 20x the bare 0.001 constant; the per-draw rate
-    /// varies by 3.1 % between intervals while the per-second rate varies by
-    /// 0.07 %, so wall time is the stable parameterisation and is what is used
-    /// here.
+    /// exactly u/2 at all three samples. The accumulators advance once per
+    /// <c>RenderTerrain</c> call, at its head and only for view 0
+    /// (<c>0x005455b5</c>/<c>0x005455d0</c>), by <c>[0x008a9e20]</c> × 0.001;
+    /// the file does not give that multiplier's units, which is why the
+    /// per-second rate is 20x the bare constant. The per-second rate varies by
+    /// 0.07 % between intervals, so wall time is the stable parameterisation
+    /// and is what is used here.
     ///
     /// This supersedes an earlier change that took these from 0.02/0.01 down to
     /// 0.001/0.0005 as "20x too fast". The original values were right and that
@@ -396,10 +404,11 @@ internal sealed class Level100TerrainAppearanceAsset
     public void Update(IReadOnlyList<Level100TerrainTileSelection> selections, double frameDelta)
     {
         // u += dt * 0.001 (0x005d8580), v += dt * 0.0005 (0x005e50e4), each
-        // followed by a single `if (x >= 1.0) x -= 1.0` against 0x005d8568.
-        // For a monotonic accumulator that single conditional subtract is
-        // fract(), and it is reproduced as fract() rather than as a subtract so
-        // that an unusually long frame cannot leave the phase above 1.
+        // followed by a single `if (x > 1.0) x -= 1.0` against 0x005d8568
+        // (strict, 0x005455f5). For a monotonic accumulator that single
+        // conditional subtract is fract() apart from an exact 1.0, and it is
+        // reproduced as fract() so that an unusually long frame cannot leave
+        // the phase above 1.
         _cloudScrollU = Fract(_cloudScrollU + (frameDelta * CloudScrollRateU));
         _cloudScrollV = Fract(_cloudScrollV + (frameDelta * CloudScrollRateV));
         _material.SetShaderParameter(

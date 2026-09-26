@@ -328,6 +328,9 @@ public sealed partial class FirstFlightWorldView : Node3D
                 case Level100DestructionEffectKind.VulcanImpact:
                     SpawnVulcanImpact(position, item.ActorId, tick);
                     break;
+                case Level100DestructionEffectKind.MicroMissileImpact:
+                    SpawnMicroMissileImpact(position, item.ActorId, tick);
+                    break;
                 case Level100DestructionEffectKind.TargetDestroyed:
                     SpawnTargetTankDestruction(position, item.ActorId);
                     break;
@@ -1000,11 +1003,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             activeIds.Add(projectile.Id);
             if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
             {
-                if (!Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind))
-                {
-                    throw new InvalidDataException(
-                        $"Core exposed unsupported projectile kind {projectile.Kind}.");
-                }
                 visual = projectile.Kind switch
                 {
                     Level100ProjectileKind.MechPulseBoltMedium =>
@@ -1012,16 +1010,21 @@ public sealed partial class FirstFlightWorldView : Node3D
                     Level100ProjectileKind.MechBullet or
                         Level100ProjectileKind.MechAirBullet =>
                         CreateVulcanBulletVisual(projectile.Id),
+                    Level100ProjectileKind.MicroMissile =>
+                        CreateMicroMissileVisual(projectile.Id),
                     _ => throw new InvalidDataException(
                         $"Core exposed unsupported projectile kind {projectile.Kind}."),
                 };
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
-                _projectileTrails.Add(
-                    projectile.Id,
-                    new Level100ProjectileTrailHistory(
-                        Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind),
-                        Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)));
+                if (Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind))
+                {
+                    _projectileTrails.Add(
+                        projectile.Id,
+                        new Level100ProjectileTrailHistory(
+                            Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind),
+                            Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)));
+                }
                 if (projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&
                     _pendingPulseCannonMuzzleFlashes > 0)
                 {
@@ -1715,6 +1718,68 @@ public sealed partial class FirstFlightWorldView : Node3D
             Visible = false,
         });
         return root;
+    }
+
+    /// <summary>
+    /// <c>Micro Missile Effect</c>, the round's <c>CRoundEffect</c>: its
+    /// <c>Micro Missile Sprite</c> layer is <c>blue spark 2.tga</c> at radius
+    /// 0.1, the texture the pulse bolt's spark already retains. The effect's
+    /// <c>Micro Missile Mesh</c> (type 11) and <c>Blue Trail</c> (type 8) are
+    /// authored but not yet drawn by the particle resolver, so neither is
+    /// shown here.
+    /// </summary>
+    private Node3D CreateMicroMissileVisual(int id)
+    {
+        var root = new Node3D { Name = $"RetailMicroMissile{id}" };
+        float side = ParticleEffectResolver.BillboardQuadSide(0.1f);
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "MicroMissileSprite",
+            Mesh = new QuadMesh { Size = new Vector2(side, side) },
+            MaterialOverride = _pulseBoltSparkMaterial,
+        });
+        return root;
+    }
+
+    /// <summary>
+    /// <c>Micro Missile Hit</c> names <c>Blue Explosion</c>: <c>Flash Small</c>
+    /// (<c>sun2.tga</c>, radius 0.7 to 0 over 4 turns) and <c>Blast Anim
+    /// Sprite Medium</c> (<c>alparticle5.tga</c>, 4x4 cells 0-8 played once
+    /// at 0.8 cells a turn, radius 0.5 to 1, cyan to black). Its ten-particle
+    /// <c>Blue Debris Emitter Medium</c> branch is not drawn.
+    /// </summary>
+    private void SpawnMicroMissileImpact(Vector3 position, int targetId, int tick)
+    {
+        Node3D root = CreateTimedEffect($"MicroMissileImpact{targetId}-{tick}", position, 0.5d);
+        MeshInstance3D flash = CreateEffectSprite(
+            "MicroMissileFlashSmall",
+            _effectFlashMediumTexture,
+            0.7f);
+        root.AddChild(flash);
+        AnimateScale(flash, 1f, 0f, 4d / SimulationConstants.TicksPerSecond);
+
+        MeshInstance3D blast = CreateEffectSprite(
+            "MicroMissileBlast",
+            _pulseCannonMuzzleFlashTexture,
+            0.5f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(blast);
+        var material = (StandardMaterial3D)blast.MaterialOverride;
+        material.AlbedoColor = new Color(0.501961f, 1f, 1f, 1f);
+        Tween tween = root.CreateTween();
+        const double cellInterval = 1d / (0.8d * SimulationConstants.TicksPerSecond);
+        for (int cell = 1; cell <= 8; cell++)
+        {
+            int capturedCell = cell;
+            tween.TweenInterval(cellInterval);
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3((capturedCell % 4) / 4f, (capturedCell / 4) / 4f, 0f);
+            }));
+        }
+        root.CreateTween().TweenProperty(material, new NodePath("albedo_color"), Colors.Black, 0.5d);
+        AnimateScale(blast, 1f, 2f, 0.5d);
     }
 
     private Node3D CreateVulcanBulletVisual(int id)

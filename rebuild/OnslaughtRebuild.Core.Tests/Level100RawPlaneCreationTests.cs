@@ -46,7 +46,8 @@ public sealed class Level100RawPlaneCreationTests
         var callerOwned = new List<Level100SpawnerExitPoint> { point };
         Level100ActorDefinitionSet With(IReadOnlyList<Level100SpawnerExitPoint>? points) => new(
             original.Actors, original.Spawns.Select(item => item == source
-                ? item with { SpawnerExitWaypoints = points } : item), original.WaypointPaths, original.MotionDefinitions);
+                ? item with { SpawnerExitWaypoints = points } : item), original.WaypointPaths, original.MotionDefinitions,
+            baseWorldPineCount: original.BaseWorldPineCount);
         Level100ActorDefinitionSet owned = With(callerOwned);
         callerOwned.Clear();
         Assert.Equal(original.IdentitySha256, owned.IdentitySha256);
@@ -78,7 +79,7 @@ public sealed class Level100RawPlaneCreationTests
         var source = Level100TestActorDefinitions.LoadMaterialized();
         var legacy = new Level100ActorDefinitionSet(source.Actors,
             source.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            source.WaypointPaths, source.MotionDefinitions);
+            source.WaypointPaths, source.MotionDefinitions, baseWorldPineCount: source.BaseWorldPineCount);
         var registry = new Level100ActorRegistry(legacy);
         Level100ActorId id = Assert.Single(registry.SpawnThing(registry.GetThingRef("Airfield")!.Value,
             "Air Trainer", "SpawnerB", 1, "AirTrainer"));
@@ -198,7 +199,8 @@ public sealed class Level100RawPlaneCreationTests
                 {
                     PositionMillimeters = new(311_313, -110_000, 356_750),
                 },
-            }), released.Spawns, released.WaypointPaths, released.MotionDefinitions);
+            }), released.Spawns, released.WaypointPaths, released.MotionDefinitions,
+            baseWorldPineCount: released.BaseWorldPineCount);
         var registry = new Level100ActorRegistry(definitions);
         ThingActorBaseStateSnapshot state = registry.GetBaseState(registry.GetThingRef("Air Trainer")!.Value);
         Assert.Equal(0, state.RetailPoses!.Old.PositionFloatBits.Z);

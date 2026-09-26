@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-25 (C# only and built in code: restored from b0b9c5e7 with the later evidenced fixes).
+Last updated: 2026-09-26 (waypoint walks from the nearest node along each node's target, at load-time heights; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up load draws; cockpit Gun emitters; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -42,14 +42,20 @@ check scenes). From September 19 to 25 much of the Godot side was ported to
 typed GDScript and editor scenes. On September 25 it returned to the last
 all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
 and the later C# changes that carry evidence: the strict AYA texture admission
-below, the 2,148-step smoke-validator pin (`53c1cc64…`), and two refusals of
+below, the 2,148-step smoke-validator pin (`53c1cc64…`, re-pinned on September 26 to `8649ff2b…`
+as the Battle Engine's refresh, recoil and round Init draws, every round's launch basis, the retail
+load order's construction draws and unit callbacks, the cockpit Gun emitters, the influence map's
+and warm-up units' load draws, the rounds' own MOVE and life events, the level's three-second
+pre-run, scripts started on their INIT_SCRIPT events and waypoint walks from the nearest node
+changed the run), and two refusals of
 impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
 cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
 September 25 measurement
 ([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
-stays as the Core's performance record: projectile launch and flight cost up to
-about 100 ms per tick in Release C#, an open defect.
+measured projectile launch and flight at up to about 100 ms per tick in Release
+C#. That was the terrain contact sweep, now pruned exactly (`Level100TerrainSweepPruningTests`):
+the smoke replay has no tick over 1 ms and the same hashes.
 
 `CuratedAyaTextureLoader` admits curated AYA textures strictly. It inflates each
 AYA record through Godot's zlib stream, which reports the bytes zlib actually
@@ -291,7 +297,7 @@ Controls:
 | `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
 | Mouse or trackpad | Turn the body and aim the attached first-person view |
 | Mouse wheel down/up during walker gameplay | Zoom in/out with the released `1.0` to `0.4` Battle Engine law |
-| Middle mouse or `;` during gameplay | Cycle to the next active weapon; the released heat/store eligibility extension and Missile Pod firing remain incomplete |
+| Middle mouse or `;` during gameplay | Cycle to the next active weapon whose store can pay for a shot; in the jet this selects the Missile Pod, whose HUD icon is not drawn yet |
 | `Space` | Fire the selected implemented weapon after the tutorial enables it |
 | `R` | Reset the slice |
 

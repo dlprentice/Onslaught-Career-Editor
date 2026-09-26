@@ -77,14 +77,13 @@ public sealed class Level100Mission
     /// (<c>references/Onslaught/game.cpp:3025-3031</c>) posts that event
     /// <c>NEXT_FRAME</c>, so this is
     /// <c>playingStateStartTick + ReleasedEventFrameTicks</c>. It starts at
-    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/> — the value
-    /// for a pan that is allowed to run its full six seconds — and
-    /// <see cref="NotifyPlayingStateStarted"/> moves it earlier when the
-    /// player skips the pan. It is canonical simulation state, so it is
-    /// hashed.
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTickFor"/> — the
+    /// value for a pan that is allowed to run its full length after the
+    /// pre-run — and <see cref="NotifyPlayingStateStarted"/> moves it earlier
+    /// when the player skips the pan. It is canonical simulation state, so it
+    /// is hashed.
     /// </remarks>
-    private int _messageBoxAllowedTick =
-        Level100MissionTiming.MessageBoxAllowedTick;
+    private int _messageBoxAllowedTick;
 
     private readonly Level100WonCareerHandoff _wonCareerHandoff = new();
 
@@ -94,6 +93,22 @@ public sealed class Level100Mission
         Level100TutorialProgress tutorialProgress = default,
         int initialPlayerHealth = SimulationConstants.MaximumHull,
         int worldNumber = Level100MissionProgram.WorldNumber100)
+        : this(actors, playerActorId, tutorialProgress, initialPlayerHealth, worldNumber, runInit: true)
+    {
+    }
+
+    /// <param name="runInit">
+    /// False on the retail path: LevelScript's <c>init()</c> then waits for
+    /// its carrier's INIT_SCRIPT (<see cref="RunInit"/>), which the first
+    /// flush delivers at the carrier's row position.
+    /// </param>
+    internal Level100Mission(
+        Level100ActorRegistry actors,
+        Level100ActorId playerActorId,
+        Level100TutorialProgress tutorialProgress,
+        int initialPlayerHealth,
+        int worldNumber,
+        bool runInit)
     {
         if (initialPlayerHealth <= 0)
         {
@@ -109,6 +124,7 @@ public sealed class Level100Mission
         }
 
         _worldNumber = worldNumber;
+        _messageBoxAllowedTick = Level100MissionTiming.MessageBoxAllowedTickFor(worldNumber);
         _program = Level100MissionProgram.LoadEmbedded(worldNumber, "LevelScript");
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _playerActorId = playerActorId;
@@ -138,8 +154,25 @@ public sealed class Level100Mission
 
         RunNewExecution("<global initializer>", 0);
         _initializerRan = true;
+        if (runInit)
+        {
+            RunInit();
+        }
+    }
+
+    /// <summary>LevelScript's INIT_SCRIPT: its <c>init()</c>, once.</summary>
+    internal void RunInit()
+    {
+        if (_initRan)
+        {
+            throw new InvalidOperationException("LevelScript's init() already ran.");
+        }
+
+        _initRan = true;
         RunNewExecution("init", _program.BuiltInEventInstructionPointers[0]);
     }
+
+    private bool _initRan;
 
     /// <summary>
     /// The cold training career this mission hands to

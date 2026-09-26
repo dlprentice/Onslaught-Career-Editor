@@ -157,7 +157,8 @@ public sealed class Level100ActorPlaneRuntimeTests
                 { ModelTransform = point.ModelTransform with
                     { LocalPositionFloatBits = point.ModelTransform.LocalPositionFloatBits with
                         { Z = BitConverter.SingleToInt32Bits(20f) } } }).ToArray(),
-            }), original.WaypointPaths, original.MotionDefinitions);
+            }), original.WaypointPaths, original.MotionDefinitions,
+            baseWorldPineCount: original.BaseWorldPineCount);
         var run = new ExitRun(definitions);
         var id = run.Spawn();
         var point = run.Actors.GetPlaneSpawnerExitPoint(id, 1)!.Value.PositionFloatBits;
@@ -252,10 +253,17 @@ public sealed class Level100ActorPlaneRuntimeTests
     {
         var run = new ExitRun();
         var id = run.Spawn();
+        // The envelope carries the standalone run's own event clock.
         WorldSnapshot world = new Simulation(1, run.Definitions).Snapshot with
-        { Level100Actors = run.Actors.Snapshot, Level100ActorMechanics = run.Mechanics.Snapshot };
+        {
+            Level100Actors = run.Actors.Snapshot,
+            Level100ActorMechanics = run.Mechanics.Snapshot,
+            RetailEventFrameCount = run.Mechanics.Snapshot.PlaneEvents!.FrameCount,
+        };
         string baseline = StateHasher.ComputeHex(world);
-        Assert.Equal(48, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(world), "ONSLAUGHT-REBUILD-STATE".Length));
+        // The exit fields of 48 are written inside 52, which the unit
+        // callbacks of the retail load order select.
+        Assert.Equal(52, BitConverter.ToInt32(StateHasher.GetCanonicalBytes(world), "ONSLAUGHT-REBUILD-STATE".Length));
         var exit = run.State(id).PlaneSpawnerExit!;
         foreach (var changed in new[]
         {
@@ -404,8 +412,12 @@ public sealed class Level100ActorPlaneRuntimeTests
         ThingActorBaseStateSnapshot initial = actors.GetBaseState(id);
         Assert.NotNull(initial.RetailPlane);
         Assert.NotNull(mechanics.Snapshot.Actors.Single(actor => actor.ActorId == id).PlaneGuide);
-        Assert.Equal(3, mechanics.Snapshot.PlaneEvents!.LiveEvents);
-        Assert.True(mechanics.Snapshot.PlaneEvents.Float24Arithmetic);
+        // Move and the two guide callbacks; the unit's 4003 and AI 3000 are
+        // the unit-callback owner's, filed between and after them.
+        Assert.Equal([3000, 2000, 2001], Filed(mechanics.Snapshot)
+            .Where(slot => slot.Listener > 0 && slot.Listener / 2 == id.Value)
+            .Select(slot => (int)slot.EventNum));
+        Assert.True(mechanics.Snapshot.PlaneEvents!.Float24Arithmetic);
 
         mechanics.AdvanceTick();
         ThingActorBaseStateSnapshot first = actors.GetBaseState(id);
@@ -416,7 +428,9 @@ public sealed class Level100ActorPlaneRuntimeTests
         // Clearance is filled AFTER this first Move, not injected before it.
         Assert.Equal(0x40c51eb8, mechanics.Snapshot.Actors.Single(actor => actor.ActorId == id)
             .PlaneGuide!.ClearanceFloatBits);
-        Assert.Equal(3u, mechanics.Snapshot.PlaneEvents!.ProcessedThisUpdate);
+        // All three were delivered in the first flush and each re-filed itself.
+        Assert.Equal(3, Filed(mechanics.Snapshot)
+            .Count(slot => slot.Listener > 0 && slot.Listener / 2 == id.Value));
 
         mechanics.AdvanceTick();
         Assert.NotEqual(first.RetailPoses.Current.PositionFloatBits,
@@ -474,8 +488,9 @@ public sealed class Level100ActorPlaneRuntimeTests
     [Fact]
     public void HashBindsSubprojectionMotionGuideCacheAndCallbackOrder()
     {
+        // The load, where the Air Trainer still rests at the Airfield.
         var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
-        WorldSnapshot baseline = simulation.Snapshot;
+        WorldSnapshot baseline = simulation.LoadSnapshotForMeasurement!;
         Level100ActorBaseStateSnapshot plane = baseline.Level100Actors.BaseStates.Single(item => item.State.RetailPlane is not null);
         string initial = StateHasher.ComputeHex(baseline);
         WorldSnapshot WithPhysical(ThingActorBaseStateSnapshot state) => baseline with
@@ -493,11 +508,29 @@ public sealed class Level100ActorPlaneRuntimeTests
             Assert.NotEqual(initial, StateHasher.ComputeHex(WithPhysical(plane.State with
             { RetailPlane = plane.State.RetailPlane! with { Drive = new(word, 0, 0) } })));
         }
-        var shifted = plane.State.RetailPoses!.Current.PositionFloatBits with
-        { Y = plane.State.RetailPoses.Current.PositionFloatBits.Y + 1 };
-        var subMillimeter = plane.State with
-        { RetailPoses = plane.State.RetailPoses with { Current = plane.State.RetailPoses.Current with { PositionFloatBits = shifted } } };
-        Assert.Equal(plane.State.CurrentPose, new ThingActorBaseState(subMillimeter).Snapshot.CurrentPose);
+        // One float step that stays inside the same millimetre: whichever
+        // direction does not cross a rounding boundary where the plane is.
+        ThingActorBaseStateSnapshot? subMillimeter = null;
+        foreach (int step in new[] { 1, -1 })
+        {
+            var shifted = plane.State.RetailPoses!.Current.PositionFloatBits with
+            { Y = plane.State.RetailPoses.Current.PositionFloatBits.Y + step };
+            var candidate = plane.State with
+            { RetailPoses = plane.State.RetailPoses with { Current = plane.State.RetailPoses.Current with { PositionFloatBits = shifted } } };
+            try
+            {
+                if (new ThingActorBaseState(candidate).Snapshot.CurrentPose == plane.State.CurrentPose)
+                {
+                    subMillimeter = candidate;
+                    break;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // This direction crossed into the next millimetre.
+            }
+        }
+        Assert.NotNull(subMillimeter);
         Assert.NotEqual(initial, StateHasher.ComputeHex(WithPhysical(subMillimeter)));
         Assert.NotEqual(initial, StateHasher.ComputeHex(baseline with
         {
