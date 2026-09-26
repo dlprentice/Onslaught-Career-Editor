@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Win32.SafeHandles;
 using OnslaughtCareerEditor.AppCore;
 using OnslaughtToolkit.Companion.Careers;
@@ -12,7 +13,8 @@ namespace OnslaughtToolkit.Companion.Files;
 
 public sealed record BackupFile(string Name, string Original, long Size, string Sha256);
 
-public sealed record BackupSet(string Folder, DateTime Created, string Game, IReadOnlyList<BackupFile> Files);
+/// <summary>A verified backup set. <see cref="Reason"/> says why it was made, in the player's words.</summary>
+public sealed record BackupSet(string Folder, DateTime Created, string Game, IReadOnlyList<BackupFile> Files, string? Reason = null);
 
 public sealed record BackupReceipt(bool Ok, string Message, BackupSet? Set = null, string? PartialFolder = null);
 
@@ -79,7 +81,7 @@ public static class Backups
     public const string ManifestName = "onslaught-backup.json";
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
-    public static BackupReceipt Create(IProtectedSaveFiles files, GameFolder game, string root, DateTime now)
+    public static BackupReceipt Create(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason = "Backup")
     {
         if (!Path.IsPathFullyQualified(root) || !Directory.Exists(root))
             return new BackupReceipt(false, "Choose an existing backup folder.");
@@ -111,7 +113,7 @@ public static class Backups
                     PartialFolder: folder);
             saved.Add(new BackupFile(file.Name, file.Path, bytes.Length, copy.Sha256.ToLowerInvariant()));
         }
-        BackupSet set = new(folder, now, game.Root, saved);
+        BackupSet set = new(folder, now, game.Root, saved, reason);
         try
         {
             using FileStream manifest = new(Path.Combine(folder, ManifestName), FileMode.CreateNew, FileAccess.Write);
@@ -126,6 +128,34 @@ public static class Backups
         int skipped = game.Careers.Count(file => !file.Supported) + (game.Options is { Supported: false } ? 1 : 0);
         return new BackupReceipt(true, $"Backed up and verified {saved.Count} file{(saved.Count == 1 ? "" : "s")}" +
             (skipped > 0 ? $"; {skipped} unsupported file{(skipped == 1 ? " was" : "s were")} left untouched" : "") + ".", set);
+    }
+
+    /// <summary>
+    /// Whether any career or the options file differs from the newest backup set in the folder (a file
+    /// added, removed or changed), so an automatic backup is only made when there is something new.
+    /// Reads only.
+    /// </summary>
+    public static bool ChangedSinceLatest(GameFolder game, string root)
+    {
+        if (List(root).FirstOrDefault() is not BackupSet latest) return true;
+        Dictionary<string, string> backed = latest.Files.ToDictionary(file => file.Name, file => file.Sha256, StringComparer.Ordinal);
+        List<GameFile> current = [.. game.Careers.Where(file => file.Supported)];
+        if (game.Options is { Supported: true } options) current.Add(options);
+        if (current.Count != backed.Count) return true;
+        foreach (GameFile file in current)
+        {
+            try
+            {
+                if (!backed.TryGetValue(file.Name, out string? sha) ||
+                    !string.Equals(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file.Path))), sha, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>Backup sets found in a folder, newest first. Folders without a readable manifest are ignored.</summary>
@@ -169,12 +199,20 @@ public static class Backups
 /// and only after a verified backup of every career and the options file. Replacing a file checks it
 /// still matches its backup, then swaps atomically and verifies both sides of the swap.
 /// </summary>
-public static class GameInstaller
+public static partial class GameInstaller
 {
     public const string OptionsName = "defaultoptions.bea";
 
+    /// <summary>Runs the portable write path on Linux as well; tests use it to check that path's logic.</summary>
+    internal static bool UsePortableInstall { get; set; }
+
+    /// <param name="expectedSha256">
+    /// For a replacement made from a career the player opened: the content they opened. If the file in the
+    /// game differs (the game saved it since), nothing is written.
+    /// </param>
     public static InstallReceipt Install(IProtectedSaveFiles files, GameFolder game, string targetName, byte[] prepared,
-        string backupRoot, Func<bool> gameRunning, DateTime now, Action? beforeCheck = null, Action? beforeSwap = null)
+        string backupRoot, Func<bool> gameRunning, DateTime now, Action? beforeCheck = null, Action? beforeSwap = null,
+        string? expectedSha256 = null, string reason = "Before a change to your game")
     {
         // The page's list may be stale; every decision below uses a fresh read of the folder.
         if (!GameFolder.LooksLikeGame(game.Root))
@@ -183,9 +221,6 @@ public static class GameInstaller
         string target = Target(game, targetName) ?? "";
         if (target.Length == 0)
             return new InstallReceipt(false, "Only a .bes career in the game's savegames folder, or defaultoptions.bea, can be written.", targetName);
-        if (!OperatingSystem.IsLinux())
-            return new InstallReceipt(false, "Writing into the game folder has only been tested on Linux so far. Copy the verified file " +
-                "yourself, or use Linux.", target);
         if (gameRunning())
             return new InstallReceipt(false, "Battle Engine Aquila is running. Close the game first; it writes these files itself.", target);
         if (!CareerSave.Inspect(prepared).Ok)
@@ -201,16 +236,23 @@ public static class GameInstaller
             return new InstallReceipt(false, "The file being replaced is not a supported career, so no verified backup of it can be made. " +
                 "Nothing was written.", target);
 
-        BackupReceipt backup = Backups.Create(files, game, backupRoot, now);
+        if (expectedSha256 is not null && !existing.Exists)
+            return new InstallReceipt(false, $"{Path.GetFileName(target)} is no longer in your game, so it was not replaced.", target);
+        BackupReceipt backup = Backups.Create(files, game, backupRoot, now, reason);
         if (backup.Set is not BackupSet set)
             return new InstallReceipt(false, "No verified backup could be made, so nothing was written. " + backup.Message, target,
                 backup.PartialFolder);
         BackupFile? saved = set.Files.FirstOrDefault(file => file.Name == Path.GetFileName(target));
         if (existing.Exists && saved is null)
             return new InstallReceipt(false, "The backup does not contain the file being replaced, so nothing was written.", target, set.Folder);
+        if (expectedSha256 is not null && !string.Equals(saved?.Sha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+            return new InstallReceipt(false, $"{Path.GetFileNameWithoutExtension(target)} has changed since you opened it; the game probably " +
+                "saved it. Nothing was written. Open it again to change the latest version.", target, set.Folder);
         try
         {
-            return LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwap);
+            return OperatingSystem.IsLinux() && !UsePortableInstall
+                ? LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwap)
+                : PortableInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwap);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException)
         {
@@ -239,8 +281,127 @@ public static class GameInstaller
             return "A name cannot start or end with a space or a dot.";
         if (name.Any(character => character < ' ' || "<>:\"/\\|?*".Contains(character)))
             return "A name cannot contain < > : \" / \\ | ? * or control characters.";
+        if (ReservedWindowsName().IsMatch(name))
+            return "Windows keeps that name for devices; choose another.";
         return null;
     }
+
+    [GeneratedRegex(@"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex ReservedWindowsName();
+}
+
+/// <summary>
+/// The game-folder write on every system but Linux, in portable .NET file calls: the prepared bytes are
+/// staged and verified beside the target; a new file is moved into place without replacing anything;
+/// a replaced file is swapped with <see cref="File.Replace(string, string, string?, bool)"/>, which keeps
+/// the displaced file under a temporary name so it can be compared with the backed-up original and the
+/// swap undone if another program changed it in between. On Windows the folder's ancestors are held by
+/// the linked safety source's directory locks. Tests run this same path on Linux to check its logic; it
+/// has not been executed on Windows.
+/// </summary>
+internal static class PortableInstall
+{
+    internal static InstallReceipt Write(string target, byte[] prepared, string? backedUpSha256, string backupFolder,
+        Action? beforeCheck, Action? beforeSwap)
+    {
+        using FileMutationSafety.DirectoryLockSet locks = FileMutationSafety.LockDirectoryTree(Path.GetDirectoryName(target)!, "Game folder");
+        string folder = locks.PhysicalPath;
+        string name = Path.GetFileName(target);
+        string destination = Path.Combine(folder, name);
+        string staged = Path.Combine(folder, $".onslaught-install-{Guid.NewGuid():N}.tmp");
+        using (FileStream stream = new(staged, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
+        {
+            stream.Write(prepared);
+            stream.Flush(flushToDisk: true);
+            if (!SaveLabSource.ReadSaveBytes(stream).AsSpan().SequenceEqual(prepared))
+            {
+                stream.Dispose();
+                File.Delete(staged);
+                throw new IOException("The staged copy did not match the prepared bytes.");
+            }
+        }
+        try
+        {
+            beforeCheck?.Invoke();
+            if (backedUpSha256 is null)
+            {
+                RequireVacant(destination, name);
+                beforeSwap?.Invoke();
+                RequireVacant(destination, name);
+                File.Move(staged, destination, overwrite: false);
+                return Verified(destination, name, prepared, target, backupFolder, replaced: false);
+            }
+
+            FileMutationSafety.RejectReparsePoint(destination, "Game file");
+            if (!string.Equals(Hash(ReadCareer(destination)), backedUpSha256, StringComparison.OrdinalIgnoreCase))
+                throw new IOException($"{name} changed after it was backed up. Back up again before writing.");
+            beforeSwap?.Invoke();
+            string displaced = Path.Combine(folder, $".onslaught-displaced-{Guid.NewGuid():N}.tmp");
+            try
+            {
+                File.Replace(staged, destination, displaced, ignoreMetadataErrors: true);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                // A failed swap usually changes nothing; if the original is no longer in place, say so.
+                if (string.Equals(TryHash(destination), backedUpSha256, StringComparison.OrdinalIgnoreCase)) throw;
+                return new InstallReceipt(false, $"{name} could not be swapped cleanly ({error.Message}). Check the game folder; the " +
+                    "backup holds the earlier files.", target, backupFolder, MayHaveChanged: true);
+            }
+            if (!string.Equals(TryHash(displaced), backedUpSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                // Another program wrote the file between the check and the swap: put its file back and withdraw ours.
+                string withdrawn = Path.Combine(folder, $".onslaught-withdrawn-{Guid.NewGuid():N}.tmp");
+                File.Replace(displaced, destination, withdrawn, ignoreMetadataErrors: true);
+                File.Delete(withdrawn);
+                return new InstallReceipt(false, $"{name} was replaced by another program during the write. It was put back " +
+                    "unchanged and nothing was installed.", target, backupFolder, MayHaveChanged: true);
+            }
+            File.Delete(displaced);
+            return Verified(destination, name, prepared, target, backupFolder, replaced: true);
+        }
+        finally
+        {
+            // Only our own staged name can still be here, if the move or swap did not happen.
+            if (File.Exists(staged)) File.Delete(staged);
+        }
+    }
+
+    private static InstallReceipt Verified(string destination, string name, byte[] prepared, string target, string backupFolder, bool replaced)
+    {
+        byte[] bytes = ReadCareer(destination);
+        if (!bytes.AsSpan().SequenceEqual(prepared))
+            return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; the backup " +
+                "holds the earlier bytes.", target, backupFolder, replaced, MayHaveChanged: true);
+        return new InstallReceipt(true, (replaced ? "Replaced and verified" : "Added and verified") +
+            $" {name}. The earlier files are in the verified backup.", target, backupFolder, replaced, Sha256: Hash(bytes));
+    }
+
+    private static void RequireVacant(string destination, string name)
+    {
+        if (File.Exists(destination) || Directory.Exists(destination) || new FileInfo(destination).LinkTarget is not null)
+            throw new IOException($"{name} already exists; nothing was replaced.");
+    }
+
+    private static byte[] ReadCareer(string path)
+    {
+        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return SaveLabSource.ReadSaveBytes(stream);
+    }
+
+    private static string? TryHash(string path)
+    {
+        try
+        {
+            return File.Exists(path) ? Hash(ReadCareer(path)) : null;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 }
 
 /// <summary>

@@ -30,6 +30,14 @@ internal sealed record FakeInstall(string SteamRoot, string Library, string Game
         Directory.CreateDirectory(Path.Combine(game, "data", "video", "cutscenes"));
         File.WriteAllBytes(Path.Combine(game, "data", "sounds", "english", "MessageBox", "211_briefing.ogg"), Convert.FromHexString("4f676753"));
         File.WriteAllBytes(Path.Combine(game, "data", "video", "cutscenes", "01.vid"), Convert.FromHexString("56494400"));
+        // Tiny pictures made here, standing in for the manual's art, and a one-line manual page.
+        Directory.CreateDirectory(Path.Combine(game, "Manuals", "Images"));
+        Directory.CreateDirectory(Path.Combine(game, "Manuals", "English"));
+        Godot.Image picture = Godot.Image.CreateEmpty(8, 6, false, Godot.Image.Format.Rgb8);
+        picture.Fill(new Godot.Color(0.2f, 0.3f, 0.4f));
+        File.WriteAllBytes(Path.Combine(game, "Manuals", "Images", "image003.png"), picture.SavePngToBuffer());
+        File.WriteAllBytes(Path.Combine(game, "Manuals", "Images", "gamemap.jpg"), picture.SaveJpgToBuffer());
+        File.WriteAllText(Path.Combine(game, "Manuals", "English", "English.htm"), "<html><body>Test manual</body></html>");
         string careerPath = Path.Combine(game, "savegames", "Career One.bes");
         File.WriteAllBytes(careerPath, career);
         string options = Path.Combine(game, "defaultoptions.bea");

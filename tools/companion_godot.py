@@ -33,6 +33,8 @@ EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
 # The companion is C# built in code: no GDScript, saved resources or editor-authored scenes.
 EDITOR_ONLY_SUFFIXES = {".gd", ".tres", ".res", ".scn", ".gdshader"}
 DEVELOPMENT_NAMESPACES = (b"OnslaughtToolkit.Companion.Tests", b"OnslaughtToolkit.Companion.Development")
+# The eight bytes every PNG file starts with, written as numbers: this tool checks an icon, it embeds no image.
+PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PLATFORMS = {
     "linux": ("linux-x64", "Linux", "OnslaughtToolkit.x86_64"),
     "windows": ("win-x64", "Windows", "OnslaughtToolkit.exe"),
@@ -274,6 +276,28 @@ def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], o
     return licenses
 
 
+def with_project_icon(text: str) -> str:
+    """project.godot text with the staged icon set as the application icon; refuses a project that already has one."""
+    if "\n[application]\n" not in text:
+        raise RuntimeError("The staged project has no [application] section for its icon")
+    if "config/icon=" in text:
+        raise RuntimeError("The project already names an icon; the companion's icon is made at export")
+    return text.replace("\n[application]\n", '\n[application]\n\nconfig/icon="res://icon.png"\n', 1)
+
+
+def prepare_icon(engine: Path, project: Path, env: dict[str, str], output: Path) -> None:
+    """Gives the staged export its application icon: the emblem, rendered by the app's own code."""
+    icon = project / "icon.png"
+    run_logged([str(engine), "--headless", "--path", str(project), "--script", "res://Development/IconWriter.cs", "--",
+                f"--output={icon}"], cwd=project, env=env, timeout=60, log=output / "logs/icon.log", godot=True)
+    if not icon.is_file() or icon.read_bytes()[:8] != PNG_SIGNATURE:
+        raise RuntimeError("The application icon was not written")
+    settings = project / "project.godot"
+    settings.write_text(with_project_icon(settings.read_text(encoding="utf-8")), encoding="utf-8")
+    run_logged([str(engine), "--headless", "--path", str(project), "--import"],
+               cwd=project, env=env, timeout=180, log=output / "logs/import-icon.log", godot=True)
+
+
 def copy_fixture(source: Path, output: Path) -> Path:
     if not stat.S_ISREG(source.stat().st_mode):
         raise RuntimeError(f"Save fixture must be a regular file: {source}")
@@ -318,14 +342,23 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     copy_dotnet_notices(pins, platform, project, package)
     for license_file in licenses.iterdir():
         shutil.copyfile(license_file, package / license_file.name)
+    start = f"run {filename}" if platform == "windows" else f"run ./{filename}"
     (package / "README.txt").write_text(
-        f"Onslaught Toolkit — {platform} package\n\n"
-        f"Run {filename} with its .pck file and Godot data directory kept beside it.\n"
+        f"Onslaught Toolkit, a companion for Battle Engine Aquila ({platform.capitalize()})\n\n"
+        f"To start, {start}. Keep the .pck file and the data folder beside it.\n"
+        "It finds the game through Steam; if it does not, choose the game folder on Home.\n\n"
+        "Your careers stay safe. Before the companion changes anything in your game it backs up every career and\n"
+        "your settings, it never writes while the game is running, and Backups can put any earlier version back.\n"
+        "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n"
+        "About this package\n"
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
         "Its file-safety boundary runs inside the same process; no helper process is used.\n"
         f"It bundles Microsoft.NETCore.App {pins['dotnet']['runtimeVersion']}; no installed .NET runtime is needed.\n"
         "The application MIT license, Godot notices and .NET notices are included here.\n"
-        "This package contains no retail assets or saves. Cross-export is not Windows execution acceptance.\n",
+        "This package contains no retail assets or saves; it reads your own copy of the game.\n" +
+        ("This Windows build is not code-signed, so Windows SmartScreen may call it an unrecognised app.\n"
+         "It was made on Linux and has not yet been run on Windows. Cross-export is not Windows\n"
+         "execution acceptance.\n" if platform == "windows" else ""),
         encoding="utf-8")
     # A package inventory records the concrete cross-export, without claiming platform execution.
     inventory = {str(path.relative_to(package)): sha256(path) for path in sorted(package.rglob("*")) if path.is_file()}
@@ -411,6 +444,7 @@ def companion_main(argv: list[str] | None = None) -> int:
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)
+            prepare_icon(engine, project, env, output)
             for platform in platforms:
                 export_platform(engine, project, templates, pins, platform, env, output, licenses)
             return 0

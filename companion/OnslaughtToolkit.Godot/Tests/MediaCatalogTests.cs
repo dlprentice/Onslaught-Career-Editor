@@ -94,7 +94,7 @@ internal static class MediaCatalogTests
         FakeInstall install = FakeInstall.Create(Path.Combine(outputDirectory, "game-audio"), career);
         IReadOnlyList<Media.GameAudioItem> items = Media.GameAudio.Catalog(Game.GameFolder.Inspect(install.Game, "test"), null);
         check.That(items.Count == 3 && items.Count(item => item.Kind == Media.AudioKind.Music) == 1 &&
-            items.Single(item => item.Kind == Media.AudioKind.Voice).Group == "Level 211" &&
+            items.Single(item => item.Kind == Media.AudioKind.Voice).Group == "Level 2.11" &&
             items.Single(item => item.Kind == Media.AudioKind.Cutscene) is { Playable: false },
             "Music, voice lines by level and unplayable cutscenes are listed from the install.");
         check.That(Media.GameAudio.VoiceGroup("tutorial_01", null).Group == "Tutorial" && Media.GameAudio.VoiceGroup("health_low", null).Group ==

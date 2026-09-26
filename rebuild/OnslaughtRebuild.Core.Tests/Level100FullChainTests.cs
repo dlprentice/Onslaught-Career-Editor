@@ -389,14 +389,15 @@ public sealed class Level100FullChainTests
         // waypoint walk started at the unit's nearest node and followed the
         // nodes' own targets at their load-time heights, the fixture's
         // scriptless U-17 and Air Trainer thought with their classes' AI
-        // cadences (CDropshipAI, CPlaneAI), and the walker dashed only inside
-        // retail's float32 window: the wave ends on the abort branch with no
-        // kills. These are reconstruction fixture readings, not retail
-        // timing, hull or branch.
+        // cadences (CDropshipAI, CPlaneAI), the walker dashed only inside
+        // retail's float32 window, and the air units flew their move orders
+        // (slot 61) and left on Retreat: the wave ends on the abort branch
+        // with three kills. These are reconstruction fixture readings, not
+        // retail timing, hull or branch.
         Assert.True(final.Level100Mission.Aborted);
-        Assert.Equal(0, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_688, final.Tick);
-        Assert.Equal(4_991, final.Hull);
+        Assert.Equal(3, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(5_961, final.Tick);
+        Assert.Equal(7_300, final.Hull);
     }
 
     /// <summary>

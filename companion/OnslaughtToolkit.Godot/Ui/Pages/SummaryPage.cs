@@ -5,25 +5,30 @@ using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
-/// <summary>The open career at a glance: missions, Goodies, kills and campaign links, read-only.</summary>
-internal sealed class OverviewPage : Page
+/// <summary>The open career at a glance: missions, Goodies, kills and campaign routes, read-only.</summary>
+internal sealed class SummaryPage : Page
 {
     private readonly CareerWorkspace _workspace;
     private readonly GameLibrary _game;
     private readonly Label _empty;
+    private readonly CareerCards _choose;
     private readonly GridContainer _stats, _columns;
     private readonly Label _missionsValue, _missionsDetail, _goodiesValue, _goodiesDetail, _killsValue, _ranksValue, _ranksDetail;
     private readonly ProgressBar _missionsMeter, _goodiesMeter;
-    private readonly VBoxContainer _killRows, _linkLines;
+    private readonly VBoxContainer _killRows;
+    private readonly PanelContainer _campaign;
+    private readonly Label _routeLine;
     private readonly GridContainer _goodieStrip;
     private readonly Label _namesNote;
 
-    internal OverviewPage(CareerWorkspace workspace, GameLibrary game, Action showGoodies) : base("overview", "Overview")
+    internal SummaryPage(AppServices app) : base("summary", "Summary", "summary")
     {
-        (_workspace, _game) = (workspace, game);
+        (_workspace, _game) = (app.Workspace, app.Game);
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
         Root = scroll;
-        _empty = content.Add(Build.Text("Open a career to see its missions, Goodies, kills and campaign links.", "Muted"));
+        _empty = content.Add(Build.Text("Choose a career to see its missions, Goodies and kills. Opening it only reads it.", "Lead"));
+        _choose = new CareerCards(app);
+        content.Add(_choose.Root);
 
         _stats = content.Add(new GridContainer { Columns = 4 });
         _stats.AddThemeConstantOverride("h_separation", 14);
@@ -35,6 +40,22 @@ internal sealed class OverviewPage : Page
         (_ranksValue, _ranksDetail, ProgressBar ranksMeter) = Stat("Ranks");
         ranksMeter.Visible = false;
         _stats.Resized += () => _stats.Columns = _stats.Size.X >= 820 ? 4 : 2;
+
+        (_campaign, VBoxContainer campaignBody) = Build.Card("Your path through the campaign");
+        content.Add(_campaign);
+        Map = campaignBody.Add(new CampaignMap());
+        HBoxContainer key = campaignBody.Add(Build.Row(14));
+        foreach ((string kind, string text) in new[]
+        {
+            ("complete", "Complete, with your rank"), ("open", "Open to play"), ("closed", "Not reached yet"),
+            ("route-taken", "Route you took"), ("route-not-taken", "Route not taken"),
+        })
+        {
+            HBoxContainer item = key.Add(Build.Row(6));
+            item.Add(new CampaignSwatch(kind));
+            item.Add(Build.Text(text, "Muted", wrap: false));
+        }
+        _routeLine = campaignBody.Add(Build.Text("", "Faint"));
 
         _columns = content.Add(new GridContainer { Columns = 2 });
         _columns.AddThemeConstantOverride("h_separation", 14);
@@ -67,32 +88,31 @@ internal sealed class OverviewPage : Page
         }
         Button openGoodies = goodieBody.Add(Build.Button("Open the Goodies gallery", "Link"));
         openGoodies.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
-        openGoodies.Pressed += showGoodies;
+        openGoodies.Pressed += () => app.Navigate("goodies");
         side.Add(goodies);
         (PanelContainer kills, VBoxContainer killBody) = Build.Card("Kills");
         _killRows = killBody.Add(Build.Column(8));
         side.Add(kills);
-        (PanelContainer links, VBoxContainer linkBody) = Build.Card("Campaign links");
-        _linkLines = linkBody.Add(Build.Column(4));
-        linkBody.Add(Build.Text("Only a complete link opens the next mission. Alternate routes are the game's own bookkeeping " +
-            "for a path not taken, drawn as a broken line; they are not damage.", "Faint"));
-        side.Add(links);
         ShowEmpty();
     }
 
     internal override Control Root { get; }
     internal override string Subtitle => _workspace.Session is SaveSession session
-        ? System.IO.Path.GetFileName(session.Path) + " · read-only"
-        : "The open career at a glance";
+        ? System.IO.Path.GetFileNameWithoutExtension(session.Path) + " at a glance"
+        : "Your career at a glance";
     internal Tree Missions { get; }
+    internal CampaignMap Map { get; }
     internal string MissionsSummary => _missionsValue.Text;
 
     internal void ShowSession(SaveSession session)
     {
         CareerInspection career = session.Analysis;
         GameText? text = _game.Text;
-        _empty.Visible = false;
+        _empty.Visible = _choose.Root.Visible = false;
         _stats.Visible = _columns.Visible = true;
+        CampaignGraph graph = CampaignGraph.From(career);
+        Map.Show(graph, text);
+        _campaign.Visible = graph.Nodes.Count > 0;
         MissionCensus missions = career.MissionCensus;
         _missionsValue.Text = $"{missions.Completed} / {missions.Used}";
         _missionsDetail.Text = "missions complete";
@@ -115,7 +135,7 @@ internal sealed class OverviewPage : Page
         {
             string name = text?.LevelName(mission.World) is string display && display.IndexOf(" - ", StringComparison.Ordinal) is int dash && dash > 0
                 ? display[(dash + 3)..] : "—";
-            TreeItem row = Build.TableRow(Missions, root, mission.World.ToString(), name, mission.Completed ? "Complete" : "Open",
+            TreeItem row = Build.TableRow(Missions, root, CareerSave.LevelCode(mission.World), name, mission.Completed ? "Complete" : "Open",
                 mission.RankLetter ?? "?");
             if (name == "—") row.SetCustomColor(1, Palette.Faint);
             row.SetCustomColor(2, mission.Completed ? Palette.Good : Palette.Muted);
@@ -123,7 +143,7 @@ internal sealed class OverviewPage : Page
         }
         _namesNote.Text = text is null
             ? "Mission names come from your game's own text file; choose your game folder on Home to show them."
-            : $"Names from your game's {text.Language} text. Stored rank floats are read with the game's own rule.";
+            : $"Mission names come from your game's {text.Language} text; ranks use the game's own grading.";
 
         _goodieStrip.Clear();
         foreach (GoodieRecord goodie in career.Goodies.Where(record => record.Shown))
@@ -153,10 +173,10 @@ internal sealed class OverviewPage : Page
             row.Add(Build.Text(career.Kills[category].ToString("N0"), "Mono", wrap: false, width: 72)).HorizontalAlignment = HorizontalAlignment.Right;
         }
 
-        _linkLines.Clear();
         LinkCensus links = career.LinkCensus;
-        _linkLines.Add(Build.Text($"{links.Complete} complete  ·  {links.AlternateRoutes} alternate routes  ·  {links.Locked} not complete" +
-            (links.Unknown > 0 ? $"  ·  {links.Unknown} unknown values" : ""), "Strong"));
+        _routeLine.Text = $"Hover a mission for its name. A route not taken is the game's own record of the path you did not " +
+            $"follow, not damage. {links.Complete} routes open, {links.AlternateRoutes} not taken, {links.Locked} still closed" +
+            (links.Unknown > 0 ? $", {links.Unknown} with values the companion does not recognise." : ".");
     }
 
     private (Label Value, Label Detail, ProgressBar Meter) Stat(string name, string detail = "")
@@ -171,9 +191,15 @@ internal sealed class OverviewPage : Page
         return (value, description, meter);
     }
 
+    internal override void Refresh()
+    {
+        if (_workspace.Session is null) ShowEmpty();
+    }
+
     private void ShowEmpty()
     {
-        _empty.Visible = true;
-        _stats.Visible = _columns.Visible = false;
+        _empty.Visible = _choose.Root.Visible = true;
+        _choose.Show();
+        _stats.Visible = _columns.Visible = _campaign.Visible = false;
     }
 }

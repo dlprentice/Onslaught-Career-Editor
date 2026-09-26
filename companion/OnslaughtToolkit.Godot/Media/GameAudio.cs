@@ -46,7 +46,7 @@ public static partial class GameAudio
     {
         string prefix = stem.Split('_')[0];
         if (uint.TryParse(prefix, out uint mission) && mission is >= 100 and <= 999)
-            return (text?.LevelName(mission) ?? $"Level {mission}", (int)mission);
+            return (text?.LevelName(mission) ?? $"Level {Careers.CareerSave.LevelCode(mission)}", (int)mission);
         string upper = stem.ToUpperInvariant();
         if (upper.StartsWith("TUTORIAL", StringComparison.Ordinal)) return ("Tutorial", 10000);
         if (upper.StartsWith("RACING", StringComparison.Ordinal)) return ("Racing", 10001);

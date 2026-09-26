@@ -45,12 +45,13 @@ public partial class CompanionTestRunner : SceneTree
                 OptionsTests.Run(original, check);
                 MediaCatalogTests.RunGameAudio(output, original, check);
                 LoreTests.Run(output, check);
+                ThemeTests.Run(check);
                 await CompanionUiTests.RunAsync(this, fixture, output, original, check);
                 check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "the owned fixture copy is restored");
             }
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"COMPANION_TESTS: {check.Failures.Count} failures in {check.Count} checks; career codec, media catalog, " +
-                "protected files, publication races, game folder, lore and the code-built interface executed.");
+                "protected files, publication races, game folder, lore, theme contrast and the code-built interface executed.");
             exitCode = check.Failures.Count == 0 ? 0 : 1;
         }
         catch (Exception error)

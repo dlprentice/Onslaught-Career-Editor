@@ -85,6 +85,31 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         }
     }
 
+    /// <summary>
+    /// Whether the careers or the settings file differ from the last reading by name, size or time: a cheap
+    /// check that decides whether the folder needs reading again. Reads only file listings.
+    /// </summary>
+    public bool FilesChanged()
+    {
+        if (Busy || Folder is not GameFolder folder) return false;
+        try
+        {
+            HashSet<(string, long, DateTime)> now = [];
+            if (Directory.Exists(folder.SavegamesPath))
+            {
+                foreach (FileInfo file in new DirectoryInfo(folder.SavegamesPath).EnumerateFiles("*.bes"))
+                    now.Add((file.FullName, file.Length, file.LastWriteTime));
+            }
+            FileInfo options = new(folder.OptionsPath);
+            if (options.Exists) now.Add((options.FullName, options.Length, options.LastWriteTime));
+            return !now.SetEquals(folder.Careers.Append(folder.Options).OfType<GameFile>().Select(file => (file.Path, file.Size, file.Modified)));
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return true;
+        }
+    }
+
     private static (GameFolder?, GameText?) Read(string root, string source) => (GameFolder.Inspect(root, source), GameText.Load(root));
 
     private void SetBusy(bool busy)
