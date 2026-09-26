@@ -3837,6 +3837,36 @@ This is static RE and metadata/recovery validation. It runs no Godot and
 establishes no additional retail-play, audio, GPU or Windows acceptance.
 
 
+## Library ownership evidence correction — September 26
+
+`python -B -m unittest tools.re_lib_match_tests`: **24 tests passed**. New
+counterexamples first reproduced eleven failures: reversed/equal section or
+offset order, contradictory second bounds, unresolved/folded anchors and a
+folded body's library pin taken from an unsupported candidate. Independent
+review found two further gaps; separate failing cases reproduced both before
+repair: caller-only proof citations used a different member from the reference
+index, and a representative could occupy a position rejected by its layout
+evidence. Positive cases retain ordered neighbours and stronger local-reference
+ownership. Synthetic tests use no retail material.
+
+The corrected matcher was then run against all three pinned library archives,
+the alias archive and the pristine `74154bfa…` specimen, using the current live
+function export. It proposes **zero name changes**; the 1,566 already-named rows
+include caller-only placements and fragments, not 1,566 byte-exact whole-function
+proofs. Compared with the prior match, the representative for `0x00589094` is
+cpudetect's folded copy, and the unsupported retained-section assertion at
+`0x005b1c30` is absent. All other selected match fields agree. There are zero
+contested pooled keys, zero import disagreements and zero layout violations;
+two data sections remain unmatched and are not admitted as verified data.
+
+Private evidence is in
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-verified/`:
+`ownership-tests-before.log`, `ownership-tests-review-before.log`,
+`ownership-tests-reviewed.log`, `ownership-checks.json`, and
+`ownership-match-final/`. This check changes no Ghidra data. Its new proof text
+must still pass independent review and the promotion gate before publication
+as live comments. It establishes no runtime behavior or complete semantic audit.
+
 ## NvTriStrip RE identities and contracts — September 26
 
 `library-nvtristrip-20260926` corrects 72 function names/comments/tag sets and
