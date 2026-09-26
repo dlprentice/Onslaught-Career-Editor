@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-09-19
+Last updated: 2026-09-25
 Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
 Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -25,7 +25,7 @@ retail executable and observed retail files own the on-disk contract.
 | Offset | Size | Content | Write policy |
 | ---: | ---: | --- | --- |
 | `0x0000` | 2 | version word `0x4BD1` | validate; preserve |
-| `0x0002` | 4 | `new_goodie_count` | preserve unless explicitly edited |
+| `0x0002` | 4 | pending extra Goodies, not an accumulated count ([recheck](../binary-analysis/save-options-static-review-2026-05-26.md)) | preserve unless explicitly edited |
 | `0x0006` | 6,400 | `CCareerNode[100]` | scoped node edits only |
 | `0x1906` | 1,600 | `CCareerNodeLink[200]` | scoped link edits only |
 | `0x1F46` | 1,200 | `CGoodie[300]` | indices 0–232 displayable; 233–299 preserve-only |
