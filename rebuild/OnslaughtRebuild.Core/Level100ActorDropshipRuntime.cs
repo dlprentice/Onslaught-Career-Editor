@@ -148,27 +148,36 @@ public sealed partial class Level100ActorMechanics
             BankFlagFloatBits = next?.BankFlagFloatBits ?? air.BankFlagFloatBits,
         }, BitConverter.SingleToInt32Bits(events.Time));
 
-        // The leave states (0x004fb053-0x004fb135), from the moved pose: within
-        // 4.0 of the retreat point the craft runs out 300 along its nose, and
-        // while running out it posts its own SHUTDOWN for the next frame
-        // (slot 116, 0x004fe5f0).
-        if (guide.SpeedMode == 1)
-        {
-            if (RetailDropshipMotion.ReachedRunOut(position, guide.Destination))
-            {
-                state.PlaneGuide = guide with { SpeedMode = 2 };
-                IssueAirMoveOrder(state, RetailDropshipMotion.RunOutTarget(new(position, basis)), force: false);
-            }
-        }
-        else if (guide.SpeedMode == 2)
-        {
-            events.AddEvent(2000, UnitListener(actor.ActorId, UnitCallbackOwner.Unit), RetailEventScheduler.NextFrame);
-        }
+        AdvanceLeaveState(events, state, new(position, basis));
 
         static bool SameAngles(Level100FloatVector3Bits left, Level100FloatVector3Bits right) =>
             BitConverter.Int32BitsToSingle(left.X) == BitConverter.Int32BitsToSingle(right.X) &&
             BitConverter.Int32BitsToSingle(left.Y) == BitConverter.Int32BitsToSingle(right.Y) &&
             BitConverter.Int32BitsToSingle(left.Z) == BitConverter.Int32BitsToSingle(right.Z);
+    }
+
+    /// <summary>
+    /// The unit step's leave states (<c>0x004fb053-0x004fb135</c>), shared by
+    /// the plane and the dropship, from the moved pose: within 4.0 of the
+    /// retreat point the unit runs out 300 along its nose, and while running
+    /// out it posts its own SHUTDOWN for the next frame (slot 116,
+    /// <c>0x004fe5f0</c>).
+    /// </summary>
+    private void AdvanceLeaveState(RetailEventScheduler events, ActorState state, RetailActorPoseSnapshot moved)
+    {
+        Level100PlaneGuideSnapshot guide = state.PlaneGuide!;
+        if (guide.SpeedMode == 1)
+        {
+            if (RetailDropshipMotion.ReachedRunOut(moved.PositionFloatBits, guide.Destination))
+            {
+                state.PlaneGuide = guide with { SpeedMode = 2 };
+                IssueAirMoveOrder(state, RetailDropshipMotion.RunOutTarget(moved), force: false);
+            }
+        }
+        else if (guide.SpeedMode == 2)
+        {
+            events.AddEvent(2000, UnitListener(state.ActorId, UnitCallbackOwner.Unit), RetailEventScheduler.NextFrame);
+        }
     }
 
     /// <summary>
@@ -217,12 +226,13 @@ public sealed partial class Level100ActorMechanics
     }
 
     /// <summary>
-    /// <c>CUnit::Retreat</c> (slot 100, <c>0x004fdd00</c>, and the
-    /// <c>Retreat()</c> native): nothing while already leaving (<c>+0x244</c>
-    /// is 1 or 2); otherwise an unforced move order to the retreat point, then
-    /// <c>+0x244</c> = 1.
+    /// <c>CUnit::Retreat</c> (slot 100, <c>0x004fdd00</c> for the plane and
+    /// the dropship, and the <c>Retreat()</c> native): nothing while already
+    /// leaving (<c>+0x244</c> is 1 or 2); otherwise an unforced move order to
+    /// the retreat point, then <c>+0x244</c> = 1. A leaving unit's AI only
+    /// polls, so it no longer steers at or fires on a target.
     /// </summary>
-    private void RetreatDropship(ActorState state)
+    private void RetreatAirUnit(ActorState state)
     {
         if (state.PlaneGuide!.SpeedMode is 1 or 2)
         {

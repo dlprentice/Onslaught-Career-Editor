@@ -186,16 +186,20 @@ public sealed class DropshipFlightTests
     }
 
     /// <summary>
-    /// <c>UpdateWaypointFollowing</c> (<c>0x00538470</c>): a dropship has
-    /// arrived only when its stored 2D distance is below 8.0.
+    /// <c>UpdateWaypointFollowing</c> (<c>0x00538470</c>): an air unit has
+    /// arrived only when its stored 2D distance is below its class radius,
+    /// 8.0 for the dropship and 5.0 for the plane (the motion rows carry both).
     /// </summary>
     [Fact]
-    public void Arrival_IsStrictlyInsideTheDropshipRadius()
+    public void Arrival_IsStrictlyInsideTheClassRadius()
     {
         var node = new Level100FloatVector4Bits(Bits(100f), Bits(100f), Bits(-20f), 0);
-        Assert.False(RetailDropshipMotion.Arrived(new(Bits(108f), Bits(100f), Bits(-15f)), node, 8f));
-        Assert.True(RetailDropshipMotion.Arrived(new(Bits(107.999f), Bits(100f), Bits(-15f)), node, 8f));
-        Assert.Equal(8f, RetailDropshipMotion.ArrivalRadius);
+        Assert.False(RetailIScriptFollowWaypoint.Arrived(new(Bits(108f), Bits(100f), Bits(-15f)), node, 8f));
+        Assert.True(RetailIScriptFollowWaypoint.Arrived(new(Bits(107.999f), Bits(100f), Bits(-15f)), node, 8f));
+        Assert.False(RetailIScriptFollowWaypoint.Arrived(new(Bits(100f), Bits(105f), Bits(-15f)), node, 5f));
+        Assert.Equal((8_000, 5_000),
+            (s_level100.Value.GetMotionDefinition("U-17 Highside Transporter").ArrivalRadiusMillimeters,
+             s_level100.Value.GetMotionDefinition("Target Drone").ArrivalRadiusMillimeters));
     }
 
     /// <summary>

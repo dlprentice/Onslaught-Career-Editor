@@ -18,9 +18,6 @@ public static class RetailDropshipMotion
     /// <summary>A Big unit in the water damps by 0.95 (<c>0x005d8600</c>).</summary>
     public const int WaterDampingFloatBits = 0x3f733333;
 
-    /// <summary>The arrival radius, slot 94 (<c>0x0050ead0</c>): 8.0 (<c>0x005d8c44</c>).</summary>
-    public const float ArrivalRadius = 8f;
-
     /// <summary>The run-out's arrival distance, 4.0 (<c>0x005d85bc</c>).</summary>
     public const float RunOutDistance = 4f;
 
@@ -135,20 +132,6 @@ public static class RetailDropshipMotion
                 Read(pose.PositionFloatBits.X))),
             Bits(RetailFloat24.Add(reachY, Read(pose.PositionFloatBits.Y))),
             pose.PositionFloatBits.Z);
-    }
-
-    /// <summary>
-    /// <c>UpdateWaypointFollowing</c>'s arrival (<c>0x00538470-0x005384d6</c>):
-    /// the stored 2D distance from the unit to the node, <c>√(dy² + dx²)</c>
-    /// with node minus unit, is below the class radius.
-    /// </summary>
-    public static bool Arrived(Level100FloatVector3Bits position, Level100FloatVector4Bits node, float radius)
-    {
-        double dx = RetailFloat24.Subtract(Read(node.X), Read(position.X));
-        double dy = RetailFloat24.Subtract(Read(node.Y), Read(position.Y));
-        double distance = Store(RetailFloat24.Sqrt(RetailFloat24.Add(
-            RetailFloat24.Multiply(dy, dy), RetailFloat24.Multiply(dx, dx))));
-        return distance < radius;
     }
 
     private static double Read(int bits)

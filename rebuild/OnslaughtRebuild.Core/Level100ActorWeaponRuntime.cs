@@ -316,7 +316,10 @@ public sealed partial class Level100ActorMechanics
             // 0, so a naive "friendly units do not attack" gate would silence
             // every actor in the level. That needs each actor's AUTHORED
             // allegiance established first and is tracked separately.
-            if (state.AiState == SimulationConstants.ReleasedAiStateOff)
+            // A leaving unit's AI only polls (0x004ff340-0x004ff34f): no think,
+            // so no firing.
+            if (state.AiState == SimulationConstants.ReleasedAiStateOff ||
+                state.PlaneGuide?.SpeedMode is 1 or 2)
             {
                 weapon.BurstShotsRemaining = 0;
                 continue;

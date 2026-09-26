@@ -72,9 +72,10 @@ public sealed class HeadlessApplicationTests
         // each node's target from its load-time height (identity formats 10-13),
         // and the walker dash history held as float32 event times (the tape
         // makes no flick near the window, so only those four words move), and
-        // the U-17 flying its path from the load (identity format 15).
-        const string expectedTrace = "932b60c37a86a2844a9d04f9680bd92f88ee5a8a128a49bd1323a20680345287";
-        const string expectedState = "c204e1c0ab9a56835db64fbff1881d311cf59f1584baf1ae5e06e7ffbe99ea0e";
+        // the U-17 flying its path from the load (identity format 15), and the
+        // Flyby trainer's orders through slot 61 and its retreat.
+        const string expectedTrace = "001f593cad86de703bad13d49655015338219b9952d403fb12a212585dc8d9ab";
+        const string expectedState = "325e51f36256b40d78e2da9bac3bcce4c8196846aec82ab8f2e1c8925ad58d1b";
         CommandTape tape = CommandTapeCodec.Deserialize(File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json")));
         var definitions = Level100TestActorDefinitions.LoadMaterialized();
@@ -99,14 +100,15 @@ public sealed class HeadlessApplicationTests
         // Compare every tick with the pre-mount format-7 definitions, restoring
         // only the identity word. Keep format 6's older normalized trace too.
         // Neither the tape nor its behavioral checks move.
+        // The Flyby trainer retreats inside the tape, so both keep the safe sides.
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
             definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
-            baseWorldPineCount: definitions.BaseWorldPineCount);
+            baseWorldPineCount: definitions.BaseWorldPineCount, safeSides: definitions.SafeSides);
         var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
             definitions.WaypointPaths, priorDefinitions.MotionDefinitions,
-            baseWorldPineCount: definitions.BaseWorldPineCount);
+            baseWorldPineCount: definitions.BaseWorldPineCount, safeSides: definitions.SafeSides);
         var currentRun = new Simulation(tape.Seed, definitions);
         var priorRun = new Simulation(tape.Seed, priorDefinitions);
         var reader = new CommandTapeReader(tape);
@@ -125,13 +127,13 @@ public sealed class HeadlessApplicationTests
             { Level100Actors = current.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         }
-        Assert.Equal("f3b178f5f93570fd391ea32f48adf61d8bcabeffe26f1c197a857858c1a2fea9",
+        Assert.Equal("3aacb4faaef005c69200a32aa206dc0967055c7f964d9e21f2f19a76c0e83346",
             StateHasher.ComputeHex(priorRun.Snapshot));
-        Assert.Equal("9ff36197b168bd6b5e755a5640ed38964e66bdf29daf3d33a4ed6751667b8532", priorTrace.GetCurrentHash());
-        Assert.Equal("1ff608cb6ebdea1abbea30fc50498a48d2fbc0ce2cf74aa8c88e77cf0af7412b",
+        Assert.Equal("15a1d320a5ccfc7a8614128145ce007e33836dd8c1500401d5eb8f3a209c065d", priorTrace.GetCurrentHash());
+        Assert.Equal("380d3e9b44a9d321537043adb4982d8039df6610f2ad6c86c241988cfeb98ea4",
             StateHasher.ComputeHex(state with { Level100Actors = state.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.Equal("43c7b6bc827fed375cb5ffc871fb052ad5b3d71a02e3e61d3f9a526111996687", legacyTrace.GetCurrentHash());
+        Assert.Equal("ee92ddc8d3934ace565f587e4c758128628cd0db4bcdcaf42a951c6f51957f29", legacyTrace.GetCurrentHash());
         Assert.True(expectedState == replay.FinalStateHash,
             $"First-flight state {replay.FinalStateHash}; trace {replay.TraceHash}");
         Assert.Equal(expectedTrace, replay.TraceHash);

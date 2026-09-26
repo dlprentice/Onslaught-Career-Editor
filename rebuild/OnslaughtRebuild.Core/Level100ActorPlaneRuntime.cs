@@ -259,11 +259,13 @@ public sealed partial class Level100ActorMechanics
                 // approach/retreat cadence are not implemented by this Move.
                 RefreshPlaneScriptTarget(state);
                 Level100PlaneGuideSnapshot guide = state.PlaneGuide;
-                RetailPlaneMotion.AdvanceFreeFlight(_actors.GetPlaneState(actorId),
+                ThingActorBaseState plane = _actors.GetPlaneState(actorId);
+                RetailPlaneMotion.AdvanceFreeFlight(plane,
                     new(guide.Destination, guide.Mode, guide.ClearanceFloatBits,
                         guide.ControllerState, guide.SpeedMode, null),
                     _actors.PlaneAirVelocityFloatBits(actor.DefinitionName),
                     BitConverter.SingleToInt32Bits(events.Time));
+                AdvanceLeaveState(events, state, plane.Snapshot.RetailPoses!.Current);
             }
             // Native AddMoveEvent stops recurrence once shutdown is declared.
             if (!_actors.GetBaseState(actorId).IsShuttingDown)
@@ -295,28 +297,26 @@ public sealed partial class Level100ActorMechanics
         events.AddEvent(dispatch.EventNum, dispatch.Listener, due, reuseHandle: dispatch.Handle);
     }
 
+    /// <summary>
+    /// FollowWaypointWait (<c>0x00537ed9</c>) and the waypoint follower
+    /// (<c>0x005385b2</c>) send a plane or dropship on with an unforced move
+    /// order (slot 61, <c>0x00403a90</c> for both classes), which a plane
+    /// still leaving its spawner ignores.
+    /// </summary>
     private void SetPlaneWaypointDestination(ActorState state)
     {
-        if (state.PlaneGuide is not null && state.WaypointPath is not null && IsDropship(state.ActorId))
-        {
-            // FollowWaypointWait (0x00537ed9) and the follower (0x005385b2)
-            // send the unit on with an unforced move order (slot 61).
-            Level100FloatVector4Bits node = GetWaypointPath(state.WaypointPath)
-                .Point(state.WaypointNodeIndex!.Value).RetailComponentsFloatBits;
-            IssueAirMoveOrder(state, new(node.X, node.Y, node.Z), force: false);
-            return;
-        }
-
-        if (!PlaneScriptControlAvailable(state) ||
-            state.PlaneGuide is not { ControllerState: not 2 } guide || state.WaypointPath is null) return;
-        Level100FloatVector4Bits point = GetWaypointPath(state.WaypointPath)
+        if (state.PlaneGuide is null || state.WaypointPath is null || !PlaneScriptControlAvailable(state)) return;
+        Level100FloatVector4Bits node = GetWaypointPath(state.WaypointPath)
             .Point(state.WaypointNodeIndex!.Value).RetailComponentsFloatBits;
-        state.PlaneGuide = guide with { Mode = 1, Destination = new(point.X, point.Y, point.Z) };
+        IssueAirMoveOrder(state, new(node.X, node.Y, node.Z), force: false);
     }
 
     private void RefreshPlaneScriptTarget(ActorState state)
     {
+        // A leaving plane's AI only polls (0x004ff340-0x004ff34f), so nothing
+        // steers it at a target.
         if (!PlaneScriptControlAvailable(state) || state.PlaneGuide is not { ControllerState: not 2 } guide ||
+            guide.SpeedMode is 1 or 2 ||
             state.Intent != Level100ActorCommandIntent.Attacking || !state.TargetActorId.HasValue) return;
         Level100ActorSnapshot target = _actors.GetActor(state.TargetActorId.Value);
         if (target.Lifecycle == Level100ActorLifecycle.Destroyed)
@@ -582,7 +582,7 @@ public sealed partial class Level100ActorMechanics
         if (!Finite(guide.Destination.X) || !Finite(guide.Destination.Y) || !Finite(guide.Destination.Z) ||
             !Finite(guide.ClearanceFloatBits) || guide.Mode is < 0 or > 3 ||
             (source.PlaneSpawnerExit is null ? guide.ControllerState != 1 : guide.ControllerState is not (1 or 2)) ||
-            guide.SpeedMode is not 0 && !(IsDropship(source.ActorId) && guide.SpeedMode is 1 or 2))
+            guide.SpeedMode is not (0 or 1 or 2))
             throw new ArgumentException("Unsupported aircraft guide state.", nameof(source));
         if (source.PlaneSpawnerExit is not { } exit) return;
         int tag = actor.SpawnerName == "SpawnerA" ? 15 : actor.SpawnerName == "SpawnerB" ? 16 : 0;
