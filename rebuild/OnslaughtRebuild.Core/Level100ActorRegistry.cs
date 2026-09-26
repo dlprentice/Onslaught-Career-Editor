@@ -76,7 +76,37 @@ public sealed record Level100ActorDefinition(
     Level100ActorPoseSnapshot InitialPose,
     Level100MissionTargetGroup TargetGroup,
     int TargetOrdinal,
-    Level100MissionTrigger? Trigger);
+    Level100MissionTrigger? Trigger,
+    int Allegiance = 0);
+
+/// <summary>
+/// A type-28 squad row: a <c>CNormalSquad</c> whose members are the actor
+/// definitions <paramref name="MemberIdentities"/>, in order. The squad keeps
+/// its own script; <c>CSquad::Init</c> clears its members' scripts and names
+/// (<c>0x004e6049-0x004e6076</c>;
+/// <c>reverse-engineering/game-mechanics/world-110-construction-order.md</c>,
+/// "Type-28 squads").
+/// </summary>
+public sealed record Level100SquadDefinition(
+    string DefinitionIdentity,
+    string Name,
+    string DefinitionName,
+    IReadOnlyList<string> MemberIdentities,
+    string? ScriptName,
+    bool Active,
+    int Allegiance,
+    int Mode,
+    Level100AuthoredTransform AuthoredTransform);
+
+/// <summary>
+/// A component built inside its parent's construction, after the parent's
+/// Actor draw: a landing craft's "Dropship Gun Turret" (the World 110
+/// construction contract, "Landing craft and their turrets").
+/// </summary>
+public sealed record Level100ComponentDefinition(
+    string ChildIdentity,
+    string ParentIdentity,
+    string DefinitionName);
 
 public sealed record Level100SpawnDefinition(
     int AuthoredOrder,
@@ -259,6 +289,8 @@ public sealed class Level100ActorDefinitionSet
     private readonly IReadOnlyList<Level100SpawnDefinition> _spawns;
     private readonly IReadOnlyList<Level100WaypointPathDefinition> _waypointPaths;
     private readonly IReadOnlyList<Level100ActorMotionDefinition> _motionDefinitions;
+    private readonly IReadOnlyList<Level100SquadDefinition> _squads;
+    private readonly IReadOnlyList<Level100ComponentDefinition> _components;
     private readonly Dictionary<string, Level100ActorDefinition> _actorsByIdentity;
     private readonly Dictionary<string, Level100SpawnDefinition> _spawnsByIdentity;
     private readonly Dictionary<SpawnKey, Level100SpawnDefinition> _spawnsByRequest;
@@ -271,7 +303,9 @@ public sealed class Level100ActorDefinitionSet
         IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null,
         IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null,
         int worldNumber = RetailWorldCatalog.RootWorldNumber,
-        int baseWorldPineCount = 0)
+        int baseWorldPineCount = 0,
+        IEnumerable<Level100SquadDefinition>? squads = null,
+        IEnumerable<Level100ComponentDefinition>? components = null)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
@@ -426,12 +460,72 @@ public sealed class Level100ActorDefinitionSet
         }
 
         _motionDefinitions = Array.AsReadOnly(motionDefinitionArray);
+        _squads = Array.AsReadOnly(AdmitSquads(squads));
+        _components = Array.AsReadOnly(AdmitComponents(components));
         IdentitySha256 = ComputeIdentity(
             actorArray,
             spawnArray,
             _waypointPaths,
             _motionDefinitions,
-            baseWorldPineCount);
+            baseWorldPineCount,
+            _squads,
+            _components);
+    }
+
+    private Level100SquadDefinition[] AdmitSquads(IEnumerable<Level100SquadDefinition>? squads)
+    {
+        Level100SquadDefinition[] squadArray = squads?.ToArray() ?? [];
+        var members = new HashSet<string>(StringComparer.Ordinal);
+        var identities = new HashSet<string>(StringComparer.Ordinal);
+        for (int index = 0; index < squadArray.Length; index++)
+        {
+            Level100SquadDefinition squad = squadArray[index] ??
+                throw new ArgumentException("Squad definitions cannot contain null.", nameof(squads));
+            squad = squad with { MemberIdentities = Array.AsReadOnly(squad.MemberIdentities?.ToArray() ?? []) };
+            squadArray[index] = squad;
+            if (string.IsNullOrWhiteSpace(squad.DefinitionIdentity) ||
+                _actorsByIdentity.ContainsKey(squad.DefinitionIdentity) ||
+                !identities.Add(squad.DefinitionIdentity) ||
+                string.IsNullOrWhiteSpace(squad.Name) ||
+                string.IsNullOrWhiteSpace(squad.DefinitionName) ||
+                squad.MemberIdentities.Count == 0 ||
+                squad.Allegiance is < 0 or > 2 ||
+                squad.AuthoredTransform is null ||
+                !HasFiniteAuthoredTransform(squad.AuthoredTransform) ||
+                squad.MemberIdentities.Any(member =>
+                    !_actorsByIdentity.TryGetValue(member, out Level100ActorDefinition? actor) ||
+                    !members.Add(member) ||
+                    actor.IsStatic ||
+                    actor.ScriptName is not null ||
+                    actor.Allegiance != squad.Allegiance ||
+                    !StringComparer.Ordinal.Equals(actor.DefinitionName, squad.DefinitionName)))
+            {
+                throw new ArgumentException($"Invalid squad definition at {index}.", nameof(squads));
+            }
+        }
+
+        return squadArray;
+    }
+
+    private Level100ComponentDefinition[] AdmitComponents(IEnumerable<Level100ComponentDefinition>? components)
+    {
+        Level100ComponentDefinition[] componentArray = components?.ToArray() ?? [];
+        var children = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Level100ComponentDefinition component in componentArray)
+        {
+            if (component is null ||
+                !_actorsByIdentity.TryGetValue(component.ChildIdentity, out Level100ActorDefinition? child) ||
+                !_actorsByIdentity.ContainsKey(component.ParentIdentity) ||
+                !children.Add(component.ChildIdentity) ||
+                children.Contains(component.ParentIdentity) ||
+                child.ScriptName is not null ||
+                !StringComparer.Ordinal.Equals(child.DefinitionName, component.DefinitionName))
+            {
+                throw new ArgumentException("Invalid component definition.", nameof(components));
+            }
+        }
+
+        return componentArray;
     }
 
     /// <summary>
@@ -449,6 +543,12 @@ public sealed class Level100ActorDefinitionSet
 
     public IReadOnlyList<Level100ActorMotionDefinition> MotionDefinitions =>
         _motionDefinitions;
+
+    /// <summary>The level's type-28 squads, in row order.</summary>
+    public IReadOnlyList<Level100SquadDefinition> Squads => _squads;
+
+    /// <summary>The components built inside their parents' construction.</summary>
+    public IReadOnlyList<Level100ComponentDefinition> Components => _components;
 
     public string IdentitySha256 { get; }
 
@@ -506,6 +606,7 @@ public sealed class Level100ActorDefinitionSet
             !HasFinitePose(definition.InitialPose) ||
             (definition.ThingTypeMask & ~Level100ReleasedThingTypeMasks.ProvenBits) != 0 ||
             definition.InitialHealth < 0 ||
+            definition.Allegiance is < 0 or > 2 ||
             definition.TargetOrdinal < 0 ||
             (definition.TargetGroup == Level100MissionTargetGroup.None) !=
                 (definition.TargetOrdinal == 0) ||
@@ -664,7 +765,9 @@ public sealed class Level100ActorDefinitionSet
         IReadOnlyList<Level100SpawnDefinition> spawns,
         IReadOnlyList<Level100WaypointPathDefinition> waypointPaths,
         IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions,
-        int baseWorldPineCount)
+        int baseWorldPineCount,
+        IReadOnlyList<Level100SquadDefinition> squads,
+        IReadOnlyList<Level100ComponentDefinition> components)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
@@ -676,8 +779,12 @@ public sealed class Level100ActorDefinitionSet
             // the exit fields even when all exits are null. Format 9 appends
             // the base world's pine count, and only a set that carries pines
             // selects it. Formats 10-13 are 6-9 with each path's nodes in
-            // retail list order and each node's own target.
-            writer.Write(baseWorldPineCount > 0 ? 13 : hasWeaponMounts ? 12 : hasSpawnerExits ? 11 : 10);
+            // retail list order and each node's own target. Format 14 is 13
+            // plus each actor's allegiance, the squads and the components, and
+            // only a set that carries any of them selects it.
+            bool hasSides = squads.Count > 0 || components.Count > 0 ||
+                actors.Any(actor => actor.Allegiance != 0);
+            writer.Write(hasSides ? 14 : baseWorldPineCount > 0 ? 13 : hasWeaponMounts ? 12 : hasSpawnerExits ? 11 : 10);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -800,6 +907,43 @@ public sealed class Level100ActorDefinitionSet
             if (baseWorldPineCount > 0)
             {
                 writer.Write(baseWorldPineCount);
+            }
+
+            if (hasSides)
+            {
+                foreach (Level100ActorDefinition actor in actors)
+                {
+                    writer.Write(actor.Allegiance);
+                }
+
+                writer.Write(squads.Count);
+                foreach (Level100SquadDefinition squad in squads)
+                {
+                    writer.Write(squad.DefinitionIdentity);
+                    writer.Write(squad.Name);
+                    writer.Write(squad.DefinitionName);
+                    writer.Write(squad.MemberIdentities.Count);
+                    foreach (string member in squad.MemberIdentities)
+                    {
+                        writer.Write(member);
+                    }
+
+                    WriteNullableString(writer, squad.ScriptName);
+                    writer.Write(squad.Active);
+                    writer.Write(squad.Allegiance);
+                    writer.Write(squad.Mode);
+                    WriteVector(writer, squad.AuthoredTransform.RetailPositionFloatBits);
+                    WriteVector(writer, squad.AuthoredTransform.RetailEulerFloatBits);
+                    WriteBasis(writer, squad.AuthoredTransform.RetailBasisFloatBits);
+                }
+
+                writer.Write(components.Count);
+                foreach (Level100ComponentDefinition component in components)
+                {
+                    writer.Write(component.ChildIdentity);
+                    writer.Write(component.ParentIdentity);
+                    writer.Write(component.DefinitionName);
+                }
             }
         }
 

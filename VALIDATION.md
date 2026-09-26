@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,44 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### World 110's static world from retail data — September 26
+
+The materializer now writes World 110's level for the Simulation:
+`rebuild/OnslaughtRebuild.Core/Assets/Level110/level110-static-world.json`
+(schema `onslaught.world110-static-world.v1`, SHA-256 `7b201943…`, ignored like
+the other Level110 outputs). It is built from the pristine specimen's
+`110_res_PC.aya` and `default physics.dat` and follows the RE lane's
+construction contract
+(`reverse-engineering/game-mechanics/world-110-construction-order.md`):
+- the shared base world's 33 objects and 1,481 pines, identical to Level 100's
+  manifest, with each building's life from its unit record;
+- the level rows in file order: Player 1 at the Start (row 1), the inactive
+  spawner (row 5), the four landing craft each followed by its "Dropship Gun
+  Turret" child, the volume (row 9), the 22 members of the five type-28 squads
+  and the six fighters, each with its authored allegiance;
+- the five squads (members, script, allegiance, mode, authored transform) and
+  the four turret children;
+- the four named paths, with the rows the loader drops (8, 25 and 5) and each
+  waypoint's own target (`waypoint-paths.md`);
+- each unit type's motion class and the settings words (pan 2.0).
+
+`Level100ActorDefinitionManifest.DecodeWorld110` decodes it into a world-110
+definition set, and Core's set now carries squads, components and each actor's
+allegiance; identity format 14 hashes them, and Level 100's identities do not
+move. Until the canonical checkout publishes the file, a worktree keeps an
+exact local copy: the asset preparation accepts a missing canonical output only
+when the local file has the pinned bytes.
+
+Tests: `materialize_retail_assets_tests` (95, including the builder against the
+pristine inputs and the missing-canonical rule), `World110StaticWorldManifestTests`
+(4), Core 1,551 and Client 916 with the two known skips, and the safety gate
+(4,085 files).
+
+Open: the turret child's life (its component record's field map is not
+established); member formation slots, which the squad sets at runtime
+(`0x004e9600`, `0x004e8730`); dropship motion (the RE lane's contract is in
+progress).
 
 ### Audit corrections: Mech Bullet damage and comments — September 26
 

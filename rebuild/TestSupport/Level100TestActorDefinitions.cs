@@ -46,6 +46,10 @@ internal static class Level100TestActorDefinitions
             AppContext.BaseDirectory, "Assets", "Level100", "StaticWorld",
             "level100-static-world.json")));
 
+    internal static Level100ActorDefinitionSet LoadMaterializedWorld110() =>
+        Level100ActorDefinitionManifest.DecodeWorld110(File.ReadAllBytes(Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Level110", "level110-static-world.json")));
+
     internal static Level100ActorDefinitionSet Create()
     {
         var actors = new List<Level100ActorDefinition>();
