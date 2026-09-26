@@ -3,7 +3,7 @@
 > Address: `0x0046cdf0`
 
 Status: active static function note
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-26 (the retired World 110 owner noted; 2026-09-19 logger callee names; earlier measurement limits retained)
 Source File: `references/Onslaught/game.cpp:685` (`CGame::LoadLevel`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -114,8 +114,8 @@ and load-screen state"): confirmed, with the tree build now pinned to
 Owner **partially exists**: `rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs`
 owns world admission (level → world identity), and Level100 mission
 program owns the bounded attempt loop.
-`rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` now
-owns one separate pre-init input: world 110's exact serialized player-1
+`rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` (retired on 2026-09-26 with the separate World 110 stage; last present at `df392cb4`)
+owned one separate pre-init input: world 110's exact serialized player-1
 start plus the proven no-match fallback plan. It does not own this
 function's per-attempt spawn law. Still absent is exactly one fresh
 `CPlayer` + one fresh `CController` per player-count slot, with counts
