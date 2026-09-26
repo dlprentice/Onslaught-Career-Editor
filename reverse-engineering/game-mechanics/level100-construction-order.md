@@ -293,6 +293,32 @@ Results, from static positions:
 - The other zones see no mover. The Battle Engine's own scan (mask 0) may pair with
   nearby pines and buildings; that count is open.
 
+## Allegiance at construction
+
+A unit's allegiance `+0x138` is its initializer's `+0xa0`, copied by `CUnit::Init`
+at `0x004f8fba`. For a world row `CInitThing::LoadFromMemBuffer` (`0x0040e280`)
+reads it from the row, after the mesh number. `onsldef.msl` names 0 friendly,
+1 enemy and 2 neutral.
+- The physics file's `CUnitAlligence` is parsed, but its apply slot is the shared
+  no-op `0x004014c0` (vtable `0x005d9d28` slot 1), so profiles never set it.
+- Level 100 base world: the Control Tower, Tank Factory, Health Pad, Turrets
+  01-04, Research Building, Radar Station, Airfield and Hangar are 0. The Forseti
+  buildings, Solar Pod, Docks, tall and city buildings are 2.
+- Level 100 level world: both Target Tanks, the Warehouse, the U-17 and the Air
+  Trainer are 0. `StaticTarget`'s "Activate Static Targets" event later calls
+  `SetAllegiance(ENEMY_ALLIGENCE)`.
+- A squad takes the row value into `+0x7c` (`0x004e5eb4`); `Process` then copies
+  its leader's `+0x138` (`0x004e714a`).
+- `SpawnThing` (`0x00536cd0`) gives the new unit the allegiance of the script's
+  owner (`[script+0x10]`) when that owner is a unit (`+0x34` bit `0x10`), and 2
+  otherwise (`0x00536f69-0x00536f97`). Level 100's spawners run on the Tank
+  Factory (`TankFactory`) and the Airfield (`Hangar`), both 0, so their tanks,
+  trucks and drones start friendly until their own scripts call `SetAllegiance`.
+- `CUnit::Init` lists a unit that is not in a squad in `0x008550c0` for
+  allegiance 1 or 6 and in `0x008550b0` for 0 or 6 (`0x004f9182-0x004f91b2`);
+  `CNormalSquad::Init` does the same for the squad by `+0x7c`
+  (`0x004e6c55-0x004e6c7f`). A squad's target search reads the opposite list.
+
 ## The first flush
 
 `CGame::RunLevel` (`0x0046e240`) runs `InitRestartLoop` (`0x0046e2c8`):

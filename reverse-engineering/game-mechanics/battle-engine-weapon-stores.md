@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (ReadyToFire)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -80,6 +80,13 @@ at 0.
   pod's heat store gains its consumption per charge call (jet
   `0x00411d62-0x00411d98`, walker `0x00413e1e-0x00413e53`).
 - `ReadyToCharge` (`0x0050a080`) is true with no mode yet or once now > `+0x64`.
+- `ReadyToFire` (`0x00509f70`; the tracked 2026-08-31 name table still calls it
+  `TargetProfileContext__IsEligibleByDistanceBucketOrRange`):
+  - with a current mode (`+0xa0`), true only when now > `+0x64` strictly
+    (`0x00509f81-0x00509f8f`), with no charge or ammo condition;
+  - with no mode yet, true when a charge level from trunc(round(`+0x60`)/100)
+    down to 0 names a mode that exists in the mode list `0x008553ec`
+    (`0x00509fa2-0x0050a066`), with no time test.
 - The charge resets to 0 at `0x0041203b` (jet fire), `0x00414019` (walker fire),
   `0x00411f96` (the newly selected weapon in `ChangeWeapon`) and `0x0050602a`
   (`CWeapon::Fire`).

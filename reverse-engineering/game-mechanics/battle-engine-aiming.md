@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (exact Gun emitter table; no-report launch orientation)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -97,8 +97,21 @@ emitter's world pose, then:
 - The hit point is view + (end − view) × distance / |end − view|, where end =
   view + (view orientation × auto-aim matrix) × (0, 200, 0).
 - The launch direction is `FMatrix(−atan2(dx, dy), asin(dz/|d|), 0)` from the
-  emitter to that point. With no report (class 0) it is orientation × auto-aim
-  matrix, where the auto-aim matrix is `FMatrix(+0x4e8, +0x4f4, 0)`.
+  emitter to that point, so it carries no roll.
+- With no report (class 0) it is the full orientation matrix `+0x3c` times the
+  auto-aim matrix `FMatrix(+0x4e8, +0x4f4, 0)` (`0x0040d0b7-0x0040d0c7`, product
+  `0x0040d320`, orientation on the left).
+  - `+0x3c` is rebuilt every Move by `UpdateRotation` (`0x00407a50`, called at
+    `0x004095d1`) as `FMatrix(yaw + cos(R)·yawShake, pitch + cos(R)·pitchShake,
+    roll + cos(R)·rollShake)` (`0x00408000-0x0040806a`), so it includes the jet's
+    roll and the shake term (`BattleEngine.cpp:1222-1224`).
+  - Element [i][j] sums the three terms O[i][k]·A[k][j] on the x87 in this k
+    order, then stores a float: [0][0] (1 + 0) + 2; [1][1], [1][2] and [2][1]
+    (0 + 2) + 1; every other element (2 + 1) + 0.
+- A third branch (`0x0040cad7-0x0040cef7`) serves ballistic rounds
+  (`CRoundGravity` nonzero, not beam or torpedo, `0x0040d0f0`):
+  `FMatrix(yaw +0x114 + +0x4e8, solved or −π/4 pitch, 0)`. No Aquila round sets
+  gravity, so the Aquila never takes it.
 - An emitter position of exactly (0, 0, 0) falls back to the Battle Engine's
   position and orientation.
 
@@ -131,13 +144,33 @@ Morphing only changes its animation: `flytowalk`/`walktofly`, then `walk`/`fly`.
     orientation `+0x3c` and B_old `+0x9c` (cockpit slot 1 `0x004254f0`);
   - S is the cockpit tilt: identity at start, a walker bob `0x00424ca0`,
     otherwise decaying `0x004250f0`.
-- **Measured model-space positions** (x right, y forward, z up):
-  - Gun 1 (0.0001, 0.0843, −0.2580);
-  - Guns 2-6 from (−0.0884, 0.0540, −0.2103) to (0.0874, 0.0561, −0.2117);
-  - Gun 13 (−0.0824, −0.0204, 0.1859) and Gun 14 (0.0788, −0.0204, 0.1859);
-  - Guns 9-12 at x ±0.23, z 0.006 or 0.056, y 0.041 in fly and 0.275 in walk.
-    They hang from the animated parts Object03 and Object01; every other Gun
-    emitter is static.
+- **Model-space positions.** The emitter's pose is its part's cached pose,
+  indexed by the record's part index (`0x004b4e86-0x004b4ecc`); the record adds
+  no offset. Composed from HPOS/HORI at virtual frame 0 (fly) and 25 (walk) and
+  rounded to single precision (x right, y forward, z up):
+
+  | Gun | Part | Fly (frame 0) | Walk (frame 25) |
+  | ---: | --- | --- | --- |
+  | 1 | Emit01 | (9.170048e-05, 0.0842639282, −0.25803259) | same |
+  | 2 | Emit02 | (−0.0883527175, 0.0539725572, −0.210329518) | same |
+  | 3 | Emit03 | (−0.0564851314, 0.0684210137, −0.227710307) | same |
+  | 4 | Emit04 | (0.000359148398, 0.0829063728, −0.247448772) | same |
+  | 5 | Emit05 | (0.0454145856, 0.0701522902, −0.228438199) | same |
+  | 6 | Emit06 | (0.0874229595, 0.0560657121, −0.211728841) | same |
+  | 9 | Emit09 | (−0.234618425, 0.0414116606, 0.00570841506) | (−0.23461841, 0.274871588, 0.00570840016) |
+  | 10 | Emit10 | (−0.235591888, 0.0416897312, 0.0558486059) | (−0.235591874, 0.275149643, 0.055848591) |
+  | 11 | Emit11 | (0.224845171, 0.0414696708, 0.00569987856) | (0.224845186, 0.274929583, 0.00569986831) |
+  | 12 | Emit12 | (0.223871738, 0.0416897163, 0.0558485687) | (0.223871753, 0.275149643, 0.0558485575) |
+  | 13 | Emit13 | (−0.0824229494, −0.0204110984, 0.185880587) | same |
+  | 14 | Emit14 | (0.0788260475, −0.0204110984, 0.185880199) | same |
+
+  Guns 1-6 hang from `hood`, Guns 9-10 from `Object03`, Guns 11-12 from
+  `Object01`, Guns 13-14 from the root. Only Guns 9-12 move between the poses.
+  Every emitter's forward axis stays within about 10° of the body's (y ≥ 0.984),
+  so the 0.9 dot test passes unless the cockpit tilt is large. The values were
+  composed in double precision by `rebuild/tools/cmsh_static_preview.py`; the
+  runtime pose cache (`0x004b4cd0`) composes on the x87 and may differ in the
+  last bits.
 
 Launch positions therefore depend on the render fraction (`0x008a9e44`) and the
 render counter (`0x008a9aac`), not only on simulation state.
