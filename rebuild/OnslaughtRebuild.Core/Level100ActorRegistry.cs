@@ -156,7 +156,7 @@ public sealed record Level100WaypointPointDefinition(
 /// file order. The list decides only where following starts:
 /// <c>FollowWaypointWait</c> (<c>0x00537e40</c>) takes the node nearest the
 /// unit (<see cref="NearestPoint"/>), and
-/// <c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>) then moves
+/// <c>UpdateWaypointFollowing</c> (<c>0x00538470</c>) then moves
 /// on to each node's own target (<c>0x005384dc</c>) until one has none. A chain
 /// can loop (Level 100's <c>Drone Path 1</c> and <c>Target Tank Path 2</c>), and
 /// one path can hold several chains (World 110's <c>Fighter Path 1</c>).
