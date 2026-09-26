@@ -68,10 +68,12 @@ public sealed class HeadlessApplicationTests
         // order's construction draws and every unit's callbacks (schema 52),
         // with the influence map's two chains and the warm-up draws, the
         // load's three-second pre-run, scripts started on their INIT_SCRIPT
-        // events, and waypoint walks that start at the nearest node and follow
-        // each node's target from its load-time height (identity formats 10-13).
-        const string expectedTrace = "fe219cb237b305d42084285cd125ace9c3ee7a302a6e1e199b05510154405018";
-        const string expectedState = "5e51c9a63bb0ef258451e8dc9d36eb182edd9329aa6e1ac4f882bdd4128d7914";
+        // events, waypoint walks that start at the nearest node and follow
+        // each node's target from its load-time height (identity formats 10-13),
+        // and the walker dash history held as float32 event times (the tape
+        // makes no flick near the window, so only those four words move).
+        const string expectedTrace = "ead3c485ffd7f0d7173abf4b87107928da789c35b7f09639ceee1c729a9dbfb8";
+        const string expectedState = "6bbb8a1d15986c42b3e4cbecf2225d98624eba57f2b458f714cdf9ac4f7dc979";
         CommandTape tape = CommandTapeCodec.Deserialize(File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json")));
         var definitions = Level100TestActorDefinitions.LoadMaterialized();
@@ -122,13 +124,13 @@ public sealed class HeadlessApplicationTests
             { Level100Actors = current.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         }
-        Assert.Equal("3a14de49e8f3dbb00ef8926128fd0dad1008277c34862834cefd074294c50804",
+        Assert.Equal("e1ea92d33fab153c79532f27bccac04dbece71262c7758a287c306cf14f8d793",
             StateHasher.ComputeHex(priorRun.Snapshot));
-        Assert.Equal("05ceb0db1bf468cecbede2cc13e17246d03514e12419a69f2dfd0c8bac3c3d3a", priorTrace.GetCurrentHash());
-        Assert.Equal("2ceba295acf1fbe65808ae616438526ebf7627da49ecd33c02e445c6727c2680",
+        Assert.Equal("f1e1842d691c0a4e74ae9001bb861202e0a6427ee5534b6c84731faa02703120", priorTrace.GetCurrentHash());
+        Assert.Equal("c46b7d7f059750b87a1b404ab7e3bd30e5632cad3649a011b76c31184c4dab5e",
             StateHasher.ComputeHex(state with { Level100Actors = state.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.Equal("e5b5426eadcd8fc88cacd1d7705dc78eaae982d701864a169b82ad7536fd1ff0", legacyTrace.GetCurrentHash());
+        Assert.Equal("1c2247312075dbb3d7d3a2ff53646fbaec633df4609aea430512b02447e32fce", legacyTrace.GetCurrentHash());
         Assert.True(expectedState == replay.FinalStateHash,
             $"First-flight state {replay.FinalStateHash}; trace {replay.TraceHash}");
         Assert.Equal(expectedTrace, replay.TraceHash);

@@ -233,10 +233,10 @@ public static class StateHasher
             writer.Write(state.RollVelocityMicroRadPerTick);
             writer.Write(state.WalkerLastMoveXPermille);
             writer.Write(state.WalkerLastMoveZPermille);
-            writer.Write(state.WalkerLastHardLeftTick);
-            writer.Write(state.WalkerLastHardRightTick);
-            writer.Write(state.WalkerLastHardForwardTick);
-            writer.Write(state.WalkerLastHardBackwardTick);
+            writer.Write(state.WalkerLastHardLeftTimeBits);
+            writer.Write(state.WalkerLastHardRightTimeBits);
+            writer.Write(state.WalkerLastHardForwardTimeBits);
+            writer.Write(state.WalkerLastHardBackwardTimeBits);
             writer.Write(state.WalkerDashTicksRemaining);
             writer.Write(state.WalkerSoundTravelMillimeters);
             writer.Write(state.WalkerSoundRolloverCount);

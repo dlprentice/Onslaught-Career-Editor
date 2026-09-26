@@ -102,19 +102,23 @@ public static class SimulationConstants
     // mMaxWalkVelocity 0.15 verbatim (BattleEngineWalkerPart.cpp:417).
     public const int WalkerMaximumSpeedPerTick = 150;
     // BattleEngineWalkerPart.cpp:30-35,119-304,361-429. A hard input in one
-    // direction followed by its opposite within a strict 0.2-second window
-    // multiplies that opposite acceleration by 25 and locks movement input for
-    // 15 released updates. Core's current input seam is digital, so the exact
-    // 0.9/0.8 analog threshold behavior remains open while the shipped full-axis
-    // gesture and lifecycle are represented without floating-point state.
+    // direction followed by its opposite inside the dash window multiplies
+    // that opposite acceleration by 25 and locks movement input for 15
+    // released updates. Retail's window has two bounds on float32 event times
+    // (0x00412e1f-0x00412e58 and its three twins; walker-dash.md), where the
+    // source has one. Core's current input seam is digital, so the exact
+    // 0.9/0.8 analog threshold behavior remains open.
     public const int WalkerDashStartPermille = 900;
     public const int WalkerDashEndPermille = 800;
-    public const int WalkerDashWindowTicks = TicksPerSecond / 5;
+    // mDashTime 0.2f (0x006236ac).
+    public const int WalkerDashTimeFloatBits = 0x3E4C_CCCD;
     public const int WalkerDashLengthTicks = 15;
     public const int WalkerDashFrictionThresholdTicks = 5;
     public const int WalkerDashAccelerationMultiplier = 25;
     public const int WalkerDashRollVelocityMicroRadPerTick = 80_000;
-    public const int WalkerDashInitialHistoryTicks = 10 * TicksPerSecond;
+    // The walker part's four hard-press times start at -10.0f
+    // (0x00412c14-0x00412c3e; BattleEngineWalkerPart.cpp:77-80).
+    public const int WalkerDashInitialHistoryFloatBits = unchecked((int)0xC120_0000);
     // BattleEngine.cpp:1871-1884. While grounded in Walker state, HandleSounds
     // accumulates the full velocity magnitude, rolls once on strict >1.5,
     // counts those rollovers, then plays `BE Hydraulics 02` on a later strict

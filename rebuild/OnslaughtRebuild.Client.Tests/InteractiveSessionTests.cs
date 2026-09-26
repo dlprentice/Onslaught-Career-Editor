@@ -1823,7 +1823,9 @@ public sealed class InteractiveSessionTests
         // and every unit's callbacks; then the Pulse left cockpit Gun 1
         // through the full body orientation; then every waypoint walk started
         // at the unit's nearest node and followed the nodes' own targets at
-        // their load-time heights. Controller calls now precede callbacks and Move, so the four releases
+        // their load-time heights; then the walker's dash history became
+        // float32 event times (no flick in this tape comes near the window).
+        // Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1844,14 +1846,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("a09c24e8bd67a8a97bd93c9b066b7eb648b9dc53a3d254ba4b96e849b63ab939",
+        Assert.Equal("4a1cbbbf20d2f4d5c682df32cd7f60fea5476d5824b75236a637da25a33f2a37",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("d7faf68f1b37ea1927308be4d6276ca25aa4ccdb2d2245d37fbe48b7518e8e9a",
+        Assert.Equal("865d846bedb910f548376f9076f9030c046a9ea95b45bca07a557aed1bad5726",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "8649ff2bba9b327bfd925e6b60e07f8c7769d4d10e54bbd04229be64a3f96942",
+            finalStateHash == "46ea8d17883a52cc16dbd315acbe4afde87af0f4a4578779c399600108956ad7",
             $"First-flight final state hash: {finalStateHash}");
     }
 

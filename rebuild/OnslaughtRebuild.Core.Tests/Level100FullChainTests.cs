@@ -387,15 +387,16 @@ public sealed class Level100FullChainTests
         // round moved on its own MOVE and life events, the level took its
         // three-second pre-run, every script started on its INIT_SCRIPT, every
         // waypoint walk started at the unit's nearest node and followed the
-        // nodes' own targets at their load-time heights, and the fixture's
+        // nodes' own targets at their load-time heights, the fixture's
         // scriptless U-17 and Air Trainer thought with their classes' AI
-        // cadences (CDropshipAI, CPlaneAI): the wave ends on the abort branch
-        // with no kills. These are reconstruction fixture readings, not retail
+        // cadences (CDropshipAI, CPlaneAI), and the walker dashed only inside
+        // retail's float32 window: the wave ends on the abort branch with no
+        // kills. These are reconstruction fixture readings, not retail
         // timing, hull or branch.
         Assert.True(final.Level100Mission.Aborted);
         Assert.Equal(0, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_858, final.Tick);
-        Assert.Equal(7_450, final.Hull);
+        Assert.Equal(5_688, final.Tick);
+        Assert.Equal(4_991, final.Hull);
     }
 
     /// <summary>

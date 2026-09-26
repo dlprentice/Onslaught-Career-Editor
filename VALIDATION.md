@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,66 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Walker dash window — September 26
+
+The RE lane's walker-dash contract
+(`reverse-engineering/game-mechanics/walker-dash.md`) found a second bound in
+retail's dash window that the source lacks. Re-read here from the pristine
+specimen (`74154bfa…`):
+- `Forward` (`0x00412e1f-0x00412e58`) and its three twins need
+  now − mDashTime < last < now − 0.5 · mDashTime. Both bounds are strict
+  (`test ah,0x41` / `jne`, then `test ah,0x01` / `je`), and each difference is
+  rounded to float32.
+- `mDashTime` is 0.2f (`0x006236ac`) and the multiplier is 0.5f (`0x005d85ec`).
+- The walker part starts its four hard-press times at −10.0f
+  (`0x00412c14-0x00412c3e`).
+
+Core now keeps the four hard-press times as float32 event times (the
+snapshot's `WalkerLastHard*TimeBits`) and applies that predicate. The time it
+stamps is the one the frame's input sees, the same `now` the weapons use.
+Before, it compared ticks against the source's single 0.2 s bound: an opposite
+press one or two frames earlier always dashed, and one four frames earlier
+never did. Now:
+- k = 3 always dashes;
+- k = 1 and k = 5 never do;
+- k = 2 and k = 4 dash only where the rounding admits them.
+
+`SimulationTests.WalkerDash_AdmitsTheOppositePressOnlyInsideRetailsFloatWindow`
+pins k = 2 at frames 320, 321 and 322 and k = 4 at frames 324, 325 and 326,
+from the RE lane's table recomputed past the pan. `WalkerOppositeFlick_…` now
+flicks with k = 3. The table itself reproduces here: the first admitted frames
+are 3, 6, 9, 21 and 42 for k = 2 and 5, 7, 25, 28 and 30 for k = 4, at the
+table's rates (10.5% and 12.1%; 22.3% and 6.1%).
+
+Five mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/walker-dash-20260926/mutation-kills/`):
+- the source's window alone;
+- the differences at double precision;
+- either bound made inclusive;
+- the hard press stamped a frame late.
+
+No tape changed behavior. A probe of the first-flight, smoke and won tapes found
+no opposite flick with k ≤ 4 (the won tape has one with k = 5). Only the four
+history words moved, since they now hold float32 times:
+- `first-flight.v1.json` replays to trace `ead3c485…` and state `6bbb8a1d…`;
+- the in-process smoke and its validator reach state `46ea8d17…`;
+- the headless Godot smoke records tape `8dee9d87…` (trace `75007ab5…`, state
+  `46ea8d17…`). Its inputs are identical to `ed3b77b5…`'s, and it replays
+  twice;
+- the won tape replays twice to trace `746e2e38…` and state `b1a82b2e…`, still
+  at hull 3,350;
+- the canonical-hash fingerprints moved.
+
+The chain autopilot does flick, so it now wins at tick 5,688 with hull 4,991 on
+the abort branch. That is a fixture reading.
+
+Suites: Core 1,573, Client 916 with the two known skips, pause checks 56 and
+AYA checks 447.
+
+Open, with the RE lane's falsifiers: the runtime precision mode, and whether
+one input sample reaches the walker per event frame. Core's input is digital,
+so the 0.9 and 0.8 analog thresholds also remain open.
 
 ### World 110 construction and start state — September 26
 
