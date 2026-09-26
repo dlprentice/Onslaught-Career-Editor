@@ -1,6 +1,10 @@
 # The default render-state block — `0x004EB1E0`, re-derived from bytes
 
-Date: 2026-07-27.
+Status: active static contract
+Last updated: 2026-09-26 (RE audit: point-size clamps, branch count, fixed-state sites, the ALPHAREF CVar and the fog arms; first derived 2026-07-27)
+Summary: what the default render-state block 0x004EB1E0 sets on the device, re-derived from bytes; it fixes the default state, not the state at any particular later draw.
+Evidence: MEASURED — pristine instructions and whole-image scans; the state at later draws is not traced.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 `D3DStateCache__UseDefaultRenderState` at `0x004EB1E0` has been load-bearing for
 several committed rendering decisions — lighting enable, the two material
@@ -110,9 +114,13 @@ Both general render-state setters carry the same quirk at `0x00513BD1` /
 and appears again at `0x004EB2CD` and `0x004EBA30`.
 
 There are also three fixed-state inline wrappers, which matter only because they
-are additional ways a render state can reach the device: `0x00513DA0` /
-`0x00513DD0` write `D3DRS_ALPHAREF` (`0x18`), and `0x00514030` / `0x0051409F`
-write `D3DRS_FOGTABLEMODE` (`0x23`) and `D3DRS_FOGVERTEXMODE` (`0x8C`).
+are additional ways a render state can reach the device: `0x00513D90` (cached,
+five callers; `0x00513DA0` is inside it) and `0x00513DD0` (uncached) write
+`D3DRS_ALPHAREF` (`0x18`), and `0x00514030` (its `arg == 0` arm starts at
+`0x0051409F`) writes `D3DRS_FOGTABLEMODE` (`0x23`) and `D3DRS_FOGVERTEXMODE`
+(`0x8C`). Both ALPHAREF wrappers write `v | (v << 8)` when the CVar
+`OLD_SCHOOL_ALPHA_REF` (`[0x0085541C]`, registered at `0x00513d6c`, default 0)
+is nonzero, and `v` otherwise.
 
 ## 4. Entry: the whole cache is invalidated before anything is set
 
@@ -182,17 +190,21 @@ literal pushes that precede it:
 | `0x004EB57B` | `0xA7` `D3DRS_INDEXEDVERTEXBLENDENABLE` | `0` |
 
 The point-size group (`0x004EB40F`–`0x004EB50C`) is the function's one real
-branch: it reads the float at `[0x00888B04]`, compares it against `[0x005D8568]`
-at `0x004EB41C`, and **jumps clear of the whole group to `0x004EB511`** when they
-are equal. Inside, `POINTSIZE_MIN` is `max(v, [0x005D8C44])` and `POINTSIZE_MAX`
-is `v` when `v >= [0x005DB2B8]` and `32.0f` otherwise.
+branch: it reads the float `v` at `[0x00888B04]`, compares it with 1.0
+(`[0x005D8568]`) at `0x004EB41C`, and **jumps clear of the whole group to
+`0x004EB511`** when `v <= 1.0` or the compare is unordered (`test ah,0x41; jne`).
+Inside, `POINTSIZE` and `POINTSIZE_MIN` are `min(v, 8.0f)` (`[0x005D8C44]`,
+`0x004EB431`-`0x004EB44A`) and `POINTSIZE_MAX` is `v` when `v < 32.0f`
+(`[0x005DB2B8]`) and `32.0f` otherwise (`0x004EB452`-`0x004EB469`).
 
-Two further render states are set on this function's behalf by callees:
+Three further render states are set on this function's behalf by callees:
 
 - `0x004EB244` → `0x00513DD0(8)` → `D3DRS_ALPHAREF` (`0x18`) `= 8`, or `0x0808`
-  when `[0x0085541C]` is non-zero.
+  when the CVar `OLD_SCHOOL_ALPHA_REF` (`[0x0085541C]`, default 0) is nonzero.
 - `0x004EB2FD` → `0x00514030(1)` → `D3DRS_FOGTABLEMODE` (`0x23`) `= 1`
-  (`D3DFOG_EXP`) **only if** the caps dword `[0x00888A78]` has bit `0x100` set.
+  (`D3DFOG_EXP`) **only if** the caps dword `[0x00888A78]` has bit `0x100` set;
+  when that bit is clear it writes `FOGTABLEMODE = 0` and `FOGVERTEXMODE`
+  (`0x8C`) `= 1` instead (`0x00514077`, `0x00514096`).
   That is the same slot the tracked
   [fog render-state contract](d3d-fog-render-state-static-contract-2026-07-25.md)
   describes, now with its gate.
@@ -210,18 +222,17 @@ state.
 `0x004EB30E`: `SetRenderState(0x89 D3DRS_LIGHTING, 1)`.
 
 **Unconditional within this function**, and the claim is structural rather than
-visual. Bounded to `[0x004EB1E0, 0x004EB99D)`, only four conditional branches
-exist before `0x004EB30E`:
+visual. Bounded to `[0x004EB1E0, 0x004EB99D)`, only two conditional branches,
+and one unconditional jump, exist before `0x004EB30E`:
 
 | Branch | At | Targets | Does it bypass `0x004EB30E`? |
 | --- | --- | --- | --- |
 | `[0x00854E6C]` test | `0x004EB1F7` | `0x004EB205` | No — skips only the `0x00513CA0` call |
 | `[0x0089D680]` fog select | `0x004EB2D4` | `0x004EB2DA` | No — both arms converge at `0x004EB2DC` |
-| fog select join | `0x004EB2D8` | `0x004EB2DC` | No |
-| — | — | — | — |
+| fog select join (unconditional `jmp`) | `0x004EB2D8` | `0x004EB2DC` | No |
 
 The only branch that skips a large span is the point-size test at `0x004EB427`,
-which jumps to `0x004EB511` — **291 bytes after** the lighting write. No control
+which jumps to `0x004EB511` — **515 bytes after** the lighting write. No control
 path through this function reaches `0x004EB99C` without executing `0x004EB30E`.
 
 ## 7. Answers 3 and 4 — material sources and stage 0
@@ -286,11 +297,12 @@ of all four PE sections for `FF /2` with `disp32 == 0x000000E4` finds
 tenth, `0x004FFBC9`, is a call on an unrelated interface held at `[esi+8]` whose
 result is compared against `1`.
 
-**(b) What those 9 sites can carry.** Seven are fixed-state: `0x00513C0C`
-(`0x16` only, the cull-swap arm), `0x00513DBD` and `0x00513DF5` (`0x18`),
-`0x00514058`, `0x00514077`, `0x005140B5` (`0x23`), `0x00514096` and `0x005140D4`
-(`0x8C`). None can express `0x8D`. The remaining two are the general setters
-`0x00513BC0` and `0x00513C20`.
+**(b) What those 9 sites can carry.** Seven are fixed-state: `0x00513DBD` and
+`0x00513DF5` (`0x18`), `0x00514058`, `0x00514077`, `0x005140B5` (`0x23`),
+`0x00514096` and `0x005140D4` (`0x8C`). None can express `0x8D`. The remaining
+two are the device calls of the general setters: `0x00513C0C` in `0x00513BC0`
+(it pushes the caller's state, swapping cull values 2 and 3 for state `0x16`
+when `[0x0089D680]` is set) and `0x00513C63` in `0x00513C20`.
 
 **(c) Every general-setter call site, resolved.** All **490** call sites
 (440 + 50) were located by an exhaustive `E8`/`E9` relative-target scan of all
@@ -346,7 +358,7 @@ references — so the function is not virtual and is not dispatched indirectly.
 | `0x0047065E` | `CGame__DrawDebugStuff` |
 | `0x0053E22B` | `CDXEngine__PreRender` |
 | `0x0053E4D0` | `CDXEngine__Render` |
-| `0x0053F25F` | `CDXFMV__VFunc_06_0053F180` |
+| `0x0053F25F` | `CDXFMV__VFunc_11_0053F190` (`0x0053F180` is a separate 10-byte thunk) |
 | `0x00540F78` | `CDXFrontEnd__RenderStart` |
 
 The 547 figure is arithmetically identifiable and is **wrong in composition**.
@@ -414,6 +426,14 @@ completely different number.
 
 **`D3DRS_FOGENABLE` here is conditional**, on `[0x0089D680]` — the same flag that
 inverts cull winding. The default block does not fix fog on.
+
+**The frontend title logo.** `CDXFrontEnd__RenderStart` calls this block at
+`0x00540F78`, but that does not fix the state when the logo is drawn.
+`CFEPMain__Render` sets `D3DRS_ZFUNC` (`0x17`) to 8 at `0x004642B9` and to 4 at
+`0x0046431E` between its draws, and the draw path (`0x005563D0` →
+`0x00555BE0`) has callees that were not scanned. `ALPHAREF 8` also holds only
+while `OLD_SCHOOL_ALPHA_REF` is 0. Cheapest falsifier: read the shadows
+`0x00855540 + 0x19·4`, `0x008555A0` and `0x008557F0 + 4` at the logo draw.
 
 **Which committed decisions have a capture behind them, and which do not:**
 

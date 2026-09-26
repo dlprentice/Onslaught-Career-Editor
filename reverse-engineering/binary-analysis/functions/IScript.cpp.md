@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-26 (RE audit: stop-flag writers, follower gates and arrival rounding; Pause runtime summary restored)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -103,15 +103,15 @@ these instruction findings do not establish a new runtime or rebuild result.
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x005385e0` | `IScript__HandleMessage` | `56 57 8bf9 8b4c240c 0fbf4104 2dd0070000 0f84a2000000 48 7448 48 0f859f000000 …` | `ret 4`; one arg = message struct at `[esp+0xc]`. **Signed** word dispatch `movsx eax, word [msg+4]; sub eax,0x7d0`: `0x7d0` (2000) → waypoint arm, `0x7d1` (2001) → **CVM wait-resume**, `0x7d2` (2002) → timer arm, anything else returns. HIGH on the dispatch shape; the arms are byte-mapped below. |
-| `0x00538470` | `CScriptEventNB__UpdateWaypointFollowing` *(owner review)* | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Strict arrival check: `sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2) < radius`; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CDebugLog__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
+| `0x00538470` | `CScriptEventNB__UpdateWaypointFollowing` *(owner review)* | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Arrival check: `float32(sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2)) < radius`, or an unordered compare; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CDebugLog__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
 
-| `0x00535cd0` | `IScript__Die` | `8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
-| `0x00537c70` | `IScript__Pause` | `8b442404 538bd9 568b08 8b11 ff5234 d95c240c 68a8070000 6840fa6400 6a18 6828020000 … c20c00` | `ret 0xc`. `args[0]->vtable[+0x34]()` (float), snapshot a 0x228 `CVM`, `AddEvent_AtTime(2001, this, mTime+delay, data=CVM)`, then `[0x0089c800]=1`. HIGH. |
+| `0x00535cd0` | `IScript__Die` | `51 8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff 59 c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
+| `0x00537c70` | `IScript__Pause` | `8b442404 538bd9 568b08 8b11 ff5234 d95c240c 68a8070000 6840fa6400 6a18 6828020000 … c20c00` | `ret 0xc`. `args[0]->vtable[+0x34]()` (float), snapshot a 0x228 `CVM`, then `[0x0089c800]=1` (`0x00537d55`), then `AddEvent_AtTime(2001, this, mTime+delay, data=CVM)` (`0x00537d5f`). HIGH. |
 | `0x005351d0` | `IScript__PlayAnimationWait` | `538bd9 56578b4310 8b7030 8b4074 85c0 7404 3bc3 7412 6864fb6400 … 897338 c20c00` | `ret 0xc`. Plays via `CMesh__FindAnimationIndexByName` + thing `vtable[+0xf0]`; snapshots a `CVM` into `[this+0x38]`; sets the stop flag. Resume is `IScript__RestoreSavedStateAndGotoInstruction`. HIGH. |
 | `0x005375f0` | `IScript__PlayCharMessageWait` | `6aff 6849735d00 64a1 … 68d1070000 … c7442440cdcc4c3d e8c36afaff … c20c00` | `ret 0xc`. Registry 36. Snapshot + `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f, this, CVM)` + `CMessage__ctor_base` / `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`. HIGH on the snapshot and event id. |
 | `0x005378e0` | `IScript__PlayPCharMessageWait` | `6aff 68a9735d00 64a1 … 68d1070000 … c7442420cdcc4c3d e8c767faff … c20c00` | `ret 0xc`. Registry 91. Same CVM + 2001 `Set` shape as `PlayCharMessageWait`, then a seven-arg `CMessage` with the extra script dword. HIGH on the snapshot and event id. |
 | `0x00537e40` | `IScript__FollowWaypointWait` | `538bd9 55bd01000000 8b4318 56 3bc5 57 0f8464010000 … 68d0070000 … c20c00` | `ret 0xc`. Early-out if `[this+0x18]==1`. Same `0x00505c30(name, thing+0x1c)` lookup; miss prints `FATAL ERROR: Cant find waypoint path '%s'` (`0x0064fe00`). If `[this+0x10] != [this+8]` prints `FATAL ERROR:  Cant Follow waypoint way for other object` (`0x0064fdc8`) and returns. Else copies waypoint `+0x1c` and calls thing `vtable[+0xf4]`; snapshot; `[this+0x1c]=1`, `[this+0x20]=CVM`, `[this+0x18]=1`; `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. |
-| `0x00537d70` | `IScript__FollowWaypoint` | `53 55 8b6c240c 56 8bf1 57 8b4d00 8b01 ff5038 8b4e10 8bd8 83c11c 51 53 e89fdefcff 8bf8 83c408 85ff 751a 53 68a8fd6400 … 8b4d04 8b11 ff5230 6a00 8d571c 83ec10 8b4e10 894624 … ff90f4000000 8b4610 8b4e08 3bc1 753c 8b4e18 … c7461c00000000 … 68d0070000 … c20c00` | `ret 0xc`; zero direct `E8` (native 0). `args[0]->vtable[+0x38]()` is the path name; `0x00505c30(name, thing+0x1c)` looks up the waypoint; miss prints `Cant find waypoint path '%s'` (`0x0064fda8`) and returns. `args[1]->vtable[+0x30]()` is stored at `[this+0x24]` with **no** later branch. Copies waypoint `+0x1c` (4 floats) onto the stack and calls thing `vtable[+0xf4]`. `[this+0x14]=waypoint`, `[this+0x1c]=0`. If `[this+0x18]!=1`, sets it and `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. Descriptor `0x0064ce20+0x04=2` (arity); no arg-name strings. |
+| `0x00537d70` | `IScript__FollowWaypoint` | `53 55 8b6c240c 56 8bf1 57 8b4d00 8b01 ff5038 8b4e10 8bd8 83c11c 51 53 e89fdefcff 8bf8 83c408 85ff 751a 53 68a8fd6400 … 8b4d04 8b11 ff5230 6a00 8d571c 83ec10 8b4e10 894624 … ff90f4000000 8b4610 8b4e08 3bc1 753c 8b4e18 … c7461c00000000 … 68d0070000 … c20c00` | `ret 0xc`; zero direct `E8` (native 0). `args[0]->vtable[+0x38]()` is the path name; `0x00505c30(name, thing+0x1c)` looks up the waypoint; miss prints `Cant find waypoint path '%s'` (`0x0064fda8`) and returns. `args[1]->vtable[+0x30]()` is stored at `[this+0x24]` with **no** later branch. Copies waypoint `+0x1c` (4 floats) onto the stack and calls thing `vtable[+0xf4]` (`0x00537de4`). Only when `[this+0x10]==[this+8]` (`0x00537dea-0x00537df2`): `[this+0x14]=waypoint`, `[this+0x1c]=0`, and if `[this+0x18]!=1`, sets it and `AddEvent_AtTime(2000, this, NEXT_FRAME)`. Otherwise it returns silently after the move order, printing nothing (unlike `FollowWaypointWait`). The constructor sets `+0x10 = +8`, so the gate passes by default. HIGH. Descriptor `0x0064ce20+0x04=2` (arity); no arg-name strings. |
 | `0x00505c30` | `NamedEntryList_T3_00505c30` | `a1c04f8500 56 85c0 57 a3c84f8500 7404 8b30 … e838270600 83c408 85c0 7422 … c744240c7f96184b 894610 … d9411c d822 d94120 d86204 d94124 d86208 … c3` | cdecl `(char* name, float* pos)`. Bare `ret`. Walks the `CSPtrSet` at `0x00854fc0` (cursor `0x00854fc8`) whose payloads are `CWaypointPath` (vptr store `0x005dfc8c`, COLOC `0x006172d0` → TypeDescriptor `0x0063d220` = `.?AVCWaypointPath@@`). Name test is CRT `stricmp` (`0x00568390`) of `[path+4]` vs `name`. Hit: walk the embedded `CSPtrSet` at `path+8` (cursor `path+0x10`) and keep the child with the smallest `(Δx²+Δy²+Δz²)` of `[child+0x1c]` vs `pos`; seed `9999999.0f` (`0x4b18967f`). Empty/miss returns 0. Two `E8`: `0x00537d8c`, `0x00537e6b`. HIGH. Table name stays the demoted placeholder — class `NamedEntryList` is absent. |
 | `0x0047e2d0` | `CGuide__VFunc04_SetVectorMode1_0047e2d0` | `8b442414 85c0 750f 8b4118 8b903c010000 837a2002 7425 8b442404 … c7411c01000000 83c108 … c21400` | Slot 4 (`+0x10`) of `CGuide` `0x005dbdc4` (COLOC `0x006141a8` → `.?AVCGuide@@`). `ret 0x14`. If the BOOL is 0 and `[[owner+0x13c]+0x20]==2`, return without store. Else `[this+0x1c]=1` and copy the 4-dword vector to `[this+8]`. Zero direct `E8`. Same slot-4 dword on `CAirGuide` `0x005d8594`, `CMechGuide` `0x005dc4f4`, `CThunderheadGuide` `0x005df8d4`. HIGH. |
 | `0x0047d750` | `CGroundVehicleGuide__VFunc03_UpdateGuidanceState_0047d750` | `81eca4000000 53 55 56 8bf1 57 8b4e18 f6412c04 7413 … e81ae90300 bd02000000 8b462c 85c0 0f840a050000 … 8a5c0aff 8d541b01 … d9f3` | Slot 3 of `CGroundVehicleGuide` `0x005dbd90` (COLOC `0x00614170` → `.?AVCGroundVehicleGuide@@`); slot 4 is still `0x0047e2d0`. Zero `E8`. Early-out if owner `mFlags` bit2 (`TF_DYING`). Dest `guide+8` minus `owner+0x1c` via `0x00401ec0`; zero `owner+0x14c`; 2D `d² < 0.5f` (`0x005d85ec`) or mode `0` or `0x004fde10(owner)` (`[unit+0x244]∈{3,4,5}`) → near exit `0x0047e183`. Mode-1 arm (`cmp [+0x1c],1`): skip if `[owner+0x13c]+0x20==2`; if `d² > 1.0f` (`0x005d8568`) and `[guide+0x20]` live, rebuild unless dest ints still match `guide+0x24/+0x28` within 1. Rebuild is `0x004bc2e0(grid=[+0x20], dest, owner-pos, 1, out=&guide+0x24)`. After the call: if `[guide+0x2c]==0` join `0x0047dee0`; else walk the path **from the end** — world `(2·byte+1, 2·byte+1)` from `[guide+0x34][n-1]` / `[guide+0x3c][n-1]` (`n=[guide+0x30]`); while 2D `d² < 0.5f` decrement `n` and pop; empty → head at dest `guide+8`; then `fpatan`. HIGH on the walk. After `fpatan` (and on the no-path join `0x0047dee0`): `[owner+0x120]=desired` from `[esp+0x18]`; current yaw is `[owner+0x114]` saved at `[esp+0x50]` in the prologue (`fpatan` of dest−owner, `fchs`). Unwrap via `2π` (`0x005d85e0`) / `±π/2`; `|Δ|≤0.6` (`0x005dbdb8` qword) near-exits `0x0047e183`. `|Δ|>0.6` at `0x0047df6a`: `ebp` is 2 (`mov ebp,2` restored `0x0047dedb`); skip occupancy if `[owner+0x13c]+0x20==2`. Else bit-test owner cell on `[guide+0x20]`; if occupied, probe one unit along `fchs`/`fsin`/`fcos` of current yaw and near-exit if the probe cell is clear. `mode==3` near-exits. Else `call [owner.vtable+0x1bc]` (`CUnit` slot 111 `0x004fe5c0`, zero `E8`) then `fmul 0.05f` (`0x005d8584`) then `fmul 4.0` (`0x005d85bc`) if mode 1 else `fmul -4.0` (`0x005d9290`). Local vector is `(0, scaled, 0)`; left-multiply `mOrientation` (`owner+0x3c`) into `owner+0x14c`. Authored `+0x114`/`+0x120`/`+0x14c` names open. |
@@ -173,6 +173,30 @@ older "destroyed-object notification" gloss is withdrawn: Pause and both
 Thing-event 2001 (`INIT_SCRIPT` on `CComplexThing`) is a different
 receiver.
 
+**Pause runtime observation.** Restored on 2026-09-26 from the version removed
+on 2026-08-17 (commit `61a839c5`); both query results survive in the lab.
+- Level 100 contains 35 authored `Pause` calls across 10 `.msl` files.
+  `TargetZone1.msl`'s `Pause(0.5)` separates setting the zone reached from
+  unsetting it and posting the firing-range event.
+- A copied-runtime TTD trace of the capture-target executable (`e1436ef7…`,
+  which differs from the pristine specimen only at file offsets
+  `0x12a644-0x12a647`) observed one call at `0x00537c70`. The trace file
+  itself (`play-level100.run`, SHA-256
+  `03599CEA7459810F601174A6713EBF17CF12DFE88D593D7F87FD5B94C564E40E`) was on a
+  retired Windows drive.
+  - Count query: symbolic and numeric `TTD.Calls` both returned 1; the
+    positive control `CWorldPhysicsManager__CreateThingByType` returned 33/33.
+    Result `local-lab/pause-native-count-v1/result.json`, SHA-256
+    `9b642820d73ea40bea8ccb9808d0b1efb33f57b898857300010dd30cbf4bb7f2`.
+  - State query on the same trace: at entry `0x0089c800` was 0 and the
+    `IScript+0x28` continuation set was empty; at return the flag was 1 and
+    the set held the one new continuation. The return address was inside
+    `CInstructionOP_CALL::ExecuteCall`. Result
+    `local-lab/pause-native-effect-v1/result.json`, SHA-256
+    `72d18adf013bc82ab1c6365ab621ad118ed2c18125e04eb788df2bfd01710c77`.
+- Neither query decoded the float argument or the scheduled due time; those
+  rest on the pristine body and the authored `Pause(0.5)`.
+
 **2002** (`0x00538601`): guard `mov eax,[0x0089c7f0]; test eax,eax;
 jne return`; `cmp [0x008a9ac0],4`: `==4` → `mov ecx,0x0089c5e0;
 call 0x539980` (`CScriptObjectCode__Reset`); else → `mov eax,[edi+0xc];
@@ -206,7 +230,9 @@ command) which writes `[this+0x14]`, **zeroes** `[this+0x1c]`, and
 schedules the same `AddEvent_AtTime(2000, this, NEXT_FRAME, …)` loop.
 `FollowWaypointWait` writes `[this+0x1c]=1` and stores the CVM at
 `[this+0x20]`. End-of-chain (`[this+0x14]` advanced to null at
-`0x0053850b`): `[this+0x18]=0`, then `cmp [this+0x1c],0` — zero fires
+`0x0053850b`): `[this+0x18]=0` (`0x0053850e`), then the thing's slot 64
+(`call [edx+0x100]` on `[this+8]`, `0x00538513`; `Stop()` by the declaration
+order in `thing.h:293-296`), then `cmp [this+0x1c],0` (`0x00538519`) — zero fires
 `CreateThingRef` / arrived(); nonzero runs the same CopyState / Remove
 `+0x28` / delete / `GotoInstruction` sequence as HandleMessage 2001,
 using `[this+0x20]` as the payload. Ready for a future
@@ -241,13 +267,20 @@ Level 100 motion classes:
 | `CPlane` | `0x005e1930` | `0x005e1aa8` | `0x0050e8e0` | `d9 05 d8 85 5d 00 c3` | `[0x005d85d8]` = `0x40a00000` = `5.0f` |
 | `CDropship` | `0x005e1dd8` | `0x005e1f50` | `0x0050ead0` | `d9 05 44 8c 5d 00 c3` | `[0x005d8c44]` = `0x41000000` = `8.0f` |
 
-The x87 `fcomp` / C0 branch at `0x005384c7..0x005384d6` enters the arrival
-arm only when distance is **strictly less** than the selected value; equality
+The distance is rounded to float32 first (`fstp dword [esp+0x10]`,
+`0x005384a0`). The x87 `fcomp` / C0 branch at `0x005384c7..0x005384d6` enters
+the arrival arm when that float32 distance is **strictly less** than the
+selected value, or when the compare is unordered (a NaN sets C0); equality
 reschedules event 2000. Neither height, speed, bounds, waypoint data, nor the
 second `FollowWaypoint` argument enters the predicate. At the rebuild's exact
 1 game unit = 1,000 mm conversion, the released radii are therefore 2,000 mm
 for `Target Tank` / `Target Truck`, 5,000 mm for `Air Trainer` / `Target
-Drone`, and 8,000 mm for `U-17 Highside Transporter`.
+Drone`, and 8,000 mm for `U-17 Highside Transporter`. The class of each of
+these profiles is established in
+[Level 100 construction order](../../game-mechanics/level100-construction-order.md#level-world-units)
+(placed rows) and
+[warm-up units](../../game-mechanics/level100-construction-order.md#warm-up-units)
+(spawned trucks and drones).
 
 #### Released console closure — exact 2026-08-28
 
@@ -354,7 +387,18 @@ Then `CSPtrSet__AddToTail` (`0x004e5b20`) on `IScript+0x28`, and
 `mov dword [0x0089c800], 1` — singleton `+0x220` — so `Run` exits
 after the current instruction. A whole-image immediate census of
 `0x0089c800` finds **exactly ten** hits, all inside these five
-functions (one copy + one store-1 each). No other writer. A sixth
+functions (one copy + one store-1 each). Those are the only absolute-address
+writes, but `CScriptObjectCode__Run` (`0x00539b00`) also writes the flag
+through `esi` = the singleton:
+- it clears it on every entry (`mov [esi+0x220],ebp` with `ebp` = 0,
+  `0x00539b47`);
+- it reads it before each instruction (`0x00539b74`) and leaves the loop when
+  it is set (`jne 0x00539c08`);
+- its 10,000-instruction guard logs and sets it to 1 (`0x00539bf9`);
+- on exit, a flag of 1 zeroes `+0x20c` and skips the stack-balance check
+  (`0x00539c08-0x00539c2c`).
+`CopyState` restores it from a snapshot (`mov [esi+0x220],ecx`,
+`0x00539948`). A sixth
 image store of vptr `0x005e4f1c` is
 `CScriptObjectCode__InitRuntime` (`0x005398d0`): it installs the
 CVM vtable on the **singleton** and zeroes `+4` / `+8` / `+0x20c` /
@@ -377,9 +421,10 @@ Per-native after the shared ctor:
 to 1; end-of-chain clears it). `+0x1c` is the wait-resume latch.
 
 Thirteen `.text` `push 0x7d1` sites exist. The three IScript wait
-schedulers are `0x0053771a`, `0x00537a16`, `0x00537d4c`.
-`0x004f42be` is thing `INIT_SCRIPT` (different receiver).
-`0x00590913` / `0x00590ab2` are the shader parser (`push 0x7d1` +
+schedulers' `push 0x7d1` instructions start at `0x00537719`, `0x00537a15`
+and `0x00537d4b`.
+`0x004f42bd` is thing `INIT_SCRIPT` (different receiver).
+`0x00590912` / `0x00590ab1` are the shader parser (`push 0x7d1` +
 string, `call 0x0058c893`) — not events.
 
 ## Waypoint path lookup and thing slot 61 (byte-exact 2026-08-18)
@@ -405,6 +450,12 @@ Thing `vtable[+0xf4]` is slot **61**. Independently read:
 | `0x005df998` | `CUnit` | `0x004fce00` |
 | `0x005dd788` | `CRadar` | `0x004fce00` |
 | `0x005e1490` | `CSubmarine` | `0x004fce00` |
+| `0x005e1930` | `CPlane` | `0x00403a90` |
+| `0x005e1dd8` | `CDropship` | `0x00403a90` |
+
+The aircraft slot `0x00403a90` adjusts the target height, then calls guide
+slot 4 (`0x00403b48`). Level 100's drones, Air Trainer and U-17 take that
+path, not `0x004fce00`.
 
 `CUnit__ForwardField208Slot10_004fce00`: if `[this+0x208]` live, copy the
 four-dword vector + the BOOL and `call [guide->vtable+0x10]`. Independently
@@ -548,8 +599,8 @@ into the mark-head; undo reverses that step into the 500-cap check.
   `CScriptEventNB__RegisterEventListener` therefore take a `CStringDataType`
   key.
 - The dispatch globals `0x008a9ac0` and `0x0089c7f0`: CLOSED.
-  `0x008a9ac0` is the `EGameState` dword (`references/Onslaught/game.h:42-54`).
-  `DAT_008a9a98+0x28`. IScript's `cmp …,4` is `GAME_STATE_LEVEL_LOST`. Sibling writers match the
+  `0x008a9ac0` is the `EGameState` dword (`references/Onslaught/game.h:42-54`),
+  the game object `0x008a9a98` + `0x28`. IScript's `cmp …,4` is `GAME_STATE_LEVEL_LOST`. Sibling writers match the
   rest of the enum: `con_win` stores `5` (`GAME_STATE_LEVEL_WON`), and
   `SetQuit`-shaped sites (`FUN_00429ab0`, `CGame__HandleEvent`,
   `CEngine__MarkDeviceResetPending`, `con_map`) store `9`
@@ -589,15 +640,19 @@ into the mark-head; undo reverses that step into the 500-cap check.
 - **arrived (id 1).** CLOSED as a fire site, empty as a shipped body.
   Only `E8` to `IScript__CreateThingRef` (`0x005335d0`) is `0x00538583`
   in the end-of-waypoint-chain arm of `UpdateWaypointFollowing` (next
-  waypoint null and `[this+0x1c]==0`). It boxes `[this+0x24]` as a
-  `CInt` (`vptr 0x005e4af8`) and `CallEvent(id=1, argc=1)`.
+  waypoint null and `[this+0x1c]==0`). It returns at once when the VM is
+  already running (`[0x0089c7f0]≠0`) or the game state is 4
+  (`0x005335d0-0x005335e3`). Otherwise it boxes `[this+0x24]` as a
+  `CInt` (`vptr 0x005e4af8`) and `CallEvent(id=1, argc=1)`. The saved name
+  `IScript__CreateThingRef` does not describe this body.
   `FollowWaypoint` (`0x00537d70`, native 0, `ret 0xc`) is the writer:
   `mov [esi+0x24],eax` at `0x00537dc7` after
   `args[1]->vtable[+0x30]()`. For `CInt` that slot is
   `SharedVFunc__ReturnField04_0052f540` (`mov eax,[ecx+4]; ret`).
   19 shipped `CALL` native-0 sites: the second PUSH is always type-1
-  (`CInt`), value **0** in 13 and **1** in 6. The only other `+0x24`
-  access in `0x00533000..0x00539000` is the read at `0x0053857d` that
+  (`CInt`), value **0** in 13 and **1** in 6. The other `+0x24`
+  accesses in `0x00533000..0x00539000` are the constructor's zeroing store
+  (`mov [esi+0x24],edi`, `0x00533403`) and the read at `0x0053857d` that
   boxes arrived(). FollowWaypoint itself does not branch on the flag.
   Flag=1 loose-`.msl` sites (independently re-listed 2026-08-18):
   `level600/Ship.msl` `FollowWaypoint("Interception", 1)`,

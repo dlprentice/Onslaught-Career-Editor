@@ -1,8 +1,13 @@
 # DXTrees.cpp - Function Mappings
 
+Status: active static function map
+Last updated: 2026-09-26 (RE audit: HideTree, the vertex format, Init/Reset, the allocation and the level loop)
+Summary: the fast tree batch: two card buffers built from the map, how a destroyed tree is hidden, and the fast/close selection facts the rebuild uses.
+Evidence: MEASURED — pristine instructions; the fast/close selection section is the rebuild-cited part.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Source File: `C:\dev\ONSLAUGHT2\DXTrees.cpp` (allocator file string `0x006529b0`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+
 > DirectX-specific tree rendering system for environmental vegetation
-> Source: `[maintainer-local-source-export-root]\DXTrees.cpp` (debug path at 0x006529b0)
-> Last updated: 2026-07-22
 
 ## Overview
 
@@ -42,7 +47,8 @@ note:
 - Default/world rendering enables alpha test with reference `8` and
   greater-or-equal comparison. The close mesh pass uses anisotropic stage-zero
   minification, linear mip filtering, max anisotropy `4`, and `-1` mip bias.
-  The fast batch uses point min/mag, no mip filtering, and alpha reference `8`.
+  The fast batch uses point min/mag and alpha reference `8`; its mip filter
+  setting is not established here.
   The observed `0x008554FC = 1` chooses its unlit white-factor `MODULATE2X`
   branch before active Level 100 fog.
 
@@ -148,11 +154,12 @@ CDXTrees::~CDXTrees() {
 ### CDXTrees__Init (0x0055a390)
 **Initialize**
 
-Initializes member variables, sets buffer pointers to NULL.
+Registers itself with the shader render list and sets both buffer pointers
+to NULL.
 
 ```cpp
 void CDXTrees::Init() {
-    BaseClass::Init();  // 0x00512ca0
+    CShaderBase__Init(/*ECX=*/0x00855bb0, this);  // 0x00512ca0, 0x0055a393-0x0055a399
     m_pTreeBuffer1 = NULL;  // this+0x08
     m_pTreeBuffer2 = NULL;  // this+0x0C
 }
@@ -186,12 +193,13 @@ int CDXTrees::ReleaseBuffers() {
 ### CDXTrees__Reset (0x0055a400)
 **Reset**
 
-Calls virtual method then releases buffers.
+Releases the buffers through its own virtual slot `+0x10`, then unlinks
+itself from the render list.
 
 ```cpp
 void CDXTrees::Reset() {
-    // Call virtual method at vtable+0x10
-    CShaderBase__UnlinkFromRenderObjectLists(this);  // 0x00512cc0, Wave561
+    this->vtable[+0x10]();                                         // ReleaseBuffers
+    CShaderBase__UnlinkFromRenderObjectLists(/*ECX=*/0x00855bb0, this);  // 0x00512cc0
 }
 ```
 
@@ -208,8 +216,9 @@ Iterates through the world quadtree to find all tree objects and builds vertex/i
 
 **Algorithm:**
 1. Release existing buffers if present
-2. Allocate two new CVBufTexture objects (size 0x68 bytes each)
-3. Configure vertex format: 0x152 (position + texture coords), 0x24 bytes per vertex
+2. Allocate two new CVBufTexture objects through `CDXMemoryManager__Alloc`
+   (size 0x68, memory type 0x1f, `DXTrees.cpp` lines 94 and 106)
+3. Configure vertex format: FVF 0x152 (XYZ | NORMAL | DIFFUSE | TEX1), 0x24 bytes per vertex
 4. Configure index format: 0x65, 2 bytes per index
 5. Iterate through quadtree levels (4 down to 0)
 6. For each cell, query CMapWho for tree objects (flag 0x2000000)
@@ -239,9 +248,10 @@ void CDXTrees::BuildTreeGeometry() {
     m_pTreeBuffer2 = new CVBufTexture();
     // ... same setup
 
-    // Iterate quadtree levels
+    // Iterate quadtree levels: level runs 4 -> 0 while the shift runs 0 -> 4
+    // (0x0055a55e, 0x0055a9d1-0x0055a9e2)
     for (int level = 4; level >= 0; level--) {
-        int gridSize = 64 / (1 << level);
+        int gridSize = 64 >> (4 - level);  // 64 at level 4, 4 at level 0
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
                 // Query mapwho for trees
@@ -310,37 +320,33 @@ void CDXTrees::Render() {
 ### CDXTrees__HideTree (0x0055ae40)
 **Hide Tree**
 
-Hides a specific tree by zeroing out its vertex positions in both buffers.
-
-**Parameters:**
-- `param_1`: Pointer to tree object (contains vertex index at offset 0x30)
+Hides one tree's cards in both buffers. Its only caller is
+`CRTTree__Destructor` (`0x004de001`), which passes its own `this`: the argument
+is the `CRTTree`, whose `+0x30` word is the tree's card index (written at
+`0x0055a82a`, or `0xffff` at `0x0055a98c`).
 
 **Algorithm:**
-1. Check if tree has valid vertex index (>= 0)
-2. Lock vertex buffer range for tree's 4 vertices
-3. Zero out position components for all 4 vertices
-4. Unlock buffer
-5. Repeat for second buffer
+1. Return if the index is negative or either buffer is missing.
+2. Standing buffer: lock the tree's four 0x24-byte vertices and zero dwords 3-5
+   of each (`+0x0c`, `+0x30`, `+0x54`, `+0x78`). Standing vertices hold the tree
+   centre in dwords 0-2 and the corner offset in dwords 3-5, the FVF normal slot
+   (`0x0055a686-0x0055a6d7`), so each card collapses onto its centre.
+3. Horizontal buffer: zero dwords 0-2 of each vertex (`+0x00`, `+0x24`, `+0x48`,
+   `+0x6c`; `0x0055af26-0x0055af72`), which are the real corner positions there.
+4. Unlock each buffer.
 
 ```cpp
-void CDXTrees::HideTree(CTree* tree) {
-    short vertexIndex = tree->m_nVertexIndex;  // offset 0x30
-    if (vertexIndex < 0) return;
-    if (m_pTreeBuffer1 == NULL || m_pTreeBuffer2 == NULL) return;
-
-    // Hide in buffer 1
-    void* vertices;
-    if (m_pTreeBuffer1->LockRange(vertexIndex * 0x24, 0x90, &vertices, 0) >= 0) {
-        // Zero positions for 4 vertices (offsets 3,4,5 / 12,13,14 / 21,22,23 / 30,31,32)
-        memset(vertices + 0x0C, 0, 12);  // vertex 0 position
-        memset(vertices + 0x30, 0, 12);  // vertex 1 position
-        memset(vertices + 0x54, 0, 12);  // vertex 2 position
-        memset(vertices + 0x78, 0, 12);  // vertex 3 position
-        m_pTreeBuffer1->Unlock();
+void CDXTrees::HideTree(CRTTree* tree) {
+    short index = tree->word30;                     // +0x30
+    if (index < 0 || !m_pTreeBuffer1 || !m_pTreeBuffer2) return;
+    if (standing->Lock(index * 36 * 4 ...) >= 0) {  // four vertices
+        zero dwords 3..5 of vertices 0..3;          // corner offsets
+        standing->Unlock();
     }
-
-    // Hide in buffer 2
-    // ... same pattern
+    if (horizontal->Lock(...) >= 0) {
+        zero dwords 0..2 of vertices 0..3;          // corner positions
+        horizontal->Unlock();
+    }
 }
 ```
 
@@ -391,4 +397,4 @@ note for the individual falling-tree path.
 
 3. **Dynamic Hiding**: Trees can be hidden at runtime (when destroyed) by zeroing their vertex positions, avoiding the need to rebuild the entire buffer.
 
-4. **OID Allocation**: Both CVBufTexture objects are allocated via OID__AllocObject with type 0x1f and size 0x68 bytes.
+4. **Allocation**: Both CVBufTexture objects are allocated through `CDXMemoryManager__Alloc` (size 0x68, memory type 0x1f, `DXTrees.cpp` lines 94 and 106).

@@ -298,6 +298,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "cli-initializer-ownership",
         "audio-sample-loading",
         "audio-sample-parameters",
+        "label-audit-20260926",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

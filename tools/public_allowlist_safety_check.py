@@ -198,7 +198,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # same exact-content requirement and all other payload/secret checks retained.
 # Sample loading/parameters: four comments each (3,673/4,227 decoded bytes),
 # reviewed as authored analysis; the same exact-content boundary applies.
+# RE-audit labels: ten current and ten proposed comments (4,708/6,733 decoded
+# bytes), reviewed as authored analysis; the same exact-content boundary applies.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/label-audit-20260926.manifest.tsv":
+        "fcb3d147351b5fc3696c03e302529c7809d75f88e2bf3ddc1e80d018d616c40f",
     "tools/cohort-specs/audio-sample-loading.manifest.tsv":
         "18a636d7b1c654a7b680d4ea7505e737e3438b81955de5f9979e7d21ff545d0b",
     "tools/cohort-specs/audio-sample-parameters.manifest.tsv":

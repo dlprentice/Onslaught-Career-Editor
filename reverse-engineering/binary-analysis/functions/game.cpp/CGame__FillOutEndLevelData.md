@@ -1,11 +1,12 @@
 # CGame__FillOutEndLevelData
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-26 (RE audit: instruction counts and starts, the type-37 evidence, the second exit, and the goodie claim withdrawn)
 Summary: FillOut's score-time arm is live on L100: last LoadWorld
 stores RLWD `300.0f` / `500.0f` so `(pct − full)=200>0`. Base-things
 `Size` is 35 (At() membership, including two type-37 `CSafeSide`).
-Training still unlocks goodies 0/8/78/121/164. Kill readout is
+Which goodies a win unlocks is decided in `CCareer::UpdateGoodieStates`
+(`0x0041c470`), not in this body, and is not re-derived here. Kill readout is
 ctor-zero plus ConfirmedKill increments, not an authored L100
 constant.
 Source File: `references/Onslaught/game.cpp:910` | Binary: BEA.exe, SHA-256
@@ -21,10 +22,15 @@ already-identified `CGame` / `END_LEVEL_DATA` slots.
 
 ## Contract
 
-Zero-arg `thiscall`. `ECX` → `EBP`. Bare `ret` at `0x0046d807`. Body
+Zero-arg `thiscall`. `ECX` → `EBP`. Bare `ret` at `0x0046d807`; a second exit
+(`add esp,0x110; ret`, `0x0046d7e3`/`0x0046d7e9`) follows the clamp that raises
+`[0x00672e20]` to 0.4 when `0x004496e0` on `END_LEVEL_DATA` returns true and the
+value is below 0.4 (`0x0046d7b8-0x0046d7d9`). Body
 `0x0046d470`–`0x0046d807` is 920 bytes, SHA-256
 `2cd8ee2693c5b5064e085d8893eadee34039eeadfa5e00d12fe7f4b6a54f8fd2`.
-`CGame` singleton `this` is `0x008a9a98` (149 image `mov ecx, 0x008a9a98`;
+`CGame` singleton `this` is `0x008a9a98` (146 image `mov ecx, 0x008a9a98`,
+`b9 98 9a 8a 00`; 149 counting every operand reference, including three
+indexed loads;
 `IScript__AddScore` `0x005343cb` is `add [0x008a9b8c], eax` =
 `this+0xf4`). `END_LEVEL_DATA` is `0x006728f8`.
 
@@ -50,9 +56,11 @@ primary; this body does not itself walk the career graph.
 L100 BSWD payload (AYA `100_res_PC.aya` WRES/WRLD/BSWD, inflated SHA-256
 `115ede05…2df4`, tag at inflated `3595001`, payload `3595009`) is
 `uint16` version 50 then, at payload `+60`, `int32 1` / `int32 0` /
-`uint16 35`. Type 37 is created (`0x004bf745` `push 0x45` /
-`push 0x00630c20`) and names `.?AVCSafeSide` at `0x00630b48` /
-`CSafeSide` at `0x00630c98`. Do not drop those two slots. Do not adopt
+`uint16 35`. Type 37 is created by `OID__CreateObject`'s case `0x004bf745`
+(jump table `0x004bf92c` indexed by type − 2, `0x004bf0a9-0x004bf0b7`), which
+installs the vtable `0x005dccdc` (`.?AVCSafeSide@@` by RTTI) at `0x004bf77a`.
+Its first pushes, `0x45` and `0x00630c20`, are the allocator's line (69) and
+file (`C:\dev\ONSLAUGHT2\oids.cpp`), not the type. Do not drop those two slots. Do not adopt
 materializer 33.
 
 First-play script does not kill a list member. FillOut therefore stores
@@ -84,7 +92,7 @@ iceberg scripts cannot post `Broke Tutorial`. L100
 | `0x00672e44` | 32 dwords from `this+0x308` (`cmp eax, 0x80`) |
 
 If `[this+0x2a4]` (player 0) is live: copy **five** dwords from
-`player+8` to `0x00672e30` (`0x0046d60f`). Else store five zeros.
+`player+8` to `0x00672e30` (store `0x0046d60d`). Else store five zeros.
 `CPlayer__ctor` `0x004d2780` writes those five dwords to 0
 (`89 46 08` … `89 46 18` at `0x004d27de`–`0x004d27eb`, EAX=0).
 The only image incrementer is `0x004d30d0` (table name

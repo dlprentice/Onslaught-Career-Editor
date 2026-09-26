@@ -1,5 +1,11 @@
 # Goodies save and unlock contract
 
+Status: active save contract
+Last updated: 2026-09-26 (RE audit: the wall never shows 71-73)
+Summary: the 300 Goodie states in the career block, which indices the wall shows, and how unlocks are decided.
+Evidence: MEASURED — pristine instructions and the tracked gold save; SOURCE — `Career.cpp`, `FEPGoodies.cpp`.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 This document owns the public format boundary and the evidence needed to interpret the product. Exact unlock descriptions are implemented once in [`GoodieUnlockRequirementService.cs`](../../OnslaughtCareerEditor.AppCore/GoodieUnlockRequirementService.cs), backed by the pinned source references [`Career.cpp`](../../references/Onslaught/Career.cpp) and [`FEPGoodies.cpp`](../../references/Onslaught/FEPGoodies.cpp).
 
 ## Save layout
@@ -8,7 +14,7 @@ This document owns the public format boundary and the evidence needed to interpr
 
 ```text
 offset(index) = 0x1F46 + index * 4
-displayable indices = 0..232
+stored indices = 0..232 (the wall shows 0..70 and 74..232)
 reserved indices = 233..299
 storage end = 0x23F6 (exclusive)
 ```
@@ -69,7 +75,7 @@ The checked PC install contains 232 matching Goodie archives for 233 displayable
 
 Every parsed archive's embedded Goodie index matched its filename index. Save index `232` is the only displayable slot without a matching `goodie_232_res_PC.aya` in that corpus.
 
-Goodies `71..73` have source data-table entries, unlock/instruction hooks, and shipped texture-only archives (`ca_be_final01`, `ca_be_final02`, and `ca_bea_battle_pic`). A controlled copied-profile observation of ordinary top-row navigation returned `66, 67, 68, 69, 70, 74`, not `71..73`. The WinUI catalog may preview those shipped artwork resources, but hidden or indirect in-game wall reachability remains unproven.
+Goodies `71..73` have source data-table entries, unlock/instruction hooks, and shipped texture-only archives (`ca_be_final01`, `ca_be_final02`, and `ca_bea_battle_pic`). The wall can never show them. The retail wall mapper `get_goodie_number` (`0x0045cb80`) is identical to `FEPGoodies.cpp:393-437`: row 0 gives 0-7, 66-70 (`add eax,0x3a`) and 74-77; row 1 gives 8-65; row 2 gives 201-232; row 3 gives 78-200. No cell produces 71-73, which matches the copied-profile observation of top-row navigation (`66, 67, 68, 69, 70, 74`). `UpdateGoodieStates` can still mark them new, so they can be earned but never viewed. The WinUI catalog may preview those shipped artwork resources.
 
 ## Bounded retail consumption
 

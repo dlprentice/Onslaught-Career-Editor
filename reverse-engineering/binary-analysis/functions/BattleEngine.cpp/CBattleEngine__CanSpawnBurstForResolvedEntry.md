@@ -1,7 +1,7 @@
 # CBattleEngine__CanSpawnBurstForResolvedEntry
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-26 (renamed CBattleEngine__WeaponFired in the working project by the RE audit; BattleEngine.cpp:2713-2729)
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -88,4 +88,4 @@ PE envelope).
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0040c2e0` | `CBattleEngine__CanSpawnBurstForResolvedEntry` | `56 8bf1 e85c5d0000 … e8b87d0000 … c20400` (87 B) | incoming-ECX thiscall; ret-4 ×3; 87 B; 2 E8 / 0 E9 / 2 targets; 1 inbound CALL. HIGH on ABI, jet-then-walker part dispatch, unique inbound. Mapping `PARTIAL_CONTRACT`. **Not** on table-name recovery or rebuild parity. |
+| `0x0040c2e0` | `CBattleEngine__WeaponFired` | `56 8bf1 e85c5d0000 … e8b87d0000 … c20400` (87 B) | incoming-ECX thiscall; ret-4 ×3; 87 B; 2 E8 / 0 E9 / 2 targets; 1 inbound CALL. HIGH on ABI, jet-then-walker part dispatch, unique inbound. Mapping `PARTIAL_CONTRACT`. **Not** on table-name recovery or rebuild parity. |

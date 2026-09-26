@@ -1,7 +1,7 @@
 # World 110 construction order, transition and first frames
 
 Status: active static contract for the rebuild's World 110
-Last updated: 2026-09-26 (lander routes linked)
+Last updated: 2026-09-26 (lander routes linked; lander cargo counts and the turret's weapon corrected)
 Summary: how a Level 100 win leads to World 110, the order in which World 110's
 construction consumes the shared gameplay stream and queues events, what the first
 flush delivers and draws, and when the player gains control.
@@ -191,14 +191,15 @@ The static first targets and 4002 draws:
 - **Airborne start.** All four start above the ground, so each takes the airborne
   branch: state `+0x27c` = 0 and `SetAnimMode(wingflat)`.
 - **Spawners.** Inside `CUnit::Init` the Landing Craft first copies its two attached
-  spawners, with no events or draws: SpawnerA holds five Light Gun Tanks and SpawnerB
-  two Muspell Grunts. The Empty craft has none.
+  spawners, with no events or draws: SpawnerA releases 5 squads of 5 Light Gun Tanks and
+  SpawnerB 2 squads of 10 Muspell Grunts once the craft has landed
+  ([dropship landing](dropship-landing.md#unloading)). The Empty craft has none.
 - **Turret child.** The child ("Dropship Gun Turret", a `CComponent`, Init
   `0x00427b80`) is built after the parent's Actor draw: Col; A(1); U; An; AI. The
   four children are built in row order 8, 12, 13, 20.
-- **No fire control.** The turret child runs none: its turn rate writes profile
-  `+0xb8`, not `+0xbc`. The landers set a turret turn rate but carry no weapon, so
-  there is nothing to inspect.
+- **No fire control.** The turret child carries a Hive Machine Gun, but its turn rate
+  writes profile `+0xb8`, not `+0xbc`, so its fire control never starts. The landers
+  themselves set a turret turn rate but carry no weapon.
 
 ### Fighters, spawner and trigger
 
