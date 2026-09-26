@@ -21,9 +21,9 @@ namespace OnslaughtRebuild.Client.Tests;
 /// belief was itself wrong, and these tests exist so it cannot be re-formed:
 /// the older sites were already drawing <c>2 * Radius</c>, they simply spelled
 /// it as a pre-doubled literal (<c>3f</c> for a <c>Radius 1.5</c> record) with
-/// nothing tying it back to the shipped file. There is now one convention,
-/// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>, and each
-/// production scene quad is checked against its authored record.</para>
+/// nothing tying it back to the shipped file. There is now one owner,
+/// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>, and every call
+/// site passes the authored number.</para>
 /// </summary>
 public sealed class ParticleQuadSizeConventionTests
 {
@@ -122,37 +122,74 @@ public sealed class ParticleQuadSizeConventionTests
     }
 
     /// <summary>
-    /// Every billboard the world view instantiates has the quad size derived
-    /// from the <c>Radius</c> its named shipped record actually carries.
+    /// Every billboard the world view builds takes an authored radius through
+    /// the one owner, and each of those radii is the <c>Radius</c> the named
+    /// shipped record actually carries.
     ///
-    /// <para>This makes the convention uniform across the production effect
-    /// scenes. It fails if a layer's literal is pre-doubled again, its size
-    /// differs from the named record, or a scene gains an unregistered mesh.
+    /// <para>This is what makes the convention uniform rather than a claim about
+    /// one sprite. It fails if a literal is pre-doubled again, if a size is
+    /// invented, or if a new sprite is added whose number is not in the file.
     /// </para>
     /// </summary>
     [Fact]
     public void EveryEffectSpriteSizeIsAnAuthoredRadiusFromTheShippedSet()
     {
+        // The shipped record each construction site draws, established by
+        // matching Radius, Final_Radius, Life, End_Frame, Random_Start_Frame and
+        // Texture_Size against the animation each site already reproduces.
+        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["BlueAnimatedBlob"] = "Blue Anim Blob Large Sprite",
+            ["FlashMedium"] = "Flash Medium",
+            ["VulcanImpactSpark"] = "Spark Anim Sprite",
+            ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
+            ["ExplosionFireball"] = "Fire Sprite Damped 2",
+            ["DroneFlash"] = "Flash",
+            ["DroneFireball"] = "Fire Sprite Damped 2",
+            ["TargetTankFlash"] = "Flash",
+            ["FacilityFlash"] = "Flash Building",
+            ["FacilityFireball"] = "Fire Sprite Damped Long",
+            ["FacilitySmoke"] = "Smoke Sprite Anim Large Building",
+            ["PulseCannonMuzzleFlash"] = "Pulse Cannon Muzzle Flash",
+        };
+
         string source = ReadGodotSource("FirstFlightWorldView.cs");
         Assert.Matches(
             @"case\s+Level100DestructionEffectKind\.DroneDestroyed:\s*" +
             @"SpawnTargetDroneDestruction\(position,\s*item\.ActorId\);\s*break;",
             source);
         Assert.Matches(
-            @"SpawnDestructionScene\(\s*TargetDroneDestructionScenePath,\s*\$""TargetDroneDestruction\{droneId\}"",\s*position\)",
+            @"(?s)private void SpawnTargetDroneDestruction\(Vector3 position, int droneId\).*?" +
+            @"CreateTimedEffect\(\s*\$""TargetDroneDestruction\{droneId\}"",\s*position,\s*1\.5d\).*?" +
+            @"CreateEffectSprite\(\s*""DroneFlash"",\s*_effectFlashMediumTexture,\s*5f\).*?" +
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.25d\);.*?" +
+            @"CreateEffectSprite\(\s*""DroneFireball"",\s*_targetTankExplosionFireballTexture,\s*1f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"AnimateLoopingFireball\(root,\s*fireball,\s*lifeTurns:\s*30\);.*?" +
+            @"AnimateScale\(fireball,\s*1f,\s*0\.5f,\s*1\.5d\);",
             source);
         Assert.Matches(
             @"case\s+Level100DestructionEffectKind\.FacilityDestroyed:\s*" +
             @"SpawnFacilityDestruction\(position,\s*item\.ActorId\);\s*break;",
             source);
         Assert.Matches(
-            @"SpawnDestructionScene\(\s*FacilityDestructionScenePath,\s*\$""FacilityDestruction\{facilityId\}"",\s*position\)",
+            @"(?s)private void SpawnFacilityDestruction\(Vector3 position, int facilityId\).*?" +
+            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*15d\).*?" +
+            @"CreateEffectSprite\(\s*""FacilityFlash"",\s*_effectFlashMediumTexture,\s*3f\).*?" +
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.3d\);.*?" +
+            @"CreateEffectSprite\(\s*""FacilityFireball"",\s*_targetTankExplosionFireballTexture,\s*0\.5f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"AnimateFacilityFireball\(root,\s*fireball\);.*?" +
+            @"AnimateScale\(fireball,\s*1f,\s*4f,\s*3d\);.*?" +
+            @"CreateEffectSprite\(\s*""FacilitySmoke"",\s*_pulseImpactAnimatedTexture,\s*3f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"BlendMode\s*=\s*BaseMaterial3D\.BlendModeEnum\.Mix;.*?" +
+            @"AnimateFacilitySmoke\(root,\s*smoke\);.*?" +
+            @"AnimateScale\(smoke,\s*1f,\s*2f / 3f,\s*15d\);",
             source);
 
-        // The final two runtime-created quads moved into PulseImpact.tscn.
-        // All production billboard sizes below now come from their actual
-        // linked scene meshes, not from an obsolete C# construction pattern.
-        Assert.DoesNotContain("CreateEffectSprite(", source, StringComparison.Ordinal);
+        // The owner is used, and the raw multiplication is not re-inlined.
+        Assert.Contains(
+            "ParticleEffectResolver.BillboardQuadSide(authoredRadius)",
+            source,
+            StringComparison.Ordinal);
 
         ParticleSetFile set = ParticleSetFile.Parse(File.ReadAllBytes(Locate(MainSetRelativePath)));
         ParticleDescriptor droneFlash = set.Require("Flash");
@@ -210,45 +247,70 @@ public sealed class ParticleQuadSizeConventionTests
         Assert.Equal(0.5f, facilitySmoke.Float("Anim_Speed"));
         Assert.Equal(1, facilitySmoke.Int("Random_Start_Frame"));
 
-        // Animation and lifetime wiring are constrained in ParticleSetTests
-        // against the native production controller. Here resolve each actual
-        // scene node's mesh, so another layer's correct size cannot hide an
-        // incorrect quad in a multi-layer destruction scene.
-        var layers = new[]
-        {
-            ("PulseMuzzleFlash.tscn", "PulseCannonMuzzleFlash", "Pulse Cannon Muzzle Flash"),
-            ("PulseImpact.tscn", "BlueAnimatedBlob", "Blue Anim Blob Large Sprite"),
-            ("PulseImpact.tscn", "FlashMedium", "Flash Medium"),
-            ("VulcanImpact.tscn", "VulcanImpactSpark", "Spark Anim Sprite"),
-            ("TargetTankDestruction.tscn", "TargetTankFlash", "Flash"),
-            ("TargetTankDestruction.tscn", "ExplosionAnimatedSprite", "Explosion Anim Sprite Medium"),
-            ("TargetTankDestruction.tscn", "ExplosionFireball", "Fire Sprite Damped 2"),
-            ("TargetDroneDestruction.tscn", "DroneFlash", "Flash"),
-            ("TargetDroneDestruction.tscn", "DroneFireball", "Fire Sprite Damped 2"),
-            ("FacilityDestruction.tscn", "FacilityFlash", "Flash Building"),
-            ("FacilityDestruction.tscn", "FacilityFireball", "Fire Sprite Damped Long"),
-            ("FacilityDestruction.tscn", "FacilitySmoke", "Smoke Sprite Anim Large Building"),
-        };
-        foreach (var group in layers.GroupBy(layer => layer.Item1))
-        {
-            string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/" + group.Key));
-            string[] expectedNodes = group.Select(layer => layer.Item2)
-                .Concat(group.Key == "PulseImpact.tscn" ? new[] { "PulseBlastSphere" } : [])
-                .Order(StringComparer.Ordinal).ToArray();
-            string[] actualNodes = SceneBlocks(scene, "node")
-                .Where(block => Attribute(block, "type") == "MeshInstance3D")
-                .Select(block => Attribute(block, "name")).Order(StringComparer.Ordinal).ToArray();
-            Assert.Equal(expectedNodes, actualNodes);
-        }
+        Assert.Contains(
+            "AnimateLoopingFireball(root, sprite, lifeTurns: 60);",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains("const int startCell = 0;", source, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 11;", source, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.5d;", source, StringComparison.Ordinal);
+        Assert.Contains("GD.Randi() % (uint)cellCount", source, StringComparison.Ordinal);
+        Assert.Contains("lifeTurns * cellsPerTurn", source, StringComparison.Ordinal);
+        Assert.Contains("step <= frameAdvances", source, StringComparison.Ordinal);
+        Assert.Contains("% cellCount", source, StringComparison.Ordinal);
+        Assert.Contains(
+            "1d / (cellsPerTurn * SimulationConstants.TicksPerSecond)",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenInterval(cellIntervalSeconds);",
+            source,
+            StringComparison.Ordinal);
+        string smokeAnimation = source[
+            source.IndexOf("private static void AnimateFacilitySmoke(", StringComparison.Ordinal)..
+            source.IndexOf("private static void AnimateScale(", StringComparison.Ordinal)];
+        Assert.Contains("const int startCell = 0;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 14;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const int lifeTurns = 300;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.5d;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("GD.Randi() % (uint)cellCount", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("step <= frameAdvances", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("% cellCount", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains(
+            "cellsPerTurn * SimulationConstants.TicksPerSecond",
+            smokeAnimation,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenInterval(cellIntervalSeconds);",
+            smokeAnimation,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenCallback(Callable.From(() => sprite.Visible = false));",
+            source,
+            StringComparison.Ordinal);
 
-        foreach ((string file, string node, string descriptor) in layers)
+        MatchCollection sites = Regex.Matches(
+            source,
+            @"CreateEffectSprite\(\s*""(?<name>[A-Za-z0-9]+)"",\s*\S+,\s*(?<radius>[0-9]*\.?[0-9]+)f",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(5));
+
+        Assert.Equal(expected.Count, sites.Count);
+
+        foreach (Match site in sites)
         {
-            string scene = File.ReadAllText(Locate("rebuild/OnslaughtRebuild.Godot/Scenes/World/" + file));
-            (float width, float height) = LinkedQuadSize(scene, node);
-            float radius = set.Require(descriptor).FloatWithModifier("Radius").Value;
-            float side = ParticleEffectResolver.BillboardQuadSide(radius);
-            Assert.Equal(side, width);
-            Assert.Equal(side, height);
+            string name = site.Groups["name"].Value;
+            float coded = float.Parse(
+                site.Groups["radius"].Value,
+                System.Globalization.CultureInfo.InvariantCulture);
+
+            Assert.True(
+                expected.TryGetValue(name, out string? descriptorName),
+                $"Effect sprite '{name}' has no recorded shipped descriptor. Identify the " +
+                "record it draws before giving it a size.");
+
+            (float authored, _) = set.Require(descriptorName!).FloatWithModifier("Radius");
+            Assert.Equal(authored, coded);
         }
     }
 
@@ -263,31 +325,6 @@ public sealed class ParticleQuadSizeConventionTests
         Assert.Equal(3f, ParticleEffectResolver.BillboardQuadSide(1.5f));
         Assert.Equal(0f, ParticleEffectResolver.BillboardQuadSide(0f));
     }
-
-    private static (float Width, float Height) LinkedQuadSize(string scene, string nodeName)
-    {
-        Match node = Assert.Single(SceneBlocks(scene, "node"), block =>
-            Attribute(block, "name") == nodeName && Attribute(block, "type") == "MeshInstance3D");
-        Match mesh = Assert.Single(Regex.Matches(node.Groups["body"].Value,
-            "(?m)^mesh = SubResource\\(\"(?<id>[^\"]+)\"\\)\\r?$",
-            RegexOptions.None, TimeSpan.FromSeconds(5)).Cast<Match>());
-        Match resource = Assert.Single(SceneBlocks(scene, "sub_resource"), block =>
-            Attribute(block, "id") == mesh.Groups["id"].Value);
-        Assert.Equal("QuadMesh", Attribute(resource, "type"));
-        Match size = Assert.Single(Regex.Matches(resource.Groups["body"].Value,
-            @"(?m)^size = Vector2\((?<x>[-+0-9.eE]+),\s*(?<y>[-+0-9.eE]+)\)\r?$",
-            RegexOptions.None, TimeSpan.FromSeconds(5)).Cast<Match>());
-        return (float.Parse(size.Groups["x"].Value, System.Globalization.CultureInfo.InvariantCulture),
-            float.Parse(size.Groups["y"].Value, System.Globalization.CultureInfo.InvariantCulture));
-    }
-
-    private static IEnumerable<Match> SceneBlocks(string scene, string kind) => Regex.Matches(scene,
-        @"(?ms)^\[" + Regex.Escape(kind) + @"\s+(?<header>[^\]\r\n]+)\]\r?\n(?<body>.*?)(?=^\[|\z)",
-        RegexOptions.None, TimeSpan.FromSeconds(5)).Cast<Match>();
-
-    private static string Attribute(Match block, string name) => Assert.Single(Regex.Matches(
-        block.Groups["header"].Value, "(?:^|\\s)" + Regex.Escape(name) + "=\"(?<value>[^\"]*)\"",
-        RegexOptions.None, TimeSpan.FromSeconds(5)).Cast<Match>()).Groups["value"].Value;
 
     private static ParticleSpriteLayer ResolveSingleLayer(string effectName)
     {

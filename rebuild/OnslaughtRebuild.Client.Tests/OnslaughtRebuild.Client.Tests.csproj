@@ -35,7 +35,7 @@
              Link="godot-hud-source\Level100MessagePlaybackState.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100MessageSchedule.cs"
              Link="godot-hud-source\Level100MessageSchedule.cs" />
-    <Compile Include="..\OnslaughtRebuild.Godot\Scenes\World\Tests\Level100TerrainCompositor.cs"
+    <Compile Include="..\OnslaughtRebuild.Godot\Level100TerrainCompositor.cs"
              Link="godot-terrain-source\Level100TerrainCompositor.cs" />
     <!-- The deterministic half of the cold-start media lane. Both files are
          deliberately free of Godot types so the sequence can be tested without
@@ -49,7 +49,7 @@
     <Compile Include="..\OnslaughtRebuild.Godot\RetailCareerLoadAdapter.cs"
              Link="godot-startup-source\RetailCareerLoadAdapter.cs" />
     <!-- CFEPIntro this+0x18 clock. Godot-free so the click-to-start prompt
-         blink can be pinned without an engine; the native Click page is the consumer. -->
+         blink can be pinned without an engine; DrawClickToStart is the consumer. -->
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartPrompt.cs"
              Link="godot-startup-source\RetailClickToStartPrompt.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartTitle.cs"
@@ -166,7 +166,7 @@
              Link="godot-startup-source\RetailLevelSelectLaterFadd20.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectLaterFsub20.cs"
              Link="godot-startup-source\RetailLevelSelectLaterFsub20.cs" />
-    <Compile Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\RetailFrontendCursor.cs"
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
              Link="godot-startup-source\RetailFeMessBox.cs" />
@@ -189,50 +189,38 @@
     <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world-animation.json"
              Link="Assets\Level100\StaticWorld\level100-static-world-animation.json"
              CopyToOutputDirectory="Always" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Hud\FirstFlightHud.tscn"
-             Link="godot-hud-layout-source\FirstFlightHud.tscn"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Hud\*.gd"
-             Link="godot-hud-layout-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightHud.cs"
              Link="godot-hud-layout-source\FirstFlightHud.cs"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightGame.cs"
              Link="godot-pause-source\FirstFlightGame.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_flow.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_pages.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Frontend.tscn"
-             Link="godot-frontend-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.cs"
              Link="godot-pause-source\RetailFrontendFlow.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\mouse_cursor*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MouseCursor.tscn"
-             Link="godot-pause-source\%(Filename)%(Extension)"
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Cursor.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Cursor.cs"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\RetailStartupSequence.cs"
              Link="godot-pause-source\RetailStartupSequence.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\startup_sequence.gd"
-             Link="godot-pause-source\startup_sequence.gd"
+    <!-- FEP_OPTIONS lives in a partial. RetailFrontendPageFillEvidenceTests has
+         to see its page renderer too, because the "the frontend is showing the
+         raw D3D clear colour" reading of #147 named the options root by name. -->
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Options.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Options.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Startup.tscn"
-             Link="godot-pause-source\Startup.tscn"
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Cutscene.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Cutscene.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\options_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_atlas_font.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_underlay.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Options.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Frontend.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Frontend*.tres;..\OnslaughtRebuild.Godot\Client\options_*.gd"
-             Link="godot-options-source\%(Filename)%(Extension)"
+    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Pause\PauseMenu.tscn"
+             Link="godot-pause-source\PauseMenu.tscn"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Pause\pause_menu.gd"
-             Link="godot-pause-source\pause_menu.gd"
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
+             Link="godot-pause-source\FirstFlightPauseMenu.cs"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100Audio.cs"
              Link="godot-pause-source\Level100Audio.cs"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Audio\*.gd;..\OnslaughtRebuild.Godot\Scenes\Audio\*.tscn"
-             Link="godot-audio-layout-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Client\music_policy.gd"
-             Link="godot-audio-layout-source\music_policy.gd"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\tools\materialize_retail_assets.py"
              Link="godot-pause-source\materialize_retail_assets.py"
@@ -240,44 +228,14 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100WaterAsset.cs"
              Link="godot-water-source\Level100WaterAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\World\Water.tscn;..\OnslaughtRebuild.Godot\Scenes\World\water.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_mesh.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_recipe.gd;..\OnslaughtRebuild.Godot\Scenes\World\water_grid.gdshader;..\OnslaughtRebuild.Godot\Scenes\World\water_shoreline.gdshader;..\OnslaughtRebuild.Godot\Scenes\World\water_sun_glint.gdshader"
-             Link="godot-water-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\debriefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\Debriefing.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\DebriefingReference.cs"
-             Link="godot-debriefing-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Loading*.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\LoadingReference.cs"
-             Link="godot-loading-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\click_presentation.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\click_preview.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickToStart.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSplash.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickSlide.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\ClickTitle.tres;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_image.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\ClickReference.cs;..\OnslaughtRebuild.Godot\Client\click_to_start_laws.gd"
-             Link="godot-click-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Client\main_menu_laws.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MainMenu.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\main_menu_reflection.gdshader;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_atlas_font.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_bitmap_label.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\frontend_underlay.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\loading_strings.gd"
-             Link="godot-main-menu-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\quit_confirm_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\QuitConfirm.tscn"
-             Link="godot-quit-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\career_name_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\CareerName.tscn"
-             Link="godot-career-name-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\briefing_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\MissionBriefing.tscn"
-             Link="godot-briefing-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\Frontend\level_select_*.gd;..\OnslaughtRebuild.Godot\Scenes\Frontend\LevelSelect.tscn;..\OnslaughtRebuild.Godot\Scenes\Frontend\Tests\LevelSelectReference.cs"
-             Link="godot-level-select-source\%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\OnslaughtRebuild.Godot\Scenes\World\sun*.gd;..\OnslaughtRebuild.Godot\Scenes\World\SunSprite.tscn"
-             Link="godot-sun-source\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <!-- ParticleQuadSizeConventionTests reads the effect construction sites to
          check every sprite size is an authored Radius taken through the one
          owner. It cannot instantiate the Godot type, so it asserts on source. -->
-    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightWorldView.cs;..\OnslaughtRebuild.Godot\FirstFlightWorldView.Presentation.cs;..\OnslaughtRebuild.Godot\Scenes\World\world_presentation.gd"
-             Link="godot-effects-source\%(Filename)%(Extension)"
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightWorldView.cs"
+             Link="godot-effects-source\FirstFlightWorldView.cs"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

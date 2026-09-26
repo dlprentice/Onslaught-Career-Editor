@@ -77,17 +77,28 @@ public sealed class RetailMainMenuTitleLogoShadowTests
     [Fact]
     public void DrawMainMenuKeepsShadowTintAndDoesNotInventAScale()
     {
-        NativeMainMenuSource.HasNoPresentationSideEffects();
-        NativeMainMenuSource.HasBounds("TitleLogo/Body", 64f, 2f, 576f, 258f);
-        NativeMainMenuSource.HasBounds("TitleLogo/ShadowMotion/Shadow", 51.2f, -4.4f, 588.8f, 264.4f);
-        NativeMainMenuSource.HasColor("TitleLogo/ShadowMotion/Shadow", 0x3e000000u);
-        Assert.Equal(new[] { 0xafu / 255f, 0xcfu / 255f, 1f, 0xfeu / 255f },
-            NativeMainMenuSource.Vector(NativeMainMenuSource.Node("TitleLogo/Body"), "ink_color", "Color"));
-        Assert.Contains("get_node(\"TitleLogo/ShadowMotion\").position = offset", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("get_node(\"TitleLogo/Body\").set_fade(1.0)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("get_node(\"TitleLogo/ShadowMotion/Shadow\").set_fade(1.0)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("ClickTitle.tres", NativeMainMenuSource.Scene, StringComparison.Ordinal);
-        NativeMainMenuSource.HasMeasuredReflectionOnly();
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string draw = Slice(flow, "private void DrawMainMenu()");
+
+        Assert.Contains("ShadowTint", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RetailMainMenuTitleLogoShadow.SubmittedColor",
+            draw,
+            StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuTitleLogoZ.DestX", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuTitleLogoZ.DestY", draw, StringComparison.Ordinal);
+        Assert.Contains("TitleLogoTint", draw, StringComparison.Ordinal);
+        Assert.Contains("1f,", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
+        Assert.Contains("0x3e000000", flow, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Slice(string source, string signature)

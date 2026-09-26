@@ -218,17 +218,62 @@ public sealed class RetailFrontendLatchToButtonTests
     [Fact]
     public void HandleOptionsPointerCancelConsumesLatchSetAndDoesNotPileIntoMotionOrClick()
     {
-        string cancel = NativeOptionsSource.Function("options_controller.gd", "pointer_cancel");
-        Assert.Contains("Laws.cancel_applies(false, right_down)", cancel, StringComparison.Ordinal);
-        Assert.Contains("_menu.cancel_expanded()", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("hover_state", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("select_state", cancel, StringComparison.Ordinal);
-        Assert.DoesNotContain("cancel_applies", NativeOptionsSource.Function("options_controller.gd", "pointer_motion"), StringComparison.Ordinal);
-        Assert.DoesNotContain("cancel_applies", NativeOptionsSource.Function("options_controller.gd", "pointer_confirm"), StringComparison.Ordinal);
-        Assert.DoesNotContain("cancel_applies", NativeOptionsSource.Read("options_row.gd"), StringComparison.Ordinal);
-        string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.DoesNotContain("RetailFrontendLatchToButton", NativeFrontendSource.RootFunction("handle_pointer_confirm"), StringComparison.Ordinal);
-        Assert.DoesNotContain("RetailFrontendLatchToButton", NativeFrontendSource.RootFunction("handle_key"), StringComparison.Ordinal);
+        string options = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.Options.cs"));
+        string draw = Slice(options, "private void DrawOptionRow");
+        string centered = Slice(options, "private void DrawOptionTextCentered");
+        string labelValue = Slice(options, "private void DrawLabelValueRow");
+        string valueBar = Slice(options, "private void DrawValueBarRow");
+        string dropdown = Slice(options, "private void DrawOptionDropdown");
+        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
+        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
+        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+
+        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", motion, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", dropdown, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", valueBar, StringComparison.Ordinal);
+        Assert.DoesNotContain("HoverState", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("0x00463669", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("15.5", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("148f", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("268f", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("284f", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("304f", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("322.5", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+
+        string flow = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.cs"));
+        string main = Slice(flow, "private void DrawMainMenu()");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", main, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", main, StringComparison.Ordinal);
+        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", quit, StringComparison.Ordinal);
+        string loading = Slice(flow, "private void DrawLoading(");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", loading, StringComparison.Ordinal);
+        string click = Slice(flow, "private void DrawClickToStart()");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", click, StringComparison.Ordinal);
+        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", pointerConfirm, StringComparison.Ordinal);
+        string handleKey = Slice(flow, "private bool HandleKey(");
+        Assert.DoesNotContain("RetailFrontendLatchToButton", handleKey, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-23 (native frontend owner; existing evidence and licensing boundaries retained).
+Last updated: 2026-09-08 (raw contact geometry and segmented explosion evidence; earlier claims retain their dated evidence).
 The 2026-08-31 update added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
@@ -21,17 +21,6 @@ Summary: the licence boundary, permitted evidence, and authority order for the
 reconstruction. It is not a clean-room lane. The root MIT license does not
 relicense this subtree or the pinned `references/Onslaught` source.
 
-The native Aquila conversion retains the three exact specimen pins, observed
-standing poses and per-profile material operations in
-`OnslaughtRebuild.Godot/Client/aquila_mesh.gd`. The original detailed cockpit
-measurements and their overlay-contamination closure remain in
-`Scenes/Aquila/Tests/LegacyRetailAquilaReference.cs`; production tests inspect
-the native operation choices and forbid fitted per-part paths there. The
-walker/jet COLOROP remains unmeasured and unchanged at MODULATE2X; the cockpit
-retains the measured MODULATE. Converting parser, materials and poses supplies
-no new retail observation and does not broaden the camera evidence. Converted
-geometry and texture payloads remain private and ignored.
-
 ## Permitted evidence and inputs
 
 - Stuart Gillam's pinned GPL source may be read, ported, and adapted with its
@@ -49,16 +38,6 @@ Do not import the retail executable, retail asset payloads or conversions,
 decompiler output, user saves, raw runtime captures, or separately licensed
 third-party code/media into this subtree.
 Never describe synthetic or source-only behavior as observed Steam behavior.
-
-The original GDScript forwarding adapters may load separately licensed
-implementations from `tools/godot_compat/` outside this subtree. The invariant
-number formatter and Arm cosine adaptation retain their own MIT notices and
-exact upstream source pins there; their licences are not replaced by this
-subtree's GPL notice. The cosine adapter reproduces the measured Linux host's
-`MathF.Cos` implementation for the language conversion. It does not establish
-a new retail trigonometry contract. The import fingerprint includes the actual
-selected dependency sources. Declared packaged-resource paths are future routing
-seams, not evidence that an export/package has been built and verified.
 
 ## Authority
 
@@ -168,10 +147,9 @@ state, the bounded Godot level-selector page, the mission-briefing and
 select-configuration pages, the released loading image, the
 released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
-Level 100 session/world. The production `Screen` enum in
-`rebuild/OnslaughtRebuild.Godot/Client/frontend_session.gd` owns that list; its
-retained C# comparison is `OnslaughtRebuild.Client/RetailFrontendSession.cs`.
-Re-read those definitions rather than quoting this sentence. `--skipfmv`, smoke,
+Level 100 session/world. The `RetailFrontendScreen` enum in
+`rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
+that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
 and capture modes suppress the reconstructed video sequences. The materializer
 decodes track 0 for the single-track logo/montage and the English Level 100 intro
 beside their lossless video frames. Native Linux intro playback produced audio;

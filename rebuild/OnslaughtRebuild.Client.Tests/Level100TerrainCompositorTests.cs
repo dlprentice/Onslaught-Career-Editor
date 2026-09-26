@@ -76,9 +76,7 @@ public sealed class Level100TerrainCompositorTests
     public void TerrainShaderPinsTheRetailDetailRotationAndCloudScrollConstants()
     {
         string shaderSource = ReadSourceText(
-            "rebuild/OnslaughtRebuild.Godot/Scenes/World/terrain.gdshader");
-        string appearanceSource = ReadSourceText(
-            "rebuild/OnslaughtRebuild.Godot/Scenes/World/terrain_appearance.gd");
+            "rebuild/OnslaughtRebuild.Godot/Level100TerrainAppearanceAsset.cs");
 
         // .rdata 0x005d858c = 0.25 (stage-3 scale) and 0x005d87e0 = 0.0
         // (stage-3 rotation angle). The image has no .reloc section, so both are
@@ -99,9 +97,9 @@ public sealed class Level100TerrainCompositorTests
         // (0.07% apart), with v exactly u/2. Wall time is the stable
         // parameterisation: the per-DRAW rate varies 3.1% over the same
         // intervals because terrain draws many tiles per frame.
-        Assert.Contains("CLOUD_SCROLL_RATE_U: float = 0.02", appearanceSource);
-        Assert.Contains("CLOUD_SCROLL_RATE_V: float = 0.01", appearanceSource);
-        Assert.DoesNotContain("CLOUD_SCROLL_RATE_U: float = 0.001", appearanceSource);
+        Assert.Contains("CloudScrollRateU = 0.02d;", shaderSource);
+        Assert.Contains("CloudScrollRateV = 0.01d;", shaderSource);
+        Assert.DoesNotContain("CloudScrollRateU = 0.001d", shaderSource);
 
         // ORIGIN GUARD. Retail advances 0x008c0294/0x008c0298 at the head of
         // CDXLandscape__RenderTerrain and never resets them, so the phase is
@@ -116,13 +114,15 @@ public sealed class Level100TerrainCompositorTests
         // CODE referencing TIME, not on the prose explaining why it must not.
         string shaderBody = string.Join(
             '\n',
-            shaderSource
+            shaderSource[
+                shaderSource.IndexOf("TerrainShaderCode", StringComparison.Ordinal)..
+                shaderSource.IndexOf("\"\"\";", StringComparison.Ordinal)]
                 .Split('\n')
                 .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
         Assert.DoesNotContain("TIME", shaderBody);
         Assert.Contains("uniform vec2 terrain_cloud_scroll;", shaderSource);
-        Assert.Contains("_cloud_scroll_u = _fract(_cloud_scroll_u + (frame_delta * CLOUD_SCROLL_RATE_U))", appearanceSource);
-        Assert.Contains("_cloud_scroll_v = _fract(_cloud_scroll_v + (frame_delta * CLOUD_SCROLL_RATE_V))", appearanceSource);
+        Assert.Contains("_cloudScrollU = Fract(_cloudScrollU + (frameDelta * CloudScrollRateU));", shaderSource);
+        Assert.Contains("_cloudScrollV = Fract(_cloudScrollV + (frameDelta * CloudScrollRateV));", shaderSource);
 
         // Stage 2's texture matrix at 0x00545943 sets _11 = _22 = 0x3b800000 =
         // 1/256 and its translation row from the two scroll accumulators, so

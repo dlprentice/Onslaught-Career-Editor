@@ -104,11 +104,17 @@ public sealed class RetailClickToStartOverlayTests
 
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string body = NativeClickSource.Presentation;
+        int start = flow.IndexOf("private void DrawClickToStart()", StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        string body = flow[start..];
+        int next = body.IndexOf("\n    private ", 1, StringComparison.Ordinal);
+        if (next >= 0)
+        {
+            body = body[..next];
+        }
 
-        Assert.Contains("Laws.sixth_visible(seconds)", body);
+        Assert.Contains("RetailClickToStartTitle.ShouldDrawSixth", body);
         Assert.DoesNotContain("BackdropScale", body);
-        Assert.DoesNotContain("backdrop_scale", body);
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);
         Assert.DoesNotContain("fe_infogrames", body);

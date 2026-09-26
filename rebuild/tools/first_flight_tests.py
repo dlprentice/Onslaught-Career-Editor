@@ -12,7 +12,7 @@ import sys
 import tempfile
 import time
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest import mock
 
@@ -64,11 +64,8 @@ class LauncherTests(unittest.TestCase):
             "'args': sys.argv[1:], 'tmp': os.environ['TMPDIR'], "
             "'data': os.environ['XDG_DATA_HOME'], 'cache': os.environ['XDG_CACHE_HOME'], "
             "'config': os.environ['XDG_CONFIG_HOME'], "
-            "'terrain_probe': os.environ.get('ONSLAUGHT_TERRAIN_PROBE'), "
             "'unrelated': os.environ['FAKE_UNRELATED']}) + '\\n')\n"
             "if pathlib.Path(sys.argv[0]).name == 'godot48-mono':\n"
-            "    if os.environ.get('FAKE_ENGINE_STDOUT'):\n"
-            "        print(os.environ['FAKE_ENGINE_STDOUT'])\n"
             "    report = os.environ.get('FAKE_SMOKE_REPORT')\n"
             "    for arg in sys.argv:\n"
             "        if arg.startswith('--report=') and report is not None:\n"
@@ -110,17 +107,13 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(0, self.invoke("run", "--", "--skipfmv"))
         calls = self.read_calls()
         self.assertEqual(["materialize_retail_assets.py",
-                          "dotnet", "dotnet", "godot48-mono", "godot48-mono"], [call["tool"] for call in calls])
-        assets, restore, build, scene_import, engine = (call["args"] for call in calls)
+                          "dotnet", "dotnet", "godot48-mono"], [call["tool"] for call in calls])
+        assets, restore, build, engine = (call["args"] for call in calls)
         self.assertEqual(["--reuse-canonical-assets"], assets)
         canonical_media = self.canonical / "local-lab/startup-media"
         self.assertEqual(str(self.engine.parent / "GodotSharp/Tools/nupkgs"), restore[restore.index("--source") + 1])
         self.assertIn("--locked-mode", restore)
         self.assertIn("--no-restore", build)
-        self.assertIn("--headless", scene_import)
-        self.assertIn("Dummy", scene_import)
-        self.assertIn("res://Scenes/World/ImportLevel100.tscn", scene_import)
-        self.assertEqual(["--prepare-level100-scene"], scene_import[scene_import.index("--") + 1:])
         self.assertEqual([f"--startup-media={canonical_media}", "--skipfmv"], engine[engine.index("--") + 1:])
         for call in calls:
             self.assertTrue(Path(call["tmp"]).is_relative_to(self.checkout / "local-data"))
@@ -135,8 +128,7 @@ class LauncherTests(unittest.TestCase):
         with mock.patch.object(launcher.materializer, "_outputs_ready", return_value=True):
             self.assertEqual(0, self.invoke("run", "--no-build"))
         calls = self.read_calls()
-        self.assertEqual(["godot48-mono", "godot48-mono"], [call["tool"] for call in calls])
-        self.assertIn("--prepare-level100-scene", calls[0]["args"])
+        self.assertEqual(["godot48-mono"], [call["tool"] for call in calls])
 
     def test_missing_worktree_media_fails_without_writing_shared_inputs(self) -> None:
         with mock.patch.object(launcher.materializer, "_outputs_ready", return_value=True), \
@@ -149,7 +141,7 @@ class LauncherTests(unittest.TestCase):
         with mock.patch.object(launcher.materializer, "_canonical_repository_root", return_value=self.checkout):
             (self.checkout / "local-lab").mkdir()
             self.assertEqual(0, self.invoke("run", "--no-build"))
-        assets, media, _, _ = (call["args"] for call in self.read_calls())
+        assets, media, _ = (call["args"] for call in self.read_calls())
         self.assertIn("--host-default-work-root", assets)
         self.assertEqual(str(self.game), assets[assets.index("--game-root") + 1])
         self.assertIn("--startup-media", media)
@@ -172,14 +164,10 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(0, launcher.main(["run", "--no-build", "--no-prepare"]))
         self.assertEqual("godot48-mono", self.read_calls()[0]["tool"])
 
-    def test_build_prepares_scene_without_startup_media_or_gameplay(self) -> None:
+    def test_build_has_no_startup_media_or_runtime(self) -> None:
         self.assertEqual(0, self.invoke("build"))
-        self.assertEqual(["materialize_retail_assets.py", "dotnet", "dotnet", "godot48-mono"],
+        self.assertEqual(["materialize_retail_assets.py", "dotnet", "dotnet"],
                          [call["tool"] for call in self.read_calls()])
-        importer = self.read_calls()[-1]["args"]
-        self.assertIn("--headless", importer)
-        self.assertIn("--prepare-level100-scene", importer)
-        self.assertFalse(any(arg.startswith("--startup-media") for arg in importer))
 
     def test_no_prepare_launch_skips_validation_and_materializer_processes(self) -> None:
         with mock.patch.object(launcher.materializer, "_outputs_ready", side_effect=AssertionError("must not validate")), \
@@ -211,47 +199,12 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(75, run.call_args.kwargs["timeout"])
             self.assertEqual(0, self.invoke("capture", "--no-build", "--", "--capture-plan=mainmenu"))
             self.assertEqual(300, run.call_args.kwargs["timeout"])
-        engine_calls = [call["args"] for call in self.read_calls()
-                        if call["tool"] == "godot48-mono" and "--prepare-level100-scene" not in call["args"]]
+        engine_calls = [call["args"] for call in self.read_calls() if call["tool"] == "godot48-mono"]
         report = next(arg.removeprefix("--report=") for arg in engine_calls[0] if arg.startswith("--report="))
         capture = next(arg.removeprefix("--capture-dir=") for arg in engine_calls[1] if arg.startswith("--capture-dir="))
         self.assertNotEqual(Path(report).parent, Path(capture))
         self.assertTrue(Path(capture).is_relative_to(self.checkout / "local-data"))
         self.assertIn("--capture-plan=mainmenu", engine_calls[1])
-
-    def test_replay_resolves_tapes_skips_scene_import_and_keeps_the_replayer_exit(self) -> None:
-        output = io.StringIO()
-        banner = "Godot Engine v4.8.dev6.mono.official.8898c2b3d - https://godotengine.org"
-        with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "2", "FAKE_ENGINE_STDOUT": banner + "\n{\"tape\": \"a\"}"}), \
-             mock.patch.object(launcher.Path, "cwd", return_value=self.root), redirect_stdout(output):
-            self.assertEqual(2, self.invoke("replay", "--no-build", "--", "--tape", "tapes/a.json",
-                                            "--compare-tape", "/abs/b.json", "--repeat", "1"))
-        calls = self.read_calls()
-        self.assertEqual(["materialize_retail_assets.py", "godot48-mono"], [call["tool"] for call in calls])
-        replay = calls[-1]["args"]
-        self.assertIn("--headless", replay)
-        self.assertEqual("res://Client/headless_replay.gd", replay[replay.index("--script") + 1])
-        self.assertEqual(["--tape", str(self.root / "tapes/a.json"), "--compare-tape", "/abs/b.json", "--repeat", "1"],
-                         replay[replay.index("--") + 1:])
-        self.assertFalse(any(arg.startswith("--startup-media") or arg == "--prepare-level100-scene" for arg in replay))
-        self.assertEqual('{"tape": "a"}\n', output.getvalue())
-        self.assertEqual(0, launcher.main(["replay", "--no-build", "--no-prepare", "--engine", str(self.engine)]))
-        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            launcher.main(["replay", "--engine-arg=--verbose"])
-
-    def test_scene_import_failure_stops_before_gameplay(self) -> None:
-        with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "9"}):
-            self.assertEqual(9, self.invoke("run", "--no-build"))
-        engine_calls = [call for call in self.read_calls() if call["tool"] == "godot48-mono"]
-        self.assertEqual(1, len(engine_calls))
-        self.assertIn("--prepare-level100-scene", engine_calls[0]["args"])
-
-    def test_diagnostic_probe_is_runtime_only_and_never_baked_into_import(self) -> None:
-        with mock.patch.dict(os.environ, {"ONSLAUGHT_TERRAIN_PROBE": "macro"}):
-            self.assertEqual(0, self.invoke("run", "--no-build"))
-        engine_calls = [call for call in self.read_calls() if call["tool"] == "godot48-mono"]
-        self.assertIsNone(engine_calls[0]["terrain_probe"])
-        self.assertEqual("macro", engine_calls[1]["terrain_probe"])
 
     def test_zero_exit_without_smoke_completion_is_failure(self) -> None:
         invalid = [None, "{", "[]", "{}"]

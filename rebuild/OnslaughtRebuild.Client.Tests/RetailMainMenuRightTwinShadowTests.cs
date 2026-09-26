@@ -146,20 +146,34 @@ public sealed class RetailMainMenuRightTwinShadowTests
     [Fact]
     public void DrawMainMenuKeepsCaptureShadowTintAndDoesNotInventASheen()
     {
-        NativeMainMenuSource.HasNoPresentationSideEffects();
-        NativeMainMenuSource.HasAnchor("Decoration/RightTwin/Body", 457f, 355f);
-        NativeMainMenuSource.HasAnchor("Decoration/RightTwin/Shadow", 457f, 355f);
-        NativeMainMenuSource.HasColor("Decoration/RightTwin/Body", 0xfe7f7f7fu);
-        NativeMainMenuSource.HasColor("Decoration/RightTwin/Shadow", 0x3e000000u);
-        Assert.Contains("Laws.right_twin(transition)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("Laws.shadow_offset(facts.animation_seconds)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("var left_offset := Vector2(shadow[0], shadow[0])", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("left_offset if index < 2 else offset", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("state.scale * F.value(1.05)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("owner.get_node(\"Body\").set_motion(state.scale, state.rotation, state.alpha, Vector2.ZERO)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("source_anchor + offset", NativeMainMenuSource.Read("main_menu_rotated_image.gd"), StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", NativeMainMenuSource.Read("main_menu_rotated_image.gd"), StringComparison.Ordinal);
-        NativeMainMenuSource.HasMeasuredReflectionOnly();
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string draw = Slice(flow, "private void DrawMainMenu()");
+
+        Assert.Contains("RetailMainMenuRightTwinShadow", draw, StringComparison.Ordinal);
+        Assert.Contains("ShadowTint", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RetailMainMenuRightTwinShadow.SubmittedColor",
+            draw,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RetailMainMenuRightTwinShadow.ShouldDraw",
+            draw,
+            StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuRightTwinOverlay", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendDecorShadow", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
+        Assert.Contains("0x3e000000", flow, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("0xfe7f7f7f", flow, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("0x3e7f7f7f", flow, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TitleLogoReflectionLayer", draw, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

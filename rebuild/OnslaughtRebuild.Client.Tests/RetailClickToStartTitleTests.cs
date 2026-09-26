@@ -86,28 +86,12 @@ public sealed class RetailClickToStartTitleTests
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.Contains("Laws.title_visible(seconds)", NativeClickSource.Controller);
-        Assert.Contains("Laws.title_scale(seconds)", NativeClickSource.Controller);
-        Assert.Contains("Laws.title_outline_color(seconds)", NativeClickSource.Controller);
-        Assert.Contains("Laws.title_body_color(seconds)", NativeClickSource.Controller);
-        Assert.Contains("TITLE_PASSES", NativeClickSource.Laws);
-        string[] parts = ["BottomRight", "BottomLeft", "TopRight", "TopLeft", "Body"];
-        for (int i = 0; i < RetailClickToStartTitle.Passes.Length; i++)
-        {
-            var pass = RetailClickToStartTitle.Passes[i];
-            string path = "Title/" + parts[i] + "/Motion/Image";
-            NativeClickSource.HasCenter(path, pass.X, pass.Y);
-            Assert.Contains("texture = ExtResource(\"title\")", NativeClickSource.Node(path));
-            Assert.Contains("offset_right = 512.0", NativeClickSource.Node(path));
-            Assert.Contains("offset_bottom = 256.0", NativeClickSource.Node(path));
-            Assert.DoesNotContain("position = ", NativeClickSource.Node("Title/" + parts[i]));
-        }
-        Assert.Contains("title-logo.texture.aya", NativeClickSource.Read("ClickTitle.tres"));
-        Assert.Contains("F.value(size.x * _image_scale)", NativeClickSource.Read("frontend_image.gd"));
-        Assert.Contains("F.value(x - F.value(width * 0.5))", NativeClickSource.Read("frontend_image.gd"));
+
+        Assert.Contains("RetailClickToStartTitle.ShouldDraw", flow);
+        Assert.Contains("RetailClickToStartTitle.Scale", flow);
+        Assert.Contains("RetailClickToStartTitle.Passes", flow);
         Assert.DoesNotContain("0.55f + (0.45f * (0.5f + (0.5f * Mathf.Sin((float)_clickPageSeconds * 3f))))", flow);
         Assert.DoesNotContain("0.35f,\r\n                0.35f,", flow);
-        Assert.DoesNotContain("sin(", NativeClickSource.Laws, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -166,21 +150,18 @@ public sealed class RetailClickToStartTitleTests
     [Fact]
     public void DrawClickToStartCallsTheSixthPassInsteadOfFoldingItIntoTheFivePassSlam()
     {
-        // CFEPIntro::Render 0x0051BD01 remains a separate sixth-pass gate;
-        // the C# numerical tests above retain its exact endpoints and words.
+        // CFEPIntro::Render 0x0051BD01 is a SECOND gate (2 < page < 2.25),
+        // not page*1.2 > 2. DrawClickToStart must consume ShouldDrawSixth /
+        // SixthPass / SixthScale / SixthColor rather than fold the z=0.02
+        // copy into Passes. Not attract splash. Not TWIMTBP.
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.Contains("get_node(\"TitleFlash\").visible = Laws.sixth_visible(seconds)", NativeClickSource.Controller);
-        Assert.Contains("Laws.sixth_scale(seconds)", NativeClickSource.Controller);
-        Assert.Contains("Laws.sixth_color(seconds)", NativeClickSource.Controller);
-        NativeClickSource.HasCenter("TitleFlash/Motion/Image", RetailClickToStartTitle.SixthPass.X, RetailClickToStartTitle.SixthPass.Y);
-        Assert.Contains("texture = ExtResource(\"title\")", NativeClickSource.Node("TitleFlash/Motion/Image"));
-        Assert.Contains("offset_right = 512.0", NativeClickSource.Node("TitleFlash/Motion/Image"));
-        Assert.Contains("offset_bottom = 256.0", NativeClickSource.Node("TitleFlash/Motion/Image"));
-        Assert.DoesNotContain("position = ", NativeClickSource.Node("TitleFlash"));
-        Assert.Contains("const SIXTH_Z_BITS: int = 0x3ca3d70a", NativeClickSource.Laws);
-        Assert.Contains("return fade > 0.0 and fade < 3.0", NativeClickSource.Laws);
-        Assert.DoesNotContain("vectorlosttoyssplash", NativeClickSource.Presentation + flow);
-        Assert.DoesNotContain("TWIMTBP", NativeClickSource.Presentation + flow);
+
+        Assert.Contains("RetailClickToStartTitle.ShouldDrawSixth", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthPass", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthScale", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthColor", flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
     }
 }

@@ -74,16 +74,29 @@ public sealed class RetailMainMenuSelectedIconShadowTests
     [Fact]
     public void DrawMainMenuKeepsShadowTintAndDoesNotWireThePack()
     {
-        NativeMainMenuSource.HasNoPresentationSideEffects();
-        NativeMainMenuSource.HasBounds("SelectedIcon/Body", 393f, 291f, 521f, 419f);
-        NativeMainMenuSource.HasBounds("SelectedIcon/ShadowMotion/Shadow", 389.8f, 287.8f, 524.2f, 422.2f);
-        NativeMainMenuSource.HasColor("SelectedIcon/Body", 0xfe7f7f7fu);
-        NativeMainMenuSource.HasColor("SelectedIcon/ShadowMotion/Shadow", 0x3e000000u);
-        Assert.Contains("get_node(\"SelectedIcon/Body\").texture = icon", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("get_node(\"SelectedIcon/ShadowMotion/Shadow\").texture = icon", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("get_node(\"SelectedIcon/ShadowMotion\").position = offset", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("set_fade(icon_fade, null if rows[selected].available else Laws.retail_color(Laws.UNAVAILABLE))", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.29", NativeMainMenuSource.Read("main_menu_texture.gd"), StringComparison.Ordinal);
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string draw = Slice(flow, "private void DrawMainMenu()");
+
+        Assert.Contains("RetailMainMenuSelectedIconShadow", draw, StringComparison.Ordinal);
+        Assert.Contains("ShadowTint", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RetailMainMenuSelectedIconShadow.SubmittedColor",
+            draw,
+            StringComparison.Ordinal);
+        Assert.Contains("ShadowScaleBoost", draw, StringComparison.Ordinal);
+        Assert.Contains("457f, 355f, 1f, 1f", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
+        Assert.Contains("0x3e000000", flow, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("0xfe7f7f7f", flow, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("0x3e7f7f7f", flow, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Slice(string source, string signature)

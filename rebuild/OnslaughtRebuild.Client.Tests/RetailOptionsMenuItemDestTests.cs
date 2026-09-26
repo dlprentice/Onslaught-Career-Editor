@@ -133,11 +133,49 @@ public sealed class RetailOptionsMenuItemDestTests
     [Fact]
     public void DrawOptionRowConsumesDestXAndDoesNotInventDestFive()
     {
-        // Numeric/model assertions above stay pinned; this guard follows the production owner.
-        string owner0 = NativeOptionsSource.Function("frontend_bitmap_label.gd", "_draw");
-        Assert.Contains("Alignment.INTEGER_CENTRE: x = Laws.menu_item_dest_x(F.value(size.x * 0.5), int(width))", owner0, StringComparison.Ordinal);
-        string owner1 = NativeOptionsSource.Function("options_row.gd", "update_time");
-        Assert.Contains("Laws.menu_packed_color", owner1, StringComparison.Ordinal);
+        string options = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.Options.cs"));
+        string draw = Slice(options, "private void DrawOptionRow");
+        string centered = Slice(options, "private void DrawOptionTextCentered");
+        string labelValue = Slice(options, "private void DrawLabelValueRow");
+        string valueBar = Slice(options, "private void DrawValueBarRow");
+
+        Assert.Contains("RetailOptionsMenuItemDest", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailOptionsMenuItemDest.DestX", centered, StringComparison.Ordinal);
+        Assert.Contains("RetailOptionsMenuItemColor.PackedColor", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemDest.LeftoverMinX", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemDest.Scale", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("5f", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("5.0", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.5f", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("268f", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("284f", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("304f", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0x00463669", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", valueBar, StringComparison.Ordinal);
+
+        string flow = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.cs"));
+        string main = Slice(flow, "private void DrawMainMenu()");
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", main, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", main, StringComparison.Ordinal);
+        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", quit, StringComparison.Ordinal);
+        string loading = Slice(flow, "private void DrawLoading(");
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", loading, StringComparison.Ordinal);
+        string click = Slice(flow, "private void DrawClickToStart()");
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", click, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

@@ -217,22 +217,19 @@ public sealed class RetailLevelSelectFsub10Tests
     }
 
     [Fact]
-    public void RetainedReferenceConsumesFsub10AndDoesNotPileIntoMainMenuOrOptions()
+    public void DrawLevelSelectConsumesFsub10AndDoesNotPileIntoMainMenuOrOptions()
     {
         string flow = File.ReadAllText(Path.Combine(
             AppContext.BaseDirectory,
             "godot-pause-source",
             "RetailFrontendFlow.cs"));
-        // The pinned pre-conversion renderer preserves these evidence calls;
-        // production ownership is checked separately against the native page.
-        string level = Slice(NativeLevelSelectSource.Reference, "private void DrawLevelSelect()");
-        string main = NativeMainMenuSource.Presentation;
-        Assert.DoesNotContain("level_select", main, StringComparison.Ordinal);
-        string quit = NativeQuitSource.Presentation;
-        string loading = NativeLoadingSource.Presentation;
-        string click = NativeClickSource.Presentation;
-        string pointerConfirm = NativeFrontendSource.RootFunction("handle_pointer_confirm");
-        string handleKey = NativeFrontendSource.RootFunction("handle_key");
+        string level = Slice(flow, "private void DrawLevelSelect()");
+        string main = Slice(flow, "private void DrawMainMenu()");
+        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        string loading = Slice(flow, "private void DrawLoading(");
+        string click = Slice(flow, "private void DrawClickToStart()");
+        string pointerConfirm = Slice(flow, "private bool HandlePointerConfirm(");
+        string handleKey = Slice(flow, "private bool HandleKey(");
 
         Assert.Contains("RetailLevelSelectFsub10", level, StringComparison.Ordinal);
         Assert.Contains("RetailLevelSelectFsub10.Delta", level, StringComparison.Ordinal);
@@ -254,12 +251,15 @@ public sealed class RetailLevelSelectFsub10Tests
         Assert.DoesNotContain("RetailLevelSelectFsub10", pointerConfirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", handleKey, StringComparison.Ordinal);
 
-        string options = NativeOptionsSource.Read("options_row.gd") + NativeOptionsSource.Read("options_presentation.gd") + NativeOptionsSource.Read("options_controller.gd");
-        string draw = options;
-        string dropdown = options;
-        string motion = options;
-        string confirm = options;
-        string cancel = options;
+        string options = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.Options.cs"));
+        string draw = Slice(options, "private void DrawOptionRow");
+        string dropdown = Slice(options, "private void DrawOptionDropdown");
+        string motion = Slice(options, "private bool HandleOptionsPointerMotion");
+        string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
+        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
         Assert.DoesNotContain("RetailLevelSelectFsub10", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", dropdown, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectFsub10", motion, StringComparison.Ordinal);

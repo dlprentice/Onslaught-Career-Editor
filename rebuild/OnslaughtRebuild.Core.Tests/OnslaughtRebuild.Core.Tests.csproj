@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OnslaughtRebuild.Core\OnslaughtRebuild.Core.csproj" />
-    <ProjectReference Include="..\OnslaughtRebuild.Client\OnslaughtRebuild.Client.csproj" />
+    <ProjectReference Include="..\OnslaughtRebuild.Headless\OnslaughtRebuild.Headless.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,9 +37,6 @@
 
   <ItemGroup>
     <Content Include="..\scenarios\*.json" Link="scenarios\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
-    <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world.json"
-             Link="Assets\Level100\StaticWorld\level100-static-world.json"
-             CopyToOutputDirectory="Always" />
     <Content Include="..\..\tests_shared\fixtures\gold_career_save.bin"
              Link="fixtures\gold_career_save.bin"
              CopyToOutputDirectory="Always" />

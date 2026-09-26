@@ -165,36 +165,39 @@ public sealed class RetailMainMenuLabelTextTests
     [Fact]
     public void DrawMainMenuKeepsLabelColorMeasureTextAndDoesNotInventDestOrWrap()
     {
-        NativeMainMenuSource.HasNoPresentationSideEffects();
-        Assert.Contains("label.bind(rows[index].text, font)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("Laws.label_color(index == selected, rows[index].available)", NativeMainMenuSource.Controller, StringComparison.Ordinal);
-        Assert.Contains("active_font.measure(displayed_units())", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.Contains("source_anchor.x - F.value(width * 0.5)", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.Contains("active_font.draw_run(self, displayed_units(), drawing_origin()", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.DoesNotContain("wrap", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.DoesNotContain("42.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.DoesNotContain("1000.0", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.32", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        Assert.DoesNotContain(" - 2", NativeMainMenuSource.Label, StringComparison.Ordinal);
-        string[] names = ["NewGame", "ContinueGame", "LoadGame", "Multiplayer", "Goodies", "Options", "Quit"];
-        for (int index = 0; index < names.Length; index++)
-        {
-            NativeMainMenuSource.HasAnchor(names[index], 219f, 304f + index * 20f - 8f);
-            NativeMainMenuSource.HasBounds(names[index], 99f, 294f + index * 20f, 339f, 314f + index * 20f);
-        }
-        Assert.Contains("const ROW_FIRST_Y: float = 304.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
-        Assert.Contains("const ROW_PITCH: float = 20.0", NativeMainMenuSource.Laws, StringComparison.Ordinal);
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+        string draw = Slice(flow, "private void DrawMainMenu()");
 
-        string flow = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        string quit = NativeQuitSource.Presentation;
+        Assert.Contains("RetailMainMenuLabelText", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuLabelColor.SubmittedColor", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuLabelDest.DestX", draw, StringComparison.Ordinal);
+        Assert.Contains("MeasureText", draw, StringComparison.Ordinal);
+        Assert.Contains("DrawText(", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.32", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("1000f", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("1000.0", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0x447A0000", draw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("0x3EA3D70A", draw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("42f", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain(" - 2", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerMotion", draw, StringComparison.Ordinal);
+
+        string quit = Slice(flow, "private void DrawQuitConfirm()");
         Assert.DoesNotContain("RetailMainMenuLabelText", quit, StringComparison.Ordinal);
-        string choice = NativeQuitSource.Presentation;
+        string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuLabelText", choice, StringComparison.Ordinal);
-        string loading = NativeLoadingSource.Presentation;
+        string loading = Slice(flow, "private void DrawLoading(");
         Assert.DoesNotContain("RetailMainMenuLabelText", loading, StringComparison.Ordinal);
-        string bar = NativeMainMenuSource.Selector;
+        string bar = Slice(flow, "private void DrawMainMenuSelectorBar");
         Assert.DoesNotContain("RetailMainMenuLabelText", bar, StringComparison.Ordinal);
-        string language = NativeMainMenuSource.Controller;
+        string language = Slice(flow, "private void DrawLanguageSelector");
         Assert.DoesNotContain("RetailMainMenuLabelText", language, StringComparison.Ordinal);
     }
 

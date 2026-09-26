@@ -1,9 +1,0 @@
-[gd_resource type="Texture2D" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://Scenes/Shared/retail_texture_page.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-source_path = "res://Assets/Hud/crosshair-secondary.texture.aya"
-dimensions = Vector2i(128, 128)
-compression = 1

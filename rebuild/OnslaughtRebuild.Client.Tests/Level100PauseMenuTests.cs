@@ -84,7 +84,7 @@ public sealed class Level100PauseMenuTests
     {
         string sourceRoot = Path.Combine(AppContext.BaseDirectory, "godot-pause-source");
         string game = File.ReadAllText(Path.Combine(sourceRoot, "FirstFlightGame.cs"));
-        string view = File.ReadAllText(Path.Combine(sourceRoot, "pause_menu.gd"));
+        string view = File.ReadAllText(Path.Combine(sourceRoot, "FirstFlightPauseMenu.cs"));
         string audio = File.ReadAllText(Path.Combine(sourceRoot, "Level100Audio.cs"));
         string materializer = File.ReadAllText(
             Path.Combine(sourceRoot, "materialize_retail_assets.py"));
@@ -141,21 +141,13 @@ public sealed class Level100PauseMenuTests
             1,
             CountOccurrences(game, "FrontendAudioCueRequested?.Invoke(cue);"));
 
-        Assert.Contains(
-            "public void StopForLevelExit(bool playFrontendSelect) => Invoke(\"stop_for_level_exit\", playFrontendSelect);",
+        string stopForExit = ExtractMethod(
             audio,
-            StringComparison.Ordinal);
-        string nativeAudio = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory, "godot-audio-layout-source", "level100_audio.gd"));
-        int stopStart = nativeAudio.IndexOf("func stop_for_level_exit(", StringComparison.Ordinal);
-        Assert.True(stopStart >= 0);
-        int stopEnd = nativeAudio.IndexOf("\nfunc ", stopStart + 1, StringComparison.Ordinal);
-        Assert.True(stopEnd > stopStart);
-        string stopForExit = nativeAudio[stopStart..stopEnd];
+            "public void StopForLevelExit(bool playFrontendSelect)");
         AssertOccursInOrder(
             stopForExit,
-            "var result: Dictionary = stop_level100_audio()",
-            "return play_frontend_cue(\"Select\") if result.ok and play_frontend_select else result");
+            "StopLevel100Audio();",
+            "PlayFrontendCue(\"Select\");");
 
         string destroy = ExtractMethod(game, "private void DestroyLevel100World()");
         AssertOccursInOrder(
@@ -199,11 +191,98 @@ public sealed class Level100PauseMenuTests
             StringComparison.Ordinal);
     }
 
-    // Renderer geometry, root-under-confirmation ordering, title colour/shadows,
-    // texture serialization safety and authored hit rectangles are exercised on
-    // the actual production scene by Scenes/Pause/Tests/pause_scene_checks.gd.
-    // PauseSceneChecks.cs additionally checks the live Client model bridge and
-    // compares the new glyph/texture decoding with the retained C# renderers.
+    [Fact]
+    public void ConfirmationDrawsTheRetailPanelFrameOverTheStillDrawnRootList()
+    {
+        string view = ReadPauseView();
+        string draw = ExtractMethod(view, "private void ApplyVisualState()");
+
+        // CPauseMenu__Render renders the active range (index this+0x24, still 0
+        // while a Retry/Quit prompt is up) and then the prompt hanging off
+        // this+0x08. The root list must therefore stay drawn, and the prompt
+        // must be the range that carries the panel flag.
+        AssertOccursInOrder(draw,
+            "_rootRange.Visible = transitionSeconds >= FadeSeconds;",
+            "_confirmationRange.Visible = _rootRange.Visible && confirmation;",
+            "ApplyMenuRange(_rootTitle, _rootRows, \"PAUSED\", _model.RootEntries,",
+            "confirmation ? _model.UnderlyingRootSelection : _model.SelectedIndex);",
+            "if (confirmation)",
+            "ApplyMenuRange(_confirmationTitle, _confirmationRows, \"Are you sure?\", _model.Entries,",
+            "ArrangePanelFrame(\"Are you sure?\", _model.Entries, _model.Page);");
+        Assert.Equal(1, CountOccurrences(draw, "ArrangePanelFrame("));
+        string scene = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
+            "godot-pause-source", "PauseMenu.tscn"));
+        Assert.DoesNotContain("parent=\"Surface/Native/RootRange/Frame\"", scene, StringComparison.Ordinal);
+        Assert.Equal(9, CountOccurrences(scene, "type=\"TextureRect\" parent=\"Surface/Native/ConfirmationRange/Frame\""));
+    }
+
+    [Fact]
+    public void PanelFrameUsesTheMeasuredRetailGeometryAndTint()
+    {
+        string view = ReadPauseView();
+        string panel = ExtractMethod(view, "private void ArrangePanelFrame(");
+
+        // Sizing pass in CMenuItemRange__Render: (max(title, widest item) +
+        // 0x10) * 1.1 wide, (0x20 + summed item heights) * 1.1 tall, centred on
+        // the range origin using the pre-round size, clamped to 0x40 after.
+        Assert.Contains(
+            "(widest + PanelWidthPadding) * PanelSizeFactor",
+            panel,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "(PanelTitleBand + itemHeights) * PanelSizeFactor",
+            panel,
+            StringComparison.Ordinal);
+        AssertOccursInOrder(
+            panel,
+            "float left = MathF.Round(320f - (rawWidth * 0.5f));",
+            "float top = MathF.Round(GetRangeCenterY(page) - (rawHeight * 0.5f));",
+            "Math.Max(PanelMinimumSize, MathF.Round(rawWidth))",
+            "Math.Max(PanelMinimumSize, MathF.Round(rawHeight))");
+
+        Assert.Contains("private const float PanelSizeFactor = 1.1f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelTitleBand = 32f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelWidthPadding = 16f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelMinimumSize = 64f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelCornerSize = 32f;", view, StringComparison.Ordinal);
+
+        // Keep the previous renderer's ROUND(1.2 * 160.0) over RGB 0 and
+        // its cited lab executable identity. This migration does not remeasure it.
+        Assert.Contains(
+            "PanelTint = new(0f, 0f, 0f, 192f / 255f)",
+            view,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4",
+            view,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SurfaceAddsNoUnevidencedLegibilityTreatment()
+    {
+        string view = ReadPauseView();
+
+        // The frame is the only occluder retail draws for the prompt. Nothing
+        // here may reach for a scrim, blur, outline or dim of the root list,
+        // and the root list must not be hidden either -- retail keeps drawing
+        // it because CPauseMenu__Render never changes the active range index
+        // when the prompt opens.
+        foreach (string banned in new[] { "Scrim", "Dim", "Blur", "Outline", "Vignette" })
+        {
+            Assert.DoesNotContain(banned, view, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // PAUSED stays at the retail title colour 0xff505050 with no shadow:
+        // CMenuItemRange__Render packs exactly that ARGB for its single title
+        // CDXFont__DrawText call. Faintness is retail, not a defect.
+        Assert.Contains("TitleColor = RetailColor(0xff505050)", view, StringComparison.Ordinal);
+        string range = ExtractMethod(view, "private static void ApplyMenuRange(");
+        AssertOccursInOrder(range, "titleControl.TextColor = TitleColor;", "titleControl.Shadow = false;");
+    }
+
+    private static string ReadPauseView() => File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "FirstFlightPauseMenu.cs"));
 
     private static string ExtractMethod(string source, string signature)
     {

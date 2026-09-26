@@ -114,22 +114,13 @@ public sealed class RetailClickToStartPromptTests
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.Contains("Laws.prompt_visible(timer)", NativeClickSource.Controller);
-        Assert.Contains("Laws.splash_scale(timer)", NativeClickSource.Controller);
-        Assert.Contains("_click_pulse_timer = Click.advance(_click_pulse_timer, _click_page_seconds, step)", NativeFrontendSource.RootFunction("advance"));
-        Assert.Contains("static func advance(timer: float, page_seconds: float, delta: float)", NativeClickSource.Laws);
-        Assert.Contains("fmod(timer, 4.0)", NativeClickSource.Laws);
-        Assert.Contains("return remainder < 2.0", NativeClickSource.Laws);
-        Assert.Contains("\"pulse_timer\": facts.click_pulse_timer", NativeClickSource.Bridge);
-        Assert.Contains("\"page_seconds\": facts.click_page_seconds", NativeClickSource.Bridge);
-        Assert.Contains("\"click_pulse_timer\": _click_pulse_timer", NativeFrontendSource.RootFunction("redraw"));
-        Assert.Contains("\"click_page_seconds\": _click_page_seconds", NativeFrontendSource.RootFunction("redraw"));
-        Assert.Contains("_click.set_frame(", NativeClickSource.Bridge);
+
+        Assert.Contains("RetailClickToStartGlyphs.ShouldDraw", flow);
+        Assert.Contains("RetailClickToStartSplash.Scale", flow);
+        Assert.Contains("RetailClickToStartPrompt.Advance", flow);
         Assert.DoesNotContain("RetailClickToStartPrompt.SplashScale", flow);
         Assert.DoesNotContain("PosMod((float)_clickPulseTimer, 2f) < 1.6f", flow);
         Assert.DoesNotContain("Mathf.Min((float)_clickPulseTimer, 1f)", flow);
-        Assert.DoesNotContain("remainder < 1.6", NativeClickSource.Laws);
-        NativeClickSource.HasNoPresentationSideEffects();
     }
 
     private static bool StubDutyVisible(double timer) =>

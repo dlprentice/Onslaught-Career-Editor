@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Build and launch First Flight with the installed, pinned Linux Godot Mono.
-
-`replay` runs the GDScript headless replayer (res://Client/headless_replay.gd):
-user arguments after `--` are its options, with relative tape paths resolved
-from the caller's directory; its JSON report is printed and its exit code kept.
-"""
+"""Build and launch First Flight with the installed, pinned Linux Godot Mono."""
 
 from __future__ import annotations
 
@@ -88,50 +83,6 @@ def _runtime_command(
     return command
 
 
-def _prepare_world_scene(engine: Path, project: Path, output: Path, env: dict[str, str]) -> None:
-    # Explicit offline import, with no game bootstrap or editor tool callbacks.
-    # Every generated resource remains under this checkout's ignored Assets.
-    import_env = dict(env)
-    import_env.pop("ONSLAUGHT_TERRAIN_PROBE", None)
-    run_process([
-        str(engine), "--headless", "--audio-driver", "Dummy", "--path", str(project),
-        "--log-file", str(output / "level100-import.log"),
-        "res://Scenes/World/ImportLevel100.tscn", "--", "--prepare-level100-scene",
-    ], cwd=project, env=import_env, timeout=PREPARATION_TIMEOUT)
-
-
-def _replay_arguments(user_args: list[str], cwd: Path) -> list[str]:
-    # The replayer admits only absolute tape paths; resolve them from the caller.
-    resolved = list(user_args)
-    for index, value in enumerate(resolved[:-1]):
-        if value in ("--tape", "--compare-tape") and resolved[index + 1].strip():
-            resolved[index + 1] = str((cwd / resolved[index + 1]).absolute())
-    return resolved
-
-
-def _run_replay(engine: Path, project: Path, output: Path, env: dict[str, str],
-                user_args: list[str], timeout: float | None) -> int:
-    command = [str(engine), "--headless", "--audio-driver", "Dummy", "--path", str(project),
-               "--log-file", str(output / "replay.log"), "--script", "res://Client/headless_replay.gd",
-               "--", *user_args]
-    try:
-        done = run_process(command, cwd=project, env=env, timeout=timeout, capture=True)
-        code, stdout, stderr = 0, done.stdout or "", done.stderr or ""
-    except subprocess.CalledProcessError as error:
-        # The replayer's own exits (1 input, 2 mismatch, 3 determinism,
-        # 4 comparison, 70 internal) are its result, not a launcher failure.
-        code, stdout, stderr = error.returncode, error.stdout or "", error.stderr or ""
-    # Keep the report parseable: drop the engine's own banner line.
-    lines = [line for line in stdout.splitlines() if not line.startswith("Godot Engine v")]
-    if lines:
-        print("\n".join(lines), flush=True)
-    if stderr:
-        print(stderr, end="" if stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
-    if "SCRIPT ERROR" in stderr or "SCRIPT ERROR" in stdout:
-        return 70
-    return code
-
-
 def _validate_smoke_completion(output: Path) -> None:
     # Window closure can exit zero before CompleteSmoke writes its report.
     # Require the completed lifecycle; this is not a pixel/audio parity gate.
@@ -159,15 +110,14 @@ def main(argv: list[str] | None = None) -> int:
     split = arguments.index("--") if "--" in arguments else len(arguments)
     user_args = arguments[split + 1:]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("build", "run", "smoke", "capture", "replay"), nargs="?", default="run")
+    parser.add_argument("mode", choices=("build", "run", "smoke", "capture"), nargs="?", default="run")
     parser.add_argument("--engine", default=DEFAULT_ENGINE, help="installed pinned Godot .NET executable")
     parser.add_argument("--game-root", type=Path, help="retail installation; otherwise discover Linux Steam")
     parser.add_argument("--no-build", action="store_true", help="run the existing managed build")
     parser.add_argument("--no-prepare", action="store_true",
-                        help="reuse prepared assets, production scenes and startup media without importing")
+                        help="reuse prepared assets and startup media without validation or materialization")
     parser.add_argument("--output-root", type=Path, help="fresh directory below this checkout's local-data")
-    parser.add_argument("--timeout", type=float,
-                        help="runtime limit in seconds (smoke: 75; capture: 300; replay: 600)")
+    parser.add_argument("--timeout", type=float, help="runtime limit in seconds (smoke: 75; capture: 300)")
     parser.add_argument("--engine-arg", action="append", default=[], help="Godot option; use --engine-arg=VALUE")
     args = parser.parse_args(arguments[:split])
     if not sys.platform.startswith("linux"):
@@ -176,9 +126,6 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--timeout must be a finite positive number")
     if args.mode == "build" and (args.no_build or user_args or args.engine_arg):
         parser.error("build does not accept --no-build or runtime arguments")
-    if args.mode == "replay" and args.engine_arg:
-        parser.error("replay does not accept engine arguments")
-    caller = Path.cwd()
 
     interrupted = signal.SIGINT
 
@@ -197,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.game_root.expanduser().absolute() if args.game_root else None
             )
         media_root = None
-        if args.mode not in ("build", "replay"):
+        if args.mode != "build":
             media_root = materializer._resolve_work_root(
                 materializer._default_startup_media_root(), game_root=game_root
             )
@@ -219,13 +166,8 @@ def main(argv: list[str] | None = None) -> int:
                 _prepare(game_root, media_root, cwd=materializer.ROOT, env=env)
             if not args.no_build:
                 build_project(project, engine, env)
-            if not args.no_prepare and args.mode != "replay":
-                _prepare_world_scene(engine, project, scratch_owner, env)
             if args.mode == "build":
                 return 0
-            if args.mode == "replay":
-                return _run_replay(engine, project, scratch_owner, env, _replay_arguments(user_args, caller),
-                                   args.timeout or 600)
             assert media_root is not None
             output = scratch_owner
             command = _runtime_command(engine, project, media_root, output, args.mode,

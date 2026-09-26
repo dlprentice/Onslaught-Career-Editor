@@ -6,8 +6,7 @@
 #   The documented, repeatable procedure for producing a genuine HUMAN replay
 #   tape: launch the rebuild with an explicit --record-tape=<path>, play the
 #   session by hand, quit to the main menu (or close the window), and verify
-#   the finalized tape with the GDScript headless replayer
-#   (res://Client/headless_replay.gd) on the same engine.
+#   the finalized tape with OnslaughtRebuild.Headless --expect.
 #
 #   STAGE 1 STATUS: this card drafts and documents the procedure only. It has
 #   NOT been executed against a live native session - no run of this script
@@ -304,25 +303,21 @@ try {
     )
     & $toolchain.EnginePath @engineArgs
     $engineExitCode = $LASTEXITCODE
-
-    if ($engineExitCode -ne 0) {
-        Write-Warning "Engine exited with code $engineExitCode; inspect any error output above."
-        exit $engineExitCode
-    }
-
-    if (-not (Test-Path -LiteralPath $TapePath)) {
-        throw "The engine exited successfully but no tape exists at $TapePath (was the destination already present? TapeFile.WriteNew refuses overwrites)."
-    }
-
-    # The replayer reaches the C# Core through the simulation bridge, so it
-    # runs on the same .NET engine before the toolchain is released.
-    Write-Host "Verifying the finalized tape:"
-    & $toolchain.EnginePath --headless --audio-driver Dummy --path $projectRoot `
-        --script 'res://Client/headless_replay.gd' -- --tape $TapePath --repeat 2
-    $replayExitCode = $LASTEXITCODE
 }
 finally {
     $toolchain.Dispose()
 }
 
-exit $replayExitCode
+if ($engineExitCode -ne 0) {
+    Write-Warning "Engine exited with code $engineExitCode; inspect any error output above."
+    exit $engineExitCode
+}
+
+if (-not (Test-Path -LiteralPath $TapePath)) {
+    throw "The engine exited successfully but no tape exists at $TapePath (was the destination already present? TapeFile.WriteNew refuses overwrites)."
+}
+
+Write-Host "Verifying the finalized tape:"
+dotnet run --project (Join-Path $PSScriptRoot '..\OnslaughtRebuild.Headless\OnslaughtRebuild.Headless.csproj') -- `
+    --tape $TapePath --repeat 2
+exit $LASTEXITCODE
