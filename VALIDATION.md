@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,19 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Terrain detail rotation — September 26
+
+The terrain shader's second detail layer used an axis-aligned quarter scale. The
+RE lane's audit found that stage 3's angle is the double at `0x005d87e0`,
+re-read here from the pristine specimen (`74154bfa…`, `0x005459a4-0x005459fd`).
+`fld qword` loads 1.0, one radian; read as a float32, its low dword is the 0.0
+the old comment cited. `fcos` and `fsin` of it are scaled by `0x005d858c`
+(0.25), with sin stored as a float32 first. That gives _11 = _22 = `0x3e0a5140`
+(0.13507557), _12 = −_21 = `0x3e576aa4` (0.21036774) and offset (0.3, 0.3).
+Stage 3 is COUNT2 (`0x0054599f`). The shader now applies that matrix to
+(u, v, 1), and `Level100TerrainCompositorTests` pins both words and the shader
+lines. Only a GPU render compiles the shader; the final capture is its check.
 
 ### Waypoint walks from the nearest node — September 26
 

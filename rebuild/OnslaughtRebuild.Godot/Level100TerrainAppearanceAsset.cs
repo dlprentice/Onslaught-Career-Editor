@@ -87,13 +87,16 @@ internal sealed class Level100TerrainAppearanceAsset
             int macro_level = int(clamp(floor(UV2.x + 0.5), 0.0, 4.0));
             vec3 macro_color = sample_macro_map(macro_level, retail_world_uv);
             vec3 detail_primary = texture(detail_map, retail_world_uv).rgb;
-            // Retail's stage-3 texture matrix is
-            // [k*cos(t), k*sin(t); -k*sin(t), k*cos(t)] with offset (0.3, 0.3),
-            // k = *(float *)0x005d858c = 0.25 and t = *(float *)0x005d87e0 = 0.0.
-            // Both live in .rdata (0x005d8000..0x00622000) in a .reloc-free image,
-            // so the angle is fixed at zero for the life of the process and the
-            // matrix is a pure uniform quarter-scale aligned with stage 1.
-            vec2 detail_secondary_uv = (retail_world_uv * 0.25) + vec2(0.3);
+            // Retail's stage-3 texture matrix (0x005459a4-0x005459fd, pristine
+            // 74154bfa...) is [k*cos(t), k*sin(t); -k*sin(t), k*cos(t)] with
+            // offset (0.3, 0.3): k = *(float *)0x005d858c = 0.25, and t is the
+            // DOUBLE *(double *)0x005d87e0 = 1.0 (`fld qword`), one radian. sin
+            // is stored as a float32 before the scale, so _11 = _22 = 0x3e0a5140
+            // and _12 = -_21 = 0x3e576aa4. With COUNT2 (0x0054599f) D3D
+            // multiplies the row vector (u, v, 1) by it.
+            vec2 detail_secondary_uv = vec2(
+                0.13507557 * retail_world_uv.x - 0.21036774 * retail_world_uv.y + 0.3,
+                0.21036774 * retail_world_uv.x + 0.13507557 * retail_world_uv.y + 0.3);
             vec3 detail_secondary = texture(detail_map, detail_secondary_uv).rgb;
             // Stage 2's texture matrix is written at 0x0054591a-0x00545967:
             // _11 (0x628258) = _22 (0x62826c) = 0x3b800000 = 1/256, _12/_21
