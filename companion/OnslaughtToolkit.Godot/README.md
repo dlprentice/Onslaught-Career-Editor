@@ -1,164 +1,159 @@
 # Onslaught Toolkit companion
 
-Status: native GDScript Save Lab implemented; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-09-19
-Summary: an editor-authored MIT companion using GDScript on Godot 4.8 dev6 .NET, with a small in-process C# adapter for protected OS file operations.
+Status: C# application built entirely in code on Godot 4.8 dev6 .NET; careers, Goodies, copies, options, install and backups, music, voices and lore; Linux executed checks, Windows runtime acceptance pending
+Last updated: 2026-09-26
+Summary: the MIT companion for Battle Engine Aquila players: it reads careers and the game's own files, writes changes only to verified copies, puts a copy into the game only after a confirmed, verified backup, and plays and explains the game's own music, voices and lore.
 
 The companion owns careers, saves, recovery copies, supported patches, media and
 related preservation tools. Retail reverse engineering and the faithful GPL game
-rebuild have separate owners. This project neither launches nor depends on that
-rebuild. The September 19 migration uses Godot .NET and typed GDScript for
-presentation, save decoding, edit planning, comparisons and media inventory.
+rebuild have separate owners; this project neither launches nor depends on that rebuild.
 
-David clarified the architecture: use Godot's .NET edition when C# is necessary,
-and use GDScript for as much of the application as possible. The active
-[ProtectedSaveFiles.cs](io/ProtectedSaveFiles.cs) adapter runs inside Godot and
-links two existing MIT safety files unchanged. It performs protected reads and
-publication only. GDScript calls it directly with byte arrays; there is no helper
-process, JSON protocol, sibling executable or C# save codec. Godot's normal .NET
-export includes its runtime, so packaged use needs no separate .NET installation.
-An unavailable adapter disables save operations; there is no unchecked write fallback.
+## Layout
 
-The [pinned API review](../OnslaughtToolkit.FileBridge/README.md) records why pure
-GDScript cannot express the required physical-identity, no-clobber publication and
-disk-flush protections. This is an OS API gap, not a requirement to write the
-interface or save parser in C#. The earlier standalone helper remains reference
-source and a development race harness; it is excluded from the application.
+Everything is C# on Godot 4.8 dev6 .NET. [Main.tscn](Main.tscn) is a one-node wrapper
+that attaches [CompanionApp](Ui/CompanionApp.cs); every control, container, dialog
+and style below it is constructed in code. There is no GDScript, saved resource or
+editor-authored scene, and `npm run build` refuses to stage one.
 
-## Open and edit the project
+| Folder | Owner of |
+| --- | --- |
+| [Careers](Careers/) | The career byte codec (`CareerSave`), immutable open snapshots (`SaveSession`), the open/publish/compare/install workflow (`CareerWorkspace`) and each Goodie's rule and evidence (`GoodieFacts`) |
+| [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles`), its worker thread, and game-folder writes: backup sets, the running-game check and the verified install (`GameWrites`) |
+| [Game](Game/) | Steam library discovery, the game folder and its files, and the game's own text read from the install (`GameText`) |
+| [Options](Options/) | The `defaultoptions.bea` reader and editor (`OptionsFile`) and the physical-key table |
+| [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) and the bounded folder inventory |
+| [Lore](Lore/) | The embedded lore library and its Markdown renderer |
+| [Ui](Ui/) | The Flight-deck theme, the shell and one class per page |
+| [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
+| [Development](Development/) | Development-only entries: screen captures and export license metadata |
 
-Open `companion/OnslaughtToolkit.Godot/project.godot` using `~/.local/bin/godot48-mono`.
-The measured engine is **4.8.dev6.mono.official.8898c2b3d**. Build the C# project
-once with the editor's Build button before running it. Open
-[SaveLab.tscn](SaveLab.tscn) to inspect the actual controls, containers, dialogs and
-four tabs. [KillEditRow.tscn](ui/KillEditRow.tscn) is the reusable category row;
-[MediaBrowser.tscn](ui/MediaBrowser.tscn) owns the media view. Change spacing,
-labels, layout and presentation in the Inspector. The shared
-[toolkit.tres](theme/toolkit.tres) owns colors and styles. Scripts attached to those
-scenes handle behavior, rather than constructing the interface at runtime.
-Tree rows are populated from selected user data. No retail assets or saves are
-bundled, and the app does not automatically open the regression fixture.
-GDScript `.uid` files are tracked editor metadata. `SaveLab.cs` is retained reference
-source, explicitly excluded from the active C# project.
+`Tests/` and `Development/` compile only into development builds; release exports
+exclude them from both the assembly and the package.
+
+## Build, test, capture, run and export
 
 From the repository or this lane's worktree:
 
 ```bash
 npm run build:companion-godot
-npm run test:companion-godot
+npm test
+npm run capture:companion-godot
 npm run run:companion-godot
 npm run export:companion-godot -- --platform both
 ```
 
-Build/test/export are headless. **Run opens a window**; use it when the desktop is
-available. F6/F5 uses the integrated C# assembly built by the editor. Development
-commands stage the companion and its two linked MIT safety source files into unique
-canonical `local-data/companion/` directories. Imports, scratch, profiles,
-logs, owned fixtures and packages live there, independently of other tasks.
-Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research
-corpus is copied. The tooling prints the exact output owner. There is no `--bridge`
-option or helper-path environment variable in the active workflow.
+Build, test, capture and export never open a window on the desktop. **Run opens a
+window**; use it when the desktop is available. Each command stages the project, its
+linked MIT AppCore sources and the lore into a unique canonical `local-data/companion/`
+directory with isolated imports, profiles, scratch and logs, and prints that directory.
+Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus
+is copied.
 
-## Use Save Lab
+`npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
+[real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
+from tiny original bytes, then the launcher's own checks. It covers the codec on the real
+bytes, Goodie edits, options edits and the key table, the protected adapter and six Linux
+publication races, Steam discovery, the game's text on a synthetic language table,
+backups and installs (including a file that takes the name just before the swap), music
+and voice grouping, every lore article and link, and the interface driving its real
+controls.
 
-1. **Open career…** selects a real `.bes`. A supported container is exactly
-   10,004 bytes with version word `0x4BD1`. The app displays its full path,
-   SHA-256, physical file identity and useful stored values. This shape check is
-   format recognition, not proof of authenticity or game acceptance.
-2. Inspect the **Career inspector** for mission records, broken/unknown links,
-   raw ranks, Goodies, reserved slots and stored settings. Unsupported fields
-   remain read-only. No guessed names or implicit unlocks are applied.
-3. Check each count to change and enter its target. The preview names every
-   selected old/new value and differing byte. Only the low three bytes per
-   selected category may change; the fourth packed byte is preserved.
-4. Choose a fresh `.bes` filename in an existing non-game folder. Choosing a
-   filename does not write. **Write verified edit** explicitly publishes the
-   preview. **Make unchanged recovery copy** ignores edit selections and publishes
-   a byte-identical copy of the opened original instead.
-5. The operation checks original identity/content again, stages and verifies all
-   bytes, publishes without replacing any existing entry, and reopens the result.
-   GDScript compares the returned and independently reopened bytes with the plan.
-   The receipt reports path, hash, byte count and preservation checks. The original
-   remains the source until **Open verified result** is explicitly selected.
-6. **Compare copies** opens another supported career read-only and lists every
-   differing byte, including bytes without a known interpretation.
+`npm run capture:companion-godot` renders every page and state at 1280×800 and
+1920×1080 through `godot-offscreen`, against the same fake install. Add
+`--capture-arg=--steam-root=DIR` to render against a real Steam library instead; that
+library is only read, and no game write is confirmed in that mode.
 
-Malformed inputs, changed sources, same-path/linked sources, existing or dangling
-link destinations, an unavailable adapter and unsupported protected operations fail
-closed. The file dialogs cannot delete or create folders. Post-publication
-uncertainty explicitly says that a copy may exist; it is never automatically
-removed or reported as verified. A successful receipt concerns that operation,
-not subsequent changes by another program or behavior inside the game. File work
-runs on one worker thread. The UI remains responsive, but it waits for the result
-and defers normal closing while a transaction is active; a timeout is not falsely
-reported as cancellation of an in-process write.
+## What it does
 
-**Media** inventories an explicitly chosen local folder: file names, relative
-paths, formats and sizes. It skips links, bounds traversal and reports incomplete
-results. This increment does not decode or play media and makes no playback claim.
+**Home** finds the game through Steam (libraries, Flatpak and Snap), or a folder you
+choose, and checks `BEA.exe` against the Steam release by SHA-256. It lists the game's
+careers with an Open button, the options file, and what the install holds.
 
-## Migration goal and acceptance
+**Career** pages open a career read-only. A supported career is exactly 10,004 bytes
+with version word `0x4BD1`; the app records its path, SHA-256 and physical file identity.
+- **Overview**: missions with the game's own names, rank letters by the game's rule,
+  attempts, Goodies, kill counts and campaign links.
+- **Goodies**: all 233 slots in the game's colours (gold new, blue viewed), each with its
+  title from your game's text, its unlock rule, and how that rule is known: seen in the
+  game, checked in the game's code, or from the developers' source only.
+- **Edit a copy**: kill counts (only the three count bytes; the fourth byte is kept) and
+  Goodie states. The preview lists every changed byte.
+- **Cheat names**: a byte-identical copy whose name carries one of the three cheats seen
+  working in the Steam game (`MALLOY`, `TURKEY`, `Maladim`).
+- **Compare** lists every differing byte between two careers, named by region;
+  **Stored values** shows the raw values read-only.
 
-The lane's deliverables are:
+**Options** opens `defaultoptions.bea` (or another `.bea`) read-only and edits sound and
+music volume, invert flight and walker, vibration, controller preset, mouse sensitivity
+(the game's own slider steps), screen shape and keyboard bindings captured from a key
+press. Controller and mouse bindings are kept unless replaced; language and display mode
+are shown but not offered.
 
-- A native editor-visible scene/resource structure and typed GDScript behavior,
-  built using the exact shared .NET-engine/template pins.
-- A complete separate-copy Save Lab flow with honest inspection, explicit preview,
-  unchanged-byte preservation, guarded publication and protected reopen; plus
-  useful recovery-copy, comparison and read-only catalog increments.
-- A narrow documented in-process C# adapter where API evidence requires it, reusing the
-  existing safety implementation without importing legacy format/UI behavior.
-- Executed real-fixture round trips, independent intended-change byte diffs,
-  malformed/changed/conflicting input checks and publication-race regressions.
-- Linux execution and isolated render evidence, separate Windows cross-export
-  evidence, scoped documentation and normal commits/pushes. Windows runtime,
-  human interaction and later legacy parity are never inferred from packaging.
+**Install & backups** is the one page that writes into the game folder. See the next
+section.
 
-The native test runs actual scene methods/controls and the integrated adapter against
-owned copies of the sole tracked fixture. Domain checks cover all categories,
-0/24-bit limits, immutable snapshots, unknown bytes and corrected link states.
-Direct adapter tests exercise identity replacement with identical content,
-link aliases and destination conflicts. The separate development-only race harness
-exercises six Linux transaction-race/failure cases through the same safety source.
-No synthetic career is created. Exact receipts and remaining platform acceptance
-are recorded in [CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md) and
-[VALIDATION.md](../../VALIDATION.md).
+**Music & voices** plays the game's soundtrack and voice lines from your install, grouped
+by mission with the game's own transcripts. Only files with an Ogg Vorbis header
+reach the decoder. Cutscenes are Bink video and are listed, not played.
 
-## Existing behavior and remaining migration
+**Lore** reads the repository's lore library offline: the front door's shelves and reading
+order, a section outline, search, Back, Forward and Home (Alt+Left, Alt+Right; Ctrl+F
+searches). Links between articles stay in the reader; links to other repository files open
+their public GitHub page in your browser. The campaign's mission list is read from your
+game's text when the page opens, never shipped.
 
-| Reference | Measured or source-established state | Native disposition |
-|---|---|---|
-| Old Godot `SaveLab.cs` / AppCore `SaveLabService` | C# runtime-built single-category shell; September 6 visible write/reopen acceptance unfinished | Replaced by editable scenes and GDScript planning; source retained for comparison |
-| WinUI Save Lab / `BesFilePatcher` | Rich career/options analysis and editing | Native career inspection, multi-category count edits and comparison; broader rank, link, Goodie and options writes remain to migrate |
-| `SafeCopyCatalog`, `SafeCopySaveRescue` | Game-copy catalog/rescue behavior with Windows-dependent mutation paths | Native verified career recovery copies now; whole-game copying/rescue remains |
-| `BinaryPatchEngine`, tracked patch catalogs | Guarded patch planning/apply/restore in the retained toolkit | Supported patching remains a future coherent workflow; no native patch-apply claim |
-| WinUI Media / `MediaCatalogService` | Catalog plus NAudio/LibVLC playback and replacement | Native metadata catalog now; playback/replacement and asset preview remain |
-| Lore, assets, cheats, settings | Retained WinUI/AppCore services and tests | Retained as migration references; no native parity claim |
+**Media files** inventories an explicitly chosen folder: names, formats and sizes, with
+bounded traversal, links skipped and partial results reported.
 
-The old `SaveLab.cs` stays as reference source and is excluded from staging/export.
-The active `.csproj` and package lock now build only the adapter, compatibility
-stubs and linked safety source; they do not reference the AppCore assembly.
-One legacy analysis defect was intentionally not ported:
-nonzero campaign links are not all complete; broken and unknown states are shown
-separately. Mission-rank editing changes other fields in legacy code and is not
-silently offered as a rank-only edit.
+## How files stay safe
+
+- Careers and options open read-only. Every edit is written to a **new** file in a folder
+  you choose outside the game: publication re-checks the original's identity and content,
+  stages and verifies all bytes, publishes without replacing any existing entry, reopens
+  the result and compares it with the preview. The original stays the source until you
+  open the copy.
+- Writing into the game folder (a career into `savegames`, or a `.bea` as
+  `defaultoptions.bea`, including a restore from a backup) needs a backup folder outside
+  the game and a confirmation that names the exact file, source and backup folder. It is
+  refused while `BEA.exe` is running. It first makes a new backup set of every career and
+  the options file, each copy verified and listed in a manifest. A file being replaced
+  must still match its fresh backup; the new file is staged, verified and exchanged
+  atomically (`renameat2` with `RENAME_EXCHANGE`). If the file displaced by the exchange
+  is not the one that was backed up, it is swapped back and the new file withdrawn. The
+  written file is reopened and verified.
+- Installing into the game folder runs on Linux only; on Windows it is refused until it has
+  been tested there. Reading, copies and backups on Windows use the linked Windows file
+  path, which has not been executed here either.
+- Malformed inputs, changed sources, same-path or linked sources, existing destinations
+  and unavailable protected access fail closed; there is no ordinary write fallback. File
+  dialogs cannot delete or create folders. An uncertain result says a file may exist; it
+  is never deleted or reported as verified. File work runs on one worker thread, and
+  closing waits for it.
+
+A receipt concerns that operation, not later changes by another program or what the game
+does with the file. These checks do not prove behavior after power loss.
+
+## File-safety boundary
+
+[ProtectedSaveFiles](Files/ProtectedSaveFiles.cs) links the MIT
+[`SaveLabFileTransaction.cs`](../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs) and
+[`FileMutationSafety.cs`](../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs) unchanged; it
+imports no AppCore assembly or media library. On Linux it opens sources descriptor-relative
+without following links, compares physical identity and link count, stages into an unnamed
+file, flushes it, and publishes with a no-clobber link. [GameWrites](Files/GameWrites.cs)
+builds game-folder installs on the same primitives. The Windows copy path locks ancestors
+and verifies identity, but releases its staging quarantine and closes the handle before a
+path-based move, then verifies the published identity; Windows execution remains
+unverified here, and a Windows cross-export is not acceptance.
 
 ## Exact toolchain and rollback
 
-[toolchain.json](toolchain.json) records the measured binary/template hashes and
-shared lock revision. `tools/companion_godot.py` verifies the selected shared
-installation and refuses mismatches. This project's `global.json` pins .NET SDK
-8.0.424; its Godot SDK is `4.8.0-dev.6` and runtime `8.0.30`. Export presets target
-Linux x86_64 and Windows x86_64. Keep the complete normal Godot .NET export folder.
-Standard `godot48` and other shared toolchain installations remain unchanged.
-
-Adopt a later official 4.8 development/beta release only in an isolated worktree:
-review upstream changes and API guarantees; retain the old pinned shared install;
-update exact pins and matching templates; run affected codec, scene, transaction,
-export and isolated-render checks. Do not upgrade through an unpinned `latest`.
-Rollback uses the preceding committed project plus its preserved engine/templates
-and its own import cache; never downgrade a newly saved project in another task's
-checkout or erase its work. The pre-migration baseline is commit `25db5b23`;
-`9764e585` preserves the validated standard-engine/standalone-helper prototype.
+[toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
+the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
+mismatches. `global.json` pins .NET SDK 8.0.424; the Godot SDK is `4.8.0-dev.6` and the
+runtime `8.0.30`. Export presets target Linux x86_64 and Windows x86_64, and Godot's normal
+.NET export bundles the runtime, so packages need no installed .NET. Adopt a later engine
+only in an isolated worktree with updated pins, matching templates and a full rerun of the
+suite, exports and captures; roll back with the preceding commit and its preserved engine.
 
 See [PROVENANCE.md](PROVENANCE.md) for licensing and data boundaries.

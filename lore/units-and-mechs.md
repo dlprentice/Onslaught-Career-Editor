@@ -170,7 +170,7 @@ another:
   between waypoints while submerged, surfaces to fight (level-500 MSL shows
   `Dive()`/`Surface()` plus teleport travel). Its sinking gates the sub branch
   of the campaign graph (slot-62 flag, see
-  [worlds.md](worlds.md#world-500-career-node-23)).
+  [worlds.md](worlds.md#world-500--career-node-23)).
 - **HiveBoss** (episode 5) — `CHiveBoss`, `CHiveBossGuide`, behaviour id 0x0e.
   The swarm-mother: segment machinery shares the destructible-segments
   controller the player's parts use. TTD batch-3 pins its exclusive functions

@@ -27,10 +27,9 @@ baseline report, David authorized the first Godot Save Lab workflow. Existing Wi
 release procedures describe the retained implementation, not a queued WinUI release.
 
 Linux owns development and native Godot execution. The rebuild now has Linux build/run/smoke/capture
-commands. The companion runs on Godot 4.8 dev6 .NET (`godot48-mono`); its interface is still GDScript, with a
-thin in-process C# adapter that links the existing file-safety source, until it moves to C# under the language rule.
-David clarified that necessary production C# belongs inside the .NET edition; the standalone helper
-prototype is retained reference source, not the active build or export route.
+commands. The companion is a C# application built in code on Godot 4.8 dev6 .NET (`godot48-mono`); its
+in-process file-safety boundary links the existing AppCore safety source unchanged. The standalone helper
+prototype was retired on September 25; its publication-race cases run inside the companion's C# suite.
 Native scene/write/reopen checks passed on Linux; human interaction, the complete player walkthrough
 and Windows runtime acceptance remain separate; read `CURRENT_CAPABILITIES.md`.
 The full legacy AppCore suite, WinUI, Windows-targeted CLI and portable ZIP retain Windows dependencies.
@@ -60,7 +59,7 @@ into it only when its own checks pass. The 2026-09-25 baseline and its logs are 
 | --- | --- | --- | --- |
 | Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Answers the rebuild's and companion's retail questions from pristine bytes, the pinned GPL source and controlled original-code experiments. Level 100 and World 110 are contracted in `reverse-engineering/game-mechanics/`: the final wave (`level100-final-drone-wave.md`) and both construction orders (`level100-construction-order.md`, `world-110-construction-order.md`). Every rebuild question on them is answered or recorded as an open question with its falsifier. The companion has no open questions. Open: runtime draw and event logs to confirm the static orders; the RE record audit (see `PROGRAM.md`). Its checks run no Godot, so nothing in it needs the retired 4.7.2. |
 | Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | C# only and built in code: restored on 2026-09-25 from the last all-code C# rebuild (`b0b9c5e7`) with the later evidenced fixes; no GDScript or editor-authored scenes remain. Build, Core, Client, pause and AYA checks, smoke and replay hashes pass; the September 25 capture matched its baseline except the evidenced differences in VALIDATION.md, and a fresh capture comes before the merge. Since September 26 the Battle Engine's crosshair and auto-aim refreshes, the weapon stores, recoil shake, the jet Missile Pod (locks, seeking missiles), every round's launch basis and frame timing (its own MOVE and life events), the cockpit Gun emitters, Level 100's retail load order (influence map and warm-up units included) with every unit's recurring callbacks, the level's three-second pre-run, scripts started on their INIT_SCRIPT events and waypoint walks (nearest start, each node's target, load-time heights) follow the RE lane's contracts. The cold-start route and a recorded tape win Level 100 and the tape replays deterministically. Next: World 110 from the RE lane's construction contract, then the friendly turrets and auto-aim. |
-| Companion | `main` | `.worktrees/main-integration-20260919` | No active work. The GDScript Save Lab on Godot 4.8 dev6 .NET, with its in-process C# safety adapter (approved 2026-09-19), builds and passes `npm test`; it moves to C# after the rebuild. Human interaction, Windows execution and further workflows remain (`CURRENT_CAPABILITIES.md`, `PROGRAM.md`). |
+| Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Merged into `main` on 2026-09-26; work continues on the branch. C# only and built in code: no GDScript, one-node entry scene. The workflows David approved on 2026-09-25 are built in the Flight-deck look: careers and Goodies, copies and options, install and backups, and music, voices and lore. `npm test`, renders of every screen at two sizes (fake and real install) and both exports pass ([VALIDATION.md](VALIDATION.md#companion-approved-workflows--september-26)). Patching the installed `BEA.exe` is a later phase. Windows execution, a human click-through and listening to the audio remain. |
 
 To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then `git pull` and
 `git merge main`. Keep Godot headless unless David has released the desktop.
@@ -76,7 +75,8 @@ To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Care
   and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn`.
   Smoke: the same launcher's `smoke` mode with those engine arguments and `-- --record-tape=ABS_FRESH_LOCAL_DATA_PATH`,
   then `npm run run:rebuild-headless -- --tape TAPE --repeat 2` (the C# headless replayer).
-- Companion, in `$REPO/.worktrees/main-integration-20260919`: `npm run build` and `npm test`; `npm run dev` opens a window.
+- Companion, in `$REPO/.worktrees/companion-csharp-20260925`: `npm run build` and `npm test`;
+  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen`; `npm run dev` opens a window.
 
 There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
 draft. Unique ignored data from the retired companion and remote-review worktrees is in
@@ -137,8 +137,7 @@ draft. Unique ignored data from the retired companion and remote-review worktree
   whatsoever. No crossover."). No `.gd` files: game code, tools that run inside Godot, checks and capture harnesses
   are C#. Each subsystem has one production owner, never two copies of the same behavior. Everything is built in
   code: no editor-authored scenes or resources (a `.tscn` only as a one-node entry wrapper), and the editor need
-  not show the game. Shader source lives in C# strings; repository tooling stays Python. GDScript still in the
-  companion is being replaced (see Lanes); new work adds none.
+  not show the game. Shader source lives in C# strings; repository tooling stays Python. New work adds no GDScript.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.

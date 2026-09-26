@@ -37,6 +37,6 @@
     "runtimeVersion": "8.0.30",
     "targetFramework": "net8.0",
     "selfContained": true,
-    "purpose": "Integrated Godot C# file-identity and verified publication boundary; interface and save-domain code remain GDScript."
+    "purpose": "The companion is a C# application built in code, including its file-identity and verified publication boundary."
   }
 }

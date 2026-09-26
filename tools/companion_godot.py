@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Pinned Godot .NET companion routes with GDScript workflows and an integrated C# safety boundary."""
+"""Pinned Godot .NET companion routes: a C# application built in code, including its file-safety boundary."""
 from __future__ import annotations
 
 import argparse
@@ -22,12 +22,17 @@ from godot_host import print_process_output, run_process
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
-RACE_PROJECT = ROOT / "companion/OnslaughtToolkit.FileBridge/OnslaughtToolkit.FileBridge.TransactionTests.csproj"
 SAFETY_SOURCES = ("SaveLabFileTransaction.cs", "FileMutationSafety.cs")
+# Pure MIT AppCore readers the companion links unchanged; each is staged beside the safety sources.
+LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs", "CheatCodeCatalog.cs", "CheatSaveNameComposer.cs",
+                  "CampaignLoreComposer.cs")
 MIT_LICENSE = ROOT / "LICENSE"
 FIXTURE = ROOT / "tests_shared/fixtures/gold_career_save.bin"
-NATIVE_EXTENSIONS = {".godot", ".gd", ".uid", ".tscn", ".tres", ".cfg", ".svg", ".png", ".ttf", ".otf", ".cs", ".csproj", ".sln"}
-EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "legacy", "reference"}
+NATIVE_EXTENSIONS = {".godot", ".tscn", ".cfg", ".cs", ".csproj", ".sln"}
+EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
+# The companion is C# built in code: no GDScript, saved resources or editor-authored scenes.
+EDITOR_ONLY_SUFFIXES = {".gd", ".tres", ".res", ".scn", ".gdshader"}
+DEVELOPMENT_NAMESPACES = (b"OnslaughtToolkit.Companion.Tests", b"OnslaughtToolkit.Companion.Development")
 PLATFORMS = {
     "linux": ("linux-x64", "Linux", "OnslaughtToolkit.x86_64"),
     "windows": ("win-x64", "Windows", "OnslaughtToolkit.exe"),
@@ -153,13 +158,30 @@ def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: 
     return engine, templates
 
 
+def check_code_only(source_root: Path) -> None:
+    """Refuse GDScript, saved resources and any scene beyond a one-node script wrapper."""
+    for path in sorted(source_root.rglob("*")):
+        relative = path.relative_to(source_root)
+        if any(part in EXCLUDED_DIRECTORIES for part in relative.parts) or not path.is_file():
+            continue
+        if path.suffix in EDITOR_ONLY_SUFFIXES:
+            raise RuntimeError(f"The companion is C# built in code; remove {relative}")
+        if path.suffix == ".tscn":
+            text = path.read_text(encoding="utf-8")
+            resources = re.findall(r'(?m)^\[ext_resource\b[^\]]*\btype="([^"]+)"', text)
+            if (len(re.findall(r"(?m)^\[node\b", text)) != 1 or re.search(r"(?m)^\[(?:sub_resource|connection)\b", text)
+                    or resources != ["Script"]):
+                raise RuntimeError(f"{relative} must be a one-node entry wrapper that only attaches a C# script")
+
+
 def stage_project(output: Path) -> Path:
+    check_code_only(COMPANION)
     project = output / "companion/OnslaughtToolkit.Godot"
     project.mkdir(parents=True)
     metadata = {"packages.lock.json", "global.json", "NuGet.Config"}
     for source in sorted(COMPANION.rglob("*")):
         relative = source.relative_to(COMPANION)
-        if any(part in EXCLUDED_DIRECTORIES for part in relative.parts) or relative in {Path("SaveLab.cs"), Path("SaveLab.cs.uid")}:
+        if any(part in EXCLUDED_DIRECTORIES for part in relative.parts):
             continue
         if source.is_symlink():
             raise RuntimeError(f"Companion project source must not contain symlinks: {relative}")
@@ -168,13 +190,20 @@ def stage_project(output: Path) -> Path:
         target = project / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
-    for name in ("project.godot", "SaveLab.tscn", "OnslaughtToolkit.Godot.csproj", "OnslaughtToolkit.Godot.sln", "global.json", "packages.lock.json"):
+    for name in ("project.godot", "Main.tscn", "OnslaughtToolkit.Godot.csproj", "OnslaughtToolkit.Godot.sln", "global.json", "packages.lock.json"):
         if not (project / name).is_file():
             raise RuntimeError(f"Companion project file is missing: {name}")
     safety = output / "OnslaughtCareerEditor.AppCore"
     safety.mkdir()
-    for name in SAFETY_SOURCES:
+    for name in (*SAFETY_SOURCES, *LINKED_SOURCES):
         shutil.copyfile(ROOT / "OnslaughtCareerEditor.AppCore" / name, safety / name)
+    # The project's own lore (MIT, project-written) is embedded in the assembly as text.
+    for folder, pattern in (("lore", "*.md"), ("lore-book", "BOOK.md")):
+        (output / folder).mkdir()
+        for article in sorted((ROOT / folder).glob(pattern)):
+            if article.is_symlink() or not article.is_file():
+                raise RuntimeError(f"Lore source must be a regular file: {article}")
+            shutil.copyfile(article, output / folder / article.name)
     return project
 
 
@@ -210,35 +239,9 @@ def build_project(engine: Path, project: Path, pins: dict[str, Any], env: dict[s
 
 
 def check_project(engine: Path, project: Path, env: dict[str, str], output: Path) -> None:
+    # The C# compiler already checked every script; the import checks the entry scene and settings.
     run_logged([str(engine), "--headless", "--path", str(project), "--import"],
                cwd=project, env=env, timeout=180, log=output / "logs/import.log", godot=True)
-    for index, script in enumerate(sorted(project.rglob("*.gd"))):
-        if ".godot" in script.relative_to(project).parts:
-            continue
-        resource = "res://" + script.relative_to(project).as_posix()
-        run_logged([str(engine), "--headless", "--path", str(project), "--check-only", "--script", resource],
-                   cwd=project, env=env, timeout=60, log=output / f"logs/parse-{index}.log", godot=True)
-
-
-def run_transaction_tests(pins: dict[str, Any], fixture: Path, env: dict[str, str], output: Path) -> None:
-    # Development-only native race checks retain the unchanged AppCore transaction oracle.
-    dotnet = dotnet_sdk(pins, RACE_PROJECT.parent, env, output)
-    destination = output / "test-tools/race-harness"
-    destination.mkdir(parents=True)
-    build_root = output / "test-tools/race-build"
-    run_logged([dotnet, "publish", str(RACE_PROJECT), "--configuration", "Release", "--runtime", "linux-x64",
-                "--self-contained", "true", "--output", str(destination), "--nologo",
-                f"-p:BaseIntermediateOutputPath={build_root / 'obj'}/",
-                f"-p:BaseOutputPath={build_root / 'bin'}/", "-p:NuGetAudit=false"],
-               cwd=RACE_PROJECT.parent, env=env, timeout=180, log=output / "logs/transaction-build.log")
-    harness = destination / "OnslaughtToolkit.FileBridge.TransactionTests"
-    root = output / "transaction-tests"
-    root.mkdir()
-    result = run_logged([str(harness), str(fixture), str(root)], cwd=root, env=env, timeout=30,
-                        log=output / "logs/transaction-tests.json")
-    report = json.loads(result.stdout)
-    if report.get("ok") is not True or len(report.get("passed", [])) != 6:
-        raise RuntimeError("The six native transaction race checks did not all pass")
 
 
 def copy_dotnet_notices(pins: dict[str, Any], platform: str, project: Path, package: Path) -> None:
@@ -254,13 +257,9 @@ def copy_dotnet_notices(pins: dict[str, Any], platform: str, project: Path, pack
 
 
 def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], output: Path) -> Path:
-    script = output / "license_metadata.gd"
-    script.write_text(
-        "extends SceneTree\n\nfunc _initialize() -> void:\n"
-        "\tprint(JSON.stringify({\"license\": Engine.get_license_text(), "
-        "\"components\": Engine.get_copyright_info(), \"licenses\": Engine.get_license_info()}))\n"
-        "\tquit()\n", encoding="utf-8")
-    result = run_logged([str(engine), "--headless", "--no-header", "--path", str(project), "--script", str(script)],
+    # A development-build C# entry prints the pinned engine's notices; it never enters an export.
+    result = run_logged([str(engine), "--headless", "--no-header", "--path", str(project),
+                         "--script", "res://Development/LicenseMetadata.cs"],
                         cwd=project, env=env, timeout=30, log=output / "logs/godot-license-metadata.json",
                         godot=True, echo=False)
     notices = json.loads(result.stdout)
@@ -308,8 +307,11 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
             item.get("name") == "Microsoft.NETCore.App" and item.get("version") == pins["dotnet"]["runtimeVersion"]
             for item in config.get("includedFrameworks", [])):
         raise RuntimeError("Godot export did not bundle the pinned self-contained .NET runtime")
-    if not list(package.rglob("OnslaughtToolkit.Godot.dll")) or not list(package.rglob("GodotSharp.dll")):
+    assemblies = list(package.rglob("OnslaughtToolkit.Godot.dll"))
+    if len(assemblies) != 1 or not list(package.rglob("GodotSharp.dll")):
         raise RuntimeError("Godot export is missing its integrated managed assemblies")
+    if any(namespace in assemblies[0].read_bytes() for namespace in DEVELOPMENT_NAMESPACES):
+        raise RuntimeError("Contract tests or development entries leaked into a release export")
     if (package / "file-bridge").exists() or any("TransactionTests" in path.name or "FileBridge" in path.name
                                                 for path in package.rglob("*")):
         raise RuntimeError("Obsolete helper or development harness leaked into a production export")
@@ -319,8 +321,8 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     (package / "README.txt").write_text(
         f"Onslaught Toolkit — {platform} package\n\n"
         f"Run {filename} with its .pck file and Godot data directory kept beside it.\n"
-        f"Godot {pins['engineVersion']} runs the GDScript scenes and save-domain code.\n"
-        "The small C# file-safety boundary runs inside Godot; no helper process is used.\n"
+        f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
+        "Its file-safety boundary runs inside the same process; no helper process is used.\n"
         f"It bundles Microsoft.NETCore.App {pins['dotnet']['runtimeVersion']}; no installed .NET runtime is needed.\n"
         "The application MIT license, Godot notices and .NET notices are included here.\n"
         "This package contains no retail assets or saves. Cross-export is not Windows execution acceptance.\n",
@@ -335,16 +337,46 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     return package
 
 
+def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: str, timeout: float | None,
+                    env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs",
+                    extra: list[str] | None = None) -> Path:
+    # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
+    # the capture entry draws each screen through fixed-size SubViewports.
+    offscreen = shutil.which(os.path.expanduser(offscreen_tool))
+    if offscreen is None:
+        raise RuntimeError(f"godot-offscreen was not found: {offscreen_tool}")
+    if not re.fullmatch(r"[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3})*", sizes):
+        raise ValueError("--sizes must list WIDTHxHEIGHT pairs, for example 1280x800,1920x1080")
+    entry = Path(script)
+    if entry.is_absolute() or ".." in entry.parts or entry.suffix != ".cs" or not (project / entry).is_file():
+        raise RuntimeError("--capture-script must name an existing relative C# capture entry")
+    captures = output / "captures"
+    run_logged([offscreen, "--path", str(project), "--qa", str(output / "offscreen"),
+                "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
+                "--script", "res://" + entry.as_posix(), "--",
+                f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}", *(extra or [])],
+               cwd=project, env=env, timeout=None, log=output / "logs/capture.log", godot=True)
+    shots = sorted(captures.glob("*.png"))
+    if not shots:
+        raise RuntimeError("The capture run produced no screens")
+    print(f"Companion captures: {len(shots)} screens in {captures}", flush=True)
+    return captures
+
+
 def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("check", "build", "test", "run", "export"))
+    parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture"))
     parser.add_argument("--engine", default="~/.local/bin/godot48-mono")
     parser.add_argument("--shared-lock", type=Path, help="existing game_pipeline_shared/toolchain.linux.lock.json")
     parser.add_argument("--platform", choices=("linux", "windows", "both"), default="both", help="export target")
     parser.add_argument("--fixture", type=Path, default=FIXTURE, help="read-only input copied into this test invocation")
-    parser.add_argument("--script", default="tests/test_save_lab.gd", help="project test script")
+    parser.add_argument("--script", default="Tests/CompanionTestRunner.cs", help="project C# test entry (a SceneTree)")
     parser.add_argument("--timeout", type=float, help="test or run timeout in seconds; test defaults to 120")
     parser.add_argument("--engine-arg", action="append", default=[], help="additional run argument (use --engine-arg=--headless)")
+    parser.add_argument("--sizes", default="1280x800,1920x1080", help="capture sizes, WIDTHxHEIGHT[,...]")
+    parser.add_argument("--offscreen", default="~/.local/bin/godot-offscreen", help="shared hidden-output GPU runner")
+    parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
+    parser.add_argument("--capture-arg", action="append", default=[], help="argument for the capture entry, e.g. --capture-arg=--steam-root=DIR")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
@@ -373,6 +405,10 @@ def companion_main(argv: list[str] | None = None) -> int:
         check_project(engine, project, env, output)
         if args.mode in ("check", "build"):
             return 0
+        if args.mode == "capture":
+            capture_screens(project, copy_fixture(args.fixture, output), args.offscreen, args.sizes, args.timeout, env,
+                            output, args.capture_script, args.capture_arg)
+            return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)
             for platform in platforms:
@@ -392,8 +428,6 @@ def companion_main(argv: list[str] | None = None) -> int:
             command.extend(args.engine_arg)
         run_logged(command, cwd=project, env=env, timeout=args.timeout or (120 if args.mode == "test" else None),
                    log=output / "logs/console.log", godot=True)
-        if args.mode == "test":
-            run_transaction_tests(pins, fixture, env, output)
         return 0
     except subprocess.TimeoutExpired as error:
         print_process_output(error)
