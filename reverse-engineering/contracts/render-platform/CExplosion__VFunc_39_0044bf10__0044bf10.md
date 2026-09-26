@@ -1,13 +1,26 @@
 # CExplosion__VFunc_39_0044bf10
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CExplosion__VFunc_39_0044bf10` at `0x0044bf10` in the render/effects/platform-support cohort; bounded behavior, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — current name/register identity, READY packet/decompile, structured edges, closure range, and independently recomputed pristine body bytes; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0044bf10`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Filing.** This is not render, effects or platform-support code. It is CExplosion's slot 39,
+  the `Hit(CThing*, CCollisionReport*)` position in `thing.h:175`.
+  - It calls the base `CComplexThing` slot 39 (`0x004f4480`) at `0x0044bf60`.
+  - It calls the other thing's `Damage` (slot 40, vtable `+0xa0`) at `0x0044c061` and
+    `0x0044c08e`, and its slot 101 (`+0x194`) at `0x0044c0b7`.
+  - It makes no direct render or platform call.
 
 ## Identity
 - Body `[0x0044bf10,0x0044c0ee]`, 479 bytes, 152 closure instructions. Raw pristine-body SHA-256 `39e060a24fb364ff853e91d4825136bf8859bce85dea28d03a48c7e0928d7872`; closure range SHA-256 `80319dc9c4cc075e5bd93896a8846f9d50239e9daacc63d0d944d481040b1919`; packet range-plus-bytes SHA-256 `97d8ed93eaf4c8bf3bec6cc56bca426479ecb5df76df8741aa2c188e8b2fc8f5`. All three were independently recomputed over the exact single contiguous inclusive range.

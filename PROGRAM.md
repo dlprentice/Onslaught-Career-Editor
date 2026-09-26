@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (RE record audit: labels corrected live, documents corrected; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-26 (RE record audit complete: labels corrected live, documents corrected, factory-draft error rate measured; walker dash window; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -189,14 +189,24 @@ queued but is the source name (`BattleEngine.cpp:980-993`). The tracked
 2026-08-31 name table is older than the working project; check the live export
 before calling a label wrong.
 
-The audit found more wrong labels. The first three are verified from bytes; the
-rest are reviewers' leads to re-derive before a cohort:
+The audit found more wrong labels for the next label cohort. The rows without
+"(lead)" are verified from bytes; the leads need re-deriving first:
 
 | Address | Saved label | What it is |
 | --- | --- | --- |
 | `004247a0` | `CGeneralVolume__InitRandomizedVelocityOffsets` | the cockpit's `AddShockShake`, called from `0x00407a22` on `+0x528`; draws only the CRT `rand` |
 | `004d3020` | `CEngine__SetOptionValueAndNotifyTarget` | `CPlayer::SetIsGod` (`Player.cpp:221-242`) |
 | `005335d0` | `IScript__CreateThingRef` | fires the script's `arrived()` event with a boxed `CInt` |
+| `0040e910` | `CBattleEngine__GetGroundedControlFactor` | `CBattleEngine::GetImportance` (`BattleEngine.cpp:3453-3459`), vtable slot 80 |
+| `00409e60` | `CGeneralVolume__ToDoubleIdentity` | `CBattleEngine::ZoomModifier` (`BattleEngine.cpp:1913`) |
+| `0040e7d0` | `CBattleEngine__VFunc_104_0040e7d0` | `CBattleEngine::CanBeLocked` (`BattleEngine.cpp:3388-3410`) |
+| `00489650` | `CInfantryUnit__VFunc40_HandleCollisionDamageReaction` | `CInfantryUnit::Damage(float, CThing*, BOOL, int)`, vtable `0x005e272c` slot 40 |
+| `0044bf10` | `CExplosion__VFunc_39_0044bf10` | `CExplosion::Hit` (slot 39, before `Damage` at 40) |
+| `0044a130` | `CEngine__InitDamageSystem` | `CEngine::BuildLevelSpecifics` (`engine.cpp:369-382`), with `InitDamageSystem` inlined |
+| `004bac40` | `CMonitor__Shutdown` | CMonitor's destructor |
+| `005015c0` | `CEngine__TrimVbIbPoolCapacitiesPow2` | the static `CVBufTexture::ClearOut` |
+| `00428500` | `CUnitAI__RefreshCachedComponentTransform` | a `CComponent` member (render-transform cache) |
+| `0058617c`, `005852d5` | `CFastVB__…` | a texture-format codec with no RTTI, not `CFastVB`; 391 live labels carry the `CFastVB__` prefix (lead for the rest) |
 | `0051b610` | `CFEPMultiplayerStart__SubObj4034_T3` | a member of the startup page, whose vtable RTTI is `CFEPIntro` (lead) |
 | `00513a50` | `CEngine__SetRenderStateCached` | calls the device's `SetTexture` (lead) |
 | `004eb9a0` | `CUnit__InitDefaultTuningBlock` | writes the two terrain `D3DMATERIAL9` records (lead) |
@@ -226,7 +236,32 @@ audit by consumer:
    `0x2496`/`0x249A`, displayable Goodies, the attempts field and others.
 3. The queued Ghidra labels. Done: `label-audit-20260926` (above).
 4. A sample of the factory-drafted contracts, re-derived from pristine bytes,
-   to measure their error rate before any wider pass. Not started.
+   to measure their error rate before any wider pass. Done on 2026-09-26:
+   - **Mechanical claims.** A script re-derived the checkable claims of all 344 factory
+     drafts from the pristine bytes and the live export: body range, byte count, body
+     hash, instruction count, callee sites, callers and the `ret` size against the
+     prototype. These claims hold, with these exceptions:
+     - one wrong prototype (`CFrontEnd__Render` is `BOOL Render(BOOL)`);
+     - 20 titles older than the live label;
+     - 5 drafts that say "no callers" but have direct callers;
+     - 2 drafts whose titles were corrected on 2026-09-08 without renaming their files
+       (`contract_factory_validate.py`).
+     The records are in `local-data/test-runs/contract-audit-20260926/`.
+   - **Semantic claims.** Three read-only reviewers checked a sample of 12 drafts; the RE
+     lane re-derived every claim they marked wrong.
+     - 27 of 220 checkable claims are wrong (12%) and one is unsupported.
+     - 11 of the 12 drafts carry at least one wrong claim.
+     - 5 name the wrong function or owner, and one is filed in the wrong subsystem.
+     - The errors come from inherited labels and packet comments (owner prefixes, callee
+       names, parameter meanings, "exact" source claims), not from the byte-level fields.
+     - Each sampled draft now has its verified corrections at the top.
+   - **What the sample means.** Use the drafts' identity blocks. Treat their names, owners,
+     parameter meanings and source-exactness as leads.
+   - **Next.** A wider pass should start with the verified label table above as a label
+     cohort. It should then take the `CFastVB__` family, and then the drafts the rebuild
+     or companion cite.
+   - **Found on the way.** The retail walker dash window differs from the source and from
+     the rebuild ([walker dash](reverse-engineering/game-mechanics/walker-dash.md)).
 
 Correct each document in place from the bytes, the pinned source or an
 original-code run; treat existing names, comments and reports as leads, not

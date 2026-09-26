@@ -1,13 +1,23 @@
 # CBattleEngineJetPart__Pitch
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CBattleEngineJetPart__Pitch` at `0x00410670`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/BattleEngineJetPart.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00410670`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **The zoom callee.** `0x00409e60` is `CBattleEngine::ZoomModifier` (`BattleEngine.cpp:1913`;
+  `fld 1.0; fsub [esp+4]; fsubr 1.0; ret 4`), called on the main part with `mZoom`
+  (`0x004106cd-0x004106d7`). It is not `CGeneralVolume__ToDoubleIdentity`.
 
 ## Identity
 - Body `[0x00410670,0x0041073e]`, 207 bytes, 63 closure instructions. Raw pristine-body SHA-256 `fad09a18f0fb341c11b4c082d4c7ff76e937c41dca0b9091b5b9cc00ea903de6`; closure range SHA-256 `7dd242d2e24ee94a7211845e010c6b3a5bd209e505a8468382357f5f81d61c26`; packet range-plus-bytes SHA-256 `7fb5d7b94ae97b80d39367772702b717fced60ba3d65b4b4d928ba045f00753b`. All three were independently recomputed over the exact single contiguous inclusive range.

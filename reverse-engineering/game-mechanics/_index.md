@@ -20,6 +20,7 @@ support product or deterministic-Core behavior.
 - [Named waypoint paths: loading, start node and following](waypoint-paths.md)
 - [Dropships: flight](dropship-flight.md)
 - [Dropships: landing, unloading and leaving](dropship-landing.md)
+- [Walker dash: the retail timing window](walker-dash.md)
 - [World 110 serialized initial-object seed admission](world-110-initial-constructor-seeds.md)
 - [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)

@@ -1,13 +1,29 @@
 # CFastVB__InitTexelUnpackVTable_005ea034
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CFastVB__InitTexelUnpackVTable_005ea034` at `0x0058617c` in the numeric format-id texel-unpack profile constructor plate on the exact factory-to-shared-constructor path; exact identity, selected call connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — current name/register/closure identity, retained read-only READY packet/decompile, structured edges, fresh pristine body copy and digest recomputation, and paired static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0058617c`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Owner.** Not `CFastVB`. This constructs a pixel-format codec in the statically linked
+  texture-conversion code.
+  - Its vtables carry no RTTI: the words before `0x005ea034` and the base vtable `0x005e9ed0`
+    are `0x38000100` and `0x3f800000`, not complete-object locators.
+  - The game's `CFastVB` is the code that references the "FastVB.cpp" path string
+    (`0x0051a2a5`, `0x0051a56d`). It null-tests its first field (`0x0051a28a`), so it has no
+    vtable.
+- **The base constructor call.** It takes three arguments (the descriptor, `0x20` and 1;
+  pushes at `0x0058617d-0x00586181`), not one.
 
 ## Identity
 - Body `[0x0058617c,0x00586197]`, 28 bytes, 10 closure instructions. Raw pristine-body SHA-256 `61c3d8d2c832f90c835bfdddb4964e44c899dec418b710829fdfac8bee539590`; closure range SHA-256 `797bd8489a28769d6c68f50eccf5ebc7115eb5a494f37fbd0a2c31a9ac3fd177`; packet range-plus-bytes SHA-256 `e186cf14308260ee1f58709d1bcba2bf6098ee0446c5a5fca3910c52ac8d7b53`. All three were independently recomputed over the exact single contiguous inclusive range.

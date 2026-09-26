@@ -1,13 +1,24 @@
 # CBattleEngineWalkerPart__Forward
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CBattleEngineWalkerPart__Forward` at `0x00412d80`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/BattleEngineWalkerPart.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00412d80`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **The log callee.** The call at `0x00412e64` passes `0x0066f580` with "do dash Forward"
+  (`0x00623910`). That is `LOG.AddMessage` (source line 142), not `CConsole__Printf`.
+- **Omission.** Retail adds an upper bound to the dash window (`0x00412e3d-0x00412e58`): see
+  [walker dash](../../game-mechanics/walker-dash.md).
 
 ## Identity
 - Body `[0x00412d80,0x00412f66]`, 487 bytes, 139 closure instructions. Raw pristine-body SHA-256 `a1700e98ef7cac1fb13a7a2542e144dc2a0f2016d6a9f2670a91ca56c38312d2`; closure range SHA-256 `bc07ee5d4644110538a0316ff383aa18544c678a6a705d8579236da736f5152f`; packet range-plus-bytes SHA-256 `10b601abc29e7cb0378d26223900d900f2aefc7f703dedb98867ef39447cd167`. All three were independently recomputed over the exact single contiguous inclusive range.
