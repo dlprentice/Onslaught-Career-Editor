@@ -29,6 +29,19 @@ internal static class InstallTests
             return;
         }
 
+        foreach ((string comm, string[] argv, bool isGame) in new (string, string[], bool)[]
+        {
+            ("BEA.exe\n", ["C:\\Program Files\\Battle Engine Aquila\\BEA.exe"], true),
+            ("wine64-preload", ["Z:\\home\\player\\Battle Engine Aquila\\BEA.exe", "-window"], true),
+            ("wine64-preload", ["/usr/bin/wine64-preloader", "/usr/bin/wine64", "BEA.exe"], true),
+            ("bash", ["bash", "/opt/ghidra/support/analyzeHeadless", "project", "-import", "/lab/BEA.exe"], false),
+            ("java", ["/usr/bin/java", "-jar", "ghidra.jar", "BEA.exe"], false),
+            ("sha256sum", ["sha256sum", "BEA.exe"], false),
+            ("python", ["python", "tools/run.py", "--exe=/lab/BEA.exe.original.backup"], false),
+        })
+        {
+            check.That(GameProcess.IsGame(comm, argv) == isGame, $"The running-game check {(isGame ? "finds" : "ignores")} {argv[0]}.");
+        }
         foreach (string name in new[] { "../escape.bes", "sub/dir.bes", "career.txt", "BEA.exe", ".hidden.bes", " padded.bes", "x.bes " })
             check.That(!GameInstaller.Install(files, game, name, edited, backups, () => false, now).Ok, $"The target name '{name}' is refused.");
         check.That(!GameInstaller.Install(files, game, "New.bes", edited, backups, () => true, now).Ok, "Nothing is written while the game runs.");

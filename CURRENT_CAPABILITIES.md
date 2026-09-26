@@ -169,9 +169,10 @@ built:
 - **Options** reads `defaultoptions.bea` and writes a verified copy with audio, invert,
   vibration, controller preset, mouse sensitivity, screen shape and captured key changes.
 - **Install & backups** makes verified backup sets of every career and the options file,
-  restores them, and puts a verified copy into the game after a confirmation, never while
-  `BEA.exe` runs, with an atomic exchange that swaps back if the displaced file is not the
-  one backed up. Game-folder writes are Linux only; Windows refuses them.
+  restores them, and puts a verified copy into the game after a confirmation, refusing while
+  it finds `BEA.exe` running (the Linux process check has not yet been seen against a live
+  game), with an atomic exchange that swaps back if the displaced file is not the one backed
+  up. Game-folder writes are Linux only; Windows refuses them.
 - **Music & voices** plays the game's soundtrack and voice lines from the install with
   the game's transcripts; Bink cutscenes are listed only. **Lore** reads the repository's
   lore library offline with search and a mission list read from the player's game.

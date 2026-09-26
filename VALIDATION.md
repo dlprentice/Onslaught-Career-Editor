@@ -6198,6 +6198,16 @@ attempts column, and calls the top kill bytes a stored screen-position setting.
 `npm test` passed in `local-data/companion/godot-dotnet-test-a2621rg6/`: **605 checks,
 0 failures**.
 
+**Running-game check.** After main was merged in, four interface checks that write into
+the fake game failed (`local-data/companion/godot-dotnet-test-oi1x5_v4/`) because a Ghidra
+headless analysis with `BEA.exe` on its command line counted as the running game: the Linux
+check matched any argument ending in `BEA.exe`. It now matches only the game's own process
+as Wine presents it — process name `BEA.exe`, `BEA.exe` as argv[0], or a Wine loader
+carrying it — with seven focused cases, and the interface test decides the game is closed
+instead of reading the machine. `npm test` then passed with that analysis still running:
+`local-data/companion/godot-dotnet-test-w3ox5u5u/`, **612 checks, 0 failures**. The
+check has not been observed against a live game under Wine or Proton.
+
 **Not verified.** Windows execution, including the Windows file path for copies and
 backups; a human click-through with a mouse and keyboard; listening to the music and voice
 playback (the audio was decoded, never heard); and anything the game does with a copy

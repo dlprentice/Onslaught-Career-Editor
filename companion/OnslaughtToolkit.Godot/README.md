@@ -117,7 +117,9 @@ bounded traversal, links skipped and partial results reported.
 - Writing into the game folder (a career into `savegames`, or a `.bea` as
   `defaultoptions.bea`, including a restore from a backup) needs a backup folder outside
   the game and a confirmation that names the exact file, source and backup folder. It is
-  refused while `BEA.exe` is running. It first makes a new backup set of every career and
+  refused while `BEA.exe` is running; on Linux that means a process Wine names `BEA.exe`
+  (a tool that merely opens the file does not count), a check not yet seen against a live
+  game. It first makes a new backup set of every career and
   the options file, each copy verified and listed in a manifest. A file being replaced
   must still match its fresh backup; the new file is staged, verified and exchanged
   atomically (`renameat2` with `RENAME_EXCHANGE`). If the file displaced by the exchange

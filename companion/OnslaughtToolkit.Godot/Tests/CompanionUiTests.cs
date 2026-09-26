@@ -20,8 +20,10 @@ internal static class CompanionUiTests
         SwitchableSaveFiles files = new(new ProtectedSaveFiles());
         FakeInstall install = FakeInstall.Create(Path.Combine(outputDirectory, "ui-install"), original);
         List<string> openedUrls = [];
+        // The machine may be running tools that name BEA.exe; this drive decides the game is closed. The
+        // running-game refusal and the process check have their own cases in InstallTests.
         CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"),
-            OpenUrl: openedUrls.Add);
+            GameRunning: () => false, OpenUrl: openedUrls.Add);
         CompanionApp app = new(files, managesWindow: false, environment);
         tree.Root.AddChild(app);
         await Frame(tree);
