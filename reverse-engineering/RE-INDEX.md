@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (walker dash window; dropship flight and landing contracts; Level 100 and World 110 construction-order contracts, final-wave contract; composed loader/preset/language contracts; current Ghidra routing retained)
+Last updated: 2026-09-26 (walker dash and dropship contracts)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →

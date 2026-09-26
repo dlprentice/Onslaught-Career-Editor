@@ -1,7 +1,7 @@
-# FUN_00590cae
+# D3DXCore__CBuffer__GetBufferPointer
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; identity proven 2026-09-26 (linked library code)
+Last updated: 2026-09-26
 Source File: unlabeled (first gates only; do not read this as
 a pin of `CScriptObjectCode.cpp.md` / sibling
 `FUN_00590c8e` / neighbour `FUN_00590cb8` /
@@ -20,6 +20,10 @@ were **not** rewritten. Did not adopt C1
 `ReturnField0c`.
 
 > Address: `0x00590cae`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXCore__CBuffer__GetBufferPointer`. Linked library code: public: virtual void * __stdcall D3DXCore::CBuffer::GetBufferPointer(void), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\cbuffer.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `layout`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Contract
 
@@ -57,4 +61,4 @@ empty, **or** `0x001ed3e8` is not `ae 0c 59 00`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00590cae` | `FUN_00590cae` | `8b442404 8b400c c20400` (10 B) | not incoming-ECX; ret 0x4; 10 B; 0 E8 / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x005ed3e8`. **Not** on field meaning. |
+| `0x00590cae` | `D3DXCore__CBuffer__GetBufferPointer` | `8b442404 8b400c c20400` (10 B) | not incoming-ECX; ret 0x4; 10 B; 0 E8 / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x005ed3e8`. **Not** on field meaning. |

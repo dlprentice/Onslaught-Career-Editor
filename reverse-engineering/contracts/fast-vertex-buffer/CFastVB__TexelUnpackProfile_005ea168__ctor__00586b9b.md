@@ -1,13 +1,17 @@
 # CFastVB__TexelUnpackProfile_005ea168__ctor
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: superseded 2026-09-26: linked library code, not game code (see Identity)
+Last updated: 2026-09-26
 Summary: specimen-bound static contract for `CFastVB__TexelUnpackProfile_005ea168__ctor` at `0x00586b9b` in the numeric-format texel-unpack profile constructor plate on a bounded slice of the post-cohort-13 tail of the texel-unpack/codec/registry format-id factory dispatch, directly called by the contracted format factory and forwarding to the shared descriptor constructor `CFastVB__TexelUnpackProfile__ctorFromDescriptor` before binding its displayed vtable; exact identity, selected call connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — current name/register/closure identity, retained read-only READY packet/decompile, structured edges, fresh pristine body copy and digest recomputation, and paired static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00586b9b`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXTex__CCodec_R16F__ctor`. Linked library code: public: __thiscall D3DXTex::CCodec_R16F::CCodec_R16F(struct D3DX_BLT *), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\ccodec.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Identity
 - Body `[0x00586b9b,0x00586bb6]`, 28 bytes, 10 closure instructions. Raw pristine-body SHA-256 `872dd255728c337830150728b0e1ab2c4168033b098b8eb50b75a75e22a17a01`; closure range SHA-256 `ffc3c25050e41ef34e711b62faeb5b5e70a14870f469ab8b451082afbe095134`; packet range-plus-bytes SHA-256 `8c0bd469fa2dfdfd187d84fbc34035ef0fd435b92706f06923835eba934bdd22`. All three were independently recomputed over the exact single contiguous inclusive range.

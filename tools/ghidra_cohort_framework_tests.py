@@ -220,6 +220,12 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # label-audit-20260926: ten names, comments and tag sets corrected by the RE
 # record audit, 2026-09-26. Reviewed rehearsal preserves every prototype,
 # variable, type, body and non-target row; five read-only refusals passed.
+# label-audit-2-20260926: eighteen names, comments and tag sets corrected by
+# the RE record audit's second label cohort, 2026-09-26; same preservation and
+# refusal evidence, after two review rounds that blocked comment overclaims.
+# library-d3dx-20260926: 1,139 statically linked library functions named from
+# byte-exact matches against the pinned d3dx9.lib (tools/re_lib_match.py), with
+# the same preservation and refusal evidence and an independent review.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -256,6 +262,8 @@ LIVE_GRANTED_COHORTS = [
     "audio-sample-loading",
     "audio-sample-parameters",
     "label-audit-20260926",
+    "label-audit-2-20260926",
+    "library-d3dx-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -698,6 +706,8 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "audio-sample-loading",\n'
         '        "audio-sample-parameters",\n'
         '        "label-audit-20260926",\n'
+        '        "label-audit-2-20260926",\n'
+        '        "library-d3dx-20260926",\n'
         "    };\n",
     ),
     (

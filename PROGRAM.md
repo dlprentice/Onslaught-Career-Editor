@@ -189,29 +189,60 @@ queued but is the source name (`BattleEngine.cpp:980-993`). The tracked
 2026-08-31 name table is older than the working project; check the live export
 before calling a label wrong.
 
-The audit found more wrong labels for the next label cohort. The rows without
-"(lead)" are verified from bytes; the leads need re-deriving first:
+The second label cohort (`label-audit-2-20260926`, applied live on 2026-09-26; see the
+[Ghidra README](reverse-engineering/ghidra/README.md#re-audit-label-corrections-second-cohort--september-26))
+corrected eighteen more labels from the bytes, among them `CCockpit__AddShockShake`,
+`CPlayer__SetIsGod`, `IScript__FireArrivedEvent`, `IScript__UpdateWaypointFollowing`,
+`CBattleEngine__GetImportance`, `CBattleEngine__CanBeLocked`, `CInfantryUnit__Damage`,
+`CExplosion__Hit`, `CMonitor__dtor_base`, `CComponent__RefreshCachedTransform`,
+`PCLTShell__D3D_SetTexture` and `CRenderMethod__ctor`. The notes that cited the old
+names were updated, and three notes named after disproved labels were renamed.
+
+Verified corrections waiting for the next cohort:
 
 | Address | Saved label | What it is |
 | --- | --- | --- |
-| `004247a0` | `CGeneralVolume__InitRandomizedVelocityOffsets` | the cockpit's `AddShockShake`, called from `0x00407a22` on `+0x528`; draws only the CRT `rand` |
-| `004d3020` | `CEngine__SetOptionValueAndNotifyTarget` | `CPlayer::SetIsGod` (`Player.cpp:221-242`) |
-| `005335d0` | `IScript__CreateThingRef` | fires the script's `arrived()` event with a boxed `CInt` |
-| `0040e910` | `CBattleEngine__GetGroundedControlFactor` | `CBattleEngine::GetImportance` (`BattleEngine.cpp:3453-3459`), vtable slot 80 |
-| `00409e60` | `CGeneralVolume__ToDoubleIdentity` | `CBattleEngine::ZoomModifier` (`BattleEngine.cpp:1913`) |
-| `0040e7d0` | `CBattleEngine__VFunc_104_0040e7d0` | `CBattleEngine::CanBeLocked` (`BattleEngine.cpp:3388-3410`) |
-| `00489650` | `CInfantryUnit__VFunc40_HandleCollisionDamageReaction` | `CInfantryUnit::Damage(float, CThing*, BOOL, int)`, vtable `0x005e272c` slot 40 |
-| `0044bf10` | `CExplosion__VFunc_39_0044bf10` | `CExplosion::Hit` (slot 39, before `Damage` at 40) |
-| `0044a130` | `CEngine__InitDamageSystem` | `CEngine::BuildLevelSpecifics` (`engine.cpp:369-382`), with `InitDamageSystem` inlined |
-| `004bac40` | `CMonitor__Shutdown` | CMonitor's destructor |
-| `005015c0` | `CEngine__TrimVbIbPoolCapacitiesPow2` | the static `CVBufTexture::ClearOut` |
-| `00428500` | `CUnitAI__RefreshCachedComponentTransform` | a `CComponent` member (render-transform cache) |
-| `0058617c`, `005852d5` | `CFastVB__…` | a texture-format codec with no RTTI, not `CFastVB`; 391 live labels carry the `CFastVB__` prefix (lead for the rest) |
-| `0051b610` | `CFEPMultiplayerStart__SubObj4034_T3` | a member of the startup page, whose vtable RTTI is `CFEPIntro` (lead) |
-| `00513a50` | `CEngine__SetRenderStateCached` | calls the device's `SetTexture` (lead) |
-| `004eb9a0` | `CUnit__InitDefaultTuningBlock` | writes the two terrain `D3DMATERIAL9` records (lead) |
-| `00527c90` | `CReconnectInterface__ctor` | the `landscape_method` CVar constructor (lead) |
-| `0050f680` | `CSpawnerThng__IsSpawnTypeAllowed` | the preserve-size predicate (lead) |
+| `005015c0` | `CEngine__TrimVbIbPoolCapacitiesPow2` | the static `CVBufTexture::ClearOut`; the name was held by `00501450` until the second cohort |
+| `004f00e0` | `CLTShell__ShutdownRuntimeAndReleaseResources` | `SYSTEM.Shutdown()`, called once at `0x0051241a` after `SYSTEM.Run()` (`ltshell.cpp:550-552`) (lead: the class name) |
+| `0046dbc0` | `CMonitor__Shutdown_Thunk` | a tail jump to CMonitor's destructor `004bac40` |
+| `00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing::SetThingType`, slot 38 |
+| `00401f70`, `00401fd0` | `CActor__TestFieldCcDeltaBelow015_…`, `ElapsedTime__BelowThreshold_D4` | `CActor::IsOnGround` (slot 67) and `IsOnObject` |
+
+The library pass (audit step 2) named the statically linked library code on
+2026-09-26 (cohort `library-d3dx-20260926`; see the
+[Ghidra README](reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)).
+`tools/re_lib_match.py` compares every function of a pinned static library with the
+pristine bytes, relocation fields masked, and pools what each relocation implies;
+`llvm-readobj` and `objdump` re-check it independently. Against the DirectX 9.0 SDK's
+`d3dx9.lib` it decides 1,112 of the 1,114 functions from `0x00574270` to `0x005be622`.
+With the C runtime functions and the global `operator new`/`operator delete` that the
+D3DX code calls, 1,139 functions were named.
+
+Of the 391 `CFastVB__` labels:
+- 326 were D3DX code (texture codecs, math, the shader assembler, libjpeg, libpng and
+  zlib) and are named now;
+- 6 are the game's `FastVB.cpp` code (`0x0051a270`-`0x0051a6a0`, the file named by the
+  `__FILE__` string that `Create` and `Render` pass to the allocator), and 2 are their
+  unwind funclets;
+- 57 are NVIDIA's NvTriStrip with its STL containers (`0x0056eb50`-`0x00574250`).
+
+NvTriStrip is next. Its four setters and `GenerateStrips` match the public source's API,
+and its globals match that source's initial values (cache size 16, stitching on). The
+public source is a later version with restart support, so the mapping is structural.
+
+The C runtime around it (`0x0055d6a0`-`0x0056eb50` and `0x005be622`-`0x005d0f10`) is
+VC6 `LIBCMT`. The SP6 library decides 434 of its 459 functions. Fifteen of the rest are
+`__finally` and unwind blocks that saved boundaries split off matched functions. Ten
+bodies (among them the `asin`, `acos` and `pow` cores) differ from SP6, because the
+game's runtime objects are an older build (Rich header `Utc12_C` build 8047).
+`0x005be628` is DxErr9's `DXGetErrorString9A`. `0x0058864a`
+(`D3DXCore::CFile::CFile`) waits for the next cohort because it shares a saved label
+with `0x0057cc53`.
+
+Follow-ups found by the review:
+- Ghidra does not treat `_exit` as no-return, so `D3DX__error_exit`'s saved body
+  swallows `output_message` (`0x00592b20`);
+- 13 call targets in matched code have no Ghidra function.
 
 ### RE record audit — requested September 25
 

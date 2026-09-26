@@ -82,7 +82,7 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 | 0x00538960 | CScriptEventNB__RegisterEventListener | WAVE586 | `void * __thiscall ... (void * this, void * event_name_ref, void * event_function)` |
 | 0x005387b0 | CScriptEventNB__ClearListenerEntry | WAVE586 | `void __fastcall ... (void * listener_entry)`; clears one listener entry. Renamed 2026-08-17 from the plural `ClearEventListeners`, which contradicted this row's own singular reading and its `listener_entry` parameter. |
 | 0x005388d0 | CScriptEventNB__DestroyAllEvents | WAVE586 | `void __fastcall ... (void * event_nb)`; destroys all listener entries |
-| 0x00538470 | CScriptEventNB__UpdateWaypointFollowing | WAVE586 | `void __fastcall ... (void * event_nb)`; waypoint following logic with distance checks |
+| 0x00538470 | IScript__UpdateWaypointFollowing | WAVE586 | `void __fastcall ... (void * event_nb)`; waypoint following logic with distance checks |
 | 0x005385e0 | IScript__HandleMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; message IDs 2000, 0x7d1, 0x7d2 |
 | 0x00538b70 | CScriptEventNB__PostEvent | WAVE586 | `void __thiscall ... (void * this, char * event_name)`; posts event to matching listeners |
 | 0x00538c70 | CScriptEventNB__HandleEventMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; handles event-manager payload message 2000 |
@@ -561,7 +561,7 @@ Offsets formerly listed from `0x58` through `0x6c` came from the now-moved `CScr
 | 0x00549220 | CDXMemoryManager__Free | Memory deallocation |
 | 0x004e5bd0 | CSPtrSet__Remove | Remove entry from list (returns node to pool) |
 | 0x004e5c60 | CSPtrSet__Clear | List cleanup |
-| 0x004bac40 | CMonitor__Shutdown | Base monitor cleanup helper (formerly `FUN_004bac40`) |
+| 0x004bac40 | CMonitor__dtor_base | Base monitor cleanup helper (formerly `FUN_004bac40`) |
 | 0x0044b370 | CEventManager__AddEvent_AtTime | Event scheduling; this call uses `NEXT_FRAME` |
 | 0x00441740 | CConsole__Printf (`FUN_00441740`) | Debug/error output |
 
