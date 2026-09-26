@@ -34,7 +34,6 @@ reverse-engineering/binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md
 reverse-engineering/binary-analysis/cockpit-lighting-law-2026-07-26.md
 reverse-engineering/binary-analysis/cockpit-world-matrix-static-2026-07-26.md
 reverse-engineering/binary-analysis/controlled-runtime-observations-2026-07-26.md
-reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md
 reverse-engineering/binary-analysis/d3d-fog-render-state-static-contract-2026-07-25.md
 reverse-engineering/binary-analysis/destroyable-segments-static-contract.md
 reverse-engineering/binary-analysis/executable-analysis.md
@@ -328,7 +327,6 @@ reverse-engineering/binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-2
 reverse-engineering/binary-analysis/re-coverage-baseline-2026-07-25.md
 reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md
 reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md
-reverse-engineering/binary-analysis/retail-specimen-baseline.md
 reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md
 reverse-engineering/binary-analysis/terrain-ambient-light-applied-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-ambient-light-material-2026-07-26.md
