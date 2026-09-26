@@ -1119,6 +1119,25 @@ public static class Level100ContactMechanics
         Level100Vector3 start,
         Level100Vector3 end,
         int contactRadiusMillimeters,
+        out Level100ContactHit hit) =>
+        TrySweepRoundAgainstTerrain(start, end, contactRadiusMillimeters, prune: true, out hit);
+
+    /// <summary>
+    /// The same search without the height-bound pruning, for the test that
+    /// proves pruning never changes a result.
+    /// </summary>
+    internal static bool TrySweepRoundAgainstTerrainWithoutPruning(
+        Level100Vector3 start,
+        Level100Vector3 end,
+        int contactRadiusMillimeters,
+        out Level100ContactHit hit) =>
+        TrySweepRoundAgainstTerrain(start, end, contactRadiusMillimeters, prune: false, out hit);
+
+    private static bool TrySweepRoundAgainstTerrain(
+        Level100Vector3 start,
+        Level100Vector3 end,
+        int contactRadiusMillimeters,
+        bool prune,
         out Level100ContactHit hit)
     {
         int high;
@@ -1132,6 +1151,7 @@ public static class Level100ContactMechanics
             0,
             Level100Basis3.Scale,
             contactRadiusMillimeters,
+            prune,
             out high))
         {
             hit = default;
@@ -1745,16 +1765,27 @@ public static class Level100ContactMechanics
         int lowTime,
         int highTime,
         int contactRadiusMillimeters,
+        bool prune,
         out int contactTime)
     {
         Level100Vector3 low = Interpolate(start, end, lowTime);
+        Level100Vector3 high = Interpolate(start, end, highTime);
+        // Interpolation is monotonic in time on every axis, so the span lies
+        // inside its endpoints' box and its lowest point is at an endpoint. If
+        // that point clears the highest ground the box can sample, every test
+        // below would report no contact, so skipping the span changes nothing.
+        if (prune && SpanClearsTerrain(low, high, contactRadiusMillimeters))
+        {
+            contactTime = 0;
+            return false;
+        }
+
         if (TouchesTerrain(low, contactRadiusMillimeters))
         {
             contactTime = lowTime;
             return true;
         }
 
-        Level100Vector3 high = Interpolate(start, end, highTime);
         bool highTouches = TouchesTerrain(high, contactRadiusMillimeters);
         (int lowX, int lowY) = GetTerrainSampleCoordinates(low);
         (int highX, int highY) = GetTerrainSampleCoordinates(high);
@@ -1792,6 +1823,7 @@ public static class Level100ContactMechanics
             lowTime,
             middleTime,
             contactRadiusMillimeters,
+            prune,
             out contactTime))
         {
             return true;
@@ -1802,7 +1834,24 @@ public static class Level100ContactMechanics
             middleTime,
             highTime,
             contactRadiusMillimeters,
+            prune,
             out contactTime);
+    }
+
+    private static bool SpanClearsTerrain(
+        Level100Vector3 low,
+        Level100Vector3 high,
+        int contactRadiusMillimeters)
+    {
+        (int lowX, int lowY) = GetTerrainSampleCoordinates(low);
+        (int highX, int highY) = GetTerrainSampleCoordinates(high);
+        int highestGround = Level100Terrain.Instance.MaximumGroundElevationMillimetersAtFixed(
+            Math.Min(lowX, highX),
+            Math.Min(lowY, highY),
+            Math.Max(lowX, highX),
+            Math.Max(lowY, highY));
+        long lowestSphereDown = (long)Math.Max(low.Z, high.Z) + contactRadiusMillimeters;
+        return lowestSphereDown < -(long)highestGround;
     }
 
     private static bool TerrainBoundaryCouldTouch(

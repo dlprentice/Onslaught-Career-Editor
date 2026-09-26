@@ -70,6 +70,37 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Terrain contact sweep pruning — September 25
+
+The recorded launch hitch came from the terrain half of
+`Level100ContactMechanics.TrySweepRoundWithTerrain`: a scratch benchmark at the
+smoke tape's four firing ticks timed the whole crosshair sweep at 78–82 ms, the
+terrain search alone at the same, and the 34 actors' mesh sweep at 0.01 ms. The
+terrain search bisects the ray down to one part per million and prunes only
+spans whose ends share a terrain cell, so a 1,000-unit ray toward the horizon
+walks every cell.
+
+It now also skips any span whose lowest point, plus the contact radius, clears
+the highest ground its box can sample. Each sample interpolates between the four
+samples of its own tile's cell, the elevation conversion is monotonic and
+interpolation along the ray is monotonic, so every test inside such a span would
+report no contact; `Level100Terrain` keeps a min/max pyramid over the 512 x 512
+cells to bound them. `Level100TerrainSweepPruningTests` compares 400
+deterministic random rays (radii 0–2.5 m, lengths to 1,000 units, 247
+contacts, some starting past the map edge) with and without the pruning: every
+contact record is identical, in 17 ms against 36,339 ms.
+
+At the four firing ticks the crosshair sweep now takes **0.06 ms**. The 2,148-tick
+smoke replay (Release, warm) has **no tick over 1 ms**: median 0.0745 ms, p99
+0.36 ms, maximum 0.48 ms, and about 28 µs per live projectile per tick. The
+smoke tape and `first-flight.v1.json` still replay to trace `a4e6673b…` / state
+`53c1cc64…` and `0872e009…` / `69bd64ac…`; the Core suite (1,471 of 1,472, the
+known cold-start route) now runs in 1 m 32 s instead of 7 m 55 s and the Client
+suite (912 passed) in 16 s. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/reticle-sweep-profile-20260925/`,
+`sim-benchmark-20260925/after-terrain-prune.log` and
+`terrain-prune-suites-20260925-231708/`.
+
 ### Level 100 won tape — September 25
 
 The cold-start Level 100 run (frontend by clicks, then the chain autopilot on
@@ -259,10 +290,9 @@ establish the largest retail battle's unit count, so the stress case is 10x Leve
 scaling the measured per-actor work puts even the idle GDScript tick at 10–56 ms.
 
 **Decision:** superseded the same evening. David directed C# only for the whole
-repository (`AGENTS.md`), so no subsystem needs a measured exception. The numbers stay
-as the performance record: Release C# already misses 5 ms on launch and flight ticks
-(about a 100 ms hitch per shot); that contact-sweep cost is an existing, open
-performance defect. Sources and logs:
+repository (`AGENTS.md`), so no subsystem needs a measured exception. The launch and
+flight costs above were the terrain contact sweep; the pruning recorded in "Terrain
+contact sweep pruning — September 25" removed them without changing any result. Sources and logs:
 `.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
 
 ### September 19 production scene migration

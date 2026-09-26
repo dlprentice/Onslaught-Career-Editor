@@ -48,8 +48,9 @@ cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
 September 25 measurement
 ([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
-stays as the Core's performance record: projectile launch and flight cost up to
-about 100 ms per tick in Release C#, an open defect.
+measured projectile launch and flight at up to about 100 ms per tick in Release
+C#. That was the terrain contact sweep, now pruned exactly (`Level100TerrainSweepPruningTests`):
+the smoke replay has no tick over 1 ms and the same hashes.
 
 `CuratedAyaTextureLoader` admits curated AYA textures strictly. It inflates each
 AYA record through Godot's zlib stream, which reports the bytes zlib actually
