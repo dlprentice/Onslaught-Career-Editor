@@ -223,6 +223,10 @@ public partial class CompanionApp : Control
         if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
         if (key is { CtrlPressed: true, Keycode: Key.O } && !Workspace.Busy)
             Home.OpenDialog.PopupCenteredRatio(0.75f);
+        else if (key is { CtrlPressed: true, Keycode: Key.S } && Current == EditCareer && !EditCareer.Save.Disabled)
+            EditCareer.AskToSave();
+        else if (key is { CtrlPressed: true, Keycode: Key.S } && Current == Settings && !Settings.Save.Disabled)
+            Settings.AskToSave();
         else if (Current == Lore && key is { CtrlPressed: true, Keycode: Key.F })
             Lore.Search.GrabFocus();
         else if (Current == Lore && key is { AltPressed: true, Keycode: Key.Left })

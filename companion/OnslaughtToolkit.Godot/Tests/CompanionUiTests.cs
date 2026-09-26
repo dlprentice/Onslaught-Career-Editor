@@ -133,6 +133,9 @@ internal static class CompanionUiTests
 
         edit.Rows[0].Target.Value = 123456;
         edit.Rows[4].Target.Value = 123460;
+        app._UnhandledKeyInput(new InputEventKey { Keycode = Key.S, CtrlPressed = true, Pressed = true });
+        check.That(edit.SaveChoice.Dialog.Visible, "Ctrl+S on Edit career opens the save choice");
+        edit.SaveChoice.Dialog.Hide();
         check.That(edit.Plan.Ok && !edit.Save.Disabled && edit.ChangesText.Contains("Aircraft kills: 3,221 → 123,456"),
             "a changed count is listed in the player's words and can be saved");
         check.That(edit.Bar.Root.Visible && edit.Bar.Summary.Text.StartsWith("2 changes not saved yet", StringComparison.Ordinal) &&

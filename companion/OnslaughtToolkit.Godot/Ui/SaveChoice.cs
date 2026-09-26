@@ -34,6 +34,8 @@ internal sealed class SaveChoice
         _nameRow.Add(Build.Text("Name", "Muted", wrap: false, width: 60));
         Name = _nameRow.Add(new LineEdit { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MaxLength = 100 });
         Name.TextChanged += _ => Validate();
+        // Enter in the name saves, as the Save button would (and only when it could).
+        Dialog.RegisterTextEnter(Name);
         content.Add(newPanel);
 
         (PanelContainer replacePanel, _, _replaceTitle, _replaceText) = Choice(SaveTarget.Replace, "", "");

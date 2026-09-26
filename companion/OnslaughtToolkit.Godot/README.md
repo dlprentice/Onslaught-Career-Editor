@@ -73,7 +73,9 @@ The sidebar groups the pages the way a player thinks about them: **Home**; **You
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
 **Extras** (Music & voices, Lore); and **Advanced**, folded away (Compare careers, Raw
 values, Media files). The header names the page, shows **Game running** while the game
-is open, and switches careers (or opens a career file, Ctrl+O).
+is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
+settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
+and Undo.
 
 **Home** finds the game through Steam (native, Flatpak and Snap on Linux; the registry and
 Program Files on Windows) or a folder you choose, and checks `BEA.exe` against the Steam
