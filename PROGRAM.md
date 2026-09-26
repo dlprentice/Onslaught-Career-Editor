@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit complete; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit complete; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -511,30 +511,29 @@ The September 6 mostly idle native session passed both expected hashes across
 two replays. Recording now works; a substantial player-input tutorial recording
 and its workflow acceptance remain open.
 
-### P10 — Godot toolkit companion — NATIVE SAVE LAB IMPLEMENTED
+### P10 — Godot toolkit companion — PLAYER APP BUILT ON LINUX; PAUSED
 
-The September 19 companion lane uses Godot 4.8 dev6 .NET and native GDScript
-for editable scenes, save inspection/planning, comparison and media metadata.
-Linux headless execution now covers open → explicit preview → separate verified
-copy → reopen through the actual scene and in-process C# file adapter. Byte-identical career
-recovery copies and read-only comparisons are native workflows. See the
-[companion goal/acceptance](companion/OnslaughtToolkit.Godot/README.md#migration-goal-and-acceptance)
-and [executed evidence](CURRENT_CAPABILITIES.md#godot-save-lab--first-workflow).
+The companion is a C# application built in code on Godot 4.8 dev6 .NET and organised
+around players: careers with a campaign map, Goodies, career editing, cheats, game
+settings, automatic backups that can be put back, music and voices, and lore (see its
+[README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
+choice made after a verified backup, never while the game runs. Its suite and renders of
+every screen at two sizes pass on Linux, and both exports build; the Linux package runs.
+[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
+records what is proven. David closed its goal on September 26 and paused the lane; it
+resumes on its branch when he sets new requirements.
 
-GDScript lacks the required OS file identity/no-clobber primitives. David clarified
-that necessary C# should run inside Godot's .NET edition. The thin adapter links
-existing file safety unchanged, with GDScript owning save semantics and presentation.
-There is no production helper process. Unsupported protection fails closed.
-WinUI/AppCore and the old C# scene script remain reference material. The legacy
-[Windows release procedure](README.RELEASE.md) remains historical, not a release task.
+Still open: a human click-through, listening to the music and voices, and running the
+Windows package. The portable write path has run only on Linux, and Windows
+cross-export/package checks do not establish Windows execution.
 
-Remaining coherent increments are broader career/options editing, whole-game
-safe-copy/rescue, catalog-backed patch preview/apply/restore, media playback and
-replacement, lore and asset views. Keep MIT application, GPL rebuild and private
-retail data separate. No unrelated launcher/store/community expansion is planned.
-Windows cross-export/package checks do not establish Windows execution; actual
-Windows acceptance and human desktop interaction remain open. The companion lane
-does not own retail RE/Ghidra contracts or the faithful rebuild's Godot migration.
+Later, only at David's direction: patching the installed `BEA.exe` with a preview, a
+verified backup and restore; showing the Goodies' own contents; media replacement; a
+public release. No unrelated launcher, store or community features are planned. Keep MIT
+application, GPL rebuild and private retail data separate. WinUI/AppCore remain reference
+material, and the legacy [Windows release procedure](README.RELEASE.md) is historical, not
+a release task. The companion lane does not own retail RE/Ghidra contracts or the faithful
+rebuild's Godot migration.
 
 ### P11 — CLI parity — OPEN
 
