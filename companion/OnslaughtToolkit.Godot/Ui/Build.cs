@@ -107,7 +107,10 @@ internal static class Build
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, SizeFlagsVertical = Control.SizeFlags.ExpandFill,
         };
-        VBoxContainer content = scroll.Add(Column(separation));
+        // A right margin keeps cards clear of the scroll bar.
+        MarginContainer gutter = scroll.Add(Margin(0, 0, 14, 0));
+        gutter.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        VBoxContainer content = gutter.Add(Column(separation));
         content.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         return (scroll, content);
     }

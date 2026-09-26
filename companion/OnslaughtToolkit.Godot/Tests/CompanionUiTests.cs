@@ -62,8 +62,18 @@ internal static class CompanionUiTests
 
         app.Home.OpenButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
         for (int frame = 0; frame < 600 && app.Workspace.Session?.Path != install.Career; frame++) await Frame(tree);
-        check.That(app.Workspace.Session?.Path == install.Career && app.Current == app.EditCopy && app.CareerName.Text == "Career One.bes",
-            "opening a career from Home shows it in the header and moves to its page");
+        check.That(app.Workspace.Session?.Path == install.Career && app.Current == app.Overview && app.CareerName.Text == "Career One.bes",
+            "opening a career from Home shows it in the header and moves to its overview");
+        CareerInspection opened1 = app.Workspace.Session!.Analysis;
+        check.That(app.Overview.MissionsSummary == $"{opened1.MissionCensus.Completed} / {opened1.MissionCensus.Used}" &&
+            app.Overview.Missions.GetRoot()?.GetChildCount() == opened1.MissionCensus.Used, "the overview lists every used mission");
+        app.Navigate("goodies");
+        check.That(app.Goodies.Cells.Count == 233 && app.Goodies.Selected == 0, "the Goodies gallery shows all 233 displayable slots");
+        app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.Selected == 2 && app.Goodies.DetailEvidence.StartsWith("Seen in the game") &&
+            app.Goodies.DetailRule.Contains("Goodie 001"), "Goodie 2 shows its rule and its in-game evidence");
+        app.Goodies.Cells[150].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.DetailEvidence.StartsWith("From the developers' source"), "an unchecked rule says it comes from the source only");
         check.That(File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original), "opening a game career changes nothing");
 
         Outcome<SaveSession> opened = await app.OpenCareerAsync(fixture);

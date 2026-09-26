@@ -23,6 +23,8 @@ from godot_host import print_process_output, run_process
 ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
 SAFETY_SOURCES = ("SaveLabFileTransaction.cs", "FileMutationSafety.cs")
+# Pure MIT AppCore readers the companion links unchanged; each is staged beside the safety sources.
+LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs")
 MIT_LICENSE = ROOT / "LICENSE"
 FIXTURE = ROOT / "tests_shared/fixtures/gold_career_save.bin"
 NATIVE_EXTENSIONS = {".godot", ".tscn", ".cfg", ".cs", ".csproj", ".sln"}
@@ -192,7 +194,7 @@ def stage_project(output: Path) -> Path:
             raise RuntimeError(f"Companion project file is missing: {name}")
     safety = output / "OnslaughtCareerEditor.AppCore"
     safety.mkdir()
-    for name in SAFETY_SOURCES:
+    for name in (*SAFETY_SOURCES, *LINKED_SOURCES):
         shutil.copyfile(ROOT / "OnslaughtCareerEditor.AppCore" / name, safety / name)
     return project
 

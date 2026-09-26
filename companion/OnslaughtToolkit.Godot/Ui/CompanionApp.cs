@@ -45,6 +45,8 @@ public partial class CompanionApp : Control
     internal IReadOnlyDictionary<string, Page> Pages => _pages;
     internal Page Current { get; private set; } = null!;
     internal HomePage Home { get; private set; } = null!;
+    internal OverviewPage Overview { get; private set; } = null!;
+    internal GoodiesPage Goodies { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -63,13 +65,15 @@ public partial class CompanionApp : Control
 
         Home = new HomePage(Game, Status, this, ShowOpenDialog, OpenCareerAsync);
         EditCopy = new EditCopyPage(Workspace, Status, this, OpenCareerAsync);
+        Overview = new OverviewPage(Workspace, Game, () => Navigate("goodies"));
+        Goodies = new GoodiesPage(Workspace, Game, _ => Navigate("edit"));
         Compare = new ComparePage(Workspace, Status, this);
         StoredValues = new StoredValuesPage(Workspace);
         MediaFiles = new MediaFilesPage(Status, this);
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
-            ("Career", [EditCopy, Compare, StoredValues]),
+            ("Career", [Overview, Goodies, EditCopy, Compare, StoredValues]),
             ("Library", [MediaFiles]),
         ];
 
@@ -186,16 +190,24 @@ public partial class CompanionApp : Control
         if (Workspace.Session is not SaveSession session) return;
         EditCopy.ShowSession(session);
         StoredValues.ShowSession(session);
+        Overview.ShowSession(session);
+        Goodies.ShowSession(session);
         Compare.Reset();
         CareerName.Text = System.IO.Path.GetFileName(session.Path);
         CareerName.TooltipText = session.Path;
         OpenButton.ThemeTypeVariation = "";
-        if (Current == Home) Navigate("edit");
+        if (Current == Home) Navigate("overview");
         RefreshHeader();
     }
 
     private void ShowGameSummary()
     {
+        // Names arrive with the game's text; redraw the career pages that show them.
+        if (!Game.Busy && Workspace.Session is SaveSession session)
+        {
+            Overview.ShowSession(session);
+            Goodies.ShowSession(session);
+        }
         Status.Game.Text = Game.Busy ? "Checking the game folder…" : Game.Folder is GameFolder folder
             ? (folder.Executable.State == ExecutableState.Retail ? "Game: Steam release" : "Game: BEA.exe differs from the Steam release")
             : "No game folder";

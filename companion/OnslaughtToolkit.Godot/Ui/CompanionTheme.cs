@@ -61,7 +61,39 @@ internal static class CompanionTheme
         Lists(theme);
         Popups(theme);
         Bars(theme);
+        GoodieCells(theme);
         return theme;
+    }
+
+    /// <summary>
+    /// Goodie cells follow the game's own wall (CFEPGoodies__Render): new is gold, viewed is blue,
+    /// locked and hint keep a dark interior, with a pale ring when the hint is shown.
+    /// </summary>
+    private static void GoodieCells(Theme theme)
+    {
+        GoodieCell(theme, "GoodieNew", Palette.NewGold, Palette.NewGold, 1, Palette.AccentText);
+        GoodieCell(theme, "GoodieViewed", Palette.ViewedBlue, Palette.ViewedBlue, 1, Colors.White);
+        GoodieCell(theme, "GoodieHint", Palette.Field, new Color(Palette.Text, 0.8f), 2, Palette.Text);
+        GoodieCell(theme, "GoodieLocked", Palette.Field, Palette.Border, 1, Palette.Faint);
+        GoodieCell(theme, "GoodieUnknown", Palette.Field, Palette.Bad, 2, Palette.Bad);
+    }
+
+    private static void GoodieCell(Theme theme, string name, Color fill, Color edge, int width, Color text)
+    {
+        theme.SetTypeVariation(name, "Button");
+        StyleBoxFlat normal = Box(fill, 4, edge, width, padX: 2, padY: 2);
+        StyleBoxFlat hover = Box(fill.Lightened(0.12f), 4, Palette.Text, width, padX: 2, padY: 2);
+        StyleBoxFlat selected = Box(fill, 4, Palette.Accent, 3, padX: 2, padY: 2);
+        theme.SetStylebox("normal", name, normal);
+        theme.SetStylebox("hover", name, hover);
+        theme.SetStylebox("pressed", name, selected);
+        theme.SetStylebox("hover_pressed", name, selected);
+        theme.SetStylebox("focus", name, Focus(4));
+        theme.SetStylebox("disabled", name, normal);
+        foreach (string color in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
+            theme.SetColor(color, name, text);
+        theme.SetFont("font", name, MonoFont);
+        theme.SetFontSize("font_size", name, 10);
     }
 
     /// <summary>A flat box. Chamfered corners (corner detail 1) give the panels their cut-edge look.</summary>

@@ -27,7 +27,6 @@ internal sealed class HomePage : Page
         _identity = folder.Add(Build.Text("", "Muted"));
         _inventory = folder.Add(Build.Text("", "Faint"));
         HBoxContainer folderActions = folder.Add(Build.Row(10));
-        folderActions.Add(Build.Spacer(4));
         ChooseFolder = folderActions.Add(Build.Button("Choose game folder…", tooltip: "The folder that contains BEA.exe and data."));
         Rescan = folderActions.Add(Build.Button("Rescan"));
         OpenOther = folderActions.Add(Build.Button("Open a career from elsewhere…", "Link"));
@@ -110,7 +109,7 @@ internal sealed class HomePage : Page
         List<string> inventory = [$"{folder.Careers.Count} career{(folder.Careers.Count == 1 ? "" : "s")}"];
         if (folder.Options is not null) inventory.Add("options file");
         if (folder.Languages.Count > 0) inventory.Add("text: " + string.Join(", ", folder.Languages));
-        if (folder.MusicTracks > 0) inventory.Add($"{folder.MusicTracks} music tracks");
+        if (folder.MusicTracks > 0) inventory.Add($"{folder.MusicTracks} music track{(folder.MusicTracks == 1 ? "" : "s")}");
         if (folder.VoiceLines > 0) inventory.Add($"{folder.VoiceLines:N0} voice lines");
         if (folder.Cutscenes > 0) inventory.Add($"{folder.Cutscenes} cutscenes");
         _inventory.Text = string.Join("  ·  ", inventory);

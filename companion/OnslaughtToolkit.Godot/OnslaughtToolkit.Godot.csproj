@@ -23,5 +23,8 @@
     <!-- Share the existing safety implementation unchanged, without the AppCore codec or services. -->
     <Compile Include="../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs" Link="Safety/SaveLabFileTransaction.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs" Link="Safety/FileMutationSafety.cs" />
+    <!-- Pure MIT readers linked unchanged: the game's text table and the Goodie unlock rules. -->
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/GameTextCatalog.cs" Link="Linked/GameTextCatalog.cs" />
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/GoodieUnlockRequirementService.cs" Link="Linked/GoodieUnlockRequirementService.cs" />
   </ItemGroup>
 </Project>

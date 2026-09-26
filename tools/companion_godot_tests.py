@@ -42,7 +42,7 @@ class CompanionLauncherTests(unittest.TestCase):
             path = self.project / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(data, encoding="utf-8")
-        for name in host.SAFETY_SOURCES:
+        for name in (*host.SAFETY_SOURCES, *host.LINKED_SOURCES):
             path = self.source / "OnslaughtCareerEditor.AppCore" / name
             path.parent.mkdir(exist_ok=True)
             path.write_text("// exact safety snapshot " + name, encoding="utf-8")
@@ -134,7 +134,7 @@ class CompanionLauncherTests(unittest.TestCase):
         staged=Path(restore["args"][1]).parent
         for name in ("Main.tscn","Ui/CompanionApp.cs","Files/ProtectedSaveFiles.cs","Tests/CompanionTestRunner.cs"):self.assertTrue((staged/name).is_file())
         self.assertFalse((staged/"Ui/CompanionApp.cs.uid").exists())
-        for name in host.SAFETY_SOURCES:self.assertEqual((self.source/"OnslaughtCareerEditor.AppCore"/name).read_bytes(),(staged.parents[1]/"OnslaughtCareerEditor.AppCore"/name).read_bytes())
+        for name in (*host.SAFETY_SOURCES, *host.LINKED_SOURCES):self.assertEqual((self.source/"OnslaughtCareerEditor.AppCore"/name).read_bytes(),(staged.parents[1]/"OnslaughtCareerEditor.AppCore"/name).read_bytes())
         self.assertFalse((self.project/".godot").exists())
         self.assertTrue(all(call["old_bridge"] is None for call in calls))
         self.assertFalse(any("FileBridge.csproj" in str(call) for call in calls))

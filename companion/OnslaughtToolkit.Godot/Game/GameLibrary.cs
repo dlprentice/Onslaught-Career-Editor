@@ -10,6 +10,9 @@ namespace OnslaughtToolkit.Companion.Game;
 public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore settings)
 {
     public GameFolder? Folder { get; private set; }
+
+    /// <summary>The game's own words from the folder's language file, when it can be read.</summary>
+    public GameText? Text { get; private set; }
     public bool Busy { get; private set; }
     public SettingsStore Settings { get; } = settings;
 
@@ -23,16 +26,16 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         try
         {
             string? chosen = Settings.Load().GameFolder;
-            Folder = await Task.Run(() =>
+            (Folder, Text) = await Task.Run(() =>
             {
                 if (chosen is not null && SteamLibraries.Canonical(chosen) is string real && GameFolder.LooksLikeGame(real))
-                    return GameFolder.Inspect(real, "Chosen by you");
+                    return Read(real, "Chosen by you");
                 foreach (GameCandidate candidate in SteamLibraries.FindGame(steamRoots))
                 {
                     if (GameFolder.LooksLikeGame(candidate.Root))
-                        return GameFolder.Inspect(candidate.Root, "Found through Steam in " + candidate.Library);
+                        return Read(candidate.Root, "Found through Steam in " + candidate.Library);
                 }
-                return null;
+                return (null, null);
             });
             return Folder;
         }
@@ -52,12 +55,12 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         SetBusy(true);
         try
         {
-            GameFolder folder = await Task.Run(() => GameFolder.Inspect(real, "Chosen by you"));
+            (GameFolder? folder, GameText? text) = await Task.Run(() => Read(real, "Chosen by you"));
             CompanionSettings saved = Settings.Load();
             saved.GameFolder = real;
             string note = Settings.Save(saved) ? "" : " It could not be remembered for next time.";
-            Folder = folder;
-            return Outcome<GameFolder>.Success(folder, "Game folder set." + note);
+            (Folder, Text) = (folder, text);
+            return Outcome<GameFolder>.Success(folder!, "Game folder set." + note);
         }
         finally
         {
@@ -73,7 +76,7 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         SetBusy(true);
         try
         {
-            Folder = await Task.Run(() => GameFolder.LooksLikeGame(current.Root) ? GameFolder.Inspect(current.Root, current.Source) : null);
+            (Folder, Text) = await Task.Run(() => GameFolder.LooksLikeGame(current.Root) ? Read(current.Root, current.Source) : (null, null));
             return Folder;
         }
         finally
@@ -81,6 +84,8 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
             SetBusy(false);
         }
     }
+
+    private static (GameFolder?, GameText?) Read(string root, string source) => (GameFolder.Inspect(root, source), GameText.Load(root));
 
     private void SetBusy(bool busy)
     {
