@@ -29,6 +29,7 @@ internal sealed class GoodiesPage : Page
     private readonly GameLibrary _game;
     private readonly Action<int> _changeInCopy;
     private readonly Label _empty, _summary;
+    private readonly CareerCards _choose;
     private readonly VBoxContainer _grid;
     private readonly List<(Control Section, int[] Slots)> _sections = [];
     private readonly Button[] _cells = new Button[CareerSave.GoodieTable];
@@ -38,9 +39,9 @@ internal sealed class GoodiesPage : Page
     private readonly List<Button> _filterButtons = [];
     private int _filter;
 
-    internal GoodiesPage(CareerWorkspace workspace, GameLibrary game, Action<int> changeInCopy) : base("goodies", "Goodies")
+    internal GoodiesPage(AppServices app, Action<int> changeInCopy) : base("goodies", "Goodies", "goodies")
     {
-        (_workspace, _game, _changeInCopy) = (workspace, game, changeInCopy);
+        (_workspace, _game, _changeInCopy) = (app.Workspace, app.Game, changeInCopy);
         HBoxContainer layout = Build.Row(16);
         layout.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = layout;
@@ -48,7 +49,9 @@ internal sealed class GoodiesPage : Page
         (ScrollContainer scroll, VBoxContainer left) = Build.Scroller(12);
         scroll.SizeFlagsStretchRatio = 2.2f;
         layout.Add(scroll);
-        _empty = left.Add(Build.Text("Open a career to see its Goodies.", "Muted"));
+        _empty = left.Add(Build.Text("Choose a career to see its Goodies. Opening it only reads it.", "Lead"));
+        _choose = new CareerCards(app);
+        left.Add(_choose.Root);
         _summary = left.Add(Build.Text("", "Strong"));
         HBoxContainer filters = left.Add(Build.Row(8));
         for (int index = 0; index < Filters.Length; index++)
@@ -76,7 +79,8 @@ internal sealed class GoodiesPage : Page
         _detailRule = detail.Add(Build.Text(""));
         _detailEvidence = detail.Add(Build.Text("", "Muted"));
         _detailRaw = detail.Add(Build.Text("", "MonoMuted"));
-        ChangeInCopy = detail.Add(Build.Button("Change its state in a copy…", tooltip: "Adds this Goodie to Edit a copy."));
+        ChangeInCopy = detail.Add(Build.Button("Change this Goodie…", tooltip: "Adds this Goodie to Edit career, where you save the change."));
+        ChangeInCopy.Icon = Icons.Get("edit");
         ChangeInCopy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         ChangeInCopy.Pressed += () => _changeInCopy(Selected);
         ShowEmpty();
@@ -94,7 +98,7 @@ internal sealed class GoodiesPage : Page
     internal void ShowSession(SaveSession session)
     {
         CareerInspection career = session.Analysis;
-        _empty.Visible = false;
+        _empty.Visible = _choose.Root.Visible = false;
         _grid.Visible = _detail.Visible = _summary.Visible = true;
         foreach (Button filter in _filterButtons) filter.Visible = true;
         GoodieCensus census = career.GoodieCensus;
@@ -136,7 +140,8 @@ internal sealed class GoodiesPage : Page
         _detailEvidence.Text = GoodieFacts.Describe(GoodieFacts.Evidence(index));
         _detailRaw.Text = $"stored 0x{goodie.RawState:X8} at 0x{goodie.Offset:X4}";
         ChangeInCopy.Disabled = !goodie.Shown;
-        ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit a copy." : "The game never shows this slot, so its state is kept.";
+        ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
+            : "The game never shows this slot, so its state is kept.";
     }
 
     private void ApplyFilter(int filter)
@@ -172,9 +177,15 @@ internal sealed class GoodiesPage : Page
         _sections.Add((section, slots));
     }
 
+    internal override void Refresh()
+    {
+        if (_workspace.Session is null) ShowEmpty();
+    }
+
     private void ShowEmpty()
     {
-        _empty.Visible = true;
+        _empty.Visible = _choose.Root.Visible = true;
+        _choose.Show();
         _grid.Visible = _detail.Visible = _summary.Visible = false;
         foreach (Button filter in _filterButtons) filter.Visible = false;
     }

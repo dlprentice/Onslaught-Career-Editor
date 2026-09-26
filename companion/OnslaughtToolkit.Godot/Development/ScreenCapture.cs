@@ -9,8 +9,9 @@ namespace OnslaughtToolkit.Companion.Development;
 /// <summary>
 /// Renders every companion screen at fixed sizes through SubViewports, so a tiling window
 /// manager cannot resize the capture. Run on a GPU output (godot-offscreen):
-/// <c>--script res://Development/ScreenCapture.cs -- --output=DIR --fixture=OWNED_COPY [--sizes=1280x800,1920x1080]</c>.
-/// Every file it writes stays inside the owned output directory. Development builds only.
+/// <c>--script res://Development/ScreenCapture.cs -- --output=DIR --fixture=OWNED_COPY [--sizes=1280x800,1920x1080] [--steam-root=DIR]</c>.
+/// Every file it writes stays inside the owned output directory; a real Steam library is only read,
+/// and no game write is confirmed against it. Development builds only.
 /// </summary>
 public partial class ScreenCapture : SceneTree
 {
@@ -25,15 +26,14 @@ public partial class ScreenCapture : SceneTree
         int exitCode = 1;
         try
         {
-            string fixture = "", sizes = "1280x800,1920x1080", steamRoot = "";
+            string fixture = "", sizes = "1280x800,1920x1080";
             foreach (string argument in OS.GetCmdlineUserArgs())
             {
                 if (argument.StartsWith("--output=", StringComparison.Ordinal)) _output = argument["--output=".Length..];
                 if (argument.StartsWith("--fixture=", StringComparison.Ordinal)) fixture = argument["--fixture=".Length..];
                 if (argument.StartsWith("--sizes=", StringComparison.Ordinal)) sizes = argument["--sizes=".Length..];
-                if (argument.StartsWith("--steam-root=", StringComparison.Ordinal)) steamRoot = argument["--steam-root=".Length..];
+                if (argument.StartsWith("--steam-root=", StringComparison.Ordinal)) _steamRoot = argument["--steam-root=".Length..];
             }
-            _steamRoot = steamRoot;
             if (_output.Length == 0 || fixture.Length == 0 || !File.Exists(fixture))
             {
                 GD.PrintErr("--output=DIR and an owned --fixture=COPY are required.");
@@ -63,128 +63,79 @@ public partial class ScreenCapture : SceneTree
         string label = $"{size.X}x{size.Y}";
         string work = Path.Combine(_output, "work-" + label);
         Directory.CreateDirectory(work);
-        string original = Path.Combine(work, "career.bes");
-        File.Copy(fixture, original);
-        string media = MediaFixture(work);
+        bool fake = _steamRoot.Length == 0;
 
-        SubViewport viewport = new()
-        {
-            Size = size, RenderTargetUpdateMode = SubViewport.UpdateMode.Always, TransparentBg = false,
-            // Dialogs render inside the capture, as they do inside the application's own window.
-            GuiEmbedSubwindows = true,
-        };
-        Root.AddChild(viewport);
-        // A fake Steam library by default; --steam-root points at a real one, which is only read.
-        FakeInstall install = FakeInstall.Create(Path.Combine(work, "install"), File.ReadAllBytes(fixture));
-        // The fake install is closed by definition; a real library keeps the real running-game check.
-        CompanionEnvironment environment = new([_steamRoot.Length > 0 ? _steamRoot : install.SteamRoot],
-            Path.Combine(work, "settings", "settings.json"), _steamRoot.Length > 0 ? null : () => false);
-        CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
-        viewport.AddChild(app);
+        // First run on a machine without the game: Home says so and the career pages wait for a career.
+        (SubViewport bare, CompanionApp empty) = await Start(size, work, "no-game", [Path.Combine(work, "no-steam")]);
+        await Shot(bare, label, "first-run-no-game");
+        empty.Navigate("summary");
+        await Shot(bare, label, "summary-no-career");
+        bare.QueueFree();
         await Settle();
-        for (int frame = 0; frame < 600 && (app.Game.Busy || app.Game.Folder is null); frame++) await Settle();
-        foreach (string page in app.Pages.Keys)
-        {
-            app.Navigate(page);
-            await Shot(viewport, label, page + "-empty");
-        }
 
-        app.Navigate("home");
-        await app.OpenCareerAsync(original);
-        await Shot(viewport, label, "overview");
+        FakeInstall install = FakeInstall.Create(Path.Combine(work, "install"), File.ReadAllBytes(fixture));
+        (SubViewport viewport, CompanionApp app) = await Start(size, work, "game", [fake ? install.SteamRoot : _steamRoot]);
+        for (int frame = 0; frame < 600 && app.Workspace.Session is null; frame++) await Settle();
+        await Shot(viewport, label, "home-first-run");
+        app.Navigate("summary");
+        await Shot(viewport, label, "summary");
         app.Navigate("goodies");
         app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
         await Shot(viewport, label, "goodies");
-        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
-        foreach ((int row, int count) in new[] { (0, 123456), (3, 4242) })
+
+        app.Navigate("edit");
+        app.EditCareer.Rows[0].Target.Value = 123456;
+        app.EditCareer.Rows[3].Target.Value = 4242;
+        app.EditCareer.UnlockEveryGoodie();
+        await Reveal(app.EditCareer.Save);
+        await Shot(viewport, label, "edit-changes");
+        app.EditCareer.AskToSave();
+        await Shot(viewport, label, "edit-save-dialog");
+        app.EditCareer.SaveChoice.Dialog.Hide();
+        if (fake)
         {
-            app.EditCopy.Rows[row].Target.Value = count;
-            app.EditCopy.Rows[row].Selected.ButtonPressed = true;
+            await app.EditCareer.SaveIntoGameAsync(SaveTarget.NewCareer, "Career One (edited)");
+            await Reveal(app.EditCareer.ResultPanel);
+            await Shot(viewport, label, "edit-saved");
         }
-        await Shot(viewport, label, "edit-preview");
-        app.EditCopy.Destination.Text = Path.Combine(work, "career-edited.bes");
-        await app.EditCopy.WriteCopyAsync(unchanged: false);
-        await Shot(viewport, label, "edit-verified-copy");
-        await app.EditCopy.WriteCopyAsync(unchanged: true);
-        await Shot(viewport, label, "edit-refused-existing");
 
-        app.Navigate("compare");
-        await app.Compare.CompareAsync(Path.Combine(work, "career-edited.bes"));
-        await Shot(viewport, label, "compare");
-        app.Navigate("stored");
-        TreeItem? first = app.StoredValues.Tree.GetRoot()?.GetFirstChild();
-        if (first?.GetNext() is TreeItem links) links.Collapsed = false;
-        await Shot(viewport, label, "stored-values");
-        app.Navigate("media");
-        await app.MediaFiles.BrowseAsync(media);
-        app.MediaFiles.Files.GetRoot()?.GetFirstChild()?.Select(0);
-        await Shot(viewport, label, "media-files");
-        app.Navigate("home");
-        await Shot(viewport, label, "home-career-open");
-        app.OpenDialog.CurrentDir = work;
-        app.OpenDialog.PopupCenteredRatio(0.75f);
-        await Shot(viewport, label, "open-dialog");
-        app.OpenDialog.Hide();
-
-        // Game writes are only confirmed against the fake install; a real --steam-root is only read.
-        bool fake = _steamRoot.Length == 0;
         app.Navigate("cheats");
         app.Cheats.BaseName.Text = "Pilot";
         app.Cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "Pilot");
         app.Cheats.Choices[0].ButtonPressed = true;
-        await Settle();
-        if (app.Cheats.Root is ScrollContainer cheatsScroll) cheatsScroll.ScrollVertical = (int)cheatsScroll.GetVScrollBar().MaxValue;
-        await Shot(viewport, label, "cheats-needs-backup-folder");
-        string backups = Path.Combine(work, "backups");
-        Directory.CreateDirectory(backups);
-        app.Install.SetBackupFolder(backups);
-        app.Cheats.Refresh();
+        await Reveal(app.Cheats.AddToGame);
+        await Shot(viewport, label, "cheats");
         app.Cheats.AskToAdd();
         await Shot(viewport, label, "cheats-confirm");
         app.Cheats.Confirm.Hide();
 
-        app.Navigate("options");
-        app.Options.OpenGameOptions.EmitSignal(BaseButton.SignalName.Pressed);
-        for (int frame = 0; frame < 600 && (app.Options.Reading is null || app.Workspace.Busy); frame++) await Settle();
-        await Shot(viewport, label, "options-open");
-        app.Options.Music.Value = app.Options.Music.Value > 50 ? 20 : 80;
-        app.Options.StartCapture(0x21, 1);
-        await Shot(viewport, label, "options-capturing-key");
-        app.Options.Capture(Key.T);
-        app.Options.Destination.Text = Path.Combine(work, "options-copy.bea");
-        await app.Options.WriteCopyAsync();
-        await Reveal(app.Options.InstallCopy);
-        await Shot(viewport, label, "options-verified-copy");
-        app.Options.AskToInstall();
-        await Shot(viewport, label, "options-confirm");
-        app.Options.Confirm.Hide();
+        app.Navigate("settings");
+        for (int frame = 0; frame < 600 && (app.Settings.Reading is null || app.Workspace.Busy); frame++) await Settle();
+        await Shot(viewport, label, "settings");
+        app.Settings.Music.Value = app.Settings.Music.Value > 50 ? 20 : 80;
+        app.Settings.StartCapture(0x21, 1);
+        await Shot(viewport, label, "settings-key");
+        app.Settings.Capture(Key.T);
+        await Reveal(app.Settings.Save);
+        await Shot(viewport, label, "settings-changes");
+        app.Settings.AskToSave();
+        await Shot(viewport, label, "settings-save-dialog");
+        app.Settings.SaveChoice.Dialog.Hide();
 
-        app.Navigate("install");
-        await app.Install.BackUpAsync();
-        await Shot(viewport, label, "install-backed-up");
-        app.Install.SetSource(Path.Combine(work, "career-edited.bes"));
-        int newItem = Enumerable.Range(0, app.Install.Target.ItemCount).FirstOrDefault(item => app.Install.Target.GetItemText(item) == "A new career…", -1);
-        if (newItem >= 0)
+        app.Navigate("backups");
+        if (Backups.List(app.Services.Backups.Folder).Count == 0) await app.Backups.BackUpAsync();
+        app.Backups.Refresh();
+        await Shot(viewport, label, "backups");
+        IReadOnlyList<BackupSet> sets = Backups.List(app.Services.Backups.Folder);
+        if (sets.Count > 0)
         {
-            app.Install.Target.Select(newItem);
-            app.Install.Target.EmitSignal(OptionButton.SignalName.ItemSelected, newItem);
+            app.Backups.AskToRestore(sets[^1], sets[^1].Files[0]);
+            await Shot(viewport, label, "backups-put-back");
+            app.Backups.Confirm.Hide();
         }
-        app.Install.NewName.Text = "Edited Career";
-        app.Install.NewName.EmitSignal(LineEdit.SignalName.TextChanged, app.Install.NewName.Text);
-        await Reveal(app.Install.Install);
-        await Shot(viewport, label, "install-ready");
-        app.Install.AskToInstall();
-        await Shot(viewport, label, "install-confirm");
-        if (fake)
-        {
-            await app.Install.ConfirmAsync();
-            await Reveal(app.Install.Install);
-            await Shot(viewport, label, "install-done");
-        }
-        else
-        {
-            app.Install.Confirm.Hide();
-        }
+
+        app.Navigate("home");
+        await Shot(viewport, label, "home");
 
         app.Navigate("music");
         if (app.Music.Items.FirstOrDefault(item => item.Kind == Media.AudioKind.Voice) is Media.GameAudioItem voice)
@@ -194,13 +145,12 @@ public partial class ScreenCapture : SceneTree
             for (TreeItem? group = app.Music.List.GetRoot()?.GetFirstChild(); group is not null; group = group.GetNext())
                 if (group.GetText(0) == voice.Group) group.Collapsed = false;
         }
-        await Shot(viewport, label, "music-voice-selected");
+        await Shot(viewport, label, "music");
 
         app.Navigate("lore");
+        await Shot(viewport, label, "lore-front-door");
         app.Lore.Open("battle-engine-tech");
         await Shot(viewport, label, "lore-memo");
-        app.Lore.Open("worlds", "world-500--career-node-23");
-        await Shot(viewport, label, "lore-section");
         app.Lore.Open("community-preservation", "active-community-contacts");
         await Shot(viewport, label, "lore-table");
         app.Lore.Open("the-campaign", "the-missions");
@@ -211,8 +161,46 @@ public partial class ScreenCapture : SceneTree
         app.Lore.Search.Text = "";
         app.Lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
 
+        app.Navigate("compare");
+        string other = Path.Combine(work, "other.bes");
+        byte[] otherBytes = File.ReadAllBytes(fixture);
+        otherBytes[0x23F6] ^= 0x10;
+        File.WriteAllBytes(other, otherBytes);
+        await app.Compare.CompareAsync(other);
+        await Shot(viewport, label, "advanced-compare");
+        app.Navigate("raw");
+        await Shot(viewport, label, "advanced-raw-values");
+        app.Navigate("media");
+        await app.MediaFiles.BrowseAsync(MediaFixture(work));
+        await Shot(viewport, label, "advanced-media-files");
+        app.Navigate("home");
+        app.Home.OpenDialog.CurrentDir = work;
+        app.Home.OpenDialog.PopupCenteredRatio(0.75f);
+        await Shot(viewport, label, "open-dialog");
+        app.Home.OpenDialog.Hide();
+
         viewport.QueueFree();
         await Settle();
+    }
+
+    private async Task<(SubViewport, CompanionApp)> Start(Vector2I size, string work, string name, IReadOnlyList<string> steamRoots)
+    {
+        SubViewport viewport = new()
+        {
+            Size = size, RenderTargetUpdateMode = SubViewport.UpdateMode.Always, TransparentBg = false,
+            // Dialogs render inside the capture, as they do inside the application's own window.
+            GuiEmbedSubwindows = true,
+        };
+        Root.AddChild(viewport);
+        // The fake install is closed by definition; a real library keeps the real running-game check.
+        CompanionEnvironment environment = new(steamRoots, Path.Combine(work, name + "-settings", "settings.json"),
+            _steamRoot.Length > 0 ? null : () => false, _ => { }, Path.Combine(work, name + "-backups"));
+        CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
+        viewport.AddChild(app);
+        await Settle();
+        for (int frame = 0; frame < 600 && (app.Game.Busy || (steamRoots.Count > 0 && app.Game.Folder is null && frame < 60)); frame++)
+            await Settle();
+        return (viewport, app);
     }
 
     private static string MediaFixture(string work)

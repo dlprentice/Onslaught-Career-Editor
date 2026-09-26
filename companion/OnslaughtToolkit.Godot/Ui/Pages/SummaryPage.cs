@@ -5,12 +5,13 @@ using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
-/// <summary>The open career at a glance: missions, Goodies, kills and campaign links, read-only.</summary>
-internal sealed class OverviewPage : Page
+/// <summary>The open career at a glance: missions, Goodies, kills and campaign routes, read-only.</summary>
+internal sealed class SummaryPage : Page
 {
     private readonly CareerWorkspace _workspace;
     private readonly GameLibrary _game;
     private readonly Label _empty;
+    private readonly CareerCards _choose;
     private readonly GridContainer _stats, _columns;
     private readonly Label _missionsValue, _missionsDetail, _goodiesValue, _goodiesDetail, _killsValue, _ranksValue, _ranksDetail;
     private readonly ProgressBar _missionsMeter, _goodiesMeter;
@@ -18,12 +19,14 @@ internal sealed class OverviewPage : Page
     private readonly GridContainer _goodieStrip;
     private readonly Label _namesNote;
 
-    internal OverviewPage(CareerWorkspace workspace, GameLibrary game, Action showGoodies) : base("overview", "Overview")
+    internal SummaryPage(AppServices app) : base("summary", "Summary", "summary")
     {
-        (_workspace, _game) = (workspace, game);
+        (_workspace, _game) = (app.Workspace, app.Game);
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
         Root = scroll;
-        _empty = content.Add(Build.Text("Open a career to see its missions, Goodies, kills and campaign links.", "Muted"));
+        _empty = content.Add(Build.Text("Choose a career to see its missions, Goodies and kills. Opening it only reads it.", "Lead"));
+        _choose = new CareerCards(app);
+        content.Add(_choose.Root);
 
         _stats = content.Add(new GridContainer { Columns = 4 });
         _stats.AddThemeConstantOverride("h_separation", 14);
@@ -67,23 +70,23 @@ internal sealed class OverviewPage : Page
         }
         Button openGoodies = goodieBody.Add(Build.Button("Open the Goodies gallery", "Link"));
         openGoodies.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
-        openGoodies.Pressed += showGoodies;
+        openGoodies.Pressed += () => app.Navigate("goodies");
         side.Add(goodies);
         (PanelContainer kills, VBoxContainer killBody) = Build.Card("Kills");
         _killRows = killBody.Add(Build.Column(8));
         side.Add(kills);
-        (PanelContainer links, VBoxContainer linkBody) = Build.Card("Campaign links");
+        (PanelContainer links, VBoxContainer linkBody) = Build.Card("Campaign routes");
         _linkLines = linkBody.Add(Build.Column(4));
-        linkBody.Add(Build.Text("Only a complete link opens the next mission. Alternate routes are the game's own bookkeeping " +
-            "for a path not taken, drawn as a broken line; they are not damage.", "Faint"));
+        linkBody.Add(Build.Text("An open route leads to the next mission. An alternate route is the game's own record of a path not " +
+            "taken, drawn as a broken line on its map; it is not damage.", "Faint"));
         side.Add(links);
         ShowEmpty();
     }
 
     internal override Control Root { get; }
     internal override string Subtitle => _workspace.Session is SaveSession session
-        ? System.IO.Path.GetFileName(session.Path) + " · read-only"
-        : "The open career at a glance";
+        ? System.IO.Path.GetFileNameWithoutExtension(session.Path) + " at a glance"
+        : "Your career at a glance";
     internal Tree Missions { get; }
     internal string MissionsSummary => _missionsValue.Text;
 
@@ -91,7 +94,7 @@ internal sealed class OverviewPage : Page
     {
         CareerInspection career = session.Analysis;
         GameText? text = _game.Text;
-        _empty.Visible = false;
+        _empty.Visible = _choose.Root.Visible = false;
         _stats.Visible = _columns.Visible = true;
         MissionCensus missions = career.MissionCensus;
         _missionsValue.Text = $"{missions.Completed} / {missions.Used}";
@@ -155,7 +158,7 @@ internal sealed class OverviewPage : Page
 
         _linkLines.Clear();
         LinkCensus links = career.LinkCensus;
-        _linkLines.Add(Build.Text($"{links.Complete} complete  ·  {links.AlternateRoutes} alternate routes  ·  {links.Locked} not complete" +
+        _linkLines.Add(Build.Text($"{links.Complete} open  ·  {links.AlternateRoutes} alternate  ·  {links.Locked} still closed" +
             (links.Unknown > 0 ? $"  ·  {links.Unknown} unknown values" : ""), "Strong"));
     }
 
@@ -171,9 +174,15 @@ internal sealed class OverviewPage : Page
         return (value, description, meter);
     }
 
+    internal override void Refresh()
+    {
+        if (_workspace.Session is null) ShowEmpty();
+    }
+
     private void ShowEmpty()
     {
-        _empty.Visible = true;
+        _empty.Visible = _choose.Root.Visible = true;
+        _choose.Show();
         _stats.Visible = _columns.Visible = false;
     }
 }

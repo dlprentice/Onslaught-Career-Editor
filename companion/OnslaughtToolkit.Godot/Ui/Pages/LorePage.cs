@@ -31,7 +31,7 @@ internal sealed class LorePage : Page
     private string _query = "";
     private bool _syncing;
 
-    internal LorePage(GameLibrary game, StatusLine status, Action<string> openUrl) : base("lore", "Lore")
+    internal LorePage(GameLibrary game, StatusLine status, Action<string> openUrl) : base("lore", "Lore", "lore")
     {
         (_game, _status, _openUrl) = (game, status, openUrl);
         foreach (LoreShelf shelf in LoreLibrary.Shelves)

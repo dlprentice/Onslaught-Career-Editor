@@ -7,10 +7,13 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// One sidebar destination. Pages are plain objects that own a control tree; the shell shows one at
 /// a time and calls <see cref="Refresh"/> when it appears or when shared state changes.
 /// </summary>
-internal abstract class Page(string key, string title)
+internal abstract class Page(string key, string title, string icon)
 {
     internal string Key { get; } = key;
     internal string Title { get; } = title;
+
+    /// <summary>The sidebar icon's name in <see cref="Icons"/>.</summary>
+    internal string Icon { get; } = icon;
     internal abstract Control Root { get; }
 
     /// <summary>The line under the page title; pages describe their current subject here.</summary>

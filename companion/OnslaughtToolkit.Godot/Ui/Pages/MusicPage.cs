@@ -21,7 +21,7 @@ internal sealed class MusicPage : Page
     private GameAudioItem? _loaded;
     private bool _seeking;
 
-    internal MusicPage(GameLibrary game, StatusLine status) : base("music", "Music & voices")
+    internal MusicPage(GameLibrary game, StatusLine status) : base("music", "Music & voices", "music")
     {
         (_game, _status) = (game, status);
         HBoxContainer layout = Build.Row(16);
