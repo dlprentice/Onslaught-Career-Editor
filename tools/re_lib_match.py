@@ -24,7 +24,8 @@ evidence under local-data/: lib-matches.tsv (every decided entry), lib-placed.ts
 lib-proposals.tsv (names and evidence comments for a cohort) and a summary.
 
 Usage:
-  python tools/re_lib_match.py match --lib LIB --lib-sha256 PIN --out DIR --functions TSV
+  python tools/re_lib_match.py match --lib LIB --lib-sha256 PIN [--label TEXT --tag TAG] [--lib ...]
+                                     --out DIR --functions TSV
 """
 from __future__ import annotations
 
@@ -110,12 +111,13 @@ class Coff:
     symbols: dict[int, CoffSymbol]
 
 
-def parse_coff(member: str, data: bytes) -> Coff | None:
-    """An i386 COFF object; import objects, other machines and bigobj files return None."""
+def parse_coff(member: str, data: bytes, machines: tuple[int, ...] = (0x14C,)) -> Coff | None:
+    """An i386 COFF object (or one of the other given machines, such as OLDNAMES.LIB's machine-independent 0);
+    import objects, other machines and bigobj files return None."""
     if len(data) < 20:
         return None
     machine, nsec, _ts, psym, nsym, optsize, _ch = struct.unpack_from("<HHIIIHH", data, 0)
-    if machine != 0x14C:
+    if machine not in machines or (machine == 0 and nsec == 0xFFFF):    # 0, 0xFFFF opens a short import object
         return None
     strtab_off = psym + 18 * nsym
     strtab = data[strtab_off:]
@@ -325,10 +327,11 @@ def split_scopes(q: str) -> list[str]:
 
 def _sanitize(text: str) -> str:
     text = re.sub(r"\b(?:class|struct|union|enum)\s+", "", text)
+    lead = re.match(r"_*", text).group(0)       # an identifier's own leading underscores are part of it (_Tree)
     text = text.replace("::", "\0").replace("*", "ptr").replace("&", "ref")
     text = re.sub(r"[^A-Za-z0-9_\0]+", "_", text)
     text = re.sub(r"_+", "_", text).strip("_")
-    return re.sub(r"_*\0_*", "__", text)
+    return lead + re.sub(r"_*\0", "__", text)
 
 
 def flat_name(symbol: str, demangled: dict[str, str]) -> str:
@@ -427,21 +430,51 @@ class Library:
     sha256: str
     objects: dict[str, Coff]
     functions: list[ObjFunc]
+    pins: list[dict] = field(default_factory=list)          # {path, sha256, label, tag} per archive
+    origin: dict[str, int] = field(default_factory=dict)     # member -> index into pins
+
+    def pin_of(self, member: str) -> dict:
+        return self.pins[self.origin.get(member, 0)] if self.pins else \
+            {"path": self.path, "sha256": self.sha256, "label": str(self.path), "tag": "library-code"}
 
 
-def load_library(path: Path) -> Library:
-    data = path.read_bytes()
-    objects, functions = {}, []
-    for member, body in read_archive(data):
-        coff = parse_coff(member, body)
-        if coff is None:
-            continue
-        if member in objects:
-            member = f"{member}#{len(objects)}"
+def load_library(path: Path, label: str | None = None, tag: str | None = None) -> Library:
+    return load_libraries([(path, label, tag)])
+
+
+def load_libraries(specs: list[tuple[Path, str | None, str | None]]) -> Library:
+    """One matching universe over several archives; a member name that repeats takes '#<archive>'."""
+    objects, functions, pins, origin = {}, [], [], {}
+    for index, (path, label, tag) in enumerate(specs):
+        data = path.read_bytes()
+        pins.append({"path": path, "sha256": hashlib.sha256(data).hexdigest(), "label": label or path.name,
+                     "tag": tag or "library-code"})
+        for member, body in read_archive(data):
+            coff = parse_coff(member, body)
+            if coff is None:
+                continue
+            base, n = member, 1
+            while member in objects:
+                member, n = f"{base}#{n}", n + 1
             coff.member = member
-        objects[member] = coff
-        functions.extend(object_functions(coff))
-    return Library(path, hashlib.sha256(data).hexdigest(), objects, functions)
+            objects[member] = coff
+            origin[member] = index
+            functions.extend(object_functions(coff))
+    return Library(specs[0][0], pins[0]["sha256"], objects, functions, pins, origin)
+
+
+def load_aliases(path: Path) -> dict[str, set[str]]:
+    """The weak-external aliases an alias library such as OLDNAMES.LIB defines, as default symbol -> alias
+    symbols: OLDNAMES resolves the program's _stricmp (C stricmp) to the runtime's __stricmp."""
+    out: dict[str, set[str]] = defaultdict(set)
+    for member, body in read_archive(path.read_bytes()):
+        coff = parse_coff(member, body, (0x14C, 0))
+        for sym in (coff.symbols.values() if coff else []):
+            if sym.storage == IMAGE_SYM_CLASS_WEAK_EXTERNAL and len(sym.aux) >= 4 and sym.section == 0:
+                default = coff.symbols.get(struct.unpack_from("<I", sym.aux, 0)[0])
+                if default is not None and default is not sym and default.name:
+                    out[default.name].add(sym.name)
+    return out
 
 
 @dataclass
@@ -605,11 +638,37 @@ class Resolver:
         agree = sum(1 for k, v in c.implied.items() if self.pool.get(k) == v)
         clash = sum(1 for k, v in list(c.implied.items()) + list(c.own.items())
                     if k in self.pool and self.pool[k] != v)
+        # an import symbol must land on the import slot the executable's import table gives that name
+        for k, v in c.implied.items():
+            if k[0] == "g" and k[1].startswith("__imp_"):
+                got = getattr(self.image, "imports", {}).get(v)
+                undecorated = lambda t: re.sub(r"@\d+$", "", t).lstrip("_")     # _BinkOpen@8 and CreateDirectoryA alike
+                if got is not None and undecorated(got.split("!")[-1]) != undecorated(k[1][len("__imp_"):]):
+                    clash += 1
         # a call into an entry already decided as a different function is a clash too
         clash += sum(1 for k, v in c.implied.items()
                      if k[0] == "g" and k[1] in self.code_symbols and v in self.decided_syms
                      and k[1] not in self.decided_syms[v])
         return agree, clash
+
+    def owner(self, va: int, d: dict) -> tuple[list[str], str | None]:
+        """The member that supplied a body several members define identically, and how that is known: 'refs' when
+        references from matched code of exactly one of them land here (a static is reachable only from its own
+        object), 'folded' when references from several land here (the linker folded their identical copies),
+        'layout' when exactly one of them owns a matched neighbour; otherwise every member and None."""
+        sym = d["cands"][0].fn.symbol
+        members = sorted({c.fn.member for c in d["cands"] if c.fn.symbol == sym})
+        if len(members) == 1:
+            return members, "only"
+        local = sorted({k[1] for k, a in self.pool.items()
+                        if a == va and k[0] == "l" and k[1] in members and k[2] == sym})
+        if local:
+            return local, ("refs" if len(local) == 1 else "folded")
+        prev, nxt = self._neighbours(va)
+        near = [m for m in members if (prev and prev.member == m) or (nxt and nxt.member == m)]
+        if len(near) == 1:
+            return near, "layout"
+        return members, None
 
     def _neighbours(self, va: int):
         single = sorted(v for v, d in self.decided.items() if len({c.fn.member for c in d["cands"]}) == 1)
@@ -830,9 +889,25 @@ def layout_violations(decided: dict[int, dict]) -> list[tuple[int, int, str]]:
 AUDIT_DATE = "2026-09-26"
 
 
-def _equivalent(current: str, proposed: str) -> bool:
-    norm = lambda t: re.sub(r"[`'_]", "", t.lower()).replace("constructor", "ctor").replace("destructor", "dtor")
-    return norm(current) == norm(proposed)
+def _equivalent(current: str, name: str) -> bool:
+    """The saved name already is this proven name: exactly, apart from a stdcall @N suffix, or in the
+    demangler's spelling of a special member (`vector constructor iterator' for vector_ctor_iterator)."""
+    cur = re.sub(r"@\d+$", "", current)
+    spell = lambda t: re.sub(r"[`']", "", t).replace(" ", "_").replace("constructor", "ctor") \
+        .replace("destructor", "dtor")
+    return cur == name or spell(cur) == spell(name)
+
+
+def spellings(symbol: str, names: dict[str, str], aliases: dict[str, set[str]]) -> set[str]:
+    """Every name that already is this linker symbol: its flat name and, for a C symbol, its C name (the
+    decoration's underscore off); the same for each alias an alias library defines for it."""
+    out = set()
+    for s in {symbol} | aliases.get(symbol, set()):
+        flat = flat_name(s, names)
+        out.add(flat)
+        if not s.startswith("?") and flat.startswith("_"):
+            out.add(flat[1:])
+    return out
 
 
 def _plural(n: int, word: str, suffix: str = "s") -> str:
@@ -857,12 +932,25 @@ def _land(n: int) -> str:
     return "lands" if n == 1 else "land"
 
 
-def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib_label: str) -> list[dict]:
+def _all_land(n: int) -> str:
+    return "lands" if n == 1 else "all land"
+
+
+def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
+              aliases: dict[str, set[str]] | None = None, verified: list | None = None) -> list[dict]:
     """One proposal per program function the match names: the decided library entries, the function fragments
     Ghidra split off them, and the entries (library or game code) that the library code's own references place.
     Each proposal carries its evidence comment; names already equal to the proven one are left alone."""
     out = []
-    pin = f"{lib_label} (SHA-256 {res.lib.sha256})"
+    aliases = aliases or {}
+
+    def pin_text(member: str) -> str:
+        p = res.lib.pin_of(member)
+        return f"{p['label']} (SHA-256 {p['sha256']})"
+
+    defined_in = {}
+    for fn in res.lib.functions:
+        defined_in.setdefault(fn.symbol, fn.member)
     res.reference_index()
     by_addr = defaultdict(list)
     for k, a in res.pool.items():
@@ -880,11 +968,14 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         if d["how"] in ("ambiguous", "called-no-bytes") or not d["cands"]:
             continue
         c = d["cands"][0]
-        length = c.fn.end - c.fn.start
         sym = c.fn.symbol
+        owners, why = res.owner(va, d)
+        if why in ("refs", "layout"):          # cite the object that supplied it, and its relocations
+            c = next(x for x in d["cands"] if x.fn.member == owners[0] and x.fn.symbol == sym)
+        length = c.fn.end - c.fn.start
         dem = names.get(sym, sym)
         new = flat_name(sym, names)
-        spans.append((va, va + length, new))
+        spans.append((va, va + length, new, c.fn.member))
         cur = rows.get(va)
         if cur is None:
             continue
@@ -904,31 +995,48 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         else:
             rel = " (it has no relocations)"
         members = sorted({x.fn.member for x in d["cands"] if x.fn.symbol == sym})
-        where = f"member {c.fn.member}" + (f"; {len(members)} members define it identically" if len(members) > 1 else "")
+        n = len(members)
+        if why == "only":
+            where = f"member {c.fn.member}"
+        elif why == "refs":
+            where = (f"member {owners[0]}: {n} members define it identically, and the references from that object's own "
+                     f"matched code land here")
+        elif why == "layout":
+            where = f"member {owners[0]}: {n} members define it identically, and the matched code beside it is that object's"
+        elif why == "folded":
+            where = (f"members {', '.join(owners)}, whose identical copies the linker folded into this one (the "
+                     f"references from each object's own matched code land here)")
+        else:
+            where = f"one of the members {', '.join(members)}, which define it identically"
         folded = [flat_name(x, names) for x in d.get("aliases", [])]
-        here = res.cands.get(va, [])
-        rivals = sorted({flat_name(x.fn.symbol, names) for x in here} - {new} - set(folded))
-        overloads = sorted({x.fn.symbol for x in here if x.fn.symbol != sym and flat_name(x.fn.symbol, names) == new})
         also = sorted(set(by_addr.get(va, [])) - {x.fn.symbol for x in d["cands"]} - set(d.get("aliases", [])))
+        here = res.cands.get(va, [])
+        # a rival shares the whole body: same length, another name, not one of this address's own names
+        rivals = sorted({flat_name(x.fn.symbol, names) for x in here if x.fn.end - x.fn.start == length}
+                        - {new} - set(folded) - {flat_name(x, names) for x in also})
+        overloads = sorted({x.fn.symbol for x in here if x.fn.symbol != sym and flat_name(x.fn.symbol, names) == new})
         ref_fields, ref_funcs, ref_data = res.sites([("g", sym)], va, exclude=va)
         short = f"Its fixed code is short ({c.fixed} bytes)"
         if d["how"] == "folded":
             af, afn, ad = res.sites([("g", x) for x in [sym] + d.get("aliases", [])], va, exclude=va)
             kept = f" The object section placed here is {flat_name(d['kept'], names)}'s." if d.get("kept") else ""
-            how = (f"The linker folded identical bodies into this one: {', '.join(folded)} have the same bytes, and "
-                   f"the library's {_refs(af, afn, ad)} to them and to this name all {_land(af)} here.{kept}")
+            how = (f"The linker folded identical bodies into this one: {', '.join(folded)} "
+                   f"{'has' if len(folded) == 1 else 'have'} the same bytes, and "
+                   f"the library's {_refs(af, afn, ad)} to them and to this name {_all_land(af)} here.{kept}")
         elif d["how"] == "called":
             lead = f"Other library functions share these bytes ({_series(rivals)})" if rivals else short
             how = f"{lead}; the library code's {_refs(ref_fields, ref_funcs, ref_data)} to {sym} {_land(ref_fields)} here."
         elif d["how"] == "relocations":
             how = (f"Other library functions share these bytes ({_series(rivals)}); only this one's relocation targets "
-                   f"agree with the rest of the match." if rivals else f"{short}, so its relocations decide it.")
+                   f"agree with the rest of the match." if rivals else
+                   f"{short}, so its relocations decide it." if c.fixed < 16 else
+                   "Its relocation targets agree with the rest of the match, which decides it.")
         elif d["how"] == "layout":
             how = (f"Other library functions share these bytes ({_series(rivals)}); the linker keeps each object's "
-                   f"sections in order, and only this one's section lies between those of its matched neighbours."
+                   f"code together and in order, and only this one fits where its matched neighbours place it."
                    if rivals else
-                   f"{short}; the linker keeps each object's sections in order, and its section lies between those of "
-                   f"its matched neighbours.")
+                   f"{short}; the linker keeps each object's code together and in order, and it fits where its matched "
+                   f"neighbours place it.")
         elif rivals:
             how = (f"Other library functions share these bytes ({_series(rivals)}), but their relocations are "
                    f"inconsistent here.")
@@ -943,25 +1051,29 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
             how += (f"; the library's {_refs(af, afn, ad)} to {'that name' if len(also) == 1 else 'those names'} "
                     f"{_land(af)} here too." if af else ".")
         how = how.strip()
-        text = (f"Linked library code: {dem}, from the static library {pin}, {where}. Proof: bytes "
+        text = (f"Linked library code: {dem}, from the static library {pin_text(c.fn.member)}, {where}. Proof: bytes "
                 f"[{va:08x},{va + length:08x}) of the pristine executable equal the object code of {sym} byte for "
-                f"byte{rel}. {how} Matched by tools/re_lib_match.py in the RE record audit ({AUDIT_DATE}).{former(cur)}")
-        folded_here = d["how"] == "folded" or any(x in res.code_symbols for x in also)
-        tags = ["library-code", "d3dx9-lib", "re-audit-20260926", "name-corrected-20260926"] + \
+                f"byte{rel}. {how} Matched by tools/re_lib_match.py in the RE record audit ({AUDIT_DATE}).")
+        folded_here = d["how"] == "folded" or why == "folded" or any(x in res.code_symbols for x in also)
+        tags = ["library-code", res.lib.pin_of(c.fn.member)["tag"], "re-audit-20260926", "name-corrected-20260926"] + \
             (["linker-folded"] if folded_here else [])
+        alts = {new}.union(*(spellings(x, names, aliases) for x in
+                             {sym} | set(d.get("aliases", [])) | set(also) | {x.fn.symbol for x in d["cands"]}))
         out.append({"address": va, "current": cur["name"], "source": cur["nameSource"], "proposed": new,
-                    "how": d["how"], "comment": text, "tags": tags, "keepTags": False})
+                    "how": d["how"], "proof": text, "comment": text + former(cur), "tags": tags, "keepTags": False,
+                    "alts": alts})
     # fragments: entries Ghidra split off inside a matched body
-    for lo_, hi_, owner in spans:
+    for lo_, hi_, owner, member in spans:
         for va, cur in rows.items():
             if lo_ < va < hi_ and cur["nameSource"] != "ANALYSIS":
                 text = (f"Part of {owner} ({lo_:08x}): that function's object code spans [{lo_:08x},{hi_:08x}) of the "
                         f"pristine executable (tools/re_lib_match.py, RE record audit {AUDIT_DATE}), so the saved "
-                        f"function boundary here splits it; this entry is not a function of its own.{former(cur)}")
+                        f"function boundary here splits it; this entry is not a function of its own.")
                 out.append({"address": va, "current": cur["name"], "source": cur["nameSource"],
-                            "proposed": f"{owner}_fragment_{va:08x}", "how": "fragment", "comment": text,
-                            "tags": ["library-code", "d3dx9-lib", "re-audit-20260926", "name-corrected-20260926",
-                                     "function-fragment"], "keepTags": False})
+                            "proposed": f"{owner}_fragment_{va:08x}", "how": "fragment", "proof": text,
+                            "comment": text + former(cur),
+                            "tags": ["library-code", res.lib.pin_of(member)["tag"], "re-audit-20260926",
+                                     "name-corrected-20260926", "function-fragment"], "keepTags": False})
     # entries placed only by the library's own references
     decided = {r["address"] for r in out}
     for va in sorted(set(by_addr) - decided):
@@ -978,26 +1090,52 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         fields, funcs, data = res.sites([("g", x) for x in syms], va)
         what = "Linked library function" if library else "The program's own definition of"
         refs = " or ".join(syms)
-        text = (f"{what} {names.get(sym, sym)}{also}. Proof: the object code of the static library {pin}, matched "
+        sources = sorted({src[1] if isinstance(src, tuple) else res.decided[src]["cands"][0].fn.member
+                          for x in syms for src, _site in res.fields.get((("g", x), va), [])})
+        labels = sorted({pin_text(m) for m in sources}) or [pin_text(next(iter(res.lib.origin), ""))]
+        libs = ("the static library " + labels[0]) if len(labels) == 1 else \
+            ("the static libraries " + " and ".join(labels))
+        head = res.image.read(va, 6)
+        slot = struct.unpack_from("<I", head, 2)[0] if head and head[:2] == b"\xff\x25" else None
+        thunk = library and slot in getattr(res.image, "imports", {}) and not any(x in defined_in for x in syms)
+        if thunk:
+            what = f"The linker's import thunk for {res.image.imports[slot]}: it jumps through the import slot {slot:08x}"
+        text = (f"{what} {'' if thunk else names.get(sym, sym)}{also}. Proof: the object code of {libs}, matched "
                 f"byte for byte elsewhere in this executable, calls or references {refs}; its "
-                f"{_refs(fields, funcs, data)} all {_land(fields)} here (tools/re_lib_match.py, RE record audit "
-                f"{AUDIT_DATE}).{former(cur)}")
-        tags = (["library-code", "msvc-crt"] if library else sorted(t for t in cur.get("tags", "").split(",") if t)) + \
-            ["re-audit-20260926", "name-corrected-20260926"]
+                f"{_refs(fields, funcs, data)} {_all_land(fields)} here (tools/re_lib_match.py, RE record audit "
+                f"{AUDIT_DATE}).").replace(" .", ".", 1)
+        defining = [x for x in syms if x in defined_in]
+        if library and not thunk and defining:
+            text += (f" Its own body differs from the library's definition of {defining[0]}, so these references "
+                     f"alone place it.")
+        owner_tag = next((res.lib.pin_of(defined_in[x])["tag"] for x in syms if x in defined_in), "msvc-crt")
+        tags = (["import-thunk"] if thunk else ["library-code", owner_tag] if library else
+                sorted(t for t in cur.get("tags", "").split(",") if t)) + ["re-audit-20260926", "name-corrected-20260926"]
+        # the program's own C functions take their source spelling (WinMain, not the linker's _WinMain@16)
+        proposed = flat_name(sym, names)
+        if not library and not sym.startswith("?") and proposed.startswith("_") and not proposed.startswith("__"):
+            proposed = proposed[1:]
         out.append({"address": va, "current": cur["name"], "source": cur["nameSource"],
-                    "proposed": flat_name(sym, names), "how": "placed", "comment": text, "tags": tags,
-                    "keepTags": not library})
+                    "proposed": proposed, "how": "placed", "proof": text, "comment": text + former(cur), "tags": tags,
+                    "keepTags": not library,
+                    "alts": {proposed}.union(*(spellings(x, names, aliases) for x in syms))})
     # leave names that already are the proven identity, and Ghidra's own funclet names
-    out = [r for r in out if not _equivalent(r["current"], r["proposed"])
-           and not re.match(r"^(Catch|Unwind|Catch_All)@", r["current"])]
+    # a saved name that already is one of the address's proven names (an alias included) stays
+    same = [r for r in out if any(_equivalent(r["current"], a) for a in r.get("alts", {r["proposed"]}))]
+    if verified is not None:
+        verified.extend(sorted(same, key=lambda r: r["address"]))
+    out = [r for r in out if r not in same and not re.match(r"^(Catch|Unwind|Catch_All)@", r["current"])]
     # uniqueness: a proposed name used twice, or held by a function this cohort does not rename, takes the address
-    renamed = {r["address"] for r in out}
     held = {cur["name"]: va for va, cur in rows.items()}
     counts = Counter(r["proposed"] for r in out)
     for r in out:
         n = r["proposed"]
         if counts[n] > 1 or (n in held and held[n] != r["address"]):
             r["proposed"] = f"{n}_{r['address']:08x}"
+    if verified is not None:        # an earlier cohort already gave the suffixed name
+        verified.extend(r for r in out if r["proposed"] == r["current"])
+        verified.sort(key=lambda r: r["address"])
+    out = [r for r in out if r["proposed"] != r["current"]]
     assert len({r["proposed"] for r in out}) == len(out)
     return sorted(out, key=lambda r: r["address"])
 
@@ -1022,8 +1160,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     m = sub.add_parser("match")
-    m.add_argument("--lib", type=Path, required=True)
-    m.add_argument("--lib-sha256", required=True, help="expected SHA-256 of the library (the pin)")
+    m.add_argument("--lib", type=Path, action="append", required=True, help="a static library (repeatable)")
+    m.add_argument("--lib-sha256", action="append", required=True,
+                   help="expected SHA-256 of each --lib, in the same order (the pin)")
+    m.add_argument("--label", action="append", help="how comments name each --lib, in the same order")
+    m.add_argument("--tag", action="append", help="the Ghidra tag for each --lib's functions, in the same order")
+    m.add_argument("--alias-lib", type=Path, action="append", default=[],
+                   help="an alias library such as OLDNAMES.LIB whose weak externals name the same functions")
+    m.add_argument("--alias-lib-sha256", action="append", default=[], help="expected SHA-256 of each --alias-lib")
     m.add_argument("--out", type=Path, required=True)
     m.add_argument("--functions", type=Path, help="working-project function export (functions.tsv)")
     m.add_argument("--lo", type=lambda s: int(s, 16), default=0x0055D6A0)
@@ -1032,9 +1176,25 @@ def main(argv: list[str] | None = None) -> int:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from re_name_evidence import Image
     image = Image()
-    lib = load_library(args.lib)
-    if lib.sha256 != args.lib_sha256:
-        raise SystemExit(f"library hash {lib.sha256} is not the pinned {args.lib_sha256}")
+    if len(args.lib_sha256) != len(args.lib):
+        raise SystemExit("give one --lib-sha256 per --lib")
+    labels = args.label or (["DirectX 9.0 SDK d3dx9.lib"] if len(args.lib) == 1 else [p.name for p in args.lib])
+    tags = args.tag or (["d3dx9-lib"] if len(args.lib) == 1 else ["library-code"] * len(args.lib))
+    if len(labels) != len(args.lib) or len(tags) != len(args.lib):
+        raise SystemExit("give one --label and one --tag per --lib")
+    lib = load_libraries(list(zip(args.lib, labels, tags)))
+    for pin, want in zip(lib.pins, args.lib_sha256):
+        if pin["sha256"] != want:
+            raise SystemExit(f"library hash {pin['sha256']} of {pin['path']} is not the pinned {want}")
+    if len(args.alias_lib_sha256) != len(args.alias_lib):
+        raise SystemExit("give one --alias-lib-sha256 per --alias-lib")
+    alias_map: dict[str, set[str]] = defaultdict(set)
+    for path, want in zip(args.alias_lib, args.alias_lib_sha256):
+        got = hashlib.sha256(path.read_bytes()).hexdigest()
+        if got != want:
+            raise SystemExit(f"alias library hash {got} of {path} is not the pinned {want}")
+        for k, v in load_aliases(path).items():
+            alias_map[k] |= v
     starts, rows = _load_starts(args.functions, args.lo, args.hi)
     _all_starts, all_rows = _load_starts(args.functions, 0, 1 << 32)
     names = demangle_all([f.symbol for f in lib.functions] +
@@ -1059,6 +1219,9 @@ def main(argv: list[str] | None = None) -> int:
                             "", "", "", ";".join(flat_name(x, names) for x in d.get("symbols", []))])
                 continue
             c = d["cands"][0]
+            owners, why = res.owner(va, d)
+            if why in ("refs", "layout"):
+                c = next(x for x in d["cands"] if x.fn.member == owners[0] and x.fn.symbol == c.fn.symbol)
             alts = sorted({flat_name(x.fn.symbol, names) for x in d["cands"]})
             nrel = sum(1 for off, _s, _t in lib.objects[c.fn.member].sections[c.fn.section].relocs
                        if c.fn.start <= off < c.fn.end)
@@ -1093,18 +1256,28 @@ def main(argv: list[str] | None = None) -> int:
                 imports_ok += 1
             else:
                 imports_bad += 1
-    props = proposals(res, all_rows, names, "DirectX 9.0 SDK d3dx9.lib")
+    verified: list[dict] = []
+    props = proposals(res, all_rows, names, alias_map, verified)
     with (args.out / "lib-proposals.tsv").open("w") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["address", "source", "current", "proposed", "how", "tags", "keepTags", "comment"])
         for r in props:
             w.writerow([f"0x{r['address']:08x}", r["source"], r["current"], r["proposed"], r["how"],
                         ";".join(r["tags"]), str(r["keepTags"]).lower(), r["comment"]])
+    with (args.out / "lib-verified.tsv").open("w") as f:
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
+        w.writerow(["address", "source", "current", "how", "tags", "keepTags", "proof"])
+        for r in verified:
+            w.writerow([f"0x{r['address']:08x}", r["source"], r["current"], r["how"], ";".join(r["tags"]),
+                        str(r["keepTags"]).lower(), r["proof"]])
     viol = layout_violations(res.decided)
-    summary = {"library": str(args.lib), "librarySha256": lib.sha256, "objects": len(lib.objects),
+    summary = {"library": [str(p["path"]) for p in lib.pins] if len(lib.pins) > 1 else str(lib.path),
+               "librarySha256": [p["sha256"] for p in lib.pins] if len(lib.pins) > 1 else lib.sha256,
+               "objects": len(lib.objects),
                "functions": len(lib.functions), "entriesMatched": len(res.decided),
                "how": Counter(d["how"] for d in res.decided.values()), "placedByCallers": len(placed),
                "proposals": Counter(r["how"] for r in props),
+               "verified": Counter(r["how"] for r in verified),
                "poolKeys": len(res.pool), "contestedKeys": len(res.contested),
                "dataSectionsChecked": len(res.data_checked),
                "dataSectionsMismatched": sum(1 for x in res.data_checked if not x[5]),

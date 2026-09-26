@@ -32,7 +32,7 @@ Battle Engine Aquila retail imports `d3d9.dll` for rendering, but parts of its a
 | 0x0052c730 | `CD3DApplication__SetResolution` | Wave572 stores requested width/height; no in-function clamp |
 | 0x0052c780 | `ScreenShape_UpdateAspectScale` | Applies 4:3 vs 16:9 scaling based on `g_ScreenShape` |
 | 0x005be622 | `Direct3DCreate9` | Wave739 d3d9.dll import thunk signature hardening |
-| 0x005be628 | `HResultToString` | Wave739 HRESULT-to-C-string mapper signature hardening |
+| 0x005be628 | `_DXGetErrorString9A` | Wave739 HRESULT-to-C-string mapper signature hardening |
 
 ### Wave739 D3D Runtime Tail (0x005be622-0x005c9c66)
 

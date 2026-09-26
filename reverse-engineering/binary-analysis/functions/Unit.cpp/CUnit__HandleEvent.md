@@ -124,7 +124,7 @@ The pristine image contains three little-endian `a4 0f 00 00` occurrences:
 | --- | --- | --- |
 | `0x0042898d` | [`CComponent__HandleTriggerEventAndMoveToOffset`](../Component.cpp/CComponent__HandleTriggerEventAndMoveToOffset.md) | `AddEvent_AtTime(4004, component, mTime+7.0f, 0, null, null)` at `0x00428997` |
 | `0x004a0103` | [`CMech__VFunc_50_004a00a0`](../Mech.cpp/CMech__VFunc_50_004a00a0.md) | after fresh `CGroundUnit__MarkDestroyedAndResetState` and `CUnit__ReleaseChildUnits`, `AddEvent_AtTime(4004, mech, mTime+3.5f, 0, null, null)` at `0x004a010d` |
-| `0x005c6928` | `HResultToString` | `mov ecx,0xfa4` in an HRESULT switch; not an event or scheduler call |
+| `0x005c6928` | `_DXGetErrorString9A` | `mov ecx,0xfa4` in an HRESULT switch; not an event or scheduler call |
 
 Thus there are exactly **two** event-4004 producers in pristine `.text`, both
 self-targeting Unit-family destruction paths, and one unrelated HRESULT

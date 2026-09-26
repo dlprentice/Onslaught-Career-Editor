@@ -1,7 +1,7 @@
-# FUN_0055fd6a
+# ___initstdio
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; identity proven 2026-09-26 (linked library code)
+Last updated: 2026-09-26
 Source File: unlabeled (first gates only; do not read this as
 a pin of `CScriptObjectCode.cpp.md` / sibling `__alldiv`
 / table `CRT__CallocWithRetry` / already-pinned
@@ -20,6 +20,10 @@ were **not** rewritten. Did not adopt C1
 `CallocFill6533c0`.
 
 > Address: `0x0055fd6a`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `___initstdio`. Linked library code: ___initstdio, from the static library Visual C++ 6.0 SP6 LIBCMT.LIB (SHA-256 a541c95e5ffdd6d5573d1976f5e5d0038f2c4fb0bcb02975c68948bf1d6e452a), member build\intel\mt_obj\_file.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-crt-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Contract
 
@@ -75,4 +79,4 @@ encoding of that imm exists.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0055fd6a` | `FUN_0055fd6a` | `a100469d00 … 5ec3` (168 B) | not incoming-ECX; bare ret ×1; 168 B; 3 E8 table `CRT__CallocWithRetry` ×2 / `__amsg_exit` / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm at `0x00622b1c`, `0x009d4600`/`0x009d35f8`. **Not** on those callees. |
+| `0x0055fd6a` | `___initstdio` | `a100469d00 … 5ec3` (168 B) | not incoming-ECX; bare ret ×1; 168 B; 3 E8 table `CRT__CallocWithRetry` ×2 / `__amsg_exit` / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm at `0x00622b1c`, `0x009d4600`/`0x009d35f8`. **Not** on those callees. |

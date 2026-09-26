@@ -58,7 +58,7 @@ Wave619 hardened the contiguous import-thunk island from `0x0055d5e0` through `0
 | `0x0055d688` | `vorbis_synthesis` | `int __cdecl vorbis_synthesis(void * vb, void * op)` | Six-byte thunk to IAT `0x005d83b0`; xref from `OggVorbisStream__ReadPcmSamples`. |
 | `0x0055d68e` | `VerQueryValueA` | `BOOL __stdcall VerQueryValueA(LPCVOID pBlock, LPCSTR lpSubBlock, LPVOID * lplpBuffer, PUINT puLen)` | Six-byte thunk to IAT `0x005d82e0`; existing WinAPI signature retained; xref from `CLTShell__WinMain`. |
 | `0x0055d694` | `GetFileVersionInfoA` | `BOOL __stdcall GetFileVersionInfoA(LPCSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData)` | Six-byte thunk to IAT `0x005d82dc`; existing WinAPI signature retained; xref from `CLTShell__WinMain`. |
-| `0x0055d69a` | `GetFileVersionInfoSizeA` | `DWORD __stdcall GetFileVersionInfoSizeA(LPCSTR lptstrFilename, LPDWORD lpdwHandle)` | Six-byte thunk to IAT `0x005d82d8`; existing WinAPI signature retained; next queue head is `0x0055d6a0 CRT__SehPopExceptionFrameAndJump`. |
+| `0x0055d69a` | `GetFileVersionInfoSizeA` | `DWORD __stdcall GetFileVersionInfoSizeA(LPCSTR lptstrFilename, LPDWORD lpdwHandle)` | Six-byte thunk to IAT `0x005d82d8`; existing WinAPI signature retained; next queue head is `0x0055d6a0 _JumpToContinuation`. |
 
 ## Evidence Sources
 

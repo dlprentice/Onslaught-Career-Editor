@@ -4,6 +4,7 @@ from __future__ import annotations
 import shutil
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -166,6 +167,44 @@ class NameTests(unittest.TestCase):
         self.assertEqual(M.flat_name("@fast@8", {}), "fast")
         self.assertEqual(M.flat_name("__ftol", {}), "__ftol")
 
+    def test_flat_names_keep_an_identifiers_own_underscores(self):
+        dem = {"?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z":
+                   "void __stdcall _JumpToContinuation(void *, struct EHRegistrationNode *)",
+               "?_Lrotate@?$_Tree@HU?$pair@$$CBHH@std@@U_Kfn@?$map@HHU?$less@H@std@@V?$allocator@H@2@@2@U?$less@H@2@V"
+               "?$allocator@H@2@@std@@IAEXPAU_Node@12@@Z":
+                   "protected: void __thiscall std::_Tree<int, struct std::pair<int const, int>, struct std::map<int, "
+                   "int, struct std::less<int>, class std::allocator<int>>::_Kfn, struct std::less<int>, class "
+                   "std::allocator<int>>::_Lrotate(struct std::_Tree<int>::_Node *)"}
+        self.assertEqual(M.flat_name("?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z", dem),
+                         "_JumpToContinuation")
+        tree = M.flat_name(next(k for k in dem if "_Lrotate" in k), dem)
+        self.assertTrue(tree.startswith("std___Tree_int_") and tree.endswith("___Lrotate"), tree)
+
+    def test_saved_names_must_equal_a_proven_spelling(self):
+        aliases = {"__stricmp": {"_stricmp"}}
+        self.assertEqual(M.spellings("__stricmp", {}, aliases), {"__stricmp", "_stricmp", "stricmp"})
+        self.assertEqual(M.spellings("_fclose", {}, {}), {"_fclose", "fclose"})
+        dem = {"?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z": "void __stdcall _JumpToContinuation(void *)"}
+        self.assertEqual(M.spellings("?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z", dem, {}),
+                         {"_JumpToContinuation"})
+        self.assertTrue(M._equivalent("__CallSettingFrame@12", "__CallSettingFrame"))
+        self.assertTrue(M._equivalent("`vector_constructor_iterator'", "vector_ctor_iterator"))
+        self.assertTrue(M._equivalent("eh_vector_constructor_iterator", "eh_vector_ctor_iterator"))
+        self.assertFalse(M._equivalent("WcsLen", "_wcslen"))                # letter case is part of a name
+        self.assertFalse(M._equivalent("wcslen", "_wcslen"))                # the C name comes from spellings()
+        self.assertFalse(M._equivalent("___free_lc_time", "__free_lc_time"))
+        self.assertFalse(M._equivalent("JumpToContinuation", "_JumpToContinuation"))
+
+    def test_alias_library_weak_externals(self):
+        obj = coff([], [("__stricmp", 0, 0, 0x20, M.IMAGE_SYM_CLASS_EXTERNAL, b""),
+                        ("_stricmp", 0, 0, 0, M.IMAGE_SYM_CLASS_WEAK_EXTERNAL, struct.pack("<II", 0, 3) + bytes(10))])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp, "OLDNAMES.LIB")
+            path.write_bytes(archive([("stricmp.obj", b"\0\0" + obj[2:])]))     # OLDNAMES objects are machine 0
+            self.assertEqual(M.load_aliases(path), {"__stricmp": {"_stricmp"}})
+        self.assertIsNone(M.parse_coff("stricmp.obj", b"\0\0" + obj[2:]))  # never code to match
+        self.assertIsNone(M.parse_coff("imp", struct.pack("<HHIIIHH", 0, 0xFFFF, 0, 0, 0, 0, 0), (0x14C, 0)))
+
     def test_anonymous_function_templates(self):
         self.assertEqual(M._anonymous_template_name(
             "?D3DXIntersect@?$@I$0A@$0?0@@YGJPAUID3DXBaseMesh@@HKPBUD3DXVECTOR3@@1PAHPAKPAM44PAPAUID3DXBuffer@@3I@Z"),
@@ -249,6 +288,37 @@ class ResolverTests(unittest.TestCase):
         mid = res.decided[self.LO + 20]
         self.assertEqual((mid["how"], mid["cands"][0].fn.symbol), ("layout", "_X"))
         self.assertEqual(M.layout_violations(res.decided), [])
+
+
+class OwnerAndImportTests(unittest.TestCase):
+    def resolver(self):
+        lib = M.Library(Path("x.lib"), "0" * 64, {}, [])
+        img = type("Img", (), {"imports": {0x5D81C8: "KERNEL32.dll!CreateDirectoryA"}})()
+        return M.Resolver(lib, img, {}, 0, 1 << 32, [])
+
+    def fn(self, member, symbol="_helper", start=0):
+        return M.ObjFunc(member, 1, start, start + 8, symbol, 3, False)
+
+    def test_owner_by_references_folding_layout_and_none(self):
+        res = self.resolver()
+        d = {"cands": [M.Candidate(0x1000, self.fn("a.obj"), 8), M.Candidate(0x1000, self.fn("b.obj"), 8)]}
+        self.assertEqual(res.owner(0x1000, d), (["a.obj", "b.obj"], None))
+        res.pool[("l", "b.obj", "_helper", 1, 0)] = 0x1000                 # b.obj's own code calls it here
+        self.assertEqual(res.owner(0x1000, d), (["b.obj"], "refs"))
+        res.pool[("l", "a.obj", "_helper", 1, 0)] = 0x1000                 # and a.obj's too: folded copies
+        self.assertEqual(res.owner(0x1000, d), (["a.obj", "b.obj"], "folded"))
+        res.pool.clear()
+        res.decided[0x0F00] = {"cands": [M.Candidate(0x0F00, self.fn("a.obj", "_prev"), 16)]}
+        self.assertEqual(res.owner(0x1000, d), (["a.obj"], "layout"))
+        one = {"cands": [M.Candidate(0x1000, self.fn("a.obj"), 8)]}
+        self.assertEqual(res.owner(0x1000, one), (["a.obj"], "only"))
+
+    def test_import_symbols_must_land_on_their_own_slot(self):
+        res = self.resolver()
+        mkdir = M.Candidate(0x2000, self.fn("mkdir.obj", "__mkdir"), 8, implied={("g", "__imp__CreateDirectoryA@8"): 0x5D81C8})
+        rmdir = M.Candidate(0x2000, self.fn("rmdir.obj", "__rmdir"), 8, implied={("g", "__imp__RemoveDirectoryA@4"): 0x5D81C8})
+        self.assertEqual(res._score(mkdir)[1], 0)
+        self.assertEqual(res._score(rmdir)[1], 1)
 
 
 if __name__ == "__main__":

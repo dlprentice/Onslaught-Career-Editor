@@ -576,16 +576,29 @@ class SourceFunc:
     literals: list[str]
     lit_calls: list[tuple[str, str, int]]   # (callee text, literal, argument index)
     end_line: int = 0      # line of the closing brace
+    args: str = ""         # the parameter list as written
+    head: str = ""         # what precedes the name: return type, 'static', 'inline', 'virtual'
+
+
+_COMMENT_OR_LITERAL = re.compile(r"//[^\n]*|/\*.*?\*/|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'", re.S)
 
 
 def strip_comments(text: str) -> str:
-    text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group().count("\n"), text, flags=re.S)
-    return re.sub(r"//[^\n]*", "", text)
+    """Comments out, line numbers kept. One left-to-right pass, so a '//****' separator is a line comment (not the
+    start of a block comment) and comment markers inside string or character literals stay literal."""
+    def keep(m: re.Match) -> str:
+        t = m.group()
+        if t.startswith("//"):
+            return ""
+        if t.startswith("/*"):
+            return "\n" * t.count("\n")
+        return t
+    return _COMMENT_OR_LITERAL.sub(keep, text)
 
 
-def index_source(root: Path = SOURCE) -> list[SourceFunc]:
+def index_source(root: Path = SOURCE, patterns: tuple[str, ...] = ("*.cpp",)) -> list[SourceFunc]:
     out = []
-    for path in sorted(root.glob("*.cpp")):
+    for path in sorted({p for pattern in patterns for p in root.glob(pattern)}):
         text = strip_comments(path.read_text(errors="replace"))
         for m in _FUNC_DEF.finditer(text):
             name = m.group("name")
@@ -608,7 +621,7 @@ def index_source(root: Path = SOURCE) -> list[SourceFunc]:
                 argidx = cm.group("pre").count(",")
                 calls.append((cm.group("callee"), c_unescape(cm.group("lit")), argidx))
             out.append(SourceFunc(key, path.name, text.count("\n", 0, m.start()) + 1, body, literals, calls,
-                                  text.count("\n", 0, j - 1) + 1))
+                                  text.count("\n", 0, j - 1) + 1, m.group("args"), head))
     return out
 
 
@@ -692,6 +705,131 @@ def string_anchors(prog: "Program", src: list[SourceFunc]):
     return body, callee
 
 
+def file_line_anchors(prog: "Program", src: list[SourceFunc]) -> dict[int, list[tuple[str, int, str | None]]]:
+    """Retail function va -> [(source file, line, source function key or None)] from the debug allocation sites
+    (`push LINE; push "C:\\dev\\ONSLAUGHT2\\File.cpp"; push TAG; push SIZE; call Alloc`). The file is proven; the
+    line names the pinned source's function that spans it, which is a lead where the revisions drift. Header files
+    carry inlined code and anchor nothing; the compiler's unwind funclets past LIB_HI are skipped."""
+    index = {i.va: n for n, i in enumerate(prog.model.insns)}
+    by_file: dict[str, list[SourceFunc]] = defaultdict(list)
+    for sf in src:
+        by_file[sf.file.lower()].append(sf)
+    out: dict[int, list[tuple[str, int, str | None]]] = defaultdict(list)
+    for a, text in prog.model.strings.items():
+        m = re.search(r"([^\\/]+\.(?:cpp|c))$", text.strip(), re.I)
+        if not m:
+            continue
+        for _kind, site in prog.model.refs_to.get(a, []):
+            n = index.get(site)
+            if not n or prog.model.insns[n - 1].mnem != "push":
+                continue
+            try:
+                line = int(prog.model.insns[n - 1].ops, 16)
+            except ValueError:
+                continue
+            f = prog.func_at(site)
+            if f is None or not 0 < line < 100000 or f.va >= LIB_HI:
+                continue
+            key = next((sf.key for sf in by_file.get(m.group(1).lower(), []) if sf.line <= line <= sf.end_line), None)
+            out[f.va].append((m.group(1), line, key))
+    return out
+
+
+def file_drift(anchors: dict[int, list], names: dict[int, str], src: list[SourceFunc], span: int = 400) -> dict:
+    """Per source file, the line shift that puts the most anchored lines inside the source function each retail
+    function's saved name names (the pinned revision's lines drift from the retail build's in some files)."""
+    by_key = {sf.key: sf for sf in src}
+    sites: dict[str, list[tuple[int, SourceFunc]]] = defaultdict(list)
+    for va, lst in anchors.items():
+        sf = by_key.get(names.get(va, "").replace("__", "::"))
+        for file, line, _key in lst:
+            if sf and sf.file.lower() == file.lower():
+                sites[file.lower()].append((line, sf))
+    out = {}
+    for file, pairs in sites.items():
+        best = max(range(-span, span + 1),
+                   key=lambda d: (sum(1 for line, sf in pairs if sf.line <= line - d <= sf.end_line), -abs(d)))
+        out[file] = best
+    return out
+
+
+_STRUCTURAL = re.compile(r"^FUN_|^Shared\w*VFunc__|VFunc_?\d*_[0-9a-f]{8}$|__Func_[0-9a-f]{8}$|_T3_[0-9a-f]{8}$|"
+                         r"^\w+VFunc__")
+
+
+def audit(prog: "Program", src: list[SourceFunc], graph: dict | None = None, calls=None) -> list[dict]:
+    """One evidence row per user-defined game function name (library code excluded): what supports the name,
+    what contradicts it, and a verdict. graph: re_source_graph.check() report over the same functions.
+    verified: the name is a pinned-source definition and a line anchor (after its file's drift) or a string
+      anchor names it, or it is virtual, its owner is the defining class and its calls agree with the source;
+    contradicted: an anchor names another function, its calls or return disagree with the source, its owner is
+      not the class that defines it, or a tiny body contradicts the name;
+    neutral: a structural placeholder (FUN_, SharedVFunc__, Class__VFunc_NN_addr, ...) that claims no identity;
+    unsupported: nothing above supports it (a descriptive name, or a source name with no anchor).
+    calls(key, file) -> short names the source function reaches, inlined helpers included (re_source_graph.reach):
+    an anchor inside a function the named one calls is evidence for the name, since the build inlines them."""
+    keys = {sf.key for sf in src}
+    anchors = file_line_anchors(prog, src)
+    names = {f.va: f.name for f in prog.funcs}
+    drift = file_drift(anchors, names, src)
+    by_file: dict[str, list[SourceFunc]] = defaultdict(list)
+    for sf in src:
+        by_file[sf.file.lower()].append(sf)
+    body, _callee = string_anchors(prog, src)
+    rows_g = {int(r["address"], 16): r for r in (graph or {}).get("rows", [])}
+    out = []
+    for f in prog.funcs:
+        if f.source != "USER_DEFINED" or LIB_LO <= f.va < LIB_HI or f.va >= LIB_HI:
+            continue
+        owner, method = split_name(f.name)
+        key = f.name.replace("__", "::")
+        if key.endswith("::ctor") and owner:
+            key = key[:-6] + "::" + owner.split("__")[-1]
+        elif key.endswith("::dtor") and owner:
+            key = key[:-6] + "::~" + owner.split("__")[-1]
+        in_source = key in keys
+        pro, con = [], []
+        reach = calls(key, next((sf.file for sf in src if sf.key == key), None)) if (calls and in_source) else set()
+        for file, line, _k in anchors.get(f.va, []):
+            d = drift.get(file.lower(), 0)
+            hit = next((sf.key for sf in by_file.get(file.lower(), []) if sf.line <= line - d <= sf.end_line), None)
+            where = f"{file}:{line}" + (f" (drift {d:+d})" if d else "")
+            if hit == key:
+                pro.append(where)
+            elif hit and hit.split("::")[-1] in reach:
+                pro.append(f"{where} in {hit}, which it calls (inlined)")
+            elif hit:
+                con.append(f"{where} is in {hit}")
+        for k in sorted(body.get(f.va, ())):
+            if k == key:
+                pro.append(f"string unique to {k}")
+            elif k.split("::")[-1] in reach:
+                pro.append(f"string unique to {k}, which it calls (inlined)")
+            else:
+                con.append(f"string unique to {k}")
+        defs = prog.defining_classes(f)
+        if defs and owner and owner not in defs and not any(prog.is_ancestor(owner, d) for d in defs):
+            con.append(f"vtables say it belongs to {'/'.join(sorted(defs))}")
+        g = rows_g.get(f.va)
+        if g:
+            con.extend(g["contradictions"])
+        tiny = check_tiny_name(method, tiny_semantics(prog, f))
+        if tiny == "disagree":
+            con.append("its tiny body contradicts the name")
+        edges_ok = bool(g) and not g["contradictions"] and g.get("absent") is not None
+        if _STRUCTURAL.search(f.name) and not in_source:
+            verdict = "contradicted" if tiny == "disagree" else "neutral"
+        elif con:
+            verdict = "contradicted"
+        elif in_source and (pro or (defs and owner in defs and edges_ok)):
+            verdict = "verified"
+        else:
+            verdict = "unsupported"
+        out.append({"address": f"0x{f.va:08x}", "name": f.name, "verdict": verdict, "inSource": in_source,
+                    "definers": ";".join(sorted(defs)), "for": " | ".join(pro), "against": " | ".join(con)})
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Statically linked library code
 # ---------------------------------------------------------------------------
@@ -707,10 +845,28 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     m = sub.add_parser("model")
     m.add_argument("--out", type=Path, required=True)
+    a = sub.add_parser("audit", help="evidence and a verdict for every user-defined game function name")
+    a.add_argument("--functions", type=Path, required=True)
+    a.add_argument("--graph", type=Path, help="a re_source_graph.py report over the same export")
+    a.add_argument("--out", type=Path, required=True)
     c = sub.add_parser("facts")
     c.add_argument("--functions", type=Path, required=True)
     c.add_argument("--out", type=Path, required=True)
     args = ap.parse_args(argv)
+    if args.cmd == "audit":
+        img, model = load_or_build(args.out / "model.pickle")
+        prog = Program(img, model, load_functions(args.functions))
+        import re_source_graph as G
+        gsrc = G.index(SOURCE, ("*.cpp", "*.h"), set())
+        rows = audit(prog, index_source(SOURCE), json.loads(args.graph.read_text()) if args.graph else None,
+                     lambda key, file: G.reach(gsrc, key, file))
+        with (args.out / "name-audit.tsv").open("w") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
+            w.writeheader()
+            w.writerows(rows)
+        from collections import Counter
+        print(json.dumps(Counter(r["verdict"] for r in rows), indent=2))
+        return 0
     if args.cmd == "facts":
         img, model = load_or_build(args.out / "model.pickle")
         prog = Program(img, model, load_functions(args.functions))

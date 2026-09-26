@@ -206,7 +206,12 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # analytic comments, 577,447 decoded bytes) and 1,139 generated evidence comments
 # (library symbol, member, byte ranges and relocation counts; 1,086,765 bytes).
 # No library or program bytes are encoded; reviewed the same way.
+# RE-audit C runtime library names: 343 current comments (prior analytic comments,
+# 150,337 decoded bytes) and 370 generated evidence comments (304,438 bytes; WinMain's
+# keeps its earlier note as a marked lead). Reviewed the same way.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/library-crt-20260926.manifest.tsv":
+        "b1292f792373f16b2e3cc8bd80e8abeed191cf90decbef6fb6d47cec7eb67b63",
     "tools/cohort-specs/library-d3dx-20260926.manifest.tsv":
         "382eb1d2406f0e83b0dd36f6342b67f65805a245de6b43e588882ade3234387e",
     "tools/cohort-specs/label-audit-2-20260926.manifest.tsv":

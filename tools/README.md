@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-25 (legacy 4.7.2 companion launcher removed; Ghidra ABI preservation and platform limits retained)
+Last updated: 2026-09-26 (record-audit instruments: library matching, name evidence, source call graph)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports retail research, the Godot rebuild, the Godot companion and retained toolkit
@@ -148,6 +148,19 @@ focused rebuild checks; a replica, moved root, changed selector, or generic
 Generation 24 bundle is refused.
 
 ## Ghidra and runtime research
+
+### Record-audit instruments
+
+These back the RE record audit's names; each records its evidence, and none writes Ghidra (cohorts do).
+
+- `re_lib_match.py` matches statically linked library code byte for byte against pinned static libraries
+  (VC6 `LIBCMT.LIB`, DirectX 9 `d3dx9.lib` and `DxErr9.lib`; `OLDNAMES.LIB` for aliases), relocation
+  fields masked, and proposes names with evidence comments. The libraries are private references in
+  `local-lab/third-party/`, pinned by SHA-256.
+- `re_name_evidence.py` gathers per-function evidence from the pristine specimen: RTTI and vtable slots,
+  strings, `__FILE__` anchors, callers and source definitions in the pinned GPL source.
+- `re_source_graph.py` tests a mapping of functions onto a pinned source tree by call graph and return
+  size, allowing for inlining within a translation unit, implicit calls and linker-folded bodies.
 
 ### Cohort promotion framework
 

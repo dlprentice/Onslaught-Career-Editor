@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110 through its start state; RE record audit complete: labels corrected live, documents corrected, factory-draft error rate measured; walker dash window; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-26 (rebuild constructs World 110 through its start state; RE record audit: library code named live in two cohorts, three more prepared, step-3 instruments and first verdicts; walker dash window; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -142,9 +142,9 @@ retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;
 this RE task does not own those production changes.
 
-The rebuild's failing cold full-combat route now has a
-[final-wave contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md):
-the abort is a designed retail branch, and retail adds friendly turrets after
+The rebuild's cold full-combat route follows the
+[final-wave contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md)
+and has won since September 26: the old abort was a designed retail branch, and retail adds friendly turrets after
 Help Player and the jet Missile Pod. An original-code control shows activated
 turrets can select the script-spawned enemy drones. The turret aim, Missile Pod
 lock, crosshair and auto-aim refresh, seeking-round, round-lifetime and per-round
@@ -208,41 +208,66 @@ Verified corrections waiting for the next cohort:
 | `00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing::SetThingType`, slot 38 |
 | `00401f70`, `00401fd0` | `CActor__TestFieldCcDeltaBelow015_…`, `ElapsedTime__BelowThreshold_D4` | `CActor::IsOnGround` (slot 67) and `IsOnObject` |
 
-The library pass (audit step 2) named the statically linked library code on
-2026-09-26 (cohort `library-d3dx-20260926`; see the
-[Ghidra README](reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)).
-`tools/re_lib_match.py` compares every function of a pinned static library with the
-pristine bytes, relocation fields masked, and pools what each relocation implies;
-`llvm-readobj` and `objdump` re-check it independently. Against the DirectX 9.0 SDK's
-`d3dx9.lib` it decides 1,112 of the 1,114 functions from `0x00574270` to `0x005be622`.
-With the C runtime functions and the global `operator new`/`operator delete` that the
-D3DX code calls, 1,139 functions were named.
+The library pass (audit step 2) named the statically linked library code in two cohorts, both live
+([Ghidra README](reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)).
+`tools/re_lib_match.py` compares every function of pinned static libraries with the pristine bytes,
+relocation fields masked, pools what each relocation implies, and checks import slots against the PE
+import table; an independent `llvm-readobj`/`objdump` checker re-derives every match, count and member
+claim. `library-d3dx-20260926` named 1,139 functions (the D3DX code in `0x00574270`-`0x005be622`, 1,112 of
+its 1,114 decided, with 26 runtime functions and the global `operator_new`/`operator_delete` it calls).
+`library-crt-20260926` named 370 more: 351 VC6 `LIBCMT` runtime functions and 15 fragments that saved
+boundaries split off them, DxErr9's `_DXGetErrorString9A`, two D3DX corrections and `WinMain`. Of the 462
+functions in the runtime's ranges (`0x0055d6a0`-`0x0056eb50`, `0x005be622`-`0x005d0f10`), 367 are named by
+it, 85 already carried a proven name (listed as verified, not renamed), and 10 stay open: three bodies
+that several library functions share identically (`0x0055dbe8`, `0x0055dcb0`, `0x0055e3ea`), five with no
+SP6 match because the game links an older runtime build (the `asin`/`acos`/`pow` cores, `0x0055fc35`,
+`0x0056c78a`), and the import thunks `Direct3DCreate9` and `DirectInput8Create`.
 
-Of the 391 `CFastVB__` labels:
-- 326 were D3DX code (texture codecs, math, the shader assembler, libjpeg, libpng and
-  zlib) and are named now;
-- 6 are the game's `FastVB.cpp` code (`0x0051a270`-`0x0051a6a0`, the file named by the
-  `__FILE__` string that `Create` and `Render` pass to the allocator), and 2 are their
-  unwind funclets;
-- 57 are NVIDIA's NvTriStrip with its STL containers (`0x0056eb50`-`0x00574250`).
+Of the 391 `CFastVB__` labels: 326 were D3DX code (named); 6 are the game's `FastVB.cpp` code
+(`0x0051a270`-`0x0051a6a0`) and 2 their unwind funclets (step 3); 57 are NVIDIA's NvTriStrip with its STL
+containers (below).
 
-NvTriStrip is next. Its four setters and `GenerateStrips` match the public source's API,
-and its globals match that source's initial values (cache size 16, stitching on). The
-public source is a later version with restart support, so the mapping is structural.
+Queued, prepared in `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` (each folder's scripts
+read the previous cohort's POST through `cohort_chain.py`, so they run in this order):
+1. `label-audit-3/`: eight re-derived game-code corrections in `targets.py`: `005015c0`
+   `CVBufTexture__ClearOut`; `004efb10`/`004f0330`/`004f00e0` `SYSTEM__Init`/`Run`/`Shutdown` (the SYSTEM
+   object at `00896ca4`, called from `PCLTShell::MainLoop` inlined into WinMain; its class is in the
+   unpinned `System.h`); `0046dbc0` `CMonitor__dtor_thunk` (the folded destructor of `CWaitForStart` and
+   `CGameInterface`); `00404110` `CComplexThing__SetThingType` (slot 38); `00401f70` `CActor__IsOnGround`
+   (slot 67) and `00401fd0` `CActor__IsOnObject`. Its `apply_live.py`/`finish.py` still need adapting.
+2. `library-nvtristrip/`: all 72 functions of `0x0056eb50`-`0x00574270`, planned by `plan.py` with
+   structural evidence per row: the call graph and return sizes against the pinned public NvTriStrip (69
+   call edges agree; two return sizes differ because the game's version is older), string anchors, data
+   initial values, and body facts that separate every look-alike pair. The STL rows name only what the
+   bytes prove (element width; `T` where unproven).
+3. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose saved names are proven
+   but whose comments are old or wrong: the 60 names that were right before the audit, and D3DX-cohort
+   comments the CRT review showed are wrong (`0x00574577`, `0x00574abb` cite unlinked objects;
+   `0x00589094` omits a folded copy).
 
-The C runtime around it (`0x0055d6a0`-`0x0056eb50` and `0x005be622`-`0x005d0f10`) is
-VC6 `LIBCMT`. The SP6 library decides 434 of its 459 functions. Fifteen of the rest are
-`__finally` and unwind blocks that saved boundaries split off matched functions. Ten
-bodies (among them the `asin`, `acos` and `pow` cores) differ from SP6, because the
-game's runtime objects are an older build (Rich header `Utc12_C` build 8047).
-`0x005be628` is DxErr9's `DXGetErrorString9A`. `0x0058864a`
-(`D3DXCore::CFile::CFile`) waits for the next cohort because it shares a saved label
-with `0x0057cc53`.
+Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
+game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
+lines), string anchors, vtable ownership, tiny-body semantics and `tools/re_source_graph.py` (call graph and
+return sizes against the pinned source, allowing inlining within a translation unit, implicit calls and
+folded bodies). First run on the live export: 148 verified, 65 contradicted, 931 structural placeholders,
+3,474 unsupported; for the 619 functions the rebuild cites, 50 verified and 17 contradicted. "Unsupported"
+is inflated until vtable layouts from the headers and call-site alignment exist; neutralize nothing until
+they do. Contradicted leads worth taking first: `BattleEngineConfigurations__Load` (the class is
+`UBattleEngineConfigurations`), `CLIParams__ParseCommandLine` (`CCLIParams::GetParams`),
+`PCPlatform__LoadFonts` (`CPCPlatform::InitFonts`), `CPCSoundManager__Init` (lines in `PlaySound`),
+`CBattleEngine__Damage` (lines in `HandleEngines`), and return sizes that disagree with the source
+(`CCareer__GetGradeFromRanking`, `CGame__RunLevel`, `CController__ctor`, `CPCController__GetKeyOnce`).
 
-Follow-ups found by the review:
-- Ghidra does not treat `_exit` as no-return, so `D3DX__error_exit`'s saved body
-  swallows `output_message` (`0x00592b20`);
-- 13 call targets in matched code have no Ghidra function.
+Follow-ups:
+- Ghidra does not treat `_exit` as no-return, so `D3DX__error_exit`'s saved body swallows
+  `output_message` (`0x00592b20`); 13 call targets in matched code have no Ghidra function.
+- `operator_new`/`operator_delete` lost their descriptive comments to the D3DX cohort's proof text; restore
+  verified descriptions.
+- `re_lib_match.py`: add a section-order check to `owner()`'s layout test; folded rows keep `cands[0]`.
+- PowerShell is retired machine-wide. The RE lane's 31 `.ps1`/`.psm1` files cannot run; several are
+  pinned by hash in evidence verifiers (`Invoke-TtdCallContext.ps1`, `Invoke-TtdCallContextV2.ps1`,
+  `Record-ApitraceD3D9.ps1` and the pinned `ttd_pipeline_contract_tests.py`, which names seven of them), so
+  retire only the unpinned ones and keep the pinned ones as provenance.
 
 ### RE record audit — requested September 25
 
