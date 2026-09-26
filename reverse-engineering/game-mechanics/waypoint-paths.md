@@ -1,7 +1,7 @@
 # Named waypoint paths: loading, start node and following
 
 Status: active static contract for the rebuild's Level 100 and World 110
-Last updated: 2026-09-26 (height adjustments, nearest-node arithmetic and end-of-walk behaviour)
+Last updated: 2026-09-26 (height adjustments, nearest-node arithmetic, end-of-walk behaviour and the Level 100 lifted heights)
 Summary: how the loader builds each named waypoint path, which node `FollowWaypointWait`
 starts from, and how following advances and ends. It also gives the resulting routes
 for the units that follow paths from their authored positions.
@@ -49,6 +49,12 @@ smaller z is higher.
 The result is the highest of the authored z, the ground and the water level. Step 3
 cannot change it, since step 1 already raised z to the ground. The heightfield sample
 excludes water; water is the separate global.
+
+In Level 100 the lift is not small. The rebuild's Core sampler (commit `4516b7a1` on the
+rebuild branch) puts Flyby node 42, authored at z −15 inside the hillside, at the ground
+height −18.10, and every node over the sea at the water level −8.84: Flyby 43, Transporter
+44 and all four drone nodes. The start choices below still win by wide margins. These
+heights are the rebuild's measurement; this page has not re-sampled them.
 
 ## Following
 
