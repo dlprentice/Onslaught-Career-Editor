@@ -274,6 +274,28 @@ def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], o
     return licenses
 
 
+def with_project_icon(text: str) -> str:
+    """project.godot text with the staged icon set as the application icon; refuses a project that already has one."""
+    if "\n[application]\n" not in text:
+        raise RuntimeError("The staged project has no [application] section for its icon")
+    if "config/icon=" in text:
+        raise RuntimeError("The project already names an icon; the companion's icon is made at export")
+    return text.replace("\n[application]\n", '\n[application]\n\nconfig/icon="res://icon.png"\n', 1)
+
+
+def prepare_icon(engine: Path, project: Path, env: dict[str, str], output: Path) -> None:
+    """Gives the staged export its application icon: the emblem, rendered by the app's own code."""
+    icon = project / "icon.png"
+    run_logged([str(engine), "--headless", "--path", str(project), "--script", "res://Development/IconWriter.cs", "--",
+                f"--output={icon}"], cwd=project, env=env, timeout=60, log=output / "logs/icon.log", godot=True)
+    if not icon.is_file() or icon.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
+        raise RuntimeError("The application icon was not written")
+    settings = project / "project.godot"
+    settings.write_text(with_project_icon(settings.read_text(encoding="utf-8")), encoding="utf-8")
+    run_logged([str(engine), "--headless", "--path", str(project), "--import"],
+               cwd=project, env=env, timeout=180, log=output / "logs/import-icon.log", godot=True)
+
+
 def copy_fixture(source: Path, output: Path) -> Path:
     if not stat.S_ISREG(source.stat().st_mode):
         raise RuntimeError(f"Save fixture must be a regular file: {source}")
@@ -411,6 +433,7 @@ def companion_main(argv: list[str] | None = None) -> int:
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)
+            prepare_icon(engine, project, env, output)
             for platform in platforms:
                 export_platform(engine, project, templates, pins, platform, env, output, licenses)
             return 0

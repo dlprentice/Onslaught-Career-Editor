@@ -32,11 +32,12 @@ class CompanionLauncherTests(unittest.TestCase):
         self.project = self.source / "companion/OnslaughtToolkit.Godot"
         self.project.mkdir(parents=True)
         for name, data in {
-            "project.godot": "config_version=5\n", "Main.tscn": WRAPPER,
+            "project.godot": 'config_version=5\n\n[application]\nconfig/name="Onslaught Toolkit"\n', "Main.tscn": WRAPPER,
             "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"8.0.424"}}',
             "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": "{}",
             "Ui/CompanionApp.cs": "code-built application root", "Files/ProtectedSaveFiles.cs": "integrated safety adapter",
             "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry", "Development/ScreenCapture.cs": "C# capture entry",
+            "Development/IconWriter.cs": "C# icon entry",
             "Ui/CompanionApp.cs.uid": "uid://generated-by-an-editor-open",
         }.items():
             path = self.project / name
@@ -71,6 +72,7 @@ class CompanionLauncherTests(unittest.TestCase):
             " if sys.argv[1]=='build':\n"
             "  target=project/'.godot/mono/temp/bin/Debug'; target.mkdir(parents=True,exist_ok=True); (target/'OnslaughtToolkit.Godot.dll').write_text('integrated assembly')\n"
             "if 'res://Development/LicenseMetadata.cs' in sys.argv: print(json.dumps({'license':'Godot MIT','components':[{'name':'component'}],'licenses':{'MIT':'notice'}}))\n"
+            "if 'res://Development/IconWriter.cs' in sys.argv: pathlib.Path(next(a for a in sys.argv if a.startswith('--output='))[9:]).write_bytes(b'\\x89PNG\\r\\n\\x1a\\n fake icon')\n"
             "if '--import' in sys.argv and os.environ.get('FAKE_PARSE_ERROR'): print('SCRIPT ERROR: Parse Error: broken source')\n"
             "if '--export-release' in sys.argv:\n"
             " target=pathlib.Path(sys.argv[sys.argv.index('--export-release')+2]); target.write_text('native exe'); target.with_suffix('.pck').write_text('native resources')\n"
@@ -205,6 +207,11 @@ class CompanionLauncherTests(unittest.TestCase):
             for name in ("LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt"):self.assertTrue((package/name).is_file())
             readme=(package/"README.txt").read_text();self.assertIn("no helper process",readme);self.assertIn("C# application built in code",readme)
         self.assertFalse(any(call["args"][0]=="publish" for call in self.calls_read()))
+        icon=[call for call in self.calls_read() if "res://Development/IconWriter.cs" in call["args"]]
+        self.assertEqual(1,len(icon))
+        staged=Path(icon[0]["cwd"])
+        self.assertIn('config/icon="res://icon.png"',(staged/"project.godot").read_text())
+        self.assertTrue((staged/"icon.png").read_bytes().startswith(b"\x89PNG"))
 
     def test_framework_dependent_export_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_FRAMEWORK_DEPENDENT":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
@@ -234,6 +241,20 @@ class CompanionLauncherTests(unittest.TestCase):
 
     def test_contract_tests_in_a_release_assembly_are_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_TEST_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
+
+
+class ProjectIconTests(unittest.TestCase):
+    def test_icon_is_added_to_the_application_section_once(self) -> None:
+        text = 'config_version=5\n\n[application]\nconfig/name="Onslaught Toolkit"\n'
+        updated = host.with_project_icon(text)
+        self.assertIn('[application]\n\nconfig/icon="res://icon.png"\nconfig/name=', updated)
+        self.assertEqual(updated.count("config/icon="), 1)
+
+    def test_a_project_without_an_application_section_or_with_an_icon_is_refused(self) -> None:
+        with self.assertRaises(RuntimeError):
+            host.with_project_icon("config_version=5\n")
+        with self.assertRaises(RuntimeError):
+            host.with_project_icon('config_version=5\n\n[application]\nconfig/icon="res://other.png"\n')
 
 
 if __name__ == "__main__":
