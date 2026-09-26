@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (the level's pre-run and the clocks; round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -128,6 +128,14 @@ the drones', files its MOVE and its life event 4000 there too, under a round
 listener (0x1000_0000 + 2 × id, + 1 for a drone's), and moves when its MOVE is
 delivered. A round is dying once its life event is no longer filed, so
 snapshots and hashes gain no round fields.
+
+Level construction includes the 3.0 s pre-run: 60 whole frames with no input,
+as `CGame::PreRun` runs them before the visuals start. Tick 0 is retail frame
+60. The event clock and the mission clock count from the load, so both read 60
+at tick 0, and a session's tick differs from them by the pre-run (and, after
+`SimActions.Reset`, by the reset's tick as well). Code that compares a script
+or mission due tick must use that clock, never the session's tick. Replays and
+tapes are unchanged: the pre-run is part of constructing the level.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

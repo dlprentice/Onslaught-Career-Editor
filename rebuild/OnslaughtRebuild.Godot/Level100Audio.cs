@@ -451,16 +451,17 @@ public sealed partial class Level100Audio : Node3D
         int missionTick)
     {
         ArgumentNullException.ThrowIfNull(events);
-        if (missionTick < 0 || missionTick > simulationTick)
+        if (missionTick < 0 || missionTick > simulationTick + SimulationConstants.Level100PreRunTicks)
         {
             throw new ArgumentOutOfRangeException(nameof(missionTick));
         }
 
         // SimActions.Reset deliberately keeps Simulation.Tick monotonic while
-        // replacing Level100Mission with a fresh tick-zero instance. Their
-        // difference is therefore the current mission's time-zero point and
-        // reproduces CBattleEngine's constructor value of 0 without adding
-        // presentation timing to Core state.
+        // replacing Level100Mission with a fresh instance, and a mission's
+        // clock starts at its load, the three-second pre-run before its first
+        // tick. Their difference is therefore the current mission's time-zero
+        // point and reproduces CBattleEngine's constructor value of 0 without
+        // adding presentation timing to Core state.
         int missionStartTick = checked(simulationTick - missionTick);
         if (_hostileEnvironmentMissionStartTick != missionStartTick)
         {

@@ -59,6 +59,26 @@ public static class SimulationConstants
     // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
     // so player actions are rejected for the first 120 Core ticks.
     public const int Level100OpeningPanTicks = 6 * TicksPerSecond;
+    // World 110's pan: its level world's settings word 4 (stored at
+    // 0x0050d2c5) is 2.0 (the RE lane's World 110 construction contract,
+    // "Player start"), against Level 100's 6.0.
+    public const int World110OpeningPanTicks = 2 * TicksPerSecond;
+    // CGame::InitRestartLoop files FINISHED_PRE_RUN at now + mPreRunTime before
+    // the world loads (game.cpp:371-373, 0x0046c5f0), and CGame::PreRun runs
+    // whole updates, unrendered, until it arrives (game.cpp:2063-2071). The
+    // world's own pre-run word arrives after that event is filed, so every
+    // level pre-runs 3.0 s: frames 1-60, whose last flush starts the pan (the
+    // RE lane's World 110 construction contract; the Steam pan began at event
+    // time 3.0, rebuild/PROVENANCE.md).
+    public const int Level100PreRunTicks = 3 * TicksPerSecond;
+
+    /// <summary>The opening pan of a career world, in ticks.</summary>
+    public static int OpeningPanTicks(int worldNumber) => worldNumber switch
+    {
+        100 => Level100OpeningPanTicks,
+        110 => World110OpeningPanTicks,
+        _ => throw new ArgumentOutOfRangeException(nameof(worldNumber), $"World {worldNumber} has no admitted pan length."),
+    };
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // Core is now at that same 20 Hz, so the measured sequence IS the

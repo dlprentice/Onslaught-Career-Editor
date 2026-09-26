@@ -69,7 +69,8 @@ public sealed class Level100BattleEngineRefreshTests
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
         var simulation = new Simulation(Seed, definitions);
-        WorldSnapshot state = simulation.Snapshot;
+        // The load, before the pre-run's frames deliver anything.
+        WorldSnapshot state = simulation.LoadSnapshotForMeasurement!;
         Level100ActorDefinition[] rows = definitions.Actors.OrderBy(row => row.AuthoredOrder).ToArray();
         int battleEngine = Array.FindIndex(rows, row =>
             Level100ConstructionClasses.Of(row.DefinitionName) == Level100ConstructionClass.BattleEngine);
@@ -136,6 +137,10 @@ public sealed class Level100BattleEngineRefreshTests
     public void Crosshair_RetainsTheLineReportAndTheUnitUnderIt()
     {
         var simulation = new Simulation(Seed, Level100TestActorDefinitions.LoadMaterialized());
+        // The load reports nothing; the pre-run's 6002 deliveries have since
+        // reported what lay ahead of the Battle Engine.
+        Assert.Equal(Level100CrosshairHitKind.Nothing,
+            simulation.LoadSnapshotForMeasurement!.Level100BattleEngineTargeting.CrosshairHitKind);
         WorldSnapshot start = simulation.Snapshot;
         Level100ActorSnapshot tower = start.Level100Actors.Actors.Single(actor =>
             actor.DefinitionName == "Control Tower");
@@ -145,19 +150,25 @@ public sealed class Level100BattleEngineRefreshTests
         });
         simulation.SetFacingForMeasurement(yaw, pitch);
 
-        // Nothing is reported before the first 6002 delivery: bucket
-        // floor((due - 0.001) x 20), flushed on the frame after it.
-        float due = BitConverter.UInt32BitsToSingle(Assert.Single(BattleEngineEvents(start),
-            slot => slot.EventNum == RetailBattleEngineRefresh.CrosshairEvent).TimeBits);
-        int deliveryFrame = (int)MathF.Floor((due - 0.001f) * 20.0f) + 1;
+        // The report is retained until the next 6002 delivery, the frame
+        // that re-files the crosshair event.
+        uint Pending(WorldSnapshot snapshot) => Assert.Single(BattleEngineEvents(snapshot),
+            slot => slot.EventNum == RetailBattleEngineRefresh.CrosshairEvent).TimeBits;
+        Level100BattleEngineTargetingSnapshot retained = start.Level100BattleEngineTargeting;
+        uint pending = Pending(start);
         WorldSnapshot state = start;
-        for (int tick = 1; tick < deliveryFrame; tick++)
+        for (int tick = 0; ; tick++)
         {
+            Assert.True(tick < 10, "No crosshair refresh within half a second.");
             state = simulation.Step(SimInput.Idle);
-            Assert.Equal(Level100CrosshairHitKind.Nothing, state.Level100BattleEngineTargeting.CrosshairHitKind);
+            if (Pending(state) != pending)
+            {
+                break;
+            }
+
+            Assert.Equal(retained, state.Level100BattleEngineTargeting);
         }
 
-        state = simulation.Step(SimInput.Idle);
         Level100BattleEngineTargetingSnapshot targeting = state.Level100BattleEngineTargeting;
         Assert.Equal(Level100CrosshairHitKind.Thing, targeting.CrosshairHitKind);
         Assert.Equal(tower.ActorId, targeting.CrosshairUnit);

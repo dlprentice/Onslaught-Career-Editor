@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,87 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### The level's three-second pre-run — September 26
+
+Core started Level 100's six-second pan at its first tick, so its world had
+run 60 frames less than retail's when the player first saw it.
+- `CGame::InitRestartLoop` files FINISHED_PRE_RUN at now + 3.0 before the world
+  loads (`game.cpp:371-373`).
+- `CGame::PreRun` then runs whole updates, unrendered, until it arrives
+  (`game.cpp:2063-2071`).
+- The RE lane confirmed the frames (`reverse-engineering/game-mechanics/level100-construction-order.md`,
+  "Pre-run, pan and the first rendered frame", commit `2035942b`):
+  - frames 1-60 run in the pre-run, and frame 60's flush starts the pan;
+  - FINISHED_PANNING lands on frame 180 for Level 100 and frame 100 for World 110;
+  - no state-1 check changes a draw. Script events run as usual; only
+    presentation, sounds and input differ.
+- The Steam measurements of the pan (installed at event time 3.0, playing at
+  9.0) and of the message boundaries already count from the pan's start.
+
+Level construction now runs those 60 frames with no input, so tick 0 is frame
+60 and the first tick is frame 61:
+- The pan starts after them, and the event and mission clocks both read 60 at
+  tick 0.
+- The message box's gate is 181 mission ticks, the same instant as before on
+  the session's clock.
+- The load's and the pre-run's mission events and script commands reach the
+  first tick, as retail shows them once the visuals start.
+- An internal receipt keeps the state at the end of the load for construction
+  tests.
+
+Tests that compared the session's tick with a script or mission clock now use
+one clock:
+- the trigger helpers and the reference-frame text gate;
+- the skip-panning gates;
+- the Godot audio's mission-start guard. It rejected a mission clock ahead of
+  the session's, which the first headless smoke caught before the guard was
+  changed.
+
+Construction and at-rest tests read the load receipt. The Vulcan-ready clock
+test now finds the first frame after the pre-run that shows its rounding
+pattern.
+
+`SimulationTests.Construction_RunsTheThreeSecondPreRunBeforeThePan` pins:
+- both clocks at 60 and the draws the pre-run took;
+- the pan's full 120 ticks, ending on frame 180, and the gate at 181;
+- the cold career's deactivation reaching the first tick.
+
+Five mutations were killed and restored byte-identical
+(`local-data/test-runs/pre-run-20260926/mutation-kills/`): no pre-run, 59
+frames, no pan after it, the pre-run's mission events dropped, and a message
+gate without it. A sixth, the pan also set at the load, is equivalent, since
+the pre-run's end resets it.
+
+The pre-run moved the chain autopilot and the cold-start route:
+- **Cold start.** It first lost to water at Target Zone 4. After the drone
+  abort it dropped out of jet mode 2.75 m from the zone, 12 m up at 5.7 m/s,
+  and drifted 13 m into the sea. The autopilot's cruise hand-off now also
+  requires a dry-land ballistic touchdown, which its committed hand-off
+  already did.
+- **Chain autopilot.** It wins on the abort branch after two kills, at tick
+  5,618 with hull 6,050. The test calls the branch a fixture reading, and it
+  still checks the result is a released branch.
+
+Core passes 1,554 (the ferry sweep 6/6 among them) and Client 912 with the two
+known skips. Re-pinned:
+- `first-flight.v1.json` replays to trace `d956053b…` and state `6b49e986…`;
+- the in-process smoke and its validator: state `3582db72…`, with a mission
+  tick of 2,208;
+- the canonical-hash fingerprints.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`633e782f…`, trace `a1be972b…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 7,557 ticks (trace `9aa196fc…`, state `15a4c22f…`), on
+the abort branch with one second-wave kill and hull 5,700, and it replays
+twice.
+
+Open:
+- **First rendered frame.** Retail's shows frame 61's update with its render
+  fraction; the Godot host draws tick 0 first.
+- **Script inits.** Core still runs them at the load, not in frame 1's flush.
+  The Tank Factory's spawn draws therefore still come before frame 1 rather
+  than in frame 2.
 
 ### Rounds on their own MOVE and life events — September 26
 

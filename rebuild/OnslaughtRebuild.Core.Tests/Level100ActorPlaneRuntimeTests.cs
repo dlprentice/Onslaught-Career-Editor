@@ -253,8 +253,13 @@ public sealed class Level100ActorPlaneRuntimeTests
     {
         var run = new ExitRun();
         var id = run.Spawn();
+        // The envelope carries the standalone run's own event clock.
         WorldSnapshot world = new Simulation(1, run.Definitions).Snapshot with
-        { Level100Actors = run.Actors.Snapshot, Level100ActorMechanics = run.Mechanics.Snapshot };
+        {
+            Level100Actors = run.Actors.Snapshot,
+            Level100ActorMechanics = run.Mechanics.Snapshot,
+            RetailEventFrameCount = run.Mechanics.Snapshot.PlaneEvents!.FrameCount,
+        };
         string baseline = StateHasher.ComputeHex(world);
         // The exit fields of 48 are written inside 52, which the unit
         // callbacks of the retail load order select.
@@ -483,8 +488,9 @@ public sealed class Level100ActorPlaneRuntimeTests
     [Fact]
     public void HashBindsSubprojectionMotionGuideCacheAndCallbackOrder()
     {
+        // The load, where the Air Trainer still rests at the Airfield.
         var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
-        WorldSnapshot baseline = simulation.Snapshot;
+        WorldSnapshot baseline = simulation.LoadSnapshotForMeasurement!;
         Level100ActorBaseStateSnapshot plane = baseline.Level100Actors.BaseStates.Single(item => item.State.RetailPlane is not null);
         string initial = StateHasher.ComputeHex(baseline);
         WorldSnapshot WithPhysical(ThingActorBaseStateSnapshot state) => baseline with
@@ -502,11 +508,29 @@ public sealed class Level100ActorPlaneRuntimeTests
             Assert.NotEqual(initial, StateHasher.ComputeHex(WithPhysical(plane.State with
             { RetailPlane = plane.State.RetailPlane! with { Drive = new(word, 0, 0) } })));
         }
-        var shifted = plane.State.RetailPoses!.Current.PositionFloatBits with
-        { Y = plane.State.RetailPoses.Current.PositionFloatBits.Y + 1 };
-        var subMillimeter = plane.State with
-        { RetailPoses = plane.State.RetailPoses with { Current = plane.State.RetailPoses.Current with { PositionFloatBits = shifted } } };
-        Assert.Equal(plane.State.CurrentPose, new ThingActorBaseState(subMillimeter).Snapshot.CurrentPose);
+        // One float step that stays inside the same millimetre: whichever
+        // direction does not cross a rounding boundary where the plane is.
+        ThingActorBaseStateSnapshot? subMillimeter = null;
+        foreach (int step in new[] { 1, -1 })
+        {
+            var shifted = plane.State.RetailPoses!.Current.PositionFloatBits with
+            { Y = plane.State.RetailPoses.Current.PositionFloatBits.Y + step };
+            var candidate = plane.State with
+            { RetailPoses = plane.State.RetailPoses with { Current = plane.State.RetailPoses.Current with { PositionFloatBits = shifted } } };
+            try
+            {
+                if (new ThingActorBaseState(candidate).Snapshot.CurrentPose == plane.State.CurrentPose)
+                {
+                    subMillimeter = candidate;
+                    break;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // This direction crossed into the next millimetre.
+            }
+        }
+        Assert.NotNull(subMillimeter);
         Assert.NotEqual(initial, StateHasher.ComputeHex(WithPhysical(subMillimeter)));
         Assert.NotEqual(initial, StateHasher.ComputeHex(baseline with
         {

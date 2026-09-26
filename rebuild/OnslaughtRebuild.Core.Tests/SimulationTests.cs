@@ -73,12 +73,12 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("5e9fac13c71a2d06307d3e52d57bc03a80b9a0d9e3a9b770df45898f91966c49",
+        Assert.Equal("29accfab12587ede2d18b26ae4fabd64256a3a8559447b15706dc21d14037a03",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("0fd1461abbb2be4de80d8e0c7ac861bd18de3d0af24c657e3997228cc0fa54e6",
+        Assert.Equal("a91e824d2ab71cbad39b67c48826a08f853dbbfa2ab39eca315b5d9859655dc8",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "c0ad8b9dd550bae0febfffe28b2bebc77d71664f9cb1408f2daf7b87b0a17016",
+        Assert.True(hash == "28bb890e159a6322b1ac006000f9856dfd00471da4c5c4fa883fccc1966b4075",
             $"Canonical state hash: {hash}");
         Assert.Equal(52, CanonicalSchemaVersion(rootState));
 
@@ -122,33 +122,78 @@ public sealed class SimulationTests
     [Fact]
     public void RetailEventClock_UsesStoredFloatMultiplierAndRestartsWithoutRewindingReplay()
     {
+        // Construction includes the 3.0 s pre-run: frames 1-60.
         var simulation = new Simulation(
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
-        Assert.Equal(0u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(60u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(60, simulation.Snapshot.Level100Mission.Tick);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
-        for (int tick = 0; tick < 9; tick++)
+        for (int tick = 0; tick < 2; tick++)
             simulation.Step(SimInput.Idle);
 
         // Pristine 0x0044B624/0x0044B62A/0x0044B630: zero-extended integer
         // FILD, multiply stored 0x3D4CCCCD, one FSTP dword. Division by 20
-        // instead produces 0x3EE66666 here; repeated addition also diverges.
-        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0x3ee66667u,
+        // instead produces 0x40466666 at frame 62, and repeated addition
+        // 0x4046665F.
+        Assert.Equal(62u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x40466667u,
             BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
-        Assert.Equal(10, reset.Tick);
-        Assert.Equal(0, reset.Level100Mission.Tick);
-        Assert.Equal(0u, reset.RetailEventFrameCount);
-        Assert.Equal(0u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(3, reset.Tick);
+        Assert.Equal(60, reset.Level100Mission.Tick);
+        Assert.Equal(60u, reset.RetailEventFrameCount);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
 
-        for (int tick = 0; tick < 9; tick++)
+        for (int tick = 0; tick < 2; tick++)
             simulation.Step(SimInput.Idle);
-        Assert.Equal(19, simulation.Snapshot.Tick);
-        Assert.Equal(9u, simulation.Snapshot.RetailEventFrameCount);
-        Assert.Equal(0x3ee66667u,
+        Assert.Equal(5, simulation.Snapshot.Tick);
+        Assert.Equal(62u, simulation.Snapshot.RetailEventFrameCount);
+        Assert.Equal(0x40466667u,
             BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+    }
+
+    /// <summary>
+    /// <c>CGame::PreRun</c> (<c>game.cpp:2063-2071</c>): the load files
+    /// FINISHED_PRE_RUN at now + 3.0, and whole updates run unrendered until
+    /// frame 60's flush delivers it and starts the pan, which FINISHED_PANNING
+    /// ends on frame 180 (the RE lane's construction-order contract, "Pre-run,
+    /// pan and the first rendered frame"). Tick 0 is frame 60.
+    /// </summary>
+    [Fact]
+    public void Construction_RunsTheThreeSecondPreRunBeforeThePan()
+    {
+        var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
+        WorldSnapshot load = simulation.LoadSnapshotForMeasurement!;
+        WorldSnapshot start = simulation.Snapshot;
+        Assert.Equal(0u, load.RetailEventFrameCount);
+        Assert.Equal(0, load.Level100Mission.Tick);
+
+        // Sixty whole frames: both clocks, and the world's draws.
+        Assert.Equal(0, start.Tick);
+        Assert.Equal(60u, start.RetailEventFrameCount);
+        Assert.Equal(60, start.Level100Mission.Tick);
+        Assert.Equal(0x40400000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.NotEqual(load.Level100ActorMechanics.ReleasedRandomSeed, start.Level100ActorMechanics.ReleasedRandomSeed);
+
+        // The pan starts with the pre-run's end and runs its full six seconds.
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks, start.Level100OpeningTicksRemaining);
+        Assert.Equal(181, start.Level100Mission.MessageBoxAllowedTick);
+        WorldSnapshot state = start;
+        for (int tick = 1; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            state = simulation.Step(SimInput.Idle);
+            Assert.True(state.Level100OpeningTicksRemaining > 0);
+        }
+
+        state = simulation.Step(SimInput.Idle);
+        Assert.Equal(0, state.Level100OpeningTicksRemaining);
+        Assert.Equal(180u, state.RetailEventFrameCount);
+
+        // What the load and the pre-run reported reaches the first tick: the
+        // cold career's LevelScript deactivated the player.
+        Assert.Contains(start.Level100MissionEvents, item => item is Level100PlayerActivationChanged { Active: false });
     }
 
     [Fact]
@@ -158,8 +203,9 @@ public sealed class SimulationTests
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
         simulation.Step(SimInput.Idle);
         WorldSnapshot baseline = Level100TestActorDefinitions.LegacyHashEnvelope(simulation.Snapshot);
-        Assert.Equal(1, baseline.Level100Mission.Tick);
-        Assert.Equal(1u, baseline.RetailEventFrameCount);
+        // The pre-run's 60 frames advance both clocks alike.
+        Assert.Equal(61, baseline.Level100Mission.Tick);
+        Assert.Equal(61u, baseline.RetailEventFrameCount);
         Assert.Equal(42, CanonicalSchemaVersion(baseline));
         string baselineHash = StateHasher.ComputeHex(baseline);
         var hashes = new HashSet<string>();
@@ -178,27 +224,47 @@ public sealed class SimulationTests
     {
         var simulation = new Simulation(
             1, Level100TestActorDefinitions.Create(), CompletedTutorialSlots);
-        for (int tick = 0; tick < 20; tick++)
+
+        // The level clock starts after the pre-run. Find its first frame whose
+        // stamped Vulcan ready time the next frame's stored word passes, and
+        // whose next ready time the frame after lands on exactly (level time
+        // 1.0 s shows the pattern, which the pre-run now precedes).
+        static bool PassesNextFrame(uint frame, out uint readyBits)
+        {
+            var probe = new Level100PlayerWeaponRuntime();
+            probe.StampReadyAt(Level100MissionWeapon.MechVulcanCannon, RetailEventScheduler.TimeAtFrameCount(frame));
+            readyBits = probe.Snapshot.MechVulcanReadyAtTimeBits;
+            return probe.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
+                RetailEventScheduler.TimeAtFrameCount(frame + 1), out _);
+        }
+        uint first = simulation.Snapshot.RetailEventFrameCount;
+        uint frame = first;
+        while (!(PassesNextFrame(frame, out _) && !PassesNextFrame(frame + 1, out uint landing) &&
+            landing == BitConverter.SingleToUInt32Bits(RetailEventScheduler.TimeAtFrameCount(frame + 2))))
+        {
+            frame++;
+            Assert.True(frame < first + 400, "No frame passes a ready time and then lands on the next.");
+        }
+        while (simulation.Snapshot.RetailEventFrameCount < frame)
             simulation.Step(SimInput.Idle);
 
         // Compose the actual level clock with an isolated configured weapon.
-        // This is not a claim that the tutorial enables Jet input at frame 20.
+        // This is not a claim that the tutorial enables Jet input at that frame.
         var weapons = new Level100PlayerWeaponRuntime();
         weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
             simulation.EngineTimeSeconds);
-        Assert.Equal(0x3f800000u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
-        Assert.Equal(0x3f866666u, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+        uint firstReady = weapons.Snapshot.MechVulcanReadyAtTimeBits;
 
         simulation.Step(SimInput.Idle);
-        Assert.Equal(0x3f866667u, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.True(BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds) > firstReady);
         Assert.True(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
             simulation.EngineTimeSeconds, out _));
         weapons.StampReadyAt(Level100MissionWeapon.MechVulcanCannon,
             simulation.EngineTimeSeconds);
-        Assert.Equal(0x3f8ccccdu, weapons.Snapshot.MechVulcanReadyAtTimeBits);
+        uint secondReady = weapons.Snapshot.MechVulcanReadyAtTimeBits;
 
         simulation.Step(SimInput.Idle);
-        Assert.Equal(0x3f8ccccdu, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
+        Assert.Equal(secondReady, BitConverter.SingleToUInt32Bits(simulation.EngineTimeSeconds));
         Assert.False(weapons.TryPrepareFire(VehicleMode.Jet, VehicleTransition.None,
             simulation.EngineTimeSeconds, out _));
     }
@@ -505,7 +571,10 @@ public sealed class SimulationTests
                 .OfType<Level100MessageRequested>()
                 .Select(message => message.MessageId)));
 
-        Assert.Equal(812, simulation.Snapshot.Level100Mission.Tick);
+        // Tick 812 of the session; the mission clock also counts the 60
+        // pre-run frames before the pan.
+        Assert.Equal(812, simulation.Snapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100PreRunTicks + 812, simulation.Snapshot.Level100Mission.Tick);
 
         // TUTORIAL_01 and TUTORIAL_SCANNER are both PlayCharMessage - the
         // script does not wait for them - so the objective is set before either
@@ -1286,7 +1355,7 @@ public sealed class SimulationTests
             BitConverter.SingleToInt32Bits(0.5f).ToString(
                 System.Globalization.CultureInfo.InvariantCulture),
             targetZonePause.WaitArgument);
-        Assert.Equal(10, targetZonePause.DueTick - simulation.Snapshot.Tick);
+        Assert.Equal(10, targetZonePause.DueTick - simulation.Snapshot.Level100ActorScripts.Tick);
 
         // The released Pause is 0.5 s, which is ten ticks at 20 Hz.
         for (int tick = 1; tick < 10; tick++)
@@ -1306,7 +1375,7 @@ public sealed class SimulationTests
         Level100ActorScriptContinuationSnapshot firingRangePause =
             DriveUntilTriggerPause(simulation, Level100MissionTrigger.FiringRange);
         Assert.Equal(Level100ActorScriptWaitKind.Pause, firingRangePause.WaitKind);
-        Assert.Equal(10, firingRangePause.DueTick - simulation.Snapshot.Tick);
+        Assert.Equal(10, firingRangePause.DueTick - simulation.Snapshot.Level100ActorScripts.Tick);
         for (int tick = 0; tick < 10; tick++)
         {
             simulation.Step(SimInput.Idle);
@@ -2304,8 +2373,9 @@ public sealed class SimulationTests
     {
         Level100ActorScriptContinuationSnapshot pause =
             DriveUntilTriggerPause(simulation, trigger);
+        // The due tick is on the scripts' clock, which the pre-run started.
         int dueTick = Assert.IsType<int>(pause.DueTick);
-        while (simulation.Snapshot.Tick < dueTick)
+        while (simulation.Snapshot.Level100ActorScripts.Tick < dueTick)
         {
             simulation.Step(SimInput.Idle);
         }

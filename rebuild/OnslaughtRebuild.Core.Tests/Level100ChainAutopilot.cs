@@ -1331,10 +1331,16 @@ internal sealed class Level100ChainAutopilot
             return true;
         }
 
+        // A cruise hand-off must also come down on dry land. An approach can
+        // reach the walk-in radius straight from a fight, at speed, without
+        // ever committing to a landing; with the level's three-second pre-run
+        // the cold career did that at Target Zone 4 and drifted 13 m into the
+        // sea from 12 m up.
         if (!_flightLegCommittedToLanding)
         {
             return state.PlayerAltitudeAboveSurfaceMillimeters <=
-                ZoneHandoffClearanceMillimeters;
+                ZoneHandoffClearanceMillimeters &&
+                BallisticTouchdownIsDryLand(state);
         }
 
         return state.PlayerAltitudeAboveSurfaceMillimeters <=

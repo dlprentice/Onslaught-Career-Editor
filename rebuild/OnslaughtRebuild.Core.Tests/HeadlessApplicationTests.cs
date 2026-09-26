@@ -66,9 +66,10 @@ public sealed class HeadlessApplicationTests
         // and since September 26 the Battle Engine's 6002/6003 refresh draws
         // and its retained crosshair report (schema 49), then the retail load
         // order's construction draws and every unit's callbacks (schema 52),
-        // with the influence map's two chains and the warm-up draws.
-        const string expectedTrace = "79a4db1bf4d1237d535f1180dae5c851306ec7fa9b7043d6ff4878b2075d9b44";
-        const string expectedState = "77a71d700e7065d5fa5254859ef0421a53df42a5c974987e2ea969fb65131cbd";
+        // with the influence map's two chains and the warm-up draws, and the
+        // load's three-second pre-run.
+        const string expectedTrace = "d956053b43d4e48e7ccfc6ab9a418192349ca154ef6643bd6bf72f2bde5c48b5";
+        const string expectedState = "6b49e986eb92240980a7421d7a5d904d51a9084e1198470e953176647f86c231";
         CommandTape tape = CommandTapeCodec.Deserialize(File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json")));
         var definitions = Level100TestActorDefinitions.LoadMaterialized();
@@ -88,7 +89,8 @@ public sealed class HeadlessApplicationTests
         Assert.NotNull(state.Level100Actors.BaseStates.Single(actor => actor.ActorId == trainer).State.RetailPlane);
         Assert.Contains(state.Level100ActorMechanics.Actors, actor => actor.ActorId == trainer && actor.PlaneGuide is not null);
         Assert.True(state.Level100ActorMechanics.PlaneEvents!.Float24Arithmetic);
-        Assert.Equal(838u, state.Level100ActorMechanics.PlaneEvents.FrameCount);
+        // The event clock also counts the load's 60 pre-run frames.
+        Assert.Equal((uint)(SimulationConstants.Level100PreRunTicks + 838), state.Level100ActorMechanics.PlaneEvents.FrameCount);
         // Compare every tick with the pre-mount format-7 definitions, restoring
         // only the identity word. Keep format 6's older normalized trace too.
         // Neither the tape nor its behavioral checks move.
@@ -118,13 +120,13 @@ public sealed class HeadlessApplicationTests
             { Level100Actors = current.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         }
-        Assert.Equal("eba4c3a5be75e4fcbad21c28733dd9077470d4a03d002ea03f934663d02ecf36",
+        Assert.Equal("4eccd0853fcc6df165435bc7161d7d2fa8b1299c345ed3860f5ca099cd227c9e",
             StateHasher.ComputeHex(priorRun.Snapshot));
-        Assert.Equal("2da991cfe11ae940baa8804b38f6b9264da72fe1e7b0430020682c96ffa34c56", priorTrace.GetCurrentHash());
-        Assert.Equal("fc565fcc226d8d8e1ff3361f3643444a1d3f473109a682427d4e39c1a51fd673",
+        Assert.Equal("00b5f4d4933ebef7ffa78998b8e38d0e8e3fb6e8040eea91530ea6ebb712f4a1", priorTrace.GetCurrentHash());
+        Assert.Equal("d0291ac2ea5e19b45f9819fe617402b487c261951a65f55636da0c292356ddb2",
             StateHasher.ComputeHex(state with { Level100Actors = state.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.Equal("2ffc0e5fea3c2a5ff8ffe70779767bac67c04624d188491a27ef92c2fbbf1569", legacyTrace.GetCurrentHash());
+        Assert.Equal("c3caa0f50747a8772980dc4d0169cc5458feef502563afdc2410d6f88c5afc38", legacyTrace.GetCurrentHash());
         Assert.True(expectedState == replay.FinalStateHash,
             $"First-flight state {replay.FinalStateHash}; trace {replay.TraceHash}");
         Assert.Equal(expectedTrace, replay.TraceHash);

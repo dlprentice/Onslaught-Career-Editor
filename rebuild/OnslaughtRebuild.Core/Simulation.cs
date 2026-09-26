@@ -379,6 +379,19 @@ public sealed partial class Simulation
             return CreateSnapshot();
         }
 
+        AdvanceFrame(input, level100Facts);
+        return CreateSnapshot();
+    }
+
+    /// <summary>
+    /// One <c>CGame::Update</c>: the event clock, the controller, the flush and
+    /// the Moves. <see cref="Step"/> runs one per tick, and level construction
+    /// runs the pre-run's frames through it before the first tick.
+    /// </summary>
+    private void AdvanceFrame(
+        SimInput input,
+        IReadOnlyList<Level100SimulationFact>? level100Facts)
+    {
         // CGame::Update (0x0046EB37-0x0046EBCE) advances the manager before
         // controller Flush and event Flush, unless already paused. Therefore
         // the update that delivers PAUSE_GAME advances the clock; subsequent
@@ -445,7 +458,7 @@ public sealed partial class Simulation
         ApplyLevel100Facts(level100Facts);
         if (_level100Mission.GameplayPaused)
         {
-            return CreateSnapshot();
+            return;
         }
 
         ProcessLevel100DamageFlashes();
@@ -505,8 +518,6 @@ public sealed partial class Simulation
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
         SyncLevel100PlayerState();
-
-        return CreateSnapshot();
     }
 
     /// <summary>
@@ -4191,7 +4202,8 @@ public sealed partial class Simulation
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
         _twinVulcanReloadTicksRemaining = 0;
-        _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
+        // The pan starts when the pre-run ends (RunPreRun).
+        _level100OpeningTicksRemaining = 0;
         // A configured weapon starts ACTIVE.
         //
         // CORRECTION, recorded here because a commit message cannot be edited:
@@ -4296,6 +4308,45 @@ public sealed partial class Simulation
             _worldNumber);
         SyncLevel100PlayerState();
         PumpLevel100EventBus();
+        LoadSnapshotForMeasurement = CreateSnapshot();
+        RunPreRun();
+    }
+
+    /// <summary>
+    /// The state at the end of the load, before the pre-run's frames: an
+    /// internal measurement receipt for construction tests, not snapshot,
+    /// replay or state-hash material.
+    /// </summary>
+    internal WorldSnapshot? LoadSnapshotForMeasurement { get; private set; }
+
+    /// <summary>
+    /// <c>CGame::PreRun</c> (<c>game.cpp:2063-2071</c>): whole updates, with
+    /// nothing rendered and no player input, from frame 1 until frame 60's
+    /// flush delivers FINISHED_PRE_RUN (filed at now + 3.0 before the load,
+    /// <c>game.cpp:371-373</c>) and <c>CGame::StartPanState</c> starts the pan.
+    /// Level construction includes them, so tick 0 is retail frame 60 and
+    /// the first tick's update is frame 61. What the frames report (mission
+    /// events, script commands, flight and weapon logs) is kept for the first
+    /// tick, as retail shows it once the visuals start.
+    /// </summary>
+    private void RunPreRun()
+    {
+        var missionEvents = new List<Level100MissionEvent>(_level100MissionEvents);
+        var scriptCommands = new List<Level100ActorScriptCommand>(_level100ActorScriptCommands);
+        for (int frame = 0; frame < SimulationConstants.Level100PreRunTicks; frame++)
+        {
+            AdvanceFrame(SimInput.Idle, level100Facts: null);
+            missionEvents.AddRange(_level100MissionEvents);
+            scriptCommands.AddRange(_level100ActorScriptCommands);
+        }
+
+        _level100MissionEvents.Clear();
+        _level100MissionEvents.AddRange(missionEvents);
+        _level100ActorScriptCommands.Clear();
+        _level100ActorScriptCommands.AddRange(scriptCommands);
+        // FINISHED_PRE_RUN -> CGame::StartPanState: FINISHED_PANNING files at
+        // now + the world's pan length, so the pan ends on frame 60 + its ticks.
+        _level100OpeningTicksRemaining = SimulationConstants.OpeningPanTicks(_worldNumber);
     }
 
     private WorldSnapshot CreateSnapshot()

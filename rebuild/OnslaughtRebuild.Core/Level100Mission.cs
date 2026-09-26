@@ -77,14 +77,13 @@ public sealed class Level100Mission
     /// (<c>references/Onslaught/game.cpp:3025-3031</c>) posts that event
     /// <c>NEXT_FRAME</c>, so this is
     /// <c>playingStateStartTick + ReleasedEventFrameTicks</c>. It starts at
-    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/> — the value
-    /// for a pan that is allowed to run its full six seconds — and
-    /// <see cref="NotifyPlayingStateStarted"/> moves it earlier when the
-    /// player skips the pan. It is canonical simulation state, so it is
-    /// hashed.
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTickFor"/> — the
+    /// value for a pan that is allowed to run its full length after the
+    /// pre-run — and <see cref="NotifyPlayingStateStarted"/> moves it earlier
+    /// when the player skips the pan. It is canonical simulation state, so it
+    /// is hashed.
     /// </remarks>
-    private int _messageBoxAllowedTick =
-        Level100MissionTiming.MessageBoxAllowedTick;
+    private int _messageBoxAllowedTick;
 
     private readonly Level100WonCareerHandoff _wonCareerHandoff = new();
 
@@ -109,6 +108,7 @@ public sealed class Level100Mission
         }
 
         _worldNumber = worldNumber;
+        _messageBoxAllowedTick = Level100MissionTiming.MessageBoxAllowedTickFor(worldNumber);
         _program = Level100MissionProgram.LoadEmbedded(worldNumber, "LevelScript");
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _playerActorId = playerActorId;

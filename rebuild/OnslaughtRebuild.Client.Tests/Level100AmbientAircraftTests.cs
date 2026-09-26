@@ -112,20 +112,30 @@ public sealed class Level100AmbientAircraftTests
             Level100TargetPresentation.AirTrainerBinding,
             Level100TargetPresentation.Project(airTrainer).Binding);
 
-        // Seated on their measured authored poses, drawn exactly as Core
-        // reports them. Since 2026-08-01 those poses are in Core's own vertical
-        // datum (task #154), and the released CThing::Init support clamp that
+        // Seated on their measured authored poses at the load. Since
+        // 2026-08-01 those poses are in Core's own vertical datum (task #154),
+        // and the released CThing::Init support clamp that
         // Level100ActorRegistry now applies to every class LEAVES BOTH OF THEM
         // WHERE THEY ARE: +5000 is above the terrain sample at each aircraft's
         // own X/Z (+997 under the Transporter, -11160 under the Air Trainer)
         // and above the -1160 water plane, so max(authored, terrain, water) is
         // the authored value. That is the measured behaviour of the released
         // CDropship too - it takes both clamps and neither moves it.
+        Level100ActorRegistrySnapshot load = new Level100ActorRegistry(definitions).Snapshot;
         Assert.Equal(
             s_authoredTransporterPosition,
-            transporter.Pose.PositionMillimeters);
+            load.Actors.Single(actor => actor.DefinitionName == "U-17 Highside Transporter").Pose.PositionMillimeters);
         Assert.Equal(
             s_authoredAirTrainerPosition,
+            load.Actors.Single(actor => actor.DefinitionName == "Air Trainer").Pose.PositionMillimeters);
+
+        // The first tick follows the three-second pre-run, in which the Air
+        // Trainer is already flying; both are drawn exactly as Core reports them.
+        Assert.Equal(
+            actorsById[transporter.ActorId.Value].Pose.PositionMillimeters,
+            transporter.Pose.PositionMillimeters);
+        Assert.Equal(
+            actorsById[airTrainer.ActorId.Value].Pose.PositionMillimeters,
             airTrainer.Pose.PositionMillimeters);
         Assert.True(transporter.IsActive);
         Assert.True(airTrainer.IsActive);
