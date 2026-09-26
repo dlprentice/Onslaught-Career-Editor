@@ -200,7 +200,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # reviewed as authored analysis; the same exact-content boundary applies.
 # RE-audit labels: ten current and ten proposed comments (4,708/6,733 decoded
 # bytes), reviewed as authored analysis; the same exact-content boundary applies.
+# Second RE-audit label cohort: seventeen current and eighteen proposed comments
+# (9,370/12,711 decoded bytes), reviewed the same way.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/label-audit-2-20260926.manifest.tsv":
+        "a08aedbd280a23db7596a4e43e1c49efebfa189e6199fef3f26b58c51486d4e1",
     "tools/cohort-specs/label-audit-20260926.manifest.tsv":
         "fcb3d147351b5fc3696c03e302529c7809d75f88e2bf3ddc1e80d018d616c40f",
     "tools/cohort-specs/audio-sample-loading.manifest.tsv":

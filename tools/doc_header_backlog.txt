@@ -181,7 +181,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/FrontEnd__HasStandard
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/Frontend__XorWideTextBlock100BytesToScratch.md
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginFlyToWalkTransition.md
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginWalkToFlyTransition.md
-reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__InitRandomizedVelocityOffsets.md
 reverse-engineering/binary-analysis/functions/GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md
 reverse-engineering/binary-analysis/functions/Hazard.cpp/CHazard__VFunc02_CleanupWorldSoundAndLinkedState.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
@@ -230,7 +229,6 @@ reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PreRender.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__Render.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__SetGlobalTintColorOpaque.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CEngine__ClampBurstStartTimeFloorNow.md
-reverse-engineering/binary-analysis/functions/engine.cpp/CEngine__SetOptionValueAndNotifyTarget.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CEngine__UpdatePos.md
 reverse-engineering/binary-analysis/functions/flexarray.cpp.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclareLevelLost.md

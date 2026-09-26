@@ -22,7 +22,7 @@ withdrawn label can tell it was corrected and not lost.
 | --- | --- | --- | --- |
 | `0x00501310` | `FUN_00501310` | `CDXEngine__DecrementResourceRefCount` | placeholder replaced; this address carries a name now |
 | `0x00513930` | `FUN_00513930` | `D3DStateCache__SetState114Raw` | placeholder replaced; this address carries a name now |
-| `0x00513a50` | `FUN_00513a50` | `CEngine__SetRenderStateCached` | placeholder replaced; this address carries a name now |
+| `0x00513a50` | `FUN_00513a50` | `PCLTShell__D3D_SetTexture` | placeholder replaced; this address carries a name now |
 | `0x00513e20` | `FUN_00513e20` | `CEngine__SetShaderObject` | placeholder replaced; this address carries a name now |
 | `0x00513f20` | `FUN_00513f20` | `CEngine__CreatePixelShaderFromText` | placeholder replaced; this address carries a name now |
 | `0x00514010` | `FUN_00514010` | `IUnknown__ReleaseAndNull` | placeholder replaced; this address carries a name now |
@@ -323,7 +323,7 @@ Instance method that renders this particle texture's geometry.
 | 0x00513e20 | CEngine__SetShaderObject | Set vertex shader |
 | 0x00513bc0 | RenderState_Set | Cached render-state setter |
 | 0x00513930 | D3DStateCache__SetState114Raw | Set sampler state |
-| 0x00513a50 | CEngine__SetRenderStateCached | Set texture |
+| 0x00513a50 | PCLTShell__D3D_SetTexture | Set texture |
 | 0x00549220 | CDXMemoryManager__Free | Free object memory |
 | 0x00558690 | CDXTexture__GetAnimatedFrame | Get texture surface |
 | 0x00568390 | stricmp (`FUN_00568390`) | Case-insensitive string compare |

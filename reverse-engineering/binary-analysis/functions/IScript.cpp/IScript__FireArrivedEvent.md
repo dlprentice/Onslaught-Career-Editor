@@ -1,7 +1,8 @@
-# IScript__CreateThingRef
+# IScript__FireArrivedEvent
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note (renamed from `IScript__CreateThingRef` on 2026-09-26)
+Last updated: 2026-09-26 (renamed by the RE record audit; the body facts below stand)
+Summary: `0x005335d0` fires the script's `arrived()` event (id 1) with the FollowWaypoint flag boxed as a `CInt`; see [the second label cohort](../../../ghidra/README.md#re-audit-label-corrections-second-cohort--september-26).
 Source File: MissionScript / IScript (wrapper only; do not
 read this as a pin of `IScript.cpp.md`) | Binary: BEA.exe,
 SHA-256
@@ -82,4 +83,4 @@ exists.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x005335d0` | `IScript__CreateThingRef` | `a1f0c78900 56 85c0 8bf1 7577 833dc09a8a0004 … e8e35a0100 … c700f84a5e00 … 890d28c58900 … 6a01 6828c58900 6a01 … e83d630000 5e c20400` | thiscall; ret 4 ×2; 135 B; 3 E8 Alloc `0x005490e0` / Reset `0x00539980` / CallEvent `0x00539990`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, early-out pair, vptr plant `0x005e4af8` / `.?AVCIntDataType@@`, `[0x0089c528]` store, CallEvent push-1. **Not** on callee bodies, host waypoint algebra, or authored event name. |
+| `0x005335d0` | `IScript__FireArrivedEvent` | `a1f0c78900 56 85c0 8bf1 7577 833dc09a8a0004 … e8e35a0100 … c700f84a5e00 … 890d28c58900 … 6a01 6828c58900 6a01 … e83d630000 5e c20400` | thiscall; ret 4 ×2; 135 B; 3 E8 Alloc `0x005490e0` / Reset `0x00539980` / CallEvent `0x00539990`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, early-out pair, vptr plant `0x005e4af8` / `.?AVCIntDataType@@`, `[0x0089c528]` store, CallEvent push-1. **Not** on callee bodies, host waypoint algebra, or authored event name. |

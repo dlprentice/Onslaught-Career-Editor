@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[RE-audit label correction](#re-audit-label-corrections--september-26);
+[second RE-audit label correction](#re-audit-label-corrections-second-cohort--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,52 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit label corrections, second cohort — September 26
+
+The [manifest](../../tools/cohort-specs/label-audit-2-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/label-audit-2-20260926.spec.tsv) correct eighteen
+function names that the RE record audit disproved from the pristine bytes, with a
+comment and tag set each: `004247a0` `CCockpit__AddShockShake`, `004d3020`
+`CPlayer__SetIsGod`, `005335d0` `IScript__FireArrivedEvent`, `00538470`
+`IScript__UpdateWaypointFollowing`, `0040e910` `CBattleEngine__GetImportance`,
+`00409e60` `CBattleEngine__ZoomModifier`, `0040e7d0` `CBattleEngine__CanBeLocked`,
+`00489650` `CInfantryUnit__Damage`, `0044bf10` `CExplosion__Hit`, `0044a130`
+`CEngine__BuildLevelSpecifics`, `004bac40` `CMonitor__dtor_base`, `00501450`
+`CVBufTexture__ReleaseUnreferencedAndReportLeaks`, `00428500`
+`CComponent__RefreshCachedTransform`, `0051b610` `CFEPIntro__Func_0051b610`,
+`00513a50` `PCLTShell__D3D_SetTexture`, `004eb9a0` `InitMaterialPair_0083d248`,
+`00527c90` `CRenderMethod__ctor` and `0050f680` `Spawner_SelectorKeepsSquadSize`.
+`005015c0` is `CVBufTexture::ClearOut`, but that name was held by `00501450` in
+PRE and the framework refuses order-dependent swaps, so it moves in a later cohort.
+Each new comment ends with the former label as a lead.
+
+Exactly eighteen function names, nonrepeatable comments and tag sets corrected by the RE record audit (second label cohort). All prototypes, storage, parameters, locals, types, bookmarks, instructions, bodies and the 8,313 non-target function rows are preserved; one previously absent comment is added.
+Only `commentsSha256` and the comment count move among program metrics. All nine
+live exports exactly equal the separately reopened rehearsal; the internal
+function count remains 8,331.
+
+Fresh independent PRE equality and restored read-only opening, isolated
+dry/apply/separate readback, a sealed-spec readback, five negative controls,
+independent exact-cohort review, live dry/apply/separate readback and independent
+POST restore passed. The review blocked three comment overclaims in the first
+seal (the component cache's skip path, the leak reporter's caller, the waypoint
+update's resume arm) and one more in the second (the resume arm's game-state-4
+discard); each was re-derived from the bytes, fixed and re-rehearsed from a fresh
+PRE restore before its GO. The live applier's allowlist gained this cohort, and
+the framework's 93 tests pass.
+
+Working identity: `db.18659`, 18 files / 119,032,692 bytes,
+inventory SHA-256 `0723845d8ee4ed37090609c976b9f8824dca0a15f6011b82ac270c154a76db5e`; main database
+68,730,880 bytes, SHA-256 `e5ead994165cf216bb980bc45c0ccc3575677063e3cd5bab4decada247bedd3d`.
+PRE was the freshly matched first label-audit POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-26-label-audit-2/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/label-audit-2/`.
+`completion.json` records the exact live readback, recovery receipts and full
+export hashes. Current name lookup composes the new manifest.
 
 ## RE-audit label corrections — September 26
 

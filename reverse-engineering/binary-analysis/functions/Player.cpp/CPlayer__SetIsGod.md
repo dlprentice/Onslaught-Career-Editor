@@ -1,13 +1,20 @@
-# CEngine Option Value Notify Helper
+# CPlayer__SetIsGod
 
-> Source File: engine.cpp | Binary: BEA.exe
+Status: renamed function note; the pre-audit notes below are leads
+Last updated: 2026-09-26 (renamed from `CEngine__SetOptionValueAndNotifyTarget` by the RE record audit)
+Summary: `0x004d3020` is `CPlayer::SetIsGod(value)` (`Player.cpp:221-243`): it stores the god flag in the player and
+the career, updates the Battle Engine through its vtable and counts a cheat. The current contract is
+[god mode](../../../game-mechanics/god-mode.md); the rename is in [the second label cohort](../../../ghidra/README.md#re-audit-label-corrections-second-cohort--september-26). The notes below were written under the
+former label.
+
+> Source File: `references/Onslaught/Player.cpp:221-243` (the pre-audit note said engine.cpp) | Binary: BEA.exe
 > Wave: 486 | Evidence: saved Ghidra metadata, decompile, xrefs, instruction rows, raw-caller rows, tags, and focused probe
 
 ## Function
 
 | Address | Name | Saved signature |
 | --- | --- | --- |
-| `0x004d3020` | `CEngine__SetOptionValueAndNotifyTarget` | `void __thiscall CEngine__SetOptionValueAndNotifyTarget(void * this, int option_value)` |
+| `0x004d3020` | `CPlayer__SetIsGod` | `void __thiscall CPlayer__SetIsGod(void * this, int option_value)` |
 
 ## Evidence
 
