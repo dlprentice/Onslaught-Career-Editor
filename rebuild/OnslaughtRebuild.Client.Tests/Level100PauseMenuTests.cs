@@ -210,10 +210,6 @@ public sealed class Level100PauseMenuTests
             "ApplyMenuRange(_confirmationTitle, _confirmationRows, \"Are you sure?\", _model.Entries,",
             "ArrangePanelFrame(\"Are you sure?\", _model.Entries, _model.Page);");
         Assert.Equal(1, CountOccurrences(draw, "ArrangePanelFrame("));
-        string scene = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
-            "godot-pause-source", "PauseMenu.tscn"));
-        Assert.DoesNotContain("parent=\"Surface/Native/RootRange/Frame\"", scene, StringComparison.Ordinal);
-        Assert.Equal(9, CountOccurrences(scene, "type=\"TextureRect\" parent=\"Surface/Native/ConfirmationRange/Frame\""));
     }
 
     [Fact]

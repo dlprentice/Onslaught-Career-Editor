@@ -6,8 +6,8 @@ using OnslaughtRebuild.Client;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Focused headless check of the production scene. Open this test scene with
-/// --headless; it never runs as an editor tool and never starts a game session.
+/// Focused headless check of the production pause view, built in code. Run this
+/// check scene with --headless; it never starts a game session.
 /// </summary>
 public sealed partial class PauseSceneChecks : Node
 {
@@ -36,7 +36,7 @@ public sealed partial class PauseSceneChecks : Node
             var rootRows = root.GetNode<Control>("Rows").GetChildren().Cast<RetailBitmapLabel>().ToArray();
             var promptRows = prompt.GetNode<Control>("Rows").GetChildren().Cast<RetailBitmapLabel>().ToArray();
             var frame = prompt.GetNode<Control>("Frame");
-            Check(rootRows.Length == 8 && promptRows.Length == 2, "Rows exist in the authored scene before _Ready.");
+            Check(rootRows.Length == 8 && promptRows.Length == 2, "Rows exist before _Ready.");
             Check(frame.GetChildCount() == 9, "The confirmation frame has nine authored texture controls.");
             Check(root.GetNodeOrNull("Frame") is null, "Only the confirmation has a panel frame.");
             for (int i = 0; i < rootRows.Length; i++)
@@ -57,24 +57,9 @@ public sealed partial class PauseSceneChecks : Node
             AddChild(viewport);
             viewport.AddChild(view);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            Check(!surface.Visible && !view.InputReady && !model.IsOpen, "Standalone scene starts inactive.");
+            Check(!surface.Visible && !view.InputReady && !model.IsOpen, "The standalone view starts inactive.");
             Check(view.GetNode<TextureRect>("Surface/Overlay").Texture is not null, "Production private atlas loaded.");
-            Check(Input.MouseMode == pointerBefore, "Scene initialization leaves pointer ownership alone.");
-            var savedScene = new PackedScene();
-            Check(savedScene.Pack(view) == Error.Ok, "Production scene can be packed after private asset binding.");
-            SceneState savedState = savedScene.GetState();
-            int transientTextures = 0;
-            for (int nodeIndex = 0; nodeIndex < savedState.GetNodeCount(); nodeIndex++)
-            {
-                if (savedState.GetNodeType(nodeIndex) != "TextureRect")
-                    continue;
-                transientTextures++;
-                bool embedsTexture = false;
-                for (int property = 0; property < savedState.GetNodePropertyCount(nodeIndex); property++)
-                    embedsTexture |= savedState.GetNodePropertyName(nodeIndex, property) == "texture";
-                Check(!embedsTexture, "Packing a public scene never embeds a bound private texture.");
-            }
-            Check(transientTextures == 12, "All overlay/circle/frame textures participate in the publication guard.");
+            Check(Input.MouseMode == pointerBefore, "View initialization leaves pointer ownership alone.");
             model.Open();
             view.Open();
             Check(!view.InputReady && !root.Visible, "Opening blocks input and rows during the fade.");
@@ -141,7 +126,7 @@ public sealed partial class PauseSceneChecks : Node
             Check(view.TryPointAt(new Vector2(640, 442.5f), out moved) && moved && model.SelectedIndex == 6,
                 "Widescreen hit conversion still selects Retry.");
             Check(Input.MouseMode == pointerBefore, "Pause transitions leave pointer changes to the game owner.");
-            GD.Print($"PAUSE_SCENE_CHECKS: {_checks} passed; actual scene, assets, timing, authored rectangles, frame, hit edges and widescreen conversion.");
+            GD.Print($"PAUSE_SCENE_CHECKS: {_checks} passed; code-built view, assets, timing, rectangles, frame, hit edges and widescreen conversion.");
             viewport.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             GetTree().Quit(0);

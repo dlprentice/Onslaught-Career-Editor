@@ -6,13 +6,11 @@ using OnslaughtRebuild.Client;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// The production pause scene. Its editor mode only previews this presentation:
-/// it never creates a game session, handles input, or changes pointer policy.
+/// The production pause view. <see cref="Create"/> builds its control tree in
+/// code; the view never creates a game session or changes pointer policy.
 /// </summary>
-[Tool]
 public sealed partial class FirstFlightPauseMenu : CanvasLayer
 {
-    public const string ScenePath = "res://Scenes/Pause/PauseMenu.tscn";
     private const float NativeWidth = 640f;
     private const float NativeHeight = 480f;
     private const float FadeSeconds = 0.4f;
@@ -73,33 +71,134 @@ public sealed partial class FirstFlightPauseMenu : CanvasLayer
     private RetailBitmapLabel[] _confirmationRows = [];
     private bool _bound;
     private bool _assetsLoaded;
-    private string? _assetError;
     private float _openingSeconds;
     private float _closingSeconds;
-    private bool _previewConfirmation;
 
-    /// <summary>Editor-only presentation selection. Ignored during gameplay.</summary>
-    [Export]
-    public bool PreviewConfirmation
-    {
-        get => _previewConfirmation;
-        set
-        {
-            _previewConfirmation = value;
-            if (Engine.IsEditorHint() && _bound)
-                ApplyEditorPreview();
-        }
-    }
-
-    public bool InputReady => !Engine.IsEditorHint() && _bound &&
+    public bool InputReady => _bound &&
         _surface.Visible && !IsClosing && _openingSeconds >= FadeSeconds;
     public bool IsClosing { get; private set; }
 
     public static FirstFlightPauseMenu Create(Level100PauseMenu model)
     {
-        var view = GD.Load<PackedScene>(ScenePath).Instantiate<FirstFlightPauseMenu>();
+        var view = new FirstFlightPauseMenu
+        {
+            Name = "Level100PauseMenu",
+            ProcessMode = ProcessModeEnum.Always,
+            Layer = 100,
+        };
+        view.BuildTree();
         view.Initialize(model);
         return view;
+    }
+
+    // The native 640x480 layout: the overlay and circles, the PAUSED range with
+    // its eight rows (the root list never gets a panel frame), and the hidden
+    // "Are you sure?" range with its nine-cell panel frame and No/Yes rows.
+    private void BuildTree()
+    {
+        static Control Range(string name) => new()
+        {
+            Name = name,
+            OffsetRight = NativeWidth,
+            OffsetBottom = NativeHeight,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        static RetailBitmapLabel Label(string name, string text, float top, float bottom, Color color, bool shadow) => new()
+        {
+            Name = name,
+            OffsetTop = top,
+            OffsetRight = NativeWidth,
+            OffsetBottom = bottom,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = text,
+            TextColor = color,
+            Shadow = shadow,
+        };
+        static TextureRect Circle(string name, float rotation) => new()
+        {
+            Name = name,
+            OffsetLeft = 192f,
+            OffsetTop = 112f,
+            OffsetRight = 448f,
+            OffsetBottom = 368f,
+            Rotation = rotation,
+            Scale = new Vector2(1.2f, 1.2f),
+            PivotOffset = new Vector2(128f, 128f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+        };
+        static TextureRect Cell(string name, bool flipH, bool flipV) => new()
+        {
+            Name = name,
+            OffsetRight = PanelCornerSize,
+            OffsetBottom = PanelCornerSize,
+            SelfModulate = new Color(0f, 0f, 0f, 0.752941f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            FlipH = flipH,
+            FlipV = flipV,
+        };
+        var title = new Color(0.3137255f, 0.3137255f, 0.3137255f, 1f);
+        var selected = new Color(1f, 0.8f, 0f, 1f);
+        var disabled = new Color(0.3137255f, 0.3137255f, 0.3137255f, 0.3137255f);
+        var normal = new Color(0.839216f, 0.839216f, 0.839216f, 1f);
+
+        var surface = new Control
+        {
+            Name = "Surface",
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+            GrowHorizontal = Control.GrowDirection.Both,
+            GrowVertical = Control.GrowDirection.Both,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        AddChild(surface);
+        surface.AddChild(new TextureRect
+        {
+            Name = "Overlay",
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+            GrowHorizontal = Control.GrowDirection.Both,
+            GrowVertical = Control.GrowDirection.Both,
+            SelfModulate = new Color(0.0627451f, 0.0627451f, 0.0627451f, 0.752941f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+        });
+        Control native = Range("Native");
+        surface.AddChild(native);
+        native.AddChild(Circle("Circle01", -0.2f));
+        native.AddChild(Circle("Circle02", 0.2f));
+
+        Control rootRange = Range("RootRange");
+        native.AddChild(rootRange);
+        rootRange.AddChild(Label("Title", "PAUSED", 145f, 177f, title, false));
+        Control rootRows = Range("Rows");
+        rootRange.AddChild(rootRows);
+        rootRows.AddChild(Label("Continue", "Continue", 175f, 195f, selected, true));
+        rootRows.AddChild(Label("MessageLog", "Message Log", 195f, 215f, disabled, true));
+        rootRows.AddChild(Label("Briefing", "Briefing", 215f, 235f, disabled, true));
+        rootRows.AddChild(Label("ControllerOptions", "Controller Options", 235f, 255f, disabled, true));
+        rootRows.AddChild(Label("SoundOptions", "Sound Options", 255f, 275f, disabled, true));
+        rootRows.AddChild(Label("VideoOptions", "Video Options", 275f, 295f, disabled, true));
+        rootRows.AddChild(Label("Retry", "Retry", 295f, 315f, normal, true));
+        rootRows.AddChild(Label("Quit", "Quit", 315f, 335f, normal, true));
+
+        Control confirmationRange = Range("ConfirmationRange");
+        confirmationRange.Visible = false;
+        native.AddChild(confirmationRange);
+        Control frame = Range("Frame");
+        confirmationRange.AddChild(frame);
+        frame.AddChild(Cell("CornerTopLeft", true, false));
+        frame.AddChild(Cell("CornerTopRight", false, false));
+        frame.AddChild(Cell("CornerBottomRight", false, true));
+        frame.AddChild(Cell("CornerBottomLeft", true, true));
+        foreach (string edge in new[] { "Top", "Bottom", "Left", "Right", "Center" })
+            frame.AddChild(Cell(edge, false, false));
+        confirmationRange.AddChild(Label("Title", "Are you sure?", 285f, 317f, title, false));
+        Control confirmationRows = Range("Rows");
+        confirmationRange.AddChild(confirmationRows);
+        confirmationRows.AddChild(Label("No", "No", 315f, 335f, selected, true));
+        confirmationRows.AddChild(Label("Yes", "Yes", 335f, 355f, normal, true));
     }
 
     public void Initialize(Level100PauseMenu model)
@@ -115,15 +214,8 @@ public sealed partial class FirstFlightPauseMenu : CanvasLayer
         BindScene();
         LoadPresentationAssets();
         _surface.Resized += ApplyVisualState;
-        if (Engine.IsEditorHint())
-            ApplyEditorPreview();
-        else
-            Reset();
+        Reset();
     }
-
-    public override string[] _GetConfigurationWarnings() => _assetError is null
-        ? []
-        : ["Pause assets are unavailable. Use the supported private-asset preparation route. " + _assetError];
 
     private void BindScene()
     {
@@ -150,59 +242,32 @@ public sealed partial class FirstFlightPauseMenu : CanvasLayer
     {
         if (_assetsLoaded)
             return;
-        try
+        Texture2D blank = CuratedAyaTextureLoader.Load(
+            "res://Assets/PauseMenu/blank.texture.aya", 16, 16,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        _overlay.Texture = blank;
+        _circle01.Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/PauseMenu/circle-01.texture.aya", 256, 256);
+        _circle02.Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/PauseMenu/circle-02.texture.aya", 256, 256);
+        Texture2D corner = CuratedAyaTextureLoader.Load(
+            "res://Assets/PauseMenu/endcurve.texture.aya", 32, 32);
+        foreach (TextureRect cell in _frame.GetChildren().Cast<TextureRect>())
         {
-            Texture2D blank = CuratedAyaTextureLoader.Load(
-                "res://Assets/PauseMenu/blank.texture.aya", 16, 16,
-                CuratedAyaTextureLoader.Compression.Dxt1);
-            _overlay.Texture = blank;
-            _circle01.Texture = CuratedAyaTextureLoader.Load(
-                "res://Assets/PauseMenu/circle-01.texture.aya", 256, 256);
-            _circle02.Texture = CuratedAyaTextureLoader.Load(
-                "res://Assets/PauseMenu/circle-02.texture.aya", 256, 256);
-            Texture2D corner = CuratedAyaTextureLoader.Load(
-                "res://Assets/PauseMenu/endcurve.texture.aya", 32, 32);
-            foreach (TextureRect cell in _frame.GetChildren().Cast<TextureRect>())
-            {
-                cell.Texture = cell.Name.ToString().StartsWith("Corner", StringComparison.Ordinal) ? corner : blank;
-                cell.SelfModulate = PanelTint;
-            }
-            var normalFont = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
-                "res://Assets/Hud/font-22.texture.aya", 512, 512,
-                CuratedAyaTextureLoader.Compression.Rgba8), 32);
-            var smallFont = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
-                "res://Assets/Hud/font-13ps.texture.aya", 256, 256,
-                CuratedAyaTextureLoader.Compression.Rgba8), 16);
-            _rootTitle.SetFont(normalFont);
-            _confirmationTitle.SetFont(normalFont);
-            foreach (RetailBitmapLabel row in _rootRows.Concat(_confirmationRows))
-                row.SetFont(smallFont);
-            _assetsLoaded = true;
-            _assetError = null;
+            cell.Texture = cell.Name.ToString().StartsWith("Corner", StringComparison.Ordinal) ? corner : blank;
+            cell.SelfModulate = PanelTint;
         }
-        catch (Exception error) when (Engine.IsEditorHint() && error is IOException or InvalidDataException)
-        {
-            // Keep the authored control tree inspectable without private inputs.
-            // A missing texture is not replaced by an approximate retail visual.
-            _assetError = error.Message;
-            UpdateConfigurationWarnings();
-        }
-    }
-
-    private void ApplyEditorPreview()
-    {
-        _model = new Level100PauseMenu();
-        _model.Open();
-        if (PreviewConfirmation)
-        {
-            _model.Hover(6);
-            _model.ActivateSelected();
-        }
-        _surface.Visible = true;
-        IsClosing = false;
-        _openingSeconds = FadeSeconds;
-        _closingSeconds = 0f;
-        ApplyVisualState();
+        var normalFont = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
+            "res://Assets/Hud/font-22.texture.aya", 512, 512,
+            CuratedAyaTextureLoader.Compression.Rgba8), 32);
+        var smallFont = new RetailBitmapFont(CuratedAyaTextureLoader.Load(
+            "res://Assets/Hud/font-13ps.texture.aya", 256, 256,
+            CuratedAyaTextureLoader.Compression.Rgba8), 16);
+        _rootTitle.SetFont(normalFont);
+        _confirmationTitle.SetFont(normalFont);
+        foreach (RetailBitmapLabel row in _rootRows.Concat(_confirmationRows))
+            row.SetFont(smallFont);
+        _assetsLoaded = true;
     }
 
     public void Open()
