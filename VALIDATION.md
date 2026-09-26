@@ -6320,6 +6320,31 @@ lore and neither the `Tests` nor the `Development` namespace. The Linux package 
 `--headless --quit-after 240` with isolated XDG directories and exited 0 with no error
 output; no core dump from the companion appeared.
 
+**Save-audit corrections (same day).** The RE lane's save audit (pristine `74154bfa…`,
+gold save `0c17e47d…`) corrected four facts the companion displayed; all four are
+read-only, so no write path changed. Checked here against the pinned source and the
+fixture's bytes: the gallery wall mapper (`FEPGoodies.cpp:393-437`, which the RE lane
+matched to retail `0x0045cb80`) never places 071–073, so the gallery shows 230 slots;
+the fixture stores 071–073 as new while the 230 shown slots hold 229 viewed and 1
+locked, so its "3 new" had been three Goodies the game never shows. `mIsGod[2]`
+(`Career.h:204`) puts player 2's god flag at `0x249A` beside player 1's at `0x2496`;
+`mNumAttempts` is only zeroed (`Career.cpp:99`), and all 43 used nodes in the fixture
+hold 0. The companion now lays Goodies out by the wall's rows and lists 071–073 apart,
+refuses edits to them, counts only shown slots, shows both god flags, drops the
+attempts column, and calls the top kill bytes a stored screen-position setting.
+`npm test` passed in `local-data/companion/godot-dotnet-test-a2621rg6/`: **605 checks,
+0 failures**.
+
+**Running-game check.** After main was merged in, four interface checks that write into
+the fake game failed (`local-data/companion/godot-dotnet-test-oi1x5_v4/`) because a Ghidra
+headless analysis with `BEA.exe` on its command line counted as the running game: the Linux
+check matched any argument ending in `BEA.exe`. It now matches only the game's own process
+as Wine presents it — process name `BEA.exe`, `BEA.exe` as argv[0], or a Wine loader
+carrying it — with seven focused cases, and the interface test decides the game is closed
+instead of reading the machine. `npm test` then passed with that analysis still running:
+`local-data/companion/godot-dotnet-test-w3ox5u5u/`, **612 checks, 0 failures**. The
+check has not been observed against a live game under Wine or Proton.
+
 **Not verified.** Windows execution, including the Windows file path for copies and
 backups; a human click-through with a mouse and keyboard; listening to the music and voice
 playback (the audio was decoded, never heard); and anything the game does with a copy

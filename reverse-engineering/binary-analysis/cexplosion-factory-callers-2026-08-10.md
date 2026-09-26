@@ -1,7 +1,7 @@
 # `CWorldPhysicsManager::CreateExplosion` caller family
 
 Status: active, bounded static contract
-Last updated: 2026-08-10
+Last updated: 2026-09-26 (RE audit: 0x00442710 uses the owning unit's CUnitExplosion)
 Evidence: MEASURED — pristine direct-call xrefs, exact function bodies,
 configuration-field adapters, and strict RTTI/vtable owners; UNKNOWN — runtime
 reachability and downstream effects outside the bounded callers.
@@ -38,7 +38,7 @@ they do not claim original source spelling.
 | `0x00415450` | `CBoat__VFunc96_SpawnConfiguredSmallExplosion` | `CBoat` slot 96; uses `CUnitSmallExplosion` with boat-specific position logic. |
 | `0x00417A40` | `CBuilding__VFunc50_HandleDeathAndSpawnUnitExplosion` | `CBuilding` death path; uses `CUnitExplosion`. |
 | `0x00428110` | `CComponent__UpdateActivationStateAndSpawnGillClawExplosion` | `CComponent`/`CGillMHead` slot 66; activation path resolves the literal `Gill-M Claw Hit`. |
-| `0x00442710` | `CDestroyableSegment__SpawnConfiguredExplosion` | Uses the segment's configured explosion definition. |
+| `0x00442710` | `CDestroyableSegment__SpawnConfiguredExplosion` | Uses the owning unit's explosion, not a segment definition: it walks segment `+0x3c` → `+0x10` (the unit) → `+0x164` (its profile) and reads the profile's `+0xE8` ordinal (`CUnitExplosion`, table above), returning when the profile or the ordinal is 0 (`0x0044271e-0x0044273a`). |
 | `0x00447120` | `CDropship__VFunc66_ProcessDoorThrustersChildrenAndSmallExplosions` | `CDropship` slot 66; door/child processing includes `CUnitSmallExplosion`. |
 | `0x0044CDB0` | `CFeature__VFunc14_ShutdownAndSpawnExplosion` | `CFeature` slot 14; shutdown path creates the feature-data explosion. |
 | `0x0044CEE0` | `CFeature__MaybeSpawnRandomExplosionFromData` | Randomized transformed spawn from the feature-data explosion ordinal. |

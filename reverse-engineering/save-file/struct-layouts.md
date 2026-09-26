@@ -1,7 +1,7 @@
 # Struct Layouts Reference
 
 Status: superseded in part — [save-format.md](save-format.md) owns the supported layout; this December 2025 map is retained for reference
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (RE audit: 0x2496/0x249A are the saved per-player god flags; mNumAttempts is never incremented)
 Summary: memory map of the 10,004-byte BES file compiled from Ghidra analysis, source and testing; the `0x0002` field, kill-counter top-byte and base-thing bitmap notes are corrected to the September rechecks.
 Evidence: MEASURED for the corrected `0x0002`, kill-counter top-byte and base-thing bitmap notes (pristine bytes `0x0042126a`-`0x00421280`, the September original-code reset control, and the career table and loader gate read 2026-09-25); the rest keeps its December 2025 evidence, partly INFERRED.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -25,8 +25,8 @@ Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, S
 | 0x248A |    4 | mCareerInProgress                       |
 | 0x248E |    4 | mSoundVolume (float)                    |
 | 0x2492 |    4 | mMusicVolume (float)                    |
-| 0x2496 |    4 | g_bGodModeEnabled (CCareer +0x2494)     |
-| 0x249A |    4 | (unknown / unused in Steam)             |
+| 0x2496 |    4 | mIsGod[0], player 1 god flag (+0x2494)  |
+| 0x249A |    4 | mIsGod[1], player 2 god flag (+0x2498)  |
 | 0x249E |    4 | Invert Y (Flight/Jet) - Player 1        |
 | 0x24A2 |    4 | Invert Y (Flight/Jet) - Player 2        |
 | 0x24A6 |    4 | Invert Y (Walker) - Player 1            |
@@ -64,7 +64,7 @@ struct CCareerNode {
     /* +0x0C */ int32_t  mHigherLink;     // Link index (into CCareerNodeLink[200])
     /* +0x10 */ int32_t  mWorldNumber;    // Level ID (100, 110, 200...)
     /* +0x14 */ int32_t  mBaseThingsExists[9];  // 288 persistence bits (level-specific; preserve)
-    /* +0x38 */ int32_t  mNumAttempts;    // Attempt counter
+    /* +0x38 */ int32_t  mNumAttempts;    // zeroed by Blank, never incremented
     /* +0x3C */ uint32_t mRanking;        // Raw IEEE-754 float bits (see table below)
 };
 // Total: 64 bytes
@@ -313,12 +313,18 @@ Evidence (binary, Feb 2026):
 
 ## God Mode / Invert-Y (Steam Correction)
 
-Older docs (and Stuart’s internal source) refer to a per-player `mIsGod[2]` persistence array. In the Steam build, those same offsets were incorrectly reused in earlier writeups:
+The Steam build keeps `CCareer::mIsGod[2]` (`Career.h:204`) where the source puts it:
 
-- `0x249E/0x24A2/0x24A6/0x24AA` are **invert-Y toggles** (walker + flight/jet per player). Steam stores them as normal booleans: `0 = Off` (default), non-zero = On.
-- `0x249A` is always `0` in observed retail saves and is currently treated as **unknown/unused**.
+- `0x2496` and `0x249A` are the saved god flags for player 1 and player 2. The player
+  loads its flag when it is built (`0x004d27f3`) and applies a nonzero flag to its
+  Battle Engine (`0x004d30a1-0x004d30ba`), whatever the save is named. The Maladim
+  cheat only adds the pause-menu item that shows and toggles player 1's flag.
+- `0x249E/0x24A2/0x24A6/0x24AA` are **invert-Y toggles** (flight/jet then walker, per
+  player): the Steam block is 8 bytes longer than the source's because this array grew
+  from two entries to four. Steam stores them as normal booleans: `0 = Off` (default),
+  non-zero = On.
 
-God mode in the Steam build is primarily runtime-cheat gated (save-name substring checks). See `reverse-engineering/game-mechanics/god-mode.md`.
+See [god mode](../game-mechanics/god-mode.md).
 
 ---
 
@@ -367,4 +373,4 @@ The console port uses BASE_VERSION=17. The internal PC build used 9.
 
 ---
 
-*Last updated: February 2026*
+*Header dates above are authoritative.*

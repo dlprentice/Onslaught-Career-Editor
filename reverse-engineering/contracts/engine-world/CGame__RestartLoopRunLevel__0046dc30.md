@@ -1,13 +1,37 @@
 # CGame__RestartLoopRunLevel
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CGame__RestartLoopRunLevel` at `0x0046dc30`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/game.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0046dc30`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Not source-exact.** Retail formats "Post Load %d" (`0x0062c130`; `0x0046dd1a-0x0046dd25`)
+  and calls `MEM_MANAGER.DumpMemory` (`0x004a2a80`, ECX `0x009c3df0`) at `0x0046dd37`.
+  `game.cpp:1334` has that call commented out. The research pass reported further differences
+  that are not re-read here: where the demo controls-screen wait runs, when
+  `SetLoadingFraction(1.0)` runs, and the quit sound.
+- **Callee names.**
+  - `0x0044a130` is `CEngine::BuildLevelSpecifics` (`engine.cpp:369-382`): `InitDamageSystem`
+    is inlined from `0x0044a135`, then `mLandscape->BuildLevelSpecifics()` is called at
+    `0x0044a1a6-0x0044a1a9`.
+  - `0x004bac40` is CMonitor's destructor. It stores CMonitor's vtable `0x005d92d4` at
+    `0x004bac47`, and the deleting destructor `0x00419a20` wraps it. It is not `Shutdown`.
+  - `0x004d3020` is `CPlayer::SetIsGod` ([god mode](../../game-mechanics/god-mode.md)).
+  - `0x004f99b0` is `CUnit::StartPlayingInitNoise`; the `label-audit-20260926` cohort
+    renamed it.
+  - `0x005015c0` is the static `CVBufTexture::ClearOut`, not a CEngine method. It reads
+    `0x00854e00` with no receiver, and its three callers match `DXEngine.cpp:1536`,
+    `engine.cpp:98` and `game.cpp:1559`.
 
 ## Identity
 - Body `[0x0046dc30,0x0046e22a]`, 1531 bytes, 408 closure instructions. Raw pristine-body SHA-256 `dee636c3cc58ab1e673357436d2447b17aa379f79afa4a09bcc23905fa4e45f6`; closure range SHA-256 `0d2fa4692bb0360a743cec142fcbd12612b92b95abc7f61d5223a17499a06f4e`; packet range-plus-bytes SHA-256 `829179bce91d1228dc2ee852265a9da7d8025eec7b531634e81d041e7140a1d0`. All three were independently recomputed over the exact single contiguous inclusive range.

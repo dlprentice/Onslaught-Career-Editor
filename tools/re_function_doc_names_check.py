@@ -121,6 +121,13 @@ CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS = (
     "returnType", "paramSpec", "arity", "arityBytes", "currentTags",
     "proposedTags", "currentName", "proposedName",
 )
+CURRENT_LABEL_AUDIT_OVERLAY = REPO_ROOT / "tools/cohort-specs/label-audit-20260926.manifest.tsv"
+CURRENT_LABEL_AUDIT_OVERLAY_SHA256 = "fcb3d147351b5fc3696c03e302529c7809d75f88e2bf3ddc1e80d018d616c40f"
+CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS = (
+    "addr", "liveKind", "currentName", "proposedName", "currentCommentBase64",
+    "proposedCommentBase64", "bodyStart", "bodyEndExclusive", "bodySha256",
+    "currentTags", "proposedTags",
+)
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -816,6 +823,11 @@ def run(
                 table, CURRENT_SAMPLE_LOADING_OVERLAY,
                 expected_sha256=CURRENT_SAMPLE_LOADING_OVERLAY_SHA256,
                 expected_rows=2, expected_columns=CURRENT_SAMPLE_LOADING_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_LABEL_AUDIT_OVERLAY,
+                expected_sha256=CURRENT_LABEL_AUDIT_OVERLAY_SHA256,
+                expected_rows=10, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

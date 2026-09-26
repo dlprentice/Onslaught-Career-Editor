@@ -1,13 +1,33 @@
 # CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG` at `0x005852d5` in the direct-call-connected concrete packed-texel-to-float4 decoder; exact identity, direct codec connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — exact-base current name/register identity, fresh read-only READY packet/decompile, structured edges, closure range, independently recomputed pristine body bytes, and paired W012/W013 static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x005852d5`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Owner.** Not `CFastVB`: this is slot 1 of the codec vtable `0x005ea020`, which carries no
+  RTTI. See the constructor draft's corrections
+  ([`0x0058617c`](CFastVB__InitTexelUnpackVTable_005ea034__0058617c.md)).
+- **Parameters.** The two indices are not `source_x` and `source_y`.
+  - The first stack argument multiplies the row pitch `+0x1058`, and the second the slice
+    pitch `+0x105c` (`0x005852d8-0x005852e8`).
+  - The base constructor offsets the data by box Top × `+0x1058` and box Front × `+0x105c`
+    (`0x00581c64-0x00581c79`; the box is at `+0x1038`).
+  - So they are the row index y and the slice index z, and each call decodes one row of
+    `+0x1060` texels.
+- **Callee owners.** `0x00581e1c` and `0x0058210e` run on the same codec `this`: ECX is
+  unchanged, and both read `[ecx+0x1060]` on entry. Their `CFastVB__TexelUnpackProfile__` and
+  `CTexture__` prefixes are wrong.
 
 ## Identity
 - Body `[0x005852d5,0x0058537f]`, 171 bytes, 58 closure instructions. Raw pristine-body SHA-256 `f3d24ed75478d4e47ba4c8b744400ddde0d457a7da52ec492593af62f9f0ead7`; closure range SHA-256 `6be9c76fcd58408d5cde7e579c5088a8d9d772119cde845e950297255fa3b1f0`; packet range-plus-bytes SHA-256 `c52cd983e2105b6291f7dffb13735cd0d1a87821003836304ccbbb29d6b2ab86`. All three were independently recomputed over the exact single contiguous inclusive range.

@@ -1,7 +1,7 @@
 # CBattleEngine__UpdateCameraVectorsAndInput
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-26 (renamed CBattleEngine__UpdateRotation in the working project by the RE audit)
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -116,4 +116,4 @@ body's E8 at `0x00407ec7`; no 2026-08-19 PE envelope).
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00407a50` | `CBattleEngine__UpdateCameraVectorsAndInput` | `83ec6c 8bd9 8b8360020000 ff920c010000 … e874f6ffff … c3` (1692 B) | incoming-ECX thiscall; bare ret ×1; 1692 B; 9 E8 / 3 E9 / 6 targets; 1 inbound Move. HIGH on ABI, `[+0x114]`→`[+0x590]`, `[+0x260]==2`, `vcall +0x10c`, unique inbound. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on field names or rebuild parity. |
+| `0x00407a50` | `CBattleEngine__UpdateRotation` | `83ec6c 8bd9 8b8360020000 ff920c010000 … e874f6ffff … c3` (1692 B) | incoming-ECX thiscall; bare ret ×1; 1692 B; 9 E8 / 3 E9 / 6 targets; 1 inbound Move. HIGH on ABI, `[+0x114]`→`[+0x590]`, `[+0x260]==2`, `vcall +0x10c`, unique inbound. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on field names or rebuild parity. |

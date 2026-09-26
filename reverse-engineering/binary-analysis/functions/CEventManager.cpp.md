@@ -1,7 +1,7 @@
 # CEventManager / CScheduledEvent function map
 
 Status: active static, isolated-code and historical runtime contracts
-Last updated: 2026-09-19 (readiness queue, precision boundary and allocation corrections)
+Last updated: 2026-09-26 (RE audit: TimeFromNow operand, what runs between advance and flush, call-site and string corrections)
 Summary: event insertion, monitored ownership, dispatch timing and failure limits;
 isolated original-code results remain separate from retained runtime extracts.
 Source File: `C:\dev\ONSLAUGHT2\eventmanager.cpp` (allocator source pointer `0x00628d3c`; `0x005d250c` is the SEH handler) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -17,13 +17,13 @@ a REBUILD_READY row): the event number is a 16-bit word.
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x0044b060` | `CEventManager__Init` | `0044b079..0044b0a5` passes `(size=0x10, type=0x43, file=0x00628d3c, line=0x34)` to `005490e0`; `0044b0fb..0044b130` allocates `0x61a84`, stores cookie `0x4e20`, and constructs records with stride `0x14`. | Initializes the existing manager, allocates its **16-byte overflow array object** at `+0x25b0`, and constructs **20,000 event records**. `+8/+10/+14` are time/current bucket/frame, not list heads. The former “52-byte manager allocation” confused source line 52 with size. |
-| `0x0044b2a0` | `CEventManager__GetNextFreeEvent` | `56 8b7128 85f6 740a 8b4610 894128 8bc6 5ec3 68608d6200 6880f56600 e87f64ffff …` | Pops the free-list head at `+0x28`, advances it through `+0x10`, and returns the node; on empty it prints via two string references (`0x00628d60`, `0x0066f580`). HIGH: free-list pop with an error path. |
-| `0x0044b2d0` | `CEventManager__AddEvent_TimeFromNow` | `8b442404 8b542418 d94108 d800 8b442414 … 50 e870000000 c21800` | Adds the argument float to the manager's current time (`fld [ecx+8]; fadd st0`), re-packs the tuple, and forwards to `AddEvent_AtTime` (+0x70). HIGH: a time-offset wrapper. |
+| `0x0044b2a0` | `CEventManager__GetNextFreeEvent` | `56 8b7128 85f6 740a 8b4610 894128 8bc6 5ec3 68608d6200 6880f56600 e87f64ffff …` | Pops the free-list head at `+0x28`, advances it through `+0x10`, and returns the node; on empty it prints the string `0x00628d60` through the log object `0x0066f580` (not a string). HIGH: free-list pop with an error path. |
+| `0x0044b2d0` | `CEventManager__AddEvent_TimeFromNow` | `8b442404 8b542418 d94108 d800 8b442414 … 50 e870000000 c21800` | Adds the argument to the manager's current time (`fld [ecx+8]; fadd dword [eax]`, `d8 00`, where `eax` is the first argument, `const float& time_from_now`, `eventmanager.h:56`), rounds the sum to float32 (`fstp` at `0x0044b2f6`), re-packs the tuple, and forwards to `AddEvent_AtTime` (+0x70). HIGH: a time-offset wrapper. |
 | `0x0044b310` | `CEventManager__AddEvent_ScheduledEvent` | `568b742408 578bf9 85f6 7446 8b460c 53 d94708 d84610 8b16 8d5e0c 6a00 50 0fbf4604 d95c2418 … e82a000000 … c20400` | `ret 4`; arg = already-built `CScheduledEvent*`. `due = [this+8] + [event+0x10]`, then `AddEvent_AtTime` of that copy, then returns the supplied node to the free list. HIGH. This is how `Play*MessageWait` inserts its 2001 after CMessageBox event 3002. |
 | `0x0044b370` | `CEventManager__AddEvent_AtTime` | `83ec08 535556 8bf1 57 8b4604 85c0 751c 68948d6200 6880f56600 e8b163ffff … 8b6c2420 85ed 0f8403020000` | `ret 0x18`; source-void absolute scheduler. Invalid manager logs and returns; null target returns; over-limit future time returns; empty event pool logs and returns. Otherwise normalize negative time, select current ring / computed ring / sorted overflow, initialize or mark reuse, request publication, and increment the count. Overflow helper failure can leave that increment without an insertion; see the capacity control below. No caller-visible status. |
 | `0x0044b5c0` | `CEventManager__Update` | `83ec08 8b4114 56 40 bec8000000 894114 89442404 8b4110 c744240800000000 89411c 40 99 df6c2404 f7fe d80d78855d00 d95908 895110 e845000000 5e 83c408 c3` | `mov eax,[ecx+14h]; inc eax; mov [ecx+14h],eax` increments the frame counter; `mov [esp+4],eax` + `mov [esp+8],0` build the zero-extended 64-bit count that `fild qword [esp+4]` loads; **`fmul dword [0x005d8578]`** multiplies by the stored `0.05f` (`3d4ccccd` = `CLOCK_TICK`) and `fstp [ecx+8]` lands `mTime = frame × 0.05f`. Separately `mov eax,[ecx+10h]; mov [ecx+1ch],eax; inc eax; cdq; idiv esi(0xc8)` computes the ring rotation and `mov [ecx+10h],edx` lands `mCurrentBufferNum = (old + 1) % 200` with the quotient discarded. Then `call 0x0044b640` = `CEventManager__Flush`. HIGH: byte-exact; the rebuild's `RetailEventScheduler.AdvanceTime` carries the identical law. |
 | `0x0044b600` | `CEventManager__AdvanceTime` | `83ec08 8b4114 56 40 bec8000000 894114 89442404 8b4110 c744240800000000 89411c 40 99 df6c2404 f7fe d80d78855d00 d95908 5e 895110 83c408 c3` | The same conversion body as `Update` through `fstp [ecx+8]` (`d95908`), then `mov [ecx+10h],edx` and return — **no trailing call**. HIGH: the advance half of the pair; the two functions share the conversion byte-for-byte and differ only in the Flush dispatch tail (`Update = AdvanceTime + Flush`). |
-| `0x0044b640` | `CEventManager__Flush` | `83ec08 535556 8bf1 33ed 57 8b5e1c 8b460c 89442414 896e24 8d0c5b … c1e104 8d7c3138 8b47f8 3bc5 8907 …` | Drains the ready slot (`+0x1C`) in lane order, then the overflow list while `fcomp` at `0x0044b6d5` + `test ah,1 / je` at `0x0044b6d9` keeps `head.mTime < mTime` (strict — an event due exactly on the boundary waits a frame). At `0x0044b68a` / `0x0044b6f2` it passes the `CScheduledEvent*` to `mToCall->vtable[0]`; numeric interpretation belongs to that receiver. Then it frees non-rearmed events. HIGH. |
+| `0x0044b640` | `CEventManager__Flush` | `83ec08 535556 8bf1 33ed 57 8b5e1c 8b460c 89442414 896e24 8d0c5b … c1e104 8d7c3138 8b47f8 3bc5 8907 …` | Drains the ready slot (`+0x1C`) in lane order, then the overflow list while `fcomp` at `0x0044b6d4` + `test ah,1 / je` at `0x0044b6d9` keeps `head.mTime < mTime` (strict — an event due exactly on the boundary waits a frame). At `0x0044b68a` / `0x0044b6f2` it passes the `CScheduledEvent*` to `mToCall->vtable[0]`; numeric interpretation belongs to that receiver. Then it frees non-rearmed events. HIGH. |
 | `0x004de1f0` | `CScheduledEvent__Set` | `668b442404 56 8bf1 8b4c240c 66894604 8b442410 8b11 50 8bce 895610 e8ef2df2ff … 66c746080000 51 8d4e0c e8dc2df2ff` | Stores the event number as a **16-bit word** at `+0x04` (`mov [esi+4],ax`), copies a dword into `+0x10`, and zeroes the word at `+0x08` — the byte witness behind the already-landed REBUILD_READY `AddEvent` law. HIGH: direct corroboration of the rebuild's int16 event-number contract. |
 
 ## Open questions (cheapest falsifier first)
@@ -198,8 +198,8 @@ This is a bounded C2 candidate for the two observed reused-event, priority-0
 ring insertions only. It does not establish allocation/free-list behavior,
 null/invalid/exhaustion paths, priorities 1/2, nonnegative current-bucket
 requests, wraparound, overflow insertion, concurrency, callback effects, or a
-generic scheduler parity claim. Generation 32 and shared counts remain
-unchanged until independent review and serialized integration.
+generic scheduler parity claim. The campaign authority and shared counts
+remain unchanged until independent review and serialized integration.
 
 ## Cleanup-event queue / dispatch boundary
 
@@ -235,9 +235,11 @@ notes; ring, clock, allocation, order, and slot-0 delivery belong here.
 
 ## Callers and lifecycle (byte-cited)
 
-Every direct caller below loads `mov ecx, 0x00672fc8` immediately before the
-call, so `0x00672fc8` is the address of the global `CEventManager` instance
-these shipped call sites share. A whole-image direct `E8`/`E9` rel32 scan
+Every direct caller below loads `mov ecx, 0x00672fc8` before the call, so
+`0x00672fc8` is the address of the global `CEventManager` instance these
+shipped call sites share. In the two IScript rows the stop-flag store
+`mov [0x0089c800],1` sits between that load and the call (`0x005376f4-0x00537703`,
+`0x005379f0-0x005379ff`). A whole-image direct `E8`/`E9` rel32 scan
 finds exactly one caller each for `Update` and `AdvanceTime`; indirect or
 register-computed calls are outside that scan's reach.
 
@@ -252,8 +254,11 @@ register-computed calls are outside that scan's reach.
 | `IScript__PlayPCharMessageWait` | `0x005379ff` | `GetNextFreeEvent` (`0x0044b2a0`) |
 
 So the frontend drives the scheduler with the combined `Update`, while
-`CGame__Update` drives it with the split pair and runs gameplay between the
-clock advance and the dispatch.
+`CGame__Update` drives it with the split pair. Between the clock advance and
+the dispatch it runs only input work: input polling (`0x0042d4d0`), the
+per-player controller `Flush` loop (`0x0046eb67-0x0046ebaa`) and two input
+helpers (`0x0042da00`, `0x00512470`). This matches `game.cpp:1919-1930`
+(control events at the start of the frame); gameplay runs from the flush.
 
 The September 8 weapon-clock correction uses the manager's own unsigned frame
 count, reset by `InitRestartLoop`, and the stored result of

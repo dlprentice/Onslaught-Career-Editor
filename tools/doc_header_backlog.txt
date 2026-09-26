@@ -34,7 +34,6 @@ reverse-engineering/binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md
 reverse-engineering/binary-analysis/cockpit-lighting-law-2026-07-26.md
 reverse-engineering/binary-analysis/cockpit-world-matrix-static-2026-07-26.md
 reverse-engineering/binary-analysis/controlled-runtime-observations-2026-07-26.md
-reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md
 reverse-engineering/binary-analysis/d3d-fog-render-state-static-contract-2026-07-25.md
 reverse-engineering/binary-analysis/destroyable-segments-static-contract.md
 reverse-engineering/binary-analysis/executable-analysis.md
@@ -118,7 +117,6 @@ reverse-engineering/binary-analysis/functions/DXPatchManager.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
-reverse-engineering/binary-analysis/functions/DXTrees.cpp.md
 reverse-engineering/binary-analysis/functions/DataType.cpp.md
 reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md
 reverse-engineering/binary-analysis/functions/EventFunction.cpp.md
@@ -214,7 +212,6 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
 reverse-engineering/binary-analysis/functions/Pod.cpp/CPod__VFunc_66_UpdateMotionAndAccumulateScalar.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
-reverse-engineering/binary-analysis/functions/Script.cpp/CGame__SetSlot.md
 reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
 reverse-engineering/binary-analysis/functions/Sentinel.cpp.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
@@ -322,7 +319,6 @@ reverse-engineering/binary-analysis/name-grading-ledger-2026-07-25.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-26.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-27-demotion2.md
 reverse-engineering/binary-analysis/pause-key-default-row-patch.md
-reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
 reverse-engineering/binary-analysis/physics-script-copied-corpus-parser-proof.md
 reverse-engineering/binary-analysis/physics-script-static-contract.md
 reverse-engineering/binary-analysis/pixel-centre-projection-offset-applied-2026-07-26.md
@@ -330,16 +326,12 @@ reverse-engineering/binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-2
 reverse-engineering/binary-analysis/re-coverage-baseline-2026-07-25.md
 reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md
 reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md
-reverse-engineering/binary-analysis/retail-specimen-baseline.md
 reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md
 reverse-engineering/binary-analysis/terrain-ambient-light-applied-2026-07-26.md
-reverse-engineering/binary-analysis/terrain-ambient-light-material-2026-07-26.md
-reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-draw-stage-flags-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-gain-frame-global-falsified-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-implied-macro-inversion-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-per-node-colour-absent-2026-07-26.md
-reverse-engineering/binary-analysis/terrain-shade-bilinear-decode-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-shade-plane-origin-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-spatial-dispersion-negative-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-sun-colour-route-2026-07-26.md
@@ -368,7 +360,6 @@ reverse-engineering/game-mechanics/campaign-scalar-status.md
 reverse-engineering/game-mechanics/cheat-codes.md
 reverse-engineering/game-mechanics/energy-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/fire-cooldown-retail-to-core-translation-policy.md
-reverse-engineering/game-mechanics/god-mode.md
 reverse-engineering/game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/jet-energy-drain-scalar-response-v1.md
 reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
@@ -401,10 +392,7 @@ reverse-engineering/quick-reference/source-hierarchy.md
 reverse-engineering/quick-reference/source-key-functions.md
 reverse-engineering/save-file/README.md
 reverse-engineering/save-file/_index.md
-reverse-engineering/save-file/career-links.md
 reverse-engineering/save-file/career-unlock-recipes.md
-reverse-engineering/save-file/goodies-system.md
-reverse-engineering/save-file/grade-system.md
 reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md
 reverse-engineering/source-code/core/_index.md
@@ -414,7 +402,6 @@ reverse-engineering/source-code/core/platform-system.md
 reverse-engineering/source-code/core/thing-system.md
 reverse-engineering/source-code/frontend/_index.md
 reverse-engineering/source-code/frontend/controller-system.md
-reverse-engineering/source-code/frontend/fep-systems.md
 reverse-engineering/source-code/full-source-parse-2026-02-11.md
 reverse-engineering/source-code/gameplay/_index.md
 reverse-engineering/source-code/gameplay/battle-system.md

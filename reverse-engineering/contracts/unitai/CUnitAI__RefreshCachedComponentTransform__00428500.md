@@ -1,13 +1,26 @@
 # CUnitAI__RefreshCachedComponentTransform
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static function contract for `CUnitAI__RefreshCachedComponentTransform` at `0x00428500`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no crosswalk row in lane brief) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00428500`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Owner.** `CComponent`, not `CUnitAI`.
+  - Its callers `0x00428710` and `0x00428770` are slots 0 and 1 of the offset-8 vtables of
+    CComponent (`0x005e3cc8`), CTentacle (`0x005e3f24`) and CGillMHead (`0x005e4180`). They
+    pass `esi-8`, the whole object (`0x0042873d`, `0x0042879d`).
+  - The third call, at `0x004284d1`, is in `0x00428110`, slot 66 of CComponent's primary
+    vtable `0x005e3d40`.
 
 ## Identity
 - Body `[0x00428500,0x00428707]`, 520 bytes. Raw pristine-body SHA-256 `176381253b56aa477a4203dc10c84b3dd0bc91e11f0bc159444c465cd6a7e51d`; closure range SHA-256 `2523bb917b41b23ed0829b22cb06143117a6ad7eebd522e46f2beb222f0f2b3b`; packet range-plus-bytes SHA-256 `e392d63691eca58e04b2dc3897d86ac257b2f5a4503c51ce45750b8207cb02ea`. All three use the same exact inclusive range; no padding or tail bytes are included.

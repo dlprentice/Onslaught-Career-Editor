@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-26 (RE audit: two byte excerpts, the Plane type bit and the 0x004fc000 spawner arm)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -70,8 +70,8 @@ These thing-event numbers are **not** the IScript `HandleMessage`
 | `0x004de700` | `Return1f` | `d90568855d00 c3` | Slot 24 (`+0x60`) of `CUnit` `0x005df998` / `CRadar` `0x005dd788` / `CSubmarine` `0x005e1490` (re-read dwords `00 e7 4d 00`). Zero-arg; `ECX` unused; zero `E8`; zero inbound `E8`/`E9`. `fld dword [0x005d8568]` (`00 00 80 3f` = `1.0f`); bare `ret`. HIGH. Child `t_416de69b` REPORT.md independently reproduced. Do not promote a CUnit-owned name — this is a folded stub. |
 | `0x0050e940` | `CGroundUnit__ReturnFloat005d85bc_0050e940` | `d905bc855d00 c3` | Slot 24 of `CGroundVehicle` `0x005e297c` is **not** `Return1f`. Same shape; `[0x005d85bc]` = `00 00 80 40` = `4.0f`. HIGH on these bytes. Subclass override, not the CUnit answer. |
 | `0x005333b0` | `IScript__Constructor` | `c706d4925d00 8d4e28 e85b24fbff … c706084f5e00 894608 894e0c 897168 … 897e24 … c20800` | `ret 8`; args `(thing, eventObj)`. Installs `CMonitor` vptr `0x005d92d4` then IScript vptr `0x005e4f08`. `CSPtrSet__Init` at `+0x28`. `[this+8]=[this+0x10]=thing`; `[this+0xc]=eventObj`; `[eventObj+0x68]=this`. Zeroes `+0x14` / `+0x18` / `+0x1c` / `+0x24` / `+0x38`. HIGH. Only `E8` is `SetScript` `0x004f42a8`. |
-| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CDebugLog__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
-| `0x00535c50` | `IScript__SetScript` | `8b442404 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
+| `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 743b 8b4f04 e8e1e30200 c20400` / miss `53 6888d26300 6880f56600 e8f56af3ff 83c40c 33c0 5f 5e 5d 5b c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CDebugLog__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
+| `0x00535c50` | `IScript__SetScript` | `8b442404 56 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff 5e c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
 
 ### Unit Euler update: isolated execution, September 8
 
@@ -294,8 +294,9 @@ excluding the constructor's optional four direct random draws.
 The original event-3002 callback `004ffbb0` queries the spawning owner's
 `+160(tag,index,position,basis)`. Deadline comparison is strict; an all-zero
 position terminates the exit. It clamps Z to terrain minus `0.1f`, increments
-the index at strict squared distance below `6.25f` for owner type bit `0x400`
-(`0.5625f` otherwise), and requests GoTo with override TRUE. Arrival uses raw
+the index at strict squared distance below `6.25f` when the Plane's own type
+has bit `0x400` (`0x004ffc9b-0x004ffcc4`; every air unit has it, since AirUnit's
+`SetThingType` ORs `0x40000400` at `0x0050e874`), and `0.5625f` otherwise, and requests GoTo with override TRUE. Arrival uses raw
 XYZ float deltas and the PC24 sum `(Z² + Y²) + X²`; the old selector's point
 is still sent on the incrementing update. Continuation draws once
 directly and submits 3002 with incoming-event reuse at the float32 store of
@@ -400,8 +401,11 @@ owns the new checks, private output paths and remaining limits.
 ### Remaining selected-provider integration
 
 The remaining weapon integration is consequential. Static inspection of
-`004fc000` requires the selected `Unit+140` provider, `+1e8` readiness and the
-weapon's strict `NOW > +64` gate. `004fbcb0` prepares that provider;
+`004fc000` shows that its weapon arm requires the selected `Unit+140` provider,
+`+1e8` readiness and the weapon's strict `NOW > +64` gate. With `+140` null it
+takes the `+144` spawner arm instead (`0x004fc027-0x004fc071`), which can return
+1 with no `+1e8` and no weapon: at once when profile `+0x110` is set, otherwise
+when none of the unit's spawners (`+0x18c`) is busy (`0x004e4420`). `004fbcb0` prepares that provider;
 `004fc080` fires only that provider on a later ready invocation and clears
 `+1ec/+1e8`. The existing every-tick/all-slots weapon loop is therefore not
 an implementation of this callback chain. Selected-provider retention,

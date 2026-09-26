@@ -1,7 +1,7 @@
 # `CRound::Hit`, configured explosion creation, and `CExplosion::Hit`
 
 Status: active, bounded semantic contract
-Last updated: 2026-09-08
+Last updated: 2026-09-26 (RE audit: beam delay 0.1, the dying bit, the call address, the explosion's collision gate and underwater exit)
 Evidence: MEASURED — pristine retail bytes, strict RTTI/vtables, exact data
 records, dated static exports, replicated runtime carriers, and independent
 PC-demo normalized bodies; SOURCE — pinned `CThing`/init layouts and virtual
@@ -80,11 +80,11 @@ Direct writes and ordered consequences visible in this body are:
 - a conditional increment of `[owner+0x574]+0x38`;
 - target `Damage`, followed by `CBattleEngine::Rearm` for Battle Engine
   targets;
-- an optional owner callback when the target newly enters its shutdown bit;
+- an optional owner callback when the target newly becomes dying (`+0x2c` bit `0x4`, `TF_DYING`, `thing.h:43-45`; the shutdown flag is bit `0x1`, tested by `AddShutdownEvent` at `0x004f43d4`);
 - impact-material sound and
   `CRound::ProcessImpactExplosionAndEffects(...,3,...)`;
 - for `CRoundBeam`, set `this+0x2C` bit 4 and schedule event `2000` at current
-  time plus `0.05`; otherwise, when `CRoundFire` is clear, dispatch projectile
+  time plus `0.1` (`fadd [0x005d85c0]` = `0x3dcccccd`, `0x004d8d64`); otherwise, when `CRoundFire` is clear, dispatch projectile
   virtual slot 50 (the existing `StartDieProcess` family).
 
 The function returns `void`. Register contents at either `RET 8` are residue,
@@ -135,7 +135,8 @@ register forms, 21 branches, and call topology after relocation normalization.
 - damages a part/body only when effective distance is within the current
   radius; and
 - optionally notifies the linked creator at virtual offset `+0x194` when the
-  target newly shuts down.
+  target newly becomes dying (`TF_DYING`), not when it shuts down. That matters
+  for the Tank, whose shutdown follows 0.5 s later.
 
 The joined instance/config fields are:
 
@@ -210,7 +211,7 @@ The bounded semantic name is therefore `CWorldPhysicsManager__CreateExplosion`.
 ## Exact round-to-explosion creation edge
 
 The creation edge is now recovered. `CRound::Hit` calls
-`CRound::ProcessImpactExplosionAndEffects` at `0x004D8D4E` with impact mode
+`CRound::ProcessImpactExplosionAndEffects` at `0x004D8D45` with impact mode
 `3`. The pristine four-entry jump table at `0x004DAA04` is:
 
 | Mode | Target |
@@ -257,10 +258,18 @@ writes show:
 - `targetOrOwner` affects the transform calculation, not `mAttachedTo` or the
   collision ignore pointer.
 
-`CExplosion::Init @ 0x0044B930` then copies `mAttachedTo` to
-`CInitCSThing::mIgnoreThing`, adds only `0x01000000` to
-`mNotSeekCollisionWithBF`, takes the configured radius from `config+0x34`, and
-copies allegiance. Its collision payload retains desired
+`CExplosion::Init @ 0x0044B930` first shuts the explosion down through slot 14
+(`0x0044beae-0x0044bebd`) when its initial z ≥ the water level `0x006fbdfc`
++ 1.5, that is 1.5 units or more under the surface (z grows downward;
+`0x0044b964-0x0044b978`). Otherwise it
+copies `mAttachedTo` to `CInitCSThing::mIgnoreThing` and adds `0x01000000` to
+`mNotSeekCollisionWithBF`. When the radius is at or below 0, or the configured
+damage (`config+0x38`) at or below the double `0.0015` (`0x005db298`,
+`0x0044b9f1`), it then clears `TF_IN_MAP_WHO` and overwrites the mask with
+`0xffffffff` (`0x0044b9fe-0x0044ba02`), so that explosion never collides (see
+[the value-id note](physics-round-value-ids-2026-07-25.md)). The Medium Pulse
+(radius 0.5, damage 1.0) takes the normal path. The body takes the
+configured radius from `config+0x34` and copies allegiance. Its collision payload retains desired
 `ECL_APPROX_GEOMETRY_SHAPES` and minimum `ECL_OUTER_SPHERE`, sets maximum
 `ECL_APPROX_GEOMETRY_SHAPES`, response `ECR_PASSIVE`,
 `mStartCollideOnNextFrame = FALSE`, and `mDoOBBForMeshCol = TRUE`. For `R <= 3`
@@ -352,8 +361,8 @@ stored CMSH words; they are not observed instance values. The raw inputs are:
 | Warehouse | `3CF5E900 / 400739E3 / BFF19379` | `40F2BEF5` | `41088DDE` |
 
 The serialized-resource path at `0x004AAB90` reads the CMSH header and global
-BBOX, while `0x004DC370` copies resource `+0x164` into renderer `+0x20` with
-integer stores at `0x004DC571/0x004DC579`. The four-byte getter
+BBOX, while `0x004DC370` copies resource `+0x164` into renderer `+0x20` with an
+integer load at `0x004DC571` and store at `0x004DC579`. The four-byte getter
 `[0x004DCAF0,0x004DCAF4)` returns that field unchanged (body SHA-256
 `c1585f87b231917fb748c8cb8dc459d10a157139bd48fb142b516af0fef2c3ae`).
 The distinct slot-17 path at `0x004F3940` reads BBOX radius through `0x004DE060`.

@@ -1,5 +1,11 @@
 # Retail Specimen Baseline
 
+Status: active specimen record
+Last updated: 2026-09-26 (RE audit: the Linux Steam install is pristine; catalogue lines and commands updated)
+Summary: which retail executable and corpus files probes trust, their hashes, and the state of the installed copy.
+Evidence: MEASURED — SHA-256 of the named files, measured on the dates given.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > Canonical runtime/provenance specimen set for the Steam retail build
 > Date: 2026-03-14
 
@@ -20,8 +26,8 @@ The current machine-generated manifest is:
 
 Regenerate it with:
 
-```powershell
-py -3 tools\hash_retail_specimens.py
+```sh
+python tools/hash_retail_specimens.py
 ```
 
 ## Baseline Targets
@@ -60,6 +66,15 @@ After the user restored the installed copy, the live install and the clean repo 
 
 So the current workstation state is back to a clean retail runtime specimen.
 
+### 2026-09-26 — the Linux Steam install is pristine
+
+On this Linux host the installed `~/.local/share/Steam/steamapps/common/Battle Engine Aquila/BEA.exe`
+hashes `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` (the
+pristine specimen), and no `BEA.exe.original.backup` sits beside it. The
+patched `e7881829…` executable described below survives as
+`local-lab/startup-parity-ghidra-ro-2026-07-23/safe-copy-bea/BEA.exe`. The
+2026-07-27 section records the Windows-era install.
+
 ### 2026-07-27 — the installed executable is patched ON PURPOSE
 
 **This is not drift and it is not a problem to be escalated. The maintainer
@@ -85,10 +100,10 @@ repository's own catalogued patches:
 
 | File offset | Change | Catalogue entry |
 |---|---|---|
-| `0x06416F` | pushed string pointer `0x00629454` → `0x005AA444` | `BinaryPatchEngine.cs:162` version-overlay marker pointer |
-| `0x129696` | `jne` rel32 displacement `0xCC` → `0x00` | `BinaryPatchEngine.cs:114` aspect/4:3 reject gate |
-| `0x12A644` | `a1 f0 2d 66 00` → `b8 01 00 00 00` (`mov eax,[0x662df0]` → `mov eax,1`) | `BinaryPatchEngine.cs:127` `force_windowed` |
-| `0x1AA444` | 20 bytes of `cc` padding → `"V%1d.%02d - PATCHED\0"` | `BinaryPatchEngine.cs:177` version-overlay cave payload |
+| `0x06416F` | pushed string pointer `0x00629454` → `0x005AA444` | `BinaryPatchEngine.cs:282` version-overlay marker pointer |
+| `0x129696` | `jne` rel32 displacement `0xCC` → `0x00` | `BinaryPatchEngine.cs:233` aspect/4:3 reject gate |
+| `0x12A644` | `a1 f0 2d 66 00` → `b8 01 00 00 00` (`mov eax,[0x662df0]` → `mov eax,1`) | `BinaryPatchEngine.cs:246` `force_windowed` |
+| `0x1AA444` | 20 bytes of `cc` padding → `"V%1d.%02d - PATCHED\0"` | `BinaryPatchEngine.cs:296` version-overlay cave payload |
 
 **Scope of the damage to existing findings: none identified, and the reason is
 specific rather than reassuring.** 2,506,724 of 2,506,752 bytes are identical, so
@@ -156,4 +171,4 @@ Before any serious runtime-validation wave:
 1. regenerate or re-check the specimen manifest,
 2. note whether `installed_live_bea_exe` matches `clean_repo_bea_exe`,
 3. record the exact specimen keys used by the probe session,
-4. write resulting notes/logs under ignored `.artifacts/` with a date- and task-scoped filename.
+4. write resulting notes/logs under ignored `local-data/` with a date- and task-scoped filename.

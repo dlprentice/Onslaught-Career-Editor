@@ -22,6 +22,21 @@ internal static class CareerSaveTests
         check.That(info.Kills.Count == 5 && info.Missions.Count == 100, "Expected inspection record counts.");
         check.That(info.Goodies.Count == 300 && info.GoodieCensus.Reserved == 67,
             "Reserved Goodie slots remain distinguishable.");
+        // The real fixture (0c17e47d…) stores 071–073 as new; the gallery shows none of them.
+        check.That(info.GoodieCensus is { Shown: 230, Old: 229, Locked: 1, New: 0, Hint: 0, Unknown: 0, NeverShownEarned: 3 },
+            "Goodie counts cover the 230 slots the gallery shows; 071–073 earned but never shown are counted apart.");
+        int[] wall = CareerSave.GalleryRows.SelectMany(row => row).ToArray();
+        check.That(wall.Length == 230 && wall.Distinct().Count() == 230 && wall.All(CareerSave.IsShown) &&
+            Enumerable.Range(0, 233).Count(CareerSave.IsShown) == 230 && CareerSave.NeverShown.All(index => !CareerSave.IsShown(index)) &&
+            CareerSave.GalleryRows[0].SequenceEqual([0, 1, 2, 3, 4, 5, 6, 7, 66, 67, 68, 69, 70, 74, 75, 76, 77]) &&
+            CareerSave.GalleryRows[1][0] == 8 && CareerSave.GalleryRows[2][0] == 201 && CareerSave.GalleryRows[3][^1] == 200,
+            "The gallery rows follow the game's wall mapper: 230 slots, never 071–073.");
+        check.That(info.GodFlags.SequenceEqual([0u, 0u]), "Both players' god flags are read, and off in the fixture.");
+        byte[] godTwo = original.ToArray();
+        godTwo[0x249A] = 1;
+        check.That(CareerSave.Inspect(godTwo).Value?.GodFlags is [0u, 1u] && CareerSave.RegionOf(0x2496) == "God flags" &&
+            CareerSave.RegionOf(0x249D) == "God flags" && CareerSave.RegionOf(0x249E) == "Career settings",
+            "Player 2's god flag at 0x249A is its own stored value, not padding.");
         ByteComparison same = CareerSave.Compare(original, original.ToArray());
         check.That(same.Equal && same.ChangedBytes == 0 && same.Ranges.Count == 0,
             "No-edit round trip is byte-for-byte identical.");
@@ -200,7 +215,7 @@ internal static class CareerSaveTests
                     edit.Goodies.Count == 1 && edit.Goodies[0].Before == before, $"Goodie {index} → {target} changes only its own dword.");
             }
         }
-        foreach (int index in new[] { -1, 233, 299, 300 })
+        foreach (int index in new[] { -1, 71, 72, 73, 233, 299, 300 })
         {
             check.That(!CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [index] = GoodieState.New })).Ok,
                 $"Goodie slot {index} cannot change.");

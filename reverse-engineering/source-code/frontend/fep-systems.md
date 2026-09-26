@@ -1,5 +1,11 @@
 # Frontend System
 
+Status: active source map with retail cross-checks
+Last updated: 2026-09-26 (RE audit: class tree, devkit cheat, SetPage, filtering, button names; runtime observations marked unrecorded)
+Summary: frontend pages, save/load pages, cheats, autosave, transitions and input constants from the pinned source, cross-checked against the retail executable where an address is given.
+Evidence: SOURCE — pinned `references/Onslaught` files cited by line; MEASURED — retail addresses read from the pristine specimen; the startup-input observations below have no recorded capture.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 ## Steam startup skip sequence
 
 Fresh Steam-binary analysis and controlled app-owned copied-runtime observation
@@ -10,17 +16,21 @@ establish both the normal input path and the retail `-skipfmv` path:
   `0x0051B660` accepts virtual action `0x2C` while the page substate at `+0x0C`
   is zero. Its process function at `0x0051B6B0` also dispatches that action for
   a full-window mouse click and otherwise can time out to attract state `-3`.
-  Some older Ghidra labels call this subobject `CFEPMultiplayerStart`; the page
-  table and function behavior establish its startup-intro role.
+  The vtable's RTTI is `.?AVCFEPIntro@@`. Some saved names still call this
+  subobject `CFEPMultiplayerStart` (for example `0x0051b610`); they are wrong.
+  The process function also dispatches `0x2C` by itself after 3.0 s when
+  `[0x00662df4]` is nonzero (`0x0051b6d4`), and the timeout to attract is
+  30.0 s (`0x0051b72f`).
 - The retail default table at `0x00514210` maps action `0x2C` to Space and
-  Enter. In copied runtime, one focused Space press advanced page `12` to the
-  letterboxed startup movie.
+  Enter (0-based rows 28 and 29). A copied-runtime observation says one focused
+  Space press advanced page `12` to the letterboxed startup movie; no capture,
+  input log or date was recorded for it, so treat it as unconfirmed.
 - The fullscreen receiver at `0x004656E0` quits playback for virtual
   `BUTTON_SKIP_CUTSCENE` (`7`), whose retail defaults include Space, Enter,
   Escape, and numpad Enter; the playback loop also accepts transient left-,
-  middle-, or right-mouse latches. A second focused Space press advanced the
-  startup movie immediately to `click to start`, after which a click entered
-  the main menu.
+  middle-, or right-mouse latches. The same unrecorded observation says a
+  second focused Space press advanced the startup movie immediately to
+  `click to start`, after which a click entered the main menu.
 
 `CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and writes
 `1` to `0x00663050`. `CLTShell__InitializeRuntimeAndLoadCoreResources`
@@ -31,7 +41,7 @@ in `CGame__RunIntroFMV` (`0x0046D890`); it is not limited to that function.
 
 In a fresh app-owned Enhanced Copy, the generated launch plan and live process
 command line were `-res 1600 900 -skipfmv`, and a runtime read confirmed
-`0x00663050 == 1`. No input was sent to the game. The first captured retail
+`0x00663050 == 1` (no capture or log of this run is recorded either). No input was sent to the game. The first captured retail
 frame after the window became available was already `click to start`. Thus the
 checked Steam build's `-skipfmv` path skips startup and level-intro FMV
 playback, but it does not bypass the click-to-start frontend interaction.
@@ -52,10 +62,13 @@ The frontend save/load system reveals critical details about save validation, ch
 ```
 CFrontEndPage (base class)
     ├── CFEPLoadGame (load game - console implementation)
-    │       └── CPCFEPLoadGame (PC - EMPTY STUB!)
-    └── CFEPSaveGame (save game - console implementation)
-            └── CPCFEPSaveGame (PC - EMPTY STUB!)
+    ├── CFEPSaveGame (save game - console implementation)
+    ├── CPCFEPLoadGame (PC - EMPTY STUB!)
+    └── CPCFEPSaveGame (PC - EMPTY STUB!)
 ```
+
+`CPCFEPLoadGame` and `CPCFEPSaveGame` derive directly from `CFrontEndPage`
+(`PCFEPLoadGame.h:6`, `PCFEPSaveGame.h:6`), not from the console pages.
 
 The console implementations (`CFEPLoadGame`, `CFEPSaveGame`) contain full save/load logic, while the PC-specific subclasses (`CPCFEPLoadGame`, `CPCFEPSaveGame`) are empty/commented stubs in this source snapshot, suggesting this internal PC snapshot was not wired for shippable save UI through these classes.
 
@@ -164,20 +177,22 @@ void CheckCheats(const char* saveName) {
 - Uses `strstr()` - code can appear **anywhere** in the save name
 - Case sensitive - must match exactly
 - Multiple cheats can be activated with a single name (e.g., "B4K42!EVAH!" enables both)
-- PS2 DevKit has all cheats enabled automatically (via `#ifdef PS2DEVKIT`)
+- On a PS2 development kit every cheat query returns true (`FEPSaveGame.cpp:556-559`)
 
 ---
 
 ### PS2 DevKit Automatic Cheat Activation
 
 ```cpp
-#ifdef PS2DEVKIT
-    // All cheats automatically enabled on PS2 development hardware
-    for (int i = 0; i < NUM_CHEATS; i++) {
-        ActivateCheat(i);
-    }
+// FEPSaveGame.cpp:556-559, inside IsCheatActive
+#if TARGET==PS2
+	if (CLIPARAMS.mDevKit)
+		return(TRUE);
 #endif
 ```
+
+It is a devkit flag checked on each query, not a loop, and there is no
+`PS2DEVKIT` macro.
 
 Development kits bypass the name check entirely, enabling all cheats unconditionally.
 
@@ -319,7 +334,7 @@ if (CAREER.Load(buffer, bytesread) == TRUE) {
 }
 ```
 
-AutoSave modes (from DXFrontend.h):
+AutoSave modes (from `Frontend.h:155-160`):
 | Mode | Value | Description |
 |------|-------|-------------|
 | `AUTO_SAVE_NOT` | 0 | Disabled |
@@ -402,7 +417,10 @@ Complete enumeration of all frontend page types:
 
 ### Page Transition System
 
-Frontend pages use a state machine for transitions:
+Frontend pages use a state machine for transitions. The states are derived
+each frame from the active page and the transition pair (`FrontEnd.cpp:680-691`).
+The enum's header is not in the partial source, so the values below are
+unverified:
 
 | State | Value | Description |
 |-------|-------|-------------|
@@ -411,23 +429,16 @@ Frontend pages use a state machine for transitions:
 | `FEPS_TRANSITIONING_FROM` | 2 | Page is fading out |
 | `FEPS_TRANSITIONING_TO` | 3 | Page is fading in |
 
-**SetPage(page, time):**
-```cpp
-void CFrontEnd::SetPage(EFrontEndPage page, float time) {
-    // If time == 0: instant switch (no animation)
-    // If time > 0: animated transition over 'time' seconds
-    if (time == 0.0f) {
-        // Immediate state change
-        mCurrentPage->SetState(FEPS_INACTIVE);
-        mNextPage->SetState(FEPS_ACTIVE);
-    } else {
-        // Start animated transition
-        mCurrentPage->SetState(FEPS_TRANSITIONING_FROM);
-        mNextPage->SetState(FEPS_TRANSITIONING_TO);
-        mTransitionTime = time;
-    }
-}
-```
+**SetPage(page, time)** (`FrontEnd.cpp:563-592`; retail `CFrontEnd__SetPage`
+`0x00466ae0` takes `(int page, int time)`):
+- `time` is an integer (`SINT`). A page already in transition is first reset to
+  its transition source.
+- With `time == 0` it calls the old page's `DeActiveNotification`, then the new
+  page's `TransitionNotification` and `ActiveNotification`, and makes it active.
+- Otherwise it records the from/to pages, zeroes the transition count, stores
+  the time, sets the active page to `FEP_TRANSITION` and calls the new page's
+  `TransitionNotification`. Pages have no `SetState`; the FEPS state comes from
+  the loop above.
 
 ---
 
@@ -479,7 +490,7 @@ BOOL IsMultiplayerLevel(int worldNumber) {
 }
 ```
 
-Wave406 saved retail Ghidra evidence for `CGame__IsMultiplayer` at `0x004725d0`: the helper reads the current-level field at `CGame+0x2a0` and checks the exact `850..899` range. Treat any `900-905` race/frontend behavior as separate from this CGame helper until separately read back.
+Wave406 saved retail Ghidra evidence for `CGame__IsMultiplayer` at `0x004725d0`: the helper reads `mCurrentlyRunningLevel` at `CGame+0x2a0` (`game.cpp:4011-4013`) and checks the exact `850..899` range. Treat any `900-905` race/frontend behavior as separate from this CGame helper until separately read back.
 
 ---
 
@@ -489,8 +500,8 @@ Available only in development builds:
 
 | Button Constant | Value | Function |
 |-----------------|-------|----------|
-| `BUTTON_SAVE_CAREER` | - | Direct career save (bypasses menu) |
-| `BUTTON_LOAD_CAREER` | - | Direct career load (bypasses menu) |
+| `BUTTON_SAVE_CAREER` | 47 | Direct career save (bypasses menu) |
+| `BUTTON_LOAD_CAREER` | 48 | Direct career load (bypasses menu) |
 | `BUTTON_LOG_CAREER` | 13 | Dump career struct to debug log |
 
 These allow developers to quickly save/load without navigating menus during testing.
@@ -505,11 +516,14 @@ These allow developers to quickly save/load without navigating menus during test
 | `BUTTON_FRONTEND_MENU_DOWN` | 43 | Navigate menu down |
 | `BUTTON_FRONTEND_MENU_SELECT` | 44 | Confirm selection |
 | `BUTTON_FRONTEND_CHEAT` | 45 | Cheat code entry mode |
-| `BUTTON_FRONTEND_BACK` | 46 | Go back / cancel |
-| `BUTTON_FRONTEND_LEFT` | 54 | Navigate left |
-| `BUTTON_FRONTEND_RIGHT` | 55 | Navigate right |
-| `BUTTON_FRONTEND_SKIP` | 60 | Skip cutscene / intro |
-| `BUTTON_FRONTEND_SPECIAL` | 63 | Context-sensitive action |
+| `BUTTON_FRONTEND_MENU_BACK` | 46 | Go back / cancel |
+| `BUTTON_FRONTEND_MENU_LEFT` | 54 | Navigate left |
+| `BUTTON_FRONTEND_MENU_RIGHT` | 55 | Navigate right |
+| `BUTTON_FRONTEND_MENU_SKIP` | 60 | Frontend skip; no default row binds it |
+| `BUTTON_FRONTEND_MENU_SPECIAL` | 63 | Context-sensitive action |
+
+Names and values are from `Controller.h:142-163`. The retail FMV skip is
+`BUTTON_SKIP_CUTSCENE` (7, `Controller.h:98`), tested at `0x004656e4`.
 
 These virtual buttons are mapped to different physical inputs per platform (keyboard keys, gamepad buttons).
 
@@ -572,7 +586,7 @@ All frontend rendering uses a **fixed 640x480 virtual coordinate system**, regar
 
 | Setting | PC (CPCFrontEnd) | Xbox/DX (CDXFrontEnd) |
 |---------|------------------|----------------------|
-| Texture filtering | `D3DTEXF_NONE` | `D3DTEXF_POINT` |
+| Texture filtering | `D3DTEXF_NONE` unless built for Xbox (`PCFrontend.cpp:44-50`) | `D3DTEXF_NONE` unless built for Xbox (`DXFrontend.cpp:111-117`) |
 | Clear color | `0x000f0f2f` | `0x001f1f3f` |
 | AutoSave UI | Skipped (direct to debriefing) | Full UI flow |
 

@@ -1,7 +1,7 @@
 # The 34 newly admitted MissionScript functions now have bounded static contracts
 
 Status: reviewed static-contract addendum; live metadata promotion remains separate
-Last updated: 2026-08-13
+Last updated: 2026-09-26 (RE audit: counts and authority stated as of 2026-08-13)
 Evidence: MEASURED — exact pristine function bodies, instruction listings,
 registry records, current Ghidra readback, and instruction-local source plates;
 INFERRED — narrow mechanism wording where an indirect call or analyst-labelled
@@ -10,11 +10,13 @@ callee behavior, runtime reachability, source equivalence, and rebuild parity.
 Verdict: all 34 callable entries added to Ghidra on 2026-08-13 now have a
 row-specific `C1_CANDIDATE_PARTIAL` / `STATIC_HYPOTHESIS_ONLY` contract and a
 cheapest falsifier. Joined with the sealed dated 8,136-row closure, this gives
-bounded static-envelope coverage for all 8,170 currently saved internal
-functions: 8,163 C1 and seven C2 in this static-accounting projection, with zero
-static `OPAQUE`. This does not change immutable Generation 23, which remains the
-runtime/campaign authority at 8,126 functions, 217 C1, ten C2, and 7,899
-semantic `OPAQUE` functions.
+bounded static-envelope coverage for all 8,170 internal functions saved on
+2026-08-13: 8,163 C1 and seven C2 in this static-accounting projection, with
+zero static `OPAQUE`. It did not change immutable Generation 23, the
+runtime/campaign authority on that date (8,126 functions, 217 C1, ten C2 and
+7,899 semantic `OPAQUE` functions). The working project has gained functions
+since; `developer_state.json` → `current_re_authority` owns the current
+authority.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 

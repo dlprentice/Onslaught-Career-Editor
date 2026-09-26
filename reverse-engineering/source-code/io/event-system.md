@@ -1,7 +1,7 @@
 # Event scheduler and active readers
 
 Status: active — source map and bounded retail static contract
-Last updated: 2026-09-07
+Last updated: 2026-09-26 (RE audit: the float64 delay product and Update's inlined advance)
 Summary: event admission, dispatch order, recycling and reader lifetimes; exact
 scheduler body checks support the Core implementation without establishing
 whole-game runtime parity.
@@ -68,16 +68,22 @@ processing cursor and puts a new event after existing equal-time events.
 Relative `AddEvent` (`eventmanager.cpp:143-146`) adds the current manager time
 on the x87 stack, then **stores the sum as float32 at `0x0044b2f6` before the
 call at `0x0044b2fb`**. It is not an unrounded tail-call forwarder. The
-absolute scheduler's delay calculation has no intermediate float32 stores;
-Core uses double intermediates for the expected 53-bit precision mode. This
+absolute scheduler's delay calculation has no intermediate float32 stores:
+the scaled product is stored as float64 (`fstp qword [esp]`, `0x0044b41a`)
+and passed to the floor helper (`0x0055dfe7`), so a 64-bit-precision model
+must round it to double there. Core uses double intermediates for the expected
+53-bit precision mode. This
 body alone does not establish every caller's runtime x87 control word.
 
 `AdvanceTime` (`eventmanager.cpp:293-304`, `0x0044b600`) increments the frame
 count, stores `frameCount * 0.05f` as float32, marks the old ring slot ready,
 and rotates the current slot modulo 200. It does not accumulate repeated
 `+0.05f`. Source returns `void`; an incidental register value after the modulo
-operation is not a supported wrap-flag return contract. `Update` calls
-`AdvanceTime` and then `Flush`.
+operation is not a supported wrap-flag return contract. In the source,
+`Update` calls `AdvanceTime` and then `Flush`. In the executable, `Update`
+(`0x0044b5c0`) inlines the advance (`fild`, `fmul 0.05f`, `fstp [ecx+8]` at
+`0x0044b5e4-0x0044b5f0`) and then calls `Flush` (`0x0044b5f6`); `AdvanceTime`'s
+only caller is `CGame__Update` (`0x0046eb5d`).
 
 ## Dispatch and reuse
 

@@ -1,13 +1,29 @@
 # CBattleEngine__VFunc_104_0040e7d0
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static function contract for `CBattleEngine__VFunc_104_0040e7d0` at `0x0040e7d0`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: unknown — no SOURCE_* crosswalk row in lane brief | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0040e7d0`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **No wrong claim found.** The packet's `__fastcall` is machine-identical to a member call
+  here, because no stack argument is involved.
+- **Identity.** This is `CBattleEngine::CanBeLocked()` (`BattleEngine.cpp:3388-3410`):
+  - `mStealth` (`+0x5d8`) above 0 returns 0 (`0x0040e7d0-0x0040e7e5`).
+  - In the jet state (`+0x260` = 3), the jet part (`+0x57c`) returns 0 while looping (`+0x2c`)
+    or rolling (`+0x48` above 0) (`0x0040e7f1-0x0040e815`).
+  - In the walker state (2), the walker part (`+0x578`) returns 0 during a special move
+    (`0x004135d0`; `0x0040e81b-0x0040e82c`).
+  - Otherwise it returns 1.
 
 ## Identity
 - Body `[0x0040e7d0,0x0040e832]`, 99 bytes. Raw pristine-body SHA-256 `32cfd7dcf39df7cf0c9a0b0e4bb497b4b9a2cf4a4cd2c2147c6fa3f6acb9351f`; closure range SHA-256 `0f4d46360781eebd9bce4a6a8659e50046e04020b8b02d556d36fe379086195f`; packet range-plus-bytes SHA-256 `c8eab0755290966f1eb628cf4e9d19381ddc9c1db1d4255edf9df2273f9760b3`. All three use the same exact inclusive range; no padding or tail bytes are included.

@@ -1,18 +1,18 @@
 # ProjectileBurst__SpawnFromCurrentPreset
 
 Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (RE audit: AddShockShake's source range, the Euler control's scope and the fourth words)
 Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
 Evidence: MEASURED — objdump of the pristine body with every callee, slot and constant read at its address on 2026-09-25; field meanings from the physics value maps; no runtime replay of this body.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees crosswalk to `references/Onslaught/BattleEngine.cpp:1094-1113` and `:2713-2737` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees crosswalk to `references/Onslaught/BattleEngine.cpp:1094-1116` and `:2713-2737` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x005069f0`
 
 ## Identity
 - Body `[0x005069f0,0x005078ab]`, 3,772 bytes ending in `ret` (`c3`); raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`, recomputed 2026-09-25.
 - Callers: `CWeapon__HandleFireBurstEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
-- The saved names of four Battle Engine callees describe them poorly, both in the tracked table and in the working project's 2026-09-22 export: `CBattleEngine__CanSpawnBurstForResolvedEntry` is `WeaponFired`, `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` is `RecoilWeapon`, `CBattleEngine__RandomizeOffsets4B8_4C0` is `AddShockShake` and `CBattleEngine__DisplayLock` tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is already `CRT__AsinDispatch_ST0` in the working project.
+- Three Battle Engine callees had saved names that described them poorly; the RE record audit renamed them in the working project on 2026-09-26: `CBattleEngine__WeaponFired` (was `CanSpawnBurstForResolvedEntry`), `CBattleEngine__RecoilWeapon` (was `RandomizeBurstOffsetsAndAccumulateRange`) and `CBattleEngine__AddShockShake` (was `RandomizeOffsets4B8_4C0`). The tracked 2026-08-31 table still has the old names. `CBattleEngine__DisplayLock` is the source name (`BattleEngine.cpp:980-993`): it tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is `CRT__AsinDispatch_ST0` in the working project.
 
 ## Calling convention
 `__thiscall` with the firing `CWeapon` in `ecx` (kept in `ebp`), no stack arguments, one `ret`. Returns in `eax`.
@@ -63,7 +63,7 @@ One call is one burst event. In order:
    13. `CWeaponClip`: create object `0x15` and take three draws (`0x005076f6`-`0x00507710`).
    14. Battle Engine owner: `RecoilWeapon` (`0x00507871`).
 
-`RecoilWeapon` calls `AddShockShake(CWeaponPower)` and adds 2 × power to `+0x604` (`BattleEngine.cpp:2732-2737`). `AddShockShake` (`BattleEngine.cpp:1094-1113`):
+`RecoilWeapon` calls `AddShockShake(CWeaponPower)` and adds 2 × power to `+0x604` (`BattleEngine.cpp:2732-2737`). `AddShockShake` (`BattleEngine.cpp:1094-1116`):
 - returns when the amount is below the double 0.001 (`0x00407944`, constant `0x005d8bc8`);
 - caps the amount at 0.75 (`0x005d8bc4`);
 - takes three draws, each (r mod 32)/(16/amount) − amount, into yaw `+0x4b8`, pitch `+0x4bc` and roll `+0x4c0`, and zeroes `+0x4c4`;
@@ -85,7 +85,7 @@ One call is one burst event. In order:
 ## Runtime corroboration (TTD, bounded)
 - The 2026-08-23 draft recorded coverage presence of this body in 7/10, 7/10, 8/10, 2/10, 5/10, 5/11, 2/7, 1/4 and 2/3 sessions of `contract-round-impact` batches 1-9 (level openings, Level 521 native runs and the Level 742 pilot); batch 10 had no coverage bitmap. Coverage proves execution only.
 - No capture has replayed the per-round order, the draw count or the recoil in this contract.
-- Original-code control `local-data/test-runs/player-launch-20260925/euler_constructors_control.py` ran the unchanged `0x004f8140` (with `0x00401ec0`, `0x00401f10`, `0x0040d320`) and `0x004062d0` under control words `0x027f` and `0x007f`. For every tested argument, `0x004f8140(a, b, c)` equals `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096), up to the sign of zero words; the integer version leaves each row's fourth word unwritten. Receipt `euler-run-9ks6dz5x/euler_constructors.json` SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`; ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`.
+- Original-code control `local-data/test-runs/player-launch-20260925/euler_constructors_control.py` ran the unchanged `0x004f8140` (with `0x00401ec0`, `0x00401f10`, `0x0040d320`) and `0x004062d0` under control words `0x027f` and `0x007f`. At zero, and at 1 or 1024 units on one axis, under both control words, the nine basis words of `0x004f8140(a, b, c)` equal `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096), up to the sign of zero words. The (100, 200, 300) case has no exactly matching float case in the receipt, so other angles are not established: each cosine is of the product as computed, and the sine is of the float32-rounded product for the third and second arguments (`0x004f8174-0x004f8182`, `0x004f81fb-0x004f826e`) but of the unrounded product for the first (`0x004f83e4-0x004f83f8`). The integer version writes all 12 destination words; each row's fourth word is copied from an unwritten stack word of the basis multiply `0x0040d320` (0, 0 and `0x004f8458` in the control). Receipt `euler-run-9ks6dz5x/euler_constructors.json` SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`; ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`.
 
 ## Evidence
 - Pristine specimen objdump over the body and the callees named above, 2026-09-25.
