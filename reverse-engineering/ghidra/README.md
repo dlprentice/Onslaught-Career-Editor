@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[NvTriStrip library identities](#re-audit-nvtristrip-library-identities--september-26);
+[verified library comments](#re-audit-verified-library-comments--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,39 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified library comments — September 26
+
+The [manifest](../../tools/cohort-specs/library-verified-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/library-verified-20260926.spec.tsv) refresh 191 library evidence
+comments and their verification tags, with no renames. Sixty previously
+unaudited comments receive specimen-backed identity evidence; 129 earlier
+proofs change with the combined library match and corrected ownership logic;
+two additional PE import thunks receive explicit local-body evidence.
+The planner leaves 1,376 already matching comments alone and excludes the
+program-owned WinMain and unresolved names or bodies.
+
+The independent checker uses LLVM COFF parsing, GNU PE imports and its own
+byte/reference analysis. All 1,542 admitted code comparisons pass, with 118
+verified data sections, no conflicting global references, 14 checked layout
+claims and three import thunks. A first attempt missed a second reference to
+the type_info vtable because it traversed data only once. Root independently
+verified the pristine RTTI chain; the corrected fixed-point traversal resolves
+the discrepancy without weakening the required count. The original failure
+is retained in the private owner. The first 190-row seal was rejected before live application because reference-only `_wcsdup` was incorrectly described as byte-identical to `_strdup`. Its seal and rehearsal remain in `rejected-v1/`. Root reproduced the mismatch and added regression cases before this replacement repeated the full gate. The comments distinguish folded bodies,
+layout-supported ownership and import thunks from imported implementations.
+They do not certify current Ghidra prototypes or runtime semantics.
+
+Exactly 191 library evidence comments and verification tag sets corrected. Every function name, symbol source, prototype, storage, parameter, local, type, bookmark, instruction and body is preserved, as are all 8,140 non-target function rows. The only program metric change is commentsSha256. All nine live exports equal the separately reopened rehearsal.
+Fresh independent PRE restore, isolated dry/apply/readback and sealed readback,
+five byte-stable refusal controls, independent read-only review, live readback
+and independently restored POST recovery passed.
+
+Working identity: `db.18664`, 18 files / 121,391,988 bytes,
+inventory SHA-256 `55b2bffa9d76a3eeea15acd0f50ae94a774539bb156bc21141cb0ede02761025`; main database 71,090,176 bytes,
+SHA-256 `0821893c0b1b4f9d9900bea41b3635e8457111a69db0c1194420fc8652323bba`. PRE is the freshly matched NvTriStrip POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-library-verified/post-working`. The tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-verified/`.
 
 ## RE-audit NvTriStrip library identities — September 26
 

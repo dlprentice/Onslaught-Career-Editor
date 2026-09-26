@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: third game-label and NvTriStrip cohorts promoted; library-comment review next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: three prepared cohorts promoted; game input/startup audit next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -252,35 +252,35 @@ return-size exceptions; the 37 absent/transitive-call notes are comparison
 limitations, not 37 proven behavioral differences. This is no runtime/rendering
 acceptance claim.
 
-Remaining prepared work is in
-`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`.
-Each folder reads its predecessor's POST through `cohort_chain.py`; drafts are
-leads to re-derive, not approved mutation manifests.
-1. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose
-   saved names are proven but whose comments are old or wrong: the 60 names that
-   were right before the audit, and D3DX-cohort comments the CRT review showed are
-   wrong (`0x00574577`, `0x00574abb` cite unlinked objects; `0x00589094` omits a
-   folded copy). Extend and independently check its draft before sealing; do not
-   skip a row merely because it already has an audit tag. The ownership fix now
-   checks both available section/offset bounds, excludes ambiguous/folded layout
-   anchors and keeps proof, relocation indexing and caller-only citations on
-   reference-supported representatives. The 31-test suite includes reproduced
-   counterexamples. A fresh run on the current export proposes no name changes;
-   it selects the folded cpudetect member at `0x00589094` and withdraws an
-   unsupported retained-section claim at `0x005b1c30`. The first 190-row seal was
-   rejected before live application: reference placement falsely implied that
-   `_wcsdup` and `_strdup` have identical bodies. Their pinned code differs in
-   length and character-width arithmetic. The matcher now separates compatible
-   complete-body aliases, typed names at one COFF entry, and reference-only
-   leads; its table, proof text and accepted saved names follow that distinction.
-   Later ownership evidence also withdraws invalidated aliases. The original
-   seal and rehearsal remain in `library-verified/rejected-v1/`.
-   The corrected 191-comment plan proposes no renames; independent LLVM/GNU
-   checks pass all 1,542 admitted code comparisons, 118 data sections, 14 layout
-   assertions and 15 complete folded-alias comparisons, while explicitly
-   rejecting the `_wcsdup` counterexample. Fresh PRE, resealing, rehearsal and
-   promotion remain to be completed; the live database is still the NvTriStrip
-   POST. These are static evidence checks, not prototype or runtime acceptance.
+The three prepared cohorts are now promoted. Their receipts remain under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`; each reads its
+predecessor's POST through `cohort_chain.py`.
+The [library-comment cohort](reverse-engineering/ghidra/README.md#re-audit-verified-library-comments--september-26)
+corrected 191 evidence comments and tag sets without changing any names,
+prototypes or code bodies. It re-grounded 60 previously unaudited comments,
+refreshed 129 changed library proofs and documented two further import thunks;
+1,376 already matching comments were left alone. Independent LLVM/GNU checks
+covered 1,542 admitted code comparisons, 118 data sections, 14 layout assertions,
+15 complete folded-alias comparisons and three import thunks. All nine live
+exports equal the separately reopened rehearsal; all 8,140 non-target function
+rows and six protected exports are unchanged. Fresh PRE recovery, five no-write
+refusal controls, independent review and independent Archive A POST restoration
+passed. These are static identity/evidence checks, not ABI or runtime acceptance.
+
+The matcher fixes behind this cohort have 31 passing focused tests. Ownership
+now checks both available section/offset bounds and excludes ambiguous/folded
+anchors. Alias evidence distinguishes compatible complete bodies, typed names
+at one COFF entry and reference-only leads; later evidence can withdraw aliases.
+The first 190-row seal was rejected before live application because it falsely
+described `_wcsdup` as byte-identical to `_strdup`. Root reproduced their different
+lengths and character-width arithmetic. That seal and rehearsal remain in
+`library-verified/rejected-v1/`; the replacement repeated the full gate.
+
+Next: re-ground controller input and startup identities, beginning with the
+CPCController constructor, key-query ABI/cache lifetime, command-line parsing
+and font initialization. Reconcile these with existing consumer contracts before
+moving through the broader game-name queue below. Source signatures and a label
+match do not establish the retail argument count or behavior.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
