@@ -174,6 +174,7 @@ export before calling a label wrong.
 | `0040c340` | `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` | `CBattleEngine::RecoilWeapon` | same |
 | `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
 | `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
+| `00407a50` | `CBattleEngine__UpdateCameraVectorsAndInput` | `CBattleEngine::UpdateRotation` (builds `+0x3c` from yaw, pitch, roll and the shake terms) | [aiming](reverse-engineering/game-mechanics/battle-engine-aiming.md#launch-position-and-direction) |
 
 ### RE record audit — requested September 25
 
