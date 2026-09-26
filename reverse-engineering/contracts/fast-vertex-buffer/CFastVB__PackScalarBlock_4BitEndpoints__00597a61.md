@@ -1,13 +1,17 @@
 # CFastVB__PackScalarBlock_4BitEndpoints
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: superseded 2026-09-26: linked library code, not game code (see Identity)
+Last updated: 2026-09-26
 Summary: specimen-bound static contract for `CFastVB__PackScalarBlock_4BitEndpoints` at `0x00597a61` in the call-connected endpoint solving and scalar block-index quantization support; exact identity, structured connectivity, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — exact-base current name/register identity, new read-only READY packet/decompile, structured edges, closure range, and independently recomputed pristine body bytes; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00597a61`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXTex__D3DXEncodeDXT3`. Linked library code: long __stdcall D3DXTex::D3DXEncodeDXT3(unsigned char *, struct D3DXCOLOR const *), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\dxtn.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Identity
 - Body `[0x00597a61,0x00597b86]`, 294 bytes, 102 closure instructions. Raw pristine-body SHA-256 `8c65d2a54979a8169e02a210e1ea8056cdbc39f589f0305441a7acbc1404b084`; closure range SHA-256 `8b8c5a0d6496a4a1c395d6d9a164259b8e4948ac4bf43c56bdc53fc7ff5dfa28`; packet range-plus-bytes SHA-256 `5ea7efc453c6904344197bb8ef4273e021fc54b81b2b0d31ceaca630fbebefbe`. All three were independently recomputed over the exact single contiguous inclusive range.

@@ -178,9 +178,12 @@ def object_functions(coff: Coff) -> list[ObjFunc]:
     # MASM objects carry .bf records at each procedure's start and type their local labels as
     # functions too; there only the symbols at .bf values start functions.
     begins: dict[int, set[int]] = defaultdict(set)
+    ends: dict[int, list[int]] = defaultdict(list)
     for s in coff.symbols.values():
         if s.storage == IMAGE_SYM_CLASS_FUNCTION and s.name == ".bf":
             begins[s.section].add(s.value)
+        elif s.storage == IMAGE_SYM_CLASS_FUNCTION and s.name == ".ef":
+            ends[s.section].append(s.value)
     out = []
     for secnum, syms in by_sec.items():
         sec = coff.sections[secnum]
@@ -194,6 +197,8 @@ def object_functions(coff: Coff) -> list[ObjFunc]:
         chosen = sorted(first.values(), key=lambda s: s.value)
         for i, s in enumerate(chosen):
             end = chosen[i + 1].value if i + 1 < len(chosen) else len(sec.data)
+            # a procedure's .ef record marks its exclusive end; the bytes after it are alignment fill
+            end = min([e for e in ends.get(secnum, []) if s.value < e <= end], default=end)
             if end > s.value:
                 out.append(ObjFunc(coff.member, secnum, s.value, end, s.name, s.storage,
                                    bool(sec.chars & IMAGE_SCN_LNK_COMDAT), secnum))
@@ -726,6 +731,67 @@ class Resolver:
             if va not in self.decided:
                 self.decided[va] = {"how": "ambiguous", "cands": [c for c in row if not c.conflicts] or row}
 
+    def reference_index(self) -> None:
+        """Every relocation field of the decided entries (one candidate each) and of the verified data sections,
+        keyed by what it implies: (symbol key, target) -> [(source, site)]; and the entries whose own symbols place
+        a key at a target."""
+        self.fields: dict = defaultdict(list)
+        self.owners: dict = defaultdict(set)
+        for va, d in self.decided.items():
+            if d["how"] in ("ambiguous", "called-no-bytes") or not d["cands"]:
+                continue
+            c = d["cands"][0]
+            coff = self.lib.objects[c.fn.member]
+            for off, sym, target in relocation_targets(coff, coff.sections[c.fn.section], c.fn.start, c.fn.end,
+                                                       va - c.fn.start, self.image.u32, self.image.base):
+                self.fields[(symbol_key(coff, sym), target)].append((va, va + off - c.fn.start))
+            for x in d["cands"]:
+                for k, v in x.own.items():
+                    self.owners[(k, v)].add(va)
+        for member, idx, _name, base, _n, same in self.data_checked:
+            if not same:
+                continue
+            coff = self.lib.objects[member]
+            sec = coff.sections[idx]
+            for off, sym, target in relocation_targets(coff, sec, 0, len(sec.data), base, self.image.u32,
+                                                       self.image.base):
+                self.fields[(symbol_key(coff, sym), target)].append((("data", member, idx), base + off))
+
+    def field_evidence(self, va: int, c: Candidate) -> tuple[int, int, int, int]:
+        """(fields, confirmed elsewhere, inside the function itself, reached only from here) for an entry."""
+        coff = self.lib.objects[c.fn.member]
+        length = c.fn.end - c.fn.start
+        total = confirmed = internal = alone = 0
+        for off, sym, target in relocation_targets(coff, coff.sections[c.fn.section], c.fn.start, c.fn.end,
+                                                   va - c.fn.start, self.image.u32, self.image.base):
+            total += 1
+            key = symbol_key(coff, sym)
+            if va <= target < va + length:
+                internal += 1
+            elif {src for src, _site in self.fields.get((key, target), [])} - {va} or \
+                    self.owners.get((key, target), set()) - {va}:
+                confirmed += 1
+            else:
+                alone += 1
+        return total, confirmed, internal, alone
+
+    def sites(self, keys: list, target: int, exclude: int | None = None) -> tuple[int, int, int]:
+        """(relocation fields, distinct matched functions, verified data entries) that reach target through any
+        of keys, leaving out the entry `exclude`."""
+        fields = funcs = data = 0
+        seen = set()
+        for key in keys:
+            for src, _site in self.fields.get((key, target), []):
+                if src == exclude:
+                    continue
+                fields += 1
+                if isinstance(src, tuple):
+                    data += 1
+                elif src not in seen:
+                    seen.add(src)
+                    funcs += 1
+        return fields, funcs, data
+
     def _sym(self, c: Candidate) -> CoffSymbol:
         coff = self.lib.objects[c.fn.member]
         return next(s for s in coff.symbols.values()
@@ -762,20 +828,33 @@ def layout_violations(decided: dict[int, dict]) -> list[tuple[int, int, str]]:
 # ---------------------------------------------------------------------------
 
 AUDIT_DATE = "2026-09-26"
-_HOW = {
-    "unique": "No other function in the library has these bytes.",
-    "relocations": "Other library functions share these bytes; only this one's relocation targets agree with the rest "
-                   "of the match.",
-    "layout": "Other library functions share these bytes; the linker keeps each object's sections in order, and only "
-              "this one's section lies between those of its matched neighbours.",
-    "unique-short": "No other library function with this much fixed code matches here, and its neighbours come from "
-                    "the same object.",
-}
 
 
 def _equivalent(current: str, proposed: str) -> bool:
     norm = lambda t: re.sub(r"[`'_]", "", t.lower()).replace("constructor", "ctor").replace("destructor", "dtor")
     return norm(current) == norm(proposed)
+
+
+def _plural(n: int, word: str, suffix: str = "s") -> str:
+    return f"{n} {word}{'' if n == 1 else suffix}"
+
+
+def _series(items: list[str], limit: int = 3) -> str:
+    shown = items[:limit]
+    more = f" and {len(items) - limit} more" if len(items) > limit else ""
+    return ", ".join(shown) + more
+
+
+def _refs(fields: int, funcs: int, data: int) -> str:
+    """'N references (from F matched functions and D verified data entries)'."""
+    src = [_plural(funcs, "matched function")] if funcs else []
+    if data:
+        src.append("1 verified data entry" if data == 1 else f"{data} verified data entries")
+    return _plural(fields, "reference") + (f" (from {' and '.join(src)})" if src else "")
+
+
+def _land(n: int) -> str:
+    return "lands" if n == 1 else "land"
 
 
 def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib_label: str) -> list[dict]:
@@ -784,13 +863,11 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
     Each proposal carries its evidence comment; names already equal to the proven one are left alone."""
     out = []
     pin = f"{lib_label} (SHA-256 {res.lib.sha256})"
+    res.reference_index()
     by_addr = defaultdict(list)
     for k, a in res.pool.items():
         if k[0] == "g" and a in rows and not k[1].startswith(("__imp_", "$", "??_C@")):
             by_addr[a].append(k[1])
-
-    def votes(sym: str) -> int:
-        return sum(res.votes[("g", sym)].values())
 
     def former(cur: dict) -> str:
         if cur.get("nameSource") == "DEFAULT":
@@ -803,11 +880,7 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         if d["how"] in ("ambiguous", "called-no-bytes") or not d["cands"]:
             continue
         c = d["cands"][0]
-        coff = res.lib.objects[c.fn.member]
-        sec = coff.sections[c.fn.section]
         length = c.fn.end - c.fn.start
-        nrel = sum(1 for off, _s, _t in sec.relocs if c.fn.start <= off < c.fn.end)
-        agree = res._score(c)[0]
         sym = c.fn.symbol
         dem = names.get(sym, sym)
         new = flat_name(sym, names)
@@ -815,25 +888,67 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         cur = rows.get(va)
         if cur is None:
             continue
-        rel = (f" apart from its {nrel} relocation field{'s' if nrel != 1 else ''}, and every relocation resolves "
-               f"consistently with the rest of the match ({agree} of them to addresses that other matches "
-               f"confirm)") if nrel else " (it has no relocations)"
-        if d["how"] == "folded":
-            aliases = [flat_name(x, names) for x in d.get("aliases", [])]
-            kept = f" The object section placed here is {flat_name(d['kept'], names)}'s." if d.get("kept") else ""
-            how = (f"The linker folded identical bodies into this one: the library's references to "
-                   f"{', '.join(aliases)} land here too, so it serves all of them.{kept}")
-        elif d["how"] == "called":
-            n = votes(sym)
-            how = (f"Other library functions share these bytes; the library code's {n} reference{'s' if n != 1 else ''} "
-                   f"to {sym} land{'' if n != 1 else 's'} here.")
+        total, confirmed, internal, alone = res.field_evidence(va, c)
+        if total:
+            parts = []
+            if confirmed:
+                parts.append("1 reaches a target that other matched code or verified data also reaches" if confirmed == 1
+                             else f"{confirmed} reach targets that other matched code or verified data also reach")
+            if internal:
+                parts.append(f"{internal} point{'s' if internal == 1 else ''} inside the function itself")
+            if alone:
+                parts.append("1 reaches a target that no other match names" if alone == 1
+                             else f"{alone} reach targets that no other match names")
+            rel = (f" apart from its {_plural(total, 'relocation field')}. Every field resolves consistently with "
+                   f"the rest of the match: {'; '.join(parts)}")
         else:
-            how = _HOW[d["how"]]
-        text = (f"Linked library code: {dem}, from member {c.fn.member} of the static library {pin}. Proof: bytes "
+            rel = " (it has no relocations)"
+        members = sorted({x.fn.member for x in d["cands"] if x.fn.symbol == sym})
+        where = f"member {c.fn.member}" + (f"; {len(members)} members define it identically" if len(members) > 1 else "")
+        folded = [flat_name(x, names) for x in d.get("aliases", [])]
+        here = res.cands.get(va, [])
+        rivals = sorted({flat_name(x.fn.symbol, names) for x in here} - {new} - set(folded))
+        overloads = sorted({x.fn.symbol for x in here if x.fn.symbol != sym and flat_name(x.fn.symbol, names) == new})
+        also = sorted(set(by_addr.get(va, [])) - {x.fn.symbol for x in d["cands"]} - set(d.get("aliases", [])))
+        ref_fields, ref_funcs, ref_data = res.sites([("g", sym)], va, exclude=va)
+        short = f"Its fixed code is short ({c.fixed} bytes)"
+        if d["how"] == "folded":
+            af, afn, ad = res.sites([("g", x) for x in [sym] + d.get("aliases", [])], va, exclude=va)
+            kept = f" The object section placed here is {flat_name(d['kept'], names)}'s." if d.get("kept") else ""
+            how = (f"The linker folded identical bodies into this one: {', '.join(folded)} have the same bytes, and "
+                   f"the library's {_refs(af, afn, ad)} to them and to this name all {_land(af)} here.{kept}")
+        elif d["how"] == "called":
+            lead = f"Other library functions share these bytes ({_series(rivals)})" if rivals else short
+            how = f"{lead}; the library code's {_refs(ref_fields, ref_funcs, ref_data)} to {sym} {_land(ref_fields)} here."
+        elif d["how"] == "relocations":
+            how = (f"Other library functions share these bytes ({_series(rivals)}); only this one's relocation targets "
+                   f"agree with the rest of the match." if rivals else f"{short}, so its relocations decide it.")
+        elif d["how"] == "layout":
+            how = (f"Other library functions share these bytes ({_series(rivals)}); the linker keeps each object's "
+                   f"sections in order, and only this one's section lies between those of its matched neighbours."
+                   if rivals else
+                   f"{short}; the linker keeps each object's sections in order, and its section lies between those of "
+                   f"its matched neighbours.")
+        elif rivals:
+            how = (f"Other library functions share these bytes ({_series(rivals)}), but their relocations are "
+                   f"inconsistent here.")
+        else:
+            how = "" if overloads else "No other function in the library has these bytes."
+        if overloads:
+            how += (f" Its bytes also match {_plural(len(overloads), 'other symbol')} with the same name "
+                    f"({_series(overloads, 2)}); the name is the same either way.")
+        if also:
+            af, afn, ad = res.sites([("g", x) for x in also], va)
+            how += f" The same address is also named {', '.join(flat_name(x, names) for x in also)}"
+            how += (f"; the library's {_refs(af, afn, ad)} to {'that name' if len(also) == 1 else 'those names'} "
+                    f"{_land(af)} here too." if af else ".")
+        how = how.strip()
+        text = (f"Linked library code: {dem}, from the static library {pin}, {where}. Proof: bytes "
                 f"[{va:08x},{va + length:08x}) of the pristine executable equal the object code of {sym} byte for "
                 f"byte{rel}. {how} Matched by tools/re_lib_match.py in the RE record audit ({AUDIT_DATE}).{former(cur)}")
+        folded_here = d["how"] == "folded" or any(x in res.code_symbols for x in also)
         tags = ["library-code", "d3dx9-lib", "re-audit-20260926", "name-corrected-20260926"] + \
-            (["linker-folded"] if d["how"] == "folded" else [])
+            (["linker-folded"] if folded_here else [])
         out.append({"address": va, "current": cur["name"], "source": cur["nameSource"], "proposed": new,
                     "how": d["how"], "comment": text, "tags": tags, "keepTags": False})
     # fragments: entries Ghidra split off inside a matched body
@@ -860,12 +975,12 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str], lib
         syms = sorted(by_addr[va], key=lambda x: (len(flat_name(x, names)), flat_name(x, names)))
         sym = syms[0]
         also = f" (also reached as {', '.join(syms[1:])})" if len(syms) > 1 else ""
-        n = sum(votes(x) for x in syms)
+        fields, funcs, data = res.sites([("g", x) for x in syms], va)
         what = "Linked library function" if library else "The program's own definition of"
-        where = "and every one of them lands here" if n != 1 else "and it lands here"
-        text = (f"{what} {names.get(sym, sym)}{also}. Proof: the object code of the static library {pin} calls "
-                f"or references {sym} at {n} site{'s' if n != 1 else ''} inside functions matched byte for byte "
-                f"elsewhere in this executable, {where} (tools/re_lib_match.py, RE record audit "
+        refs = " or ".join(syms)
+        text = (f"{what} {names.get(sym, sym)}{also}. Proof: the object code of the static library {pin}, matched "
+                f"byte for byte elsewhere in this executable, calls or references {refs}; its "
+                f"{_refs(fields, funcs, data)} all {_land(fields)} here (tools/re_lib_match.py, RE record audit "
                 f"{AUDIT_DATE}).{former(cur)}")
         tags = (["library-code", "msvc-crt"] if library else sorted(t for t in cur.get("tags", "").split(",") if t)) + \
             ["re-audit-20260926", "name-corrected-20260926"]
@@ -926,6 +1041,7 @@ def main(argv: list[str] | None = None) -> int:
                          [s.name for c in lib.objects.values() for s in c.symbols.values()])
     res = Resolver(lib, image, names, args.lo, args.hi, starts)
     res.run()
+    res.reference_index()
     args.out.mkdir(parents=True, exist_ok=True)
     placed = res.placed_symbols()
     by_addr = defaultdict(list)
@@ -946,7 +1062,7 @@ def main(argv: list[str] | None = None) -> int:
             alts = sorted({flat_name(x.fn.symbol, names) for x in d["cands"]})
             nrel = sum(1 for off, _s, _t in lib.objects[c.fn.member].sections[c.fn.section].relocs
                        if c.fn.start <= off < c.fn.end)
-            agree = res._score(c)[0]
+            agree = res.field_evidence(va, c)[1]
             aliases = sorted({flat_name(s, names) for s in list(by_addr.get(va, [])) + d.get("aliases", [])
                               if s not in {x.fn.symbol for x in d["cands"]} and not s.startswith("$")
                               and s in res.code_symbols})

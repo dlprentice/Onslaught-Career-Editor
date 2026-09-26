@@ -116,13 +116,14 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual([(f.symbol, f.start, f.end) for f in fns], [("_first_function@4", 0, 20), ("_second", 20, 24)])
 
     def test_masm_labels_do_not_split_procedures(self):
-        # MASM types local labels as functions; .bf records mark the real procedure starts
+        # MASM types local labels as functions; .bf records mark the real procedure starts and .ef their ends
         obj = coff([(".text", CODE, BODY + BODY, [])],
                    [("_Proc@8", 0, 1, FUNC, EXT, b""), (".bf", 0, 1, 0, M.IMAGE_SYM_CLASS_FUNCTION, b""),
                     ("Loop", 8, 1, FUNC, STATIC, b""), ("ProcPrologue", 0, 1, FUNC, STATIC, b""),
+                    (".ef", 17, 1, 0, M.IMAGE_SYM_CLASS_FUNCTION, b""),
                     ("_Next@8", 20, 1, FUNC, EXT, b""), (".bf", 20, 1, 0, M.IMAGE_SYM_CLASS_FUNCTION, b"")])
         fns = M.object_functions(M.parse_coff("a.obj", obj))
-        self.assertEqual([(f.symbol, f.start, f.end) for f in fns], [("_Proc@8", 0, 20), ("_Next@8", 20, 40)])
+        self.assertEqual([(f.symbol, f.start, f.end) for f in fns], [("_Proc@8", 0, 17), ("_Next@8", 20, 40)])
 
     def test_masked_pattern_hides_relocation_fields(self):
         obj = coff([(".text", CODE, b"\xe8\x00\x00\x00\x00\xc3", [(1, 1, M.REL_I386_REL32)])],
@@ -203,6 +204,11 @@ class ResolverTests(unittest.TestCase):
         self.assertEqual(res.decided[0x401100]["how"], "unique")
         self.assertEqual(res.pool[("g", "_helper")], 0x401100)
         self.assertFalse(res.contested)
+        # counts for the comments: one call site in one function; the caller's field is confirmed by the helper's match
+        res.reference_index()
+        self.assertEqual(res.sites([("g", "_helper")], 0x401100), (1, 1, 0))
+        self.assertEqual(res.sites([("g", "_helper")], 0x401100, exclude=self.LO), (0, 0, 0))
+        self.assertEqual(res.field_evidence(self.LO, res.decided[self.LO]["cands"][0]), (1, 1, 0, 0))
 
     def test_own_section_reference_must_land_inside_the_match(self):
         # a jump table entry (DIR32 to the function's own section) that points elsewhere is a conflict

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[second RE-audit label correction](#re-audit-label-corrections-second-cohort--september-26);
+[RE-audit D3DX library names](#re-audit-d3dx-library-names--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,36 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit D3DX library names — September 26
+
+The [manifest](../../tools/cohort-specs/library-d3dx-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/library-d3dx-20260926.spec.tsv) name 1,139 functions of the
+statically linked library code, each with an evidence comment and tag set.
+`tools/re_lib_match.py` matched the DirectX 9.0 SDK's static `d3dx9.lib`
+(a private, untracked reference; pin in the comments) byte for byte with
+relocation fields masked. It decides 1,112 of the 1,114 functions from
+`00574270` to `005be622`; the other two are Ghidra's `Catch@00589200` and
+`0058920c`, a fragment of `IsIntelSSEProcessor` split off by a saved boundary.
+The D3DX code's own calls also name 26 C runtime functions and the program's
+global `operator_new` (`00426fd0`) and `operator_delete` (`00449d40`).
+Most of these carried game-class labels (`CFastVB__`, `CDXTexture__`,
+`CTexture__`, `Platform__`); comments keep user-defined former labels as leads.
+`0058864a` shares its saved label with `0057cc53` and moves in the next cohort.
+The `CFastVB__` labels from `0056eb50` to `00574250` are NVIDIA's NvTriStrip
+and its STL containers, also for a later cohort.
+
+The gate passed: fresh PRE restore, rehearsal with separate and sealed-spec
+readbacks, five negative controls, independent review, live
+dry/apply/readback and an independent POST restore. Only program comment and
+symbol-source counts move (`symbolsUserDefined` 6185->6338, `symbolsAnalysis`
+18006->18005, `symbolsDefaultOther` 61687->61535, `comments` 9200->9352).
+Working `db.18660`, 18 files / 120,605,556 bytes, inventory SHA-256
+`8de23434a63a013d84a57cc0bba9eec61bd98aec13d9afde4269e7b3eb33752a`. PRE: the
+second label-audit POST. POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-26-library-d3dx/post-working`.
+Tracked checkpoint unchanged. Receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-d3dx/`.
 
 ## RE-audit label corrections, second cohort — September 26
 

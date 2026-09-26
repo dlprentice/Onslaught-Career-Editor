@@ -1,13 +1,17 @@
 # CFastVB__PackTexels_Dither_Bits16_16_16_16
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: superseded 2026-09-26: linked library code, not game code (see Identity)
+Last updated: 2026-09-26
 Summary: specimen-bound static contract for `CFastVB__PackTexels_Dither_Bits16_16_16_16` at `0x0058439e` in the direct-call-connected concrete dithered packed-texel format encoder; exact identity, direct codec connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — exact-base current name/register identity, fresh read-only READY packet/decompile, structured edges, closure range, independently recomputed pristine body bytes, and paired W012/W013 static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0058439e`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXTex__CCodec_Q16W16V16U16__Encode`. Linked library code: public: virtual void __thiscall D3DXTex::CCodec_Q16W16V16U16::Encode(unsigned int, unsigned int, struct D3DXCOLOR *), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\ccodec.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Identity
 - Body `[0x0058439e,0x00584534]`, 407 bytes, 135 closure instructions. Raw pristine-body SHA-256 `9362892c2f04e10fc5cc8d13203e6f810a816d776eaaa641b659c6934b6afb24`; closure range SHA-256 `6bf8dc560f724628c7b377dda69461c1a4f4520343030e49a29c16c4c5fb6f78`; packet range-plus-bytes SHA-256 `2bef156c143212d66e9932afbe024269b0305be0d94dec0d5d0080f356d32a87`. All three were independently recomputed over the exact single contiguous inclusive range.

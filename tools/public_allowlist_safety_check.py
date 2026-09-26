@@ -202,7 +202,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # bytes), reviewed as authored analysis; the same exact-content boundary applies.
 # Second RE-audit label cohort: seventeen current and eighteen proposed comments
 # (9,370/12,711 decoded bytes), reviewed the same way.
+# RE-audit D3DX library names: 987 current comments (the working project's prior
+# analytic comments, 577,447 decoded bytes) and 1,139 generated evidence comments
+# (library symbol, member, byte ranges and relocation counts; 1,086,765 bytes).
+# No library or program bytes are encoded; reviewed the same way.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/library-d3dx-20260926.manifest.tsv":
+        "382eb1d2406f0e83b0dd36f6342b67f65805a245de6b43e588882ade3234387e",
     "tools/cohort-specs/label-audit-2-20260926.manifest.tsv":
         "a08aedbd280a23db7596a4e43e1c49efebfa189e6199fef3f26b58c51486d4e1",
     "tools/cohort-specs/label-audit-20260926.manifest.tsv":

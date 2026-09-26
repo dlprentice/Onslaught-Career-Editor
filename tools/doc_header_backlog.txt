@@ -294,7 +294,6 @@ reverse-engineering/binary-analysis/functions/text.cpp/CText__Ctor.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__FreeBuffer.md
 reverse-engineering/binary-analysis/functions/text.cpp/CText__ResetCoreFields.md
 reverse-engineering/binary-analysis/functions/texture.cpp/CTextureBase__Init.md
-reverse-engineering/binary-analysis/functions/texture.cpp/CTexture__FindTexture_Unwind.md
 reverse-engineering/binary-analysis/functions/tree.cpp/CTree__ComputeLodBucket.md
 reverse-engineering/binary-analysis/functions/tree.cpp/CTree__CreateFallingTree.md
 reverse-engineering/binary-analysis/functions/tree.cpp/CTree__HandleEvent.md

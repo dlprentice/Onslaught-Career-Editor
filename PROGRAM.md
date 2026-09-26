@@ -205,18 +205,44 @@ Verified corrections waiting for the next cohort:
 | `005015c0` | `CEngine__TrimVbIbPoolCapacitiesPow2` | the static `CVBufTexture::ClearOut`; the name was held by `00501450` until the second cohort |
 | `004f00e0` | `CLTShell__ShutdownRuntimeAndReleaseResources` | `SYSTEM.Shutdown()`, called once at `0x0051241a` after `SYSTEM.Run()` (`ltshell.cpp:550-552`) (lead: the class name) |
 | `0046dbc0` | `CMonitor__Shutdown_Thunk` | a tail jump to CMonitor's destructor `004bac40` |
-| `00426fd0`, `00449d40` | `OID_T3_…` | the game's global `operator new` and `operator delete` (to `MEM_MANAGER`) |
 | `00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing::SetThingType`, slot 38 |
 | `00401f70`, `00401fd0` | `CActor__TestFieldCcDeltaBelow015_…`, `ElapsedTime__BelowThreshold_D4` | `CActor::IsOnGround` (slot 67) and `IsOnObject` |
 
-The step-2 library pass is under way. The code from `0x0055d6a0` to the first
-exception funclet (`0x005d0f10`) is statically linked library code. It references no
-game RTTI or source path and calls the game only through `operator new`/`delete`, two
-linker-folded no-ops and `WinMain`. A Ghidra Function ID database built from the DirectX
-9.0 SDK's static `d3dx9.lib` (D3DX_SDK_VERSION 9, the game's `D3D_SDK_VERSION` 31
-generation) names most of it; the codec classes come from `CCodec::Create`'s format
-dispatch. The `CFastVB__`, `CDXTexture__` and `CTexture__` labels in that range are
-D3DX, libjpeg, libpng and zlib code.
+The library pass (audit step 2) named the statically linked library code on
+2026-09-26 (cohort `library-d3dx-20260926`; see the
+[Ghidra README](reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)).
+`tools/re_lib_match.py` compares every function of a pinned static library with the
+pristine bytes, relocation fields masked, and pools what each relocation implies;
+`llvm-readobj` and `objdump` re-check it independently. Against the DirectX 9.0 SDK's
+`d3dx9.lib` it decides 1,112 of the 1,114 functions from `0x00574270` to `0x005be622`.
+With the C runtime functions and the global `operator new`/`operator delete` that the
+D3DX code calls, 1,139 functions were named.
+
+Of the 391 `CFastVB__` labels:
+- 326 were D3DX code (texture codecs, math, the shader assembler, libjpeg, libpng and
+  zlib) and are named now;
+- 6 are the game's `FastVB.cpp` code (`0x0051a270`-`0x0051a6a0`, the file named by the
+  `__FILE__` string that `Create` and `Render` pass to the allocator), and 2 are their
+  unwind funclets;
+- 57 are NVIDIA's NvTriStrip with its STL containers (`0x0056eb50`-`0x00574250`).
+
+NvTriStrip is next. Its four setters and `GenerateStrips` match the public source's API,
+and its globals match that source's initial values (cache size 16, stitching on). The
+public source is a later version with restart support, so the mapping is structural.
+
+The C runtime around it (`0x0055d6a0`-`0x0056eb50` and `0x005be622`-`0x005d0f10`) is
+VC6 `LIBCMT`. The SP6 library decides 434 of its 459 functions. Fifteen of the rest are
+`__finally` and unwind blocks that saved boundaries split off matched functions. Ten
+bodies (among them the `asin`, `acos` and `pow` cores) differ from SP6, because the
+game's runtime objects are an older build (Rich header `Utc12_C` build 8047).
+`0x005be628` is DxErr9's `DXGetErrorString9A`. `0x0058864a`
+(`D3DXCore::CFile::CFile`) waits for the next cohort because it shares a saved label
+with `0x0057cc53`.
+
+Follow-ups found by the review:
+- Ghidra does not treat `_exit` as no-return, so `D3DX__error_exit`'s saved body
+  swallows `output_message` (`0x00592b20`);
+- 13 call targets in matched code have no Ghidra function.
 
 ### RE record audit — requested September 25
 
