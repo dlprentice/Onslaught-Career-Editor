@@ -3,7 +3,6 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -119,20 +118,26 @@ public sealed class RetailAquilaVertexDiffuseTests
     [Fact]
     public void TheWalkerLoaderReadsTheDiffuseDwordAndBindsTheColorArray()
     {
-        string loader = ReadGodotSource("Client/aquila_mesh.gd");
-        string component = ReadGodotSource("Scenes/Aquila/aquila_model.gd");
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
 
-        Assert.Contains("var diffuse: int = _data.decode_u32(offset + 24)", loader);
-        Assert.Contains("geometry.colors.append(Color(", loader);
-        Assert.Contains("arrays[Mesh.ARRAY_COLOR] = geometry.colors", component);
-        Assert.Contains("if (diffuse >> 24) != 255:", loader);
-        Assert.Contains("fail(\"The retained Aquila walker has a non-opaque vertex diffuse alpha.\")", loader);
+        Assert.Contains("colors[index] = ReadDiffuse(data, offset + 24);", loader);
+        Assert.Contains("arrays[(int)Mesh.ArrayType.Color] = geometry.Colors;", loader);
+        Assert.Contains(
+            "throw new InvalidDataException(\"The retained Aquila walker has a non-opaque vertex diffuse alpha.\");",
+            loader);
 
-        // All three profiles keep the same shared fixed-function material and
-        // the admitted per-profile stage-zero operation in their native owner.
-        Assert.Contains("Factory.create(layers, facts, 0.0, 0.5, operation)", component);
-        Assert.Contains("materials, overrides, selected.operation)", component);
-        Assert.Contains("vertex_light_color *= COLOR.rgb;", ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader"));
+        // The walker, jet and cockpit all draw through the shared fixed-function
+        // material, whose lit vertex colour is already modulated by COLOR.rgb.
+        // The stage-zero colour operation travels with the profile, because
+        // retail's differs between them.
+        Assert.Contains(
+            "material = RetailFixedFunctionMaterial.Create(\n" +
+            "                        layers,\n" +
+            "                        terrain,\n" +
+            "                        stageZeroColorOperation: stageZeroColorOperation);",
+            loader.Replace("\r\n", "\n"));
+        Assert.Contains("profile.StageZeroColorOperation);", loader);
+        Assert.Contains("vertex_light_color *= COLOR.rgb;", ReadGodotSource("Level100StaticWorldAsset.cs"));
     }
 
     /// <summary>
@@ -167,11 +172,11 @@ public sealed class RetailAquilaVertexDiffuseTests
     public void OnlyTheCockpitProfileCarriesTheMeasuredModulateStageZeroOperation()
     {
         Assert.Equal(
-            new Dictionary<string, int>(StringComparer.Ordinal)
+            new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["walker"] = 5,
-                ["jet"] = 5,
-                ["cockpit"] = 4,
+                ["s_walkerProfile"] = "Modulate2X",
+                ["s_jetProfile"] = "Modulate2X",
+                ["s_cockpitProfile"] = "Modulate",
             },
             ReadProfileStageZeroColorOperations());
     }
@@ -199,8 +204,7 @@ public sealed class RetailAquilaVertexDiffuseTests
     [Fact]
     public void TheLsidebit02ResidualIsRecordedAsOpenAndNotFitted()
     {
-        AssertNoNativePerPartOverride("Lsidebit02");
-        string[] lines = ReadGodotSource("Scenes/Aquila/Tests/LegacyRetailAquilaReference.cs")
+        string[] lines = ReadGodotSource("RetailAquilaWalkerAsset.cs")
             .Replace("\r\n", "\n")
             .Split('\n');
         string[] mentions = lines
@@ -237,8 +241,7 @@ public sealed class RetailAquilaVertexDiffuseTests
     [Fact]
     public void TheTwoMirroredBatchSamplesAreRecordedAsOverlayContaminationNotShading()
     {
-        AssertNoNativePerPartOverride("Rsidebit01", "Lsidebit02");
-        string loader = ReadGodotSource("Scenes/Aquila/Tests/LegacyRetailAquilaReference.cs");
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
         string[] lines = loader.Replace("\r\n", "\n").Split('\n');
 
         foreach (string part in new[] { "Rsidebit01", "Lsidebit02" })
@@ -270,34 +273,35 @@ public sealed class RetailAquilaVertexDiffuseTests
                 StringComparison.Ordinal));
     }
 
-    // Read the live native profiles, rather than accepting the retained C#
-    // oracle as proof of the production operation selection.
-    private static Dictionary<string, int> ReadProfileStageZeroColorOperations()
+    /// <summary>
+    /// Each <c>AssetProfile</c> declaration in the loader, mapped to the
+    /// <c>RetailStageZeroColorOperation</c> member it passes. Read out of the
+    /// source because the profiles are private to a Godot-project type this
+    /// test assembly cannot reference.
+    /// </summary>
+    private static Dictionary<string, string> ReadProfileStageZeroColorOperations()
     {
-        string loader = ReadGodotSource("Client/aquila_mesh.gd");
-        MatchCollection profiles = Regex.Matches(loader, "(?m)^\\t\"(?<name>[^\"]+)\": \\{");
-        var operations = new Dictionary<string, int>(StringComparer.Ordinal);
-        for (int index = 0; index < profiles.Count; index++)
+        const string declaration = "private static readonly AssetProfile ";
+        const string member = "RetailStageZeroColorOperation.";
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
+        var operations = new Dictionary<string, string>(StringComparer.Ordinal);
+        int at = loader.IndexOf(declaration, StringComparison.Ordinal);
+        while (at >= 0)
         {
-            Match profile = profiles[index];
-            int end = index + 1 < profiles.Count ? profiles[index + 1].Index : loader.IndexOf("const LEGS", profile.Index, StringComparison.Ordinal);
-            string body = loader[profile.Index..end];
-            Match operation = Regex.Match(body, "\"operation\": (?<value>[0-9]+)");
-            Assert.True(operation.Success, $"{profile.Groups["name"].Value} states no stage-zero colour operation.");
-            operations.Add(profile.Groups["name"].Value, int.Parse(operation.Groups["value"].Value, System.Globalization.CultureInfo.InvariantCulture));
+            int nameEnd = loader.IndexOf(" = new(", at, StringComparison.Ordinal);
+            Assert.True(nameEnd > at);
+            string name = loader[(at + declaration.Length)..nameEnd];
+            int next = loader.IndexOf(declaration, nameEnd, StringComparison.Ordinal);
+            string body = next < 0 ? loader[nameEnd..] : loader[nameEnd..next];
+
+            int operation = body.IndexOf(member, StringComparison.Ordinal);
+            Assert.True(operation >= 0, $"{name} states no stage-zero colour operation.");
+            int end = body.IndexOf(')', operation);
+            Assert.True(end > operation);
+            operations.Add(name, body[(operation + member.Length)..end]);
+            at = next;
         }
         return operations;
-    }
-
-    private static void AssertNoNativePerPartOverride(params string[] names)
-    {
-        foreach (string file in new[] { "Client/aquila_mesh.gd", "Scenes/Aquila/aquila_model.gd" })
-        {
-            string[] lines = ReadGodotSource(file).Replace("\r\n", "\n").Split('\n');
-            foreach (string name in names)
-                Assert.All(lines.Where(line => line.Contains(name, StringComparison.Ordinal)),
-                    line => Assert.StartsWith("#", line.TrimStart(), StringComparison.Ordinal));
-        }
     }
 
     /// <summary>
@@ -441,14 +445,16 @@ public sealed class RetailAquilaVertexDiffuseTests
     [Fact]
     public void TheWalkerLoaderMapsNormalsWithoutNegatingThem()
     {
-        string loader = ReadGodotSource("Client/aquila_mesh.gd");
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
 
-        Assert.Contains("var normal: Vector3 = vector(offset + 12)", loader);
-        Assert.Contains("geometry.normals.append(normalized(map_vector(normal)))", loader);
-        Assert.Contains("return Vector3(value.x, -value.z, -value.y)", loader);
+        Assert.Contains("Vector3 normal = ReadVector3(data, offset + 12);", loader);
+        Assert.Contains("normals[index] = MapVector(normal).Normalized();", loader);
+        Assert.Contains(
+            "private static Vector3 MapVector(Vector3 value) => new(value.X, -value.Z, -value.Y);",
+            loader);
         Assert.Contains(
             "vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);",
-            ReadGodotSource("Scenes/Shared/retail_fixed_function.gdshader"));
+            ReadGodotSource("Level100StaticWorldAsset.cs"));
     }
 
     /// <summary>
@@ -460,13 +466,30 @@ public sealed class RetailAquilaVertexDiffuseTests
     [Fact]
     public void WalkerTransformInterpolationUsesTheRetailComponentwiseMatrixLaw()
     {
-        string loader = ReadGodotSource("Client/aquila_mesh.gd");
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
 
-        Assert.Contains("for index: int in range(9):", loader, StringComparison.Ordinal);
-        Assert.Contains("var from: float = part.orientations[a][index]", loader, StringComparison.Ordinal);
-        Assert.Contains("result[index] = F.value(from + F.value(F.value(part.orientations[b][index] - from) * weight))", loader, StringComparison.Ordinal);
-        Assert.Contains("for axis: int in range(3): result[9 + axis] = F.value(p[axis] + F.value(F.value(q[axis] - p[axis]) * weight))", loader, StringComparison.Ordinal);
-        Assert.DoesNotContain("slerp(", loader, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "Matrix3.Lerp(first.Rotation, second.Rotation, weight)",
+            loader,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "first.Position.Lerp(second.Position, weight)",
+            loader,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Slerp(", loader, StringComparison.Ordinal);
+
+        foreach (string component in new[]
+                 {
+                     "M00", "M01", "M02",
+                     "M10", "M11", "M12",
+                     "M20", "M21", "M22",
+                 })
+        {
+            Assert.Contains(
+                $"first.{component} + ((second.{component} - first.{component}) * weight)",
+                loader,
+                StringComparison.Ordinal);
+        }
     }
 
     /// <summary>
@@ -926,10 +949,10 @@ public sealed class RetailAquilaVertexDiffuseTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            foreach (string relative in new[] { "OnslaughtRebuild.Godot", "rebuild/OnslaughtRebuild.Godot" })
+            string candidate = Path.Combine(directory.FullName, "OnslaughtRebuild.Godot");
+            if (Directory.Exists(Path.Combine(candidate, SourceDirectory)))
             {
-                string candidate = Path.Combine(directory.FullName, relative);
-                if (Directory.Exists(Path.Combine(candidate, SourceDirectory))) return candidate;
+                return candidate;
             }
             directory = directory.Parent;
         }

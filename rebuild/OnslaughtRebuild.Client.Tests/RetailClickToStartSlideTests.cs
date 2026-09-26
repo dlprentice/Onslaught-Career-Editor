@@ -93,27 +93,13 @@ public sealed class RetailClickToStartSlideTests
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
-        Assert.Contains("-Laws.slide_offset(timer)", NativeClickSource.Controller);
-        Assert.Contains("for part: String in [\"Shadow\", \"Body\"]:", NativeClickSource.Controller);
-        Assert.DoesNotContain("get_node(\"Slide\").visible", NativeClickSource.Controller);
-        Assert.Contains("SLIDE_PASSES", NativeClickSource.Laws);
-        string[] parts = ["Shadow", "Body"];
-        for (int i = 0; i < RetailClickToStartSlide.Passes.Length; i++)
-        {
-            var pass = RetailClickToStartSlide.Passes[i];
-            string path = "Slide/" + parts[i] + "/Motion/Image";
-            NativeClickSource.HasCenter(path, pass.SettledX, pass.Y);
-            Assert.Contains("texture = ExtResource(\"slide\")", NativeClickSource.Node(path));
-            Assert.Contains("centered = false", NativeClickSource.Node(path));
-            Assert.Contains("offset_right = 128.0", NativeClickSource.Node(path));
-            Assert.Contains("offset_bottom = 128.0", NativeClickSource.Node(path));
-            Assert.DoesNotContain("position = ", NativeClickSource.Node("Slide/" + parts[i]));
-            Assert.DoesNotContain("position = ", NativeClickSource.Node("Slide/" + parts[i] + "/Motion"));
-        }
-        Assert.Contains("click-slide.texture.aya", NativeClickSource.Read("ClickSlide.tres"));
-        Assert.Contains("DAT_0089d7bc", NativeClickSource.Read("ClickReference.cs"));
+
+        Assert.Contains("RetailClickToStartSlide.ShouldDraw", flow);
+        Assert.Contains("RetailClickToStartSlide.X", flow);
+        Assert.Contains("RetailClickToStartSlide.Passes", flow);
+        Assert.Contains("DAT_0089d7bc", flow);
         Assert.DoesNotContain("(1f - fade) * (1f - fade) * 400f", flow);
-        Assert.DoesNotContain("vectorlosttoyssplash", NativeClickSource.Presentation + flow);
-        Assert.DoesNotContain("TWIMTBP", NativeClickSource.Presentation + flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
     }
 }

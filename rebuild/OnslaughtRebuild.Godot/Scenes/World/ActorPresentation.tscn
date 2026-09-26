@@ -1,7 +1,0 @@
-[gd_scene format=3]
-
-[node name="ActorPresentation" type="Node3D"]
-metadata/pose_owner = "Core actor registry; imported faithful placement"
-
-[node name="Geometry" type="MeshInstance3D" parent="."]
-rotation = Vector3(-1.5707964, 0, 0)

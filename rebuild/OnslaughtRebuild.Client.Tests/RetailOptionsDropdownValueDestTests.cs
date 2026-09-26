@@ -140,14 +140,58 @@ public sealed class RetailOptionsDropdownValueDestTests
     [Fact]
     public void DrawLabelValueRowConsumesDestXAndDoesNotInventDestTwo()
     {
-        // Numeric/model assertions above stay pinned; this guard follows the production owner.
-        string owner0 = NativeOptionsSource.Function("options_presentation.gd", "_refresh_popup");
-        Assert.Contains("Laws.dropdown_value_x(319.0)", owner0, StringComparison.Ordinal);
-        string owner1 = NativeOptionsSource.Function("options_row.gd", "bind");
-        Assert.Contains("value.bind(row.current_state.value", owner1, StringComparison.Ordinal);
-        string scene = NativeOptionsSource.Read("Options.tscn");
-        Assert.Contains("offset_right = 319.0", scene, StringComparison.Ordinal);
-        Assert.Contains("offset_left = 321.0", scene, StringComparison.Ordinal);
+        string options = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.Options.cs"));
+        string draw = Slice(options, "private void DrawOptionRow");
+        string centered = Slice(options, "private void DrawOptionTextCentered");
+        string labelValue = Slice(options, "private void DrawLabelValueRow");
+        string valueBar = Slice(options, "private void DrawValueBarRow");
+        string dropdown = Slice(options, "private void DrawOptionDropdown");
+
+        Assert.Contains("RetailOptionsDropdownValueDest", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailOptionsDropdownValueDest.DestX", labelValue, StringComparison.Ordinal);
+        Assert.Contains("RetailOptionsDropdownDest.DestX", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("OptionValueLeftX", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest.Pad", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest.IdentityScale", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemDest", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsMenuItemIconDest", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("5f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("5.0", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("2f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.5f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("268f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("284f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("304f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("322f", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("IntegerHalf", labelValue, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("0x00463669", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", centered, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", valueBar, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", dropdown, StringComparison.Ordinal);
+
+        string flow = File.ReadAllText(Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-pause-source",
+            "RetailFrontendFlow.cs"));
+        string main = Slice(flow, "private void DrawMainMenu()");
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", main, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetTextExtent", main, StringComparison.Ordinal);
+        string quit = Slice(flow, "private void DrawQuitConfirm()");
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", quit, StringComparison.Ordinal);
+        string loading = Slice(flow, "private void DrawLoading(");
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", loading, StringComparison.Ordinal);
+        string click = Slice(flow, "private void DrawClickToStart()");
+        Assert.DoesNotContain("RetailOptionsDropdownValueDest", click, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

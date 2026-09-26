@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-19 (GDScript migration consumes committed scheduler evidence; live precision remains open).
+Last updated: 2026-09-25 (scheduler and speed-provider evidence pointer kept through the C# restore; no new gameplay-parity claim).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -37,25 +37,16 @@ and shared ownership under the declared numerical and fresh-resource assumptions
 for static evidence; these partial constructors add no completed runtime-parity
 row to the table below.
 
-During language conversion, C# comparison results establish regression behavior,
-not retail authority. The committed RE revision `d34f565d` on
-`codex/retail-re-20260919` supplies the September 19 projectile-readiness queue
-and maximum-speed-provider contracts in
+RE commit `d34f565d` (now in this branch) supplies the September 19
+projectile-readiness queue and maximum-speed-provider contracts in
 `reverse-engineering/binary-analysis/functions/CEventManager.cpp.md` and
-`collisionseekingthing.cpp.md`. Read those files at that revision if this
-worktree's copies predate it; no RE branch merge or authority change is implied.
-
-The native scheduler checks now independently retain queued delivery after the
-next bucket advance, low-word event admission, FIFO order and strict overflow
-due-time comparison. Their four neighboring-float probes retain the measured
-precision-dependent frame-9 boundary. The existing explicit PC53 path agrees
-with the controlled PC64 result for these bounded operands; it is not a general
+`collisionseekingthing.cpp.md`. The existing explicit PC53 scheduler path agrees
+with the controlled PC64 result for those bounded operands; it is not a general
 PC64 implementation. **Open question:** which x87 precision context applies at
 the live scheduler entry for each relevant retail caller? The cheapest direct
 falsifier is a controlled observation of the control word and operands at the
 named scheduler entry during the corresponding retail call. The isolated PC64
-and PC24 runs do not select a global simulation mode, and this migration does
-not change that mode or timing constants to fit a trace.
+and PC24 runs do not select a global simulation mode.
 
 The provider evidence distinguishes maximum speed from current velocity, a
 parent's primary interface from its renderer interface, and normal monitored
