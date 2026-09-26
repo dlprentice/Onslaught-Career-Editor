@@ -2,7 +2,7 @@
 
 Status: active contract for the rebuild's final-wave route; per-unit RNG ordering
 across the whole level remains open
-Last updated: 2026-09-26 (round frames and dying-round hits, steering composition, wiggle, feature and city-building probes; created 2026-09-25)
+Last updated: 2026-09-26 (round frames, overflow life events and dying-round hits, steering composition, wiggle, feature and city-building probes; created 2026-09-25)
 Summary: the abort after one kill is a designed retail branch, but retail gives the
 player two helps the rebuild lacks: four friendly turrets that come online after the
 first poll below 80 % health, and the jet Missile Pod. Activated turrets can see the
@@ -491,6 +491,20 @@ never self-acquire.
   move multiplier is 1.0, so it moves once per frame after that.
   - Its 4000 lands k = floor((life − 0.001) × 20) buckets later and is delivered in
     frame N+1+k: frame N+160 for 8.0 s, N+20 for 1.0 s.
+  - When k reaches 198 (a life of about 9.9 s or more), the 4000 goes to the overflow
+    list instead (`0x0044b42d`). Entries stay sorted by due time, and equal times keep
+    filing order (`0x0044b449-0x0044b464`).
+  - The flush delivers overflow entries after all three lanes, in the first frame
+    whose time is strictly later than the due time (`0x0044b6b6-0x0044b700`). Both
+    times are float32:
+    - the due time is float32(now + life) (`0x004d8680-0x004d8698`);
+    - the frame time is float32(frame × 0.05f) (`0x0044b600`).
+  - For a 10.0 s life the two times are equal at frame N+200 for most N, so the 4000
+    arrives in frame N+201. For some N (N = 3, for example) rounding makes the due
+    time smaller, and it arrives in N+200. A float32 model over N < 60,000 gives
+    59,656 at N+201 and 344 at N+200.
+  - In that frame the MOVE comes first, so the air burst follows that frame's step.
+    The last step falls in the next frame, ahead of the SHUTDOWN filed after it.
   - In that frame the 4000, queued in frame N, comes before the MOVE requeued in
     frame N+k in the same priority-0 list. The 4000 handler runs any air explosion,
     then slot 50 → `StartDieProcess` (`0x004f4430`, dying bit `0x4`) →
