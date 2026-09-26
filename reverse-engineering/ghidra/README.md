@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[third RE-audit label correction](#re-audit-label-corrections-third-cohort--september-26);
+[NvTriStrip library identities](#re-audit-nvtristrip-library-identities--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,42 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit NvTriStrip library identities — September 26
+
+The [manifest](../../tools/cohort-specs/library-nvtristrip-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/library-nvtristrip-20260926.spec.tsv) identify the 72 saved functions
+in the NvTriStrip and associated VC6 STL block. Fifty-seven had misleading
+`CFastVB__` names; the remaining labels also mixed game classes and generic
+helpers into this library. These are structural identities supported by retail
+instructions, callers, diagnostic strings and pinned later reference source;
+there is no byte-identical compiled NvTriStrip reference.
+
+The source graph has 69 compatible call edges and two explicitly checked
+return-size differences. Its 37 absent/transitive-call notes are limitations of
+that comparison, not 37 proven behavioral divergences. Independent body review
+and root reproduction establish the proposed roles. The comments retain the
+four-argument retail GenerateStrips/CreateStrips APIs, two-byte indices,
+24-byte faces without the newer fake-face member, uncertain STL template types
+and wrapper provenance, and the empty-vector allocation difference in
+RemoveSmallStrips. Existing prototypes are preserved, not certified.
+
+Exactly 72 function identities, nonrepeatable comments and tag sets corrected in the NvTriStrip block: 71 prior labels replaced and one default function named. The evidence is structural, not an exact match to a compiled library. All prototypes, storage, parameters, locals, types, bookmarks, instructions, bodies and the 8,259 non-target function rows are preserved. Only the comment digest, one added comment and one symbol's
+DEFAULT-to-USER_DEFINED counts change among program metrics. All nine live
+exports equal the separately reopened rehearsal. Fresh PRE restore, rehearsal,
+sealed readback, five no-write negative controls, independent review, live
+readback and independently restored POST recovery passed. The first seal was
+rejected before live application because FindOtherFace's comment excluded a
+second null-return path. Its plan, seal and rehearsal remain in `rejected-v1/`;
+the replacement changes only that comment and repeats the preservation and
+rehearsal gates. This does not
+establish runtime equivalence or complete semantic coverage of the library.
+
+Working identity: `db.18663`, 18 files / 121,162,612 bytes,
+inventory SHA-256 `6f34839c7db5326abb5de5addcc50ace1ada389082467d71712bd91e155a5d1c`; main database 70,860,800 bytes,
+SHA-256 `032bf7ea693eb297907728d23756df345017f82ba0409fc7d1fe079856fbc9a9`. PRE is the freshly matched third label-cohort POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-library-nvtristrip/post-working`. The tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-nvtristrip/`.
 
 ## RE-audit label corrections, third cohort — September 26
 

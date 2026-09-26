@@ -233,6 +233,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # buffer cleanup, base destruction, type bits and actor contact predicates;
 # fresh PRE, exact rehearsal/readback, five no-write refusals and independent
 # review after retaining a rejected first seal with ambiguous branch wording.
+# library-nvtristrip-20260926: 72 structural library/STL identities, comments
+# and tag sets; exact body review, source-version differences, fresh PRE,
+# rehearsal/readback, five no-write refusals and independent review. The first
+# seal's FindOtherFace null-return wording was rejected and retained.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -273,6 +277,7 @@ LIVE_GRANTED_COHORTS = [
     "library-d3dx-20260926",
     "library-crt-20260926",
     "label-audit-3-20260926",
+    "library-nvtristrip-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -719,6 +724,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "library-d3dx-20260926",\n'
         '        "library-crt-20260926",\n'
         '        "label-audit-3-20260926",\n'
+        '        "library-nvtristrip-20260926",\n'
         "    };\n",
     ),
     (
