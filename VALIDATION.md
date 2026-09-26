@@ -4540,6 +4540,39 @@ neither real Windows/Proton failure nor full startup reachability. The
 [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
 distinguishes null-interface dereference from a returned method failure.
 
+### Level 100 turret targeting control — September 25
+
+`python -P local-data/test-runs/level100-final-wave-20260925/turret_targeting_control.py`
+passed **16 cases** under `local-data/test-runs/level100-final-wave-20260925/turret-run-1s9s58nr/`.
+Receipt SHA-256 `6ff66c70ab7b0886163d5038e6e8cfd55eca4b0e574c43bea400195311b1602a`;
+ELF SHA-256 `7a6117d690170766e17e82dac1088ecd94871222c5abceadb0ace22743ebada3`;
+driver copy SHA-256 `133230c6914bc33d91115db29a9c3d409ee4f64ab2cd86cecf17941f5a47a1bc`.
+
+The ELF places ten unchanged pristine bodies and seven `.rdata` scalars at their
+retail addresses: script `SetAllegiance`, `SetFactionForHierarchy`, CSPtrSet
+add-to-head/add-to-tail/remove, the close-target scan `0x004ff710`, its state and
+side gates, `SetReader` and monitor registration. Feasibility A/B, capability,
+support and support-band helpers are recording stubs; objects, the node free list
+and the three world lists are synthetic. Every case checks callee-saved registers,
+stack, FS:0 and the x87 control word, and the full list contents, counts and tails.
+
+A squad-less unit switched from 0 to 1 moves from `0x008550b0` to `0x008550c0`; a
+squad member is not relisted; allegiance 6 joins both lists and 2 neither; a
+non-unit receiver is ignored; a child component follows its parent. An
+allegiance-0 owner selects an allegiance-1 drone from `0x008550c0`, cannot see one
+left in `0x008550b0`, rejects a stale allegiance-0 entry at the side gate, and
+applies the strict range and dying gates; the nearer of two drones wins; a false
+B keeps the reader and zeroes A. The composed Level 100 order (spawned friendly,
+script ENEMY, then turret scan) selects the drone; a squad-wrapped drone stays
+invisible. The first run failed on a harness defect, not a retail result: its
+`fnstenv` overwrote the first trace slot and its predicted call list omitted the
+capability stub. Both were corrected before the passing run.
+
+This measures the list, allegiance and selection transaction with supplied
+helper results. It establishes no turret aim, weapon, geometry, spawner or retail
+gameplay behavior; the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md)
+keeps those open.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

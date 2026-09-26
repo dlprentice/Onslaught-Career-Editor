@@ -363,7 +363,6 @@ reverse-engineering/game-assets/game-folder-analysis.md
 reverse-engineering/game-assets/modding-reference.md
 reverse-engineering/game-assets/msl-scripting.md
 reverse-engineering/game-mechanics/README.md
-reverse-engineering/game-mechanics/_index.md
 reverse-engineering/game-mechanics/battleengine-target-acquisition-static-contract-v1.md
 reverse-engineering/game-mechanics/campaign-scalar-status.md
 reverse-engineering/game-mechanics/cheat-codes.md

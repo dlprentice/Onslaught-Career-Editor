@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-23 (coupled settings routing and original sound-manager/device initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-25 (Level 100 final-wave contract for the rebuild; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -141,6 +141,14 @@ Keep original-code evidence distinct from decoder self-tests,
 retail file durability and player acceptance. The retained AppCore sensitivity
 clamp and display-mode naming discrepancy are implementation-consumer findings;
 this RE task does not own those production changes.
+
+The rebuild's failing cold full-combat route now has a
+[final-wave contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md):
+the abort is a designed retail branch, and retail adds friendly turrets after
+Help Player and the jet Missile Pod. An original-code control shows activated
+turrets can select the script-spawned enemy drones. Open: turret aim/fire law,
+the Missile Pod lock and micro-missile laws, and the ordered RNG draws of the 22
+base-world AI owners.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and

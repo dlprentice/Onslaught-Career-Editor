@@ -1,5 +1,10 @@
 # Game Mechanics
 
+Status: active — index of accepted mechanics measurements and contracts
+Last updated: 2026-09-25
+Summary: routes to each accepted game-mechanics owner; every owner states its own
+specimen, procedure and limits.
+
 This area keeps accepted measurements and source/static context that materially
 support product or deterministic-Core behavior.
 
@@ -7,6 +12,7 @@ support product or deterministic-Core behavior.
 - [Cheat codes](cheat-codes.md)
 - [Campaign scalar status](campaign-scalar-status.md)
 - [Released spawner squad-cycle contract](spawner-squad-cycle.md)
+- [Level 100 final drone wave, Help Player turrets and abort](level100-final-drone-wave.md)
 - [World 110 serialized initial-object seed admission](world-110-initial-constructor-seeds.md)
 - [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)
