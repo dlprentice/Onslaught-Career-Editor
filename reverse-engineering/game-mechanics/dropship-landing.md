@@ -43,6 +43,11 @@ The state is `+0x27c`. `Init` starts an airborne craft in state 0 and a grounded
   yet empty, an AI target (slot 81) and `0x004fb500(target, 1)`.
 - **Touched ground** is slot 67 (`0x00401f70`): `now − +0xcc < 0.15` (`0x005d8588`), where `+0xcc`
   is stamped when the actor move clamps the craft to the ground.
+- **Doors (state 6, `0x00447489-0x0044754c`).** Without a `dooropening` animation the craft goes
+  to state 4 at once. Otherwise each tick it tests the mesh's type-27 point (slot 88): when
+  that point is at or below the ground there minus 0.1, or the door progress `+0x2a4` has
+  reached 1.0, the state becomes 4; otherwise the progress grows by the animation's
+  per-tick step (0.00625 per the research pass, about 160 ticks) and is capped at 1.0.
 - **State 1 is unreachable for these craft.** The state-0 think moves to 1 only when
   `0x004fb500(target, 1)` succeeds, and that needs a weapon (`+0x140`) or deploy spawner
   (`+0x144`); the landers have neither (research pass, `0x004fb519-0x004fb590`). They land only
