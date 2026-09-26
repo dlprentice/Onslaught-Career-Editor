@@ -36,7 +36,7 @@ class CompanionLauncherTests(unittest.TestCase):
             "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"8.0.424"}}',
             "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": "{}",
             "Ui/CompanionApp.cs": "code-built application root", "Files/ProtectedSaveFiles.cs": "integrated safety adapter",
-            "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry",
+            "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry", "Development/ScreenCapture.cs": "C# capture entry",
             "Ui/CompanionApp.cs.uid": "uid://generated-by-an-editor-open",
         }.items():
             path = self.project / name
@@ -208,6 +208,26 @@ class CompanionLauncherTests(unittest.TestCase):
 
     def test_obsolete_helper_leak_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_HELPER_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
+
+    def test_capture_runs_the_csharp_entry_through_the_offscreen_runner(self)->None:
+        offscreen=self.root/"bin/godot-offscreen"
+        offscreen.write_text(f"#!{sys.executable}\nimport json,os,pathlib,sys\n"
+            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':'godot-offscreen','args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'old_bridge':None})+'\\n')\n"
+            "out=pathlib.Path(next(a.split('=',1)[1] for a in sys.argv if a.startswith('--output=')))\n"
+            "out.mkdir(parents=True); (out/'1280x800-01-home.png').write_bytes(b'png')\n"
+            "print('CAPTURES_DONE 1 screens')\n",encoding="utf-8")
+        offscreen.chmod(0o700)
+        with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+            code=host.companion_main(["capture","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)])
+        self.assertEqual(0,code)
+        call=next(call for call in self.calls_read() if call["tool"]=="godot-offscreen")
+        self.assertIn("res://Development/ScreenCapture.cs",call["args"]);self.assertIn("--done-marker",call["args"])
+        fixture=Path(next(a.split("=",1)[1] for a in call["args"] if a.startswith("--fixture=")))
+        self.assertNotEqual(fixture,self.fixture);self.assertEqual(self.fixture.read_bytes(),fixture.read_bytes())
+        with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(2,host.companion_main(["capture","--sizes","big","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)]))
+            for script in ("/abs/Capture.cs","Development/Missing.cs","../Capture.cs"):
+                self.assertEqual(2,host.companion_main(["capture","--capture-script",script,"--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)]))
 
     def test_contract_tests_in_a_release_assembly_are_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_TEST_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))

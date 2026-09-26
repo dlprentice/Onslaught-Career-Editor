@@ -327,9 +327,34 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     return package
 
 
+def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: str, timeout: float | None,
+                    env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs") -> Path:
+    # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
+    # the capture entry draws each screen through fixed-size SubViewports.
+    offscreen = shutil.which(os.path.expanduser(offscreen_tool))
+    if offscreen is None:
+        raise RuntimeError(f"godot-offscreen was not found: {offscreen_tool}")
+    if not re.fullmatch(r"[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3})*", sizes):
+        raise ValueError("--sizes must list WIDTHxHEIGHT pairs, for example 1280x800,1920x1080")
+    entry = Path(script)
+    if entry.is_absolute() or ".." in entry.parts or entry.suffix != ".cs" or not (project / entry).is_file():
+        raise RuntimeError("--capture-script must name an existing relative C# capture entry")
+    captures = output / "captures"
+    run_logged([offscreen, "--path", str(project), "--qa", str(output / "offscreen"),
+                "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
+                "--script", "res://" + entry.as_posix(), "--",
+                f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}"],
+               cwd=project, env=env, timeout=None, log=output / "logs/capture.log", godot=True)
+    shots = sorted(captures.glob("*.png"))
+    if not shots:
+        raise RuntimeError("The capture run produced no screens")
+    print(f"Companion captures: {len(shots)} screens in {captures}", flush=True)
+    return captures
+
+
 def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("check", "build", "test", "run", "export"))
+    parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture"))
     parser.add_argument("--engine", default="~/.local/bin/godot48-mono")
     parser.add_argument("--shared-lock", type=Path, help="existing game_pipeline_shared/toolchain.linux.lock.json")
     parser.add_argument("--platform", choices=("linux", "windows", "both"), default="both", help="export target")
@@ -337,6 +362,9 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--script", default="Tests/CompanionTestRunner.cs", help="project C# test entry (a SceneTree)")
     parser.add_argument("--timeout", type=float, help="test or run timeout in seconds; test defaults to 120")
     parser.add_argument("--engine-arg", action="append", default=[], help="additional run argument (use --engine-arg=--headless)")
+    parser.add_argument("--sizes", default="1280x800,1920x1080", help="capture sizes, WIDTHxHEIGHT[,...]")
+    parser.add_argument("--offscreen", default="~/.local/bin/godot-offscreen", help="shared hidden-output GPU runner")
+    parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
@@ -364,6 +392,10 @@ def companion_main(argv: list[str] | None = None) -> int:
         build_project(engine, project, pins, env, output)
         check_project(engine, project, env, output)
         if args.mode in ("check", "build"):
+            return 0
+        if args.mode == "capture":
+            capture_screens(project, copy_fixture(args.fixture, output), args.offscreen, args.sizes, args.timeout, env,
+                            output, args.capture_script)
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)
