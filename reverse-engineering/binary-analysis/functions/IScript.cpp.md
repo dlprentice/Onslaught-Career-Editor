@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-26 (RE audit: stop-flag writers, follower gates and arrival rounding; Pause runtime summary restored)
+Last updated: 2026-09-26 (RE audit: stop-flag writers, follower gates and arrival rounding; Pause runtime summary restored; waypoint follower owner settled)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -103,7 +103,7 @@ these instruction findings do not establish a new runtime or rebuild result.
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x005385e0` | `IScript__HandleMessage` | `56 57 8bf9 8b4c240c 0fbf4104 2dd0070000 0f84a2000000 48 7448 48 0f859f000000 …` | `ret 4`; one arg = message struct at `[esp+0xc]`. **Signed** word dispatch `movsx eax, word [msg+4]; sub eax,0x7d0`: `0x7d0` (2000) → waypoint arm, `0x7d1` (2001) → **CVM wait-resume**, `0x7d2` (2002) → timer arm, anything else returns. HIGH on the dispatch shape; the arms are byte-mapped below. |
-| `0x00538470` | `CScriptEventNB__UpdateWaypointFollowing` *(owner review)* | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Arrival check: `float32(sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2)) < radius`, or an unordered compare; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CDebugLog__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
+| `0x00538470` | `IScript__UpdateWaypointFollowing` | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Arrival check: `float32(sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2)) < radius`, or an unordered compare; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CDebugLog__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
 
 | `0x00535cd0` | `IScript__Die` | `51 8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff 59 c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
 | `0x00537c70` | `IScript__Pause` | `8b442404 538bd9 568b08 8b11 ff5234 d95c240c 68a8070000 6840fa6400 6a18 6828020000 … c20c00` | `ret 0xc`. `args[0]->vtable[+0x34]()` (float), snapshot a 0x228 `CVM`, then `[0x0089c800]=1` (`0x00537d55`), then `AddEvent_AtTime(2001, this, mTime+delay, data=CVM)` (`0x00537d5f`). HIGH. |
@@ -203,9 +203,11 @@ call 0x539980` (`CScriptObjectCode__Reset`); else → `mov eax,[edi+0xc];
 push 0; push 0x0089c528; push 2; push eax; mov ecx,0x0089c5e0;
 call 0x539990` (`CScriptObjectCode__CallEvent`); `ret 4`.
 
-### `CScriptEventNB__UpdateWaypointFollowing` — owner review (not yet a rename)
+### `IScript__UpdateWaypointFollowing` — owner settled
 
-The `CScriptEventNB__` prefix is mis-owned, byte-proven:
+The Ghidra cohort `label-audit-2-20260926` renamed this function from
+`CScriptEventNB__UpdateWaypointFollowing` on 2026-09-26. The former
+`CScriptEventNB__` prefix was mis-owned, byte-proven:
 
 - Its teardown arms all load `mov ecx,0x0089c5e0` — the **CScriptObjectCode**
   singleton, never the `CScriptEventNB` singleton `0x0089c590` (the
@@ -222,8 +224,7 @@ The `CScriptEventNB__` prefix is mis-owned, byte-proven:
   So the waypoint follower is a self-sustaining next-frame loop: message 2000
   → move one step → reschedule 2000 against `this` → `Flush` → message 2000.
 
-Candidate name `IScript__UpdateWaypointFollowing`; do not promote outside a
-name cohort. Independently re-read 2026-08-18: the only `E8` is still
+Independently re-read 2026-08-18: the only `E8` is still
 `0x0053869b` (`mov ecx,edi; call 0x00538470`). A second static witness is
 `IScript__FollowWaypoint` (`0x00537d70`, zero direct `E8` — a registry
 command) which writes `[this+0x14]`, **zeroes** `[this+0x1c]`, and
@@ -233,11 +234,11 @@ schedules the same `AddEvent_AtTime(2000, this, NEXT_FRAME, …)` loop.
 `0x0053850b`): `[this+0x18]=0` (`0x0053850e`), then the thing's slot 64
 (`call [edx+0x100]` on `[this+8]`, `0x00538513`; `Stop()` by the declaration
 order in `thing.h:293-296`), then `cmp [this+0x1c],0` (`0x00538519`) — zero fires
-`CreateThingRef` / arrived(); nonzero runs the same CopyState / Remove
+arrived() through `IScript__FireArrivedEvent` (`0x005335d0`, formerly
+`IScript__CreateThingRef`); nonzero runs the same CopyState / Remove
 `+0x28` / delete / `GotoInstruction` sequence as HandleMessage 2001,
-using `[this+0x20]` as the payload. Ready for a future
-name-only cohort row; cheapest falsifier is `[ecx] != 0x005e4f08` at
-entry. The older decompiler gloss in
+using `[this+0x20]` as the payload. Cheapest falsifier for the owner is
+`[ecx] != 0x005e4f08` at entry. The older decompiler gloss in
 [`ScriptEventNB.cpp.md`](ScriptEventNB.cpp.md) claiming this function
 rescheduled with `(2000, this, &nextFrame, 0, 0, 0)` is **confirmed** by the
 tail above; the same document's `CScriptEventNB__HandleMessage` label was
