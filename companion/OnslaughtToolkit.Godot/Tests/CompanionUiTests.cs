@@ -205,6 +205,35 @@ internal static class CompanionUiTests
             if (goodieBytes[offset] != original[offset] && offset is < 0x1F4E or > 0x1F51) onlyGoodie = false;
         check.That(goodieWritten.Ok && onlyGoodie && BinaryPrimitives.ReadUInt32LittleEndian(goodieBytes.AsSpan(0x1F4E)) ==
             (target == GoodieState.Hint ? 1u : 0u), "the Goodie copy changes only Goodie 002's dword, to the chosen state");
+
+        // Install & backups: a verified backup set, then the last verified copy added to the game after confirmation.
+        app.Navigate("install");
+        InstallPage installPage = app.Install;
+        string backupRoot = Path.Combine(outputDirectory, "ui-backups");
+        Directory.CreateDirectory(backupRoot);
+        installPage.SetBackupFolder(backupRoot);
+        BackupReceipt backedUp = await installPage.BackUpAsync();
+        check.That(backedUp.Ok && Backups.List(backupRoot).Count == 1 && installPage.RestoreButtons.Count == 2,
+            "a backup set of the game's career and options file is made and listed with restore actions");
+        check.That(app.Game.Settings.Load().BackupFolder == backupRoot, "the backup folder is remembered");
+        installPage.UseLastCopy.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(installPage.Source.Text == goodieCopy, "the last verified copy can be chosen for installing");
+        int newItem = Enumerable.Range(0, installPage.Target.ItemCount).First(item => installPage.Target.GetItemText(item) == "A new career…");
+        installPage.Target.Select(newItem);
+        installPage.Target.EmitSignal(OptionButton.SignalName.ItemSelected, newItem);
+        installPage.NewName.Text = "Installed Career";
+        installPage.NewName.EmitSignal(LineEdit.SignalName.TextChanged, installPage.NewName.Text);
+        check.That(!installPage.Install.Disabled, "a named new career can be installed");
+        installPage.AskToInstall();
+        check.That(installPage.Confirm.Visible && installPage.Confirm.DialogText.Contains("Installed Career.bes") &&
+            installPage.Confirm.DialogText.Contains(backupRoot), "the confirmation names the exact target and backup folder");
+        string installed = Path.Combine(install.Game, "savegames", "Installed Career.bes");
+        check.That(!File.Exists(installed), "nothing is written before the confirmation");
+        InstallReceipt installedReceipt = await installPage.ConfirmAsync();
+        check.That(installedReceipt.Ok && File.ReadAllBytes(installed).AsSpan().SequenceEqual(goodieBytes) && Backups.List(backupRoot).Count == 2,
+            "the confirmed copy is backed up around, written into savegames and verified");
+        check.That(app.Game.Folder?.Careers.Any(career => career.Name == "Installed Career.bes") == true && app.Home.OpenButtons.Count == 2,
+            "Home lists the installed career after the write");
         await Frame(tree);
     }
 

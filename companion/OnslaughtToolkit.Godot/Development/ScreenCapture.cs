@@ -82,14 +82,19 @@ public partial class ScreenCapture : SceneTree
         viewport.AddChild(app);
         await Settle();
         for (int frame = 0; frame < 600 && (app.Game.Busy || app.Game.Folder is null); frame++) await Settle();
-        foreach (string page in new[] { "home", "edit", "compare", "stored", "media" })
+        foreach (string page in app.Pages.Keys)
         {
             app.Navigate(page);
-            await Shot(viewport, label, page + "-before-open");
+            await Shot(viewport, label, page + "-empty");
         }
 
         app.Navigate("home");
         await app.OpenCareerAsync(original);
+        await Shot(viewport, label, "overview");
+        app.Navigate("goodies");
+        app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
+        await Shot(viewport, label, "goodies");
+        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
         foreach ((int row, int count) in new[] { (0, 123456), (3, 4242) })
         {
             app.EditCopy.Rows[row].Target.Value = count;
@@ -102,21 +107,19 @@ public partial class ScreenCapture : SceneTree
         await app.EditCopy.WriteCopyAsync(unchanged: true);
         await Shot(viewport, label, "edit-refused-existing");
 
+        app.Navigate("compare");
+        await app.Compare.CompareAsync(Path.Combine(work, "career-edited.bes"));
+        await Shot(viewport, label, "compare");
         app.Navigate("stored");
         TreeItem? first = app.StoredValues.Tree.GetRoot()?.GetFirstChild();
         if (first?.GetNext() is TreeItem links) links.Collapsed = false;
         await Shot(viewport, label, "stored-values");
-
-        app.Navigate("compare");
-        await app.Compare.CompareAsync(Path.Combine(work, "career-edited.bes"));
-        await Shot(viewport, label, "compare");
-
         app.Navigate("media");
         await app.MediaFiles.BrowseAsync(media);
         app.MediaFiles.Files.GetRoot()?.GetFirstChild()?.Select(0);
         await Shot(viewport, label, "media-files");
-
         app.Navigate("home");
+        await Shot(viewport, label, "home-career-open");
         app.OpenDialog.CurrentDir = work;
         app.OpenDialog.PopupCenteredRatio(0.75f);
         await Shot(viewport, label, "open-dialog");

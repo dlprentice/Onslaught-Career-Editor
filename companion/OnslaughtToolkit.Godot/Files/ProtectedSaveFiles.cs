@@ -63,6 +63,8 @@ public sealed class ProtectedSaveFiles : IProtectedSaveFiles
         {
             string path = CareerPath(input, "input");
             string destination = CareerPath(output, "output");
+            if (!string.Equals(Path.GetExtension(path), Path.GetExtension(destination), StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("A copy keeps its original's kind: a .bes career stays .bes and an options .bea stays .bea.");
             string expectedIdentity = RequiredText(identity, "identity", 128);
             byte[] expectedSourceHash = ParseSha256(sha256);
             if (FileMutationSafety.AreLexicallySamePath(path, destination))
@@ -101,9 +103,9 @@ public sealed class ProtectedSaveFiles : IProtectedSaveFiles
     private static string CareerPath(string? value, string field)
     {
         string path = RequiredText(value, field, MaximumPathCharacters);
-        if (path.Contains('\0') || !Path.IsPathFullyQualified(path) ||
-            !string.Equals(Path.GetExtension(path), ".bes", StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException($"{field} must be an absolute .bes career-save path.");
+        // Careers (.bes) and the game's options file (.bea) share the 10,004-byte career format.
+        if (path.Contains('\0') || !Path.IsPathFullyQualified(path) || Path.GetExtension(path).ToLowerInvariant() is not (".bes" or ".bea"))
+            throw new ArgumentException($"{field} must be an absolute .bes career or .bea options path.");
         if (!string.Equals(path, path.Trim(), StringComparison.Ordinal))
             throw new ArgumentException($"{field} must not have leading or trailing whitespace.");
         return FileMutationSafety.NormalizeLocalPath(path, field);

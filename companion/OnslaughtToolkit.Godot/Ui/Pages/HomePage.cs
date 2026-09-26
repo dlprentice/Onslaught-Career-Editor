@@ -48,7 +48,8 @@ internal sealed class HomePage : Page
         {
             "Careers open read-only; the original is never modified.",
             "Changes go to a new file that is reopened and compared with the preview before it is offered.",
-            "Existing files are never replaced by an edit, and nothing is deleted automatically.",
+            "An edit never replaces a file. Only Install & backups writes into the game folder: after you confirm, never " +
+                "while the game runs, and only after a verified backup of every career and the options file.",
             "Each value says how we know what it means: seen in the game, read from the game's code, or unproven.",
         })
         {

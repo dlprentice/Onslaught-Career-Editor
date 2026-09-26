@@ -92,6 +92,51 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
         }
     }
 
+    /// <summary>Makes a verified backup set of every career and the options file.</summary>
+    public async Task<BackupReceipt> BackUpAsync(Game.GameFolder game, string backupRoot)
+    {
+        if (Busy) return new BackupReceipt(false, "A file operation is already running.");
+        SetBusy(true);
+        try
+        {
+            return await worker.RunExclusiveAsync(files => Backups.Create(files, game, backupRoot, DateTime.Now),
+                message => new BackupReceipt(false, message));
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>
+    /// Writes a verified career or options file into the game folder after a verified backup. The
+    /// source is read through the protected route and must be a supported career of the same kind.
+    /// </summary>
+    public async Task<InstallReceipt> InstallAsync(Game.GameFolder game, string sourcePath, string targetName, string backupRoot,
+        Func<bool> gameRunning)
+    {
+        if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
+        bool options = string.Equals(targetName, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase);
+        if (!string.Equals(System.IO.Path.GetExtension(sourcePath), options ? ".bea" : ".bes", StringComparison.OrdinalIgnoreCase))
+            return new InstallReceipt(false, options ? "Only a .bea options file can become defaultoptions.bea."
+                : "Only a .bes career can go into savegames.", targetName);
+        SetBusy(true);
+        try
+        {
+            return await worker.RunExclusiveAsync(files =>
+            {
+                ProtectedRead read = files.OpenCareer(sourcePath);
+                if (!read.Ok || read.Bytes is not byte[] bytes)
+                    return new InstallReceipt(false, "The file to install could not be read: " + read.Message, targetName);
+                return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now);
+            }, message => new InstallReceipt(false, message, targetName));
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
     /// <summary>Blocks until a running transaction finishes; used only while the application closes.</summary>
     public void WaitForCompletion() => worker.WaitForCompletion();
 

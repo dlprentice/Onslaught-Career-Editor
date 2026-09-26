@@ -12,10 +12,10 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// closing while a protected file transaction is still running.
 /// </summary>
 /// <summary>Where the companion looks for Steam and keeps its settings; tests and captures supply their own.</summary>
-internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath)
+internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null)
 {
     internal static CompanionEnvironment Default() =>
-        new(SteamLibraries.DefaultRoots(), ProjectSettings.GlobalizePath("user://settings.json"));
+        new(SteamLibraries.DefaultRoots(), ProjectSettings.GlobalizePath("user://settings.json"), GameProcess.IsRunning);
 }
 
 public partial class CompanionApp : Control
@@ -47,6 +47,7 @@ public partial class CompanionApp : Control
     internal HomePage Home { get; private set; } = null!;
     internal OverviewPage Overview { get; private set; } = null!;
     internal GoodiesPage Goodies { get; private set; } = null!;
+    internal InstallPage Install { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -74,10 +75,12 @@ public partial class CompanionApp : Control
         Compare = new ComparePage(Workspace, Status, this);
         StoredValues = new StoredValuesPage(Workspace);
         MediaFiles = new MediaFilesPage(Status, this);
+        Install = new InstallPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
             ("Career", [Overview, Goodies, EditCopy, Compare, StoredValues]),
+            ("Game", [Install]),
             ("Library", [MediaFiles]),
         ];
 
@@ -230,6 +233,7 @@ public partial class CompanionApp : Control
         OpenButton.Disabled = Workspace.Busy;
         EditCopy.UpdateActions();
         Compare.Refresh();
+        if (Current == Install) Install.Refresh();
         RefreshHeader();
     }
 

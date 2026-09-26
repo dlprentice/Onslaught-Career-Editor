@@ -134,6 +134,18 @@ internal static class ProtectedFilesTests
         check.That(!File.Exists(game.Output), "Game-tree refusal creates no save.");
         OriginalUnchanged(game, original, check);
 
+        Case options = new(root, "options-file", original);
+        string optionsInput = Path.Combine(options.Root, "defaultoptions.bea");
+        File.Move(options.Input, optionsInput);
+        ProtectedRead optionsRead = adapter.OpenCareer(optionsInput);
+        check.That(optionsRead.Ok && optionsRead.Bytes is byte[] optionBytes && optionBytes.AsSpan().SequenceEqual(original),
+            "The game's .bea options file opens through the same protected read.");
+        Refusal(adapter.PublishCopy(optionsInput, optionsRead.Identity, optionsRead.Sha256, options.Output, original),
+            "An options file published under a .bes name", check);
+        PublicationReceipt optionsCopy = adapter.PublishCopy(optionsInput, optionsRead.Identity, optionsRead.Sha256,
+            Path.Combine(options.OutputDirectory, "defaultoptions-copy.bea"), original);
+        check.That(optionsCopy.Ok && optionsCopy.Verified, "An options file copies to a new .bea file.");
+
         if (OperatingSystem.IsLinux()) LinuxAliases(adapter, root, original, check);
     }
 
