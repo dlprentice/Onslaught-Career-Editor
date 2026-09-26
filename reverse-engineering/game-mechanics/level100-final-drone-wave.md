@@ -382,6 +382,31 @@ never self-acquire.
   the six callers are `0x004d8e00`, `0x004d9351`, `0x004d93a7`, `0x004d959a`,
   `0x004daafc` and `0x004dab6b`).
 
+### Round lifetime, terrain and binding
+
+- **Birth.** The `CRound` constructor stamps `+0xf4` with the event time
+  (`0x004d8253`); `CreateProjectile` runs it before `Init`. The seek-delay age
+  test computes now − `+0xf4` on the x87 stack (`0x004d9403-0x004d9409`) and
+  compares it with `CRoundSeekDelay` without storing it, at the live precision.
+- **Life.** `CRound::Init` queues event 4000 at now + the payload life span
+  (`0x004d86a6`), a scheduled event rather than an age test. On delivery
+  (`0x004d9a54`), a `CRoundFlak` or `CRoundExplode` round explodes in the air
+  (`0x004d9f30`, mode 0) and dies; any other non-beam round just dies. Micro
+  Missile, Forseti Missile and SAT 1 carry `CRoundExplode`; Blaster and Pulse Bolt
+  Medium do not.
+- **Terrain.** A gravity-free round with zero turn rate that does not hug the
+  ground gets a launch-time terrain prediction along its straight path. `Init`
+  queues event 4001 at now + distance/speed (`0x004d89cb`); on delivery the
+  round steps back to the impact point, explodes with the ground (1) or water (2)
+  variant and dies unless `CRoundFire`.
+- **Seeking rounds** (turn rate above zero) get no prediction. They meet the
+  terrain through their Actor ground contact, `CRound::DeclareOnGround` (slot 68,
+  `0x004d9dd0`).
+- **Binding.** `CRound::SetTargetReaderIfAllowed(target, 0)` (`0x004daab0`)
+  refuses only a null target, or a round that neither seeks nor repairs (seek 0
+  and damage ≥ 0). It binds `+0xe8`, and a Battle Engine target also lists the
+  round in `0x008551a0`.
+
 ### Shared-stream draws by rounds and weapons
 
 Every `Random__NextLCGAbs` call in the round, weapon, fire-control, AI, crosshair
@@ -399,8 +424,12 @@ generator. Player and enemy rounds use the same code and stream.
   `CWeaponClip` (`+0x00`).
 
 The Missile Pod modes, the M6 Blaster, the SAT Launcher and both drone weapons
-name no clip and fire no flak rounds, so each spawned round costs exactly two
-draws at launch, plus two per Move while a wiggling round flies.
+name no clip and fire no flak rounds. Each spawned round therefore costs three draws
+at launch: the inaccuracy pair, then the Actor draw inside `CRound::Init`
+(`CActor::Init` at `0x004d867b`). A wiggling round then takes two per Move while it
+flies. A Battle Engine shot adds three `AddShockShake` draws per round when
+`CWeaponPower` is at least 0.001
+([burst contract](../contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md)).
 
 ## AI owners that draw shared RNG
 

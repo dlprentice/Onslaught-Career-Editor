@@ -54,7 +54,11 @@ One call is one burst event. In order:
    8. Target = owner slot 81. The round's owner reader `+0xec` = owner.
    9. `CRoundFlak` round (`+0x4c`) with a target and speed × life > distance: one draw resets the life (`0x00507453`).
    10. Battle Engine owner: player `+0x574` → `+0x34` += 1, then `FireLock(target)` (`0x005074c9`) when `0x00407310` finds this weapon current.
-   11. `SetTargetReaderIfAllowed(target, 0)`, then the round's Init with the payload.
+   11. `SetTargetReaderIfAllowed(target, 0)`, then the round's Init with the payload (`CRound::Init`, `0x004d8410`):
+       - It calls `CActor::Init` (`0x004d867b`), which takes one shared draw for the move phase and queues MOVE.
+       - It queues event 4000 at now + the payload life span (`0x004d86a6`).
+       - For a gravity-free round with zero turn rate that does not hug the ground, it predicts the terrain hit along the launch line and queues event 4001 (`0x004d89cb`).
+       - A seek-mode-1 round then takes one more draw and queues 4003 (`0x004daf8e`).
    12. Muzzle effect per emitter slot, then the muzzle light when `+0xb8` is not −1.
    13. `CWeaponClip`: create object `0x15` and take three draws (`0x005076f6`-`0x00507710`).
    14. Battle Engine owner: `RecoilWeapon` (`0x00507871`).
