@@ -1,5 +1,11 @@
 # Career Graph (Nodes + Links) and Safe Unlocking
 
+Status: active reference for companion career edits
+Last updated: 2026-09-25
+Summary: how the campaign graph (nodes, links and base-world survivor bitmaps) sits in the fixed-size Steam save, and how to unlock missions without corrupting it.
+Evidence: SOURCE-INFORMED from the pinned `Career.cpp`/`Career.h` with retail cross-references; on 2026-09-25 the retail career table at `0x00623e28` was compared word for word with `Career.cpp:24-60` and matched.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 This doc describes how the campaign graph is represented inside the fixed-size Steam `.bes` save and what to change to unlock missions **without** corrupting the career structure.
 
 Primary sources:
@@ -177,7 +183,7 @@ This is the “shape” of the graph. Save files store the derived node/link ind
 
 Notes:
 - The save reserves 100 nodes / 200 links, but the shipped campaign logic iterates `num_nodes = 43` nodes for the main career tree.
-- Some `base_update_*` targets intentionally “skip ahead” (see comments in `CCareer::ReCalcLinks()`), but that impacts base-objective persistence, not the graph structure itself.
+- Some `base_update_*` targets intentionally “skip ahead” (see comments in `CCareer::ReCalcLinks()`), but that affects which world's base-world survivor bitmap is written, not the graph structure itself.
 
 ---
 
@@ -206,7 +212,7 @@ Recommended:
 - Do not modify structural fields:
   - `CCareerNode.mLowerLink` / `mHigherLink`
   - `CCareerNodeLink.mToNode`
-  - `CCareerNode.mBaseThingsExists[]` (preserve objective persistence bits)
+  - `CCareerNode.mBaseThingsExists[]` (preserve the base-world survivor bits)
 
 This is the lowest-risk unlock operation because it changes only the gate state of edges and preserves all per-mission state.
 
@@ -277,6 +283,6 @@ World-500 caveat:
 
 Avoid these unless you’re intentionally doing deeper experiments:
 - `CCareerNode.state` at `+0x00` (historical/legacy flags; preserve)
-- `mBaseThingsExists[9]` (objective persistence bits)
+- `mBaseThingsExists[9]` (base-world survivor bits: bit *i* is base-world row *i*; see [struct-layouts](struct-layouts.md#mbasethingsexists9---base-world-survivors))
 - Any structural indices (`mLowerLink`, `mHigherLink`, `mToNode`)
 - File size (must remain `0x2714` for Steam saves)

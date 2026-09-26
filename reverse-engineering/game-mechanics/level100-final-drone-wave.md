@@ -344,9 +344,10 @@ Both refreshes exist in retail and draw from the shared gameplay stream.
   menu (`0x00472d1b`/`0x00472d2f`) changes it. Otherwise it ends with one draw
   (`0x0040bf57`) and queues 6003 for time + 0.2 + (r mod 65536) × 0.1/65536.
 
-Construction of the Battle Engine therefore takes two shared draws, 6002 and
-then 6003. Afterwards each 6002 delivery takes one, and each 6003 delivery takes
-one while auto-aim is allowed.
+Battle Engine construction therefore draws three times: the Actor draw inside
+its Unit Init (called at `0x004054c6`), then 6002, then 6003. Afterwards each
+6002 delivery takes one draw, and each 6003 delivery takes one while auto-aim
+is allowed.
 
 ### Seeking rounds
 
