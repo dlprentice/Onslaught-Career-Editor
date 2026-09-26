@@ -62,9 +62,9 @@ class GoldenAdmissionTests(unittest.TestCase):
         (self.directory / "b.json").unlink()
         (self.directory / "b.real").rename(target)
 
-    def test_only_the_named_diagnostic_is_expected(self) -> None:
-        self.assertEqual(("core/io/stream_peer_gzip.cpp",), gdscript_checks.EXPECTED_ENGINE_ERRORS["pause_scene_checks"])
-        self.assertEqual({"pause_scene_checks"}, set(gdscript_checks.EXPECTED_ENGINE_ERRORS))
+    def test_only_the_named_diagnostics_are_expected(self) -> None:
+        self.assertEqual({"pause_scene_checks": ("core/io/stream_peer_gzip.cpp",),
+                          "world_presentation": ("look_at() failed",)}, gdscript_checks.EXPECTED_ENGINE_ERRORS)
 
 
 if __name__ == "__main__":

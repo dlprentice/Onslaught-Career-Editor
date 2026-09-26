@@ -7,7 +7,10 @@ extends RefCounted
 ## The exact shader and per-draw provenance remain in the external shader and
 ## retained C# light-rig/enumerant definitions. No lighting model is added here.
 const F = preload("res://Scenes/Shared/retail_float32.gd")
-const Template = preload("res://Scenes/Shared/RetailFixedFunctionMaterial.tres")
+# Loaded at first use, not with this script: a preload here created the shared
+# shader when the host started, ahead of the imported world's own resources,
+# which reordered equal-depth draws against the C# host's frames.
+const TEMPLATE_PATH: String = "res://Scenes/Shared/RetailFixedFunctionMaterial.tres"
 const MODULATE: int = 4
 const MODULATE_2X: int = 5
 
@@ -51,7 +54,7 @@ static func create(layers: Variant, facts: Variant, maximum_horizontal_distance:
 	var dot3: Variant = layers[1]
 	var reflection: Variant = layers[2]
 	var overlay: Variant = layers[4]
-	var material: ShaderMaterial = Template.duplicate()
+	var material: ShaderMaterial = (load(TEMPLATE_PATH) as ShaderMaterial).duplicate()
 	material.set_shader_parameter("base_texture", base.texture)
 	material.set_shader_parameter("dot3_texture", _texture_or_base(dot3, base))
 	material.set_shader_parameter("reflection_texture", _texture_or_base(reflection, base))

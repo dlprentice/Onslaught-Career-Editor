@@ -97,8 +97,10 @@ STANDALONE = (
 )
 GROUPS = ("parity", "fixtures", "laws", "startup", "scenes", "host", "replay", "world")
 # Engine diagnostics a check provokes on purpose: pause_scene_checks feeds a
-# corrupt deflate stream to the AYA reader, and Godot's gzip stream logs it.
-EXPECTED_ENGINE_ERRORS = {"pause_scene_checks": ("core/io/stream_peer_gzip.cpp",)}
+# corrupt deflate stream to the AYA reader, and Godot's gzip stream logs it;
+# world_presentation's Int32-boundary pose makes both cameras' look_at refuse.
+EXPECTED_ENGINE_ERRORS = {"pause_scene_checks": ("core/io/stream_peer_gzip.cpp",),
+                          "world_presentation": ("look_at() failed",)}
 
 
 def canonical_lab() -> Path:
@@ -238,6 +240,8 @@ def main(argv: list[str] | None = None) -> int:
         if "world" in groups:
             text = run("world", dotnet_engine, ["--script", "res://Scenes/World/Tests/world_scene_checks.gd"], [], 900)
             results["world"]["report_ok"] = "WORLD_SCENE_CHECKS:" in text and "passed" in text
+            text = run("world_presentation", dotnet_engine, ["--script", "res://Tests/world_presentation_checks.gd"], [], 900)
+            results["world_presentation"]["report_ok"] = "WORLD_PRESENTATION_CHECKS:" in text and "passed" in text
         failed = sorted(name for name, result in results.items()
                         if result["exit"] != 0 or result["engine_errors"] or result.get("report_ok") is False)
         summary = {"result": "failed" if failed else "passed", "engine": version,
