@@ -214,7 +214,6 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
 reverse-engineering/binary-analysis/functions/Pod.cpp/CPod__VFunc_66_UpdateMotionAndAccumulateScalar.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
-reverse-engineering/binary-analysis/functions/Script.cpp/CGame__SetSlot.md
 reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
 reverse-engineering/binary-analysis/functions/Sentinel.cpp.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
@@ -413,7 +412,6 @@ reverse-engineering/source-code/core/platform-system.md
 reverse-engineering/source-code/core/thing-system.md
 reverse-engineering/source-code/frontend/_index.md
 reverse-engineering/source-code/frontend/controller-system.md
-reverse-engineering/source-code/frontend/fep-systems.md
 reverse-engineering/source-code/full-source-parse-2026-02-11.md
 reverse-engineering/source-code/gameplay/_index.md
 reverse-engineering/source-code/gameplay/battle-system.md
