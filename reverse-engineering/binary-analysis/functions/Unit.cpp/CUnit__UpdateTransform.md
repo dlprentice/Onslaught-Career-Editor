@@ -1,7 +1,7 @@
 # CUnit__UpdateTransform
 
 Status: bounded static and isolated original-code contract; World110 arithmetic implemented
-Last updated: 2026-09-26 (RE audit: the asin helpers' current names)
+Last updated: 2026-09-26 (the retired World 110 stage noted; RE audit: the asin helpers' current names)
 Summary: profile attachment caching, exact arithmetic, mesh lookup and isolated
 aircraft cache population and pose observations. Live firing integration,
 camera-latch ownership and complete child initialization remain unvalidated.
@@ -239,7 +239,7 @@ The four actual matrices take the interior, nonzeroing path. The helper keeps
 control `0x027f` unchanged; other control-word and exceptional paths are outside
 the Core claim.
 
-`RetailWorld110InitialConstruction.Create()` now prepares four ordered
+`RetailWorld110InitialConstruction.Create()` (retired on 2026-09-26 with the separate World 110 stage; last present at `df392cb4`) prepared four ordered
 `ComponentInitInputs` using the actual parent identities and shared mesh data.
 `RetailUnitAttachmentPose` computes the attachment and Euler words. It does not
 allocate a child, bind its parent reader, run child Init or publish events.

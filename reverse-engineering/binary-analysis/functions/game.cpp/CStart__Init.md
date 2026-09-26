@@ -3,7 +3,7 @@
 > Address: `0x004eae10`
 
 Status: partial static contract; terrain-height prefix carried, remainder open
-Last updated: 2026-08-30
+Last updated: 2026-09-26 (its rebuild owner retired; findings dated 2026-08-30)
 Source File: none — the `CStart` implementation is absent from the pinned GPL
 drop; placement below `game.cpp/` is organizational only | Binary: BEA.exe
 pristine specimen, SHA-256
@@ -59,6 +59,8 @@ negative-zero Z, so the second sample becomes the final Z.
 
 ## Rebuild mapping
 
+`RetailWorldPlayerStartHeightClamp` was retired on 2026-09-26 with the separate World 110 stage; last present at `df392cb4`. `Simulation` now
+builds World 110. As recorded:
 `RetailWorldPlayerStartHeightClamp.Apply` accepts only an already-admitted
 player-start resolution and the hash-pinned world-110 terrain. Its immutable
 result retains authored raw fields and records every sample. Production callers

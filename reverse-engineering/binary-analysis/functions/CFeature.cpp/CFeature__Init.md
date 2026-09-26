@@ -3,11 +3,11 @@
 > Address: `0x0044ca30`
 
 Status: active static construction contract
-Last updated: 2026-09-07
+Last updated: 2026-09-26 (the retired World 110 stage noted; construction findings dated 2026-09-07)
 Summary: Feature initialization, its Actor lineage, three distinct mesh radii,
-collision/publication order and the actual World110 iceberg inputs. The six
-icebergs now have bounded Core initialization after the preceding Buildings and
-SAT Cannon; they are not an independent or playable load prefix.
+collision/publication order and the actual World110 iceberg inputs. The separate
+World 110 stage, retired on 2026-09-26, gave the six icebergs bounded Core initialization
+after the preceding Buildings and SAT Cannon; the retail findings stand.
 Evidence: MEASURED — pristine body/vtable/RTTI reads, retained instruction
 comparisons and four exact mesh reads; no Ghidra or game process was opened.
 `CFeature.cpp` is absent from the pinned GPL source drop.
@@ -130,7 +130,7 @@ fresh construction prefix can retain real membership with readiness false,
 provided preceding constructors/callbacks are shown not to activate it.
 This is not permission to omit the eventual occupancy/shadow effects.
 
-`RetailWorld110Feature` now uses the shared `RetailWorld110Actor` owner in
+`RetailWorld110Feature` (retired on 2026-09-26 with the separate World 110 stage; last present at `df392cb4`) used the shared `RetailWorld110Actor` owner in
 `CreateThroughInitialIcebergs(seed)`, following all four preceding ordinary
 objects and the real 1,481 pines. The v7 actor input admits the four profiles,
 mesh bounds and full CPOS/CORI word arrays. All six actual terrain samples
@@ -154,7 +154,7 @@ All twelve requests remain undelivered. No Unit membership, weapon/effect,
 AI, animation or sound owner is created. Occupancy is prepended but inactive.
 Current and old XY/bases survive; direct Euler retains negative zero in
 row0Y and row2X. These are input-specific static calculations, checked by
-`RetailWorld110CannonFeatureConstructionTests`, under the stated nearest/53-bit
+`RetailWorld110CannonFeatureConstructionTests` (retired with that stage), under the stated nearest/53-bit
 and fresh/preloaded-resource assumptions.
 
 | Variant | Sphere radius² | Initial centre Z | Stored owner-relative Z |
