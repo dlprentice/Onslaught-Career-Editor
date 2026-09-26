@@ -157,14 +157,17 @@ complete-shot RNG remain unresolved. A read-only frontend review identified
 `00459810` as a card-selection setter and `00465f10` as the outer frontend
 constructor; their saved metadata still needs the scoped byte-backed correction
 workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
-These saved labels are also wrong, each shown by the bytes cited in the named
-owner, and queue for the same workflow:
+These labels are still wrong in the working project, as its 2026-09-22 export
+(`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/live-post/functions.tsv`,
+db.18657) shows. Each is disproved by the bytes cited in the named owner, and all
+queue for the same workflow. The tracked 2026-08-31 name table is older still:
+the working project had already renamed `0055dcb0` to `CRT__AsinDispatch_ST0`,
+`00506010` to `CWeapon__Fire` and `004fe710` to `CUnitAI__Init`. Check the live
+export before calling a label wrong.
 
 | Address | Saved label | What it is | Owner |
 | --- | --- | --- | --- |
-| `0055dcb0` | `CRT__AcosDispatch_ST0` | CRT asin (error record `00653310` names `asin`) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
 | `0042efd0` | `CUnitAI__InitDefaults` | Unit profile defaults (turret yaw limit `+0xdc` = 2π) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
-| `00506010` | `ProjectileBurst__SpawnFromPercentBucketFallback` | `CWeapon::Fire` | [stores](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#fire-empty-stores-and-locks) |
 | `00509c80` | `CBattleEngine__ComputeProjectileMetricFromTargetProfile` | `CWeapon::GetActualMaxRange` | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#crosshair-and-auto-aim-refresh) |
 | `004f8140` | `Mat34__SetFromEulerDegrees` | Euler matrix from integer angles in units of 2π/4096 | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
 | `0040c2e0` | `CBattleEngine__CanSpawnBurstForResolvedEntry` | `CBattleEngine::WeaponFired` | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |

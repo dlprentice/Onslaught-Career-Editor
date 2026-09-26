@@ -86,7 +86,8 @@ at 0.
 
 ## Fire, empty stores and locks
 
-- `CWeapon::Fire` (`0x00506010`; its saved label is wrong) resolves the level from
+- `CWeapon::Fire` (`0x00506010`; named so in the working project, though the tracked
+  2026-08-31 table still says `ProjectileBurst__SpawnFromPercentBucketFallback`) resolves the level from
   round(charge)/100 with fallback, then sets the mode.
   - It sets the reload deadline `+0x64` to now + `CWeaponReloadTime` (`0x0050611a`),
     zeroes the burst counter `+0x6c`, and zeroes Battle Engine `+0x5e0`, the source's
