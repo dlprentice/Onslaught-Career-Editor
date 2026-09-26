@@ -60,9 +60,10 @@ public sealed class Level100ActorMechanicsTests
             "SpawnerA",
             1,
             "TargetTank1"));
+        // Node 6, the path's node nearest the tank's aligned position.
         Level100WaypointPointDefinition destination = definitions
             .GetWaypointPath("Target Tank Path 1")
-            .ChainPoint(0);
+            .Point(6);
         Level100ActorPoseSnapshot aligned = actors.GetActor(target).Pose with
         {
             PositionMillimeters = new SimVector3(
@@ -332,16 +333,14 @@ public sealed class Level100ActorMechanicsTests
                 "SpawnerA",
                 1,
                 "TargetTank1"));
-        // The first node of the TRAVERSAL, not of the serialized list. The tank
+        // The walk starts at the node nearest the tank, node 6 here. The tank
         // is parked on that node's X and pointed down +Z so the leg is a
         // straight run with no lateral component, which is what makes the
         // `displacement.X == 0` assertion below a speed measurement rather than
-        // a turn measurement. `Target Tank Path 1` serializes [18, 6, 7] and is
-        // walked [6, 7, 18], so aligning on `Points[0]` (node 18) would aim the
-        // tank at a node it visits LAST and the run would curve.
+        // a turn measurement.
         Level100WaypointPathDefinition route =
             definitions.GetWaypointPath("Target Tank Path 1");
-        Level100WaypointPointDefinition destination = route.ChainPoint(0);
+        Level100WaypointPointDefinition destination = route.Point(6);
         int initialZ = 0;
         int initialY =
             Level100Terrain.Instance.SampleGroundElevationMillimeters(
@@ -604,6 +603,48 @@ public sealed class Level100ActorMechanicsTests
     /// exactly 8,000 mm has not arrived.
     /// </para>
     /// </remarks>
+    /// <summary>
+    /// At the end of a walk a <c>CDropship</c>'s slot 64 is a bare <c>ret</c>
+    /// (<c>0x00459990</c>): the craft keeps its velocity, where a ground
+    /// vehicle stops (<c>0x004fcf00</c>; waypoint-paths.md, "Following").
+    /// </summary>
+    [Fact]
+    public void TransporterWalkEnd_KeepsItsVelocity()
+    {
+        Level100ActorDefinitionSet definitions =
+            Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        var mechanics =
+            new Level100ActorMechanics(actors, definitions);
+        Level100ActorId transporter =
+            actors.GetThingRef("Transporter")!.Value;
+        Level100WaypointPathDefinition path =
+            definitions.GetWaypointPath("Transporter Path");
+        void Park(int node) => actors.SetPose(transporter, actors.GetActor(transporter).Pose with
+        {
+            PositionMillimeters = path.Point(node).PositionMillimeters,
+            LinearVelocityMillimetersPerTick = new SimVector3(1, 2, 3),
+        });
+
+        Park(22);
+        mechanics.ApplyCommand(Command(
+            1,
+            transporter,
+            Level100ActorScriptCommandKind.FollowWaypointWait,
+            argument: path.Name));
+        Assert.Empty(mechanics.AdvanceTick());
+        Park(23);
+        Assert.Empty(mechanics.AdvanceTick());
+        Park(44);
+        Level100ActorMechanicsWaitCompletion completion = Assert.Single(mechanics.AdvanceTick());
+
+        Assert.Equal(path.Name, completion.Argument);
+        Assert.Equal(
+            Level100ActorCommandIntent.Stopped,
+            Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter).Intent);
+        Assert.Equal(new SimVector3(1, 2, 3), actors.GetActor(transporter).Pose.LinearVelocityMillimetersPerTick);
+    }
+
     [Fact]
     public void TransporterArrival_UsesTheStrictReleasedClassRadius()
     {
@@ -619,18 +660,24 @@ public sealed class Level100ActorMechanicsTests
         Assert.NotEqual(
             path.Points[0].PositionMillimeters,
             path.Points[1].PositionMillimeters);
-        // The cursor walks the authored `target` chain, so step 0 of the
-        // traversal is node 22 - the chain head - not node 44, which the level
-        // file happens to serialize first and the chain visits LAST.
-        Assert.Equal([44, 22, 23], path.Points.Select(point => point.NodeIndex));
-        Assert.Equal([22, 23, 44], path.TargetChainNodeIndices);
-        Assert.Equal(22, path.ChainPoint(0).NodeIndex);
+        // Retail's list is the file order [44, 22, 23] reversed. The walk
+        // starts at node 22, the node nearest the craft's authored position
+        // (squared distance 846.3 against 3,486.0 for node 23), and follows
+        // the targets 22 -> 23 -> 44 (waypoint-paths.md).
+        Assert.Equal([23, 22, 44], path.Points.Select(point => point.NodeIndex));
+        Assert.Equal([44, 23, null], path.Points.Select(point => point.TargetNodeIndex));
         Assert.Equal(
             8_000,
             definitions
                 .GetMotionDefinition("U-17 Highside Transporter")
                 .ArrivalRadiusMillimeters);
 
+        // The fixture parks the craft at the origin, where node 23 is nearest;
+        // from its authored position, retail (218.5, 297.5, -15), node 22 is.
+        actors.SetPose(transporter, actors.GetActor(transporter).Pose with
+        {
+            PositionMillimeters = new SimVector3(-70_188, 5_000, 54_250),
+        });
         mechanics.ApplyCommand(Command(
             1,
             transporter,
@@ -640,23 +687,23 @@ public sealed class Level100ActorMechanicsTests
             actors.GetActor(transporter).Pose with
             {
                 PositionMillimeters = new SimVector3(
-                    path.ChainPoint(0).PositionMillimeters.X +
+                    path.Point(22).PositionMillimeters.X +
                         8_000,
                     -12_345,
-                    path.ChainPoint(0).PositionMillimeters.Z),
+                    path.Point(22).PositionMillimeters.Z),
             };
         actors.SetPose(transporter, pose);
 
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            0,
+            22,
             Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
-                .WaypointPointIndex);
+                .WaypointNodeIndex);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            0,
+            22,
             Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
-                .WaypointPointIndex);
+                .WaypointNodeIndex);
         Assert.Equal(pose, actors.GetActor(transporter).Pose);
 
         pose = pose with
@@ -665,16 +712,16 @@ public sealed class Level100ActorMechanicsTests
                 pose.PositionMillimeters with
                 {
                     X =
-                        path.ChainPoint(0).PositionMillimeters.X +
+                        path.Point(22).PositionMillimeters.X +
                         7_999,
                 },
         };
         actors.SetPose(transporter, pose);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            1,
+            23,
             Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
-                .WaypointPointIndex);
+                .WaypointNodeIndex);
 
         // ...and it stops there. Under the aliased table both of the base ticks
         // below advanced the cursor again, because node 22 held node 44's
@@ -683,14 +730,14 @@ public sealed class Level100ActorMechanicsTests
         // cursor exactly one node.
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            1,
+            23,
             Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
-                .WaypointPointIndex);
+                .WaypointNodeIndex);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            1,
+            23,
             Assert.Single(mechanics.Snapshot.Actors, item => item.ActorId == transporter)
-                .WaypointPointIndex);
+                .WaypointNodeIndex);
 
         // Dropship movement is not implemented - the class identity and radius
         // are retained evidence only - so the pose is still exactly where the

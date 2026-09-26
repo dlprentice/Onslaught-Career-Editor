@@ -167,12 +167,37 @@ public static class Level100ActorDefinitionManifest
         for (int pathIndex = 0; pathIndex < waypointPaths.Length; pathIndex++)
         {
             WaypointPath source = manifest.WaypointPaths[pathIndex];
+            if (source.TargetChainNodeIndices.Length != source.Points.Length)
+            {
+                throw new InvalidDataException(
+                    $"Level 100 waypoint path '{source.Name}' has " +
+                    $"{source.TargetChainNodeIndices.Length} chain entries for " +
+                    $"{source.Points.Length} nodes.");
+            }
+
+            // The manifest keeps the file order, every row a CWaypoint, and
+            // the target chain: each node targets the next chain entry, and the
+            // last one the head when the chain closes (waypoint-paths.md).
+            int[] chain = source.TargetChainNodeIndices;
+            var targets = new Dictionary<int, int?>();
+            for (int index = 0; index < chain.Length; index++)
+            {
+                if (!targets.TryAdd(
+                    chain[index],
+                    index + 1 < chain.Length ? chain[index + 1] : source.IsClosed ? chain[0] : null))
+                {
+                    throw new InvalidDataException(
+                        $"Level 100 waypoint path '{source.Name}' repeats chain node {chain[index]}.");
+                }
+            }
+
             var points = new Level100WaypointPointDefinition[source.Points.Length];
             for (int pointIndex = 0; pointIndex < points.Length; pointIndex++)
             {
                 WaypointPoint point = source.Points[pointIndex];
                 if (point.PositionMillimeters.Length != 3 ||
-                    point.RetailComponentsFloatBits.Length != 4)
+                    point.RetailComponentsFloatBits.Length != 4 ||
+                    !targets.TryGetValue(point.NodeIndex, out int? target))
                 {
                     throw new InvalidDataException(
                         "A Level 100 waypoint point changed shape.");
@@ -187,20 +212,10 @@ public static class Level100ActorDefinitionManifest
                         point.RetailComponentsFloatBits[0],
                         point.RetailComponentsFloatBits[1],
                         point.RetailComponentsFloatBits[2],
-                        point.RetailComponentsFloatBits[3]));
+                        point.RetailComponentsFloatBits[3]),
+                    target);
             }
-            if (source.TargetChainNodeIndices.Length != points.Length)
-            {
-                throw new InvalidDataException(
-                    $"Level 100 waypoint path '{source.Name}' has " +
-                    $"{source.TargetChainNodeIndices.Length} chain entries for " +
-                    $"{points.Length} nodes.");
-            }
-            waypointPaths[pathIndex] = new Level100WaypointPathDefinition(
-                source.Name,
-                points,
-                Array.AsReadOnly(source.TargetChainNodeIndices.ToArray()),
-                source.IsClosed);
+            waypointPaths[pathIndex] = Level100WaypointPathDefinition.FromFileOrder(source.Name, points);
         }
 
         var motionDefinitions =
@@ -422,12 +437,8 @@ public static class Level100ActorDefinitionManifest
         public string Name { get; init; } = string.Empty;
         public WaypointPoint[] Points { get; init; } = [];
 
-        // Schema v14 shipped these two on 2026-07-27 and nothing read them for
-        // three days, so the product walked `Points` - the SERIALIZED order -
-        // and the ambient Air Trainer flew `Flyby Path` backwards, from the
-        // chain's tail. They are consumed now; see
-        // Level100WaypointPathDefinition for the bytes that settle which order
-        // retail walks.
+        // The chain gives each node's target; see
+        // Level100WaypointPathDefinition for how retail walks it.
         public int[] TargetChainNodeIndices { get; init; } = [];
         public bool IsClosed { get; init; }
     }

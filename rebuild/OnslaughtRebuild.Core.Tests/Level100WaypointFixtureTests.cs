@@ -76,58 +76,41 @@ public sealed class Level100WaypointFixtureTests
                 Assert.Equal(expected.Points[index], actual.Points[index]);
             }
 
-            // The traversal chain and the loop flag decide MOTION, so a fixture
-            // that drifted on them would send every Core-only follower down a
-            // different route from the product's while every coordinate above
-            // still matched.
-            Assert.Equal(
-                expected.TargetChainNodeIndices,
-                actual.TargetChainNodeIndices);
-            Assert.Equal(expected.IsClosed, actual.IsClosed);
+            // Record equality on each point includes its target, which decides
+            // motion: a fixture that drifted on one would send every Core-only
+            // follower down a different route from the product's while every
+            // coordinate still matched.
         }
     }
 
     /// <summary>
-    /// The shipped fact that #146 turned on: on six of the eight paths the
-    /// serialized node order is NOT the order retail walks.
+    /// The loaded paths as retail holds them: each list is the file order
+    /// reversed, and the targets form the chains the RE lane read
+    /// (<c>reverse-engineering/game-mechanics/waypoint-paths.md</c>, "Level 100
+    /// paths").
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Asserted on the manifest, so it is a statement about retail rather than
-    /// about the fixture. If a future materializer change quietly made
-    /// <c>points</c> chain-ordered, every consumer would keep working and this
-    /// test would fail - which is the point. It is the guard that keeps the two
-    /// orders visibly distinct instead of letting them silently converge.
-    /// </para>
-    /// <para>
-    /// <c>Target Truck Path 1</c> and <c>Drone Path 1</c> are the two that
-    /// genuinely agree; they are named rather than counted so that "six" cannot
-    /// be satisfied by the wrong six.
-    /// </para>
-    /// </remarks>
     [Fact]
-    public void ManifestWaypointPaths_SerializedOrderIsNotTheTraversalOrder()
+    public void ManifestWaypointPaths_AreRetailListsWithTheirTargetChains()
     {
         Level100ActorDefinitionSet manifest = Manifest();
 
-        string[] agreeing = manifest.WaypointPaths
-            .Where(path => path.Points
-                .Select(point => point.NodeIndex)
-                .SequenceEqual(path.TargetChainNodeIndices))
-            .Select(path => path.Name)
-            .ToArray();
-        Assert.Equal(["Target Truck Path 1", "Drone Path 1"], agreeing);
-
-        // The one this task exists for.
         Level100WaypointPathDefinition flyby = manifest.GetWaypointPath("Flyby Path");
-        Assert.Equal([43, 42, 41], flyby.Points.Select(point => point.NodeIndex));
-        Assert.Equal([41, 42, 43], flyby.TargetChainNodeIndices);
+        Assert.Equal([41, 42, 43], flyby.Points.Select(point => point.NodeIndex));
+        Assert.Equal([42, 43, null], flyby.Points.Select(point => point.TargetNodeIndex));
 
-        // Exactly the two closed chains, named for the same reason.
+        Level100WaypointPathDefinition transporter = manifest.GetWaypointPath("Transporter Path");
+        Assert.Equal([23, 22, 44], transporter.Points.Select(point => point.NodeIndex));
+        Assert.Equal([44, 23, null], transporter.Points.Select(point => point.TargetNodeIndex));
+
+        Level100WaypointPathDefinition tanks = manifest.GetWaypointPath("Target Tank Path 2");
+        Assert.Equal([24, 10, 8, 37, 38], tanks.Points.Select(point => point.NodeIndex));
+        Assert.Equal([8, 24, 38, 10, 37], tanks.Points.Select(point => point.TargetNodeIndex!.Value));
+
+        // Exactly the two loops: every node of theirs has a target.
         Assert.Equal(
             ["Target Tank Path 2", "Drone Path 1"],
             manifest.WaypointPaths
-                .Where(path => path.IsClosed)
+                .Where(path => path.Points.All(point => point.TargetNodeIndex is not null))
                 .Select(path => path.Name));
     }
 
@@ -208,10 +191,10 @@ public sealed class Level100WaypointFixtureTests
                 .GroupBy(point => point.PositionMillimeters.Y)
                 .ToDictionary(group => group.Key, group => group.Count()));
         Assert.All(
-            manifest.GetWaypointPath("Flyby Path").Points.Skip(1),
+            manifest.GetWaypointPath("Flyby Path").Points.SkipLast(1),
             point => Assert.Equal(-15_000, point.PositionMillimeters.Y));
         Assert.All(
-            manifest.GetWaypointPath("Transporter Path").Points.Skip(1),
+            manifest.GetWaypointPath("Transporter Path").Points.SkipLast(1),
             point => Assert.Equal(-20_000, point.PositionMillimeters.Y));
     }
 }

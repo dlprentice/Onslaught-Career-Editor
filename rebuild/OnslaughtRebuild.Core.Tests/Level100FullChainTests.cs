@@ -196,15 +196,13 @@ public sealed class Level100FullChainTests
         // was written to check was still exactly right.
         Assert.Equal(Level100ActorCommandIntent.Stopped, intent?.Intent);
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
-        // The last node of the AUTHORED TRAVERSAL, not of the serialized list.
-        // `Target Tank Path 1` serializes [18, 6, 7] and is walked [6, 7, 18],
-        // so its final node is 18 and its serialized last entry, 7, is the
-        // route's middle. Reading `Points[^1]` here would assert the tank
-        // stopped at a node it drives straight past.
+        // The route's last node is 18, the one whose target is none:
+        // `Target Tank Path 1` chains 6 -> 7 -> 18 (waypoint-paths.md).
         Level100WaypointPathDefinition tankPath =
             definitions.GetWaypointPath("Target Tank Path 1");
         Level100WaypointPointDefinition lastNode =
-            tankPath.ChainPoint(tankPath.TargetChainNodeIndices.Count - 1);
+            Assert.Single(tankPath.Points, point => point.TargetNodeIndex is null);
+        Assert.Equal(18, lastNode.NodeIndex);
         long arrivalRadius = definitions
             .GetMotionDefinition("Target Tank").ArrivalRadiusMillimeters;
         long deltaX = tank.Pose.PositionMillimeters.X - (long)lastNode.PositionMillimeters.X;
@@ -387,13 +385,15 @@ public sealed class Level100FullChainTests
         // units) and every unit's recurring 4003, AI, fire-control and squad
         // draws, player rounds left their weapons' cockpit Gun emitters, every
         // round moved on its own MOVE and life events, the level took its
-        // three-second pre-run, and every script started on its INIT_SCRIPT:
-        // the wave ends on the abort branch after two kills. These are
-        // reconstruction fixture readings, not retail timing, hull or branch.
-        Assert.True(final.Level100Mission.Aborted);
-        Assert.Equal(2, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_793, final.Tick);
-        Assert.Equal(4_750, final.Hull);
+        // three-second pre-run, every script started on its INIT_SCRIPT, and
+        // every waypoint walk started at the unit's nearest node and followed
+        // the nodes' own targets at their load-time heights: the wave completes
+        // with all six kills. These are reconstruction fixture readings, not
+        // retail timing, hull or branch.
+        Assert.False(final.Level100Mission.Aborted);
+        Assert.Equal(6, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(6_502, final.Tick);
+        Assert.Equal(9_554, final.Hull);
     }
 
     /// <summary>

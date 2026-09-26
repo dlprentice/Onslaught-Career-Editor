@@ -569,7 +569,7 @@ public static class StateHasher
             writer.Write((int)actor.Intent);
             WriteNullableActorId(writer, actor.TargetActorId);
             WriteNullableString(writer, actor.WaypointPath);
-            writer.Write(actor.WaypointPointIndex);
+            writer.Write(actor.WaypointNodeIndex ?? -1);
             writer.Write(actor.WaypointCommandScalar);
             writer.Write(actor.WaitForWaypointCompletion);
             writer.Write(actor.GroundFullGuideBaseTickPhase);

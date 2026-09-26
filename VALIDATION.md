@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,74 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Waypoint walks from the nearest node — September 26
+
+Core started every waypoint walk at the head of its path's target chain and
+steered at waypoints' authored heights. The RE lane's contract
+(`reverse-engineering/game-mechanics/waypoint-paths.md`, commits `1e7bc137` and
+`d0709d36`) was re-read here from the pristine specimen (`74154bfa…`):
+- The loader keeps a path's `CWaypoint` rows (flag bit `0x1000`,
+  `0x00505a29-0x00505a35`) and prepends each one (`0x004e5a80` links the new
+  node ahead of the head). A path's list therefore runs in reverse file order.
+- `0x00505c30` returns the listed node nearest the unit. It takes dx, dy and dz
+  as waypoint minus unit (`+0x1c/+0x20/+0x24`) and sums (dx² + dz²) + dy² on the
+  x87 stack. The sum is compared with `fcom` (C0, a strict `<`) against a
+  float32 minimum that starts at 9999999.0 (`0x4b18967f`); a new minimum is
+  stored with `fstp`.
+- On arrival the next node is the current waypoint's `+0x3c` (`0x005384dc`). A
+  waypoint that targets itself logs `0x0064fe50` and ends the walk.
+- `CThing::Init` raises a waypoint below the heightfield sample (`0x0047eb80`,
+  `0x004f34fb-0x004f3534`) to it, then one below the water level (`0x006fbdfc`,
+  `0x004f3549-0x004f3559`) to that. `InitAndLink`'s second sample
+  (`0x005057db-0x005057f6`) cannot move it again.
+- When a walk ends, `CDropship`'s slot 64 is a bare `ret` (`0x00459990`).
+  `CPlane`'s (`0x00422750`) resets its guide: slot 8 (`0x0047e3d0`) clears the
+  mode word, sets the goal to the position and zeroes `+0x14c`'s xyz. A ground
+  vehicle takes the Unit default (`0x004fcf00`).
+
+Core now loads each path as retail's list, with each node's own target
+(`Level100WaypointPathDefinition.FromFileOrder`), and seats the waypoints at
+their load-time heights (`Level100ActorMechanics.SeatWaypoints`). A walk starts
+at `NearestPoint` from the unit's position and follows the targets. A dropship
+keeps its velocity at the end of a walk. The definition identity carries each
+node's target (formats 10-13). What moved in Level 100:
+- The Air Trainer is authored nearer node 42 than 41, so it flies 42 → 43
+  instead of 41 → 42 → 43.
+- Flyby node 42 lies 3.1 m inside the hillside and rises to the ground
+  (z −18.10). The nodes over the sea rise to the water level (z −8.84): Flyby
+  43, Transporter 44 and all four drone nodes. The truck and tank nodes rise to
+  the ground.
+- Spawned targets start from the node nearest their spawn. Target Tank #23
+  still drives 6 → 7 → 18.
+
+Six mutations were killed and restored byte-identical
+(`local-data/test-runs/waypoint-routes-20260926/mutation-kills/`): a start at
+the list head; no load-time lift; a dropship that stops at the walk's end; a
+self-target that keeps walking; the file order kept; and a tie that keeps the
+later node.
+
+Tests that moved read the retail list and node targets instead of the chain.
+The Transporter test now places the craft at its authored position, since the
+fixture's origin is nearer node 23.
+
+Core passes 1,553, the ferry sweep 6/6, and Client 912 with the two known
+skips. The pause checks (56) and AYA checks (447) pass. Re-pinned:
+- `first-flight.v1.json` replays to trace `fe219cb2…` and state `5e51c9a6…`;
+- the in-process smoke and its validator: state `8649ff2b…`;
+- the canonical-hash fingerprints;
+- the chain autopilot, now on the six-kill branch: Won at tick 6,502 with hull
+  9,554.
+
+The headless Godot smoke records tape `ed3b77b5…` (trace `97cf1e7c…`, state
+`8649ff2b…`). The C# replayer reproduces it twice, and the smoke validator
+module accepts the report. The cold-start won tape is 8,540 ticks (trace
+`d6df9a59…`, state `fdf132e6…`), on the abort branch after two second-wave kills
+with hull 3,350, and it replays twice.
+
+Open: Core has no dropship motion, so the U-17 and World 110's landing craft do
+not fly their paths yet. The RE lane's runtime check of the start nodes is still
+open.
 
 ### Scripts start on their INIT_SCRIPT events — September 26
 

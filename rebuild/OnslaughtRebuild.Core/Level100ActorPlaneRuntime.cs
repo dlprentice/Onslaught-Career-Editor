@@ -287,8 +287,8 @@ public sealed partial class Level100ActorMechanics
     {
         if (!PlaneScriptControlAvailable(state) ||
             state.PlaneGuide is not { ControllerState: not 2 } guide || state.WaypointPath is null) return;
-        Level100FloatVector4Bits point = _definitions.GetWaypointPath(state.WaypointPath)
-            .ChainPoint(state.WaypointPointIndex).RetailComponentsFloatBits;
+        Level100FloatVector4Bits point = GetWaypointPath(state.WaypointPath)
+            .Point(state.WaypointNodeIndex!.Value).RetailComponentsFloatBits;
         state.PlaneGuide = guide with { Mode = 1, Destination = new(point.X, point.Y, point.Z) };
     }
 

@@ -261,36 +261,34 @@ public sealed class Level100ActorRegistryTests
 
     /// <summary>
     /// Two definition sets with identical node coordinates but different
-    /// TRAVERSAL ORDERS are different definition sets.
+    /// routes are different definition sets.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// The chain decides which node a follower steers at, so a set that walks
-    /// <c>Flyby Path</c> as <c>[41, 42, 43]</c> and one that walks it as
-    /// <c>[43, 42, 41]</c> produce different simulations from the same
-    /// geometry. If <c>ComputeIdentity</c> ignored the chain, those two would
-    /// share a digest, a snapshot taken under one would restore cleanly under
-    /// the other, and a replay would silently diverge.
-    /// </para>
-    /// <para>
-    /// This is the exact hole that let the previous waypoint defect live: the
-    /// aliased coordinate table and the corrected one were distinguishable only
-    /// because positions happened to be hashed. Order was not, until #146.
-    /// </para>
+    /// The list order decides which node wins a tie for the start and each
+    /// node's target decides where the walk goes next, so both change the
+    /// simulation from the same geometry. If <c>ComputeIdentity</c> ignored
+    /// either, a snapshot taken under one would restore cleanly under the
+    /// other and a replay would silently diverge.
     /// </remarks>
     [Fact]
-    public void DefinitionIdentity_SeparatesRoutesThatDifferOnlyInTraversalOrder()
+    public void DefinitionIdentity_SeparatesRoutesThatDifferOnlyInOrderOrTargets()
     {
         Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();
         var reordered = new Level100ActorDefinitionSet(
             original.Actors,
             original.Spawns,
             original.WaypointPaths
-                .Select(path => new Level100WaypointPathDefinition(
-                    path.Name,
-                    path.Points,
-                    path.Points.Select(point => point.NodeIndex).ToArray(),
-                    path.IsClosed))
+                .Select(path => path with { Points = path.Points.Reverse().ToArray() })
+                .ToArray(),
+            original.MotionDefinitions);
+        var untargeted = new Level100ActorDefinitionSet(
+            original.Actors,
+            original.Spawns,
+            original.WaypointPaths
+                .Select(path => path with
+                {
+                    Points = path.Points.Select(point => point with { TargetNodeIndex = null }).ToArray(),
+                })
                 .ToArray(),
             original.MotionDefinitions);
 
@@ -298,26 +296,34 @@ public sealed class Level100ActorRegistryTests
         foreach (Level100WaypointPathDefinition path in original.WaypointPaths)
         {
             Assert.Equal(
-                path.Points,
-                reordered.GetWaypointPath(path.Name).Points);
+                path.Points.OrderBy(point => point.NodeIndex).Select(point => point.PositionMillimeters),
+                reordered.GetWaypointPath(path.Name).Points
+                    .OrderBy(point => point.NodeIndex).Select(point => point.PositionMillimeters));
         }
 
         Assert.NotEqual(original.IdentitySha256, reordered.IdentitySha256);
+        Assert.NotEqual(original.IdentitySha256, untargeted.IdentitySha256);
+    }
 
-        // And the closure flag is hashed too, on its own.
-        var unlooped = new Level100ActorDefinitionSet(
-            original.Actors,
-            original.Spawns,
-            original.WaypointPaths
-                .Select(path => new Level100WaypointPathDefinition(
-                    path.Name,
-                    path.Points,
-                    path.TargetChainNodeIndices,
-                    IsClosed: false))
-                .ToArray(),
-            original.MotionDefinitions);
-        Assert.Contains(original.WaypointPaths, path => path.IsClosed);
-        Assert.NotEqual(original.IdentitySha256, unlooped.IdentitySha256);
+    /// <summary>
+    /// <c>0x00505c30</c> replaces its running minimum only on a strictly
+    /// smaller distance, walking the list in order from 9999999.0, so a tie
+    /// keeps the earlier node and a node that far or farther is never taken
+    /// (waypoint-paths.md, "Following").
+    /// </summary>
+    [Fact]
+    public void NearestPoint_KeepsTheEarlierNodeOnATieAndStartsBelow9999999()
+    {
+        static int Bits(float value) => BitConverter.SingleToInt32Bits(value);
+        static Level100WaypointPointDefinition Node(int index, float x) =>
+            new(index, SimVector3.Zero, new Level100FloatVector4Bits(Bits(x), Bits(0), Bits(0), 0));
+        var origin = new Level100FloatVector3Bits(Bits(0), Bits(0), Bits(0));
+
+        var tie = new Level100WaypointPathDefinition("Tie", [Node(7, 2), Node(3, -2), Node(5, 9)]);
+        Assert.Equal(7, tie.NearestPoint(origin)!.NodeIndex);
+        var nearerLater = new Level100WaypointPathDefinition("Later", [Node(7, 2), Node(3, -1)]);
+        Assert.Equal(3, nearerLater.NearestPoint(origin)!.NodeIndex);
+        Assert.Null(new Level100WaypointPathDefinition("Far", [Node(1, 4_000)]).NearestPoint(origin));
     }
 
     [Fact]
@@ -449,9 +455,7 @@ public sealed class Level100ActorRegistryTests
                             1,
                             new SimVector3(10, 30, 20),
                             new Level100FloatVector4Bits(1, 2, 3, 4)),
-                    ],
-                    [1],
-                    false),
+                    ]),
             ],
             original.MotionDefinitions);
 
