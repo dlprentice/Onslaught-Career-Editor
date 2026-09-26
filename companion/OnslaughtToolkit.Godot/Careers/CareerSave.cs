@@ -117,16 +117,23 @@ public static class CareerSave
             "Supported career container. Unselected and unknown bytes are preserved.");
     }
 
+    /// <summary>Plans a copy that changes only explicitly selected kill counts.</summary>
+    public static Outcome<EditPlan> Preview(ReadOnlySpan<byte> original, IReadOnlyDictionary<int, int> selections) =>
+        Preview(original, new EditRequest(selections, new Dictionary<int, GoodieState>()));
+
     /// <summary>
-    /// Plans a copy with explicitly selected kill counts. Exactly the low three bytes of each
-    /// selected category may change; the packed fourth byte is never authored.
+    /// Plans a copy with explicitly selected changes. A kill count changes exactly its low three bytes
+    /// (the packed fourth byte is never authored); a Goodie changes exactly its own four-byte state and
+    /// only for displayable slots 0–232. Every other byte is copied unchanged.
     /// </summary>
-    public static Outcome<EditPlan> Preview(ReadOnlySpan<byte> original, IReadOnlyDictionary<int, int> selections)
+    public static Outcome<EditPlan> Preview(ReadOnlySpan<byte> original, EditRequest request)
     {
         if (Validate(original) is string refusal) return Outcome<EditPlan>.Refusal(refusal);
-        if (selections.Count == 0 || selections.Count > CategoryNames.Count)
+        if (request.Kills.Count + request.Goodies.Count == 0)
+            return Outcome<EditPlan>.Refusal("Select between one and five kill categories explicitly, or choose a Goodie.");
+        if (request.Kills.Count > CategoryNames.Count)
             return Outcome<EditPlan>.Refusal("Select between one and five kill categories explicitly.");
-        foreach ((int category, int count) in selections)
+        foreach ((int category, int count) in request.Kills)
         {
             if (category < 0 || category >= CategoryNames.Count)
                 return Outcome<EditPlan>.Refusal("A kill category must be a number from 0 to 4.");
@@ -136,19 +143,44 @@ public static class CareerSave
                 return Outcome<EditPlan>.Refusal(
                     $"The selected {CategoryNames[category]} count is unchanged. Remove that selection or choose a different count.");
         }
+        foreach ((int index, GoodieState state) in request.Goodies)
+        {
+            if (index < 0 || index >= DisplayableGoodies)
+                return Outcome<EditPlan>.Refusal("Only Goodies 000 to 232 can change; reserved slots are always preserved.");
+            if (StoredValue(state) is not uint value)
+                return Outcome<EditPlan>.Refusal("A Goodie can only become locked, hint shown, new or viewed.");
+            if (U32(original, GoodieOffset + index * 4) == value)
+                return Outcome<EditPlan>.Refusal($"Goodie {index:D3} already has that state. Remove it or choose another state.");
+        }
         byte[] output = original.ToArray();
-        List<KillEdit> selected = [];
-        foreach ((int category, int count) in selections.OrderBy(pair => pair.Key))
+        List<KillEdit> kills = [];
+        foreach ((int category, int count) in request.Kills.OrderBy(pair => pair.Key))
         {
             int offset = KillsOffset + category * 4;
             for (int index = 0; index < 3; index++) output[offset + index] = (byte)((count >> (index * 8)) & 0xFF);
-            selected.Add(new KillEdit(category, CategoryNames[category], offset,
-                (int)(U32(original, offset) & MaxKills), count));
+            kills.Add(new KillEdit(category, CategoryNames[category], offset, (int)(U32(original, offset) & MaxKills), count));
+        }
+        List<GoodieEdit> goodies = [];
+        foreach ((int index, GoodieState state) in request.Goodies.OrderBy(pair => pair.Key))
+        {
+            int offset = GoodieOffset + index * 4;
+            BinaryPrimitives.WriteUInt32LittleEndian(output.AsSpan(offset), StoredValue(state)!.Value);
+            goodies.Add(new GoodieEdit(index, offset, U32(original, offset), state));
         }
         ByteComparison difference = Compare(original, output);
-        return Outcome<EditPlan>.Success(new EditPlan(output, difference.Changes, selected),
+        return Outcome<EditPlan>.Success(new EditPlan(output, difference.Changes, kills, goodies),
             "Preview only. No file has been written.");
     }
+
+    /// <summary>The stored dword for a Goodie state the game draws; null for states it never stores.</summary>
+    public static uint? StoredValue(GoodieState state) => state switch
+    {
+        GoodieState.Locked => 0,
+        GoodieState.Hint => 1,
+        GoodieState.New => 2,
+        GoodieState.Old => 3,
+        _ => null,
+    };
 
     public static ByteComparison Compare(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
@@ -290,18 +322,25 @@ public sealed record StoredFloat(int Offset, uint RawBits, float Value)
 
 public sealed record KillEdit(int Category, string Name, int Offset, int Before, int After);
 
+public sealed record GoodieEdit(int Index, int Offset, uint Before, GoodieState After);
+
+/// <summary>The explicitly chosen changes for one copy.</summary>
+public sealed record EditRequest(IReadOnlyDictionary<int, int> Kills, IReadOnlyDictionary<int, GoodieState> Goodies);
+
 /// <summary>A previewed copy. Its bytes are private; callers receive copies.</summary>
 public sealed class EditPlan
 {
     private readonly byte[] _bytes;
 
-    internal EditPlan(byte[] bytes, IReadOnlyList<ByteChange> changes, IReadOnlyList<KillEdit> selected)
-        => (_bytes, Changes, Selected) = (bytes, changes, selected);
+    internal EditPlan(byte[] bytes, IReadOnlyList<ByteChange> changes, IReadOnlyList<KillEdit> selected, IReadOnlyList<GoodieEdit> goodies)
+        => (_bytes, Changes, Selected, Goodies) = (bytes, changes, selected, goodies);
 
     public IReadOnlyList<ByteChange> Changes { get; }
     public IReadOnlyList<KillEdit> Selected { get; }
+    public IReadOnlyList<GoodieEdit> Goodies { get; }
     public int ChangedBytes => Changes.Count;
-    public string Summary => $"{Selected.Count} selected categories; {ChangedBytes} changed bytes; all other bytes preserved.";
+    public string Summary =>
+        $"{Selected.Count} kill counts and {Goodies.Count} Goodie states; {ChangedBytes} changed bytes; all other bytes preserved.";
 
     public byte[] CopyBytes() => _bytes.ToArray();
 }

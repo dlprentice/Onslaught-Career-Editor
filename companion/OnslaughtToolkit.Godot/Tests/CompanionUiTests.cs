@@ -184,6 +184,27 @@ internal static class CompanionUiTests
         // Opening the verified result makes it the new original only when explicitly requested.
         Outcome<SaveSession> reopenedResult = await app.OpenCareerAsync(recovery);
         check.That(reopenedResult.Ok && app.Workspace.Session?.Path == recovery, "an explicitly opened copy becomes the source");
+
+        // A Goodie chosen in the gallery arrives on Edit a copy and changes only its own four bytes.
+        app.Navigate("goodies");
+        app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
+        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Current == app.EditCopy && lab.GoodieTargets.ContainsKey(2) && lab.GoodiePickers.Count == 1,
+            "a Goodie chosen in the gallery is added to Edit a copy");
+        GoodieState before = app.Workspace.Session!.Analysis.Goodies[2].State;
+        GoodieState target = before == GoodieState.Hint ? GoodieState.Locked : GoodieState.Hint;
+        lab.GoodiePickers[0].Select(target == GoodieState.Hint ? 1 : 0);
+        lab.GoodiePickers[0].EmitSignal(OptionButton.SignalName.ItemSelected, target == GoodieState.Hint ? 1 : 0);
+        check.That(lab.GoodieTargets[2] == target && lab.Preview.GetParsedText().Contains("Goodie 002"), "the picker sets the target and the preview names it");
+        string goodieCopy = Path.Combine(outputDirectory, "goodie-edit.bes");
+        lab.Destination.Text = goodieCopy;
+        PublicationReceipt goodieWritten = await lab.WriteCopyAsync(unchanged: false);
+        byte[] goodieBytes = File.Exists(goodieCopy) ? File.ReadAllBytes(goodieCopy) : [];
+        bool onlyGoodie = goodieBytes.Length == original.Length;
+        for (int offset = 0; onlyGoodie && offset < original.Length; offset++)
+            if (goodieBytes[offset] != original[offset] && offset is < 0x1F4E or > 0x1F51) onlyGoodie = false;
+        check.That(goodieWritten.Ok && onlyGoodie && BinaryPrimitives.ReadUInt32LittleEndian(goodieBytes.AsSpan(0x1F4E)) ==
+            (target == GoodieState.Hint ? 1u : 0u), "the Goodie copy changes only Goodie 002's dword, to the chosen state");
         await Frame(tree);
     }
 

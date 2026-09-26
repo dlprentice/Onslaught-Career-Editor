@@ -2,6 +2,7 @@
 using Godot;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
@@ -11,7 +12,14 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// </summary>
 internal sealed class EditCopyPage : Page
 {
+    private static readonly GoodieState[] Targets = [GoodieState.Locked, GoodieState.Hint, GoodieState.New, GoodieState.Old];
+
     private readonly CareerWorkspace _workspace;
+    private readonly GameLibrary _game;
+    private readonly SortedDictionary<int, GoodieState> _goodieTargets = [];
+    private readonly VBoxContainer _goodieRows;
+    private readonly SpinBox _goodieIndex;
+    private readonly Button _addGoodie;
     private readonly StatusLine _status;
     private readonly Func<string, Task> _openCareer;
     private readonly VBoxContainer _content;
@@ -19,10 +27,10 @@ internal sealed class EditCopyPage : Page
     private readonly List<Control> _needsCareer = [];
     private Outcome<EditPlan> _plan = Outcome<EditPlan>.Refusal("Choose a change.");
 
-    internal EditCopyPage(CareerWorkspace workspace, StatusLine status, Node popups, Func<string, Task> openCareer)
+    internal EditCopyPage(CareerWorkspace workspace, GameLibrary game, StatusLine status, Node popups, Func<string, Task> openCareer)
         : base("edit", "Edit a copy")
     {
-        (_workspace, _status, _openCareer) = (workspace, status, openCareer);
+        (_workspace, _game, _status, _openCareer) = (workspace, game, status, openCareer);
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
         (Root, _content) = (scroll, content);
         content.Add(Build.Notice("Every change is written to a new file that is checked byte for byte. " +
@@ -49,6 +57,18 @@ internal sealed class EditCopyPage : Page
             row.SelectionChanged += RefreshPreview;
         }
         _needsCareer.Add(content.Add(kills));
+
+        (PanelContainer goodies, VBoxContainer goodieBody) = Build.Card("Goodie states");
+        goodieBody.Add(Build.Text("Add Goodies from the Goodies page or by number. Only each chosen Goodie's four bytes change. " +
+            "Loading a Goodie as new has been seen in the game only for Goodie 002; how the game handles other changes has not " +
+            "been watched in play.", "Muted"));
+        _goodieRows = goodieBody.Add(Build.Column(6));
+        HBoxContainer addRow = goodieBody.Add(Build.Row(10));
+        addRow.Add(Build.Text("Goodie number", "Muted", wrap: false));
+        _goodieIndex = addRow.Add(new SpinBox { MaxValue = CareerSave.DisplayableGoodies - 1, CustomMinimumSize = new Vector2(110, 0) });
+        _addGoodie = addRow.Add(Build.Button("Add Goodie", disabled: true));
+        _addGoodie.Pressed += () => AddGoodie((int)_goodieIndex.Value);
+        _needsCareer.Add(content.Add(goodies));
 
         (PanelContainer preview, VBoxContainer previewBody) = Build.Card("Preview");
         Preview = previewBody.Add(Build.Detail("", bbcode: true));
@@ -96,6 +116,9 @@ internal sealed class EditCopyPage : Page
         : "Changes are always written to a new, verified file";
 
     internal IReadOnlyList<KillEditRow> Rows { get; }
+    internal IReadOnlyDictionary<int, GoodieState> GoodieTargets => _goodieTargets;
+    internal IReadOnlyList<OptionButton> GoodiePickers => _goodieRows.GetChildren().OfType<HBoxContainer>()
+        .SelectMany(row => row.GetChildren().OfType<OptionButton>()).ToArray();
     internal RichTextLabel SourceDetails { get; }
     internal RichTextLabel Preview { get; }
     internal PanelContainer ResultPanel { get; }
@@ -117,6 +140,8 @@ internal sealed class EditCopyPage : Page
             $"10,004 bytes  ·  version 0x{analysis.Version:X4}  ·  {analysis.MissionCensus.Completed} of " +
             $"{analysis.MissionCensus.Used} missions complete\n[code]SHA-256 {session.Sha256}\nfile identity {session.Identity}[/code]";
         foreach (KillEditRow row in Rows) row.SetCurrent(analysis.Kills[row.Category], analysis.PackedBytes[row.Category]);
+        _goodieTargets.Clear();
+        ShowGoodieRows();
         foreach (Control section in _needsCareer) section.Visible = true;
         _empty.Visible = false;
         RefreshPreview();
@@ -132,13 +157,65 @@ internal sealed class EditCopyPage : Page
         BackupCopy.Disabled = !ready || !hasDestination;
         ReopenCopy.Disabled = _workspace.Busy || _workspace.LastVerifiedOutput.Length == 0;
         foreach (KillEditRow row in Rows) row.SetLocked(!ready);
+        _addGoodie.Disabled = !ready;
+    }
+
+    /// <summary>Adds a Goodie to the plan, aiming at a different state than it has now.</summary>
+    internal void AddGoodie(int index)
+    {
+        if (_workspace.Session is not SaveSession session || index < 0 || index >= CareerSave.DisplayableGoodies) return;
+        if (!_goodieTargets.ContainsKey(index))
+            _goodieTargets[index] = session.Analysis.Goodies[index].State == GoodieState.New ? GoodieState.Old : GoodieState.New;
+        ShowGoodieRows();
+        RefreshPreview();
+    }
+
+    internal void SetGoodieTarget(int index, GoodieState state)
+    {
+        if (!_goodieTargets.ContainsKey(index)) return;
+        _goodieTargets[index] = state;
+        ShowGoodieRows();
+        RefreshPreview();
+    }
+
+    internal void RemoveGoodie(int index)
+    {
+        _goodieTargets.Remove(index);
+        ShowGoodieRows();
+        RefreshPreview();
+    }
+
+    private void ShowGoodieRows()
+    {
+        _goodieRows.Clear();
+        if (_workspace.Session is not SaveSession session) return;
+        if (_goodieTargets.Count == 0) _goodieRows.Add(Build.Text("No Goodies chosen.", "Faint"));
+        foreach ((int index, GoodieState target) in _goodieTargets)
+        {
+            GoodieRecord current = session.Analysis.Goodies[index];
+            HBoxContainer row = _goodieRows.Add(Build.Row(12));
+            row.Add(Build.Text($"GOODIE {index:D3}", "Strong", wrap: false, width: 104));
+            Label title = row.Add(Build.Text(_game.Text?.GoodieTitle(index) ?? "", "Muted", wrap: false, clip: true));
+            title.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            row.Add(Build.Text("now " + GoodieFacts.StateName(current.State).Split(' ')[0].ToLowerInvariant(), "Faint", wrap: false, width: 90));
+            OptionButton picker = row.Add(new OptionButton { CustomMinimumSize = new Vector2(150, 0) });
+            foreach (GoodieState state in Targets) picker.AddItem(state == GoodieState.Hint ? "Hint shown" : state == GoodieState.Old ? "Viewed" : state.ToString());
+            picker.Selected = Array.IndexOf(Targets, target);
+            int goodie = index;
+            picker.ItemSelected += item => SetGoodieTarget(goodie, Targets[item]);
+            GoodieEvidence evidence = GoodieFacts.Evidence(index);
+            row.Add(Build.Text(evidence == GoodieEvidence.SeenInGame ? "seen in the game" : "not watched in play",
+                evidence == GoodieEvidence.SeenInGame ? "Good" : "Faint", wrap: false, width: 130));
+            Button remove = row.Add(Build.Button("Remove", "Link"));
+            remove.Pressed += () => RemoveGoodie(goodie);
+        }
     }
 
     internal void RefreshPreview()
     {
         if (_workspace.Session is not SaveSession session) return;
         Dictionary<int, int> selected = Rows.Where(row => row.IsSelected).ToDictionary(row => row.Category, row => row.TargetValue);
-        _plan = session.Prepare(selected);
+        _plan = session.Prepare(new EditRequest(selected, new Dictionary<int, GoodieState>(_goodieTargets)));
         if (_plan.Value is not EditPlan plan)
         {
             Preview.Text = $"[color=#{Palette.Muted.ToHtml(false)}]{Escape(_plan.Message)} An unchanged recovery copy is " +
@@ -146,7 +223,9 @@ internal sealed class EditCopyPage : Page
         }
         else
         {
-            string edits = string.Join("\n", plan.Selected.Select(edit => $"{edit.Name}: {edit.Before:N0} → [b]{edit.After:N0}[/b]"));
+            string edits = string.Join("\n", plan.Selected.Select(edit => $"{edit.Name}: {edit.Before:N0} → [b]{edit.After:N0}[/b]")
+                .Concat(plan.Goodies.Select(edit => $"Goodie {edit.Index:D3}: {GoodieFacts.StateName(new GoodieRecord(edit.Index, edit.Offset, edit.Before).State)} → " +
+                    $"[b]{GoodieFacts.StateName(edit.After)}[/b]")));
             string bytes = string.Join("   ", plan.Changes.Select(change => $"0x{change.Offset:X4} {change.Before:X2}→{change.After:X2}"));
             Preview.Text = $"{edits}\n[color=#{Palette.Data.ToHtml(false)}]{plan.ChangedBytes} changed bytes;[/color] length and " +
                 $"every other byte preserved.\n[code]{bytes}[/code]";

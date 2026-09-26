@@ -330,7 +330,8 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
 
 
 def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: str, timeout: float | None,
-                    env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs") -> Path:
+                    env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs",
+                    extra: list[str] | None = None) -> Path:
     # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
     # the capture entry draws each screen through fixed-size SubViewports.
     offscreen = shutil.which(os.path.expanduser(offscreen_tool))
@@ -345,7 +346,7 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
     run_logged([offscreen, "--path", str(project), "--qa", str(output / "offscreen"),
                 "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
                 "--script", "res://" + entry.as_posix(), "--",
-                f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}"],
+                f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}", *(extra or [])],
                cwd=project, env=env, timeout=None, log=output / "logs/capture.log", godot=True)
     shots = sorted(captures.glob("*.png"))
     if not shots:
@@ -367,6 +368,7 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sizes", default="1280x800,1920x1080", help="capture sizes, WIDTHxHEIGHT[,...]")
     parser.add_argument("--offscreen", default="~/.local/bin/godot-offscreen", help="shared hidden-output GPU runner")
     parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
+    parser.add_argument("--capture-arg", action="append", default=[], help="argument for the capture entry, e.g. --capture-arg=--steam-root=DIR")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
@@ -397,7 +399,7 @@ def companion_main(argv: list[str] | None = None) -> int:
             return 0
         if args.mode == "capture":
             capture_screens(project, copy_fixture(args.fixture, output), args.offscreen, args.sizes, args.timeout, env,
-                            output, args.capture_script)
+                            output, args.capture_script, args.capture_arg)
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)

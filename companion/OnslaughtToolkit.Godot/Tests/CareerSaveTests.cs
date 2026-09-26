@@ -163,8 +163,58 @@ internal static class CareerSaveTests
             "The pending extra Goodies dword is read from offset 0x0002.");
         check.That(CareerSave.RegionOf(0x0002) == "Pending extra Goodies" && CareerSave.RegionOf(0x0006) == "Mission records",
             "Byte regions name the pending Goodies dword.");
+        GoodieEdits(original, info, check);
         check.That(original.AsSpan().SequenceEqual(untouched),
             "Inspection, previews and malformed-input checks never mutate the baseline.");
+    }
+
+    /// <summary>A Goodie edit changes exactly its own four bytes; reserved slots and other states are refused.</summary>
+    private static void GoodieEdits(byte[] original, CareerInspection info, Checks check)
+    {
+        Dictionary<int, int> noKills = [];
+        foreach (int index in new[] { 0, 2, 5, 232 })
+        {
+            foreach (GoodieState target in new[] { GoodieState.Locked, GoodieState.Hint, GoodieState.New, GoodieState.Old })
+            {
+                int offset = 0x1F46 + index * 4;
+                uint before = BinaryPrimitives.ReadUInt32LittleEndian(original.AsSpan(offset));
+                uint value = target switch { GoodieState.Locked => 0u, GoodieState.Hint => 1u, GoodieState.New => 2u, _ => 3u };
+                Outcome<EditPlan> plan = CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [index] = target }));
+                if (before == value)
+                {
+                    check.That(!plan.Ok, $"Goodie {index} already {target} is refused as unchanged.");
+                    continue;
+                }
+                check.That(plan.Ok, $"Goodie {index} can become {target}.");
+                if (plan.Value is not EditPlan edit) continue;
+                byte[] output = edit.CopyBytes();
+                bool confined = true;
+                for (int at = 0; at < original.Length; at++)
+                {
+                    if (output[at] != original[at] && (at < offset || at >= offset + 4)) confined = false;
+                }
+                check.That(confined && BinaryPrimitives.ReadUInt32LittleEndian(output.AsSpan(offset)) == value &&
+                    edit.Goodies.Count == 1 && edit.Goodies[0].Before == before, $"Goodie {index} → {target} changes only its own dword.");
+            }
+        }
+        foreach (int index in new[] { -1, 233, 299, 300 })
+        {
+            check.That(!CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [index] = GoodieState.New })).Ok,
+                $"Goodie slot {index} cannot change.");
+        }
+        foreach (GoodieState target in new[] { GoodieState.Unknown, GoodieState.Reserved })
+        {
+            check.That(!CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [3] = target })).Ok,
+                $"A Goodie cannot be set to {target}.");
+        }
+        check.That(!CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState>())).Ok, "An empty request is refused.");
+        int newAircraft = (info.Kills[0] + 1) & 0xFFFFFF;
+        GoodieState flipped = info.Goodies[7].State == GoodieState.Locked ? GoodieState.New : GoodieState.Locked;
+        Outcome<EditPlan> combined = CareerSave.Preview(original,
+            new EditRequest(new Dictionary<int, int> { [0] = newAircraft }, new Dictionary<int, GoodieState> { [7] = flipped }));
+        check.That(combined.Value is { Selected.Count: 1, Goodies.Count: 1 } && CareerSave.Inspect(combined.Value.CopyBytes()).Value is
+            CareerInspection after && after.Kills[0] == newAircraft && after.Goodies[7].State == flipped,
+            "A kill count and a Goodie state compose in one copy.");
     }
 
     private static Dictionary<int, int> One() => new() { [0] = 1 };

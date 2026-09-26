@@ -40,6 +40,8 @@ public sealed class SaveSession
 
     public Outcome<EditPlan> Prepare(IReadOnlyDictionary<int, int> selections) => CareerSave.Preview(_bytes, selections);
 
+    public Outcome<EditPlan> Prepare(EditRequest request) => CareerSave.Preview(_bytes, request);
+
     public ByteComparison CompareWith(SaveSession other) => CareerSave.Compare(_bytes, other._bytes);
 
     /// <summary>

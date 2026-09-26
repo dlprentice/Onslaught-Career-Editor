@@ -64,9 +64,13 @@ public partial class CompanionApp : Control
             .SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 
         Home = new HomePage(Game, Status, this, ShowOpenDialog, OpenCareerAsync);
-        EditCopy = new EditCopyPage(Workspace, Status, this, OpenCareerAsync);
+        EditCopy = new EditCopyPage(Workspace, Game, Status, this, OpenCareerAsync);
         Overview = new OverviewPage(Workspace, Game, () => Navigate("goodies"));
-        Goodies = new GoodiesPage(Workspace, Game, _ => Navigate("edit"));
+        Goodies = new GoodiesPage(Workspace, Game, index =>
+        {
+            EditCopy.AddGoodie(index);
+            Navigate("edit");
+        });
         Compare = new ComparePage(Workspace, Status, this);
         StoredValues = new StoredValuesPage(Workspace);
         MediaFiles = new MediaFilesPage(Status, this);
