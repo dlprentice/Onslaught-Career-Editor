@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-09-19 (explicit Ghidra ABI preservation; platform limits retained)
+Last updated: 2026-09-25 (legacy 4.7.2 companion launcher removed; Ghidra ABI preservation and platform limits retained)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports retail research, the Godot rebuild, the Godot companion and retained toolkit
@@ -36,10 +36,9 @@ limited to the target window. Windows runtime helpers remain Windows-gated.
 ## Product and release
 
 - `godot_host.py` supplies pinned installed-engine discovery, locked bundled-SDK
-  restore/build and owned-process cleanup for both Godot lanes. Its CLI builds or
-  runs the MIT companion and routes logs/user data under canonical `local-data/companion/`.
-  `rebuild/tools/first_flight.py` adds retail preparation and rebuild runtime modes;
-  the shared helper imports no GPL or retail code.
+  restore/build and owned-process cleanup for both Godot lanes; `companion_godot.py`
+  builds and runs the MIT companion, and `rebuild/tools/first_flight.py` adds retail
+  preparation and rebuild runtime modes. The shared helper imports no GPL or retail code.
 - `winui_lore_pack_builder.py` builds the short-path offline pack from the
   canonical `lore/` tree and the single `lore-book/BOOK.md` entry guide.
 - `winui_zip_package_probe.py` builds the disposable publish and inspects the

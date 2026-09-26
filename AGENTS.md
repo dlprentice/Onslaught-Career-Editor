@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-25 (lane map verified; headless replay moved to GDScript)
+Last updated: 2026-09-25 (C# only, by David's direction; lane map updated)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -27,8 +27,8 @@ baseline report, David authorized the first Godot Save Lab workflow. Existing Wi
 release procedures describe the retained implementation, not a queued WinUI release.
 
 Linux owns development and native Godot execution. The rebuild now has Linux build/run/smoke/capture
-commands. The companion uses editable native GDScript scenes on Godot 4.8 dev6 .NET (`godot48-mono`);
-a thin in-process C# adapter links existing file-safety source for OS guarantees unavailable to GDScript.
+commands. The companion runs on Godot 4.8 dev6 .NET (`godot48-mono`); its interface is still GDScript, with a
+thin in-process C# adapter that links the existing file-safety source, until it moves to C# under the language rule.
 David clarified that necessary production C# belongs inside the .NET edition; the standalone helper
 prototype is retained reference source, not the active build or export route.
 Native scene/write/reopen checks passed on Linux; human interaction, the complete player walkthrough
@@ -59,8 +59,8 @@ into it only when its own checks pass. The 2026-09-25 baseline and its logs are 
 | Lane | Branch | Checkout | State on 2026-09-25 |
 | --- | --- | --- | --- |
 | Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Merged into `main` (`ed7f5332`); work continues on the branch. Save, settings, audio and weapon contracts from controlled original-code experiments; the latest is the sound manager's startup order. The remaining backlog is open-ended (`PROGRAM.md`). Its Godot routes now come from `main` (4.8 dev6 .NET); nothing in the lane needs 4.7.2. |
-| Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | Up to date with `main`, not merged. Midway through moving all production C# to typed GDScript and native scenes: frontend, HUD, pause, audio, world presentation, effects and many Core foundations are native; world import and assembly, the simulation, replay entry and the host are still C#, so it needs `godot48-mono`. Build, world checks, smoke and replay hashes, GDScript parity and the Client suite pass. `AyaTextureChecks`, added unvalidated in `5c8276ce`, fails 15 of 1,206 synthetic malformed-input cases; settling that contract comes before the merge. |
-| Companion | `main` | `.worktrees/main-integration-20260919` | No active work. The GDScript Save Lab on Godot 4.8 dev6 .NET, with its in-process C# safety adapter (approved 2026-09-19), builds and passes `npm test`. Human interaction, Windows execution and further workflows remain (`CURRENT_CAPABILITIES.md`, `PROGRAM.md`). |
+| Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | Up to date with `main`, not merged. Returning to C# only (David, 2026-09-25). The last all-C# rebuild is `b0b9c5e7` (2026-09-19), and most of the C# the GDScript replaced survives as check references under `Scenes/*/Tests/`. Today Core, Client, the world asset loaders and the simulation bridge are C#; the host entry, frontend, HUD, pause, audio, world import and presentation, effects and the headless replayer are GDScript. Each subsystem's C# owner returns with a parity proof, then its GDScript is deleted. Build, world checks, `AyaTextureChecks`, smoke and replay hashes and the Client suite pass. |
+| Companion | `main` | `.worktrees/main-integration-20260919` | No active work. The GDScript Save Lab on Godot 4.8 dev6 .NET, with its in-process C# safety adapter (approved 2026-09-19), builds and passes `npm test`; it moves to C# after the rebuild. Human interaction, Windows execution and further workflows remain (`CURRENT_CAPABILITIES.md`, `PROGRAM.md`). |
 
 To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then `git pull` and
 `git merge main`. Keep Godot headless unless David has released the desktop.
@@ -132,13 +132,12 @@ draft. Unique ignored data from the retired companion and remote-review worktree
   clock, process, network and GPU APIs.
   Using Godot for the companion does not merge MIT application code, GPL rebuild code
   and private retail material into one licensing boundary.
-- Language: GDScript by default. Each subsystem has one production owner, never a C# and a GDScript copy of
-  the same behavior. C# stays only where a recorded measurement shows optimized GDScript cannot hold a simulation
-  tick under 5 ms on this laptop, on Level 100 and on a stress scenario sized to the largest retail battle (from RE,
-  else 10x Level 100's objects), or where GDScript lacks an OS guarantee (the companion's file-safety adapter).
-  The September 25 measurement in `VALIDATION.md` keeps the deterministic simulation Core in C#, with its replay
-  runner and trace/state hashing; the Godot side, including the GDScript headless replayer, reaches it through one
-  thin bridge (`rebuild/OnslaughtRebuild.Godot/Bridge/`), which also owns create-new tape and report writes.
+- Language: C# only, on Godot 4.8 dev6 .NET (David, 2026-09-25: "I want us to go 100% C sharp. No GD script
+  whatsoever. No crossover."). No `.gd` files: game code, tools that run inside Godot, checks and capture harnesses
+  are C#. Each subsystem has one production owner, never two copies of the same behavior. Scenes may be built in
+  code; `.tscn`/`.tres` files are optional data, and the editor need not show the game. Shaders stay in Godot's
+  shading language and repository tooling stays Python. GDScript still in the rebuild and the companion is being
+  replaced (see Lanes); new work adds none.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.

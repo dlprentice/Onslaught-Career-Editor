@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-25 (headless replay moved to the rebuild's GDScript)
+Last updated: 2026-09-25 (C# only direction; the legacy 4.7.2 companion launcher removed)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -121,7 +121,7 @@ source through its in-process C# adapter; it does not run a second C# codec.
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, GDScript domain and narrow C# file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes; `tools/godot_host.py` retains shared process support and the legacy launcher. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, GDScript domain and narrow C# file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes; `tools/godot_host.py` supplies shared engine discovery and process support. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. `ghidra/` holds the tracked checkpoint; `EVIDENCE-REGISTER.tsv` is generated from `developer_state.json`. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, campaign generations, captures, reviewer reports, frozen proof graphs, the working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |

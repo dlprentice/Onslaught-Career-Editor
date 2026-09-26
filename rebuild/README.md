@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-25 (AYA malformed-input contract; native texture imports and impact scenes; existing evidence boundaries retained).
+Last updated: 2026-09-25 (C# only, by David's direction; AYA malformed-input contract; existing evidence boundaries retained).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -38,18 +38,15 @@ of readiness tooling.
   runner and verifies versioned final state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The production rebuild is migrating to typed GDScript under the repository's
-language rule: one production owner per subsystem and C# only where a recorded
-measurement requires it. The September 25 measurement
-([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
-keeps `OnslaughtRebuild.Core` in C#: projectile launch and flight already cost
-up to about 100 ms per tick in Release C#, and matched GDScript kernels run 10–68x
-slower. The Core's replay runner and trace/state hashing stay with it; the
-headless replayer is GDScript and reaches them through the bridge. The host, frontend, HUD, pause, audio, world presentation, world
-import and assembly, and recording entry move to GDScript behind one thin C#
-bridge; C# comparison copies and GDScript ports of Core logic are retired as each
-owner is settled. The MIT companion/AppCore has its own migration owner and
-remains a separate boundary.
+The rebuild is C# only (David, 2026-09-25; see the repository `AGENTS.md`). From
+September 19 to 25 much of the Godot side was ported to typed GDScript. Each of those
+owners returns to C#, restored from the last all-C# rebuild (`b0b9c5e7`) or from the
+C# references kept under `Scenes/*/Tests/`, with a parity proof, and then its
+GDScript, duplicate checks and parity tooling are deleted. The September 25
+measurement ([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
+stays as the Core's performance record: projectile launch and flight cost up to about
+100 ms per tick in Release C#, an open defect. The MIT companion/AppCore has its own
+migration owner and remains a separate boundary.
 
 ### Migration state
 

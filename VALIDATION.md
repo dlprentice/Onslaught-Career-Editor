@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline, reconciliation and the AYA malformed-input contract; earlier dated validation retained).
+Last updated: 2026-09-25 (three-lane baseline, reconciliation, the AYA malformed-input contract and the C#-only direction; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -143,8 +143,8 @@ passed 77/77 headless scene checks, **24,190** world checks, **910** Client test
 
 ### Simulation language measurement — September 25
 
-The repository language rule needs a recorded measurement before any subsystem stays
-in C#. A scratch Release benchmark (`net8.0`, tiered PGO) replayed the 2,148-tick
+The language rule of the time required a recorded measurement before any subsystem
+stayed in C#. A scratch Release benchmark (`net8.0`, tiered PGO) replayed the 2,148-tick
 Level 100 smoke tape through `Simulation.Step`, reproduced final state `53c1cc64…`,
 and timed the warm last of six replays. The typical tick is cheap (median **0.08 ms**,
 p95 **0.11 ms**), but p99 is **4.1–7.8 ms** and the maximum **98–226 ms**. Canonical
@@ -167,11 +167,11 @@ establish the largest retail battle's unit count, so the stress case is 10x Leve
 45–48 actors. The Level 100 Core cannot construct it without mission-level changes;
 scaling the measured per-actor work puts even the idle GDScript tick at 10–56 ms.
 
-**Decision:** `OnslaughtRebuild.Core` stays in C# with its replay runner, trace/state
-hashing and `OnslaughtRebuild.Headless`. Everything else moves to GDScript behind one
-thin bridge. The same numbers show that Release C# already misses 5 ms on launch and
-flight ticks (about a 100 ms hitch per shot); that contact-sweep cost is an existing
-performance defect, open outside this migration. Sources and logs:
+**Decision:** superseded the same evening. David directed C# only for the whole
+repository (`AGENTS.md`), so no subsystem needs a measured exception. The numbers stay
+as the performance record: Release C# already misses 5 ms on launch and flight ticks
+(about a 100 ms hitch per shot); that contact-sweep cost is an existing, open
+performance defect. Sources and logs:
 `.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
 
 ### September 19 production scene migration
