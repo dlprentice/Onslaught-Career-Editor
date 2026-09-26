@@ -385,13 +385,14 @@ public sealed class Level100FullChainTests
         // September 26 readings after the load took retail's construction
         // draws (the base world's pines and rows, the Battle Engine, the level
         // units) and every unit's recurring 4003, AI, fire-control and squad
-        // draws, and player rounds left their weapons' cockpit Gun emitters:
-        // the wave ends on the six-kill branch. These are reconstruction
-        // fixture readings, not retail timing, hull or branch.
+        // draws, player rounds left their weapons' cockpit Gun emitters, and
+        // every round moved on its own MOVE and life events: the wave ends on
+        // the six-kill branch. These are reconstruction fixture readings, not
+        // retail timing, hull or branch.
         Assert.False(final.Level100Mission.Aborted);
         Assert.Equal(6, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(6_254, final.Tick);
-        Assert.Equal(11_564, final.Hull);
+        Assert.Equal(6_286, final.Tick);
+        Assert.Equal(12_450, final.Hull);
     }
 
     /// <summary>

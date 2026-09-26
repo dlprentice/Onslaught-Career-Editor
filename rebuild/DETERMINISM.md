@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (round MOVE and life events; the influence map's load draws and 1000 chains; schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -123,7 +123,11 @@ load order selects it. The definition identity's format 9 adds the base world's
 pine count, whose draws open the load. A set with the base world also takes the
 influence map's two draws and the warm-up units' draws during the load, and its
 two influence 1000 chains run on the same manager under their own reserved
-listener; they add no snapshot fields.
+listener; they add no snapshot fields. Every round, the Battle Engine's and
+the drones', files its MOVE and its life event 4000 there too, under a round
+listener (0x1000_0000 + 2 × id, + 1 for a drone's), and moves when its MOVE is
+delivered. A round is dying once its life event is no longer filed, so
+snapshots and hashes gain no round fields.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

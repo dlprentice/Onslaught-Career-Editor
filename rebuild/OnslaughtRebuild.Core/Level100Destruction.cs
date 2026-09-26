@@ -327,6 +327,37 @@ public sealed class Level100DestructionRuntime
             out hit);
 
     /// <summary>
+    /// A dying round's step (the RE lane's "No hit while dying"): the contact
+    /// still reaches both things' Hit, but the round's own Hit returns before
+    /// damage, its impact explosion and its death. Only the struck thing's
+    /// script notification remains, which <see cref="TryApplyRoundSweep(SimVector3, SimVector3, int, uint, Level100DestructionEffectKind, out Level100ContactHit, uint)"/>
+    /// reports for the same things. Returns whether the step met anything.
+    /// </summary>
+    internal bool TryReportDyingRoundContact(SimVector3 start, SimVector3 end, int contactRadiusMillimeters)
+    {
+        int contactActorCount = GatherContactActors(isCandidate: null, atRest: false);
+        if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
+                ToContactVector(start),
+                ToContactVector(end),
+                contactRadiusMillimeters,
+                _contactActors.AsSpan(0, contactActorCount),
+                out Level100ContactHit hit))
+        {
+            return false;
+        }
+
+        if (hit.ActorId != 0)
+        {
+            var actorId = new Level100ActorId(hit.ActorId);
+            if (_states.ContainsKey(hit.ActorId) || _registry.GetActor(actorId).ScriptName is not null)
+            {
+                _registry.ReportHit(actorId, otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
     /// The crosshair's line query: <c>CWorld::FindFirstThingToHitLine</c>
     /// (<c>0x0050b030</c>) at mesh level, which traces the heightfield first and
     /// takes a thing only when it is not farther than the ground. The line is

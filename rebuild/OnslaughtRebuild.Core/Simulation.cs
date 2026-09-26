@@ -30,6 +30,9 @@ public sealed partial class Simulation
         public int PitchMicroRad { get; set; }
         public uint LaunchTimeBits { get; init; }
         public Level100ActorId? SeekTarget { get; set; }
+        // Set by the life event. Every player round's life ends in the ring,
+        // before that frame's MOVE, so the flag never outlives the flush.
+        public bool Dying { get; set; }
         // Immutable Kind is already in the snapshot/hash. It owns these
         // configured parameters for both launch and sweep, so no separate
         // mutable or unhashed radius/damage copy can drift from the round.
@@ -290,13 +293,13 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Causal-probe seam for supported released player round kinds. It queues one
-    /// round across a caller-supplied contact segment; the next normal
-    /// <see cref="Step"/> still owns movement, contact selection, impact-kind
-    /// routing, event production and removal.
+    /// round across a caller-supplied contact segment, with a two-frame life;
+    /// the next normal <see cref="Step"/> still owns movement, contact
+    /// selection, impact-kind routing, event production and removal.
     /// </summary>
     /// <remarks>
     /// No shipped path calls this. The seam exists so the production
-    /// <c>UpdateProjectiles</c> kind switch can be falsified without replacing
+    /// <c>MovePlayerRound</c> kind switch can be falsified without replacing
     /// it with a manually injected destruction effect.
     /// </remarks>
     internal void QueueRoundForContactMeasurement(
@@ -319,9 +322,10 @@ public sealed partial class Simulation
                 nameof(end));
         }
 
+        int id = _nextProjectileId++;
         _projectiles.Add(new MutableProjectile
         {
-            Id = _nextProjectileId++,
+            Id = id,
             Kind = kind,
             Position = new SimVector2(start.X, start.Z),
             Velocity = new SimVector2(
@@ -331,6 +335,7 @@ public sealed partial class Simulation
             VerticalVelocityMillimetersPerTick = checked(end.Y - start.Y),
             RemainingTicks = 2,
         });
+        FilePlayerRoundEvents(id, 2);
     }
 
     /// <summary>
@@ -499,7 +504,6 @@ public sealed partial class Simulation
         SyncLevel100PlayerState();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
-        UpdateProjectiles();
         SyncLevel100PlayerState();
 
         return CreateSnapshot();
@@ -1057,6 +1061,12 @@ public sealed partial class Simulation
                 _level100PlayerActorId,
                 otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
             DrainAndDispatchLevel100ActorFacts();
+            if (receipt.ContactOnly)
+            {
+                // A dying round's last step: the script hit only.
+                PumpLevel100EventBus();
+                continue;
+            }
 
             if (ApplyLevel100PlayerDamage(
                 impact.IncomingDamageMilliLife,
@@ -3889,9 +3899,10 @@ public sealed partial class Simulation
             -(long)launchPitchSin * speedPerTick,
             FixedTrigScale);
 
+        int id = _nextProjectileId++;
         _projectiles.Add(new MutableProjectile
         {
-            Id = _nextProjectileId++,
+            Id = id,
             Kind = kind,
             Position = new SimVector2(emitter.X, emitter.Z),
             Velocity = new SimVector2(velocityX, velocityZ),
@@ -3903,7 +3914,18 @@ public sealed partial class Simulation
             LaunchTimeBits = launchTimeBits,
             SeekTarget = seekTarget,
         });
+        FilePlayerRoundEvents(id, lifetimeTicks);
     }
+
+    /// <summary>
+    /// <c>CRound::Init</c>'s MOVE and life events for a Battle Engine round,
+    /// on the level's one event manager. Every player round's life span is a
+    /// whole number of seconds, so ticks / 20 is its exact float.
+    /// </summary>
+    private void FilePlayerRoundEvents(int roundId, int lifetimeTicks) =>
+        _level100ActorMechanics.FileRoundEvents(
+            Level100ActorMechanics.PlayerRoundListener(roundId),
+            lifetimeTicks / (float)SimulationConstants.TicksPerSecond);
 
     /// <summary>
     /// A cockpit emitter's world position: the Battle Engine's position plus
@@ -3965,93 +3987,141 @@ public sealed partial class Simulation
             FixedAtan2(-deltaY, Math.Max(1, horizontal)));
     }
 
-    private void UpdateProjectiles()
+    /// <summary>
+    /// A Battle Engine round's MOVE or life event, delivered in the level
+    /// event manager's flush (the RE lane's round Frames contract). The life
+    /// event comes first in its frame: a <c>CRoundExplode</c> round (the Micro
+    /// Missile) bursts in the air where it is (<c>0x004d9a54</c> →
+    /// <c>0x004d9f30</c>), and every round starts dying. The MOVE delivered
+    /// after it still takes one last step and is not re-filed, so a round
+    /// makes k + 1 Moves; that step can meet things but hits nothing.
+    /// </summary>
+    private void HandlePlayerRoundEvent(RetailEventScheduler events, RetailEventDispatch dispatch)
     {
-        for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
+        int roundId = Level100ActorMechanics.PlayerRoundId(dispatch.Listener);
+        MutableProjectile projectile = _projectiles.Find(round => round.Id == roundId) ??
+            throw new InvalidOperationException($"Round {roundId} has an event but no round.");
+        switch (dispatch.EventNum)
         {
-            MutableProjectile projectile = _projectiles[projectileIndex];
-            if (projectile.Seeks)
-            {
-                // CRound::Move takes its two wiggle draws first, then guides;
-                // the wiggle bends only this step's travel (the actor rounds'
-                // shared law).
-                (int wiggleYaw, int wigglePitch) =
-                    _level100ActorMechanics.NextWiggle(Level100MissilePod.WiggleMicroRadians);
-                SteerSeekingPlayerRound(projectile);
-                (SimVector2 velocity, int vertical) = VelocityFromAngles(
-                    NormalizeMicroRad(projectile.YawMicroRad + wiggleYaw),
-                    NormalizeMicroRad(projectile.PitchMicroRad + wigglePitch),
-                    Level100MissilePod.SpeedMillimetersPerTick);
-                projectile.Velocity = velocity;
-                projectile.VerticalVelocityMillimetersPerTick = vertical;
-            }
+            case Level100ActorMechanics.RoundLifeEvent:
+                if (projectile.Kind == Level100ProjectileKind.MicroMissile)
+                {
+                    _level100Destruction.ReportAirBurst(
+                        new SimVector3(
+                            projectile.Position.X,
+                            projectile.ElevationMillimeters,
+                            projectile.Position.Z),
+                        Level100DestructionEffectKind.MicroMissileImpact);
+                }
+                projectile.Dying = true;
+                return;
+            case Level100ActorMechanics.RoundMoveEvent:
+                if (MovePlayerRound(projectile) || projectile.Dying)
+                {
+                    // CRound::Shutdown calls the owning Battle Engine's LockHit
+                    // for the bound target (0x004d8e00).
+                    if (projectile.Seeks)
+                    {
+                        _playerLocks.LockHit(projectile.SeekTarget);
+                    }
+                    _projectiles.Remove(projectile);
+                    events.ClearListenerEvents(dispatch.Listener);
+                    return;
+                }
 
-            var start = new SimVector3(
-                projectile.Position.X,
-                projectile.ElevationMillimeters,
-                projectile.Position.Z);
-            var end = new SimVector3(
-                checked(projectile.Position.X + projectile.Velocity.X),
-                checked(projectile.ElevationMillimeters +
-                    projectile.VerticalVelocityMillimetersPerTick),
-                checked(projectile.Position.Z + projectile.Velocity.Z));
-            projectile.Position = new SimVector2(end.X, end.Z);
-            projectile.ElevationMillimeters = end.Y;
-            projectile.RemainingTicks--;
+                Level100ActorMechanics.RefileRoundMove(events, dispatch);
+                return;
+            default:
+                throw new InvalidOperationException($"Unadmitted round event {dispatch.EventNum}.");
+        }
+    }
 
-            Level100DestructionEffectKind impactEffectKind = projectile.Kind switch
-            {
-                Level100ProjectileKind.MechPulseBoltMedium =>
-                    Level100DestructionEffectKind.PulseImpact,
-                Level100ProjectileKind.MechPulseBoltLarge =>
-                    // Retained Medium presentation placeholder; Large's
-                    // actual effect/audio assets are not admitted here.
-                    Level100DestructionEffectKind.PulseImpact,
-                Level100ProjectileKind.MechBullet or
-                    Level100ProjectileKind.MechAirBullet =>
-                    Level100DestructionEffectKind.VulcanImpact,
-                Level100ProjectileKind.MicroMissile =>
-                    Level100DestructionEffectKind.MicroMissileImpact,
-                _ => throw new InvalidDataException(
-                    $"Projectile {projectile.Id} has unsupported impact kind " +
-                    $"{projectile.Kind}."),
-            };
-            // Only Medium retains the older fixed second damage stage.
-            // Large applies its configured direct amount through the common
-            // sweep; a spatial blast cannot be replaced with another fixed 4.
-            bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
-                ? _level100Destruction.TryApplyPulseSweep(start, end, out _, _retailEventFrameCount)
-                : _level100Destruction.TryApplyRoundSweep(
-                    start,
-                    end,
-                    projectile.ContactRadiusMillimeters,
-                    projectile.DamageBits,
-                    impactEffectKind,
-                    out _,
-                    _retailEventFrameCount);
-            if (hit)
+    /// <summary>
+    /// One <c>CRound::Move</c> of a Battle Engine round: a seeking round's two
+    /// wiggle draws and guidance, the step, and its contact sweep. Returns
+    /// whether the round hit.
+    /// </summary>
+    private bool MovePlayerRound(MutableProjectile projectile)
+    {
+        if (projectile.Seeks)
+        {
+            // CRound::Move takes its two wiggle draws first, then guides;
+            // the wiggle bends only this step's travel (the actor rounds'
+            // shared law).
+            (int wiggleYaw, int wigglePitch) =
+                _level100ActorMechanics.NextWiggle(Level100MissilePod.WiggleMicroRadians);
+            SteerSeekingPlayerRound(projectile);
+            (SimVector2 velocity, int vertical) = VelocityFromAngles(
+                NormalizeMicroRad(projectile.YawMicroRad + wiggleYaw),
+                NormalizeMicroRad(projectile.PitchMicroRad + wigglePitch),
+                Level100MissilePod.SpeedMillimetersPerTick);
+            projectile.Velocity = velocity;
+            projectile.VerticalVelocityMillimetersPerTick = vertical;
+        }
+
+        var start = new SimVector3(
+            projectile.Position.X,
+            projectile.ElevationMillimeters,
+            projectile.Position.Z);
+        var end = new SimVector3(
+            checked(projectile.Position.X + projectile.Velocity.X),
+            checked(projectile.ElevationMillimeters +
+                projectile.VerticalVelocityMillimetersPerTick),
+            checked(projectile.Position.Z + projectile.Velocity.Z));
+        projectile.Position = new SimVector2(end.X, end.Z);
+        projectile.ElevationMillimeters = end.Y;
+        projectile.RemainingTicks--;
+
+        Level100DestructionEffectKind impactEffectKind = projectile.Kind switch
+        {
+            Level100ProjectileKind.MechPulseBoltMedium =>
+                Level100DestructionEffectKind.PulseImpact,
+            Level100ProjectileKind.MechPulseBoltLarge =>
+                // Retained Medium presentation placeholder; Large's
+                // actual effect/audio assets are not admitted here.
+                Level100DestructionEffectKind.PulseImpact,
+            Level100ProjectileKind.MechBullet or
+                Level100ProjectileKind.MechAirBullet =>
+                Level100DestructionEffectKind.VulcanImpact,
+            Level100ProjectileKind.MicroMissile =>
+                Level100DestructionEffectKind.MicroMissileImpact,
+            _ => throw new InvalidDataException(
+                $"Projectile {projectile.Id} has unsupported impact kind " +
+                $"{projectile.Kind}."),
+        };
+        if (projectile.Dying)
+        {
+            // A dying round still meets things, but its own Hit (slot 39,
+            // 0x004d8ae0) returns at 0x004d8af7 while the dying bit is set: no
+            // damage, no impact explosion, no death. Only the struck thing's
+            // script hit notification remains (the RE lane's "No hit while
+            // dying").
+            if (_level100Destruction.TryReportDyingRoundContact(start, end, projectile.ContactRadiusMillimeters))
             {
                 DrainAndDispatchLevel100ActorFacts();
             }
-
-            if (hit || projectile.RemainingTicks <= 0)
-            {
-                // A Micro Missile carries CRoundExplode, so the end of its
-                // life span bursts in the air (the RE lane's round-lifetime
-                // contract); the bolts and bullets just die.
-                if (!hit && projectile.Kind == Level100ProjectileKind.MicroMissile)
-                {
-                    _level100Destruction.ReportAirBurst(end, impactEffectKind);
-                }
-                // CRound::Shutdown calls the owning Battle Engine's LockHit
-                // for the bound target (0x004d8e00).
-                if (projectile.Seeks)
-                {
-                    _playerLocks.LockHit(projectile.SeekTarget);
-                }
-                _projectiles.RemoveAt(projectileIndex);
-            }
+            return false;
         }
+
+        // Only Medium retains the older fixed second damage stage.
+        // Large applies its configured direct amount through the common
+        // sweep; a spatial blast cannot be replaced with another fixed 4.
+        bool hit = projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium
+            ? _level100Destruction.TryApplyPulseSweep(start, end, out _, _retailEventFrameCount)
+            : _level100Destruction.TryApplyRoundSweep(
+                start,
+                end,
+                projectile.ContactRadiusMillimeters,
+                projectile.DamageBits,
+                impactEffectKind,
+                out _,
+                _retailEventFrameCount);
+        if (hit)
+        {
+            DrainAndDispatchLevel100ActorFacts();
+        }
+
+        return hit;
     }
 
     /// <summary>

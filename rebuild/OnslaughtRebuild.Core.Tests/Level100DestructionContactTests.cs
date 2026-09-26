@@ -1049,6 +1049,41 @@ public sealed class Level100DestructionContactTests
         Assert.False(restoredRegistry.GetActor(id).Active);
     }
 
+    /// <summary>
+    /// A dying round's step (the RE lane's "No hit while dying"): the contact
+    /// still reaches the struck thing's Hit, so its script hears it, but the
+    /// round's own Hit returns before damage, the impact explosion and the
+    /// round's death.
+    /// </summary>
+    [Fact]
+    public void DyingRoundContact_ReportsTheHitButLeavesTheTargetUnharmed()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        Level100ActorId id = registry.GetThingRef("Target Tank 2")!.Value;
+        PositionGroundTarget(registry, id);
+        registry.Activate(id);
+        registry.DrainFacts();
+        runtime.BeginTick();
+        int health = registry.GetActor(id).Health;
+
+        Assert.True(runtime.TryReportDyingRoundContact(GroundStart, GroundEnd, 200));
+        Level100ActorFactSnapshot fact = Assert.Single(registry.DrainFacts());
+        Assert.Equal(Level100ActorFactKind.Hit, fact.Kind);
+        Assert.Equal(id, fact.ActorId);
+        Assert.Equal(Level100ReleasedThingTypeMasks.Ammunition, fact.OtherThingTypeMask);
+        Assert.Equal(health, registry.GetActor(id).Health);
+        Assert.Empty(runtime.Events);
+        Assert.Empty(runtime.Snapshot.PendingShutdowns);
+
+        // The same step from a live round damages the tank and bursts on it.
+        Assert.True(runtime.TryApplyRoundSweep(GroundStart, GroundEnd, 200, 0x41000000,
+            Level100DestructionEffectKind.PulseImpact, out _, 0));
+        Assert.True(registry.GetActor(id).Health < health);
+        Assert.NotEmpty(runtime.Events);
+    }
+
     private static readonly SimVector3 GroundStart = new(1_000, 5_000, 2_000);
     private static readonly SimVector3 GroundEnd = new(1_000, 2_000, 2_000);
 

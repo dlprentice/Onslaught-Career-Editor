@@ -1837,14 +1837,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("3b558e18ae54f0d333a4953e9b9d692fe222db94f1a269bc9999a2ef71a6f56d",
+        Assert.Equal("c6cc8707caca196f1bca8baefdaf1424559681b90412e3909bc094ef21a48338",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("fc31478637e65ee5b533fce49d1d73a9b0f1b316ab801b311e23381aff1347a8",
+        Assert.Equal("f739a657ab15450115687531ec8616783c69e365513abd797baeeb42cf250f9c",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "0df3dd5c28f7904cec420abfa54b5b4848b7a0c76223994cabb3de5556562136",
+            finalStateHash == "7191f986488ac41d624f2b64f5cb71aa5657e36764bb3632d7f0a4372864dfa7",
             $"First-flight final state hash: {finalStateHash}");
     }
 

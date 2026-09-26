@@ -375,12 +375,9 @@ public sealed partial class Level100ActorMechanics
             ObserveWaypointArrival(state, actor, motion, completions);
         }
 
-        // Released ordering inside one base tick is: things move, then rounds
-        // move (CRound vtable slot 66), then weapons that are due spawn new
-        // rounds. Advancing live rounds before this tick's launches is what
-        // stops a round from travelling on the tick it is created, which is
-        // what retail's event-scheduled creation also produces.
-        AdvanceActorRounds();
+        // Rounds move on their own MOVE events inside the flush above. A round
+        // these weapons launch files its first MOVE into the current bucket,
+        // so it first moves in the next frame.
         AdvanceActorWeapons();
 
         return Array.AsReadOnly(completions.ToArray());

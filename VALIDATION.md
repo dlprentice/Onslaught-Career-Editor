@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,77 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Rounds on their own MOVE and life events — September 26
+
+Core used to move player rounds at the end of every update, starting on the
+launch frame, newest first. Drone rounds moved after the flush, also newest
+first. Every round lived a fixed tick count. The RE lane's round contract
+(`reverse-engineering/game-mechanics/level100-final-drone-wave.md`, "Frames"
+and "No hit while dying", commits `0827d186` and `6c966df3`, with its message
+on insertion order) says:
+- `CRound::Init` files the Actor MOVE at −1 and the life event 4000 at now +
+  the life span. A round built in frame N first moves in frame N+1's flush,
+  then every frame.
+- Each delivered MOVE re-files itself as it is delivered, so rounds move in the
+  manager's insertion order. A round made by a controller Fire goes in before
+  the MOVEs its flush re-files, so it moves ahead of older rounds. One made by
+  a 5001 burst goes in at that point of the flush.
+- The life event lands k = floor((life − 0.001) × 20) buckets out and comes
+  before that frame's MOVE. A `CRoundExplode` round (the Micro Missile) bursts
+  in the air where it is, then every round starts dying. The MOVE still takes
+  one last step and is not re-filed: k + 1 Moves, 160 for 8.0 s.
+- A dying round's last step still meets things, but its own Hit returns before
+  damage, its impact explosion and its death. Only the struck thing's script
+  hit notification remains.
+
+Core now files both events for every round, player and drone, on the level's
+event manager under round listeners, and moves each round when its MOVE is
+delivered. A life of 9.9 s or more is past the ring and waits in the overflow
+list, which is delivered after the lanes. So the Forseti Missile (10 s) takes
+that frame's MOVE, then its last step in the next frame. The dying state is the
+absence of a filed life event, so snapshots gain no fields. Not modelled:
+- the Forseti's own air burst;
+- the next frame's SHUTDOWN. Core removes a round on its last step or its
+  impact, so a hit round's `LockHit` comes one frame early, and a round that
+  impacts one frame before its life ends does not burst a second time, as the
+  contract says retail does.
+
+Tests:
+- `SimulationTests`:
+  - `PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits`
+    pins a round at its emitter on the launch frame and gone after L Moves;
+  - `ControllerRounds_MoveAheadOfRoundsAlreadyInFlight` reads the next
+    bucket's MOVE order;
+  - `DyingRound_LastStepCrossesATargetWithoutDamagingIt` checks the dying step
+    against a live control;
+  - the pod launcher test now pins each air burst exactly at the missile's
+    previous-frame position.
+- `Level100ActorWeaponTests`:
+  - `ActorRounds_MoveOnTheirOwnEventsUntilTheirLifeEnds`: the Blaster's 60
+    Moves, and the Forseti's overflow count computed from its filed due time;
+  - `ActorRound_LastStepMeetsThePlayerWithoutDamage`: a contact-only receipt
+    on the dying step, a damaging one a step earlier.
+- `Level100DestructionContactTests.DyingRoundContact_ReportsTheHitButLeavesTheTargetUnharmed`.
+
+Eight mutations were killed and restored byte-identical
+(`local-data/test-runs/round-frames-20260926/mutation-kills/`): a first Move
+two frames late; a new round queued behind the re-filed MOVEs; player and
+drone rounds that outlive their life event; the air burst where the last step
+ends; dying player and drone steps that damage; and a dying contact the
+target's script never hears.
+
+Core passes 1,547, the ferry sweep 6/6, and Client 912 with the two known
+skips. First-flight fires nothing and keeps its pins. Re-pinned:
+- the in-process smoke and its validator: state `7191f986…`;
+- the chain autopilot, which still wins on the six-kill branch, at tick 6,286
+  with hull 12,450.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`167b17b0…`, trace `274aecdf…`), and the C# replayer reproduces it twice. The
+cold-start won tape is 8,188 ticks (trace `cc34aaec…`, state `fa0ea6ce…`), on
+the abort branch with one second-wave kill and hull 7,377, and it replays
+twice.
 
 ### Influence map and warm-up draws in Level 100's load — September 26
 

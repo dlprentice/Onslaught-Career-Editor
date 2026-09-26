@@ -267,6 +267,121 @@ public sealed class Level100ActorWeaponTests
     }
 
     /// <summary>
+    /// Actor rounds move on their own MOVE and life events (the RE lane's round
+    /// Frames contract). A Blaster's 3 s life lands in the ring 59 buckets out,
+    /// ahead of that frame's MOVE: 60 Moves. A Forseti Missile's 10 s life is
+    /// 199 buckets out, past the ring, so it waits in the overflow list, which
+    /// is delivered after the lanes once its time has passed: the missile takes
+    /// that frame's MOVE and one more.
+    /// </summary>
+    [Theory]
+    [InlineData(Level100ActorRoundKind.Blaster)]
+    [InlineData(Level100ActorRoundKind.ForsetiMissile)]
+    public void ActorRounds_MoveOnTheirOwnEventsUntilTheirLifeEnds(Level100ActorRoundKind kind)
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(registry, definitions);
+        Level100ActorId airfield = registry.GetThingRef("Airfield")!.Value;
+        Level100ActorId player = registry.GetThingRef("Player 1")!.Value;
+        // High above the level and climbing away from its target, the round
+        // meets nothing, and a missile drops the target at its seek cone.
+        int roundId = mechanics.QueueActorRoundForMeasurement(
+            airfield, player, kind, new SimVector3(0, 400_000, 0), 0, 1_000_000);
+        RetailEventSchedulerSnapshot events = mechanics.Snapshot.PlaneEvents!;
+        uint launchFrame = events.FrameCount;
+        int listener = Level100ActorMechanics.ActorRoundListener(roundId);
+        RetailEventSlotSnapshot[] filed = events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow)
+            .Select(handle => events.Slots.Single(slot => slot.Handle == handle))
+            .Where(slot => slot.Listener == listener).ToArray();
+        Assert.Equal(
+            new[] { Level100ActorMechanics.RoundMoveEvent, Level100ActorMechanics.RoundLifeEvent },
+            filed.Select(slot => (int)slot.EventNum).Order());
+        RetailEventSlotSnapshot life = filed.Single(slot => slot.EventNum == Level100ActorMechanics.RoundLifeEvent);
+        bool overflow = events.Overflow.Contains(life.Handle);
+        Assert.Equal(kind == Level100ActorRoundKind.ForsetiMissile, overflow);
+
+        int expectedMoves = 60;
+        if (overflow)
+        {
+            float due = BitConverter.UInt32BitsToSingle(life.TimeBits);
+            uint delivery = launchFrame + 1;
+            while (!(due < RetailEventScheduler.TimeAtFrameCount(delivery)))
+            {
+                delivery++;
+            }
+            expectedMoves = checked((int)(delivery + 1 - launchFrame));
+            Assert.InRange(expectedMoves, 201, 202);
+        }
+
+        int lastElapsed = -1;
+        for (int frame = 0; frame < 400; frame++)
+        {
+            mechanics.AdvanceTick();
+            Level100ActorRoundSnapshot? round = mechanics.Snapshot.ActorRounds.SingleOrDefault(item => item.Id == roundId);
+            if (round is null)
+            {
+                break;
+            }
+            Assert.Equal(frame + 1, round.ElapsedBaseTicks);
+            lastElapsed = round.ElapsedBaseTicks;
+        }
+
+        // The frame that removes the round has taken its last step.
+        Assert.Equal(expectedMoves, lastElapsed + 1);
+        Assert.Empty(mechanics.DrainActorRoundImpactReceipts());
+    }
+
+    /// <summary>
+    /// A dying actor round's last step still meets its target but hits
+    /// nothing (the RE lane's "No hit while dying"): its receipt only carries
+    /// the target's script hit, and the public drain of damaging impacts stays
+    /// empty. The same crossing one step earlier, while it lives, damages.
+    /// </summary>
+    [Theory]
+    [InlineData(59, true)]
+    [InlineData(58, false)]
+    public void ActorRound_LastStepMeetsThePlayerWithoutDamage(int stepsBeforeTheCrossing, bool dying)
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(registry, definitions);
+        Level100ActorId airfield = registry.GetThingRef("Airfield")!.Value;
+        Level100ActorId player = registry.GetThingRef("Player 1")!.Value;
+        registry.Activate(player);
+        // A level Blaster along +Z crosses the Battle Engine's cylinder centre
+        // halfway through step stepsBeforeTheCrossing + 1 of its 60.
+        int step = Level100ActorArmament.Round(Level100ActorRoundKind.Blaster).SpeedMillimetersPerBaseTick;
+        const int Height = 100_000;
+        registry.SetPose(player, new Level100ActorPoseSnapshot(
+            new SimVector3(0, Height + SimulationConstants.Level100PlayerCollisionCenterBelowOriginMillimeters,
+                (stepsBeforeTheCrossing * step) + (step / 2)),
+            IdentityFloatBasis(), SimVector3.Zero, SimVector3.Zero));
+        int roundId = mechanics.QueueActorRoundForMeasurement(
+            airfield, player, Level100ActorRoundKind.Blaster, new SimVector3(0, Height, 0), 0, 0);
+
+        var receipts = new List<Level100ActorRoundImpactReceipt>();
+        int frames = 0;
+        while (mechanics.Snapshot.ActorRounds.Any(item => item.Id == roundId))
+        {
+            mechanics.AdvanceTick();
+            frames++;
+            receipts.AddRange(mechanics.DrainActorRoundImpactReceipts());
+            Assert.True(frames <= 60);
+        }
+
+        Assert.Equal(stepsBeforeTheCrossing + 1, frames);
+        Level100ActorRoundImpactReceipt receipt = Assert.Single(receipts);
+        Assert.Equal(roundId, receipt.RoundId);
+        Assert.Equal(dying, receipt.ContactOnly);
+    }
+
+    private static Level100FloatBasis3Bits IdentityFloatBasis() => new(
+        BitConverter.SingleToInt32Bits(1.0f), 0, 0,
+        0, BitConverter.SingleToInt32Bits(1.0f), 0,
+        0, 0, BitConverter.SingleToInt32Bits(1.0f));
+
+    /// <summary>
     /// The old sphere shortcut misses this line: at closest approach it is
     /// 800 mm from the cylinder centre along the cap axis and 399 mm radially
     /// away. Retail's finite cylinder accepts it, while a 400 mm sphere around

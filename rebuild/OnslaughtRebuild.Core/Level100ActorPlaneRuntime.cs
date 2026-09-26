@@ -174,6 +174,18 @@ public sealed partial class Level100ActorMechanics
             DispatchUnitCallback(events, dispatch);
             return;
         }
+        if (IsRoundListener(dispatch.Listener))
+        {
+            if (!IsPlayerRoundListener(dispatch.Listener))
+            {
+                DispatchActorRoundEvent(events, dispatch);
+                return;
+            }
+            if (battleEngineEvent is null)
+                throw new InvalidOperationException("A Battle Engine round event has no owner in this update.");
+            battleEngineEvent(events, dispatch);
+            return;
+        }
         if (dispatch.Listener == InfluenceMapListener)
         {
             if (dispatch.EventNum != 1000)
@@ -399,7 +411,8 @@ public sealed partial class Level100ActorMechanics
         foreach (int handle in snapshot.Lanes.SelectMany(lane => lane.Handles).Concat(snapshot.Overflow))
         {
             int listener = slots[handle].Listener;
-            if (IsPlayerListener(listener) || IsUnitListener(listener) || listener == InfluenceMapListener) continue;
+            if (IsPlayerListener(listener) || IsUnitListener(listener) || IsRoundListener(listener) ||
+                listener == InfluenceMapListener) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -420,7 +433,12 @@ public sealed partial class Level100ActorMechanics
         if (rawActors.Any(id => !_states.TryGetValue(id.Value, out ActorState? state) || state.PlaneGuide is null) ||
             (_planeEvents is null && rawActors.Length != 0))
             throw new ArgumentException("Aircraft physical/guide/event ownership is incomplete.", nameof(snapshot));
-        if (snapshot.PlaneEvents is not { } events) return;
+        if (snapshot.PlaneEvents is not { } events)
+        {
+            if (_actorRounds.Count != 0)
+                throw new ArgumentException("Actor rounds need the level event manager.", nameof(snapshot));
+            return;
+        }
         var slots = events.Slots.ToDictionary(slot => slot.Handle);
         foreach (int handle in events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow))
         {
@@ -452,6 +470,16 @@ public sealed partial class Level100ActorMechanics
                     throw new ArgumentException("Influence map queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
+            if (IsRoundListener(slot.Listener))
+            {
+                // Battle Engine rounds belong to the Simulation, which owns
+                // their dispatch; an actor round must be restored above.
+                if (slot.EventNum is not (RoundMoveEvent or RoundLifeEvent) ||
+                    !IsPlayerRoundListener(slot.Listener) &&
+                    !_actorRounds.Any(round => ActorRoundListener(round.Id) == slot.Listener))
+                    throw new ArgumentException("Round queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
             if (slot.Listener is 1 or int.MinValue)
                 throw new ArgumentException("Aircraft queue has an invalid listener.", nameof(snapshot));
             int owner = slot.Listener < 0 ? -slot.Listener : slot.Listener / 2;
@@ -477,6 +505,20 @@ public sealed partial class Level100ActorMechanics
             if (queued.Length != (state.PlaneSpawnerExit!.ScriptControlResumed ? 0 : 1) &&
                 !(killedDuringExit && queued.Length == 0))
                 throw new ArgumentException("Aircraft exit has missing or duplicate controller work.", nameof(snapshot));
+        }
+        // Between flushes every live round has its MOVE filed, and its life
+        // event until that is delivered; a round without one is dying.
+        foreach (ActorRoundState round in _actorRounds)
+        {
+            int listener = ActorRoundListener(round.Id);
+            short[] filed = events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow)
+                .Where(handle => slots[handle].Listener == listener)
+                .Select(handle => slots[handle].EventNum).Order().ToArray();
+            if (filed.SequenceEqual(new short[] { RoundMoveEvent, RoundLifeEvent }))
+                continue;
+            if (!filed.SequenceEqual(new short[] { RoundMoveEvent }))
+                throw new ArgumentException("An actor round's MOVE is missing.", nameof(snapshot));
+            round.Dying = true;
         }
     }
 

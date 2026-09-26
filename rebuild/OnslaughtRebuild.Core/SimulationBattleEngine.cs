@@ -69,6 +69,12 @@ public sealed partial class Simulation
     /// <summary><c>CBattleEngine::HandleEvent</c> for 6002 and 6003 (<c>0x0040c180</c>).</summary>
     private void HandleBattleEngineEvent(RetailEventScheduler events, RetailEventDispatch dispatch)
     {
+        if (Level100ActorMechanics.IsPlayerRoundListener(dispatch.Listener))
+        {
+            HandlePlayerRoundEvent(events, dispatch);
+            return;
+        }
+
         if (dispatch.Listener == Level100ActorMechanics.MissilePodListener)
         {
             if (dispatch.EventNum != Level100ActorMechanics.WeaponBurstEvent)

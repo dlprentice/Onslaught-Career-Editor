@@ -2019,7 +2019,9 @@ public sealed class SimulationTests
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
         Assert.Equal(expectedKind, projectile.Kind);
-        Assert.Equal(lifetimeTicks - 1, projectile.RemainingTicks);
+        // CActor::Init files the round's MOVE for the next frame, so the
+        // launch frame leaves it at its emitter (the RE lane's round Frames).
+        Assert.Equal(lifetimeTicks, projectile.RemainingTicks);
         Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);
         Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
         long speedSquared =
@@ -2039,31 +2041,31 @@ public sealed class SimulationTests
         int expectedEmitterOffsetX = (int)Math.Round(gunOffset.X, MidpointRounding.AwayFromZero);
         int expectedEmitterOffsetZ = (int)Math.Round(gunOffset.Z, MidpointRounding.AwayFromZero);
         Assert.InRange(
-            (projectile.Position.X - projectile.Velocity.X) - fired.PlayerPosition.X,
+            projectile.Position.X - fired.PlayerPosition.X,
             expectedEmitterOffsetX - 1,
             expectedEmitterOffsetX + 1);
         Assert.InRange(
-            (projectile.Position.Z - projectile.Velocity.Z) - fired.PlayerPosition.Z,
+            projectile.Position.Z - fired.PlayerPosition.Z,
             expectedEmitterOffsetZ - 1,
             expectedEmitterOffsetZ + 1);
         int emitterVerticalOffset = (int)Math.Round(gunOffset.Y, MidpointRounding.AwayFromZero);
         Assert.Equal(
-            fired.PlayerElevationMillimeters +
-                emitterVerticalOffset +
-                projectile.VerticalVelocityMillimetersPerTick,
+            fired.PlayerElevationMillimeters + emitterVerticalOffset,
             projectile.ElevationMillimeters);
 
-        int firstElevation = projectile.ElevationMillimeters;
+        int launchElevation = projectile.ElevationMillimeters;
         projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
-        Assert.Equal(lifetimeTicks - 2, projectile.RemainingTicks);
+        Assert.Equal(lifetimeTicks - 1, projectile.RemainingTicks);
         Assert.Equal(
-            firstElevation + projectile.VerticalVelocityMillimetersPerTick,
+            launchElevation + projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
-        for (int remaining = lifetimeTicks - 3; remaining >= 1; remaining--)
+        for (int remaining = lifetimeTicks - 2; remaining >= 1; remaining--)
         {
             projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
             Assert.Equal(remaining, projectile.RemainingTicks);
         }
+        // Frame N + L delivers the life event, then the last MOVE: L Moves
+        // in all (k + 1, k = floor((life - 0.001) x 20)).
         Assert.Empty(simulation.Step(SimInput.Idle).Projectiles);
 
         Assert.Equal(
@@ -2427,7 +2429,9 @@ public sealed class SimulationTests
         Assert.True(Math.Abs(headings[4].PitchMicroRadians - Pitch) > 5_000);
 
         // Unbound and aimed at open sky, each missile lives out its span and,
-        // carrying CRoundExplode, bursts in the air where it last was.
+        // carrying CRoundExplode, bursts in the air on its life event, which
+        // comes before that frame's last step: exactly where the previous
+        // frame left it (the RE lane's round Frames contract).
         var lastPositions = new Dictionary<int, Level100Vector3>();
         int airBursts = 0;
         for (int step = 0; step < 200 && (step == 0 || lastPositions.Count > 0); step++)
@@ -2435,13 +2439,9 @@ public sealed class SimulationTests
             foreach (Level100DestructionEvent burstEvent in state.Level100DestructionEvents.Where(item =>
                          item.Kind == Level100DestructionEventKind.MicroMissileImpact))
             {
-                // One 750 mm step (bent by the wiggle) past a missile's last
-                // snapshot, in contact axes (Core z forward, retail z down).
+                // Contact axes: Core z forward, retail z down.
                 Assert.Equal(0, burstEvent.ActorId);
-                Assert.Contains(lastPositions.Values, last =>
-                    Math.Abs(burstEvent.Position.X - last.X) <= 760 &&
-                    Math.Abs(burstEvent.Position.Y - last.Y) <= 760 &&
-                    Math.Abs(burstEvent.Position.Z - last.Z) <= 760);
+                Assert.Contains(burstEvent.Position, lastPositions.Values);
                 airBursts++;
             }
             lastPositions = state.Projectiles
@@ -2571,12 +2571,95 @@ public sealed class SimulationTests
             (double X, double Y, double Z) offset = CockpitEmitterOffset(
                 Level100CockpitEmitters.Gun(13 + index, walkPose: false),
                 before.FacingYawMicroRad / 1e6, before.FacingPitchMicroRad / 1e6, before.BodyRollMicroRad / 1e6);
+            // The launch frame leaves each round at its emitter.
             ProjectileSnapshot round = rounds[index];
-            Assert.InRange((round.Position.X - round.Velocity.X) - (before.PlayerPosition.X + offset.X), -2, 2);
-            Assert.InRange((round.Position.Z - round.Velocity.Z) - (before.PlayerPosition.Z + offset.Z), -2, 2);
-            Assert.InRange((round.ElevationMillimeters - round.VerticalVelocityMillimetersPerTick) -
-                (before.PlayerElevationMillimeters + offset.Y), -2, 2);
+            Assert.InRange(round.Position.X - (before.PlayerPosition.X + offset.X), -2, 2);
+            Assert.InRange(round.Position.Z - (before.PlayerPosition.Z + offset.Z), -2, 2);
+            Assert.InRange(round.ElevationMillimeters - (before.PlayerElevationMillimeters + offset.Y), -2, 2);
         }
+    }
+
+    /// <summary>
+    /// Rounds move in the level event manager's insertion order (the RE lane's
+    /// round Frames contract). A round a controller Fire makes is filed into
+    /// the current bucket before the flush re-files the MOVEs of the rounds
+    /// already in flight, so in the next frame it moves ahead of them.
+    /// </summary>
+    [Fact]
+    public void ControllerRounds_MoveAheadOfRoundsAlreadyInFlight()
+    {
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(jet, state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None, 100);
+        int[] older = jet.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles
+            .Select(round => round.Id).Order().ToArray();
+        Assert.Equal(2, older.Length);
+        for (int tick = 0; tick < 4; tick++)
+        {
+            jet.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot fired = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        int[] newer = fired.Projectiles.Select(round => round.Id).Except(older).Order().ToArray();
+        Assert.Equal(2, newer.Length);
+        Assert.Equal(4, fired.Projectiles.Count);
+
+        RetailEventSchedulerSnapshot events = fired.Level100ActorMechanics.PlaneEvents!;
+        Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+        int[] moveOrder = events.Lanes
+            .Single(lane => lane.LaneIndex == events.CurrentBufferNum * RetailEventScheduler.PriorityLanes)
+            .Handles.Select(handle => slots[handle])
+            .Where(slot => slot.EventNum == Level100ActorMechanics.RoundMoveEvent &&
+                Level100ActorMechanics.IsPlayerRoundListener(slot.Listener))
+            .Select(slot => Level100ActorMechanics.PlayerRoundId(slot.Listener))
+            .ToArray();
+        Assert.Equal(newer.Concat(older), moveOrder);
+    }
+
+    /// <summary>
+    /// A dying round's last step still meets things but hits nothing (the RE
+    /// lane's "No hit while dying"). The probe round lives two frames: its
+    /// first step ends 10 m above the tank, and its second, taken after its
+    /// life event, drops through it.
+    /// </summary>
+    [Fact]
+    public void DyingRound_LastStepCrossesATargetWithoutDamagingIt()
+    {
+        var simulation = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank 2");
+        SimVector3 position = target.Pose.PositionMillimeters;
+        simulation.QueueRoundForContactMeasurement(
+            Level100ProjectileKind.MechBullet,
+            position with { Y = position.Y + 20_000 },
+            position with { Y = position.Y + 10_000 });
+
+        WorldSnapshot first = simulation.Step(SimInput.Idle);
+        Assert.Single(first.Projectiles);
+        WorldSnapshot last = simulation.Step(SimInput.Idle);
+        Assert.Empty(last.Projectiles);
+        Assert.DoesNotContain(
+            first.Level100DestructionEvents.Concat(last.Level100DestructionEvents),
+            item => item.Kind == Level100DestructionEventKind.VulcanImpact);
+        Assert.Equal(target.Health, last.Level100Actors.Actors
+            .Single(actor => actor.ActorId == target.ActorId).Health);
+
+        // The same drop taken by a live step hits and damages the tank.
+        var control = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        control.QueueRoundForContactMeasurement(
+            Level100ProjectileKind.MechBullet,
+            position with { Y = position.Y + 10_000 },
+            position);
+        WorldSnapshot hit = control.Step(SimInput.Idle);
+        Assert.Contains(hit.Level100DestructionEvents, item =>
+            item.Kind == Level100DestructionEventKind.VulcanImpact && item.ActorId == target.ActorId.Value);
+        Assert.True(hit.Level100Actors.Actors.Single(actor => actor.ActorId == target.ActorId).Health <
+            target.Health);
     }
 
     /// <summary>
