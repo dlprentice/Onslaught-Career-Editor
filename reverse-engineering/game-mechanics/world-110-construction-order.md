@@ -1,7 +1,7 @@
 # World 110 construction order, transition and first frames
 
 Status: active static contract for the rebuild's World 110
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (lander routes linked)
 Summary: how a Level 100 win leads to World 110, the order in which World 110's
 construction consumes the shared gameplay stream and queues events, what the first
 flush delivers and draws, and when the player gains control.
@@ -254,7 +254,8 @@ From the shipped `.msl` sources:
   whose 2001 lands in frame 2.
 - `Weather` sets the snow density to 1.
 - `Lander` (rows 8 and 20) sets AI state 4 (`AI_ONF`) and follows "Lander Path 1"
-  (`FollowWaypointWait`, which suspends it).
+  (`FollowWaypointWait`, which suspends it). Row 8 flies 10 → 11 → 15 and row 20
+  21 → 22 → 24 ([waypoint paths](waypoint-paths.md#world-110-paths)).
 - `Lander2` (row 12) sets AI state 4, then calls `Land()`, then sets AI state 0
   (`AI_ON`), then pauses.
   - `Land()` is `CDropship` slot 93 (`0x00447f50`). It lands where the craft is and

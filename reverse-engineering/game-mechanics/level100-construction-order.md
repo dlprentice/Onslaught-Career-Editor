@@ -1,7 +1,7 @@
 # Level 100 construction order: shared draws and queued events
 
 Status: active static contract for the rebuild's Level 100 start
-Last updated: 2026-09-26 (influence-map draws, warm-up units, Battle Engine events, and the pre-run and first rendered frame)
+Last updated: 2026-09-26 (influence-map draws, warm-up units, Battle Engine events, the pre-run and first rendered frame, and waypoint starts)
 Summary: the order in which Level 100's construction consumes the shared gameplay
 random stream and queues events, from the base-world pines to the last level-world
 row, and what each event's first delivery draws.
@@ -446,9 +446,10 @@ In the first flush:
 - `LevelScript` records the objectives, disables flight mode and two weapons, and on
   a fresh career deactivates the player and waits on its first message.
 - `Transporter` and `Flyby` switch their AI off and call `FollowWaypointWait`
-  (`0x00537e40`). It passes the first waypoint to the unit's move-to (slot 61,
-  `0x00403a90`, which sets the guide's goal) and suspends the script with a script
-  2000 at −1, delivered in frame 2.
+  (`0x00537e40`). It passes the path's waypoint nearest the unit to the unit's
+  move-to (slot 61, `0x00403a90`, which sets the guide's goal). It then suspends the
+  script with a script 2000 at −1, delivered in frame 2. The U-17 flies 22 → 23 → 44
+  and the Air Trainer 42 → 43 ([waypoint paths](waypoint-paths.md)).
 - The four `TargetZone` scripts deactivate their zones.
 - `StaticTarget` has an empty `init()`, and no script defines the `ready()` event
   that 2003 calls.
