@@ -130,6 +130,9 @@ internal sealed class EditCareerPage : Page
     internal SaveChoice SaveChoice => _saveChoice;
     internal Outcome<EditPlan> Plan => _plan;
 
+    /// <summary>Whether the player has changed anything here that is not saved yet.</summary>
+    internal bool HasChanges => Rows.Any(row => row.IsChanged) || _goodieTargets.Count > 0;
+
     /// <summary>The changes in the player's words, one per line.</summary>
     internal string ChangesText => string.Join("\n", _changes.GetChildren().OfType<Label>().Select(label => label.Text));
 
@@ -237,8 +240,8 @@ internal sealed class EditCareerPage : Page
         if (_app.Workspace.Session is not SaveSession session || _plan.Value is null) return;
         string name = System.IO.Path.GetFileNameWithoutExtension(session.Path);
         bool inGame = InGame(session) is not null;
-        _saveChoice.Open("Save your changes", NewName($"{name} (edited)"), inGame ? name : null,
-            "The career in your game gets these changes. Its current version goes into the backup first.", CareerNameProblem);
+        _saveChoice.Open("Save your changes", _app.NewCareerName($"{name} (edited)"), inGame ? name : null,
+            "The career in your game gets these changes. Its current version goes into the backup first.", _app.CareerNameProblem);
     }
 
     /// <summary>Saves the planned changes into the game: as a new career, or in place of the open one.</summary>
@@ -317,18 +320,6 @@ internal sealed class EditCareerPage : Page
 
     private GameFile? InGame(SaveSession session) => _app.Game.Folder?.Careers.FirstOrDefault(career =>
         string.Equals(career.Path, session.Path, StringComparison.Ordinal));
-
-    private string? CareerNameProblem(string name) =>
-        GameInstaller.PortableNameProblem(name) ?? (_app.Game.Folder?.Careers.Any(career =>
-            string.Equals(career.DisplayName, name, StringComparison.OrdinalIgnoreCase)) == true
-            ? "Your game already has a career with that name." : null);
-
-    private string NewName(string wanted)
-    {
-        string name = wanted;
-        for (int number = 2; CareerNameProblem(name) is not null && number < 100; number++) name = $"{wanted} {number}";
-        return name;
-    }
 
     private string GoodieName(int index) => _app.Game.Text?.GoodieTitle(index) is string title ? $"{index:D3} {title}" : $"{index:D3}";
 

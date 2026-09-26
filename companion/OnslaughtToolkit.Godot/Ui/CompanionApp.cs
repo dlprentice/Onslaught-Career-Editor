@@ -29,7 +29,8 @@ internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, st
 /// The companion's root. Everything below it is built in code; <c>Main.tscn</c> only attaches this
 /// script to one node. It owns the sidebar, header, pages, dialogs and status bar, opens the player's
 /// most recent career, keeps automatic backups when they are on, watches whether the game is running,
-/// and defers closing while a file operation is still running.
+/// catches up with what the game saved when it closes or the player comes back to the companion, and
+/// defers closing while a file operation is still running.
 /// </summary>
 public partial class CompanionApp : Control
 {
@@ -43,6 +44,7 @@ public partial class CompanionApp : Control
     private Func<bool> _gameRunning = () => false;
     private bool _running, _openedFirstCareer, _autoBackupDone, _quietOpen;
     private double _sinceRunningCheck;
+    private Task _catchUp = Task.CompletedTask;
 
     public CompanionApp() : this(new ProtectedSaveFiles(), managesWindow: true)
     {
@@ -79,6 +81,9 @@ public partial class CompanionApp : Control
     /// <summary>Whether the game was running at the last check; the header says so while it is.</summary>
     internal bool GameIsRunning => _running;
 
+    /// <summary>The latest catch-up with the game folder (see <see cref="CatchUpAsync"/>), for tests to await.</summary>
+    internal Task PendingCatchUp => _catchUp;
+
     public override void _Ready()
     {
         Theme = CompanionTheme.Build();
@@ -97,6 +102,7 @@ public partial class CompanionApp : Control
         {
             Workspace = Workspace, Game = Game, Status = Status, Backups = new BackupLocation(settings, environment.BackupFolder()),
             GameRunning = () => _gameRunning(), OpenUrl = openUrl, Navigate = Navigate, OpenCareer = OpenCareerAsync, Popups = popups,
+            CatchUp = () => CatchUpAsync(force: true, backUp: false),
         };
 
         Home = new HomePage(Services);
@@ -205,6 +211,12 @@ public partial class CompanionApp : Control
         if (_sinceRunningCheck >= RunningCheckSeconds) CheckRunning();
     }
 
+    public override void _Notification(int what)
+    {
+        // Coming back to the companion, perhaps after playing: pick up anything the game saved.
+        if (what == NotificationApplicationFocusIn && Workspace is not null) CheckRunning(catchUp: true);
+    }
+
     public override void _UnhandledKeyInput(InputEvent @event)
     {
         if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
@@ -246,16 +258,65 @@ public partial class CompanionApp : Control
         return opened;
     }
 
-    /// <summary>Checks whether the game is running and updates what depends on it.</summary>
-    internal void CheckRunning()
+    /// <summary>
+    /// Checks whether the game is running and updates what depends on it. When the game has just closed,
+    /// the companion catches up with what it saved and, if automatic backups are on, backs that up.
+    /// </summary>
+    internal void CheckRunning(bool catchUp = false)
     {
         _sinceRunningCheck = 0;
         bool running = _gameRunning();
-        if (running == _running) return;
-        _running = running;
-        RunningBadge.Visible = running;
-        Home.ShowGame();
-        Status.Game.Text = GameLine();
+        bool closed = _running && !running;
+        if (running != _running)
+        {
+            _running = running;
+            RunningBadge.Visible = running;
+            Home.ShowGame();
+            Status.Game.Text = GameLine();
+        }
+        if ((closed || catchUp) && !running && _catchUp.IsCompleted)
+        {
+            _catchUp = CatchUpAsync(force: false, backUp: closed);
+            Status.Track(_catchUp);
+        }
+    }
+
+    /// <summary>
+    /// Brings the companion up to date after the game (or anything else) changed its careers or settings:
+    /// reads the folder again, makes an automatic backup when asked and they are on, and reopens the open
+    /// career and settings if they changed and hold no unsaved changes. Without <paramref name="force"/> it
+    /// does nothing unless the files' names, sizes or times changed. It never writes into the game.
+    /// </summary>
+    internal async Task CatchUpAsync(bool force, bool backUp)
+    {
+        if (Game.Busy || Workspace.Busy || Game.Folder is null || (!force && !Game.FilesChanged())) return;
+        await Game.RescanAsync();
+        if (Game.Folder is not GameFolder folder) return;
+        if (backUp && Game.Settings.Load().AutoBackup == true) await AutoBackUpAsync(folder);
+        if (Workspace.Session is SaveSession session && !Workspace.Busy &&
+            folder.Careers.FirstOrDefault(file => string.Equals(file.Path, session.Path, StringComparison.Ordinal)) is { Sha256: string now } career &&
+            now != session.Sha256)
+        {
+            if (EditCareer.HasChanges)
+            {
+                Status.Show($"{career.DisplayName} has changed in your game since you opened it. Undo your changes on Edit career to see " +
+                    "the latest; saving in its place is refused until then.");
+            }
+            else
+            {
+                _quietOpen = true;
+                try
+                {
+                    await OpenCareerAsync(career.Path);
+                }
+                finally
+                {
+                    _quietOpen = false;
+                }
+                Status.Show($"{career.DisplayName} changed in your game; the companion shows the latest.", StatusKind.Success);
+            }
+        }
+        await Settings.CatchUpAsync();
     }
 
     private void ShowSession()

@@ -41,8 +41,12 @@ public sealed record ExecutableIdentity(ExecutableState State, long Size = 0, st
 /// <summary>A career's progress at a glance, read (never written) while the game folder is inspected.</summary>
 public sealed record CareerSummary(int MissionsDone, int MissionsUsed, int GoodiesEarned, int GoodiesShown, long Kills);
 
-/// <summary>One career or options file found in the game folder, with whether the companion can open it.</summary>
-public sealed record GameFile(string Path, string Name, long Size, DateTime Modified, string? Problem, CareerSummary? Summary = null)
+/// <summary>
+/// One career or options file found in the game folder, with whether the companion can open it and, when
+/// it can, the SHA-256 of what was read (to notice when the game saves it again).
+/// </summary>
+public sealed record GameFile(string Path, string Name, long Size, DateTime Modified, string? Problem, CareerSummary? Summary = null,
+    string? Sha256 = null)
 {
     public bool Supported => Problem is null;
 
@@ -96,11 +100,13 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
                 problem = $"{file.Length:N0} bytes, not the supported 10,004.";
             }
             CareerSummary? summary = null;
+            string? sha256 = null;
             if (problem is null)
             {
                 byte[] bytes = new byte[CareerSave.Size];
                 using FileStream stream = new(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 stream.ReadExactly(bytes);
+                sha256 = SaveSession.Digest(bytes);
                 if (CareerSave.Inspect(bytes).Value is CareerInspection career)
                 {
                     summary = new CareerSummary(career.MissionCensus.Completed, career.MissionCensus.Used,
@@ -112,7 +118,7 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
                 }
             }
             return new GameFile(file.FullName, file.Name, file.Exists ? file.Length : 0, file.Exists ? file.LastWriteTime : default, problem,
-                summary);
+                summary, problem is null ? sha256 : null);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {

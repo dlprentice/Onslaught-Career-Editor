@@ -150,10 +150,7 @@ internal sealed class CheatsPage : Page
         if (composed.Problem is string problem) return problem;
         if (composed.ActiveCheatIds.Count == 0) return "Choose at least one cheat.";
         if (GameInstaller.PortableNameProblem(composed.Name) is string nameProblem) return nameProblem;
-        if (checkGame && _app.Game.Folder?.Careers.Any(career =>
-                string.Equals(career.DisplayName, composed.Name, StringComparison.OrdinalIgnoreCase)) == true)
-            return $"Your game already has a career called {composed.Name}.";
-        return null;
+        return checkGame ? _app.CareerNameProblem(composed.Name) : null;
     }
 
     private void ShowName()

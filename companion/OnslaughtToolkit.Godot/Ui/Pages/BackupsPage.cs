@@ -26,7 +26,7 @@ internal sealed class BackupsPage : Page
         content.Add(Build.Text("Every change the companion makes to your game is backed up first. You can put any earlier version back.", "Lead"));
 
         (PanelContainer settings, VBoxContainer body) = Build.Card("Your backups", 10);
-        Automatic = body.Add(new CheckBox { Text = "Back up automatically when the companion opens (only when something changed)" });
+        Automatic = body.Add(new CheckBox { Text = "Back up automatically when the companion opens and after you play (only when something changed)" });
         Automatic.Toggled += on =>
         {
             CompanionSettings saved = _app.Game.Settings.Load();
@@ -121,9 +121,9 @@ internal sealed class BackupsPage : Page
         _app.Status.Show("Backing up, then putting the file back…");
         InstallReceipt receipt = await _app.Workspace.InstallAsync(game, System.IO.Path.Combine(set.Folder, file.Name), file.Name, folder,
             _app.GameRunning, $"Before putting back {Describe(file.Name)} from {set.Created:d MMM HH:mm}");
+        await _app.CatchUp();
         _app.Status.Show(receipt.Ok ? $"{Capitalised(Describe(file.Name))} is back as it was {Build.When(set.Created)}." : receipt.Message,
             receipt.Ok ? StatusKind.Success : StatusKind.Failure);
-        await _app.Game.RescanAsync();
         Refresh();
         return receipt;
     }

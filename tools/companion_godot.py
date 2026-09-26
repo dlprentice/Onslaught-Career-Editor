@@ -340,14 +340,22 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     copy_dotnet_notices(pins, platform, project, package)
     for license_file in licenses.iterdir():
         shutil.copyfile(license_file, package / license_file.name)
+    start = f"run {filename}" if platform == "windows" else f"run ./{filename}"
     (package / "README.txt").write_text(
-        f"Onslaught Toolkit — {platform} package\n\n"
-        f"Run {filename} with its .pck file and Godot data directory kept beside it.\n"
+        f"Onslaught Toolkit, a companion for Battle Engine Aquila ({platform})\n\n"
+        f"To start, {start}. Keep the .pck file and the data folder beside it.\n"
+        "It finds the game through Steam; if it does not, choose the game folder on Home.\n\n"
+        "Your careers stay safe. Before the companion changes anything in your game it backs up every career and\n"
+        "your settings, it never writes while the game is running, and Backups can put any earlier version back.\n"
+        "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n"
+        "About this package\n"
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
         "Its file-safety boundary runs inside the same process; no helper process is used.\n"
         f"It bundles Microsoft.NETCore.App {pins['dotnet']['runtimeVersion']}; no installed .NET runtime is needed.\n"
         "The application MIT license, Godot notices and .NET notices are included here.\n"
-        "This package contains no retail assets or saves. Cross-export is not Windows execution acceptance.\n",
+        "This package contains no retail assets or saves; it reads your own copy of the game.\n" +
+        ("This Windows build was made on Linux and has not yet been run on Windows. Cross-export is not Windows\n"
+         "execution acceptance.\n" if platform == "windows" else ""),
         encoding="utf-8")
     # A package inventory records the concrete cross-export, without claiming platform execution.
     inventory = {str(path.relative_to(package)): sha256(path) for path in sorted(package.rglob("*")) if path.is_file()}

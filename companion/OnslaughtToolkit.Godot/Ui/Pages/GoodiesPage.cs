@@ -34,7 +34,7 @@ internal sealed class GoodiesPage : Page
     private readonly List<(Control Section, int[] Slots)> _sections = [];
     private readonly Button[] _cells = new Button[CareerSave.GoodieTable];
     private readonly ButtonGroup _selection = new();
-    private readonly Label _detailTitle, _detailName, _detailState, _detailRule, _detailEvidence, _detailRaw;
+    private readonly Label _detailTitle, _detailName, _detailState, _detailRule, _detailEvidence;
     private readonly PanelContainer _detail;
     private readonly List<Button> _filterButtons = [];
     private int _filter;
@@ -65,7 +65,7 @@ internal sealed class GoodiesPage : Page
         for (int row = 0; row < CareerSave.GalleryRows.Count; row++)
             AddSection(RowNames[row], [.. CareerSave.GalleryRows[row]]);
         AddSection("Never shown in the game · 071–073", [.. CareerSave.NeverShown]);
-        _grid.Add(Build.Text("Rows follow the game's gallery wall; what each row holds is named in the developers' source.", "Faint"));
+        _grid.Add(Build.Text("Rows follow the game's gallery wall, top to bottom.", "Faint"));
 
         (_detail, VBoxContainer detail) = Build.Panel("Card", 8);
         _detail.CustomMinimumSize = new Vector2(330, 0);
@@ -78,7 +78,6 @@ internal sealed class GoodiesPage : Page
         detail.Add(Build.Eyebrow("How the game unlocks it"));
         _detailRule = detail.Add(Build.Text(""));
         _detailEvidence = detail.Add(Build.Text("", "Muted"));
-        _detailRaw = detail.Add(Build.Text("", "MonoMuted"));
         ChangeInCopy = detail.Add(Build.Button("Change this Goodie…", tooltip: "Adds this Goodie to Edit career, where you save the change."));
         ChangeInCopy.Icon = Icons.Get("edit");
         ChangeInCopy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
@@ -138,7 +137,6 @@ internal sealed class GoodiesPage : Page
         _detailState.Text = GoodieFacts.StateName(goodie.State);
         _detailRule.Text = GoodieFacts.Rule(index);
         _detailEvidence.Text = GoodieFacts.Describe(GoodieFacts.Evidence(index));
-        _detailRaw.Text = $"stored 0x{goodie.RawState:X8} at 0x{goodie.Offset:X4}";
         ChangeInCopy.Disabled = !goodie.Shown;
         ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
             : "The game never shows this slot, so its state is kept.";

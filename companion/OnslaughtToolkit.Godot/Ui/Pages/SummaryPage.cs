@@ -126,7 +126,7 @@ internal sealed class SummaryPage : Page
         }
         _namesNote.Text = text is null
             ? "Mission names come from your game's own text file; choose your game folder on Home to show them."
-            : $"Names from your game's {text.Language} text. Stored rank floats are read with the game's own rule.";
+            : $"Mission names come from your game's {text.Language} text; ranks use the game's own grading.";
 
         _goodieStrip.Clear();
         foreach (GoodieRecord goodie in career.Goodies.Where(record => record.Shown))

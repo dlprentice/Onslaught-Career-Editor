@@ -40,7 +40,7 @@ internal static class CompanionUiTests
             await Start(app, tree, install, check);
             await Edit(app, files, tree, install, fixture, outputDirectory, original, running, check);
             await CheatsAndSettings(app, tree, install, outputDirectory, check);
-            await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, check);
+            await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, running, check);
             await DriveLore(app, tree, openedUrls, check);
         }
         finally
@@ -89,7 +89,7 @@ internal static class CompanionUiTests
             app.Goodies.Cells.Count(cell => cell.ButtonPressed) == 1 && app.Goodies.Cells[150].ButtonPressed,
             "an unchecked rule says it comes from the source only, and exactly one cell is selected");
         app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
-        check.That(app.Goodies.DetailEvidence.StartsWith("The game's gallery has no cell", StringComparison.Ordinal) &&
+        check.That(app.Goodies.DetailEvidence.StartsWith("The game's gallery has no place", StringComparison.Ordinal) &&
             app.Goodies.ChangeInCopy.Disabled, "Goodie 072, which the gallery never shows, says so and cannot be changed");
         check.That(app.RawValues.Tree.GetRoot()?.GetChildren().Count(row => row.GetText(0).Contains("god flag")) == 2,
             "raw values show both players' god flags");
@@ -314,7 +314,7 @@ internal static class CompanionUiTests
     }
 
     private static async Task BackupsAndHome(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, byte[] original,
-        string defaultBackups, List<string> openedUrls, Checks check)
+        string defaultBackups, List<string> openedUrls, Flag running, Checks check)
     {
         check.Suite("backups and home");
         app.Navigate("backups");
@@ -336,6 +336,36 @@ internal static class CompanionUiTests
         check.That(restored.Ok && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original) &&
             Backups.List(defaultBackups)[0].Reason!.StartsWith("Before putting back", StringComparison.Ordinal),
             "a backed-up career is put back, after a backup of what it replaced");
+        check.That(app.Workspace.Session?.Path == install.Career && app.Workspace.Session.Matches(original),
+            "the open career follows a file put back from a backup");
+
+        // Playing while the companion is open: when the game closes, what it saved is backed up and shown.
+        running.On = true;
+        app.CheckRunning();
+        byte[] played = original.ToArray();
+        played[0x23F6] ^= 0x01;
+        File.WriteAllBytes(install.Career, played);
+        File.SetLastWriteTime(install.Career, DateTime.Now.AddMinutes(1));
+        string settingsPath = app.Settings.Opened!.Path;
+        byte[] settingsPlayed = File.ReadAllBytes(settingsPath);
+        settingsPlayed[0x2492] ^= 0x01;
+        File.WriteAllBytes(settingsPath, settingsPlayed);
+        running.On = false;
+        app.CheckRunning();
+        await app.PendingCatchUp;
+        BackupSet latest = Backups.List(defaultBackups)[0];
+        check.That(app.Workspace.Session?.Matches(played) == true && app.Settings.Opened?.Matches(settingsPlayed) == true &&
+            latest.Reason == "Automatic backup" && latest.Files.Single(file => file.Name == "Career One.bes").Sha256 == SaveSession.Digest(played),
+            "when the game closes, the companion backs up what it saved and shows the latest career and settings");
+        app.EditCareer.Rows[2].Target.Value = app.EditCareer.Rows[2].Target.Value + 1;
+        File.WriteAllBytes(install.Career, original);
+        File.SetLastWriteTime(install.Career, DateTime.Now.AddMinutes(2));
+        app.CheckRunning(catchUp: true);
+        await app.PendingCatchUp;
+        check.That(app.Workspace.Session?.Matches(played) == true && app.EditCareer.HasChanges && app.Status.Label.Text.Contains("Undo your changes"),
+            "unsaved changes are never thrown away to show what the game saved; the player is told instead");
+        app.EditCareer.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        await app.OpenCareerAsync(install.Career);
         app.Navigate("home");
         HomePage home = app.Home;
         check.That(!home.AskingAboutBackups && home.HeroStatus.Contains("last backed up"), "Home shows the safety net once it is set up");

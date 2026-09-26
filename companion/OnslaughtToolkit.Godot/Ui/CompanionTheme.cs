@@ -137,7 +137,6 @@ internal static class CompanionTheme
         LabelVariation(theme, "Muted", 13, Palette.Muted, null);
         LabelVariation(theme, "Faint", 12, Palette.Faint, null);
         LabelVariation(theme, "Mono", 13, Palette.Text, MonoFont);
-        LabelVariation(theme, "MonoMuted", 12, Palette.Muted, MonoFont);
         LabelVariation(theme, "Accent", BodySize, Palette.Accent, StrongFont);
         LabelVariation(theme, "Data", BodySize, Palette.Data, StrongFont);
         LabelVariation(theme, "Good", 13, Palette.Good, null);

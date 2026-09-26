@@ -81,8 +81,8 @@ internal sealed class HomePage : Page
         (PanelContainer safety, VBoxContainer safetyBody) = Build.Card("Your safety net", 10);
         (_askBackups, VBoxContainer ask) = Build.Panel("CautionNotice", 8);
         ask.Add(Build.Text("Keep automatic backups?", "Strong"));
-        ask.Add(Build.Text("Each time the companion opens, it copies your careers and settings to a backup folder if anything " +
-            "changed. Nothing is ever deleted.", "Muted"));
+        ask.Add(Build.Text("When the companion opens, and when you close the game while it is open, it copies your careers and " +
+            "settings to a backup folder if anything changed. Nothing is ever deleted.", "Muted"));
         HBoxContainer askActions = ask.Add(Build.Row(10));
         TurnOnBackups = askActions.Add(Build.Button("Turn on automatic backups", "Primary"));
         NotNow = askActions.Add(Build.Button("Not now"));
@@ -205,8 +205,8 @@ internal sealed class HomePage : Page
     internal void AskToAdd(string source)
     {
         _addSource = source;
-        _addChoice.Open("Add a career to your game", NewName(System.IO.Path.GetFileNameWithoutExtension(source)), null, "",
-            CareerNameProblem, elsewhere: false);
+        _addChoice.Open("Add a career to your game", _app.NewCareerName(System.IO.Path.GetFileNameWithoutExtension(source)), null, "",
+            _app.CareerNameProblem, elsewhere: false);
     }
 
     /// <summary>Copies a career file into the game's savegames folder under a new name, after a verified backup.</summary>
@@ -244,20 +244,6 @@ internal sealed class HomePage : Page
         return receipt;
     }
 
-    /// <summary>Why a new career name cannot be used in this game, or null.</summary>
-    internal string? CareerNameProblem(string name) =>
-        GameInstaller.PortableNameProblem(name) ?? (_app.Game.Folder?.Careers.Any(career =>
-            string.Equals(career.DisplayName, name, StringComparison.OrdinalIgnoreCase)) == true
-            ? "Your game already has a career with that name." : null);
-
-    /// <summary>A name not yet used by a career in the game: "Pilot", then "Pilot (2)" and so on.</summary>
-    internal string NewName(string wanted)
-    {
-        string name = wanted.Trim();
-        for (int number = 2; CareerNameProblem(name) is not null && number < 100; number++) name = $"{wanted.Trim()} ({number})";
-        return name;
-    }
-
     internal void ShowGame()
     {
         GameFolder? folder = _app.Game.Folder;
@@ -273,7 +259,7 @@ internal sealed class HomePage : Page
         Careers.Show();
 
         IReadOnlyList<BackupSet> sets = Backups.List(_app.Backups.Folder);
-        if (_app.Game.Busy)
+        if (_app.Game.Busy && folder is null)
         {
             _heroStatus.Text = "Looking for your game…";
         }

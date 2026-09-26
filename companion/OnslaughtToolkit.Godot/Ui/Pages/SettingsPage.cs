@@ -178,6 +178,9 @@ internal sealed class SettingsPage : Page
     internal string PreviewText => string.Join("\n", _changes.GetChildren().OfType<Label>().Select(label => label.Text));
     internal string ResultText => _resultText.Text;
 
+    /// <summary>Whether the player has changed anything here that is not saved yet.</summary>
+    internal bool HasChanges => !_edit.IsEmpty;
+
     internal override void Refresh()
     {
         if (_file is null && _app.Game.Folder is not null && !_app.Workspace.Busy && Source.ItemCount > 0 && Source.Selected >= 0)
@@ -198,7 +201,7 @@ internal sealed class SettingsPage : Page
         }
         (_file, _reading, _edit) = (file, reading, new OptionsEdit());
         _loading = true;
-        _rawLine.Text = $"{file.Path}\nStored language number {reading.Language} and display mode 0x{reading.DisplayMode:X8} are kept as they are.";
+        _rawLine.Text = $"{file.Path}\nLanguage and display mode are kept as they are.";
         _sound.Value = Math.Round(reading.SoundVolume * 100);
         _music.Value = Math.Round(reading.MusicVolume * 100);
         for (int player = 0; player < 2; player++)
@@ -226,6 +229,13 @@ internal sealed class SettingsPage : Page
         SelectSource(file.Path);
         HeaderChanged?.Invoke();
         return opened;
+    }
+
+    /// <summary>Reopens the settings shown if the game changed their file since, unless something here is unsaved.</summary>
+    internal async Task CatchUpAsync()
+    {
+        if (_file is not SaveSession file || HasChanges || InGame(file.Path) is not { Sha256: string now } || now == file.Sha256) return;
+        await OpenAsync(file.Path);
     }
 
     internal void StartCapture(int entryId, int slot)
