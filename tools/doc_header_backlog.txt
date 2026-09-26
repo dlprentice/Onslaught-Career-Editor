@@ -364,7 +364,6 @@ reverse-engineering/game-mechanics/campaign-scalar-status.md
 reverse-engineering/game-mechanics/cheat-codes.md
 reverse-engineering/game-mechanics/energy-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/fire-cooldown-retail-to-core-translation-policy.md
-reverse-engineering/game-mechanics/god-mode.md
 reverse-engineering/game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/jet-energy-drain-scalar-response-v1.md
 reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
@@ -399,8 +398,6 @@ reverse-engineering/save-file/README.md
 reverse-engineering/save-file/_index.md
 reverse-engineering/save-file/career-links.md
 reverse-engineering/save-file/career-unlock-recipes.md
-reverse-engineering/save-file/goodies-system.md
-reverse-engineering/save-file/grade-system.md
 reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md
 reverse-engineering/source-code/core/_index.md

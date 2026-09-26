@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (RE audit: the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
 Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
 Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -28,14 +28,14 @@ retail executable and observed retail files own the on-disk contract.
 | `0x0002` | 4 | pending extra Goodies, not an accumulated count ([recheck](../binary-analysis/save-options-static-review-2026-05-26.md)) | preserve unless explicitly edited |
 | `0x0006` | 6,400 | `CCareerNode[100]` | scoped node edits only |
 | `0x1906` | 1,600 | `CCareerNodeLink[200]` | scoped link edits only |
-| `0x1F46` | 1,200 | `CGoodie[300]` | indices 0–232 displayable; 233–299 preserve-only |
+| `0x1F46` | 1,200 | `CGoodie[300]` | indices 0–70 and 74–232 appear on the wall; 71–73 are stored but never shown; 233–299 preserve-only |
 | `0x23F6` | 20 | five packed kill counters; rows 0–1 carry a screen-position byte on top | edit lower 24 bits; preserve every top byte |
 | `0x240A` | 128 | `mSlots[32]` | scoped bit edits only |
 | `0x248A` | 4 | `mCareerInProgress` | preserve unless explicitly edited |
 | `0x248E` | 4 | sound volume float | preserve on career edits |
 | `0x2492` | 4 | music volume float | preserve on career edits |
-| `0x2496` | 4 | `g_bGodModeEnabled` | scoped edit only |
-| `0x249A` | 4 | unused/reserved | preserve |
+| `0x2496` | 4 | player 1 god flag, `CCareer::mIsGod[0]` ([god mode](../game-mechanics/god-mode.md)) | scoped edit only; nonzero makes player 1's Battle Engine invulnerable |
+| `0x249A` | 4 | player 2 god flag, `mIsGod[1]` | preserve unless explicitly edited |
 | `0x249E` | 4 | P1 flight invert Y | scoped options edit only |
 | `0x24A2` | 4 | P2 flight invert Y | scoped options edit only |
 | `0x24A6` | 4 | P1 walker invert Y | scoped options edit only |
@@ -61,7 +61,7 @@ fixed size of `0x2714`; do not resize or synthesize a save for another value.
 | `+0x0C` | higher link index |
 | `+0x10` | world number |
 | `+0x14` | nine persistence dwords (`mBaseThingsExists`) |
-| `+0x38` | attempt count |
+| `+0x38` | `mNumAttempts` (`Career.h:96`): zeroed by `Blank` (`Career.cpp:99`; retail `0x0041b74e`, `0x0041b814`) and never incremented; 0 in every gold-save node |
 | `+0x3C` | ranking float bits |
 
 ### `CCareerNodeLink` (8 bytes)
@@ -79,7 +79,9 @@ save_index = script_index - 1
 offset = 0x1F46 + 4 * save_index
 ```
 
-Only indices 0–232 are supported displayable rows. Reserved rows must remain
+Indices 0–70 and 74–232 are the rows the Goodies wall shows: its mapper
+(`0x0045cb80`, identical to `FEPGoodies.cpp:393-437`) never produces 71–73,
+though `UpdateGoodieStates` can mark them new. Reserved rows must remain
 unchanged.
 
 ## Kill counters and slots
@@ -106,8 +108,15 @@ hold the count — `CCareer::GetNumKilled` masks with `and eax, 0xFFFFFF` at
 Rows 2–4 have no accessor and no known consumer; their top byte is carried
 unread and preserved. Because `CCareer::UpdateThingsKilled` stores an unmasked
 32-bit sum (`0x0041C1A9`), a count that carries out of bit 23 adds one to the
-packed byte and shifts the screen position — shipped behaviour, correctable
-from the game's own options page. All addresses are the pristine
+packed byte and changes the stored screen-position setting — shipped
+behaviour, correctable from the game's own options page. Whether that setting
+moves the picture is open. A census of the image's references to the two words
+(absolute `0x00662a14`/`0x00662a18`, displacement `0x23f4`/`0x23f8`) finds only
+`Blank`, `UpdateThingsKilled`, a 19-byte helper (`0x0041c160`), `Load`,
+`UpdateGoodieStates` (which masks the byte off), the four accessors
+(`0x004218f0`-`0x00421960`) and their callers in the `CFEPScreenPos` and
+`CFEPOptions` pages (`0x0051f484`-`0x0051fa71`); none of these applies it to
+the display. All addresses are the pristine
 `74154bfa…` image, file offset = VA - 0x400000.
 
 The historical `0x23A4` location is inside the Goodie array and must never be

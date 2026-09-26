@@ -1,516 +1,113 @@
-# God Mode Investigation
-
-## Current Understanding (Updated Mar 2026)
-
-**CRITICAL CORRECTION**: Our previous hypothesis was WRONG. Offset `0x240C` is NOT god mode!
-
-**Build scope note:** The cheat strings shown as `B4K42`/`!EVAH!`/`105770Y2` below come from the **source/internal build**. The Steam PC port uses different cheat codes (`MALLOY`, `TURKEY`, `Maladim`). Live runtime/user testing on 2026-03-15 confirmed that `Maladim` exposes a cheat-gated `God OFF` / `God ON` toggle under **Controller Options** in the pause menu, and a 2026-03-29 gameplay retest confirmed that the toggle changes real combat-damage behavior in the Steam build.
-
-## Runtime Confirmation (2026-03-15 / 2026-03-29)
-
-Confirmed live against a patched-for-windowed installed build used only for debugger practicality:
-
-- `IsCheatActive(3)` is part of the Steam-build `Maladim` path.
-- The visible god-mode toggle is **not** a new top-level pause-menu line.
-- The visible toggle appears under **Controller Options** as `God OFF` / `God ON`.
-- Toggling the option changes the displayed state in the live game UI.
-- A later gameplay retest confirmed that with `God ON`, normal combat damage no longer depleted shields.
-- Turning `God ON` back on after shield loss instantly restored shields to full.
-- Turning `God ON` back on after hull damage restored shields but did **not** repair the already-lost hull.
-
-What remains open:
-
-- the exact implementation boundary that produces the observed shield-centric behavior,
-- and whether environmental hazards such as water still bypass the effect in the Steam build.
-
-## Likely Steam-Build Mechanism (Offline Follow-up, 2026-03-29)
-
-Saved decomp now gives a stronger mechanism story for the Steam build:
-
-- `CPauseMenu__ButtonPressed` (`0x004d0810`) flips the `God OFF` / `God ON` menu item IDs
-- then calls `CEngine__SetOptionValueAndNotifyTarget` (`0x004d3020`) with `0` or `1`
-- that helper stores the new option value and dispatches **two** target vfunc calls with complementary booleans
-
-This does **not** look like a single direct `SetIsGod` call in the Steam build. It looks like a split runtime notification path.
-
-That split still lines up well with the internal/source implementation:
-
-- internal `CPlayer::SetIsGod(TRUE)` calls `mBattleEngine->SetVulnerable(FALSE)` and `mBattleEngine->SetInfinateEnergy(TRUE)`
-- internal `CBattleEngine::Damage()` restores pre-hit `life`, `shields`, and `energy` when `mVulnerable == FALSE`
-
-Why that matches the observed Steam behavior:
-
-- future combat damage no longer sticks
-- turning god mode back on later does **not** retroactively heal hull that was already lost
-- shield refill is plausibly explained by the energy/shield recharge side of the Battle Engine rather than a direct full-heal call
-
-This is the current best explanation for:
-
-- `God ON` blocks new damage
-- shields refill when it is re-enabled
-- already-lost hull stays lost
-
-Treat that as a strong mechanism inference, not yet a direct vfunc-by-vfunc proof.
-
-## The Steam build's `mVulnerable` is at `CBattleEngine + 0x15C` (2026-08-01)
-
-**Evidence:** MEASURED. Byte pattern read out of `CBattleEngine::Damage` in
-`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, corroborated
-by `references/Onslaught/BattleEngine.cpp:2234`.
-
-This closes the "exact implementation boundary" question raised above. The
-restore is not an inference from the internal source any more - it is in the
-Steam binary, at a known offset, with a readable polarity.
-
-`CBattleEngine::Damage`, VA `0x0040A890` (file offset `0x00A890`) - the same
-function the trainer's vital offsets came from. At `+0x035a`:
-
-```
-+0x035a  8b 86 5c 01 00 00    mov   eax, [esi+0x15C]      ; mVulnerable
-+0x0360  85 c0                test  eax, eax
-+0x036e  75 1e                jnz   +0x1e                 ; non-zero -> damage stands
-+0x0370  8b 54 24 04          mov   edx, [esp+0x04]       ; life,    from the prologue
-+0x0374  8b 44 24 08          mov   eax, [esp+0x08]       ; shields, from the prologue
-+0x0378  8b 4c 24 0c          mov   ecx, [esp+0x0C]       ; energy,  from the prologue
-+0x037c  89 96 f8 00 00 00    mov   [esi+0x0F8], edx      ; life restored
-+0x0382  89 86 00 01 00 00    mov   [esi+0x100], eax      ; shields restored
-+0x0388  89 8e fc 00 00 00    mov   [esi+0x0FC], ecx      ; energy restored
-```
-
-Three things make this conclusive rather than suggestive:
-
-1. **The restored values are the prologue's own snapshot.** Life at `[esp+0x04]`,
-   shields at `[esp+0x08]`, energy at `[esp+0x0C]` are read back in order into
-   `+0x0F8`, `+0x100`, `+0x0FC` - the three vital offsets. Nothing else in the
-   function does that.
-2. **The shape matches the source exactly.** `BattleEngine.cpp:2234` is
-   `if (mVulnerable == FALSE)` guarding a restore of those same three. This is
-   that `if`, compiled.
-3. **The polarity is readable from the jump.** `jnz` skips the restore, so the
-   restore runs when the field is **zero**. Zero is invulnerable, matching
-   `SetVulnerable(FALSE)` in `Player.cpp:229`.
-
-**It is a per-hit undo, not a heal.** That is why the 2026-03-29 retest saw
-already-lost hull stay lost: the hull was committed by an earlier call, and
-nothing here goes back for it. The section above guessed at recharge to explain
-the shield refill; the restore explains it directly.
-
-### What this does not settle
-
-- **Nothing has written to `+0x15C` in a running game.** The offset is measured;
-  the write is untested. The trainer therefore reads and displays the field and
-  offers no control for it - the same bar the vitals had to clear.
-- **Whether the game re-asserts it.** The pause-menu path above may write it
-  back, in which case a single write would need the trainer's 10 Hz hold.
-- **What else reads it.** Only `Damage` was scanned. Water and other
-  environmental hazards remain the open question this document already records.
-
-**Ghidra Evidence (Dec 2025):**
-- `PauseMenu.cpp` gates the menu option via `IsCheatActive(3)` and uses `g_bGodModeEnabled` as the pause-menu toggle state
-- Retail `.bes` uses the **true dword view**:
-  - 16-bit version word at `0x0000` (`0x4BD1`)
-  - `CCareer::Load/Save` copies CCareer bytes from/to `file + 2`
-  - File offset mapping: `file_off = 0x0002 + career_off`
-- **Steam build correction:** the file offsets previously documented as `mIsGod[]` are **not** god mode persistence flags in the Steam build. They are used by the Controls UI for per-player/per-mode invert-Y (walker/flight) toggles.
-
-**God Mode / Controls-Adjacent Fields** (file offsets, true dword view):
-| File Offset | CCareer Offset | Size | Field | Purpose |
-|-------------|----------------|------|-------|---------|
-| 0x240A | 0x2408 | 128 | mSlots[32] | Tech slots array (32 ints) |
-| 0x248A | 0x2488 | 4 | mCareerInProgress | Progress flag |
-| 0x248E | 0x248C | 4 | mSoundVolume | Sound settings (float) |
-| 0x2492 | 0x2490 | 4 | mMusicVolume | Music settings (float) |
-| 0x2496 | 0x2494 | 4 | g_bGodModeEnabled | Pause-menu toggle state (cheat-gated) |
-| 0x249A | 0x2498 | 4 | (unused/padding) | Observed 0; used as a base for 1-based indexing in invert logic |
-| 0x249E | 0x249C | 4 | mInvertYFlightP1 | Player 1 flight/jet invert Y |
-| 0x24A2 | 0x24A0 | 4 | mInvertYFlightP2 | Player 2 flight/jet invert Y |
-| 0x24A6 | 0x24A4 | 4 | mInvertYWalkerP1 | Player 1 walker invert Y |
-| 0x24AA | 0x24A8 | 4 | mInvertYWalkerP2 | Player 2 walker invert Y |
-| 0x24AE | 0x24AC | 4 | mVibration[0] | Player 1 controller vibration toggle (`0=Off`, non-zero=On) |
-| 0x24B2 | 0x24B0 | 4 | mVibration[1] | Player 2 controller vibration toggle (`0=Off`, non-zero=On) |
-| 0x24B6 | 0x24B4 | 4 | mControllerConfigurationNum[0] | Player 1 controller config/preset index |
-| 0x24BA | 0x24B8 | 4 | mControllerConfigurationNum[1] | Player 2 controller config/preset index |
-
-**Runtime-address note:** `g_bGodModeEnabled` here refers to the persisted CCareer field at file `0x2496`. The runtime address commonly labeled `g_bGodModeEnabled` at `0x00662ab4` is the in-memory address used after load, not a second independent persisted storage location.
-
-**Internal build note:** God mode was designed as per-player state (2-player support). In the Steam build, we have not identified a reliable per-player persisted flag in the `.bes` save format; behavior remains cheat-gated.
-
-**Encoding note (Feb 2026):** In the true view, these flags are normal 32-bit values (0/1 observed). In the legacy 4-byte-aligned view, the same bytes can *appear* as `0x00010000`.
-**WRONG Offset 0x240C**: This is actually `mSlots[1]` tech slot data, NOT god mode!
-
----
-
-## Historical Context (Dec 2025)
-
-### Previous Misunderstanding
-The gold save file has `0x01000000` at offset 0x240C, which we now understand:
-- **This is NOT god mode at all** - it's `mSlots[1]` in the tech slots array
-- The value `0x01000000` represents tech slot bits, not a god mode flag
-- Our patcher was writing to the wrong offset entirely
-
-**Why our tests failed initially**: We were patching tech slot data, not god mode. In the Steam build, the bytes at `0x249A/0x249E/...` are invert-Y toggles, not god mode persistence.
-
-### The REAL Answer (Source/Internal Build): B4K42 Checks Save NAME, Not Flag
-
-**From `FEPSaveGame.cpp` source code (Dec 2025 analysis):**
-
-```cpp
-// Cheat codes defined in FEPSaveGame.cpp
-char cheatname[4][256];
-strcpy(cheatname[0], "105770Y2");   // Index 0: All goodies unlocked
-strcpy(cheatname[1], "!EVAH!");     // Index 1: All levels unlocked
-strcpy(cheatname[2], "V3R5ION");    // Index 2: Show version number
-strcpy(cheatname[3], "B4K42");      // Index 3: God mode available
-
-// Called with the save name to check for cheat codes
-BOOL CFEPSaveGame::IsCheatActive(int cheatno) {
-    char mungedname[256];
-    strcpy(mungedname, FromWCHAR(mSaveGameName));
-
-    // On PS2 devkit, all cheats are active
-    #if TARGET == PS2
-    if (CLIPARAMS.mDevKit)
-        return TRUE;
-    #endif
-
-    // Uses strstr() - code can appear ANYWHERE in the name!
-    if (strstr(mungedname, cheatname[cheatno]) != NULL)
-        return TRUE;
-    else
-        return FALSE;
-}
-```
-
-**This explains the internal/source build behavior (and what we learned about Steam):**
-1. The B4K42 cheat works by checking the **save game NAME string** at runtime via `strstr()`
-2. The cheat code can appear **anywhere** in the save name (not just the full name)
-3. In the internal build source, god mode is per-player runtime state (`CPlayer::mIsGod`) and `CPlayer::SetIsGod()` persists to `CCareer::mIsGod[2]`
-4. In the Steam build, the on-disk dwords previously documented as `mIsGod[]` are used by the Controls UI for invert-Y toggles; we have **not** identified a per-player persisted god flag in `.bes` saves
-5. In the Steam build, the pause menu uses `IsCheatActive(3)` for gating and uses `g_bGodModeEnabled` (file `0x2496`) as the menu toggle state; live testing now confirms the visible toggle appears under `Controller Options` as `God OFF` / `God ON`
-6. A 2026-03-29 gameplay retest confirmed that `God ON` blocks normal combat damage in single-player, instantly refills depleted shields when toggled back on, and does not repair hull that was already lost before re-enabling the toggle
-7. Practical implication: save patching the old "mIsGod" offsets is not a valid approach on Steam; any invincibility is still driven by runtime state and additional gating/conditions
-
-**PC port note:** In the Steam build, `IsCheatActive(3)` uses the `Maladim` string (per Ghidra), and live testing now confirms both the gated UI toggle under `Controller Options` and real gameplay effect against normal combat damage. The remaining uncertainty is the exact mechanism/boundary, not whether the feature works.
-
-**Why `mIsGod[]` exists in the internal source at all:**
-- The internal build has split-screen support (2 players), so per-player arrays are common.
-- In that source, `CPlayer::CPlayer()` loads `mIsGod` from `CAREER.GetIsGod(mNumber-1)`, implying persistence was intended for that build.
-- The Steam PC port diverges: the corresponding on-disk region is used for controls settings (invert-Y), and per-player persisted god flags are currently unconfirmed.
-
----
-
-## Source Code Implementation (Player.cpp - Dec 2025 Analysis)
-
-**Full call chain when god mode is enabled:**
-```cpp
-void CPlayer::SetIsGod(BOOL val) {
-    mIsGod = val;                        // Set player's runtime flag
-    CAREER.SetIsGod(mNumber-1, val);     // Persist to career (1-indexed player)
-
-    if (mBattleEngine.ToRead()) {
-        if (mIsGod == TRUE) {
-            mBattleEngine->SetVulnerable(FALSE);    // Disable damage
-            mBattleEngine->SetInfinateEnergy(TRUE); // Infinite energy (typo preserved!)
-        } else {
-            mBattleEngine->SetVulnerable(TRUE);
-            mBattleEngine->SetInfinateEnergy(FALSE);
-        }
-    }
-
-    if (val)
-        IncStat(PS_CHEATED, 1);  // Marks player as cheater!
-}
-```
-
-**Storage in Career struct (Career.h):**
-```cpp
-CSArray<BOOL, 2> mIsGod;  // 2-player support, 8 bytes total
-```
-
-**God mode is loaded on player construction:**
-```cpp
-CPlayer::CPlayer(int number) : mNumber(number) {
-    // ...
-    mIsGod = CAREER.GetIsGod(mNumber-1);  // Load from saved career!
-}
-```
-
----
-
-## Why Save Patching Didn't Work (Steam Build, Updated Feb 2026)
-
-**Root Cause (Steam PC port)**: We were patching the wrong offsets. In the Steam build, the dwords at `0x249A/0x249E/...` are used for invert-Y controls settings, not per-player god flags. Any invincibility is runtime state and remains cheat-gated.
-
-**Evidence trail (Steam build):**
-1. **Cheat gating**: `PauseMenu__Init` gates the menu option via `IsCheatActive(3)` (PC port cheat string: `Maladim`)
-2. **Toggle state**: the pause menu uses `g_bGodModeEnabled` (file `0x2496`) as the toggle state once the option is available
-3. **Controls UI xrefs**: the `0x249E/0x24A2/0x24A6/0x24AA` dwords are accessed as per-player invert-Y toggles (walker/flight)
-4. **User testing (Mar 2026)**: A `Maladim`-named save in single-player exposes `God OFF` / `God ON` under `Controller Options`; a later gameplay retest confirmed that normal combat damage no longer depletes shields while enabled, and MP "invincibility" observations are runtime behavior and are not attributable to persisted per-player flags in Steam saves
-
----
-
-## Internal Build Cheat Gating (B4K42) (Historical)
-
-`IsCheatActive(3)` checks the **save game NAME** using substring matching. In the internal/source build the string is `B4K42`; in the Steam PC port, the decrypted cheat string for index 3 is `Maladim`. From `FEPSaveGame.cpp` (internal/source build):
-```cpp
-// Cheat code checking - uses strstr() for substring match
-if (strstr(saveName, "B4K42") != NULL) {
-    // God mode toggle enabled in pause menu
-}
-```
-
-Additionally, from `PCController.cpp`, god mode was also a **runtime toggle** via debug keyboard shortcut in internal builds:
-
-| Key | Action | Notes |
-|-----|--------|-------|
-| **V** | Toggle God Mode | Runtime only! Mapped to `BUTTON_TOGGLE_GOD_MODE` |
-| **U** | Instant Win Level | Debug cheat (`BUTTON_WIN_LEVEL`) |
-| **I** | Instant Lose Level | Debug cheat (`BUTTON_LOOSE_LEVEL`) |
-| **S** | Save Career | Debug save |
-| **L** | Load Career | Debug load |
-| **Z** | Log Career State | Dumps career to log |
-| **7** | Complete All Objectives | Debug skip (`BUTTON_COMPLETE_ALL_OBJECTIVES`) |
-
-**BUTTON_TOGGLE_GOD_MODE Handler (game.cpp line 2572):**
-```cpp
-case BUTTON_TOGGLE_GOD_MODE:
-    for (n = 0; n < MAX_PLAYERS; n++) {
-        if (mPlayer[n]) {
-            if (mPlayer[n]->IsGod())
-                mPlayer[n]->SetIsGod(FALSE);
-            else
-                mPlayer[n]->SetIsGod(TRUE);
-        }
-    }
-    break;
-```
-
-**Implication:** The debug keys were stripped from release builds, but god mode was designed as a runtime toggle, NOT a persistent save flag. This explains why patching the `mIsGod[]` flags in the save has no effect in single-player: the retail build uses save-name cheats at runtime.
-
----
-
-## CORRECTED: Bit Flags at 0x240C Are Tech Slots, NOT God Mode (Dec 2025)
-
-**Function `CCareer__ReCalcLinks` at 0x0041bdf0 checks bits 29-30:**
-
-```c
-// From decompiled code:
-if ((*(uint *)(in_ECX + 0x240c) >> 0x1d & 1) != 0)  // Check bit 29 = Slot 61
-if ((*(uint *)(in_ECX + 0x240c) >> 0x1e & 1) != 0)  // Check bit 30 = Slot 62
-```
-
-**CRITICAL CORRECTION**: These are NOT god mode flags! They are tech slot bits:
-
-| Bit | Slot | Constant | Purpose |
-|-----|------|----------|---------|
-| 29 | 61 | `SLOT_500_ROCKET` | Controls higher tier path after mission 500 |
-| 30 | 62 | `SLOT_500_SUB` | Controls lower tier path after mission 500 |
-
-**From Career.cpp lines 468-481:**
-```cpp
-if (END_LEVEL_DATA.mWorldFinished == 500) {
-    if ((GetSlot(SLOT_500_ROCKET)) && (link == CAREER.GetLink(finished_node->mHigherLink))) {
-        complete=TRUE;  // Complete higher path link
-    }
-    if ((GetSlot(SLOT_500_SUB)) && (link != CAREER.GetLink(finished_node->mHigherLink))) {
-        complete=TRUE;  // Complete lower path link
-    }
-}
-```
-
-**Explanation**: Mission 500 has a branching path. When you complete it:
-- If you took the "rocket" path, `SLOT_500_ROCKET` is set, enabling the higher tier link
-- If you took the "sub" path, `SLOT_500_SUB` is set, enabling the lower tier link
-
-This is mission progression logic, NOT invincibility.
-
----
-
-## Tech Slots Layout (True File Offsets)
-
-For save patching, use true file offsets (`file_off = 0x0002 + career_off`):
-
-| mSlots Index | File Offset (true view) | CCareer Offset | Slot Numbers |
-|--------------|--------------------------|----------------|--------------|
-| mSlots[0] | 0x240A | 0x2408 | 0-31 |
-| mSlots[1] | 0x240E | 0x240C | 32-63 |
-| mSlots[2] | 0x2412 | 0x2410 | 64-95 |
-| ... | ... | ... | ... |
-
-`0x2408/0x240C/...` are CCareer/aligned-view references and are not authoritative on-disk patch offsets.
-
----
-
-## Executable Analysis
-
-**CFeatureInvincible** class exists (RTTI at 0x00627548) but implementation is obfuscated.
-
-Related strings found:
-- `"GOD mode Score = %0d"` at 0x0062c558 (debug display)
-- `"SetVulnerable"` at 0x0064f8c0 (script command)
-- `"SetAllSegmentsVulnerable"` at 0x0064f428
-- `"SetSegmentVulnerable"` at 0x0064f444
-
-**Why god mode patching has not worked (UPDATED)**: We were patching the WRONG offset (0x240C = tech slots). Also, in the **Steam build**, the bytes at `0x249A/0x249E/...` are used by the Controls UI for invert-Y (walker/flight) toggles, not god mode persistence.
-
-God mode also requires:
-1. Runtime feature flags (CFeatureInvincible instantiation)
-2. Player state updates (SetVulnerable calls)
-3. The save flag to be read on player construction (may be disabled in console port)
-
-The B4K42 cheat code (entered as save game NAME when starting new game) works because it triggers runtime gating in the internal/source build. In Steam/retail, use the retail cheat table and treat behavior as build-specific.
-
----
-
-## PS_CHEATED Stat
-
-From `Player.cpp` - enabling god mode increments a cheat counter:
-
-```cpp
-void CPlayer::SetIsGod(BOOL val) {
-    mIsGod = val;
-    CAREER.SetIsGod(mNumber-1, val);
-    if (val) IncStat(PS_CHEATED, 1);  // Marks player as cheated!
-}
-```
-
-This may affect grade eligibility or goodie unlocks.
-
----
-
-## IN-GAME TEST RESULTS (Dec 12, 2025) (Historical; Re-evaluate for Steam Build)
-
-**Test saves used:**
-- `test_godmode_correct_p1_shift16.bes` - P1 ON, P2 ON
-- `test_godmode_correct_both_shift16.bes` - P1 ON, P2 ON
-
-**Results:**
-
-| Finding | Status |
-|---------|--------|
-| God mode works in multiplayer | ⚠️ **Historical** (pre-correction; do not treat as Steam-confirmed) |
-| God mode works in single-player | ❓ **Unverified** on Steam build |
-| Player 2 invincibility (multiplayer) | ⚠️ **Historical** (pre-correction; do not treat as Steam-confirmed) |
-| Player 1 invincibility (single-player) | ❓ **Unverified** on Steam build |
-| Unlimited ammo | ❌ **NOT INCLUDED** |
-| Environmental hazards bypass | ⚠️ **Historical only**: older testing suggested water was still lethal; not re-tested in the current Steam-build pass |
-
-**What "god mode" actually does:**
-- Shields and health do NOT drop from weapon/enemy damage
-- Does NOT grant infinite ammo (energy depletes normally)
-- Historical note only: older testing suggested water remained lethal; this specific hazard was not re-tested in the current Steam-build pass
-
-**Key insight (Steam build correction):** Earlier notes referenced a “P2 god mode flag” at `0x249E`, but in the Steam build that offset is used for **flight/jet invert Y (P1)**. Treat any conclusions derived from those offsets as invalid for Steam until re-tested with updated field mapping.
-
-**Why P1 god mode might not work:**
-- Single-player may follow different initialization/toggle code paths than multiplayer
-- The console port may have disabled the save-load path for P1
-- Runtime flag may need to be triggered differently for P1
-
----
-
-## Investigation Status (Core Mechanism Resolved; Steam Behavior Still Under Test)
-
-**Internal/source resolution:** `B4K42` is save-name substring gating in source snapshots.
-**Steam/retail status:** index-3 cheat string is `Maladim`; menu-gating callsite is live-confirmed, the toggle is visible under `Controller Options`, and normal combat-damage protection is now live-confirmed. The remaining question is the exact behavior boundary (especially hull already lost and environmental hazards).
-
-- [x] Compare gold save 0x240C region byte-by-byte with patched saves - **DONE**: Gold save has `0x01000000` - now understood as tech slot data, not god mode
-- [x] Test if 0x01000000 (gold save value) enables god mode - **DONE**: It doesn't - because it's not god mode! It's `mSlots[1]` tech slot bits
-- [x] **CORRECTED**: Offset 0x240C is `mSlots[1]`, NOT `mIsGod[0]` - bits 29-30 control mission 500 branching paths
-- [x] Check if PS_CHEATED stat is stored in save file - **DONE, and the answer is NO.** See the correction below.
-- [x] Look for cheat code input handlers in the binary - **DONE**: Debug keys are in `PCController.cpp`; see [`../source-code/frontend/controller-system.md`](../source-code/frontend/controller-system.md). Stripped from release builds. (Cross-reference repointed 2026-07-28 — see below.)
-
-**CORRECTED 2026-07-28 — the PS_CHEATED line recorded the opposite of the truth,
-and both of its cross-references were dead.** The two lines above previously read:
-
-> - [x] Check if PS_CHEATED stat is stored in save file - **DONE**: Documented in "Player Stats (Career.h)" section. Stored at `mStats` array in career save.
-> - [x] Look for cheat code input handlers in the binary - **DONE**: Debug keys documented in "God Mode Mystery SOLVED" section (PCController.cpp). Stripped from release builds.
-
-Three defects, quoted rather than deleted because a closed question that is
-closed the wrong way is worse than an open one:
-
-1. **Player stats are not in the career save.** They are
-   `int mStat[PS_NUM_PLAYERSTATS];` — a member of **`CPlayer`**, not `CCareer`
-   (`references/Onslaught/Player.h:106`), private, reached only through
-   `SetStat` / `GetStat` / `IncStat` (`Player.h:86-88`), and zeroed at
-   `CPlayer::WipeStats` (`Player.cpp:247-251`). `Career.h` declares no stats
-   member at all (its only `mState` hits are `CGoodie::mState`, `Career.h:53-54`,
-   `140-141`). The 0x24BC career block is fully assigned by
-   [`../save-file/save-format.md`](../save-file/save-format.md)'s layout table,
-   with no stats region. Consequence of the old line: a save-editor contributor
-   was told a stat array is persisted at an unspecified offset, inside a
-   byte-preserving editor's blast radius.
-2. **`mStats` is not the name of anything in `CCareer`.** The plural identifier
-   does exist in the corpus, but it is unrelated —
-   `CUnitData *mStats` on `CUnitInitThing` (`InitThing.h:873`, `881`, `884`).
-3. **Both cited sections do not exist in this document.** There is no
-   "Player Stats (Career.h)" section and no "God Mode Mystery SOLVED" section.
-   The real headings are `## Complete Player Stats (PS_*) System` (below) and
-   `## PS_CHEATED Stat`; the debug-key material lives in
-   `../source-code/frontend/controller-system.md`.
-
-**Unchanged:** `PS_CHEATED` itself is real and is documented in
-`## PS_CHEATED Stat` in this document; only its claimed persistence in the career
-save is withdrawn. Nothing else in the checklist above is affected.
-- [ ] Re-test god mode persistence for Steam build with corrected field mapping (note: `0x249A/0x249E/...` are invert-Y toggles)
-- [x] **SOLVED via FEPSaveGame.cpp**: B4K42 checks `strstr(saveName, "B4K42")` using `IsCheatActive(3)`
-- [x] Verify whether `Maladim` exposes a visible Steam-build menu toggle - **DONE**: live 2026-03-15 testing confirmed `God OFF` / `God ON` under `Controller Options`
-- [x] Why save patching old `mIsGod[]` offsets doesn't work (Steam build) - **EXPLAINED**: those offsets are used for invert-Y, and runtime god behavior is cheat-gated; the pause-menu toggle uses the persisted field at file `0x2496`
-
-**Remaining (low priority, informational only):**
-- [x] Test single-player with `Maladim` to verify whether `God ON` actually grants runtime invincibility in Steam build - **DONE**: normal combat damage is blocked while enabled; toggling it back on instantly refills shields but does not repair prior hull loss
-- [ ] Verify if multiplayer P2 can get god mode via any mechanism (no cheat code triggers P2)
-
----
-
-## Complete Player Stats (PS_*) System
-
-| Stat | Index | Purpose | Encoding |
-|------|-------|---------|----------|
-| `PS_UNITSDESTROYED` | 0 | Total units destroyed | Standard |
-| `PS_ROUNDSFIRED` | 1 | Ammunition expended | Standard |
-| `PS_ROUNDSHIT` | 2 | Shots that connected | Standard |
-| `PS_CHEATED` | 3 | Cheat usage counter | Incremented by SetIsGod() |
-| `PS_TIMEASJET` | 4 | Time in jet mode | Seconds |
-| `PS_TIMEASWALKER` | 5 | Time in walker mode | Seconds |
-| `PS_DAMAGETAKEN` | 6 | Damage received | **x256 multiplier** (fixed-point) |
-| `PS_NUM_PLAYERSTATS` | 7 | Sentinel/count | N/A |
-
-**Note:** `PS_DAMAGETAKEN` uses x256 encoding (NOT shift-16) because damage is floating-point. Different encoding than career integers.
-
----
-
-## In-Game Cheat Codes
-
-Enter as save game name when creating a new game:
-
-**ORIGINAL codes (Stuart's source):**
-| Code | Effect |
-|------|--------|
-| `B4K42` | God mode (runtime only - patching doesn't work) |
-| `!EVAH!` | All missions unlocked |
-| `105770Y2` | All goodies unlocked |
-
-**PC PORT codes (Steam/retail):**
-| Code | Effect |
-|------|--------|
-| `Maladim` | God mode (`God OFF` / `God ON` under `Controller Options`; blocks normal combat damage, instantly refills shields, does not repair prior hull loss) |
-| `TURKEY` | All missions unlocked |
-| `MALLOY` | All goodies unlocked |
-
-**NOTE:** Steam/retail cheat strings differ from source/internal strings; MALLOY and TURKEY are confirmed working in Steam without patching, and `Maladim` now has live-confirmed menu behavior plus live-confirmed combat-damage effect. The remaining Steam-side uncertainty is exact behavior boundary, especially environmental hazards.
-
-Mechanism note: the current best Steam-build explanation is a split runtime path through `CPauseMenu__ButtonPressed -> CEngine__SetOptionValueAndNotifyTarget`, which is strongly compatible with source-side `SetVulnerable` + `SetInfinateEnergy` behavior but not yet proven to be identical.
-
-**See [cheat-codes.md](cheat-codes.md)** for detailed analysis of cheat code storage (not plaintext in binary), obfuscation theories, and activation flow.
-
----
-
-## Cheat Activation Mechanism
-
-From `Controller.cpp`:
-- **Release build**: L1 + R1 triggers `BUTTON_FRONTEND_CHEAT` (45)
-- **E3 build**: L1 + R1 + left stick left + right stick right (harder combo)
-
-The actual cheat validation uses build-specific frontend strings (source/internal: B4K42/!EVAH!/105770Y2; Steam PC port: MALLOY/TURKEY/Maladim/Aurore/latête). **See [cheat-codes.md](cheat-codes.md)** for binary analysis findings.
+# God mode
+
+Status: active contract
+Last updated: 2026-09-26 (rewritten by the RE audit: the saved per-player flags at file 0x2496 and 0x249A)
+Summary: god mode is per-player state saved in the career at file offsets 0x2496 (player 1)
+and 0x249A (player 2). The player loads it when it is built and applies it to its Battle
+Engine; the Maladim cheat only adds the pause-menu item that shows and toggles player 1's flag.
+Evidence: MEASURED — pristine instructions and the tracked gold save; SOURCE — `Player.cpp`,
+`Career.cpp`/`Career.h`, `BattleEngine.cpp`, `BattleEngineJetPart.cpp`, `PCGame.cpp`; runtime
+notes from 2026-03-15 and 2026-03-29 on a patched-for-windowed Windows install, with no
+archived capture. The effect of a saved flag without the cheat name is static only.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; gold save
+`tests_shared/fixtures/gold_career_save.bin`.
+
+An earlier version of this page said the Steam build had reused these words for invert-Y
+settings and that god mode was not persisted. Both claims were wrong; Git keeps that version.
+
+## Where the flags live
+
+- `CCareer::mIsGod[2]` (`Career.h:204`) sits at career `+0x2494` and `+0x2498`, which are
+  file offsets `0x2496` (player 1) and `0x249A` (player 2). In memory they are `0x00662ab4`
+  and `0x00662ab8` (the career object is at `0x00660620`).
+- `CCareer::Blank` clears both (`0x0041b8cd`, `0x0041b8d3`; `Career.cpp:229`). `CCareer::Load`
+  copies the whole `0x92f`-dword block, flags included (`0x00421236-0x00421243`).
+- The Steam career block is 8 bytes longer than the source's (`0x24BC` against `0x24B4`)
+  because the invert-Y array grew from two entries to four (`+0x249C`-`+0x24A8`). `mIsGod`
+  was not moved or reused. The field table is in [save-format.md](../save-file/save-format.md).
+
+## What the flags do
+
+- **Player construction.** `CPlayer::CPlayer` loads its flag from
+  `[0x00662ab0 + 4 × number]` (numbers are 1-based) into `+0x20` (`0x004d27f3-0x004d27fe`),
+  as `Player.cpp:33` (`mIsGod = CAREER.GetIsGod(mNumber-1)`).
+- **Battle Engine assignment.** When `+0x20` is nonzero, `AssignBattleEngine` calls the
+  Battle Engine's `SetVulnerable(0)` (vtable `+0xe0`, `0x00405e30`: `+0x15C` = argument) and
+  `SetInfinateEnergy(1)` (vtable `+0x154`, `0x00405f20`: `+0x160` = argument, then `+0xFC`
+  = the configuration's `+0x20`) (`0x004d30a1-0x004d30ba`). The Battle Engine vtable is
+  `0x005d89c4`.
+- **`CPlayer::SetIsGod`** (`0x004d3020`, `Player.cpp:221-242`) stores the player's `+0x20`
+  and the career word, then, if the player has a Battle Engine (`+0x1c`): for a value of 1,
+  `SetVulnerable(0)` and `SetInfinateEnergy(1)`; otherwise `SetVulnerable(1)` and
+  `SetInfinateEnergy(0)`. A nonzero value also increments the player's `+0x3c`
+  (`IncStat(PS_CHEATED)`, `Player.cpp:240`; `0x004d3070`).
+- **Damage.** `CBattleEngine::Damage` (`0x0040A890`) restores the life, shields and energy it
+  snapshotted in its prologue when `+0x15C` (`mVulnerable`) is 0, as `BattleEngine.cpp:2234`:
+
+  ```
+  +0x035a  8b 86 5c 01 00 00    mov   eax, [esi+0x15C]      ; mVulnerable
+  +0x0360  85 c0                test  eax, eax
+  +0x036e  75 1e                jnz   +0x1e                 ; non-zero -> damage stands
+  +0x0370  8b 54 24 04          mov   edx, [esp+0x04]       ; life,    from the prologue
+  +0x0374  8b 44 24 08          mov   eax, [esp+0x08]       ; shields, from the prologue
+  +0x0378  8b 4c 24 0c          mov   ecx, [esp+0x0C]       ; energy,  from the prologue
+  +0x037c  89 96 f8 00 00 00    mov   [esi+0x0F8], edx      ; life restored
+  +0x0382  89 86 00 01 00 00    mov   [esi+0x100], eax      ; shields restored
+  +0x0388  89 8e fc 00 00 00    mov   [esi+0x0FC], ecx      ; energy restored
+  ```
+
+  It undoes each hit taken while the flag is 0; it does not heal damage taken earlier. (The
+  listing leaves out a harmless `fadd`/`fstp` of `+0x604` between these instructions.)
+- **Energy.** The jet part skips its energy drain while `+0x160` is nonzero
+  (`0x00410ca2`, `BattleEngineJetPart.cpp:313`), so god mode also gives infinite energy.
+- **The cheat statistic.** The source's only reader of `PS_CHEATED` is the PC statistics
+  line "CHEATER!" (`PCGame.cpp:170-174`); that string is not in the retail image, so the
+  statistic has no known effect in retail.
+
+## What gates it
+
+- **Cheat names.** `IsCheatActive` (`0x00465490`) XORs the table at `0x00629464`
+  (`0x100` bytes per entry) with the key `HELP ME!!` (`0x00629a64`): 0 `MALLOY`, 1 `TURKEY`,
+  2 `V3R5IOF`, 3 `Maladim`, 4 `Aurore`, 5 `latête`. It searches the save name
+  (`FromWCHAR`) for the entry with a case-sensitive `strstr` (`0x0055ea80`), so the name
+  may contain it anywhere. A nonzero `[0x00662df4]` or byte `[0x00679ec1]` turns every
+  cheat on.
+- **Pause menu.** `IsCheatActive(3)` decides whether the god item exists
+  (`0x004ce314-0x004ce322`). Its label follows player 1's flag (`cmp [0x00662ab4],1`,
+  `0x004ce328`: God ON or God OFF). Pressing it calls `SetIsGod` on player 1
+  (`[0x008a9d3c]`, `0x004d0b19-0x004d0b55`). Pause virtual 6 re-applies the flag through
+  `SetIsGod` (`0x004d1132-0x004d114a`).
+- **Debug button.** `CGame::ReceiveButtonAction` case 0 (`BUTTON_TOGGLE_GOD_MODE`,
+  `Controller.h:91`; jump table `0x0046faa4` → `0x0046f7fa`) toggles `SetIsGod` for all
+  four players. The handler survives in retail; no default PC binding row maps action 0.
+- **The saved flag needs no cheat.** Nothing on the construction or assignment path tests
+  a cheat, so a save whose `0x2496` is nonzero makes player 1's Battle Engine invulnerable
+  whatever the save is named. This is static; see the open questions.
+
+## Runtime notes (2026-03-15 and 2026-03-29)
+
+Observed on a Windows install patched for windowed play, without an archived capture:
+- `Maladim` in the save name exposed `God OFF` / `God ON` under **Controller Options** in
+  the pause menu, and toggling it changed the label.
+- With `God ON`, normal combat damage no longer depleted the shields.
+- Turning `God ON` again after losing shields refilled a bar at once; hull already lost
+  stayed lost.
+
+The toggle path writes energy (`+0xFC`, through `SetInfinateEnergy`) and nothing on it
+writes `+0x100` (shields) or `+0xF8` (life), so which bar refilled is open.
+
+## The internal source build
+
+The pinned source uses different cheat names (`FEPSaveGame.cpp`): `105770Y2` (all goodies),
+`!EVAH!` (all levels), `V3R5ION` (version display) and `B4K42` (god mode available).
+`IsCheatActive` there also returns true on a PS2 development kit (`FEPSaveGame.cpp:556-559`).
+The persistence path is the same as retail's.
+
+## Open questions
+
+| Question | Cheapest falsifier |
+| --- | --- |
+| Whether a saved flag alone makes the Battle Engine invulnerable | Set `0x2496` = 1 in a copy of a save not named Maladim, start a level, and read `CBattleEngine+0x15C` (expect 0) |
+| Which bar refilled when the toggle was turned on again | Log `+0xF8`, `+0xFC` and `+0x100` across one toggle in a copied runtime |
+| Whether water and other hazards bypass the restore | Log `Damage` calls and `+0xF8` while a god-mode Battle Engine enters deep water |

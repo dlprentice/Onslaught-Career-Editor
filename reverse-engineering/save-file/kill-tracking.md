@@ -1,7 +1,7 @@
 # Kill Tracking System
 
 Status: active reference; the top-byte notes are corrected to the byte-level rule in [save-format.md](save-format.md#kill-counters-and-slots)
-Last updated: 2026-09-25
+Last updated: 2026-09-26 (RE audit: every reader of the screen-position bytes, the Goodie overlap and a broken link)
 Summary: kill categories, 24-bit counts and their Goodie thresholds; the first two counters' top byte is a front-end screen offset that Load resets to 0 when out of range.
 Evidence: MEASURED for the 24-bit mask and the top-byte rule (pristine bytes `0x0041C16B`, `0x0042126a`-`0x00421280`, `0x004218f0`-`0x00421960`); SOURCE for the kill categories (`Player.h`); thresholds per the cited Goodie owner.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -63,7 +63,7 @@ switch (mT1) {
 
 **CRITICAL FIX**: Kill counters live at **CCareer offset `0x23F4`** (5 dwords total), with true on-disk dwords at `0x23F6`, `0x23FA`, `0x23FE`, `0x2402`, `0x2406` (file = `career + 2`).
 
-The previous offset (`0x23A4`) was wrong and lands inside reserved `CGoodie` entries 280-284. That legacy mistake caused goodie corruption.
+The previous offset (`0x23A4`) was wrong and lands inside reserved `CGoodie` entries: 280-284 in the legacy aligned view, and 279-284 in the true view (`0x23A4`-`0x23B7`). That legacy mistake caused goodie corruption.
 
 **Important file-vs-memory nuance**: `CCareer__Load` validates a 16-bit version word at file offset `0x0000` and then bulk-copies the CCareer bytes from `source + 2` into memory. That makes many 32-bit fields appear **shifted by 2 bytes** in the on-disk file.
 
@@ -137,7 +137,7 @@ if ((iVar5 < -0x40) || (0x40 < iVar5)) {
 
 ## The "Top Byte" Is a Persisted Screen-Position Offset
 
-The *top byte* of the first two kill counters (CCareer offsets `0x23F4` and `0x23F8`) is not part of the kill count. It is a front-end **screen-position** offset stored in excess-128 — the stored byte `0x80` is position `0` — and its owner is `CFEPScreenPos`: RTTI type descriptor `0x00629DB0` (`.?AVCFEPScreenPos@@`), complete object locator `0x00613D10`, vtable `0x005DB858`. The four accessors and the pair readers/writers below are its only users anywhere in the image:
+The *top byte* of the first two kill counters (CCareer offsets `0x23F4` and `0x23F8`) is not part of the kill count. It is a front-end **screen-position** offset stored in excess-128 — the stored byte `0x80` is position `0` — and its owner is `CFEPScreenPos`: RTTI type descriptor `0x00629DB0` (`.?AVCFEPScreenPos@@`), complete object locator `0x00613D10`, vtable `0x005DB858`. Besides `Blank`, `UpdateThingsKilled`, a 19-byte helper (`0x0041C160`), `Load` and `UpdateGoodieStates` (which masks the byte off), the words are read only through the four accessors below, whose callers are the `CFEPScreenPos` page and `CFEPOptions__EnsureOptionsContext` (`0x0051F85F`, `0x0051F86C`):
 
 - `CCareer__GetKillCounterTopByte_23F4` (`0x004218f0`) / `CCareer__SetKillCounterTopByte_23F4` (`0x00421910`)
 - `CCareer__GetKillCounterTopByte_23F8` (`0x00421900`) / `CCareer__SetKillCounterTopByte_23F8` (`0x00421940`)
@@ -150,13 +150,13 @@ The *top byte* of the first two kill counters (CCareer offsets `0x23F4` and `0x2
 - `mSoundVolume` (true view `0x248E`)
 - `mMusicVolume` (true view `0x2492`)
 
-**Settled (Aug 2026):** the user-facing setting is the front end's own screen-position adjustment. The only callers of the four accessors sit in one contiguous block, `0x0051F470`-`0x0051FD6C`, reached through the `CFEPScreenPos` vtable at `0x005DB858`; the adjusters at `0x0051FA20`-`0x0051FAE7` are asymmetric — the `0x23F4` word steps `±4` clamped to `[-0x3F, +0x40]`, the `0x23F8` word steps `±1` clamped to `[-0x32, +0x40]` — and each one repacks through the setter and plays a UI sample. Which of the two is horizontal is still not established. Because `CCareer::UpdateThingsKilled` stores an unmasked 32-bit sum (`0x0041C1A9`), a count carrying out of bit 23 adds one to the stored byte and shifts the player's screen by one unit; that is shipped behaviour and is correctable from the game's own options page.
+**Settled (Aug 2026):** the user-facing setting is the front end's own screen-position adjustment. The callers of the four accessors sit in one contiguous block, `0x0051F470`-`0x0051FD6C`: the `CFEPScreenPos` page (vtable `0x005DB858`) and `CFEPOptions__EnsureOptionsContext`, which snapshots the values; the adjusters at `0x0051FA20`-`0x0051FAE7` are asymmetric — the `0x23F4` word steps `±4` clamped to `[-0x3F, +0x40]`, the `0x23F8` word steps `±1` clamped to `[-0x32, +0x40]` — and each one repacks through the setter and plays a UI sample. Which of the two is horizontal is still not established. Because `CCareer::UpdateThingsKilled` stores an unmasked 32-bit sum (`0x0041C1A9`), a count carrying out of bit 23 adds one to the stored byte, changing the stored setting by one unit; that is shipped behaviour and is correctable from the game's own options page. Whether the setting moves the picture is not shown: none of the readers above applies it to the display.
 
 ---
 
 ## Goodie Unlocks by Kill Count
 
-For the complete list of which goodies unlock at each kill threshold, see **[goodies-system.md](goodies-system.md#kill-based-unlocks-source-of-truth)**.
+For the complete list of which goodies unlock at each kill threshold, see **[goodies-system.md](goodies-system.md#unlock-ownership)**.
 
 **Summary of thresholds:**
 
