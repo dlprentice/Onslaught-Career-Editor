@@ -322,7 +322,6 @@ reverse-engineering/binary-analysis/name-grading-ledger-2026-07-25.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-26.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-27-demotion2.md
 reverse-engineering/binary-analysis/pause-key-default-row-patch.md
-reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
 reverse-engineering/binary-analysis/physics-script-copied-corpus-parser-proof.md
 reverse-engineering/binary-analysis/physics-script-static-contract.md
 reverse-engineering/binary-analysis/pixel-centre-projection-offset-applied-2026-07-26.md

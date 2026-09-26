@@ -1,7 +1,7 @@
 # `CBattleEngine` virtual-interface semantic crosswalk
 
 Status: active, bounded semantic recovery  
-Last updated: 2026-08-11  
+Last updated: 2026-09-26 (RE audit: the GetMaxLife/GetInitialLife fold is an inference)
 Evidence: MEASURED — strict retail/demo RTTI, vtables, gapless decoded
 function bodies, strings, constants, and direct calls; SOURCE — pinned
 `BattleEngine.h` and `BattleEngine.cpp`; UNKNOWN — runtime path coverage and
@@ -72,8 +72,13 @@ predicate. Inline constant methods such as `IsAThreat` and `BounceFactor` can
 likewise share compiler-folded targets.
 
 Conversely, one address may represent more than one source method. Both
-`CBattleEngine::GetMaxLife` and `CBattleEngine::GetInitialLife` compile to
-`0x00406040`. A single global rename to only one of them would discard real
+`CBattleEngine::GetMaxLife` and `CBattleEngine::GetInitialLife` have identical
+bodies (`return mConfiguration->mLife`, `BattleEngine.cpp:443-446` and
+`:3462-3465`), and `0x00406040` returns `config+0x1c` for slot 78 (`0x005d8afc`)
+and three direct calls (`0x00427697`, `0x00427758`, `0x0053c585`). Neither is
+declared virtual in `BattleEngine.h` (lines 192 and 322), so slot 78 overrides a
+base-class virtual that the partial source lacks; which method owns the slot,
+and that both fold to `0x00406040`, is inferred from the identical bodies. A single global rename to only one of them would discard real
 source identity. As in the `CUnit` pass, semantic truth belongs first to
 `(class, vtable, slot)` and only secondarily to an address label.
 

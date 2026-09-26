@@ -1,5 +1,11 @@
 # PhysicsScript round and weapon-mode value ids — resolved
 
+Status: active static contract
+Last updated: 2026-09-26 (RE audit: the Mech Bullet explosion never collides; name flags +0x9c/+0xa0; the spawn range check; unit offsets for ids 1, 2, 5, 6 and 23)
+Summary: which record offset each round, weapon-mode, explosion and weapon value id writes, the damage chain for the tutorial rounds, and what stays open.
+Evidence: MEASURED — RTTI descriptors, vtable slots and apply bodies read from the pristine specimen, and the value ids present in the shipped `default physics.dat`; runtime sections cite their own captures; INFERRED where marked.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; `data/default physics.dat` SHA-256 `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
+
 > Date: 2026-07-25. Scope: what the previously unnamed value ids in
 > `data/default physics.dat` Round and WeaponMode records mean, and which
 > record offset each one writes.
@@ -148,8 +154,11 @@ off that pointer line up with the table above:
   `*(float *)(*(int *)(this + 0xf0) + 0x2c) * _DAT_005d8584` scales the
   normalised velocity vector — `+0x2c` **is** the speed term.
 - `CRound__SpawnConfiguredProjectile` (`0x004db150`) copies `config+0x24`
-  (`CRoundLifeSpan`) into the init payload and later compares a squared
-  distance against `lifeSpan * speed` — a time × speed = range product.
+  (`CRoundLifeSpan`) into the init payload. At `0x004db56d` it compares a
+  squared distance with the product of two locals; the branch on
+  `config+0x50` (`CRoundBeam`) at `0x004db2bd` selects how the second factor
+  is computed. So the check is not a time × speed = range product; its
+  factors are not traced here.
 - `CRound__SetTargetReaderIfAllowed` (`0x004daab0`) and
   `CRound__SelectBestTargetReaderAndSyncAimState` (`0x004dac90`) both gate
   target acquisition on `config+0x48 != 0 || config+0x1c < 0.0`, i.e. on
@@ -158,8 +167,12 @@ off that pointer line up with the table above:
 - `CRound__Init` branches on `config+0x50` (`CRoundBeam`), `+0x6c`
   (`CRoundTorpedo`), `+0x70` (`CRoundMissile`), `+0xa0`, `+0xa4`
   (`CRoundTreeCollision`), `+0x8c` (`CRoundRadius`), `+0x98` (`CRoundLength`),
-  `+0x58` (`CRoundGridOfFear`). Every one of those is a flag/scalar in the
-  table above and is used flag-like or scalar-like accordingly.
+  `+0x58` (`CRoundGridOfFear`). All but `+0xa0` are value ids in the table
+  above. `+0xa0` and `+0x9c` have no value id: `CRoundData__CreateAndRegisterByName`
+  (`0x0042ffa0`) sets `+0x9c` to 1 only for a round named `"Stream Laser"`
+  (`0x00625944`, compared from `0x00430031`, stores `0x00430073`/`0x0043007b`)
+  and `+0xa0` to 1 only for `"Gill-M Breath"` (`0x00625934`, from `0x00430084`,
+  stores `0x004300b9`/`0x004300c1`); every other round gets 0.
 
 ### 3.2 `CRound` primary virtual surface
 
@@ -191,7 +204,8 @@ The independent input is the 2,510,848-byte PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`;
 the retail baseline remains
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-For all twelve bodies, complete x86-32 decoding produced the same instruction
+For all twelve compared bodies (the pin list below has fifteen; which three
+were not compared is not recorded), complete x86-32 decoding produced the same instruction
 count, offsets, sizes, mnemonics, register forms, relative branches, and literal
 constant shapes. Normalizing only relocated address/displacement encodings left
 zero instruction differences. The demo thus independently corroborates the
@@ -205,7 +219,7 @@ Retail body SHA-256 pins, in the table's address order:
 004d8290 b255442129093c839144a11c6315d0c555714f692cb71fd92c9342397bdf8b6d
 004d82a0 ba0fab8d92af843dba3b9c5f1211ddd201ec160e393f36a42458602847c13b4d
 004d8ac0 c986f432cbada785b922a589cef8b7ed95fe96df48d1cb41090a06326e6e9382
-004d8320 6ecb411d5107118adc9f1069e90032b6493f6678cd462e47928f644174622d98
+004d8320 6ecb411d5107118adc9e1069e90032b6493f6678cd462e47928f644174622d98
 004d8340 3f59723d13c058fc8da764b0c39e4e3724e16109ceec8b0b8d9720d03aa46e2b
 004d82e0 e43a75c9c1a2cdb47bb5429f5d7a125e40bc2916ae9a7efee9502459ffd475eb
 004db600 7f549e893dcde13ddd86f75f080144f76b173910a0d4dea4153b0007134bb967
@@ -501,10 +515,19 @@ thing-flag and smart/allegiance filters pass. The Target Drone remains alive
 after direct `0.8` against life `1.0`; the prior measured direct loss of `1.8`
 independently corroborates that its released path passes those filters.
 
-The Twin Vulcan pair remains a useful optional runtime corroborator:
-`0.08 + 0.001` predicts `0.081`, while round-only predicts `0.08` and
-explosion-only predicts `0.001`. It is no longer needed to discover the static
-same-receiver dispatch mechanism. `Mech Pulse Bolt Small` remains a control in
+The Twin Vulcan's `Mech Bullet Hit` explosion cannot hit anything, so the
+static prediction is the round alone, `0.08`, not `0.08 + 0.001`.
+`CExplosion::Init` (`0x0044b930`) compares the configured damage
+(`config+0x38`) with the double `0.0015` (`0x005db298`) at `0x0044b9f1`; when
+the radius is at or below 0, or the damage at or below `0.0015`, it clears
+`TF_IN_MAP_WHO` (`0x2`) in `+0x2c` and sets the init's `mNotSeekCollisionWithBF` (`+0x70`, the
+`CInitCSThing` field at `+8`, `InitThing.h:98`) to `0xffffffff`
+(`0x0044b9fe-0x0044ba02`). `CCollisionSeekingThing::Init` copies that mask to
+the component's `+0x10` (`0x004261a9`), and the collision filter `0x00426900`
+passes only when `(other type & mask) == 0`. `Mech Bullet Hit` has damage
+`0.001` (`0x3a83126f`), so it never reaches `CExplosion::Hit`; `Mech Pulse Hit
+Small` (damage `0.0`) is gated the same way. A runtime hit on a Twin Vulcan
+target would still corroborate the static result. `Mech Pulse Bolt Small` remains a control in
 the other direction: `CRoundDamage 1.5` with `CExplosionDamage 0.0`.
 
 Note also that `Mech Pulse Bolt Small` is **not** the tutorial round, despite
@@ -536,7 +559,19 @@ future measurement must go through `Pulse Cannon Pod`.
   seek, behaviour, alligence, navmap and state factories were resolved to RTTI
   class names as part of the closure check but their record offsets were not
   transcribed here; the raw export is listed below and the work is
-  mechanical.
+  mechanical. Five unit ids were transcribed on 2026-09-26 from the unit
+  factory (`CPhysicsScriptStatements__CreateStatementType2`, `0x00431bb0`,
+  jump table `0x00432908` indexed by id − 1) and each class's slot-1 apply body:
+
+  | Id | Class (vtable RTTI) | Apply body | Writes |
+  | --- | --- | --- | --- |
+  | 1 | `CUnitGroundVelocity` (`0x005d9e2c`) | `0x00432af0` | `+0xb4` (`0x00432af7`) |
+  | 2 | `CUnitAirVelocity` (`0x005d9e18`) | `0x00432af0` | `+0xb4` |
+  | 5 | `CUnitGroundTurnRate` (`0x005d9e04`) | `0x00432b00` | `+0xb8` (`0x00432b07`) |
+  | 6 | `CUnitAirTurnRate` (`0x005d9df0`) | `0x00432b00` | `+0xb8` |
+  | 23 | `CUnitMaxTargetRange` (`0x005d9cc4`) | `0x00432bf0` | `+0x158` (`0x00432bf7`) |
+
+  Ground and air velocity write the same field, as do the two turn rates.
 
 ## 8. Reproduction
 
