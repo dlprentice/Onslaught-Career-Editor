@@ -6468,7 +6468,7 @@ David approved four feature groups and the Flight-deck look on 2026-09-25 (caree
 Goodies; copies and options; install and backups; music, voices and lore), with patching
 the installed `BEA.exe` left for a later phase. Branch `claude/companion-csharp-20260925`
 built all four in C# and in code; the [companion README](companion/OnslaughtToolkit.Godot/README.md)
-describes them and [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-options-install-music-and-lore)
+describes them and [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
 states their limits.
 
 **Suite.** `npm test` passed in canonical `local-data/companion/godot-dotnet-test-mzmgwefv/`:

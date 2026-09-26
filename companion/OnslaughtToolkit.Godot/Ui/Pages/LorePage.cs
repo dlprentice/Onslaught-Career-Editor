@@ -31,7 +31,7 @@ internal sealed class LorePage : Page
     private string _query = "";
     private bool _syncing;
 
-    internal LorePage(GameLibrary game, StatusLine status, Action<string> openUrl) : base("lore", "Lore")
+    internal LorePage(GameLibrary game, StatusLine status, Action<string> openUrl) : base("lore", "Lore", "lore")
     {
         (_game, _status, _openUrl) = (game, status, openUrl);
         foreach (LoreShelf shelf in LoreLibrary.Shelves)
@@ -79,6 +79,12 @@ internal sealed class LorePage : Page
         Reader.MetaHoverStarted += meta => Reader.TooltipText = IsWeb(meta.AsString()) ? "Opens in your browser: " + meta.AsString() : "";
         Reader.MetaHoverEnded += _ => Reader.TooltipText = "";
         Reader.Resized += FitMeasure;
+        Map = body.Add(new TextureRect
+        {
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, Visible = false,
+            TooltipText = "The map of Allium from your game's manual, read from your install.",
+        });
 
         BackButton.Pressed += Back;
         ForwardButton.Pressed += Forward;
@@ -86,18 +92,24 @@ internal sealed class LorePage : Page
         _game.Changed += () =>
         {
             // The campaign article's mission list comes from the game's text; redraw it in place.
-            if (!_game.Busy && Current is LoreArticle article && CampaignLoreComposer.WantsMissionList(article.Markdown))
+            if (!_game.Busy && !ShowingMap && Current is LoreArticle article && CampaignLoreComposer.WantsMissionList(article.Markdown))
                 Show(article, scroll: Reader.GetVScrollBar().Value);
         };
     }
 
     internal override Control Root { get; }
-    internal override string Subtitle => Current is null ? "The project's record of the game, its war and the people who made it"
+    internal override string Subtitle => ShowingMap ? "The map of Allium  ·  from your game's manual"
+        : Current is null ? "The project's record of the game, its war and the people who made it"
         : $"{LabelOf(Current.Id)}  ·  about {Math.Max(1, (int)Math.Round(Words / 230.0))} min read";
     internal LineEdit Search { get; }
     internal Tree Library { get; }
     internal RichTextLabel Results { get; }
     internal RichTextLabel Reader { get; }
+    internal TextureRect Map { get; }
+    internal bool ShowingMap { get; private set; }
+
+    /// <summary>The pseudo-article id for the map of Allium, which comes from the player's install.</summary>
+    internal const string MapId = "map";
     internal Button BackButton { get; }
     internal Button ForwardButton { get; }
     internal Button HomeButton { get; }
@@ -113,6 +125,16 @@ internal sealed class LorePage : Page
     /// <summary>Opens an article, optionally at an anchor or at its first mention of a search phrase.</summary>
     internal void Open(string id, string? anchor = null, string? mention = null, bool remember = true)
     {
+        if (id == MapId)
+        {
+            if (remember && !ShowingMap && Current is not null)
+            {
+                _back.Add(new Visit(Current.Id, Reader.GetVScrollBar().Value));
+                _forward.Clear();
+            }
+            ShowMap();
+            return;
+        }
         if (LoreLibrary.Find(id) is not LoreArticle article)
         {
             _status.Show("That lore article is not part of this build.", StatusKind.Failure);
@@ -123,9 +145,9 @@ internal sealed class LorePage : Page
             ScrollTo(Rendered!.Anchors.TryGetValue(anchor, out int target) ? target : 0);
             return;
         }
-        if (remember && Current is not null && article != Current)
+        if (remember && (ShowingMap || (Current is not null && article != Current)))
         {
-            _back.Add(new Visit(Current.Id, Reader.GetVScrollBar().Value));
+            _back.Add(new Visit(ShowingMap ? MapId : Current!.Id, ShowingMap ? 0 : Reader.GetVScrollBar().Value));
             _forward.Clear();
         }
         Show(article);
@@ -155,15 +177,37 @@ internal sealed class LorePage : Page
 
     private void Step(List<Visit> from, List<Visit> to)
     {
-        if (from.Count == 0 || Current is null || LoreLibrary.Find(from[^1].Id) is not LoreArticle article) return;
+        if (from.Count == 0 || (Current is null && !ShowingMap)) return;
         Visit visit = from[^1];
         from.RemoveAt(from.Count - 1);
-        to.Add(new Visit(Current.Id, Reader.GetVScrollBar().Value));
-        Show(article, scroll: visit.Scroll);
+        to.Add(new Visit(ShowingMap ? MapId : Current!.Id, ShowingMap ? 0 : Reader.GetVScrollBar().Value));
+        if (visit.Id == MapId) ShowMap();
+        else if (LoreLibrary.Find(visit.Id) is LoreArticle article) Show(article, scroll: visit.Scroll);
+    }
+
+    private void ShowMap()
+    {
+        if (GameArt.Load(_game.Folder?.Root, GameArt.Map) is not Texture2D map)
+        {
+            _status.Show("The map comes from your game's manual; choose your game folder on Home to see it.", StatusKind.Failure);
+            return;
+        }
+        ShowingMap = true;
+        Map.Texture = map;
+        Map.Visible = true;
+        Reader.Visible = false;
+        _shelf.Text = "FROM YOUR GAME'S MANUAL";
+        BackButton.Disabled = _back.Count == 0;
+        ForwardButton.Disabled = _forward.Count == 0;
+        ShowLibrary();
+        HeaderChanged?.Invoke();
     }
 
     private void Show(LoreArticle article, double scroll = 0)
     {
+        ShowingMap = false;
+        Map.Visible = false;
+        Reader.Visible = true;
         Current = article;
         string markdown = LoreLibrary.Compose(article, _game.Text?.Levels);
         Rendered = Markdown.Render(markdown, target => LoreLibrary.Resolve(article.Id, target), _style);
@@ -186,6 +230,25 @@ internal sealed class LorePage : Page
         Library.Clear();
         TreeItem root = Library.CreateItem();
         if (LoreLibrary.Home is LoreArticle home) Entry(root, home, _labels[home.Id], "What this is, the shelves, and where to start.");
+        if (GameArt.Load(_game.Folder?.Root, GameArt.Map) is not null)
+        {
+            TreeItem map = Library.CreateItem(root);
+            map.SetText(0, "The map of Allium");
+            map.SetTooltipText(0, "The map from your game's manual, read from your install.");
+            map.SetMetadata(0, MapId);
+            if (ShowingMap)
+            {
+                Library.SetSelected(map, 0);
+                Library.ScrollToItem(map);
+            }
+        }
+        if (GameArt.Manual(_game.Folder?.Root) is not null)
+        {
+            TreeItem manual = Library.CreateItem(root);
+            manual.SetText(0, "The game's manual  ↗");
+            manual.SetTooltipText(0, "Opens the manual that came with your game, in your browser.");
+            manual.SetMetadata(0, "manual");
+        }
         foreach (LoreShelf shelf in LoreLibrary.Shelves)
         {
             TreeItem group = Library.CreateItem(root);
@@ -205,7 +268,7 @@ internal sealed class LorePage : Page
         item.SetText(0, label);
         item.SetTooltipText(0, blurb.Length > 0 ? blurb : article.Title);
         item.SetMetadata(0, article.Id);
-        if (article != Current || Rendered is null) return;
+        if (article != Current || Rendered is null || ShowingMap) return;
         // The open article lists its sections beneath it, as an outline; the front door's sections are the shelves.
         foreach (LoreHeading heading in Rendered.Headings.Where(heading => heading.Level == 2 && article.Id != LoreLibrary.HomeId))
         {
@@ -222,6 +285,16 @@ internal sealed class LorePage : Page
     private void OnLibrarySelected()
     {
         if (_syncing || Library.GetSelected()?.GetMetadata(0).AsString() is not string target || target.Length == 0) return;
+        if (target == "manual")
+        {
+            if (GameArt.Manual(_game.Folder?.Root) is string manual)
+            {
+                _openUrl(manual);
+                _status.Show("Opened the game's manual in your browser.");
+            }
+            ShowLibrary();
+            return;
+        }
         string[] parts = target.Split('#', 2);
         Open(parts[0], parts.Length > 1 ? parts[1] : null);
     }

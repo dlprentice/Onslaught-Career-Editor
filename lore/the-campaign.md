@@ -5,7 +5,7 @@
   not shipped with this app.** It is read out of your own installed copy each
   time you open this page, so what you see is your game's text rather than
   someone's transcription of it.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-09-26
 - **Summary:** how the campaign is shaped, what the mission numbering means, and
   the mission list read live from your install.
 
@@ -33,7 +33,7 @@ the game keeps the same code and gives it a different title — the same ground,
 after things have gone worse. Those are marked in the list below.
 
 Mission numbers are what the app uses when it talks to the game, which is why
-Save Lab and the Media page show them beside the names.
+the Summary and Music & voices pages show them beside the names.
 
 The measured PC, Xbox, and PlayStation 2 language tables carry the same 43
 mission codes and titles in American, English, French, German, Italian, and
@@ -58,6 +58,6 @@ freely downloadable package is redistributing the game's content, which is not
 this project's to redistribute — and it would also be worse: it would pin one
 language's names into an app that can simply ask your copy which language it is.
 
-The same decoding drives the real mission names on the Media page and the
-transcripts on its voice lines. It is the same file, read the same way, every
+The same decoding drives the real mission names on the Summary and Music & voices
+pages and the transcripts on the voice lines. It is the same file, read the same way, every
 time from your disk.

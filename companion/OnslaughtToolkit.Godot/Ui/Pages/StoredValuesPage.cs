@@ -9,14 +9,14 @@ internal sealed class StoredValuesPage : Page
 {
     private readonly CareerWorkspace _workspace;
 
-    internal StoredValuesPage(CareerWorkspace workspace) : base("stored", "Stored values")
+    internal StoredValuesPage(CareerWorkspace workspace) : base("raw", "Raw values", "raw")
     {
         _workspace = workspace;
         VBoxContainer column = Build.Column(14);
         column.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = column;
-        column.Add(Build.Notice("Read-only values exactly as stored. Unknown and reserved values stay raw; a stored value " +
-            "does not by itself show how the game will behave.").Panel);
+        column.Add(Build.Notice("For the curious: the open career's values exactly as stored, read-only. Unknown and reserved " +
+            "values stay raw; a stored value does not by itself show how the game behaves.").Panel);
         Tree = column.Add(Build.Table("Record", "Stored value", "Reading"));
         Tree.SetColumnCustomMinimumWidth(0, 220);
     }

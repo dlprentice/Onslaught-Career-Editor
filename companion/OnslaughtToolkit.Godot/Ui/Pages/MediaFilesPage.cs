@@ -13,7 +13,7 @@ internal sealed class MediaFilesPage : Page
     private TreeItem? _treeRoot;
     private string _folder = "";
 
-    internal MediaFilesPage(StatusLine status, Node popups) : base("media", "Media files")
+    internal MediaFilesPage(StatusLine status, Node popups) : base("media", "Media files", "folder")
     {
         _status = status;
         VBoxContainer column = Build.Column(14);

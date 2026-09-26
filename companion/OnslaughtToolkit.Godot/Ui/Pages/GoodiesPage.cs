@@ -29,18 +29,19 @@ internal sealed class GoodiesPage : Page
     private readonly GameLibrary _game;
     private readonly Action<int> _changeInCopy;
     private readonly Label _empty, _summary;
+    private readonly CareerCards _choose;
     private readonly VBoxContainer _grid;
     private readonly List<(Control Section, int[] Slots)> _sections = [];
     private readonly Button[] _cells = new Button[CareerSave.GoodieTable];
     private readonly ButtonGroup _selection = new();
-    private readonly Label _detailTitle, _detailName, _detailState, _detailRule, _detailEvidence, _detailRaw;
+    private readonly Label _detailTitle, _detailName, _detailState, _detailRule, _detailEvidence;
     private readonly PanelContainer _detail;
     private readonly List<Button> _filterButtons = [];
     private int _filter;
 
-    internal GoodiesPage(CareerWorkspace workspace, GameLibrary game, Action<int> changeInCopy) : base("goodies", "Goodies")
+    internal GoodiesPage(AppServices app, Action<int> changeInCopy) : base("goodies", "Goodies", "goodies")
     {
-        (_workspace, _game, _changeInCopy) = (workspace, game, changeInCopy);
+        (_workspace, _game, _changeInCopy) = (app.Workspace, app.Game, changeInCopy);
         HBoxContainer layout = Build.Row(16);
         layout.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = layout;
@@ -48,7 +49,9 @@ internal sealed class GoodiesPage : Page
         (ScrollContainer scroll, VBoxContainer left) = Build.Scroller(12);
         scroll.SizeFlagsStretchRatio = 2.2f;
         layout.Add(scroll);
-        _empty = left.Add(Build.Text("Open a career to see its Goodies.", "Muted"));
+        _empty = left.Add(Build.Text("Choose a career to see its Goodies. Opening it only reads it.", "Lead"));
+        _choose = new CareerCards(app);
+        left.Add(_choose.Root);
         _summary = left.Add(Build.Text("", "Strong"));
         HBoxContainer filters = left.Add(Build.Row(8));
         for (int index = 0; index < Filters.Length; index++)
@@ -62,7 +65,7 @@ internal sealed class GoodiesPage : Page
         for (int row = 0; row < CareerSave.GalleryRows.Count; row++)
             AddSection(RowNames[row], [.. CareerSave.GalleryRows[row]]);
         AddSection("Never shown in the game · 071–073", [.. CareerSave.NeverShown]);
-        _grid.Add(Build.Text("Rows follow the game's gallery wall; what each row holds is named in the developers' source.", "Faint"));
+        _grid.Add(Build.Text("Rows follow the game's gallery wall, top to bottom.", "Faint"));
 
         (_detail, VBoxContainer detail) = Build.Panel("Card", 8);
         _detail.CustomMinimumSize = new Vector2(330, 0);
@@ -75,8 +78,8 @@ internal sealed class GoodiesPage : Page
         detail.Add(Build.Eyebrow("How the game unlocks it"));
         _detailRule = detail.Add(Build.Text(""));
         _detailEvidence = detail.Add(Build.Text("", "Muted"));
-        _detailRaw = detail.Add(Build.Text("", "MonoMuted"));
-        ChangeInCopy = detail.Add(Build.Button("Change its state in a copy…", tooltip: "Adds this Goodie to Edit a copy."));
+        ChangeInCopy = detail.Add(Build.Button("Change this Goodie…", tooltip: "Adds this Goodie to Edit career, where you save the change."));
+        ChangeInCopy.Icon = Icons.Get("edit");
         ChangeInCopy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         ChangeInCopy.Pressed += () => _changeInCopy(Selected);
         ShowEmpty();
@@ -94,7 +97,7 @@ internal sealed class GoodiesPage : Page
     internal void ShowSession(SaveSession session)
     {
         CareerInspection career = session.Analysis;
-        _empty.Visible = false;
+        _empty.Visible = _choose.Root.Visible = false;
         _grid.Visible = _detail.Visible = _summary.Visible = true;
         foreach (Button filter in _filterButtons) filter.Visible = true;
         GoodieCensus census = career.GoodieCensus;
@@ -127,16 +130,17 @@ internal sealed class GoodiesPage : Page
         for (int cell = 0; cell < _cells.Length; cell++) _cells[cell].SetPressedNoSignal(cell == index);
         GoodieRecord goodie = session.Analysis.Goodies[index];
         _detailTitle.Text = $"GOODIE {index:D3}";
-        _detailName.Text = _game.Text?.GoodieTitle(index) ?? (_game.Text is null
+        _detailName.Text = _game.Text?.GoodieTitle(index) ?? (_game.Folder is null
             ? "Titles come from your game's own text; choose your game folder on Home."
+            : _game.Text is null ? "Your game's text could not be read, so titles are not shown."
             : "The game's text names no title for this Goodie.");
         _detailName.ThemeTypeVariation = _game.Text?.GoodieTitle(index) is null ? "Faint" : "Strong";
         _detailState.Text = GoodieFacts.StateName(goodie.State);
         _detailRule.Text = GoodieFacts.Rule(index);
         _detailEvidence.Text = GoodieFacts.Describe(GoodieFacts.Evidence(index));
-        _detailRaw.Text = $"stored 0x{goodie.RawState:X8} at 0x{goodie.Offset:X4}";
         ChangeInCopy.Disabled = !goodie.Shown;
-        ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit a copy." : "The game never shows this slot, so its state is kept.";
+        ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
+            : "The game never shows this slot, so its state is kept.";
     }
 
     private void ApplyFilter(int filter)
@@ -172,9 +176,15 @@ internal sealed class GoodiesPage : Page
         _sections.Add((section, slots));
     }
 
+    internal override void Refresh()
+    {
+        if (_workspace.Session is null) ShowEmpty();
+    }
+
     private void ShowEmpty()
     {
-        _empty.Visible = true;
+        _empty.Visible = _choose.Root.Visible = true;
+        _choose.Show();
         _grid.Visible = _detail.Visible = _summary.Visible = false;
         foreach (Button filter in _filterButtons) filter.Visible = false;
     }

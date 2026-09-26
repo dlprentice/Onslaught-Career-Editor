@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-26 (companion route covers its game, options, install and lore owners; C# only direction)
+Last updated: 2026-09-26 (companion route covers its player-first shell, saving, backups and catch-up owners; C# only direction)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -72,20 +72,29 @@ the rebuild assembly contract in detail.
 [`CompanionApp`](companion/OnslaughtToolkit.Godot/Ui/CompanionApp.cs), which builds the
 whole interface and theme in code. [`CareerSave`](companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs)
 owns format interpretation, selected-byte previews and comparison;
+[`CampaignGraph`](companion/OnslaughtToolkit.Godot/Careers/CampaignGraph.cs) turns the stored
+nodes and links into the campaign map;
 [`SaveSession`](companion/OnslaughtToolkit.Godot/Careers/SaveSession.cs) owns the opened
 snapshot and [`CareerWorkspace`](companion/OnslaughtToolkit.Godot/Careers/CareerWorkspace.cs)
 the open, publish, compare, backup and install workflows. The in-process
 [adapter](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs) links
 `SaveLabFileTransaction` and `FileMutationSafety` unchanged;
 [`GameWrites`](companion/OnslaughtToolkit.Godot/Files/GameWrites.cs) owns backup sets, the
-running-game check and verified installs into the game folder.
-[`GameLibrary`](companion/OnslaughtToolkit.Godot/Game/GameLibrary.cs) finds the game through
-Steam and reads its text through the linked `GameTextCatalog`;
+running-game check and verified writes into the game folder (Linux exchange and the portable
+path). [`GameLibrary`](companion/OnslaughtToolkit.Godot/Game/GameLibrary.cs) finds the game
+through Steam, notices when its careers change and reads its text through the linked
+`GameTextCatalog`; [`GameFolder`](companion/OnslaughtToolkit.Godot/Game/GameFolder.cs) owns
+the folder's files, the remembered choices and the backup folder;
 [`OptionsFile`](companion/OnslaughtToolkit.Godot/Options/OptionsFile.cs) owns the options block;
 [`GameAudio`](companion/OnslaughtToolkit.Godot/Media/GameAudio.cs) lists the game's music and
 voice lines, and the [media catalog](companion/OnslaughtToolkit.Godot/Media/MediaCatalog.cs)
 inventories chosen folders; [`LoreLibrary`](companion/OnslaughtToolkit.Godot/Lore/LoreLibrary.cs)
-embeds `lore/` and `lore-book/BOOK.md`. Pages live in
+embeds `lore/` and `lore-book/BOOK.md`. In the interface,
+[`AppServices`](companion/OnslaughtToolkit.Godot/Ui/AppServices.cs) is what every page may use
+(including career naming), [`SaveChoice`](companion/OnslaughtToolkit.Godot/Ui/SaveChoice.cs)
+asks where a change is saved, [`CareerCards`](companion/OnslaughtToolkit.Godot/Ui/CareerCards.cs)
+lists the game's careers and [`GameArt`](companion/OnslaughtToolkit.Godot/Ui/GameArt.cs) reads
+the manual's images from the install. Pages live in
 [`Ui/Pages/`](companion/OnslaughtToolkit.Godot/Ui/Pages/). Contract tests live in
 [`Tests/`](companion/OnslaughtToolkit.Godot/Tests/) and never enter a release export.
 

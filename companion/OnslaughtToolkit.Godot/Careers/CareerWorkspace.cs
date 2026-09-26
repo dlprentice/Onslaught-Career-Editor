@@ -113,14 +113,57 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     }
 
     /// <summary>Makes a verified backup set of every career and the options file.</summary>
-    public async Task<BackupReceipt> BackUpAsync(Game.GameFolder game, string backupRoot)
+    public async Task<BackupReceipt> BackUpAsync(Game.GameFolder game, string backupRoot, string reason = "Backed up by you")
     {
         if (Busy) return new BackupReceipt(false, "A file operation is already running.");
         SetBusy(true);
         try
         {
-            return await worker.RunExclusiveAsync(files => Backups.Create(files, game, backupRoot, DateTime.Now),
+            return await worker.RunExclusiveAsync(files => Backups.Create(files, game, backupRoot, DateTime.Now, reason),
                 message => new BackupReceipt(false, message));
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>
+    /// Backs up every career and the options file only if something changed since the newest backup set;
+    /// otherwise succeeds without writing (<see cref="BackupReceipt.Set"/> is null).
+    /// </summary>
+    public async Task<BackupReceipt> AutoBackUpAsync(Game.GameFolder game, string backupRoot)
+    {
+        if (Busy) return new BackupReceipt(false, "A file operation is already running.");
+        SetBusy(true);
+        try
+        {
+            return await worker.RunExclusiveAsync(files => Backups.ChangedSinceLatest(game, backupRoot)
+                    ? Backups.Create(files, game, backupRoot, DateTime.Now, "Automatic backup")
+                    : new BackupReceipt(true, "Nothing has changed since the last backup."),
+                message => new BackupReceipt(false, message));
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>
+    /// Writes prepared bytes into the game folder as a career or the options file, after a verified
+    /// backup. <paramref name="expectedSha256"/> is the content the player opened when the file is being
+    /// replaced; the write is refused if the game has changed it since.
+    /// </summary>
+    public async Task<InstallReceipt> InstallBytesAsync(Game.GameFolder game, string targetName, byte[] prepared, string backupRoot,
+        Func<bool> gameRunning, string? expectedSha256, string reason)
+    {
+        if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
+        SetBusy(true);
+        try
+        {
+            byte[] bytes = prepared.ToArray();
+            return await worker.RunExclusiveAsync(files => GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning,
+                DateTime.Now, expectedSha256: expectedSha256, reason: reason), message => new InstallReceipt(false, message, targetName));
         }
         finally
         {
@@ -133,7 +176,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// source is read through the protected route and must be a supported career of the same kind.
     /// </summary>
     public async Task<InstallReceipt> InstallAsync(Game.GameFolder game, string sourcePath, string targetName, string backupRoot,
-        Func<bool> gameRunning)
+        Func<bool> gameRunning, string reason = "Before a change to your game")
     {
         if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
         bool options = string.Equals(targetName, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase);
@@ -148,7 +191,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
                 ProtectedRead read = files.OpenCareer(sourcePath);
                 if (!read.Ok || read.Bytes is not byte[] bytes)
                     return new InstallReceipt(false, "The file to install could not be read: " + read.Message, targetName);
-                return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now);
+                return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now, reason: reason);
             }, message => new InstallReceipt(false, message, targetName));
         }
         finally

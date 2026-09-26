@@ -10,18 +10,18 @@ internal sealed class ComparePage : Page
     private readonly CareerWorkspace _workspace;
     private readonly StatusLine _status;
 
-    internal ComparePage(CareerWorkspace workspace, StatusLine status, Node popups) : base("compare", "Compare")
+    internal ComparePage(CareerWorkspace workspace, StatusLine status, Node popups) : base("compare", "Compare careers", "compare")
     {
         (_workspace, _status) = (workspace, status);
         VBoxContainer column = Build.Column(14);
         column.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = column;
-        column.Add(Build.Notice("Opens another career read-only and lists every byte that differs from your open original, " +
-            "including bytes whose meaning is unknown. Neither file is changed.").Panel);
+        column.Add(Build.Notice("For the curious: opens another career read-only and lists every byte that differs from the open " +
+            "career, including bytes whose meaning is unknown. Neither file is changed.").Panel);
         HBoxContainer actions = column.Add(Build.Row(12));
         CompareButton = actions.Add(Build.Button("Choose a career to compare…", "Primary", disabled: true));
         (PanelContainer summaryPanel, VBoxContainer summaryBody) = Build.Panel("Inset", 4);
-        Summary = summaryBody.Add(Build.Detail("Open an original first, then choose the career to compare with it.", bbcode: true));
+        Summary = summaryBody.Add(Build.Detail("Open a career first, then choose the career to compare with it.", bbcode: true));
         column.Add(summaryPanel);
         Tree = column.Add(Build.Table("Offset", "Region", "Original", "Other"));
         Tree.SetColumnCustomMinimumWidth(0, 110);
@@ -32,7 +32,7 @@ internal sealed class ComparePage : Page
     }
 
     internal override Control Root { get; }
-    internal override string Subtitle => "Every differing byte between two careers, read-only";
+    internal override string Subtitle => "Every byte that differs between two careers, read-only";
     internal Button CompareButton { get; }
     internal RichTextLabel Summary { get; }
     internal Tree Tree { get; }
@@ -41,7 +41,7 @@ internal sealed class ComparePage : Page
     internal void Reset()
     {
         Tree.Clear();
-        Summary.Text = "Choose another career to compare with this original.";
+        Summary.Text = "Choose another career to compare with the open one.";
     }
 
     internal override void Refresh() => CompareButton.Disabled = _workspace.Session is null || _workspace.Busy;
