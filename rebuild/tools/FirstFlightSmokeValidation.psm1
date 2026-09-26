@@ -164,7 +164,7 @@ function Test-FirstFlightSmokeEvidence {
     # and format-7 fingerprints. The former bc5d99c7 pin predated those changes.
     # Linux Godot smoke and the C# headless replayer reproduce it; Windows
     # execution of this retained gate remains pending.
-    Assert-SmokeValue 'stateHash' 'aaf7bba9759cd732200bbe086e4877795ff6520f287d3d613bfed46690f6ebd8' $report.stateHash
+    Assert-SmokeValue 'stateHash' 'afc552db013e155d517e081f639d1f1a832b5338aae128f3c0a11e6a62d45d72' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

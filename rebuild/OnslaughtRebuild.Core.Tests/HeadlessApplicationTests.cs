@@ -64,9 +64,10 @@ public sealed class HeadlessApplicationTests
         // Native Godot smoke pins the 2148-tick rendered path separately.
         // Includes the admitted Airfield exits and aircraft weapon model inputs,
         // and since September 26 the Battle Engine's 6002/6003 refresh draws
-        // and its retained crosshair report (schema 49).
-        const string expectedTrace = "a59321dcd27c32fc6e23975dcd95ac970fa5a4b4efdd6bcad7ef7f3f1a76586a";
-        const string expectedState = "63b241d613351fbe5a8827d01512ca4a91d51cbfa4a41807d45fe8203f54e5da";
+        // and its retained crosshair report (schema 49), then the retail load
+        // order's construction draws and every unit's callbacks (schema 52).
+        const string expectedTrace = "2564e760581727b8e061a3bff401b9ea1f211ae8317f913d487b5d5d12a9a7af";
+        const string expectedState = "66cab706e7a795fa06650142de8573db0c9488734c5bfdb3ff1feeca3e51a358";
         CommandTape tape = CommandTapeCodec.Deserialize(File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json")));
         var definitions = Level100TestActorDefinitions.LoadMaterialized();
@@ -92,10 +93,12 @@ public sealed class HeadlessApplicationTests
         // Neither the tape nor its behavioral checks move.
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
-            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }));
+            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            definitions.WaypointPaths, priorDefinitions.MotionDefinitions);
+            definitions.WaypointPaths, priorDefinitions.MotionDefinitions,
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         var currentRun = new Simulation(tape.Seed, definitions);
         var priorRun = new Simulation(tape.Seed, priorDefinitions);
         var reader = new CommandTapeReader(tape);
@@ -114,13 +117,13 @@ public sealed class HeadlessApplicationTests
             { Level100Actors = current.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         }
-        Assert.Equal("50fcc3c23ac92735a4a2a2cce3c95b9c142211d15ddb8c7e55d14efcb56e60b5",
+        Assert.Equal("eb7662b285f2fdad62746c407dd20c7b89ea3c12fdfb39f3f6b1f3a9ee924afd",
             StateHasher.ComputeHex(priorRun.Snapshot));
-        Assert.Equal("0e053afc447230f51ebfdbe0c60deaf64d9a0ad1e449657c16ce5f3219f624bf", priorTrace.GetCurrentHash());
-        Assert.Equal("3f7a706238053374c611d65c319fd875326fcbc7e617c74a2c08af2dc6ba366b",
+        Assert.Equal("51d22e53069026b6ed890a47db4e5f486d1e91df62eb672deb654d6b47fea29f", priorTrace.GetCurrentHash());
+        Assert.Equal("fd56b6498ac9a0bac29a8d3d66a0793dc49942389d4327d9048460b6923dfb13",
             StateHasher.ComputeHex(state with { Level100Actors = state.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.Equal("abdd7b0ca5e8073866fdf0c851e03ce92d602fc89bc875ff561bf795c9834c51", legacyTrace.GetCurrentHash());
+        Assert.Equal("f52adf6d21e0884ded98f20dc8ebdeef35dbebfe3e8672fbea125b81271ad99d", legacyTrace.GetCurrentHash());
         Assert.True(expectedState == replay.FinalStateHash,
             $"First-flight state {replay.FinalStateHash}; trace {replay.TraceHash}");
         Assert.Equal(expectedTrace, replay.TraceHash);

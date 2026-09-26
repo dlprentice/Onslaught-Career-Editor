@@ -551,16 +551,21 @@ public sealed class Level100FerryLandingTests
             $"the ferry home begins at t{ferryStart}: the clearance terms are " +
             "no longer confined to the last leg, and beat 9 has been re-rolled.");
 
-        // The arms separate exactly when the adverse ferry hands off above the
-        // tier the clearance term refuses. On routes whose ferry arrives below
-        // it (the September 26 route arrives at 13.9 m) they are the same run,
-        // which is also what the rule predicts; the refusal is then pinned by
+        // An adverse ferry that hands off above the tier the clearance term
+        // refuses must separate the arms. The converse does not hold: the term
+        // also governs the driver's re-launch after a hand-off, so identical
+        // hand-offs below the tier can still separate later (the route with
+        // the retail construction draws hands off at 19.3 m in both arms and
+        // separates twelve ticks after). The refusal itself is pinned by
         // Level100ZoneHandoffTests.
         bool adverseReachedTheTier = adverse.FlightLegMorphs.Any(morph =>
             morph.Trigger == Level100MissionTrigger.TargetZone4 &&
             morph.SurfaceClearanceMillimeters >
                 Level100ChainAutopilot.ZoneHandoffClearanceMillimeters);
-        Assert.Equal(adverseReachedTheTier, firstDivergence != -1);
+        if (adverseReachedTheTier)
+        {
+            Assert.NotEqual(-1, firstDivergence);
+        }
     }
 
     private void Report(string label, IReadOnlyList<Level100SweepRun> runs)

@@ -50,9 +50,8 @@ public sealed partial class Simulation
     /// the other constructors' draws is the RE lane's open first-flush
     /// question; Core runs it once the level's actors and mechanics exist.
     /// </remarks>
-    private void InitializeBattleEngineRefreshEvents()
+    private void InitializeBattleEngineRefreshEvents(RetailEventScheduler events, Func<int> nextDraw)
     {
-        RetailEventScheduler events = _level100ActorMechanics.LevelEvents;
         if (events.FrameCount != _retailEventFrameCount)
         {
             throw new InvalidOperationException(
@@ -62,10 +61,9 @@ public sealed partial class Simulation
         events.AddEvent(
             RetailBattleEngineRefresh.CrosshairEvent,
             Level100ActorMechanics.BattleEngineListener,
-            RetailBattleEngineRefresh.CrosshairDueTime(
-                _level100ActorMechanics.NextReleasedRandom(), events.Time),
+            RetailBattleEngineRefresh.CrosshairDueTime(nextDraw(), events.Time),
             RetailEventPriority.StartOfFrame);
-        HandleAutoAim(events, reuseHandle: -1);
+        FileAutoAim(events, nextDraw, reuseHandle: -1);
     }
 
     /// <summary><c>CBattleEngine::HandleEvent</c> for 6002 and 6003 (<c>0x0040c180</c>).</summary>
@@ -121,16 +119,16 @@ public sealed partial class Simulation
     /// retail for the non-Smart Pulse Cannon Pod and Missile Pod, and not yet
     /// retail for the Smart Vulcans. The draw and requeue are exact.
     /// </remarks>
-    private void HandleAutoAim(RetailEventScheduler events, int reuseHandle)
-    {
+    private void HandleAutoAim(RetailEventScheduler events, int reuseHandle) =>
+        FileAutoAim(events, _level100ActorMechanics.NextReleasedRandom, reuseHandle);
+
+    private static void FileAutoAim(RetailEventScheduler events, Func<int> nextDraw, int reuseHandle) =>
         events.AddEvent(
             RetailBattleEngineRefresh.AutoAimEvent,
             Level100ActorMechanics.BattleEngineListener,
-            RetailBattleEngineRefresh.AutoAimDueTime(
-                _level100ActorMechanics.NextReleasedRandom(), events.Time),
+            RetailBattleEngineRefresh.AutoAimDueTime(nextDraw(), events.Time),
             RetailEventPriority.StartOfFrame,
             reuseHandle: reuseHandle);
-    }
 
     /// <summary>
     /// <c>CalcUnitOverCrossHair</c> (<c>0x0040acc0</c>,

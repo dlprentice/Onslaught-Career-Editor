@@ -79,6 +79,12 @@ public static class StateHasher
             bool usesMissilePodSchema =
                 state.Level100MissilePod != Level100MissilePodSnapshot.Initial ||
                 state.Projectiles.Any(projectile => projectile.Seeking is not null);
+            // 52: every constructed unit's callback state (+0x110, its
+            // construction frame and its first full Move). Selected whenever
+            // the level was constructed in the retail load order; the
+            // callbacks themselves are in the event manager above.
+            bool usesUnitCallbackSchema =
+                state.Level100ActorMechanics.UnitCallbacks is { Count: > 0 };
             // 48: retained spawning-owner reader, exit selector/deadline and
             // explicit handoff to the existing approximate normal-control
             // bridge. Unspawned scenes retain schema 47 byte-for-byte.
@@ -179,7 +185,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesMissilePodSchema ? 51 : usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesUnitCallbackSchema ? 52 : usesMissilePodSchema ? 51 : usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -346,12 +352,13 @@ public static class StateHasher
                 writer.Write(foot.LiftMillimeters);
             }
 
-            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema || usesMissilePodSchema)
+            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema || usesMissilePodSchema ||
+                usesUnitCallbackSchema)
             {
                 WriteBattleEngineTargeting(writer, state.Level100BattleEngineTargeting);
             }
 
-            if (usesStoresAndShakeSchema || usesMissilePodSchema)
+            if (usesStoresAndShakeSchema || usesMissilePodSchema || usesUnitCallbackSchema)
             {
                 Level100PlayerStoresSnapshot stores = state.Level100PlayerStores;
                 writer.Write(stores.Store0Bits);
@@ -372,7 +379,7 @@ public static class StateHasher
                 writer.Write(shake.PhaseBits);
             }
 
-            if (usesMissilePodSchema)
+            if (usesMissilePodSchema || usesUnitCallbackSchema)
             {
                 Level100MissilePodSnapshot pod = state.Level100MissilePod;
                 writer.Write(pod.ChargeBits);
@@ -393,6 +400,22 @@ public static class StateHasher
                     writer.Write(round.PitchMicroRadians);
                     writer.Write(round.LaunchTimeBits);
                     WriteNullableActorId(writer, round.Target);
+                }
+            }
+
+            if (usesUnitCallbackSchema)
+            {
+                Level100UnitCallbackSnapshot[] units = state.Level100ActorMechanics.UnitCallbacks!
+                    .OrderBy(unit => unit.ActorId.Value)
+                    .ToArray();
+                writer.Write(units.Length);
+                foreach (Level100UnitCallbackSnapshot unit in units)
+                {
+                    writer.Write(unit.ActorId.Value);
+                    writer.Write((byte)unit.Class);
+                    writer.Write(unit.NearCamera);
+                    writer.Write(unit.ConstructionFrame);
+                    writer.Write(unit.FirstMoveFrame);
                 }
             }
         }

@@ -1001,7 +1001,8 @@ public sealed partial class Simulation
             {
                 _level100Destruction.StartPlaneDeathAfterSpawnerLoss(actorId);
                 DrainAndDispatchLevel100ActorFacts();
-            }, HandleBattleEngineEvent);
+            }, HandleBattleEngineEvent,
+            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z));
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(
@@ -4168,9 +4169,13 @@ public sealed partial class Simulation
         _jetMovedThisTick = false;
         _projectiles.Clear();
         _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        // The Battle Engine is built inline by level-world row 0, so its
+        // 6002/6003 draws come at that point of the load, after the base world.
+        ResetBattleEngineTargeting();
         _level100ActorMechanics = new Level100ActorMechanics(
             _level100Actors,
-            _level100ActorDefinitions);
+            _level100ActorDefinitions,
+            InitializeBattleEngineRefreshEvents);
         _level100Destruction = new Level100DestructionRuntime(_level100Actors);
         _level100PlayerActorId = _level100Actors.GetThingRef("Player 1") ??
             throw new InvalidOperationException("Level 100 Player is missing.");
@@ -4184,8 +4189,6 @@ public sealed partial class Simulation
             0,
             transitionPose: false);
         BuildWalkerFeet();
-        ResetBattleEngineTargeting();
-        InitializeBattleEngineRefreshEvents();
         _level100ActorScripts = new Level100ActorScriptRuntime(
             _level100Actors,
             _level100PlayerActorId,

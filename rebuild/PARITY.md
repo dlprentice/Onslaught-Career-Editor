@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-26 (every round's launch basis and default launch angle; the jet Missile Pod: charge and Fire, burst and launch slots, locks, seeking flight and air burst; weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
+Last updated: 2026-09-26 (Level 100's construction order and unit callbacks; every round's launch basis and default launch angle; the jet Missile Pod: charge and Fire, burst and launch slots, locks, seeking flight and air burst; weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -276,6 +276,9 @@ Owner paths are relative to the repository root; test names are relative to
 | Aquila weapon stores and `WeaponFired` | Config `0x35f`: (0, 2000) (0, 100) (1, 150) (0, 200) (1, 100) (1, 100). Jet ammo `0x0041215d-0x00412192` −consumption clamped at 0; jet heat `0x00412135` +consumption − `kWeaponCoolRate` (int 1 at `0x006236a4`); walker heat +consumption; `Charged()` is `+0x68 > 0`; once per burst event, before the volley | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.WeaponFired`, `.StoreOf` | `Level100PlayerStoresTests` | 12 | Mech Vulcan consumption 1→2; a charged heat shot pays heat — each RED, restored, GREEN |
 | `CBattleEngine::Move` heat-store cooling | `0x004095d6-0x00409633`: each heat store −1.0 (`fild [0x00622f08]`), below 0 → 0, else overheat cleared when strictly below `0.75 × capacity` (`0x005d8bc4`) | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.CoolStores` | `Level100PlayerStoresTests.Cooling_TakesOneEveryMoveAndClearsOverheatStrictlyBelowThreeQuarters` | 1 | cool rate 1→2; clear threshold 0.75→0.8 — each RED, restored, GREEN |
 | `CBattleEngine::AddShockShake` and the round's Init draw | `0x00407940`: return below 0.001 (double `0x005d8bc8`), cap 0.75, three draws `(r mod 32)/(16/a) − a`; called per spawned round with `CWeaponPower` (`0x0040c340`) and from `Damage` (`0x0040ab75-0x0040abc2`). `CRound::Init` `0x004d8410` → `CActor::Init` `0x004d867b` takes one draw per round | `rebuild/OnslaughtRebuild.Core/RetailBattleEngineShake.cs`, `Simulation.cs`, `Level100ActorWeaponRuntime.cs` | `RetailBattleEngineShake.Add`/`.Decay`/`.DamageAmount`, `Simulation.SpawnPlayerBurst` | `Level100PlayerStoresTests.Shake_TakesThreeDrawsAboveTheThresholdAndDecaysEachMove`, `SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder` | 1, 1 | threshold 0.001→0.1; the round Init draw removed — each RED, restored, GREEN |
+| Level 100 load order and construction draws | `CWorld::LoadWorld`: base world's 1,481 pines one draw each, base rows 0-34, then level rows; row 0's `CStart::SpawnBattleEngine` (`0x004eaf20`) builds the Battle Engine inline; per class: `CActor::Init` draw (`0x0040135d`), cannon fire control (`0x004f90ce`), ground hover (`0x0047c869`), squad 4000/4001/4002 draws (`0x004e8177`, `0x004e8486`, `0x004e709c`), `CPlane::Init` last draw (`0x004d1bae`) | `rebuild/OnslaughtRebuild.Core/Level100UnitCallbacks.cs` | `Level100ActorMechanics.ConstructLevel`, `.ConstructUnit` | `Level100BattleEngineRefreshTests.Construction_FilesTheCrosshairThenTheAutoAimRefreshWithOneDrawEach`, `Level100UnitCallbackTests` | 1, 7 | no pine draws; no construction fire-control draw; Battle Engine refresh before its Actor draw — each RED, restored, GREEN |
+| Unit 4003, UnitAI 3000/3001/3003, fire control 4001, squads 4000-4002 | 4003 `0x004f98a8-0x004f9972` (camera within 50 units, one draw, now + 3 + r/65536); `CUnitAI::HandleEvent` `0x004ff330` poll (one draw, 3003 at now + 2 + r·2⁻¹⁵) and `0x004fec60` → `Update` idle arm (1.5 + r·2⁻¹⁶ near, 3 + r·2⁻¹⁵ far); Warehouse 3001 `0x004feac0`; fire control `0x004fb280` (dying returns); squad `0x4e8100`, `0x4e83b0`, `0x4e7070` | `rebuild/OnslaughtRebuild.Core/Level100UnitCallbacks.cs` | `Level100ActorMechanics.DispatchUnitCallback` | `Level100UnitCallbackTests` | 7 | 4003 delay 3→2; near/far swapped; poll 2→3; Warehouse without target; squad 4002 0.99→1.0; camera test inclusive; dying turret keeps refreshing — each RED, restored, GREEN |
+| Actor multiplier-4 Move phase | `CActor::Init` q = r mod 4: q − 1 &gt; 0 files LF_MOVE with that counter, else MOVE with the counter reset; first full Move one, two or three frames after construction | `rebuild/OnslaughtRebuild.Core/Level100UnitCallbacks.cs`, `Level100ActorMechanics.cs` | `Level100ActorMechanics.SeedGroundMovePhase`, `.ConstructedThisFrame` | `Level100UnitCallbackTests.TargetTank_TakesItsSquadDrawsAndSeedsItsMovePhase` | 1 | phase not seeded from the Actor draw — RED, restored, GREEN |
 | Launch basis and the default launch angle | Burst spawner basis = orientation × angle × jitter, each `FMatrix(yaw, pitch, 0)` (`0x00506ed1-0x005072d0`); with no `CWeaponLaunchAngle` slot the angle is `0x004f8140(0, 1, 0)` = pitch float(2π/4096) (Euler-constructor control, 36 cases); `Mech Pulse Cannon Charged` @`0x134e3` first node `CWeaponInaccuracy` = `00000000` | `rebuild/OnslaughtRebuild.Core/Level100ActorWeaponRuntime.cs`, `Simulation.cs` | `Level100ActorMechanics.ComposeLaunchDirection`, `.DefaultLaunchAngle`, `Simulation.LaunchWalkerRound`, `Level100ActorMechanics.LaunchActorRound` | `SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder`, `Level100ActorWeaponTests.AttackingTargetDrone_FiresItsVulcanAndReachesThePlayer` | 1, 1 | no default pitch; the Small bolt's 0.5° scatter restored; the drones' aim pitch and stored pitch each fed with the wrong sign — each RED, restored, GREEN |
 | Missile Pod charge and Fire | `Weapon "Missile Pod"` @`0x17746`: `CWeaponChargeRate` `0x41000000` (8.0), levels 0 and 1, store 3, consumption 1. `CWeapon::Fire` `0x00506010` writes the rounded level and mode (`0x00506952`) before its reload check and stamps `now + 0x3f4ccccd` from the burst's start | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs`, `Level100MissilePod.cs` | `Level100PlayerWeaponRuntime.AdvanceCharge`, `.TryPrepareFire`, `.StampReadyAt` | `Level100MissilePodTests.Charge_ReachesTheSalvoOnItsThirteenthCallAndStopsThere`, `.Fire_SetsTheModeBeforeItsReloadCheck` | 2 | charge rate 8→10; the level taken only after the reload check — each RED, restored, GREEN |
 | Missile Pod burst event and launch slots | `CWeapon__HandleFireBurstEvent` `0x00506930` re-files 5001 at now + `CWeaponBurstDelay` (`0x3dcccccd` launcher, `0x3d4ccccd` salvo) while the counter is below the burst size; the counters `+0x70`/`+0x74` start at −1 (`0x00505e7b`) and advance before each round; the basis is orientation × `FMatrix(a, b, 0)` × jitter (`0x00506ed1-0x005072d0`), with the five `CWeaponLaunchAngle` pairs from the mode records | `rebuild/OnslaughtRebuild.Core/SimulationBattleEngine.cs`, `Simulation.cs` | `Simulation.FireMissilePod`, `.HandleMissilePodBurst`, `.SpawnPodBurst`, `.ComposeLaunchDirection` | `SimulationTests.MissilePodLauncher_SpawnsFiveMissilesOnTheBurstEventsAlongTheirSlots`, `Level100MissilePodTests.LaunchCounters_StartAtTheFirstSlotAndWrapAfterFive` | 2 | burst delay 0.1→0.2; sequence counter starts at 0; angles added to the aim instead of composed — each RED, restored, GREEN |
@@ -290,7 +293,9 @@ four mutations) and `local-data/test-runs/stores-shake-20260926/mutation-kills/`
 `local-data/test-runs/missile-pod-20260926/mutation-kills/` (the four Missile
 Pod rows: eleven mutations) and
 `local-data/test-runs/launch-basis-20260926/mutation-kills/` (the launch-basis
-row: four mutations), each with `mutate.py` and
+row: four mutations) and
+`local-data/test-runs/construction-order-20260926/mutation-kills/` (the three
+load-order and unit-callback rows: eleven mutations), each with `mutate.py` and
 `mutation-results.json`; every mutation went RED, was restored byte-identical by
 SHA-256, then went GREEN. The shake offsets are not yet applied to the Battle
 Engine's orientation (`BattleEngine.cpp:1222-1224`), and the damage shake's
@@ -319,6 +324,22 @@ The Missile Pod rows leave six more:
 - A lock needs a side set by the target's script, because Core has no authored
   allegiance for the other level things. Falsifier: the world file's side field
   for those rows.
+
+The load-order and unit-callback rows leave five more:
+- Core runs every script's init at construction, so the Tank Factory's first
+  `SpawnThing` takes its squad's five draws before frame 1, where retail runs
+  that init on frame 2 (Setup binds it into bucket 1). Falsifier: the RE lane's
+  first-flush order, applied by scheduling script inits on the event manager.
+- Core has no pan camera, so `+0x110` uses the Battle Engine's position, which
+  is only exact for the first-person camera. Falsifier: the Client's pan spline
+  moved into Core, compared with a copied-retail read of the camera position
+  during the pan.
+- A drone spawned through a spawner exit files no AI loop after its exit.
+  Falsifier: a static read of the exit controller's hand-off to `0x004ff330`.
+- The squads' target branch (`+0xc4` set) is not traced, and Core treats any
+  waypoint-following member's squad as moving.
+- The Air Trainer's `+0x284` draw is taken but its ±0.8 is not used by Core's
+  plane motion.
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and

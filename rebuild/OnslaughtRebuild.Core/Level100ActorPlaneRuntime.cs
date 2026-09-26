@@ -75,22 +75,25 @@ public sealed partial class Level100ActorMechanics
     internal static bool IsBattleEngineEvent(int eventNum) =>
         eventNum is RetailBattleEngineRefresh.CrosshairEvent or RetailBattleEngineRefresh.AutoAimEvent;
 
-    private void InitializePlanes()
-    {
-        foreach (Level100ActorSnapshot actor in _actors.Snapshot.Actors)
-            RegisterSpawnedActor(actor.ActorId);
-    }
-
     /// <summary>
-    /// Called after allocation and before its script initializer. Move is
-    /// queued before the two guide callbacks, including for an idle Plane.
-    /// The isolated aircraft queue does not claim the complete world event,
-    /// effect or random-consumer order.
+    /// Called after allocation and before its script initializer, for load
+    /// rows and <c>SpawnThing</c> results alike. A plane files Move, 4003 and
+    /// its two guide callbacks, then its AI, and takes <c>CPlane::Init</c>'s
+    /// last draw; a squad-wrapped ground vehicle takes its unit and squad
+    /// construction (<see cref="ConstructUnit"/>).
     /// </summary>
     internal void RegisterSpawnedActor(Level100ActorId actorId)
     {
         ThingActorBaseStateSnapshot physical = _actors.GetBaseState(actorId);
-        if (physical.RetailPlane is null) return;
+        if (physical.RetailPlane is null)
+        {
+            Level100ConstructionClass kind = Level100ConstructionClasses.Of(_actors.GetActor(actorId).DefinitionName);
+            if (kind != Level100ConstructionClass.SquadGroundVehicle)
+                throw new NotSupportedException($"Level 100 spawns no {kind}.");
+            _planeEvents ??= new(useFloat24Arithmetic: true);
+            ConstructUnit(actorId, kind);
+            return;
+        }
         if (_states.ContainsKey(actorId.Value))
             throw new InvalidOperationException("Aircraft mechanics was already registered.");
         Level100ActorSnapshot actor = _actors.GetActor(actorId);
@@ -121,12 +124,20 @@ public sealed partial class Level100ActorMechanics
         // Zero is the observed startup allocation in observe-plane-motion-a,
         // a declared deterministic seed here, not a universal allocator law.
         _planeEvents.AddEvent(3000, PlaneListener(actorId, 0), RetailEventScheduler.NextFrame);
+        AddPlaneUnitCallbacks(actorId);
         _planeEvents.AddEvent(2000, PlaneListener(actorId, 1), RetailEventScheduler.NextFrame);
         _planeEvents.AddEvent(2001, PlaneListener(actorId, 1), RetailEventScheduler.NextFrame);
         // CUnitAI__Init [004fe710,004fea24), selected profile +19c == 0:
-        // no constructor Ready and no optional sweeping RNG draws.
+        // no constructor Ready and no optional sweeping RNG draws. A spawner
+        // exit gives the AI its 3002 path; its later loop after the exit is
+        // not filed yet.
         if (exit is not null)
             _planeEvents.AddEvent(3002, PlaneControllerListener(actorId), _planeEvents.Time);
+        else
+            FileInitialAi(_planeEvents, actorId, hasTarget: false);
+        // CPlane::Init's last draw (0x004d1bae) sets +0x284 to 0.8 when
+        // (r mod 65536)/65536 > 0.5, else -0.8.
+        _ = _releasedRandom.Next();
     }
 
     internal void AdvanceEventClock(uint eventFrameCount)
@@ -156,6 +167,11 @@ public sealed partial class Level100ActorMechanics
             if (battleEngineEvent is null)
                 throw new InvalidOperationException("A Battle Engine event has no owner in this update.");
             battleEngineEvent(events, dispatch);
+            return;
+        }
+        if (IsUnitListener(dispatch.Listener))
+        {
+            DispatchUnitCallback(events, dispatch);
             return;
         }
         var actorId = new Level100ActorId(dispatch.Listener < 0 ? checked(-dispatch.Listener) : dispatch.Listener / 2);
@@ -375,7 +391,7 @@ public sealed partial class Level100ActorMechanics
         foreach (int handle in snapshot.Lanes.SelectMany(lane => lane.Handles).Concat(snapshot.Overflow))
         {
             int listener = slots[handle].Listener;
-            if (IsPlayerListener(listener)) continue;
+            if (IsPlayerListener(listener) || IsUnitListener(listener)) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -414,6 +430,12 @@ public sealed partial class Level100ActorMechanics
             {
                 if (slot.EventNum != WeaponBurstEvent)
                     throw new ArgumentException("Missile Pod queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
+            if (IsUnitListener(slot.Listener))
+            {
+                if (!AdmitsUnitCallback(slot))
+                    throw new ArgumentException("Unit queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
             if (slot.Listener is 1 or int.MinValue)

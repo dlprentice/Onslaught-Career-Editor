@@ -67,21 +67,35 @@ public sealed class Level100BattleEngineRefreshTests
     [Fact]
     public void Construction_FilesTheCrosshairThenTheAutoAimRefreshWithOneDrawEach()
     {
-        var simulation = new Simulation(Seed, Level100TestActorDefinitions.LoadMaterialized());
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        var simulation = new Simulation(Seed, definitions);
         WorldSnapshot state = simulation.Snapshot;
-        int aircraft = state.Level100Actors.BaseStates.Count(item => item.State.RetailPlane is not null);
+        Level100ActorDefinition[] rows = definitions.Actors.OrderBy(row => row.AuthoredOrder).ToArray();
+        int battleEngine = Array.FindIndex(rows, row =>
+            Level100ConstructionClasses.Of(row.DefinitionName) == Level100ConstructionClass.BattleEngine);
+        Assert.Equal(1_481, definitions.BaseWorldPineCount);
 
-        // Every aircraft present at construction takes its Actor Init draw
-        // first; the Battle Engine's Init then takes 6002's draw and
-        // HandleAutoAim(NULL) takes 6003's.
+        // The load order (the RE lane's construction-order contract): the
+        // base world's pines, its rows 0-34, then level row 0's Battle
+        // Engine: its Actor draw, 6002's draw and HandleAutoAim(NULL)'s 6003
+        // draw, and then the rest of the level world's rows. Core then runs
+        // every script's init at construction, so the Tank Factory's
+        // SpawnThing("Target Tank") takes its squad's five draws here; retail
+        // runs that init on frame 2, which is an open difference.
         var random = new Level100ReleasedRandom();
-        for (int draw = 0; draw < aircraft; draw++)
-        {
-            _ = random.Next();
-        }
+        Skip(definitions.BaseWorldPineCount + Level100ActorWeaponTests.RowDraws(rows[..battleEngine]) + 1);
         float crosshairDue = RetailBattleEngineRefresh.CrosshairDueTime(random.Next(), 0.0f);
         float autoAimDue = RetailBattleEngineRefresh.AutoAimDueTime(random.Next(), 0.0f);
+        Skip(Level100ActorWeaponTests.RowDraws(rows[(battleEngine + 1)..]) + 5);
         Assert.Equal(random.Seed, state.Level100ActorMechanics.ReleasedRandomSeed);
+
+        void Skip(int draws)
+        {
+            for (int draw = 0; draw < draws; draw++)
+            {
+                _ = random.Next();
+            }
+        }
 
         RetailEventSlotSnapshot[] filed = BattleEngineEvents(state);
         Assert.Equal(
@@ -129,9 +143,13 @@ public sealed class Level100BattleEngineRefreshTests
         });
         simulation.SetFacingForMeasurement(yaw, pitch);
 
-        // Both refreshes were filed for frame 5; nothing is reported before it.
+        // Nothing is reported before the first 6002 delivery: bucket
+        // floor((due - 0.001) x 20), flushed on the frame after it.
+        float due = BitConverter.UInt32BitsToSingle(Assert.Single(BattleEngineEvents(start),
+            slot => slot.EventNum == RetailBattleEngineRefresh.CrosshairEvent).TimeBits);
+        int deliveryFrame = (int)MathF.Floor((due - 0.001f) * 20.0f) + 1;
         WorldSnapshot state = start;
-        for (int tick = 0; tick < 4; tick++)
+        for (int tick = 1; tick < deliveryFrame; tick++)
         {
             state = simulation.Step(SimInput.Idle);
             Assert.Equal(Level100CrosshairHitKind.Nothing, state.Level100BattleEngineTargeting.CrosshairHitKind);

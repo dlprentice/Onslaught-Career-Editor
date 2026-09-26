@@ -1066,7 +1066,7 @@ internal sealed class Level100ChainAutopilot
     /// hull instead of 1000, which is most of the margin the six attacking
     /// drones then eat.
     /// </summary>
-    private static SimInput Hold(WorldSnapshot state)
+    private SimInput Hold(WorldSnapshot state)
     {
         if (state.Transition != VehicleTransition.None)
         {
@@ -1075,6 +1075,19 @@ internal sealed class Level100ChainAutopilot
 
         if (state.Mode != VehicleMode.Walker)
         {
+            // Never come down over the sea (the rule the sorties follow). A
+            // jet can be left with nothing to shoot mid-wave: measured with the
+            // retail construction draws, the first wave's third drone was still
+            // unflagged as an objective when the second died over the water,
+            // and the unguarded morph lost the level at tick 4,162.
+            if (OverWater(state.PlayerPosition))
+            {
+                double homeYawError = YawErrorTo(state, _lastDryGround.X, _lastDryGround.Z);
+                double levelPitchError = -(state.FacingPitchMicroRad / 1_000_000d);
+                return new SimInput(0, 1, SimActions.None, 0, 0,
+                    LookAxis(homeYawError, 2_000), LookAxis(levelPitchError, 4_000));
+            }
+
             return new SimInput(0, 0, SimActions.ToggleMode);
         }
 

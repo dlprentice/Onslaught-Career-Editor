@@ -33,7 +33,8 @@ public sealed class SimulationTests
 
     /// <summary>
     /// The living Plane's raw state, guide and callbacks select schema 47;
-    /// the Battle Engine's retained crosshair report then selects 49.
+    /// the Battle Engine's retained crosshair report then selects 49, and
+    /// the unit callbacks of a world built in the retail load order 52.
     /// Legacy mission-only envelopes still select schema 43 and bind all
     /// ten secondary slots; changing the native-88 text dword must therefore
     /// change the world hash even when every older field is equal.
@@ -72,14 +73,14 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("443f04ec3f6e247321db0149d50c2224b7ad8ee63fba67eb7d8f961d4bc86dc0",
+        Assert.Equal("5e9fac13c71a2d06307d3e52d57bc03a80b9a0d9e3a9b770df45898f91966c49",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("f5f63d1dfa942fcd60f9f3745d1c8b7753092fbd098d6e116bc07146c66032f4",
+        Assert.Equal("0fd1461abbb2be4de80d8e0c7ac861bd18de3d0af24c657e3997228cc0fa54e6",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "114c440af8715a57a7797ab0aeaa4438e84e716eeae59e64dc9bdfab27231d8a",
+        Assert.True(hash == "c0ad8b9dd550bae0febfffe28b2bebc77d71664f9cb1408f2daf7b87b0a17016",
             $"Canonical state hash: {hash}");
-        Assert.Equal(49, CanonicalSchemaVersion(rootState));
+        Assert.Equal(52, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
         var world110 = new Level100Mission(actors, actors.GetThingRef("Player 1")!.Value,
@@ -1592,8 +1593,8 @@ public sealed class SimulationTests
         Assert.Equal(paused.RetailEventFrameCount, held.RetailEventFrameCount);
         Assert.Equal(paused.Level100Mission.Tick + 1, held.Level100Mission.Tick);
         Assert.Equal(pausedTimeBits, BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds));
-        // The Battle Engine's retained crosshair report selects schema 49.
-        Assert.Equal(49, CanonicalSchemaVersion(held));
+        // The unit callbacks of the retail load order select schema 52.
+        Assert.Equal(52, CanonicalSchemaVersion(held));
         Assert.Equal(held.RetailEventFrameCount, held.Level100ActorMechanics.PlaneEvents!.FrameCount);
         Assert.Equal(0x3dcccb3b, MixBits(held));
 
@@ -1748,6 +1749,7 @@ public sealed class SimulationTests
     public void PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder()
     {
         Simulation pulse = CreateFiringRangeExerciseSimulation();
+        Simulation pulseTwin = CreateFiringRangeExerciseSimulation();
         int pulseSeed = pulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var pulseRandom = new Level100ReleasedRandom(pulseSeed);
         // `Mech Pulse Cannon Charged` carries +0 CWeaponInaccuracy: the pair
@@ -1761,7 +1763,7 @@ public sealed class SimulationTests
 
         WorldSnapshot pulseBefore = pulse.Snapshot;
         WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
-        AdvanceByEventDraws(pulseRandom, pulseBefore, pulseShot);
+        AdvanceByEventDraws(pulseRandom, pulseTwin);
         Assert.Equal(
             pulseRandom.Seed,
             pulseShot.Level100ActorMechanics.ReleasedRandomSeed);
@@ -1772,8 +1774,12 @@ public sealed class SimulationTests
             pulseOffset);
 
         Simulation chargedPulse = CreateFiringRangeExerciseSimulation();
+        Simulation chargedTwin = CreateFiringRangeExerciseSimulation();
         for (int sample = 0; sample < 10; sample++)
+        {
             chargedPulse.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+            chargedTwin.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        }
         int chargedSeed = chargedPulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var chargedRandom = new Level100ReleasedRandom(chargedSeed);
         // The pristine scatter block calls the shared stream at 0x00506E0A
@@ -1789,21 +1795,25 @@ public sealed class SimulationTests
         WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot chargedRound = Assert.Single(chargedShot.Projectiles);
         Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge, chargedRound.Kind);
-        AdvanceByEventDraws(chargedRandom, chargedBefore, chargedShot);
+        AdvanceByEventDraws(chargedRandom, chargedTwin);
         Assert.Equal(chargedRandom.Seed, chargedShot.Level100ActorMechanics.ReleasedRandomSeed);
         AssertDirection(chargedRound, chargedBefore.FacingYawMicroRad,
             chargedBefore.FacingPitchMicroRad, (0, 0));
 
         Simulation jet = CreatePlayingSimulation();
-        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
-        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
-        for (int tick = 0;
-             jet.Snapshot.Mode != VehicleMode.Jet ||
-                 jet.Snapshot.Transition != VehicleTransition.None;
-             tick++)
+        Simulation jetTwin = CreatePlayingSimulation();
+        foreach (Simulation flight in new[] { jet, jetTwin })
         {
-            Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
-            jet.Step(SimInput.Idle);
+            flight.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+            flight.Step(new SimInput(0, 0, SimActions.ToggleMode));
+            for (int tick = 0;
+                 flight.Snapshot.Mode != VehicleMode.Jet ||
+                     flight.Snapshot.Transition != VehicleTransition.None;
+                 tick++)
+            {
+                Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
+                flight.Step(SimInput.Idle);
+            }
         }
 
         int jetSeed = jet.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
@@ -1827,7 +1837,7 @@ public sealed class SimulationTests
         // facing later in this same update, after the round already exists.
         WorldSnapshot jetBefore = jet.Snapshot;
         WorldSnapshot jetShot = jet.Step(new SimInput(0, 0, SimActions.Fire));
-        AdvanceByEventDraws(jetRandom, jetBefore, jetShot);
+        AdvanceByEventDraws(jetRandom, jetTwin);
         Assert.Equal(jetRandom.Seed, jetShot.Level100ActorMechanics.ReleasedRandomSeed);
         ProjectileSnapshot[] rounds = jetShot.Projectiles.OrderBy(item => item.Id).ToArray();
         Assert.Equal(jetOffsets.Length, rounds.Length);
@@ -1845,30 +1855,20 @@ public sealed class SimulationTests
             rounds[1].VerticalVelocityMillimetersPerTick);
 
         // The controller fires before the event flush, so scatter takes the
-        // first draws of the update. Every callback the flush then delivers
-        // that draws and re-files itself (the Battle Engine's 6002/6003, the
-        // aircraft guide's 2000/2001 and the exit controller's 3002) takes one
-        // more; a delivery is visible as its handle's changed due time.
-        static void AdvanceByEventDraws(
-            Level100ReleasedRandom random,
-            WorldSnapshot before,
-            WorldSnapshot after)
+        // first draws of the update. The flush's own draws (the Battle
+        // Engine's refreshes, the aircraft callbacks and every unit callback)
+        // do not depend on the shot, so an identical twin stepped idle takes
+        // exactly as many; count them along the stream.
+        static void AdvanceByEventDraws(Level100ReleasedRandom random, Simulation twin)
         {
-            static Dictionary<int, RetailEventSlotSnapshot> Queued(WorldSnapshot state)
+            var probe = new Level100ReleasedRandom(twin.Snapshot.Level100ActorMechanics.ReleasedRandomSeed);
+            int after = twin.Step(SimInput.Idle).Level100ActorMechanics.ReleasedRandomSeed;
+            int draws = 0;
+            while (probe.Seed != after)
             {
-                RetailEventSchedulerSnapshot events = state.Level100ActorMechanics.PlaneEvents!;
-                Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
-                return events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow)
-                    .ToDictionary(handle => handle, handle => slots[handle]);
+                probe.Next();
+                Assert.True(++draws < 10_000, "The idle twin's draws were not found on the stream.");
             }
-
-            Dictionary<int, RetailEventSlotSnapshot> previous = Queued(before);
-            Dictionary<int, RetailEventSlotSnapshot> next = Queued(after);
-            int draws = previous.Count(item =>
-                item.Value.EventNum is 2000 or 2001 or 3002 or 6002 or 6003 &&
-                next.TryGetValue(item.Key, out RetailEventSlotSnapshot? refiled) &&
-                refiled.EventNum == item.Value.EventNum &&
-                refiled.TimeBits != item.Value.TimeBits);
             for (int draw = 0; draw < draws; draw++)
             {
                 random.Next();
@@ -2391,7 +2391,9 @@ public sealed class SimulationTests
         Assert.Equal(
             BitConverter.SingleToUInt32Bits(firedAt + BitConverter.UInt32BitsToSingle(0x3dcccccdu)),
             burst.TimeBits);
-        Assert.Equal(51, CanonicalSchemaVersion(fired));
+        // The pod selects schema 51 on its own; a world built in the retail
+        // load order always carries the unit callbacks of 52 as well.
+        Assert.Equal(52, CanonicalSchemaVersion(fired));
 
         var spawnTicks = new List<int>();
         var headings = new List<Level100SeekingRoundSnapshot>();

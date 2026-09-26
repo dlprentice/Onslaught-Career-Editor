@@ -463,11 +463,16 @@ public sealed class Level100ActorWeaponTests
 
         Level100ActorMechanicsSnapshot idle = Advance(0);
         Assert.Empty(idle.ActorRounds);
-        // Actor Init consumes Next()%1 at creation, even before the first
-        // movement/guide callback: one authored Trainer, then the spawned Drone.
+        // Construction takes its draws before any callback runs: each row's
+        // class sequence in load order (the RE lane's construction-order
+        // contract), then the spawned Drone's Actor draw and CPlane::Init's
+        // last draw.
         var creationRandom = new Level100ReleasedRandom();
-        creationRandom.Next();
-        creationRandom.Next();
+        int draws = ConstructionDraws(Level100TestActorDefinitions.Create()) + 2;
+        for (int draw = 0; draw < draws; draw++)
+        {
+            creationRandom.Next();
+        }
         Assert.Equal(creationRandom.Seed, idle.ReleasedRandomSeed);
 
         Level100ActorMechanicsSnapshot flown = Advance(30 * 120);
@@ -485,6 +490,26 @@ public sealed class Level100ActorWeaponTests
             $"{flown.ActorRounds.Count} rounds in flight, " +
             $"next round id {flown.NextActorRoundId}");
     }
+
+    /// <summary>
+    /// The load's draws for a definition set: one per pine, then per row
+    /// Building 1 (Actor), Cannon 2 (Actor, fire control), Feature 1,
+    /// SimpleBuilding 1, Battle Engine 1 (its 6002/6003 belong to the
+    /// Simulation), squad-wrapped ground vehicle 5 (Actor, hover, three squad
+    /// refreshes), Dropship 1 and Plane 2 (Actor, <c>+0x284</c>).
+    /// </summary>
+    internal static int ConstructionDraws(Level100ActorDefinitionSet definitions) =>
+        definitions.BaseWorldPineCount + RowDraws(definitions.Actors);
+
+    /// <summary>The construction draws of the given rows, by class.</summary>
+    internal static int RowDraws(IEnumerable<Level100ActorDefinition> rows) =>
+        rows.Sum(definition => Level100ConstructionClasses.Of(definition.DefinitionName) switch
+        {
+            Level100ConstructionClass.Trigger => 0,
+            Level100ConstructionClass.Cannon or Level100ConstructionClass.Plane => 2,
+            Level100ConstructionClass.SquadGroundVehicle => 5,
+            _ => 1,
+        });
 
     /// <summary>
     /// <c>CRoundSeek 3</c> is a homing round with a launcher-supplied target.

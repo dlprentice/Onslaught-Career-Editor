@@ -40,6 +40,9 @@ public sealed record Level100ActorMechanicsSnapshot(
     IReadOnlyList<Level100ActorRoundSnapshot> ActorRounds)
 {
     public RetailEventSchedulerSnapshot? PlaneEvents { get; init; }
+
+    /// <summary>Every constructed unit's callback state, by actor.</summary>
+    public IReadOnlyList<Level100UnitCallbackSnapshot>? UnitCallbacks { get; init; }
 }
 
 public sealed record Level100ActorMechanicsWaitCompletion(
@@ -113,24 +116,37 @@ public sealed partial class Level100ActorMechanics
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
-        Level100ActorDefinitionSet definitions) : this(actors, definitions, initializePlanes: true)
+        Level100ActorDefinitionSet definitions) : this(actors, definitions, construct: true)
     {
     }
 
+    /// <summary>
+    /// Constructs the level with the Battle Engine's own 6002/6003 draws
+    /// supplied by its owner, at the Battle Engine's place in the load order.
+    /// </summary>
+    internal Level100ActorMechanics(
+        Level100ActorRegistry actors,
+        Level100ActorDefinitionSet definitions,
+        Action<RetailEventScheduler, Func<int>> battleEngineRefresh) : this(actors, definitions, construct: false)
+    {
+        ArgumentNullException.ThrowIfNull(battleEngineRefresh);
+        ConstructLevel(battleEngineRefresh);
+    }
+
     private Level100ActorMechanics(Level100ActorRegistry actors,
-        Level100ActorDefinitionSet definitions, bool initializePlanes)
+        Level100ActorDefinitionSet definitions, bool construct)
     {
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
         ValidateDefinitionIdentity();
-        if (initializePlanes) InitializePlanes();
+        if (construct) ConstructLevel(null);
     }
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
         Level100ActorDefinitionSet definitions,
         Level100ActorMechanicsSnapshot snapshot)
-        : this(actors, definitions, initializePlanes: false)
+        : this(actors, definitions, construct: false)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(snapshot.Actors);
@@ -158,6 +174,7 @@ public sealed partial class Level100ActorMechanics
         }
 
         RestoreArmament(snapshot);
+        RestoreUnitCallbacks(snapshot);
         RestorePlaneEvents(snapshot);
     }
 
@@ -167,7 +184,11 @@ public sealed partial class Level100ActorMechanics
         _releasedRandom.Seed,
         _nextActorRoundId,
         SnapshotActorWeapons(),
-        SnapshotActorRounds()) { PlaneEvents = _planeEvents?.Snapshot };
+        SnapshotActorRounds())
+    {
+        PlaneEvents = _planeEvents?.Snapshot,
+        UnitCallbacks = _unitCallbacks.Count == 0 ? null : UnitCallbackSnapshots,
+    };
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>
         kind is
@@ -204,14 +225,28 @@ public sealed partial class Level100ActorMechanics
         return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, null);
     }
 
+    /// <param name="cameraPosition">
+    /// Player 0's current camera position, which each unit's 4003 compares
+    /// with its own. Core has no pan camera, so the caller supplies the Battle
+    /// Engine's position, which is exactly the first-person camera's.
+    /// </param>
     internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount,
         Action<Level100ActorId>? dispatchReady = null,
         Action<Level100ActorId>? startPlaneDeath = null,
-        Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent = null)
+        Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent = null,
+        SimVector3? cameraPosition = null)
     {
         if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
             throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
-        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, battleEngineEvent);
+        _cameraPosition = cameraPosition;
+        try
+        {
+            return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, battleEngineEvent);
+        }
+        finally
+        {
+            _cameraPosition = null;
+        }
     }
 
     private void ConsumeCommand(
@@ -288,14 +323,21 @@ public sealed partial class Level100ActorMechanics
             if (motion?.MotionClass ==
                 Level100ActorMotionClass.GroundVehicle)
             {
+                // The Actor's MOVE/LF_MOVE cadence runs every frame from the
+                // frame after construction, active or not, until the unit is
+                // deleted; what a Move does depends on the unit's state.
+                if (actor.Lifecycle == Level100ActorLifecycle.Destroyed ||
+                    ConstructedThisFrame(state.ActorId))
+                {
+                    continue;
+                }
+
+                bool fullGuideUpdate = state.GroundFullGuideBaseTickPhase == 0;
+                state.GroundFullGuideBaseTickPhase =
+                    (state.GroundFullGuideBaseTickPhase + 1) % motion.FullGuideBaseTicks!.Value;
                 if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown ||
                     (actor.Active && actor.Lifecycle == Level100ActorLifecycle.Alive))
                 {
-                    bool fullGuideUpdate =
-                        state.GroundFullGuideBaseTickPhase == 0;
-                    state.GroundFullGuideBaseTickPhase =
-                        (state.GroundFullGuideBaseTickPhase + 1) %
-                        motion.FullGuideBaseTicks!.Value;
                     if (actor.Lifecycle == Level100ActorLifecycle.DiedAwaitingShutdown)
                     {
                         AdvanceDyingGroundVehicle(state, motion, fullGuideUpdate);

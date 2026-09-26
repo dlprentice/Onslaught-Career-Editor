@@ -254,10 +254,13 @@ public sealed class Level100ActorDefinitionSet
         IEnumerable<Level100SpawnDefinition> spawns,
         IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null,
         IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null,
-        int worldNumber = RetailWorldCatalog.RootWorldNumber)
+        int worldNumber = RetailWorldCatalog.RootWorldNumber,
+        int baseWorldPineCount = 0)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
+        ArgumentOutOfRangeException.ThrowIfNegative(baseWorldPineCount);
+        BaseWorldPineCount = baseWorldPineCount;
         if (RetailWorldCatalog.Find(worldNumber) is null)
         {
             throw new ArgumentOutOfRangeException(
@@ -418,8 +421,16 @@ public sealed class Level100ActorDefinitionSet
             actorArray,
             spawnArray,
             _waypointPaths,
-            _motionDefinitions);
+            _motionDefinitions,
+            baseWorldPineCount);
     }
+
+    /// <summary>
+    /// The base world's pines, each of which takes one draw from the gameplay
+    /// stream when <c>LoadWorld</c> initialises it (the RE lane's construction
+    /// order). Zero for a definition set without the base world's trees.
+    /// </summary>
+    public int BaseWorldPineCount { get; }
 
     public IReadOnlyList<Level100ActorDefinition> Actors => _actors;
 
@@ -643,7 +654,8 @@ public sealed class Level100ActorDefinitionSet
         IReadOnlyList<Level100ActorDefinition> actors,
         IReadOnlyList<Level100SpawnDefinition> spawns,
         IReadOnlyList<Level100WaypointPathDefinition> waypointPaths,
-        IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions)
+        IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions,
+        int baseWorldPineCount)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
@@ -653,7 +665,9 @@ public sealed class Level100ActorDefinitionSet
             bool hasWeaponMounts = motionDefinitions.Any(definition => definition.WeaponMounts is not null);
             // Formats 6/7 remain byte-exact without mount input. Format 8
             // includes the format-7 exit fields even when all exits are null.
-            writer.Write(hasWeaponMounts ? 8 : hasSpawnerExits ? 7 : 6);
+            // Format 9 appends the base world's pine count, and only a set
+            // that carries pines selects it.
+            writer.Write(baseWorldPineCount > 0 ? 9 : hasWeaponMounts ? 8 : hasSpawnerExits ? 7 : 6);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -782,6 +796,11 @@ public sealed class Level100ActorDefinitionSet
                         }
                     }
                 }
+            }
+
+            if (baseWorldPineCount > 0)
+            {
+                writer.Write(baseWorldPineCount);
             }
         }
 

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,102 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Level 100 construction order and unit callbacks — September 26
+
+Core used to take three draws while building Level 100 (the Air Trainer's Actor
+draw, then the Battle Engine's 6002 and 6003) and no unit callbacks at all. The RE
+lane's construction-order contract
+(`reverse-engineering/game-mechanics/level100-construction-order.md`, commits
+`b8a19b68`, `c3fff6c4` and `0aa1ceac`) gives the retail load: the base world's
+1,481 pines, one draw each; base rows 0-34 in file order; then the level world's
+rows. Row 0's Start builds the Battle Engine inline, so its draws follow base row
+34.
+
+Per class, in load order:
+- **Buildings:** one Actor draw, then a 4003 and an AI.
+- **Cannons:** the Actor draw, which also phases their four-frame Move, and the
+  fire-control refresh's draw with its 4001; then a 4003 and an AI.
+- **Features and city buildings:** one Actor draw; city buildings also get a 4003.
+- **Battle Engine:** its Actor draw and a 4003, then 6002's and 6003's draws.
+- **Target Tanks:** the Actor draw, which phases the squad member's Move; a
+  4003; the hover draw; an AI; then three squad draws for 4000, 4001 and 4002.
+- **Warehouse:** one draw; its AI starts on 3001 because its authored target is a
+  waypoint.
+- **U-17:** one Actor draw, a 4003 and an AI.
+- **Air Trainer:** the Actor draw, a 4003, the guide callbacks, an AI and
+  `CPlane::Init`'s last draw.
+
+Core files the callbacks that draw, on the level's one event manager, and delivers
+them with the contract's draws and requeues:
+- **4003** takes one draw and re-files at now + 3 + r/65536. It sets
+  `+0x110` when the camera is strictly within 50 units.
+- **A polling AI** (inactive or switched off) draws and files 3003 two to four
+  seconds out; the 3003 files 3000 for the next frame.
+- **An active AI with no target** takes Update's idle arm: one draw, then 1.5 to
+  2.5 s when `+0x110` is set, else 3 to 5 s. With a target the delay is 0.5 to
+  1.5 s.
+- **The Warehouse's 3001** draws and re-files one to two seconds out.
+- **Turret fire control** draws and re-files within 0.1 s, and stops once the
+  turret is dying.
+- **The tank squads** re-file 4000, 4001 and 4002 with one draw each. While the
+  member follows a waypoint, 4002 re-files for the next frame without a draw.
+
+Ground vehicles' mechanics state now exists from construction, with the full-guide
+phase set by the Actor draw. It advances every frame, active or not. A unit moves
+first on the frame after its construction, so a spawned tank no longer moves on
+its spawn frame. A spawned drone keeps its exit controller, and its AI loop after
+the exit is not filed yet.
+
+Schema 52 carries the callbacks' state. The definition identity gains format 9,
+the pine count, which the manifest decoder now validates (1,481).
+
+Tests:
+- `Level100UnitCallbackTests` (7 cases) builds one-row worlds from the
+  materialized definitions and pins every draw and due time: a building, the
+  inactive Tank Factory's poll, a turret, the Warehouse, a Target Tank's squad
+  draws and Move phase, the camera rule and the snapshot restore.
+- `Level100BattleEngineRefreshTests` pins the whole load draw sequence around
+  the Battle Engine's refreshes.
+
+Eleven mutations were killed and restored byte-identical
+(`local-data/test-runs/construction-order-20260926/mutation-kills/`).
+
+The new draws moved the test autopilot's timing enough to expose a gap in it,
+not in Core. In the first drone wave the third drone was still unflagged as an
+objective when the second died over the sea, so the autopilot had nothing to
+shoot. Its `Hold` then morphed to walker and lost the level to water. `Hold` now
+follows the sorties' existing rule: never come down over water, and head for the
+last dry ground.
+
+Core passes 1,529 and the Client suite 912 with the two known skips. The explicit
+ferry sweep passes 6/6 over its twenty perturbations; no run drowns. One of its
+assertions was too strong and is weakened: it claimed the two hand-off arms
+separate only when the adverse ferry hands off above the 20 m tier. On this route
+both arms hand off at 19.3 m, and they still separate twelve ticks later through
+the driver's re-launch, which the same clearance term governs. Re-pinned:
+- `first-flight.v1.json` replays to trace `2564e760…` and state `66cab706…`.
+- The in-process smoke and its validator: state `afc552db…`.
+- The canonical-hash fingerprints.
+
+The headless Godot smoke records inputs equal to the previous tape's (tape
+`85338db6…`, trace `3971f7fe…`), and the C# replayer reproduces it twice.
+
+The chain autopilot now wins through the six-kill branch at tick 5,901 with hull
+10,650. The cold-start route's won tape is 7,759 ticks (trace `a65fb9ec…`, state
+`40493662…`), on the abort branch after three kills, and it replays twice.
+
+Open, each also listed in PARITY.md:
+- Core runs every script's init at construction, so the Tank Factory's first
+  `SpawnThing` takes its squad's five draws before frame 1; retail runs that init
+  on frame 2.
+- Core has no pan camera, so `+0x110` uses the Battle Engine's position, which
+  is only exact for the first-person camera.
+- The drones' AI loop after their exit is not filed.
+- The squads' target branch is not modelled.
+- The Air Trainer's `+0x284` draw is taken but the value is unused.
+
+Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/construction-order-20260926/`.
 
 ### Launch basis for every round — September 26
 

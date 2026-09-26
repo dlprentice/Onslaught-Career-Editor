@@ -26,6 +26,9 @@ internal static class Level100TestActorDefinitions
         Level100ActorMechanics = state.Level100ActorMechanics with
         {
             PlaneEvents = null,
+            // The unit callbacks' state is the schema-52 extension; their
+            // events went with the event pool.
+            UnitCallbacks = null,
             Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with
                 { PlaneGuide = null, PlaneSpawnerExit = null }).ToArray(),
         },

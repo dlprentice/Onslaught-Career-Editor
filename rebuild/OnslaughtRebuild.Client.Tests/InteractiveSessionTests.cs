@@ -1762,7 +1762,8 @@ public sealed class InteractiveSessionTests
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
-            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }));
+            definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         var priorSession = new InteractiveSession(Seed, priorDefinitions);
         var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
@@ -1806,7 +1807,8 @@ public sealed class InteractiveSessionTests
         // Init draw (the four Pulse releases each take six draws now); then
         // every round's launch basis took retail's default 2π/4096 pitch and
         // matrix composition, and the Pulse's level-0 mode lost the Small
-        // bolt's scatter. Controller calls now precede callbacks and Move, so the four releases
+        // bolt's scatter; then the load took the retail construction draws
+        // and every unit's callbacks. Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1818,7 +1820,8 @@ public sealed class InteractiveSessionTests
         // both older definition formats' fingerprints without changing input.
         var legacyDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns.Select(spawn => spawn with { SpawnerExitWaypoints = null }),
-            definitions.WaypointPaths, priorDefinitions.MotionDefinitions);
+            definitions.WaypointPaths, priorDefinitions.MotionDefinitions,
+            baseWorldPineCount: definitions.BaseWorldPineCount);
         WorldSnapshot priorState = priorSession.CurrentSnapshot;
         WorldSnapshot priorIdentityOnly = session.CurrentSnapshot with
         {
@@ -1826,14 +1829,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("e3002313c65b95ff2ca855932f71bb8d149c7d4d17ef4480fbd22d6cda8d94d0",
+        Assert.Equal("3581009dfca9d2d9ff909a541bdf69cea894f2efb560cafbc82141617bf9fe37",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("2ad59cd4468bd160b438d0290a88d1d764a2498d641dc1459049f4ef07ad28f4",
+        Assert.Equal("8d3fd2b891b0e20c5612259d2c896583d4ea9b5eaee28c6886364272f68c4da0",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "aaf7bba9759cd732200bbe086e4877795ff6520f287d3d613bfed46690f6ebd8",
+            finalStateHash == "afc552db013e155d517e081f639d1f1a832b5338aae128f3c0a11e6a62d45d72",
             $"First-flight final state hash: {finalStateHash}");
     }
 

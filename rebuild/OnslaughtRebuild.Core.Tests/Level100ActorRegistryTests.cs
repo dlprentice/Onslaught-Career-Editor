@@ -416,7 +416,8 @@ public sealed class Level100ActorRegistryTests
         IReadOnlyList<Level100ActorWeaponMountDefinition>? mounts) => new(
             original.Actors, original.Spawns, original.WaypointPaths,
             original.MotionDefinitions.Select(definition => definition.DefinitionName == "Target Drone"
-                ? definition with { WeaponMounts = mounts } : definition));
+                ? definition with { WeaponMounts = mounts } : definition),
+            baseWorldPineCount: original.BaseWorldPineCount);
 
     [Fact]
     public void DefinitionIdentity_OwnsAuthoredDataAndRejectsCrossSetRestore()

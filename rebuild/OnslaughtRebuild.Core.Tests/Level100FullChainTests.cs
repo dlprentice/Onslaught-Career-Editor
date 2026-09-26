@@ -382,15 +382,15 @@ public sealed class Level100FullChainTests
         // friendly. The RE contract classes the six-kill result as a driver
         // expectation, not a retail invariant.
         Level100FinalWaveContract.AssertReleasedBranch(final);
-        // September 26 readings after every round's launch basis took
-        // retail's default 2π/4096 pitch and matrix composition and the
-        // Pulse's level-0 mode lost the Small bolt's scatter: the wave now
-        // aborts after one kill. These are reconstruction fixture readings,
-        // not retail timing, hull or branch.
-        Assert.True(final.Level100Mission.Aborted);
-        Assert.Equal(1, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_543, final.Tick);
-        Assert.Equal(7_950, final.Hull);
+        // September 26 readings after the load took retail's construction
+        // draws (the base world's pines and rows, the Battle Engine, the level
+        // units) and every unit's recurring 4003, AI, fire-control and squad
+        // draws: the wave now ends on the six-kill branch. These are
+        // reconstruction fixture readings, not retail timing, hull or branch.
+        Assert.False(final.Level100Mission.Aborted);
+        Assert.Equal(6, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(5_901, final.Tick);
+        Assert.Equal(10_650, final.Hull);
     }
 
     /// <summary>

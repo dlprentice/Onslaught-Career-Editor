@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (schema 52 unit callbacks and the retail load order; schema 51 Missile Pod and seeking rounds; schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -115,7 +115,12 @@ counter and both launch-slot counters) and, for each seeking round in flight,
 its heading, launch time and bound target. It is selected only once the pod
 differs from construction or a seeking round flies. The pod's burst
 continuation (event 5001) shares the same level event manager under its own
-reserved listener.
+reserved listener. Schema 52 adds every constructed unit's callback state (its
+near-camera flag, construction frame and first full Move); the callbacks
+themselves (4003, the AI's 3000/3001/3003, fire control's 4001 and the squads'
+4000-4002) are ordinary events on that manager. Every world built in the retail
+load order selects it. The definition identity's format 9 adds the base world's
+pine count, whose draws open the load.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

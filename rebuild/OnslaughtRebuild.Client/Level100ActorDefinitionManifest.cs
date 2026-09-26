@@ -101,7 +101,9 @@ public static class Level100ActorDefinitionManifest
             manifest.WaypointPaths.Length != 8 ||
             manifest.MotionDefinitions.Length != 5 ||
             manifest.ActorDefinitions.Count(definition =>
-                definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33)
+                definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33 ||
+            manifest.PineInstanceCount != 1_481 ||
+            manifest.Pines.Length != manifest.PineInstanceCount)
         {
             throw new InvalidDataException(
                 "The Level 100 actor-definition identity or authored counts changed.");
@@ -229,11 +231,14 @@ public static class Level100ActorDefinitionManifest
                     .ToArray());
         }
 
+        // Each of the base world's 1,481 pines takes one gameplay draw when
+        // LoadWorld initialises it (the RE lane's construction order).
         return new Level100ActorDefinitionSet(
             actors,
             spawns,
             waypointPaths,
-            motionDefinitions);
+            motionDefinitions,
+            baseWorldPineCount: manifest.PineInstanceCount);
     }
 
     private static Level100ActorPoseSnapshot DecodePose(Pose source)
@@ -334,6 +339,8 @@ public static class Level100ActorDefinitionManifest
         public SpawnDefinition[] SpawnDefinitions { get; init; } = [];
         public WaypointPath[] WaypointPaths { get; init; } = [];
         public WorldObject[] Objects { get; init; } = [];
+        public int PineInstanceCount { get; init; }
+        public float[][] Pines { get; init; } = [];
     }
 
     private sealed record WorldObject
