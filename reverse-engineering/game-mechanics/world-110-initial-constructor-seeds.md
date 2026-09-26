@@ -1,7 +1,7 @@
 # World 110 serialized initial-object seed admission
 
 Status: accepted authored-data and bounded Unit static admission; runtime construction remains open
-Last updated: 2026-09-25 (Turret 03 fire-control correction; construction admission dated 2026-09-07)
+Last updated: 2026-09-25 (Level 100 carry-over and Turret 03 fire-control correction; construction admission dated 2026-09-07)
 Verdict: Core admits all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
@@ -951,3 +951,48 @@ they do not yet execute live peers, selected weapon/ballistic helpers or
 reader lifetime effects. A world owner must execute those calls in order and
 acquire RNG only after earlier effects. No live scheduler/UnitAI integration is
 claimed by the new tree inputs or this static event closure.
+
+## Level 100 to World 110: base-world carry-over
+
+Level 100 and World 110 share one base world: `100_BSWD` and `110_BSWD` are
+byte-identical (35 ordinary rows, 753 ferns, 1,481 pines). What Level 100 hands
+to World 110 is which of those rows survived. Pristine specimen `74154bfa…7750`,
+static reads, 2026-09-25; pinned `Career.cpp`/`game.cpp` agree where cited.
+
+- **Career table.** The retail level table at `0x00623e28` equals
+  `Career.cpp:24-60`. Row 0 is (world 100, lower child node 1 = world 110, no
+  higher child, base world to update on primary completion 110, none on
+  secondary). A fresh career marks every base thing as existing
+  (`CCareerNode::Blank`, `Career.cpp:91-109`: every bitmap word `0xffffffff`,
+  288 bits per node).
+- **Survivor list.** During a base load the ordinary Init loop appends one entry
+  per BSWD row, in serialized order, to the world's base list at `world+0xc0`:
+  a reader to the new object (`0x0050d015`), or a null entry for a skipped row
+  (`0x0050d061`). The list index is therefore the BSWD row index.
+- **Level end.** `CGame::RestartLoopRunLevel` calls `FillOutEndLevelData`
+  (`0x0046d470`, at `0x0046e1cb`; `game.cpp:910-936`). Entry *i* becomes alive
+  when its reader is non-null and the object's dying bit (`+0x2c` bit 2) is
+  clear, otherwise dead.
+- **Career update.** Back in the front end, `CFrontEnd::Init` calls
+  `CCareer::Update` (`0x0041bd00`, at `0x00466315`; `FrontEnd.cpp:67`). Only a
+  won level updates: the node is marked complete, its ranking raised, and
+  `ReCalcLinks` (`0x0041bdf0`) copies the survivor list into World 110's node
+  bitmap (`Career.cpp:379-530`). Level 100 has no secondary target.
+- **World 110 gate.** For each BSWD row *i* the loader calls
+  `CCareer::DoesBaseThingExist(current world 0x008a9ac8, i)` (`0x0041bb20`, at
+  `0x0050cf8f`). When the row's trailing world number is not −1 it also asks
+  `IsWorldLater` (`0x0041bbb0`, at `0x0050cfb5`); every row of this base world
+  carries −1. A failing row is not initialised:
+  - it gets slot 38 with 0 and a null base-list entry;
+  - when its class type has bit `0x100` (buildings), ten iterations each take
+    two shared draws, the first for Y and the second for X. They stamp landscape
+    damage type 6 through `0x005475d0` (`0x0089c9b0`) at the row position plus
+    ((r mod 65536)/65536 − 0.5) × 5.0 per axis (`0x0050d09c-0x0050d123`);
+  - it then gets slot 58 with its initializer and is deleted.
+
+A Level 100 run that loses no base-world row therefore gives World 110 the full
+base world with no extra draws. Each destroyed base building costs World 110
+twenty draws in serialized row order, and its row and effects are absent. Open:
+which Level 100 rows a player can actually destroy, and the render of the damage
+stamps. The cheapest falsifier is a copied-retail run that destroys one base
+building in Level 100 and loads World 110.

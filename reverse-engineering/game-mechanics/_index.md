@@ -1,7 +1,7 @@
 # Game Mechanics
 
 Status: active — index of accepted mechanics measurements and contracts
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 Summary: routes to each accepted game-mechanics owner; every owner states its own
 specimen, procedure and limits.
 
@@ -13,6 +13,10 @@ support product or deterministic-Core behavior.
 - [Campaign scalar status](campaign-scalar-status.md)
 - [Released spawner squad-cycle contract](spawner-squad-cycle.md)
 - [Level 100 final drone wave, Help Player turrets and abort](level100-final-drone-wave.md)
+- [Battle Engine weapon stores, charge and firing state](battle-engine-weapon-stores.md)
+- [Battle Engine auto-aim, launch position and Gun emitters](battle-engine-aiming.md)
+- [Level 100 construction order: shared draws and queued events](level100-construction-order.md)
+- [World 110 construction order, transition and first frames](world-110-construction-order.md)
 - [World 110 serialized initial-object seed admission](world-110-initial-constructor-seeds.md)
 - [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)

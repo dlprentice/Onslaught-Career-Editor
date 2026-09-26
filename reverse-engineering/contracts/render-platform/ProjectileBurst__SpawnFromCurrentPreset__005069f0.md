@@ -1,104 +1,102 @@
 # ProjectileBurst__SpawnFromCurrentPreset
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
-Summary: specimen-bound static contract for `ProjectileBurst__SpawnFromCurrentPreset` at `0x005069f0` in the render/effects/platform-support cohort; bounded behavior, evidence limits, and no-promotion disposition are explicit.
-Evidence: MEASURED — current name/register identity, READY packet/decompile, structured edges, closure range, and independently recomputed pristine body bytes; source and runtime limits remain explicit.
+Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
+Last updated: 2026-09-25
+Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
+Evidence: MEASURED — objdump of the pristine body with every callee, slot and constant read at its address on 2026-09-25; field meanings from the physics value maps; no runtime replay of this body.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees crosswalk to `references/Onslaught/BattleEngine.cpp:1094-1113` and `:2713-2737` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x005069f0`
 
 ## Identity
-- Body `[0x005069f0,0x005078ab]`, 3772 bytes, 906 closure instructions. Raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`; closure range SHA-256 `108eb147c5146edb494ea2b5d0eda1d101ffebc3e030ff3cfefd60526373c9f3`; packet range-plus-bytes SHA-256 `6f92bd13c37aa98a8867493980688873fbef689ad6e95f7126790ac603372171`. All three were independently recomputed over the exact single contiguous inclusive range.
-- Current 8,329-row name table and current EVIDENCE-REGISTER both name `ProjectileBurst__SpawnFromCurrentPreset`. The READY packet agrees. The dated closure spelling also matches the current identity.
-- Packet name/signature provenance is counted metadata, not semantic proof. Packet file SHA-256 `2eeb1b06707a5971692d6c5faeb9d325676954528395de69cd4159a9f9524841` and decompile SHA-256 `79e49a0071b07eee21c4885af204c26f8695df5694ff92d8abf4fe6bfc58cf87` bind the retained review input without citing a writer-local scratch path.
-- Campaign grade `C1_CANDIDATE_PARTIAL` / register grade `C1_CANDIDATE_PARTIAL` / register contract state `OPEN_EXECUTED` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `MEDIUM_STATIC`. Proposed promotion: false.
+- Body `[0x005069f0,0x005078ab]`, 3,772 bytes ending in `ret` (`c3`); raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`, recomputed 2026-09-25.
+- Callers: `CWeapon__HandleFireBurstEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
+- The saved names of four Battle Engine callees describe them poorly, both in the tracked table and in the working project's 2026-09-22 export: `CBattleEngine__CanSpawnBurstForResolvedEntry` is `WeaponFired`, `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` is `RecoilWeapon`, `CBattleEngine__RandomizeOffsets4B8_4C0` is `AddShockShake` and `CBattleEngine__DisplayLock` tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is already `CRT__AsinDispatch_ST0` in the working project.
 
 ## Calling convention
-Packet records `__fastcall` for `int __fastcall ProjectileBurst__SpawnFromCurrentPreset(void * burstContext)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
+`__thiscall` with the firing `CWeapon` in `ecx` (kept in `ebp`), no stack arguments, one `ret`. Returns in `eax`.
 
 ## Prototype and parameter semantics
 ```c
-int __fastcall ProjectileBurst__SpawnFromCurrentPreset(void * burstContext)
+int __thiscall ProjectileBurst__SpawnFromCurrentPreset(CWeapon *weapon);
 ```
-- Packet-declared parameter list: `void * burstContext`. Parameter labels are analyst/source intent; concrete object layouts, units, ownership, aliasing, and nullability remain not_determinable unless directly stated by the quoted packet comment or source-first boundary below.
+- `weapon+0x08` owner; `+0xa0` current mode, the charge-level mode record; `+0x70` launch-sequence counter; `+0x74` launch-angle counter; `+0x80` fixed-orientation flag; `+0x30` weapon orientation (12 dwords); `+0x2c` weapon target; `+0x84` a four-dword vector copied into the round's init payload.
+- Mode fields use the weapon-mode map in `reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md`: `+0x00` `CWeaponClip`, `+0x18` round, `+0x34` `CWeaponInaccuracy`, `+0x40` `CWeaponPower`, `+0x48` `CWeaponVolleySize`, `+0xac` `CWeaponTrack`, `+0xb4` `CWeaponSoundPerBurst`, `+0xb8`/`+0xbc` muzzle light and radius.
 
 ## Return value meaning
-The packet signature declares `int`. Exact domain meaning of the returned bits/value is not_determinable from identity and decompile evidence alone; no stronger meaning is invented.
+1 when at least one round of the volley was created and initialised; 0 when the Battle Engine spend gate refuses, the weapon has no mode, the volley size is not positive, or every `CreateProjectile` returned null.
 
 ## Globals read/written
-- Decompile symbol references: `DAT_00855040`, `DAT_00855044`, `DAT_00855048`, `DAT_0085504c`, `DAT_00896988`, `DAT_0089c9a0`, `DAT_008a9d9c`. Read/write direction for each symbol is not independently instruction-verified by this factory.
+- `0x008a9d9c`: the gameplay generator for every `Random__NextLCGAbs` call here, and for the three draws of `AddShockShake`.
+- `0x00896988` sound manager (`CSoundManager__PlayEffect` `0x004e1940`), `0x009c63e8` particle manager (`0x004cb3d0`), `0x0089c9a0` muzzle-light owner (`0x0044a610`), `0x00855040`-`0x0085504c` a four-float vector passed to the particle manager, `0x00672fd0` event time (through callees).
 
 ## Callees relied on / callers
-- Callee `CGenericActiveReader__SetReader` `0x00401000` x1 site(s) (STATIC_DIRECT).
-- Callee `Vec3__SetXYZ` `0x00401ec0` x8 site(s) (STATIC_DIRECT).
-- Callee `Mat34__SetRows` `0x00401f10` x2 site(s) (STATIC_DIRECT).
-- Callee `Vec3__Magnitude` `0x004026b0` x1 site(s) (STATIC_DIRECT).
-- Callee `Mat34__SetFromEulerAngles_004062d0` `0x004062d0` x3 site(s) (STATIC_DIRECT).
-- Callee `CBattleEngine__FireLock` `0x00407060` x1 site(s) (STATIC_DIRECT).
-- Callee `CBattleEngine__DisplayLock` `0x00407310` x1 site(s) (STATIC_DIRECT).
-- Callee `LinkedPtrCursor__MoveFirstAndGet` `0x00409760` x1 site(s) (STATIC_DIRECT).
-- Callee `CUnit__PushTransformHistoryAndSetCurrent` `0x004097a0` x2 site(s) (STATIC_DIRECT).
-- Callee `CBattleEngine__CanSpawnBurstForResolvedEntry` `0x0040c2e0` x1 site(s) (STATIC_DIRECT).
-- Callee `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` `0x0040c340` x1 site(s) (STATIC_DIRECT).
-- Callee `CEngine__TrackBurstEventFromPreset` `0x0044a610` x1 site(s) (STATIC_DIRECT).
-- Callee `OID__GetAttachmentOrBaseOrientationMatrix` `0x0044a930` x1 site(s) (STATIC_DIRECT).
-- Callee `CInitThing__ctor` `0x0048dcf0` x2 site(s) (STATIC_DIRECT).
-- Callee `OID__CreateObject` `0x004bf090` x1 site(s) (STATIC_DIRECT).
-- Callee `ParticleEffectLink_T3_004cb040` `0x004cb040` x1 site(s) (STATIC_DIRECT).
-- Callee `CParticleManager__RemoveOwnerLinkFromGlobalList` `0x004cb050` x1 site(s) (STATIC_DIRECT).
-- Callee `CParticleManager__CreateEffect` `0x004cb3d0` x2 site(s) (STATIC_DIRECT).
-- Callee `CRound__SetTargetReaderIfAllowed` `0x004daab0` x1 site(s) (STATIC_DIRECT).
-- Callee `Random__NextLCGAbs` `0x004de8d0` x6 site(s) (STATIC_DIRECT).
-- Callee `CShell__CopyResourceNameToInlineBuffer` `0x004df530` x1 site(s) (STATIC_DIRECT).
-- Callee `CSoundManager__PlayEffect` `0x004e1940` x1 site(s) (STATIC_DIRECT).
-- Callee `CThing__GetCentrePos` `0x004f3ac0` x1 site(s) (STATIC_DIRECT).
-- Callee `Mat34__SetFromEulerDegrees` `0x004f8140` x1 site(s) (STATIC_DIRECT).
-- Callee `ProjectileBurstPreset__GetListEntryIdByIndex` `0x005078b0` x1 site(s) (STATIC_DIRECT).
-- Callee `CUnit__ComputeMaxBallisticTravelDistance` `0x005099a0` x1 site(s) (STATIC_DIRECT).
-- Callee `CWorldPhysicsManager__CreateProjectile` `0x0050f7a0` x1 site(s) (STATIC_DIRECT).
-- Callee `CRT__AcosDispatch_ST0` `0x0055dcb0` x1 site(s) (STATIC_DIRECT).
-- Caller `ProjectileBurst__SpawnFromPercentBucketFallback` `0x00506010` x1 site(s) (instruction-flow).
-- Caller `CWeapon__HandleFireBurstEvent` `0x00506930` x1 site(s) (instruction-flow).
-- Structured packet arrays prove the listed direct/static edge identities and site counts only. Indirect vtable targets, library inlining, and data-driven dispatch remain unresolved unless separately named in the packet.
+- Gate and recoil: `0x0040c2e0` (`WeaponFired`: jet part `0x00412050`, then walker part `0x004140d0`; success clears `+0x5d8`, the source's `mStealth = 0`), `0x0040c340` (`RecoilWeapon`), which calls `0x00407940` (`AddShockShake`).
+- Rounds: `CWorldPhysicsManager__CreateProjectile` `0x0050f7a0`, `CInitThing__ctor` `0x0048dcf0`, round slot 9 Init, `CRound__SetTargetReaderIfAllowed` `0x004daab0`.
+- Aim: owner slot 75 (Battle Engine `CBattleEngine__GetLaunchPosition` `0x0040c990`; units `0x004fc3c0`), owner slot 27 (`0x00404120`, the velocity `+0x7c`), owner slot 81 (Battle Engine `0x004071b0` `GetCurrentTarget`; units `0x004175e0`, AI `+0x13c` target `+0xc` or null), `ProjectileBurstPreset__GetListEntryIdByIndex` `0x005078b0`, `CThing__GetCentrePos` `0x004f3ac0`, asin `0x0055dcb0`, `0x005099a0` (beam speed), Euler matrices `0x004062d0` and `0x004f8140`.
+- Locks: `0x00407310` then `CBattleEngine__FireLock` `0x00407060`.
+- Effects: `0x004cb3d0`, `0x004097a0`, `0x0044a610`, `OID__CreateObject` `0x004bf090` (clip), `0x0044a930`.
 
 ## Behavior summary
-- Packet-first row: neither the current canonical crosswalk nor the five landed expansion receipts owns this VA. The retail packet/pristine body is therefore the first behavior envelope.
-- Retail packet analyst comment (quoted as bounded packet evidence, never promoted by this file): “Owner-neutral correction for the current-preset projectile-burst body. It creates projectile/effect objects from burstContext +0xa0 and is reached from the weapon event handler plus the percent-bucket fallback helper. Static Ghidra evidence only; raw percent-bucket fallback callsites are now bounded at ProjectileBurstCallerBoundary_0044e020 and ProjectileBurstCallerBoundary_004f4920. Proof-boundary: exact CWeapon::Fire, CBattleEngine::WeaponFired, weapon_fire_breaks_stealth, runtime stealth behavior, tags/locals/types, and concrete layout remain unproven.”
-- The non-empty packet decompile is bound by SHA-256 `79e49a0071b07eee21c4885af204c26f8695df5694ff92d8abf4fe6bfc58cf87`. This contract retains only its displayed control/side-effect envelope and does not infer unstated field meanings, units, ordering guarantees, or runtime causality.
-- Structured inventory: 2 caller record(s), 28 callee record(s), and 0 string-ref record(s).
+One call is one burst event. In order:
+
+1. A Battle Engine owner (thing type bit `0x8`) must pass `WeaponFired` (`0x00506a1f`); a refusal returns 0 before any draw, round, lock or recoil.
+2. No mode: return 0. A mode with a launch sample (`+0xc`) and `CWeaponSoundPerBurst` 0 plays it once (`0x00506a96`).
+3. `CWeaponVolleySize` not positive: return. Otherwise, for each round of the volley (`0x00506aaa`-`0x0050788b`):
+   1. `CreateProjectile(mode round)`; null skips to the next round with no draw.
+   2. Launch-sequence counter `+0x70` +1, reset to 0 when not below the sequence count `+0x58`; slot `[counter]` of the list at `+0x4c` is the emitter index (`0x005078b0`, 0 for a missing slot). `CWeaponLaunchSequence` pairs (index, emitter) fill slot index − 1 with fistp(emitter) (`0x00435a00`). Launch-angle counter `+0x74` +1, reset at `+0x68`. The weapon constructor sets both counters to −1 (`0x00505e7b`), so a new weapon's first round uses the first slots.
+   3. Owner slot 75 fills the launch position and orientation for that emitter.
+   4. With weapon `+0x80`, the weapon orientation `+0x30` replaces it, first re-aimed at the weapon target's centre (yaw −atan2(dx, dy), pitch asin(dz/|d|)) when `CWeaponTrack` is set, a target exists and the round is gravity-free, beam or torpedo. Only `0x00509140` sets the flag (`0x0050945f`, together with the aim orientation, aim point `+0x84` and target `+0x2c`), and only AI code reaches it (through `0x004fb650`), so player weapons never use it.
+   5. `CWeaponLaunchAngle` triples (index, a, b) fill slot index − 1 of the list at `+0x5c` with (a, b) (`0x00435b50`). A found slot gives `Mat34__SetFromEulerAngles(yaw a, pitch b, roll 0)` (`0x004062d0`). With no slot, including every mode that has no entries, the matrix is `0x004f8140(0, 1, 0)`, the integer-angle constructor in units of 2π/4096. That is a pitch of 2π/4096, with words rows (`3f800000 0 0`, `0 3f7fffec bac90fd6`, `0 3ac90fd6 3f7fffec`). Speed is `CRoundVelocity` × 0.05, or `0x005099a0` for a beam.
+   6. Two draws, pitch then yaw (`0x00506e0a`, `0x00506e3e`): ((r mod 65536) × 2/65536 − 1) × `CWeaponInaccuracy`, taken whatever the inaccuracy.
+   7. The launch basis is orientation × angle × jitter, each product row by column (`0x00506ed1-0x005070db`, then `0x005070e0-0x005072d0`), with jitter = `FMatrix(yaw second draw, pitch first draw, 0)`. The velocity is speed × the basis's column 1 (the local forward axis), and the round's orientation is the basis. Start position = launch position + owner velocity (slot 27); allegiance = owner `+0x138`; life = `CRoundLifeSpan`.
+   8. Target = owner slot 81. The round's owner reader `+0xec` = owner.
+   9. `CRoundFlak` round (`+0x4c`) with a target and speed × life > distance: one draw resets the life (`0x00507453`).
+   10. Battle Engine owner: player `+0x574` → `+0x34` += 1, then `FireLock(target)` (`0x005074c9`) when `0x00407310` finds this weapon current.
+   11. `SetTargetReaderIfAllowed(target, 0)`, then the round's Init with the payload (`CRound::Init`, `0x004d8410`):
+       - It calls `CActor::Init` (`0x004d867b`), which takes one shared draw for the move phase and queues MOVE.
+       - It queues event 4000 at now + the payload life span (`0x004d86a6`).
+       - For a gravity-free round with zero turn rate that does not hug the ground, it predicts the terrain hit along the launch line and queues event 4001 (`0x004d89cb`).
+       - A seek-mode-1 round then takes one more draw and queues 4003 (`0x004daf8e`).
+   12. Muzzle effect per emitter slot, then the muzzle light when `+0xb8` is not −1.
+   13. `CWeaponClip`: create object `0x15` and take three draws (`0x005076f6`-`0x00507710`).
+   14. Battle Engine owner: `RecoilWeapon` (`0x00507871`).
+
+`RecoilWeapon` calls `AddShockShake(CWeaponPower)` and adds 2 × power to `+0x604` (`BattleEngine.cpp:2732-2737`). `AddShockShake` (`BattleEngine.cpp:1094-1113`):
+- returns when the amount is below the double 0.001 (`0x00407944`, constant `0x005d8bc8`);
+- caps the amount at 0.75 (`0x005d8bc4`);
+- takes three draws, each (r mod 32)/(16/amount) − amount, into yaw `+0x4b8`, pitch `+0x4bc` and roll `+0x4c0`, and zeroes `+0x4c4`;
+- calls the cockpit object `+0x528` when present (`0x004247a0`, which draws from CRT `rand` `0x0055dbfe`, not the gameplay stream), then the rumble.
+
+`CWeaponPower` defaults to 0 (`CWeaponModeStatement__Create`, `0x0042fb81`), so the Mech Vulcan Cannon and Mech Twin Vulcan Cannon take no shake draws. Mech Pulse Cannon Charged (0.03), Charged 2 (0.05) and both Micro Missile modes (0.01) take three per round.
+
+`CBattleEngine::Damage` (`0x0040ab75`-`0x0040abc2`) computes the other shake:
+- diff = (life before − life after) × 0.125, halved when shields `+0x100` are nonzero and capped at 0.25;
+- `AddShockShake(diff)` takes three draws once diff ≥ 0.001, a life loss of at least 0.008 without shields;
+- vibration then adds min(diff, 0.05) × 50;
+- life, shields and energy are restored after the shake when `+0x15c` (`mVulnerable`) is 0.
 
 ## Error / edge behavior
-Nullability, invalid-state behavior, allocation/device failure, indirect-call failure, overflow/NaN behavior, and rollback semantics are not_determinable as a class from packet metadata. The decompile, quoted comment, and any source-first algorithm above are bounded evidence; missing branch-level behavior remains open rather than receiving an invented default.
+- A null `CreateProjectile` result skips that round's draws, lock, Init and recoil, and the loop continues.
+- The flak draw and the three clip draws occur only as stated. None of the Level 100 player, drone or turret weapons names a clip or fires a flak round.
+- `WeaponFired`'s store spending is the parts' own (`0x00412050`, `0x004140d0`) and is outside this body.
 
 ## Runtime corroboration (TTD, bounded)
-The bounded TTD table contains these exact rows; they establish only execution/coverage in the named captures unless a row states a stronger measured fact:
-- Session `batch-1`; question `contract-round-impact`; value: corroborated in 7/10 coverage sessions; evidence `level-opening-3m-v1-level110, level-opening-3m-v1-level200, level-opening-3m-v1-level201, level-opening-3m-v1-level211 …`.
-- Session `batch-2`; question `contract-round-impact`; value: corroborated in 7/10 coverage sessions; evidence `level-opening-3m-v1-level311, level-opening-3m-v1-level312, level-opening-3m-v1-level321, level-opening-3m-v1-level322 …`.
-- Session `batch-3`; question `contract-round-impact`; value: corroborated in 8/10 coverage sessions; evidence `level-opening-3m-v1-level421, level-opening-3m-v1-level422, level-opening-3m-v1-level431, level-opening-3m-v1-level432 …`.
-- Session `batch-4`; question `contract-round-impact`; value: corroborated in 2/10 coverage sessions; evidence `level-opening-3m-v1-level720, level-opening-3m-v1-level731`.
-- Session `batch-5`; question `contract-round-impact`; value: corroborated in 5/10 coverage sessions; evidence `level-opening-3m-v1-level732, level-opening-3m-v1-level741, level-opening-3m-v1-level742, level-opening-3m-v1-level854 …`.
-- Session `batch-6`; question `contract-round-impact`; value: corroborated in 5/11 coverage sessions; evidence `level-opening-3m-v1-level856, level-opening-3m-v1-level858, level-opening-3m-v1-level859, level-opening-3m-v1-level862 …`.
-- Session `batch-7`; question `contract-round-impact`; value: corroborated in 2/7 coverage sessions; evidence `level521-native-20260802-0018-take1, level521-native-20260802-0018-take2`.
-- Session `batch-8`; question `contract-round-impact`; value: corroborated in 1/4 coverage sessions; evidence `level521-native-20260802-0018-take4`.
-- Session `batch-9`; question `contract-round-impact`; value: corroborated in 2/3 coverage sessions; evidence `q-pilot-cov-l742-20260731, q-pilot-cov-l742-rep2-20260731`.
-- Session `batch-10`; question `contract-round-impact`; value: no coverage collector output for this batch's sessions; evidence `batch carries no BEA.exe coverage bitmap (query/infra captures)`.
+- The 2026-08-23 draft recorded coverage presence of this body in 7/10, 7/10, 8/10, 2/10, 5/10, 5/11, 2/7, 1/4 and 2/3 sessions of `contract-round-impact` batches 1-9 (level openings, Level 521 native runs and the Level 742 pilot); batch 10 had no coverage bitmap. Coverage proves execution only.
+- No capture has replayed the per-round order, the draw count or the recoil in this contract.
+- Original-code control `local-data/test-runs/player-launch-20260925/euler_constructors_control.py` ran the unchanged `0x004f8140` (with `0x00401ec0`, `0x00401f10`, `0x0040d320`) and `0x004062d0` under control words `0x027f` and `0x007f`. For every tested argument, `0x004f8140(a, b, c)` equals `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096), up to the sign of zero words; the integer version leaves each row's fourth word unwritten. Receipt `euler-run-9ks6dz5x/euler_constructors.json` SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`; ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`.
 
 ## Evidence
-- Writer authority: task `t_5b694f87`, immutable cohort-9 manifest SHA-256 `ebf607a5672b6d0dd95cf0ecf31d8fa9c2053b4ebe50fd2fe2f39bb8ceda9be8`, row 8; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, exact current identity, and proposed promotion false. The task comment and independent review receipt are the durable manifest route; no writer-local scratch path is cited here.
-- Current identity joins: `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv`, `reverse-engineering/EVIDENCE-REGISTER.tsv`, and `reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv`. The current name table/register pair wins over any dated closure spelling.
-- READY packet schema `bea.re.triage-packet.v1`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, packet-file SHA-256 `2eeb1b06707a5971692d6c5faeb9d325676954528395de69cd4159a9f9524841`, and packet decompile SHA-256 `79e49a0071b07eee21c4885af204c26f8695df5694ff92d8abf4fe6bfc58cf87`; retained locally for cold review without a tracked local-path citation.
-- Digest derivation: closure SHA-256 hashes canonical range text `005069f0:005078ab;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
-- Closure execution state `PARTIAL` and confidence `MEDIUM_STATIC`; these are inherited bounded grades, not this factory's promotion decision.
-- Packet stringRefs array: empty.
-- Source crosswalk: no selected canonical or landed-expansion row for this VA.
+- Pristine specimen objdump over the body and the callees named above, 2026-09-25.
+- Constants read at their addresses: 0.05 `0x005d8584`, 2/65536 `0x005d8de4`, 1.0 `0x005d8568`, 0.001 (double) `0x005d8bc8`, 0.75 `0x005d8bc4`, 16.0 `0x005d8bc0`, 0.125 `0x005d8c4c`, 0.25 `0x005d858c`, 0.5 `0x005d85ec`, 50.0 `0x005d85d0`.
+- Mode defaults: `CWeaponModeStatement__Create` `0x0042fa80` (burst and volley 1, power 0, yaw tolerance 0.5, maximum locks 5, lock range 40, lock radius 10, sound per burst 1, muzzle light −1).
+- Weapon-mode field offsets: `reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md`.
+- Level 100 use: `reverse-engineering/game-mechanics/level100-final-drone-wave.md`.
 
 ## Confidence
-1 — exact current identity, contiguous pristine bytes, digest derivations, signature text, structured edge inventory, comments, strings, source joins, and TTD presence/absence are reconciled. Field-level semantics and runtime causality remain bounded. Proposed promotion: false.
+2 — every branch, draw site, callee and product named here was read from the pristine body, and the two Euler constructors were executed unchanged; the full init-payload layout was not re-derived and the spawner itself has not been replayed.
 
 ## Unresolved questions
-- Instruction-level read/write direction and concrete layout for every referenced field/global.
-- Complete indirect-call target set and failure/nullability behavior.
-- Runtime ordering, side effects, return-domain meaning, and caller expectations beyond the bounded packet/source/TTD evidence.
-- Cheapest falsifier: cold-disassemble this exact raw-body digest, compare every branch/load/store/call against the packet decompile and structured arrays, then run a controlled copied-runtime probe for the named input/state transition.
+- The full init-payload layout. Cheapest falsifier: an original-code run of this body with a synthetic weapon, owner and round, comparing the payload against a model.
+- The launch-position providers `0x0040c990` and `0x004fc3c0` and the parts' `WeaponFired` stores are separate contracts.

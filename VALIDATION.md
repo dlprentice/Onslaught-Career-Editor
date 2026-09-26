@@ -4706,6 +4706,25 @@ This corrects the World 110 owner's Turret 03 statement. It establishes the
 inspection and refresh transactions only, not turret aiming, firing, rendering or
 retail gameplay.
 
+### Launch-angle Euler constructors control — September 25
+
+`python -P local-data/test-runs/player-launch-20260925/euler_constructors_control.py`
+ran **36 cases** under `local-data/test-runs/player-launch-20260925/euler-run-9ks6dz5x/`.
+Receipt SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`;
+ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`;
+driver copy SHA-256 `bc9f9b98520a397286bb3610a37d8b92a628fed786558ff2073285b1c68fa75a`.
+
+The ELF places the unchanged integer-angle constructor `0x004f8140` with its callees
+`0x00401ec0`, `0x00401f10` and `0x0040d320`, the float constructor `0x004062d0`, and
+the constant at `0x005dfb6c` at their retail addresses. Each case checks stack and
+callee-saved registers. Under control words `0x027f` and `0x007f`, every tested
+`0x004f8140(a, b, c)` equals `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096)
+except for signed zero words, and the integer version leaves each row's fourth
+word unwritten. So the burst spawner's default launch matrix `0x004f8140(0, 1, 0)`
+is a 2π/4096 pitch; see the
+[burst contract](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md).
+This measures the two constructors only, not the spawner or a retail run.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
