@@ -415,7 +415,7 @@ and `CSimpleBuilding` have none.
 | 2 Health Pad | `CBuilding` | `CRepairPadAI` | yes |
 | 1 Tank Factory, 23 Airfield | `CBuilding` | `CUnitAI` | no |
 | 3, 10, 11, 12 turrets | `CCannon` | `CUnitAI` | no |
-| 4–9 icebergs, 30–34 city buildings, 21–22 type 37 | Feature, `CSimpleBuilding`, not created | none | — |
+| 4–9 icebergs, 30–34 city buildings, 21–22 SafeSides (type 37) | Feature, `CSimpleBuilding`, `CSafeSide` | none | — |
 
 Level-world and spawned units also own AIs: Target Tank and Target Truck
 (`CGroundVehicle`, squad-wrapped when spawned by the Tank Factory), Warehouse
