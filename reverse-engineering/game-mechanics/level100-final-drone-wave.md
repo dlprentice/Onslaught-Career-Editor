@@ -2,7 +2,7 @@
 
 Status: active contract for the rebuild's final-wave route; per-unit RNG ordering
 across the whole level remains open
-Date: 2026-09-25
+Last updated: 2026-09-26 (turret aim, locks, crosshair, seeking rounds, Hangar probe; created 2026-09-25)
 Summary: the abort after one kill is a designed retail branch, but retail gives the
 player two helps the rebuild lacks: four friendly turrets that come online after the
 first poll below 80 % health, and the jet Missile Pod. Activated turrets can see the
@@ -433,12 +433,18 @@ or in AI mode 0. These draws share the gameplay stream with each Unit's Actor In
 draw and 4003 draw; the [World 110 owner](world-110-initial-constructor-seeds.md)
 already orders rows 0–9 of this same base world.
 
+The Hangar's all-squads spawning probe never finds a spawner. The shipped `Hangar`
+profile has no `CUnitUseSpawner` entry (physics record `Hangar`), so `CUnit::Init`
+appends nothing to its attached-spawner list `+0x18c`. `0x004fda90` walks that list
+and returns 0 at once. The drones come from the script's `SpawnThing`. The
+Airfield's two spawners (`Forseti Fighter Spawner`, `SpawnerA`/`SpawnerB`) are used
+the same way (`LevelScript.msl:185`), and it stays inactive.
+
 ## Open questions
 
 | Question | Cheapest falsifier |
 | --- | --- |
 | Whether the turret, lock, crosshair and seek laws above hold at runtime as composed | An original-code composition of `0x004fa8d0`'s turret section, `HandleLocks`, `CalcUnitOverCrossHair` and `CRound::Move` over a supplied world |
 | Exact first-flush order of all AI, 4003 and Actor draws in Level 100 | Extend the World 110 construction order to all base rows and the level-world rows |
-| Whether the Hangar AI's all-squads spawning probe runs (owner `+0x188`) | Read the Hangar and Airfield spawner uses and `0x004fda90` |
 | How often stray turret rounds hit the player | A copied-retail observation once David releases the desktop |
 | Whether retail aborts on a given player trajectory | Not reproducible without a retail run of the same inputs |
