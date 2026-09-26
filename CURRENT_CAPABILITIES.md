@@ -161,8 +161,9 @@ built:
   folder, checks `BEA.exe` against the Steam release by SHA-256, and lists careers and the
   options file.
 - **Careers** open read-only: overview with the game's own mission names, rank letters by
-  the game's rule and campaign links; all 233 Goodies in the game's colours with titles
-  from the player's text, unlock rules and how each rule is known; kill-count and Goodie
+  the game's rule and campaign links; the 230 Goodies the game's gallery shows, row by
+  row as on its wall, in the game's colours with titles from the player's text, unlock
+  rules and how each rule is known (071–073 are stored but never shown); kill-count and Goodie
   edits to a verified copy; cheat-name copies for the three cheats seen working in the
   Steam game; byte comparison named by region; raw stored values.
 - **Options** reads `defaultoptions.bea` and writes a verified copy with audio, invert,

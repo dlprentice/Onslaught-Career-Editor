@@ -72,7 +72,11 @@ internal static class CompanionUiTests
         check.That(app.Overview.MissionsSummary == $"{opened1.MissionCensus.Completed} / {opened1.MissionCensus.Used}" &&
             app.Overview.Missions.GetRoot()?.GetChildCount() == opened1.MissionCensus.Used, "the overview lists every used mission");
         app.Navigate("goodies");
-        check.That(app.Goodies.Cells.Count == 233 && app.Goodies.Selected == 0, "the Goodies gallery shows all 233 displayable slots");
+        check.That(app.Goodies.Cells.Count == 233 && app.Goodies.Selected == 0 && app.Overview.Missions.Columns == 4,
+            "the gallery has a cell for each slot of the game's table, and the overview has no attempts column");
+        app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.DetailEvidence.StartsWith("The game's gallery has no cell", StringComparison.Ordinal) &&
+            app.Goodies.ChangeInCopy.Disabled, "Goodie 072, which the gallery never shows, says so and cannot be changed");
         app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.Goodies.Selected == 2 && app.Goodies.DetailEvidence.StartsWith("Seen in the game") &&
             app.Goodies.DetailRule.Contains("Goodie 001"), "Goodie 2 shows its rule and its in-game evidence");
@@ -81,6 +85,8 @@ internal static class CompanionUiTests
         check.That(app.Goodies.Cells.Count(cell => cell.ButtonPressed) == 1 && app.Goodies.Cells[150].ButtonPressed,
             "exactly one Goodie cell shows as selected");
         check.That(File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original), "opening a game career changes nothing");
+        check.That(app.StoredValues.Tree.GetRoot()?.GetChildren().Count(row => row.GetText(0).Contains("god flag")) == 2,
+            "stored values shows both players' god flags");
 
         Outcome<SaveSession> opened = await app.OpenCareerAsync(fixture);
         check.That(opened.Ok && app.CareerName.Text == Path.GetFileName(fixture), "companion opens the protected real fixture");

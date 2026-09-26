@@ -44,7 +44,8 @@ internal sealed class OverviewPage : Page
         (PanelContainer missions, VBoxContainer missionBody) = Build.Card("Missions");
         missions.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         missions.SizeFlagsStretchRatio = 1.4f;
-        Missions = missionBody.Add(Build.Table("Level", "Mission", "Status", "Rank", "Tries"));
+        // No attempts column: the game only ever zeroes that field (Career.cpp:99), so it counts nothing.
+        Missions = missionBody.Add(Build.Table("Level", "Mission", "Status", "Rank"));
         Missions.CustomMinimumSize = new Vector2(0, 460);
         Missions.SetColumnCustomMinimumWidth(0, 70);
         Missions.SetColumnExpand(0, false);
@@ -97,9 +98,9 @@ internal sealed class OverviewPage : Page
         _missionsDetail.Text = "missions complete";
         _missionsMeter.Value = missions.Used == 0 ? 0 : missions.Completed / (double)missions.Used;
         int earned = career.GoodieCensus.New + career.GoodieCensus.Old;
-        _goodiesValue.Text = $"{earned} / {career.GoodieCensus.Displayable}";
-        _goodiesDetail.Text = $"{career.GoodieCensus.New} new · {career.GoodieCensus.Hint} hints";
-        _goodiesMeter.Value = earned / (double)career.GoodieCensus.Displayable;
+        _goodiesValue.Text = $"{earned} / {career.GoodieCensus.Shown}";
+        _goodiesDetail.Text = $"{career.GoodieCensus.New} new · {career.GoodieCensus.Hint} hints in the gallery";
+        _goodiesMeter.Value = earned / (double)career.GoodieCensus.Shown;
         _killsValue.Text = career.Kills.Sum(value => (long)value).ToString("N0");
         IEnumerable<(string Letter, int Count)> ranks = career.Missions.Where(record => record.Completed)
             .GroupBy(record => record.RankLetter ?? "?").Select(group => (group.Key, group.Count()))
@@ -115,7 +116,7 @@ internal sealed class OverviewPage : Page
             string name = text?.LevelName(mission.World) is string display && display.IndexOf(" - ", StringComparison.Ordinal) is int dash && dash > 0
                 ? display[(dash + 3)..] : "—";
             TreeItem row = Build.TableRow(Missions, root, mission.World.ToString(), name, mission.Completed ? "Complete" : "Open",
-                mission.RankLetter ?? "?", mission.Attempts.ToString("N0"));
+                mission.RankLetter ?? "?");
             if (name == "—") row.SetCustomColor(1, Palette.Faint);
             row.SetCustomColor(2, mission.Completed ? Palette.Good : Palette.Muted);
             row.SetCustomColor(3, Palette.Accent);
@@ -125,7 +126,7 @@ internal sealed class OverviewPage : Page
             : $"Names from your game's {text.Language} text. Stored rank floats are read with the game's own rule.";
 
         _goodieStrip.Clear();
-        foreach (GoodieRecord goodie in career.Goodies.Where(record => !record.Reserved))
+        foreach (GoodieRecord goodie in career.Goodies.Where(record => record.Shown))
         {
             _goodieStrip.Add(new ColorRect
             {
