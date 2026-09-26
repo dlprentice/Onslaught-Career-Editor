@@ -667,54 +667,16 @@ times, terrain tilt/bob and the Drone's different shutdown/motion conditions
 remain incomplete. These changes have not had a live desktop playthrough;
 focused results are in [VALIDATION.md](VALIDATION.md).
 
-World 110 now prepares the four landing-craft turret constructor inputs from
-real owner identities and the shared `Component`/1 mesh attachment. The
-[transform implementation](rebuild/OnslaughtRebuild.Core/RetailUnitAttachmentPose.cs)
-preserves measured translation/matrix store order and the following Euler
-conversion; its four results match an independent native x87 arithmetic probe.
-The [RE owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md)
-also corrects the misleading retained acos label: this finite path computes asin.
-The existing mesh parser now handles conditional emitter part indices and keeps
-unknown bytes intact. No turret child has been initialized or published by this
-step, and no new retail or Godot playthrough occurred.
-
-The World110 input asset retains both explicit-tree tables. The
-[base-tree construction](rebuild/OnslaughtRebuild.Core/RetailWorld110Tree.cs)
-creates only the 1,481 base-world pines, preserving the skipped ferns and repeated
-level-world records. Trees have real spatial entries and readiness listeners;
-each consumes one shared RNG draw. The tree-only factory can dispatch readiness
-without rescheduling. MapWho owns live links and a shared cursor; its separate
-PostLoad sort preserves the original-tail stop rule and leaves layer 0 alone.
-All object and reader identities use one world allocator.
-
-The first three Buildings extend that prefix using the same Actor owners with
-exact float poses, 64 destructible segments, nine AI reader cells and 15
-undelivered events in the shared scheduler. Named, world, Unit, big-Thing,
-faction, effect and inactive occupancy memberships retain their actual insertion
-rules. The inactive factory owns an active attached-spawner template, with no
-spawned tank. The repair pad owns its actual weapon definition/mode, shared
-charge/selection state and two empty effect nodes; no firing/healing is implemented.
-The same Actor/Unit implementation now constructs the next SAT turret and six
-icebergs in authored order. SAT retains its inactive animation (mode 1003,
-physical index 3), weapon and guide/AI owners. Features keep authored old Z
-while current Z is clamped to water. Collision spheres use the correct
-type-dependent centre calculation and bind the actual materialized mesh.
-This prefix has 1,491 spatial owners, 1,513 undelivered events and four Units;
-the six Features create no Unit, weapon, AI or animation owners.
-The latest focused selection passed **183/183 Core facts and 14/14 materializer
-checks**, with the World100 forty-step hash unchanged; [VALIDATION.md](VALIDATION.md)
-records the checks and controlled failures.
-
-These factories take an incoming RNG seed and explicitly assume nearest/53-bit
-arithmetic; the ordinary-actor factories select a fresh resource route with preloaded
-geometry. Renderer/resource caches, remaining actors, frame delivery, damage,
-reset and playable World110 remain unfinished. Legacy mutation, restore and
-hashing reject the incomplete initialized Actor state. `Simulation` does not use this
-stage: since 2026-09-26 it constructs World 110 from its materialized static world
-through its start state (VALIDATION.md, "World 110 construction and start state"),
-and the Godot host still starts only Level 100. The
-[World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
-retains the contracts and unresolved startup FP/seed boundary.
+World 110 is constructed by `Simulation` from its materialized static world, in
+the retail load order, through its start state, with Level 100's surviving base
+world carried in through the career (VALIDATION.md, "World 110 construction and
+start state" and "World 110's base-world carry-over from Level 100"). The
+earlier, separate World 110 construction stage (the turret-input, tree,
+Building, SAT and Feature prefix and its admissions) was retired on 2026-09-26
+because it duplicated that construction without ever running in the product;
+its retail contracts stay in the
+[World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+The Godot host still starts only Level 100.
 
 **2026-08-19 operator click-through (not training Won).** Godot 4.7.1
 mono on `main` showed night fortress → Aquila title art → main menu

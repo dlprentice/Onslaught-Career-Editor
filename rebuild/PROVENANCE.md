@@ -1,15 +1,12 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-09-25 (GDScript-era provenance notes retired with the return to C#; earlier claims retain their dated evidence).
-The 2026-08-31 update added the exact world-110 all-40 serialized
-initial-object seed and player-start admissions, complete ordered list
-resolution, and bounded `CStart::Init`
-terrain-height prefix, plus the standalone ordered
-`CPlayer::AssignBattleEngine` mapping and every-match adapter-supplied
-composition. The released Battle
+Last updated: 2026-09-26 (the separate World 110 construction stage retired in favour of the one construction owner; 2026-09-25 GDScript-era provenance notes retired with the return to C#; earlier claims retain their dated evidence).
+The 2026-08-31 world-110 admissions and the separate construction stage built
+on them were retired on 2026-09-26, when World 110 moved onto the one
+construction owner; the standalone ordered `CPlayer::AssignBattleEngine`
+mapping remains. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
-bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause mission execution, and current
 Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
@@ -232,259 +229,20 @@ existing secondary-state owner, mission VM, and exact world-110 admission
 tests; **NEW_MEASUREMENT** — 0. No new inventory, census, output root, pristine
 read, runtime capture, or Ghidra mutation was created.
 
-Core now also owns an identity-only authored-definition admission seam for
-world 110. `RetailWorldActorDefinitionAdmission` accepts the world number, exact
-`data/resources/110_res_PC.aya` identity (SHA-256 `4e041c75…3c2b`), and the
-ordered definition-bearing object projection exposed by
-`RetailWorld110LevelActors`. The projection reuses the established
-`wres:bswd:NNNN` / `wres:rlwd:NNNN` identity law and admits exactly 49 rows:
-33 actor rows from the byte-identical BSWD, then 15 actor rows and one type-19
-spawner row from world 110's own RLWD. Stuart's pinned `InitThing.h:112-357`
-owns the common position/orientation/name/script/active record fields,
-`InitThing.h:410-620` owns `CSpawnerInitThing::mSpawnUnit`, and
-`InitThing.h:623-675` owns the squad amount/mode shape. The retained
-`WORLD-DATA-2026-07-31.md` 115/115 round-trip receipt and its exact
-`110_BSWD.json` / `110_RLWD.json` rows establish the released type/definition
-bindings. Archive hash admission remains owned by
-`materialize_retail_assets.py`; the existing `RetailWorld110LevelActors`
-census owns `(2, 0, 40)` and the shared-BSWD identity. Wrong world, archive,
-object identity, definition identity, row count, or kind/type shape is rejected
-before any mission state can be touched. This is not a complete
-`Level100ActorDefinitionSet`: no pose, mesh, health, runtime class, player
-binding, registry, mission, or Godot lifecycle is inferred. The type-15 start
-is deliberately absent from those 49 rows because it carries no Battle Engine
-definition. That exclusion is a definition-projection boundary, not evidence
-that world 110 lacks an authored player start.
-
-Reuse preflight disposition for that seam: **REUSED 6** authority groups —
-(1) pinned `InitThing.h`, (2) the retained round-trip world-data receipt and
-its two world-110 rows, (3) the existing archive path/hash pin, (4) the existing
-world-110 actor census/shared-BSWD pin, (5) the existing WRES object-identity
-law, and (6) the existing world-100 hash plus world-110 script/heightfield/
-secondary-state controls; **EXTENDED 2** existing owners —
-`RetailWorld110LevelActors` and `RetailWorld110LevelActorsTests`;
-**NEW_MEASUREMENT 0**. The generic deterministic admission class is new code,
-not a new retail measurement, inventory, output root, payload, specimen read,
-runtime capture, or Ghidra mutation.
-
-Core now also owns the complete inert RLWD initial-object seed admission that
-the earlier definition projection deliberately did not. The same exact archive
-inflates to a 76,600-byte RLWD, SHA-256
-`fb56249deac8faf0033f4d4b67688ff72e12d922291c880d75b10599fc739837`.
-After the version-50 preamble and 13 pinned scripts, the `(2, 0, 40)` table
-header is at offset 15,709; records occupy `[15,719, 18,327)`; and the next
-header is `(uint16 0, int32 2)`. Pinned `InitThing.h:112-130,318-356` owns the
-common field order. Its type-specific owners are `InitThing.h:410-620` for the
-spawner, `623-675` for the squad, `791-830` for the start, and `833-865` for
-the volume. Numeric type dispatch and the type-8/type-28 definition suffix are
-the already measured serialized grammar, not a new source-only claim.
-
-The materializer retains all seven closed tails and writes canonical compact
-JSON only to the ignored local asset
-`Assets/Level110/level110-initial-object-seeds.json`. Schema
-`onslaught.world110-initial-object-seeds.v1` is 21,651 bytes, SHA-256
-`51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a`.
-`RetailWorldInitialObjectSeedAdmission.World110` verifies that hash before
-interpretation, rejects unknown or incomplete schema shapes, validates the
-exact envelope/census/order/extents and finite raw float words, then publishes
-immutable typed views over one snapshot of all 40 rows. The sole start converts
-losslessly to the existing player-start owner, and the 16 definition-bearing
-RLWD rows join the existing definition projection without importing its 33
-shared-BSWD rows.
-
-This is serialized constructor-input evidence, not construction. Five
-type-28 rows remain squad seeds with amounts `(5, 5, 3, 5, 4)`; no 22 member
-poses or publication order is inferred. The inactive type-19 row remains one
-configuration seed rather than three cold-spawned fighters. Raw transforms,
-delays, and radius are not converted poses, timing policy, or collision. No
-physics/runtime-class enrichment, actor IDs, nested allocation, start/player/
-Battle Engine construction, registry, state hash, session, Godot lifecycle, or
-campaign handoff is added. The bounded evidence and exact ceiling are recorded
-in
-[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
-
-The September 7 base-tree factory is a separate, implemented extension of those
-inputs. It constructs 1,481 CThing-derived pines, their live MapWho membership
-and readiness listeners. It uses actual World110 terrain and hash-pinned CMSH
-header/global bounds, consumes an explicit incoming RNG stream and dispatches
-owned events. It assumes nearest float stores, binary64 arithmetic and nearest-
-even integer conversion; runtime FP state/seed, address-dependent final yaw,
-complete collision response and world load/reset remain unmeasured. Exact body
-hashes and implementation limits are in the same World110 evidence owner above.
-The payload stays ignored; no retail executable/decompiler body was added to Core.
-
-The first three Buildings use those same owners and existing Actor allocations.
-`RetailWorld110Building`, `RetailBuildingSegments` and `RetailUnitConstructionAttachments`
-implement bounded Core construction from pinned physics and source mesh metadata:
-float poses, graph/scales, AI reader cells, 15 event admissions, world memberships,
-the factory's private spawner Init and the repair weapon's empty effect links.
-Weapon/mode/spawner records and resolved constructor defaults are materialized
-locally; no definition ordinal is hardcoded into the Core constructor.
-Shared `RetailWorld110Actor` and `RetailWorld110Unit` now carry that transaction
-through SAT Cannon initialization and the six following Features in authored order.
-The materializer retains SAT's CAMD mode IDs, ordered weapon/mode records,
-ground-profile defaults and each iceberg profile, plus full original CPOS/CORI
-word arrays. It does not export vertex/index geometry or treat padding as state.
-The v7 materialized actor payload is 236,889 bytes with
-SHA-256 `ace932aaf6277b1ebe1a7b5408024fc638eb1d70bb0be5731ae878eab8292ba4`.
-The September 8 signed coordinate conversion changes 189 zero words in the
-43 projected initial bases; raw retail transforms and other fields are unchanged.
-The collision centre uses the type-selected retail branch and explicit float
-stores; the transformed branch shares the existing attachment point arithmetic.
-The source mesh, static body pins and fresh resource-route assumptions belong
-to the same RE owner. Renderer/cache allocation, frame delivery, damage and
-complete load/reset, spawning and weapon fire remain unimplemented. The focused tests are reconstruction
-checks with declared arithmetic assumptions, not observed retail play.
-
-`RetailMapWho.SortAfterLoad()` implements the separately measured PostLoad
-operation at `0x4926e0`: layers 4 through 1, original-tail stop marker, preceding
-tree entries moved to the tail without replacing owners or the shared cursor.
-The 383-byte body hashes to
-`c8ced3c72ed01dc9539205197a096397950ea4cb3f58f757698c01b61fd63c37` in the
-same pristine specimen. It is not invoked prematurely during tree construction.
-
-The controlled decoder mutation swapped type-28 amount and mode while leaving
-the embedded bytes and hash valid. The exact squad fact failed with expected
-amounts `(5, 5, 3, 5, 4)` and actual `(0, 0, 0, 0, 0)`; byte-for-byte source
-restoration returned that fact and the adjacent 66-test World-110/start/height/
-session/hash gate to green. The ignored repo-local receipt is
-`local-lab/rebuild-world110-all40-initial-object-seed-mutation-kill-20260830/RECEIPT.md`,
-SHA-256
-`fe300ff9fdfc13522922bdd81e860ecece1e54b521f719aeafec535d1b82e382`.
-Reuse disposition: **REUSED** — the exact archive,
-RLWD, preamble/scripts, object-table grammar, source field owners, definition
-and start admissions, and World-100 hash control; **EXTENDED** — the existing
-materializer and Level-110 local asset owner; **NEW_MEASUREMENT 0**. The new
-schema and immutable admission are deterministic implementation outputs, not
-new retail runtime evidence.
-
-Core separately owns the exact serialized player-start admission seam for
-world 110. `RetailWorldPlayerStartAdmission` accepts only the archive identity
-above and the one 59-byte type-15 row at `wres:rlwd:0001` (SHA-256
-`850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc`).
-Pinned `InitThing.h:112-130,318-356` owns the common version-50 fields;
-`InitThing.h:791-830` owns the derived `mPlaneMode` / `mPlayerNumber` tail.
-The retained 115/115 world-data round trip independently corroborates that
-type-15 grammar across the 66-level corpus. The exact admitted raw words are
-position `(0x43846000, 0x43816800, 0x80000000)`, orientation
-`(0xbf04fd8b, 0, 0)`, plane mode `0`, player number `1`. Keeping the IEEE-754
-words preserves authored negative zero.
-
-Pinned `game.cpp:781-822` and pristine
-`CGame__PostLoadProcess` (`0x0046d040..0x0046d264`) supply the later runtime
-law: walk the whole start list for each player, assign on every match in list
-order, create type 15 at `(256, 256, 0)` only after zero matches, then initialize
-the player. Core retains an immutable serialized pre-init plan: it walks all
-stored rows, preserves matching rows in order, uses the final match for the
-effective projected fields, and reaches the proven type/position/player/plane
-fallback only after zero matches. World 110's exact player 1 still resolves to
-its one admitted row. A separate bounded owner then
-carries only `CStart::Init`'s 37-byte terrain-height prefix at
-`[0x004eae27, 0x004eae4c)`. The standalone
-`RetailPlayerBattleEngineAssignment` owner now carries the valid-object order
-of both reader calls and the God-only policy-call intents. It does not supply a
-`CStart`, engine, player, or reader-cell identity to this path. The separate
-`RetailWorldPlayerAuthoredStartAssignmentSequence` now consumes one complete
-adapter-supplied binding snapshot and invokes that function owner for every
-ordered match. It retains the final player→engine target and earlier
-engine→player backlinks, including repeated exact tuples, but constructs none
-of those identities. The World-110 seam therefore still does not implement the
-remainder of `CStart::Init`, real `GetPlayerObject` values, Battle Engine or
-player construction, policy-method execution, `CPlayer::Init`, the post-load
-state pair, an actor registry, an `InteractiveSession`, or a Godot lifecycle.
-The full evidence and falsifier are recorded in
-[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
-
-Reuse preflight disposition for the player-start seam: **REUSED** — the exact
-archive identity, actor census, retained corpus grammar/round trip, pinned
-`InitThing.h`, and pinned source/pristine post-load contract; **EXTENDED** —
-`RetailWorld110LevelActors` and its focused admission tests;
-**NEW_MEASUREMENT** — one exact serialized 59-byte world-110 row and its raw
-field projection. No runtime capture, mutable Ghidra project, retail payload in
-Git, or new output root was created.
-
-The matching fail-closed real-materializer parser landed at `4e3d472c`. The
-admission row's controlled mutation receipt is ignored repo-local machine
-evidence at
-`local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
-SHA-256
-`900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`;
-on this workstation it resides in canonical-checkout `local-lab/`, outside
-portable Git content. Changing only
-`PlayerStartPlayerNumber` from 1 to 2 made the exact admission test fail
-Expected 1 / Actual 2; restoring the owner made that same test pass. This
-closes the serialized-admission mutation gate only.
-
-The later list-resolution carry at `7491346f` reuses the already accepted
-`game.cpp:781-822` / pristine `CGame::PostLoadProcess` complete-walk law and
-adds no new retail measurement. Its internal synthetic projection proves
-ordered multiple-match selection without weakening public exact-world-110
-admission. Disposition: **REUSED** — pinned source, pristine function/range,
-and released fallback; **EXTENDED** — the existing immutable resolution and
-focused test owner; **NEW_MEASUREMENT 0**. It introduces no runtime capture,
-Ghidra mutation, specimen mutation, retail payload, or tracked/product output
-root; only the ignored machine-local mutation receipt below was added.
-
-The controlled first-match mutation receipt is ignored repo-local machine
-evidence at
-`local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
-SHA-256
-`fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
-Adding one `break` reduced two ordered matches to one and failed the exact
-discriminator; restoring the owner returned that fact to 1/1 and the adjacent
-gate to 44/44. This closes pure serialized resolution, not the runtime
-assignment effects named above.
-
-The ordered assignment-sequence carry reuses the same accepted complete-walk
-law and the standalone assignment owner; it adds no retail measurement. Its
-adapter contract requires one already-constructed engine/cell binding per
-match, snapshots and preflights the complete set, and returns a deeply
-immutable per-start transcript. Disposition: **REUSED** — the complete ordered
-resolution, standalone assignment owner, active-reader graph, pinned source,
-and pristine post-load range; **EXTENDED** — deterministic Core composition and
-focused tests; **NEW_MEASUREMENT 0**. The exact World-110 one-row path uses test
-tokens only; no runtime object, payload, Ghidra project, session, or external
-state was created or mutated.
-
-Controlled first-only and final-only sequence mutations each failed three
-ordered/per-match tests (8 passed / 3 failed). Exact restoration returned the
-production owner to SHA-256
-`39aa59f8c87d62b23b5b4a86fcc3ade26af7ffcad5165b1d3c1a9b3ffde29118`
-and the focused class to 11/11. The ignored repo-local receipt is
-`local-lab/rebuild-world110-assignment-sequence-mutation-kill-20260831/RECEIPT.md`,
-SHA-256
-`bb600b6c439e24fc503a648c0203f8f6bf026a22d0d942d5cdadd922e1496c79`.
-
-The bounded height owner reuses the already-admitted start resolution, the
-hash-pinned world-110 HFLD, and the existing released 24.8 sampler. The new
-static measurement is exactly `[0x004eae27, 0x004eae4c)`, 37 pristine bytes,
-SHA-256
-`f4efe7633c1f4ea75ca937ec0479eb1c72cd273812c15c31100991cd0844fe6a`.
-The full `CStart__Init` boundary is `[0x004eae10, 0x004eaf1a)`, 266 bytes,
-raw SHA-256
-`67ada0c7c363cd7f8ee3a059c198f568b687739f020a352b0ba6c2a37357934d`;
-only the smaller prefix has carried semantics. The prefix samples once,
-compares sampled height strictly below serialized Z, and samples/stores again
-only on that arm. For exact world-110 fixed XY `(67,776, 66,256)`, both samples
-are `-10,485` units; scale bits `0x3a7003c0` yield final Z bits `0xc1199926`.
-
-Reuse preflight disposition for the height seam: **REUSED** — the admitted
-serialized row/fallback, `Level100Terrain` envelope/hash/sampler law, and the
-pristine specimen; **EXTENDED** — deterministic Core composition and focused
-player-start tests; **NEW_MEASUREMENT** — the exact 37-byte prefix, strict
-branch/second-call ordering, and world-110 final Z. No runtime capture, mutable
-Ghidra project, session integration, or retail payload in Git was introduced.
-The production API admits no arbitrary sampler or arbitrary world; its internal
-friend-test seam exists only to distinguish a real second call/store from
-copying the first deterministic result.
-
-The clamp mutation receipt is ignored repo-local machine evidence at
-`local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
-SHA-256
-`9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
-Inverting only the strict comparison failed four of seven focused cases;
-restoring the owner byte-for-byte returned the class to seven of seven green.
-That closes this bounded prefix's mutation gate only.
+World 110 is constructed by the same owners as Level 100 since September 26:
+the materializer writes its static world from the pinned
+`data/resources/110_res_PC.aya` (SHA-256 `4e041c75…3c2b`), the Client decodes
+it, and `Simulation` builds it in the retail load order (VALIDATION.md, "World
+110 construction and start state"). The earlier, separate World 110 stage was
+retired then, because it duplicated that construction without ever running in
+the product: the definition, seed and player-start admissions, the tree,
+Building, SAT and Feature prefix, the player-start list resolution and
+assignment sequence, and the `CStart::Init` height prefix. Its retail
+evidence stays with the RE lane
+([`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md),
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md)),
+and its code, tests and mutation receipts stay in Git history and the ignored
+`local-lab/rebuild-world110-*` receipts.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
@@ -1127,21 +885,10 @@ invariant. This is not a retail atomicity claim: null pointers, configuration
 faults, allocator failure, rollback, lifetime, and concurrent mutation remain
 excluded.
 
-`RetailWorldPlayerAuthoredStartAssignmentSequence` composes that same bounded
-function once per ordered authored match. It preflights resolution shape,
-binding count/order, reader-role separation, engine/cell alias consistency,
-every required cell, and existing reverse membership before mutation. Exact
-repeated engine/cell tuples remain legal and still produce repeated outer call
-steps. The adapter proves that the player identity/cell correspond to the
-resolution's player and that each engine/cell is the matching start's
-already-constructed `GetPlayerObject` result. Core does not discover or create
-those objects.
-
 Reuse disposition for this seam: **REUSED** — the exact
 `CGenericActiveReader::SetReader` law, its accepted deterministic graph owner,
 pinned GPL source, and the pristine specimen; **EXTENDED** — one standalone
-Core function owner plus ordered adapter-supplied composition and focused
-tests; **NEW_MEASUREMENT** — the complete
+Core function owner and focused tests; **NEW_MEASUREMENT** — the complete
 69-byte body identity/order and concrete God-policy vtable targets/effects.
 There was no runtime capture, Ghidra mutation, retail payload in Git, engine
 construction, session integration, or campaign-grade promotion.
@@ -1155,15 +902,6 @@ Omitting the second graph call while retaining its transcript label failed the
 exact fresh-bind fact. Byte restoration returned the production owner to
 `f8df01f2ad11d72061359487f625f0aeb68a6e34e291c0c59fb78c7e300cebce`,
 the same fact to 1/1, and the adjacent assignment/reader/start gate to 54/54.
-
-The sequence owner's separate first-only/final-only receipt is
-`local-lab/rebuild-world110-assignment-sequence-mutation-kill-20260831/RECEIPT.md`,
-SHA-256
-`bb600b6c439e24fc503a648c0203f8f6bf026a22d0d942d5cdadd922e1496c79`.
-Both wrong loop shapes failed the ordered/per-match controls; restored source
-passed 11/11. That receipt closes deterministic composition only, not runtime
-identity discovery, virtual policy execution, player initialization, or a
-World-110 lifecycle.
 
 The spawner reached by that helper is now a separately bounded Core
 transaction. Pristine PC retail `CSpawnerThng__DoSpawn`

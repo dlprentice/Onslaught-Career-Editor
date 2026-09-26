@@ -79,13 +79,12 @@ public sealed class RetailWorld200AdmissionTests
         Assert.Equal(80_232, RetailWorld200LevelActors.BaseWorldBytes);
         Assert.Equal(668_660, RetailWorld200LevelActors.HeightfieldEnvelopeBytes);
 
-        // The base world is NOT the island world 110 shares with Level 100.
+        // The base world is NOT the island world 110 shares with Level 100
+        // (the shared BSWD: 54,669 bytes, SHA-256 04c5a383…10f4).
         Assert.NotEqual(
-            RetailWorld110LevelActors.SharedBaseWorldSha256,
+            "04C5A3838548A2C50819F46DC1F1746F7C20EC4AA34678BD23C8BCD2186010F4",
             RetailWorld200LevelActors.BaseWorldSha256);
-        Assert.NotEqual(
-            RetailWorld110LevelActors.SharedBaseWorldBytes,
-            RetailWorld200LevelActors.BaseWorldBytes);
+        Assert.NotEqual(54_669, RetailWorld200LevelActors.BaseWorldBytes);
     }
 
     /// <summary>

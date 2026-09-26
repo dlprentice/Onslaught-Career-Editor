@@ -20,15 +20,19 @@ public sealed class SimulationTests
 
     /// <summary>
     /// A world's session starts at its Start row, so a definition set without
-    /// one (the partial World 110 admission's) is refused before anything is
-    /// constructed.
+    /// one is refused before anything is constructed.
     /// </summary>
     [Fact]
     public void Constructor_RejectsAWorldWithoutItsStart()
     {
-        var world = RetailWorld110InitialConstruction.Create();
+        Level100ActorDefinitionSet world = Level100TestActorDefinitions.LoadMaterializedWorld110();
+        var withoutStart = new Level100ActorDefinitionSet(
+            world.Actors.Where(actor => actor.Name != "Player 1")
+                .Select((actor, order) => actor with { AuthoredOrder = order }), world.Spawns, world.WaypointPaths,
+            world.MotionDefinitions, worldNumber: 110, baseWorldPineCount: world.BaseWorldPineCount,
+            squads: world.Squads, components: world.Components);
         NotSupportedException error = Assert.Throws<NotSupportedException>(() =>
-            new Simulation(1, world.ActorDefinitions, worldNumber: 110));
+            new Simulation(1, withoutStart, worldNumber: 110));
         Assert.Contains("no Start", error.Message);
     }
 

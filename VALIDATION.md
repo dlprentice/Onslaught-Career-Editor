@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,41 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Retiring the separate World 110 stage — September 26
+
+World 110 had two construction owners in Core. `Simulation` builds it for the
+product (see "World 110 construction and start state"). A separate stage from
+August and early September never ran in the product: it had its own
+admissions of the materialized seeds, definitions and player start, a
+tree/Building/SAT/Feature construction prefix, turret-child inputs,
+start-list resolution and assignment, and the `CStart::Init` height prefix.
+The goal allows one owner per subsystem, so that stage is retired:
+- Core: 16 files (`RetailWorld110InitialConstruction` and its
+  `…Actor/…Building/…Cannon/…Feature/…Tree/…Unit/…LevelActors/…PlayerConstruction`,
+  `RetailUnitConstructionAttachments`, `RetailBuildingSegments`, and the
+  `RetailWorld…Admission`, start-assignment and height-clamp owners);
+- their 8 test classes (101 cases);
+- the three prototype-only embedded assets (`level110-initial-object-seeds.json`,
+  `level110-initial-actors.json`, `level110-player-inputs.json`). The
+  materializer still writes them; no Core code reads them.
+
+Production kept what it uses. `RetailUnitConstructionUse` moved to its own file
+(the Level 100 weapon mounts), and `RetailWorldTerrain`, `Level100Terrain.World110`,
+the world-200 admission, `RetailMapWho` and `RetailPlayerBattleEngineAssignment`
+stay with their tests. The Start refusal test now removes Player 1 from the
+materialized World 110 set, and the world-200 test pins the shared BSWD
+(54,669 bytes, `04c5a383…10f4`) literally.
+
+The retail evidence stays in the RE lane's
+`world-110-initial-constructor-seeds.md` and `world-110-player-start-admission.md`.
+The code and its mutation receipts stay in Git history (last present at
+`df392cb4`) and in the ignored `local-lab/rebuild-world110-*` receipts. Nine
+PARITY rows whose owners are gone were removed; the `CPlayer::AssignBattleEngine`
+row stays.
+
+Suites: Core 1,477 (was 1,578), Client 917 with the two known skips, and the
+Godot build. The Level 100 first-flight, smoke and won-tape pins are unchanged.
 
 ### World 110's base-world carry-over from Level 100 — September 26
 
