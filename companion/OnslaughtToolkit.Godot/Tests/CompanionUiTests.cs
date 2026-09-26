@@ -60,6 +60,7 @@ internal static class CompanionUiTests
             "the most recent career opens by itself, read-only, without leaving Home");
         check.That(app.Status.Game.Text.Contains("changed BEA.exe"), "the status bar says the test executable is not the Steam release");
         check.That(app.Home.AskingAboutBackups, "Home asks once whether to keep automatic backups");
+        check.That(app.Home.ShowsGameArt && app.Home.Manual.Visible, "Home shows the game's own art and offers its manual when the install has them");
         check.That(!app.Sidebar.IsOpen("Advanced") && app.Sidebar.Items.Count == app.Pages.Count,
             "every page has one sidebar item, and the Advanced tools start folded away");
         foreach (Page page in app.Pages.Values)
@@ -400,6 +401,12 @@ internal static class CompanionUiTests
         lore.Open("community-preservation", "active-community-contacts");
         for (int frame = 0; frame < 3; frame++) await Frame(tree);
         check.That(lore.Reader.GetVScrollBar().Value > 0, "a link to a section scrolls the reader to it");
+        lore.Open(LorePage.MapId);
+        check.That(lore.ShowingMap && lore.Map.Visible && lore.Map.Texture is not null && !lore.Reader.Visible &&
+            app.PageSubtitle.Text.Contains("map of Allium"), "the map from the game's manual opens in the reader");
+        lore.Back();
+        check.That(!lore.ShowingMap && lore.Current?.Id == "community-preservation" && lore.Reader.Visible,
+            "Back returns from the map to the article");
     }
 
     private static async Task UnavailableWorker(string outputDirectory, byte[] original, Checks check)

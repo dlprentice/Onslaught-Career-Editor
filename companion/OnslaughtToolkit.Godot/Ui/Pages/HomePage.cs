@@ -189,6 +189,9 @@ internal sealed class HomePage : Page
     internal SaveChoice AddChoice => _addChoice;
     internal IReadOnlyList<Button> OpenButtons => Careers.OpenButtons;
     internal string HeroStatus => _heroStatus.Text;
+
+    /// <summary>Whether the banner shows the game's own art (read from the install) rather than the emblem.</summary>
+    internal bool ShowsGameArt => _art.Texture is not null;
     internal bool AskingAboutBackups => _askBackups.Visible;
 
     internal override void Refresh() => ShowGame();
