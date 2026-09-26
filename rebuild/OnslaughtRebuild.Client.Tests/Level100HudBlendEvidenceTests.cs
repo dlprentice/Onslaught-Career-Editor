@@ -28,18 +28,13 @@ namespace OnslaughtRebuild.Client.Tests;
 /// opaque rectangle, which no retail frame shows, so these pages are its
 /// ONE/ONE passes.
 ///
-/// This test reads the page list out of hud_assets.gd itself, so adding a
+/// This test reads the page list out of FirstFlightHud.cs itself, so adding a
 /// DXT1 page or changing a page's declared compression re-checks the bytes.
 /// </summary>
 public sealed class Level100HudBlendEvidenceTests
 {
-    private static string Read(string name) => File.ReadAllText(
-        Path.Combine(AppContext.BaseDirectory, "godot-hud-layout-source", name));
-    private static readonly string GlowSource = Read("hud_glow_draw.gd");
-    private static readonly string BaseSource = Read("hud_base_draw.gd");
-    private static readonly string SceneSource = Read("FirstFlightHud.tscn");
-    private static readonly string HudSource = string.Join("\n", Read("hud_draw.gd"),
-        Read("hud_assets.gd"), BaseSource, GlowSource, Read("hud_text_draw.gd"), SceneSource);
+    private static readonly string HudSource = File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "godot-hud-layout-source", "FirstFlightHud.cs"));
 
     private static string HudAssetDirectory
     {
@@ -54,16 +49,6 @@ public sealed class Level100HudBlendEvidenceTests
                 {
                     return candidate;
                 }
-                // Owned --artifacts-path builds are below local-data rather
-                // than rebuild/. Stop at this checkout's Git entrance: an
-                // absent worktree asset link must not borrow another tree.
-                string gitEntrance = Path.Combine(probe.FullName, ".git");
-                if (File.Exists(gitEntrance) || Directory.Exists(gitEntrance))
-                {
-                    candidate = Path.Combine(probe.FullName, "rebuild", "OnslaughtRebuild.Godot", "Assets", "Hud");
-                    if (Directory.Exists(candidate)) return candidate;
-                    break;
-                }
                 probe = probe.Parent;
             }
 
@@ -72,12 +57,13 @@ public sealed class Level100HudBlendEvidenceTests
         }
     }
 
-    /// <summary>Page names the production GDScript recipes declare as DXT1 (compression 0).</summary>
+    /// <summary>Page names FirstFlightHud.cs declares as DXT1.</summary>
     private static IEnumerable<string> DeclaredDxt1Pages()
     {
         foreach (Match match in Regex.Matches(
             HudSource,
-            @"""(?<name>[a-z0-9\-]+)"": \[\d+, \d+, 0\]",
+            @"LoadHudTexture\(\s*""(?<name>[a-z0-9\-]+)""\s*,\s*\d+\s*,\s*\d+\s*,\s*" +
+            @"CuratedAyaTextureLoader\.Compression\.Dxt1\s*\)",
             RegexOptions.Singleline))
         {
             yield return match.Groups["name"].Value;
@@ -172,9 +158,23 @@ public sealed class Level100HudBlendEvidenceTests
     [Fact]
     public void CompassObjectiveMarkerCarriesRealAlphaAndIsNotOnTheAdditiveLayer()
     {
+        // It is the compass marker that retail alpha-blends: CDXCompass__Render
+        // restores SRCALPHA/INVSRCALPHA for its final pass. Unlike the DXT1
+        // pages it has the coverage that needs, so it must not drift back onto
+        // the additive layer.
         Assert.Equal("DXT2", ReadPage("compass-objective-marker").FourCc);
-        Assert.Contains("texture(\"compass-objective-marker\"", BaseSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("compass-objective-marker", GlowSource, StringComparison.Ordinal);
+
+        int glowLayer = HudSource.IndexOf(
+            "private sealed partial class RetailHudGlowLayer", StringComparison.Ordinal);
+        Assert.True(glowLayer > 0, "RetailHudGlowLayer is missing from the HUD.");
+        int glowLayerEnd = HudSource.IndexOf(
+            "private sealed partial class RetailHudTextLayer", glowLayer, StringComparison.Ordinal);
+        Assert.True(glowLayerEnd > glowLayer, "RetailHudTextLayer is missing from the HUD.");
+
+        Assert.DoesNotContain(
+            "CompassObjectiveMarker",
+            HudSource[glowLayer..glowLayerEnd],
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -204,31 +204,51 @@ public sealed class Level100HudBlendEvidenceTests
         Assert.Equal(20, alphaNibbleOneTexels);
         Assert.Contains("COLOR.a < (8.0 / 255.0)", HudSource, StringComparison.Ordinal);
         Assert.DoesNotContain("COLOR.a <=", HudSource, StringComparison.Ordinal);
-        foreach (string group in new[] { "Base", "Glow", "Text" })
-        {
-            Assert.Matches($@"(?s)\[node name=""{group}""[^\]]*\][^\[]*material = SubResource\(""Material_{group.ToLowerInvariant()}""\)", SceneSource);
-        }
-        Assert.Matches(@"(?s)\[sub_resource type=""ShaderMaterial"" id=""Material_base""\]\s*shader = SubResource\(""Shader_mix""\)", SceneSource);
-        Assert.Matches(@"(?s)\[sub_resource type=""ShaderMaterial"" id=""Material_text""\]\s*shader = SubResource\(""Shader_mix""\)", SceneSource);
-        Assert.Matches(@"(?s)\[sub_resource type=""ShaderMaterial"" id=""Material_glow""\]\s*shader = SubResource\(""Shader_add""\)", SceneSource);
-        Assert.Single(Regex.Matches(SceneSource, @"render_mode\s+blend_mix,\s*unshaded"));
-        Assert.Single(Regex.Matches(SceneSource, @"render_mode\s+blend_add,\s*unshaded"));
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                HudSource,
+                @"CreateReleasedAlphaTestMaterial\(additive:\s*false\)").Count);
+        Assert.Single(
+            Regex.Matches(
+                HudSource,
+                @"CreateReleasedAlphaTestMaterial\(additive:\s*true\)"));
+        Assert.Single(Regex.Matches(HudSource, @"render_mode\s+blend_mix,\s*unshaded"));
+        Assert.Single(
+            Regex.Matches(HudSource, @"render_mode\s+blend_add,\s*unshaded"));
     }
 
     [Fact]
     public void DamageFlashUsesTheReleasedAdditiveRgbFadeAndCompassGeometry()
     {
-        int start = GlowSource.IndexOf("for flash: Dictionary in hud.damage_flashes:", StringComparison.Ordinal);
-        int end = GlowSource.IndexOf("\n\tgauge_needle(", start, StringComparison.Ordinal);
-        Assert.True(start >= 0 && end > start);
-        string method = GlowSource[start..end];
-        Assert.Contains("state.damage_flash_lifetime_ticks", method, StringComparison.Ordinal);
-        Assert.Contains("* 96.0", method, StringComparison.Ordinal);
-        Assert.Contains("Vector2(128, 32)", method, StringComparison.Ordinal);
-        Assert.Contains("Color(fade, fade, fade, 1)", method, StringComparison.Ordinal);
-        Assert.DoesNotContain("Color(1, 1, 1, alpha)", method, StringComparison.Ordinal);
-        Assert.Contains("\"damage_flash_lifetime_ticks\": Simulation.LEVEL100_DAMAGE_FLASH_LIFETIME_TICKS",
-            Read("first_flight_hud.gd"), StringComparison.Ordinal);
+        int glowStart = HudSource.IndexOf(
+            "private sealed partial class RetailHudGlowLayer",
+            StringComparison.Ordinal);
+        int textStart = HudSource.IndexOf(
+            "private sealed partial class RetailHudTextLayer",
+            glowStart,
+            StringComparison.Ordinal);
+        int methodStart = HudSource.IndexOf(
+            "private void DrawDamageFlashes",
+            glowStart,
+            StringComparison.Ordinal);
+        int methodEnd = HudSource.IndexOf(
+            "// bar-line is DXT1",
+            methodStart,
+            StringComparison.Ordinal);
+        Assert.True(glowStart >= 0 && methodStart > glowStart && methodEnd > methodStart);
+        Assert.True(methodEnd < textStart, "Damage flashes left the additive HUD layer.");
+
+        string method = HudSource[methodStart..methodEnd];
+        Assert.Contains(
+            "SimulationConstants.Level100DamageFlashLifetimeTicks",
+            method,
+            StringComparison.Ordinal);
+        Assert.Contains("* CompassDamageRadius", method, StringComparison.Ordinal);
+        Assert.Contains("new Vector2(128f, 32f)", method, StringComparison.Ordinal);
+        Assert.Contains("new Color(fade, fade, fade, 1f)", method, StringComparison.Ordinal);
+        Assert.DoesNotContain("new Color(1f, 1f, 1f, alpha)", method, StringComparison.Ordinal);
+        Assert.Contains("CompassDamageRadius = 96f", HudSource, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -249,16 +269,16 @@ public sealed class Level100HudBlendEvidenceTests
     public void TheBattleLineCompositionMatchesTheDeviceLevelRead()
     {
         // 0x7fffffff -> alpha 127/255.
-        Assert.Contains("CIRCLE_DARKENER_ALPHA: float = 127.0 / 255.0", HudSource, StringComparison.Ordinal);
+        Assert.Contains("CircleDarkenerAlpha = 127f / 255f", HudSource, StringComparison.Ordinal);
         Assert.DoesNotContain("1f, 1f, 1f, 0.76f", HudSource, StringComparison.Ordinal);
 
         // 0x40ffffff, issued six times under SRCALPHA/INVSRCALPHA with
         // ZWRITEENABLE=0, so every draw passes: 1 - (1 - 64/255)^6.
-        Assert.Contains("PORTRAIT_DRAW_COUNT: int = 6", HudSource, StringComparison.Ordinal);
-        Assert.Contains("PORTRAIT_DRAW_ALPHA: float = 64.0 / 255.0", HudSource, StringComparison.Ordinal);
+        Assert.Contains("PortraitDrawCount = 6", HudSource, StringComparison.Ordinal);
+        Assert.Contains("PortraitDrawAlpha = 64f / 255f", HudSource, StringComparison.Ordinal);
         double composite = 1.0 - Math.Pow(1.0 - (64.0 / 255.0), 6);
         Match declared = Regex.Match(
-            HudSource, @"PORTRAIT_COMPOSITE_ALPHA:\s*float\s*=\s*([0-9.]+)");
+            HudSource, @"PortraitCompositeAlpha\s*=\s*([0-9.]+)f");
         Assert.True(declared.Success, "PortraitCompositeAlpha is missing from the HUD.");
         Assert.Equal(
             composite,
@@ -267,7 +287,7 @@ public sealed class Level100HudBlendEvidenceTests
 
         // The message-noise diffuse alpha byte over 66 steady-state frames of one
         // message ranged 0x3c..0x4a, mean 66.2.
-        Assert.Contains("MESSAGE_NOISE_ALPHA: float = 66.0 / 255.0", HudSource, StringComparison.Ordinal);
+        Assert.Contains("MessageNoiseAlpha = 66f / 255f", HudSource, StringComparison.Ordinal);
         Assert.InRange(66f / 255f, 0x3c / 255f, 0x4a / 255f);
     }
 
@@ -313,9 +333,9 @@ public sealed class Level100HudBlendEvidenceTests
         // The file must carry the texel itself, so the two halves of the one
         // premultiplied draw are derived rather than fitted.
         Assert.Contains(
-            "COMPASS_BASE_RING_TEXEL_ALPHA: float = 2.0 / 15.0", HudSource, StringComparison.Ordinal);
+            "CompassBaseRingTexelAlpha = 2f / 15f", HudSource, StringComparison.Ordinal);
         Assert.Contains(
-            "COMPASS_BASE_RING_TEXEL_PREMULTIPLIED_RGB: float = 4.0 / 15.0",
+            "CompassBaseRingTexelPremultipliedRgb = 4f / 15f",
             HudSource,
             StringComparison.Ordinal);
         Assert.Equal(2.0 / 15.0, alpha, 6);
@@ -326,7 +346,7 @@ public sealed class Level100HudBlendEvidenceTests
         // equals (1-a)bg + P exactly when K = P/(1+a). Same identity the gauge
         // arcs already use.
         Assert.Contains(
-            "f(COMPASS_BASE_RING_TEXEL_PREMULTIPLIED_RGB) / f(1.0 + f(COMPASS_BASE_RING_TEXEL_ALPHA))",
+            "CompassBaseRingTexelPremultipliedRgb / (1f + CompassBaseRingTexelAlpha)",
             HudSource,
             StringComparison.Ordinal);
         double paint = red / (1.0 + alpha);
@@ -337,15 +357,15 @@ public sealed class Level100HudBlendEvidenceTests
         // its literal.
         Assert.DoesNotContain(
             "0.42f + compassHighlight, 0.58f, 0.90f", HudSource, StringComparison.Ordinal);
-        Assert.Single(Regex.Matches(HudSource, @"func compass_color\(\)"));
+        Assert.Single(Regex.Matches(HudSource, @"private static Color CompassBaseColor"));
         Assert.Equal(
             2,
-            Regex.Matches(HudSource, @"(?<!func )compass_color\(\)").Count);
+            Regex.Matches(HudSource, @"CompassBaseColor\(snapshot, hud, compassHighlight\)").Count);
 
         // And the ring stays one primitive: retail issues 102 vertices as a
         // single D3DPT_TRIANGLESTRIP, so the helper must not go back to emitting
         // one antialiased DrawLine per segment.
-        Assert.Contains("draw_polyline(points, color, width, true)", HudSource, StringComparison.Ordinal);
+        Assert.Contains("DrawPolyline(points, color, width, true)", HudSource, StringComparison.Ordinal);
         Assert.DoesNotContain("DrawLine(firstPoint, secondPoint", HudSource, StringComparison.Ordinal);
     }
 
@@ -362,10 +382,21 @@ public sealed class Level100HudBlendEvidenceTests
     [Fact]
     public void MessageNoiseIsAlphaBlendedOnlyBecauseItIsDiscClippedAndFaint()
     {
-        Assert.DoesNotContain("noise_phases", GlowSource, StringComparison.Ordinal);
-        Assert.Contains("assets.noise_phases", BaseSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("Color(0.48, 0.66, 1", HudSource, StringComparison.Ordinal);
-        Assert.Contains("pixel.a = F32.value(1.0 - mask.get_pixel(x, y).a)", HudSource, StringComparison.Ordinal);
-        Assert.Contains("MESSAGE_NOISE_ALPHA", BaseSource, StringComparison.Ordinal);
+        int glowLayer = HudSource.IndexOf(
+            "private sealed partial class RetailHudGlowLayer", StringComparison.Ordinal);
+        int glowLayerEnd = HudSource.IndexOf(
+            "private sealed partial class RetailHudTextLayer", glowLayer, StringComparison.Ordinal);
+        Assert.True(glowLayerEnd > glowLayer);
+
+        // It must no longer be drawn on the additive layer, and the blue tint
+        // that pass carried must be gone from the file entirely.
+        Assert.DoesNotContain(
+            "assets.MessageNoise,", HudSource[glowLayer..glowLayerEnd], StringComparison.Ordinal);
+        Assert.DoesNotContain("0.48f, 0.66f, 1f", HudSource, StringComparison.Ordinal);
+
+        // The disc clip is what makes the alpha-blended draw legal.
+        Assert.Contains(
+            "sourcePixel.A = 1f - maskImage.GetPixel(x, y).A", HudSource, StringComparison.Ordinal);
+        Assert.Contains("MessageNoiseDiscPhases", HudSource, StringComparison.Ordinal);
     }
 }

@@ -108,7 +108,7 @@ public sealed partial class FrontendCaptureRig : Node
     /// </summary>
     /// <summary>
     /// First frame on which FEP_MAIN is drawn: the confirm at frame 128 is applied
-    /// by this rig's `_Process`, which runs after the native frontend View's, so the
+    /// by this rig's `_Process`, which runs after `RetailFrontendFlow`'s, so the
     /// flow first sees the main menu on the following frame.
     /// </summary>
     private const int MainMenuEntryFrame = 129;
@@ -487,7 +487,7 @@ public sealed partial class FrontendCaptureRig : Node
     ///
     /// This is CAPTURE-ONLY and deliberately does not change the shipped window
     /// contract in `project.godot` (1280x720) — that is a product decision, not a
-    /// parity concern. The native frontend View letterboxes its 640x480 design stage
+    /// parity concern. `RetailFrontendFlow` letterboxes its 640x480 design stage
     /// with `scale = min(Size.X / 640, Size.Y / 480)`, so at exactly 640x480 the
     /// scale is 1.0 and the offset is zero: every drawn pixel maps to one output
     /// pixel, which is what makes a direct diff against the retail reference

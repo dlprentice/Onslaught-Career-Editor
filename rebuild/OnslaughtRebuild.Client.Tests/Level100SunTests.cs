@@ -224,35 +224,41 @@ public sealed class Level100SunTests
     [Fact]
     public void TheSunAssetTakesItsNumbersFromTheDecodedDescriptor()
     {
-        string folder = Path.Combine(AppContext.BaseDirectory, "godot-sun-source");
-        string Source(string file) => string.Join('\n', File.ReadLines(Path.Combine(folder, file))
-            .Where(line => !line.TrimStart().StartsWith("#", StringComparison.Ordinal))
-            .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
-        string bridge = Source("Level100SunAsset.cs");
-        string recipe = Source("sun_recipe.gd");
-        string native = Source("sun_sprite.gd");
-        string scene = Source("SunSprite.tscn");
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "godot-sun-source",
+            "Level100SunAsset.cs");
+        Assert.True(File.Exists(path), $"Sun source was not copied to the test output: {path}");
+        string source = string.Join(
+            '\n',
+            File.ReadLines(path)
+                .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
+                .Where(line => !line.TrimStart().StartsWith("///", StringComparison.Ordinal)));
 
-        // Production owns one native scene and passes the original terrain
-        // bytes once. The old C# effect construction is a comparison only.
-        Assert.Contains("scene.Instantiate<MeshInstance3D>()", bridge, StringComparison.Ordinal);
-        Assert.Contains("GetManifestResourceStream(TerrainResource)", bridge, StringComparison.Ordinal);
-        Assert.DoesNotContain("new QuadMesh", bridge, StringComparison.Ordinal);
-        Assert.Contains("SetFile.parse_bytes(bytes)", recipe, StringComparison.Ordinal);
-        Assert.Contains("Resolver.resolve(parsed.value, descriptor_name)", recipe, StringComparison.Ordinal);
-        Assert.Contains("\"Sun Sprite\"", recipe, StringComparison.Ordinal);
-        Assert.Contains("hash.finish().hex_encode() != MAIN_SET_SHA256", recipe, StringComparison.Ordinal);
-        Assert.Contains("not plan.unimplemented.is_empty() or plan.layers.size() != 1", recipe, StringComparison.Ordinal);
+        // The effect is resolved by name out of the shipped set, not rebuilt.
+        Assert.Contains("ParticleSetFile.Parse", source, StringComparison.Ordinal);
+        Assert.Contains("ParticleEffectResolver.Resolve", source, StringComparison.Ordinal);
+        Assert.Contains("\"Sun Sprite\"", source, StringComparison.Ordinal);
 
-        // Size, colour and placement remain derived from admitted data. Actual
-        // native/legacy resource and float comparisons live in SunSceneChecks.
-        Assert.Contains("Resolver.billboard_quad_side(_layer.start_radius_bits)", native, StringComparison.Ordinal);
-        Assert.Contains("_word(colour.start.r_bits), _word(colour.start.g_bits), _word(colour.start.b_bits)", native, StringComparison.Ordinal);
-        Assert.Contains("data.sun_position_x_bits", native, StringComparison.Ordinal);
-        Assert.Contains("const SCALE: float = 0.6", native, StringComparison.Ordinal);
-        Assert.Contains("_offset = sun * F.value(SCALE)", native, StringComparison.Ordinal);
-        Assert.Contains("blend_mode = 1", scene, StringComparison.Ordinal);
-        Assert.DoesNotContain("blend_mode = 0", scene, StringComparison.Ordinal);
+        // Size, colour and placement all read from decoded values. The quad side
+        // must come from the one owner of the half-extent law, not from a
+        // hand-doubled literal - see ParticleQuadSizeConventionTests.
+        Assert.Contains(
+            "ParticleEffectResolver.BillboardQuadSide(layer.StartRadius)",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains("range.Start.R, range.Start.G, range.Start.B", source, StringComparison.Ordinal);
+        Assert.Contains("terrain.SunPosition", source, StringComparison.Ordinal);
+        Assert.Contains("RetailSunScale = 0.6f", source, StringComparison.Ordinal);
+
+        // Blend_Mode 0 is additive; an alpha-blended sun would be a different
+        // claim about the shipped data.
+        Assert.Contains("BlendModeEnum.Add", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BlendModeEnum.Mix", source, StringComparison.Ordinal);
+
+        // The plan must be rejected, not trimmed, if it stops being one clean
+        // sprite.
+        Assert.Contains("plan.Unimplemented.Count != 0", source, StringComparison.Ordinal);
     }
 
     private static string Locate(string repositoryRelativePath)

@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://Scenes/Audio/retail_audio_player.gd" id="1"]
-
-[node name="RetailOneShot" type="AudioStreamPlayer"]
-process_mode = 3
-autoplay = false
-bus = &"Master"
-script = ExtResource("1")

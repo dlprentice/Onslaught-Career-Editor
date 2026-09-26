@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="PackedScene" path="res://Scenes/Aquila/AquilaModel.tscn" id="1"]
-
-[node name="RetailAquilaJet" instance=ExtResource("1")]
-profile = "jet"

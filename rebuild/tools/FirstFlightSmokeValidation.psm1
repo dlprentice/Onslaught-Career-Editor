@@ -162,9 +162,8 @@ function Test-FirstFlightSmokeEvidence {
     # That test preserves gameplay assertions and compares format-7 state every
     # tick after substituting only definition identity; it also retains format-6
     # and format-7 fingerprints. The former bc5d99c7 pin predated those changes.
-    # September 19 Linux Godot execution agrees with the current Client oracle;
-    # this scene migration changes no Core contract. Windows execution remains
-    # pending. See VALIDATION.md's September 19 scene-migration receipt.
+    # Linux Godot smoke and the C# headless replayer reproduce it; Windows
+    # execution of this retained gate remains pending.
     Assert-SmokeValue 'stateHash' '53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode

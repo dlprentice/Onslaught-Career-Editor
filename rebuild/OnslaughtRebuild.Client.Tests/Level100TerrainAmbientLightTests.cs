@@ -77,27 +77,27 @@ public sealed class Level100TerrainAmbientLightTests
     public void TheShaderAppliesTheLightingTermAndTheStageOpTogetherAtStageZero()
     {
         string shaderSource = ReadSourceText(
-            "rebuild/OnslaughtRebuild.Godot/Scenes/World/terrain.gdshader");
-        string appearanceSource = ReadSourceText(
-            "rebuild/OnslaughtRebuild.Godot/Scenes/World/terrain_appearance.gd");
+            "rebuild/OnslaughtRebuild.Godot/Level100TerrainAppearanceAsset.cs");
 
         // Stage 0 is TEXTURE x DIFFUSE at MODULATE2X. The doubling and the
         // lighting term are one expression: applying the 2x alone, without the
         // material that kills the diffuse channel, overshoots.
         Assert.Contains("uniform vec3 terrain_vertex_diffuse;", shaderSource);
         Assert.Contains(
-            "vec3 stage_color = min(\n        macro_color * terrain_vertex_diffuse * 2.0,\n"
-            + "        vec3(1.0));",
+            "vec3 stage_color = min(\n                macro_color * terrain_vertex_diffuse * 2.0,\n"
+            + "                vec3(1.0));",
             shaderSource.ReplaceLineEndings("\n"));
 
         // The gain reaches the shader from the parsed HFLD, never as a literal.
         Assert.Contains(
-            "TerrainCompositor.terrain_vertex_diffuse(\n\t\tfacts.sun_color_rgb24, facts.anti_sun_color_rgb24)",
-            appearanceSource.ReplaceLineEndings("\n"));
-        Assert.DoesNotContain("1.400", shaderSource + appearanceSource);
-        Assert.DoesNotContain("1.325", shaderSource + appearanceSource);
-        Assert.DoesNotContain("1.106", shaderSource + appearanceSource);
-        Assert.DoesNotContain("224", shaderSource + appearanceSource);
+            "Level100TerrainCompositor.TerrainVertexDiffuse(\n"
+            + "            heightField.SunColorRgb24,\n"
+            + "            heightField.AntiSunColorRgb24);",
+            shaderSource.ReplaceLineEndings("\n"));
+        Assert.DoesNotContain("1.400", shaderSource);
+        Assert.DoesNotContain("1.325", shaderSource);
+        Assert.DoesNotContain("1.106", shaderSource);
+        Assert.DoesNotContain("224", shaderSource);
     }
 
     private static string ReadSourceText(string repositoryRelativePath) =>

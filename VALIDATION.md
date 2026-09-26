@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline, reconciliation and the AYA malformed-input contract; earlier dated validation retained).
+Last updated: 2026-09-25 (three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -39,7 +39,7 @@ are not replaced by the focused portable results below.
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
 | Public payload/provenance boundary | `npm run test:safety` |
-| GDScript rebuild migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes/SHA-256, pause transitions and detached snapshots. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. The production pause scene has separate actual-scene checks described below. This is a bounded migration gate, not full simulation, performance or gameplay parity. |
+| Rebuild Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
@@ -69,6 +69,73 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Return to all-code C# — September 25
+
+David directed that the project be 100% C# and built in code. The rebuild's
+code, tests, tools, C# headless replayer and docs were restored to `b0b9c5e7`,
+the last commit before GDScript entered the rebuild (its child `29727e2b`
+began the editor-scene conversion). Separate commits then rebuilt the pause
+menu's tree in code, carried the stricter AYA admission into the C# decoder,
+refused two impossible inputs (an Int32.MaxValue emitter lifetime and an
+invalid compositor level) and restored the smoke validator's `53c1cc64` pin.
+The 244 GDScript files, their parity runners and oracles, the simulation
+bridge, the editor scenes and `tools/godot_compat` are deleted; Git keeps
+them. A read-only review of every commit in `b0b9c5e7..37cf89b3` found the
+simulation unchanged and no other evidenced behavior to carry.
+
+Executed at the restored state:
+- The solution and Godot project build with 0 warnings and 0 errors.
+- `npm run test:rebuild-client`: **912 passed**, 2 existing skips.
+- `npm run test:rebuild-core`: **1,469 of 1,470**. The one failure is
+  `Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface`,
+  failing since the September 12 aircraft work (see below); the RE lane's
+  contract identifies two missing retail helps in its final wave.
+- The C# headless replayer reproduces the baseline smoke tape (`89ca7b4b…`,
+  2,148 ticks, trace `a4e6673b…`, state `53c1cc64…`) and `first-flight.v1.json`
+  (838 ticks, trace `0872e009…`, state `69bd64ac…`), twice each.
+- The headless smoke records the identical tape (`89ca7b4b…`).
+- `PauseSceneChecks` **56 passed** headless; offscreen, the code-built root
+  and confirmation renders are pixel-identical to the `b0b9c5e7` scene's.
+- `AyaTextureChecks` **801 checks**, 0 failures, 0 unexpected diagnostics; all
+  142 cases match the September 25 production decoder's report, including the
+  decoded bytes of all 51 actual textures.
+
+Capture. godot-offscreen Movie Maker at 60 fps and 1280x720 recorded startup,
+menus, Level 100, a retry and the return to the main menu, exactly as the
+September 25 baseline (`migration-baseline-20260925/run-2`, from `d5e002d0`).
+The restored build recorded the identical tape and state, and its WAV is
+byte-identical to the baseline's (`932b25a9…`). All 15,334 frames are identical
+to a capture of `b0b9c5e7` itself. Against the baseline, frames 0–13,179
+(startup, menus and the whole first Level 100 session) are identical; the
+2,154 frames from 13,180 differ for two evidenced reasons:
+- **Pines after the retry (frames 13,180–15,330).** The baseline shows no pine
+  trees in the retry session, although the first session draws them and a
+  retry builds a fresh world. A capture of `29b40721` (September 19 C# with the
+  `29727e2b` scene-imported world) reproduces the loss and matches the
+  baseline on 15,330 frames, so the scene import introduced it; the all-code
+  world builds its pines on every construction. This restores the earlier
+  behavior rather than inventing one.
+- **The last three frames (15,331–15,333).** They are drawn after the smoke
+  completes: `RequestQuit` freezes every child node and the root keeps
+  rendering only while real audio retires, which is why headless runs (dummy
+  audio) end at frame 15,330. Instrumented runs, headless and offscreen with
+  real audio, show the frontend's last update in both builds is on the
+  Loading screen with identical clocks and the title-logo reflection hidden.
+  A capture of `b0b9c5e7` changed only to add its frontend ahead of the audio
+  node, as the scene host orders them (`order-experiment-20260925-223458`),
+  differs from the unmodified capture in exactly these three frames, so they
+  depend on scene composition. It still does not show the baseline's logo
+  sheen, and the scene-based `29b40721` does, so the scene host's exact render
+  path for these frames is not isolated. **Open question:** which frontend state
+  does each build hold when Movie Maker draws them? Cheapest falsifier: log the
+  screen and reflection visibility per Movie Maker frame in both builds.
+  Normal play never quits here, so the frames are a capture-harness artifact.
+
+Other differences: none. Logs: `local-data/test-runs/csharp-allcode-lane-20260925-221042/`,
+`csharp-pre-b0b9c5e7/`, `csharp-scenes-29b40721/`, `order-experiment-20260925-223458/`,
+`feback-trace-20260925-222356/`
+and the worktree's `local-data/test-runs/csharp-allcode-20260925-215316/`.
 
 ### Lane baseline — September 25
 
@@ -140,6 +207,39 @@ The rebuild then built with zero warnings/errors and a verified Level 100 import
 passed 77/77 headless scene checks, **24,190** world checks, **910** Client tests
 (2 known skips), and kept the smoke tape (`89ca7b4b…`) and replayed state
 (`53c1cc64…`). Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/aya-contract-afwwC2/`.
+
+### Simulation language measurement — September 25
+
+The language rule of the time required a recorded measurement before any subsystem
+stayed in C#. A scratch Release benchmark (`net8.0`, tiered PGO) replayed the 2,148-tick
+Level 100 smoke tape through `Simulation.Step`, reproduced final state `53c1cc64…`,
+and timed the warm last of six replays. The typical tick is cheap (median **0.08 ms**,
+p95 **0.11 ms**), but p99 is **4.1–7.8 ms** and the maximum **98–226 ms**. Canonical
+serialization plus SHA-256 adds **0.11 ms** per tick for 50,536 bytes. An instrumented
+scratch copy of `Simulation.Step` attributes **380–414 ms** of the ~0.7 s run to
+`TryFire`: four launches of about **95–100 ms**, all inside `ReticleAdjustedLaunchAngles`,
+whose `TrySweepRoundWithTerrain` sweeps a 1,000-unit ray against terrain and every
+active actor's contact geometry. `UpdateProjectiles` costs **146–153 ms**, about 1 ms
+per live projectile per tick. Every other phase totals at most 26 ms for the run; the
+typical tick is mostly snapshot creation.
+
+Matched kernels on identical inputs produced identical results in both languages.
+The terrain fixed-point lookup costs **6.0 ns** in C# and **410 ns** in GDScript (68x).
+PC24 multiply-and-add costs **12.1 ns** in C#, **403 ns** in the current GDScript port
+(33x), **122 ns** with an allocation-free helper (10x) and **24 ns** fully inlined; the
+last form is not maintainable across the Core. Applying the measured 10–68x to the
+measured C# phases gives a GDScript Level 100 tick of roughly 1–5 ms when idle,
+3–7 s per launch and 10–70 ms per live projectile per tick. RE could not quickly
+establish the largest retail battle's unit count, so the stress case is 10x Level 100's
+45–48 actors. The Level 100 Core cannot construct it without mission-level changes;
+scaling the measured per-actor work puts even the idle GDScript tick at 10–56 ms.
+
+**Decision:** superseded the same evening. David directed C# only for the whole
+repository (`AGENTS.md`), so no subsystem needs a measured exception. The numbers stay
+as the performance record: Release C# already misses 5 ms on launch and flight ticks
+(about a 100 ms hitch per shot); that contact-sweep cost is an existing, open
+performance defect. Sources and logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
 
 ### September 19 production scene migration
 

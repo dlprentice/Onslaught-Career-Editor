@@ -33,12 +33,11 @@ public sealed class RetailFeMessBoxTests
     [Fact]
     public void DrawQuitConfirmUsesTheRecoveredWidthAndCentre()
     {
-        AssertRectangle("Dialog/Panel", "rectangle", RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.BoxTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ReconstructionHeight);
-        Assert.Equal(new[] { RetailFeMessBox.QuitCenterX, RetailFeMessBox.PromptTop },
-            NativeMainMenuSource.Vector(NativeQuitSource.Node("Dialog/Prompt"), "source_anchor", "Vector2"));
-        Assert.Contains("Stage/QuitConfirm", NativeFrontendSource.PageFunction("_configure_quit"));
-        Assert.DoesNotContain("new Rect2(70f, 160f, 500f, 140f)", NativeQuitSource.Presentation);
+        string flow = FlowSource();
+
+        Assert.Contains("RetailFeMessBox.QuitLeft", flow);
+        Assert.Contains("RetailFeMessBox.QuitWidth", flow);
+        Assert.DoesNotContain("new Rect2(70f, 160f, 500f, 140f)", flow);
     }
 
     [Fact]
@@ -76,39 +75,29 @@ public sealed class RetailFeMessBoxTests
     [Fact]
     public void DrawQuitConfirmUsesBlankPanelBoxAndVerticalYesNo()
     {
-        float x = RetailFeMessBox.QuitLeft, y = RetailFeMessBox.BoxTop;
-        float width = RetailFeMessBox.QuitWidth, height = RetailFeMessBox.ReconstructionHeight;
-        float line = RetailFeMessBox.BoxLineWidth;
-        AssertRectangle("Dialog/BorderTop", "rectangle", x, y, width, line);
-        AssertRectangle("Dialog/BorderBottom", "rectangle", x, y + height - line, width, line);
-        AssertRectangle("Dialog/BorderLeft", "rectangle", x, y, line, height);
-        AssertRectangle("Dialog/BorderRight", "rectangle", x + width - line, y, line, height);
-        AssertColor("Dialog/Panel", RetailFeMessBox.PanelColor);
-        foreach (string edge in new[] { "Top", "Bottom", "Left", "Right" })
-            AssertColor("Dialog/Border" + edge, RetailFeMessBox.BorderColor);
-        foreach (string row in new[] { "Yes", "No" })
-            AssertColor("Dialog/" + row + "/Highlight", RetailFeMessBox.HighlightColor);
-        Assert.Contains("text = \"" + RetailFeMessBox.YesLabel + "\"", NativeQuitSource.Node("Dialog/Yes/Label"));
-        Assert.Contains("text = \"" + RetailFeMessBox.NoLabel + "\"", NativeQuitSource.Node("Dialog/No/Label"));
-        Assert.Contains("res://Assets/PauseMenu/blank.texture.aya", NativeQuitSource.Scene);
-        Assert.Contains("dimensions = Vector2i(16, 16)", NativeQuitSource.Scene);
-        Assert.Contains("compression = 0", NativeQuitSource.Scene);
-        Assert.Contains("ink_color: Color = Color.WHITE", NativeQuitSource.Read("quit_confirm_label.gd"));
-        Assert.DoesNotContain("new Color(0f, 0f, 0f, 0.82f)", NativeQuitSource.Presentation);
+        string flow = FlowSource();
+
+        Assert.Contains("RetailFeMessBox.PanelColor", flow);
+        Assert.Contains("RetailFeMessBox.BorderColor", flow);
+        Assert.Contains("RetailFeMessBox.BoxLineWidth", flow);
+        Assert.Contains("RetailFeMessBox.YesLabel", flow);
+        Assert.Contains("RetailFeMessBox.NoLabel", flow);
+        Assert.Contains("_feBlank", flow);
+        Assert.DoesNotContain("DrawQuitConfirmChoice(\"No\", 220f", flow);
+        Assert.DoesNotContain("DrawQuitConfirmChoice(\"Yes\", 420f", flow);
+        Assert.DoesNotContain("new Color(0f, 0f, 0f, 0.82f)", flow);
     }
 
     [Fact]
     public void QuitConfirmHitRowsAreTheFullWidthYesNoStack()
     {
-        AssertRectangle("Dialog/No", "hit_rect", RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.NoChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
-        AssertRectangle("Dialog/Yes", "hit_rect", RetailFeMessBox.QuitLeft,
-            RetailFeMessBox.YesChoiceTop, RetailFeMessBox.QuitWidth, RetailFeMessBox.ChoiceRowHeight);
-        Assert.Contains("get_node(\"Stage/QuitConfirm\").hit_test(design)", NativeFrontendSource.RootFunction("quit_confirm_index_at"));
-        Assert.Contains("hit_rect.has_point(", NativeQuitSource.Read("quit_confirm_row.gd"));
-        Assert.Contains("\"selected_index\": session.get_selected_quit_confirm_index()", NativeQuitSource.Bridge);
-        Assert.DoesNotContain(".confirm(", NativeQuitSource.Bridge);
-        Assert.DoesNotContain("get_tree().quit", NativeQuitSource.Presentation);
+        string flow = FlowSource();
+
+        Assert.DoesNotContain("new Rect2(160f, 240f, 120f, 36f)", flow);
+        Assert.DoesNotContain("new Rect2(360f, 240f, 120f, 36f)", flow);
+        Assert.Contains("RetailFeMessBox.QuitLeft", MethodBody(flow, "QuitConfirmIndexAt"));
+        Assert.Contains("RetailFeMessBox.NoChoiceTop", MethodBody(flow, "QuitConfirmIndexAt"));
+        Assert.Contains("RetailFeMessBox.YesChoiceTop", MethodBody(flow, "QuitConfirmIndexAt"));
     }
 
     [Fact]
@@ -122,26 +111,70 @@ public sealed class RetailFeMessBoxTests
         Assert.Equal(1, RetailFeMessBox.YesChoiceIndex);
         Assert.Equal(0, RetailFeMessBox.DefaultChoiceIndex);
 
-        string handleKey = NativeFrontendSource.RootFunction("handle_key");
-        int quit = handleKey.IndexOf("if _session.get_screen() == Frontend.Screen.QUIT_CONFIRM:", StringComparison.Ordinal);
-        Assert.True(quit >= 0, "handle_key must special-case QuitConfirm.");
+        string handleKey = MethodBody(FlowSource(), "HandleKey");
+        Assert.Contains("RetailFrontendScreen.QuitConfirm", handleKey);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", handleKey);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", handleKey);
+
+        int quit = handleKey.IndexOf(
+            "Screen == RetailFrontendScreen.QuitConfirm",
+            StringComparison.Ordinal);
+        Assert.True(quit >= 0, "HandleKey must special-case QuitConfirm.");
         string quitArm = handleKey[quit..];
-        int sharedUpLeft = quitArm.IndexOf("if is_key(key, KEY_UP) or is_key(key, KEY_LEFT):", StringComparison.Ordinal);
+        int sharedUpLeft = quitArm.IndexOf(
+            "IsKey(key, Key.Up) || IsKey(key, Key.Left)",
+            StringComparison.Ordinal);
         Assert.True(sharedUpLeft > 0, "The shared Up/Left arm must follow the QuitConfirm split.");
         string beforeShared = quitArm[..sharedUpLeft];
-        Assert.Contains("if is_key(key, KEY_UP): return _handled(_move_selection(_session.select_quit_confirm_index(1)))", beforeShared);
-        Assert.Contains("if is_key(key, KEY_DOWN): return _handled(_move_selection(_session.select_quit_confirm_index(0)))", beforeShared);
-        Assert.DoesNotContain("is_key(key, KEY_LEFT)", beforeShared);
-        Assert.DoesNotContain("is_key(key, KEY_RIGHT)", beforeShared);
-        Assert.Contains("is_key(key, KEY_LEFT)", handleKey);
-        Assert.Contains("_session.move_previous()", handleKey);
-        Assert.Contains("is_key(key, KEY_RIGHT)", handleKey);
-        Assert.Contains("_session.move_next()", handleKey);
+        Assert.Contains("IsKey(key, Key.Up)", beforeShared);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", beforeShared);
+        Assert.Contains("IsKey(key, Key.Down)", beforeShared);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", beforeShared);
+        Assert.DoesNotContain("IsKey(key, Key.Left)", beforeShared);
+        Assert.DoesNotContain("IsKey(key, Key.Right)", beforeShared);
+        Assert.Contains("IsKey(key, Key.Left)", handleKey);
+        Assert.Contains("_session.MovePrevious()", handleKey);
+        Assert.Contains("IsKey(key, Key.Right)", handleKey);
+        Assert.Contains("_session.MoveNext()", handleKey);
     }
 
-    private static void AssertRectangle(string node, string property, params float[] values) =>
-        Assert.Equal(values, NativeMainMenuSource.Vector(NativeQuitSource.Node(node), property, "Rect2"));
+    private static string FlowSource() =>
+        File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-    private static void AssertColor(string node, uint argb) => NativeQuitSource.HasColor(node, argb);
+    private static string MethodBody(string source, string methodName)
+    {
+        int signature = IndexOfSignature(source, "int " + methodName + "(");
+        if (signature < 0)
+        {
+            signature = IndexOfSignature(source, "bool " + methodName + "(");
+        }
 
+        Assert.True(signature >= 0, methodName + " was not found.");
+        int open = source.IndexOf('{', signature);
+        int depth = 0;
+        for (int index = open; index < source.Length; index++)
+        {
+            if (source[index] == '{')
+            {
+                depth++;
+            }
+            else if (source[index] == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return source[open..(index + 1)];
+                }
+            }
+        }
+
+        throw new InvalidOperationException(methodName + " has an unbalanced body.");
+    }
+
+    private static int IndexOfSignature(string source, string signature)
+    {
+        int found = source.IndexOf(signature, StringComparison.Ordinal);
+        return found;
+    }
 }

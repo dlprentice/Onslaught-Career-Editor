@@ -46,27 +46,19 @@ public sealed class RetailCareerLoadAdapterTests
             frontendSource,
             StringComparison.Ordinal);
         Assert.Contains(
-            "using D result = InvokeNative(\"initialize\", batch);",
+            "_session = new RetailFrontendSession(careerDescriptors);",
             frontendSource,
             StringComparison.Ordinal);
-        Assert.Contains("RetailCareerDescriptor[] descriptors = careerDescriptors.ToArray();", frontendSource, StringComparison.Ordinal);
-        Assert.Contains("_originalDescriptors = descriptors;", frontendSource, StringComparison.Ordinal);
-        Assert.Contains("descriptor.Name.Select(character => (int)character).ToArray()", frontendSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("new RetailFrontendSession", frontendSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("new GdFrontendSession", frontendSource, StringComparison.Ordinal);
-        Assert.Contains("Frontend.create(descriptors)", NativeFrontendSource.RootFunction("initialize"), StringComparison.Ordinal);
-        Assert.Contains("_session.consume_selected_career_load_request_index()", NativeFrontendSource.RootFunction("_handle_navigation_signal"), StringComparison.Ordinal);
         Assert.Contains(
-            "CareerSelected?.Invoke(_originalDescriptors[index]);",
+            "CareerSelected?.Invoke(selectedCareer);",
             frontendSource,
             StringComparison.Ordinal);
         Assert.Contains(
             "RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs())",
             hostSource,
             StringComparison.Ordinal);
-        Assert.Contains("_frontend.Initialize(RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs()));",
-            hostSource, StringComparison.Ordinal);
-        Assert.Contains("_frontend!.CareerSelected += SelectCareer;", hostSource, StringComparison.Ordinal);
+        Assert.Contains("_frontend.Initialize(careerDescriptors);", hostSource, StringComparison.Ordinal);
+        Assert.Contains("_frontend.CareerSelected += SelectCareer;", hostSource, StringComparison.Ordinal);
     }
 
     [Fact]

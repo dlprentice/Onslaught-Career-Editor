@@ -30,7 +30,6 @@
     "test:rebuild-core": "npm run prepare:rebuild-assets && dotnet test ./rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --filter \"FullyQualifiedName!~Level100FerryLandingTests\"",
     "test:rebuild-ferry-sweep": "npm run prepare:rebuild-assets && dotnet test ./rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --filter \"FullyQualifiedName~Level100FerryLandingTests\"",
     "test:rebuild-client": "npm run prepare:rebuild-assets && dotnet test ./rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj --nologo",
-    "test:rebuild-gdscript": "python ./rebuild/tools/gdscript_parity_tests.py && python ./rebuild/tools/gdscript_parity.py",
     "test:rebuild": "npm run require:windows-host && npm run test:rebuild-core && npm run test:rebuild-ferry-sweep && npm run test:rebuild-client && python ./rebuild/tools/cmsh_static_preview_tests.py && pwsh -NoLogo -NoProfile -File ./rebuild/tools/GodotToolchain.Tests.ps1 && pwsh -NoLogo -NoProfile -File ./rebuild/tools/Capture-Session.Tests.ps1",
     "run:rebuild-headless": "npm run prepare:rebuild-assets && dotnet run --project ./rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj --",
     "test:capture-session": "npm run require:windows-host && pwsh -NoLogo -NoProfile -File ./rebuild/tools/Capture-Session.Tests.ps1",

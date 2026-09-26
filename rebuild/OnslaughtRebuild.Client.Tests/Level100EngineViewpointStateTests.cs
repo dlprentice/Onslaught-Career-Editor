@@ -122,18 +122,12 @@ public sealed class Level100EngineViewpointStateTests
     public void FirstFlightWorldView_ConsumesTheSelectedByValueEngineSnapshot()
     {
         string source = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory, "godot-effects-source",
+            LocateGodotDirectory(),
             "FirstFlightWorldView.cs"));
-        string bridge = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory, "godot-effects-source",
-            "FirstFlightWorldView.Presentation.cs"));
-        string owner = File.ReadAllText(Path.Combine(
-            AppContext.BaseDirectory, "godot-effects-source",
-            "world_presentation.gd"));
 
         Assert.Contains(
-            "[\"control_view_handoff_lead_ticks\"] = Level100MissionTiming.ReleasedEventFrameTicks,",
-            bridge,
+            "private readonly Level100EngineViewpointState _engineViewpointState = new(\n        RetailNearPlane,\n        RetailFarPlane);",
+            source,
             StringComparison.Ordinal);
         Assert.Contains(
             "private const float RetailNearPlane = 0.1f;",
@@ -144,29 +138,20 @@ public sealed class Level100EngineViewpointStateTests
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "[\"near_bits\"] = (long)BitConverter.SingleToUInt32Bits(RetailNearPlane),",
-            bridge,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "[\"far_bits\"] = (long)BitConverter.SingleToUInt32Bits(RetailFarPlane),",
-            bridge,
-            StringComparison.Ordinal);
-        Assert.Contains("config.near_bits, config.far_bits", owner, StringComparison.Ordinal);
-        Assert.Contains("_call_checked(_camera_state, \"sample_and_bind\", [alpha_bits], \"camera\")", owner, StringComparison.Ordinal);
-        Assert.DoesNotContain("Level100EngineViewpointState _engineViewpointState", source + bridge, StringComparison.Ordinal);
-        Assert.Contains("stage.viewpoint = result.value.viewpoint", owner, StringComparison.Ordinal);
-        Assert.Contains("var selected_viewpoint: Dictionary = stage.viewpoint", owner, StringComparison.Ordinal);
-        Assert.Contains(
-            "Near = RetailNearPlane,",
+            "EngineViewpointSnapshot selectedViewpoint =\n            _engineViewpointState.Bind(cameraSnapshot);",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Far = RetailFarPlane,",
+            "Near = selectedViewpoint.NearPlane,",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_camera.size = F.value(F.value(F.value(2.0 * Words.read_word(selected_viewpoint.near_plane_bits)) * 0.75) * Words.read_word(camera_snapshot.zoom_bits))",
-            owner,
+            "Far = selectedViewpoint.FarPlane,",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;",
+            source,
             StringComparison.Ordinal);
         Assert.DoesNotContain("Near = 0.1f,", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Far = 700f,", source, StringComparison.Ordinal);
@@ -200,4 +185,22 @@ public sealed class Level100EngineViewpointStateTests
                 ClientCameraPose.Identity,
                 new Level100RenderVector3(1f, 0f, 0f)));
 
+    private static string LocateGodotDirectory()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            string candidate = Path.Combine(
+                directory.FullName,
+                "OnslaughtRebuild.Godot");
+            if (File.Exists(Path.Combine(candidate, "FirstFlightWorldView.cs")))
+            {
+                return candidate;
+            }
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
+    }
 }
