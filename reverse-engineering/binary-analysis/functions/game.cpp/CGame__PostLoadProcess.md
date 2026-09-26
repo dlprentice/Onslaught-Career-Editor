@@ -3,7 +3,7 @@
 > Address: `0x0046d040`
 
 Status: active static function note
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-26 (the retired World 110 owners noted; 2026-09-19 logger callee names; earlier measurement limits retained)
 Source File: `references/Onslaught/game.cpp:764`
 (`CGame::PostLoadProcess`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -114,6 +114,8 @@ world sorting/setup stages" maps to `CMapWho__Sort` +
 
 ## Rebuild mapping
 
+The two owners below, `RetailWorldPlayerStartAdmission` and `RetailWorldPlayerStartHeightClamp`,
+were retired on 2026-09-26 with the separate World 110 stage; last present at `df392cb4`. `Simulation` now builds World 110.
 Three bounded World-110 input/pre-init contracts and one standalone player/
 engine assignment contract now exist, but their runtime composition in this
 function does not.

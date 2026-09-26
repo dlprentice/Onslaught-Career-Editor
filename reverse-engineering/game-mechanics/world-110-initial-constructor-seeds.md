@@ -1,13 +1,14 @@
 # World 110 serialized initial-object seed admission
 
-Status: accepted authored-data and bounded Unit static admission; runtime construction remains open
-Last updated: 2026-09-25 (Level 100 carry-over and Turret 03 fire-control correction; construction admission dated 2026-09-07)
-Verdict: Core admits all 40 exact World-110 RLWD initial-object rows as one
+Status: accepted authored-data and bounded Unit static admission; the rebuild code it describes was
+retired on 2026-09-26 (see "Rebuild pointers")
+Last updated: 2026-09-26 (rebuild pointers: the separate World 110 owners retired; 2026-09-25 Level 100 carry-over and Turret 03 fire-control correction; construction admission dated 2026-09-07)
+Verdict: until 2026-09-26, Core admitted all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
-September 7 extension records ordered Unit/child initialization and prepares the
+September 7 extension recorded ordered Unit/child initialization and prepared the
 four landing-craft turret inputs from the measured attachment calculation. It
-also retains both explicit-tree tables and constructs the base pines followed
+also retained both explicit-tree tables and constructed the base pines followed
 by the first three Buildings, SAT turret and six Features, with shared spatial
 membership, RNG and undelivered events under explicit FP/seed/resource assumptions.
 Evidence: MEASURED serialized data plus SOURCE-INFORMED field semantics — the
@@ -21,6 +22,24 @@ authored input `data/resources/110_res_PC.aya`, 1,294,300 bytes, SHA-256
 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`;
 RLWD 76,600 bytes, SHA-256
 `fb56249deac8faf0033f4d4b67688ff72e12d922291c880d75b10599fc739837`.
+
+## Rebuild pointers (2026-09-26)
+
+The rebuild types this page names were retired on 2026-09-26, together with their tests:
+- the `RetailWorld110*` owners;
+- `RetailWorldInitialObjectSeedAdmission` and `RetailWorldActorDefinitionAdmission`;
+- `RetailWorldPlayerStartAdmission` (with `RetailWorldPlayerStartResolution`);
+- `RetailWorldPlayerAuthoredStartAssignmentSequence` and `RetailWorldPlayerStartHeightClamp`;
+- `RetailUnitConstructionAttachments` and `RetailBuildingSegments`.
+
+That separate World 110 stage never ran in the product. `Simulation` now builds World 110 from
+the materialized static world in the retail load order. That work is `c44977d3`; Level 100's
+base world is carried over in `df392cb4`. See the
+[World 110 construction order](world-110-construction-order.md).
+
+The retired code is last present at `df392cb4`. The retail evidence on this page is unchanged:
+offsets, hashes, orders and values. Where the page says what Core does, it describes the
+retired code.
 
 ## Exact serialized envelope
 
@@ -83,8 +102,7 @@ output bytes have SHA-256
 The payload remains user-local retail-derived evidence and is neither tracked
 nor distributed.
 
-[`RetailWorldInitialObjectSeedAdmission`](../../rebuild/OnslaughtRebuild.Core/RetailWorldInitialObjectSeedAdmission.cs)
-loads only that embedded local payload. It verifies the output hash before JSON
+`RetailWorldInitialObjectSeedAdmission` (retired) loaded only that embedded local payload. It verifies the output hash before JSON
 interpretation, rejects unknown, duplicate, missing, null, reordered, or
 unsupported shapes, validates the exact envelope and census, snapshots every
 row, and exposes read-only typed views over the same row instances. There is no

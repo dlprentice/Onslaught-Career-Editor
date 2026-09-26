@@ -1,16 +1,16 @@
 # World 110 authored player-start admission
 
-Status: accepted authored-data and bounded static construction contracts;
-detached Start/engine/player shells implemented, complete initialization open
-Last updated: 2026-09-26 (engine construction draws linked; script control of the player; "game playing" moved to frame 100 after the pan; admission dated 2026-09-06)
-Verdict: world 110 contains one exact authored type-15 start for player 1. Core
-admits its serialized pre-initialization fields, the complete ordered-match
+Status: accepted authored-data and bounded static construction contracts; the separate rebuild
+owners this page describes were retired on 2026-09-26 (see "Rebuild pointers")
+Last updated: 2026-09-26 (rebuild pointers: the separate World 110 owners retired; engine construction draws linked; script control of the player; "game playing" moved to frame 100 after the pan; admission dated 2026-09-06)
+Verdict: world 110 contains one exact authored type-15 start for player 1. Until
+2026-09-26, Core admitted its serialized pre-initialization fields, the complete ordered-match
 selection law, the released no-match fallback plan, and the exact
-terrain-height prefix of `CStart::Init`. Separate deterministic owners carry
-valid-object `CPlayer::AssignBattleEngine` order and invoke it once for every
+terrain-height prefix of `CStart::Init`. Separate deterministic owners carried
+valid-object `CPlayer::AssignBattleEngine` order and invoked it once for every
 ordered match over adapter-supplied, already-constructed engine/cell identities.
-The production constructor now owns distinct Start, engine and player shells
-and their reader storage, retaining supported initialization fields. It does
+The production constructor owned distinct Start, engine and player shells
+and their reader storage, retaining supported initialization fields. It did
 not complete their lifecycle, publish a world, or perform post-load assignment.
 Evidence: MEASURED — the exact record was reread from the hash-pinned retail
 archive; the retained 66-level round-trip census independently corroborates the
@@ -22,6 +22,24 @@ Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 authored-record source `data/resources/110_res_PC.aya`, 1,294,300 bytes,
 SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`.
+
+## Rebuild pointers (2026-09-26)
+
+The rebuild types this page names were retired on 2026-09-26, together with their tests:
+- the `RetailWorld110*` owners;
+- `RetailWorldInitialObjectSeedAdmission` and `RetailWorldActorDefinitionAdmission`;
+- `RetailWorldPlayerStartAdmission` (with `RetailWorldPlayerStartResolution`);
+- `RetailWorldPlayerAuthoredStartAssignmentSequence` and `RetailWorldPlayerStartHeightClamp`;
+- `RetailUnitConstructionAttachments` and `RetailBuildingSegments`.
+
+That separate World 110 stage never ran in the product. `Simulation` now builds World 110 from
+the materialized static world in the retail load order. That work is `c44977d3`; Level 100's
+base world is carried over in `df392cb4`. See the
+[World 110 construction order](world-110-construction-order.md).
+
+The retired code is last present at `df392cb4`. The retail evidence on this page is unchanged:
+offsets, hashes, orders and values. Where the page says what Core does, it describes the
+retired code.
 
 ## Exact serialized record
 
@@ -100,8 +118,7 @@ stopped at the first match was false.
 
 ## Reconstruction admission
 
-[`RetailWorldPlayerStartAdmission`](../../rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs)
-accepts only world 110, the exact archive identity, and the exact ordered start
+`RetailWorldPlayerStartAdmission` (retired) accepted only world 110, the exact archive identity, and the exact ordered start
 record above. Object identity, type, length, record digest, all six raw float
 words, plane mode, player number, count, and null shape fail closed.
 Commit `4e3d472c` gives the real materializer the matching fail-closed
@@ -174,8 +191,7 @@ P7.
 
 ## Ordered authored-start assignment composition
 
-[`RetailWorldPlayerAuthoredStartAssignmentSequence`](../../rebuild/OnslaughtRebuild.Core/RetailWorldPlayerAuthoredStartAssignmentSequence.cs)
-joins `RetailWorldPlayerStartResolution.MatchingAuthoredStarts` to one
+`RetailWorldPlayerAuthoredStartAssignmentSequence` (retired) joined `RetailWorldPlayerStartResolution.MatchingAuthoredStarts` to one
 adapter-supplied binding per ordered match. Each binding names the matching
 start identity, its already-constructed `GetPlayerObject` result, and that
 engine's player-reader cell. The caller separately supplies the constructed
@@ -461,9 +477,8 @@ weapon or flight mode, unlike Level 100's.
 
 ## Detached production construction and focused checks
 
-[`RetailWorld110InitialConstruction.Create(career, settings)`](../../rebuild/OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)
-now owns a
-[`RetailWorld110PlayerConstruction`](../../rebuild/OnslaughtRebuild.Core/RetailWorld110PlayerConstruction.cs).
+`RetailWorld110InitialConstruction.Create(career, settings)` (retired) owned a
+`RetailWorld110PlayerConstruction`.
 The caller supplies validated career data and explicit frontend settings;
 object and reader identities are allocated by the owner. Identities are local
 Core tokens and make no claim about retail addresses or global thing-number
@@ -479,8 +494,7 @@ The production materializer emits the exact local
 It carries World110's RLWD table and the admitted configuration fields from
 the shipped data, with no restamped Level100 fixture or invented player row.
 
-Focused checks live in
-[`RetailWorld110PlayerConstructionTests.cs`](../../rebuild/OnslaughtRebuild.Core.Tests/RetailWorld110PlayerConstructionTests.cs)
+Focused checks lived in `RetailWorld110PlayerConstructionTests.cs` (retired)
 and `World110InitialActorMaterializationTests` in
 [`materialize_retail_assets_tests.py`](../../rebuild/tools/materialize_retail_assets_tests.py).
 They distinguish all three reader cells, preserve raw God/settings words,
