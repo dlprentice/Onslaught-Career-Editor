@@ -44,6 +44,16 @@ internal static class Build
         field.CaretColumn = path.Length;
     }
 
+    /// <summary>A time as a player would say it: "today 14:32", "yesterday 09:10", "6 Sep 2026".</summary>
+    internal static string When(DateTime time)
+    {
+        if (time == default) return "at an unknown time";
+        DateTime today = DateTime.Today;
+        if (time.Date == today) return $"today {time:HH:mm}";
+        if (time.Date == today.AddDays(-1)) return $"yesterday {time:HH:mm}";
+        return time.Year == today.Year ? time.ToString("d MMM") : time.ToString("d MMM yyyy");
+    }
+
     /// <summary>"1 voice line", "2,340 voice lines".</summary>
     internal static string Count(int count, string singular, string? plural = null) =>
         $"{count:N0} {(count == 1 ? singular : plural ?? singular + "s")}";
@@ -162,6 +172,15 @@ internal static class Build
         ThemeTypeVariation = accent ? "AccentBar" : "", CustomMinimumSize = new Vector2(0, 6),
         SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
     };
+
+    /// <summary>A yes-or-no question before a write: wrapped text at a readable width, the action in amber.</summary>
+    internal static ConfirmationDialog Confirm(string title, string action)
+    {
+        ConfirmationDialog dialog = new() { Title = title, OkButtonText = action, MinSize = new Vector2I(560, 0) };
+        dialog.GetLabel().AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        dialog.GetOkButton().ThemeTypeVariation = "Primary";
+        return dialog;
+    }
 
     /// <summary>A filesystem dialog that cannot delete, create folders or offer to overwrite.</summary>
     internal static FileDialog FilePicker(string title, FileDialog.FileModeEnum mode, params string[] filters) => new()

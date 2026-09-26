@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-26 (rebuild constructs World 110 through its start state; companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
+Last updated: 2026-09-26 (companion rebuilt around players; rebuild constructs World 110 through its start state; companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -149,34 +149,45 @@ isolated original-code evidence, not an observed installed-game/Proton crash or
 a single executed failed-Load-to-bank chain. See the
 [missing-device contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device).
 
-## Godot companion — careers, options, install, music and lore
+## Godot companion — careers, settings, backups, music and lore
 
 The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
 built entirely in code on **Godot 4.8.dev6.mono.official.8898c2b3d**. Its one scene only
 attaches the root script; the build refuses GDScript, saved resources and multi-node
-scenes. David approved its feature set and Flight-deck look on 2026-09-25; all of it is
-built:
+scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 2026-09-26
+he asked for it to be built around players: easy to find your way, easy on the eyes, and
+safe for their game and saves. Its sidebar follows that:
 
-- **Home** finds the game through Steam (native, Flatpak or Snap libraries) or a chosen
-  folder, checks `BEA.exe` against the Steam release by SHA-256, and lists careers and the
-  options file.
-- **Careers** open read-only: overview with the game's own mission names, rank letters by
-  the game's rule and campaign links; the 230 Goodies the game's gallery shows, row by
-  row as on its wall, in the game's colours with titles from the player's text, unlock
-  rules and how each rule is known (071–073 are stored but never shown); kill-count and Goodie
-  edits to a verified copy; cheat-name copies for the three cheats seen working in the
-  Steam game; byte comparison named by region; raw stored values.
-- **Options** reads `defaultoptions.bea` and writes a verified copy with audio, invert,
-  vibration, controller preset, mouse sensitivity, screen shape and captured key changes.
-- **Install & backups** makes verified backup sets of every career and the options file,
-  restores them, and puts a verified copy into the game after a confirmation, refusing while
-  it finds `BEA.exe` running (the Linux process check has not yet been seen against a live
-  game), with an atomic exchange that swaps back if the displaced file is not the one backed
-  up. Game-folder writes are Linux only; Windows refuses them.
-- **Music & voices** plays the game's soundtrack and voice lines from the install with
-  the game's transcripts; Bink cutscenes are listed only. **Lore** reads the repository's
-  lore library offline with search and a mission list read from the player's game.
-  **Media files** inventories a chosen folder.
+- **Home** finds the game through Steam (native, Flatpak or Snap on Linux; the registry
+  on Windows) or a chosen folder, checks `BEA.exe` against the Steam release by SHA-256,
+  shows the banner art from the player's own manual, offers Play through Steam, lists the
+  careers with their progress and opens the most recent one read-only.
+- **Your career**: a Summary with a map of the career's path through the campaign (each
+  mission's rank, the routes taken and those the game recorded as not taken, read from the
+  links the career stores), then missions, Goodies and kills; the 230 Goodies the game's
+  gallery shows, row by row as on its wall, with titles from the player's text, unlock
+  rules and how each rule is known (071–073 are stored but never shown); Edit career for
+  kill counts and Goodies; Cheats for a byte-identical copy named to switch on the three
+  cheats seen working in the Steam game.
+- **Your game**: Game settings (the defaults or any career's own: sound, invert, vibration,
+  controller layout, mouse sensitivity, screen shape and keys captured from a key press)
+  and Backups (automatic backups when the companion opens and after the game closes, only
+  when something changed; Back up now; every set, with Put back for each file).
+- **Extras**: Music & voices plays the soundtrack and voice lines from the install with
+  the game's transcripts (Bink cutscenes are listed only); Lore reads the repository's lore
+  offline with search, the map of Allium from the player's manual and the manual itself.
+- **Advanced**, folded away: Compare careers, Raw values and Media files.
+
+A change reaches the game only through one dialog that offers a new career, replacing the
+one that was opened, or a copy elsewhere. Before anything in the game changes, every career
+and the settings file are copied to a verified backup set; nothing is written while it finds
+`BEA.exe` running (the Linux process check has not yet been seen against a live game); a
+file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
+an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
+`File.Replace` with the same comparison) and verified. When the game closes, or the player
+comes back to the companion, it reads what the game saved and shows the latest, keeping any
+unsaved changes; while changes are unsaved, a bar under the page keeps Save in reach. Every label style outside the banner measures at least 4.5:1 against the
+surfaces it sits on.
 
 The in-process [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs)
 adapter links the existing AppCore safety source unchanged. Linux publication retains
@@ -185,15 +196,18 @@ Malformed or changed inputs and conflicting outputs are refused; uncertain publi
 never becomes a success receipt or an automatic deletion. There is no helper process or
 unchecked write fallback, and normal Godot .NET exports bundle their runtime.
 
-**September 26 evidence:** `npm test` runs one C# contract suite inside headless Godot
-and the launcher's own cases; every screen was rendered at 1280×800 and 1920×1080 against
-a fake install and against the real Steam install (left byte-identical), and reviewed;
-Linux and Windows packages were exported and the Linux package started and quit cleanly.
-Receipts are in the [validation section](VALIDATION.md#companion-approved-workflows--september-26);
-the migration's are in [its section](VALIDATION.md#companion-c-migration--september-25).
-**Windows execution, a human click-through and listening to the audio remain pending.**
-Patching the installed `BEA.exe` is a later phase; mission, rank and link edits are not
-offered; no legacy feature parity or retail gameplay acceptance is implied.
+**Evidence:** the lane's commit messages from 2026-09-26 record each check: `npm test`
+(one C# contract suite inside headless Godot, including the portable write path run on
+Linux, and the launcher's own cases), renders of every screen at 1280×800 and 1920×1080
+reviewed first-hand (the problems that review found are fixed and covered by tests), and
+Linux and Windows packages exported, with the Linux package started and quit cleanly
+under an isolated home. The earlier approved-workflow receipts are
+in [their validation section](VALIDATION.md#companion-approved-workflows--september-26) and
+the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
+**Windows execution (the portable write path has run only on Linux), a human click-through
+and listening to the audio remain pending.** Patching the installed `BEA.exe` is a later
+phase; mission, rank and link edits are not offered; no legacy feature parity or retail
+gameplay acceptance is implied.
 
 ## Existing WinUI toolkit — migration material
 

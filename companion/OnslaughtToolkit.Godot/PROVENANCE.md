@@ -3,7 +3,7 @@
 Status: active independent MIT application boundary
 Last updated: 2026-09-26
 Evidence: SOURCE — code-built C# application, linked MIT AppCore source and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
-Summary: the companion's C# derives only from MIT application references and the RE lane's published contracts; it bundles the project's own lore, reads the game's files from the player's install at run time, and keeps retail data and GPL reconstruction out.
+Summary: the companion's C# derives only from MIT application references and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
 All C# in this project is original MIT application code under the repository
 [LICENSE](../../LICENSE). Save layout facts and behavior were ported from the MIT
@@ -31,7 +31,10 @@ Its own articles name their sources.
 
 The game's own material is never bundled. Mission names, Goodie titles and voice-line
 transcripts are read from the player's `data/language/*.dat` and `text.stf`; music and voice
-lines are played from the player's install; cutscenes are only listed. No source from
+lines are played from the player's install; cutscenes are only listed. Home's banner and the
+map of Allium are the images in the player's own `Manuals/Images/`, read when shown, and the
+manual itself opens from the install in the player's browser. The icons and the emblem
+(also the Windows program icon, drawn at export) are original vector shapes in code. No source from
 `rebuild/` or `references/Onslaught`, decompiler output, proprietary asset, font, music,
 executable or user save enters this application or its exports. Using Godot in both lanes
 does not combine their licensing boundaries. No retail payload is required to build or

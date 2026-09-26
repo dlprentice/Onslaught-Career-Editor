@@ -28,12 +28,12 @@ public static class GoodieFacts
     public static string Describe(GoodieEvidence evidence) => evidence switch
     {
         GoodieEvidence.SeenInGame =>
-            "Seen in the game: a career with this Goodie new loaded, showed it gold and marked it viewed when opened (Steam release).",
-        GoodieEvidence.GameCodeChecked => "Checked in the game's code: this rule matches the retail executable. Not yet watched in play.",
-        GoodieEvidence.DeveloperSource => "From the developers' source code; not yet checked in the retail game.",
-        GoodieEvidence.NeverShown => "The game's gallery has no cell for this slot: its wall mapper skips 071–073 (the retail code " +
-            "matches the developers' source). The game can still mark it new, so the save keeps a state for it; that state is preserved.",
-        _ => "A reserved slot the game never displays; its bytes are preserved.",
+            "Seen in the game: a career with this Goodie new loaded, showed it gold, and marked it viewed once it was opened.",
+        GoodieEvidence.GameCodeChecked => "Checked against the game's own code; not yet watched in play.",
+        GoodieEvidence.DeveloperSource => "From the developers' source code; not yet checked against the game itself.",
+        GoodieEvidence.NeverShown => "The game's gallery has no place for this Goodie, so it never appears there. The game can still " +
+            "mark it earned, so your career keeps its state exactly as it is.",
+        _ => "A slot the game never shows; it is kept exactly as it is.",
     };
 
     public static string StateName(GoodieState state) => state switch

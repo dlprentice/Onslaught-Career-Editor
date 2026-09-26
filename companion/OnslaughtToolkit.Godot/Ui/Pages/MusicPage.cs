@@ -21,7 +21,7 @@ internal sealed class MusicPage : Page
     private GameAudioItem? _loaded;
     private bool _seeking;
 
-    internal MusicPage(GameLibrary game, StatusLine status) : base("music", "Music & voices")
+    internal MusicPage(GameLibrary game, StatusLine status) : base("music", "Music & voices", "music")
     {
         (_game, _status) = (game, status);
         HBoxContainer layout = Build.Row(16);
@@ -56,7 +56,8 @@ internal sealed class MusicPage : Page
         HBoxContainer volumeRow = body.Add(Build.Row(10));
         volumeRow.Add(Build.Text("Volume", "Muted", wrap: false, width: 70));
         _volume = volumeRow.Add(new HSlider { MinValue = 0, MaxValue = 100, Step = 1, Value = 80, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-        body.Add(Build.Text("Cutscenes are Bink video, which this app cannot decode; they are listed for reference only.", "Faint"));
+        body.Add(Build.Text("Cutscenes are listed so you can see what the game holds; watch them in the game, because the companion " +
+            "cannot play their Bink video.", "Faint"));
 
         _player = layout.Add(new AudioStreamPlayer { VolumeDb = Mathf.LinearToDb(0.8f) });
         _player.Finished += () => PlayPause.Text = "Play";

@@ -37,6 +37,7 @@ internal static class CareerSaveTests
         check.That(CareerSave.Inspect(godTwo).Value?.GodFlags is [0u, 1u] && CareerSave.RegionOf(0x2496) == "God flags" &&
             CareerSave.RegionOf(0x249D) == "God flags" && CareerSave.RegionOf(0x249E) == "Career settings",
             "Player 2's god flag at 0x249A is its own stored value, not padding.");
+        CampaignRun(original, info, check);
         ByteComparison same = CareerSave.Compare(original, original.ToArray());
         check.That(same.Equal && same.ChangedBytes == 0 && same.Ranges.Count == 0,
             "No-edit round trip is byte-for-byte identical.");
@@ -239,4 +240,33 @@ internal static class CareerSaveTests
 
     private static string Describe(Dictionary<int, int> selection) =>
         "{" + string.Join(", ", selection.Select(pair => $"{pair.Key}: {pair.Value}")) + "}";
+
+    /// <summary>
+    /// The campaign map's graph against independent literals from the RE lane's level_structure table
+    /// (reverse-engineering/save-file/career-graph.md), which that document checked on a real save.
+    /// </summary>
+    private static void CampaignRun(byte[] original, CareerInspection info, Checks check)
+    {
+        CampaignGraph graph = CampaignGraph.From(info);
+        Dictionary<uint, uint[]> next = graph.Routes.GroupBy(route => info.Missions[route.From].World).ToDictionary(group => group.Key,
+            group => group.Select(route => info.Missions[route.To].World).Order().ToArray());
+        check.That(graph.Nodes.Count == 43 && graph.Routes.Count == 63 && graph.Columns == 26 && graph.MaxRows == 4,
+            "The campaign has 43 missions and 63 routes in 26 columns, at most four missions deep.");
+        check.That(next[100].SequenceEqual([110u]) && next[110].SequenceEqual([200u]) && next[200].SequenceEqual([211u, 212u]) &&
+            next[512].SequenceEqual([523u, 524u]) && next[720].SequenceEqual([731u, 732u]) && !next.ContainsKey(741) &&
+            next[742].SequenceEqual([800u]) && !next.ContainsKey(800), "The routes follow the game's level structure, 1.00 to 8.00.");
+        CampaignNode first = graph.Nodes.Single(node => node.World == 100), last = graph.Nodes.Single(node => node.World == 800);
+        check.That(first is { Column: 0, Code: "1.00", Chapter: 1 } && last.Column == 25 &&
+            graph.Nodes.Where(node => node.Column == 16).Select(node => node.World).SequenceEqual([521u, 522u, 523u, 524u]),
+            "Missions sit in columns by distance from training, ordered by level number within a column.");
+        check.That(graph.Nodes.Count(node => node.Progress == MissionProgress.Complete) == info.MissionCensus.Completed &&
+            graph.Nodes.Where(node => node.Progress == MissionProgress.Open).All(node =>
+                graph.Routes.Any(route => route.To == node.Index && route.State == LinkState.Complete)),
+            "Complete missions are the recorded wins; an open mission has a completed route into it.");
+        byte[] looped = original.ToArray();
+        int lowerOfSecond = (int)BinaryPrimitives.ReadUInt32LittleEndian(looped.AsSpan(0x0006 + 0x40 + 0x08));
+        BinaryPrimitives.WriteUInt32LittleEndian(looped.AsSpan(0x1906 + lowerOfSecond * 8 + 4), 0);
+        check.That(CareerSave.Inspect(looped).Value is CareerInspection loop && CampaignGraph.From(loop).Nodes.Count == 0,
+            "Routes that loop back draw no map rather than a wrong one.");
+    }
 }

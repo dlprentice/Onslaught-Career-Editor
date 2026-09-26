@@ -15,7 +15,11 @@ internal static class Palette
     internal static readonly Color Text = Color.FromHtml("dce8ef");
     internal static readonly Color Muted = Color.FromHtml("8ba3b3");
     internal static readonly Color Quote = Color.FromHtml("b9cad6");
-    internal static readonly Color Faint = Color.FromHtml("5c7486");
+    /// <summary>Small secondary text; at least 4.5:1 against every surface it sits on.</summary>
+    internal static readonly Color Faint = Color.FromHtml("7e96a8");
+
+    /// <summary>Text and icons of controls that cannot be used right now.</summary>
+    internal static readonly Color Disabled = Color.FromHtml("5c7486");
     internal static readonly Color Accent = Color.FromHtml("f2a93b");
     internal static readonly Color AccentHover = Color.FromHtml("f7bf66");
     internal static readonly Color AccentText = Color.FromHtml("1a1204");
@@ -73,7 +77,8 @@ internal static class CompanionTheme
     private static void GoodieCells(Theme theme)
     {
         GoodieCell(theme, "GoodieNew", Palette.NewGold, Palette.NewGold, 1, Palette.AccentText);
-        GoodieCell(theme, "GoodieViewed", Palette.ViewedBlue, Palette.ViewedBlue, 1, Colors.White);
+        // Dark numbers on the game's blue: white on it measures only 3.2:1.
+        GoodieCell(theme, "GoodieViewed", Palette.ViewedBlue, Palette.ViewedBlue, 1, Palette.Background);
         GoodieCell(theme, "GoodieHint", Palette.Field, new Color(Palette.Text, 0.8f), 2, Palette.Text);
         GoodieCell(theme, "GoodieLocked", Palette.Field, Palette.Border, 1, Palette.Faint);
         GoodieCell(theme, "GoodieUnknown", Palette.Field, Palette.Bad, 2, Palette.Bad);
@@ -126,6 +131,10 @@ internal static class CompanionTheme
     {
         theme.SetColor("font_color", "Label", Palette.Text);
         LabelVariation(theme, "Title", 26, Palette.Text, HeadingFont);
+        LabelVariation(theme, "HeroTitle", 34, Colors.White, HeadingFont);
+        LabelVariation(theme, "HeroText", 16, new Color(Colors.White, 0.9f), null);
+        LabelVariation(theme, "Lead", 16, Palette.Text, null);
+        LabelVariation(theme, "CardTitle", 17, Palette.Text, StrongFont);
         LabelVariation(theme, "Section", 15, Palette.Text, HeadingFont);
         LabelVariation(theme, "Eyebrow", 11, Palette.Muted, Variation(ThemeDB.FallbackFont, 0.35f, 2));
         LabelVariation(theme, "StatValue", 26, Palette.Text, HeadingFont);
@@ -133,7 +142,6 @@ internal static class CompanionTheme
         LabelVariation(theme, "Muted", 13, Palette.Muted, null);
         LabelVariation(theme, "Faint", 12, Palette.Faint, null);
         LabelVariation(theme, "Mono", 13, Palette.Text, MonoFont);
-        LabelVariation(theme, "MonoMuted", 12, Palette.Muted, MonoFont);
         LabelVariation(theme, "Accent", BodySize, Palette.Accent, StrongFont);
         LabelVariation(theme, "Data", BodySize, Palette.Data, StrongFont);
         LabelVariation(theme, "Good", 13, Palette.Good, null);
@@ -174,16 +182,20 @@ internal static class CompanionTheme
     private static void Buttons(Theme theme)
     {
         ButtonStyles(theme, "Button", Palette.Raised, Palette.Hover, Palette.Border, Palette.Text);
-        theme.SetColor("font_disabled_color", "Button", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Button", Palette.Disabled);
         theme.SetFont("font", "Button", StrongFont);
         theme.SetConstant("h_separation", "Button", 8);
+        theme.SetConstant("icon_max_width", "Button", Icons.Size);
+        IconColors(theme, "Button", Palette.Text, Palette.Text, Palette.Disabled);
 
         theme.SetTypeVariation("Primary", "Button");
         ButtonStyles(theme, "Primary", Palette.Accent, Palette.AccentHover, Palette.Accent, Palette.AccentText);
+        IconColors(theme, "Primary", Palette.AccentText, Palette.AccentText, Palette.Disabled);
 
         // A write into the game folder: amber outline, never mistaken for an ordinary action.
         theme.SetTypeVariation("Caution", "Button");
         ButtonStyles(theme, "Caution", Palette.Surface, new Color(Palette.Warn, 0.14f), Palette.Warn, Palette.Warn);
+        IconColors(theme, "Caution", Palette.Warn, Palette.Warn, Palette.Disabled);
 
         theme.SetTypeVariation("Nav", "Button");
         StyleBoxFlat nav = Box(new Color(0, 0, 0, 0), 6, padX: 14, padY: 8);
@@ -197,8 +209,10 @@ internal static class CompanionTheme
         theme.SetColor("font_color", "Nav", Palette.Muted);
         theme.SetColor("font_hover_color", "Nav", Palette.Text);
         theme.SetColor("font_pressed_color", "Nav", Palette.Text);
-        theme.SetColor("font_disabled_color", "Nav", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Nav", Palette.Disabled);
         theme.SetFont("font", "Nav", ThemeDB.FallbackFont);
+        theme.SetConstant("h_separation", "Nav", 12);
+        IconColors(theme, "Nav", Palette.Muted, Palette.Text, Palette.Disabled);
 
         theme.SetTypeVariation("NavActive", "Button");
         StyleBoxFlat active = Box(Palette.Raised, 6, padX: 14, padY: 8);
@@ -211,6 +225,23 @@ internal static class CompanionTheme
         theme.SetColor("font_hover_color", "NavActive", Palette.Text);
         theme.SetColor("font_pressed_color", "NavActive", Palette.Text);
         theme.SetFont("font", "NavActive", StrongFont);
+        theme.SetConstant("h_separation", "NavActive", 12);
+        IconColors(theme, "NavActive", Palette.Accent, Palette.Accent, Palette.Accent);
+
+        // The fold-away group heading in the sidebar (Advanced).
+        theme.SetTypeVariation("NavGroup", "Button");
+        StyleBoxFlat group = Box(new Color(0, 0, 0, 0), 6, padX: 8, padY: 4);
+        foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+            theme.SetStylebox(state, "NavGroup", state.StartsWith("hover") ? Box(Palette.Raised, 6, padX: 8, padY: 4) : group);
+        theme.SetStylebox("focus", "NavGroup", Focus(6));
+        foreach (string color in new[] { "font_color", "font_pressed_color", "font_focus_color" })
+            theme.SetColor(color, "NavGroup", Palette.Faint);
+        theme.SetColor("font_hover_color", "NavGroup", Palette.Muted);
+        theme.SetColor("font_hover_pressed_color", "NavGroup", Palette.Muted);
+        theme.SetFont("font", "NavGroup", Variation(ThemeDB.FallbackFont, 0.3f, 2));
+        theme.SetFontSize("font_size", "NavGroup", 11);
+        theme.SetConstant("icon_max_width", "NavGroup", 14);
+        IconColors(theme, "NavGroup", Palette.Faint, Palette.Muted, Palette.Disabled);
 
         // A quiet text action inside cards.
         theme.SetTypeVariation("Link", "Button");
@@ -221,7 +252,17 @@ internal static class CompanionTheme
         theme.SetColor("font_color", "Link", Palette.Data);
         theme.SetColor("font_hover_color", "Link", Palette.Text);
         theme.SetColor("font_pressed_color", "Link", Palette.Accent);
-        theme.SetColor("font_disabled_color", "Link", Palette.Faint);
+        theme.SetColor("font_disabled_color", "Link", Palette.Disabled);
+    }
+
+    private static void IconColors(Theme theme, string type, Color normal, Color hover, Color disabled)
+    {
+        theme.SetColor("icon_normal_color", type, normal);
+        theme.SetColor("icon_focus_color", type, normal);
+        theme.SetColor("icon_pressed_color", type, hover);
+        theme.SetColor("icon_hover_color", type, hover);
+        theme.SetColor("icon_hover_pressed_color", type, hover);
+        theme.SetColor("icon_disabled_color", type, disabled);
     }
 
     private static void ButtonStyles(Theme theme, string type, Color fill, Color hover, Color border, Color text)
@@ -237,7 +278,7 @@ internal static class CompanionTheme
         theme.SetColor("font_pressed_color", type, text);
         theme.SetColor("font_hover_pressed_color", type, text);
         theme.SetColor("font_focus_color", type, text);
-        theme.SetColor("font_disabled_color", type, Palette.Faint);
+        theme.SetColor("font_disabled_color", type, Palette.Disabled);
     }
 
     private static StyleBoxFlat Focus(int radius)
@@ -264,13 +305,42 @@ internal static class CompanionTheme
             theme.SetColor("font_hover_color", type, Palette.Text);
             theme.SetColor("font_pressed_color", type, Palette.Text);
             theme.SetColor("font_hover_pressed_color", type, Palette.Text);
-            theme.SetColor("font_disabled_color", type, Palette.Faint);
+            theme.SetColor("font_disabled_color", type, Palette.Disabled);
             theme.SetConstant("h_separation", type, 8);
         }
         theme.SetIcon("unchecked", "CheckBox", CheckIcon(checkedState: false, enabled: true));
         theme.SetIcon("checked", "CheckBox", CheckIcon(checkedState: true, enabled: true));
         theme.SetIcon("unchecked_disabled", "CheckBox", CheckIcon(checkedState: false, enabled: false));
         theme.SetIcon("checked_disabled", "CheckBox", CheckIcon(checkedState: true, enabled: false));
+        theme.SetIcon("radio_unchecked", "CheckBox", RadioIcon(selected: false, enabled: true));
+        theme.SetIcon("radio_checked", "CheckBox", RadioIcon(selected: true, enabled: true));
+        theme.SetIcon("radio_unchecked_disabled", "CheckBox", RadioIcon(selected: false, enabled: false));
+        theme.SetIcon("radio_checked_disabled", "CheckBox", RadioIcon(selected: true, enabled: false));
+    }
+
+    /// <summary>An 18-pixel radio choice drawn in code: an outlined ring with an amber centre when chosen.</summary>
+    private static ImageTexture RadioIcon(bool selected, bool enabled)
+    {
+        const int size = 18;
+        Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+        Color edge = enabled ? (selected ? Palette.Accent : Palette.Muted) : Palette.Border;
+        Vector2 centre = new(size / 2f - 0.5f, size / 2f - 0.5f);
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float distance = new Vector2(x, y).DistanceTo(centre);
+                // Soft edges: blend by distance so the ring reads as round at icon size.
+                float ring = Mathf.Clamp(1.5f - Mathf.Abs(distance - 7.5f), 0f, 1f);
+                float dot = selected ? Mathf.Clamp(4.5f - distance, 0f, 1f) : 0f;
+                float field = Mathf.Clamp(7.5f - distance, 0f, 1f);
+                Color color = new(Palette.Field, field);
+                if (dot > 0) color = color.Lerp(enabled ? Palette.Accent : Palette.Border, dot) with { A = Mathf.Max(field, dot) };
+                if (ring > 0) color = color.Lerp(edge, ring) with { A = Mathf.Max(color.A, ring) };
+                image.SetPixel(x, y, color);
+            }
+        }
+        return ImageTexture.CreateFromImage(image);
     }
 
     /// <summary>An 18-pixel check box drawn in code: an outlined square, amber-filled with a dark tick when checked.</summary>
@@ -292,7 +362,7 @@ internal static class CompanionTheme
         }
         if (checkedState)
         {
-            Color tick = enabled ? Palette.AccentText : Palette.Faint;
+            Color tick = enabled ? Palette.AccentText : Palette.Disabled;
             (int X, int Y)[] strokes = [(4, 9), (5, 10), (6, 11), (7, 12), (8, 11), (9, 10), (10, 9), (11, 8), (12, 7), (13, 6)];
             foreach ((int x, int y) in strokes)
             {
@@ -343,6 +413,13 @@ internal static class CompanionTheme
         PanelVariation(theme, "CautionNotice", Callout(Palette.Warn));
         PanelVariation(theme, "FailureNotice", Callout(Palette.Bad));
         PanelVariation(theme, "SuccessNotice", Callout(Palette.Good));
+        // The banner frames the game's own art; its content is clipped to the rounded frame.
+        PanelVariation(theme, "Hero", Box(Palette.Surface, 12, Palette.Border));
+        // A choice in a dialog: raised, and outlined in amber when it is the chosen one.
+        PanelVariation(theme, "Choice", Box(Palette.Raised, 8, Palette.Border, padX: 14, padY: 12));
+        PanelVariation(theme, "ChoiceChosen", Box(Palette.Raised.Blend(new Color(Palette.Accent, 0.08f)), 8, Palette.Accent, padX: 14, padY: 12));
+        // Unsaved changes under a page: raised, outlined in amber like the save it leads to.
+        PanelVariation(theme, "ChangesBar", Box(Palette.Raised, 8, Palette.Accent, padX: 16, padY: 10));
         theme.SetStylebox("separator", "HSeparator", new StyleBoxLine { Color = Palette.Border, Thickness = 1 });
         theme.SetConstant("separation", "HSeparator", 12);
     }
@@ -406,7 +483,7 @@ internal static class CompanionTheme
         theme.SetStylebox("hover", "PopupMenu", Box(Palette.Hover, 4, chamfer: false));
         theme.SetColor("font_color", "PopupMenu", Palette.Text);
         theme.SetColor("font_hover_color", "PopupMenu", Palette.Text);
-        theme.SetColor("font_disabled_color", "PopupMenu", Palette.Faint);
+        theme.SetColor("font_disabled_color", "PopupMenu", Palette.Disabled);
         theme.SetConstant("v_separation", "PopupMenu", 8);
 
         theme.SetStylebox("panel", "TooltipPanel", Box(Palette.Raised, 6, Palette.Border, padX: 10, padY: 7));

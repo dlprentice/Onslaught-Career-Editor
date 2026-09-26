@@ -38,10 +38,20 @@ public sealed record ExecutableIdentity(ExecutableState State, long Size = 0, st
     }
 }
 
-/// <summary>One career or options file found in the game folder, with whether the companion can open it.</summary>
-public sealed record GameFile(string Path, string Name, long Size, DateTime Modified, string? Problem)
+/// <summary>A career's progress at a glance, read (never written) while the game folder is inspected.</summary>
+public sealed record CareerSummary(int MissionsDone, int MissionsUsed, int GoodiesEarned, int GoodiesShown, long Kills);
+
+/// <summary>
+/// One career or options file found in the game folder, with whether the companion can open it and, when
+/// it can, the SHA-256 of what was read (to notice when the game saves it again).
+/// </summary>
+public sealed record GameFile(string Path, string Name, long Size, DateTime Modified, string? Problem, CareerSummary? Summary = null,
+    string? Sha256 = null)
 {
     public bool Supported => Problem is null;
+
+    /// <summary>The career's name as the game shows it: the file name without .bes.</summary>
+    public string DisplayName => System.IO.Path.GetFileNameWithoutExtension(Name);
 }
 
 /// <summary>A game installation as the companion sees it. Inspection only reads.</summary>
@@ -75,7 +85,7 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
             Files(System.IO.Path.Combine(root, "data", "video", "cutscenes"), "*.vid").Length);
     }
 
-    /// <summary>Checks the size and version word only; the protected open repeats every check.</summary>
+    /// <summary>Checks the size and version and reads a progress summary; the protected open repeats every check.</summary>
     private static GameFile Describe(FileInfo file)
     {
         string? problem = null;
@@ -89,14 +99,26 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
             {
                 problem = $"{file.Length:N0} bytes, not the supported 10,004.";
             }
-            else
+            CareerSummary? summary = null;
+            string? sha256 = null;
+            if (problem is null)
             {
-                Span<byte> version = stackalloc byte[2];
+                byte[] bytes = new byte[CareerSave.Size];
                 using FileStream stream = new(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                if (stream.Read(version) != 2 || (version[0] | (version[1] << 8)) != CareerSave.VersionWord)
+                stream.ReadExactly(bytes);
+                sha256 = SaveSession.Digest(bytes);
+                if (CareerSave.Inspect(bytes).Value is CareerInspection career)
+                {
+                    summary = new CareerSummary(career.MissionCensus.Completed, career.MissionCensus.Used,
+                        career.GoodieCensus.New + career.GoodieCensus.Old, career.GoodieCensus.Shown, career.Kills.Sum(value => (long)value));
+                }
+                else
+                {
                     problem = "Not a supported career version.";
+                }
             }
-            return new GameFile(file.FullName, file.Name, file.Exists ? file.Length : 0, file.Exists ? file.LastWriteTime : default, problem);
+            return new GameFile(file.FullName, file.Name, file.Exists ? file.Length : 0, file.Exists ? file.LastWriteTime : default, problem,
+                summary, problem is null ? sha256 : null);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
@@ -121,7 +143,44 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
 public sealed class CompanionSettings
 {
     public string? GameFolder { get; set; }
+
+    /// <summary>Where backups go; null means the default folder.</summary>
     public string? BackupFolder { get; set; }
+
+    /// <summary>Whether the companion backs up the game's careers when it starts; null until the player has chosen.</summary>
+    public bool? AutoBackup { get; set; }
+}
+
+/// <summary>
+/// Where backups go: the folder the player chose, or a default folder the companion creates when it
+/// first needs it (in the player's Documents folder). Always outside the game folder.
+/// </summary>
+public sealed class BackupLocation(SettingsStore settings, string defaultFolder)
+{
+    public string DefaultFolder { get; } = defaultFolder;
+    public string Folder => settings.Load().BackupFolder ?? DefaultFolder;
+    public bool IsDefault => settings.Load().BackupFolder is null;
+
+    /// <summary>The folder, created if needed, or null when it cannot be created.</summary>
+    public string? Ensure()
+    {
+        try
+        {
+            Directory.CreateDirectory(Folder);
+            return Folder;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    public bool Choose(string folder)
+    {
+        CompanionSettings saved = settings.Load();
+        saved.BackupFolder = folder;
+        return settings.Save(saved);
+    }
 }
 
 public sealed class SettingsStore(string path)
