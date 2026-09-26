@@ -5,7 +5,7 @@ using OnslaughtToolkit.Companion.Media;
 namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>Lists audio, video and image files in a chosen folder by name and size. Nothing is played or changed.</summary>
-internal sealed class MediaPage
+internal sealed class MediaFilesPage : Page
 {
     private readonly StatusLine _status;
     private readonly Dictionary<string, MediaItem> _items = [];
@@ -13,33 +13,33 @@ internal sealed class MediaPage
     private TreeItem? _treeRoot;
     private string _folder = "";
 
-    internal MediaPage(StatusLine status, Node popups)
+    internal MediaFilesPage(StatusLine status, Node popups) : base("media", "Media files")
     {
         _status = status;
-        Root = Build.Column(12);
-        Root.Name = "Media";
-        Root.Add(Build.Text("Browse local media", CompanionTheme.PageHeadingSize));
-        Root.Add(Build.Text("Choose your game or media folder to inspect its audio, video and image filenames, sizes and " +
-            "locations. This browser lists metadata only; it does not play, decode, import or change the files."));
-        HBoxContainer actions = Root.Add(Build.Row(12));
-        ChooseFolder = actions.Add(Build.Button("Choose media folder…"));
+        VBoxContainer column = Build.Column(14);
+        column.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        Root = column;
+        column.Add(Build.Notice("Lists the audio, video and image files in any folder you choose, by name, format and size. " +
+            "Formats come from file extensions; nothing is opened, decoded or changed.").Panel);
+        HBoxContainer actions = column.Add(Build.Row(12));
+        ChooseFolder = actions.Add(Build.Button("Choose a folder…", "Primary"));
         Rescan = actions.Add(Build.Button("Rescan", disabled: true));
         CancelScan = actions.Add(Build.Button("Cancel scan", disabled: true));
-        FolderPath = Root.Add(new LineEdit
+        FolderPath = column.Add(new LineEdit
         {
-            Editable = false, PlaceholderText = "No folder selected",
-            TooltipText = "The folder you explicitly selected. Files remain in place.",
+            Editable = false, PlaceholderText = "No folder selected", ThemeTypeVariation = "MonoField",
+            TooltipText = "The folder you chose. Files stay where they are.",
         });
-        ScanSummary = Root.Add(Build.Text("Choose a folder to begin. Linked files and folders are skipped."));
-        Files = Root.Add(Build.Table("Filename", "Kind", "Format", "Bytes", "Relative path"));
+        ScanSummary = column.Add(Build.Text("Linked files and folders are skipped. A scan covers 8 folder levels, 5,000 media " +
+            "files and 30,000 entries; a cancelled or limited scan says it is partial.", "Muted"));
+        Files = column.Add(Build.Table("File", "Kind", "Format", "Bytes", "Folder"));
         Files.CustomMinimumSize = new Vector2(0, 240);
-        int[] widths = [190, 120, 95, 90, 220];
-        for (int column = 0; column < widths.Length; column++) Files.SetColumnCustomMinimumWidth(column, widths[column]);
+        int[] widths = [200, 120, 100, 90, 220];
+        for (int index = 0; index < widths.Length; index++) Files.SetColumnCustomMinimumWidth(index, widths[index]);
         Files.SetColumnExpand(3, false);
-        FileDetails = Root.Add(Build.Detail("Select a file to inspect its relative path and reported format. Formats are " +
-            "identified by filename extension; their contents have not been validated.", 108));
-        Root.Add(Build.Text("Each scan covers up to 8 folder levels, 5,000 media files and 30,000 entries. A cancelled or " +
-            "limited scan is labelled as a partial list.", CompanionTheme.NoteSize));
+        (PanelContainer detailPanel, VBoxContainer detailBody) = Build.Panel("Inset", 4);
+        FileDetails = detailBody.Add(Build.Detail("Select a file to see its details."));
+        column.Add(detailPanel);
         FolderDialog = popups.Add(Build.FilePicker("Choose a local media folder", FileDialog.FileModeEnum.OpenDir));
 
         ChooseFolder.Pressed += () => FolderDialog.PopupCenteredRatio(0.75f);
@@ -49,7 +49,8 @@ internal sealed class MediaPage
         Files.ItemSelected += ShowSelection;
     }
 
-    internal VBoxContainer Root { get; }
+    internal override Control Root { get; }
+    internal override string Subtitle => "An inventory of any folder's audio, video and images";
     internal Button ChooseFolder { get; }
     internal Button Rescan { get; }
     internal Button CancelScan { get; }
@@ -68,7 +69,7 @@ internal sealed class MediaPage
         Files.Clear();
         _items.Clear();
         _treeRoot = Files.CreateItem();
-        FileDetails.Text = "Select a file to inspect its metadata. Files are identified by extension; contents are not decoded or validated.";
+        FileDetails.Text = "Select a file to see its details.";
         MediaScan progress = catalog.Begin(path);
         _folder = progress.Root;
         FolderPath.Text = _folder;
@@ -91,6 +92,7 @@ internal sealed class MediaPage
         if (final.IssueCount > 0) FileDetails.Text = "Some entries could not be listed:\n" + string.Join("\n", final.Issues);
         Busy = false;
         UpdateActions();
+        _status.Show(final.Message, final.Ok ? StatusKind.Info : StatusKind.Failure);
         return final;
     }
 
@@ -102,20 +104,20 @@ internal sealed class MediaPage
 
     private void Append(MediaItem item)
     {
+        string folder = System.IO.Path.GetDirectoryName(item.RelativePath)?.Replace('\\', '/') ?? "";
         TreeItem row = Build.TableRow(Files, _treeRoot, item.Name, item.Kind, item.Format,
-            item.Size >= 0 ? item.Size.ToString("N0") : "Unknown", item.RelativePath);
+            item.Size >= 0 ? item.Size.ToString("N0") : "Unknown", folder.Length == 0 ? "." : folder);
         row.SetMetadata(0, item.RelativePath);
         _items[item.RelativePath] = item;
-        row.SetTooltipText(2, "Filename extension only; contents have not been validated.");
     }
 
     private void ShowSelection()
     {
         if (Files.GetSelected() is not TreeItem selected) return;
         if (!_items.TryGetValue(selected.GetMetadata(0).AsString(), out MediaItem? item)) return;
-        string size = item.Size >= 0 ? $"{item.Size:N0} bytes" : "Size unavailable";
-        FileDetails.Text = $"{item.Name}\n{item.Kind}  •  {item.Format}  •  {size}\n{item.RelativePath}\n" +
-            "Metadata only. The extension names a possible format; no playback or content validation is implied.";
+        string size = item.Size >= 0 ? $"{item.Size:N0} bytes" : "size unavailable";
+        FileDetails.Text = $"{item.RelativePath}\n{item.Kind} · {item.Format} · {size}\n" +
+            "The extension names a possible format; the contents were not opened or validated.";
     }
 
     private void UpdateActions()

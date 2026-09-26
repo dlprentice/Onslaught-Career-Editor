@@ -71,38 +71,41 @@ public partial class ScreenCapture : SceneTree
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false);
         viewport.AddChild(app);
         await Settle();
-        await Shot(viewport, label, "save-lab-before-open");
+        foreach (string page in new[] { "home", "edit", "compare", "stored", "media" })
+        {
+            app.Navigate(page);
+            await Shot(viewport, label, page + "-before-open");
+        }
 
+        app.Navigate("home");
         await app.OpenCareerAsync(original);
         foreach ((int row, int count) in new[] { (0, 123456), (3, 4242) })
         {
-            app.SaveLab.Rows[row].Target.Value = count;
-            app.SaveLab.Rows[row].Selected.ButtonPressed = true;
+            app.EditCopy.Rows[row].Target.Value = count;
+            app.EditCopy.Rows[row].Selected.ButtonPressed = true;
         }
-        await Shot(viewport, label, "save-lab-preview");
-        app.SaveLab.Destination.Text = Path.Combine(work, "career-edited.bes");
-        await app.SaveLab.WriteCopyAsync(unchanged: false);
-        await Shot(viewport, label, "save-lab-verified-copy");
-        app.SaveLab.Root.ScrollVertical = 0;
-        app.SaveLab.Destination.Text = Path.Combine(work, "career-edited.bes");
-        await app.SaveLab.WriteCopyAsync(unchanged: true);
-        await Shot(viewport, label, "save-lab-refused-existing");
+        await Shot(viewport, label, "edit-preview");
+        app.EditCopy.Destination.Text = Path.Combine(work, "career-edited.bes");
+        await app.EditCopy.WriteCopyAsync(unchanged: false);
+        await Shot(viewport, label, "edit-verified-copy");
+        await app.EditCopy.WriteCopyAsync(unchanged: true);
+        await Shot(viewport, label, "edit-refused-existing");
 
-        app.Tabs.CurrentTab = 1;
-        TreeItem? first = app.Inspector.Tree.GetRoot()?.GetFirstChild();
+        app.Navigate("stored");
+        TreeItem? first = app.StoredValues.Tree.GetRoot()?.GetFirstChild();
         if (first?.GetNext() is TreeItem links) links.Collapsed = false;
-        await Shot(viewport, label, "inspector");
+        await Shot(viewport, label, "stored-values");
 
-        app.Tabs.CurrentTab = 2;
+        app.Navigate("compare");
         await app.Compare.CompareAsync(Path.Combine(work, "career-edited.bes"));
         await Shot(viewport, label, "compare");
 
-        app.Tabs.CurrentTab = 3;
-        await app.Media.BrowseAsync(media);
-        app.Media.Files.GetRoot()?.GetFirstChild()?.Select(0);
-        await Shot(viewport, label, "media");
+        app.Navigate("media");
+        await app.MediaFiles.BrowseAsync(media);
+        app.MediaFiles.Files.GetRoot()?.GetFirstChild()?.Select(0);
+        await Shot(viewport, label, "media-files");
 
-        app.Tabs.CurrentTab = 0;
+        app.Navigate("home");
         app.OpenDialog.CurrentDir = work;
         app.OpenDialog.PopupCenteredRatio(0.75f);
         await Shot(viewport, label, "open-dialog");

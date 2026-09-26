@@ -36,11 +36,19 @@ internal static class CompanionUiTests
     private static async Task Drive(CompanionApp app, SwitchableSaveFiles files, SceneTree tree, string fixture,
         string outputDirectory, byte[] original, Checks check)
     {
-        SaveLabPage lab = app.SaveLab;
-        check.That(app.Tabs.GetTabCount() == 4, "four code-built pages");
+        EditCopyPage lab = app.EditCopy;
+        check.That(app.Pages.Count >= 5 && app.Sidebar.Items.Count == app.Pages.Count, "every page has one sidebar item");
+        check.That(app.Current == app.Home && app.Home.Root.Visible, "the companion starts on Home");
+        foreach (Page page in app.Pages.Values)
+        {
+            app.Navigate(page.Key);
+            check.That(app.Current == page && page.Root.Visible && app.PageTitle.Text == page.Title.ToUpperInvariant() &&
+                app.Pages.Values.Count(other => other.Root.Visible) == 1, "navigation shows exactly one page: " + page.Key);
+        }
+        app.Navigate("home");
         check.That(lab.Rows.Count == 5, "five code-built editable rows");
         check.That(lab.WriteCopy.Disabled && lab.BackupCopy.Disabled, "writing unavailable before open");
-        foreach (FileDialog dialog in new[] { app.OpenDialog, lab.OutputDialog, app.Compare.Dialog, app.Media.FolderDialog })
+        foreach (FileDialog dialog in new[] { app.OpenDialog, lab.OutputDialog, app.Compare.Dialog, app.MediaFiles.FolderDialog })
         {
             check.That(!dialog.DeletingEnabled && !dialog.FolderCreationEnabled && dialog.Access == FileDialog.AccessEnum.Filesystem,
                 "file dialog has no mutation actions: " + dialog.Title);
@@ -48,6 +56,8 @@ internal static class CompanionUiTests
 
         Outcome<SaveSession> opened = await app.OpenCareerAsync(fixture);
         check.That(opened.Ok, "companion opens the protected real fixture");
+        check.That(app.Current == app.EditCopy && app.CareerName.Text == Path.GetFileName(fixture),
+            "opening from Home shows the career in the header and moves to its page");
         if (app.Workspace.Session is not SaveSession session)
         {
             check.Fail("open failed: " + opened.Message);
@@ -82,7 +92,7 @@ internal static class CompanionUiTests
             for (int index = 0; index < 3; index++)
                 if (original[offset + index] != (byte)(value >> (8 * index))) expectedChanged++;
         }
-        check.That(lab.Preview.Text.Contains($"\n{expectedChanged} changed bytes;"), "the preview counts every changed byte");
+        check.That(lab.Preview.GetParsedText().Contains($"\n{expectedChanged} changed bytes;"), "the preview counts every changed byte");
         PublicationReceipt written = await lab.WriteCopyAsync(unchanged: false);
         check.That(written.Ok, "selected edit publishes and reopens");
         byte[] actual = File.Exists(edited) ? File.ReadAllBytes(edited) : [];

@@ -12,14 +12,11 @@ config/custom_user_dir_name="OnslaughtToolkit"
 project/assembly_name="OnslaughtToolkit.Godot"
 
 [display]
-window/size/viewport_width=1180
-window/size/viewport_height=850
-window/size/window_width_override=1180
-window/size/window_height_override=850
+window/size/viewport_width=1280
+window/size/viewport_height=800
 window/size/resizable=true
-window/stretch/mode="canvas_items"
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.043, 0.063, 0.09, 1)
+environment/defaults/default_clear_color=Color(0.039, 0.059, 0.078, 1)
