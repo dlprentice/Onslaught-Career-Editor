@@ -66,6 +66,8 @@ public partial class ScreenCapture : SceneTree
         SubViewport viewport = new()
         {
             Size = size, RenderTargetUpdateMode = SubViewport.UpdateMode.Always, TransparentBg = false,
+            // Dialogs render inside the capture, as they do inside the application's own window.
+            GuiEmbedSubwindows = true,
         };
         Root.AddChild(viewport);
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false);

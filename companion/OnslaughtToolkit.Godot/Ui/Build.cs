@@ -13,7 +13,8 @@ internal static class Build
     }
 
     /// <summary>A label using one of the theme's label variations (Title, Section, Eyebrow, Muted, Mono…).</summary>
-    internal static Label Text(string text, string variation = "", bool wrap = true, float width = 0)
+    /// <param name="clip">Trim with an ellipsis instead of growing; give the label room (ExpandFill or a width).</param>
+    internal static Label Text(string text, string variation = "", bool wrap = true, float width = 0, bool clip = false)
     {
         Label label = new()
         {
@@ -21,7 +22,7 @@ internal static class Build
             AutowrapMode = wrap ? TextServer.AutowrapMode.WordSmart : TextServer.AutowrapMode.Off,
             CustomMinimumSize = new Vector2(width, 0), VerticalAlignment = VerticalAlignment.Center,
         };
-        if (!wrap) label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        if (clip) label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         return label;
     }
 

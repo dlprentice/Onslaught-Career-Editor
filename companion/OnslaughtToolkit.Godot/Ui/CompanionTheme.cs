@@ -223,6 +223,40 @@ internal static class CompanionTheme
             theme.SetColor("font_disabled_color", type, Palette.Faint);
             theme.SetConstant("h_separation", type, 8);
         }
+        theme.SetIcon("unchecked", "CheckBox", CheckIcon(checkedState: false, enabled: true));
+        theme.SetIcon("checked", "CheckBox", CheckIcon(checkedState: true, enabled: true));
+        theme.SetIcon("unchecked_disabled", "CheckBox", CheckIcon(checkedState: false, enabled: false));
+        theme.SetIcon("checked_disabled", "CheckBox", CheckIcon(checkedState: true, enabled: false));
+    }
+
+    /// <summary>An 18-pixel check box drawn in code: an outlined square, amber-filled with a dark tick when checked.</summary>
+    private static ImageTexture CheckIcon(bool checkedState, bool enabled)
+    {
+        const int size = 18;
+        Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+        Color edge = enabled ? (checkedState ? Palette.Accent : Palette.Muted) : Palette.Border;
+        Color fill = checkedState ? (enabled ? Palette.Accent : Palette.Border) : Palette.Field;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                // A 1-pixel chamfer on each corner keeps the Flight-deck edge at icon size.
+                bool corner = (x == 0 || x == size - 1) && (y == 0 || y == size - 1);
+                bool border = x <= 1 || y <= 1 || x >= size - 2 || y >= size - 2;
+                image.SetPixel(x, y, corner ? new Color(0, 0, 0, 0) : border ? edge : fill);
+            }
+        }
+        if (checkedState)
+        {
+            Color tick = enabled ? Palette.AccentText : Palette.Faint;
+            (int X, int Y)[] strokes = [(4, 9), (5, 10), (6, 11), (7, 12), (8, 11), (9, 10), (10, 9), (11, 8), (12, 7), (13, 6)];
+            foreach ((int x, int y) in strokes)
+            {
+                image.SetPixel(x, y, tick);
+                image.SetPixel(x, y + 1, tick);
+            }
+        }
+        return ImageTexture.CreateFromImage(image);
     }
 
     private static void Fields(Theme theme)

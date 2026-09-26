@@ -74,13 +74,12 @@ public partial class CompanionApp : Control
         VBoxContainer titles = header.Add(Build.Column(2));
         titles.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         PageTitle = titles.Add(Build.Heading("", "Title"));
-        PageSubtitle = titles.Add(Build.Text("", "Muted", wrap: false));
+        PageSubtitle = titles.Add(Build.Text("", "Muted", wrap: false, clip: true));
         VBoxContainer career = header.Add(Build.Column(0));
         career.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         career.Add(Build.Eyebrow("Open career")).HorizontalAlignment = HorizontalAlignment.Right;
-        CareerName = career.Add(Build.Text("None", "Strong", wrap: false));
+        CareerName = career.Add(Build.Text("None", "Strong", wrap: false, width: 220, clip: true));
         CareerName.HorizontalAlignment = HorizontalAlignment.Right;
-        CareerName.CustomMinimumSize = new Vector2(160, 0);
         OpenButton = header.Add(Build.Button("Open career…", "Primary", "Choose a .bes career save (Ctrl+O)."));
         OpenButton.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 

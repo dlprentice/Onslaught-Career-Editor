@@ -12,7 +12,7 @@ internal sealed class StatusLine
     {
         Root = new PanelContainer { ThemeTypeVariation = "StatusBar" };
         HBoxContainer row = Root.Add(Build.Margin(20, 8, 20, 8)).Add(Build.Row(16));
-        Label = row.Add(Build.Text("Ready. Open a career or choose your game folder to begin.", "Muted", wrap: false));
+        Label = row.Add(Build.Text("Ready. Open a career or choose your game folder to begin.", "Muted", wrap: false, clip: true));
         Label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         Game = row.Add(Build.Text("", "Faint", wrap: false));
     }
