@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
 SAFETY_SOURCES = ("SaveLabFileTransaction.cs", "FileMutationSafety.cs")
 # Pure MIT AppCore readers the companion links unchanged; each is staged beside the safety sources.
-LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs")
+LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs", "CheatCodeCatalog.cs", "CheatSaveNameComposer.cs")
 MIT_LICENSE = ROOT / "LICENSE"
 FIXTURE = ROOT / "tests_shared/fixtures/gold_career_save.bin"
 NATIVE_EXTENSIONS = {".godot", ".tscn", ".cfg", ".cs", ".csproj", ".sln"}

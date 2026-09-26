@@ -170,6 +170,7 @@ internal sealed class InstallPage : Page
 
     internal async Task<InstallReceipt> ConfirmAsync()
     {
+        Confirm.Hide();
         if (_game.Folder is not GameFolder game || _pendingSource.Length == 0)
             return new InstallReceipt(false, "Nothing was chosen to write.", "");
         (string source, string target) = (_pendingSource, _pendingTarget);

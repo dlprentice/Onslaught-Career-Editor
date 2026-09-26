@@ -74,6 +74,8 @@ internal static class CompanionUiTests
             app.Goodies.DetailRule.Contains("Goodie 001"), "Goodie 2 shows its rule and its in-game evidence");
         app.Goodies.Cells[150].EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.Goodies.DetailEvidence.StartsWith("From the developers' source"), "an unchecked rule says it comes from the source only");
+        check.That(app.Goodies.Cells.Count(cell => cell.ButtonPressed) == 1 && app.Goodies.Cells[150].ButtonPressed,
+            "exactly one Goodie cell shows as selected");
         check.That(File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original), "opening a game career changes nothing");
 
         Outcome<SaveSession> opened = await app.OpenCareerAsync(fixture);
@@ -234,6 +236,33 @@ internal static class CompanionUiTests
             "the confirmed copy is backed up around, written into savegames and verified");
         check.That(app.Game.Folder?.Careers.Any(career => career.Name == "Installed Career.bes") == true && app.Home.OpenButtons.Count == 2,
             "Home lists the installed career after the write");
+
+        // Cheat names: a byte-identical copy whose name carries a code seen working in the game.
+        app.Navigate("cheats");
+        CheatsPage cheats = app.Cheats;
+        check.That(cheats.Choices.Count == 3, "only the three cheats seen working in the Steam game are offered");
+        check.That(cheats.WriteCopy.Disabled, "no cheat chosen means no copy");
+        cheats.BaseName.Text = "Pilot";
+        cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "Pilot");
+        cheats.Choices[0].ButtonPressed = true;
+        check.That(cheats.Composed.FileName == "PilotMALLOY.bes" && !cheats.WriteCopy.Disabled && !cheats.AddToGame.Disabled,
+            "choosing All goodies names the copy PilotMALLOY.bes");
+        cheats.BaseName.Text = "Bad:Name";
+        cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "Bad:Name");
+        check.That(cheats.WriteCopy.Disabled && cheats.AddToGame.Disabled, "a name the game cannot use under Windows rules is refused");
+        cheats.BaseName.Text = "Pilot";
+        cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "Pilot");
+        string cheatFolder = Path.Combine(outputDirectory, "cheat-copies");
+        Directory.CreateDirectory(cheatFolder);
+        PublicationReceipt cheatCopy = await cheats.WriteCopyAsync(cheatFolder);
+        byte[] sourceBytes = app.Workspace.Session!.CopyBytes();
+        check.That(cheatCopy.Ok && File.ReadAllBytes(Path.Combine(cheatFolder, "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
+            "the cheat copy is byte-identical to the open career");
+        cheats.AskToAdd();
+        check.That(cheats.Confirm.Visible && cheats.Confirm.DialogText.Contains("PilotMALLOY.bes"), "adding to the game asks first, naming the file");
+        InstallReceipt cheatInstall = await cheats.ConfirmAddAsync();
+        check.That(cheatInstall.Ok && File.ReadAllBytes(Path.Combine(install.Game, "savegames", "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
+            "the confirmed cheat career is added to savegames after a verified backup");
         await Frame(tree);
     }
 

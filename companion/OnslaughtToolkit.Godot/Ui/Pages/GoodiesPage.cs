@@ -124,7 +124,8 @@ internal sealed class GoodiesPage : Page
     {
         if (_workspace.Session is not SaveSession session || index < 0 || index >= _cells.Count) return;
         Selected = index;
-        _cells[index].SetPressedNoSignal(true);
+        // Setting a toggle without a signal does not release the rest of its group, so do it here.
+        for (int cell = 0; cell < _cells.Count; cell++) _cells[cell].SetPressedNoSignal(cell == index);
         GoodieRecord goodie = session.Analysis.Goodies[index];
         _detailTitle.Text = $"GOODIE {index:D3}";
         _detailName.Text = _game.Text?.GoodieTitle(index) ?? (_game.Text is null

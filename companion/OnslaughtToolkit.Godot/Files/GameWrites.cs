@@ -206,10 +206,24 @@ public static class GameInstaller
     public static string? Target(GameFolder game, string name)
     {
         if (string.Equals(name, OptionsName, StringComparison.OrdinalIgnoreCase)) return game.OptionsPath;
-        if (name.Length is < 5 or > 128 || name.IndexOfAny(['/', '\\', '\0', ':']) >= 0 || name.Trim() != name || name.StartsWith('.') ||
-            !name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        if (name.Length is < 5 or > 128 || !name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) ||
+            PortableNameProblem(name[..^4]) is not null)
             return null;
         return Path.Combine(game.SavegamesPath, name);
+    }
+
+    /// <summary>
+    /// Why a career name cannot be used in the game's folder on every system, or null. The game runs
+    /// under Windows rules even through Proton, so Windows-invalid characters are refused everywhere.
+    /// </summary>
+    public static string? PortableNameProblem(string name)
+    {
+        if (name.Length == 0) return "Type a name.";
+        if (name.Trim() != name || name.StartsWith('.') || name.EndsWith('.'))
+            return "A name cannot start or end with a space or a dot.";
+        if (name.Any(character => character < ' ' || "<>:\"/\\|?*".Contains(character)))
+            return "A name cannot contain < > : \" / \\ | ? * or control characters.";
+        return null;
     }
 }
 

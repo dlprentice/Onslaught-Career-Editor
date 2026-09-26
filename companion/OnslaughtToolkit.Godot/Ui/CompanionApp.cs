@@ -48,6 +48,7 @@ public partial class CompanionApp : Control
     internal OverviewPage Overview { get; private set; } = null!;
     internal GoodiesPage Goodies { get; private set; } = null!;
     internal InstallPage Install { get; private set; } = null!;
+    internal CheatsPage Cheats { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -76,10 +77,11 @@ public partial class CompanionApp : Control
         StoredValues = new StoredValuesPage(Workspace);
         MediaFiles = new MediaFilesPage(Status, this);
         Install = new InstallPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
+        Cheats = new CheatsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
-            ("Career", [Overview, Goodies, EditCopy, Compare, StoredValues]),
+            ("Career", [Overview, Goodies, EditCopy, Cheats, Compare, StoredValues]),
             ("Game", [Install]),
             ("Library", [MediaFiles]),
         ];
@@ -199,6 +201,7 @@ public partial class CompanionApp : Control
         StoredValues.ShowSession(session);
         Overview.ShowSession(session);
         Goodies.ShowSession(session);
+        Cheats.ShowSession(session);
         Compare.Reset();
         CareerName.Text = System.IO.Path.GetFileName(session.Path);
         CareerName.TooltipText = session.Path;
@@ -234,6 +237,7 @@ public partial class CompanionApp : Control
         EditCopy.UpdateActions();
         Compare.Refresh();
         if (Current == Install) Install.Refresh();
+        if (Current == Cheats) Cheats.Refresh();
         RefreshHeader();
     }
 

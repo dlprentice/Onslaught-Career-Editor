@@ -26,5 +26,7 @@
     <!-- Pure MIT readers linked unchanged: the game's text table and the Goodie unlock rules. -->
     <Compile Include="../../OnslaughtCareerEditor.AppCore/GameTextCatalog.cs" Link="Linked/GameTextCatalog.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/GoodieUnlockRequirementService.cs" Link="Linked/GoodieUnlockRequirementService.cs" />
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/CheatCodeCatalog.cs" Link="Linked/CheatCodeCatalog.cs" />
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/CheatSaveNameComposer.cs" Link="Linked/CheatSaveNameComposer.cs" />
   </ItemGroup>
 </Project>
