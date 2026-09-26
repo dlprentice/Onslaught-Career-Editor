@@ -26,6 +26,10 @@ internal sealed record FakeInstall(string SteamRoot, string Library, string Game
         File.WriteAllText(Path.Combine(game, "BEA.exe"), ExecutableMarker);
         File.WriteAllBytes(Path.Combine(game, "data", "language", "english.dat"), [0x4E, 0x6F, 0x74, 0x20, 0x61]);
         File.WriteAllBytes(Path.Combine(game, "data", "Music", "theme.ogg"), Convert.FromHexString("4f67675300020000"));
+        Directory.CreateDirectory(Path.Combine(game, "data", "sounds", "english", "MessageBox"));
+        Directory.CreateDirectory(Path.Combine(game, "data", "video", "cutscenes"));
+        File.WriteAllBytes(Path.Combine(game, "data", "sounds", "english", "MessageBox", "211_briefing.ogg"), Convert.FromHexString("4f676753"));
+        File.WriteAllBytes(Path.Combine(game, "data", "video", "cutscenes", "01.vid"), Convert.FromHexString("56494400"));
         string careerPath = Path.Combine(game, "savegames", "Career One.bes");
         File.WriteAllBytes(careerPath, career);
         string options = Path.Combine(game, "defaultoptions.bea");

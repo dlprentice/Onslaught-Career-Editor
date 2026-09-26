@@ -43,6 +43,7 @@ public partial class CompanionTestRunner : SceneTree
                 GameTextTests.Run(output, check);
                 InstallTests.Run(original, output, check);
                 OptionsTests.Run(original, check);
+                MediaCatalogTests.RunGameAudio(output, original, check);
                 await CompanionUiTests.RunAsync(this, fixture, output, original, check);
                 check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "the owned fixture copy is restored");
             }

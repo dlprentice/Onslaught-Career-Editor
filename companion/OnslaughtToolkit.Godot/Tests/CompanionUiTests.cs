@@ -297,6 +297,14 @@ internal static class CompanionUiTests
         InstallReceipt optionsInstalled = await optionsPage.ConfirmInstallAsync();
         check.That(optionsInstalled is { Ok: true, Replaced: true } && File.ReadAllBytes(install.Options).AsSpan().SequenceEqual(optionsBytes),
             "the confirmed options copy replaces defaultoptions.bea after a verified backup");
+
+        // Music & voices lists the install's own audio; damaged files and Bink cutscenes are refused without the decoder.
+        app.Navigate("music");
+        check.That(app.Music.Items.Count == 3 && app.Music.List.GetRoot()?.GetChildCount() == 3, "music, voices and cutscenes are listed");
+        check.That(!app.Music.Load(app.Music.Items.First(item => item.Kind == OnslaughtToolkit.Companion.Media.AudioKind.Music)) &&
+            app.Music.PlayPause.Disabled, "a file without a Vorbis header is refused and cannot play");
+        check.That(!app.Music.Load(app.Music.Items.First(item => !item.Playable)) && app.Music.Player.Stream is null,
+            "a Bink cutscene is listed but not played");
         await Frame(tree);
     }
 

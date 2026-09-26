@@ -50,6 +50,7 @@ public partial class CompanionApp : Control
     internal InstallPage Install { get; private set; } = null!;
     internal CheatsPage Cheats { get; private set; } = null!;
     internal OptionsPage Options { get; private set; } = null!;
+    internal MusicPage Music { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -80,12 +81,13 @@ public partial class CompanionApp : Control
         Install = new InstallPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         Cheats = new CheatsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         Options = new OptionsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
+        Music = new MusicPage(Game, Status);
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
             ("Career", [Overview, Goodies, EditCopy, Cheats, Compare, StoredValues]),
             ("Game", [Options, Install]),
-            ("Library", [MediaFiles]),
+            ("Library", [Music, MediaFiles]),
         ];
 
         VBoxContainer frame = this.Add(Build.Column(0));
@@ -155,6 +157,11 @@ public partial class CompanionApp : Control
         MediaFiles.Cancel();
         // A close cannot abandon a write or claim it was cancelled.
         Workspace.WaitForCompletion();
+    }
+
+    public override void _Process(double delta)
+    {
+        if (Current == Music) Music.Tick();
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
