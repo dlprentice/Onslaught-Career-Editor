@@ -2,7 +2,7 @@
 
 Status: active contract for the rebuild's final-wave route; per-unit RNG ordering
 across the whole level remains open
-Last updated: 2026-09-26 (round frames, steering composition, wiggle, feature and city-building probes; created 2026-09-25)
+Last updated: 2026-09-26 (round frames and dying-round hits, steering composition, wiggle, feature and city-building probes; created 2026-09-25)
 Summary: the abort after one kill is a designed retail branch, but retail gives the
 player two helps the rebuild lacks: four friendly turrets that come online after the
 first poll below 80 % health, and the jet Missile Pod. Activated turrets can see the
@@ -500,6 +500,37 @@ never self-acquire.
     tests bit `0x1` (`0x00401ae6-0x00401af4`), and `CRound::Move` never tests the
     round's own dying bit. The round therefore takes one last step in frame N+1+k
     and is not requeued: k + 1 Moves in all, 160 for an 8.0 s life.
+- **No hit while dying.** Contact in that last step, or a collision 2000 delivered
+  after the 4000, does nothing from the round's side:
+  - The collision response (`0x004264a0`) does not test the round's dying or
+    shutdown bits. It gates on:
+    - the readiness bit (`+0xc` bit `0x400`);
+    - parent and child pairs;
+    - invisibility (`+0x2c` bit `0x10`);
+    - dying buildings (type bit `0x100`, slot 28).
+    It then calls slot 39 on both things (`0x004268cb`, `0x004268de`).
+  - `CRound`'s slot 39 (`0x004d8ae0`) first calls `CComplexThing::Hit`
+    (`0x004f4480`), which only notifies a script. It then returns at
+    `0x004d8af7-0x004d8afb` while the round's dying bit `0x4` is set. That exit
+    comes before the damage call (the other thing's slot 40, `0x004d8cef`), the
+    impact explosion (`0x004d9f30`, mode 3) and the death (slot 50).
+  - The other thing's slot 39 still runs. For a `CUnit` (`0x004fcc30`), a round
+    partner (type `0x80000007`: no unit bit `0x10`, no impulse bit `0x100000`) only
+    produces script hit notifications: the squad's (`0x004e6640`) and its own
+    (`0x004f4480` → `0x00533690`). So a scripted target can still see a hit, but
+    nothing is damaged. Bolts and bullets lose the last step's reach.
+- **Impact just before the life event.** This case is static and not observed:
+  - A round that hits something in frame N+k is dying but not yet shut down in
+    frame N+1+k. Its 4000 was filed in frame N, so it comes before the SHUTDOWN
+    2000 that the impact filed in frame N+k.
+  - Neither the 4000's air-burst path (`0x004d9a54-0x004d9a71` → `0x004d9d0d`) nor
+    the explosion (`0x004d9f30`) tests the dying bit. So a `CRoundFlak` or
+    `CRoundExplode` round explodes again in the air; its second `StartDieProcess`
+    returns 0 (`0x004f4437`).
+  - After an impact in an earlier frame, the SHUTDOWN arrives first.
+  - Events hold an active reader to their target (`AddEvent` → `0x00401000`), and
+    the flush skips a null reader. That the shutdown clears the 4000's reader is
+    not traced.
 - **Terrain.** A gravity-free round with zero turn rate that does not hug the
   ground gets a launch-time terrain prediction along its straight path. `Init`
   queues event 4001 at now + distance/speed (`0x004d89cb`); on delivery the
