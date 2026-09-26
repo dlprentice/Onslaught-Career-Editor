@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified library comments](#re-audit-verified-library-comments--september-26);
+[keyboard query ABI](#re-audit-keyboard-query-abi--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,37 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit keyboard query ABI — September 26
+
+The [manifest](../../tools/cohort-specs/input-key-abi-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/input-key-abi-20260926.spec.tsv) correct four query interfaces:
+`00514850`, `00514870` and `00514890` gain their virtual ECX receiver and
+full-EAX integer return; `00513a80` retains its AL return storage with a raw
+unsigned-byte type. Every explicit key stays at stack `+4`; no source-only
+pad-number argument is added. The third table is release-event state; its old
+held-state/source-KeyOn identification is explicitly marked disproved. Neutral
+saved names remain where historical spelling is unknown.
+
+Exactly four keyboard-query prototypes, plate comments and tag sets corrected. Three virtual wrappers gain automatic ECX receivers and int/EAX returns; the raw release helper retains AL storage as uchar. All explicit key parameters remain at stack +4. Every name, body, instruction, local, type and bookmark, all stack metadata and all 8,327 non-target function rows are preserved. Five protected exports are byte-identical; every variable row
+matches the declared return/automatic-receiver change. All nine live exports
+equal the separately reopened rehearsal. Fresh PRE restoration, seven byte-stable
+no-write refusals, independent review, live readback and independently restored
+POST recovery passed. The first isolated seal and rehearsal remain in
+`rejected-v1/` because the historical-note introductions needed clearer
+disproved-claim wording; that seal never reached the working project.
+
+The [keyboard contract](../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+records pristine instruction/caller evidence and 27 original-code cases with
+135 operations. The pump's message/device/timer/pad dependencies were explicit
+substitutes. These are bounded ABI and internal-state findings, not Windows
+event delivery, physical-input or rebuild acceptance.
+
+Working identity: `db.18665`, 18 files / 121,408,372 bytes,
+inventory SHA-256 `97863cea4c23c6b0894d6ac9d6301b8a0353a5628c19d4df8ece8579c3957a87`; main database 71,106,560 bytes,
+SHA-256 `748d0dbd2cbd7ed9c59f97ffe2e7c1b52a7a953364bdc4f508ac127d8f04f3f5`. PRE is the freshly restored library-comment POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-input-key-abi/post-working`. Tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/input-key-abi/`.
 
 ## RE-audit verified library comments — September 26
 

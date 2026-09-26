@@ -240,6 +240,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # library-verified-20260926: 191 authored library evidence comments and tags;
 # no names/ABI/bodies change. Fresh PRE, exact rehearsal/readback, five no-write
 # refusals and independent review; first seal rejected for a false folded alias.
+# input-key-abi-20260926: four keyboard-query prototypes, comments and tag sets;
+# member receivers and result widths from retail callers/bytes, bounded original-code
+# execution, fresh PRE, exact rehearsal/readback and seven no-write refusals.
+# Independent review excludes real input/device acceptance; all names stay unchanged.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -282,6 +286,7 @@ LIVE_GRANTED_COHORTS = [
     "label-audit-3-20260926",
     "library-nvtristrip-20260926",
     "library-verified-20260926",
+    "input-key-abi-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -730,6 +735,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "label-audit-3-20260926",\n'
         '        "library-nvtristrip-20260926",\n'
         '        "library-verified-20260926",\n'
+        '        "input-key-abi-20260926",\n'
         "    };\n",
     ),
     (

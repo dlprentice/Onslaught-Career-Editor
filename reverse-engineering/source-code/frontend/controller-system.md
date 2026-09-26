@@ -1,5 +1,22 @@
 # Controller System
 
+Status: active — mixed source reference and bounded retail evidence
+Last updated: 2026-09-26
+Summary: controller architecture and retail differences; the keyboard queries
+and POV neutral comparison were rechecked on September 26, while other sections
+retain their own dated evidence and limitations.
+Evidence: MEASURED — bounded retail keyboard recheck and the dated evidence below;
+the separate pinned-source architecture is a reference, not proof of retail parity.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+The current [keyboard contract](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+uses pristine SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+and controlled original-code experiments. It supersedes the older held-state
+interpretation of the third key table and the consume-on-first-query shorthand.
+Source interfaces are not literal retail signatures.
+
 ## PC Controller System (PCController.cpp/h)
 
 > Analysis added December 2025
@@ -31,7 +48,7 @@ CController (base class, Controller.h/cpp)
 | `RecordControllerState()` | Write input state to file |
 | `ReadControllerState()` | Read input state from file |
 
-### Retail (Steam) Confirmed Mappings (BEA.exe)
+### Retail mappings and their evidence limits
 
 In the Steam `BEA.exe`, the PC controller vtable at `0x005e48e0` points to concrete helpers for joystick/keyboard queries and record/playback support.
 
@@ -42,22 +59,24 @@ Note: these are safe to re-verify via address-level read-back after any Ghidra r
 | 0x005147b0 | `CPCController__GetJoyButtonOnce` | Returns true when `old == 0` and `current != 0` for `state[pad] + 0x30 + button` (`old @ 0x00888fa4`, `current @ 0x00888f94`) |
 | 0x005147f0 | `CPCController__GetJoyButtonOn` | Returns true when `current != 0` for `state[pad] + 0x30 + button` (`current @ 0x00888f94`) |
 | 0x00514810 | `CPCController__GetJoyButtonRelease` | Returns true when `old != 0` and `current == 0` for `state[pad] + 0x30 + button` (`old @ 0x00888fa4`, `current @ 0x00888f94`) |
-| 0x00514850 | `CPCController__GetKeyOnce` | Returns+clears `0x00888d94[key]` (per-key one-shot/edge state) |
+| 0x00514850 | `CPCController__GetKeyOnce` | Clears `0x00888d94[key]`, but remembers queries in a 32-entry list; repeated queries can remain true until the cursor resets. See the current keyboard contract. |
 | 0x00514890 | `CPCController__GetKeyOn` | Returns `0x00888c94[key]` (per-key held state) |
-| 0x00514870 | `CPCController__GetKeyState3` (TBD) | Returns `0x00888e94[key]` (third per-key state table; meaning still TBD) |
+| 0x00514870 | `CPCController__GetKeyState3` (neutral saved name) | Returns the nonconsuming release-event byte `0x00888e94[key]`; keyup sets it, and separate table clearing resets it. Historical method spelling remains unknown. |
 | 0x00514640 | `CPCController__GetJoyAnalogueLeftX` | Reads joystick state `+0x00` and scales by `0.001` |
 | 0x00514670 | `CPCController__GetJoyAnalogueLeftY` | Reads joystick state `+0x04` and scales by `0.001` |
 | 0x005146a0 | `CPCController__GetJoyAnalogueRightX` | Reads joystick state `+0x08` and scales by `0.001` |
 | 0x005146d0 | `CPCController__GetJoyAnalogueRightY` | Reads joystick state `+0x14`, centers at `32768`, scales by `1/32768` (guarded) |
-| 0x005148b0 | `CPCController__GetJoyPovX` | `sin(POV * 0.00017453294)`; returns 0 when POV is `-1` |
-| 0x00514900 | `CPCController__GetJoyPovY` | `-cos(POV * 0.00017453294)`; returns 0 when POV is `-1` |
+| 0x005148b0 | `CPCController__GetJoyPovX` | `sin(POV * 0.00017453294)`; returns 0 when the low 16 bits are `0xffff` (`CMP AX,FFFF` at `0x005148c1`) |
+| 0x00514900 | `CPCController__GetJoyPovY` | `-cos(POV * 0.00017453294)`; returns 0 when the low 16 bits are `0xffff` (`0x00514911`) |
 | 0x0042d9d0 | `CController__Flush` | Copies button bitfields into `Old`, clears current, calls `DoMappings` (vtable+`0x3c`) |
 | 0x0042db40 | `CController__DoMappings` | Main mapping engine (push_type switch) that drives `SendButtonAction` |
 | 0x00514720 | `CPCController__RecordControllerState` | Writes `mButtons1/2/3` into `DXMemBuffer` (3x4 bytes: `this+0x14/+0x18/+0x1c`) |
 | 0x00514760 | `CPCController__ReadControllerState` | Reads `mButtons1/2/3`; on EOF closes buffer and clears `mPlaying` (`this+0x161=0`) |
 
 **Retail deltas vs Stuart header**:
-- A third key-state vtable entry exists (`0x00514870`), which is not present in `references/Onslaught/Controller.h` (likely a release-edge table).
+- A third key-state vtable entry exists (`0x00514870`), absent from the pinned header. Its release-event meaning is now established from the retail writer and reader; it is not the held-state query.
+- Retail key virtuals receive ECX and one stack key. The pinned source's additional pad-number argument is absent. Held/release wrappers return a raw zero-extended byte; the mapper compares held with exactly 1 and release with nonzero.
+- The consumed-query list is separate from all three keyboard arrays. Clearing those arrays does not clear the list. The message pump has a reset-skipping early return, so its lifetime is not a universal frame boundary.
 - POV hat helpers exist (`0x005148b0`/`0x00514900`) and compute sin/cos from DirectInput POV degrees.
 
 ### Steam mouse-axis mapping

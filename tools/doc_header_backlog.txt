@@ -397,7 +397,6 @@ reverse-engineering/source-code/core/engine-system.md
 reverse-engineering/source-code/core/platform-system.md
 reverse-engineering/source-code/core/thing-system.md
 reverse-engineering/source-code/frontend/_index.md
-reverse-engineering/source-code/frontend/controller-system.md
 reverse-engineering/source-code/full-source-parse-2026-02-11.md
 reverse-engineering/source-code/gameplay/_index.md
 reverse-engineering/source-code/gameplay/battle-system.md
