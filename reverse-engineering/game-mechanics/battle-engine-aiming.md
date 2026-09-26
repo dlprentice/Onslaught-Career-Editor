@@ -147,7 +147,11 @@ Morphing only changes its animation: `flytowalk`/`walktofly`, then `walk`/`fly`.
 - **Model-space positions.** The emitter's pose is its part's cached pose,
   indexed by the record's part index (`0x004b4e86-0x004b4ecc`); the record adds
   no offset. Composed from HPOS/HORI at virtual frame 0 (fly) and 25 (walk) and
-  rounded to single precision (x right, y forward, z up):
+  rounded to single precision. Model space uses the Battle Engine's own axes (the
+  world pose is M·p + P with M from `+0x3c`, no flip): y forward and z down, as in
+  the world, so negative z is up. The ground meshes measured for the probe table
+  (tank, truck, warehouse, icebergs, city buildings) all have their BBOX at
+  negative z, above their origin; the Target Tank's spans z −0.73 to −0.04.
 
   | Gun | Part | Fly (frame 0) | Walk (frame 25) |
   | ---: | --- | --- | --- |
@@ -166,6 +170,8 @@ Morphing only changes its animation: `flytowalk`/`walktofly`, then `walk`/`fly`.
 
   Guns 1-6 hang from `hood`, Guns 9-10 from `Object03`, Guns 11-12 from
   `Object01`, Guns 13-14 from the root. Only Guns 9-12 move between the poses.
+  Gun 1 therefore sits 258 mm above the cockpit origin and Guns 13-14 186 mm below
+  it.
   Every emitter's forward axis stays within about 10° of the body's (y ≥ 0.984),
   so the 0.9 dot test passes unless the cockpit tilt is large. The values were
   composed in double precision by `rebuild/tools/cmsh_static_preview.py`; the

@@ -20,13 +20,18 @@ Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, S
 
 `Random__NextLCGAbs` (`0x004de8d0`) has 154 direct call sites in 77 functions. Each
 call site's generator object was classified from the last load of `ecx` before the
-call. 137 sites in 74 functions use the gameplay generator at `0x008a9d9c`. The
-others are:
-- `CGame::ReceiveButtonAction` and `CGame::RespawnPlayer` (3 sites), which use a
-  generator at `CGame+0x304`;
-- `CMessageBox::RenderBattleLinePulseSprites` (12 sites), which uses a local one;
-- two `CWorld::LoadWorld` sites (`0x0050cc62`, `0x0050cc8b`), which use a generator
-  seeded locally at `0x0050cc3f`.
+call. The gameplay stream is `GAME.mRandomStream`, the pointer at `0x008a9d9c`,
+which is `CGame+0x304` of the global `CGame` at `0x008a9a98`. `InitRestartLoop`
+creates it afresh with seed 123456 at every level start (`0x0046c7e4-0x0046c80d`,
+`game.cpp:387`).
+- 137 sites in 74 functions load it as `ds:0x008a9d9c`.
+- 3 more load it through `this+0x304`: the developer-mode win and lose buttons in
+  `CGame::ReceiveButtonAction` (`0x0046f96a`, `0x0046fa60`, `game.cpp:2677/2716`)
+  and the spawn-point pick in `CGame::RespawnPlayer` (`0x00470267`). None runs in
+  normal single-player play.
+- `CMessageBox::RenderBattleLinePulseSprites` (12 sites) uses a local generator.
+- Two `CWorld::LoadWorld` sites (`0x0050cc62`, `0x0050cc8b`) use a generator seeded
+  locally at `0x0050cc3f`.
 
 The site list is kept at
 `local-data/test-runs/re-lane-20260925/rng-call-sites-20260926.tsv` (SHA-256
@@ -407,9 +412,13 @@ At frame 2:
 | Unit 4003 | `CUnit::HandleEvent` (`0x004f98a8-0x004f9972`) | one, then requeue at now + 3.0 + (r mod 65536)/65536 ([final wave](level100-final-drone-wave.md#ai-owners-that-draw-shared-rng)) |
 | fire control 4001 | `0x004fb280` | one, then requeue at now + (r mod 65536) × 0.1/65536 |
 | AI 3000, polling owner | `CUnitAI::HandleEvent` (`0x004ff330`) | one (`0x004ff371`), then 3003 at now + 2.0 + (r mod 65536) × 2⁻¹⁵. An owner polls when inactive (`+0x214` = 0), in deploy state 1 or 2 (`+0x244`), or with its AI switched off (`+0x210` ≠ 0) |
-| AI 3000, active owner | `0x004fec60` → `CUnitAI::Update` | the idle arm's one draw when there is no target (delay from `+0x110`), then 3000 again (`0x004fef33`); a squad member skips the movement step |
+| AI 3000, active owner | `0x004fec60` → `CUnitAI::Update` (`0x004fef40`) | the idle arm's one draw when there is no target, then 3000 again at now + 1.5 + (r mod 65536) × 2⁻¹⁶ with `+0x110` set, else now + 3.0 + (r mod 65536) × 2⁻¹⁵ (`0x004ff2b3-0x004ff321`, requeue `0x004fef33`); a squad member skips the movement step |
+| AI target search (inside `Update`) | slot 4 (`0x004ff4f0`) calls slot 11 when the AI has no target (`0x004ff6fe`) | `CUnitAI`'s selector (`0x004ff710`) draws once per candidate that passes the side, activity and range tests, and only for a `CUnitIndiscriminate` profile (`0x004ff8c2-0x004ff8d8`). `CRepairPadAI` (Health Pad) differs only in this slot (`0x004d6d10`), which draws nothing. No Level 100 profile is Indiscriminate, so the search draws nothing here |
 | AI 3001 (Warehouse) | `0x004feac0` | one (`0x004feb80`) when no target is found, then 3001 at now + 1.0 + (r mod 65536) × 2⁻¹⁶ |
 | script 2003 | `0x005335a0` | none; it calls the script's `ready()` event |
+| squad 4000 | `CNormalSquad` slot 0 (`0x004e7040`) → `0x004e8100` | refreshes the target reader when `+0x114` is set and `+0x120` ≠ 1 (search `0x00477cb0`, no draw), then one draw (`0x004e8177`) and a new 4000 at now + 2.0 + (r mod 65536) × 2⁻¹⁵ |
+| squad 4001 | slot 0 → prune(1) (`0x004e83b0`) | drops dead members, resolves formation slots (`0x004e84e0`, no draw), then one draw (`0x004e8486`) and a new 4001 at now + 1.0 + (r mod 65536) × 2⁻¹⁶ |
+| squad 4002 | `0x004e65e0` → slot 66 (`0x004e7070`) | runs `Process`; when it returns 0, one draw (`0x004e709c`) and 4002 at now + 0.99 + (r mod 65536) × 1.5258789e-7, otherwise 4002 at −1 with no draw. It returns 1 only on its formation path (destination more than 1 unit away or an active path); a squad that has a target takes a branch not traced here |
 | guide 2000 (Air Trainer) | `CAirGuide::HandleEvent` (`0x004026e0`) → `0x004028e0` | one (`0x00402762`), then 2000 at now + 0.5 + (r mod 65536) × 2⁻¹⁷ |
 | guide 2001 (Air Trainer) | `0x004026e0` → `0x004027c0` | one (`0x00402705`), then 2001 at now + 0.5 + (r mod 65536) × 2⁻¹⁷ |
 | INIT_SCRIPT 2001 | the thing's script VM | none directly (no Level 100 script calls `Rand`); natives such as `SpawnThing` construct things that draw |
