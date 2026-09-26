@@ -12,7 +12,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// closing while a protected file transaction is still running.
 /// </summary>
 /// <summary>Where the companion looks for Steam and keeps its settings; tests and captures supply their own.</summary>
-internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null)
+internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null,
+    Action<string>? OpenUrl = null)
 {
     internal static CompanionEnvironment Default() =>
         new(SteamLibraries.DefaultRoots(), ProjectSettings.GlobalizePath("user://settings.json"), GameProcess.IsRunning);
@@ -51,6 +52,7 @@ public partial class CompanionApp : Control
     internal CheatsPage Cheats { get; private set; } = null!;
     internal OptionsPage Options { get; private set; } = null!;
     internal MusicPage Music { get; private set; } = null!;
+    internal LorePage Lore { get; private set; } = null!;
     internal EditCopyPage EditCopy { get; private set; } = null!;
     internal ComparePage Compare { get; private set; } = null!;
     internal StoredValuesPage StoredValues { get; private set; } = null!;
@@ -82,12 +84,13 @@ public partial class CompanionApp : Control
         Cheats = new CheatsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         Options = new OptionsPage(Workspace, Game, Status, this, environment.GameRunning ?? GameProcess.IsRunning);
         Music = new MusicPage(Game, Status);
+        Lore = new LorePage(Game, Status, environment.OpenUrl ?? (url => OS.ShellOpen(url)));
         (string, IReadOnlyList<Page>)[] groups =
         [
             ("Start", [Home]),
             ("Career", [Overview, Goodies, EditCopy, Cheats, Compare, StoredValues]),
             ("Game", [Options, Install]),
-            ("Library", [Music, MediaFiles]),
+            ("Library", [Music, Lore, MediaFiles]),
         ];
 
         VBoxContainer frame = this.Add(Build.Column(0));
@@ -120,6 +123,7 @@ public partial class CompanionApp : Control
             foreach (Page page in pages)
             {
                 _pages[page.Key] = page;
+                page.HeaderChanged = RefreshHeader;
                 page.Root.SizeFlagsVertical = SizeFlags.ExpandFill;
                 page.Root.Visible = false;
                 host.Add(page.Root);
@@ -166,11 +170,18 @@ public partial class CompanionApp : Control
 
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Echo: false, CtrlPressed: true, Keycode: Key.O } && !Workspace.Busy)
-        {
+        if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
+        if (key is { CtrlPressed: true, Keycode: Key.O } && !Workspace.Busy)
             ShowOpenDialog();
-            GetViewport().SetInputAsHandled();
-        }
+        else if (Current == Lore && key is { CtrlPressed: true, Keycode: Key.F })
+            Lore.Search.GrabFocus();
+        else if (Current == Lore && key is { AltPressed: true, Keycode: Key.Left })
+            Lore.Back();
+        else if (Current == Lore && key is { AltPressed: true, Keycode: Key.Right })
+            Lore.Forward();
+        else
+            return;
+        GetViewport().SetInputAsHandled();
     }
 
     /// <summary>Shows one page and refreshes its header.</summary>

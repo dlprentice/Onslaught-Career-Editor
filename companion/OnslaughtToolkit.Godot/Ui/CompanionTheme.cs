@@ -14,6 +14,7 @@ internal static class Palette
     internal static readonly Color Border = Color.FromHtml("21394a");
     internal static readonly Color Text = Color.FromHtml("dce8ef");
     internal static readonly Color Muted = Color.FromHtml("8ba3b3");
+    internal static readonly Color Quote = Color.FromHtml("b9cad6");
     internal static readonly Color Faint = Color.FromHtml("5c7486");
     internal static readonly Color Accent = Color.FromHtml("f2a93b");
     internal static readonly Color AccentHover = Color.FromHtml("f7bf66");
@@ -149,7 +150,18 @@ internal static class CompanionTheme
         theme.SetFontSize("bold_font_size", "RichTextLabel", BodySize);
         theme.SetFontSize("mono_font_size", "RichTextLabel", 13);
         theme.SetConstant("line_separation", "RichTextLabel", 3);
+        // Slanted from the same face, so emphasis in the lore never falls back to another font.
+        theme.SetFont("italics_font", "RichTextLabel", Slanted(ThemeDB.FallbackFont));
+        theme.SetFont("bold_italics_font", "RichTextLabel", Slanted(StrongFont));
+        theme.SetFontSize("italics_font_size", "RichTextLabel", BodySize);
+        theme.SetFontSize("bold_italics_font_size", "RichTextLabel", BodySize);
+        theme.SetColor("table_border", "RichTextLabel", Palette.Border);
+        theme.SetColor("table_odd_row_bg", "RichTextLabel", new Color(Palette.Raised, 0.45f));
+        theme.SetColor("table_even_row_bg", "RichTextLabel", new Color(0, 0, 0, 0));
     }
+
+    private static FontVariation Slanted(Font font) =>
+        new() { BaseFont = font, VariationTransform = new Transform2D(1, 0.2f, 0, 1, 0, 0) }; // Godot's documented slant: xy = 0.2.
 
     private static void LabelVariation(Theme theme, string name, int size, Color color, Font? font)
     {

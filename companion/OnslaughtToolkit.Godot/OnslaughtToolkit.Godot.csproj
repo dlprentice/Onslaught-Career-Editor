@@ -17,16 +17,20 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Media/**/*.cs;Options/**/*.cs;Ui/**/*.cs" />
+    <Compile Include="Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Lore/**/*.cs;Media/**/*.cs;Options/**/*.cs;Ui/**/*.cs" />
+    <!-- The project's own lore articles and the reader's front door, embedded as text. -->
+    <EmbeddedResource Include="../../lore/*.md" LogicalName="lore/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../lore-book/BOOK.md" LogicalName="lore-book/BOOK.md" />
     <!-- Contract tests and development entries (captures, license metadata) never enter a release export. -->
     <Compile Include="Tests/**/*.cs;Development/**/*.cs" Condition="'$(Configuration)' != 'ExportRelease'" />
     <!-- Share the existing safety implementation unchanged, without the AppCore codec or services. -->
     <Compile Include="../../OnslaughtCareerEditor.AppCore/SaveLabFileTransaction.cs" Link="Safety/SaveLabFileTransaction.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/FileMutationSafety.cs" Link="Safety/FileMutationSafety.cs" />
-    <!-- Pure MIT readers linked unchanged: the game's text table and the Goodie unlock rules. -->
+    <!-- Pure MIT readers linked unchanged: the game's text table, Goodie unlock rules, cheat names and the lore mission list. -->
     <Compile Include="../../OnslaughtCareerEditor.AppCore/GameTextCatalog.cs" Link="Linked/GameTextCatalog.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/GoodieUnlockRequirementService.cs" Link="Linked/GoodieUnlockRequirementService.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/CheatCodeCatalog.cs" Link="Linked/CheatCodeCatalog.cs" />
     <Compile Include="../../OnslaughtCareerEditor.AppCore/CheatSaveNameComposer.cs" Link="Linked/CheatSaveNameComposer.cs" />
+    <Compile Include="../../OnslaughtCareerEditor.AppCore/CampaignLoreComposer.cs" Link="Linked/CampaignLoreComposer.cs" />
   </ItemGroup>
 </Project>

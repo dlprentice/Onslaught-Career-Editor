@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using Godot;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Lore;
 using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Tests;
@@ -18,7 +19,9 @@ internal static class CompanionUiTests
         check.Suite("companion interface");
         SwitchableSaveFiles files = new(new ProtectedSaveFiles());
         FakeInstall install = FakeInstall.Create(Path.Combine(outputDirectory, "ui-install"), original);
-        CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"));
+        List<string> openedUrls = [];
+        CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"),
+            OpenUrl: openedUrls.Add);
         CompanionApp app = new(files, managesWindow: false, environment);
         tree.Root.AddChild(app);
         await Frame(tree);
@@ -26,6 +29,7 @@ internal static class CompanionUiTests
         try
         {
             await Drive(app, files, tree, install, fixture, outputDirectory, original, check);
+            await DriveLore(app, tree, openedUrls, check);
         }
         finally
         {
@@ -306,6 +310,44 @@ internal static class CompanionUiTests
         check.That(!app.Music.Load(app.Music.Items.First(item => !item.Playable)) && app.Music.Player.Stream is null,
             "a Bink cutscene is listed but not played");
         await Frame(tree);
+    }
+
+    private static async Task DriveLore(CompanionApp app, SceneTree tree, List<string> openedUrls, Checks check)
+    {
+        check.Suite("lore reader");
+        app.Navigate("lore");
+        LorePage lore = app.Lore;
+        check.That(lore.Current?.Id == LoreLibrary.HomeId && lore.Reader.GetParsedText().Contains("Lost Toys") &&
+            app.PageSubtitle.Text.StartsWith("Onslaught Lore", StringComparison.Ordinal), "Lore opens on the front door and names it in the header");
+        check.That(lore.BackButton.Disabled && lore.ForwardButton.Disabled, "a fresh reading session has nowhere to go back to");
+        lore.Follow("lore:characters");
+        TreeItem? selected = lore.Library.GetSelected();
+        check.That(lore.Current?.Id == "characters" && lore.Reader.GetParsedText().Contains("Kiralova") && !lore.BackButton.Disabled &&
+            app.PageSubtitle.Text.StartsWith("The people in it", StringComparison.Ordinal), "a link opens another article and can be retraced");
+        check.That(selected?.GetMetadata(0).AsString() == "characters" &&
+            selected.GetChildCount() == lore.Rendered!.Headings.Count(heading => heading.Level == 2),
+            "the open article is selected in the library with its sections beneath it");
+        lore.Back();
+        check.That(lore.Current?.Id == LoreLibrary.HomeId && !lore.ForwardButton.Disabled, "Back returns to the front door");
+        lore.Forward();
+        check.That(lore.Current?.Id == "characters", "Forward returns to the article");
+        lore.Open("the-campaign");
+        check.That(lore.Reader.GetParsedText().Contains("Choose your Battle Engine Aquila folder on Home") &&
+            !lore.Reader.Text.Contains("LIVE:CAMPAIGN"), "without the game's text the campaign page says where to set the game folder");
+        string page = LoreLibrary.Repository + "reverse-engineering/RE-INDEX.md";
+        lore.Follow(page);
+        check.That(openedUrls.SequenceEqual([page]) && lore.Current?.Id == "the-campaign", "a repository link opens in the browser; the reader stays put");
+        lore.Search.Text = "Kiralova";
+        lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "Kiralova");
+        check.That(!lore.Library.Visible && lore.Results.GetParsedText().Contains("The people in it"), "search lists the articles that mention a phrase");
+        lore.Results.EmitSignal(RichTextLabel.SignalName.MetaClicked, "hit:battle-engine-tech");
+        check.That(lore.Current?.Id == "battle-engine-tech", "a search result opens its article");
+        lore.Search.Text = "";
+        lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
+        check.That(lore.Library.Visible, "clearing the search shows the library again");
+        lore.Open("community-preservation", "active-community-contacts");
+        for (int frame = 0; frame < 3; frame++) await Frame(tree);
+        check.That(lore.Reader.GetVScrollBar().Value > 0, "a link to a section scrolls the reader to it");
     }
 
     private static async Task UnavailableWorker(string outputDirectory, byte[] original, Checks check)

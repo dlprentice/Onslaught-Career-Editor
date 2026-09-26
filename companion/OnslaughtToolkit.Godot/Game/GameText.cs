@@ -19,7 +19,8 @@ public sealed partial class GameText
     private GameText(GameTextCatalog catalog, IReadOnlyDictionary<string, uint> names)
     {
         Language = catalog.LanguageName;
-        foreach (GameLevelName level in GameTextCatalogService.GetLevelNames(catalog))
+        Levels = GameTextCatalogService.GetLevelNames(catalog);
+        foreach (GameLevelName level in Levels)
             _levels.TryAdd(level.Code, level); // The plain row sorts before its (Evo) variant.
         Dictionary<uint, string> byId = [];
         foreach (GameTextEntry entry in catalog.Entries)
@@ -37,6 +38,9 @@ public sealed partial class GameText
     }
 
     public string Language { get; }
+
+    /// <summary>Every mission the game's text names, in code order, each harder (Evo) version after its map.</summary>
+    public IReadOnlyList<GameLevelName> Levels { get; }
     public int LevelCount => _levels.Count;
     public int GoodieTitleCount => _goodieTitles.Count;
     public int VoiceLineCount => _voiceLines.Count;

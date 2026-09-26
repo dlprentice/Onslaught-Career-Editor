@@ -24,7 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
 SAFETY_SOURCES = ("SaveLabFileTransaction.cs", "FileMutationSafety.cs")
 # Pure MIT AppCore readers the companion links unchanged; each is staged beside the safety sources.
-LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs", "CheatCodeCatalog.cs", "CheatSaveNameComposer.cs")
+LINKED_SOURCES = ("GameTextCatalog.cs", "GoodieUnlockRequirementService.cs", "CheatCodeCatalog.cs", "CheatSaveNameComposer.cs",
+                  "CampaignLoreComposer.cs")
 MIT_LICENSE = ROOT / "LICENSE"
 FIXTURE = ROOT / "tests_shared/fixtures/gold_career_save.bin"
 NATIVE_EXTENSIONS = {".godot", ".tscn", ".cfg", ".cs", ".csproj", ".sln"}
@@ -196,6 +197,13 @@ def stage_project(output: Path) -> Path:
     safety.mkdir()
     for name in (*SAFETY_SOURCES, *LINKED_SOURCES):
         shutil.copyfile(ROOT / "OnslaughtCareerEditor.AppCore" / name, safety / name)
+    # The project's own lore (MIT, project-written) is embedded in the assembly as text.
+    for folder, pattern in (("lore", "*.md"), ("lore-book", "BOOK.md")):
+        (output / folder).mkdir()
+        for article in sorted((ROOT / folder).glob(pattern)):
+            if article.is_symlink() or not article.is_file():
+                raise RuntimeError(f"Lore source must be a regular file: {article}")
+            shutil.copyfile(article, output / folder / article.name)
     return project
 
 

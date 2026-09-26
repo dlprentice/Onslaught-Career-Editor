@@ -16,6 +16,9 @@ internal abstract class Page(string key, string title)
     /// <summary>The line under the page title; pages describe their current subject here.</summary>
     internal virtual string Subtitle => "";
 
+    /// <summary>Raised when the page's title line changes while it is showing; the shell redraws the header.</summary>
+    internal Action? HeaderChanged { get; set; }
+
     internal virtual void Refresh()
     {
     }

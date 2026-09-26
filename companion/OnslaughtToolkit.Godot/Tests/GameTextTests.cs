@@ -20,17 +20,7 @@ internal static class GameTextTests
             "text.stf #define lines map names to ids; anything else is ignored.");
 
         string game = Path.Combine(outputDirectory, "game-text", "game");
-        Directory.CreateDirectory(Path.Combine(game, "data", "language"));
-        Directory.CreateDirectory(Path.Combine(game, "data", "MissionScripts", "text"));
-        File.WriteAllBytes(Path.Combine(game, "data", "language", "english.dat"), LanguageTable(
-        [
-            (10, "1.00 - Test Flight", null), (11, "2.11 - Example Crossing", null),
-            (12, "2.11 - Example Crossing (Evo)", null), (971379130, "First Title", null), (42, "Third Title", null),
-            (13, "Hello from the briefing.", "V211_01"),
-        ]));
-        File.WriteAllText(Path.Combine(game, "data", "MissionScripts", "text", "text.stf"),
-            "#define GOODIE_TEXT_1_TITLE 971379130\r\n#define GOODIE_TEXT_3_TITLE 42\r\n");
-        GameText? text = GameText.Load(game);
+        GameText? text = LoadSample(game);
         check.That(text is { Language: "english", LevelCount: 2 }, "A language table decodes and its level names are recognised by shape.");
         check.That(text?.LevelName(100) == "1.00 - Test Flight" && text.LevelName(211) == "2.11 - Example Crossing" &&
             text.LevelName(999) is null, "Level numbers map to the game's dotted codes; the plain row wins over (Evo).");
@@ -41,6 +31,22 @@ internal static class GameTextTests
         File.WriteAllBytes(Path.Combine(game, "data", "language", "english.dat"), [0xBB, 0xFF, 0xFF, 0xFF, 3, 0, 0, 0, 200, 0, 0, 0]);
         check.That(GameText.Load(game) is null, "A truncated table is no text, not an error.");
         check.That(GameText.Load(Path.Combine(outputDirectory, "game-text", "absent")) is null, "A folder without text is no text.");
+    }
+
+    /// <summary>A game folder holding only a synthetic language table and text.stf, loaded as the game's text.</summary>
+    internal static GameText? LoadSample(string game)
+    {
+        Directory.CreateDirectory(Path.Combine(game, "data", "language"));
+        Directory.CreateDirectory(Path.Combine(game, "data", "MissionScripts", "text"));
+        File.WriteAllBytes(Path.Combine(game, "data", "language", "english.dat"), LanguageTable(
+        [
+            (10, "1.00 - Test Flight", null), (11, "2.11 - Example Crossing", null),
+            (12, "2.11 - Example Crossing (Evo)", null), (971379130, "First Title", null), (42, "Third Title", null),
+            (13, "Hello from the briefing.", "V211_01"),
+        ]));
+        File.WriteAllText(Path.Combine(game, "data", "MissionScripts", "text", "text.stf"),
+            "#define GOODIE_TEXT_1_TITLE 971379130\r\n#define GOODIE_TEXT_3_TITLE 42\r\n");
+        return GameText.Load(game);
     }
 
     /// <summary>The v3 table: header, entries, uVar7, UTF-16 pool, then the audio pool the loader finds through uVar7.</summary>

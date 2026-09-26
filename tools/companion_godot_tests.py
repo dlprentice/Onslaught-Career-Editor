@@ -42,6 +42,9 @@ class CompanionLauncherTests(unittest.TestCase):
             path = self.project / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(data, encoding="utf-8")
+        for name in ("lore/_index.md", "lore/world-lore.md", "lore-book/BOOK.md"):
+            (self.source / name).parent.mkdir(exist_ok=True)
+            (self.source / name).write_text("# Project-written article\n", encoding="utf-8")
         for name in (*host.SAFETY_SOURCES, *host.LINKED_SOURCES):
             path = self.source / "OnslaughtCareerEditor.AppCore" / name
             path.parent.mkdir(exist_ok=True)
