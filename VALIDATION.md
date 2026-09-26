@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the September 25 capture record corrected; each dated section keeps its own date).
+Last updated: 2026-09-26 (the rebuild's final capture recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1321,6 +1321,28 @@ Other differences: none. Logs: `local-data/test-runs/csharp-allcode-lane-2026092
 `csharp-pre-b0b9c5e7/`, `csharp-scenes-29b40721/`, `order-experiment-20260925-223458/`,
 `feback-trace-20260925-222356/`
 and the worktree's `local-data/test-runs/csharp-allcode-20260925-215316/`.
+
+**Final capture, September 26.** `main` at `455ed6f4`, from a frozen checkout, with the command above
+(`final-capture-455ed6f4/capture.sh`): the smoke completed and returned to the main menu, the Godot log
+has no error, and the WAV is again byte-identical to the baseline's (`932b25a9…`; integrated −13.0 LUFS,
+true peak +0.2 dBFS). Frames 0–13,179 and the three main-menu frames match the capture above. Frames
+13,180–15,330 differ from it for two evidenced reasons, besides the pines and reticle rounding they
+already had against the baseline:
+- **The terrain's stage-3 detail matrix** ([Terrain detail rotation](#terrain-detail-rotation--september-26))
+  changes every frame that draws terrain. Two no-intro smoke captures of the same checkout on the Intel
+  iGPU (Mesa, `gl_compatibility`), one with the matrix as committed and one with only the old
+  quarter-scale matrix restored, reach the same state and tape and differ on exactly the frames that draw
+  terrain; their loading screens and menus are identical. Their gameplay frames are bit-identical to the
+  NVIDIA captures: the committed run to this capture on all 2,151, and the old-matrix run to the capture
+  above on its first 40 (13,180–13,219). Those 40 frames therefore differ by the matrix alone, and the
+  shader compiles and draws on both renderers.
+- **The simulation's September 26 contracts** (the sections above: the pre-run, the retail load order,
+  waypoint walks, rounds, the U-17's flight and the planes' retreat), which moved the smoke's state from
+  `53c1cc64…` to `79fc338c…`. The old-matrix run differs from the capture above only on 13,220–15,329:
+  first where the U-17 enters the frame in a different pose, then in the units, rounds and the HUD's
+  scanner and crosshair.
+
+Logs and comparisons: `local-data/test-runs/final-capture-455ed6f4/` (the Intel pair in `ab-rotation/igpu/`).
 
 ### Lane baseline — September 25
 
