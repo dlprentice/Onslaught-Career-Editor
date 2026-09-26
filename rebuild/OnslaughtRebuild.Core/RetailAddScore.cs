@@ -48,7 +48,7 @@ namespace OnslaughtRebuild.Core;
 /// </remarks>
 public static class RetailAddScore
 {
-    /// <summary><c>CGame</c> singleton — 149 image <c>mov ecx, 0x008a9a98</c>.</summary>
+    /// <summary><c>CGame</c> singleton — 146 image <c>mov ecx, 0x008a9a98</c> (149 operand references in all).</summary>
     public const uint GameSingletonAddress = 0x008a9a98u;
 
     /// <summary><c>CGame.mScore</c> — <c>this+0xf4</c>.</summary>

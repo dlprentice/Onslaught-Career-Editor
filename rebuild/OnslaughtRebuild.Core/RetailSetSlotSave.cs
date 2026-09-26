@@ -29,8 +29,10 @@ namespace OnslaughtRebuild.Core;
 /// bits 63..66 even though <c>Complete</c> is still 0.
 /// </para>
 /// <para>
-/// <b>Do not invent live <c>GAME.mSlots</c>.</b> <c>CGame::SetSlot</c>'s
-/// any-nonzero OR and FillOut's copy of those 32 words stay on
+/// <b>Do not invent live <c>GAME.mSlots</c>.</b> <c>CGame::SetSlot</c>
+/// (sets the bit only when the value is 1 and clears it otherwise: <c>cmp
+/// [esp+0xc],1; jne</c> at <c>0x0046d3c5</c>, as <c>CCareer::SetSlot</c> at
+/// <c>0x00421505</c>) and FillOut's copy of those 32 words stay on
 /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>. This owner
 /// only persists through the already-pinned
 /// <see cref="RetailCareerSlots.SetSlot"/> literal-1 store.

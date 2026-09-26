@@ -41,10 +41,21 @@ namespace OnslaughtRebuild.Core;
 /// Mutation: increment so a second Wait becomes 2.
 /// </para>
 /// <para>
+/// <b>The flag's other readers and writers</b> (the RE lane's audit,
+/// re-read here). Pause stores it (<c>0x00537d55</c>) before its
+/// <c>AddEvent</c> call (<c>0x00537d5f</c>).
+/// <c>CScriptObjectCode::Run</c> (<c>0x00539b00</c>) clears it on
+/// entry (<c>0x00539b47</c>), reads it before each instruction and
+/// exits when it is set (<c>0x00539b74</c>), and sets it at its
+/// 10,000-instruction guard (<c>0x00539bf9</c>); an exit with the flag
+/// set zeroes <c>+0x20c</c> and skips the stack-balance check
+/// (<c>0x00539c0f-0x00539c1f</c>). <c>CopyState</c> restores it from
+/// the snapshot (<c>0x00539948</c>).
+/// </para>
+/// <para>
 /// PlayPCharMessageWait / FollowWaypointWait /
-/// PlayAnimationWait, the 0x228 CVM snapshot, the
-/// <c>0.05f</c> CLOCK_TICK resume, and what
-/// <c>Run</c> does with the flag stay unclaimed.
+/// PlayAnimationWait, the 0x228 CVM snapshot and the
+/// <c>0.05f</c> CLOCK_TICK resume stay unclaimed.
 /// ChargeWeapon stays unclaimed. Live
 /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
 /// </para>

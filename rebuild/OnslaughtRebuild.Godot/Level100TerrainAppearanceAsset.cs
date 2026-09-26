@@ -106,9 +106,10 @@ internal sealed class Level100TerrainAppearanceAsset
             // of CDXLandscape__RenderTerrain (0x005455d2-0x0054563a) by
             //   u += dt * *(float *)0x005d8580 (0x3a83126f = 0.001)
             //   v += dt * *(float *)0x005e50e4 (0x3a03126f = 0.0005)
-            // each followed by a single `if (x >= 1.0) x -= 1.0` against
-            // *(float *)0x005d8568 (0x3f800000 = 1.0), which for a monotonic
-            // accumulator is fract().
+            // each followed by a single `if (x > 1.0) x -= 1.0` against
+            // *(float *)0x005d8568 (0x3f800000 = 1.0; strict: `fcomp; test
+            // ah,0x41; jne` at 0x005455f5), which for a monotonic accumulator
+            // is fract() except that exactly 1.0 stays 1.0.
             //
             // BOTH HALVES OF THE PARAGRAPH BELOW WERE WRONG, and it is retained
             // only because it is the reasoning that led here. The rate was NOT
@@ -148,7 +149,10 @@ internal sealed class Level100TerrainAppearanceAsset
             // is the level's first frame, not process start. Back-extrapolating
             // u from three samples puts u = 0 at process uptime 26.15 s against
             // a level start of about 26.3 s. So resetting the phase at level
-            // entry, as this asset does, is retail's behaviour.
+            // entry, as this asset does, is retail's behaviour for a process's
+            // first level. Nothing in the image resets the accumulators between
+            // levels (5 + 5 references, all in RenderTerrain), so whether a
+            // second mission in the same process starts from zero is open.
             //
             // The rate, however, was NOT what the .rdata constants suggested —
             // see the remarks on CloudScrollRateU.
@@ -243,12 +247,13 @@ internal sealed class Level100TerrainAppearanceAsset
     /// <c>0x008c0298</c> at three level times on the safe copy: u =
     /// 0.058181878 / 0.20878051 / 0.35480464, giving du/dt = 0.0199944 and
     /// 0.0200088 per second over the two intervals — 0.07 % apart. v is
-    /// exactly u/2 at all three samples. Note the accumulator advances once
-    /// per terrain DRAW and terrain draws many tiles per frame, which is why
-    /// the per-second rate is 20x the bare 0.001 constant; the per-draw rate
-    /// varies by 3.1 % between intervals while the per-second rate varies by
-    /// 0.07 %, so wall time is the stable parameterisation and is what is used
-    /// here.
+    /// exactly u/2 at all three samples. The accumulators advance once per
+    /// <c>RenderTerrain</c> call, at its head and only for view 0
+    /// (<c>0x005455b5</c>/<c>0x005455d0</c>), by <c>[0x008a9e20]</c> × 0.001;
+    /// the file does not give that multiplier's units, which is why the
+    /// per-second rate is 20x the bare constant. The per-second rate varies by
+    /// 0.07 % between intervals, so wall time is the stable parameterisation
+    /// and is what is used here.
     ///
     /// This supersedes an earlier change that took these from 0.02/0.01 down to
     /// 0.001/0.0005 as "20x too fast". The original values were right and that
@@ -399,10 +404,11 @@ internal sealed class Level100TerrainAppearanceAsset
     public void Update(IReadOnlyList<Level100TerrainTileSelection> selections, double frameDelta)
     {
         // u += dt * 0.001 (0x005d8580), v += dt * 0.0005 (0x005e50e4), each
-        // followed by a single `if (x >= 1.0) x -= 1.0` against 0x005d8568.
-        // For a monotonic accumulator that single conditional subtract is
-        // fract(), and it is reproduced as fract() rather than as a subtract so
-        // that an unusually long frame cannot leave the phase above 1.
+        // followed by a single `if (x > 1.0) x -= 1.0` against 0x005d8568
+        // (strict, 0x005455f5). For a monotonic accumulator that single
+        // conditional subtract is fract() apart from an exact 1.0, and it is
+        // reproduced as fract() so that an unusually long frame cannot leave
+        // the phase above 1.
         _cloudScrollU = Fract(_cloudScrollU + (frameDelta * CloudScrollRateU));
         _cloudScrollV = Fract(_cloudScrollV + (frameDelta * CloudScrollRateV));
         _material.SetShaderParameter(

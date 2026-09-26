@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,29 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Audit corrections: Mech Bullet damage and comments — September 26
+
+The RE lane's record audit found these in rebuild code; each was re-read here
+from the pristine specimen (`74154bfa…`).
+- **Mech Bullet damage is 0.08, not 0.081.** `CExplosion::Init` compares an
+  explosion's damage with the double 0.0015 (`0x0044b9e8-0x0044ba02`, `0x5db298`).
+  At or below it, the explosion's collision mask becomes −1, and the filter at
+  `0x00426900` then never collides. "Mech Bullet Hit" deals 0.001
+  (`0x3a83126f`, `default physics.dat`), so a Mech Bullet does only its round's
+  0.08 (`0x3DA3D70A`). The old value added the explosion. A Target Tank now takes
+  76 rounds (was 75); a truck still takes 38 and a drone 13. No pinned run lands
+  a Mech Bullet, so no pin moved. The cold-start run fires the Vulcan: it still
+  wins at tick 8,540 with hull 3,350 on the abort branch, and its won tape now
+  ends at state `c6017343…` (trace `b44844e6…`), replayed twice.
+- **Comments only:** `CGame::SetSlot` and `CCareer::SetSlot` set a slot bit only
+  for 1 (`0x0046d3c5`, `0x00421505`); the image has 146 `mov ecx, 0x008a9a98`
+  (149 operand references); Enter is binding row 19 and Numpad Enter row 21;
+  the installed Steam executable hashes pristine today; `+0x2494` is
+  `mIsGod[2]`; the stop flag's readers and writers in `Run`, `CopyState` and
+  Pause; the terrain scroll advances per `RenderTerrain` call for view 0 and
+  wraps only above 1.0 (`0x005455f5`). Whether a second mission in the same
+  process restarts the scroll phase is open.
 
 ### Terrain detail rotation — September 26
 

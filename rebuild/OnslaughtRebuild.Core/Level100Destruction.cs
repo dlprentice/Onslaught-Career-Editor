@@ -708,13 +708,15 @@ public sealed class Level100DestructionState
     /// </summary>
     public const uint PulseDamageBits = 0x3FE66666;
     /// <summary>
-    /// Legacy Mech Bullet approximation: configured direct damage <c>0.08</c>
-    /// plus explosion maximum <c>0.001</c>. The round/explosion contract
-    /// requires separate spatial eligibility and falloff; Pulse observations
-    /// do not prove a fixed combined Mech Bullet amount. This remains pending
-    /// the shared explosion resolver, even where existing tutorial tests pass.
+    /// The Mech Bullet round's direct damage, 0.08 (field 2 of round
+    /// "Mech Bullet", <c>default physics.dat</c>). Its "Mech Bullet Hit"
+    /// explosion adds nothing: its damage, 0.001 (<c>0x3a83126f</c>), is at or
+    /// below the double 0.0015 that <c>CExplosion::Init</c> compares
+    /// (<c>0x0044b9e8-0x0044ba02</c>, pristine <c>74154bfa…</c>), so its
+    /// collision mask becomes −1 and the filter at <c>0x00426900</c> never
+    /// lets it touch anything.
     /// </summary>
-    public const uint MechBulletDamageBits = 0x3DA5E354;
+    public const uint MechBulletDamageBits = 0x3DA3D70A;
     // The admitted Warehouse has 28 parts. Reserve one detach per part plus
     // impact, direct damage and the two existing threshold/terminal projections.
     public const int MaximumEventsPerHit = 28 + 4;

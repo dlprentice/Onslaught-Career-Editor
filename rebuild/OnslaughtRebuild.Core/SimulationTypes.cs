@@ -225,9 +225,11 @@ public enum SimActions : ushort
     /// <list type="bullet">
     ///   <item>Space <c>0x39</c> — row 9, <c>BUTTON_MECH_MORPH</c>
     ///   <c>0x21</c>, KEY_ONCE, <c>active=1</c>;</item>
-    ///   <item>Enter <c>0x1c</c> and Numpad Enter <c>0x9c</c> — row 20,
-    ///   <c>BUTTON_SKIP_CUTSCENE</c>
-    ///   (<c>reverse-engineering/source-code/frontend/fep-systems.md:19</c>);</item>
+    ///   <item>Enter <c>0x1c</c> — row 19, and Numpad Enter <c>0x9c</c> —
+    ///   row 21, both on button 7 (the RE lane's decode of the default rows at
+    ///   <c>0x00514210</c>, whose button-7 rows are 18 Space, 19 Enter,
+    ///   20 Escape and 21 Numpad Enter;
+    ///   <c>reverse-engineering/source-code/frontend/fep-systems.md:19</c>);</item>
     ///   <item>Escape <c>0x01</c> — rows 17 <c>BUTTON_FRONTEND_MENU_BACK</c>,
     ///   20 <c>BUTTON_SKIP_CUTSCENE</c> and 34 <c>BUTTON_PAUSE</c>.</item>
     /// </list>
