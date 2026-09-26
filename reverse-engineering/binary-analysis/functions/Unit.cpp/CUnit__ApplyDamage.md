@@ -191,7 +191,7 @@ Ghidra symbol.
 | `0x004037be` | `CAirUnit__ApplyDamageAndResolveSlot19Vector_004037a0` | forwards its four args unchanged, then compares life to 0 |
 | `0x00417a16` | `CBuilding__VFunc_40_004179a0` | pure forwarder; skips when `[this+0x178]` live or `[this+0x2c]` bit 4 set — matches the rebuild's PROVENANCE account of the prison-building slot 40 |
 | `0x0048006d` | `CHiveBoss__ForwardApplyDamageUnlessFlag01000000_00480050` | skips when `[src+0x34] & 0x1000000`; passes `eax` twice (source reused as mesh arg slot per caller window) |
-| `0x004898b0` | `CInfantryUnit__VFunc40_HandleCollisionDamageReaction` | collision-damage reaction passing computed args |
+| `0x004898b0` | `CInfantryUnit__Damage` | collision-damage reaction passing computed args |
 
 Caller names are the current name-table identities; the table's own
 `_004037a0`-style suffixes are part of the saved symbol. Plus **19

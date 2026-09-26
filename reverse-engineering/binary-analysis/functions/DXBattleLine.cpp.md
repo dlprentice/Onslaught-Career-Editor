@@ -23,7 +23,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0047ec60` | `FUN_0047ec60` | `CMonitor__SampleHeightfieldNormalAtXY` | placeholder replaced; this address carries a name now |
 | `0x00513820` | `FUN_00513820` | `D3DStateCache__SetStateCached` | placeholder replaced; this address carries a name now |
 | `0x00513930` | `FUN_00513930` | `D3DStateCache__SetState114Raw` | placeholder replaced; this address carries a name now |
-| `0x00513a50` | `FUN_00513a50` | `CEngine__SetRenderStateCached` | placeholder replaced; this address carries a name now |
+| `0x00513a50` | `FUN_00513a50` | `PCLTShell__D3D_SetTexture` | placeholder replaced; this address carries a name now |
 | `0x00513c70` | `FUN_00513c70` | `CEngine__DrawIndexedPrimitives` | placeholder replaced; this address carries a name now |
 | `0x00527cc0` | `FUN_00527cc0` | `CWaterRenderSystem__ValidateVBufferAndMarkReady` | placeholder replaced; this address carries a name now |
 | `0x00527d20` | `FUN_00527d20` | `CDXLandscape__ValidateDeviceAndUpdateValidSoFar` | placeholder replaced; this address carries a name now |
@@ -388,7 +388,7 @@ Wave 310 corrected this saved owner label from the older `CExplosionInitThing` i
 | 0x00513bc0 | RenderState_Set | Cached render-state setter |
 | 0x00513820 | D3DStateCache__SetStateCached | Set texture stage state |
 | 0x00513930 | D3DStateCache__SetState114Raw | Set sampler state |
-| 0x00513a50 | CEngine__SetRenderStateCached | Set texture |
+| 0x00513a50 | PCLTShell__D3D_SetTexture | Set texture |
 | 0x00513c70 | CEngine__DrawIndexedPrimitives | Draw indexed primitives |
 | 0x00527cc0 | CWaterRenderSystem__ValidateVBufferAndMarkReady | Check render pass enabled |
 | 0x00527d20 | CDXLandscape__ValidateDeviceAndUpdateValidSoFar | Check stencil enabled |

@@ -1,7 +1,8 @@
 # CTexture__FindTexture_Unwind
 
 > Address: 0x005d5120
-> Source: texture.cpp (debug path at 0x00632ef0)
+> Source File: texture.cpp (debug path at 0x00632ef0) | Binary: BEA.exe
+> Last updated: 2026-09-26
 
 ## Summary
 Exception unwind handler for CTexture__FindTexture. Called during stack unwinding when an exception occurs within the FindTexture function.
@@ -30,7 +31,7 @@ The function accesses the stack frame of `CTexture__FindTexture` via the unaffec
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x00449d40 | OID_T3_00449d40 | Cleanup/deallocation callback wrapper (calls `OID__FreeObject`). Demoted from `OID__FreeObject_Callback` on 2026-08-17: no `OID` type descriptor is present in the image and no vtable owns this VA. The wrapper reading is a body observation and is unaffected, but note that `OID__FreeObject` itself is not a name the current Ghidra function table carries, so the callee in that parenthesis is unresolved rather than merely renamed. |
+| 0x00449d40 | operator_delete | The program's global `operator delete`: it passes the pointer to the memory manager's free (`0x00549220` on `0x009c3df0`) (pristine specimen `74154bfa…`). Named 2026-09-26: the D3DX library code's 104 references to `??3@YAXPAX@Z` land here (Ghidra cohort `library-d3dx-20260926`). This funclet calls it with the tag, file and line arguments of the game's debug `new` (`0x005d5120`-`0x005d5138`). |
 
 Call sites often push additional debug context (alloc tag / file / line) for consistency with allocation sites, but this helper ultimately frees the pointer.
 

@@ -37,7 +37,7 @@ settings and that god mode was not persisted. Both claims were wrong; Git keeps 
   `SetInfinateEnergy(1)` (vtable `+0x154`, `0x00405f20`: `+0x160` = argument, then `+0xFC`
   = the configuration's `+0x20`) (`0x004d30a1-0x004d30ba`). The Battle Engine vtable is
   `0x005d89c4`.
-- **`CPlayer::SetIsGod`** (`0x004d3020`, `Player.cpp:221-242`) stores the player's `+0x20`
+- **`CPlayer::SetIsGod`** (`0x004d3020`, `Player.cpp:221-243`) stores the player's `+0x20`
   and the career word, then, if the player has a Battle Engine (`+0x1c`): for a value of 1,
   `SetVulnerable(0)` and `SetInfinateEnergy(1)`; otherwise `SetVulnerable(1)` and
   `SetInfinateEnergy(0)`. A nonzero value also increments the player's `+0x3c`

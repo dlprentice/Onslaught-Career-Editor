@@ -128,6 +128,11 @@ implemented by the rebuild's `RetailUnitEuler`.
 - **Guide slots 5-8:** 5 sets mode 2 (fly away) with a goal, 6 sets mode 3 (steered like mode
   1), 7 sets mode 3 or 0, and 8 resets the guide to the unit's position. The dropship's slot 64
   is a bare `ret`, so nothing resets its guide at the end of a path.
+- **Planes.** The `CPlane` vtable (`0x005e1930`, 118 slots) holds the same slot 61
+  (`0x00403a90`), slot 100 (`0x004fdd00`, Retreat) and slot 116 (`0x004fe5f0`) as `CDropship`
+  (`0x005e1dd8`). Its Move (slot 66, `0x004d1cd0`) calls `CAirUnit::Move` (`0x00402fa0`, at
+  `0x004d1e8c`), which calls `CUnit::Move` (`0x004fa8d0`, at `0x00403159`). Its arrival radius
+  is 5.0 (slot 94, `0x0050e8e0`: `fld [0x005d85d8]`).
 
 ## What ends a leg
 
