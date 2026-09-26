@@ -1,13 +1,28 @@
 # CFrameTimer__Start
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CFrameTimer__Start` at `0x00423680` in the render/effects/platform-support cohort; bounded behavior, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — current name/register identity, READY packet/decompile, structured edges, closure range, and independently recomputed pristine body bytes; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00423680`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **The argument is a starting frame rate, not a "frame scale".**
+  - `Start` stores it at `+4` and its reciprocal at `+8` (`0x00423680-0x00423698`).
+  - The constructor stores the counter frequency as a float at `+0` (`0x0042366b-0x0042366f`).
+  - `Frame()` keeps `+4` as a smoothed frames-per-second value:
+    `+4 = 0.25 × frequency / ticks + 0.75 × +4`, floored at 1.0 (`0x0042378c-0x004237af`).
+  - `PCPlatform`'s FPS getter returns `+4` (`0x00515956`).
+- **No "tick budget".** `+0x20` (frequency ÷ argument) only seeds the last frame's tick count.
+  `Frame()` overwrites it with now − last every frame (`0x0042377c`, `0x0042377f`).
 
 ## Identity
 - Body `[0x00423680,0x00423710]`, 145 bytes, 53 closure instructions. Raw pristine-body SHA-256 `bba61cf815b506353200ed1e7d05288619db919b2863a64f847a771c3111a9e4`; closure range SHA-256 `0e1bacd44dcd5a9e32677bbe0245421ba923e8cb496033a8b08c7eb4cf7a9087`; packet range-plus-bytes SHA-256 `ac2d0d3185a3d47c044c427e9ffc7ae8c35129d9df2cf904d2aa3c722ea0f03c`. All three were independently recomputed over the exact single contiguous inclusive range.

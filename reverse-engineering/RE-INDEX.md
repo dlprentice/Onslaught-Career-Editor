@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (dropship flight and landing contracts; Level 100 and World 110 construction-order contracts, final-wave contract; composed loader/preset/language contracts; current Ghidra routing retained)
+Last updated: 2026-09-26 (walker dash window; dropship flight and landing contracts; Level 100 and World 110 construction-order contracts, final-wave contract; composed loader/preset/language contracts; current Ghidra routing retained)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -997,6 +997,7 @@ flat inventory.
 | Named waypoint paths: loading, start node, following and the Level 100 and World 110 routes | [waypoint-paths.md](game-mechanics/waypoint-paths.md) |
 | Dropship flight: per-tick move, guide steering, turning and move orders | [dropship-flight.md](game-mechanics/dropship-flight.md) |
 | Dropship landing: landing states, `Land()`, unloading, withdrawal, turret and AI schedule | [dropship-landing.md](game-mechanics/dropship-landing.md) |
+| Walker dash: the retail timing window, its float32 frame table and the strafe roll | [walker-dash.md](game-mechanics/walker-dash.md) |
 | CMSH `CPOS`/`CORI` identity | [cmsh-cpos-cori-identity-2026-07-25.md](binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) |
 
 Machine-readable siblings, for consumers that should not be parsing prose:

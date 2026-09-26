@@ -1,13 +1,25 @@
 # CBattleEngine__GetGroundedControlFactor
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static function contract for `CBattleEngine__GetGroundedControlFactor` at `0x0040e910`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: unknown — no SOURCE_* crosswalk row in lane brief | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0040e910`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Identity.** This is `CBattleEngine::GetImportance()` (`BattleEngine.cpp:3453-3459`), slot 80
+  of the CBattleEngine vtable `0x005d89c4` (pointer at `0x005d8b04`). It returns 5.0 when
+  `IsOnGround` (vtable `+0x10c`) is true and `CActor::IsOnObject` (`0x00401fd0`) is false, else
+  0.0. It is an importance score for targeting, not a "grounded control factor"; no control
+  input is involved.
 
 ## Identity
 - Body `[0x0040e910,0x0040e939]`, 42 bytes. Raw pristine-body SHA-256 `99f979d0b165369c6ad85f61547994dc791207c6107fdf492506eaf50f0ddc40`; closure range SHA-256 `48caa78c0d0119793f88613592564e12c396035cae081fd94e8e3cf2752ee569`; packet range-plus-bytes SHA-256 `9c7403fd6b2bcfccc90161d101f0ad764bf038a38f850f902dda19ec380de821`. All three use the same exact inclusive range; no padding or tail bytes are included.

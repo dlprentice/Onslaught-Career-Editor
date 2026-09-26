@@ -1,13 +1,33 @@
 # CInfantryUnit__VFunc40_HandleCollisionDamageReaction
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CInfantryUnit__VFunc40_HandleCollisionDamageReaction` at `0x00489650`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00489650`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **Identity.** This is `CInfantryUnit::Damage(float amount, CThing* inByThis, BOOL
+  inDamageShields, int mesh_part_no)` (`thing.h:176`). It is slot 40 of the CInfantryUnit
+  vtable `0x005e272c` (pointer at `0x005e27cc`; the locator at `0x005e2728` names
+  `.?AVCInfantryUnit@@`). The packet's "vtable `0x005e2730` slot 39" is wrong: `0x005e2730` is
+  that vtable's slot 1, and slot 39 (`0x00488f10`) is `Hit`.
+- **Parameters.** It forwards its four stack arguments unchanged to the base `CUnit` `Damage`
+  (`0x004f9a90`, which fills slot 40 in 19 vtables): pushes at `0x004898a2-0x004898ad`, call at
+  `0x004898b0`, `ret 0x10`. Parameter 1 is the float damage amount (not `collisionContext`),
+  parameter 3 is `BOOL inDamageShields` (not `impactContext`) and parameter 4 is
+  `int mesh_part_no` (not `damageContext`).
+- **Unsupported.** "Effect dispatch helpers": none of the direct callees is an effect or sound
+  call. They are the round's preset scalar, the mesh animation lookup, `SetAnimMode`, the random
+  generator and the base `Damage`.
 
 ## Identity
 - Body `[0x00489650,0x00489b38]`, 1257 bytes, 384 closure instructions. Raw pristine-body SHA-256 `7c6de4139b0a44ed45b5de2ab7993353b01db19c9e68da5137525e37800552d2`; closure range SHA-256 `f2036d2ad4e5b257c5b8463a80a2ac44443b163428ceda15196e167e8bdd33ef`; packet range-plus-bytes SHA-256 `2f470b17d76080d57a6675cbc88839a976701c2ecb5aeec1e9cda1c1c79357e2`. All three were independently recomputed over the exact single contiguous inclusive range.

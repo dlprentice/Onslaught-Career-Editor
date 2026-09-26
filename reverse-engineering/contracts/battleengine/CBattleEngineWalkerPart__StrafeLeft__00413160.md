@@ -1,13 +1,28 @@
 # CBattleEngineWalkerPart__StrafeLeft
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active static contract (factory draft); audited 2026-09-26, corrections below
+Last updated: 2026-09-26 (RE audit: verified corrections added)
 Summary: specimen-bound static contract for `CBattleEngineWalkerPart__StrafeLeft` at `0x00413160`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/BattleEngineWalkerPart.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00413160`
+
+## Audit corrections (2026-09-26)
+
+Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
+step 4). The statements below replace the draft's where they conflict; the title keeps the live
+Ghidra label until a label cohort renames it.
+
+- **The log callee.** The call at `0x0041324e` passes `0x0066f580` with "do dash LEFT"
+  (`0x00623934`). That is the debug log, `LOG.AddMessage` (source line 240), not
+  `CConsole__Printf`; the console object is `0x00663498` (`0x00412c23`).
+- **Roll.** It is not a "bump": `0x004132b4` stores `mRollvel = +0.08`
+  (`mov [edx+0x27c], 0x3da3d70a`; source line 246, `mRollvel=+DASH_BOOST_ROLL`).
+  `StrafeRight` subtracts 0.08 (`0x004134ae-0x004134ba`).
+- **Omission.** Retail adds an upper bound to the dash window (`0x00413221-0x0041323c`): see
+  [walker dash](../../game-mechanics/walker-dash.md).
 
 ## Identity
 - Body `[0x00413160,0x0041335f]`, 512 bytes, 144 closure instructions. Raw pristine-body SHA-256 `f73bf900aff3f6b19d141656b8432f72a385d3fc58b2e7c3cd2305058deaf206`; closure range SHA-256 `6d568526fb98ee6d5940364aa998ac3368d8e8b90976f25d3014950813dfa10c`; packet range-plus-bytes SHA-256 `0b94db2122311a0c44bf230e70c30fba624fe1ea79f49c9217a9c20f851e9a54`. All three were independently recomputed over the exact single contiguous inclusive range.

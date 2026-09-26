@@ -328,12 +328,10 @@ reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md
 reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md
 reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md
 reverse-engineering/binary-analysis/terrain-ambient-light-applied-2026-07-26.md
-reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-draw-stage-flags-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-gain-frame-global-falsified-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-implied-macro-inversion-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-per-node-colour-absent-2026-07-26.md
-reverse-engineering/binary-analysis/terrain-shade-bilinear-decode-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-shade-plane-origin-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-spatial-dispersion-negative-2026-07-26.md
 reverse-engineering/binary-analysis/terrain-sun-colour-route-2026-07-26.md
@@ -394,7 +392,6 @@ reverse-engineering/quick-reference/source-hierarchy.md
 reverse-engineering/quick-reference/source-key-functions.md
 reverse-engineering/save-file/README.md
 reverse-engineering/save-file/_index.md
-reverse-engineering/save-file/career-links.md
 reverse-engineering/save-file/career-unlock-recipes.md
 reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md

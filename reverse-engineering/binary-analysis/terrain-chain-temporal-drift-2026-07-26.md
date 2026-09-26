@@ -1,5 +1,11 @@
 # The reconstruction's terrain drift is the cloud-shadow scroll, and the origin of that scroll is wrong
 
+Status: partially superseded (read the box below); the scroll's code facts stand
+Last updated: 2026-09-26 (RE audit: one advance per view-0 RenderTerrain call, the breakpoint location, the rebuild's frame delta)
+Summary: the terrain's cloud-shadow scroll accumulators, where they advance, and how the reconstruction's origin differs; the per-second rate is measured, not derived.
+Evidence: MEASURED — pristine instructions and a runtime accumulator read; the 20x factor's cause is an inference.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > ## PARTIALLY SUPERSEDED 2026-07-26 — read this before using any number below
 >
 > **The scroll RATE used throughout this note is wrong, and so is every quantity
@@ -12,11 +18,13 @@
 > Measured live from the accumulators `0x008c0294`/`0x008c0298` at three level
 > times: **du/dt = 0.0199944 and 0.0200088 per second** over two intervals
 > (0.07 % apart), with v exactly u/2. The correct rates are **0.02 / 0.01 per
-> second — 20x** what this note assumes. The accumulator advances once per
-> terrain *draw* and terrain draws many tiles per frame, which is where the
-> factor comes from; the per-*draw* rate varies 3.1 % over the same intervals
-> while the per-second rate varies 0.07 %, so wall time is the stable
-> parameterisation.
+> second — 20x** what this note assumes. The accumulators advance at most once per
+> frame: the advance (`0x005455d2`-`0x0054563a`) sits at `RenderTerrain`'s head,
+> outside any tile loop, and runs only when its view-index argument is 0
+> (`cmp eax,ebp` at `0x005455b5`, `jne` at `0x005455d0`). So the 20x must come
+> from the unit of `[0x008a9e20]`; `CLOCK_TICK 0.05f` (`thing.h:29`, 1/0.05 = 20)
+> is a lead, not proof. The per-second rate varies 0.07 % over the measured
+> intervals, so wall time is the stable parameterisation.
 >
 > **Consequently §5's admissible phase interval is void.** "phi in [5.0, 13.5] s,
 > 1.1 % of the 1000 s cycle" is computed on a cycle length that is 20x wrong; the
@@ -118,7 +126,9 @@ carries a clock.
 
 ## 2. What the bytes say the cloud stage is
 
-`CDXLandscape__RenderTerrain` @ `0x00545590` opens by advancing two globals:
+`CDXLandscape__RenderTerrain` @ `0x00545590` opens by advancing two globals,
+only when its view-index argument is 0 (split-screen views 1 and up do not
+advance them):
 
 ```
 005455d2  d9 05 20 9e 8a 00   FLD   dword [0x008a9e20]     ; frame delta
@@ -182,7 +192,7 @@ initialiser, no reset on level load, and no other writer; `pe_read_va.py`
 refuses both addresses, so they are in the uninitialised tail of `.data` and are
 zero at image load. Retail's cloud phase at any moment is therefore
 `0.001 x (sum of frame deltas over every terrain draw since the process
-started)`, and terrain draws happen only through the single call site at
+started, on view 0)`, and terrain draws happen only through the single call site at
 `0x0053e688` under the `has-landscape` branch — not while a `CFEP*` front-end
 page is up.
 
@@ -310,8 +320,10 @@ offsets. That gives retail's phase and its rate at once, confirms or refutes
 `0.001/0.0005 per second of terrain-draw time`, and turns the phase argument
 above into a measurement. The breakpoint is already in use — the light-state
 probe in `local-lab/TERRAIN-LIGHT-STATE-RUNTIME-2026-07-26.md` halts at
-`0x0053e688`, which is 208 bytes past the accumulator update and inside the same
-function. Adding `dd 0x008c0294 L2` and `dd 0x008a9e20 L1` to that same dump
+`0x0053e688`, the `Render` call inside `CDXEngine__Render` (`0x0053e2e0`), 208
+bytes after its `SetupLights` call. The accumulator update is in `RenderTerrain`
+and runs after that breakpoint, so a dump there reads the values before the
+current frame's advance. Adding `dd 0x008c0294 L2` and `dd 0x008a9e20 L1` to that same dump
 costs nothing and answers §5 outright.
 
 ## 5. One scalar explains both of retail's stage-1..3 observables
@@ -385,11 +397,12 @@ spent in menus, without bound, because retail's accumulators advance only inside
 time would render the terrain at different brightness.
 
 The correct implementation is a pair of accumulators advanced once per terrain
-draw by that frame's delta. `Level100TerrainAppearanceAsset.Update` is not given
-a frame delta, and its only caller is `FirstFlightWorldView`, which is owned
-elsewhere and which already has `frameDelta` in hand at the call site. **The
-change therefore has to be made together with that caller and is reported, not
-made here.** What was changed is documentation and a test:
+draw by that frame's delta. When this note was written,
+`Level100TerrainAppearanceAsset.Update` was not given a frame delta; the rebuild
+has since added one (`Update(…, double frameDelta)`). Nothing in the image resets
+the accumulators between missions (all ten references are inside
+`RenderTerrain`), so a per-level reset in the rebuild is unproven for a second
+mission in the same process. What was changed is documentation and a test:
 
 - `Level100TerrainAppearanceAsset.cs` — the cloud-scroll comment now carries the
   full stage-2 matrix derivation (`0x0054591a`–`0x00545967`), the accumulator
