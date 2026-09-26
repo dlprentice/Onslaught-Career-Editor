@@ -129,6 +129,12 @@ internal sealed class Level100TerrainCompositor
         int slotX,
         int slotY)
     {
+        // Refuse an invalid level before allocating its shifted block: the
+        // admitted levels are 0..4, and 1 << level can otherwise reach gigabytes.
+        if ((uint)level >= (uint)_hierarchy.Maps.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
         int scale = 1 << level;
         int blockSize = TileWidth * scale;
         var block = new ushort[blockSize * blockSize];

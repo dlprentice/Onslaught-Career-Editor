@@ -485,6 +485,13 @@ public static class ParticleEffectResolver
                     $"{path}: emitter Life {emitterLife} does not expire; this plan " +
                     "emits only its first turn");
             }
+            // The Int32 turn counter below wraps at this bound and never
+            // terminates. Refuse it rather than run it or cap it silently.
+            if (lastTurn == int.MaxValue)
+            {
+                throw new InvalidDataException(
+                    "The source emitter loop cannot terminate when Life is Int32.MaxValue.");
+            }
 
             // `Emit_Per_Turn` IS the particle count per game turn, and the
             // Shape supplies positions rather than a count.
@@ -517,8 +524,8 @@ public static class ParticleEffectResolver
 
             if (startTurns.Count == 0)
             {
-                _unimplemented.Add(
-                    $"{path}: Emit_Per_Turn {emitPerTurn} over Life {emitterLife} " +
+                _unimplemented.Add(FormattableString.Invariant(
+                    $"{path}: Emit_Per_Turn {emitPerTurn} over Life {emitterLife} ") +
                     "emits no whole particle");
                 return;
             }

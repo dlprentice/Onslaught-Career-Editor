@@ -21,6 +21,28 @@ public sealed class Level100TerrainCompositorTests
     private const string RootTextureSha256 =
         "6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B";
 
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(5)]
+    [InlineData(11)]
+    [InlineData(30)]
+    public void RenderTileRefusesAnInvalidLevelBeforeAllocatingItsBlock(int level)
+    {
+        Level100Terrain terrain = Level100Terrain.Instance;
+        Level100TerrainCompositor compositor = Level100TerrainCompositor.Create(
+            ReadAsset("Assets/Level100/Source/level100-terrain-hierarchy.bin"),
+            terrain.SunColorRgb24,
+            terrain.AmbientColorRgb24);
+        var destination = new byte[Level100TerrainCompositor.RootTextureLength];
+
+        // Unguarded, level 11 allocates a 512 MiB block before its map lookup
+        // fails (shifts past 12 wrap the block size to zero); refuse first.
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        Assert.Throws<IndexOutOfRangeException>(() => compositor.RenderTile(destination, level, 0, 0, 0, 0));
+        Assert.True(GC.GetAllocatedBytesForCurrentThread() - before < 1 << 20, "An invalid level allocated its block.");
+        Assert.All(destination, value => Assert.Equal(0, value));
+    }
+
     [Fact]
     public void RenderTileAtLevelZeroReproducesThePinnedRootTerrainMap()
     {
