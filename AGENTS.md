@@ -27,10 +27,9 @@ baseline report, David authorized the first Godot Save Lab workflow. Existing Wi
 release procedures describe the retained implementation, not a queued WinUI release.
 
 Linux owns development and native Godot execution. The rebuild now has Linux build/run/smoke/capture
-commands. The companion runs on Godot 4.8 dev6 .NET (`godot48-mono`); its interface is still GDScript, with a
-thin in-process C# adapter that links the existing file-safety source, until it moves to C# under the language rule.
-David clarified that necessary production C# belongs inside the .NET edition; the standalone helper
-prototype is retained reference source, not the active build or export route.
+commands. The companion is a C# application built in code on Godot 4.8 dev6 .NET (`godot48-mono`); its
+in-process file-safety boundary links the existing AppCore safety source unchanged. The standalone helper
+prototype was retired on September 25; its publication-race cases run inside the companion's C# suite.
 Native scene/write/reopen checks passed on Linux; human interaction, the complete player walkthrough
 and Windows runtime acceptance remain separate; read `CURRENT_CAPABILITIES.md`.
 The full legacy AppCore suite, WinUI, Windows-targeted CLI and portable ZIP retain Windows dependencies.
@@ -60,7 +59,7 @@ into it only when its own checks pass. The 2026-09-25 baseline and its logs are 
 | --- | --- | --- | --- |
 | Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Merged into `main` (`ed7f5332`); work continues on the branch. Save, settings, audio and weapon contracts from controlled original-code experiments; the latest is the sound manager's startup order. The remaining backlog is open-ended (`PROGRAM.md`). Its Godot routes now come from `main` (4.8 dev6 .NET); nothing in the lane needs 4.7.2. |
 | Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | C# only and built in code: restored on 2026-09-25 from the last all-code C# rebuild (`b0b9c5e7`) with the later evidenced fixes; no GDScript or editor-authored scenes remain. Build, Client, pause and AYA checks, smoke and replay hashes pass, and the capture matches the September 25 baseline except the evidenced differences in VALIDATION.md. Core passes except the Level 100 cold-start full-combat route (failing since 2026-09-12); its final-wave divergences (friendly turrets, jet Missile Pod) come from the RE lane and are next. |
-| Companion | `main` | `.worktrees/main-integration-20260919` | No active work. The GDScript Save Lab on Godot 4.8 dev6 .NET, with its in-process C# safety adapter (approved 2026-09-19), builds and passes `npm test`; it moves to C# after the rebuild. Human interaction, Windows execution and further workflows remain (`CURRENT_CAPABILITIES.md`, `PROGRAM.md`). |
+| Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | C# only and built in code since 2026-09-25: no GDScript, one-node entry scene; `npm test` passes the C# contract suite (codec, media, protected files, publication races, interface) and the launcher cases. David approved (2026-09-25) careers and Goodies, copies and options, install and backups, and music, voices and lore, in the Flight-deck look; those are being built. Patching the installed `BEA.exe` is a later phase. Windows execution and human click-through remain (`CURRENT_CAPABILITIES.md`). |
 
 To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then `git pull` and
 `git merge main`. Keep Godot headless unless David has released the desktop.
@@ -76,7 +75,8 @@ To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Care
   and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn`.
   Smoke: the same launcher's `smoke` mode with those engine arguments and `-- --record-tape=ABS_FRESH_LOCAL_DATA_PATH`,
   then `npm run run:rebuild-headless -- --tape TAPE --repeat 2` (the C# headless replayer).
-- Companion, in `$REPO/.worktrees/main-integration-20260919`: `npm run build` and `npm test`; `npm run dev` opens a window.
+- Companion, in `$REPO/.worktrees/companion-csharp-20260925`: `npm run build` and `npm test`;
+  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen`; `npm run dev` opens a window.
 
 There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
 draft. Unique ignored data from the retired companion and remote-review worktrees is in
@@ -137,8 +137,7 @@ draft. Unique ignored data from the retired companion and remote-review worktree
   whatsoever. No crossover."). No `.gd` files: game code, tools that run inside Godot, checks and capture harnesses
   are C#. Each subsystem has one production owner, never two copies of the same behavior. Everything is built in
   code: no editor-authored scenes or resources (a `.tscn` only as a one-node entry wrapper), and the editor need
-  not show the game. Shader source lives in C# strings; repository tooling stays Python. GDScript still in the
-  companion is being replaced (see Lanes); new work adds none.
+  not show the game. Shader source lives in C# strings; repository tooling stays Python. New work adds no GDScript.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.
