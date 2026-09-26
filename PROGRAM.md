@@ -261,12 +261,14 @@ leads to re-derive, not approved mutation manifests.
    were right before the audit, and D3DX-cohort comments the CRT review showed are
    wrong (`0x00574577`, `0x00574abb` cite unlinked objects; `0x00589094` omits a
    folded copy). Extend and independently check its draft before sealing; do not
-   skip a row merely because it already has an audit tag. First fix and test
-   library ownership's unchecked section order and unreliable layout anchors;
-   re-run the current matcher rather than reuse older proof text. Its folded
-   representative can also differ from the proven owners. These tooling defects
-   are reproduced with synthetic inputs; their real-row consequences still
-   require fresh matching and independent evidence.
+   skip a row merely because it already has an audit tag. The ownership fix now
+   checks both available section/offset bounds, excludes ambiguous/folded layout
+   anchors and keeps proof, relocation indexing and caller-only citations on
+   reference-supported representatives. The 24-test suite includes reproduced
+   counterexamples. A fresh run on the current export proposes no name changes;
+   it selects the folded cpudetect member at `0x00589094` and withdraws an
+   unsupported retained-section claim at `0x005b1c30`. Fresh proof text still
+   needs independent checking before a comment cohort is sealed.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
@@ -289,7 +291,6 @@ Follow-ups:
   `output_message` (`0x00592b20`); 13 call targets in matched code have no Ghidra function.
 - `operator_new`/`operator_delete` lost their descriptive comments to the D3DX cohort's proof text; restore
   verified descriptions.
-- `re_lib_match.py`: add a section-order check to `owner()`'s layout test; folded rows keep `cands[0]`.
 - PowerShell is retired machine-wide. The RE lane's 31 `.ps1`/`.psm1` files cannot run; several are
   pinned by hash in evidence verifiers (`Invoke-TtdCallContext.ps1`, `Invoke-TtdCallContextV2.ps1`,
   `Record-ApitraceD3D9.ps1` and the pinned `ttd_pipeline_contract_tests.py`, which names seven of them), so

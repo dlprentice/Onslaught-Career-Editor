@@ -552,6 +552,15 @@ def own_symbols(coff: Coff, fn: ObjFunc, va: int) -> dict:
     return out
 
 
+def layout_anchor(d: dict) -> ObjFunc | None:
+    """A decided physical position, not an unresolved match or an arbitrarily chosen folded alias."""
+    if d.get("how") not in {"unique", "relocations", "called", "layout", "unique-short"}:
+        return None
+    cands = d["cands"]
+    positions = {(c.fn.member, c.fn.order, c.fn.start) for c in cands}
+    return cands[0].fn if len(positions) == 1 else None
+
+
 class Resolver:
     """Decides each game entry's identity from byte matches, relocation implications, verified data
     sections and the linker's per-object section order."""
@@ -655,7 +664,8 @@ class Resolver:
         """The member that supplied a body several members define identically, and how that is known: 'refs' when
         references from matched code of exactly one of them land here (a static is reachable only from its own
         object), 'folded' when references from several land here (the linker folded their identical copies),
-        'layout' when exactly one of them owns a matched neighbour; otherwise every member and None."""
+        'layout' when exactly one fits its reliable matched neighbours in section/offset order;
+        otherwise every member and None."""
         sym = d["cands"][0].fn.symbol
         members = sorted({c.fn.member for c in d["cands"] if c.fn.symbol == sym})
         if len(members) == 1:
@@ -665,18 +675,39 @@ class Resolver:
         if local:
             return local, ("refs" if len(local) == 1 else "folded")
         prev, nxt = self._neighbours(va)
-        near = [m for m in members if (prev and prev.member == m) or (nxt and nxt.member == m)]
+        near = sorted({c.fn.member for c in d["cands"]
+                       if c.fn.symbol == sym and self._ordered_near(c.fn, prev, nxt)})
         if len(near) == 1:
             return near, "layout"
         return members, None
 
     def _neighbours(self, va: int):
-        single = sorted(v for v, d in self.decided.items() if len({c.fn.member for c in d["cands"]}) == 1)
+        anchors = {v: fn for v, d in self.decided.items() if (fn := layout_anchor(d)) is not None}
+        single = sorted(anchors)
         i = bisect.bisect_left(single, va)
-        prev = self.decided[single[i - 1]]["cands"][0].fn if i > 0 else None
+        prev = anchors[single[i - 1]] if i > 0 else None
         j = bisect.bisect_right(single, va)
-        nxt = self.decided[single[j]]["cands"][0].fn if j < len(single) else None
+        nxt = anchors[single[j]] if j < len(single) else None
         return prev, nxt
+
+    @staticmethod
+    def _ordered_near(fn: ObjFunc, prev: ObjFunc | None, nxt: ObjFunc | None) -> bool:
+        pos = (fn.order, fn.start)
+        left = prev is not None and prev.member == fn.member
+        right = nxt is not None and nxt.member == fn.member
+        return bool((left or right)
+                    and (not left or (prev.order, prev.start) < pos)
+                    and (not right or pos < (nxt.order, nxt.start)))
+
+    def representative(self, va: int, d: dict) -> Candidate:
+        """Keep the compared bytes, pin and relocation evidence with a supported owner when one is known."""
+        first = d["cands"][0]
+        owners, how = self.owner(va, d)
+        if how in ("refs", "layout", "folded"):
+            prev, nxt = self._neighbours(va) if how == "layout" else (None, None)
+            return next(c for c in d["cands"] if c.fn.member == owners[0] and c.fn.symbol == first.fn.symbol
+                        and (how != "layout" or self._ordered_near(c.fn, prev, nxt)))
+        return first
 
     def _bracketed(self, c: Candidate, prev: ObjFunc | None, nxt: ObjFunc | None) -> bool:
         me = (c.fn.order, c.fn.start)
@@ -775,7 +806,8 @@ class Resolver:
                     if len({self.flat(c) for c in br}) == 1:
                         self._accept(va, "layout", br)
                     elif len(names) == 1 and ok and max(c.fixed for c, _a in ok) >= 8 and \
-                            any(prev and prev.member == c.fn.member for c, _a in ok):
+                            any(prev and prev.member == c.fn.member and self._ordered_near(c.fn, prev, nxt)
+                                for c, _a in ok):
                         self._accept(va, "unique-short", [c for c, _a in ok])
                     else:
                         continue
@@ -799,7 +831,7 @@ class Resolver:
         for va, d in self.decided.items():
             if d["how"] in ("ambiguous", "called-no-bytes") or not d["cands"]:
                 continue
-            c = d["cands"][0]
+            c = self.representative(va, d)
             coff = self.lib.objects[c.fn.member]
             for off, sym, target in relocation_targets(coff, coff.sections[c.fn.section], c.fn.start, c.fn.end,
                                                        va - c.fn.start, self.image.u32, self.image.base):
@@ -873,8 +905,7 @@ class Resolver:
 
 def layout_violations(decided: dict[int, dict]) -> list[tuple[int, int, str]]:
     """Consecutive decided entries from one object whose section order runs backwards."""
-    seq = sorted((va, d["cands"][0].fn) for va, d in decided.items()
-                 if d["how"] not in ("ambiguous", "folded") and len({c.fn.member for c in d["cands"]}) == 1)
+    seq = sorted((va, fn) for va, d in decided.items() if (fn := layout_anchor(d)) is not None)
     out = []
     for (va0, f0), (va1, f1) in zip(seq, seq[1:]):
         if f0.member == f1.member and (f1.order, f1.start) < (f0.order, f0.start):
@@ -967,11 +998,9 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
         d = res.decided[va]
         if d["how"] in ("ambiguous", "called-no-bytes") or not d["cands"]:
             continue
-        c = d["cands"][0]
+        c = res.representative(va, d)
         sym = c.fn.symbol
         owners, why = res.owner(va, d)
-        if why in ("refs", "layout"):          # cite the object that supplied it, and its relocations
-            c = next(x for x in d["cands"] if x.fn.member == owners[0] and x.fn.symbol == sym)
         length = c.fn.end - c.fn.start
         dem = names.get(sym, sym)
         new = flat_name(sym, names)
@@ -1002,12 +1031,17 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
             where = (f"member {owners[0]}: {n} members define it identically, and the references from that object's own "
                      f"matched code land here")
         elif why == "layout":
-            where = f"member {owners[0]}: {n} members define it identically, and the matched code beside it is that object's"
+            where = (f"member {owners[0]}: {n} members define it identically; only this member fits the reliable "
+                     f"matched neighbours in section/offset order (layout-supported ownership)")
         elif why == "folded":
             where = (f"members {', '.join(owners)}, whose identical copies the linker folded into this one (the "
                      f"references from each object's own matched code land here)")
         else:
             where = f"one of the members {', '.join(members)}, which define it identically"
+        pins = sorted({pin_text(m) for m in owners}) if why == "folded" else [pin_text(c.fn.member)]
+        libraries = ("the static library " + pins[0]) if len(pins) == 1 else ("the static libraries " + " and ".join(pins))
+        representative_note = (f" The byte and relocation comparison below uses member {c.fn.member}."
+                               if why == "folded" else "")
         folded = [flat_name(x, names) for x in d.get("aliases", [])]
         also = sorted(set(by_addr.get(va, [])) - {x.fn.symbol for x in d["cands"]} - set(d.get("aliases", [])))
         here = res.cands.get(va, [])
@@ -1051,11 +1085,12 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
             how += (f"; the library's {_refs(af, afn, ad)} to {'that name' if len(also) == 1 else 'those names'} "
                     f"{_land(af)} here too." if af else ".")
         how = how.strip()
-        text = (f"Linked library code: {dem}, from the static library {pin_text(c.fn.member)}, {where}. Proof: bytes "
+        text = (f"Linked library code: {dem}, from {libraries}, {where}.{representative_note} Proof: bytes "
                 f"[{va:08x},{va + length:08x}) of the pristine executable equal the object code of {sym} byte for "
                 f"byte{rel}. {how} Matched by tools/re_lib_match.py in the RE record audit ({AUDIT_DATE}).")
         folded_here = d["how"] == "folded" or why == "folded" or any(x in res.code_symbols for x in also)
-        tags = ["library-code", res.lib.pin_of(c.fn.member)["tag"], "re-audit-20260926", "name-corrected-20260926"] + \
+        owner_tags = sorted({res.lib.pin_of(m)["tag"] for m in owners}) if why == "folded" else [res.lib.pin_of(c.fn.member)["tag"]]
+        tags = ["library-code", *owner_tags, "re-audit-20260926", "name-corrected-20260926"] + \
             (["linker-folded"] if folded_here else [])
         alts = {new}.union(*(spellings(x, names, aliases) for x in
                              {sym} | set(d.get("aliases", [])) | set(also) | {x.fn.symbol for x in d["cands"]}))
@@ -1090,7 +1125,7 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
         fields, funcs, data = res.sites([("g", x) for x in syms], va)
         what = "Linked library function" if library else "The program's own definition of"
         refs = " or ".join(syms)
-        sources = sorted({src[1] if isinstance(src, tuple) else res.decided[src]["cands"][0].fn.member
+        sources = sorted({src[1] if isinstance(src, tuple) else res.representative(src, res.decided[src]).fn.member
                           for x in syms for src, _site in res.fields.get((("g", x), va), [])})
         labels = sorted({pin_text(m) for m in sources}) or [pin_text(next(iter(res.lib.origin), ""))]
         libs = ("the static library " + labels[0]) if len(labels) == 1 else \
@@ -1218,10 +1253,7 @@ def main(argv: list[str] | None = None) -> int:
                 w.writerow([f"0x{va:08x}", rows.get(va, {}).get("name", ""), d["how"], "", "", "", "", "", "", "",
                             "", "", "", ";".join(flat_name(x, names) for x in d.get("symbols", []))])
                 continue
-            c = d["cands"][0]
-            owners, why = res.owner(va, d)
-            if why in ("refs", "layout"):
-                c = next(x for x in d["cands"] if x.fn.member == owners[0] and x.fn.symbol == c.fn.symbol)
+            c = res.representative(va, d)
             alts = sorted({flat_name(x.fn.symbol, names) for x in d["cands"]})
             nrel = sum(1 for off, _s, _t in lib.objects[c.fn.member].sections[c.fn.section].relocs
                        if c.fn.start <= off < c.fn.end)

@@ -289,6 +289,18 @@ class ResolverTests(unittest.TestCase):
         self.assertEqual((mid["how"], mid["cands"][0].fn.symbol), ("layout", "_X"))
         self.assertEqual(M.layout_violations(res.decided), [])
 
+    def test_short_match_needs_ordered_neighbours(self):
+        short = b"\x33\xc0\x40\x40\x40\x40\x40\x40\x40\xc3"
+        long = bytes(range(0x10, 0x24))
+        for ordered in (True, False):
+            with self.subTest(ordered=ordered):
+                parts = [("_long", long), ("_short", short)] if ordered else [("_short", short), ("_long", long)]
+                obj = coff([(".text", COMDAT, body, []) for _name, body in parts],
+                           [(name, 0, i, FUNC, EXT, b"") for i, (name, _body) in enumerate(parts, 1)])
+                res = self.resolve([("o.obj", obj)], {self.LO: long + short}, [self.LO, self.LO + len(long)])
+                self.assertEqual(res.decided[self.LO + len(long)]["how"],
+                                 "unique-short" if ordered else "ambiguous")
+
 
 class OwnerAndImportTests(unittest.TestCase):
     def resolver(self):
@@ -296,8 +308,8 @@ class OwnerAndImportTests(unittest.TestCase):
         img = type("Img", (), {"imports": {0x5D81C8: "KERNEL32.dll!CreateDirectoryA"}})()
         return M.Resolver(lib, img, {}, 0, 1 << 32, [])
 
-    def fn(self, member, symbol="_helper", start=0):
-        return M.ObjFunc(member, 1, start, start + 8, symbol, 3, False)
+    def fn(self, member, symbol="_helper", start=0, order=2):
+        return M.ObjFunc(member, order, start, start + 8, symbol, 3, False, order)
 
     def test_owner_by_references_folding_layout_and_none(self):
         res = self.resolver()
@@ -308,10 +320,118 @@ class OwnerAndImportTests(unittest.TestCase):
         res.pool[("l", "a.obj", "_helper", 1, 0)] = 0x1000                 # and a.obj's too: folded copies
         self.assertEqual(res.owner(0x1000, d), (["a.obj", "b.obj"], "folded"))
         res.pool.clear()
-        res.decided[0x0F00] = {"cands": [M.Candidate(0x0F00, self.fn("a.obj", "_prev"), 16)]}
+        res.decided[0x0F00] = {"how": "unique", "cands": [M.Candidate(0x0F00, self.fn("a.obj", "_prev", order=1), 16)]}
         self.assertEqual(res.owner(0x1000, d), (["a.obj"], "layout"))
         one = {"cands": [M.Candidate(0x1000, self.fn("a.obj"), 8)]}
         self.assertEqual(res.owner(0x1000, one), (["a.obj"], "only"))
+
+    def test_owner_layout_requires_every_available_order_bound(self):
+        cases = [
+            ("ordered predecessor", (1, 0), None, True),
+            ("ordered successor", None, (3, 0), True),
+            ("both ordered", (1, 0), (3, 0), True),
+            ("reversed predecessor", (3, 0), None, False),
+            ("reversed successor", None, (1, 0), False),
+            ("contradictory successor", (1, 0), (1, 0), False),
+            ("contradictory predecessor", (3, 0), (3, 0), False),
+            ("ordered offsets", (2, 0), (2, 16), True),
+            ("equal offset", (2, 8), None, False),
+            ("reversed offsets", None, (2, 0), False),
+        ]
+        for label, left, right, fits in cases:
+            with self.subTest(label=label):
+                res = self.resolver()
+                d = {"cands": [M.Candidate(0x1000, self.fn(m, start=8), 8) for m in ("a.obj", "b.obj")]}
+                for va, pos in [(0x0F00, left), (0x1100, right)]:
+                    if pos:
+                        res.decided[va] = {"how": "unique", "cands": [M.Candidate(
+                            va, self.fn("a.obj", "_anchor", start=pos[1], order=pos[0]), 8)]}
+                self.assertEqual(res.owner(0x1000, d), (["a.obj"], "layout") if fits else (["a.obj", "b.obj"], None))
+
+    def test_owner_layout_excludes_unresolved_or_folded_anchors(self):
+        for how, positions in [("ambiguous", [0]), ("folded", [0]),
+                               ("unique", [0, 8]), ("called-no-bytes", [])]:
+            with self.subTest(how=how, positions=positions):
+                res = self.resolver()
+                d = {"cands": [M.Candidate(0x1000, self.fn(m), 8) for m in ("a.obj", "b.obj")]}
+                res.decided[0x0F00] = {"how": how, "cands": [M.Candidate(
+                    0x0F00, self.fn("a.obj", "_anchor", start=p, order=1), 8) for p in positions]}
+                self.assertEqual(res.owner(0x1000, d), (["a.obj", "b.obj"], None))
+
+    def test_two_ordered_members_do_not_prove_one_owner(self):
+        res = self.resolver()
+        d = {"cands": [M.Candidate(0x1000, self.fn(m), 8) for m in ("a.obj", "b.obj")]}
+        res.decided[0x0F00] = {"how": "unique", "cands": [M.Candidate(0x0F00, self.fn("a.obj", order=1), 8)]}
+        res.decided[0x1100] = {"how": "unique", "cands": [M.Candidate(0x1100, self.fn("b.obj", order=3), 8)]}
+        self.assertEqual(res.owner(0x1000, d), (["a.obj", "b.obj"], None))
+        res.pool[("l", "b.obj", "_helper", 2, 0)] = 0x1000
+        self.assertEqual(res.owner(0x1000, d), (["b.obj"], "refs"))
+
+    def test_folded_proof_uses_a_reference_supported_member(self):
+        # a.obj has identical bytes, but only b.obj and c.obj have local callers here.
+        obj = coff([(".text", COMDAT, BODY, [])], [("_helper", 0, 1, FUNC, STATIC, b"")])
+        lib = library([(name, obj) for name in ("a.obj", "b.obj", "c.obj")])
+        lib.pins = [{"label": name, "sha256": str(i) * 64, "tag": name} for i, name in enumerate(("A", "B", "C"))]
+        lib.origin = {name: i for i, name in enumerate(("a.obj", "b.obj", "c.obj"))}
+        res = M.Resolver(lib, FakeImage(0x400000, {0x401000: BODY}), {}, 0x401000, 0x402000, [0x401000])
+        res.run()
+        for name in ("b.obj", "c.obj"):
+            res.pool[("l", name, "_helper", 1, 0)] = 0x401000
+        rows = {0x401000: {"name": "old", "nameSource": "USER_DEFINED"}}
+        p, = M.proposals(res, rows, {})
+        self.assertIn("members b.obj, c.obj", p["proof"])
+        self.assertIn("B (SHA-256 " + "1" * 64 + ")", p["proof"])
+        self.assertIn("C (SHA-256 " + "2" * 64 + ")", p["proof"])
+        self.assertIn("comparison below uses member b.obj", p["proof"])
+        self.assertIn("B", p["tags"])
+        self.assertIn("C", p["tags"])
+        self.assertNotIn("static library A", p["proof"])
+
+    def test_reference_index_uses_the_same_supported_representative(self):
+        # All three bodies relocate to the same address but give the static target different local keys.
+        va, target = 0x401000, 0x401100
+        obj = coff([(".text", COMDAT, BODY + b"\xe8\0\0\0\0\xc3", [(21, 1, M.REL_I386_REL32)])],
+                   [("_helper", 0, 1, FUNC, STATIC, b""), ("_target", 0, 0, FUNC, STATIC, b"")])
+        lib = library([(name, obj) for name in ("a.obj", "b.obj", "c.obj")])
+        body = BODY + b"\xe8" + struct.pack("<i", target - (va + 25)) + b"\xc3"
+        res = M.Resolver(lib, FakeImage(0x400000, {va: body}), {}, va, 0x402000, [va])
+        res.run()
+        for name in ("b.obj", "c.obj"):
+            res.pool[("l", name, "_helper", 1, 0)] = va
+        res.reference_index()
+        self.assertEqual(res.fields[(("l", "b.obj", "_target", 0, 0), target)], [(va, va + 21)])
+        self.assertNotIn((("l", "a.obj", "_target", 0, 0), target), res.fields)
+
+    def test_layout_representative_itself_must_fit_the_anchor(self):
+        res = self.resolver()
+        d = {"how": "called", "cands": [
+            M.Candidate(0x1000, self.fn("a.obj", order=1), 8),
+            M.Candidate(0x1000, self.fn("a.obj", order=3), 8),
+            M.Candidate(0x1000, self.fn("b.obj", order=3), 8)]}
+        res.decided[0x0F00] = {"how": "unique", "cands": [M.Candidate(0x0F00, self.fn("a.obj", "_anchor", order=2), 8)]}
+        self.assertEqual(res.owner(0x1000, d), (["a.obj"], "layout"))
+        self.assertEqual(res.representative(0x1000, d).fn.order, 3)
+
+    def test_placed_proof_pin_follows_the_supported_caller(self):
+        va, target = 0x401000, 0x401100
+        members = []
+        for member, symbol in [("a.obj", "_unused"), ("b.obj", "_target")]:
+            obj = coff([(".text", COMDAT, BODY + b"\xe8\0\0\0\0\xc3", [(21, 1, M.REL_I386_REL32)])],
+                       [("_helper", 0, 1, FUNC, STATIC, b""), (symbol, 0, 0, FUNC, EXT, b"")])
+            members.append((member, obj))
+        lib = library(members)
+        lib.pins = [{"label": name, "sha256": str(i) * 64, "tag": name} for i, name in enumerate(("A", "B"))]
+        lib.origin = {"a.obj": 0, "b.obj": 1}
+        body = BODY + b"\xe8" + struct.pack("<i", target - (va + 25)) + b"\xc3"
+        res = M.Resolver(lib, FakeImage(0x400000, {va: body}), {}, va, 0x402000, [va])
+        res.search()
+        res.decided[va] = {"how": "called", "cands": res.cands[va]}
+        res.pool = {("l", "b.obj", "_helper", 1, 0): va, ("g", "_target"): target}
+        rows = {target: {"name": "old", "nameSource": "USER_DEFINED"}}
+        p, = M.proposals(res, rows, {})
+        self.assertEqual(p["how"], "placed")
+        self.assertIn("static library B (SHA-256 " + "1" * 64 + ")", p["proof"])
+        self.assertNotIn("static library A", p["proof"])
 
     def test_import_symbols_must_land_on_their_own_slot(self):
         res = self.resolver()
