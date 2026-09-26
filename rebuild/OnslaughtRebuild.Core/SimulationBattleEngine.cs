@@ -38,6 +38,7 @@ public sealed partial class Simulation
     private Level100CrosshairHitKind _crosshairHitKind;
     private int _crosshairHitDistanceMillimeters;
     private Level100PlayerLocks _playerLocks = null!;
+    private readonly RetailBattleEngineShake _shake = new();
 
     /// <summary>
     /// The tail of <c>CBattleEngine::Init</c> (<c>0x00404dd0</c>,
@@ -279,5 +280,23 @@ public sealed partial class Simulation
         _crosshairHitKind = Level100CrosshairHitKind.Nothing;
         _crosshairHitDistanceMillimeters = 0;
         _playerLocks = new Level100PlayerLocks(id => _level100Actors.GetLifecycle(id));
+        _shake.Reset();
+    }
+
+    /// <summary>
+    /// The tail of <c>CBattleEngine::Move</c> after the part moves:
+    /// <c>UpdateRotation</c>'s shake decay (<c>BattleEngine.cpp:1222-1233</c>)
+    /// and the heat-store cooling loop (<c>:1708-1718</c>). Both run on every
+    /// Move, dying or not, for as long as the Battle Engine exists.
+    /// </summary>
+    private void AdvanceBattleEngineRotationTail()
+    {
+        if (_level100Actors.GetLifecycle(_level100PlayerActorId) == Level100ActorLifecycle.Destroyed)
+        {
+            return;
+        }
+
+        _shake.Decay();
+        _level100PlayerWeapons.CoolStores();
     }
 }

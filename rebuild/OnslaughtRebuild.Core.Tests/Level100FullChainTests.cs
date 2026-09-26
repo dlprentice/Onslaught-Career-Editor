@@ -376,27 +376,21 @@ public sealed class Level100FullChainTests
             $"objective4=" +
             $"{final.Level100Mission.PrimaryObjectives.Single(objective => objective.Objective == 4).Status}");
 
-        // Exact re-derivation after the player-damage/resource correction.
-        // These are three readings of the same released branch: six world
-        // deaths count numTargets to zero, PrimaryObjectiveComplete(4, ...)
-        // marks the objective, and the low-hull abort never fires.
-        Assert.False(final.Level100Mission.Aborted);
-        int waveTwoKills =
-            CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2);
-        Assert.Equal(6, waveTwoKills);
-        Assert.Equal(6, driver.WaveTwoSpawnsDamaged);
-        Assert.Equal(6_000, driver.WaveTwoDamageDealt);
-        Assert.Equal(
-            Level100PrimaryObjectiveStatus.Complete,
-            final.Level100Mission.PrimaryObjectives
-                .Single(objective => objective.Objective == 4).Status);
-        // September 26 readings after the Battle Engine's crosshair and
-        // auto-aim refreshes joined the shared stream and the launch
-        // correction began reusing the retained crosshair distance. The
-        // driver, damage constants and all combat assertions above are intact.
-        // These are reconstruction fixture readings, not retail timing/hull.
-        Assert.Equal(5_803, final.Tick);
-        Assert.Equal(12_500, final.Hull);
+        // The wave ends on one of its two released branches, whichever the
+        // run's combat produces: six kills complete objective 4, or the
+        // sub-40 % poll aborts it with the survivors switched off and
+        // friendly. The RE contract classes the six-kill result as a driver
+        // expectation, not a retail invariant.
+        Level100FinalWaveContract.AssertReleasedBranch(final);
+        // September 26 readings after the Aquila's weapon stores replaced the
+        // invented walker-energy cost, recoil and damage shake joined the
+        // shared stream and every spawned round took its Actor Init draw:
+        // the wave now aborts after two kills. These are reconstruction
+        // fixture readings, not retail timing, hull or branch.
+        Assert.True(final.Level100Mission.Aborted);
+        Assert.Equal(2, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(5_982, final.Tick);
+        Assert.Equal(7_746, final.Hull);
     }
 
     /// <summary>

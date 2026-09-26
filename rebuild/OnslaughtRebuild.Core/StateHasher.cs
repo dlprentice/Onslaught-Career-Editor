@@ -65,6 +65,13 @@ public static class StateHasher
             // launches, locks and targets.
             bool usesBattleEngineTargetingSchema =
                 !IsInitialTargeting(state.Level100BattleEngineTargeting);
+            // 50: the Aquila's six weapon stores, their overheat flags, the
+            // walker's shields-recharging flag, the depleted/overheated cue
+            // times, the Pulse's last Fire level and the Battle Engine's shake.
+            // Selected whenever any differs from construction.
+            bool usesStoresAndShakeSchema =
+                state.Level100PlayerStores != Level100PlayerStoresSnapshot.Initial ||
+                state.Level100BattleEngineShake != Level100BattleEngineShakeSnapshot.Initial;
             // 48: retained spawning-owner reader, exit selector/deadline and
             // explicit handoff to the existing approximate normal-control
             // bridge. Unspawned scenes retain schema 47 byte-for-byte.
@@ -165,7 +172,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesStoresAndShakeSchema ? 50 : usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -332,9 +339,30 @@ public static class StateHasher
                 writer.Write(foot.LiftMillimeters);
             }
 
-            if (usesBattleEngineTargetingSchema)
+            if (usesBattleEngineTargetingSchema || usesStoresAndShakeSchema)
             {
                 WriteBattleEngineTargeting(writer, state.Level100BattleEngineTargeting);
+            }
+
+            if (usesStoresAndShakeSchema)
+            {
+                Level100PlayerStoresSnapshot stores = state.Level100PlayerStores;
+                writer.Write(stores.Store0Bits);
+                writer.Write(stores.Store1Bits);
+                writer.Write(stores.Store2Bits);
+                writer.Write(stores.Store3Bits);
+                writer.Write(stores.Store4Bits);
+                writer.Write(stores.Store5Bits);
+                writer.Write(stores.OverheatMask);
+                writer.Write(stores.ShieldsRecharging);
+                writer.Write(stores.AmmoDepletedTimeBits);
+                writer.Write(stores.WeaponOverheatedTimeBits);
+                writer.Write(stores.PulseModeLevel);
+                Level100BattleEngineShakeSnapshot shake = state.Level100BattleEngineShake;
+                writer.Write(shake.YawBits);
+                writer.Write(shake.PitchBits);
+                writer.Write(shake.RollBits);
+                writer.Write(shake.PhaseBits);
             }
         }
 

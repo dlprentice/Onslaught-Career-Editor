@@ -469,6 +469,10 @@ public sealed partial class Level100ActorMechanics
         // regardless of the scatter magnitude.
         (int yawInaccuracy, int pitchInaccuracy) =
             NextWeaponInaccuracy(mode.InaccuracyMicroRadians);
+        // The spawner then runs the round's Init: CRound::Init 0x004d8410 calls
+        // CActor::Init at 0x004d867b, which takes one more shared draw for the
+        // round's Move phase. Every spawned round therefore costs three draws.
+        _ = _releasedRandom.Next();
 
         Level100ActorRoundData round = Level100ActorArmament.Round(mode.Round);
         _actorRounds.Add(new ActorRoundState

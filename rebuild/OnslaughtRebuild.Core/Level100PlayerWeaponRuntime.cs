@@ -3,15 +3,23 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
-/// The released Level 100 player's configured weapon slots, active flags and
-/// current selection. Charge is the Pulse Cannon Pod accumulator advanced by
-/// held <see cref="SimActions.ChargeWeapon"/>. Each weapon retains its own
-/// float ready time. Heat, ammo stores, and complete launch/contact behavior
-/// remain open. Selections are base slots: Walker slot zero may resolve to
-/// the augmented weapon at runtime. Manual cycling is bounded to the active
-/// flag represented here. The released heat/store eligibility test remains an
-/// open extension for configurations whose next active weapon cannot fire.
+/// The released Level 100 player's configured weapon slots, active flags,
+/// current selection and the Aquila's six ammunition and heat stores. Charge
+/// is the Pulse Cannon Pod accumulator advanced by held
+/// <see cref="SimActions.ChargeWeapon"/>. Each weapon retains its own float
+/// ready time. Selections are base slots: Walker slot zero may resolve to the
+/// augmented weapon at runtime.
 /// </summary>
+/// <remarks>
+/// Stores follow the RE lane's contract
+/// <c>reverse-engineering/game-mechanics/battle-engine-weapon-stores.md</c>
+/// and the pinned source (<c>BattleEngine.cpp:303-312, :1708-1718</c>,
+/// <c>BattleEngineJetPart.cpp:659-797</c>,
+/// <c>BattleEngineWalkerPart.cpp:519-760</c>): ammo stores start full and
+/// heat stores empty; a burst event spends once, before its volley; heat
+/// stores cool by 1 on every Move and clear overheat below three quarters of
+/// capacity.
+/// </remarks>
 internal sealed class Level100PlayerWeaponRuntime
 {
     private bool _pulseCannonActive;
@@ -21,15 +29,35 @@ internal sealed class Level100PlayerWeaponRuntime
     private int _walkerSelection;
     private int _jetSelection;
     private RetailWeaponChargeTable _pulseCharge = Level100PulseCannonCharge.CreatePod();
+    private int _pulseModeLevel;
     private float _twinVulcanReadyAt;
     private float _mechVulcanReadyAt;
     private float _missilePodReadyAt;
+    private readonly RetailWeaponStores _stores = new();
+    private bool _shieldsRecharging;
+    private float _ammoDepletedTime;
+    private float _weaponOverheatedTime;
 
     // CWeapon constructor's +0x64 store at 0x00505e6e, also used by the admitted Unit
     // attachment constructor. Configured Level 100 weapons have a mode.
     private const float InitialReadyAt = -200f;
     // Both released Vulcan modes carry CWeaponReloadTime 0x3d4ccccd.
     private const float VulcanReloadTime = 0.05f;
+    // BattleEngine.cpp:329-330: mAmmoDepletedTime and mWeaponOverheatedTime.
+    private const float InitialCueTime = -99999.0f;
+    // kWeaponCoolRate is the integer 1 at 0x00622f08 and 0x006236a4.
+    private const float CoolRate = 1.0f;
+
+    /// <summary>
+    /// Aquila Prototype's six (heat, capacity) store pairs, read at
+    /// <c>data/battle engine configurations.dat</c> offset <c>0x35f</c>
+    /// (SHA-256 <c>58722b12…</c>, record 3 @<c>0x2d2</c>, version 12):
+    /// ammo 2000, ammo 100, heat 150, ammo 200, heat 100, heat 100.
+    /// </summary>
+    internal static ReadOnlySpan<int> AquilaStoreHeat => [0, 0, 1, 0, 1, 1];
+
+    internal static ReadOnlySpan<float> AquilaStoreCapacity =>
+        [2000.0f, 100.0f, 150.0f, 200.0f, 100.0f, 100.0f];
 
     internal Level100PlayerWeaponRuntime() => ResetConfiguration();
 
@@ -39,12 +67,28 @@ internal sealed class Level100PlayerWeaponRuntime
     /// <summary>The Pulse Cannon Pod's charge-selected mode level.</summary>
     internal int PulseChargeLevel => RetailWeaponCharge.ModeLevel(_pulseCharge);
 
+    /// <summary>The walker part's +0x14: false after a heat charge or shot this update.</summary>
+    internal bool ShieldsRecharging => _shieldsRecharging;
+
     internal Level100PlayerWeaponStateSnapshot Snapshot => new(
         PulseCannonChargeBits,
         BitConverter.SingleToUInt32Bits(_pulseCharge.ReadyAtTime),
         BitConverter.SingleToUInt32Bits(_twinVulcanReadyAt),
         BitConverter.SingleToUInt32Bits(_mechVulcanReadyAt),
         BitConverter.SingleToUInt32Bits(_missilePodReadyAt));
+
+    internal Level100PlayerStoresSnapshot StoresSnapshot => new(
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[0]),
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[1]),
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[2]),
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[3]),
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[4]),
+        BitConverter.SingleToUInt32Bits(_stores.StoreValue[5]),
+        OverheatMask(),
+        _shieldsRecharging,
+        BitConverter.SingleToUInt32Bits(_ammoDepletedTime),
+        BitConverter.SingleToUInt32Bits(_weaponOverheatedTime),
+        _pulseModeLevel);
 
     internal Level100MissionWeapon WalkerSelectedWeapon =>
         WeaponAt(VehicleMode.Walker, _walkerSelection);
@@ -62,16 +106,30 @@ internal sealed class Level100PlayerWeaponRuntime
         _jetSelection = 0;
         _pulseCharge = Level100PulseCannonCharge.CreatePod();
         _pulseCharge.ReadyAtTime = InitialReadyAt;
+        _pulseModeLevel = 0;
         _twinVulcanReadyAt = InitialReadyAt;
         _mechVulcanReadyAt = InitialReadyAt;
         _missilePodReadyAt = InitialReadyAt;
+        for (int store = 0; store < RetailWeaponStores.StoreCount; store++)
+        {
+            _stores.StoreOverheat[store] = 0;
+            _stores.StoreHeat[store] = AquilaStoreHeat[store];
+            _stores.ConfigurationStoreValue[store] = AquilaStoreCapacity[store];
+            _stores.StoreValue[store] = AquilaStoreHeat[store] == 0
+                ? AquilaStoreCapacity[store]
+                : 0.0f;
+        }
+        _shieldsRecharging = true;
+        _ammoDepletedTime = InitialCueTime;
+        _weaponOverheatedTime = InitialCueTime;
     }
 
     /// <summary>
     /// The held-input arm of Walker <c>0x00413CF0</c> and Jet
-    /// <c>0x00411BF0</c>. Returns a Fire request for the two non-chargeable
-    /// Vulcans; the caller uses the same Fire wrapper as a release. The Pulse
-    /// increment is bounded here: store spend and overheat-to-fire remain open.
+    /// <c>0x00411BF0</c> (<c>BattleEngineWalkerPart.cpp:519-557</c>). Returns a
+    /// Fire request for a weapon that cannot charge, and for a charge that
+    /// finds its heat store full; the caller uses the same Fire wrapper as a
+    /// release.
     /// </summary>
     internal bool AdvanceCharge(VehicleMode mode, VehicleTransition transition, float now)
     {
@@ -88,18 +146,48 @@ internal sealed class Level100PlayerWeaponRuntime
             return true;
         }
 
-        if (selected == Level100MissionWeapon.PulseCannonPod &&
-            !RetailWeaponCharge.FullyCharged(_pulseCharge))
+        if (selected != Level100MissionWeapon.PulseCannonPod)
         {
-            RetailWeaponCharge.Charge(_pulseCharge);
+            return false;
         }
-        return false;
+
+        (int store, float consumption) = StoreOf(selected);
+        bool heat = _stores.StoreHeat[store] != 0;
+        if (!(heat || _stores.StoreValue[store] > 0.0f) ||
+            RetailWeaponCharge.FullyCharged(_pulseCharge) ||
+            _stores.StoreOverheat[store] != 0)
+        {
+            return false;
+        }
+
+        RetailWeaponCharge.Charge(_pulseCharge);
+        if (mode == VehicleMode.Walker)
+        {
+            _shieldsRecharging = false;
+        }
+
+        if (!heat)
+        {
+            return false;
+        }
+
+        // The store's overheat flag was clear to reach this point, so the
+        // source's second test is its capacity alone.
+        if (_stores.StoreValue[store] < _stores.ConfigurationStoreValue[store])
+        {
+            _stores.StoreValue[store] = (float)RetailFloat24.Add(_stores.StoreValue[store], consumption);
+            return false;
+        }
+
+        _stores.StoreOverheat[store] = 1;
+        WeaponOverheated(now);
+        return true;
     }
 
     /// <summary>
     /// Shared Fire <c>0x00506010</c> samples charge, clears +0x60, selects its
-    /// mode, then checks now &gt; +0x64. A refused Pulse release still loses its
-    /// charge. This does not claim the subsequent ammo/launch effects.
+    /// mode level (+0x68), then checks now &gt; +0x64. A refused Pulse release
+    /// still loses its charge and keeps its new mode level.
     /// </summary>
     internal bool TryPrepareFire(VehicleMode mode, VehicleTransition transition,
         float now, out Level100ProjectileKind pulseRound)
@@ -114,6 +202,7 @@ internal sealed class Level100PlayerWeaponRuntime
         if (selected == Level100MissionWeapon.PulseCannonPod)
         {
             pulseRound = Level100PulseCannonCharge.SelectFireRound(_pulseCharge);
+            _pulseModeLevel = RetailWeaponCharge.ModeLevel(_pulseCharge);
             RetailWeaponCharge.LoseCharge(_pulseCharge);
         }
         return ReadyToFire(selected, now);
@@ -160,6 +249,131 @@ internal sealed class Level100PlayerWeaponRuntime
             case Level100MissionWeapon.MechVulcanCannon:
                 _mechVulcanReadyAt = readyAt;
                 break;
+        }
+    }
+
+    /// <summary>
+    /// The weapon record's <c>CWeaponAmmoStore</c> and <c>CWeaponConsumption</c>
+    /// (<c>data/default physics.dat</c>, SHA-256 <c>e1fb3ded…</c>): Pulse Cannon
+    /// Pod @<c>0x17463</c> store 2, 4.0; Mech Twin Vulcan Cannon @<c>0x171b4</c>
+    /// store 0, 2.0; Mech Vulcan Cannon @<c>0x170c5</c> store 0, 1.0; Missile
+    /// Pod @<c>0x17746</c> store 3, 1.0.
+    /// </summary>
+    internal static (int Store, float Consumption) StoreOf(Level100MissionWeapon weapon) => weapon switch
+    {
+        Level100MissionWeapon.PulseCannonPod => (2, 4.0f),
+        Level100MissionWeapon.MechTwinVulcanCannon => (0, 2.0f),
+        Level100MissionWeapon.MechVulcanCannon => (0, 1.0f),
+        Level100MissionWeapon.MissilePod => (3, 1.0f),
+        _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+    };
+
+    /// <summary>
+    /// The owning part's <c>WeaponFired</c>, run once per burst event before
+    /// the volley (jet <c>0x00412050</c>, walker <c>0x004140d0</c>). A refusal
+    /// creates no round and takes no draw.
+    /// </summary>
+    internal bool WeaponFired(Level100MissionWeapon weapon, bool jetPart, float now)
+    {
+        (int store, float consumption) = StoreOf(weapon);
+        if (_stores.StoreHeat[store] != 0)
+        {
+            // Charged() is weapon +0x68 > 0: a charged heat shot costs nothing.
+            if (weapon == Level100MissionWeapon.PulseCannonPod && _pulseModeLevel > 0)
+            {
+                return true;
+            }
+
+            if (_stores.StoreValue[store] < _stores.ConfigurationStoreValue[store] &&
+                _stores.StoreOverheat[store] == 0)
+            {
+                // The jet subtracts kWeaponCoolRate here; the walker adds the
+                // full consumption and stops its shields recharging.
+                _stores.StoreValue[store] = (float)RetailFloat24.Add(
+                    _stores.StoreValue[store],
+                    jetPart ? RetailFloat24.Subtract(consumption, CoolRate) : consumption);
+                if (!jetPart)
+                {
+                    _shieldsRecharging = false;
+                }
+                return true;
+            }
+
+            _stores.StoreOverheat[store] = 1;
+            WeaponOverheated(now);
+            return false;
+        }
+
+        if (_stores.StoreValue[store] > 0.0f)
+        {
+            float value = (float)RetailFloat24.Subtract(_stores.StoreValue[store], consumption);
+            _stores.StoreValue[store] = value < 0.0f ? 0.0f : value;
+            return true;
+        }
+
+        if (_ammoDepletedTime < (float)RetailFloat24.Subtract(now, 8.0f))
+        {
+            _ammoDepletedTime = now;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// <c>CanWeaponFire</c> (jet <c>0x00412570</c>, walker <c>0x00414630</c>,
+    /// which also requires the weapon active).
+    /// </summary>
+    internal bool CanWeaponFire(Level100MissionWeapon weapon, bool walkerPart)
+    {
+        if (walkerPart && !IsActive(weapon))
+        {
+            return false;
+        }
+
+        (int store, _) = StoreOf(weapon);
+        return _stores.StoreHeat[store] != 0
+            ? _stores.StoreValue[store] < _stores.ConfigurationStoreValue[store] &&
+                _stores.StoreOverheat[store] == 0
+            : _stores.StoreValue[store] > 0.0f;
+    }
+
+    /// <summary>
+    /// The store loop at the end of <c>CBattleEngine::Move</c>
+    /// (<c>0x004095d6-0x00409633</c>, <c>BattleEngine.cpp:1708-1718</c>).
+    /// </summary>
+    internal void CoolStores()
+    {
+        for (int store = 0; store < RetailWeaponStores.StoreCount; store++)
+        {
+            if (_stores.StoreHeat[store] == 0)
+            {
+                continue;
+            }
+
+            float value = (float)RetailFloat24.Subtract(_stores.StoreValue[store], CoolRate);
+            if (value < 0.0f)
+            {
+                value = 0.0f;
+            }
+            else if (value < (float)RetailFloat24.Multiply(_stores.ConfigurationStoreValue[store], 0.75f))
+            {
+                _stores.StoreOverheat[store] = 0;
+            }
+            _stores.StoreValue[store] = value;
+        }
+    }
+
+    /// <summary>The walker part's Move ends with <c>mShieldsRecharging=TRUE</c>.</summary>
+    internal void ResumeShieldsRecharging() => _shieldsRecharging = true;
+
+    /// <summary>
+    /// <c>WeaponOverheated</c> (<c>0x0040f110</c>) only stamps the cue time
+    /// when the previous stamp is more than 4 s old.
+    /// </summary>
+    private void WeaponOverheated(float now)
+    {
+        if (_weaponOverheatedTime < (float)RetailFloat24.Subtract(now, 4.0f))
+        {
+            _weaponOverheatedTime = now;
         }
     }
 
@@ -249,6 +463,12 @@ internal sealed class Level100PlayerWeaponRuntime
         }
     }
 
+    /// <summary>
+    /// The parts' <c>ChangeWeapon</c> walk
+    /// (<c>BattleEngineWalkerPart.cpp:560-596</c>, jet <c>0x00411f3a-0x00411f49</c>):
+    /// the next active weapon whose store is a heat store or holds at least
+    /// its consumption.
+    /// </summary>
     private bool TrySelectNextActive(VehicleMode mode)
     {
         int current = mode == VehicleMode.Walker
@@ -257,7 +477,10 @@ internal sealed class Level100PlayerWeaponRuntime
         int candidate = (current + 1) % 2;
         while (candidate != current)
         {
-            if (IsActive(WeaponAt(mode, candidate)))
+            Level100MissionWeapon weapon = WeaponAt(mode, candidate);
+            (int store, float consumption) = StoreOf(weapon);
+            if (IsActive(weapon) &&
+                (_stores.StoreHeat[store] != 0 || _stores.StoreValue[store] >= consumption))
             {
                 if (mode == VehicleMode.Walker)
                 {
@@ -271,7 +494,7 @@ internal sealed class Level100PlayerWeaponRuntime
                 // ChangeWeapon's aftermath: LoseCharge on the newly selected
                 // weapon. Level 100 only accumulates charge on the Pulse
                 // Cannon Pod; resetting that table matches the store of +0.0f.
-                if (WeaponAt(mode, candidate) == Level100MissionWeapon.PulseCannonPod)
+                if (weapon == Level100MissionWeapon.PulseCannonPod)
                 {
                     RetailWeaponCharge.LoseCharge(_pulseCharge);
                 }
@@ -282,6 +505,19 @@ internal sealed class Level100PlayerWeaponRuntime
         }
 
         return false;
+    }
+
+    private int OverheatMask()
+    {
+        int mask = 0;
+        for (int store = 0; store < RetailWeaponStores.StoreCount; store++)
+        {
+            if (_stores.StoreOverheat[store] != 0)
+            {
+                mask |= 1 << store;
+            }
+        }
+        return mask;
     }
 
     private static Level100MissionWeapon WeaponAt(VehicleMode mode, int index) =>

@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-26 (the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
+Last updated: 2026-09-26 (weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -273,12 +273,20 @@ Owner paths are relative to the repository root; test names are relative to
 | World-110 direct mission initialization | Exact `f5c157ba…22aa` program: native 88 at instruction 22, first `Pause` at instruction 34. The intervening non-waiting `_110_PROTECT` message id 8444036 maps to exact retail `110_protect.ogg`, SHA-256 `03f1fc8e…35d3`, 172,496 samples at 44.1 kHz; the retained duration law gives 90 ticks. Definition/world mismatches fail in both directions. The stamped Level 100 fixture is a direct mission instrument, not a World110 Simulation or authored world-110 content | `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | direct world-110 mission constructor; `Level100MissionTiming.MessagePlaybackTicks` | `RetailWorld110AdmissionTests.MissionConstructor_World110CrossesNative88AndStopsAtItsFirstLegitimateWait` | 1 | change the measured `_110_PROTECT` duration from 90 to 91 ticks (observed Expected 90 / Actual 91) |
 | `CBattleEngine::Init` refresh events 6002/6003 | `0x00404dd0` draws at `0x0040586e` and files 6002 at `0x004058b2` (`fmul [0x005d8808]` = `0x364ccccd`, `fadd mTime`, `fadd [0x005d85c0]` = 0.1f), then `HandleAutoAim(NULL)` `0x0040b6d0` draws at `0x0040bf57` and files 6003 (`0x35cccccd`, 0.2f); both priority 0. Order after other constructors awaits the RE first-flush answer | `rebuild/OnslaughtRebuild.Core/RetailBattleEngineRefresh.cs`, `SimulationBattleEngine.cs` | `RetailBattleEngineRefresh.CrosshairDueTime`/`AutoAimDueTime`, `Simulation.InitializeBattleEngineRefreshEvents` | `Level100BattleEngineRefreshTests.DueTimes_AreSampleTimesScalePlusNowPlusDelayInSinglePrecision`, `.Construction_FilesTheCrosshairThenTheAutoAimRefreshWithOneDrawEach` | 7, 1 | 6002 scale set to 6003's `0x35cccccd`; 6003 delay 0.2f set to 0.1f; one extra construction draw — each RED, restored byte-identical, GREEN |
 | `CBattleEngine::GetLaunchPosition` reuses the event report | `0x0040c990` (`BattleEngine.cpp:3049-3063`): `hitPoint = cam_pos + unit(view) × mWlcr.mDistToImpact`, where `mWlcr` is written only by the 6002 path of `CalcUnitOverCrossHair` `0x0040acc0` | `rebuild/OnslaughtRebuild.Core/Simulation.cs`, `SimulationBattleEngine.cs` | `Simulation.ReticleAdjustedLaunchAngles`, `Simulation.CalcUnitOverCrossHair` | `Level100BattleEngineRefreshTests.LaunchCorrection_ReusesTheRetainedDistanceAlongTheCurrentViewLine` | 1 | launch correction re-traces the current line instead of reading the report — RED, restored, GREEN |
+| Aquila weapon stores and `WeaponFired` | Config `0x35f`: (0, 2000) (0, 100) (1, 150) (0, 200) (1, 100) (1, 100). Jet ammo `0x0041215d-0x00412192` −consumption clamped at 0; jet heat `0x00412135` +consumption − `kWeaponCoolRate` (int 1 at `0x006236a4`); walker heat +consumption; `Charged()` is `+0x68 > 0`; once per burst event, before the volley | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.WeaponFired`, `.StoreOf` | `Level100PlayerStoresTests` | 12 | Mech Vulcan consumption 1→2; a charged heat shot pays heat — each RED, restored, GREEN |
+| `CBattleEngine::Move` heat-store cooling | `0x004095d6-0x00409633`: each heat store −1.0 (`fild [0x00622f08]`), below 0 → 0, else overheat cleared when strictly below `0.75 × capacity` (`0x005d8bc4`) | `rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` | `Level100PlayerWeaponRuntime.CoolStores` | `Level100PlayerStoresTests.Cooling_TakesOneEveryMoveAndClearsOverheatStrictlyBelowThreeQuarters` | 1 | cool rate 1→2; clear threshold 0.75→0.8 — each RED, restored, GREEN |
+| `CBattleEngine::AddShockShake` and the round's Init draw | `0x00407940`: return below 0.001 (double `0x005d8bc8`), cap 0.75, three draws `(r mod 32)/(16/a) − a`; called per spawned round with `CWeaponPower` (`0x0040c340`) and from `Damage` (`0x0040ab75-0x0040abc2`). `CRound::Init` `0x004d8410` → `CActor::Init` `0x004d867b` takes one draw per round | `rebuild/OnslaughtRebuild.Core/RetailBattleEngineShake.cs`, `Simulation.cs`, `Level100ActorWeaponRuntime.cs` | `RetailBattleEngineShake.Add`/`.Decay`/`.DamageAmount`, `Simulation.SpawnPlayerBurst` | `Level100PlayerStoresTests.Shake_TakesThreeDrawsAboveTheThresholdAndDecaysEachMove`, `SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder` | 1, 1 | threshold 0.001→0.1; the round Init draw removed — each RED, restored, GREEN |
 
-The two September 26 Battle Engine rows have their mutation receipts in the
+The September 26 Battle Engine rows have their mutation receipts in the
 rebuild worktree's ignored
-`local-data/test-runs/be-refresh-20260926/mutation-kills/` (`mutate.py` and
-`mutation-results.json`: four mutations, each RED, restored byte-identical by
-SHA-256, then GREEN). Open questions they leave, each with its cheapest
+`local-data/test-runs/be-refresh-20260926/mutation-kills/` (the refresh rows:
+four mutations) and `local-data/test-runs/stores-shake-20260926/mutation-kills/`
+(the store, cooling and shake rows: six mutations), each with `mutate.py` and
+`mutation-results.json`; every mutation went RED, was restored byte-identical by
+SHA-256, then went GREEN. The shake offsets are not yet applied to the Battle
+Engine's orientation (`BattleEngine.cpp:1222-1224`), and the damage shake's
+draws come where Core applies the hit, after the actor rounds' Move, not inside
+the round's Move as in retail. Open questions they leave, each with its cheapest
 falsifier: the Battle Engine Init's place among the other constructors' draws
 (the RE lane's first-flush order); the view point, which Core takes as the
 Battle Engine's position and facing because it has no camera (a copied-retail

@@ -32,6 +32,8 @@ internal static class Level100TestActorDefinitions
         // The Battle Engine's refresh events went with the event pool above;
         // its targeting state is the schema-49 extension.
         Level100BattleEngineTargeting = Level100BattleEngineTargetingSnapshot.Initial,
+        Level100PlayerStores = Level100PlayerStoresSnapshot.Initial,
+        Level100BattleEngineShake = Level100BattleEngineShakeSnapshot.Initial,
     };
 
     private static readonly Lazy<Level100ActorDefinitionSet> s_materialized = new(LoadMaterialized);

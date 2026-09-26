@@ -479,6 +479,7 @@ public sealed partial class Simulation
 
         UpdateZoom();
         UpdateMovement(playerInput);
+        AdvanceBattleEngineRotationTail();
         UpdateWalkerHydraulicCue();
         UpdateWalkerFeet();
         // hit() InJetMode reads the actor-script flight state.
@@ -3457,10 +3458,17 @@ public sealed partial class Simulation
         {
             if (CanRechargeWalkerEnergy(_ticksSinceGroundContact))
             {
+                // BattleEngineWalkerPart.cpp:376-388: a heat shot or charge this
+                // update cleared mShieldsRecharging, which halves the recharge
+                // (0x00413804); 0.05 / 2 is exactly 25 milli-units.
+                int recharge = _level100PlayerWeapons.ShieldsRecharging
+                    ? SimulationConstants.WalkerEnergyRegenerationPerTick
+                    : SimulationConstants.WalkerEnergyRegenerationPerTick / 2;
                 _energy = Math.Min(
                     SimulationConstants.MaximumEnergy,
-                    _energy + SimulationConstants.WalkerEnergyRegenerationPerTick);
+                    _energy + recharge);
             }
+            _level100PlayerWeapons.ResumeShieldsRecharging();
             if (_energy == SimulationConstants.MaximumEnergy)
             {
                 _jetEnergyDrainRemainderMicro = 0;
@@ -3555,6 +3563,13 @@ public sealed partial class Simulation
             result.ShieldAbsorbedMilliLife,
             result.LifeDamageMilliLife,
             result.RequestsDeath));
+        // CBattleEngine::Damage ends with AddShockShake of the life lost
+        // times 0.125, halved while shields remain (0x0040ab75-0x0040abc2).
+        _shake.Add(
+            RetailBattleEngineShake.DamageAmount(
+                result.LifeDamageMilliLife,
+                result.State.ShieldMilli != 0),
+            _level100ActorMechanics.NextReleasedRandom);
         requestsDeath = result.RequestsDeath;
         return true;
     }
@@ -3578,20 +3593,27 @@ public sealed partial class Simulation
             return;
         }
 
+        // CBattleEngine::FireWeapon (BattleEngine.cpp:1958-1970): record the
+        // lock count the burst's targets round-robin over, then the part fires.
+        _playerLocks.RecordFireWeapon();
         FireCurrentWeapon();
     }
 
+    /// <summary>
+    /// The part's <c>FireWeapon</c> then <c>CWeapon::Fire</c> (<c>0x00506010</c>):
+    /// sample and clear charge, check readiness, stamp the reload from the
+    /// burst's start, zero the Battle Engine's target cursor and spawn the
+    /// first burst event.
+    /// </summary>
     private void FireCurrentWeapon()
     {
-        // Both a release and the held non-chargeable arm reach CWeapon::Fire.
-        // Sampling/clearing charge precedes readiness and the remaining
-        // bounded resource/launch checks; integer countdowns are not gates.
         if (!_level100PlayerWeapons.TryPrepareFire(
             _mode, _transition, EngineTimeSeconds, out Level100ProjectileKind pulseRound))
         {
             return;
         }
 
+        float now = EngineTimeSeconds;
         if (_mode == VehicleMode.Jet)
         {
             Level100MissionWeapon selected =
@@ -3608,35 +3630,23 @@ public sealed partial class Simulation
                     $"Unsupported Level 100 jet weapon {selected}.");
             }
 
-            // Aquila Prototype's JetPart owns Mech Vulcan Cannon followed by Missile
-            // Pod. ResetConfiguration selects slot zero and jet fire never
-            // routes through the walker-only primary Pulse Cannon.
-            EmitFlightEvent(
-                AquilaFlightEvents.JetWeaponFireRequested,
-                AquilaJetWeapon.MechVulcanCannon);
-            EmitWeaponFireEvent(
-                Level100PlayerWeapon.MechVulcanCannon,
-                SimulationConstants.MechVulcanVolleySize);
             _fireCooldownTicksRemaining = SimulationConstants.MechVulcanReloadTicks;
-            _level100PlayerWeapons.StampReadyAt(selected, EngineTimeSeconds);
-
-            // Mech Vulcan Cannon fires two Mech Air Bullet rounds. The two
-            // authored muzzle offsets remain unmodelled. Jet ammo/heat stores
-            // are also open; no invented energy cost is spent here.
-            for (int round = 0;
-                 round < SimulationConstants.MechVulcanVolleySize;
-                 round++)
-            {
-                (int yawInaccuracy, int pitchInaccuracy) =
-                    _level100ActorMechanics.NextWeaponInaccuracy(
-                        SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
-                LaunchWalkerRound(
-                    Level100ProjectileKind.MechAirBullet,
-                    SimulationConstants.MechAirBulletSpeedPerTick,
-                    SimulationConstants.MechAirBulletLifetimeTicks,
-                    yawInaccuracy,
-                    pitchInaccuracy);
-            }
+            _level100PlayerWeapons.StampReadyAt(selected, now);
+            _playerLocks.ResetCurrentTarget();
+            // Mech Vulcan Cannon fires two Mech Air Bullet rounds per event.
+            // The two authored muzzle offsets remain unmodelled.
+            SpawnPlayerBurst(
+                selected,
+                jetPart: true,
+                SimulationConstants.MechVulcanVolleySize,
+                Level100ProjectileKind.MechAirBullet,
+                SimulationConstants.MechAirBulletSpeedPerTick,
+                SimulationConstants.MechAirBulletLifetimeTicks,
+                SimulationConstants.PlayerVulcanInaccuracyMicroRadians,
+                MechVulcanPower,
+                () => EmitFlightEvent(
+                    AquilaFlightEvents.JetWeaponFireRequested,
+                    AquilaJetWeapon.MechVulcanCannon));
             return;
         }
 
@@ -3644,81 +3654,123 @@ public sealed partial class Simulation
             _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Walker);
         if (walkerSelected == Level100MissionWeapon.PulseCannonPod)
         {
-            if (_energy < SimulationConstants.FireEnergyCost)
-            {
-                return;
-            }
-
-            _energy -= SimulationConstants.FireEnergyCost;
             // Legacy countdown is a nominal-duration projection. Raw stored
             // per-weapon float time above owns the strict readiness decision.
             _fireCooldownTicksRemaining = pulseRound == Level100ProjectileKind.MechPulseBoltLarge
                 ? (int)(Level100PulseCannonCharge.ChargedReloadTime * SimulationConstants.TicksPerSecond)
                 : SimulationConstants.PulseCannonReloadTicks;
-            _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds, pulseRound);
+            _level100PlayerWeapons.StampReadyAt(walkerSelected, now, pulseRound);
+            _playerLocks.ResetCurrentTarget();
+            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
-            EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
-            bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
             // Charged2 field 1 @0x135DF in the pinned physics.dat is +0
-            // CWeaponInaccuracy. The retail scatter block still draws twice
-            // (0x00506E0A/0x00506E3E), then multiplies each by mode+0x34.
-            // Preserve those draws even when both angular offsets are zero.
-            (int yawInaccuracy, int pitchInaccuracy) =
-                _level100ActorMechanics.NextWeaponInaccuracy(
-                    largePulse ? 0 : SimulationConstants.PulseCannonInaccuracyMicroRadians);
-            LaunchWalkerRound(
-                // Large carries its own physical scalars and zero scatter.
-                // Its spatial blast, launch sound and impact presentation
-                // remain open; this is not complete parity.
+            // CWeaponInaccuracy; the scatter block still draws twice. Large
+            // carries its own physical scalars; its spatial blast, launch sound
+            // and impact presentation remain open, so this is not complete parity.
+            SpawnPlayerBurst(
+                walkerSelected,
+                jetPart: false,
+                1,
                 pulseRound,
                 largePulse ? SimulationConstants.LargePulseSpeedPerTick :
                     SimulationConstants.ProjectileSpeedPerTick,
                 largePulse ? SimulationConstants.LargePulseLifetimeTicks :
                     SimulationConstants.ProjectileLifetimeTicks,
-                yawInaccuracy,
-                pitchInaccuracy);
+                largePulse ? 0 : SimulationConstants.PulseCannonInaccuracyMicroRadians,
+                largePulse ? PulseChargedTwoPower : PulseChargedPower,
+                null);
             return;
         }
 
         // The released script disables the Pulse Cannon Pod and enables the
         // Mech Twin Vulcan Cannon at the end of the first firing-range
-        // exercise, so from that point the walker's only weapon is the Twin
-        // Vulcan. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet rounds
-        // per CWeaponReloadTime 0.05 s. CWeaponInaccuracy 0.006981317 rad is
-        // applied through the same global two-draw path as actor weapons. The
-        // four CWeaponLaunchSequence muzzle entries remain unmodelled, so the
-        // volley leaves the one evidenced BattleEngine emitter.
+        // exercise. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet
+        // rounds per CWeaponReloadTime 0.05 s. The four CWeaponLaunchSequence
+        // muzzle entries remain unmodelled, so the volley leaves the one
+        // evidenced BattleEngine emitter.
         if (walkerSelected != Level100MissionWeapon.MechTwinVulcanCannon)
         {
             throw new InvalidOperationException(
                 $"Unsupported Level 100 walker weapon {walkerSelected}.");
         }
-        if (_energy < SimulationConstants.TwinVulcanFireEnergyCost)
+
+        _twinVulcanReloadTicksRemaining =
+            SimulationConstants.TwinVulcanReloadTicks;
+        _level100PlayerWeapons.StampReadyAt(walkerSelected, now);
+        _playerLocks.ResetCurrentTarget();
+        SpawnPlayerBurst(
+            walkerSelected,
+            jetPart: false,
+            SimulationConstants.TwinVulcanVolleySize,
+            Level100ProjectileKind.MechBullet,
+            SimulationConstants.MechBulletSpeedPerTick,
+            SimulationConstants.MechBulletLifetimeTicks,
+            SimulationConstants.PlayerVulcanInaccuracyMicroRadians,
+            TwinVulcanPower,
+            null);
+    }
+
+    // CWeaponPower (mode +0x40, default 0 at 0x0042fb81) from the pinned
+    // physics.dat: Mech Pulse Cannon Charged 0x3cf5c28f, Charged 2 0x3d4ccccd;
+    // neither Vulcan mode carries the node.
+    private static readonly float PulseChargedPower = BitConverter.UInt32BitsToSingle(0x3cf5c28fu);
+    private static readonly float PulseChargedTwoPower = BitConverter.UInt32BitsToSingle(0x3d4ccccdu);
+    private const float TwinVulcanPower = 0.0f;
+    private const float MechVulcanPower = 0.0f;
+
+    /// <summary>
+    /// One burst event of <c>ProjectileBurst__SpawnFromCurrentPreset</c>
+    /// (<c>0x005069f0</c>) for a Battle Engine weapon, in the RE lane's order
+    /// (<c>reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md</c>):
+    /// the part's <c>WeaponFired</c> once, before the volley (a refusal ends the
+    /// event with no round, draw, lock, recoil or sound); then per round the
+    /// pitch and yaw scatter draws, the target from <c>GetCurrentTarget</c>,
+    /// <c>FireLock</c> when this is the current weapon, the round's Actor Init
+    /// draw, and <c>RecoilWeapon</c>'s shake draws.
+    /// </summary>
+    private void SpawnPlayerBurst(
+        Level100MissionWeapon weapon,
+        bool jetPart,
+        int volleySize,
+        Level100ProjectileKind kind,
+        int speedPerTick,
+        int lifetimeTicks,
+        int inaccuracyMicroRadians,
+        float power,
+        Action? launchCue)
+    {
+        float now = EngineTimeSeconds;
+        if (!_level100PlayerWeapons.WeaponFired(weapon, jetPart, now))
         {
             return;
         }
 
-        _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
-        _twinVulcanReloadTicksRemaining =
-            SimulationConstants.TwinVulcanReloadTicks;
-        _level100PlayerWeapons.StampReadyAt(walkerSelected, EngineTimeSeconds);
-        EmitWeaponFireEvent(
-            Level100PlayerWeapon.MechTwinVulcanCannon,
-            SimulationConstants.TwinVulcanVolleySize);
-        for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
+        launchCue?.Invoke();
+        EmitWeaponFireEvent(PlayerWeaponIdentity(weapon), volleySize);
+        for (int round = 0; round < volleySize; round++)
         {
             (int yawInaccuracy, int pitchInaccuracy) =
-                _level100ActorMechanics.NextWeaponInaccuracy(
-                    SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
-            LaunchWalkerRound(
-                Level100ProjectileKind.MechBullet,
-                SimulationConstants.MechBulletSpeedPerTick,
-                SimulationConstants.MechBulletLifetimeTicks,
-                yawInaccuracy,
-                pitchInaccuracy);
+                _level100ActorMechanics.NextWeaponInaccuracy(inaccuracyMicroRadians);
+            Level100ActorId? target = _playerLocks.GetCurrentTarget(now);
+            if (weapon == RetailCurrentWeapon)
+            {
+                _playerLocks.FireLock(target, now);
+            }
+            // CRound::Init -> CActor::Init takes the round's Move-phase draw.
+            _ = _level100ActorMechanics.NextReleasedRandom();
+            LaunchWalkerRound(kind, speedPerTick, lifetimeTicks, yawInaccuracy, pitchInaccuracy);
+            _shake.Add(power, _level100ActorMechanics.NextReleasedRandom);
         }
     }
+
+    private static Level100PlayerWeapon PlayerWeaponIdentity(Level100MissionWeapon weapon) => weapon switch
+    {
+        Level100MissionWeapon.PulseCannonPod => Level100PlayerWeapon.PulseCannonPod,
+        Level100MissionWeapon.MechTwinVulcanCannon => Level100PlayerWeapon.MechTwinVulcanCannon,
+        Level100MissionWeapon.MechVulcanCannon => Level100PlayerWeapon.MechVulcanCannon,
+        _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+    };
 
     private void TryChargeWeapon(SimInput input)
     {
@@ -4193,6 +4245,8 @@ public sealed partial class Simulation
             RetailEventFrameCount = _retailEventFrameCount,
             Level100PlayerWeaponState = _level100PlayerWeapons.Snapshot,
             Level100BattleEngineTargeting = TargetingSnapshot,
+            Level100PlayerStores = _level100PlayerWeapons.StoresSnapshot,
+            Level100BattleEngineShake = _shake.Snapshot,
         };
     }
 

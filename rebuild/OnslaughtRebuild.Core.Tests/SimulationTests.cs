@@ -1753,6 +1753,10 @@ public sealed class SimulationTests
         (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(
             pulseRandom,
             SimulationConstants.PulseCannonInaccuracyMicroRadians);
+        // Per round the spawner then takes the round's Actor Init draw and,
+        // for a Battle Engine weapon with CWeaponPower >= 0.001, RecoilWeapon's
+        // three shake draws (Mech Pulse Cannon Charged: 0.03).
+        AdvanceAfterScatter(pulseRandom, recoil: true);
 
         WorldSnapshot pulseBefore = pulse.Snapshot;
         WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
@@ -1777,6 +1781,8 @@ public sealed class SimulationTests
         // that bounded scatter stage, not every retail constructor/effect draw.
         chargedRandom.Next();
         chargedRandom.Next();
+        // Charged 2 carries CWeaponPower 0.05, so its recoil draws too.
+        AdvanceAfterScatter(chargedRandom, recoil: true);
         Assert.NotEqual(chargedSeed, chargedRandom.Seed);
         WorldSnapshot chargedBefore = chargedPulse.Snapshot;
         WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
@@ -1801,12 +1807,19 @@ public sealed class SimulationTests
 
         int jetSeed = jet.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var jetRandom = new Level100ReleasedRandom(jetSeed);
+        // Each bullet takes its scatter pair then its Actor Init draw; the
+        // Mech Vulcan Cannon has no CWeaponPower, so no recoil draws.
         (int Yaw, int Pitch)[] jetOffsets = Enumerable.Range(
                 0,
                 SimulationConstants.MechVulcanVolleySize)
-            .Select(_ => NextOffsets(
-                jetRandom,
-                SimulationConstants.PlayerVulcanInaccuracyMicroRadians))
+            .Select(_ =>
+            {
+                (int Yaw, int Pitch) offsets = NextOffsets(
+                    jetRandom,
+                    SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
+                AdvanceAfterScatter(jetRandom, recoil: false);
+                return offsets;
+            })
             .ToArray();
 
         // Controller Fire samples the retained emitter. Jet Move changes the
@@ -1857,6 +1870,17 @@ public sealed class SimulationTests
                 refiled.TimeBits != item.Value.TimeBits);
             for (int draw = 0; draw < draws; draw++)
             {
+                random.Next();
+            }
+        }
+
+        static void AdvanceAfterScatter(Level100ReleasedRandom random, bool recoil)
+        {
+            random.Next();
+            if (recoil)
+            {
+                random.Next();
+                random.Next();
                 random.Next();
             }
         }

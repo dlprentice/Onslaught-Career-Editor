@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-26 (the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
+Last updated: 2026-09-26 (schema 50 weapon stores and shake; the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -105,7 +105,11 @@ a reserved listener identity, so the scheduler now exists from construction
 whether or not an aircraft does. Each construction and delivery takes one
 shared draw. Schema 49 adds the Battle Engine's targeting state: both
 crosshair readers, the retained crosshair line report (hit class and distance)
-and the lock sets.
+and the lock sets. Schema 50 adds the Aquila's six weapon stores, their
+overheat flags, the walker's shields-recharging flag, the ammunition-depleted
+and overheated cue times, the Pulse's last Fire level and the Battle Engine's
+shake offsets and phase; it is selected only once any differs from
+construction, so a run that never fires or takes a hit keeps its schema.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

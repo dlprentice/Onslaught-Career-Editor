@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,61 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Weapon stores, recoil shake and the round's Init draw — September 26
+
+The rebuild charged every walker Pulse shot 30 milli-units of walker energy
+(and the Twin Vulcan 15), a placeholder the code itself called unaccepted. Retail
+spends no energy on weapons. The RE lane's contract
+(`reverse-engineering/game-mechanics/battle-engine-weapon-stores.md` on the RE
+branch, commit `05d5ed86`, with the GPL part bodies) gives the Aquila's six stores from
+`data/battle engine configurations.dat` offset `0x35f`: ammo 2000 (both Vulcans),
+ammo 100, heat 150 (Pulse Cannon Pod), ammo 200 (Missile Pod), heat 100, heat
+100. Ammo starts full and heat empty; a burst event's `WeaponFired` spends once,
+before its volley (jet ammo −consumption, walker heat +consumption, jet heat
++consumption − 1); every Move cools each heat store by the integer
+`kWeaponCoolRate` 1 and clears overheat strictly below three quarters of capacity;
+a charged heat shot costs nothing; charging a heat weapon adds its consumption
+per call and, at capacity, overheats and forces a Fire; `ChangeWeapon` skips an
+ammo weapon that cannot pay. A walker heat shot or charge clears
+`mShieldsRecharging`, which halves that update's ground recharge — the arm the
+rebuild had left out only because stores were unmodelled.
+
+The burst spawner's order (the RE lane's Q12 answer and correction, commits
+`d5ad5c9a` and `35056883`) adds four things per round of a Battle Engine weapon:
+`GetCurrentTarget` (its cursor zeroed by each successful `Fire`), `FireLock` for
+the current weapon, the round's `CRound::Init` → `CActor::Init` draw, and
+`RecoilWeapon`'s `AddShockShake(CWeaponPower)`, three draws when the power is at
+least 0.001 (Pulse Charged 0.03, Charged 2 0.05; both Vulcans 0).
+`CBattleEngine::Damage` ends with `AddShockShake` of the life lost times 0.125,
+halved while shields remain, capped at 0.25. The drones' rounds take their
+Actor Init draw too, so every spawned round costs three launch draws. The shake
+offsets, phase and decay are kept exactly; applying them to the Battle Engine's
+orientation (`UpdateRotation`) is not done yet.
+
+`Level100PlayerStoresTests` (12 cases) pins the stores, spend, refusal and cue
+stamps, cooling and the overheat clear, the charged shot, the charge overheat,
+the store-gated weapon change, the shake draws and decay, and the damage amount.
+Six mutations were each killed and restored byte-identical
+(`local-data/test-runs/stores-shake-20260926/mutation-kills/`). The scatter-order
+test now counts six draws per Pulse release and three per bullet.
+
+With these draws the re-rolled final wave now ends on retail's abort branch in
+both driven routes. The chain autopilot wins at tick 5,982 after two kills; the
+cold-start route wins after none, taking the abort at the first sub-40 % poll.
+The RE contract classes the six-kill, no-abort result both tests demanded as a
+driver expectation, so they now assert the released final-wave contract
+(`Level100FinalWaveContract`: six kills with objective 4 complete, or the abort
+with objective 4 failed and every surviving drone switched to AI off and
+friendly). `ColdStart_PlaysLevel100ThroughThePlayerInputSurface`, failing since
+September 12, passes on that contract. Core passes all 1,508; the Client suite
+passes 912 with the two known skips. First-flight and the canonical-hash
+fingerprints do not move (no shot or hit). The in-process smoke and validator
+re-pin to state `89b9ada6…`; the headless Godot smoke records a tape whose inputs
+equal the September 25 tape's (tape `7c7ca639…`, trace `248b326a…`), and the C#
+replayer reproduces it twice. The cold-start won tape is 7,813 ticks, trace
+`613489cc…`, state `278af3f3…`, replayed twice. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/stores-shake-20260926/`.
 
 ### Battle Engine crosshair and auto-aim refresh — September 26
 

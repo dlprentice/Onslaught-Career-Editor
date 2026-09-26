@@ -622,7 +622,6 @@ public static class SimulationConstants
     // Energy uses the accepted milli-retail policy (1000 Core units == one
     // retail energy unit), so one Core energy unit is 1000 micro-retail.
     public const int MicroRetailEnergyPerCoreEnergyUnit = 1_000;
-    public const int FireEnergyCost = 30;
     // Measured 2026-07-31:
     // weapon `Pulse Cannon Pod` @0x17463 of data/default physics.dat (sha256
     // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14,
@@ -691,11 +690,6 @@ public static class SimulationConstants
     // every 3 to average the released 20 volleys per second rather than
     // rounding it to 15 or 30. The unit has no reason to exist at 20 Hz.
     public const int TwinVulcanReloadTicks = 1;
-    // CWeaponConsumption is 2.0 for the Twin Vulcan against 4.0 for the Pulse
-    // Cannon Pod. The absolute Core cost of a pulse shot (FireEnergyCost) is
-    // not dual-accepted retail truth, so only the byte-read 2.0/4.0 ratio is
-    // carried across.
-    public const int TwinVulcanFireEnergyCost = FireEnergyCost / 2;
     // A same-return capture of Steam CBattleEngine::GetLaunchPosition resolved
     // cockpit emitter "Gun" index 1 relative to the live BattleEngine basis.
     // Values are rounded to deterministic integer millimetres.

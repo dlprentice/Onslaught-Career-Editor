@@ -238,6 +238,12 @@ internal sealed class Level100PlayerLocks
     }
 
     /// <summary>
+    /// <c>CWeapon::Fire</c> zeroes the Battle Engine's <c>mCurrentTarget</c>
+    /// (<c>+0x5e0</c>, <c>0x00506137</c>) once its reload check passes.
+    /// </summary>
+    internal void ResetCurrentTarget() => _currentTarget = 0;
+
+    /// <summary>
     /// <c>GetCurrentTarget</c> (<c>BattleEngine.cpp:913-977</c>, vtable slot 81,
     /// <c>0x004071b0</c>): advance the cursor, then return the first finished
     /// unfired lock, else walk the fired set round-robin, wrapping every

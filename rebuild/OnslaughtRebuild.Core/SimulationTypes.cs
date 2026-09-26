@@ -546,6 +546,31 @@ public readonly record struct Level100PlayerWeaponStateSnapshot(
         0, 0xc3480000, 0xc3480000, 0xc3480000, 0xc3480000);
 }
 
+/// <summary>
+/// The Aquila's six store values as float bits, its overheat flags as a mask,
+/// the walker's shields-recharging flag, the ammunition-depleted and
+/// overheated cue times, and the Pulse Cannon Pod's last Fire level
+/// (<c>+0x68</c>, whose nonzero value makes a heat shot free).
+/// </summary>
+public readonly record struct Level100PlayerStoresSnapshot(
+    uint Store0Bits,
+    uint Store1Bits,
+    uint Store2Bits,
+    uint Store3Bits,
+    uint Store4Bits,
+    uint Store5Bits,
+    int OverheatMask,
+    bool ShieldsRecharging,
+    uint AmmoDepletedTimeBits,
+    uint WeaponOverheatedTimeBits,
+    int PulseModeLevel)
+{
+    /// <summary>Construction: ammo stores full, heat stores empty, cues at -99999.</summary>
+    public static Level100PlayerStoresSnapshot Initial => new(
+        0x44fa0000, 0x42c80000, 0, 0x43480000, 0, 0, 0, true,
+        0xc7c34f80, 0xc7c34f80, 0);
+}
+
 public sealed record WorldSnapshot(
     int Tick,
     uint Seed,
@@ -643,6 +668,14 @@ public sealed record WorldSnapshot(
     /// </summary>
     public Level100BattleEngineTargetingSnapshot Level100BattleEngineTargeting { get; init; } =
         Level100BattleEngineTargetingSnapshot.Initial;
+
+    /// <summary>The Aquila's six weapon stores and their firing cues.</summary>
+    public Level100PlayerStoresSnapshot Level100PlayerStores { get; init; } =
+        Level100PlayerStoresSnapshot.Initial;
+
+    /// <summary>The Battle Engine's shake offsets and phase.</summary>
+    public Level100BattleEngineShakeSnapshot Level100BattleEngineShake { get; init; } =
+        Level100BattleEngineShakeSnapshot.Initial;
 
     public bool Level100PlayerControlEnabled =>
         Level100PlayerActive && Level100OpeningTicksRemaining == 0;
