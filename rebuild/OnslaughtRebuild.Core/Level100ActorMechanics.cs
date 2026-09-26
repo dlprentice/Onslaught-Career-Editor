@@ -361,12 +361,12 @@ public sealed partial class Level100ActorMechanics
                     break;
                 case Level100ActorScriptCommandKind.Retreat:
                 {
-                    // A dropship's Retreat is slot 100 alone: its guide flies
+                    // An air unit's Retreat is slot 100 alone: its guide flies
                     // to the retreat point and nothing else stops.
                     ActorState state = RequireState(command);
-                    if (state.PlaneGuide is not null && IsDropship(state.ActorId))
+                    if (state.PlaneGuide is not null)
                     {
-                        RetreatDropship(state);
+                        RetreatAirUnit(state);
                     }
                     else
                     {
@@ -664,13 +664,15 @@ public sealed partial class Level100ActorMechanics
             GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
             path.Point(state.WaypointNodeIndex!.Value);
-        if (motion.MotionClass == Level100ActorMotionClass.Dropship && state.PlaneGuide is not null)
+        if (state.PlaneGuide is not null)
         {
-            // A dropship arrives on the follower's own float test.
-            if (!RetailDropshipMotion.Arrived(
+            // An air unit arrives on the follower's own float test, with its
+            // class radius (slot 94: 5.0 for CPlane at 0x0050e8e0, 8.0 for
+            // CDropship at 0x0050ead0).
+            if (!RetailIScriptFollowWaypoint.Arrived(
                     _actors.GetBaseState(state.ActorId).RetailPoses!.Current.PositionFloatBits,
                     point.RetailComponentsFloatBits,
-                    RetailDropshipMotion.ArrivalRadius))
+                    motion.ArrivalRadiusMillimeters / 1000f))
             {
                 return;
             }

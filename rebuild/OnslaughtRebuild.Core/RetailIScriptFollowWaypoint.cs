@@ -52,6 +52,23 @@ namespace OnslaughtRebuild.Core;
 public static class RetailIScriptFollowWaypoint
 {
     /// <summary>
+    /// <c>UpdateWaypointFollowing</c>'s arrival (<c>0x00538470-0x005384d6</c>):
+    /// the unit has arrived when its stored 2D distance to the node,
+    /// <c>√(dy² + dx²)</c> with node minus unit at PC24, is below the class
+    /// radius (slot 94: 5.0 for <c>CPlane</c>, 8.0 for <c>CDropship</c>).
+    /// </summary>
+    public static bool Arrived(Level100FloatVector3Bits position, Level100FloatVector4Bits node, float radius)
+    {
+        double dx = RetailFloat24.Subtract(
+            BitConverter.Int32BitsToSingle(node.X), BitConverter.Int32BitsToSingle(position.X));
+        double dy = RetailFloat24.Subtract(
+            BitConverter.Int32BitsToSingle(node.Y), BitConverter.Int32BitsToSingle(position.Y));
+        float distance = (float)RetailFloat24.Sqrt(RetailFloat24.Add(
+            RetailFloat24.Multiply(dy, dy), RetailFloat24.Multiply(dx, dx)));
+        return distance < radius;
+    }
+
+    /// <summary>
     /// Registry 0 handler — <c>0x00537d70</c>.
     /// </summary>
     public const int HandlerAddress = 0x00537d70;

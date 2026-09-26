@@ -705,7 +705,8 @@ public sealed partial class Level100ActorMechanics
             case (UnitCallbackOwner.Unit, 4003):
                 RefreshUnit(events, dispatch, state, actor);
                 return;
-            case (UnitCallbackOwner.Unit, 2000) when state.Class == Level100ConstructionClass.Dropship:
+            case (UnitCallbackOwner.Unit, 2000) when state.Class is Level100ConstructionClass.Dropship or
+                Level100ConstructionClass.Plane:
                 ShutDownUnit(actorId);
                 return;
             case (UnitCallbackOwner.Ai, 3000):
@@ -941,8 +942,9 @@ public sealed partial class Level100ActorMechanics
         return (owner, slot.EventNum) switch
         {
             (UnitCallbackOwner.Unit, 4003) => true,
-            // A running-out dropship's own SHUTDOWN (slot 116).
-            (UnitCallbackOwner.Unit, 2000) => state.Class == Level100ConstructionClass.Dropship,
+            // A running-out air unit's own SHUTDOWN (slot 116).
+            (UnitCallbackOwner.Unit, 2000) => state.Class is Level100ConstructionClass.Dropship or
+                Level100ConstructionClass.Plane,
             (UnitCallbackOwner.Ai, 3000 or 3001 or 3003) => Level100ConstructionClasses.HasAi(state.Class),
             (UnitCallbackOwner.FireControl, 4001) => Level100ConstructionClasses.HasFireControl(state.Class),
             (UnitCallbackOwner.Squad, 4000 or 4001 or 4002) =>

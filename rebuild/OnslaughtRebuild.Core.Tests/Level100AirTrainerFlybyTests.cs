@@ -169,14 +169,18 @@ public sealed class Level100AirTrainerFlybyTests
             1, 0, trainer, Level100ActorScriptCommandKind.FollowWaypointWait, null, path.Name, 0));
         Level100PlaneGuideSnapshot Guide() =>
             mechanics.Snapshot.Actors.Single(actor => actor.ActorId == trainer).PlaneGuide!;
+        // The follower's order goes through slot 61 (0x00403a90), which raises
+        // the seated node to MinAltitude above the integer floor.
         Assert.Equal(
-            new Level100FloatVector3Bits(node42.X, node42.Y, BitConverter.SingleToInt32Bits(ground42)),
+            Level100ActorMechanics.ClampAirMoveTarget(Level100Terrain.Instance,
+                new(node42.X, node42.Y, BitConverter.SingleToInt32Bits(ground42)), 0x40800000),
             Guide().Destination);
 
         mechanics.AdvanceTick();
         Assert.Equal(43, mechanics.Snapshot.Actors.Single(actor => actor.ActorId == trainer).WaypointNodeIndex);
         Assert.Equal(
-            new Level100FloatVector3Bits(node43.X, node43.Y, BitConverter.SingleToInt32Bits(water)),
+            Level100ActorMechanics.ClampAirMoveTarget(Level100Terrain.Instance,
+                new(node43.X, node43.Y, BitConverter.SingleToInt32Bits(water)), 0x40800000),
             Guide().Destination);
     }
 

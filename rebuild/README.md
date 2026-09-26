@@ -308,7 +308,8 @@ follows the RE lane's construction contract. VALIDATION.md's "World 110
 construction and start state" lists what is carried and what is open:
 landing-craft flight, landing and cargo, and squad formation. Level 100's U-17
 flies its path, retreats to its side's nearest safe side and leaves
-(`Level100ActorDropshipRuntime`, from the RE lane's dropship contracts); World
+(`Level100ActorDropshipRuntime`, from the RE lane's dropship contracts), and the
+Air Trainers leave the same way when their scripts call `Retreat`; World
 110's landing craft wait for the landing states, since one lands at once. A Level 100 win
 hands World 110 its surviving base world through the career ("World 110's
 base-world carry-over from Level 100"). The Godot host still starts only
