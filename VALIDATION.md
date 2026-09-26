@@ -6673,3 +6673,24 @@ check has not been observed against a live game under Wine or Proton.
 backups; a human click-through with a mouse and keyboard; listening to the music and voice
 playback (the audio was decoded, never heard); and anything the game does with a copy
 beyond the options, Goodie and cheat behaviour the RE lane has already watched.
+
+## Library alias evidence — September 26
+
+`python -B -m unittest tools.re_lib_match_tests`: **31 passed**. New cases
+reproduce and reject reference-only aliases, unequal complete extents, stale
+representative choices and false saved-name admission, while retaining true
+folds and typed COFF names at one entry. The first counterexamples failed before
+the fix. An independent read-only review reproduced the later-owner case; root
+retained it as a regression case.
+
+Fresh matching of the current live export against the pinned libraries proposes
+**no renames**. The private independent LLVM/GNU checker passes 1,542 code
+comparisons, 118 data sections, all 191 proposed comment targets, 14 layout claims
+and 15 explicit full-body alias claims. It rejects the actual `_wcsdup` body at
+the retail `_strdup` entry. Exact object-entry aliases preserve `__chkstk` and
+`stricmp`; raw reference-derived names no longer gain byte-proof status. The
+first 190-row comment seal was never applied live and is retained under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-verified/rejected-v1/`.
+The current comment plan still requires fresh preservation/rehearsal and live
+promotion. Private commands/results and independent check are in that owner's
+parent; these checks do not validate prototypes or retail runtime behavior.

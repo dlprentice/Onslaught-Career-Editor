@@ -264,11 +264,23 @@ leads to re-derive, not approved mutation manifests.
    skip a row merely because it already has an audit tag. The ownership fix now
    checks both available section/offset bounds, excludes ambiguous/folded layout
    anchors and keeps proof, relocation indexing and caller-only citations on
-   reference-supported representatives. The 24-test suite includes reproduced
+   reference-supported representatives. The 31-test suite includes reproduced
    counterexamples. A fresh run on the current export proposes no name changes;
    it selects the folded cpudetect member at `0x00589094` and withdraws an
-   unsupported retained-section claim at `0x005b1c30`. Fresh proof text still
-   needs independent checking before a comment cohort is sealed.
+   unsupported retained-section claim at `0x005b1c30`. The first 190-row seal was
+   rejected before live application: reference placement falsely implied that
+   `_wcsdup` and `_strdup` have identical bodies. Their pinned code differs in
+   length and character-width arithmetic. The matcher now separates compatible
+   complete-body aliases, typed names at one COFF entry, and reference-only
+   leads; its table, proof text and accepted saved names follow that distinction.
+   Later ownership evidence also withdraws invalidated aliases. The original
+   seal and rehearsal remain in `library-verified/rejected-v1/`.
+   The corrected 191-comment plan proposes no renames; independent LLVM/GNU
+   checks pass all 1,542 admitted code comparisons, 118 data sections, 14 layout
+   assertions and 15 complete folded-alias comparisons, while explicitly
+   rejecting the `_wcsdup` counterexample. Fresh PRE, resealing, rehearsal and
+   promotion remain to be completed; the live database is still the NvTriStrip
+   POST. These are static evidence checks, not prototype or runtime acceptance.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100

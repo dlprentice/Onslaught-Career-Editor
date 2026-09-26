@@ -14,9 +14,10 @@ against the pool. A reference into the candidate's own section must land inside 
 matched bytes. Object data sections placed by the pool are verified the same way, and
 their relocations add implications (a virtual table names its slots). Identical bodies
 are told apart by what their relocations imply, then by the linker's layout, which
-keeps each object's sections in order; bodies the linker folded into one carry every
-alias that lands on them. Symbols that no pattern matched, such as the C runtime
-functions D3DX calls, are placed by the references to them from matched code.
+keeps each object's sections in order. Folding requires compatible complete-body
+matches; a reference-derived name alone is not a byte-verified alias. Symbols that
+no pattern matched, such as the C runtime functions D3DX calls, are placed by the
+references to them from matched code.
 
 The tool reads only the specimen and the library, never Ghidra. Its output is private
 evidence under local-data/: lib-matches.tsv (every decided entry), lib-placed.tsv
@@ -638,10 +639,17 @@ class Resolver:
 
     def _accept(self, va: int, how: str, cands: list[Candidate], **extra) -> None:
         self.decided[va] = {"how": how, "cands": cands, **extra}
-        self.decided_syms[va] = {c.fn.symbol for c in cands} | set(extra.get("aliases", []))
+        self.decided_syms[va] = set().union(*(self.entry_symbols(c) for c in cands), extra.get("aliases", []))
         members = {c.fn.member for c in cands}
         for c in cands:
             self._vote(c, local=len(members) == 1)
+
+    def entry_symbols(self, c: Candidate) -> set[str]:
+        """Typed global names the matched object defines at this entry, not references or interior labels."""
+        return {c.fn.symbol} | {s.name for s in self.lib.objects[c.fn.member].symbols.values()
+                               if s.section == c.fn.section and s.value == c.fn.start
+                               and s.storage == IMAGE_SYM_CLASS_EXTERNAL
+                               and (s.type & 0x30) == IMAGE_SYM_DTYPE_FUNCTION}
 
     def _score(self, c: Candidate) -> tuple[int, int]:
         agree = sum(1 for k, v in c.implied.items() if self.pool.get(k) == v)
@@ -785,20 +793,23 @@ class Resolver:
                 if len(names) == 1 and any(a > 0 for _c, a in ok):
                     self._accept(va, "relocations", [c for c, _a in ok])
                 elif placed:
-                    # the callers name this entry; several names mean identical bodies the linker folded
+                    # References place names, but only complete compatible byte matches support folding.
                     byte_ok = [c for c, _a in ok if c.fn.symbol in placed]
                     br = [c for c in byte_ok if self._bracketed(c, prev, nxt)]
                     kept = br[0].fn.symbol if len({c.fn.symbol for c in br}) == 1 else None
-                    # a folded body is every alias at once; it is named after its shortest alias
+                    # Choose among matching bodies; a placed symbol without matching code is only a lead.
                     best = min((sym for sym in placed if any(c.fn.symbol == sym for c in byte_ok)),
                                key=lambda sym: (len(flat_name(sym, self.names)), flat_name(sym, self.names)),
                                default=None)
                     pick = [c for c in byte_ok if c.fn.symbol == best]
                     if pick:
-                        if len(placed) == 1:
+                        representative = self.representative(va, {"how": "called", "cands": pick})
+                        length = representative.fn.end - representative.fn.start
+                        aliases = {c.fn.symbol for c in byte_ok if c.fn.end - c.fn.start == length} - {best}
+                        if not aliases:
                             self._accept(va, "called", pick)
                         else:
-                            self._accept(va, "folded", pick, aliases=sorted(placed - {best}), kept=kept)
+                            self._accept(va, "folded", pick, aliases=sorted(aliases), kept=kept)
                     else:
                         self.decided[va] = {"how": "called-no-bytes", "cands": [], "symbols": sorted(placed)}
                 else:
@@ -821,6 +832,31 @@ class Resolver:
         for va, row in self.cands.items():
             if va not in self.decided:
                 self.decided[va] = {"how": "ambiguous", "cands": [c for c in row if not c.conflicts] or row}
+        self.revalidate_aliases()
+
+    def revalidate_aliases(self) -> None:
+        """Withdraw aliases invalidated by later ownership/relocation evidence; never add a new guess."""
+        while True:
+            changed = False
+            for va, d in self.decided.items():
+                old = set(d.get("aliases", []))
+                if not old or not d["cands"]:
+                    continue
+                c = self.representative(va, d)
+                length = c.fn.end - c.fn.start
+                valid = {x.fn.symbol for x in self.cands.get(va, [])
+                         if x.fn.end - x.fn.start == length and not x.conflicts and self._score(x)[1] == 0}
+                kept = old & valid
+                if kept == old:
+                    continue
+                d["aliases"] = sorted(kept)
+                if not kept and d["how"] == "folded":
+                    d["how"] = "called"
+                    d.pop("kept", None)
+                self.decided_syms[va] = set().union(*(self.entry_symbols(x) for x in d["cands"]), kept)
+                changed = True
+            if not changed:
+                break
 
     def reference_index(self) -> None:
         """Every relocation field of the decided entries (one candidate each) and of the verified data sections,
@@ -1025,7 +1061,12 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
             rel = " (it has no relocations)"
         members = sorted({x.fn.member for x in d["cands"] if x.fn.symbol == sym})
         n = len(members)
-        if why == "only":
+        extents = sorted({x.fn.end - x.fn.start for x in d["cands"] if x.fn.symbol == sym})
+        if len(extents) > 1:
+            where = (f"member {c.fn.member} for this comparison; matching definitions of this symbol have differing "
+                     f"extents ({', '.join(map(str, extents))} bytes). This does not establish identical definitions "
+                     f"or linker folding among members {', '.join(members)}")
+        elif why == "only":
             where = f"member {c.fn.member}"
         elif why == "refs":
             where = (f"member {owners[0]}: {n} members define it identically, and the references from that object's own "
@@ -1042,22 +1083,31 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
         libraries = ("the static library " + pins[0]) if len(pins) == 1 else ("the static libraries " + " and ".join(pins))
         representative_note = (f" The byte and relocation comparison below uses member {c.fn.member}."
                                if why == "folded" else "")
-        folded = [flat_name(x, names) for x in d.get("aliases", [])]
-        also = sorted(set(by_addr.get(va, [])) - {x.fn.symbol for x in d["cands"]} - set(d.get("aliases", [])))
         here = res.cands.get(va, [])
+        complete_matches = {x.fn.symbol for x in here if x.fn.end - x.fn.start == length
+                            and not x.conflicts and res._score(x)[1] == 0}
+        # Ownership can become better constrained after the initial decision. Never render an alias
+        # using a different extent from the representative whose bytes/pin this proof actually cites.
+        body_aliases = set(d.get("aliases", [])) & complete_matches
+        folded = [flat_name(x, names) for x in sorted(body_aliases)]
+        also = sorted(set(by_addr.get(va, [])) - {x.fn.symbol for x in d["cands"]} - body_aliases)
+        decision_how = "called" if d["how"] == "folded" and not body_aliases else d["how"]
+        entry_aliases = set(also) & res.entry_symbols(c)
+        proven_also = set(also) & complete_matches
+        reference_only = sorted(set(also) - proven_also - entry_aliases)
         # a rival shares the whole body: same length, another name, not one of this address's own names
         rivals = sorted({flat_name(x.fn.symbol, names) for x in here if x.fn.end - x.fn.start == length}
                         - {new} - set(folded) - {flat_name(x, names) for x in also})
         overloads = sorted({x.fn.symbol for x in here if x.fn.symbol != sym and flat_name(x.fn.symbol, names) == new})
         ref_fields, ref_funcs, ref_data = res.sites([("g", sym)], va, exclude=va)
         short = f"Its fixed code is short ({c.fixed} bytes)"
-        if d["how"] == "folded":
-            af, afn, ad = res.sites([("g", x) for x in [sym] + d.get("aliases", [])], va, exclude=va)
+        if decision_how == "folded":
+            af, afn, ad = res.sites([("g", x) for x in [sym] + sorted(body_aliases)], va, exclude=va)
             kept = f" The object section placed here is {flat_name(d['kept'], names)}'s." if d.get("kept") else ""
             how = (f"The linker folded identical bodies into this one: {', '.join(folded)} "
                    f"{'has' if len(folded) == 1 else 'have'} the same bytes, and "
                    f"the library's {_refs(af, afn, ad)} to them and to this name {_all_land(af)} here.{kept}")
-        elif d["how"] == "called":
+        elif decision_how == "called":
             lead = f"Other library functions share these bytes ({_series(rivals)})" if rivals else short
             how = f"{lead}; the library code's {_refs(ref_fields, ref_funcs, ref_data)} to {sym} {_land(ref_fields)} here."
         elif d["how"] == "relocations":
@@ -1084,18 +1134,25 @@ def proposals(res: "Resolver", rows: dict[int, dict], names: dict[str, str],
             how += f" The same address is also named {', '.join(flat_name(x, names) for x in also)}"
             how += (f"; the library's {_refs(af, afn, ad)} to {'that name' if len(also) == 1 else 'those names'} "
                     f"{_land(af)} here too." if af else ".")
+            if entry_aliases:
+                how += (f" The matched object defines {', '.join(sorted(entry_aliases))} at the same section offset "
+                        f"as {sym}; these are object entry aliases, without a claim about linker folding.")
+            if reference_only:
+                how += (f" These reference placements do not establish byte identity for "
+                        f"{', '.join(flat_name(x, names) for x in reference_only)}; no complete compatible "
+                        f"library-body match supports those aliases here.")
         how = how.strip()
         text = (f"Linked library code: {dem}, from {libraries}, {where}.{representative_note} Proof: bytes "
                 f"[{va:08x},{va + length:08x}) of the pristine executable equal the object code of {sym} byte for "
                 f"byte{rel}. {how} Matched by tools/re_lib_match.py in the RE record audit ({AUDIT_DATE}).")
-        folded_here = d["how"] == "folded" or why == "folded" or any(x in res.code_symbols for x in also)
+        folded_here = bool(body_aliases) or (why == "folded" and len(extents) == 1) or bool(proven_also - entry_aliases)
         owner_tags = sorted({res.lib.pin_of(m)["tag"] for m in owners}) if why == "folded" else [res.lib.pin_of(c.fn.member)["tag"]]
         tags = ["library-code", *owner_tags, "re-audit-20260926", "name-corrected-20260926"] + \
             (["linker-folded"] if folded_here else [])
         alts = {new}.union(*(spellings(x, names, aliases) for x in
-                             {sym} | set(d.get("aliases", [])) | set(also) | {x.fn.symbol for x in d["cands"]}))
+                             {sym} | body_aliases | proven_also | entry_aliases | {x.fn.symbol for x in d["cands"]}))
         out.append({"address": va, "current": cur["name"], "source": cur["nameSource"], "proposed": new,
-                    "how": d["how"], "proof": text, "comment": text + former(cur), "tags": tags, "keepTags": False,
+                    "how": decision_how, "proof": text, "comment": text + former(cur), "tags": tags, "keepTags": False,
                     "alts": alts})
     # fragments: entries Ghidra split off inside a matched body
     for lo_, hi_, owner, member in spans:
@@ -1246,12 +1303,12 @@ def main(argv: list[str] | None = None) -> int:
     with (args.out / "lib-matches.tsv").open("w") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["address", "currentName", "how", "name", "symbol", "member", "section", "offset", "length",
-                    "fixed", "relocations", "agree", "aliases", "alternatives", "keptSection"])
+                    "fixed", "relocations", "agree", "aliases", "alternatives", "keptSection", "referenceOnly"])
         for va in sorted(res.decided):
             d = res.decided[va]
             if not d["cands"]:
                 w.writerow([f"0x{va:08x}", rows.get(va, {}).get("name", ""), d["how"], "", "", "", "", "", "", "",
-                            "", "", "", ";".join(flat_name(x, names) for x in d.get("symbols", []))])
+                            "", "", "", ";".join(flat_name(x, names) for x in d.get("symbols", [])), "", ""])
                 continue
             c = res.representative(va, d)
             alts = sorted({flat_name(x.fn.symbol, names) for x in d["cands"]})
@@ -1260,12 +1317,17 @@ def main(argv: list[str] | None = None) -> int:
             agree = res.field_evidence(va, c)[1]
             aliases = sorted({flat_name(s, names) for s in list(by_addr.get(va, [])) + d.get("aliases", [])
                               if s not in {x.fn.symbol for x in d["cands"]} and not s.startswith("$")
-                              and s in res.code_symbols})
+                              and (s in res.entry_symbols(c) or any(x.fn.symbol == s
+                                  and x.fn.end - x.fn.start == c.fn.end - c.fn.start
+                                  and not x.conflicts and res._score(x)[1] == 0 for x in res.cands.get(va, [])))})
+            reference_only = sorted({flat_name(s, names) for s in by_addr.get(va, [])
+                                     if s in res.code_symbols and s not in {x.fn.symbol for x in d["cands"]}
+                                     and flat_name(s, names) not in aliases})
             w.writerow([f"0x{va:08x}", rows.get(va, {}).get("name", ""), d["how"],
                         alts[0] if len(alts) == 1 and d["how"] != "ambiguous" else "", c.fn.symbol, c.fn.member,
                         c.fn.section, c.fn.start, c.fn.end - c.fn.start, c.fixed, nrel, agree, ";".join(aliases),
                         ";".join(alts) if len(alts) > 1 else "",
-                        flat_name(d["kept"], names) if d.get("kept") else ""])
+                        flat_name(d["kept"], names) if d.get("kept") else "", ";".join(reference_only)])
     with (args.out / "lib-placed.tsv").open("w") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["address", "currentName", "symbol", "name", "votes"])
