@@ -44,7 +44,16 @@ public sealed record Level100ActorMechanicsSnapshot(
 
     /// <summary>Every constructed unit's callback state, by actor.</summary>
     public IReadOnlyList<Level100UnitCallbackSnapshot>? UnitCallbacks { get; init; }
+
+    /// <summary>The landscape damage a lost base building left at load, in stamp order.</summary>
+    public IReadOnlyList<Level100LandscapeDamageStamp> LandscapeDamageStamps { get; init; } = [];
 }
+
+/// <summary>
+/// One landscape damage stamp (<c>0x005475d0</c>): retail X and Y as float32
+/// bits, and the damage type.
+/// </summary>
+public sealed record Level100LandscapeDamageStamp(int XFloatBits, int YFloatBits, int DamageType);
 
 public sealed record Level100ActorMechanicsWaitCompletion(
     Level100ActorId ActorId,
@@ -206,7 +215,10 @@ public sealed partial class Level100ActorMechanics
         RestoreArmament(snapshot);
         RestoreUnitCallbacks(snapshot);
         RestorePlaneEvents(snapshot);
+        _landscapeDamageStamps.AddRange(snapshot.LandscapeDamageStamps ?? []);
     }
+
+    private readonly List<Level100LandscapeDamageStamp> _landscapeDamageStamps = [];
 
     public Level100ActorMechanicsSnapshot Snapshot => new(
         _lastConsumedCommandSequence,
@@ -218,6 +230,7 @@ public sealed partial class Level100ActorMechanics
     {
         PlaneEvents = _planeEvents?.Snapshot,
         UnitCallbacks = _unitCallbacks.Count == 0 ? null : UnitCallbackSnapshots,
+        LandscapeDamageStamps = Array.AsReadOnly(_landscapeDamageStamps.ToArray()),
     };
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>

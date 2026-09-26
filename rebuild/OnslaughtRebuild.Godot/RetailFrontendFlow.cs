@@ -714,10 +714,11 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     public void AcceptWonHandoff(
         Level100MissionOutcome outcome,
-        Level100MissionTerminalState terminalState)
+        Level100MissionTerminalState terminalState,
+        IReadOnlyList<int> baseThingsLeft)
     {
         RetailFrontendScreen origin = _session.Screen;
-        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState))
+        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState, baseThingsLeft))
         {
             return;
         }

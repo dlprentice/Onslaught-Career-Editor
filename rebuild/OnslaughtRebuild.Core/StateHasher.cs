@@ -31,6 +31,11 @@ public static class StateHasher
             // no hash schema yet; its fighters are already refused below.
             if (state.Level100ActorMechanics.Actors.Any(actor => actor.DropshipLandingState != 0))
                 throw new NotSupportedException("A landed dropship has no admitted hash schema.");
+            // A world built from a partial carry-over (lost base rows and their
+            // landscape damage) has no hash schema yet either.
+            if (state.Level100Actors.LostBaseRows.Count != 0 ||
+                state.Level100ActorMechanics.LandscapeDamageStamps.Count != 0)
+                throw new NotSupportedException("A world with lost base rows has no admitted hash schema.");
             int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
                 .Select(item => item.ActorId.Value).Order().ToArray();
             bool usesPlaneMotionSchema = rawActors.Length != 0 ||

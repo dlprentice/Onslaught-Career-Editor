@@ -236,10 +236,11 @@ public sealed class RetailFrontendScenePath
     public static bool TryAcceptWonHandoff(
         RetailFrontendSession session,
         Level100MissionOutcome outcome,
-        Level100MissionTerminalState terminalState)
+        Level100MissionTerminalState terminalState,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return session.TryAcceptWonHandoff(outcome, terminalState)
+        return session.TryAcceptWonHandoff(outcome, terminalState, baseThingsLeft)
             && session.Screen == RetailFrontendScreen.Debriefing;
     }
 

@@ -204,6 +204,43 @@ public static class RetailFillOutEndLevelData
     }
 
     /// <summary>
+    /// FillOut <c>mBaseThingsLeft</c> from a level's end state (the base list
+    /// at <c>world+0xc0</c>, read at <c>0x0046d4cb-0x0046d4d1</c>): for each
+    /// base-world row, 1 when the load built it and it is not dying, else 0.
+    /// A row the load skipped (the career's carry-over) has a null reader.
+    /// Core builds no actor for the two SafeSides (rows 21 and 22); they are
+    /// built and never die. Words 35..287 stay 0.
+    /// </summary>
+    public static int[] BaseThingsLeft(WorldSnapshot state, Level100ActorDefinitionSet definitions)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(definitions);
+        var left = new int[RetailCareerNode.BaseThingsExistsSize];
+        for (int row = 0; row < Level100BaseWorldThingCount; row++)
+        {
+            if (state.Level100Actors.LostBaseRows.Contains(row))
+            {
+                continue;
+            }
+
+            string identity = Level100ActorRegistry.BaseRowIdentity(row);
+            if (!definitions.Actors.Any(definition => StringComparer.Ordinal.Equals(definition.DefinitionIdentity, identity)))
+            {
+                left[row] = 1;
+                continue;
+            }
+
+            Level100ActorSnapshot? actor = state.Level100Actors.Actors.SingleOrDefault(item =>
+                item.SpawnOwnerId is null && StringComparer.Ordinal.Equals(item.DefinitionIdentity, identity));
+            left[row] = BaseThingLeftWord(
+                actor is not null,
+                actor?.Lifecycle == Level100ActorLifecycle.Alive ? 0 : ThingFlagDying);
+        }
+
+        return left;
+    }
+
+    /// <summary>
     /// <c>TF_DYING</c> — <c>0x0046d4d1</c> <c>test byte [eax+0x2c],4</c>.
     /// </summary>
     public const int ThingFlagDying = 4;
@@ -273,7 +310,8 @@ public static class RetailFillOutEndLevelData
     /// </summary>
     public static RetailEndLevelSnapshot ForLevel100Won(
         float ranking = 1.0f,
-        IReadOnlyList<int>? thingsKilled = null)
+        IReadOnlyList<int>? thingsKilled = null,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
         return new RetailEndLevelSnapshot(
             RetailCareerReCalcLinks.TrainingWorldNumber,
@@ -283,7 +321,7 @@ public static class RetailFillOutEndLevelData
             thingsKilled ?? FirstPlayThingsKilled(),
             FirstPlayTutorialSlotWords(),
             RetailGameObjectiveCount.Level100WonPrimaryStatuses(),
-            FirstPlayBaseThingsLeft());
+            baseThingsLeft ?? FirstPlayBaseThingsLeft());
     }
 
     /// <summary>

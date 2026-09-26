@@ -1089,7 +1089,14 @@ public sealed record Level100ActorRegistrySnapshot(
     long NextFactSequence,
     IReadOnlyList<Level100ActorSnapshot> Actors,
     IReadOnlyList<Level100ActorFactSnapshot> PendingFacts,
-    IReadOnlyList<Level100ActorBaseStateSnapshot> BaseStates);
+    IReadOnlyList<Level100ActorBaseStateSnapshot> BaseStates)
+{
+    /// <summary>
+    /// The base-world rows an earlier level lost, which this world's load
+    /// skipped (the career's carry-over), in row order.
+    /// </summary>
+    public IReadOnlyList<int> LostBaseRows { get; init; } = [];
+}
 
 /// <summary>
 /// Native Level 100 object identity and lifecycle owner. It contains no
@@ -1146,18 +1153,36 @@ public sealed class Level100ActorRegistry
     {
     }
 
+    /// <summary>
+    /// A world built from the career's base-world carry-over. Each BSWD row in
+    /// <paramref name="lostBaseRows"/> was lost in an earlier level, so the
+    /// load skips it (<c>CCareer::DoesBaseThingExist</c>, <c>0x0041bb20</c>,
+    /// called at <c>0x0050cf8f</c>) and it never becomes a thing.
+    /// </summary>
+    public Level100ActorRegistry(Level100ActorDefinitionSet definitions, IReadOnlyCollection<int> lostBaseRows)
+        : this(definitions, RetailWorldTerrain.World100, initializeSupport: true, lostBaseRows)
+    {
+    }
+
     // Partial world construction retains authored positions until class Init
     // owns its ground/water overrides. The existing Level 100 policy is unchanged.
     internal Level100ActorRegistry(
         Level100ActorDefinitionSet definitions,
         RetailWorldTerrain terrain,
-        bool initializeSupport)
+        bool initializeSupport,
+        IReadOnlyCollection<int>? lostBaseRows = null)
     {
         _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
         _terrain = terrain ?? throw new ArgumentNullException(nameof(terrain));
         _initializeSupport = initializeSupport;
+        _lostBaseRows = AdmitLostBaseRows(lostBaseRows ?? []);
         foreach (Level100ActorDefinition definition in definitions.Actors)
         {
+            if (IsLostBaseRow(definition))
+            {
+                continue;
+            }
+
             Level100ActorId actorId = AllocateId();
             _actors.Add(
                 actorId.Value,
@@ -1184,6 +1209,7 @@ public sealed class Level100ActorRegistry
         _terrain = terrain ?? throw new ArgumentNullException(nameof(terrain));
         _initializeSupport = initializeSupport;
         ArgumentNullException.ThrowIfNull(snapshot);
+        _lostBaseRows = AdmitLostBaseRows(snapshot.LostBaseRows ?? []);
         if (!StringComparer.Ordinal.Equals(
                 snapshot.DefinitionSetIdentitySha256,
                 definitions.IdentitySha256) ||
@@ -1237,7 +1263,7 @@ public sealed class Level100ActorRegistry
                     !actor.SpawnOwnerId.HasValue &&
                     StringComparer.Ordinal.Equals(
                         actor.DefinitionIdentity,
-                        definition.DefinitionIdentity)) != 1))
+                        definition.DefinitionIdentity)) != (IsLostBaseRow(definition) ? 0 : 1)))
         {
             throw new ArgumentException(
                 "Actor registry snapshot does not contain each authored actor exactly once.",
@@ -1292,7 +1318,39 @@ public sealed class Level100ActorRegistry
             .Select(actor => new Level100ActorBaseStateSnapshot(
                 actor.ActorId,
                 actor.BaseState.Snapshot))
-            .ToArray()));
+            .ToArray()))
+    {
+        LostBaseRows = _lostBaseRows,
+    };
+
+    /// <summary>The base-world rows this world's load skipped, in row order.</summary>
+    internal IReadOnlyList<int> LostBaseRows => _lostBaseRows;
+
+    private readonly IReadOnlyList<int> _lostBaseRows;
+
+    /// <summary>A base-world row's definition identity (<c>wres:bswd:NNNN</c>).</summary>
+    internal static string BaseRowIdentity(int row) =>
+        $"wres:bswd:{row.ToString("D4", System.Globalization.CultureInfo.InvariantCulture)}";
+
+    private bool IsLostBaseRow(Level100ActorDefinition definition) =>
+        _lostBaseRows.Count > 0 &&
+        _lostBaseRows.Any(row => StringComparer.Ordinal.Equals(BaseRowIdentity(row), definition.DefinitionIdentity));
+
+    /// <summary>
+    /// A lost row that Core does not build as an actor (the two SafeSides, rows
+    /// 21 and 22) has nothing to skip.
+    /// </summary>
+    private static IReadOnlyList<int> AdmitLostBaseRows(IReadOnlyCollection<int> lostBaseRows)
+    {
+        int[] rows = lostBaseRows.Order().ToArray();
+        if (rows.Distinct().Count() != rows.Length ||
+            rows.Any(row => row < 0 || row >= RetailFillOutEndLevelData.Level100BaseWorldThingCount))
+        {
+            throw new ArgumentException("Lost base rows must be distinct base-world rows.", nameof(lostBaseRows));
+        }
+
+        return Array.AsReadOnly(rows);
+    }
 
     /// <summary>
     /// The immutable definition set this registry was built from. Its

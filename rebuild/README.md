@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (World 110 constructed in Core through its start state; waypoint walks from the nearest node along each node's target, at load-time heights; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up load draws; cockpit Gun emitters; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
+Last updated: 2026-09-26 (World 110 constructed in Core through its start state, with Level 100's surviving base world; waypoint walks from the nearest node along each node's target, at load-time heights; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up load draws; cockpit Gun emitters; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -310,8 +310,10 @@ squads, landing craft and turret children, fighters and scripts, then the
 pre-run and the start state, where the player is activated on frame 140. It
 follows the RE lane's construction contract. VALIDATION.md's "World 110
 construction and start state" lists what is carried and what is open:
-landing-craft flight, landing and cargo, squad formation and the transition
-from a Level 100 win. The Godot host still starts only Level 100.
+landing-craft flight, landing and cargo, and squad formation. A Level 100 win
+hands World 110 its surviving base world through the career ("World 110's
+base-world carry-over from Level 100"). The Godot host still starts only
+Level 100; World 110 has no presentation yet.
 
 Before that, an incomplete construction stage was built separately:
 [`RetailWorld110InitialConstruction`](OnslaughtRebuild.Core/RetailWorld110InitialConstruction.cs)

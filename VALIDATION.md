@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,72 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### World 110's base-world carry-over from Level 100 — September 26
+
+A Level 100 win now hands World 110 its surviving base world, following the RE
+lane's contracts: `world-110-initial-constructor-seeds.md` ("Level 100 to World
+110: base-world carry-over") and `world-110-construction-order.md` ("From a
+Level 100 win to World 110"). Each address below was re-read from the pristine
+specimen (`74154bfa…`).
+- **FillOut.** `RetailFillOutEndLevelData.BaseThingsLeft` reads the 35
+  base-world rows from a level's end state (`0x0046d4cb-0x0046d4d1`). A row is
+  1 when the load built it and it is not dying; a skipped row reads 0. The two
+  SafeSides (rows 21 and 22, type 37) have no actor in Core; they are built and
+  never die. The frontend's Won handoff and the Godot host now pass this list.
+  Before, they assumed a first play that loses nothing.
+- **Career.** `ReCalcLinks` already copied the list onto World 110's node.
+  `RetailCareerNodeTable.LostBaseRows` reads back the rows whose
+  `CCareer::DoesBaseThingExist` (`0x0041bb20`) is false. Levels 850-899 keep
+  every row (`0x004725d0` tests 849 < level < 900), as does a world with no
+  node.
+- **Load.** `Simulation` and `InteractiveSession` take the lost rows, and the
+  registry does not build them. `GetThingRef` then finds nothing, so Setup's
+  `Exists` checks skip them.
+  - The load's building check (`0x0050d066-0x0050d073`) tests the type bit that
+    the building setter `0x00417660` sets (it ORs `0x40100120`). Cannons
+    (`0x40040220`) and features (`0x80500023`) lack it.
+  - A lost building runs ten iterations of two shared draws, the first for Y
+    and the second for X (`0x0050d09c-0x0050d123`). Each iteration stamps
+    landscape damage type 6 (`0x005475d0`) at the row's position plus
+    ((r mod 65536)·2⁻¹⁶ − 0.5) × 5.0, at single precision (constants
+    `0x37800000`, `0x3f000000`, `0x40a00000`).
+  - The mechanics keep the stamps; nothing renders them yet.
+- **Hashes.** The registry snapshot records the lost rows. A world with lost rows
+  or stamps has no hash schema, so the canonical hash refuses it, as it
+  already refuses every World 110 state.
+
+Tests: `World110CarryOverTests` (5), and
+`RetailCampaignFlowTests.WonHandoff_CarriesTheLevel100SurvivorsIntoWorld110sSession`,
+which carries a Tank Factory lost in Level 100 into World 110's session. What
+they pin:
+- a full carry-over keeps World 110's 1,622 load draws;
+- a lost Tank Factory takes 1,641, with its ten stamps pinned from the stream;
+- a lost Turret 03 takes 1,620 and leaves no stamp;
+- FillOut reads a dying building as 0.
+
+Eight mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/world110-carry-over-20260926/mutation-kills/`):
+- no draws for a lost building;
+- X drawn before Y;
+- cannons stamping;
+- the registry building lost rows;
+- FillOut ignoring the dying bit;
+- FillOut dropping the SafeSides;
+- levels 850-899 reading their node;
+- a 2.5 spread.
+
+Level 100 is unchanged: its construction has no lost rows, and the
+first-flight, smoke and won-tape pins pass unchanged. Suites: Core 1,578,
+Client 917 with the two known skips, and the Godot build.
+
+Open:
+- which Level 100 rows a player can actually destroy (the RE lane's falsifier
+  is a copied-retail run that destroys one base building);
+- the stamps' rendering;
+- the Godot host still plays only Level 100. SELECT LEVEL offers World 110
+  after a win, then returns to the selector because World 110 has no
+  presentation yet: its unit meshes, landing craft and fighters.
 
 ### Walker dash window — September 26
 

@@ -144,11 +144,17 @@ public sealed partial class Simulation
     private int _jetEnergyDrainThisTick;
     private bool _jetMovedThisTick;
 
+    /// <param name="lostBaseRows">
+    /// The base-world rows the career marks lost (<c>CCareer::DoesBaseThingExist</c>
+    /// false for this world), which the load skips: World 110's carry-over from
+    /// Level 100. Empty for a full base world.
+    /// </param>
     public Simulation(
         uint seed,
         Level100ActorDefinitionSet level100ActorDefinitions,
         Level100TutorialProgress tutorialProgress = default,
-        int worldNumber = Level100MissionProgram.WorldNumber100)
+        int worldNumber = Level100MissionProgram.WorldNumber100,
+        IReadOnlyCollection<int>? lostBaseRows = null)
     {
         if (seed == 0)
         {
@@ -175,8 +181,11 @@ public sealed partial class Simulation
 
         _worldNumber = worldNumber;
         _level100TutorialProgress = tutorialProgress;
+        _lostBaseRows = Array.AsReadOnly((lostBaseRows ?? []).ToArray());
         ResetDynamicState();
     }
+
+    private IReadOnlyList<int> _lostBaseRows = [];
 
     /// <summary>The career world whose mission program this session executes.</summary>
     public int WorldNumber => _worldNumber;
@@ -4296,7 +4305,7 @@ public sealed partial class Simulation
         _jetEnergyDrainThisTick = 0;
         _jetMovedThisTick = false;
         _projectiles.Clear();
-        _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions, _lostBaseRows);
         // The Battle Engine is built inline by level-world row 0, so its
         // 6002/6003 draws come at that point of the load, after the base world.
         ResetBattleEngineTargeting();

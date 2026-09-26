@@ -2,6 +2,7 @@
 
 using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -117,6 +118,54 @@ public sealed class RetailCampaignFlowTests
         Assert.True(frontend.ReturnUnconstructibleLaunchToLevelSelect());
         Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
         Assert.Equal(110, frontend.ConsumeLaunchWorldNumber);
+    }
+
+    /// <summary>
+    /// The transition from a Level 100 win to World 110: FillOut reads the
+    /// base-world survivors from the level's end state, ReCalcLinks copies them
+    /// onto World 110's node, and World 110's session skips the rows it marks
+    /// lost (the RE lane's World 110 seed contract, "base-world carry-over").
+    /// </summary>
+    [Fact]
+    public void WonHandoff_CarriesTheLevel100SurvivorsIntoWorld110sSession()
+    {
+        Level100ActorDefinitionSet level100 = Level100TestActorDefinitions.LoadMaterialized();
+        WorldSnapshot end = new InteractiveSession(1u, level100).CurrentSnapshot;
+        Level100ActorId factory = end.Level100Actors.Actors.Single(actor => actor.Name == "Tank Factory").ActorId;
+        WorldSnapshot factoryLost = end with
+        {
+            Level100Actors = end.Level100Actors with
+            {
+                Actors = end.Level100Actors.Actors.Select(actor => actor.ActorId == factory
+                    ? actor with { Lifecycle = Level100ActorLifecycle.Destroyed }
+                    : actor).ToArray(),
+            },
+        };
+
+        var frontend = AtGameplay();
+        Assert.True(frontend.TryAcceptWonHandoff(
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            RetailFillOutEndLevelData.BaseThingsLeft(factoryLost, level100)));
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.True(frontend.SelectWorld(110));
+        Assert.Equal([1], frontend.SelectedWorldLostBaseRows);
+
+        var world110 = new InteractiveSession(
+            123_456u, Level100TestActorDefinitions.LoadMaterializedWorld110(), 110, frontend.SelectedWorldLostBaseRows);
+        Assert.Equal(110, world110.CurrentSnapshot.Level100Mission.WorldNumber);
+        Assert.DoesNotContain(world110.CurrentSnapshot.Level100Actors.Actors, actor => actor.Name == "Tank Factory");
+        Assert.Contains(world110.CurrentSnapshot.Level100Actors.Actors, actor => actor.Name == "Control Tower");
+
+        // A win that loses nothing hands World 110 the whole base world.
+        var intact = AtGameplay();
+        Assert.True(intact.TryAcceptWonHandoff(
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            RetailFillOutEndLevelData.BaseThingsLeft(end, level100)));
+        Assert.Equal(RetailFrontendSignal.PageChanged, intact.Confirm());
+        Assert.True(intact.SelectWorld(110));
+        Assert.Empty(intact.SelectedWorldLostBaseRows);
     }
 
     [Fact]

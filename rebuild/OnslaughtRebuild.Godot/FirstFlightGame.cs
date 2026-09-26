@@ -927,7 +927,12 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        _frontend.AcceptWonHandoff(mission.Outcome, mission.TerminalState);
+        // FillOut reads which base-world rows survived; the career carries
+        // them to World 110's node.
+        _frontend.AcceptWonHandoff(
+            mission.Outcome,
+            mission.TerminalState,
+            RetailFillOutEndLevelData.BaseThingsLeft(_session.CurrentSnapshot, _sessionDefinitions!));
     }
 
     private void StopFrontendMusicForLevelEntry()
@@ -1094,8 +1099,14 @@ public sealed partial class FirstFlightGame : Node3D
         _session = null!;
     }
 
-    private static InteractiveSession CreateSession() =>
-        new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+    private InteractiveSession CreateSession()
+    {
+        _sessionDefinitions = Level100StaticWorldAsset.LoadActorDefinitions();
+        return new InteractiveSession(SimulationSeed, _sessionDefinitions);
+    }
+
+    /// <summary>The definitions the current session was built from, for FillOut.</summary>
+    private Level100ActorDefinitionSet? _sessionDefinitions;
 
     /// <summary>
     /// When --record-tape was given, the session

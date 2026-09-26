@@ -289,7 +289,14 @@ public sealed partial class Level100ActorMechanics
                 continue;
             }
 
-            Level100ActorId actorId = byIdentity[definition.DefinitionIdentity];
+            if (!byIdentity.TryGetValue(definition.DefinitionIdentity, out Level100ActorId actorId))
+            {
+                // A base row the career marks lost: the load skips it, and a
+                // lost building leaves landscape damage instead.
+                StampLostBaseBuilding(definition);
+                continue;
+            }
+
             Level100ConstructionClass kind = Level100ConstructionClasses.Of(definition.DefinitionName);
             if (kind == Level100ConstructionClass.Squad)
             {
@@ -441,6 +448,39 @@ public sealed partial class Level100ActorMechanics
                 break;
             default:
                 throw new InvalidOperationException($"Unadmitted construction class {kind}.");
+        }
+    }
+
+    /// <summary>
+    /// A lost base-world row in the load (<c>0x0050d01f-0x0050d13e</c>; the
+    /// World 110 seed contract, "base-world carry-over"). When its class type
+    /// has bit <c>0x100</c> (the building setter <c>0x00417660</c> ORs
+    /// <c>0x40100120</c>; cannons and features do not), ten iterations each
+    /// take two shared draws, the first for Y and the second for X, and stamp
+    /// landscape damage type 6 (<c>0x005475d0</c>) at the row's position plus
+    /// ((r mod 65536)·2⁻¹⁶ − 0.5) × 5.0 per axis, at single precision.
+    /// </summary>
+    private void StampLostBaseBuilding(Level100ActorDefinition definition)
+    {
+        if (Level100ConstructionClasses.Of(definition.DefinitionName) is not
+            (Level100ConstructionClass.Building or Level100ConstructionClass.SimpleBuilding))
+        {
+            return;
+        }
+
+        float x = BitConverter.Int32BitsToSingle(definition.AuthoredTransform.RetailPositionFloatBits.X);
+        float y = BitConverter.Int32BitsToSingle(definition.AuthoredTransform.RetailPositionFloatBits.Y);
+        float Offset(float axis) => (float)RetailFloat24.Add(
+            RetailFloat24.Multiply(
+                RetailFloat24.Subtract(RetailFloat24.Multiply(_releasedRandom.Next() % 65536, 1.0 / 65536.0), 0.5),
+                5.0),
+            axis);
+        for (int stamp = 0; stamp < 10; stamp++)
+        {
+            float stampY = Offset(y);
+            float stampX = Offset(x);
+            _landscapeDamageStamps.Add(new Level100LandscapeDamageStamp(
+                BitConverter.SingleToInt32Bits(stampX), BitConverter.SingleToInt32Bits(stampY), 6));
         }
     }
 

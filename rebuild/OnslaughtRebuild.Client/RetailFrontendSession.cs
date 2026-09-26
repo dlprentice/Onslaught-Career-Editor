@@ -629,16 +629,22 @@ public sealed class RetailFrontendSession
     public int ConsumeLaunchWorldNumber => SelectedWorldNumber;
 
     /// <summary>
-    /// Whether this reconstruction can currently build
-    /// <see cref="SelectedWorldNumber"/>. World 100 is the only constructed
-    /// session owner; world 110 is admitted by Core and selectable after a
-    /// Won update. Its script, terrain, definition-bearing identities, and
-    /// serialized player-1 start are admitted, but it still has no complete
-    /// actor/player/Battle Engine, <see cref="InteractiveSession"/>, or Godot
-    /// lifecycle.
+    /// Whether the host can currently play <see cref="SelectedWorldNumber"/>.
+    /// World 110 is selectable after a Won update, and Core and
+    /// <see cref="InteractiveSession"/> construct it with its carry-over
+    /// (<see cref="SelectedWorldLostBaseRows"/>), but the Godot host has no
+    /// World 110 presentation yet, so only world 100 is played.
     /// </summary>
     public bool SelectedWorldIsConstructible =>
         SelectedWorldNumber == RetailWorldCatalog.RootWorldNumber;
+
+    /// <summary>
+    /// The base-world rows the selected world's load skips: the career's
+    /// carry-over from the levels before it
+    /// (<see cref="RetailCareerNodeTable.LostBaseRows"/>).
+    /// </summary>
+    public IReadOnlyList<int> SelectedWorldLostBaseRows =>
+        Career.Nodes.LostBaseRows(SelectedWorldNumber, RetailFillOutEndLevelData.Level100BaseWorldThingCount);
 
     public void CompleteLevel100Load()
     {
@@ -747,9 +753,15 @@ public sealed class RetailFrontendSession
     /// leaves the page. <c>SetCurrentLevelToHighestAvailable</c> is not in the
     /// source drop and is not invented here: the highlight stays on the root.
     /// </summary>
+    /// <param name="baseThingsLeft">
+    /// FillOut's base-world survivor list from the level's end state
+    /// (<see cref="RetailFillOutEndLevelData.BaseThingsLeft"/>); a first play
+    /// that loses no row when omitted.
+    /// </param>
     public bool TryAcceptWonHandoff(
         Level100MissionOutcome outcome,
-        Level100MissionTerminalState terminalState)
+        Level100MissionTerminalState terminalState,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
         if (Screen != RetailFrontendScreen.Gameplay ||
             outcome != Level100MissionOutcome.Won ||
@@ -758,7 +770,7 @@ public sealed class RetailFrontendSession
             return false;
         }
 
-        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(baseThingsLeft: baseThingsLeft);
         Career.ApplyUpdate(snapshot);
         Debriefing = RetailDebriefingProjection.From(
             snapshot,
