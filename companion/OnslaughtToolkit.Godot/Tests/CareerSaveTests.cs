@@ -132,8 +132,8 @@ internal static class CareerSaveTests
             BinaryPrimitives.WriteUInt32LittleEndian(mixedLinks.AsSpan(0x1906 + index * 8 + 4), (uint)index);
         }
         LinkCensus? census = CareerSave.Inspect(mixedLinks).Value?.LinkCensus;
-        check.That(census is { Used: 4, Locked: 1, Complete: 1, Broken: 1, Unknown: 1 },
-            "Broken/unknown links are not counted as complete, and destination zero is used.");
+        check.That(census is { Used: 4, Locked: 1, Complete: 1, AlternateRoutes: 1, Unknown: 1 },
+            "Alternate-route and unknown links are not counted as complete, and destination zero is used.");
         byte[] mixedGoodies = original.ToArray();
         BinaryPrimitives.WriteUInt32LittleEndian(mixedGoodies.AsSpan(0x1F46 + 232 * 4), 99);
         BinaryPrimitives.WriteUInt32LittleEndian(mixedGoodies.AsSpan(0x1F46 + 233 * 4), 2);
@@ -141,11 +141,28 @@ internal static class CareerSaveTests
         check.That(goodieInfo?.Goodies[232].State == GoodieState.Unknown && goodieInfo.Goodies[233].State == GoodieState.Reserved,
             "Reserved slots are never presented as earned/unlocked.");
         byte[] unusual = original.ToArray();
-        BinaryPrimitives.WriteUInt32LittleEndian(unusual.AsSpan(0x0006 + 0x3C), 0x7FC00000);
+        BinaryPrimitives.WriteUInt32LittleEndian(unusual.AsSpan(0x0006 + 0x3C), 0x3FC00000); // 1.5
+        BinaryPrimitives.WriteUInt32LittleEndian(unusual.AsSpan(0x0006 + 0x40 + 0x3C), 0x7FC00000); // NaN
         BinaryPrimitives.WriteUInt32LittleEndian(unusual.AsSpan(0x248E), 0x7F800000);
         CareerInspection? unusualInfo = CareerSave.Inspect(unusual).Value;
-        check.That(unusualInfo is not null && !unusualInfo.Missions[0].RankKnown && !unusualInfo.SoundVolume.Finite,
-            "Unmapped rank and nonfinite stored volume remain visible as unsupported values.");
+        check.That(unusualInfo is not null && unusualInfo.Missions[0].RankLetter is null && unusualInfo.Missions[1].RankLetter == "S"
+            && !unusualInfo.SoundVolume.Finite,
+            "A stored rank above 1 has no letter, NaN reads as S like the game's rule, and a nonfinite volume stays visible.");
+
+        // The game's rank rule: exactly 1.0 or NaN is S, zero or below E, otherwise 'D' - floor(4f).
+        (float Value, string? Letter)[] ranks =
+        [
+            (1.0f, "S"), (float.NaN, "S"), (0f, "E"), (-1f, "E"), (float.NegativeInfinity, "E"),
+            (0.75f, "A"), (0.9999999f, "A"), (0.7499999f, "B"), (0.5f, "B"), (0.4999999f, "C"), (0.25f, "C"),
+            (0.2499999f, "D"), (0.0000001f, "D"), (1.0000001f, null), (1.5f, null), (float.PositiveInfinity, null),
+            (0.8f, "A"), (0.6f, "B"), (0.35f, "C"), (0.15f, "D"),
+        ];
+        foreach ((float value, string? letter) in ranks)
+            check.That(CareerSave.RankLetter(value) == letter, $"Rank {value:R} reads as {letter ?? "no letter"}.");
+        check.That(info.PendingGoodiesRaw == BinaryPrimitives.ReadUInt32LittleEndian(original.AsSpan(0x0002)),
+            "The pending extra Goodies dword is read from offset 0x0002.");
+        check.That(CareerSave.RegionOf(0x0002) == "Pending extra Goodies" && CareerSave.RegionOf(0x0006) == "Mission records",
+            "Byte regions name the pending Goodies dword.");
         check.That(original.AsSpan().SequenceEqual(untouched),
             "Inspection, previews and malformed-input checks never mutate the baseline.");
     }

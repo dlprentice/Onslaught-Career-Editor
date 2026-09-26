@@ -19,6 +19,7 @@ public static class CareerSave
 {
     public const int Size = 10004;
     public const int VersionWord = 0x4BD1;
+    public const int PendingGoodiesOffset = 0x0002;
     public const int MaxKills = 0x00FFFFFF;
     public const int MissionOffset = 0x0006, MissionStride = 64, MissionCount = 100;
     public const int LinkOffset = 0x1906, LinkStride = 8, LinkCount = 200;
@@ -31,24 +32,29 @@ public static class CareerSave
 
     public static IReadOnlyList<string> CategoryNames { get; } = ["Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs"];
 
-    private static readonly Dictionary<uint, string> RankNames = new()
-    {
-        [0x3F800000] = "S", [0x3F4CCCCD] = "A", [0x3F19999A] = "B",
-        [0x3EB33333] = "C", [0x3E19999A] = "D", [0x00000000] = "E", [0xBF800000] = "None",
-    };
-
     public static IReadOnlyList<string> Notes { get; } =
     [
         "The version word and length recognize this container; they do not prove its origin or gameplay validity.",
         "Packed bytes above the five kill counts are preserved. The first two store screen-position data; the other three have no known consumer.",
-        "Reserved Goodie slots 233–299, unmapped rank values, options and all unselected bytes remain unchanged.",
+        "Reserved Goodie slots 233–299, options and all unselected bytes remain unchanged.",
+        "Rank letters follow the game's own rule (static evidence): exactly 1.0 or NaN is S, 0 or below is E, otherwise D, C, B or A by quarters.",
         "Raw tech slots and god-mode state are inspection only. A save flag does not establish active game cheats.",
         "Stored sound/music values do not establish the settings that a running game will apply.",
     ];
 
-    public static string RankName(uint bits) => RankNames.GetValueOrDefault(bits, "Unmapped");
-
-    public static bool IsKnownRank(uint bits) => RankNames.ContainsKey(bits);
+    /// <summary>
+    /// The letter the game derives from a stored rank float (retail 0x00421470, matching the
+    /// developers' Career.cpp; static evidence): exactly 1.0 or NaN is S, zero or below is E,
+    /// otherwise <c>'D' - floor(4 * value)</c>. Values above 1 or infinite produce no letter.
+    /// Multiplying by four is exact in every float width, so the quarter boundaries do not drift.
+    /// </summary>
+    public static string? RankLetter(float value)
+    {
+        if (float.IsNaN(value) || value == 1.0f) return "S";
+        if (value <= 0f) return "E";
+        if (!float.IsFinite(value) || value > 1.0f) return null;
+        return ((char)('D' - (int)Math.Floor(value * 4.0))).ToString();
+    }
 
     public static Outcome<CareerInspection> Inspect(ReadOnlySpan<byte> bytes)
     {
@@ -86,6 +92,7 @@ public static class CareerSave
         {
             Size = bytes.Length,
             Version = BinaryPrimitives.ReadUInt16LittleEndian(bytes),
+            PendingGoodiesRaw = U32(bytes, PendingGoodiesOffset),
             Kills = kills,
             PackedBytes = packed,
             Missions = missions,
@@ -95,7 +102,7 @@ public static class CareerSave
             Links = links,
             LinkCensus = new LinkCensus(
                 links.Count(record => record.Used), Count(links, LinkState.Locked), Count(links, LinkState.Complete),
-                Count(links, LinkState.Broken), Count(links, LinkState.Unknown), Count(links, LinkState.Unused)),
+                Count(links, LinkState.AlternateRoute), Count(links, LinkState.Unknown), Count(links, LinkState.Unused)),
             Goodies = goodies,
             GoodieCensus = new GoodieCensus(DisplayableGoodies,
                 Count(goodies, GoodieState.Locked), Count(goodies, GoodieState.Hint), Count(goodies, GoodieState.New),
@@ -173,8 +180,8 @@ public static class CareerSave
 
     public static string RegionOf(int offset) => offset switch
     {
-        < 0x0002 => "Version word",
-        < MissionOffset => "Career header",
+        < PendingGoodiesOffset => "Version word",
+        < MissionOffset => "Pending extra Goodies",
         < LinkOffset => "Mission records",
         < GoodieOffset => "Campaign links",
         < KillsOffset => offset < GoodieOffset + DisplayableGoodies * 4 ? "Goodie states" : "Reserved Goodie slots",
@@ -205,6 +212,9 @@ public sealed class CareerInspection
 {
     public required int Size { get; init; }
     public required int Version { get; init; }
+
+    /// <summary>Goodies the game has yet to announce; the startup reset clears it (original-code evidence).</summary>
+    public required uint PendingGoodiesRaw { get; init; }
     public required IReadOnlyList<int> Kills { get; init; }
     public required IReadOnlyList<int> PackedBytes { get; init; }
     public required IReadOnlyList<MissionRecord> Missions { get; init; }
@@ -224,13 +234,18 @@ public sealed record MissionRecord(int Index, int Offset, uint World, uint Compl
 {
     public bool Used => World != 0;
     public bool Completed => Used && CompleteRaw != 0;
-    public string Rank => CareerSave.RankName(RankBits);
-    public bool RankKnown => CareerSave.IsKnownRank(RankBits);
+
+    /// <summary>The letter the game's rule gives this stored value, or null when it gives none.</summary>
+    public string? RankLetter => CareerSave.RankLetter(RankValue);
 }
 
 public sealed record MissionCensus(int Used, int Completed, int Incomplete, int Unused);
 
-public enum LinkState { Unused, Locked, Complete, Broken, Unknown }
+/// <summary>
+/// Stored link states. <see cref="AlternateRoute"/> is the game's CN_COMPLETE_BROKEN bookkeeping: an
+/// alternate parent route drawn as a broken line, not corruption. Only Complete opens a mission.
+/// </summary>
+public enum LinkState { Unused, Locked, Complete, AlternateRoute, Unknown }
 
 public sealed record LinkRecord(int Index, int Offset, uint RawState, uint ToNode)
 {
@@ -240,12 +255,12 @@ public sealed record LinkRecord(int Index, int Offset, uint RawState, uint ToNod
     {
         0 => LinkState.Locked,
         1 => LinkState.Complete,
-        2 => LinkState.Broken,
+        2 => LinkState.AlternateRoute,
         _ => LinkState.Unknown,
     };
 }
 
-public sealed record LinkCensus(int Used, int Locked, int Complete, int Broken, int Unknown, int Unused);
+public sealed record LinkCensus(int Used, int Locked, int Complete, int AlternateRoutes, int Unknown, int Unused);
 
 public enum GoodieState { Locked, Hint, New, Old, Unknown, Reserved }
 

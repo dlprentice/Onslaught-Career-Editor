@@ -31,12 +31,13 @@ internal sealed class InspectorPage
         foreach (MissionRecord record in analysis.Missions.Where(record => record.Used))
         {
             Build.TableRow(Tree, missions, $"Slot {record.Index} · world {record.World}",
-                $"Complete {record.CompleteRaw} · attempts {record.Attempts}", $"{record.Rank} · raw rank 0x{record.RankBits:X8}");
+                $"Complete {record.CompleteRaw} · attempts {record.Attempts}",
+                $"{record.RankLetter ?? "no letter (outside the game's range)"} · stored 0x{record.RankBits:X8}");
         }
         LinkCensus links = analysis.LinkCensus;
         TreeItem linkRow = Build.TableRow(Tree, root, "Links",
-            $"{links.Used} used · {links.Locked} locked · {links.Complete} complete · {links.Broken} broken · " +
-            $"{links.Unknown} unknown · {links.Unused} unused", "Broken and unknown states are not called complete");
+            $"{links.Used} used · {links.Locked} locked · {links.Complete} complete · {links.AlternateRoutes} alternate routes · " +
+            $"{links.Unknown} unknown · {links.Unused} unused", "Only complete links open a mission; alternate routes are the game's broken-line bookkeeping");
         linkRow.Collapsed = true;
         foreach (LinkRecord record in analysis.Links.Where(record => record.Used))
             Build.TableRow(Tree, linkRow, $"Slot {record.Index} → {record.ToNode}", $"0x{record.RawState:X8}", Label(record.State));
