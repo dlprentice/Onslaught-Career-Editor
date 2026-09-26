@@ -1,7 +1,7 @@
 # CUnit__UpdateTransform
 
 Status: bounded static and isolated original-code contract; World110 arithmetic implemented
-Last updated: 2026-09-12
+Last updated: 2026-09-26 (RE audit: the asin helpers' current names)
 Summary: profile attachment caching, exact arithmetic, mesh lookup and isolated
 aircraft cache population and pose observations. Live firing integration,
 camera-latch ownership and complete child initialization remain unvalidated.
@@ -230,7 +230,8 @@ yaws also have negative-zero `M02`. The recipe preserves these words.
 initializer mode zero causes `0x004f8c99..0x004f8cc9` to call `0x0044adb0`, then
 copy three Euler words into child `+0x44/+0x48/+0x4c`, with child mode zero.
 The finite interior path computes pitch `asin(M21)`, yaw `atan2(-M01,M11)` and
-roll `atan2(-M20,M22)`. Despite retained `Acos` labels, `0x0055dccd` computes
+roll `atan2(-M20,M22)`. `0x0055dccd` (now saved as `CRT__AsinCoreWithFpuGuards`,
+with dispatcher `0x0055dcb0` `CRT__AsinDispatch_ST0`) computes
 `sqrt((1+x)*(1-x))` followed by `FPATAN(x,sqrt)` for finite `|x|<1`.
 Pitch is stored float32 but its unrounded result gates strict `(-pi,+pi)`;
 the alternative writes positive-zero yaw/roll. There is no input clamp.
