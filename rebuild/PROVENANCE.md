@@ -846,10 +846,12 @@ wiring remain outside Core; no runtime or console equivalence is claimed.
 Deletion-aware reader feedback is now its own deterministic owner. Pristine PC
 `CGenericActiveReader__SetReader` `[0x00401000,0x00401034)` (52 bytes, SHA-256
 `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)
-and `CMonitor__Shutdown` `[0x004BAC40,0x004BACA7)` (103 bytes, SHA-256
-`3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf`)
-establish same-target no-op, detach/publish/attach rebind order, newest-first
-reverse membership, direct reader-cell zeroing, and clear-after-walk shutdown.
+and `CMonitor__dtor_base` `[0x004BAC40,0x004BACA7)` (103 bytes, SHA-256
+`3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf`; the
+RE lane's second label cohort renamed it from `CMonitor__Shutdown` on
+2026-09-26) establish same-target no-op, detach/publish/attach rebind order,
+newest-first reverse membership, direct reader-cell zeroing, and
+clear-after-walk teardown.
 The 159-byte PC UnitAI destructor independently orders outbound detachments as
 `+0x28`, `+0x24`, `+0x0C` before invalidating inbound readers. PC demo closes
 the same lifecycle, Xbox closes target-death behavior, and all three PS2
