@@ -65,7 +65,12 @@ catching up after the game closes.
 `npm run capture:companion-godot` renders every page and state at 1280×800 and
 1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
-library instead; that library is only read, and nothing is saved into it in that mode.
+library instead; that library is only read, and nothing is saved into it in that mode. Add
+`--beside-gpu-jobs` to render next to a job on the NVIDIA card instead of queuing behind the
+machine-wide GPU lock: the run gets its own hidden output and queues on the lanes' shared Intel
+GPU lock, `/var/tmp/godot-igpu.lock`. The companion's Compatibility renderer runs on the laptop's
+Intel GPU through Mesa, so it does not compete with a film rendering on the NVIDIA card, and it
+never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 
 ## What it does
 

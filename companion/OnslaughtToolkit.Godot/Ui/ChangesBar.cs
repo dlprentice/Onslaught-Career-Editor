@@ -45,3 +45,39 @@ internal sealed class ChangesBar
         return page;
     }
 }
+
+/// <summary>
+/// "Show exactly what changes in the file": a link that opens the byte-level detail of the changes, offered
+/// only while there are changes to show.
+/// </summary>
+internal sealed class FileDetails
+{
+    private const string ShowText = "Show exactly what changes in the file", HideText = "Hide the file details";
+
+    internal FileDetails(VBoxContainer parent)
+    {
+        Toggle = parent.Add(Build.Button(ShowText, "Link"));
+        Toggle.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        Toggle.Visible = false;
+        Panel = parent.Add(Build.Detail("", bbcode: true));
+        Panel.Visible = false;
+        Toggle.Pressed += () =>
+        {
+            Panel.Visible = !Panel.Visible;
+            Toggle.Text = Panel.Visible ? HideText : ShowText;
+        };
+    }
+
+    internal Button Toggle { get; }
+    internal RichTextLabel Panel { get; }
+
+    /// <summary>Sets the detail to show, or closes and hides it all when there are no changes (null).</summary>
+    internal void Show(string? bbcode)
+    {
+        Panel.Text = bbcode ?? "";
+        Toggle.Visible = bbcode is not null;
+        if (bbcode is not null) return;
+        Panel.Visible = false;
+        Toggle.Text = ShowText;
+    }
+}
