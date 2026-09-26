@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Focused fake-tool checks for integrated Godot .NET routes and export boundaries."""
+"""Focused fake-tool checks for the code-built C# companion routes and export boundaries."""
 from __future__ import annotations
 
 import contextlib
@@ -14,6 +14,8 @@ from pathlib import Path
 from unittest import mock
 
 import companion_godot as host
+
+WRAPPER = '[gd_scene format=3]\n\n[ext_resource type="Script" path="res://Ui/CompanionApp.cs" id="1"]\n\n[node name="Companion" type="Control"]\nscript = ExtResource("1")\n'
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "Linux development launcher")
@@ -30,12 +32,12 @@ class CompanionLauncherTests(unittest.TestCase):
         self.project = self.source / "companion/OnslaughtToolkit.Godot"
         self.project.mkdir(parents=True)
         for name, data in {
-            "project.godot": "config_version=5\n", "SaveLab.tscn": "[gd_scene format=3]\n",
+            "project.godot": "config_version=5\n", "Main.tscn": WRAPPER,
             "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"8.0.424"}}',
-            "OnslaughtToolkit.Godot.sln": "single-project Godot solution",
-            "packages.lock.json": "{}", "SaveLab.cs": "retained legacy source, not active",
-            "SaveLab.cs.uid": "uid://retained-reference",
-            "io/ProtectedSaveFiles.cs": "integrated safety adapter", "tests/test_save_lab.gd": "extends SceneTree\n",
+            "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": "{}",
+            "Ui/CompanionApp.cs": "code-built application root", "Files/ProtectedSaveFiles.cs": "integrated safety adapter",
+            "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry",
+            "Ui/CompanionApp.cs.uid": "uid://generated-by-an-editor-open",
         }.items():
             path = self.project / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -44,9 +46,6 @@ class CompanionLauncherTests(unittest.TestCase):
             path = self.source / "OnslaughtCareerEditor.AppCore" / name
             path.parent.mkdir(exist_ok=True)
             path.write_text("// exact safety snapshot " + name, encoding="utf-8")
-        self.race = self.source / "companion/OnslaughtToolkit.FileBridge/OnslaughtToolkit.FileBridge.TransactionTests.csproj"
-        self.race.parent.mkdir()
-        self.race.write_text("test-only project", encoding="utf-8")
         self.fixture = self.root / "fixture.bin"
         self.fixture.write_bytes(host.FIXTURE.read_bytes())
         self.pins = host.read_json(host.COMPANION / "toolchain.json")
@@ -68,16 +67,13 @@ class CompanionLauncherTests(unittest.TestCase):
             " (assets/'project.assets.json').write_text(json.dumps({'packageFolders':{os.environ['FAKE_NUGET']:{}}}))\n"
             " if sys.argv[1]=='build':\n"
             "  target=project/'.godot/mono/temp/bin/Debug'; target.mkdir(parents=True,exist_ok=True); (target/'OnslaughtToolkit.Godot.dll').write_text('integrated assembly')\n"
-            "if tool=='dotnet' and sys.argv[1]=='publish':\n"
-            " target=pathlib.Path(sys.argv[sys.argv.index('--output')+1]); target.mkdir(parents=True,exist_ok=True)\n"
-            " harness=target/'OnslaughtToolkit.FileBridge.TransactionTests'\n"
-            f" harness.write_text('#!{sys.executable}\\nimport json,os\\nprint(json.dumps({{\"ok\":not bool(os.environ.get(\"FAKE_RACE_FAILURE\")),\"passed\":list(range(6))}}))\\n'); harness.chmod(0o700)\n"
-            "if any(arg.endswith('/license_metadata.gd') for arg in sys.argv): print(json.dumps({'license':'Godot MIT','components':[{'name':'component'}],'licenses':{'MIT':'notice'}}))\n"
+            "if 'res://Development/LicenseMetadata.cs' in sys.argv: print(json.dumps({'license':'Godot MIT','components':[{'name':'component'}],'licenses':{'MIT':'notice'}}))\n"
             "if '--import' in sys.argv and os.environ.get('FAKE_PARSE_ERROR'): print('SCRIPT ERROR: Parse Error: broken source')\n"
             "if '--export-release' in sys.argv:\n"
             " target=pathlib.Path(sys.argv[sys.argv.index('--export-release')+2]); target.write_text('native exe'); target.with_suffix('.pck').write_text('native resources')\n"
             " data=target.parent/'data_OnslaughtToolkit.Godot'; data.mkdir()\n"
             " for name in ['OnslaughtToolkit.Godot.dll','GodotSharp.dll','libcoreclr.so']: (data/name).write_text('integrated runtime')\n"
+            " if os.environ.get('FAKE_TEST_LEAK'): (data/'OnslaughtToolkit.Godot.dll').write_text('OnslaughtToolkit.Companion.Tests')\n"
             " config={'includedFrameworks':[{'name':'Microsoft.NETCore.App','version':'8.0.30'}]}\n"
             " if os.environ.get('FAKE_FRAMEWORK_DEPENDENT'): config={'framework':{'name':'Microsoft.NETCore.App','version':'8.0.30'}}\n"
             " (data/'OnslaughtToolkit.Godot.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':config}))\n"
@@ -117,7 +113,7 @@ class CompanionLauncherTests(unittest.TestCase):
             package.mkdir(parents=True)
             for name in ("LICENSE.TXT","THIRD-PARTY-NOTICES.TXT"):(package/name).write_text(name,encoding="utf-8")
         for patch in (mock.patch.object(host,"ROOT",self.source),mock.patch.object(host,"COMPANION",self.project),
-                      mock.patch.object(host,"RACE_PROJECT",self.race),mock.patch.object(host,"FIXTURE",self.fixture),
+                      mock.patch.object(host,"FIXTURE",self.fixture),
                       mock.patch.object(host,"canonical_root",return_value=self.canonical),
                       mock.patch.dict(os.environ,{"FAKE_CALLS":str(self.calls),"FAKE_NUGET":str(packages),"ONSLAUGHT_FILE_BRIDGE":"must-not-be-used","PATH":str(self.dotnet.parent)+os.pathsep+os.environ["PATH"]})):
             patch.start();self.addCleanup(patch.stop)
@@ -136,9 +132,8 @@ class CompanionLauncherTests(unittest.TestCase):
         restore=next(call for call in calls if call["args"][0]=="restore")
         self.assertIn("--locked-mode",restore["args"])
         staged=Path(restore["args"][1]).parent
-        self.assertTrue((staged/"io/ProtectedSaveFiles.cs").is_file())
-        self.assertFalse((staged/"SaveLab.cs").exists())
-        self.assertFalse((staged/"SaveLab.cs.uid").exists())
+        for name in ("Main.tscn","Ui/CompanionApp.cs","Files/ProtectedSaveFiles.cs","Tests/CompanionTestRunner.cs"):self.assertTrue((staged/name).is_file())
+        self.assertFalse((staged/"Ui/CompanionApp.cs.uid").exists())
         for name in host.SAFETY_SOURCES:self.assertEqual((self.source/"OnslaughtCareerEditor.AppCore"/name).read_bytes(),(staged.parents[1]/"OnslaughtCareerEditor.AppCore"/name).read_bytes())
         self.assertFalse((self.project/".godot").exists())
         self.assertTrue(all(call["old_bridge"] is None for call in calls))
@@ -170,17 +165,31 @@ class CompanionLauncherTests(unittest.TestCase):
     def test_zero_exit_godot_parse_error_fails_check(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_PARSE_ERROR":"1"}):self.assertEqual(2,self.invoke("check"))
 
-    def test_native_test_receives_owned_fixture_and_requires_six_races(self)->None:
+    def test_gdscript_and_saved_resources_are_refused_before_build(self)->None:
+        for name in ("Ui/legacy.gd","Ui/theme.tres","Ui/look.gdshader"):
+            with self.subTest(name=name):
+                (self.project/name).write_text("editor-authored",encoding="utf-8")
+                self.assertEqual(2,self.invoke("build"));self.assertEqual([],self.calls_read())
+                (self.project/name).unlink()
+
+    def test_scene_must_be_a_one_node_script_wrapper(self)->None:
+        for text in (WRAPPER+'[node name="Extra" type="Label" parent="."]\n',
+                     WRAPPER.replace('type="Script"','type="Theme"'),
+                     WRAPPER+'[sub_resource type="StyleBoxFlat" id="look"]\n'):
+            with self.subTest(text=text):
+                (self.project/"Main.tscn").write_text(text,encoding="utf-8")
+                self.assertEqual(2,self.invoke("build"));self.assertEqual([],self.calls_read())
+
+    def test_native_test_receives_owned_fixture_and_runs_the_csharp_entry(self)->None:
         before=self.fixture.read_bytes();self.assertEqual(0,self.invoke("test"))
         calls=self.calls_read();native=next(call for call in calls if any(arg.startswith("--fixture=") for arg in call["args"]))
+        self.assertIn("res://Tests/CompanionTestRunner.cs",native["args"]);self.assertIn("--headless",native["args"])
         copied=Path(next(arg.split("=",1)[1] for arg in native["args"] if arg.startswith("--fixture=")))
         self.assertNotEqual(copied,self.fixture);self.assertEqual(before,copied.read_bytes());self.assertEqual(before,self.fixture.read_bytes())
-        self.assertTrue(any(call["args"][0]=="publish" and "TransactionTests" in str(call["args"]) for call in calls))
-        with mock.patch.dict(os.environ,{"FAKE_RACE_FAILURE":"1"}):self.assertEqual(2,self.invoke("test"))
+        self.assertFalse(any(call["args"][0]=="publish" for call in calls))
 
-    def test_native_test_failure_stops_before_race_build(self)->None:
+    def test_native_test_failure_is_reported(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_NATIVE_EXIT":"17"}):self.assertEqual(17,self.invoke("test"))
-        self.assertFalse(any(call["args"][0]=="publish" for call in self.calls_read()))
 
     def test_normal_dotnet_exports_bundle_runtime_not_helper_or_harness(self)->None:
         self.assertEqual(0,self.invoke("export","--platform","both"))
@@ -191,7 +200,7 @@ class CompanionLauncherTests(unittest.TestCase):
             self.assertFalse((package/"file-bridge").exists());self.assertFalse(list(package.rglob("*TransactionTests*")))
             self.assertTrue(list(package.rglob("OnslaughtToolkit.Godot.dll")))
             for name in ("LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt"):self.assertTrue((package/name).is_file())
-            self.assertIn("no helper process",(package/"README.txt").read_text())
+            readme=(package/"README.txt").read_text();self.assertIn("no helper process",readme);self.assertIn("C# application built in code",readme)
         self.assertFalse(any(call["args"][0]=="publish" for call in self.calls_read()))
 
     def test_framework_dependent_export_is_refused(self)->None:
@@ -199,6 +208,9 @@ class CompanionLauncherTests(unittest.TestCase):
 
     def test_obsolete_helper_leak_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_HELPER_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
+
+    def test_contract_tests_in_a_release_assembly_are_refused(self)->None:
+        with mock.patch.dict(os.environ,{"FAKE_TEST_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
 
 
 if __name__ == "__main__":

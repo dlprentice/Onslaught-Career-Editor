@@ -36,14 +36,13 @@ flowchart LR
 
 The arrows are source dependencies, not priority. Full retail reverse
 engineering, the 1:1 Godot rebuild, and the Godot toolkit companion are coequal
-project outcomes. The companion ports format behavior to GDScript; its in-process file adapter links
+project outcomes. The companion is a C# application built in code; its in-process file adapter links
 the existing AppCore safety source. Retained Windows adapters still use AppCore.
 The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
-| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/project.godot) | Godot .NET, GDScript scenes/domain, and a thin in-process C# adapter linking existing file safety. No AppCore assembly or C# save codec. |
-| [`OnslaughtToolkit.FileBridge`](companion/OnslaughtToolkit.FileBridge/README.md) | Retained standalone prototype/API-gap evidence and development-only safety race harness. Excluded from active production builds/exports. |
+| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/README.md) | Godot .NET C# application built in code: interface, theme, career codec, media inventory and an in-process adapter linking existing file safety, with its contract tests. No GDScript, editor-authored scene or AppCore assembly. |
 | [`OnslaughtCareerEditor.WinUI`](OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj) | .NET 10 WinUI 3 executable. Owns the shell, pages, interaction, and presentation; references AppCore. |
 | [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
 | [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Windows-targeted, unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
@@ -69,16 +68,18 @@ the rebuild assembly contract in detail.
 
 ## Companion route
 
-[`SaveLab.tscn`](companion/OnslaughtToolkit.Godot/SaveLab.tscn) owns the visible
-controls and mounts [`save_lab.gd`](companion/OnslaughtToolkit.Godot/ui/save_lab.gd).
-[`career_save.gd`](companion/OnslaughtToolkit.Godot/domain/career_save.gd) owns native
-format interpretation, selected-byte previews and comparison;
-[`save_session.gd`](companion/OnslaughtToolkit.Godot/domain/save_session.gd) owns the
-opened snapshot. The in-process [adapter](companion/OnslaughtToolkit.Godot/io/ProtectedSaveFiles.cs)
-links `SaveLabFileTransaction` and `FileMutationSafety` unchanged for OS protections
-that GDScript does not expose. The old companion `SaveLab.cs` UI is retained
-reference material, excluded from compilation and export. The media scene and
-native catalog perform read-only metadata inventory of explicitly selected data.
+[`Main.tscn`](companion/OnslaughtToolkit.Godot/Main.tscn) only attaches
+[`CompanionApp`](companion/OnslaughtToolkit.Godot/Ui/CompanionApp.cs), which builds the
+whole interface and theme in code. [`CareerSave`](companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs)
+owns format interpretation, selected-byte previews and comparison;
+[`SaveSession`](companion/OnslaughtToolkit.Godot/Careers/SaveSession.cs) owns the opened
+snapshot and [`CareerWorkspace`](companion/OnslaughtToolkit.Godot/Careers/CareerWorkspace.cs)
+the open, publish and compare workflows. The in-process
+[adapter](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs) links
+`SaveLabFileTransaction` and `FileMutationSafety` unchanged. The
+[media catalog](companion/OnslaughtToolkit.Godot/Media/MediaCatalog.cs) performs read-only
+metadata inventory of explicitly selected folders. Contract tests live in
+[`Tests/`](companion/OnslaughtToolkit.Godot/Tests/) and never enter a release export.
 
 ## Retained WinUI route map
 

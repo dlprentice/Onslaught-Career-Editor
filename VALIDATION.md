@@ -9,9 +9,9 @@ Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
 
-Linux is the active development and native Godot host. `npm test` runs the native
-GDScript Save Lab scene/domain, integrated C# adapter and publication-race checks, and
-companion launcher tests without opening a window. `npm run build` and
+Linux is the active development and native Godot host. `npm test` runs the companion's
+C# contract suite (career codec, media inventory, protected adapter, publication races
+and the code-built interface) and its launcher tests without opening a window. `npm run build` and
 `npm run dev` build/run the Godot .NET companion. The latter opens a window.
 The rebuild has native Linux build/run/smoke/capture commands; live input checks
 need an available desktop. Source and headless tests alone do not establish native
@@ -34,7 +34,7 @@ are not replaced by the focused portable results below.
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:save-lab` covers the supported Linux workflow on .NET 8; select an affected portable fixture and framework for other source changes. `test:appcore` retains the full Windows-dependent suite. |
 | WinUI behavior or copy | On Windows, `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
-| Native companion scenes, save domain and safety | `npm run test:companion-godot` uses owned real-save copies, actual scene controls, independent byte diffs, protected round trips, changed/conflicting sources, direct C# adapter and publication-race cases. `test:companion-tools` checks pins/staging/exports. |
+| Companion (C# built in code) and its file safety | `npm run test:companion-godot` runs `Tests/CompanionTestRunner.cs` on owned real-save copies: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` checks pins, the code-only policy, staging and exports. |
 | Retained save, options, copied-target, or patch safety | `test:save-lab` retains the C# service oracle and existing safety tests. Other services need their own affected fixture. The retained Windows `test:safe-copy` includes UI regressions. |
 | CLI | On Windows, `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` is portable; run the LoreBrowserService/AppCore fixture on Windows unless that exact fixture has been demonstrated platform-neutral |
@@ -42,7 +42,7 @@ are not replaced by the focused portable results below.
 | GDScript rebuild migration | `npm run test:rebuild-gdscript` runs the standard pinned engine headlessly against production GDScript, C# comparisons and existing native Euler fixtures. It checks exact output bits, RNG state and failure ordering, wide arithmetic, canonical binary bytes/SHA-256, pause transitions and detached snapshots. Owned output is under `local-data/test-runs/`; the C# comparison build uses existing prepared asset links. The production pause scene has separate actual-scene checks described below. This is a bounded migration gate, not full simulation, performance or gameplay parity. |
 | Rebuild Core | `npm run test:rebuild-core` is the focused cross-host command and excludes only `Level100FerryLandingTests`; use `npm run test:rebuild-ferry-sweep` for that complete explicit oracle. The larger `npm run test:rebuild` aggregate additionally includes Windows-only Godot/capture gates and therefore requires a separately provided Windows host. **Current broad default receipt, 2026-08-31, at combined tip `c0e994ef` over causal Blaster commit `b8fca9ea`:** `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'` measured **1,130 passed / 3 known failed / 1,133 total / 0 skipped**, **34 m 23 s**. The only failures in that dated run were the Linux-host Windows-message assertions `TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot`, `TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations`, and `TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments`; the September 6 focused correction and result below close those failures without claiming a new broad run. The former `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` population mismatch now passes through exact internal round identity, and no assignment/start failure appeared. The 2026-08-30 **1,118/4/1,122** receipt remains historical. **PROGRAM P9 historical receipt, 2026-08-23, pre-change HEAD `221d7811`:** the actual runner first discovered 939 tests, including exactly the six ferry facts. After the split and three gate-composition facts, runner discovery proved **942 = 936 default + 6 sweep**, intersection zero, with the all-minus-default and explicit-sweep sets both exactly those six facts. The gate guard was RED 0/3 before script registration and GREEN 3/3 after. The explicit command passed **6/6** over the unchanged **20 perturbations × 2 arms = 40 runs**; VSTest reported **6 m 38 s**, while fleet-loaded wall time was **67 m 39 s**. Its pre-change 112.6 m overloaded run and the 2026-08-21 **862 passed / 1 failed / 863 total** run remain dated history, not current counts |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` builds the small integrated C# assembly and checks GDScript; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
 | Frontend page drawing | Linux `capture:rebuild-godot -- -- --capture-plan=mainmenu` produces native captures. Compare them with the existing `tools/compare_capture.py` scorer and appropriate retail reference; capture success alone is not parity. The historical Windows `Capture-Frontend.ps1` combines capture and scoring. |
 | Portable ZIP inputs or layout | On Windows, `npm run release:winui-zip` |
 | Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
@@ -5027,7 +5027,7 @@ Normal closing while busy is deferred until the transaction returns; shutdown
 joins an outstanding worker. A read-only integration review found no actionable
 ownership, thread-lifetime, uncertainty or unchecked-write issue. The unchanged
 filesystem code's Windows staging-handoff and power-loss limitations remain as
-documented in the [API/safety record](companion/OnslaughtToolkit.FileBridge/README.md).
+documented in the [API/safety record](https://github.com/dlprentice/Onslaught-Career-Editor/blob/d5e002d00aa8b7d2fb6d745aa1775285d957f2fd/companion/OnslaughtToolkit.FileBridge/README.md), retired with the prototype on September 25.
 
 The actual worktree source built with zero warnings/errors and imported headlessly
 with the .NET editor: `local-data/companion/mono-source-editor-ps1m7phv/`.
@@ -5071,3 +5071,31 @@ owned app/server processes, display sockets and private cookies were cleaned up.
 This is executed Linux workflow evidence and Windows cross-export/package
 inspection. Windows execution, human usability and audio acceptance remain pending.
 No physical desktop, VM, release or hosted CI was used.
+
+## Companion C# migration — September 25
+
+Branch `claude/companion-csharp-20260925` replaced the companion's GDScript domain,
+interface and tests with one C# application built in code. `Main.tscn` is a one-node
+wrapper attaching `Ui/CompanionApp.cs`; the build now refuses `.gd`, saved resources and
+any scene with more than that node. Each former GDScript contract moved to a C# suite
+run inside headless Godot by `Tests/CompanionTestRunner.cs`: the codec checks to
+`CareerSaveTests`, the media checks to `MediaCatalogTests`, the direct adapter checks to
+`ProtectedFilesTests`, the scene workflow to `CompanionUiTests`, and the retired
+FileBridge harness's six Linux publication races to `TransactionRaceTests`, which calls
+the linked transaction's internal hook in-process. GDScript's string-key, float and
+boolean selection refusals have no C# equivalent because selections are typed; every
+representable invalid selection is still refused. New checks cover plan immutability,
+the preview's byte count, one listed row per differing byte, a receipt whose bytes
+differ from the plan, a worker with no protected access, scan-limit and relative-path
+refusal, and explicitly reopening a verified result. `Tests/` and `Development/`
+compile only into development builds; the export launcher refuses a release assembly
+that contains either namespace.
+
+`npm test` passed in canonical `local-data/companion/godot-dotnet-test-6r33pbap/`:
+**302 checks, 0 failures**, then all **15** launcher cases, in 9.3 s. The C# build
+reported zero warnings and errors with warnings treated as errors. Two deliberate
+defects — authoring the packed fourth kill byte and accepting a receipt without
+original verification — turned the same suite red with exit code 1 and ten named
+failures: `local-data/companion/godot-dotnet-test-6862alcj/`. The standalone FileBridge
+prototype and its Python protocol test were removed; their Windows staging-handoff and
+power-loss limits now live in the [companion README](companion/OnslaughtToolkit.Godot/README.md#file-safety-boundary).
