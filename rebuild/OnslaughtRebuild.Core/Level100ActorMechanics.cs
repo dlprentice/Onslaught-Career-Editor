@@ -27,6 +27,9 @@ public sealed record Level100ActorCommandIntentSnapshot(
 {
     public Level100PlaneGuideSnapshot? PlaneGuide { get; init; }
     public Level100PlaneSpawnerExitSnapshot? PlaneSpawnerExit { get; init; }
+
+    /// <summary>A <c>CDropship</c>'s landing state (<c>+0x27c</c>); 0 for anything else.</summary>
+    public int DropshipLandingState { get; init; }
 }
 
 public sealed record Level100ActorMechanicsSnapshot(
@@ -103,6 +106,9 @@ public sealed partial class Level100ActorMechanics
         internal int WaypointCommandScalar { get; set; }
         internal bool WaitForWaypointCompletion { get; set; }
         internal int GroundFullGuideBaseTickPhase { get; set; }
+
+        /// <summary>A <c>CDropship</c>'s landing state, <c>+0x27c</c>: 0 airborne, 2 after <c>Land</c>.</summary>
+        internal int DropshipLandingState { get; set; }
         internal Level100PlaneGuideSnapshot? PlaneGuide { get; set; }
         internal Level100PlaneSpawnerExitSnapshot? PlaneSpawnerExit { get; set; }
     }
@@ -216,6 +222,7 @@ public sealed partial class Level100ActorMechanics
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>
         kind is
+            Level100ActorScriptCommandKind.Land or
             Level100ActorScriptCommandKind.FollowWaypoint or
             Level100ActorScriptCommandKind.FollowWaypointWait or
             Level100ActorScriptCommandKind.SetAIState or
@@ -301,6 +308,19 @@ public sealed partial class Level100ActorMechanics
                 case Level100ActorScriptCommandKind.FollowWaypointWait:
                     BeginWaypoint(command);
                     break;
+                case Level100ActorScriptCommandKind.Land:
+                {
+                    // IScript::Land (0x005361d0) calls a unit's slot 93; a
+                    // CDropship's (0x00447f50) lands where the craft is and
+                    // sets landing state 2 through slot 118 (0x00447a40).
+                    ActorState state = RequireState(command);
+                    if (Level100ConstructionClasses.Of(_actors.GetActor(state.ActorId).DefinitionName) ==
+                        Level100ConstructionClass.Dropship)
+                    {
+                        state.DropshipLandingState = 2;
+                    }
+                    break;
+                }
                 case Level100ActorScriptCommandKind.SetAIState:
                 {
                     ActorState state = RequireState(command);
@@ -740,10 +760,14 @@ public sealed partial class Level100ActorMechanics
         {
             ActorId = actorId,
             Intent = Level100ActorCommandIntent.Stopped,
+            Allegiance = _actors.GetAuthoredAllegiance(actorId),
         };
         _states.Add(actorId.Value, state);
         return state;
     }
+
+    /// <summary>A draw from the level's one gameplay stream, for a script's <c>Rand</c>.</summary>
+    internal int NextSharedRandom() => _releasedRandom.Next();
 
     private void ZeroActorVelocity(Level100ActorId actorId)
     {
@@ -871,7 +895,11 @@ public sealed partial class Level100ActorMechanics
             state.WaypointCommandScalar,
             state.WaitForWaypointCompletion,
             state.GroundFullGuideBaseTickPhase)
-        { PlaneGuide = state.PlaneGuide, PlaneSpawnerExit = state.PlaneSpawnerExit };
+        {
+            PlaneGuide = state.PlaneGuide,
+            PlaneSpawnerExit = state.PlaneSpawnerExit,
+            DropshipLandingState = state.DropshipLandingState,
+        };
 
     private static ActorState Restore(
         Level100ActorCommandIntentSnapshot source) => new()
@@ -889,6 +917,7 @@ public sealed partial class Level100ActorMechanics
                 source.WaitForWaypointCompletion,
             GroundFullGuideBaseTickPhase =
                 source.GroundFullGuideBaseTickPhase,
+            DropshipLandingState = source.DropshipLandingState,
             PlaneGuide = source.PlaneGuide,
             PlaneSpawnerExit = source.PlaneSpawnerExit,
         };

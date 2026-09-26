@@ -747,9 +747,10 @@ public static class SimulationConstants
     // at 0x00402fc5 applies only while TF_DYING; living Plane motion uses
     // the full rate. The air and ground guides have different move paths.
     //
-    // The current Plane path reads these constants; its manifest motion
+    // Level 100's Plane path reads these constants; its manifest motion
     // scalars remain null. materialize_retail_assets.py validates these exact
-    // profile words in _level100_actor_motion_definitions.
+    // profile words in _level100_actor_motion_definitions. Other worlds'
+    // motion rows carry their planes' ids 2 and 6 themselves.
     //
     // CAirGuide slot 3 writes drive using GetMaxVelocity() * 0.05 * 4.0.
     // AirUnit motion subsequently clamps velocity to GetMaxVelocity() * 0.05
@@ -760,6 +761,8 @@ public static class SimulationConstants
     public const int Level100TargetDroneAirSpeedMillimetersPerSecond = 5_500;
     public const int Level100AirTrainerAirSpeedMillimetersPerSecond = 9_200;
     public const int Level100PlaneAirTurnRateFloatBits = 0x3D32B8C2;
+    public const int Level100AirTrainerAirVelocityFloatBits = 0x41133333;
+    public const int Level100TargetDroneAirVelocityFloatBits = 0x40B00000;
 
     // Air-guide altitude band, read out of the pristine BEA.exe
     // (sha256 74154bfa...7750). CAirGuide__UpdateGroundClearanceCache

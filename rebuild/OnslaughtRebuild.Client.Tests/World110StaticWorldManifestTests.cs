@@ -24,7 +24,7 @@ public sealed class World110StaticWorldManifestTests
         Level100ActorDefinitionSet world = s_world110.Value;
         Assert.Equal(110, world.WorldNumber);
         Assert.Equal(1_481, world.BaseWorldPineCount);
-        Assert.Equal(72, world.Actors.Count);
+        Assert.Equal(77, world.Actors.Count);
         Assert.Equal(33, world.Actors.Count(actor => actor.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)));
 
         Level100ActorDefinition player = Assert.Single(world.Actors, actor => actor.Name == "Player 1");
@@ -56,6 +56,10 @@ public sealed class World110StaticWorldManifestTests
              ("wres:rlwd:0018", 5, 1), ("wres:rlwd:0019", 4, 0)],
             world.Squads.Select(squad => (squad.DefinitionIdentity, squad.MemberIdentities.Count, squad.Allegiance)));
         Assert.Equal("Scout", world.Squads[4].ScriptName);
+        Assert.All(world.Squads, squad => Assert.Equal(
+            (Level100ActorDefinitionSet.SquadDefinitionName, squad.ScriptName),
+            world.Actors.Where(actor => actor.DefinitionIdentity == squad.DefinitionIdentity)
+                .Select(actor => (actor.DefinitionName, actor.ScriptName)).Single()));
         Assert.All(world.Squads.Take(4), squad => Assert.Null(squad.ScriptName));
 
         Assert.Equal(

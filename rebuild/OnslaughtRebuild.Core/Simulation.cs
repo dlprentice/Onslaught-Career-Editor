@@ -173,13 +173,6 @@ public sealed partial class Simulation
                 nameof(level100ActorDefinitions));
         }
 
-        if (worldNumber != Level100MissionProgram.WorldNumber100)
-        {
-            throw new NotSupportedException(
-                "World 110 construction is incomplete. Use its admitted inputs or direct mission tests; " +
-                "the Level 100 simulation cannot initialize that world.");
-        }
-
         _worldNumber = worldNumber;
         _level100TutorialProgress = tutorialProgress;
         ResetDynamicState();
@@ -455,6 +448,7 @@ public sealed partial class Simulation
         PumpLevel100EventBus();
         _level100Mission.AdvanceTick(PlayerHull);
         PumpLevel100EventBus();
+        PostGamePlaying();
         ApplyLevel100Facts(level100Facts);
         if (_level100Mission.GameplayPaused)
         {
@@ -618,7 +612,28 @@ public sealed partial class Simulation
             // fresh one while _tick keeps running - so it derives the gate
             // itself rather than being handed a simulation tick.
             _level100Mission.NotifyPlayingStateStarted();
+            // StartPlayingState also posts "game playing" to every script
+            // (game.cpp:3029); World 110's Scout answers it. Retail posts it
+            // inside the frame's event flush, so what the scripts start from it
+            // (LevelScript's Pause(2.0) after "Enemy Engaged") counts from this
+            // frame: it is posted once the mission's clock has reached it.
+            _level100GamePlayingPending = true;
         }
+    }
+
+    private bool _level100GamePlayingPending;
+
+    private void PostGamePlaying()
+    {
+        if (!_level100GamePlayingPending)
+        {
+            return;
+        }
+
+        _level100GamePlayingPending = false;
+        _level100Mission.QueueExternalEvent("game playing");
+        _level100ActorScripts.PublishEvent("game playing");
+        PumpLevel100EventBus();
     }
 
     private Level100ActorPoseSnapshot PlayerPose =>
@@ -4160,7 +4175,7 @@ public sealed partial class Simulation
         _nextProjectileId = 1;
         _mode = VehicleMode.Walker;
         _transition = VehicleTransition.None;
-        SimVector2 initialPosition = SimVector2.Zero;
+        (SimVector2 initialPosition, int startYawMicroRad) = PlayerStart();
         _playerGroundElevationMillimeters =
             Level100Terrain.Instance.SampleGroundElevationMillimeters(initialPosition);
         _playerGroundDeltaMillimeters = 0;
@@ -4175,7 +4190,7 @@ public sealed partial class Simulation
         _weaponFireEvents.Clear();
         _playerDamageEvents.Clear();
         _damageFlashes.Clear();
-        _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
+        _facingYawMicroRad = startYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
         _facingPitchMicroRad = 0;
@@ -4299,6 +4314,9 @@ public sealed partial class Simulation
             () => BitConverter.SingleToInt32Bits(EngineTimeSeconds));
         // Scripts are bound now and run their init() when the pre-run's first
         // flush delivers each INIT_SCRIPT the load filed.
+        _level100ActorScripts.SharedRandom = _level100ActorMechanics.NextSharedRandom;
+        _level100ActorScripts.RequestMessage = (speaker, message, waits) =>
+            _level100Mission.RequestScriptMessage(speaker, message, waits);
         _level100ActorScripts.AttachReleasedScripts(_level100ActorMechanics.FileScriptInit);
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
@@ -4321,6 +4339,27 @@ public sealed partial class Simulation
     /// replay or state-hash material.
     /// </summary>
     internal WorldSnapshot? LoadSnapshotForMeasurement { get; private set; }
+
+    /// <summary>
+    /// Where the Battle Engine starts: Level 100's Start is Core's origin with
+    /// its authored yaw; another world's is its Start row (Player 1's
+    /// authored position, on the ground as <c>CStart::Init</c>'s clamp puts it)
+    /// and that row's yaw, in the same datum.
+    /// </summary>
+    private (SimVector2 Position, int YawMicroRad) PlayerStart()
+    {
+        if (_worldNumber == Level100MissionProgram.WorldNumber100)
+        {
+            return (SimVector2.Zero, SimulationConstants.Level100PlayerStartYawMicroRad);
+        }
+
+        Level100ActorDefinition start = _level100ActorDefinitions.Actors.SingleOrDefault(actor => actor.Name == "Player 1") ??
+            throw new NotSupportedException($"World {_worldNumber}'s definitions have no Start (Player 1).");
+        float yaw = BitConverter.Int32BitsToSingle(start.AuthoredTransform.RetailEulerFloatBits.X);
+        return (
+            new SimVector2(start.InitialPose.PositionMillimeters.X, start.InitialPose.PositionMillimeters.Z),
+            checked((int)Math.Round(yaw * 1_000_000.0, MidpointRounding.AwayFromZero)));
+    }
 
     /// <summary>
     /// <c>CGame::PreRun</c> (<c>game.cpp:2063-2071</c>): whole updates, with

@@ -36,7 +36,7 @@ public static class Level100ActorDefinitionManifest
 
     /// <summary>The materializer's <c>WORLD110_STATIC_WORLD_SHA256</c>.</summary>
     public const string ExpectedWorld110ManifestSha256 =
-        "7B20194324E0F75EAC9B12CA0A71A292B631314AFCA09377A04FD64DAF118105";
+        "431A0B04FD4AA48354F5882B73E683DF57B9B4957BEBEF3DA30A8CE743DC21CE";
     private const string ExpectedWorld110Schema = "onslaught.world110-static-world.v1";
     private const string ExpectedWorld110ArchiveSha256 =
         "4E041C758B9D41BA18311B1FADEACB95FC31AF51320861480B97033BC24E3C2B";
@@ -230,7 +230,7 @@ public static class Level100ActorDefinitionManifest
             manifest.WorldNumber != 110 ||
             !StringComparer.OrdinalIgnoreCase.Equals(manifest.SourceArchiveSha256, ExpectedWorld110ArchiveSha256) ||
             !StringComparer.OrdinalIgnoreCase.Equals(manifest.PhysicsSourceSha256, ExpectedPhysicsSourceSha256) ||
-            manifest.ActorDefinitions.Length != 72 ||
+            manifest.ActorDefinitions.Length != 77 ||
             manifest.ActorDefinitions.Count(definition =>
                 definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33 ||
             manifest.Squads.Length != 5 ||
@@ -320,7 +320,9 @@ public static class Level100ActorDefinitionManifest
                 new RetailUnitAttachmentPose(
                     DecodeFloatVector(mount.ModelTransform.LocalPositionFloatBits, "weapon model position"),
                     DecodeBasis(mount.ModelTransform.LocalBasisFloatBits, "weapon model basis"))))
-                .ToArray());
+                .ToArray(),
+            source.AirVelocityFloatBits,
+            source.AirTurnRateFloatBits);
 
     private static Level100WaypointPointDefinition DecodeWaypointPoint(WaypointPoint point, int? target)
     {
@@ -492,6 +494,8 @@ public static class Level100ActorDefinitionManifest
         public string MotionClass { get; init; } = string.Empty;
         public int SteamClassVtableAddress { get; init; }
         public WeaponMount[]? WeaponMounts { get; init; }
+        public int? AirVelocityFloatBits { get; init; }
+        public int? AirTurnRateFloatBits { get; init; }
     }
 
     private sealed record WeaponMount

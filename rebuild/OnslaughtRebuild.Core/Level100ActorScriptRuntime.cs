@@ -14,6 +14,7 @@ public enum Level100ActorScriptCommandKind
     SetSnowDensity = 8,
     Print = 9,
     Damage = 10,
+    Land = 11,
 }
 
 public enum Level100ActorScriptWaitKind
@@ -114,6 +115,30 @@ public sealed class Level100ActorScriptRuntime
     private bool _initializing;
     private Instance? _setup;
 
+    /// <summary>
+    /// The world's other script carriers besides <c>LevelScript</c> (the
+    /// mission's) and <c>Setup</c>: World 110's <c>Weather</c> (row 39). Like
+    /// Setup they belong to no actor.
+    /// </summary>
+    private readonly SortedDictionary<string, Instance> _carriers = new(StringComparer.Ordinal);
+
+    private int WorldNumber => _actors.WorldNumber;
+
+    /// <summary>The level's gameplay stream, for <c>Rand</c>; the Simulation supplies it.</summary>
+    internal Func<int>? SharedRandom { get; set; }
+
+    /// <summary>
+    /// The mission's message box, for an actor script's <c>PlayCharMessage</c>
+    /// and <c>PlayCharMessageWait</c>: speaker, message and whether the script
+    /// waits; returns the ticks until the message clears.
+    /// </summary>
+    internal Func<int, int, bool, int>? RequestMessage { get; set; }
+
+    private IEnumerable<string> OtherCarrierNames =>
+        Level100ScriptCarriers.For(WorldNumber)
+            .Select(carrier => carrier.ScriptName)
+            .Where(name => name is not ("LevelScript" or "Setup"));
+
     public Level100ActorScriptRuntime(
         Level100ActorRegistry actors,
         Level100ActorId playerActorId) : this(actors, playerActorId, null, null)
@@ -159,7 +184,7 @@ public sealed class Level100ActorScriptRuntime
         _playerInJetMode,
         Array.AsReadOnly((_setup is null
                 ? _instances.Values
-                : new[] { _setup }.Concat(_instances.Values))
+                : new[] { _setup }.Concat(_carriers.Values).Concat(_instances.Values))
             .OrderBy(item => item.ActorId.Value)
             .Select(SnapshotInstance)
             .ToArray()),
@@ -182,7 +207,11 @@ public sealed class Level100ActorScriptRuntime
         }
 
         _requestInit = requestInit;
-        _setup = new Instance(default, Level100MissionProgram.LoadEmbedded("Setup"));
+        _setup = new Instance(default, Level100MissionProgram.LoadEmbedded(WorldNumber, "Setup"));
+        foreach (string carrier in OtherCarrierNames)
+        {
+            _carriers.Add(carrier, new Instance(default, Level100MissionProgram.LoadEmbedded(WorldNumber, carrier)));
+        }
         foreach (Level100ActorSnapshot actor in _actors.Snapshot.Actors
             .Where(actor => actor.ScriptName is not null)
             .OrderBy(actor => actor.ActorId.Value))
@@ -202,6 +231,16 @@ public sealed class Level100ActorScriptRuntime
 
         InitializeInstance(instance);
         PumpEvents(instance);
+    }
+
+    /// <summary>Another carrier's INIT_SCRIPT (World 110's Weather).</summary>
+    internal void RunCarrierInit(string scriptName)
+    {
+        Instance carrier = _carriers.TryGetValue(scriptName, out Instance? instance)
+            ? instance
+            : throw new InvalidOperationException($"Carrier {scriptName} was never attached.");
+        InitializeInstance(carrier);
+        PumpEvents(carrier);
     }
 
     /// <summary>The Setup carrier's INIT_SCRIPT.</summary>
@@ -224,7 +263,7 @@ public sealed class Level100ActorScriptRuntime
         {
             // Setup is a released global program, not a world actor. Its
             // initializer assigns exact scripts to Player and named facilities.
-            _setup = new Instance(default, Level100MissionProgram.LoadEmbedded("Setup"));
+            _setup = new Instance(default, Level100MissionProgram.LoadEmbedded(WorldNumber, "Setup"));
             InitializeInstance(_setup);
 
             foreach (Level100ActorSnapshot actor in _actors.Snapshot.Actors
@@ -480,7 +519,7 @@ public sealed class Level100ActorScriptRuntime
             Level100MissionProgram program;
             try
             {
-                program = Level100MissionProgram.LoadEmbedded(source.ProgramName);
+                program = Level100MissionProgram.LoadEmbedded(WorldNumber, source.ProgramName);
             }
             catch (Exception exception) when (
                 exception is ArgumentException or InvalidDataException or FileNotFoundException)
@@ -495,7 +534,10 @@ public sealed class Level100ActorScriptRuntime
             Level100ActorId actorId = source.ActorId ?? default;
             if (actorId.Value == 0)
             {
-                if (_setup is not null || !string.Equals(program.Name, "Setup", StringComparison.Ordinal))
+                bool setup = string.Equals(program.Name, "Setup", StringComparison.Ordinal);
+                if (setup ? _setup is not null
+                        : !OtherCarrierNames.Contains(program.Name, StringComparer.Ordinal) ||
+                          _carriers.ContainsKey(program.Name))
                 {
                     throw new ArgumentException("Actor-script snapshot has an invalid global program.", nameof(snapshot));
                 }
@@ -565,7 +607,14 @@ public sealed class Level100ActorScriptRuntime
 
             if (actorId.Value == 0)
             {
-                _setup = instance;
+                if (string.Equals(program.Name, "Setup", StringComparison.Ordinal))
+                {
+                    _setup = instance;
+                }
+                else
+                {
+                    _carriers.Add(program.Name, instance);
+                }
             }
             else
             {
@@ -596,6 +645,7 @@ public sealed class Level100ActorScriptRuntime
         // A script still waiting for its INIT_SCRIPT is legitimately
         // uninitialized; the event is in the level event manager.
         if (_setup is null ||
+            OtherCarrierNames.Any(name => !_carriers.ContainsKey(name)) ||
             _instances.Keys.Any(id => !scriptedActorIds.Contains(id)) ||
             undestroyedScriptedActorIds.Any(id => !_instances.ContainsKey(id)))
         {
@@ -788,7 +838,7 @@ public sealed class Level100ActorScriptRuntime
             return false;
         }
 
-        _instances.Add(actorId.Value, new Instance(actorId, Level100MissionProgram.LoadEmbedded(scriptName)));
+        _instances.Add(actorId.Value, new Instance(actorId, Level100MissionProgram.LoadEmbedded(WorldNumber, scriptName)));
         return true;
     }
 
@@ -1085,6 +1135,43 @@ public sealed class Level100ActorScriptRuntime
                     }
                 }
                 return NativeResult.Void;
+            case 6: // Rand — IScript::Rand 0x00538230: one shared draw (0x00538237), r mod n
+                RequireArguments(command, arguments, 1);
+                int randomDraw = (SharedRandom ?? throw new InvalidOperationException(
+                    "Rand needs the level's gameplay stream."))();
+                return new NativeResult(
+                    Level100ScriptValue.Integer(randomDraw % arguments[0].AsInteger()), WaitRequest.None);
+            case 28: // PlayCharMessage
+                RequireArguments(command, arguments, 3);
+                _ = arguments[2].AsFloat();
+                _ = (RequestMessage ?? throw new InvalidOperationException("Messages need the mission."))(
+                    arguments[0].AsInteger(), arguments[1].AsInteger(), false);
+                return NativeResult.Void;
+            case 36: // PlayCharMessageWait
+                RequireArguments(command, arguments, 3);
+                _ = arguments[2].AsFloat();
+                _waitStopFlag = RetailIScriptWaitStop.Stop(_waitStopFlag);
+                int messageTicks = (RequestMessage ?? throw new InvalidOperationException("Messages need the mission."))(
+                    arguments[0].AsInteger(), arguments[1].AsInteger(), true);
+                return NativeResult.Pause(messageTicks, arguments[1].AsInteger());
+            case 72: // Land — IScript::Land 0x005361d0: a unit's slot 93
+                RequireArguments(command, arguments, 0);
+                EmitCommand(RequireContext(execution).AsActorId(), Level100ActorScriptCommandKind.Land);
+                return NativeResult.Void;
+            case 73: // SpawnersEmpty — 0x00535a90 -> 0x004fd7e0
+                RequireArguments(command, arguments, 0);
+                return new NativeResult(
+                    Level100ScriptValue.Boolean(SpawnersEmpty(RequireContext(execution).AsActorId())),
+                    WaitRequest.None);
+            case 92: // GetInitialHealth — 0x00535a30: a unit's slot 78, else 0.0
+                RequireArguments(command, arguments, 0);
+                Level100ActorId healthOf = RequireContext(execution).AsActorId();
+                return new NativeResult(
+                    Level100ScriptValue.Float(Level100ConstructionClasses.IsUnit(
+                        Level100ConstructionClasses.Of(_actors.GetActor(healthOf).DefinitionName))
+                        ? _actors.GetInitialHealth(healthOf)
+                        : 0),
+                    WaitRequest.None);
             case 4: // Pause — IScript__Pause 0x00537c70
                 RequireArguments(command, arguments, 1);
                 // Isolated PauseTicks names the rebuild sleep.
@@ -1650,6 +1737,20 @@ public sealed class Level100ActorScriptRuntime
         string? Argument)
     {
         internal static WaitRequest None => new(Level100ActorScriptWaitKind.None, 0, null);
+    }
+
+    /// <summary>
+    /// <c>0x004fd7e0</c>: a unit's spawners (<c>+0x18c</c>) are empty when each
+    /// has run out and is idle; a unit with none is empty, and a thing that is
+    /// not a unit returns false. A loaded landing craft ("Muspell Light Landing
+    /// Craft", with its SpawnerA and SpawnerB) is not: Core does not deploy
+    /// cargo yet, so it stays loaded.
+    /// </summary>
+    private bool SpawnersEmpty(Level100ActorId actorId)
+    {
+        string? definition = _actors.GetActor(actorId).DefinitionName;
+        return Level100ConstructionClasses.IsUnit(Level100ConstructionClasses.Of(definition)) &&
+            definition != "Muspell Light Landing Craft";
     }
 
     private readonly record struct NativeResult(Level100ScriptValue Value, WaitRequest Wait)

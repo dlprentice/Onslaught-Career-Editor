@@ -138,7 +138,8 @@ public sealed partial class Simulation
                     _level100ActorScripts.RunSetupInit();
                     break;
                 default:
-                    throw new NotSupportedException($"Script carrier {script} has no Core owner.");
+                    _level100ActorScripts.RunCarrierInit(script);
+                    break;
             }
         }
         else

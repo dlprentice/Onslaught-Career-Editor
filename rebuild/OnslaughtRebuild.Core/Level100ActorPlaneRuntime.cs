@@ -123,6 +123,7 @@ public sealed partial class Level100ActorMechanics
         _states.Add(actorId.Value, new ActorState
         {
             ActorId = actorId, Intent = Level100ActorCommandIntent.Stopped,
+            Allegiance = _actors.GetAuthoredAllegiance(actorId),
             PlaneGuide = new(physical.RetailPoses!.Current.PositionFloatBits, 0, 0, 0, 0, exit is null ? 1 : 2, 0),
             PlaneSpawnerExit = exit,
         });
@@ -183,6 +184,11 @@ public sealed partial class Level100ActorMechanics
         if (IsUnitListener(dispatch.Listener))
         {
             DispatchUnitCallback(events, dispatch);
+            return;
+        }
+        if (IsComponentMoveListener(dispatch.Listener))
+        {
+            DispatchComponentMove(events, dispatch);
             return;
         }
         if (IsScriptListener(dispatch.Listener))
@@ -250,7 +256,7 @@ public sealed partial class Level100ActorMechanics
                 RetailPlaneMotion.AdvanceFreeFlight(_actors.GetPlaneState(actorId),
                     new(guide.Destination, guide.Mode, guide.ClearanceFloatBits,
                         guide.ControllerState, guide.SpeedMode, null),
-                    actor.DefinitionName == "Air Trainer" ? 0x41133333 : 0x40b00000,
+                    _actors.PlaneAirVelocityFloatBits(actor.DefinitionName),
                     BitConverter.SingleToInt32Bits(events.Time));
             }
             // Native AddMoveEvent stops recurrence once shutdown is declared.
@@ -480,6 +486,15 @@ public sealed partial class Level100ActorMechanics
             {
                 if (!AdmitsUnitCallback(slot))
                     throw new ArgumentException("Unit queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
+            if (IsComponentMoveListener(slot.Listener))
+            {
+                var child = new Level100ActorId(slot.Listener - ComponentMoveListener(new Level100ActorId(0)));
+                if (slot.EventNum != ComponentMoveEvent ||
+                    !_unitCallbacks.TryGetValue(child.Value, out UnitCallbackState? component) ||
+                    component.Class != Level100ConstructionClass.Component)
+                    throw new ArgumentException("Component queue has an unowned callback.", nameof(snapshot));
                 continue;
             }
             if (slot.Listener == InfluenceMapListener)

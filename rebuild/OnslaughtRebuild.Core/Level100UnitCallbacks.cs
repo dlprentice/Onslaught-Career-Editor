@@ -34,6 +34,32 @@ public enum Level100ConstructionClass : byte
 
     /// <summary><c>CPlane</c>.</summary>
     Plane = 8,
+
+    /// <summary>
+    /// A <c>CSpawnerThing</c> row (World 110 row 5). Its 3000 at −1
+    /// (<c>0x004e3322</c>) and its 0.1 s poll while inactive
+    /// (<c>0x004e367d-0x004e36a9</c>) draw nothing, so nothing is filed.
+    /// </summary>
+    SpawnerThing = 9,
+
+    /// <summary>
+    /// A <c>CComponent</c> child built inside its parent's construction, a
+    /// landing craft's "Dropship Gun Turret": Actor multiplier 1, 4003 and an
+    /// AI, and one draw on every Move (<c>0x00428110</c>, <c>0x004284a1</c>).
+    /// </summary>
+    Component = 10,
+
+    /// <summary>
+    /// A <c>CGroundVehicle</c> member of a type-28 <c>CNormalSquad</c>, with
+    /// fire control (World 110's Light Gun Tanks and AV-14Bs).
+    /// </summary>
+    SquadMember = 11,
+
+    /// <summary>
+    /// A type-28 <c>CNormalSquad</c> thing: its members' construction, then its
+    /// own script, then its 4000, 4001 and 4002.
+    /// </summary>
+    Squad = 12,
 }
 
 /// <summary>One unit's callback state.</summary>
@@ -77,20 +103,35 @@ public static class Level100ConstructionClasses
             Level100ConstructionClass.SimpleBuilding,
         "BattleEngine" or "Battle Engine" => Level100ConstructionClass.BattleEngine,
         "Target Tank" or "Target Truck" => Level100ConstructionClass.SquadGroundVehicle,
-        "U-17 Highside Transporter" => Level100ConstructionClass.Dropship,
-        "Air Trainer" or "Target Drone" => Level100ConstructionClass.Plane,
+        "U-17 Highside Transporter" or "Muspell Light Landing Craft" or "Muspell Light Landing Empty" =>
+            Level100ConstructionClass.Dropship,
+        "Air Trainer" or "Target Drone" or "Muspell Fighter" or "Muspell Light Fighter" =>
+            Level100ConstructionClass.Plane,
         "General Volume" => Level100ConstructionClass.Trigger,
+        "Dropship Gun Turret" => Level100ConstructionClass.Component,
+        "Light Gun Tank" or "AV-14B Sabre Pulse Tank" => Level100ConstructionClass.SquadMember,
+        "Level Actor Type 19" => Level100ConstructionClass.SpawnerThing,
+        Level100ActorDefinitionSet.SquadDefinitionName => Level100ConstructionClass.Squad,
         _ => throw new NotSupportedException(
             $"Level 100 construction class is unadmitted for definition '{definitionName}'."),
     };
 
     internal static bool IsUnit(Level100ConstructionClass kind) =>
-        kind is not (Level100ConstructionClass.Trigger or Level100ConstructionClass.Feature);
+        kind is not (Level100ConstructionClass.Trigger or Level100ConstructionClass.Feature or
+            Level100ConstructionClass.SpawnerThing or Level100ConstructionClass.Squad);
+
+    /// <summary>A class whose callbacks the unit-callback owner files: every unit, and a squad.</summary>
+    internal static bool HasCallbacks(Level100ConstructionClass kind) =>
+        IsUnit(kind) || kind == Level100ConstructionClass.Squad;
 
     internal static bool HasAi(Level100ConstructionClass kind) =>
         kind is Level100ConstructionClass.Building or Level100ConstructionClass.Cannon or
             Level100ConstructionClass.SquadGroundVehicle or Level100ConstructionClass.Dropship or
-            Level100ConstructionClass.Plane;
+            Level100ConstructionClass.Plane or Level100ConstructionClass.Component or
+            Level100ConstructionClass.SquadMember;
+
+    internal static bool HasFireControl(Level100ConstructionClass kind) =>
+        kind is Level100ConstructionClass.Cannon or Level100ConstructionClass.SquadMember;
 
     /// <summary>
     /// Actor slot 24, the move multiplier: 4.0 for <c>CCannon</c>
@@ -98,7 +139,8 @@ public static class Level100ConstructionClasses
     /// (<c>0x004de700</c>).
     /// </summary>
     internal static int MoveMultiplier(Level100ConstructionClass kind) =>
-        kind is Level100ConstructionClass.Cannon or Level100ConstructionClass.SquadGroundVehicle ? 4 : 1;
+        kind is Level100ConstructionClass.Cannon or Level100ConstructionClass.SquadGroundVehicle or
+            Level100ConstructionClass.SquadMember ? 4 : 1;
 }
 
 /// <summary>
@@ -155,6 +197,9 @@ public sealed partial class Level100ActorMechanics
     private static int UnitListener(Level100ActorId actorId, UnitCallbackOwner owner) =>
         checked(UnitListenerBase + (actorId.Value * UnitListenerSlots) + (int)owner);
 
+    /// <summary>A unit's AI listener, for tests that read the first bucket.</summary>
+    internal static int UnitAiListener(Level100ActorId actorId) => UnitListener(actorId, UnitCallbackOwner.Ai);
+
     private static bool IsUnitListener(int listener) =>
         listener >= UnitListenerBase && listener < InfluenceMapListener;
 
@@ -173,6 +218,17 @@ public sealed partial class Level100ActorMechanics
     /// </summary>
     private static readonly string[] s_warmUpCandidates =
         ["Target Truck", "Target Tank", "Air Trainer", "Target Drone"];
+
+    /// <summary>
+    /// A world's warm-up types. World 110's scripts call no <c>SpawnThing</c>,
+    /// so it has none (the World 110 construction contract, "Load order").
+    /// </summary>
+    private static IReadOnlyList<string> WarmUpCandidates(int worldNumber) => worldNumber switch
+    {
+        100 => s_warmUpCandidates,
+        110 => [],
+        _ => throw new ArgumentOutOfRangeException(nameof(worldNumber)),
+    };
 
     private static (Level100ActorId ActorId, UnitCallbackOwner Owner) DecodeUnitListener(int listener)
     {
@@ -215,6 +271,12 @@ public sealed partial class Level100ActorMechanics
         // row positions among the level rows (after the rest when the set
         // carries no level-row identities).
         int nextCarrier = 0;
+        // Squad members and components are built inside their owners'
+        // construction (the World 110 construction contract).
+        var builtByOwner = new HashSet<string>(
+            _definitions.Squads.SelectMany(squad => squad.MemberIdentities)
+                .Concat(_definitions.Components.Select(component => component.ChildIdentity)),
+            StringComparer.Ordinal);
         foreach (Level100ActorDefinition definition in _definitions.Actors.OrderBy(item => item.AuthoredOrder))
         {
             if (LevelWorldRow(definition) is { } levelRow)
@@ -222,8 +284,23 @@ public sealed partial class Level100ActorMechanics
                 FileCarrierScriptInits(ref nextCarrier, levelRow);
             }
 
+            if (builtByOwner.Contains(definition.DefinitionIdentity))
+            {
+                continue;
+            }
+
             Level100ActorId actorId = byIdentity[definition.DefinitionIdentity];
             Level100ConstructionClass kind = Level100ConstructionClasses.Of(definition.DefinitionName);
+            if (kind == Level100ConstructionClass.Squad)
+            {
+                ConstructSquad(actorId, definition.DefinitionIdentity, byIdentity);
+                continue;
+            }
+
+            if (kind == Level100ConstructionClass.SpawnerThing)
+            {
+                continue;
+            }
             if (kind == Level100ConstructionClass.BattleEngine)
             {
                 ConstructUnit(actorId, kind);
@@ -264,7 +341,7 @@ public sealed partial class Level100ActorMechanics
             .Select(unit => _actors.GetActor(unit.ActorId).DefinitionName)
             .OfType<string>()
             .ToHashSet(StringComparer.Ordinal);
-        foreach (string name in s_warmUpCandidates.Where(name => !used.Contains(name)))
+        foreach (string name in WarmUpCandidates(_definitions.WorldNumber).Where(name => !used.Contains(name)))
         {
             if (Level100ConstructionClasses.Of(name) is not
                 (Level100ConstructionClass.SquadGroundVehicle or Level100ConstructionClass.Plane))
@@ -355,6 +432,9 @@ public sealed partial class Level100ActorMechanics
                 FileSquadEvent(events, actorId, 4002, -1);
                 break;
             case Level100ConstructionClass.Dropship:
+                // A landing craft builds its turret child after its own Actor
+                // draw (World 110 contract, "Landing craft and their turrets").
+                ConstructComponents(actorId);
                 FileUnitRefresh(events, actorId);
                 FileScriptReady(actorId);
                 FileInitialAi(events, actorId, hasTarget: false);
@@ -362,6 +442,118 @@ public sealed partial class Level100ActorMechanics
             default:
                 throw new InvalidOperationException($"Unadmitted construction class {kind}.");
         }
+    }
+
+    /// <summary>
+    /// A type-28 squad (World 110 construction contract, "Type-28 squads"):
+    /// each member in order takes collision, the Actor draw (multiplier 4),
+    /// the fire-control draw and 4001, 4003, the hover draw and its AI 3000;
+    /// then the squad binds its own script (<c>0x004e61b4</c>) and takes the
+    /// draws before its 4000 (<c>0x004e8177</c>) and 4001 (<c>0x004e8486</c>).
+    /// When <c>Process</c> returns 0 it also takes 4002's draw
+    /// (<c>0x004e709c</c>); otherwise 4002 is queued at −1 with no draw.
+    /// </summary>
+    private void ConstructSquad(
+        Level100ActorId squadId,
+        string squadIdentity,
+        IReadOnlyDictionary<string, Level100ActorId> byIdentity)
+    {
+        RetailEventScheduler events = _planeEvents!;
+        Level100SquadDefinition squad = _definitions.Squads.Single(item =>
+            StringComparer.Ordinal.Equals(item.DefinitionIdentity, squadIdentity));
+        foreach (string member in squad.MemberIdentities)
+        {
+            Level100ActorId memberId = byIdentity[member];
+            UnitCallbackState state = AddUnitCallbacks(memberId, Level100ConstructionClass.SquadMember);
+            state.FirstMoveFrame = FirstFullMoveFrame(state.ConstructionFrame, _releasedRandom.Next());
+            SeedGroundMovePhase(memberId, state);
+            FileFireControl(events, memberId, _releasedRandom.Next(), reuseHandle: -1);
+            FileUnitRefresh(events, memberId);
+            // CGroundUnit::Init's hover draw (0x0047c869).
+            _ = _releasedRandom.Next();
+            FileInitialAi(events, memberId, hasTarget: false);
+        }
+
+        if (HasScript(squadId))
+        {
+            FileScriptInit(squadId);
+        }
+
+        _ = AddUnitCallbacks(squadId, Level100ConstructionClass.Squad);
+        FileSquadEvent(events, squadId, 4000, -1);
+        FileSquadEvent(events, squadId, 4001, -1);
+        if (SquadProcessesAtConstruction(squadIdentity))
+        {
+            events.AddEvent(4002, UnitListener(squadId, UnitCallbackOwner.Squad), RetailEventScheduler.NextFrame);
+        }
+        else
+        {
+            FileSquadEvent(events, squadId, 4002, -1);
+        }
+    }
+
+    /// <summary>
+    /// Whether <c>CSquadNormal::Process</c> returns 1 at construction. It does
+    /// only when a third of the members sit more than 1.5 radii from their
+    /// formation slots after the squad turns to its first target
+    /// (<c>0x004e7cf0</c>, <c>0x004e7f40</c>). Core has no formation or squad
+    /// target search yet, so this is the RE lane's static estimate for World
+    /// 110 (rows 16 and 18; "Type-28 squads"), an open question until a load
+    /// log reads squad <c>+0xc4</c>.
+    /// </summary>
+    private bool SquadProcessesAtConstruction(string squadIdentity) =>
+        _definitions.WorldNumber == 110 &&
+        squadIdentity is "wres:rlwd:0016" or "wres:rlwd:0018";
+
+    /// <summary>
+    /// A parent's components (<c>CComponent</c>, Init <c>0x00427b80</c>):
+    /// collision, the Actor draw with its MOVE for the next frame, 4003, the
+    /// animation event and the AI 3000, built after the parent's Actor draw.
+    /// </summary>
+    private void ConstructComponents(Level100ActorId parentId)
+    {
+        string parent = _actors.GetActor(parentId).DefinitionIdentity;
+        foreach (Level100ComponentDefinition component in _definitions.Components.Where(item =>
+                     StringComparer.Ordinal.Equals(item.ParentIdentity, parent)))
+        {
+            Level100ActorId childId = _actors.Snapshot.Actors.Single(actor =>
+                StringComparer.Ordinal.Equals(actor.DefinitionIdentity, component.ChildIdentity)).ActorId;
+            RetailEventScheduler events = _planeEvents!;
+            _ = AddUnitCallbacks(childId, Level100ConstructionClass.Component);
+            _ = _releasedRandom.Next();
+            events.AddEvent(ComponentMoveEvent, ComponentMoveListener(childId), RetailEventScheduler.NextFrame);
+            FileUnitRefresh(events, childId);
+            FileInitialAi(events, childId, hasTarget: false);
+        }
+    }
+
+    /// <summary>A component's Actor MOVE, re-filed every frame.</summary>
+    internal const int ComponentMoveEvent = 3000;
+
+    private const int ComponentMoveListenerBase = 0x1800_0000;
+
+    internal static int ComponentMoveListener(Level100ActorId actorId) =>
+        checked(ComponentMoveListenerBase + actorId.Value);
+
+    internal static bool IsComponentMoveListener(int listener) =>
+        listener >= ComponentMoveListenerBase && listener < UnitListenerBase;
+
+    /// <summary>
+    /// <c>CComponent::Move</c> (<c>0x00428110</c>): on its normal path one
+    /// draw (<c>0x004284a1</c>), and the MOVE is filed again for the next frame
+    /// until the component is deleted.
+    /// </summary>
+    private void DispatchComponentMove(RetailEventScheduler events, RetailEventDispatch dispatch)
+    {
+        var childId = new Level100ActorId(dispatch.Listener - ComponentMoveListenerBase);
+        if (_actors.GetActor(childId).Lifecycle == Level100ActorLifecycle.Destroyed)
+        {
+            return;
+        }
+
+        _ = _releasedRandom.Next();
+        events.AddEvent(ComponentMoveEvent, dispatch.Listener, RetailEventScheduler.NextFrame,
+            reuseHandle: dispatch.Handle);
     }
 
     /// <summary>
@@ -471,8 +663,8 @@ public sealed partial class Level100ActorMechanics
                 return;
             case (UnitCallbackOwner.FireControl, 4001):
                 // 0x004fb280 returns at once, without a draw or a requeue,
-                // while the unit is dying. No turret here has an AI target, so
-                // the aim branch never runs.
+                // while the unit is dying. No turret or tank here has an AI
+                // target, so the aim branch never runs.
                 if (actor.Lifecycle != Level100ActorLifecycle.Alive)
                 {
                     return;
@@ -539,18 +731,52 @@ public sealed partial class Level100ActorMechanics
     private void HandleAiEvent(RetailEventScheduler events, RetailEventDispatch dispatch,
         UnitCallbackState state, Level100ActorSnapshot actor)
     {
-        bool aiOff = _states.TryGetValue(actor.ActorId.Value, out ActorState? mechanics) && mechanics.AiState != 0;
-        if (!actor.Active || aiOff)
+        _states.TryGetValue(actor.ActorId.Value, out ActorState? mechanics);
+        int aiState = mechanics?.AiState ?? 0;
+        void Poll()
         {
             int poll = _releasedRandom.Next() % 65536;
             float due = (float)RetailFloat24.Add(RetailFloat24.Add(events.Time, 2.0), RetailFloat24.Multiply(poll, 1.0 / 32768.0));
             events.AddEvent(3003, dispatch.Listener, due, reuseHandle: dispatch.Handle);
+        }
+
+        if (actor.Active && aiState == 4 && state.Class == Level100ConstructionClass.Dropship)
+        {
+            // AI_ONF on a landing craft: the dispatcher runs
+            // CDropshipAI::Update (0x004487e0, one draw at 0x0044880f), then
+            // polls (the World 110 construction contract's delivery table).
+            _ = _releasedRandom.Next();
+            Poll();
+            return;
+        }
+
+        if (!actor.Active || aiState != 0)
+        {
+            Poll();
             return;
         }
 
         if (actor.Lifecycle != Level100ActorLifecycle.Alive)
         {
             return;
+        }
+
+        switch (state.Class)
+        {
+            case Level100ConstructionClass.Dropship:
+                // CDropshipAI slot 9 (0x00448580) does nothing in landing
+                // state 2; an airborne craft's target search draws nothing and
+                // its steering is not modeled. Then one draw (0x00448763) and
+                // 3000 at ((r mod 65536)·2⁻¹⁶ + 1.0) + now.
+                RequeueAi(events, dispatch, 1.0, 1.0 / 65536.0);
+                return;
+            case Level100ConstructionClass.Plane:
+                // CPlaneAI slot 9 (0x004d21c0): CUnitAI::Update's arm draw,
+                // then one draw (0x004d2434) and 3000 at ((r mod 65536)·2⁻¹⁸ +
+                // 0.25) + now. Which arm the first think takes is open.
+                _ = _releasedRandom.Next();
+                RequeueAi(events, dispatch, 0.25, 1.0 / 262144.0);
+                return;
         }
 
         int sample = _releasedRandom.Next() % 65536;
@@ -572,6 +798,14 @@ public sealed partial class Level100ActorMechanics
                 : RetailFloat24.Add(RetailFloat24.Multiply(sample, 2.0 / 65536.0), 3.0);
         events.AddEvent(3000, dispatch.Listener, (float)RetailFloat24.Add(events.Time, delay),
             reuseHandle: dispatch.Handle);
+    }
+
+    private void RequeueAi(RetailEventScheduler events, RetailEventDispatch dispatch, double baseDelay, double scale)
+    {
+        int sample = _releasedRandom.Next() % 65536;
+        float due = (float)RetailFloat24.Add(
+            RetailFloat24.Add(RetailFloat24.Multiply(sample, scale), baseDelay), events.Time);
+        events.AddEvent(3000, dispatch.Listener, due, reuseHandle: dispatch.Handle);
     }
 
     /// <summary>
@@ -602,7 +836,12 @@ public sealed partial class Level100ActorMechanics
         int lowFrequencyMoves = unit.FirstMoveFrame - (unit.ConstructionFrame + 1);
         if (!_states.TryGetValue(actorId.Value, out ActorState? state))
         {
-            state = new ActorState { ActorId = actorId, Intent = Level100ActorCommandIntent.Stopped };
+            state = new ActorState
+            {
+                ActorId = actorId,
+                Intent = Level100ActorCommandIntent.Stopped,
+                Allegiance = _actors.GetAuthoredAllegiance(actorId),
+            };
             _states.Add(actorId.Value, state);
         }
         state.GroundFullGuideBaseTickPhase = (ticks - lowFrequencyMoves) % ticks;
@@ -619,7 +858,7 @@ public sealed partial class Level100ActorMechanics
         _unitCallbacks.Clear();
         foreach (Level100UnitCallbackSnapshot item in snapshot.UnitCallbacks ?? [])
         {
-            if (!Enum.IsDefined(item.Class) || !Level100ConstructionClasses.IsUnit(item.Class) ||
+            if (!Enum.IsDefined(item.Class) || !Level100ConstructionClasses.HasCallbacks(item.Class) ||
                 _actors.GetActor(item.ActorId).DefinitionName is not { } name ||
                 Level100ConstructionClasses.Of(name) != item.Class ||
                 !_unitCallbacks.TryAdd(item.ActorId.Value, new UnitCallbackState
@@ -648,9 +887,9 @@ public sealed partial class Level100ActorMechanics
         {
             (UnitCallbackOwner.Unit, 4003) => true,
             (UnitCallbackOwner.Ai, 3000 or 3001 or 3003) => Level100ConstructionClasses.HasAi(state.Class),
-            (UnitCallbackOwner.FireControl, 4001) => state.Class == Level100ConstructionClass.Cannon,
+            (UnitCallbackOwner.FireControl, 4001) => Level100ConstructionClasses.HasFireControl(state.Class),
             (UnitCallbackOwner.Squad, 4000 or 4001 or 4002) =>
-                state.Class == Level100ConstructionClass.SquadGroundVehicle,
+                state.Class is Level100ConstructionClass.SquadGroundVehicle or Level100ConstructionClass.Squad,
             _ => false,
         };
     }

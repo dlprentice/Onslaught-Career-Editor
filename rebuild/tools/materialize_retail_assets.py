@@ -319,7 +319,7 @@ WORLD110_INITIAL_MESHES = (
 )
 LEVEL110_STATIC_WORLD = CORE_ASSETS / "Level110/level110-static-world.json"
 WORLD110_STATIC_WORLD_SHA256 = (
-    "7b20194324e0f75eac9b12ca0a71a292b631314afca09377a04fd64daf118105"
+    "431a0b04fd4aa48354f5882b73e683df57b9b4957bebef3da30a8ce743dc21ce"
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -1737,10 +1737,20 @@ def _reuse_canonical_assets() -> int:
     for relative, expected in outputs:
         source = canonical / relative
         destination = ROOT / relative
-        if (not source.exists() and not source.is_symlink() and not destination.is_symlink()
-                and destination.is_file() and _sha256(destination.read_bytes()) == expected):
-            # An output the canonical checkout has not published yet, already
-            # materialized here with its exact pinned bytes: keep it.
+        if ROOT.resolve() != canonical.resolve():
+            # A directory link could redirect Godot imports or later
+            # publications into the canonical corpus even when the leaf link
+            # is correct.
+            parent = destination.parent
+            while parent != ROOT:
+                if parent.is_symlink():
+                    raise RuntimeError(f"asset destination traverses a directory link: {parent}")
+                parent = parent.parent
+        if (not destination.is_symlink() and destination.is_file()
+                and _sha256(destination.read_bytes()) == expected):
+            # This checkout already holds the exact pinned bytes as its own
+            # file (an output the canonical checkout has not published, or has
+            # not yet republished for this checkout's materializer): keep it.
             continue
         if not source.exists() and not source.is_symlink():
             raise RuntimeError(f"canonical input is missing: {relative}")
@@ -1748,13 +1758,6 @@ def _reuse_canonical_assets() -> int:
             raise RuntimeError(f"canonical input is not the current exact regular file: {relative}")
         if ROOT.resolve() == canonical.resolve():
             continue
-        # A directory link could redirect Godot imports or later publications
-        # into the canonical corpus even when the leaf link is correct.
-        parent = destination.parent
-        while parent != ROOT:
-            if parent.is_symlink():
-                raise RuntimeError(f"asset destination traverses a directory link: {parent}")
-            parent = parent.parent
         if destination.is_symlink():
             if destination.resolve(strict=True) != source.resolve(strict=True):
                 raise RuntimeError(f"asset destination points to another input: {relative}")
@@ -4161,8 +4164,8 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
     The shared base world's 33 objects and 1,481 pines as Level 100's manifest
     reads them, with each building's life from its unit record; then the level
     rows in file order: the Start (as Player 1), the inactive spawner, the four
-    landing craft each followed by its turret child, the volume, the members
-    of the five type-28 squads and the six fighters. The squads, the turret
+    landing craft each followed by its turret child, the volume, the five
+    type-28 squads each followed by its members, and the six fighters. The squads, the turret
     children, the named paths, each unit type's motion and the settings words
     follow. Squad members start on their squad's point; placing them on their
     formation slots is the squad's own work at runtime (0x004e9600,
@@ -4269,6 +4272,11 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
             fields = _physics_record(physics, 1, definition)
             if struct.unpack("<i", fields[8])[0] != 3:
                 raise RuntimeError(f"world 110 {definition} behaviour changed")
+            # The squad is itself a thing: CreateSquad builds it, its members
+            # are built inside its Init, and it keeps its own script
+            # (world-110-construction-order.md, "Type-28 squads").
+            add(identity, f"Level Actor {ordinal:02d}", "Level Actor Type 28", script, None, False, active,
+                0, seed.allegiance, position, orientation)
             members = []
             for member in range(amount):
                 member_identity = f"{identity}:{member}"
@@ -4324,18 +4332,24 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
                         "fullGuideBaseTicks": 4, "maximumSpeedFloatBits": struct.unpack("<i", fields[1])[0],
                         "maximumTurnRadiansPerBaseTickFloatBits": struct.unpack("<i", fields[5])[0],
                         "motionClass": "GroundVehicle", "steamClassVtableAddress": 0x005E297C})
-        elif behaviour == 9:
-            row.update({"arrivalRadiusMillimeters": 5_000, "motionClass": "Plane",
-                        "steamClassVtableAddress": 0x005E1930})
-        elif behaviour == 12:
-            row.update({"arrivalRadiusMillimeters": 8_000, "motionClass": "Dropship",
-                        "steamClassVtableAddress": 0x005E1DD8})
+        elif behaviour in (9, 12):
+            # id 2 CUnitAirVelocity (+0xb4) and id 6 CUnitAirTurnRate (+0xb8)
+            # (factory jump table 0x00432908); Level 100 keeps its two planes'
+            # in SimulationConstants.
+            row.update({"airTurnRateFloatBits": struct.unpack("<i", fields[6])[0],
+                        "airVelocityFloatBits": struct.unpack("<i", fields[2])[0]})
+            if behaviour == 9:
+                row.update({"arrivalRadiusMillimeters": 5_000, "motionClass": "Plane",
+                            "steamClassVtableAddress": 0x005E1930})
+            else:
+                row.update({"arrivalRadiusMillimeters": 8_000, "motionClass": "Dropship",
+                            "steamClassVtableAddress": 0x005E1DD8})
         else:
             raise RuntimeError(f"world 110 {definition} behaviour {behaviour} is not admitted")
         motion.append(row)
 
     ferns, pines = base_trees.groups
-    if (len(actors) != 33 + 1 + 1 + 4 * 2 + 1 + 22 + 6 or len(squads) != 5
+    if (len(actors) != 33 + 1 + 1 + 4 * 2 + 1 + 5 + 22 + 6 or len(squads) != 5
             or len(components) != 4 or len(pines.placements) != 1_481):
         raise RuntimeError("world 110 static world counts changed")
     document = {

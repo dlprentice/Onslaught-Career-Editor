@@ -362,16 +362,31 @@ public static class Level100MissionTiming
     /// hold), and that residual is still unidentified.
     /// </para>
     /// <para>
-    /// World 110's first non-waiting message is the one bounded extension:
-    /// exact retail <c>110_protect.ogg</c> (SHA-256
-    /// <c>03f1fc8e…35d3</c>) has 172,496 samples at 44.1 kHz. The same retained
-    /// 20 Hz equation gives 90 ticks. This admits only message id 8444036;
-    /// no other world-110 message duration is inferred.
+    /// World 110's messages take the same retained 20 Hz equation from their
+    /// shipped English Ogg sample counts: <c>110_protect.ogg</c> (SHA-256
+    /// <c>03f1fc8e…35d3</c>) has 172,496 samples at 44.1 kHz and gives 90
+    /// ticks, and the table below lists the rest. None sits within Level 100's
+    /// measured offset range (11.70-12.28 ticks) of a rounding boundary. The
+    /// shared HEALTH_LOW messages are not admitted.
     /// </para>
     /// </remarks>
     internal static int MessagePlaybackTicks(int messageId) => messageId switch
     {
         8444036 => 90,       // _110_PROTECT
+        // World 110's other messages, by the same retained equation from
+        // their shipped English Ogg sample counts at 44.1 kHz (ids from
+        // data/MissionScripts/text/text.stf).
+        453985879 => 81,     // _110_ENEMY_ENGAGED  152,115 samples
+        33759812 => 142,     // _110_RED_ALERT      285,841
+        261104546 => 104,    // _110_ENGAGE_TANKS   202,392
+        29930330 => 117,     // _110_HANG_BACK      231,545
+        30271398 => 83,      // _110_NO_ESCAPE      157,386
+        9170604 => 63,       // _110_VICTORY        111,619
+        954166190 => 98,     // _110_KRAMER_ANNOYED 190,396
+        509975791 => 67,     // _110_BUILDING_DIES  122,195
+        1353519 => 88,       // _110_LOST           167,610
+        124264647 => 110,    // _110_SECOND_WAVE    216,042
+        264341189 => 72,     // _110_RESEARCH_HIT   133,028
         292562 => 113,       // HUD_01
         293386 => 140,       // HUD_02
         294210 => 176,       // HUD_03

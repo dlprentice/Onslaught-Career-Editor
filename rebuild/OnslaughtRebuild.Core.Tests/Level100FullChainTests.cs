@@ -385,15 +385,17 @@ public sealed class Level100FullChainTests
         // units) and every unit's recurring 4003, AI, fire-control and squad
         // draws, player rounds left their weapons' cockpit Gun emitters, every
         // round moved on its own MOVE and life events, the level took its
-        // three-second pre-run, every script started on its INIT_SCRIPT, and
-        // every waypoint walk started at the unit's nearest node and followed
-        // the nodes' own targets at their load-time heights: the wave completes
-        // with all six kills. These are reconstruction fixture readings, not
-        // retail timing, hull or branch.
-        Assert.False(final.Level100Mission.Aborted);
-        Assert.Equal(6, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(6_502, final.Tick);
-        Assert.Equal(9_554, final.Hull);
+        // three-second pre-run, every script started on its INIT_SCRIPT, every
+        // waypoint walk started at the unit's nearest node and followed the
+        // nodes' own targets at their load-time heights, and the fixture's
+        // scriptless U-17 and Air Trainer thought with their classes' AI
+        // cadences (CDropshipAI, CPlaneAI): the wave ends on the abort branch
+        // with no kills. These are reconstruction fixture readings, not retail
+        // timing, hull or branch.
+        Assert.True(final.Level100Mission.Aborted);
+        Assert.Equal(0, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(5_858, final.Tick);
+        Assert.Equal(7_450, final.Hull);
     }
 
     /// <summary>

@@ -27,6 +27,10 @@ public static class StateHasher
             if (state.Level100Actors.BaseStates.Any(item => item.State.RetailPlane is null &&
                     (item.State.RetailPoses is not null || item.State.RetailMotion is not null)))
                 throw new NotSupportedException("Incomplete retail construction has no admitted hash schema.");
+            // World 110's landing craft (Land sets their landing state) have
+            // no hash schema yet; its fighters are already refused below.
+            if (state.Level100ActorMechanics.Actors.Any(actor => actor.DropshipLandingState != 0))
+                throw new NotSupportedException("A landed dropship has no admitted hash schema.");
             int[] rawActors = state.Level100Actors.BaseStates.Where(item => item.State.RetailPlane is not null)
                 .Select(item => item.ActorId.Value).Order().ToArray();
             bool usesPlaneMotionSchema = rawActors.Length != 0 ||

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,143 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### World 110 construction and start state — September 26
+
+Core now builds World 110 as a session. `new Simulation(seed, world110,
+worldNumber: 110)` loads the materialized static world in the retail order and
+runs the level's pre-run, as the RE lane's construction contract describes
+(`reverse-engineering/game-mechanics/world-110-construction-order.md`, RE
+commit `0bce197c`). A definition set without its Start row is refused before
+anything is built. The Godot host still starts only Level 100. Each
+address below was re-read from the pristine specimen (`74154bfa…`).
+- **Load.** The shared base world loads as Level 100's: 1,481 pines, the
+  influence map and 37 base-row draws. The 40 level rows take 102 draws under
+  the RE lane's static squad-target estimate, and the tail takes one: 1,622 in
+  all, counted on the shared stream. World 110 has no warm-up units.
+- **Squads.** A type-28 squad is now a thing of its own ("Level Actor Type 28",
+  ahead of its members in the manifest). Each member takes the Actor draw
+  (multiplier 4), fire control and its 4001, 4003, the hover draw and its AI.
+  Then the squad binds its own script (Scout after its four members,
+  `0x004e61b4`) and takes its 4000 and 4001 draws. It also takes 4002's draw
+  unless `Process` returns 1 at construction. The RE lane's static estimate
+  gives 1 for rows 16 and 18; that is open until a load log reads squad
+  `+0xc4`.
+- **Landing craft.** Each craft builds its "Dropship Gun Turret" child after
+  its own Actor draw. The child moves every frame with one draw
+  (`CComponent::Move` `0x00428110`, draw `0x004284a1`) and has 4003 and an AI.
+  A craft in AI_ONF runs `CDropshipAI::Update` (one draw, `0x0044880f`), then
+  polls (one draw, 3003 at now + 2 + (r mod 65536)·2⁻¹⁵). In AI_ON it thinks
+  every 1-2 s with one draw (`0x00448763`, 3000 at ((r mod 65536)·2⁻¹⁶ + 1.0)
+  + now). `Land` (native 72, `0x005361d0` → slot 93) sets landing state 2.
+- **Fighters.** The six fighters are admitted planes. Each think takes the
+  Update's arm draw and one more (`0x004d2434`), then 3000 at
+  ((r mod 65536)·2⁻¹⁸ + 0.25) + now. Their air velocity and turn rate come from
+  their unit records: the factory at `0x00431bb0` indexes id − 1 into
+  `0x00432908`, and ids 2 and 6 apply through `0x00432af0` (`+0xb4`) and
+  `0x00432b00` (`+0xb8`). The landing craft's values match the RE lane's
+  `dropship-flight.md` table (8.0 and 7.0; 0.0174532924).
+- **Spawner and trigger.** Row 5's inactive spawner and row 9's volume file
+  nothing that draws.
+- **Scripts.** The carriers at rows 0, 2 and 39 (LevelScript, Setup, Weather)
+  and the scripted units start on their INIT_SCRIPT events at their rows. In
+  the first flush:
+  - LevelScript deactivates the player and starts its first message;
+  - Setup activates the Tank Factory and Turrets 01-04 and binds VitalBuilding;
+  - Weather sets snow density 1;
+  - rows 8 and 20 switch to AI_ONF and follow Lander Path 1;
+  - row 12 lands and switches to AI_ON.
+- **Natives.** Seven natives are added:
+  - Rand (6, `0x00538230`): one shared draw, r mod n;
+  - Print (11): the debug log only;
+  - PlayCharMessage and PlayCharMessageWait from actor scripts (28, 36), through
+    the mission's message box;
+  - GetNumUnits (40, `0x00535590`);
+  - Land (72);
+  - SpawnersEmpty (73, `0x00535a90` → `0x004fd7e0`);
+  - GetInitialHealth (92, `0x00535a30`): a unit's slot 78, 0 for anything else.
+
+  `CUnit::Init` increments the per-side counts that GetNumUnits reads
+  (`0x004f90af`, `0x004f90c4`). The start of a death (`0x004fd140`) decrements
+  them, and `SetAllegiance` (`0x004fd830`) does not move a unit between them.
+  Core counts living units by motion selector and authored side.
+- **VitalBuilding's switch.** Its source has no `break`, but the shipped
+  bytecode ends every case with a JMP to the switch's end. The JMPs are
+  instructions 36, 47 and 58; opcode `0x14`'s executor `0x0052e9b0` sets the
+  instruction pointer unconditionally. So below 60% health it plays one
+  HEALTH_LOW message, then `_110_RESEARCH_HIT`. This corrects the RE
+  contract, which reads the source as falling through; the RE lane has the
+  evidence.
+- **Start state.** The pan ends on frame 100, where "game playing" is posted
+  after that frame's mission tick. Scout answers with "Enemy Engaged".
+  LevelScript's handler waits two seconds, then on frame 140 activates the
+  Airfield and the player and posts "Target Buildings". VitalBuilding answers by
+  activating the Research Building and making it the objective. The opening
+  message plays at the message gate (frame 101) and Scout's at frame 195.
+
+A World 110 state restores from its snapshot. The registry's restore now admits
+each world's aircraft through the same check as construction. The canonical
+hash still refuses a World 110 state, because its fighters and landed craft
+have no admitted hash schema yet.
+
+The manifest now lists each squad as a row ahead of its members and carries
+each aircraft's air scalars. It has 77 actors and SHA-256 `431a0b04…` (was
+`7b201943…`). The asset preparation now keeps a checkout's own file when its
+bytes match the pin, even when the canonical copy is older. So a worktree runs
+on its exact copy until the canonical checkout republishes.
+
+Level 100 did not move:
+- `first-flight.v1.json` is unchanged;
+- the headless smoke records tape `ed3b77b5…` (trace `97cf1e7c…`, state
+  `8649ff2b…`), replayed twice;
+- the won tape replays twice to trace `b44844e6…` and state `c6017343…`.
+
+Two fixture readings moved:
+- The test fixture's scriptless U-17 and Air Trainer now think on their classes'
+  cadences. The chain autopilot now ends on the abort branch at tick 5,858,
+  with hull 7,450 and no second-wave kills.
+- The canonical-hash fingerprints also moved; with the two class branches
+  disabled they return to their old values.
+
+Twenty-three mutations were killed, each RED, restored byte-identical by SHA-256,
+then GREEN again (`local-data/test-runs/world110-construction-20260926/mutation-kills/`):
+- the member fire-control draw removed;
+- `Process` never 1 at construction;
+- the turret child's Actor draw removed;
+- the squad's script before its members;
+- `Land` ignored (twice);
+- Weather not attached;
+- "game playing" before the mission tick;
+- the landing craft and the fighters thinking as `CUnitAI` (the fighters twice:
+  through the fixture autopilot and the one-fighter test);
+- a fighter's think without the Update's arm draw;
+- every side 0;
+- AI_ONF without its Update draw;
+- a landed craft on the `CUnitAI` far cadence;
+- the turret child's MOVE without its draw;
+- the landing state dropped on restore;
+- Rand returning r;
+- Rand without its draw;
+- a loaded craft's spawners reported empty;
+- GetNumUnits counting the dying, ignoring the side, or reading side 2.
+
+Tests: `World110ConstructionTests` (10), `World110ScriptNativeTests` (3) and
+`World110StaticWorldManifestTests` (4). Suites: Core 1,564, Client 916 with the
+two known skips, `materialize_retail_assets_tests` 95, pause checks 56, AYA
+checks 447, and the safety gate (4,100 files).
+
+Open, each with its cheapest falsifier where the RE lane names one:
+- each squad's formation and first target (log squad `+0xc4` after load);
+- the turret child's life (its component record's field map);
+- the landing craft's flight and landing, whose contracts
+  (`dropship-flight.md`, `dropship-landing.md`) are the next work;
+- row 13's move order after its first think;
+- cargo release: a loaded craft's `SpawnersEmpty` stays false until Core
+  deploys its spawners;
+- which Update arm each turret child, tank and fighter takes first (the RE
+  lane's draw log);
+- the load's collision scans;
+- the transition from a Level 100 win.
 
 ### World 110's static world from retail data — September 26
 

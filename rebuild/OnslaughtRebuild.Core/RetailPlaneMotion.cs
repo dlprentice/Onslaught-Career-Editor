@@ -44,12 +44,13 @@ public static class RetailPlaneMotion
 
     /// <summary>The selected living CPlane initializer starts at rest.</summary>
     public static RetailPlaneMotionSnapshot CreateInitial(RetailActorPoseSnapshot pose,
-        Level100FloatVector3Bits euler)
+        Level100FloatVector3Bits euler, int turnRateFloatBits = SimulationConstants.Level100PlaneAirTurnRateFloatBits)
     {
         ArgumentNullException.ThrowIfNull(pose);
         _ = Read(euler.X); _ = Read(euler.Y); _ = Read(euler.Z);
+        // The Euler rates start at the type's air turn rate (unit +0xb8).
         return new(default, default, euler, euler,
-            new(0x3d32b8c2, 0x3d32b8c2, 0x3d32b8c2), 0);
+            new(turnRateFloatBits, turnRateFloatBits, turnRateFloatBits), 0);
     }
 
     /// <summary>

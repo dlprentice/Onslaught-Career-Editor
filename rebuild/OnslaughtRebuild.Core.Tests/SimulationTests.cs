@@ -19,16 +19,17 @@ public sealed class SimulationTests
     }
 
     /// <summary>
-    /// Actual World110 inputs do not make the Level100 initialization path a
-    /// supported second-world session. Refuse it before loading Level100 Setup.
+    /// A world's session starts at its Start row, so a definition set without
+    /// one (the partial World 110 admission's) is refused before anything is
+    /// constructed.
     /// </summary>
     [Fact]
-    public void Constructor_RejectsIncompleteWorld110BeforeRunningLevel100Setup()
+    public void Constructor_RejectsAWorldWithoutItsStart()
     {
         var world = RetailWorld110InitialConstruction.Create();
         NotSupportedException error = Assert.Throws<NotSupportedException>(() =>
             new Simulation(1, world.ActorDefinitions, worldNumber: 110));
-        Assert.Contains("construction is incomplete", error.Message);
+        Assert.Contains("no Start", error.Message);
     }
 
     /// <summary>
@@ -73,12 +74,12 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("aebeceb53df8c45f77370e82220ce3679512884d480154625340796f0364d3ed",
+        Assert.Equal("5ec17b036443cbd88e576d0b0e5db210a384d8a156eccf5a216bdade5440c311",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("d19b7cbc8a527d77ba438dc7aa9fa2718fdbacb7aa2be4a2bd7f58e4cc2d2aa5",
+        Assert.Equal("92a1fcce5c8cc5ce523bd982f6fdcac3ad37b35f97d5f500cbe5488ee5f9b064",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "ea2000d20a4e845544afab24e6a0919ae19d6fecee99e97859996df6464cb179",
+        Assert.True(hash == "9a3271f06004ee1407f86d95e5b0ef67d4ef03bd35799da0bf99a1c6709cf020",
             $"Canonical state hash: {hash}");
         Assert.Equal(52, CanonicalSchemaVersion(rootState));
 

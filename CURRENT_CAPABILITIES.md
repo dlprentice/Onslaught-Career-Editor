@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-26 (companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
+Last updated: 2026-09-26 (rebuild constructs World 110 through its start state; companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
@@ -707,8 +707,10 @@ These factories take an incoming RNG seed and explicitly assume nearest/53-bit
 arithmetic; the ordinary-actor factories select a fresh resource route with preloaded
 geometry. Renderer/resource caches, remaining actors, frame delivery, damage,
 reset and playable World110 remain unfinished. Legacy mutation, restore and
-hashing reject the incomplete initialized Actor state. Simulation rejects World110 before
-Level100 Setup; direct World110 mission instruments remain supported. The
+hashing reject the incomplete initialized Actor state. `Simulation` does not use this
+stage: since 2026-09-26 it constructs World 110 from its materialized static world
+through its start state (VALIDATION.md, "World 110 construction and start state"),
+and the Godot host still starts only Level 100. The
 [World110 evidence owner](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md)
 retains the contracts and unresolved startup FP/seed boundary.
 

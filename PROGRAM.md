@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-26 (rebuild constructs World 110 through its start state; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -364,7 +364,11 @@ height-clamp prefix, ordered start-list selection, standalone player/engine assi
 ordered composition over adapter-supplied identities, and all-40 initial-object seed
 admission. These deterministic pieces do not construct a playable world.
 
-The active phase now constructs an explicitly incomplete World 110 stage from
+Since 2026-09-26 `Simulation` constructs World 110 from its materialized static
+world, in the retail load order, through its start state (VALIDATION.md, "World
+110 construction and start state"). Still open: the landing craft's flight,
+landing and cargo, squad formation, the 100→110 transition and the Godot host.
+Separately, the active phase constructs an explicitly incomplete World 110 stage from
 its own terrain and 43 admitted direct actors, with real authored transforms,
 behavior selectors and physics life. It also owns detached Start/engine/player
 shells with measured configuration and reader fields. Concrete class Init,

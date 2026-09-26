@@ -861,6 +861,14 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 1);
                 StoreHudPartWord(arguments[0].AsInteger(), highlight: false);
                 return NativeResult.Void;
+            case 11: // Print — IScript::Print 0x00537ad0 writes the debug log only
+                RequireArguments(command, arguments, 1);
+                return NativeResult.Void;
+            case 40: // GetNumUnits — IScript::GetNumUnits 0x00535590
+                RequireArguments(command, arguments, 2);
+                return new NativeResult(
+                    Level100ScriptValue.Integer(_actors.CountUnits(arguments[0].AsInteger(), arguments[1].AsInteger())),
+                    WaitRequest.None);
             case 36: // PlayCharMessageWait
                 RequireArguments(command, arguments, 3);
                 int messageTicks = RequestMessage(arguments, waits: true);
@@ -962,11 +970,18 @@ public sealed class Level100Mission
     /// adapter both see the released delivery instant rather than the instant
     /// the script line executed.
     /// </remarks>
+    /// <summary>An actor script's message through this mission's message box.</summary>
+    internal int RequestScriptMessage(int speakerId, int messageId, bool waits) =>
+        RequestMessage(speakerId, messageId, waits);
+
     private int RequestMessage(IReadOnlyList<Level100ScriptValue> arguments, bool waits)
     {
-        int speakerId = arguments[0].AsInteger();
-        int messageId = arguments[1].AsInteger();
         _ = arguments[2].AsFloat();
+        return RequestMessage(arguments[0].AsInteger(), arguments[1].AsInteger(), waits);
+    }
+
+    private int RequestMessage(int speakerId, int messageId, bool waits)
+    {
         if (waits)
         {
             StoreWaitStop();

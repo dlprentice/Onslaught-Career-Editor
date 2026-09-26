@@ -328,7 +328,10 @@ class World110InitialActorMaterializationTests(unittest.TestCase):
         self.assertEqual(("onslaught.world110-static-world.v1", 110),
                          (document["schema"], document["worldNumber"]))
         actors = {actor["definitionIdentity"]: actor for actor in document["actorDefinitions"]}
-        self.assertEqual(72, len(actors))
+        self.assertEqual(77, len(actors))
+        self.assertEqual({"Level Actor Type 28"}, {actors[f"wres:rlwd:{row:04d}"]["definitionName"]
+                                                   for row in (14, 16, 17, 18, 19)})
+        self.assertEqual("Scout", actors["wres:rlwd:0019"]["scriptName"])
         # The shared base world reads exactly as Level 100's.
         base100, _ = materializer._parse_static_world_inputs(self.raw100)
         self.assertEqual(
@@ -1012,6 +1015,13 @@ class CanonicalAssetReuseTests(unittest.TestCase):
                 self.assertEqual(1, materializer._reuse_canonical_assets())
                 self.assertFalse(destination.is_symlink())
                 self.assertEqual(b"pinned", destination.read_bytes())
+                # A canonical copy the canonical checkout has not republished
+                # for this materializer does not displace the exact local one.
+                (canonical / "assets").mkdir()
+                (canonical / "assets/new").write_bytes(b"previous")
+                self.assertEqual(1, materializer._reuse_canonical_assets())
+                self.assertEqual(b"pinned", destination.read_bytes())
+                (canonical / "assets/new").unlink()
                 destination.write_bytes(b"other")
                 with self.assertRaisesRegex(RuntimeError, "canonical input is missing"):
                     materializer._reuse_canonical_assets()

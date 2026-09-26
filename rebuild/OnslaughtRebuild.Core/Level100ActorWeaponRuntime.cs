@@ -560,7 +560,7 @@ public sealed partial class Level100ActorMechanics
     internal static int ActorRoundListener(int roundId) => checked(RoundListenerBase + (roundId * 2) + 1);
 
     private static bool IsRoundListener(int listener) =>
-        listener >= RoundListenerBase && listener < UnitListenerBase;
+        listener >= RoundListenerBase && listener < ComponentMoveListenerBase;
 
     internal static bool IsPlayerRoundListener(int listener) =>
         IsRoundListener(listener) && (listener - RoundListenerBase) % 2 == 0;
