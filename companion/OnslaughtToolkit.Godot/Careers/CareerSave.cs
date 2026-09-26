@@ -84,7 +84,8 @@ public static class CareerSave
         {
             int offset = MissionOffset + index * MissionStride;
             missions[index] = new MissionRecord(index, offset, U32(bytes, offset + 0x10), U32(bytes, offset + 0x04),
-                U32(bytes, offset + 0x38), U32(bytes, offset + 0x3C), BinaryPrimitives.ReadSingleLittleEndian(bytes[(offset + 0x3C)..]));
+                U32(bytes, offset + 0x38), U32(bytes, offset + 0x3C), BinaryPrimitives.ReadSingleLittleEndian(bytes[(offset + 0x3C)..]),
+                (int)U32(bytes, offset + 0x08), (int)U32(bytes, offset + 0x0C));
         }
         LinkRecord[] links = new LinkRecord[LinkCount];
         for (int index = 0; index < LinkCount; index++)
@@ -286,8 +287,11 @@ public sealed class CareerInspection
 /// <summary>
 /// One campaign node. <see cref="Attempts"/> is mNumAttempts (+0x38), which the game only ever zeroes
 /// (Career.cpp:99 and retail's Blank paths), so it is shown as a stored field, never as a count of tries.
+/// <see cref="LowerLink"/> and <see cref="HigherLink"/> are mLowerLink (+0x08) and mHigherLink (+0x0C): the
+/// indices of the links to the next missions (struct-layouts.md; career-graph.md).
 /// </summary>
-public sealed record MissionRecord(int Index, int Offset, uint World, uint CompleteRaw, uint Attempts, uint RankBits, float RankValue)
+public sealed record MissionRecord(int Index, int Offset, uint World, uint CompleteRaw, uint Attempts, uint RankBits, float RankValue,
+    int LowerLink = -1, int HigherLink = -1)
 {
     public bool Used => World != 0;
     public bool Completed => Used && CompleteRaw != 0;

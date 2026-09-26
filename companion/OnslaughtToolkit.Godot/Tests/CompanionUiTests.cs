@@ -79,6 +79,12 @@ internal static class CompanionUiTests
         check.That(app.Summary.MissionsSummary == $"{opened.MissionCensus.Completed} / {opened.MissionCensus.Used}" &&
             app.Summary.Missions.GetRoot()?.GetChildCount() == opened.MissionCensus.Used && app.Summary.Missions.Columns == 4,
             "the summary lists every used mission, with no attempts column");
+        app.Navigate("summary");
+        CampaignMap map = app.Summary.Map;
+        CampaignNode? training = map.Graph?.Nodes.FirstOrDefault(node => node.World == 100);
+        check.That(map.Graph?.Nodes.Count == opened.MissionCensus.Used && map.IsVisibleInTree() && training is not null &&
+            map.Describe(training).StartsWith("1.00", StringComparison.Ordinal) && map.CustomMinimumSize.Y > 100,
+            "the summary draws the career's path through the campaign, and a mission names itself");
         app.Navigate("goodies");
         check.That(app.Goodies.Cells.Count == 233, "the gallery has a cell for each slot of the game's table");
         app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);

@@ -15,7 +15,9 @@ internal sealed class SummaryPage : Page
     private readonly GridContainer _stats, _columns;
     private readonly Label _missionsValue, _missionsDetail, _goodiesValue, _goodiesDetail, _killsValue, _ranksValue, _ranksDetail;
     private readonly ProgressBar _missionsMeter, _goodiesMeter;
-    private readonly VBoxContainer _killRows, _linkLines;
+    private readonly VBoxContainer _killRows;
+    private readonly PanelContainer _campaign;
+    private readonly Label _routeLine;
     private readonly GridContainer _goodieStrip;
     private readonly Label _namesNote;
 
@@ -38,6 +40,22 @@ internal sealed class SummaryPage : Page
         (_ranksValue, _ranksDetail, ProgressBar ranksMeter) = Stat("Ranks");
         ranksMeter.Visible = false;
         _stats.Resized += () => _stats.Columns = _stats.Size.X >= 820 ? 4 : 2;
+
+        (_campaign, VBoxContainer campaignBody) = Build.Card("Your path through the campaign");
+        content.Add(_campaign);
+        Map = campaignBody.Add(new CampaignMap());
+        HBoxContainer key = campaignBody.Add(Build.Row(14));
+        foreach ((string kind, string text) in new[]
+        {
+            ("complete", "Complete, with your rank"), ("open", "Open to play"), ("closed", "Not reached yet"),
+            ("route-taken", "Route you took"), ("route-not-taken", "Route not taken"),
+        })
+        {
+            HBoxContainer item = key.Add(Build.Row(6));
+            item.Add(new CampaignSwatch(kind));
+            item.Add(Build.Text(text, "Muted", wrap: false));
+        }
+        _routeLine = campaignBody.Add(Build.Text("", "Faint"));
 
         _columns = content.Add(new GridContainer { Columns = 2 });
         _columns.AddThemeConstantOverride("h_separation", 14);
@@ -75,11 +93,6 @@ internal sealed class SummaryPage : Page
         (PanelContainer kills, VBoxContainer killBody) = Build.Card("Kills");
         _killRows = killBody.Add(Build.Column(8));
         side.Add(kills);
-        (PanelContainer links, VBoxContainer linkBody) = Build.Card("Campaign routes");
-        _linkLines = linkBody.Add(Build.Column(4));
-        linkBody.Add(Build.Text("An open route leads to the next mission. An alternate route is the game's own record of a path not " +
-            "taken, drawn as a broken line on its map; it is not damage.", "Faint"));
-        side.Add(links);
         ShowEmpty();
     }
 
@@ -88,6 +101,7 @@ internal sealed class SummaryPage : Page
         ? System.IO.Path.GetFileNameWithoutExtension(session.Path) + " at a glance"
         : "Your career at a glance";
     internal Tree Missions { get; }
+    internal CampaignMap Map { get; }
     internal string MissionsSummary => _missionsValue.Text;
 
     internal void ShowSession(SaveSession session)
@@ -96,6 +110,9 @@ internal sealed class SummaryPage : Page
         GameText? text = _game.Text;
         _empty.Visible = _choose.Root.Visible = false;
         _stats.Visible = _columns.Visible = true;
+        CampaignGraph graph = CampaignGraph.From(career);
+        Map.Show(graph, text);
+        _campaign.Visible = graph.Nodes.Count > 0;
         MissionCensus missions = career.MissionCensus;
         _missionsValue.Text = $"{missions.Completed} / {missions.Used}";
         _missionsDetail.Text = "missions complete";
@@ -156,10 +173,10 @@ internal sealed class SummaryPage : Page
             row.Add(Build.Text(career.Kills[category].ToString("N0"), "Mono", wrap: false, width: 72)).HorizontalAlignment = HorizontalAlignment.Right;
         }
 
-        _linkLines.Clear();
         LinkCensus links = career.LinkCensus;
-        _linkLines.Add(Build.Text($"{links.Complete} open  ·  {links.AlternateRoutes} alternate  ·  {links.Locked} still closed" +
-            (links.Unknown > 0 ? $"  ·  {links.Unknown} unknown values" : ""), "Strong"));
+        _routeLine.Text = $"Hover a mission for its name. A route not taken is the game's own record of the path you did not " +
+            $"follow, not damage. {links.Complete} routes open, {links.AlternateRoutes} not taken, {links.Locked} still closed" +
+            (links.Unknown > 0 ? $", {links.Unknown} with values the companion does not recognise." : ".");
     }
 
     private (Label Value, Label Detail, ProgressBar Meter) Stat(string name, string detail = "")
@@ -183,6 +200,6 @@ internal sealed class SummaryPage : Page
     {
         _empty.Visible = _choose.Root.Visible = true;
         _choose.Show();
-        _stats.Visible = _columns.Visible = false;
+        _stats.Visible = _columns.Visible = _campaign.Visible = false;
     }
 }
