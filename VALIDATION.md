@@ -4640,6 +4640,72 @@ neither real Windows/Proton failure nor full startup reachability. The
 [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
 distinguishes null-interface dereference from a returned method failure.
 
+### Level 100 turret targeting control — September 25
+
+`python -P local-data/test-runs/level100-final-wave-20260925/turret_targeting_control.py`
+passed **16 cases** under `local-data/test-runs/level100-final-wave-20260925/turret-run-1s9s58nr/`.
+Receipt SHA-256 `6ff66c70ab7b0886163d5038e6e8cfd55eca4b0e574c43bea400195311b1602a`;
+ELF SHA-256 `7a6117d690170766e17e82dac1088ecd94871222c5abceadb0ace22743ebada3`;
+driver copy SHA-256 `133230c6914bc33d91115db29a9c3d409ee4f64ab2cd86cecf17941f5a47a1bc`.
+
+The ELF places ten unchanged pristine bodies and seven `.rdata` scalars at their
+retail addresses: script `SetAllegiance`, `SetFactionForHierarchy`, CSPtrSet
+add-to-head/add-to-tail/remove, the close-target scan `0x004ff710`, its state and
+side gates, `SetReader` and monitor registration. Feasibility A/B, capability,
+support and support-band helpers are recording stubs; objects, the node free list
+and the three world lists are synthetic. Every case checks callee-saved registers,
+stack, FS:0 and the x87 control word, and the full list contents, counts and tails.
+
+A squad-less unit switched from 0 to 1 moves from `0x008550b0` to `0x008550c0`; a
+squad member is not relisted; allegiance 6 joins both lists and 2 neither; a
+non-unit receiver is ignored; a child component follows its parent. An
+allegiance-0 owner selects an allegiance-1 drone from `0x008550c0`, cannot see one
+left in `0x008550b0`, rejects a stale allegiance-0 entry at the side gate, and
+applies the strict range and dying gates; the nearer of two drones wins; a false
+B keeps the reader and zeroes A. The composed Level 100 order (spawned friendly,
+script ENEMY, then turret scan) selects the drone; a squad-wrapped drone stays
+invisible. The first run failed on a harness defect, not a retail result: its
+`fnstenv` overwrote the first trace slot and its predicted call list omitted the
+capability stub. Both were corrected before the passing run.
+
+This measures the list, allegiance and selection transaction with supplied
+helper results. It establishes no turret aim, weapon, geometry, spawner or retail
+gameplay behavior; the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md)
+keeps those open.
+
+### Level 100 turret fire-control control — September 25
+
+`python -P local-data/test-runs/level100-final-wave-20260925/turret_fire_control_control.py`
+passed **21 cases** under `local-data/test-runs/level100-final-wave-20260925/fire-control-run-ob8ydblf/`.
+Receipt SHA-256 `4efecff6d05e6a33a408fff564688ab96b21d245d58fc09e3596bc104245efe2`;
+ELF SHA-256 `0a6ff38de4811e088cd116327ea89b9174c0582b4e3f441cf43592f2a2178683`;
+driver copy SHA-256 `6382a81107b62a7fa890a190650f651cd88179a72380207db1f88000346bad95`.
+
+The ELF places the unchanged `CUnit::Init` inspection range `[0x004f889a,0x004f89fb)`
+and its nine-entry jump table, the emitter lookup `0x004aa820`, CRT `stricmp`,
+`_strnicmp` and `_strncmp`, the fire-control refresh `0x004fb280`,
+`Random__NextLCGAbs`, the shipped name strings and seven constants at their retail
+addresses. Part and emitter structures come from the three shipped turret meshes
+(hashes in the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md#fire-control-control))
+through the repository CMSH parser. The C-locale fast path is supplied and the
+locale-lock path is trapped; the Euler constructor and `AddEvent_AtTime` are
+recording stubs and the ballistic solver is a trap. Every case checks stack,
+FS:0 and the x87 control word; refresh cases also check callee-saved registers.
+
+All three meshes set `+0x224`, the barrel pointer and the rest angle; Blaster and
+Pulse also set the weapon turret flag, SAT does not. Zero turn rate, a missing
+emitter or selector, the Pulse `GunB` chain, a capitalised `Barrel`, and a
+capitalised `Turret` behave as the byte reading predicts; an `x1 barrel` prefix and
+a linked second mesh are found. Each enabled refresh takes one draw and queues
+4001 at time + low16 × 0.1/65536 whether the owner is active or not; disabled and
+dying owners do neither; both angle clamps hold; two refreshes match an exact int32
+model of the generator. The first run (`fire-control-run-5gchgdb9/`) failed only in
+that model, which lacked 32-bit wraparound for a deliberately out-of-range seed.
+
+This corrects the World 110 owner's Turret 03 statement. It establishes the
+inspection and refresh transactions only, not turret aiming, firing, rendering or
+retail gameplay.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)
