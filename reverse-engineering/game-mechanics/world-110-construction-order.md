@@ -1,12 +1,13 @@
 # World 110 construction order, transition and first frames
 
 Status: active static contract for the rebuild's World 110
-Last updated: 2026-09-26 (lander routes linked; lander cargo counts and the turret's weapon corrected)
+Last updated: 2026-09-26 (VitalBuilding's switch corrected; GetNumUnits counts; lander routes linked; lander cargo counts and the turret's weapon corrected)
 Summary: how a Level 100 win leads to World 110, the order in which World 110's
 construction consumes the shared gameplay stream and queues events, what the first
 flush delivers and draws, and when the player gains control.
 Evidence: MEASURED static reads of the pristine specimen, the pinned GPL source, and
-the shipped World 110 world files, mission scripts, meshes and `default physics.dat`.
+the shipped World 110 world files, mission scripts and their compiled bytecode, meshes and
+`default physics.dat`.
 Two read-only research passes traced the level-world rows. The RE lane re-read every
 address, class, event, draw and profile value given here, and re-ran the squad
 formation model. The squad target choices are a static calculation from positions and
@@ -250,6 +251,16 @@ From the shipped `.msl` sources:
 - `LevelScript` deactivates the player (`GetPlayer(1).Deactivate()`). It then calls
   `PrimaryObjectiveFailed` and `SecondaryObjectiveFailed`, starts its first message,
   and loops on `Pause(1)` and `GetNumUnits`.
+  - `GetNumUnits` (`0x00535590`) reads per-profile counts for allegiance 0 (`0x008551c0`)
+    and allegiance 1 (`0x00855228`), at `0x005355ae` and `0x005355bc`.
+  - `CUnit::Init` increments them (`0x004f90af`, `0x004f90c4`), indexed by the profile's
+    `+0xe0`.
+  - The start of a death (`0x004fd140`) sets the dying flag, then decrements them
+    (`0x004fd17a-0x004fd1a8`). It then sets `+0x2d` bit 0 (`0x004fd1ce`).
+  - The shutdown path decrements only while that bit is clear
+    (`0x004f97b6-0x004f97e8`).
+  - So a unit leaves the count when it starts to die. The rebuild lane traced this while
+    implementing the call.
 - `Setup` activates the Tank Factory and Turrets 01-04 (base rows 1, 3, 10, 11 and 12,
   all inactive at load). It also binds `VitalBuilding` to Forseti Research Building 1,
   whose 2001 lands in frame 2.
@@ -331,9 +342,20 @@ The level rows' deliveries:
   follow the Level 100 laws.
 - **`VitalBuilding`.** When the Research Building first falls below 60% of its
   initial health, the script calls `Rand(3)`. `IScript::Rand` (`0x00538230`) takes
-  one shared draw (`0x00538237`) and returns r mod n. The script's `switch` has no
-  `break`, so case 0 plays all three warnings, case 1 the last two and case 2 the
-  last one.
+  one shared draw (`0x00538237`) and returns r mod n. Case 0 plays `HEALTH_LOW_1O`, case 1
+  `HEALTH_LOW_2O` and case 2 `HEALTH_LOW_3O`, each followed by `_110_RESEARCH_HIT`.
+  - The `.msl` source has no `break`, but the shipped bytecode does not fall through.
+    `level110-VitalBuilding.mso.bin` is materialized from `110_res_PC.aya`, SHA-256
+    `712bac0b6b8177fcbafc3ceaf4d0768375e22cce465513125f06f712ca23dea5`.
+  - Instructions 26-61 test each case with push, push, compare (`0x0f`), remove-top
+    (`0x0e`) and jump-if-not-equal (`0x12`). They end each body with a jump (`0x14`) to
+    instruction 60, at instructions 36, 47 and 58.
+  - Opcode `0x14`'s executor `0x0052e9b0` (vtable `0x005e4c00`, whose getter `0x0052dac0`
+    returns `0x14`) writes its operand to the script's `+0x214` unconditionally.
+  - Opcode `0x12`'s executor `0x0052e990` (vtable `0x005e4c20`, getter `0x0052db60`) jumps
+    only when bit 0 of `+0x218` is clear.
+  - The `0x0d` executors at the case labels are `ret 0xc` (`0x00453ac0`).
+  - The rebuild lane found this and pins it in `World110ScriptNativeTests`.
 
 ## Player start
 
