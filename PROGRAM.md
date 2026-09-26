@@ -172,6 +172,32 @@ owner, and queue for the same workflow:
 | `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
 | `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
 
+### RE record audit — requested September 25
+
+David asked for a quality once-over of the existing RE record. Most of it was
+produced by earlier, less capable agents, and parts are known to be wrong. The
+record holds 8,330 saved Ghidra function names and about 1,980 RE documents
+(354 contracts, 807 function notes). Items found while answering lane questions
+on September 25 include:
+- wrong saved labels (the table above);
+- a factory contract that called the burst spawner a one-argument fastcall;
+- a save-field name and the kill-counter reset rule;
+- the base-thing bitmap's meaning;
+- World 110's turret fire-control statement.
+
+Order: answer the rebuild and companion lanes' blocking questions first, then
+audit by consumer:
+1. The 26 RE documents the rebuild tree cites.
+2. The save-file documents the companion reads.
+3. The queued Ghidra labels, as one declared cohort through the
+   [promotion gate](reverse-engineering/ghidra/README.md).
+4. A sample of the factory-drafted contracts, re-derived from pristine bytes,
+   to measure their error rate before any wider pass.
+
+Correct each document in place from the bytes, the pinned source or an
+original-code run; treat existing names, comments and reports as leads, not
+evidence.
+
 ### Remote checkpoint integrated on Linux — September 12
 
 The complete remote difference from `135775772a126af48b9930a8fcfd4140000a4af9`
