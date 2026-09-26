@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (one owner for the Won career update; the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the September 25 capture record corrected; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -1280,20 +1280,27 @@ Executed at the restored state:
   decoded bytes of all 51 actual textures.
 
 Capture. godot-offscreen Movie Maker at 60 fps and 1280x720 recorded startup,
-menus, Level 100, a retry and the return to the main menu, exactly as the
+Level 100, a retry and the return to the main menu, exactly as the
 September 25 baseline (`migration-baseline-20260925/run-2`, from `d5e002d0`).
 The restored build recorded the identical tape and state, and its WAV is
 byte-identical to the baseline's (`932b25a9…`). All 15,334 frames are identical
-to a capture of `b0b9c5e7` itself. Against the baseline, frames 0–13,179
-(startup, menus and the whole first Level 100 session) are identical; the
-2,154 frames from 13,180 differ for two evidenced reasons:
-- **Pines after the retry (frames 13,180–15,330).** The baseline shows no pine
-  trees in the retry session, although the first session draws them and a
-  retry builds a fresh world. A capture of `29b40721` (September 19 C# with the
-  `29727e2b` scene-imported world) reproduces the loss and matches the
-  baseline on 15,330 frames, so the scene import introduced it; the all-code
-  world builds its pines on every construction. This restores the earlier
-  behavior rather than inventing one.
+to a capture of `b0b9c5e7` itself. Against the baseline, frames 0–13,179 are
+identical: the startup movies and logos (0–5,748), Level 100's loading screen
+(5,749–5,750) and its intro movie (5,751–13,179). The smoke confirms each menu
+as it arrives, so no menu is drawn on the way in. The 2,154 frames from 13,180
+differ for two evidenced reasons:
+- **Pines (frames 13,180–15,330).** Frames 13,180–15,327 are the Level 100
+  session, one tick per frame; 15,328–15,329 are the retry's loading screen
+  with the HUD drawn over it, and 15,330 is the retry's first frame. The
+  baseline draws no pine trees in the session or the retry. A capture of
+  `29b40721` (September 19 C# with the `29727e2b` scene-imported world)
+  reproduces the loss and matches the baseline on 15,330 frames, every session
+  frame included, so the scene conversion introduced it; the all-code world
+  builds its pines on every construction. This restores the earlier behavior
+  rather than inventing one. The same conversion also moved 3–10 pixels of the
+  HUD's central reticle by 1–2 of 255 levels, which is the loading screen's
+  only difference. (Corrected September 26: this paragraph first placed the
+  session in frames 0–13,179 and the loss after a retry.)
 - **The last three frames (15,331–15,333).** They are drawn after the smoke
   completes: `RequestQuit` freezes every child node and the root keeps
   rendering only while real audio retires, which is why headless runs (dummy

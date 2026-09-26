@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-09-26 (companion rebuilt around players; rebuild constructs World 110 through its start state; companion approved workflows built; rebuild returned to all-code C#; coupled settings routing and original sound initialization; 2026-09-19 native companion workflow; earlier evidence retains its stated limits).
+Last updated: 2026-09-26 (companion rebuilt around players; rebuild constructs World 110; earlier entries keep their stated limits).
 Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
