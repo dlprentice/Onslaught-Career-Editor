@@ -117,7 +117,6 @@ reverse-engineering/binary-analysis/functions/DXPatchManager.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
-reverse-engineering/binary-analysis/functions/DXTrees.cpp.md
 reverse-engineering/binary-analysis/functions/DataType.cpp.md
 reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md
 reverse-engineering/binary-analysis/functions/EventFunction.cpp.md
