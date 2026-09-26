@@ -146,9 +146,10 @@ The rebuild's failing cold full-combat route now has a
 [final-wave contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md):
 the abort is a designed retail branch, and retail adds friendly turrets after
 Help Player and the jet Missile Pod. An original-code control shows activated
-turrets can select the script-spawned enemy drones. Open: turret aim/fire law,
-the Missile Pod lock and micro-missile laws, and the ordered RNG draws of the 22
-base-world AI owners.
+turrets can select the script-spawned enemy drones. The turret aim, Missile Pod
+lock, crosshair and auto-aim refresh, seeking-round and per-round draw laws are
+static contracts there. Open: a composed runtime control of those laws and the
+ordered RNG draws of the base-world AI owners and the Battle Engine.
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and
@@ -156,6 +157,10 @@ complete-shot RNG remain unresolved. A read-only frontend review identified
 `00459810` as a card-selection setter and `00465f10` as the outer frontend
 constructor; their saved metadata still needs the scoped byte-backed correction
 workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
+Two more saved labels are wrong and queue for the same workflow:
+`CRT__AcosDispatch_ST0` (`0055dcb0`) computes asin (its error record at
+`00653310` names `asin`), and `CUnitAI__InitDefaults` (`0042efd0`) sets Unit
+profile defaults, including turret yaw limit `+0xdc` = 2π.
 
 ### Remote checkpoint integrated on Linux — September 12
 

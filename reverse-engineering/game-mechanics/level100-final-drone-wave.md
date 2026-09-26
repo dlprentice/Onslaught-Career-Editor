@@ -1,7 +1,7 @@
 # Level 100 final drone wave, Help Player turrets and abort
 
-Status: active contract for the rebuild's final-wave route; turret aim/fire law and
-per-unit RNG ordering remain open
+Status: active contract for the rebuild's final-wave route; per-unit RNG ordering
+across the whole level remains open
 Date: 2026-09-25
 Summary: the abort after one kill is a designed retail branch, but retail gives the
 player two helps the rebuild lacks: four friendly turrets that come online after the
@@ -184,6 +184,60 @@ The Pulse Turret cannot engage airborne drones; the two Blaster Turrets and the 
 Turret can. None of these rounds is smart and `SAT Hit` has no smart filter, so a
 stray round or blast can damage the player; turrets never select the player.
 
+### Turret aiming
+
+Cannons use Actor multiplier 4 (`CCannon` vtable `0x005e24dc` slot 24 is
+`0x0050e940`, returning 4.0), so a full MOVE runs every fourth frame, phased by the
+Actor Init draw ([Actor owner](../binary-analysis/functions/Actor.cpp.md)); let
+M = 4.0. `CCannon` Move (slot 66, `0x0041b370`) reaches
+`CUnit::UpdateMotionAttachmentsAndEffects` (`0x004fa8d0`) through `0x0047c970`.
+Each call:
+
+1. Saves turret yaw `+0xe0` to `+0xe4` and barrel pitch `+0xe8` to `+0xf0`
+   (`0x004fad00-0x004fad17`). `CMCCannon` (`0x004952a0`) draws the yaw between
+   `+0xe4` and `+0xe0` and applies the pitch between `+0xf0` and `+0xe8` to parts
+   whose names start with `barrel`.
+2. Skips steps 3 and 4 unless the AI exists, the dying bit (`+0x2c` bit 2) is
+   clear and slot 109 (`0x00405e70`, true when `+0x168` is null) returns true.
+3. Turret yaw (`0x004fad4f-0x004fafe3`). With an AI target the aim point is the
+   target's slot 90 midpoint, taken relative to the pivot: Unit position `+0x1c`
+   plus the orientation rows at `+0x3c` and `+0x4c` applied to offset `+0x1f8`
+   (copied by `CUnit::Init` from mesh part 2 when a `turret` part exists; SAT has
+   none, so its offset is zero). Desired = −atan2(dx, dy) − body yaw (slot 92,
+   `+0x114`) and the deadline `+0x20c` becomes time + 10.0. Without a target the
+   desired yaw is 0.0 once the deadline is strictly past, otherwise the current
+   yaw. Desired is wrapped once into [−π, π] and clamped to ±M × profile `+0xdc`.
+   Let s = M × profile `+0xbc` (`CUnitTurretTurnRate`). The yaw snaps to desired
+   when |current − desired′| ≤ s, where desired′ is desired − 2π when current
+   < −π/2 and desired > π/2, desired + 2π when current > π/2 and desired < −π/2,
+   and desired otherwise. Otherwise it moves by s, upward when
+   0 < desired − current ≤ π or current − desired > π and downward in the other
+   cases, is wrapped once into [−π, π] and is clamped to ±`+0xdc`. The profile
+   defaults (`0x0042efd0`, stores at `0x0042f0ff-0x0042f110`) set `+0xdc` to 2π,
+   so neither clamp bites for these turrets.
+4. Barrel pitch (`0x004fafe5-0x004fb04d`), only with `+0x224`: snaps to `+0xec`
+   when |`+0xe8` − `+0xec`| ≤ M × `+0xbc`, otherwise steps by that amount toward it.
+
+The desired pitch `+0xec` comes from the fire-control refresh, not the Move. With
+an AI target and a current weapon, mode and round, the refresh stores the solver
+result at `0x004fb302`. The solver `0x005094b0` takes its no-gravity branch
+(`0x00509529-0x00509557`) when the round's `CRoundGravity` `+0x3c` is zero or its
+beam or torpedo flag is set. `CRoundData__CreateAndRegisterByName`
+(`0x0042ffa0`) defaults all three to zero (`0x004300fc`, `0x0043011f`,
+`0x00430108`) and none of the Blaster, SAT 1 or Pulse Bolt Medium records sets
+them. The pitch is therefore asin(dz/|d|) from the Unit position `+0x1c`
+(`CCannon` slot 113 is `0x00405eb0`, a copy of `+0x1c`), or 0.0 when |d| is 0.
+The helper `0x0055dcb0` is the CRT asin: it computes atan2(x, √(1 − x²)), returns
+±π/2 at |x| = 1 and names `asin` in its error record at `0x00653310`.
+
+Fire gate A ([`0x00507ab0`](../binary-analysis/functions/IScript.cpp.md)) takes the
+weapon's facing from the body orientation plus turret yaw `+0xe0` when the weapon's
+turret flag is set (Blaster, Pulse), its elevation from `+0xe8` with the barrel
+flag (all three), and fires only when the yaw error is below
+`CWeaponYawTolerance`. Selection, preparation, readiness and firing are the shared
+Unit chain already contracted for aircraft
+([controller owner](../binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)).
+
 ## Drones and the player
 
 Target Drone (`default physics.dat` offset `0x24e76`): life 1.0, no shields on it or
@@ -215,8 +269,137 @@ Player weapons against a 1.0-life drone:
 Aquila Prototype's jet list is Mech Vulcan Cannon then Missile Pod (configuration
 offsets `0x340`, `0x353`). `CBattleEngineJetPart::ResetConfiguration` creates every
 configured jet weapon with no career gate (`BattleEngineJetPart.cpp:976-1000`), and
-`LevelScript.msl` disables the Missile Pod only in the abort handler (`:357`). The
-lock path is pinned source (`BattleEngine.cpp:640-1000`).
+`LevelScript.msl` disables the Missile Pod only in the abort handler (`:357`).
+
+### Missile Pod locks
+
+`CBattleEngine::Move` (`0x004081c0`) calls `HandleLocks` (`0x00406560`) at
+`0x00408b84` on every Move while the Battle Engine is not dying
+(`BattleEngine.cpp:1330-1476`); its Actor multiplier is 1 (vtable `0x005d89c4` slot
+24 is `0x004de700`, returning 1.0), so that is every frame. `HandleLocks` returns
+at once while the current part is firing (`0x00414b30`) and otherwise follows
+`BattleEngine.cpp:586-760`, with these retail specifics:
+
+- Every lock parameter comes from the weapon's current mode. Each getter rounds
+  charge `+0x60` with `fistp`, divides by 100 with truncation and takes that
+  level's mode from the weapon profile, falling back to lower levels when an entry
+  is missing: `0x00506350` maximum locks `+0x90`, `0x00506440` lock time `+0x94`,
+  `0x00506620` lock deflection `+0x98`, `0x00506710` lock range `+0x9c`,
+  `0x00506800` lock radius `+0xa0`, `0x00506530` lock mode `+0xa8`.
+- Both pod modes store `CWeaponLockMode` 0, direct. The dispatch at `0x0040682b`
+  sends 0 to `0x00406b1f` (crosshair unit), 1 to `0x00406a5e` (proximity) and 2
+  to `0x00406842` (sequence).
+- The lock-loss pass (`0x00406724`) and direct acquisition (`0x00406ce4`) compare
+  the normalised heading's forward component with cos(`CWeaponLockDeflection`),
+  where the source uses `GetMaxDeflection`: −0.34906584 for the launcher (cos
+  0.9396926) and −0.69813168 for the salvo (cos 0.7660444). A new lock needs the
+  forward component strictly greater.
+- Direct acquisition uses the crosshair unit `+0x4c8`, or the outer-sphere probe
+  below when that is null. It skips units already locked, applies the side gate
+  `0x004fd3d0` and `CanLock` (`0x005061f0`), requires distance² < (lock range ×
+  (1 − stealth × 0.01))² with stealth from the target's slot 91, and then starts a
+  lock for the mode's lock time (`0x00406fc0`).
+- `CanLock` requires the target's active flag `+0x214`; `+0x228` clear unless the
+  target profile's `+0x12c` is set; `+0x22c` clear; a nonzero profile `+0x114`; and
+  a nonzero intersection of the target's thing type `+0x34` with the mode's
+  `CWeaponLockUnit` `+0xa4`. Both pod modes carry `0x000e8400`, which includes the
+  air-unit bit `0x400` that every `CPlane` has (its type mask is `0x40000400`).
+- The burst spawner calls `FireLock` (`0x00407060`) from `0x005074c9` with the
+  Battle Engine's current target (slot 81, `0x004071b0`, the source's
+  `GetCurrentTarget`); a finished lock moves to the fired set with a 0.5 s window
+  ([owner](../binary-analysis/functions/BattleEngine.cpp/CBattleEngine__FireLock.md)).
+
+### Crosshair and auto-aim refresh
+
+Both refreshes exist in retail and draw from the shared gameplay stream.
+
+- `CBattleEngine::Init` (`0x00404dd0`) queues event 6002 (`CALC_UNIT_OVER_CROSSHAIR`)
+  at `0x004058b2`, after `0x00406460` and before `HandleAutoAim`, for time + 0.1 +
+  (r mod 65536) × 0.2/65536 at priority 0 (start of frame), taking one draw at
+  `0x0040586e`.
+- `CBattleEngine::HandleEvent` (`0x0040c180`) sends 6002 to
+  `CalcUnitOverCrossHair(event, TRUE, TRUE)` (`0x0040acc0`) and stores the result
+  in `+0x4c8`. Every call with an event requeues 6002 the same way with one draw
+  (`0x0040b091`), whether or not a player is attached.
+- `CalcUnitOverCrossHair` casts a 1000-unit line from the player's view point
+  along the view orientation times the auto-aim matrix, ignoring the Battle Engine
+  itself, trees (`0x2000000`) and rounds (`0x4`). It returns a unit that is not a
+  lifeless building, when the weapon's actual maximum range (1000.0 when not
+  positive) exceeds the hit distance. The event path also stores the unit
+  regardless of range in `+0x4cc`.
+- The line query `CWorld::FindFirstThingToHitLine` (`0x0050b030`) first traces the
+  heightfield (`0x00490a40`). A terrain hit records class 1 and its distance, and a
+  thing counts only when it is strictly nearer. Candidates skip the ignored thing,
+  things with `+0x2c` bit `0x10`, masked types and dying non-buildings. Each must
+  have a collision shape whose sphere the line intersects (`0x004780f0`); its
+  distance is |sphere centre − line start| − radius (thing slot 17).
+- The event path (level 2) replaces that distance with a mesh test whenever the
+  shape has mesh data. The `HandleLocks` fallback (level 0, mesh flag 0) accepts
+  the sphere result and draws nothing. The nearest candidate wins, and the call
+  returns 3 for a thing, 1 for ground and 0 for nothing.
+- `HandleAutoAim` (`0x0040b6d0`) runs once from Init and then on each event 6003.
+  When `GAME+0x20` (`0x008a9ab8`) is zero it clears the auto-aim offsets and
+  returns without requeueing. `CGame::InitRestartLoop` sets it to 1 at every level
+  start (`0x0046c4c2`; the global `CGame` is `0x008a9a98`), and only the pause
+  menu (`0x00472d1b`/`0x00472d2f`) changes it. Otherwise it ends with one draw
+  (`0x0040bf57`) and queues 6003 for time + 0.2 + (r mod 65536) × 0.1/65536.
+
+Construction of the Battle Engine therefore takes two shared draws, 6002 and
+then 6003. Afterwards each 6002 delivery takes one, and each 6003 delivery takes
+one while auto-aim is allowed.
+
+### Seeking rounds
+
+SAT 1, Micro Missile and Forseti Missile are plain `CRound`s (no missile, beam or
+torpedo flag), moved every frame by `CRound::Move` (`0x004d8e40`; `CRound` vtable
+`0x005de82c` slot 24 returns 1.0). The only value compare on `CRoundSeek` in round
+or weapon code is `== 1` at `0x004dac9c`, the self-acquire selector; every other
+reader tests only nonzero. Seek modes 2 and 3 both keep the launch target and
+never self-acquire.
+
+- With `CRoundWiggle` `+0x38` above zero every Move first takes two shared draws
+  (`0x004d8ffc`, `0x004d9036`).
+- For a damaging round a bound non–Battle Engine target is released when its
+  dying bit is set or its slot 104 returns zero (`0x004d9382-0x004d93c7`).
+  `CUnit` slot 104 (`0x00417630`) returns profile `+0x114`, or 1 without a profile.
+- A Battle Engine target is released when within 15 units (squared distance
+  below 225.0) and its slot 104 returns zero.
+- Steering (`0x004d93cc-0x004d9838`) requires nonnegative damage, a positive turn
+  rate, a bound target, seek delay < age and age < `CRoundSeekTerminationTime`
+  (default 1000.0, `0x004300e3`).
+- Let f be the forward component of the normalised direction to the target's aim
+  point in the round frame, and c = cos(`CRoundSeekAngle`). A round without
+  `CRoundWeirdoSeek` steers when f ≥ c and otherwise drops the target
+  permanently, unless it is a torpedo.
+- SAT 1 has `CRoundWeirdoSeek` (`+0x54`). It keeps the target and does the
+  opposite: it holds its course while f ≥ c and steers only when f < c
+  (`0x004d95c8-0x004d95d6`).
+- Steering turns by the yaw error −atan2(x, y) and the pitch error
+  atan2(z, √(x² + y²)), each clamped to ±turn rate.
+- Whenever a round owned by a Battle Engine releases its target, including
+  `CRound::Shutdown` on impact (`0x004d8e00`), it calls `LockHit` (`0x00407140`;
+  the six callers are `0x004d8e00`, `0x004d9351`, `0x004d93a7`, `0x004d959a`,
+  `0x004daafc` and `0x004dab6b`).
+
+### Shared-stream draws by rounds and weapons
+
+Every `Random__NextLCGAbs` call in the round, weapon, fire-control, AI, crosshair
+and auto-aim paths above loads `ecx` from `0x008a9d9c`, the single gameplay
+generator. Player and enemy rounds use the same code and stream.
+`ProjectileBurst__SpawnFromCurrentPreset` (`0x005069f0`) loops over
+`CWeaponVolleySize` (`+0x48`) rounds per burst event and, for each one:
+
+- takes two draws (`0x00506e0a`, `0x00506e3e`), whatever the inaccuracy, scaling
+  (r mod 65536) × 2/65536 − 1 by `CWeaponInaccuracy` `+0x34` for pitch (first) and
+  yaw (second);
+- takes one more (`0x00507453`) only for a `CRoundFlak` round whose owner target
+  lies within speed × life span;
+- takes three (`0x005076f6-0x00507710`) only when the mode names a
+  `CWeaponClip` (`+0x00`).
+
+The Missile Pod modes, the M6 Blaster, the SAT Launcher and both drone weapons
+name no clip and fire no flak rounds, so each spawned round costs exactly two
+draws at launch, plus two per Move while a wiggling round flies.
 
 ## AI owners that draw shared RNG
 
@@ -253,7 +436,7 @@ already orders rows 0–9 of this same base world.
 
 | Question | Cheapest falsifier |
 | --- | --- |
-| Turret aim and fire law: turret/barrel rotation (`CMCCannon` `0x004952a0`), fire gates A/B, bursts and volleys against a moving drone | Static read of `0x004952a0` and the Unit fire path with the existing weapon contracts, then an original-code composition with a `CCannon` owner |
+| Whether the turret, lock, crosshair and seek laws above hold at runtime as composed | An original-code composition of `0x004fa8d0`'s turret section, `HandleLocks`, `CalcUnitOverCrossHair` and `CRound::Move` over a supplied world |
 | Exact first-flush order of all AI, 4003 and Actor draws in Level 100 | Extend the World 110 construction order to all base rows and the level-world rows |
 | Whether the Hangar AI's all-squads spawning probe runs (owner `+0x188`) | Read the Hangar and Airfield spawner uses and `0x004fda90` |
 | How often stray turret rounds hit the player | A copied-retail observation once David releases the desktop |
