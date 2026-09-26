@@ -1808,7 +1808,8 @@ public sealed class InteractiveSessionTests
         // every round's launch basis took retail's default 2π/4096 pitch and
         // matrix composition, and the Pulse's level-0 mode lost the Small
         // bolt's scatter; then the load took the retail construction draws
-        // and every unit's callbacks. Controller calls now precede callbacks and Move, so the four releases
+        // and every unit's callbacks; then the Pulse left cockpit Gun 1
+        // through the full body orientation. Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1829,14 +1830,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("3581009dfca9d2d9ff909a541bdf69cea894f2efb560cafbc82141617bf9fe37",
+        Assert.Equal("03f4e35e9e0dbf6947c06955c6d93df6eb3b69a4f8052c3ad2adb65f772c6121",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("8d3fd2b891b0e20c5612259d2c896583d4ea9b5eaee28c6886364272f68c4da0",
+        Assert.Equal("79fcba86f2a8c9eabd2b2b8dc39925eabb457870e29281a7f785547121e2a111",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "afc552db013e155d517e081f639d1f1a832b5338aae128f3c0a11e6a62d45d72",
+            finalStateHash == "cb9281fc827cf66e046b6c2c7644aab0e697a49b5a6c0707c10e4bdd21f50dab",
             $"First-flight final state hash: {finalStateHash}");
     }
 
@@ -2037,23 +2038,23 @@ public sealed class InteractiveSessionTests
     private static Level100ActorPoseSnapshot PlaceTargetCenterAtPulseEmitter(
         WorldSnapshot state)
     {
+        // Gun 1 of cockpit2.msh (x right, y forward, z down, micrometres)
+        // through yaw, nose-down pitch and roll.
         double yaw = state.FacingYawMicroRad / 1_000_000d;
         double pitch = state.FacingPitchMicroRad / 1_000_000d;
-        double emitterForwardPlane =
-            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
-        int emitterOffsetX = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
-            (emitterForwardPlane * Math.Sin(yaw)),
-            MidpointRounding.AwayFromZero);
-        int emitterOffsetZ = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
-            (emitterForwardPlane * Math.Cos(yaw)),
-            MidpointRounding.AwayFromZero);
-        int emitterVerticalOffset = (int)Math.Round(
-            (-SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Sin(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Cos(pitch)),
-            MidpointRounding.AwayFromZero);
+        double roll = state.BodyRollMicroRad / 1_000_000d;
+        const double gunX = 0.092, gunY = 84.264, gunZ = -258.033;
+        double forwardX = -Math.Sin(yaw) * Math.Cos(pitch), forwardY = -Math.Sin(pitch), forwardZ = Math.Cos(yaw) * Math.Cos(pitch);
+        double baseUpX = -Math.Sin(pitch) * Math.Sin(yaw), baseUpY = Math.Cos(pitch), baseUpZ = Math.Sin(pitch) * Math.Cos(yaw);
+        double rightX = (Math.Cos(yaw) * Math.Cos(roll)) + (baseUpX * Math.Sin(roll));
+        double rightY = baseUpY * Math.Sin(roll);
+        double rightZ = (Math.Sin(yaw) * Math.Cos(roll)) + (baseUpZ * Math.Sin(roll));
+        double upX = (baseUpX * Math.Cos(roll)) - (Math.Cos(yaw) * Math.Sin(roll));
+        double upY = baseUpY * Math.Cos(roll);
+        double upZ = (baseUpZ * Math.Cos(roll)) - (Math.Sin(yaw) * Math.Sin(roll));
+        int emitterOffsetX = (int)Math.Round((gunX * rightX) + (gunY * forwardX) - (gunZ * upX), MidpointRounding.AwayFromZero);
+        int emitterOffsetZ = (int)Math.Round((gunX * rightZ) + (gunY * forwardZ) - (gunZ * upZ), MidpointRounding.AwayFromZero);
+        int emitterVerticalOffset = (int)Math.Round((gunX * rightY) + (gunY * forwardY) - (gunZ * upY), MidpointRounding.AwayFromZero);
         var emitter = new SimVector3(
             state.PlayerPosition.X + emitterOffsetX,
             state.PlayerGroundElevationMillimeters +

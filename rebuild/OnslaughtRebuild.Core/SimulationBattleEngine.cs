@@ -544,7 +544,7 @@ public sealed partial class Simulation
         }
 
         EmitWeaponFireEvent(Level100PlayerWeapon.MissilePod, 1);
-        (_, int angleSlot) = _level100PlayerWeapons.AdvancePodLaunchCounters();
+        (int gun, int angleSlot) = _level100PlayerWeapons.AdvancePodLaunchCounters();
         (int yawInaccuracy, int pitchInaccuracy) = _level100ActorMechanics.NextWeaponInaccuracy(0);
         Level100ActorId? target = _playerLocks.GetCurrentTarget(now);
         if (RetailCurrentWeapon == Level100MissionWeapon.MissilePod)
@@ -558,6 +558,7 @@ public sealed partial class Simulation
             Level100MissilePod.LifetimeTicks,
             yawInaccuracy,
             pitchInaccuracy,
+            gun,
             target,
             BitConverter.SingleToUInt32Bits(now),
             (FloatBitsToMicroRadians(Level100MissilePod.LaunchAngleYawBits[angleSlot]),

@@ -2908,8 +2908,9 @@ internal sealed class Level100ChainAutopilot
     {
         double startX = state.PlayerPosition.X;
         double startZ = state.PlayerPosition.Z;
-        double startY = state.PlayerElevationMillimeters +
-            SimulationConstants.PulseCannonEmitterUpMillimeters;
+        // Gun 1 sits 258 mm above the Battle Engine (cockpit2.msh, z down).
+        double startY = state.PlayerElevationMillimeters -
+            (Level100CockpitEmitters.Gun(Level100CockpitEmitters.PulseGun, walkPose: true).ZMicrometres / 1000.0);
         double deltaX = aim.X - startX;
         double deltaY = aim.Y - startY;
         double deltaZ = aim.Z - startZ;

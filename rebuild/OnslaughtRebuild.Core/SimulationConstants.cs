@@ -687,12 +687,6 @@ public static class SimulationConstants
     // every 3 to average the released 20 volleys per second rather than
     // rounding it to 15 or 30. The unit has no reason to exist at 20 Hz.
     public const int TwinVulcanReloadTicks = 1;
-    // A same-return capture of Steam CBattleEngine::GetLaunchPosition resolved
-    // cockpit emitter "Gun" index 1 relative to the live BattleEngine basis.
-    // Values are rounded to deterministic integer millimetres.
-    public const int PulseCannonEmitterRightMillimeters = -6;
-    public const int PulseCannonEmitterForwardMillimeters = 80;
-    public const int PulseCannonEmitterUpMillimeters = 259;
     // The released definitions retain life in float units. Registry health
     // carries the same values in milli-life while the contact owner applies
     // exact 1.8 medium-pulse damage to the contacted part.

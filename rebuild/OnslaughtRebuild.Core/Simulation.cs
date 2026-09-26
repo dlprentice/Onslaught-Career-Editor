@@ -2434,7 +2434,10 @@ public sealed partial class Simulation
         int ForwardZ,
         int RightX,
         int RightY,
-        int RightZ);
+        int RightZ,
+        int UpX = 0,
+        int UpY = 0,
+        int UpZ = 0);
 
     private FixedBodyBasis GetBodyBasis()
     {
@@ -2455,13 +2458,20 @@ public sealed partial class Simulation
         int rightY = MultiplyFixed(baseUpY, rollSin);
         int rightZ = MultiplyFixed(baseRightZ, rollCos) +
             MultiplyFixed(baseUpZ, rollSin);
+        // The same roll turns up away from right.
+        int upX = MultiplyFixed(baseUpX, rollCos) - MultiplyFixed(baseRightX, rollSin);
+        int upY = MultiplyFixed(baseUpY, rollCos);
+        int upZ = MultiplyFixed(baseUpZ, rollCos) - MultiplyFixed(baseRightZ, rollSin);
         return new FixedBodyBasis(
             forwardX,
             forwardY,
             forwardZ,
             rightX,
             rightY,
-            rightZ);
+            rightZ,
+            upX,
+            upY,
+            upZ);
     }
 
     private static int MultiplyFixed(int left, int right) =>
@@ -3724,6 +3734,20 @@ public sealed partial class Simulation
             null);
     }
 
+    /// <summary>
+    /// The emitter of a burst event's <paramref name="round"/>-th round, from
+    /// the mode's launch sequence (<see cref="Level100CockpitEmitters"/>).
+    /// </summary>
+    internal static int LaunchGun(Level100MissionWeapon weapon, int round) => weapon switch
+    {
+        Level100MissionWeapon.PulseCannonPod => Level100CockpitEmitters.PulseGun,
+        Level100MissionWeapon.MechTwinVulcanCannon =>
+            Level100CockpitEmitters.TwinVulcanSequence[round % Level100CockpitEmitters.TwinVulcanSequence.Length],
+        Level100MissionWeapon.MechVulcanCannon =>
+            Level100CockpitEmitters.MechVulcanSequence[round % Level100CockpitEmitters.MechVulcanSequence.Length],
+        _ => throw new ArgumentOutOfRangeException(nameof(weapon)),
+    };
+
     // CWeaponPower (mode +0x40, default 0 at 0x0042fb81) from the pinned
     // physics.dat: Mech Pulse Cannon Charged 0x3cf5c28f, Charged 2 0x3d4ccccd;
     // neither Vulcan mode carries the node.
@@ -3772,7 +3796,8 @@ public sealed partial class Simulation
             }
             // CRound::Init -> CActor::Init takes the round's Move-phase draw.
             _ = _level100ActorMechanics.NextReleasedRandom();
-            LaunchWalkerRound(kind, speedPerTick, lifetimeTicks, yawInaccuracy, pitchInaccuracy);
+            LaunchWalkerRound(kind, speedPerTick, lifetimeTicks, yawInaccuracy, pitchInaccuracy,
+                LaunchGun(weapon, round));
             _shake.Add(power, _level100ActorMechanics.NextReleasedRandom);
         }
     }
@@ -3828,47 +3853,21 @@ public sealed partial class Simulation
         int lifetimeTicks,
         int yawInaccuracyMicroRadians,
         int pitchInaccuracyMicroRadians,
+        int gun,
         Level100ActorId? seekTarget = null,
         uint launchTimeBits = 0,
         (int YawMicroRad, int PitchMicroRad)? launchAngle = null)
     {
-        // Retail samples the retained cockpit emitter before correcting its
+        // Retail samples the cockpit's Gun emitter before correcting its
         // launch orientation. CBattleEngine::GetLaunchPosition (0x0040c990,
-        // BattleEngine.cpp:3000-3069) reuses the distance the last crosshair
-        // refresh (event 6002) retained and, for an adjustable weapon, rotates
-        // this emitter toward that point on the current view line.
-        // Inaccuracy rotates the corrected direction, never the emitter.
-        (int emitterSin, int emitterCos) = FixedSinCos(_facingYawMicroRad);
-        (int emitterPitchSin, int emitterPitchCos) =
-            FixedSinCos(_facingPitchMicroRad);
-        int emitterForwardPlane = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                emitterPitchCos) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
-                emitterPitchSin),
-            FixedTrigScale);
-        int emitterVerticalOffset = DivideRoundNearest(
-            (-(long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                emitterPitchSin) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
-                emitterPitchCos),
-            FixedTrigScale);
-        int emitterOffsetX = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
-                emitterCos) -
-            ((long)emitterForwardPlane * emitterSin),
-            FixedTrigScale);
-        int emitterOffsetZ = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
-                emitterSin) +
-            ((long)emitterForwardPlane * emitterCos),
-            FixedTrigScale);
-
-        SimVector2 playerPosition = PlayerPosition;
-        var emitter = new SimVector3(
-            playerPosition.X + emitterOffsetX,
-            PlayerElevationMillimeters + emitterVerticalOffset,
-            playerPosition.Z + emitterOffsetZ);
+        // BattleEngine.cpp:3000-3069) takes the emitter's world pose, p = M·p
+        // + P, with M the body orientation (+0x3c, roll included) and P the
+        // Battle Engine's position, then reuses the distance the last
+        // crosshair refresh (event 6002) retained and rotates this emitter
+        // toward that point on the current view line. Inaccuracy rotates the
+        // corrected direction, never the emitter.
+        SimVector3 emitter = CockpitEmitterWorldPosition(
+            Level100CockpitEmitters.Gun(gun, walkPose: _mode == VehicleMode.Walker));
         (int baseYaw, int basePitch) = ReticleAdjustedLaunchAngles(emitter);
         (int launchYaw, int launchPitch) = Level100ActorMechanics.ComposeLaunchDirection(
             baseYaw,
@@ -3904,6 +3903,28 @@ public sealed partial class Simulation
             LaunchTimeBits = launchTimeBits,
             SeekTarget = seekTarget,
         });
+    }
+
+    /// <summary>
+    /// A cockpit emitter's world position: the Battle Engine's position plus
+    /// the body orientation times the emitter's model position. Retail's model
+    /// z points down, so it enters Core's up axis negated. The cockpit tilt S
+    /// and the render-fraction lerp of the pose are open (the RE lane's aiming
+    /// contract), so this is the current pose with S the identity.
+    /// </summary>
+    private SimVector3 CockpitEmitterWorldPosition(Level100CockpitEmitters.Emitter model)
+    {
+        FixedBodyBasis body = GetBodyBasis();
+        long Axis(int right, int forward, int up) =>
+            ((long)model.XMicrometres * right) +
+            ((long)model.YMicrometres * forward) -
+            ((long)model.ZMicrometres * up);
+        const long Scale = (long)FixedTrigScale * 1000;
+        SimVector2 position = PlayerPosition;
+        return new SimVector3(
+            checked(position.X + DivideRoundNearest(Axis(body.RightX, body.ForwardX, body.UpX), Scale)),
+            checked(PlayerElevationMillimeters + DivideRoundNearest(Axis(body.RightY, body.ForwardY, body.UpY), Scale)),
+            checked(position.Z + DivideRoundNearest(Axis(body.RightZ, body.ForwardZ, body.UpZ), Scale)));
     }
 
     /// <summary>

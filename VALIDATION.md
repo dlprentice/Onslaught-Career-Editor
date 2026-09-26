@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,51 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Cockpit Gun emitters for player rounds — September 26
+
+Core launched every player round from one point: a live capture of the Pulse's
+emitter relative to the Battle Engine (right −6 mm, forward 80 mm, up 259 mm),
+turned by yaw and pitch only. The RE lane's aiming contract
+(`reverse-engineering/game-mechanics/battle-engine-aiming.md`, "Gun emitters",
+commits `0827d186` and `0aa1ceac`) gives each weapon its own emitters on the
+cockpit mesh `cockpit2.msh`. Their model positions are x right, y forward and z
+down, and the world pose is the body orientation `+0x3c`, roll included, times
+that position plus the Battle Engine's position.
+
+The weapon modes' launch sequences name the emitters: Pulse, Gun 1; Twin
+Vulcan, Guns 9-12 (walk pose); Mech Vulcan, Guns 13-14; pod, Guns 4, 3, 5, 2,
+6. Gun 1 comes out at (0.09, 84, 258 above) mm. The captured (−6, 80, 259)
+differs by the cockpit tilt and render-fraction terms that the contract leaves
+open, so the model value is used.
+
+Tests:
+- `Level100CockpitEmitterTests` (9 cases) pins the Gun table against the
+  contract's composed poses and each weapon's sequence.
+- `SimulationTests.MechVulcanRounds_LeaveGunsThirteenAndFourteenInSequence`
+  checks the jet Vulcan's two rounds leave Guns 13 and 14 in order, through the
+  full body basis.
+- The Pulse emitter tests now expect Gun 1.
+
+Four mutations were killed and restored byte-identical
+(`local-data/test-runs/emitters-20260926/mutation-kills/`).
+
+Core passes 1,539 and Client 912 with the two known skips. First-flight fires
+nothing and keeps its pins. The in-process smoke and validator now read state
+`cb9281fc…`. The headless Godot smoke records inputs equal to the previous tape's
+(tape `add3de61…`, trace `06af5907…`), and the C# replayer reproduces it twice.
+The chain autopilot wins through six kills at tick 6,254 with hull 11,564. The
+cold-start won tape is 8,139 ticks (trace `c430525d…`, state `6e1f75a0…`), on
+the abort branch with no second-wave kills, and it replays twice.
+
+Open:
+- The cockpit tilt S and the render-fraction lerp of the pose.
+- The cockpit's own offsets `+0x1c` and `+0xc`, taken as zero.
+- The body shake term of `+0x3c`, not yet applied.
+
+Correction to the previous change's commit message: retail takes 1,535 draws
+before its first frame, not 1,540. Core's other five are the Tank Factory
+spawn, which retail takes on frame 2.
 
 ### Level 100 construction order and unit callbacks — September 26
 

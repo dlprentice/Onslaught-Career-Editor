@@ -2030,19 +2030,14 @@ public sealed class SimulationTests
         Assert.InRange(speedSquared,
             (long)(speedPerTick - 1) * (speedPerTick - 1),
             (long)(speedPerTick + 1) * (speedPerTick + 1));
+        // Gun 1 of cockpit2.msh through the body orientation, roll included.
         double yaw = fired.FacingYawMicroRad / 1_000_000d;
         double pitch = fired.FacingPitchMicroRad / 1_000_000d;
-        double emitterForwardPlane =
-            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
-        int expectedEmitterOffsetX = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
-            (emitterForwardPlane * Math.Sin(yaw)),
-            MidpointRounding.AwayFromZero);
-        int expectedEmitterOffsetZ = (int)Math.Round(
-            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
-            (emitterForwardPlane * Math.Cos(yaw)),
-            MidpointRounding.AwayFromZero);
+        double roll = fired.BodyRollMicroRad / 1_000_000d;
+        (double X, double Y, double Z) gunOffset = CockpitEmitterOffset(
+            Level100CockpitEmitters.Gun(Level100CockpitEmitters.PulseGun, walkPose: true), yaw, pitch, roll);
+        int expectedEmitterOffsetX = (int)Math.Round(gunOffset.X, MidpointRounding.AwayFromZero);
+        int expectedEmitterOffsetZ = (int)Math.Round(gunOffset.Z, MidpointRounding.AwayFromZero);
         Assert.InRange(
             (projectile.Position.X - projectile.Velocity.X) - fired.PlayerPosition.X,
             expectedEmitterOffsetX - 1,
@@ -2051,12 +2046,7 @@ public sealed class SimulationTests
             (projectile.Position.Z - projectile.Velocity.Z) - fired.PlayerPosition.Z,
             expectedEmitterOffsetZ - 1,
             expectedEmitterOffsetZ + 1);
-        int emitterVerticalOffset = (int)Math.Round(
-            (-SimulationConstants.PulseCannonEmitterForwardMillimeters *
-                Math.Sin(fired.FacingPitchMicroRad / 1_000_000d)) +
-            (SimulationConstants.PulseCannonEmitterUpMillimeters *
-                Math.Cos(fired.FacingPitchMicroRad / 1_000_000d)),
-            MidpointRounding.AwayFromZero);
+        int emitterVerticalOffset = (int)Math.Round(gunOffset.Y, MidpointRounding.AwayFromZero);
         Assert.Equal(
             fired.PlayerElevationMillimeters +
                 emitterVerticalOffset +
@@ -2558,6 +2548,61 @@ public sealed class SimulationTests
             }
             return now;
         }
+    }
+
+    /// <summary>
+    /// The jet's Mech Vulcan fires its two rounds from cockpit Guns 13 and 14,
+    /// in its launch sequence's order, through the body orientation (the RE
+    /// lane's aiming contract; <c>CWeaponLaunchSequence</c> (1, 13) (2, 14)).
+    /// </summary>
+    [Fact]
+    public void MechVulcanRounds_LeaveGunsThirteenAndFourteenInSequence()
+    {
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        AdvanceUntil(jet, state => state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None, 100);
+        WorldSnapshot before = jet.Snapshot;
+        WorldSnapshot fired = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot[] rounds = fired.Projectiles.OrderBy(item => item.Id).ToArray();
+        Assert.Equal(2, rounds.Length);
+        for (int index = 0; index < 2; index++)
+        {
+            (double X, double Y, double Z) offset = CockpitEmitterOffset(
+                Level100CockpitEmitters.Gun(13 + index, walkPose: false),
+                before.FacingYawMicroRad / 1e6, before.FacingPitchMicroRad / 1e6, before.BodyRollMicroRad / 1e6);
+            ProjectileSnapshot round = rounds[index];
+            Assert.InRange((round.Position.X - round.Velocity.X) - (before.PlayerPosition.X + offset.X), -2, 2);
+            Assert.InRange((round.Position.Z - round.Velocity.Z) - (before.PlayerPosition.Z + offset.Z), -2, 2);
+            Assert.InRange((round.ElevationMillimeters - round.VerticalVelocityMillimetersPerTick) -
+                (before.PlayerElevationMillimeters + offset.Y), -2, 2);
+        }
+    }
+
+    /// <summary>
+    /// A cockpit emitter's offset from the Battle Engine in Core millimetres:
+    /// model x right, y forward and z down through yaw, nose-down pitch and
+    /// roll, in double precision.
+    /// </summary>
+    private static (double X, double Y, double Z) CockpitEmitterOffset(
+        Level100CockpitEmitters.Emitter gun, double yaw, double pitch, double roll)
+    {
+        (double X, double Y, double Z) forward = (-Math.Sin(yaw) * Math.Cos(pitch), -Math.Sin(pitch), Math.Cos(yaw) * Math.Cos(pitch));
+        (double X, double Y, double Z) baseRight = (Math.Cos(yaw), 0.0, Math.Sin(yaw));
+        (double X, double Y, double Z) baseUp = (-Math.Sin(pitch) * Math.Sin(yaw), Math.Cos(pitch), Math.Sin(pitch) * Math.Cos(yaw));
+        (double X, double Y, double Z) right = (
+            (baseRight.X * Math.Cos(roll)) + (baseUp.X * Math.Sin(roll)),
+            baseUp.Y * Math.Sin(roll),
+            (baseRight.Z * Math.Cos(roll)) + (baseUp.Z * Math.Sin(roll)));
+        (double X, double Y, double Z) up = (
+            (baseUp.X * Math.Cos(roll)) - (baseRight.X * Math.Sin(roll)),
+            baseUp.Y * Math.Cos(roll),
+            (baseUp.Z * Math.Cos(roll)) - (baseRight.Z * Math.Sin(roll)));
+        double x = gun.XMicrometres / 1000.0, y = gun.YMicrometres / 1000.0, z = gun.ZMicrometres / 1000.0;
+        return (
+            (x * right.X) + (y * forward.X) - (z * up.X),
+            (x * right.Y) + (y * forward.Y) - (z * up.Y),
+            (x * right.Z) + (y * forward.Z) - (z * up.Z));
     }
 
     private static Simulation CreateJetWithMissilePod()
