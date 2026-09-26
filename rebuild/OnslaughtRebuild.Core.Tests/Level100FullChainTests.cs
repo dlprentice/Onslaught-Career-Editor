@@ -382,15 +382,15 @@ public sealed class Level100FullChainTests
         // friendly. The RE contract classes the six-kill result as a driver
         // expectation, not a retail invariant.
         Level100FinalWaveContract.AssertReleasedBranch(final);
-        // September 26 readings after the Aquila's weapon stores replaced the
-        // invented walker-energy cost, recoil and damage shake joined the
-        // shared stream and every spawned round took its Actor Init draw:
-        // the wave now aborts after two kills. These are reconstruction
-        // fixture readings, not retail timing, hull or branch.
+        // September 26 readings after every round's launch basis took
+        // retail's default 2π/4096 pitch and matrix composition and the
+        // Pulse's level-0 mode lost the Small bolt's scatter: the wave now
+        // aborts after one kill. These are reconstruction fixture readings,
+        // not retail timing, hull or branch.
         Assert.True(final.Level100Mission.Aborted);
-        Assert.Equal(2, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
-        Assert.Equal(5_982, final.Tick);
-        Assert.Equal(7_746, final.Hull);
+        Assert.Equal(1, CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(5_543, final.Tick);
+        Assert.Equal(7_950, final.Hull);
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
+Last updated: 2026-09-26 (every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
 The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, adapter-supplied every-match assignment
@@ -42,8 +42,9 @@ check scenes). From September 19 to 25 much of the Godot side was ported to
 typed GDScript and editor scenes. On September 25 it returned to the last
 all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
 and the later C# changes that carry evidence: the strict AYA texture admission
-below, the 2,148-step smoke-validator pin (`53c1cc64…`, re-pinned on September 26 to `89b9ada6…`
-as the Battle Engine's refresh, recoil and round Init draws joined the stream), and two refusals of
+below, the 2,148-step smoke-validator pin (`53c1cc64…`, re-pinned on September 26 to `aaf7bba9…`
+as the Battle Engine's refresh, recoil and round Init draws joined the stream and every round took
+retail's launch basis), and two refusals of
 impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
 cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The

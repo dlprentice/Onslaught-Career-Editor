@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,50 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Launch basis for every round — September 26
+
+The burst spawner builds each round's basis as orientation × launch angle ×
+scatter, every factor an `FMatrix(yaw, pitch, 0)` (the RE lane's burst-spawner
+contract, steps 5-7, and its 36-case Euler-constructor control, commit
+`84193799`). Before this change Core added the scatter to the aim as angles, which
+matches the product only when the aim is level, and gave modes without launch-angle
+entries no launch angle at all. Three corrections:
+- **Default launch angle.** A mode without `CWeaponLaunchAngle` entries uses
+  `0x004f8140(0, 1, 0)`: a pitch of float(2π/4096). Retail's z axis points down,
+  so every Pulse, Vulcan and drone round now leaves 1,534 µrad nose-down of its aim.
+- **Matrix composition.** Player rounds and the drones' rounds now compose aim,
+  angle and scatter through the one function the Missile Pod already uses. The
+  drones' rounds keep pitch nose-up internally, so their aim and wiggle pitch
+  convert to retail's nose-down pitch at the boundary. Before, the drones'
+  scatter and wiggle pitch had the opposite sign to retail's.
+- **Pulse scatter.** The Pulse Cannon Pod's level-0 mode, `Mech Pulse Cannon
+  Charged` @`0x134e3` in `data/default physics.dat` (`e1fb3ded…`), has
+  `CWeaponInaccuracy` 0; its first node's payload is `00000000`. Core scattered
+  its bolts by 0.5° (`0x3c0efa35`), which belongs to `Mech Pulse Cannon`
+  @`0x13473`, the Small bolt's mode, and the pod never selects that mode. The two
+  scatter draws are still taken and now scale to nothing.
+
+`SimulationTests.PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder` now
+checks every Pulse and Vulcan heading against a double-precision matrix
+product. Four mutations were killed and restored byte-identical
+(`local-data/test-runs/launch-basis-20260926/mutation-kills/`): no default
+pitch, the Small bolt's scatter restored, and the drones' pitch sign flipped at
+either end of the composition.
+
+Core passes 1,522 and the Client suite 912 with the two known skips.
+`first-flight.v1.json` and the canonical fingerprints do not move, because they
+fire nothing. The smoke fires the Pulse four times, so its pins move: the
+in-process fingerprints and the smoke validator now read state `aaf7bba9…`. The
+headless Godot smoke records a tape whose inputs equal the previous tape's;
+only its expected hashes differ (tape `0923ca41…`, trace `e3ed327f…`). The C#
+replayer reproduces it twice.
+
+The chain autopilot still wins on the final wave's abort branch, now after one
+kill at tick 5,543 with hull 7,950. The cold-start route records a won tape of
+7,347 ticks (trace `25332a14…`, state `6dd3c819…`), also on the abort branch
+with two kills, and it replays twice. Logs:
+`.worktrees/godot-editor-48-20260919/local-data/test-runs/launch-basis-20260926/`.
 
 ### Jet Missile Pod, locks and seeking rounds — September 26
 

@@ -1803,8 +1803,10 @@ public sealed class InteractiveSessionTests
         // September 26: the Battle Engine's 6002/6003 refresh draws and its
         // retained crosshair report joined the canonical state; then the
         // Aquila's weapon stores, recoil shake draws and every round's Actor
-        // Init draw (the four Pulse releases each take six draws now).
-        // Controller calls now precede callbacks and Move, so the four releases
+        // Init draw (the four Pulse releases each take six draws now); then
+        // every round's launch basis took retail's default 2π/4096 pitch and
+        // matrix composition, and the Pulse's level-0 mode lost the Small
+        // bolt's scatter. Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
         // above and the independent identical-input repeat below guard this
@@ -1824,14 +1826,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("5e4e58f449017f6c3026dd992aeb26007269364ad8c46312c4b3381fc880536a",
+        Assert.Equal("e3002313c65b95ff2ca855932f71bb8d149c7d4d17ef4480fbd22d6cda8d94d0",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("3ac06e3092d2b93536f54f7a08b3b043d4b90a7905923c3f427137d6cccafe3b",
+        Assert.Equal("2ad59cd4468bd160b438d0290a88d1d764a2498d641dc1459049f4ef07ad28f4",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "89b9ada6008de78bc84fb1928883af3fb043e701a350e42f0172957bdc73a4c8",
+            finalStateHash == "aaf7bba9759cd732200bbe086e4877795ff6520f287d3d613bfed46690f6ebd8",
             $"First-flight final state hash: {finalStateHash}");
     }
 

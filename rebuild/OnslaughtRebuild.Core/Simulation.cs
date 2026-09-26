@@ -3673,10 +3673,13 @@ public sealed partial class Simulation
             bool largePulse = pulseRound == Level100ProjectileKind.MechPulseBoltLarge;
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
-            // Charged2 field 1 @0x135DF in the pinned physics.dat is +0
-            // CWeaponInaccuracy; the scatter block still draws twice. Large
-            // carries its own physical scalars; its spatial blast, launch sound
-            // and impact presentation remain open, so this is not complete parity.
+            // Both charge levels' first node is +0 CWeaponInaccuracy (Charged
+            // @0x134E3, Charged 2 @0x135B3 in the pinned physics.dat); the
+            // 0x3C0EFA35 once used here is `Mech Pulse Cannon` @0x13473, the
+            // Small bolt's mode, which the Pulse Cannon Pod never selects. The
+            // scatter block still draws twice. Large carries its own physical
+            // scalars; its spatial blast, launch sound and impact presentation
+            // remain open, so this is not complete parity.
             SpawnPlayerBurst(
                 walkerSelected,
                 jetPart: false,
@@ -3686,7 +3689,7 @@ public sealed partial class Simulation
                     SimulationConstants.ProjectileSpeedPerTick,
                 largePulse ? SimulationConstants.LargePulseLifetimeTicks :
                     SimulationConstants.ProjectileLifetimeTicks,
-                largePulse ? 0 : SimulationConstants.PulseCannonInaccuracyMicroRadians,
+                0,
                 largePulse ? PulseChargedTwoPower : PulseChargedPower,
                 null);
             return;
@@ -3866,14 +3869,11 @@ public sealed partial class Simulation
             PlayerElevationMillimeters + emitterVerticalOffset,
             playerPosition.Z + emitterOffsetZ);
         (int baseYaw, int basePitch) = ReticleAdjustedLaunchAngles(emitter);
-        (int launchYaw, int launchPitch) = launchAngle is { } angle
-            ? ComposeLaunchDirection(
-                baseYaw,
-                basePitch,
-                angle,
-                (yawInaccuracyMicroRadians, pitchInaccuracyMicroRadians))
-            : (NormalizeMicroRad(baseYaw + yawInaccuracyMicroRadians),
-                NormalizeMicroRad(basePitch + pitchInaccuracyMicroRadians));
+        (int launchYaw, int launchPitch) = Level100ActorMechanics.ComposeLaunchDirection(
+            baseYaw,
+            basePitch,
+            launchAngle ?? Level100ActorMechanics.DefaultLaunchAngle,
+            (yawInaccuracyMicroRadians, pitchInaccuracyMicroRadians));
         (int launchSin, int launchCos) = FixedSinCos(launchYaw);
         (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
         int horizontalSpeed = DivideRoundNearest(
@@ -3903,54 +3903,6 @@ public sealed partial class Simulation
             LaunchTimeBits = launchTimeBits,
             SeekTarget = seekTarget,
         });
-    }
-
-    /// <summary>
-    /// The burst spawner's launch basis, orientation × launch angle × jitter
-    /// (<c>0x00506ed1-0x005072d0</c>), reduced to the forward column its
-    /// velocity uses. Each factor is <c>FMatrix(yaw, pitch, 0)</c>; retail's z
-    /// axis points down, so Core's pitch (positive nose-down) is retail's.
-    /// <c>GetLaunchPosition</c> hands a zero-roll orientation whenever a
-    /// crosshair report exists (the RE lane's aiming contract).
-    /// </summary>
-    private static (int YawMicroRad, int PitchMicroRad) ComposeLaunchDirection(
-        int baseYawMicroRad,
-        int basePitchMicroRad,
-        (int Yaw, int Pitch) launchAngle,
-        (int Yaw, int Pitch) jitter)
-    {
-        // Retail axes: x right, y forward, z down. Core X = x, Z = y, up = -z.
-        (long x, long y, long z) = RotateByEuler(jitter.Yaw, jitter.Pitch, 0, FixedTrigScale, 0);
-        (x, y, z) = RotateByEuler(launchAngle.Yaw, launchAngle.Pitch, x, y, z);
-        (x, y, z) = RotateByEuler(baseYawMicroRad, basePitchMicroRad, x, y, z);
-        return (
-            FixedAtan2(-x, y),
-            FixedAtan2(z, IntegerSquareRoot((x * x) + (y * y))));
-    }
-
-    /// <summary>
-    /// <c>FMatrix(yaw, pitch, 0)</c> times a Q30 vector: columns
-    /// (cos y, sin y, 0), (−cos p sin y, cos p cos y, sin p) and
-    /// (sin p sin y, −sin p cos y, cos p), the words <c>RetailUnitEuler</c>
-    /// builds with zero roll.
-    /// </summary>
-    private static (long X, long Y, long Z) RotateByEuler(
-        int yawMicroRad,
-        int pitchMicroRad,
-        long x,
-        long y,
-        long z)
-    {
-        (int yawSin, int yawCos) = FixedSinCos(yawMicroRad);
-        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRad);
-        long forwardX = -MultiplyFixed(pitchCos, yawSin);
-        long forwardY = MultiplyFixed(pitchCos, yawCos);
-        long upX = MultiplyFixed(pitchSin, yawSin);
-        long upY = -MultiplyFixed(pitchSin, yawCos);
-        return (
-            DivideRoundNearest((x * yawCos) + (y * forwardX) + (z * upX), FixedTrigScale),
-            DivideRoundNearest((x * yawSin) + (y * forwardY) + (z * upY), FixedTrigScale),
-            DivideRoundNearest((y * pitchSin) + (z * pitchCos), FixedTrigScale));
     }
 
     /// <summary>

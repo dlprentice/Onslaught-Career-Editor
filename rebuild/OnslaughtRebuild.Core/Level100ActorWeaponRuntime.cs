@@ -474,6 +474,10 @@ public sealed partial class Level100ActorMechanics
         // round's Move phase. Every spawned round therefore costs three draws.
         _ = _releasedRandom.Next();
 
+        // The actor rounds keep pitch nose-up; retail's basis is nose-down.
+        // Neither drone weapon mode names a CWeaponLaunchAngle.
+        (int launchYaw, int launchPitch) = ComposeLaunchDirection(
+            yaw, -pitch, DefaultLaunchAngle, (yawInaccuracy, pitchInaccuracy));
         Level100ActorRoundData round = Level100ActorArmament.Round(mode.Round);
         _actorRounds.Add(new ActorRoundState
         {
@@ -482,8 +486,8 @@ public sealed partial class Level100ActorMechanics
             TargetActorId = targetId,
             Kind = round.Kind,
             PositionMillimeters = ownerPose.PositionMillimeters,
-            YawMicroRadians = NormalizeMicroRad(yaw + yawInaccuracy),
-            PitchMicroRadians = NormalizeMicroRad(pitch + pitchInaccuracy),
+            YawMicroRadians = launchYaw,
+            PitchMicroRadians = NormalizeMicroRad(-launchPitch),
             RemainingBaseTicks = round.LifeSpanBaseTicks,
             ElapsedBaseTicks = 0,
             Locked = round.Seeks,
@@ -533,7 +537,8 @@ public sealed partial class Level100ActorMechanics
             {
                 (int wiggleYaw, int wigglePitch) = NextWiggle(data.WiggleMicroRadians);
                 travelYaw = NormalizeMicroRad(travelYaw + wiggleYaw);
-                travelPitch = NormalizeMicroRad(travelPitch + wigglePitch);
+                // NextWiggle's pitch is retail's nose-down draw.
+                travelPitch = NormalizeMicroRad(travelPitch - wigglePitch);
                 (sin, cos) = FixedSinCos(travelYaw);
                 (pitchSin, pitchCos) = FixedSinCos(travelPitch);
             }
@@ -636,6 +641,64 @@ public sealed partial class Level100ActorMechanics
 
         round.YawMicroRadians = yaw;
         round.PitchMicroRadians = pitch;
+    }
+
+    /// <summary>
+    /// The launch angle of a weapon mode with no <c>CWeaponLaunchAngle</c>
+    /// entries: <c>0x004f8140(0, 1, 0)</c>, the integer-angle constructor in
+    /// units of 2π/4096, which equals the float constructor at a pitch of
+    /// float(2π/4096) (the RE lane's Euler-constructor control, 36 cases).
+    /// Retail's z axis points down, so it tips every such round 1,534 µrad
+    /// nose-down.
+    /// </summary>
+    internal static (int Yaw, int Pitch) DefaultLaunchAngle => (0, 1_534);
+
+    /// <summary>
+    /// The burst spawner's launch basis, orientation × launch angle × jitter
+    /// (<c>0x00506ed1-0x005072d0</c>), reduced to the forward column its
+    /// velocity uses. Each factor is <c>FMatrix(yaw, pitch, 0)</c> with
+    /// retail's nose-down pitch; the jitter is the scatter pair, yaw from the
+    /// second draw and pitch from the first. Shared by the Battle Engine's
+    /// rounds and the actors'.
+    /// </summary>
+    internal static (int YawMicroRadians, int PitchMicroRadians) ComposeLaunchDirection(
+        int baseYawMicroRadians,
+        int basePitchMicroRadians,
+        (int Yaw, int Pitch) launchAngle,
+        (int Yaw, int Pitch) jitter)
+    {
+        // Retail axes: x right, y forward, z down. Core X = x, Z = y, up = -z.
+        (long x, long y, long z) = RotateByEuler(jitter.Yaw, jitter.Pitch, 0, FixedTrigScale, 0);
+        (x, y, z) = RotateByEuler(launchAngle.Yaw, launchAngle.Pitch, x, y, z);
+        (x, y, z) = RotateByEuler(baseYawMicroRadians, basePitchMicroRadians, x, y, z);
+        return (
+            FixedAtan2(-x, y),
+            FixedAtan2(z, IntegerSquareRoot((x * x) + (y * y))));
+    }
+
+    /// <summary>
+    /// <c>FMatrix(yaw, pitch, 0)</c> times a Q30 vector: columns
+    /// (cos y, sin y, 0), (−cos p sin y, cos p cos y, sin p) and
+    /// (sin p sin y, −sin p cos y, cos p), the words <c>RetailUnitEuler</c>
+    /// builds with zero roll.
+    /// </summary>
+    private static (long X, long Y, long Z) RotateByEuler(
+        int yawMicroRadians,
+        int pitchMicroRadians,
+        long x,
+        long y,
+        long z)
+    {
+        (int yawSin, int yawCos) = FixedSinCos(yawMicroRadians);
+        (int pitchSin, int pitchCos) = FixedSinCos(pitchMicroRadians);
+        long forwardX = -MultiplyFixed(pitchCos, yawSin);
+        long forwardY = MultiplyFixed(pitchCos, yawCos);
+        long upX = MultiplyFixed(pitchSin, yawSin);
+        long upY = -MultiplyFixed(pitchSin, yawCos);
+        return (
+            DivideRoundNearest((x * yawCos) + (y * forwardX) + (z * upX), FixedTrigScale),
+            DivideRoundNearest((x * yawSin) + (y * forwardY) + (z * upY), FixedTrigScale),
+            DivideRoundNearest((y * pitchSin) + (z * pitchCos), FixedTrigScale));
     }
 
     /// <summary>The outcome of one <see cref="SteerTowards"/> step.</summary>

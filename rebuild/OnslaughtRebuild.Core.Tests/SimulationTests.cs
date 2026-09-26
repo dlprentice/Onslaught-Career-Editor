@@ -1750,9 +1750,10 @@ public sealed class SimulationTests
         Simulation pulse = CreateFiringRangeExerciseSimulation();
         int pulseSeed = pulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
         var pulseRandom = new Level100ReleasedRandom(pulseSeed);
-        (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(
-            pulseRandom,
-            SimulationConstants.PulseCannonInaccuracyMicroRadians);
+        // `Mech Pulse Cannon Charged` carries +0 CWeaponInaccuracy: the pair
+        // is drawn and scaled to nothing.
+        (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(pulseRandom, 0);
+        Assert.Equal((0, 0), pulseOffset);
         // Per round the spawner then takes the round's Actor Init draw and,
         // for a Battle Engine weapon with CWeaponPower >= 0.001, RecoilWeapon's
         // three shake draws (Mech Pulse Cannon Charged: 0.03).
@@ -1894,12 +1895,21 @@ public sealed class SimulationTests
             return (second, first);
         }
 
+        // Every one of these modes lacks CWeaponLaunchAngle entries, so its
+        // basis is facing × FMatrix(0, 2π/4096, 0) × the scatter matrix.
         static void AssertDirection(
             ProjectileSnapshot projectile,
             int facingYaw,
             int facingPitch,
             (int Yaw, int Pitch) offset)
         {
+            (double expectedYaw, double expectedPitch) = RetailLaunchHeading(
+                facingYaw / 1e6,
+                facingPitch / 1e6,
+                0.0,
+                2.0 * Math.PI / 4096.0,
+                offset.Yaw / 1e6,
+                offset.Pitch / 1e6);
             int actualYaw = (int)Math.Round(
                 Math.Atan2(-projectile.Velocity.X, projectile.Velocity.Z) * 1_000_000d,
                 MidpointRounding.AwayFromZero);
@@ -1913,11 +1923,11 @@ public sealed class SimulationTests
                 MidpointRounding.AwayFromZero);
 
             Assert.InRange(
-                Normalize(actualYaw - Normalize(facingYaw + offset.Yaw)),
+                Normalize(actualYaw - (int)Math.Round(expectedYaw * 1e6)),
                 -500,
                 500);
             Assert.InRange(
-                Normalize(actualPitch - Normalize(facingPitch + offset.Pitch)),
+                Normalize(actualPitch - (int)Math.Round(expectedPitch * 1e6)),
                 -500,
                 500);
         }
@@ -2610,13 +2620,16 @@ public sealed class SimulationTests
         double yaw,
         double pitch,
         double angleYaw,
-        double anglePitch)
+        double anglePitch,
+        double jitterYaw = 0.0,
+        double jitterPitch = 0.0)
     {
         static (double X, double Y, double Z) Rotate(double y, double p, (double X, double Y, double Z) v) => (
             (Math.Cos(y) * v.X) - (Math.Cos(p) * Math.Sin(y) * v.Y) + (Math.Sin(p) * Math.Sin(y) * v.Z),
             (Math.Sin(y) * v.X) + (Math.Cos(p) * Math.Cos(y) * v.Y) - (Math.Sin(p) * Math.Cos(y) * v.Z),
             (Math.Sin(p) * v.Y) + (Math.Cos(p) * v.Z));
-        (double x, double yy, double z) = Rotate(yaw, pitch, Rotate(angleYaw, anglePitch, (0.0, 1.0, 0.0)));
+        (double x, double yy, double z) = Rotate(yaw, pitch,
+            Rotate(angleYaw, anglePitch, Rotate(jitterYaw, jitterPitch, (0.0, 1.0, 0.0))));
         return (Math.Atan2(-x, yy), Math.Atan2(z, Math.Sqrt((x * x) + (yy * yy))));
     }
 

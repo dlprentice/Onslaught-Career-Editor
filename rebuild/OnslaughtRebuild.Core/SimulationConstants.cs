@@ -629,9 +629,6 @@ public static class SimulationConstants
     // `Mech Pulse Cannon Charged` @0x134E3, whose CWeaponReloadTime is 0.1 s
     // (0x3DCCCCCD @0x1351D), exactly two released 20 Hz updates.
     public const int PulseCannonReloadTicks = 2;
-    // The same charged mode carries CWeaponInaccuracy 0.008726646 rad
-    // (0x3C0EFA35), rounded here to deterministic integer microradians.
-    public const int PulseCannonInaccuracyMicroRadians = 8_727;
     // Fresh copied-Steam Level 100 runs independently repeated four
     // lowest-charge Pulse Cannon rounds against each of the three training
     // tanks. Every round carried definition speed 35 and moved exactly 1.75
