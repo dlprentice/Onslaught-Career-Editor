@@ -2,7 +2,7 @@
 
 Status: active contract for the rebuild's final-wave route; per-unit RNG ordering
 across the whole level remains open
-Last updated: 2026-09-26 (turret aim, locks, crosshair, seeking rounds, Hangar probe; created 2026-09-25)
+Last updated: 2026-09-26 (turret aim, launch and damage, locks, crosshair, seeking rounds, 4003 camera rule, Hangar probe; created 2026-09-25)
 Summary: the abort after one kill is a designed retail branch, but retail gives the
 player two helps the rebuild lacks: four friendly turrets that come online after the
 first poll below 80 % health, and the jet Missile Pod. Activated turrets can see the
@@ -238,6 +238,43 @@ flag (all three), and fires only when the yaw error is below
 Unit chain already contracted for aircraft
 ([controller owner](../binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)).
 
+### Turret launch, timing and damage
+
+A read-only research pass traced this; the RE lane re-checked the emitter path
+branch and the hit arithmetic.
+
+- **Emitters.** GunA's launch sequences cycle Blaster emitters 1, 4, 2, 3 (parts
+  9, 8, 7, 6 under `arse` → `barrel` → `turret` → `turretbase` → `base`) and SAT
+  emitters 1-8 (parts 11, 5, 9, 8, 7, 6, 10, 4 under `barrel` → `support` →
+  `turretbase` → `base`). The counter carries across bursts.
+- **Launch point** (`CCannon` slot 75 `0x004fc3c0` → slot 88 `0x004fc4e0`). A near
+  unit (`+0x110` = 1) reads the render-pose cache and the render-interpolated body
+  pose. A far unit reads a per-profile cache (profile `+0x6c`, keyed by tag and
+  index, shared by every unit of that profile). The cache stores the model-space
+  emitter pose on first query and is cleared only at `CGame::ShutdownRestartLoop`.
+  A far turret's launch point therefore follows its body but not its later yaw or
+  pitch. An exactly zero position falls back to GunA/1 or the unit's own pose.
+- **Aiming.** AI aiming through `0x004fb650` sets the weapon's orientation, aim
+  point and `+0x80`. `CWeaponAdjustAim` defaults to 1, so the orientation is
+  `FMatrix(−atan2(dx, dy), asin(dz/|d|), 0)` from GunA/1 to the aim point. The
+  Blaster (`CWeaponTrack` 1) re-aims every round from its own launch point; the SAT
+  uses that orientation for all 8 rounds.
+- **Timing.** `CWeapon::Fire` needs now > `+0x64` and sets it to now + reload, so
+  reload counts from burst start ([stores](battle-engine-weapon-stores.md)).
+  - Blaster bursts run at T, T+0.1 … T+0.4, two rounds each (10 rounds); the next
+    Fire needs now > T+3.0.
+  - SAT bursts run at T … T+0.7, one round each (8 rounds); the next Fire needs
+    now > T+10.
+- **Draws.** Three per round at launch, as for every round, including the SAT
+  (inaccuracy 0).
+- **Damage.** `CRound::Hit` passes the raw `CRoundDamage` word to the target's slot
+  40, and `CPlane` routes it to `ApplyDamage`, which stores life with `fst`. The
+  Target Drone dies when the x87 result is below 0. With 0.2 Blaster hits on 1.0,
+  life runs `3f4ccccd`, `3f19999a`, `3eccccce`, `3e4ccccf`, then `33000000` (2⁻²⁵):
+  the drone survives five hits and dies on the sixth.
+  `Small Energy Hit` has radius 0, so its explosion adds nothing (`CExplosion::Hit`
+  exits at `0x0044bf19`).
+
 ## Drones and the player
 
 Target Drone (`default physics.dat` offset `0x24e76`): life 1.0, no shields on it or
@@ -349,6 +386,23 @@ its Unit Init (called at `0x004054c6`), then 6002, then 6003. Afterwards each
 6002 delivery takes one draw, and each 6003 delivery takes one while auto-aim
 is allowed.
 
+The outer-sphere probe's numbers come from a research pass, from each mesh's BBOX
+chunk.
+- The centre is the thing's current position plus an offset fixed when its
+  collision component is made in `CThing::Init` (`0x00426218-0x0042626a`),
+  `GetCentrePos` − position.
+  - Planes, ground vehicles and cannons offset by (0, 0, BBOX-origin z).
+  - Buildings offset by (orientation at Init) × the full BBOX origin.
+- The distance uses the mesh BBOX radius R (thing slot 17, `0x004f3940`). The hit
+  sphere uses R, or 0.8 × R for a ground vehicle (`0x0047c915`).
+
+| Thing | Centre offset | Probe radius | R |
+| --- | --- | --- | --- |
+| Target Drone | (0, 0, −0.02630952) | R | 1.518808 |
+| Target Tank | (0, 0, −0.3844024) | 0.8 R | 1.337182 |
+| Target Truck | (0, 0, −0.4746696) | 0.8 R | 1.623722 |
+| Warehouse | orientation × (0.03001833, 2.112908, −1.887313) | R | 7.58581 |
+
 ### Seeking rounds
 
 SAT 1, Micro Missile and Forseti Missile are plain `CRound`s (no missile, beam or
@@ -455,8 +509,24 @@ The four turrets also run the fire-control cycle above. Each AI queues event 300
 at its construction time. An inactive owner then draws
 once per re-poll, every 2.0–4.0 s plus one frame. An active owner with no target
 takes `Update`'s idle arm: one draw and a delay of 1.5 + r/65536 s when owner `+0x110`
-is nonzero, otherwise 3.0 + 2r/65536 s. `+0x110` is written by the Unit 4003 handler
-from camera distance ([owner](../binary-analysis/functions/Unit.cpp/CUnit__HandleEvent.md)).
+is nonzero, otherwise 3.0 + 2r/65536 s.
+
+Only the Unit 4003 handler (`0x004f98a8-0x004f9972`) writes `+0x110`
+([owner](../binary-analysis/functions/Unit.cpp/CUnit__HandleEvent.md)):
+- It clears `+0x110`. For player slots 0 and 1, when both the player
+  (`CGame+0x2a4+4i`) and its current camera (`CGame+0x2c4+4i`) exist, it takes the
+  camera's current position (slot 0). It sets `+0x110` to 1 when
+  (dz² + dx²) + dy² from the unit position `+0x1c` is strictly below 2500.0
+  (`0x005dfb70`), summed on the x87 without stores.
+- It always takes one draw (`0x004f9924`) and requeues 4003 through
+  `AddEvent_TimeFromNow` at now + 3.0 + (r mod 65536)/65536, reusing the event.
+  `CUnit::Init` queues the first one at −1.0 with no draw.
+- The first-person camera returns the Battle Engine's `+0x1c`. The pan camera
+  returns its stored point: the pinned `Camera.cpp` spline, updated at end of
+  frame. The measured Level 100 run pans from event time 3.0 to 8.95
+  ([pan owner](../binary-analysis/functions/Player.cpp/CPlayer__GotoPanView.md)).
+- So the minimum input per delivery is player 0's current camera position. With
+  no player or camera the flag stays 0.
 `0x004fec60` exits without requeueing when the owner is dying, in deploy state 1 or 2,
 or in AI mode 0. These draws share the gameplay stream with each Unit's Actor Init
 draw and 4003 draw; the [World 110 owner](world-110-initial-constructor-seeds.md)

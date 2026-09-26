@@ -14,6 +14,7 @@ support product or deterministic-Core behavior.
 - [Released spawner squad-cycle contract](spawner-squad-cycle.md)
 - [Level 100 final drone wave, Help Player turrets and abort](level100-final-drone-wave.md)
 - [Battle Engine weapon stores, charge and firing state](battle-engine-weapon-stores.md)
+- [Battle Engine auto-aim, launch position and Gun emitters](battle-engine-aiming.md)
 - [World 110 serialized initial-object seed admission](world-110-initial-constructor-seeds.md)
 - [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)

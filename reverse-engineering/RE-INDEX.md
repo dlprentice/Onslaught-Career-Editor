@@ -991,6 +991,7 @@ flat inventory.
 | Career progression bridge | [career-progression-static-bridge-contract.md](binary-analysis/career-progression-static-bridge-contract.md) |
 | Level 100 final wave: turrets, Missile Pod locks, crosshair refresh, seeking rounds and RNG-drawing owners | [level100-final-drone-wave.md](game-mechanics/level100-final-drone-wave.md) |
 | Battle Engine weapon stores, charge law and firing state | [battle-engine-weapon-stores.md](game-mechanics/battle-engine-weapon-stores.md) |
+| Battle Engine auto-aim, launch position and cockpit Gun emitters | [battle-engine-aiming.md](game-mechanics/battle-engine-aiming.md) |
 | CMSH `CPOS`/`CORI` identity | [cmsh-cpos-cori-identity-2026-07-25.md](binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) |
 
 Machine-readable siblings, for consumers that should not be parsing prose:
