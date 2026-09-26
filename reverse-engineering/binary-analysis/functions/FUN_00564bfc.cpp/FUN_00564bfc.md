@@ -1,7 +1,7 @@
-# FUN_00564bfc
+# __CxxRestoreUnhandledExceptionFilter
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; identity proven 2026-09-26 (linked library code)
+Last updated: 2026-09-26
 Source File: unlabeled (first gates only; do not read this as
 a pin of `CScriptObjectCode.cpp.md` / sibling
 `CRT__OpenFileByModeString` / already-pinned
@@ -20,6 +20,10 @@ were **not** rewritten. Did not adopt C1
 `RestoreUnhandledExceptionFilter`.
 
 > Address: `0x00564bfc`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `__CxxRestoreUnhandledExceptionFilter`. Linked library code: void __cdecl __CxxRestoreUnhandledExceptionFilter(void), from the static library Visual C++ 6.0 SP6 LIBCMT.LIB (SHA-256 a541c95e5ffdd6d5573d1976f5e5d0038f2c4fb0bcb02975c68948bf1d6e452a), member build\intel\mt_obj\unhandld.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `relocations`). The Ghidra cohort `library-crt-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Contract
 
@@ -58,4 +62,4 @@ second encoding of that imm exists.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00564bfc` | `FUN_00564bfc` | `ff3580099d00 ff155c815d00 c3` | not incoming-ECX; bare ret ×1; 13 B; 0 E8 / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x00622b40`, IAT `[0x005d815c]`. **Not** on `FUN_00564beb`. |
+| `0x00564bfc` | `__CxxRestoreUnhandledExceptionFilter` | `ff3580099d00 ff155c815d00 c3` | not incoming-ECX; bare ret ×1; 13 B; 0 E8 / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x00622b40`, IAT `[0x005d815c]`. **Not** on `FUN_00564beb`. |

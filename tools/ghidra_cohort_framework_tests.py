@@ -226,6 +226,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # library-d3dx-20260926: 1,139 statically linked library functions named from
 # byte-exact matches against the pinned d3dx9.lib (tools/re_lib_match.py), with
 # the same preservation and refusal evidence and an independent review.
+# library-crt-20260926: 369 names from the same matcher against the pinned
+# VC6 LIBCMT.LIB, d3dx9.lib and DxErr9.lib (C runtime, two D3DX rows, WinMain),
+# with the same preservation and refusal evidence and an independent review.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -264,6 +267,7 @@ LIVE_GRANTED_COHORTS = [
     "label-audit-20260926",
     "label-audit-2-20260926",
     "library-d3dx-20260926",
+    "library-crt-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -708,6 +712,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "label-audit-20260926",\n'
         '        "label-audit-2-20260926",\n'
         '        "library-d3dx-20260926",\n'
+        '        "library-crt-20260926",\n'
         "    };\n",
     ),
     (

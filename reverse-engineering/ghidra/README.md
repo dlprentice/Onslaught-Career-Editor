@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[RE-audit D3DX library names](#re-audit-d3dx-library-names--september-26);
+[RE-audit C runtime library names](#re-audit-c-runtime-library-names--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,36 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit C runtime library names — September 26
+
+The [manifest](../../tools/cohort-specs/library-crt-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/library-crt-20260926.spec.tsv) name 370
+functions, each with an evidence comment and tag set: 351 Visual C++ 6.0 C
+runtime functions and the 15 fragments that saved boundaries split off them, in
+`0055d6a0`-`0056eb50` and `005be622`-`005d0f10` matched byte for byte against
+the pinned `LIBCMT.LIB` by `tools/re_lib_match.py` (relocation fields masked;
+private, untracked references, pins in the comments), DxErr9's
+`_DXGetErrorString9A` (`005be628`), `D3DXCore__CFile__ctor` (`0058864a`, held
+back from the D3DX cohort), `_asm_isMMX` (`005890f1`, whose D3DX-cohort name had
+lost the identifier's underscore) and the program's `WinMain` (`00512130`,
+formerly `CLTShell__WinMain`, placed by the runtime startup's reference; its
+earlier note stays as a marked lead). Saved names that already equal a proven
+spelling stay: the C name of a decorated symbol, an `OLDNAMES.LIB` alias
+(`stricmp`) or a trailing `@N`. The NvTriStrip block `0056eb50`-`00574270` is
+left for its own cohort.
+
+The gate passed: fresh PRE restore, rehearsal with separate and sealed-spec
+readbacks, five negative controls, independent review, live dry/apply/readback
+and an independent POST restore. Only program comment and symbol-source counts
+move (symbolsUserDefined 6338->6368, symbolsAnalysis 18005->18004,
+symbolsImported 907->906, symbolsDefaultOther 61535->61507, comments
+9352->9379). Working `db.18661`, 18 files / 121,064,308 bytes, inventory SHA-256
+`79c57e7dea81a5e22d880e50041a94715d33c08fa0c082fc1bee6d6da6090105`. PRE: the
+D3DX library POST. POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-26-library-crt/post-working`.
+Tracked checkpoint unchanged. Receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-crt/`.
 
 ## RE-audit D3DX library names — September 26
 

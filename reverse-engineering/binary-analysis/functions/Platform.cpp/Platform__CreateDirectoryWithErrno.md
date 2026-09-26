@@ -1,8 +1,12 @@
-# Platform__CreateDirectoryWithErrno
+# __mkdir
 
 > Address: `0x0055f347`
 >
 > Source: retail binary evidence; thin Windows API wrapper
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `__mkdir`. Linked library code: __mkdir, from the static library Visual C++ 6.0 SP6 LIBCMT.LIB (SHA-256 a541c95e5ffdd6d5573d1976f5e5d0038f2c4fb0bcb02975c68948bf1d6e452a), member build\intel\mt_obj\mkdir.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `relocations`). The Ghidra cohort `library-crt-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Status
 - **Named in Ghidra:** Yes

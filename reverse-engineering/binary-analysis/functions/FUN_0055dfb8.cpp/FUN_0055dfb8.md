@@ -1,7 +1,7 @@
-# FUN_0055dfb8
+# ___onexitinit
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; identity proven 2026-09-26 (linked library code)
+Last updated: 2026-09-26
 Source File: unlabeled (first gates only; do not read this as
 a pin of `CScriptObjectCode.cpp.md` / sibling
 `CRT__RoundDoubleWithFpuChecks` / table `_malloc` /
@@ -20,6 +20,10 @@ were **not** rewritten. Did not adopt C1
 `OnexitTableAlloc80`.
 
 > Address: `0x0055dfb8`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `___onexitinit`. Linked library code: ___onexitinit, from the static library Visual C++ 6.0 SP6 LIBCMT.LIB (SHA-256 a541c95e5ffdd6d5573d1976f5e5d0038f2c4fb0bcb02975c68948bf1d6e452a), member build\intel\mt_obj\onexit.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-crt-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Contract
 
@@ -65,4 +69,4 @@ Cheapest falsifier: file `0x0015dfb8` is not `68 80 00 00 00`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0055dfb8` | `FUN_0055dfb8` | `6880000000 e84a0c0000 85c0 59 a310469d00 750d 6a18 e8b6220000 a110469d00 59 832000 a110469d00 a30c469d00 c3` | not incoming-ECX; bare ret ×1; 47 B; 2 E8 / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm at `0x00622b14`, `0x009d4610`/`0x009d460c`. **Not** on `_malloc` or `__amsg_exit`. |
+| `0x0055dfb8` | `___onexitinit` | `6880000000 e84a0c0000 85c0 59 a310469d00 750d 6a18 e8b6220000 a110469d00 59 832000 a110469d00 a30c469d00 c3` | not incoming-ECX; bare ret ×1; 47 B; 2 E8 / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm at `0x00622b14`, `0x009d4610`/`0x009d460c`. **Not** on `_malloc` or `__amsg_exit`. |

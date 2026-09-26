@@ -55,6 +55,15 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(E.source_key_to_name("CThing::CThing"), "CThing__ctor")
         self.assertEqual(E.source_key_to_name("CGame::LoadLevel"), "CGame__LoadLevel")
 
+    def test_strip_comments_reads_separators_and_literals_in_order(self):
+        text = ('//****************\nvoid A::F()\n{\n\tLog("a // b /* c");\n}\n/* x\ny */\n'
+                '//****************\nvoid A::G() { }\n')
+        out = E.strip_comments(text)
+        self.assertIn("void A::F()", out)
+        self.assertIn('Log("a // b /* c");', out)
+        self.assertIn("void A::G()", out)
+        self.assertEqual(out.count("\n"), text.count("\n"))
+
     def test_c_unescape_keeps_escaped_backslashes(self):
         self.assertEqual(E.c_unescape(r"C:\\dev\\a.cpp\n"), "C:\\dev\\a.cpp\n")
 
