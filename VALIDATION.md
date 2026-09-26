@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-25 (three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,64 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Battle Engine crosshair and auto-aim refresh — September 26
+
+Retail's player Battle Engine files two refresh events for itself that the
+rebuild never had, and both draw from the one gameplay stream: event 6002
+(`CALC_UNIT_OVER_CROSSHAIR`) and event 6003 (`HANDLE_AUTO_AIM`). The RE lane's
+static contract ([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md),
+"Crosshair and auto-aim refresh", commit `f23dcc28`, and its due-time answer
+from the pristine `74154bfa…` bytes) gives: `CBattleEngine::Init` takes one draw
+and files 6002, then `HandleAutoAim(NULL)` takes one draw and files 6003; each
+delivery re-files the same way with one draw; 6002's due time is
+`(sample × 0x364ccccd + mTime) + 0.1f` and 6003's `(sample × 0x35cccccd + mTime) + 0.2f`.
+Core now files both on the level's one event manager (the scheduler the
+aircraft already used, now created with the Battle Engine), under a reserved
+listener identity, so insertion order between them and the aircraft callbacks
+is the delivery order.
+
+Each 6002 delivery runs `CalcUnitOverCrossHair`'s event path: it clears both
+crosshair readers, casts the 1,000-unit view line through the shared contact
+query (terrain first, a thing only when not farther, dying non-buildings
+skipped), retains the line report and returns the struck unit when the current
+weapon's `GetActualMaxRange` exceeds the hit distance (Pulse 210 or 140,
+Vulcans 60, Missile Pod 100, from the RE lane's Q14 answer). The launch
+correction (`GetLaunchPosition`) now reads that retained distance along the
+current view line, as retail does, instead of the rebuild's former per-shot
+fresh trace. The auto-aim candidate search is not implemented yet, so its
+offsets stay zero; its draw and requeue are exact. The Battle Engine's Init
+draws follow the Air Trainer's Actor Init draw until the RE lane's first-flush
+order places them. Core has no camera, so the view line starts at the Battle
+Engine's position along its facing, as the launch correction always assumed.
+
+`Level100BattleEngineRefreshTests` (22 cases) pins the due-time arithmetic bit
+for bit, the range and side-gate tables, the construction order and draws, the
+one-of-each queue invariant over 200 frames, the crosshair unit and report
+against the Control Tower, features occluding without becoming units, and the
+launch correction's use of the retained distance (a fresh trace would keep the
+facing). Core passes except the known cold-start six-kill expectation; the
+Client suite passes 912 with the two known skips.
+
+The new draws move every Level 100 hash. Re-pinned with this change:
+`first-flight.v1.json` now replays to trace `a59321dc…` / state `63b241d6…`;
+the in-process 2,148-step smoke and the smoke validator to state `a8c2209d…`;
+the canonical-hash and older-definition fingerprints in `SimulationTests`,
+`HeadlessApplicationTests` and `InteractiveSessionTests`; schema 49 where
+targeting state exists. The headless Godot smoke records a tape whose seed,
+duration and every input span equal the September 25 tape's (`89ca7b4b…`); only
+its embedded expected hashes differ (tape `43d63bd0…`, trace `33ebdaee…`, state
+`a8c2209d…`), and the C# replayer reproduces it twice with no divergence. The
+chain autopilot still wins with six kills, now at tick 5,803 with hull 12,500.
+The cold-start run records a won tape of 7,374 ticks (trace `ca2209e7…`, state
+`0a8e7972…`), still through the abort branch, which replays twice. The ferry
+sweep's twenty runs all still win without water loss, but the re-rolled final
+wave now brings every ferry in 13.9 m up, below the 20 m tier where the two
+hand-off rules differ. The route-level adverse control therefore compares
+identical runs, so the rule itself is now pinned directly
+(`Level100ZoneHandoffTests`, in the default Core gate). The divergence
+check asserts that the arms separate exactly when an adverse hand-off exceeds
+the tier. Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/be-refresh-20260926/`.
 
 ### Terrain contact sweep pruning — September 25
 

@@ -29,6 +29,9 @@ internal static class Level100TestActorDefinitions
             Actors = state.Level100ActorMechanics.Actors.Select(actor => actor with
                 { PlaneGuide = null, PlaneSpawnerExit = null }).ToArray(),
         },
+        // The Battle Engine's refresh events went with the event pool above;
+        // its targeting state is the schema-49 extension.
+        Level100BattleEngineTargeting = Level100BattleEngineTargetingSnapshot.Initial,
     };
 
     private static readonly Lazy<Level100ActorDefinitionSet> s_materialized = new(LoadMaterialized);

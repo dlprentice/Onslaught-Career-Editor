@@ -390,12 +390,13 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        // September 12 readings after the recovered exit callbacks, their
-        // RNG draws and delayed Ready replace immediate normal control. The
+        // September 26 readings after the Battle Engine's crosshair and
+        // auto-aim refreshes joined the shared stream and the launch
+        // correction began reusing the retained crosshair distance. The
         // driver, damage constants and all combat assertions above are intact.
         // These are reconstruction fixture readings, not retail timing/hull.
-        Assert.Equal(5_588, final.Tick);
-        Assert.Equal(11_450, final.Hull);
+        Assert.Equal(5_803, final.Tick);
+        Assert.Equal(12_500, final.Hull);
     }
 
     /// <summary>

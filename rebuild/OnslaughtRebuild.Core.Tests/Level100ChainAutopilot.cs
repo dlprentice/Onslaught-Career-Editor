@@ -1311,7 +1311,7 @@ internal sealed class Level100ChainAutopilot
     /// flown and landed by <see cref="FlyLeg"/>, and in both cases the airframe
     /// is grounded when the walker branch is first asked for.</para>
     /// </summary>
-    private bool ClearedToLeaveJetMode(WorldSnapshot state)
+    internal bool ClearedToLeaveJetMode(WorldSnapshot state)
     {
         if (_horizontalOnlyZoneHandoff || state.PlayerOnGround)
         {

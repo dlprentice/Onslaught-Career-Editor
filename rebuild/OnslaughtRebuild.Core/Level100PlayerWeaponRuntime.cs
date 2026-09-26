@@ -36,6 +36,9 @@ internal sealed class Level100PlayerWeaponRuntime
     internal uint PulseCannonChargeBits =>
         BitConverter.SingleToUInt32Bits(_pulseCharge.Charge);
 
+    /// <summary>The Pulse Cannon Pod's charge-selected mode level.</summary>
+    internal int PulseChargeLevel => RetailWeaponCharge.ModeLevel(_pulseCharge);
+
     internal Level100PlayerWeaponStateSnapshot Snapshot => new(
         PulseCannonChargeBits,
         BitConverter.SingleToUInt32Bits(_pulseCharge.ReadyAtTime),

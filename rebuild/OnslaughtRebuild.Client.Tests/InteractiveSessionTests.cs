@@ -1800,6 +1800,8 @@ public sealed class InteractiveSessionTests
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
         Assert.Equal(4, session.Metrics.FirePulseEdgesConsumed);
         // This fingerprint belongs to the 2,148-step in-process input tape.
+        // September 26: the Battle Engine's 6002/6003 refresh draws and its
+        // retained crosshair report joined the canonical state.
         // Controller calls now precede callbacks and Move, so the four releases
         // use their retained emitter poses. Raw charge/readiness and shared RNG
         // state remain part of the canonical state. The semantic assertions
@@ -1820,14 +1822,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("2f5f634f8b785a304508fc39bba8f373148fc1292ec67271a1a21888a60d65de",
+        Assert.Equal("aad07ebbb1edd88ba7d773528568d5a5a7feeb9dcd0f0a5a723f620370c5d828",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("107e827def948d71ce77bea385fdff452d59110ab30529f5594f37c6d8f20e8d",
+        Assert.Equal("076dfb3be1595557e7a3b681ced0229526bc13d247fa25770b98b4c38eb93371",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "53c1cc64ace55542f48534d0554d6ffed57dda0eae48c9f2a55a928fea096e5e",
+            finalStateHash == "a8c2209d3332d4fa7b304f70ae86e905e508026a473fc91e506ccd6d63779e2a",
             $"First-flight final state hash: {finalStateHash}");
     }
 

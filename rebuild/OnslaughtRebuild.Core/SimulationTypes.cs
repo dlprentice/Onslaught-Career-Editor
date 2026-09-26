@@ -637,6 +637,13 @@ public sealed record WorldSnapshot(
     public Level100PlayerWeaponStateSnapshot Level100PlayerWeaponState { get; init; } =
         Level100PlayerWeaponStateSnapshot.Initial;
 
+    /// <summary>
+    /// The Battle Engine's crosshair readers, retained crosshair line report
+    /// and lock sets.
+    /// </summary>
+    public Level100BattleEngineTargetingSnapshot Level100BattleEngineTargeting { get; init; } =
+        Level100BattleEngineTargetingSnapshot.Initial;
+
     public bool Level100PlayerControlEnabled =>
         Level100PlayerActive && Level100OpeningTicksRemaining == 0;
 

@@ -59,6 +59,12 @@ public static class StateHasher
                 Level100PlayerWeaponStateSnapshot.Initial;
             bool usesWorldMissionSchema = usesPlayerWeaponSchema ||
                 UsesWorldMissionSchema(state.Level100Mission);
+            // 49: the Battle Engine's crosshair readers, retained crosshair
+            // line report and lock sets. Selected whenever any of them differs
+            // from construction; the report and cursors then decide later
+            // launches, locks and targets.
+            bool usesBattleEngineTargetingSchema =
+                !IsInitialTargeting(state.Level100BattleEngineTargeting);
             // 48: retained spawning-owner reader, exit selector/deadline and
             // explicit handoff to the existing approximate normal-control
             // bridge. Unspawned scenes retain schema 47 byte-for-byte.
@@ -159,7 +165,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
+            writer.Write(usesBattleEngineTargetingSchema ? 49 : usesPlaneExitSchema ? 48 : usesPlaneMotionSchema ? 47 : usesGroundShutdownSchema ? 46 : usesEventClockSchema ? 45 : usesPlayerWeaponSchema ? 44 : usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             if (usesEventClockSchema)
             {
@@ -325,9 +331,53 @@ public static class StateHasher
                 writer.Write(foot.PhaseThirds);
                 writer.Write(foot.LiftMillimeters);
             }
+
+            if (usesBattleEngineTargetingSchema)
+            {
+                WriteBattleEngineTargeting(writer, state.Level100BattleEngineTargeting);
+            }
         }
 
         return stream.ToArray();
+    }
+
+    private static bool IsInitialTargeting(Level100BattleEngineTargetingSnapshot targeting)
+    {
+        ArgumentNullException.ThrowIfNull(targeting);
+        return targeting.CrosshairUnit is null &&
+            targeting.CrosshairUnitRegardlessOfRange is null &&
+            targeting.CrosshairHitKind == Level100CrosshairHitKind.Nothing &&
+            targeting.CrosshairHitDistanceMillimeters == 0 &&
+            targeting.Locks.Locks.Count == 0 &&
+            targeting.Locks.FiredLocks.Count == 0 &&
+            targeting.Locks.RecentLocks == 0 &&
+            targeting.Locks.CurrentTarget == 0;
+    }
+
+    private static void WriteBattleEngineTargeting(
+        BinaryWriter writer,
+        Level100BattleEngineTargetingSnapshot targeting)
+    {
+        WriteNullableActorId(writer, targeting.CrosshairUnit);
+        WriteNullableActorId(writer, targeting.CrosshairUnitRegardlessOfRange);
+        writer.Write((byte)targeting.CrosshairHitKind);
+        writer.Write(targeting.CrosshairHitDistanceMillimeters);
+        WriteLocks(targeting.Locks.Locks);
+        WriteLocks(targeting.Locks.FiredLocks);
+        writer.Write(targeting.Locks.RecentLocks);
+        writer.Write(targeting.Locks.CurrentTarget);
+
+        void WriteLocks(IReadOnlyList<Level100PlayerLockSnapshot> locks)
+        {
+            writer.Write(locks.Count);
+            foreach (Level100PlayerLockSnapshot item in locks)
+            {
+                writer.Write(item.Unit.Value);
+                writer.Write(item.StartBits);
+                writer.Write(item.FinishBits);
+                writer.Write(item.DirectLock);
+            }
+        }
     }
 
     private static bool UsesWorldMissionSchema(Level100MissionSnapshot mission)

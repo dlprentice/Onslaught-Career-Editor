@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-25 (the GDScript numerical foundation is retired with the return to C#; existing behavior boundaries retained)
+Last updated: 2026-09-26 (the Battle Engine's refresh events share the level event manager; schema 49; September 25: the GDScript numerical foundation is retired with the return to C#)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -98,6 +98,14 @@ Scenes with no spawned Plane retain schema 47 bytes. The recorded 838-step
 Headless fingerprint changed only because of the earlier exit-input definition
 identity; its test compares every tick's canonical bytes after substituting
 only the previous identity and recovers the previous complete trace.
+
+Since September 26 the same level event manager also carries the player
+Battle Engine's two self-refreshes, 6002 (crosshair) and 6003 (auto-aim), under
+a reserved listener identity, so the scheduler now exists from construction
+whether or not an aircraft does. Each construction and delivery takes one
+shared draw. Schema 49 adds the Battle Engine's targeting state: both
+crosshair readers, the retained crosshair line report (hit class and distance)
+and the lock sets.
 
 The production script/weapon target bridge, missing avoidance candidate stream,
 contact response, complete event/RNG order and effects remain partial. The

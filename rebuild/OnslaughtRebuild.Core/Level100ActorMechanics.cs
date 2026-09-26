@@ -201,16 +201,17 @@ public sealed partial class Level100ActorMechanics
         Action<Level100ActorId>? startPlaneDeath = null)
     {
         _planeEvents?.AdvanceTime();
-        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
+        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, null);
     }
 
     internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount,
         Action<Level100ActorId>? dispatchReady = null,
-        Action<Level100ActorId>? startPlaneDeath = null)
+        Action<Level100ActorId>? startPlaneDeath = null,
+        Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent = null)
     {
         if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
             throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
-        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath);
+        return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, battleEngineEvent);
     }
 
     private void ConsumeCommand(
@@ -272,11 +273,13 @@ public sealed partial class Level100ActorMechanics
     }
 
     private IReadOnlyList<Level100ActorMechanicsWaitCompletion>
-        AdvanceRetailBaseTick(Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath)
+        AdvanceRetailBaseTick(Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath,
+            Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent)
     {
         var completions = new List<Level100ActorMechanicsWaitCompletion>();
         InvalidatePlaneReferences();
-        _planeEvents?.Flush((events, item) => DispatchPlaneEvent(events, item, dispatchReady, startPlaneDeath));
+        _planeEvents?.Flush((events, item) =>
+            DispatchPlaneEvent(events, item, dispatchReady, startPlaneDeath, battleEngineEvent));
         foreach (ActorState state in _states.Values)
         {
             Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);

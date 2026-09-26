@@ -21,6 +21,37 @@ public sealed partial class Level100ActorMechanics
 {
     private RetailEventScheduler? _planeEvents;
 
+    /// <summary>
+    /// The opaque listener identity of the player's Battle Engine on the level
+    /// event manager. Aircraft use <c>2 * actor</c> and <c>2 * actor + 1</c>
+    /// and negative controller identities, so this value cannot collide.
+    /// </summary>
+    internal const int BattleEngineListener = int.MaxValue;
+
+    /// <summary>
+    /// The level's one event manager. Retail has a single <c>CEventManager</c>
+    /// shared by every thing, so the player's Battle Engine files its events
+    /// in the same pool and lanes as the aircraft; insertion order between
+    /// them is the delivery order. It is created with the level when a
+    /// Battle Engine is constructed, or with the first aircraft.
+    /// </summary>
+    internal RetailEventScheduler LevelEvents => _planeEvents ??= new(useFloat24Arithmetic: true);
+
+    /// <summary>
+    /// One raw step of the shared gameplay generator (<c>Random__NextLCGAbs</c>
+    /// on <c>0x008a9d9c</c>), for callers outside this class that consume the
+    /// same stream.
+    /// </summary>
+    internal int NextReleasedRandom() => _releasedRandom.Next();
+
+    /// <summary>
+    /// <c>CALC_UNIT_OVER_CROSSHAIR</c> (6002, <c>0x1772</c>) and
+    /// <c>HANDLE_AUTO_AIM</c> (6003, <c>0x1773</c>), the two refreshes a
+    /// Battle Engine files for itself from <c>CBattleEngine::Init</c>.
+    /// </summary>
+    internal static bool IsBattleEngineEvent(int eventNum) =>
+        eventNum is RetailBattleEngineRefresh.CrosshairEvent or RetailBattleEngineRefresh.AutoAimEvent;
+
     private void InitializePlanes()
     {
         foreach (Level100ActorSnapshot actor in _actors.Snapshot.Actors)
@@ -94,8 +125,16 @@ public sealed partial class Level100ActorMechanics
         state.PlaneSpawnerExit is null || state.PlaneSpawnerExit.ScriptControlResumed;
 
     private void DispatchPlaneEvent(RetailEventScheduler events, RetailEventDispatch dispatch,
-        Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath)
+        Action<Level100ActorId>? dispatchReady, Action<Level100ActorId>? startPlaneDeath,
+        Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent)
     {
+        if (dispatch.Listener == BattleEngineListener)
+        {
+            if (battleEngineEvent is null)
+                throw new InvalidOperationException("A Battle Engine event has no owner in this update.");
+            battleEngineEvent(events, dispatch);
+            return;
+        }
         var actorId = new Level100ActorId(dispatch.Listener < 0 ? checked(-dispatch.Listener) : dispatch.Listener / 2);
         if (!_states.TryGetValue(actorId.Value, out ActorState? state) || state.PlaneGuide is null)
             throw new InvalidOperationException("Aircraft event has no guide owner.");
@@ -313,6 +352,7 @@ public sealed partial class Level100ActorMechanics
         foreach (int handle in snapshot.Lanes.SelectMany(lane => lane.Handles).Concat(snapshot.Overflow))
         {
             int listener = slots[handle].Listener;
+            if (listener == BattleEngineListener) continue;
             int actor = listener < 0 ? checked(-listener) : listener / 2;
             if (destroyed.Contains(actor)) _planeEvents.ClearListener(handle);
         }
@@ -331,7 +371,7 @@ public sealed partial class Level100ActorMechanics
         Level100ActorId[] rawActors = _actors.Snapshot.BaseStates
             .Where(item => item.State.RetailPlane is not null).Select(item => item.ActorId).ToArray();
         if (rawActors.Any(id => !_states.TryGetValue(id.Value, out ActorState? state) || state.PlaneGuide is null) ||
-            ((_planeEvents is null) != (rawActors.Length == 0)))
+            (_planeEvents is null && rawActors.Length != 0))
             throw new ArgumentException("Aircraft physical/guide/event ownership is incomplete.", nameof(snapshot));
         if (snapshot.PlaneEvents is not { } events) return;
         var slots = events.Slots.ToDictionary(slot => slot.Handle);
@@ -341,6 +381,12 @@ public sealed partial class Level100ActorMechanics
                 throw new ArgumentException("Aircraft queue has a missing event.", nameof(snapshot));
             // Deleted monitored listeners remain filed until normal disposal.
             if (slot.Listener == 0) continue;
+            if (slot.Listener == BattleEngineListener)
+            {
+                if (!IsBattleEngineEvent(slot.EventNum))
+                    throw new ArgumentException("Battle Engine queue has an unowned callback.", nameof(snapshot));
+                continue;
+            }
             if (slot.Listener is 1 or int.MinValue)
                 throw new ArgumentException("Aircraft queue has an invalid listener.", nameof(snapshot));
             int owner = slot.Listener < 0 ? -slot.Listener : slot.Listener / 2;

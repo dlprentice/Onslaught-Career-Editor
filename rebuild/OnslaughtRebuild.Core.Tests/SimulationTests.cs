@@ -32,7 +32,8 @@ public sealed class SimulationTests
     }
 
     /// <summary>
-    /// The living Plane's raw state, guide and callbacks select schema 47.
+    /// The living Plane's raw state, guide and callbacks select schema 47;
+    /// the Battle Engine's retained crosshair report then selects 49.
     /// Legacy mission-only envelopes still select schema 43 and bind all
     /// ten secondary slots; changing the native-88 text dword must therefore
     /// change the world hash even when every older field is equal.
@@ -71,14 +72,14 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("5a71982008e1a30f1684030e562fd45580cde149a3bcd3c3a4649201d4bb2750",
+        Assert.Equal("443f04ec3f6e247321db0149d50c2224b7ad8ee63fba67eb7d8f961d4bc86dc0",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("f121a4698b3eb150282ee8dd66c297922f9d54d0a56bb18dece072c04b4f55b8",
+        Assert.Equal("f5f63d1dfa942fcd60f9f3745d1c8b7753092fbd098d6e116bc07146c66032f4",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "0a0b24633f25bb96ac2e8b98443524de47e065b3744b9a15871c09595127a19d",
+        Assert.True(hash == "114c440af8715a57a7797ab0aeaa4438e84e716eeae59e64dc9bdfab27231d8a",
             $"Canonical state hash: {hash}");
-        Assert.Equal(47, CanonicalSchemaVersion(rootState));
+        Assert.Equal(49, CanonicalSchemaVersion(rootState));
 
         var actors = new Level100ActorRegistry(RetailWorld110AdmissionTests.CreateWorld110Definitions());
         var world110 = new Level100Mission(actors, actors.GetThingRef("Player 1")!.Value,
@@ -1591,7 +1592,8 @@ public sealed class SimulationTests
         Assert.Equal(paused.RetailEventFrameCount, held.RetailEventFrameCount);
         Assert.Equal(paused.Level100Mission.Tick + 1, held.Level100Mission.Tick);
         Assert.Equal(pausedTimeBits, BitConverter.SingleToUInt32Bits(death.EngineTimeSeconds));
-        Assert.Equal(47, CanonicalSchemaVersion(held));
+        // The Battle Engine's retained crosshair report selects schema 49.
+        Assert.Equal(49, CanonicalSchemaVersion(held));
         Assert.Equal(held.RetailEventFrameCount, held.Level100ActorMechanics.PlaneEvents!.FrameCount);
         Assert.Equal(0x3dcccb3b, MixBits(held));
 
@@ -1754,6 +1756,7 @@ public sealed class SimulationTests
 
         WorldSnapshot pulseBefore = pulse.Snapshot;
         WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        AdvanceByEventDraws(pulseRandom, pulseBefore, pulseShot);
         Assert.Equal(
             pulseRandom.Seed,
             pulseShot.Level100ActorMechanics.ReleasedRandomSeed);
@@ -1779,6 +1782,7 @@ public sealed class SimulationTests
         WorldSnapshot chargedShot = chargedPulse.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot chargedRound = Assert.Single(chargedShot.Projectiles);
         Assert.Equal(Level100ProjectileKind.MechPulseBoltLarge, chargedRound.Kind);
+        AdvanceByEventDraws(chargedRandom, chargedBefore, chargedShot);
         Assert.Equal(chargedRandom.Seed, chargedShot.Level100ActorMechanics.ReleasedRandomSeed);
         AssertDirection(chargedRound, chargedBefore.FacingYawMicroRad,
             chargedBefore.FacingPitchMicroRad, (0, 0));
@@ -1809,6 +1813,7 @@ public sealed class SimulationTests
         // facing later in this same update, after the round already exists.
         WorldSnapshot jetBefore = jet.Snapshot;
         WorldSnapshot jetShot = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        AdvanceByEventDraws(jetRandom, jetBefore, jetShot);
         Assert.Equal(jetRandom.Seed, jetShot.Level100ActorMechanics.ReleasedRandomSeed);
         ProjectileSnapshot[] rounds = jetShot.Projectiles.OrderBy(item => item.Id).ToArray();
         Assert.Equal(jetOffsets.Length, rounds.Length);
@@ -1824,6 +1829,37 @@ public sealed class SimulationTests
         Assert.NotEqual(
             rounds[0].VerticalVelocityMillimetersPerTick,
             rounds[1].VerticalVelocityMillimetersPerTick);
+
+        // The controller fires before the event flush, so scatter takes the
+        // first draws of the update. Every callback the flush then delivers
+        // that draws and re-files itself (the Battle Engine's 6002/6003, the
+        // aircraft guide's 2000/2001 and the exit controller's 3002) takes one
+        // more; a delivery is visible as its handle's changed due time.
+        static void AdvanceByEventDraws(
+            Level100ReleasedRandom random,
+            WorldSnapshot before,
+            WorldSnapshot after)
+        {
+            static Dictionary<int, RetailEventSlotSnapshot> Queued(WorldSnapshot state)
+            {
+                RetailEventSchedulerSnapshot events = state.Level100ActorMechanics.PlaneEvents!;
+                Dictionary<int, RetailEventSlotSnapshot> slots = events.Slots.ToDictionary(slot => slot.Handle);
+                return events.Lanes.SelectMany(lane => lane.Handles).Concat(events.Overflow)
+                    .ToDictionary(handle => handle, handle => slots[handle]);
+            }
+
+            Dictionary<int, RetailEventSlotSnapshot> previous = Queued(before);
+            Dictionary<int, RetailEventSlotSnapshot> next = Queued(after);
+            int draws = previous.Count(item =>
+                item.Value.EventNum is 2000 or 2001 or 3002 or 6002 or 6003 &&
+                next.TryGetValue(item.Key, out RetailEventSlotSnapshot? refiled) &&
+                refiled.EventNum == item.Value.EventNum &&
+                refiled.TimeBits != item.Value.TimeBits);
+            for (int draw = 0; draw < draws; draw++)
+            {
+                random.Next();
+            }
+        }
 
         static (int Yaw, int Pitch) NextOffsets(
             Level100ReleasedRandom random,

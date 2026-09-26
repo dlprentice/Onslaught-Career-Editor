@@ -309,15 +309,34 @@ public sealed class Level100DestructionRuntime
             eventFrameCount,
             out hit);
 
-    private bool TryApplyRoundSweep(
+    /// <summary>
+    /// The crosshair's line query: <c>CWorld::FindFirstThingToHitLine</c>
+    /// (<c>0x0050b030</c>) at mesh level, which traces the heightfield first and
+    /// takes a thing only when it is not farther than the ground. The line is
+    /// instantaneous, so every candidate is presented at rest. The caller
+    /// supplies retail's candidate filter (<c>BattleEngine.cpp:2320</c> skips
+    /// the Battle Engine, trees and rounds; the query skips dying
+    /// non-buildings). The hit's time is parts per million of the line.
+    /// </summary>
+    internal bool TryFindFirstThingOnLine(
         SimVector3 start,
         SimVector3 end,
-        int contactRadiusMillimeters,
-        uint damageBits,
-        Level100DestructionEffectKind impactEffectKind,
-        bool preservePulseDamageStages,
-        uint eventFrameCount,
+        Func<Level100ActorSnapshot, Level100ContactDefinition, bool> isCandidate,
         out Level100ContactHit hit)
+    {
+        ArgumentNullException.ThrowIfNull(isCandidate);
+        int contactActorCount = GatherContactActors(isCandidate, atRest: true);
+        return Level100ContactMechanics.TrySweepRoundWithTerrain(
+            ToContactVector(start),
+            ToContactVector(end),
+            contactRadiusMillimeters: 0,
+            _contactActors.AsSpan(0, contactActorCount),
+            out hit);
+    }
+
+    private int GatherContactActors(
+        Func<Level100ActorSnapshot, Level100ContactDefinition, bool>? isCandidate,
+        bool atRest)
     {
         SynchronizeActors(requireInitialState: false);
         Level100ActorRegistrySnapshot registrySnapshot = _registry.Snapshot;
@@ -348,6 +367,10 @@ public sealed class Level100DestructionRuntime
                 throw new InvalidDataException(
                     $"Level 100 actor {actor.ActorId.Value} definition/mesh binding changed.");
             }
+            if (isCandidate is not null && !isCandidate(actor, definition))
+            {
+                continue;
+            }
 
             ReadOnlyMemory<byte> partActivity =
                 _states.TryGetValue(
@@ -359,11 +382,27 @@ public sealed class Level100DestructionRuntime
                 actor.ActorId.Value,
                 active: true,
                 ToContactTransform(actor.Pose),
-                ToContactVector(actor.Pose.LinearVelocityMillimetersPerTick),
+                atRest
+                    ? Level100Vector3.Zero
+                    : ToContactVector(actor.Pose.LinearVelocityMillimetersPerTick),
                 definition,
                 partActivity: partActivity);
         }
 
+        return contactActorCount;
+    }
+
+    private bool TryApplyRoundSweep(
+        SimVector3 start,
+        SimVector3 end,
+        int contactRadiusMillimeters,
+        uint damageBits,
+        Level100DestructionEffectKind impactEffectKind,
+        bool preservePulseDamageStages,
+        uint eventFrameCount,
+        out Level100ContactHit hit)
+    {
+        int contactActorCount = GatherContactActors(isCandidate: null, atRest: false);
         if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
                 ToContactVector(start),
                 ToContactVector(end),
