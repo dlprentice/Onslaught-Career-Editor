@@ -3,7 +3,7 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-09-07 (five-function semantic name/comment correction).
+Last updated: 2026-09-26 (dated RTTI queue reconciled with current type-setter identity).
 Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
@@ -898,6 +898,12 @@ The apparent library region above `0x00555000` is mixed application, compiler,
 CRT, codec, math, and rendering code. It is not a clean authorship boundary.
 
 ### RTTI conflict queue: all 24 rows in the dated inventory
+
+This table preserves the names at that cut. The September 26
+[third label cohort](ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
+resolved `0x00404110` as `CComplexThing__SetThingType` (slot 38);
+its former CAnimal label below is historical.
+<!-- ghidra-name-drift-accepted: 0x00404110 CComplexThing__SetThingType (2026-09-26) -->
 
 | Address | Name at that cut | Resolved RTTI owner |
 | --- | --- | --- |

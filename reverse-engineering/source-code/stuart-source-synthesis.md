@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the pinned Stuart Gillam source corpus and
 its current reverse-engineering/rebuild use; the source files remain the
 line-level primary evidence
-Last updated: 2026-07-29
+Last updated: 2026-09-26 (current startup identities corrected; earlier synthesis retains its evidence limits)
 Verdict: **The pinned `references/Onslaught` drop is an exceptionally valuable
 but incomplete architecture corpus: 106 C/C++ files (52 `.cpp`, 54 headers),
 50,266 physical source lines, 1,354,693 source bytes, 254 distinct quoted
@@ -620,13 +620,16 @@ WinMain / CLTShell
 - `game.cpp:1836-2293`: model update, pause/audio behavior, interpolated render
   loop, timing/catch-up, and base-time repair.
 
-Representative retail-static anchors:
+Representative retail-static anchors. The September 26
+[third label cohort](../ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
+aligns the three startup calls with the source's `SYSTEM` expression; `System.h`
+is absent, so its class spelling remains unknown:
 
 | Source identity | Current Steam address | Boundary |
 | --- | --- | --- |
-| `CLTShell::WinMain` | `0x00512130` | current static identity |
-| shell/runtime initialization | `0x004EFB10` | current name `CLTShell__InitializeRuntimeAndLoadCoreResources` |
-| frontend/game shell loop | `0x004F0330` | current name `CLTShell__RunFrontEndAndGameLoop` |
+| `WinMain` | `0x00512130` | current static identity; former CLTShell qualification was corrected in the C runtime audit |
+| shell/runtime initialization | `0x004EFB10` | current name `SYSTEM__Init`; object identity, not a recovered class declaration |
+| frontend/game shell loop | `0x004F0330` | current name `SYSTEM__Run`; object identity, not a recovered class declaration |
 | `CGame::Init` | `0x0046C360` | source-shaped static match |
 | `CGame::RestartLoopRunLevel` | `0x0046DC30` | source-shaped static match |
 | `CGame::RunLevel` | `0x0046E240` | source-shaped static match |

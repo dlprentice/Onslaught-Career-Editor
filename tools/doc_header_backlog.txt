@@ -108,7 +108,6 @@ reverse-engineering/binary-analysis/functions/Credits.cpp/CCredits__WriteEntry_S
 reverse-engineering/binary-analysis/functions/Credits.cpp/CCredits__WriteEntry_TextId.md
 reverse-engineering/binary-analysis/functions/DXBattleLine.cpp.md
 reverse-engineering/binary-analysis/functions/DXClouds.cpp.md
-reverse-engineering/binary-analysis/functions/DXFMV.cpp.md
 reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md
 reverse-engineering/binary-analysis/functions/DXKempyCube.cpp.md
 reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md

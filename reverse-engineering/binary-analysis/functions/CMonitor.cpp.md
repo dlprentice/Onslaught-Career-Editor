@@ -1,14 +1,15 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-09-26 (RE audit: the deletion set is 0x10 bytes, memory type 0x5e, Monitor.h line 24)
+Last updated: 2026-09-26 (shared destructor thunk and SYSTEM caller names corrected)
+Summary: retained monitor/reader lifecycle evidence, with a fresh bounded destructor-thunk identity correction.
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen at
-file offset VA − 0x400000. Function names are the live Ghidra name table
-(`db.18627` lineage); the byte-level contracts here are independent of the
-names.
+file offset VA − 0x400000. Earlier byte-level measurements below retain their own dates and limits.
+The September 26 third label cohort rechecks the destructor thunk and updates
+its SYSTEM caller identities; it does not remeasure every retained claim.
 
 ## Functions
 
@@ -25,8 +26,8 @@ names.
 | `0x004e5a80` | `CSPtrSet__AddToHead` | `a134d18300 56 85c0 8bf1 7512 … 6a08 b9f03d9c00 e8e6350600 8b16 8b4c2408 895004 8908 8b560c 8906` | `ret 4`. Recycles an 8-byte wrapper from free-list `0x0083d130` or `Alloc`s 8 (`SPtrSet.cpp:0xb7`). `[node+4] = old head`; `[node+0] = arg`; `[set+0] = node`. HIGH: the deletion set stores **wrappers**, not the arg itself. |
 | `0x004e5c60` | `CSPtrSet__Clear` | `8b410c 33d2 3bc2 7421 8b4104 3bc2 740b 56 8b3530d18300 897004 5e 8b01 a330d18300 8911 895104 89510c c3` at file offset `0x000e5c60` | Zero-arg `ret`. If `count` (`+0xc`) is 0, return. Else splice the live chain onto free-list `0x0083d130` (`[tail+4] = old_free` when tail live; `[0x0083d130] = old head`) and zero `+0` / `+4` / `+0xc`. Does **not** call `CDXMemoryManager__Free` per node. HIGH. `0x0042f220` is a 5-byte `jmp` to this body (same table name); CMonitor death-walk calls the thunk. |
 | `0x004e5990` | `CSPtrSet__ClearAnyDynamicCreatedNodes` | `56 8b3530d18300 57 33ff 85f6 7444 8b0d34d18300 8bc6 8b7604 3bc1 7211 8b1538d18300 8d14d1 3bc2 7304 8bf8 eb20 85ff 7405 897704 eb06 893530d18300 50 b9f03d9c00 e848380600 … c3` | Zero-arg `ret` (cdecl). Walks free-list `0x0083d130`. Pool is `[0x0083d134, 0x0083d134 + 0x0083d138*8)`. In-range nodes stay; out-of-range nodes are unlinked and `CDXMemoryManager__Free`d. HIGH. Sole `E8` is `CGame__Shutdown` `0x0046c9e9`. These are the overflow wrappers AddToHead allocs after the "creating nodes dynamicaly" warning (`0x00632774`). |
-| `0x004e59f0` | `CSPtrSet__Initialise` | `a134d18300 85c0 7413 6850276300 … 8b742408 6889000000 6830276300 8d04f500000000 6a4c 50 b9f03d9c00 e8b1360600 8bd6 a334d18300 … 891538d18300 … 890d30d18300 … c3` | `cdecl`, one arg = slot count. If `[0x0083d134]` already set, print `Warning: Initilise SptrSet twice` (`0x00632750`) and `ret`. Else `Alloc(count*8)` (`SPtrSet.cpp:0x89`, pool `0x4c`), `[0x0083d134]=base`, `[0x0083d138]=count`, `[0x0083d130]=base`, then chain `[slot_i+4]=slot_{i+1}` and last next=0. HIGH. Sole `E8` is `CLTShell__InitializeRuntimeAndLoadCoreResources` `0x004efb58` with `push 0x9c40` (40000 slots, 320000 bytes). |
-| `0x004e5910` | `CSPtrSet__Shutdown` | `8b0d30d18300 85c9 7441 8b1534d18300 57 8bc1 8b4904 3bc2 890d30d18300 720d 8b3d38d18300 8d3cfa 3bc7 7217 50 … e8d8380600 … 52 … e8b4380600 c70534d1830000000000 c70530d1830000000000 c3` | Zero-arg. Walks the free list: overflow nodes `Free`d, in-pool nodes skipped; then `Free`s the pool block and zeroes `0x0083d134` / `0x0083d130`. HIGH. Sole image ref is `JMP` `0x004f01ec` inside `CLTShell__ShutdownRuntimeAndReleaseResources`. |
+| `0x004e59f0` | `CSPtrSet__Initialise` | `a134d18300 85c0 7413 6850276300 … 8b742408 6889000000 6830276300 8d04f500000000 6a4c 50 b9f03d9c00 e8b1360600 8bd6 a334d18300 … 891538d18300 … 890d30d18300 … c3` | `cdecl`, one arg = slot count. If `[0x0083d134]` already set, print `Warning: Initilise SptrSet twice` (`0x00632750`) and `ret`. Else `Alloc(count*8)` (`SPtrSet.cpp:0x89`, pool `0x4c`), `[0x0083d134]=base`, `[0x0083d138]=count`, `[0x0083d130]=base`, then chain `[slot_i+4]=slot_{i+1}` and last next=0. HIGH. Sole `E8` is `SYSTEM__Init` `0x004efb58` with `push 0x9c40` (40000 slots, 320000 bytes). |
+| `0x004e5910` | `CSPtrSet__Shutdown` | `8b0d30d18300 85c9 7441 8b1534d18300 57 8bc1 8b4904 3bc2 890d30d18300 720d 8b3d38d18300 8d3cfa 3bc7 7217 50 … e8d8380600 … 52 … e8b4380600 c70534d1830000000000 c70530d1830000000000 c3` | Zero-arg. Walks the free list: overflow nodes `Free`d, in-pool nodes skipped; then `Free`s the pool block and zeroes `0x0083d134` / `0x0083d130`. HIGH. Sole image ref is `JMP` `0x004f01ec` inside `SYSTEM__Shutdown`. |
 
 ## UnitAI retained-target lifecycle closure (2026-08-28)
 
@@ -84,6 +85,17 @@ safe copied-runtime watchpoint on `+0x0C/+0x10/+0x18/+0x1C` during one target
 shutdown is the cheapest remaining causal falsifier; no retained trace yet
 captures that exact death write.
 
+## Shared destructor thunk — September 26
+
+`0x0046dbc0` is now `CMonitor__dtor_thunk`: its five-byte body tail-jumps
+to `CMonitor__dtor_base` at `0x004bac40`. Callers include the two global
+destructors at `0x0046dbb0`/`0x004729c0`, the deleting-destructor wrapper
+at `0x0053f160` (call `0x0053f163`), and unwind funclets. This establishes
+shared base destruction, not exclusive ownership by CWaitForStart or
+CGameInterface and not linker folding. The former Shutdown_Thunk label was
+misleading. Exact scope and readback are in the
+[third label cohort](../../ghidra/README.md#re-audit-label-corrections-third-cohort--september-26).
+
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 
 `CMonitor__UpdateSoundEventPlaybackForReader` (`0x00409950`),
@@ -92,7 +104,6 @@ captures that exact death write.
 `CMonitor__FlushTrackedList_1D4` (`0x0040eb50`),
 `CMonitor__UpdateTrackedList_620` (`0x0040ebf0`),
 `CMonitor__ClearCurrentTrackedEntryFlag60` (`0x00414010`),
-`CMonitor__Shutdown_Thunk` (`0x0046dbc0`),
 `CMonitor__SpawnParticleEffectFromIndexedListInHeightBand` (`0x004ef120`),
 `CMonitor__UpdateTrackedRenderPair` (`0x005078f0`).
 
@@ -187,12 +198,12 @@ source analogy and call sites do not fill those runtime cells.
 - `CSPtrSet` 8-byte wrapper ownership: CLOSED 2026-08-18.
   `CSPtrSet__Initialise` (`0x004e59f0`) is the only writer of pool
   base `0x0083d134` / count `0x0083d138`. Sole `E8`:
-  `CLTShell__InitializeRuntimeAndLoadCoreResources` `0x004efb58`
+  `SYSTEM__Init` `0x004efb58`
   pushes `0x9c40` (40000). `AddToHead` recycles `0x0083d130` or
   allocs 8 (`SPtrSet.cpp:0xb7`, increments `0x0083d13c`, prints
   `0x00632774`). `Clear` (`0x004e5c60`) returns the chain to that
   free list. `ClearAnyDynamicCreatedNodes` (`0x004e5990`) `Free`s
   overflow nodes — sole caller `CGame__Shutdown` `0x0046c9e9`.
   `CSPtrSet__Shutdown` (`0x004e5910`) `Free`s overflow + the pool
-  block; `JMP` from `CLTShell__ShutdownRuntimeAndReleaseResources`.
+  block; `JMP` from `SYSTEM__Shutdown`.
   CMonitor death-walk `Free`s only the 0x10-byte set.

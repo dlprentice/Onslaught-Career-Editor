@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: library code named live in two cohorts, three more prepared, step-3 instruments and first verdicts; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: third game-label cohort promoted; NvTriStrip source divergences re-derived; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -198,15 +198,20 @@ corrected eighteen more labels from the bytes, among them `CCockpit__AddShockSha
 `PCLTShell__D3D_SetTexture` and `CRenderMethod__ctor`. The notes that cited the old
 names were updated, and three notes named after disproved labels were renamed.
 
-Verified corrections waiting for the next cohort:
-
-| Address | Saved label | What it is |
-| --- | --- | --- |
-| `005015c0` | `CEngine__TrimVbIbPoolCapacitiesPow2` | the static `CVBufTexture::ClearOut`; the name was held by `00501450` until the second cohort |
-| `004f00e0` | `CLTShell__ShutdownRuntimeAndReleaseResources` | `SYSTEM.Shutdown()`, called once at `0x0051241a` after `SYSTEM.Run()` (`ltshell.cpp:550-552`) (lead: the class name) |
-| `0046dbc0` | `CMonitor__Shutdown_Thunk` | a tail jump to CMonitor's destructor `004bac40` |
-| `00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing::SetThingType`, slot 38 |
-| `00401f70`, `00401fd0` | `CActor__TestFieldCcDeltaBelow015_…`, `ElapsedTime__BelowThreshold_D4` | `CActor::IsOnGround` (slot 67) and `IsOnObject` |
+The third game-label cohort (`label-audit-3-20260926`) is now live, with its
+independent POST recovery restored and reopened successfully. The
+[Ghidra record](reverse-engineering/ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
+contains the exact scope and recovery identity. It corrects `CVBufTexture__ClearOut`,
+`SYSTEM__Init`/`Run`/`Shutdown`, `CMonitor__dtor_thunk`,
+`CComplexThing__SetThingType`, and `CActor__IsOnGround`/`IsOnObject`.
+The missing SYSTEM header does not establish a class name; the destructor thunk
+does not prove linker folding; the contact predicates return x87 C0, including
+masked unordered comparisons. Zero buffer counts retain a zero capacity target.
+Two BattleEngine contracts now resolve their contact callees and the
+`GetImportance` return values; this is static evidence, not player acceptance.
+The first sealed rehearsal was retained after review found ambiguous Init branch
+wording. Fresh PRE, corrected seal, repeated rehearsal/controls and live recovery
+passed; no prototype or body changed.
 
 The library pass (audit step 2) named the statically linked library code in two cohorts, both live
 ([Ghidra README](reverse-engineering/ghidra/README.md#re-audit-c-runtime-library-names--september-26)).
@@ -227,23 +232,27 @@ Of the 391 `CFastVB__` labels: 326 were D3DX code (named); 6 are the game's `Fas
 (`0x0051a270`-`0x0051a6a0`) and 2 their unwind funclets (step 3); 57 are NVIDIA's NvTriStrip with its STL
 containers (below).
 
-Queued, prepared in `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` (each folder's scripts
-read the previous cohort's POST through `cohort_chain.py`, so they run in this order):
-1. `label-audit-3/`: eight re-derived game-code corrections in `targets.py`: `005015c0`
-   `CVBufTexture__ClearOut`; `004efb10`/`004f0330`/`004f00e0` `SYSTEM__Init`/`Run`/`Shutdown` (the SYSTEM
-   object at `00896ca4`, called from `PCLTShell::MainLoop` inlined into WinMain; its class is in the
-   unpinned `System.h`); `0046dbc0` `CMonitor__dtor_thunk` (the folded destructor of `CWaitForStart` and
-   `CGameInterface`); `00404110` `CComplexThing__SetThingType` (slot 38); `00401f70` `CActor__IsOnGround`
-   (slot 67) and `00401fd0` `CActor__IsOnObject`. Its `apply_live.py`/`finish.py` still need adapting.
-2. `library-nvtristrip/`: all 72 functions of `0x0056eb50`-`0x00574270`, planned by `plan.py` with
-   structural evidence per row: the call graph and return sizes against the pinned public NvTriStrip (69
-   call edges agree; two return sizes differ because the game's version is older), string anchors, data
-   initial values, and body facts that separate every look-alike pair. The STL rows name only what the
-   bytes prove (element width; `T` where unproven).
-3. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose saved names are proven
-   but whose comments are old or wrong: the 60 names that were right before the audit, and D3DX-cohort
-   comments the CRT review showed are wrong (`0x00574577`, `0x00574abb` cite unlinked objects;
-   `0x00589094` omits a folded copy).
+Remaining prepared work is in
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`.
+Each folder reads its predecessor's POST through `cohort_chain.py`; drafts are
+leads to re-derive, not approved mutation manifests.
+1. `library-nvtristrip/`: proposed identities for 72 saved functions in
+   `0x0056eb50`-`0x00574270`. The renewed review has already corrected assumptions
+   in its private `plan.py`: retail `GenerateStrips` receives four arguments while
+   the reference has five; retail index storage is two-byte while that source's
+   `WordVec` uses `long WORD`; retail face allocations are 24 bytes, without the
+   later `m_bIsFake` field. Three GetNextIndex calls are active in the source;
+   two others are comments. The source graph checks compatibility, not unique
+   identity; distinguish look-alike bodies before sealing. Its exception check
+   now binds exact contradictions, rejecting extra edge problems even at an
+   address with an admitted return-size mismatch. No NvTriStrip correction has
+   been promoted. Finish per-row evidence and the independent check, adapt its
+   live/finish scripts, then use the promotion gate.
+2. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose
+   saved names are proven but whose comments are old or wrong: the 60 names that
+   were right before the audit, and D3DX-cohort comments the CRT review showed are
+   wrong (`0x00574577`, `0x00574abb` cite unlinked objects; `0x00589094` omits a
+   folded copy). Extend and independently check its draft before sealing.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
@@ -259,6 +268,9 @@ they do. Contradicted leads worth taking first: `BattleEngineConfigurations__Loa
 (`CCareer__GetGradeFromRanking`, `CGame__RunLevel`, `CController__ctor`, `CPCController__GetKeyOnce`).
 
 Follow-ups:
+- NvTriStrip also exposes an absent function candidate at `0x00572e20`, passed
+  as an array-constructor callback at `0x00572658`. Check actual boundaries and
+  instructions in a later structural cohort; do not widen the names-only cohort.
 - Ghidra does not treat `_exit` as no-return, so `D3DX__error_exit`'s saved body swallows
   `output_message` (`0x00592b20`); 13 call targets in matched code have no Ghidra function.
 - `operator_new`/`operator_delete` lost their descriptive comments to the D3DX cohort's proof text; restore
@@ -273,7 +285,8 @@ Follow-ups:
 
 David asked for a quality once-over of the existing RE record. Most of it was
 produced by earlier, less capable agents, and parts are known to be wrong. The
-record holds 8,330 saved Ghidra function names and about 1,980 RE documents
+current readback has 8,331 internal functions; the earlier document inventory
+counted about 1,980 RE documents
 (354 contracts, 807 function notes). Items found while answering lane questions
 on September 25 include:
 - wrong saved labels (the table above);

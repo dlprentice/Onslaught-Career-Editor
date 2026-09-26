@@ -229,6 +229,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # library-crt-20260926: 369 names from the same matcher against the pinned
 # VC6 LIBCMT.LIB, d3dx9.lib and DxErr9.lib (C runtime, two D3DX rows, WinMain),
 # with the same preservation and refusal evidence and an independent review.
+# label-audit-3-20260926: eight names/comments/tag sets for SYSTEM startup,
+# buffer cleanup, base destruction, type bits and actor contact predicates;
+# fresh PRE, exact rehearsal/readback, five no-write refusals and independent
+# review after retaining a rejected first seal with ambiguous branch wording.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -268,6 +272,7 @@ LIVE_GRANTED_COHORTS = [
     "label-audit-2-20260926",
     "library-d3dx-20260926",
     "library-crt-20260926",
+    "label-audit-3-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -713,6 +718,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "label-audit-2-20260926",\n'
         '        "library-d3dx-20260926",\n'
         '        "library-crt-20260926",\n'
+        '        "label-audit-3-20260926",\n'
         "    };\n",
     ),
     (

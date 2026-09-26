@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (walker dash and dropship contracts)
+Last updated: 2026-09-26 (third game-label audit and contact-query contracts)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -11,6 +11,13 @@ Ghidra checkpoint and sole mutable Linux owner through
 [`ghidra/README.md`](ghidra/README.md). The mutable PC project is
 `local-lab/ghidra-projects/BEA/`; its latest measured state and correction are in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+The [third game-label audit](ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
+corrects startup object identities, buffer cleanup, base destruction, type bits
+and actor contact predicates. Its BattleEngine consumer contracts resolve
+GetImportance and the mode-2 contact query; the wider name/prototype/document
+audit remains unfinished. NvTriStrip drafts contain source-version differences
+that are being re-derived before promotion.
+
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or
 re-ground a campaign from a number copied out of this index.

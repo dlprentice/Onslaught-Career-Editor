@@ -1,91 +1,53 @@
-# CBattleEngine__GetGroundedControlFactor
+# CBattleEngine__GetImportance
 
-Status: active static contract (factory draft); audited 2026-09-26, corrections below
-Last updated: 2026-09-26 (RE audit: verified corrections added)
-Summary: specimen-bound static function contract for `CBattleEngine__GetGroundedControlFactor` at `0x0040e910`; unknown semantics and runtime limits remain explicit.
-Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
-Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Source File: unknown — no SOURCE_* crosswalk row in lane brief | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Status: active static contract; former control-factor interpretation corrected
+Last updated: 2026-09-26
+Summary: retail GetImportance returns 5.0 when on ground and not on an object, otherwise 0.0; source identity and both contact predicates are resolved.
+Evidence: MEASURED — fresh static instructions, constants and RTTI; SOURCE — pinned definitions for the identified queries; UNKNOWN — complete-process contact observations and player acceptance.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 > Address: `0x0040e910`
 
-## Audit corrections (2026-09-26)
+## Identity and evidence
 
-Re-derived from the pristine specimen during the RE audit's contract sample (PROGRAM.md, audit
-step 4). The statements below replace the draft's where they conflict; the title keeps the live
-Ghidra label until a label cohort renames it.
+The complete body is `[0x0040e910,0x0040e93a)`, 42 bytes, freshly read from the
+specimen above: SHA-256 `99f979d0b165369c6ad85f61547994dc791207c6107fdf492506eaf50f0ddc40`.
+Pinned Stuart source `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`,
+`BattleEngine.cpp:3453-3459`, identifies `CBattleEngine::GetImportance()`.
+The RTTI-confirmed CBattleEngine vtable at `0x005d89c4` points here from zero-based
+slot 80 (`0x005d8b04`). The second September 26 label cohort saved this identity;
+the old filename remains for link stability. It is not a control-input multiplier.
 
-- **Identity.** This is `CBattleEngine::GetImportance()` (`BattleEngine.cpp:3453-3459`), slot 80
-  of the CBattleEngine vtable `0x005d89c4` (pointer at `0x005d8b04`). It returns 5.0 when
-  `IsOnGround` (vtable `+0x10c`) is true and `CActor::IsOnObject` (`0x00401fd0`) is false, else
-  0.0. It is an importance score for targeting, not a "grounded control factor"; no control
-  input is involved.
+## Executable contract
 
-## Identity
-- Body `[0x0040e910,0x0040e939]`, 42 bytes. Raw pristine-body SHA-256 `99f979d0b165369c6ad85f61547994dc791207c6107fdf492506eaf50f0ddc40`; closure range SHA-256 `48caa78c0d0119793f88613592564e12c396035cae081fd94e8e3cf2752ee569`; packet range-plus-bytes SHA-256 `9c7403fd6b2bcfccc90161d101f0ad764bf038a38f850f902dda19ec380de821`. All three use the same exact inclusive range; no padding or tail bytes are included.
-- Name provenance: CBattleEngine__GetGroundedControlFactor — Ghidra tracked/table name
-  (USER_DEFINED label, counted name, not a recovered source symbol). Packet `name` field agrees.
-- Campaign grade: C1_CANDIDATE_PARTIAL (OPEN_EXECUTED); packet closureClass is
-  PREEXISTING_GEN19_C1_OR_C2 with confidence CANDIDATE_CONTRACT — not SEALED_STATIC_RECEIPT.
+The receiver arrives in ECX. There are no stack arguments; the body returns its
+floating result in x87 ST(0) with a plain `ret`. The saved `__fastcall` prototype
+is metadata, not an independent proof of the original C++ declaration.
 
-## Calling convention
-`__fastcall` per packet; single pointer arg in ECX. No stack args.
+1. Call receiver vtable slot 67 (`+0x10c`) at `0x0040e915`. In the retail
+   CBattleEngine vtable it is `CActor__IsOnGround`, `0x00401f70`.
+2. Only if its EAX result is nonzero, call `CActor__IsOnObject`, `0x00401fd0`,
+   at `0x0040e921`.
+3. Return the float **5.0** from `0x005d85d8` if ground was true and object was
+   false. Otherwise return **0.0** from `0x005d856c`.
 
-## Prototype and parameter semantics
-```c
-float __fastcall CBattleEngine__GetGroundedControlFactor(void * unit)
-```
-- `unit` — first dereferenced as `*(int*)unit` to reach vtable slot `+0x10c`; the decompile does not
-  expose an explicit argument or receiver for that indirect call. `unit` is passed explicitly to the
-  threshold helper. Layout and indirect-call storage are unknown.
-- Packet signature-hardening note: checks vtable `+0x10c` and `ElapsedTime__BelowThreshold_D4`
-  before returning one of two global float factors; exact identity/layout unproven.
+The contact helpers subtract the object's timestamp at `+0xcc` (ground) or
+`+0xd4` (object) from the event-time float at `0x00672fd0`, compare with the
+single-precision value at `0x005d8588` (bits `0x3e19999a`, the stored `0.15f`),
+and return x87 C0. Ordered comparisons therefore use strict less-than;
+masked unordered comparisons also return 1. Pinned `actor.cpp:326-341` and
+`actor.h:45-47` support the identities. See the
+[third label cohort](../../ghidra/README.md#re-audit-label-corrections-third-cohort--september-26).
 
-## Return value meaning
-`5.0` when vtable-slot `+0x10c` returns nonzero AND `ElapsedTime__BelowThreshold_D4(unit)` returns 0;
-otherwise `0.0`. Two-level float result; units/semantics of the levels unknown beyond the literals.
+This body performs no object writes. Its receiver and virtual-call target must
+be valid; there is no null guard. Runtime replacement of the vtable can change
+the first predicate and is outside the stated retail-vtable mapping.
 
-## Globals read/written
-not_applicable — no DAT_/g_ symbols referenced directly by this body (the helper call is by address,
-not through a named global shown here).
+## Limits
 
-## Callees relied on / callers
-- Callee: `ElapsedTime__BelowThreshold_D4` @ `0x00401fd0` (STATIC_DIRECT, 1 site).
-- Virtual/thunk call: vtable slot `+0x10c` invoked on the object at `*unit` (target not resolved here).
-- Callers: none recorded in the packet.
-
-## Behavior summary
-```c
-iVar2 = (**(code **)(*(int *)unit + 0x10c))();
-if (iVar2 != 0) {
-    bVar1 = ElapsedTime__BelowThreshold_D4(unit);
-    if (CONCAT31(extraout_var,bVar1) == 0) { return 5.0; }
-}
-return 0.0;
-```
-Virtual predicate gate, then a time-threshold negation decides between 5.0 and 0.0.
-
-## Error / edge behavior
-No null guard on `*unit` or its vtable before the indirect call. Behavior when the time-threshold
-helper's argument state is degenerate is not_determinable from this body.
-
-## Runtime corroboration (TTD, bounded)
-No TTD execution observed (bounded: deep-mine captures only). The VA has no row in
-`ttd-deep-mine/values.tsv`.
-
-## Evidence
-- Digest reconciliation: closure `bodyDigest` `48caa78c0d0119793f88613592564e12c396035cae081fd94e8e3cf2752ee569` hashes canonical range text only (`tools/ExportFullFunctionInventory.java` lines 121-131); packet `bodyDigest` `9c7403fd6b2bcfccc90161d101f0ad764bf038a38f850f902dda19ec380de821` hashes that same range text followed by the exact body bytes (`tools/ExportTriagePacket.java` lines 235-261); raw SHA-256 `99f979d0b165369c6ad85f61547994dc791207c6107fdf492506eaf50f0ddc40` hashes only the bytes extracted from the hash-verified pristine specimen.
-- Packet `D:/packet-runs/wave1-contracts-20260822/packet-0x0040e910.json`
-  (bea.re.triage-packet.v1, image 74154bfa…).
-- Closure row `reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv`
-  (C1_CANDIDATE_PARTIAL, confidence OPEN_EXECUTED).
-- TTD deep-mine `local-lab/hermes-kanban-campaign-2026-08-22/ttd-deep-mine/values.tsv`
-  sessions: none.
-
-## Confidence
-2 — full small body visible with clear branch structure; no runtime observation and the virtual
-slot target is unresolved, so semantics stay partial per rule 7.
-
-## Unresolved questions
-- Which virtual function occupies slot `+0x10c` and what its nonzero return means.
-- Units/meaning of the 5.0 and 0.0 factor levels.
+The earlier factory draft's unresolved virtual target and unknown meaning of
+the two numeric results are superseded by the evidence above. This recheck is
+static: it does not measure observed target choices, contact timing during
+play, or the FPU exception configuration of a complete retail process. A
+controlled copied-runtime call/watchpoint recording both contact predicates
+and the returned score is the remaining behavioral falsifier.

@@ -1,5 +1,14 @@
 # DXFMV.CPP Functions
 
+Status: retained static evidence; dated passes are not current runtime acceptance
+Last updated: 2026-09-26 (startup caller alias reconciled)
+Summary: historical FMV analysis with explicit current-name routing.
+
+The Wave594 caller label `CLTShell__InitializeRuntimeAndLoadCoreResources`
+below is now `SYSTEM__Init` at `0x004efb10`, corrected by the
+[third label cohort](../../ghidra/README.md#re-audit-label-corrections-third-cohort--september-26).
+This update does not revalidate the older FMV behavior claims.
+
 > Source File: DXFMV.CPP | Binary: BEA.exe
 > Debug Path: 0x00650644 (`[maintainer-local-source-export-root]\DXFMV.CPP`)
 

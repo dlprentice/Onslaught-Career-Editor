@@ -1,15 +1,16 @@
 # Frontend System
 
 Status: active source map with retail cross-checks
-Last updated: 2026-09-26 (RE audit: class tree, devkit cheat, SetPage, filtering, button names; runtime observations marked unrecorded)
+Last updated: 2026-09-26 (SYSTEM startup identity corrected; earlier runtime observations remain unconfirmed)
 Summary: frontend pages, save/load pages, cheats, autosave, transitions and input constants from the pinned source, cross-checked against the retail executable where an address is given.
 Evidence: SOURCE — pinned `references/Onslaught` files cited by line; MEASURED — retail addresses read from the pristine specimen; the startup-input observations below have no recorded capture.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 ## Steam startup skip sequence
 
-Fresh Steam-binary analysis and controlled app-owned copied-runtime observation
-establish both the normal input path and the retail `-skipfmv` path:
+The retained static analysis below describes the normal input and `-skipfmv`
+paths. Its copied-runtime observations lack recorded captures and remain
+unconfirmed; this label correction does not revalidate them:
 
 - Front-end page `12` is the object at `CFrontEnd + 0x4034` (retail runtime
   address `0x008A178C`) with vtable `0x005E49B4`. Its button handler at
@@ -33,7 +34,7 @@ establish both the normal input path and the retail `-skipfmv` path:
   `click to start`, after which a click entered the main menu.
 
 `CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and writes
-`1` to `0x00663050`. `CLTShell__InitializeRuntimeAndLoadCoreResources`
+`1` to `0x00663050`. `SYSTEM__Init`
 (`0x004EFB10`) checks that same global and branches around the startup
 full-screen FMV group. The lower video-open path at `0x00541173` also avoids
 `BinkOpen` while the flag is set. The flag is shared with the level-intro gate
