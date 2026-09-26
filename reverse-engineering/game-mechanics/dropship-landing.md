@@ -1,7 +1,7 @@
 # Dropships: landing, unloading and leaving
 
 Status: active static contract for the rebuild's U-17 and World 110 landing craft
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (descent below HAS 10 and climb below HAS 5 traced; event 2000 read)
 Summary: the landing-state machine of a `CDropship`, what `Land()` starts, how the landing craft
 unload their spawners, how a craft withdraws and is removed, what its turret does, and the AI
 event schedule in each AI state. Flight is in [dropship flight](dropship-flight.md).
@@ -61,16 +61,47 @@ The guide (`0x00448930`) sets thrust A and the Euler targets; see
 - **State 3, HAS > 10:** thrust (0, 0, +0.005), which pushes down; pitch −0.15; yaw held; roll
   `(r mod 65536) × 2⁻¹⁸ − 0.5` from one shared draw at `0x00448d4c` every tick
   (`0x00448d18-0x00448da3`).
-- **State 3, HAS ≤ 10:** the attitude aligns with the terrain normal and the thrust brakes the
-  descent (`0x00448da8-0x00449031`, partly traced by the research pass: horizontal thrust
-  `v.xy × −0.05` below HAS 4; a braking z thrust `HAS × −0.0005` while `v.z > HAS/45` and
-  HAS > 0.075; otherwise 0.005, and 0.002 on the ground).
+- **State 3, HAS ≤ 10: attitude** (`0x00448da8-0x00449031`, traced by the RE lane). The game
+  thread runs the x87 at single precision ([walker dash](walker-dash.md#the-window)), so every
+  operation below rounds to float32.
+  - The yaw target is held at the current yaw ψ (`+0x114`, stored at `0x00448d33`).
+  - The heading A is `(−sin ψ, cos ψ, 0)`: the second column of the rows
+    `(cos ψ, −sin ψ, 0)`, `(sin ψ, cos ψ, 0)`, `(0, 0, 1)` built at `0x00448da8-0x00448ebb`.
+  - N is the heightfield normal at the craft's position (`0x0047ec60` on `0x006fadc8`, at
+    `0x00448ec0-0x00448ed1`; see
+    [its note](../binary-analysis/functions/HeightField.cpp/CMonitor__SampleHeightfieldNormalAtXY.md)).
+  - `B = A × N`, as `(A.y·N.z − A.z·N.y, A.z·N.x − N.z·A.x, N.y·A.x − A.y·N.x)`
+    (`0x00448ed6-0x00448f1c`).
+  - `C = B × N`, as `(B.y·N.z − B.z·N.y, B.z·N.x − N.z·B.x, N.y·B.x − B.y·N.x)`
+    (`0x00448f21-0x00448f67`).
+  - C is normalised with `|C|² = (C.x² + C.z²) + C.y²`, left as is when `|C|` is 0, and the
+    pitch target is `−C.z` (`0x00448f6c-0x00448fc7`).
+  - The roll target is `B.z × (1 / |B|)`, with `|B|² = (B.x² + B.z²) + B.y²`, or `B.z` when
+    `|B|` is 0 (`0x00448fcb-0x00449031`).
+- **State 3, HAS ≤ 10: thrust** (`0x00449035-0x00449144`).
+  - The horizontal brake is `(v.x × −0.05, v.y × −0.05)` when HAS < 4.0; `v` is the unit's
+    velocity from its slot 27 (`GetVelocity`, `0x00449060`). Otherwise the brake is 0.
+  - With HAS ≤ 0.075 (`0x005db260`), the thrust is `(brake.x, brake.y, 0.002)`.
+  - Otherwise, while `v.z > HAS × 0.022222223` (`0x005db264`, a second slot-27 read at
+    `0x0044908b`), the thrust is `(brake.x, brake.y, HAS × −0.0005)`, upward.
+  - Otherwise the thrust is `(0, 0, 0.005)`.
+  - The tail (`0x0044947d-0x004494eb`) stores the targets (yaw, pitch, roll) at `+0x120` and
+    the thrust at `+0x14c`. Every state-3 tick also clears the unit's `+0x174` (`0x00448d29`).
 - **State 3 downwash, in Move:** it queries things within 25.0; trees within distance² 100 are
   knocked over (`0x004f69b0`), and a Battle Engine (thing flag `0x8`) within 7.0 and not more
   than 2.0 above the craft takes `0.9 / d` damage through its slot 40 (`0x0044765b-0x004477dd`).
 - **State 4:** thrust 0. **States 6 and 7:** nothing is written, so the last thrust persists.
-- **State 5:** thrust (0, 0, −0.001), upward; above HAS 5, pitch −0.1 and roll
-  `(r mod 65536) × 0.1 × 2⁻¹⁶ − 0.2` from one draw at `0x004491a1` every tick.
+- **State 5:** thrust (0, 0, −0.001), upward, at every height; the unit's `+0x174` is cleared
+  (`0x00449149-0x00449182`).
+  - Above HAS 5, the pitch target is −0.1 and the roll is `(r mod 65536) × 0.1 × 2⁻¹⁶ − 0.2`,
+    from one draw at `0x004491a1` every tick.
+  - At or below HAS 5 (`0x004491d9-0x0044943e`), the attitude follows the state-3 law with
+    two differences in rounding order. First, `|C|²` is summed `(C.z² + C.y²) + C.x²`
+    (`0x0044939d-0x004493b7`). Second, B is normalised by `0x00406d50`, which sums
+    `(x² + y²) + z²`, leaves a zero vector unchanged and otherwise multiplies each component
+    by `1 / |B|`; the roll target is the normalised `B.z` (`0x00449426-0x00449436`). The
+    remaining cross-product terms differ only in operand order, and IEEE multiplication is
+    commutative.
 
 ## Unloading
 
@@ -119,8 +150,20 @@ Traced by the research pass, not re-derived here:
   (`0x005d85bc`) it sets `+0x244` = 2 and orders a move to its position plus 300
   (`0x005db520`) times its forward axis in x and y; while `+0x244` is 2 it posts event 2000 at
   −1 through slot 116
-  (`0x004fb050-0x004fb12f`). Event 2000 is the unit's shutdown, which runs the script's
-  `shutdown()` ("Lander Escaped").
+  (`0x004fb050-0x004fb12f`).
+- **Event 2000 (SHUTDOWN)** reaches `CComplexThing::HandleEvent`. At `0x004f438c-0x004f439e`,
+  when the game state (`0x008a9ac0`) is at most 3 and the thing has a mission script
+  (`+0x74`), it calls the script's slot 2 (`0x00533810`), which runs the script's
+  `shutdown()` ("Lander Escaped"; [IScript](../binary-analysis/functions/IScript.cpp.md)).
+  This matches `thing.cpp:677-683`. The thing's own shutdown follows.
+  - For a `CDropship` that shutdown is slot 2, `0x00447100`. It removes the craft from the
+    landing grid (`0x0050b020` on `0x00855090`), then calls `0x00402d30`.
+- **Reported by the rebuild lane** (their byte reads, not re-derived here):
+  - The shutdown chain continues into `CUnit::Shutdown` (`0x004f95d0`).
+  - The retreat walk visits the side's list newest first, because `0x004e5a80` prepends.
+  - The SHUTDOWN is posted on the tick after the run-out starts and delivered on the tick
+    after that.
+  - In Level 100 the U-17 retreats to row 20, (501, 296).
 - While `+0x244` is 1 or 2 the speed cap is 1.5 × `+0xb4` × 0.05.
 
 ## The U-17 in Level 100
@@ -175,7 +218,5 @@ so the turret dies with it.
 | Question | Cheapest falsifier |
 | --- | --- |
 | The unload counts (25 tanks, 20 grunts) and their timing | Count Light Gun Tanks and Muspell Grunts created after "Landing Started" in World 110, in a copied runtime |
-| The state-3 descent law below HAS 10 and the state-5 climb below HAS 5 | Static trace of `0x00448da8-0x00449031` and the state-5 terrain branch |
 | The spawn placement, clearance and exit-walk details listed as research-traced | Static trace of `0x004e3f90` and `0x004ffbb0`, or a runtime log of member positions |
 | Whether the door-stop test uses the moving door or the rest pose | Log slot 88's type-27 output during state 6 in a copied runtime |
-| That event 2000 runs the script's `shutdown()` | Static read of the unit event handler for 2000 |
