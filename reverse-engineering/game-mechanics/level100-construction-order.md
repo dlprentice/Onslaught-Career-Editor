@@ -214,9 +214,19 @@ only their 3000.
    - slot 66 (`0x004e7070`): when `CSquadNormal::Process` (`0x004e7110`) returns 0,
      draw `0x004e709c` and 4002 at now + 0.99 + (r mod 65536) × 1.5258789e-7;
      otherwise 4002 at −1 with no draw.
-8. That is five draws per row, or four if `Process` returns 1. It returns 1 only
-   through `0x004e79b5`, after `IsLeaderNearFormationCentroid` (`0x004e7f40`) on its
-   formation path, and 0 on every other path (see the open questions).
+8. `Process` returns 0 here, so each row takes five draws. Its return slot is
+   written only at `0x004e7124` (0) and `0x004e79b5` (1), and `0x004e79b5` needs a
+   destination more than 1 unit away or an active path:
+   - The target search (`0x00477cb0`) reads list `0x008550c0`, the allegiance-1 and
+     allegiance-6 things. Every row loaded so far has allegiance 0 or 2, so it finds
+     nothing and `+0xc4` stays 0.
+   - The destination `+0xf4` is the squad's own position (`0x004e6c89`).
+   - The side-0 fear grid (`0x008a9d7c`, rebuilt by `0x0044c440` when
+     `InitRestartLoop` creates it at `0x0046c657`, before loading) holds no
+     occupancy yet, so the destination is not moved to a free cell.
+   - The path length `+0xdc` is 0 from the constructor (`0x004e6909`).
+   With the destination 0 units away and no path, `0x004e7881` skips to
+   `0x004e79ca`, from which `0x004e79b5` is unreachable.
 
 **Warehouse** (row 11, `CBuilding::Init` `0x00417190`):
 - Its target is the row-8 waypoint, so its AI queues 3001, not 3000.
@@ -399,7 +409,6 @@ guide below.
 | Question | Cheapest falsifier |
 | --- | --- |
 | Whether this static order matches retail end to end, from the first pine draw through frame 2 | Log the return address of every `Random__NextLCGAbs` call on `0x008a9d9c` from level load through frame 2 in a copied runtime |
-| Whether `CSquadNormal::Process` (`0x004e7110`) returns 0 at squad construction, which decides five or four draws per Target Tank row | Trace `0x004e7110` statically for a one-member squad whose target search found nothing, or read its return in the draw log above |
 | What the response `0x004264a0` does in the first flush for the two overlapping pairs, including its virtual callees | Trace the response's virtual calls for `CBuilding`/`CGroundVehicle` and `CSphereTrigger`/`CBattleEngine` pairs, or read lane 1 in the draw log |
 | Which pairs the Battle Engine's and the units' first scans find, and their 2000 times | Recompute the scans with the Level 100 heightfield in Core, or log `0x00480ed0` arguments during load |
 | Whether the member position update (slot 20 at `0x004e6199`) or `AddMember`'s formation placement (`0x004e8730`) rescans collision | Static read of `CGroundVehicle` slot 20 and `0x004e8730` |
