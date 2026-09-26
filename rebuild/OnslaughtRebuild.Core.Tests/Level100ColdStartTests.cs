@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.TestSupport;
 using Xunit.Abstractions;
@@ -12,7 +13,7 @@ namespace OnslaughtRebuild.Core.Tests;
 ///
 /// <para>The complete route is shared by the tests below.</para>
 /// </summary>
-public sealed class Level100ColdStartRunFixture
+public sealed class Level100ColdStartRunFixture : IDisposable
 {
     internal Level100ColdStartRun Run { get; }
 
@@ -23,6 +24,8 @@ public sealed class Level100ColdStartRunFixture
         Run = new Level100ColdStartRun();
         Outcome = Run.Run();
     }
+
+    public void Dispose() => Run.Dispose();
 }
 
 /// <summary>
@@ -479,6 +482,39 @@ public sealed class Level100ColdStartTests
         Assert.Equal(
             (short)0,
             Level100InteractiveChainHost.DeliverablePermille(15));
+    }
+
+    /// <summary>
+    /// The cold start's own recording is a complete Level 100 tape: replayed
+    /// twice through the headless replayer's <see cref="ReplayRunner"/>, it
+    /// reproduces the trace and final-state hashes observed live and ends with
+    /// the mission won. <c>ONSLAUGHT_WON_TAPE_PATH</c>, when set to an absolute
+    /// path, also writes it with the host's create-new <see cref="TapeFile"/>.
+    /// </summary>
+    [Fact]
+    public void ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin()
+    {
+        Assert.Equal(Level100MissionOutcome.Won, _coldStart.Outcome);
+        CommandTape tape = _coldStart.Run.Recorder.BuildObserved(
+            "level100-cold-start-won", Level100ColdStartRun.SimulationSeed);
+        Assert.Equal(_coldStart.Run.Final.Tick, tape.DurationTicks);
+
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.LoadMaterialized();
+        ReplayResult first = ReplayRunner.Run(tape, definitions);
+        ReplayResult second = ReplayRunner.Run(tape, definitions);
+        Assert.Equal(tape.ExpectedTraceHash, first.TraceHash);
+        Assert.Equal(tape.ExpectedFinalStateHash, first.FinalStateHash);
+        Assert.Equal(first.TraceHash, second.TraceHash);
+        Assert.Equal(first.FinalStateHash, second.FinalStateHash);
+        Assert.Equal(Level100MissionOutcome.Won, first.FinalState.Level100Mission.Outcome);
+        _output.WriteLine(
+            $"WON TAPE ticks={tape.DurationTicks} trace={first.TraceHash} state={first.FinalStateHash}");
+
+        if (Environment.GetEnvironmentVariable("ONSLAUGHT_WON_TAPE_PATH") is { Length: > 0 } path)
+        {
+            TapeFile.WriteNew(path, tape);
+            _output.WriteLine($"WON TAPE written to {path}");
+        }
     }
 
     /// <summary>
