@@ -1,7 +1,7 @@
 # Onslaught Toolkit companion
 
 Status: C# application built entirely in code on Godot 4.8 dev6 .NET; careers, Goodies, copies, options, install and backups, music, voices and lore; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (RE save-audit corrections: gallery rows, god flags)
 Summary: the MIT companion for Battle Engine Aquila players: it reads careers and the game's own files, writes changes only to verified copies, puts a copy into the game only after a confirmed, verified backup, and plays and explains the game's own music, voices and lore.
 
 The companion owns careers, saves, recovery copies, supported patches, media and
@@ -72,16 +72,18 @@ careers with an Open button, the options file, and what the install holds.
 **Career** pages open a career read-only. A supported career is exactly 10,004 bytes
 with version word `0x4BD1`; the app records its path, SHA-256 and physical file identity.
 - **Overview**: missions with the game's own names, rank letters by the game's rule,
-  attempts, Goodies, kill counts and campaign links.
-- **Goodies**: all 233 slots in the game's colours (gold new, blue viewed), each with its
-  title from your game's text, its unlock rule, and how that rule is known: seen in the
-  game, checked in the game's code, or from the developers' source only.
+  Goodies, kill counts and campaign links.
+- **Goodies**: the 230 Goodies the game's gallery shows, row by row as on its wall, in the
+  game's colours (gold new, blue viewed), each with its title from your game's text, its
+  unlock rule, and how that rule is known: seen in the game, checked in the game's code, or
+  from the developers' source only. Slots 071–073 are stored and can be earned, but the
+  gallery never shows them; they are listed apart and always kept as they are.
 - **Edit a copy**: kill counts (only the three count bytes; the fourth byte is kept) and
   Goodie states. The preview lists every changed byte.
 - **Cheat names**: a byte-identical copy whose name carries one of the three cheats seen
   working in the Steam game (`MALLOY`, `TURKEY`, `Maladim`).
 - **Compare** lists every differing byte between two careers, named by region;
-  **Stored values** shows the raw values read-only.
+  **Stored values** shows the raw values read-only, including both players' god flags.
 
 **Options** opens `defaultoptions.bea` (or another `.bea`) read-only and edits sound and
 music volume, invert flight and walker, vibration, controller preset, mouse sensitivity
@@ -115,7 +117,9 @@ bounded traversal, links skipped and partial results reported.
 - Writing into the game folder (a career into `savegames`, or a `.bea` as
   `defaultoptions.bea`, including a restore from a backup) needs a backup folder outside
   the game and a confirmation that names the exact file, source and backup folder. It is
-  refused while `BEA.exe` is running. It first makes a new backup set of every career and
+  refused while `BEA.exe` is running; on Linux that means a process Wine names `BEA.exe`
+  (a tool that merely opens the file does not count), a check not yet seen against a live
+  game. It first makes a new backup set of every career and
   the options file, each copy verified and listed in a manifest. A file being replaced
   must still match its fresh backup; the new file is staged, verified and exchanged
   atomically (`renameat2` with `RENAME_EXCHANGE`). If the file displaced by the exchange

@@ -31,11 +31,12 @@ internal sealed class StoredValuesPage : Page
         Tree.Clear();
         TreeItem root = Tree.CreateItem();
         TreeItem missions = Build.TableRow(Tree, root, "Mission records",
-            $"{analysis.MissionCensus.Used} used · {analysis.MissionCensus.Completed} complete", "Unused slots are kept as stored");
+            $"{analysis.MissionCensus.Used} used · {analysis.MissionCensus.Completed} complete",
+            "Unused slots are kept as stored; the game only ever zeroes the attempts field");
         foreach (MissionRecord record in analysis.Missions.Where(record => record.Used))
         {
             Build.TableRow(Tree, missions, $"Slot {record.Index} · level {record.World}",
-                $"complete {record.CompleteRaw} · attempts {record.Attempts} · rank 0x{record.RankBits:X8}",
+                $"complete {record.CompleteRaw} · attempts field {record.Attempts} · rank 0x{record.RankBits:X8}",
                 record.RankLetter is string letter ? $"Rank {letter} by the game's rule" : "Rank outside the game's letters");
         }
         LinkCensus links = analysis.LinkCensus;
@@ -45,7 +46,8 @@ internal sealed class StoredValuesPage : Page
         linkRow.Collapsed = true;
         foreach (LinkRecord record in analysis.Links.Where(record => record.Used))
             Build.TableRow(Tree, linkRow, $"Link {record.Index} to node {record.ToNode}", $"0x{record.RawState:X8}", Describe(record.State));
-        TreeItem goodies = Build.TableRow(Tree, root, "Goodies", "300 stored slots", "Slots 233–299 are reserved and preserved");
+        TreeItem goodies = Build.TableRow(Tree, root, "Goodies", "300 stored slots",
+            "The gallery shows 230; 071–073 are kept but never shown; 233–299 are reserved and preserved");
         goodies.Collapsed = true;
         foreach (GoodieRecord record in analysis.Goodies)
             Build.TableRow(Tree, goodies, $"Goodie {record.Index:D3} · 0x{record.Offset:X4}", $"0x{record.RawState:X8}", Describe(record.State));
@@ -57,8 +59,15 @@ internal sealed class StoredValuesPage : Page
         Build.TableRow(Tree, root, "Career in progress", $"0x{analysis.CareerInProgressRaw:X8}", "Stored flag");
         Build.TableRow(Tree, root, "Sound / music volume", $"{analysis.SoundVolume.Value} / {analysis.MusicVolume.Value}",
             "Stored floats; a menu load keeps the game's current volumes");
-        Build.TableRow(Tree, root, "God mode flag", $"0x{analysis.GodModeRaw:X8}", "Stored flag; read only");
-        Build.TableRow(Tree, root, "Everything else", "Preserved in full", "Options, top kill bytes and unknown data are never edited here");
+        // CCareer::mIsGod[2]. The game's code applies a set flag whatever the career's name; Maladim only adds the menu toggle.
+        for (int player = 0; player < analysis.GodFlags.Count; player++)
+        {
+            Build.TableRow(Tree, root, $"Player {player + 1} god flag · 0x{CareerSave.GodFlagOffsets[player]:X4}",
+                $"0x{analysis.GodFlags[player]:X8}", analysis.GodFlags[player] == 0 ? "Off" :
+                "On: the game's code makes this player's Battle Engine invulnerable with infinite energy (read from the code; not yet seen in play)");
+        }
+        Build.TableRow(Tree, root, "Everything else", "Preserved in full",
+            "Options, the stored screen-position setting in the top kill bytes, and unknown data are never edited here");
     }
 
     private static string Describe(Enum state) => state switch
