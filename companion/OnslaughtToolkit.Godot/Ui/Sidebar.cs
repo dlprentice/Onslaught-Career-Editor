@@ -21,7 +21,7 @@ internal sealed class Sidebar
         VBoxContainer words = brand.Add(Build.Column(0));
         words.Add(Build.Text("ONSLAUGHT", "Brand", wrap: false));
         words.Add(Build.Text("TOOLKIT", "BrandSub", wrap: false));
-        column.Add(Build.Spacer(18));
+        column.Add(Build.Spacer(12));
         // The destinations scroll when the window is too short for them all, so the sidebar never pushes
         // the status bar off the bottom of the window.
         ScrollContainer scroll = column.Add(new ScrollContainer
@@ -59,7 +59,7 @@ internal sealed class Sidebar
                 item.Pressed += () => navigate(page.Key);
                 _items[page.Key] = item;
             }
-            nav.Add(Build.Spacer(12));
+            nav.Add(Build.Spacer(6));
         }
         column.Add(Build.Margin(4, 8, 0, 0)).Add(Build.Text("A companion for Battle Engine Aquila", "Faint"));
     }

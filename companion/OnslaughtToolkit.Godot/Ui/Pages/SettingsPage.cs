@@ -18,7 +18,7 @@ internal sealed class SettingsPage : Page
     private readonly AppServices _app;
     private readonly Label _empty, _rawLine, _resultText;
     private readonly VBoxContainer _changes;
-    private readonly RichTextLabel _details;
+    private readonly FileDetails _details;
     private readonly PanelContainer _result;
     private readonly List<Control> _needsFile = [];
     private readonly HSlider _sound, _music;
@@ -128,14 +128,7 @@ internal sealed class SettingsPage : Page
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");
         ChangesCard = summary;
         _changes = summaryBody.Add(Build.Column(4));
-        Button details = summaryBody.Add(Build.Button("Show exactly what changes in the file", "Link"));
-        _details = summaryBody.Add(Build.Detail("", bbcode: true));
-        _details.Visible = false;
-        details.Pressed += () =>
-        {
-            _details.Visible = !_details.Visible;
-            details.Text = _details.Visible ? "Hide the file details" : "Show exactly what changes in the file";
-        };
+        _details = new FileDetails(summaryBody);
         (_result, _resultText) = Build.Notice("");
         summaryBody.Add(_result).Visible = false;
         _needsFile.Add(content.Add(summary));
@@ -365,14 +358,14 @@ internal sealed class SettingsPage : Page
         if (_plan.Value is OptionsPlan plan)
         {
             foreach (string line in plan.Lines) _changes.Add(Build.Text("•  " + line, "Strong"));
-            _details.Text = $"[color=#{Palette.Data.ToHtml(false)}]{plan.Changes.Count} bytes change;[/color] every other byte is kept.\n[code]" +
-                string.Join("   ", plan.Changes.Select(change => $"0x{change.Offset:X4} {change.Before:X2}→{change.After:X2}")) + "[/code]";
+            _details.Show($"[color=#{Palette.Data.ToHtml(false)}]{plan.Changes.Count} bytes change;[/color] every other byte is kept.\n[code]" +
+                string.Join("   ", plan.Changes.Select(change => $"0x{change.Offset:X4} {change.Before:X2}→{change.After:X2}")) + "[/code]");
         }
         else
         {
             bool none = _edit.IsEmpty;
             _changes.Add(Build.Text(none ? "No changes yet." : _plan.Message, none ? "Muted" : "Bad"));
-            _details.Text = "";
+            _details.Show(null);
         }
         bool ready = !_app.Workspace.Busy;
         Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready && _plan.Ok, ready && HasChanges);

@@ -28,19 +28,24 @@ public sealed record InstallReceipt(bool Ok, string Message, string Target, stri
 /// <summary>Whether the game is running; the companion never writes into its folder while it is.</summary>
 public static class GameProcess
 {
-    public static bool IsRunning()
+    public static bool IsRunning() => Running().Count > 0;
+
+    /// <summary>The processes the check counts as the game, as "pid: name (first argument)"; read-only.</summary>
+    public static IReadOnlyList<string> Running()
     {
+        List<string> found = [];
         try
         {
-            if (OperatingSystem.IsWindows()) return System.Diagnostics.Process.GetProcessesByName("BEA").Length > 0;
+            if (OperatingSystem.IsWindows())
+                return System.Diagnostics.Process.GetProcessesByName("BEA").Select(process => $"{process.Id}: {process.ProcessName}").ToArray();
             foreach (string folder in Directory.EnumerateDirectories("/proc"))
             {
-                if (!int.TryParse(Path.GetFileName(folder), out _)) continue;
+                if (!int.TryParse(Path.GetFileName(folder), out int pid)) continue;
                 try
                 {
                     string comm = File.ReadAllText(Path.Combine(folder, "comm"));
                     string[] argv = File.ReadAllText(Path.Combine(folder, "cmdline")).Split('\0', StringSplitOptions.RemoveEmptyEntries);
-                    if (IsGame(comm, argv)) return true;
+                    if (IsGame(comm, argv)) found.Add($"{pid}: {comm.Trim()} ({(argv.Length > 0 ? argv[0] : "")})");
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException)
                 {
@@ -50,14 +55,17 @@ public static class GameProcess
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
         }
-        return false;
+        return found;
     }
 
     /// <summary>
     /// Whether a Linux process is the game itself. Wine names a Windows program's process after its
     /// executable (comm <c>BEA.exe</c>) and shows its Windows path as argv[0]; a Wine loader may carry the
     /// path as an argument while it starts. A tool that only names the file (a disassembler, a hash, a
-    /// copy) is not the game. Not yet observed against a live game on Linux.
+    /// copy) is not the game. Seen on 2026-09-26 with the Steam game under Proton: the game's process has
+    /// comm <c>BEA.exe</c> and argv[0] <c>S:\steamapps\common\Battle Engine Aquila\BEA.exe</c>, while
+    /// Steam's <c>steam.exe</c> shim, the Proton script and the runtime wrapper, which name the file, are not
+    /// counted.
     /// </summary>
     public static bool IsGame(string comm, IReadOnlyList<string> argv)
     {
