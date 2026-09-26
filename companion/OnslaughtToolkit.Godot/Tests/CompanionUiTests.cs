@@ -70,6 +70,20 @@ internal static class CompanionUiTests
                 app.Pages.Values.Count(other => other.Root.Visible) == 1, "navigation shows exactly one page: " + page.Key);
         }
         check.That(app.Sidebar.IsOpen("Advanced"), "going to an Advanced page opens its group");
+        // The window may be as short as its 700-pixel minimum: no page, with every sidebar group open, may need more.
+        List<string> tall = [];
+        foreach (Page page in app.Pages.Values)
+        {
+            app.Navigate(page.Key);
+            for (int frame = 0; frame < 2; frame++) await Frame(tree);
+            if (app.GetCombinedMinimumSize().Y > 700) tall.Add($"{page.Key} {app.GetCombinedMinimumSize().Y}");
+        }
+        check.That(tall.Count == 0, "every page fits the smallest window, 700 pixels tall, with the sidebar open" +
+            (tall.Count > 0 ? ": too tall " + string.Join(", ", tall) : ""));
+        app.Navigate("home");
+        for (int frame = 0; frame < 3; frame++) await Frame(tree);
+        check.That(app.Home.Promises.Count == 3 && app.Home.Promises.All(promise => promise.Size.X > 200 && promise.GetLineCount() <= 3),
+            "Home's three promises read as lines of text, not a letter per line");
         for (int frame = 0; frame < 600 && app.Workspace.Busy; frame++) await Frame(tree);
         FileDialog[] dialogs = app.FindChildren("*", nameof(FileDialog), true, false).OfType<FileDialog>().ToArray();
         check.That(dialogs.Length >= 8 && dialogs.All(dialog => !dialog.DeletingEnabled && !dialog.FolderCreationEnabled &&
@@ -124,6 +138,9 @@ internal static class CompanionUiTests
         check.That(edit.Bar.Root.Visible && edit.Bar.Summary.Text.StartsWith("2 changes not saved yet", StringComparison.Ordinal) &&
             !edit.Bar.Save.Disabled, "a bar under the page counts the unsaved changes and offers Save");
         edit.AskToSave();
+        for (int frame = 0; frame < 4; frame++) await Frame(tree);
+        check.That(edit.SaveChoice.Dialog.Size.Y is > 200 and < 640 && edit.SaveChoice.Dialog.GetOkButton().ThemeTypeVariation == "Primary",
+            $"the save dialog fits its content, well inside the window ({edit.SaveChoice.Dialog.Size.Y} px tall), with its action in amber");
         check.That(edit.SaveChoice.Dialog.Visible && edit.SaveChoice.Offers(SaveTarget.NewCareer) && edit.SaveChoice.Offers(SaveTarget.Replace) &&
             edit.SaveChoice.Offers(SaveTarget.Elsewhere) && edit.SaveChoice.Name.Text == "Career One (edited)" && edit.SaveChoice.InGameAvailable,
             "saving offers a new career, replacing this one, or a copy elsewhere, with a sensible new name");
@@ -143,6 +160,10 @@ internal static class CompanionUiTests
             (BinaryPrimitives.ReadUInt32LittleEndian(actual.AsSpan(0x2406)) & 0xFFFFFF) == 123460,
             "a copy elsewhere changes only the chosen counts' low three bytes");
         check.That(File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original), "saving elsewhere leaves the game's career unchanged");
+        check.That(!edit.HasChanges && !edit.Bar.Root.Visible && edit.ResultPanel.Visible && edit.Result.Text.StartsWith("Saved a copy"),
+            "saved changes are done: the page starts again from the career and the result stays in view");
+        edit.Rows[0].Target.Value = 123456;
+        edit.Rows[4].Target.Value = 123460;
         PublicationReceipt duplicate = await edit.SaveElsewhereAsync(edited);
         check.That(!duplicate.Ok && File.ReadAllBytes(edited).AsSpan().SequenceEqual(actual), "an existing file is never replaced");
 
@@ -154,6 +175,8 @@ internal static class CompanionUiTests
             sets[0].Reason == "Before adding Career One (edited)" && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original),
             "a new career is added to the game after a backup made for it; the open career is unchanged");
         check.That(app.Game.Folder?.Careers.Count == 2 && app.Home.OpenButtons.Count == 2, "Home lists the new career");
+        edit.Rows[0].Target.Value = 123456;
+        edit.Rows[4].Target.Value = 123460;
 
         InstallReceipt replaced = await edit.SaveIntoGameAsync(SaveTarget.Replace, "");
         IReadOnlyList<BackupSet> after = Backups.List(app.Services.Backups.Folder);
@@ -310,6 +333,11 @@ internal static class CompanionUiTests
         }
         check.That(optionsWritten.Ok && optionsConfined && Math.Abs(BinaryPrimitives.ReadSingleLittleEndian(optionsBytes.AsSpan(0x2492)) -
             (float)(newMusic / 100)) < 1e-6, "a settings copy changes only the music float and the chosen key's two dwords");
+        check.That(!settings.HasChanges && settings.ResultText.StartsWith("Saved a copy", StringComparison.Ordinal),
+            "after a settings copy is saved the page starts again from the file, the result still shown");
+        settings.Music.Value = newMusic;
+        settings.StartCapture(0x21, 1);
+        settings.Capture(Key.T);
         settings.AskToSave();
         check.That(settings.SaveChoice.Dialog.Visible && settings.SaveChoice.Offers(SaveTarget.Replace) &&
             !settings.SaveChoice.Offers(SaveTarget.NewCareer), "saving settings offers to replace them in the game, or a copy");

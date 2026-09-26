@@ -126,11 +126,8 @@ internal sealed class SettingsPage : Page
         _needsFile.Add(content.Add(keys));
 
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");
+        ChangesCard = summary;
         _changes = summaryBody.Add(Build.Column(4));
-        HBoxContainer saveRow = summaryBody.Add(Build.Row(10));
-        Save = saveRow.Add(Build.Button("Save settings…", "Primary", disabled: true));
-        Save.Icon = Icons.Get("save");
-        UndoAll = saveRow.Add(Build.Button("Undo all changes", "Link", disabled: true));
         Button details = summaryBody.Add(Build.Button("Show exactly what changes in the file", "Link"));
         _details = summaryBody.Add(Build.Detail("", bbcode: true));
         _details.Visible = false;
@@ -155,9 +152,7 @@ internal sealed class SettingsPage : Page
         OpenOther.Pressed += () => OpenDialog.PopupCenteredRatio(0.75f);
         OpenDialog.FileSelected += path => _app.Status.Track(OpenAsync(path));
         SaveDialog.FileSelected += path => _app.Status.Track(SaveElsewhereAsync(path));
-        Save.Pressed += AskToSave;
         Bar.Save.Pressed += AskToSave;
-        UndoAll.Pressed += UndoChanges;
         Bar.Undo.Pressed += UndoChanges;
         _app.Game.Changed += ShowSources;
         foreach (Control section in _needsFile) section.Visible = false;
@@ -169,8 +164,9 @@ internal sealed class SettingsPage : Page
     internal ChangesBar Bar { get; }
     internal Button OpenOther { get; }
     internal Button UndoKeys { get; }
-    internal Button Save { get; }
-    internal Button UndoAll { get; }
+    internal Button Save => Bar.Save;
+    internal Button UndoAll => Bar.Undo;
+    internal PanelContainer ChangesCard { get; }
     internal FileDialog OpenDialog { get; }
     internal FileDialog SaveDialog { get; }
     internal SaveChoice SaveChoice => _saveChoice;
@@ -203,7 +199,9 @@ internal sealed class SettingsPage : Page
         }
         (_file, _reading, _edit) = (file, reading, new OptionsEdit());
         _loading = true;
-        _rawLine.Text = $"{file.Path}\nLanguage and display mode are kept as they are.";
+        // A file from the game is named by the list above; one from elsewhere shows where it is.
+        _rawLine.Text = (InGame(file.Path) is null ? file.Path + "\n" : "") + "Language and display mode are kept as they are.";
+        _rawLine.TooltipText = file.Path;
         _sound.Value = Math.Round(reading.SoundVolume * 100);
         _music.Value = Math.Round(reading.MusicVolume * 100);
         for (int player = 0; player < 2; player++)
@@ -300,6 +298,8 @@ internal sealed class SettingsPage : Page
             return new PublicationReceipt(false, _plan.Message);
         _app.Status.Show("Saving a checked copy of your settings…");
         PublicationReceipt receipt = await _app.Workspace.PublishFromAsync(file, destination, plan.Bytes);
+        // Saved changes are done: start again from the file shown (reopening hides the result, so show it after).
+        if (receipt.Ok) await OpenAsync(file.Path);
         ShowResult(receipt.Ok ? $"Saved a copy with your settings to {destination}. It was read back and matches byte for byte."
             : receipt.Message + (receipt.MayHaveOutput ? $"\nA copy may exist at: {receipt.Output ?? destination}" : ""), receipt.Ok);
         _app.Status.Show(receipt.Ok ? "Settings copy saved and checked." : receipt.Message, receipt.Ok ? StatusKind.Success : StatusKind.Failure);
@@ -358,8 +358,7 @@ internal sealed class SettingsPage : Page
         _changes.Clear();
         if (_file is not SaveSession file)
         {
-            Save.Disabled = UndoAll.Disabled = true;
-            Bar.Show(0, false);
+            Bar.Show(0, false, false);
             return;
         }
         _plan = OptionsFile.Preview(file.CopyBytes(), _edit);
@@ -376,9 +375,7 @@ internal sealed class SettingsPage : Page
             _details.Text = "";
         }
         bool ready = !_app.Workspace.Busy;
-        Save.Disabled = !ready || !_plan.Ok;
-        UndoAll.Disabled = !ready || !_plan.Ok;
-        Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready);
+        Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready && _plan.Ok, ready && HasChanges);
     }
 
     private void UndoChanges()
@@ -429,8 +426,9 @@ internal sealed class SettingsPage : Page
                 continue;
             }
             button.ThemeTypeVariation = "";
-            button.Text = reading.Bindings.FirstOrDefault(row => row.EntryId == entryId) is BindingRow row
-                ? OptionsFile.Describe(row.Slot(slot).Device, row.Slot(slot).Key) : "Not set";
+            BindingRow? row = reading.Bindings.FirstOrDefault(row => row.EntryId == entryId);
+            button.Text = row is null ? "Not set" : OptionsFile.Describe(row.Slot(slot).Device, row.Slot(slot).Key);
+            button.TooltipText = row is null ? "" : "Click, then press a key to change it. " + OptionsFile.Raw(row.Slot(slot).Device, row.Slot(slot).Key) + ".";
         }
     }
 

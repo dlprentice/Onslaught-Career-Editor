@@ -18,6 +18,7 @@ internal sealed class HomePage : Page
     private readonly PanelContainer _askBackups, _backupsOn;
     private readonly GridContainer _columns;
     private readonly SaveChoice _addChoice;
+    private readonly List<Label> _promises = [];
     private string _addSource = "";
 
     internal HomePage(AppServices app) : base("home", "Home", "home")
@@ -36,7 +37,12 @@ internal sealed class HomePage : Page
             MouseFilter = Control.MouseFilterEnum.Ignore,
         });
         _art.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _emblem = stage.Add(new Emblem { CustomMinimumSize = new Vector2(150, 150), Modulate = new Color(1, 1, 1, 0.5f) });
+        // Sized before it is anchored, so it sits inside the banner rather than growing past its right edge.
+        _emblem = stage.Add(new Emblem
+        {
+            CustomMinimumSize = new Vector2(150, 150), Size = new Vector2(150, 150), Modulate = new Color(1, 1, 1, 0.5f),
+            GrowHorizontal = Control.GrowDirection.Begin, GrowVertical = Control.GrowDirection.Both,
+        });
         _emblem.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterRight, Control.LayoutPresetMode.KeepSize, 48);
         TextureRect shade = stage.Add(new TextureRect
         {
@@ -50,7 +56,7 @@ internal sealed class HomePage : Page
         heroColumn.Add(Build.Eyebrow("Your game"));
         heroColumn.Add(Build.Text("Battle Engine Aquila", "HeroTitle", wrap: false));
         _heroStatus = heroColumn.Add(Build.Text("Looking for your game…", "HeroText"));
-        _heroStatus.CustomMinimumSize = new Vector2(360, 0);
+        _heroStatus.CustomMinimumSize = new Vector2(520, 0);
         _heroStatus.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         heroColumn.Add(Build.Spacer(0, expand: true));
         HBoxContainer heroActions = heroColumn.Add(Build.Row(10));
@@ -109,7 +115,10 @@ internal sealed class HomePage : Page
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, CustomMinimumSize = new Vector2(18, 18),
                 Modulate = Palette.Good, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             });
-            line.Add(Build.Text(promise));
+            // A wrapping label in a row needs the row's width, or it wraps after every letter.
+            Label said = line.Add(Build.Text(promise));
+            said.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _promises.Add(said);
         }
         side.Add(safety);
 
@@ -189,6 +198,7 @@ internal sealed class HomePage : Page
     internal SaveChoice AddChoice => _addChoice;
     internal IReadOnlyList<Button> OpenButtons => Careers.OpenButtons;
     internal string HeroStatus => _heroStatus.Text;
+    internal IReadOnlyList<Label> Promises => _promises;
 
     /// <summary>Whether the banner shows the game's own art (read from the install) rather than the emblem.</summary>
     internal bool ShowsGameArt => _art.Texture is not null;

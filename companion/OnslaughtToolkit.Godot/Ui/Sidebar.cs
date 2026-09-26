@@ -22,12 +22,21 @@ internal sealed class Sidebar
         words.Add(Build.Text("ONSLAUGHT", "Brand", wrap: false));
         words.Add(Build.Text("TOOLKIT", "BrandSub", wrap: false));
         column.Add(Build.Spacer(18));
+        // The destinations scroll when the window is too short for them all, so the sidebar never pushes
+        // the status bar off the bottom of the window.
+        ScrollContainer scroll = column.Add(new ScrollContainer
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        });
+        VBoxContainer nav = scroll.Add(Build.Column(2));
+        nav.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         foreach (NavGroup group in groups)
         {
             VBoxContainer items = Build.Column(2);
             if (group.Folds)
             {
-                Button heading = column.Add(Build.Button(group.Heading.ToUpperInvariant(), "NavGroup"));
+                Button heading = nav.Add(Build.Button(group.Heading.ToUpperInvariant(), "NavGroup"));
                 heading.Icon = Icons.Get("right");
                 heading.Alignment = HorizontalAlignment.Left;
                 heading.TooltipText = "Tools for comparing files and reading raw values.";
@@ -37,10 +46,10 @@ internal sealed class Sidebar
             }
             else if (group.Heading.Length > 0)
             {
-                Label heading = column.Add(Build.Margin(8, 0, 0, 0)).Add(Build.Eyebrow(group.Heading));
+                Label heading = nav.Add(Build.Margin(8, 0, 0, 0)).Add(Build.Eyebrow(group.Heading));
                 heading.CustomMinimumSize = new Vector2(0, 22);
             }
-            column.Add(items);
+            nav.Add(items);
             foreach (Page page in group.Pages)
             {
                 Button item = items.Add(Build.Button(page.Title, "Nav"));
@@ -50,10 +59,9 @@ internal sealed class Sidebar
                 item.Pressed += () => navigate(page.Key);
                 _items[page.Key] = item;
             }
-            column.Add(Build.Spacer(12));
+            nav.Add(Build.Spacer(12));
         }
-        column.Add(Build.Spacer(0, expand: true));
-        column.Add(Build.Margin(4, 0, 0, 0)).Add(Build.Text("A companion for Battle Engine Aquila", "Faint"));
+        column.Add(Build.Margin(4, 8, 0, 0)).Add(Build.Text("A companion for Battle Engine Aquila", "Faint"));
     }
 
     internal PanelContainer Root { get; }

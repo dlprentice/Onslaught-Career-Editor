@@ -135,7 +135,7 @@ internal sealed class SummaryPage : Page
         {
             string name = text?.LevelName(mission.World) is string display && display.IndexOf(" - ", StringComparison.Ordinal) is int dash && dash > 0
                 ? display[(dash + 3)..] : "—";
-            TreeItem row = Build.TableRow(Missions, root, mission.World.ToString(), name, mission.Completed ? "Complete" : "Open",
+            TreeItem row = Build.TableRow(Missions, root, CareerSave.LevelCode(mission.World), name, mission.Completed ? "Complete" : "Open",
                 mission.RankLetter ?? "?");
             if (name == "—") row.SetCustomColor(1, Palette.Faint);
             row.SetCustomColor(2, mission.Completed ? Palette.Good : Palette.Muted);

@@ -59,16 +59,13 @@ internal sealed class EditCareerPage : Page
         pick.Pressed += () => _app.Navigate("goodies");
         ClearGoodies = goodieActions.Add(Build.Button("Clear Goodie changes", "Link"));
         _goodieRows = goodieBody.Add(Build.Column(6));
-        goodieBody.Add(Build.Text("A Goodie changed this way was loaded and shown by the game for Goodie 002; the others use the same " +
-            "stored values but have not been watched in play.", "Faint"));
+        goodieBody.Add(Build.Text("The game loaded and showed a change made this way to Goodie 002; the other Goodies are stored the " +
+            "same way.", "Faint"));
         _needsCareer.Add(content.Add(goodies));
 
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");
+        ChangesCard = summary;
         _changes = summaryBody.Add(Build.Column(4));
-        HBoxContainer saveRow = summaryBody.Add(Build.Row(10));
-        Save = saveRow.Add(Build.Button("Save changes…", "Primary", disabled: true));
-        Save.Icon = Icons.Get("save");
-        UndoAll = saveRow.Add(Build.Button("Undo all changes", "Link", disabled: true));
         Button details = summaryBody.Add(Build.Button("Show exactly what changes in the file", "Link"));
         Details = summaryBody.Add(Build.Detail("", bbcode: true));
         Details.Visible = false;
@@ -100,9 +97,7 @@ internal sealed class EditCareerPage : Page
             ShowGoodieRows();
             RefreshPreview();
         };
-        Save.Pressed += AskToSave;
         Bar.Save.Pressed += AskToSave;
-        UndoAll.Pressed += UndoChanges;
         Bar.Undo.Pressed += UndoChanges;
         OpenResult.Pressed += () => _app.Status.Track(_app.OpenCareer(_app.Workspace.LastVerifiedOutput.Length > 0
             ? _app.Workspace.LastVerifiedOutput : _lastInstalled));
@@ -122,8 +117,9 @@ internal sealed class EditCareerPage : Page
     internal IReadOnlyList<OptionButton> GoodiePickers => _goodieRows.FindChildren("*", nameof(OptionButton), true, false).OfType<OptionButton>().ToArray();
     internal Button UnlockAll { get; }
     internal Button ClearGoodies { get; }
-    internal Button Save { get; }
-    internal Button UndoAll { get; }
+    internal Button Save => Bar.Save;
+    internal Button UndoAll => Bar.Undo;
+    internal PanelContainer ChangesCard { get; }
     internal Button OpenResult { get; }
     internal RichTextLabel Details { get; }
     internal PanelContainer ResultPanel { get; }
@@ -160,16 +156,25 @@ internal sealed class EditCareerPage : Page
     internal void UpdateActions()
     {
         bool ready = _app.Workspace.Session is not null && !_app.Workspace.Busy;
-        Save.Disabled = !ready || !_plan.Ok;
-        UndoAll.Disabled = !ready || !_plan.Ok;
         UnlockAll.Disabled = ClearGoodies.Disabled = !ready;
         foreach (KillRow row in Rows) row.SetLocked(!ready);
-        Bar.Show(_app.Workspace.Session is null ? 0 : Rows.Count(row => row.IsChanged) + _goodieTargets.Count, ready && _plan.Ok);
+        Bar.Show(_app.Workspace.Session is null ? 0 : Rows.Count(row => row.IsChanged) + _goodieTargets.Count, ready && _plan.Ok,
+            ready && HasChanges);
     }
 
     private void UndoChanges()
     {
         if (_app.Workspace.Session is SaveSession session) ShowSession(session);
+    }
+
+    /// <summary>Once changes are saved they are done: the page starts again from the open career, the result still shown.</summary>
+    private void ClearSavedChanges()
+    {
+        if (_app.Workspace.Session is not SaveSession session) return;
+        foreach (KillRow row in Rows) row.SetCurrent(session.Analysis.Kills[row.Category]);
+        _goodieTargets.Clear();
+        ShowGoodieRows();
+        RefreshPreview();
     }
 
     /// <summary>Adds a Goodie aiming at the opposite of what it has now: locked ones become unlocked, unlocked ones locked.</summary>
@@ -272,6 +277,7 @@ internal sealed class EditCareerPage : Page
             _lastInstalled = receipt.Target;
             ShowResult(replace ? $"Saved. {saved} in your game now has your changes. Its previous version is in your backups."
                 : $"Saved. {saved} is now in your game's career list. Your other careers are unchanged.", "SuccessNotice");
+            if (!replace) ClearSavedChanges();
             _app.Status.Show(replace ? $"{saved} saved into your game." : $"{saved} added to your game.", StatusKind.Success);
         }
         else
@@ -304,6 +310,7 @@ internal sealed class EditCareerPage : Page
             _lastInstalled = "";
             ShowResult($"Saved a copy with your changes to {receipt.Output}. It was read back and matches byte for byte; your career " +
                 "is unchanged.", "SuccessNotice");
+            ClearSavedChanges();
             _app.Status.Show("Copy saved and checked. Your career is unchanged.", StatusKind.Success);
         }
         else

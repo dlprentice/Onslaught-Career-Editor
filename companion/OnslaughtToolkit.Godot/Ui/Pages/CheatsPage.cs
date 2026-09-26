@@ -61,9 +61,7 @@ internal sealed class CheatsPage : Page
         _needsCareer.Add(content.Add(naming));
 
         FolderDialog = app.Popups.Add(Build.FilePicker("Choose a folder for the cheat copy", FileDialog.FileModeEnum.OpenDir));
-        Confirm = app.Popups.Add(new ConfirmationDialog { Title = "Add a cheat career to your game?", OkButtonText = "Back up and add" });
-        Confirm.GetLabel().AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        Confirm.MinSize = new Vector2I(560, 0);
+        Confirm = app.Popups.Add(Build.Confirm("Add a cheat career to your game?", "Back up and add"));
         WriteCopy.Pressed += () => FolderDialog.PopupCenteredRatio(0.75f);
         FolderDialog.DirSelected += folder => _app.Status.Track(WriteCopyAsync(folder));
         AddToGame.Pressed += AskToAdd;

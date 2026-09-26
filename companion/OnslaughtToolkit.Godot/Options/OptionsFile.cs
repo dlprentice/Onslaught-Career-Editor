@@ -186,10 +186,13 @@ public static class OptionsFile
             (11, 0) => "Mouse X+", (12, 0) => "Mouse X−", (11, 1) => "Mouse Y+", (12, 1) => "Mouse Y−",
             (16, 3) => "Mouse wheel up", (16, 4) => "Mouse wheel down", (16, 2) => "Right mouse button",
             (17, 0) or (15, 0) => "Left mouse button",
-            (>= 4 and <= 7, _) => $"Controller (device {device})",
-            _ => $"Device {device} · 0x{key:X8}",
+            (>= 4 and <= 7, _) => "Controller",
+            _ => "Other input",
         };
     }
+
+    /// <summary>The stored device and key, for anyone who wants the raw values behind a binding's name.</summary>
+    public static string Raw(uint device, uint key) => $"Stored as device {device}, key 0x{key:X8}";
 
     private static uint U32(ReadOnlySpan<byte> bytes, int offset) => BinaryPrimitives.ReadUInt32LittleEndian(bytes[offset..]);
 

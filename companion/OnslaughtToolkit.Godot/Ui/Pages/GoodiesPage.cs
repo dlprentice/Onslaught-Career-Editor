@@ -130,8 +130,9 @@ internal sealed class GoodiesPage : Page
         for (int cell = 0; cell < _cells.Length; cell++) _cells[cell].SetPressedNoSignal(cell == index);
         GoodieRecord goodie = session.Analysis.Goodies[index];
         _detailTitle.Text = $"GOODIE {index:D3}";
-        _detailName.Text = _game.Text?.GoodieTitle(index) ?? (_game.Text is null
+        _detailName.Text = _game.Text?.GoodieTitle(index) ?? (_game.Folder is null
             ? "Titles come from your game's own text; choose your game folder on Home."
+            : _game.Text is null ? "Your game's text could not be read, so titles are not shown."
             : "The game's text names no title for this Goodie.");
         _detailName.ThemeTypeVariation = _game.Text?.GoodieTitle(index) is null ? "Faint" : "Strong";
         _detailState.Text = GoodieFacts.StateName(goodie.State);

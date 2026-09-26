@@ -7,7 +7,7 @@ public enum MissionProgress { Complete, Open, NotYetOpen }
 public sealed record CampaignNode(int Index, uint World, int Column, int Row, int RowsInColumn, MissionProgress Progress, string? Rank)
 {
     /// <summary>The game's own level code: world 211 is "2.11".</summary>
-    public string Code => $"{World / 100}.{World % 100:D2}";
+    public string Code => CareerSave.LevelCode(World);
 
     /// <summary>The campaign chapter: the code's first number.</summary>
     public int Chapter => (int)(World / 100);

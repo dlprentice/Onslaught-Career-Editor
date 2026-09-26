@@ -52,6 +52,9 @@ public static class CareerSave
     /// <summary>Slots in the game's table that its gallery never shows, though the game can still mark them new.</summary>
     public static IReadOnlyList<int> NeverShown { get; } = [71, 72, 73];
 
+    /// <summary>The game's own code for a level: world 211 is "2.11" (the chapter, then the mission in it).</summary>
+    public static string LevelCode(uint world) => $"{world / 100}.{world % 100:D2}";
+
     public static bool IsShown(int index) => index is >= 0 and < GoodieTable && index is < 71 or > 73;
 
     /// <summary>

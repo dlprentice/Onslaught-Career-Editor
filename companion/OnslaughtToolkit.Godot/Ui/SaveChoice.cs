@@ -24,6 +24,7 @@ internal sealed class SaveChoice
         _app = app;
         Dialog = app.Popups.Add(new ConfirmationDialog { Title = "Save your changes", OkButtonText = "Save", MinSize = new Vector2I(600, 0) });
         Dialog.GetLabel().Visible = false;
+        Dialog.GetOkButton().ThemeTypeVariation = "Primary";
         VBoxContainer content = Dialog.Add(Build.Column(10));
         content.CustomMinimumSize = new Vector2(560, 0);
 
@@ -86,6 +87,22 @@ internal sealed class SaveChoice
         Validate();
         Dialog.PopupCentered();
         Name.CallDeferred(Control.MethodName.GrabFocus);
+        FitToContent();
+    }
+
+    /// <summary>
+    /// Wrapped text knows its height only once it is laid out, and a dialog grows to fit but never shrinks:
+    /// fit the dialog to its content after the first layout, so it never runs off the window.
+    /// </summary>
+    private async void FitToContent()
+    {
+        for (int pass = 0; pass < 2; pass++)
+        {
+            await Dialog.ToSignal(Dialog.GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (!Dialog.Visible) return;
+            Dialog.ResetSize();
+        }
+        Dialog.MoveToCenter();
     }
 
     internal void Select(SaveTarget target)

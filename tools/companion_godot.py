@@ -342,7 +342,7 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         shutil.copyfile(license_file, package / license_file.name)
     start = f"run {filename}" if platform == "windows" else f"run ./{filename}"
     (package / "README.txt").write_text(
-        f"Onslaught Toolkit, a companion for Battle Engine Aquila ({platform})\n\n"
+        f"Onslaught Toolkit, a companion for Battle Engine Aquila ({platform.capitalize()})\n\n"
         f"To start, {start}. Keep the .pck file and the data folder beside it.\n"
         "It finds the game through Steam; if it does not, choose the game folder on Home.\n\n"
         "Your careers stay safe. Before the companion changes anything in your game it backs up every career and\n"

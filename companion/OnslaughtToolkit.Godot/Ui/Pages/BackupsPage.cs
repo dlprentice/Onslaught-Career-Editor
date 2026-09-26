@@ -49,9 +49,7 @@ internal sealed class BackupsPage : Page
         content.Add(list);
 
         FolderDialog = app.Popups.Add(Build.FilePicker("Choose a folder for backups", FileDialog.FileModeEnum.OpenDir));
-        Confirm = app.Popups.Add(new ConfirmationDialog { Title = "Put a file back?", OkButtonText = "Back up and put back" });
-        Confirm.GetLabel().AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        Confirm.MinSize = new Vector2I(560, 0);
+        Confirm = app.Popups.Add(Build.Confirm("Put a file back?", "Back up and put back"));
         BackUpNow.Pressed += () => _app.Status.Track(BackUpAsync());
         OpenFolder.Pressed += () =>
         {

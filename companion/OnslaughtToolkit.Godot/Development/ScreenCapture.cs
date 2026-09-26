@@ -87,7 +87,7 @@ public partial class ScreenCapture : SceneTree
         app.EditCareer.Rows[0].Target.Value = 123456;
         app.EditCareer.Rows[3].Target.Value = 4242;
         app.EditCareer.UnlockEveryGoodie();
-        await Reveal(app.EditCareer.Save);
+        await Reveal(app.EditCareer.ChangesCard);
         await Shot(viewport, label, "edit-changes");
         app.EditCareer.AskToSave();
         await Shot(viewport, label, "edit-save-dialog");
@@ -116,7 +116,7 @@ public partial class ScreenCapture : SceneTree
         app.Settings.StartCapture(0x21, 1);
         await Shot(viewport, label, "settings-key");
         app.Settings.Capture(Key.T);
-        await Reveal(app.Settings.Save);
+        await Reveal(app.Settings.ChangesCard);
         await Shot(viewport, label, "settings-changes");
         app.Settings.AskToSave();
         await Shot(viewport, label, "settings-save-dialog");

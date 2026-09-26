@@ -173,6 +173,15 @@ internal static class Build
         SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
     };
 
+    /// <summary>A yes-or-no question before a write: wrapped text at a readable width, the action in amber.</summary>
+    internal static ConfirmationDialog Confirm(string title, string action)
+    {
+        ConfirmationDialog dialog = new() { Title = title, OkButtonText = action, MinSize = new Vector2I(560, 0) };
+        dialog.GetLabel().AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        dialog.GetOkButton().ThemeTypeVariation = "Primary";
+        return dialog;
+    }
+
     /// <summary>A filesystem dialog that cannot delete, create folders or offer to overwrite.</summary>
     internal static FileDialog FilePicker(string title, FileDialog.FileModeEnum mode, params string[] filters) => new()
     {

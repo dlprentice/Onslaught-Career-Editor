@@ -26,12 +26,13 @@ internal sealed class ChangesBar
     internal Button Save { get; }
     internal Button Undo { get; }
 
-    /// <summary>Shows the bar for this many unsaved changes, or hides it; <paramref name="ready"/> false disables its buttons.</summary>
-    internal void Show(int changes, bool ready)
+    /// <summary>Shows the bar for this many unsaved changes, or hides it, with Save and Undo enabled as given.</summary>
+    internal void Show(int changes, bool canSave, bool canUndo)
     {
         Root.Visible = changes > 0;
         Summary.Text = $"{Build.Count(changes, "change")} not saved yet. Nothing in your game changes until you save.";
-        Save.Disabled = Undo.Disabled = !ready;
+        Save.Disabled = !canSave;
+        Undo.Disabled = !canUndo;
     }
 
     /// <summary>A page: its scroller above, the bar below.</summary>
