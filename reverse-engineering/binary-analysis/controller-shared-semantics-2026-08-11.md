@@ -1,7 +1,7 @@
 # `CController` shared mapping and dispatch semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-08-11
+Last updated: 2026-09-26 (key type 10 clarified; other measurements retain their date)
 Evidence: MEASURED — complete pristine retail bodies, table accesses, constants,
 virtual calls, and seventeen normalized-identical PC demo twins; SOURCE — pinned
 `Controller.cpp` and `Controller.h`; UNKNOWN — physical-device timing, live input
@@ -75,7 +75,9 @@ Released push types `0..9` reproduce the retained enum: held, once, release,
 repeat, positive/negative analogue, positive/negative analogue-as-repeat, key
 once, and key held. The PC build extends the switch through `17`:
 
-- type `10` calls a third platform key-state query;
+- type `10` calls the nonconsuming release-event query. The
+  [September 26 keyboard recheck](cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+  establishes its writer, clearing behavior and full-EAX/nonzero caller test;
 - types `11..14` form signed mouse axes from cursor displacement about the
   window centre, with positive/negative sign gating and two bank-gated forms;
 - type `15` reads the three mouse-button held states;

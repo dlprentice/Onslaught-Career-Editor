@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (library comments re-grounded; game input/startup audit next; broader audit unfinished)
+Last updated: 2026-09-26 (keyboard ABI/cache contract corrected; startup identities next; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -23,9 +23,12 @@ identities; unchanged prototypes and complete runtime behavior remain unverified
 The [library-comment correction](ghidra/README.md#re-audit-verified-library-comments--september-26)
 re-grounded 191 evidence comments and tag sets without renaming functions or
 changing prototypes or code. The live exports match the isolated rehearsal and
-independently restored Archive A recovery passed. Controller input and startup
-are the next focused game-code audit; library identity coverage does not imply
-semantic coverage of the game's own code.
+independently restored Archive A recovery passed. The [keyboard-query correction](ghidra/README.md#re-audit-keyboard-query-abi--september-26)
+now fixes four interfaces and the misleading release-table description. Its
+[contract](binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+separates retail caller/RTTI evidence and 27 isolated original-code cases from
+real device acceptance. Startup identities are next; library identity coverage
+does not imply semantic coverage of the game's own code.
 
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or

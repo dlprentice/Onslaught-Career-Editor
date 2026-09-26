@@ -6739,3 +6739,42 @@ Executed after the corrected seal:
 
 The canonical mutable-owner pointer and recovery README were updated only after
 POST restoration. The broader game-name/prototype/document audit remains open.
+
+## RE keyboard-query ABI and lifetime — September 26
+
+The `input-key-abi-20260926` cohort corrects four prototypes, plate comments and
+tag sets; no names or bodies change. Three wrappers gain automatic ECX receivers
+and integer EAX returns; the raw release helper keeps AL storage as `uchar`.
+Explicit keys remain at stack +4. Exactly 8,327 other function rows and every
+local, type, bookmark and stack row are unchanged. The only program-metric
+change is the comment digest. All nine live exports equal separately reopened
+rehearsal; the independently restored Archive A POST matches the working project.
+
+Executed private driver:
+`python -B local-data/test-runs/re-audit-20260926/controller-key-query/original_key_query.py`.
+The accepted `run-dpflbd9l/key-query.json` contains 27 cases / 135 operations:
+repeat/duplicate/full-cache queries, raw held/release bytes, array clears and
+11 controlled pump cases. Nine unchanged original bodies execute at retail
+addresses. Guard checks pass; syscall access is limited to read/write/exit and
+a denied `getpid` control returns EPERM. Message/device/timer/pad boundaries are
+explicit substitutes. Neither real Windows events, device-reset execution,
+physical input, full-game runtime nor rebuild acceptance is established.
+
+Cohort commands, inputs, pins and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/input-key-abi/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`
+and `finish.py`. Fresh PRE restore, independent read-only review with root
+reproduction, live readback and independent POST restoration passed. Seven
+controls reject stale/wrong signatures, comments, tags and specimen identity
+without attempting writes or changing project bytes. The first isolated seal
+is preserved in `rejected-v1/`; it never reached live and was replaced so two
+disproved historical claims are explicitly marked as such.
+
+`python -B -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`python -B tools/public_allowlist_safety_check.py --self-test`: passed.
+`npm run test:docs`: passed, with zero drifted or unresolved name assertions.
+`npm run test:safety` and `git diff --check`: passed. The first docs run correctly
+refused missing/malformed evidence headers; those were corrected and the full
+docs gate rerun. Both outcomes remain in this cohort's private gate logs. The full contract is in
+[the keyboard recheck](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck).

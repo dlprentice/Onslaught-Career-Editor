@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: three prepared cohorts promoted; game input/startup audit next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: keyboard ABI/cache contract corrected; startup identities next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -276,11 +276,22 @@ described `_wcsdup` as byte-identical to `_strdup`. Root reproduced their differ
 lengths and character-width arithmetic. That seal and rehearsal remain in
 `library-verified/rejected-v1/`; the replacement repeated the full gate.
 
-Next: re-ground controller input and startup identities, beginning with the
-CPCController constructor, key-query ABI/cache lifetime, command-line parsing
-and font initialization. Reconcile these with existing consumer contracts before
-moving through the broader game-name queue below. Source signatures and a label
-match do not establish the retail argument count or behavior.
+The [keyboard recheck](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+corrects four saved prototypes/comments/tag sets through the full gate. The
+three virtual key wrappers have an ECX receiver, one explicit key and an integer
+EAX result; the raw release helper returns an unsigned byte in AL. The old
+held-state description of the release table was wrong. Twenty-seven isolated
+original-code cases (135 operations) distinguish remembered presses, duplicate
+cache entries, full-cache behavior, array clears and message-pump reset paths.
+Clearing arrays does not clear the remembered-key list, and the pump can return
+without resetting it. Source's extra pad argument does not belong in these retail
+interfaces. All names/bodies and 8,327 non-target rows are preserved; the live
+readback matches rehearsal and independently restored Archive A POST recovery.
+Real Windows events, physical input and complete runtime acceptance remain open.
+
+Next: finish the CPCController constructor, command-line parser and font
+initializer identities, reconciling their existing consumer contracts. Source
+signatures and label matches do not establish retail argument counts or behavior.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
@@ -293,7 +304,8 @@ they do. Contradicted leads worth taking first: `BattleEngineConfigurations__Loa
 `UBattleEngineConfigurations`), `CLIParams__ParseCommandLine` (`CCLIParams::GetParams`),
 `PCPlatform__LoadFonts` (`CPCPlatform::InitFonts`), `CPCSoundManager__Init` (lines in `PlaySound`),
 `CBattleEngine__Damage` (lines in `HandleEngines`), and return sizes that disagree with the source
-(`CCareer__GetGradeFromRanking`, `CGame__RunLevel`, `CController__ctor`, `CPCController__GetKeyOnce`).
+(`CCareer__GetGradeFromRanking`, `CGame__RunLevel`, `CController__ctor`). The
+`CPCController` key-query argument/result discrepancy is resolved above.
 
 Follow-ups:
 - NvTriStrip also exposes an absent function candidate at `0x00572e20`, passed

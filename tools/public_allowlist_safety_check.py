@@ -215,7 +215,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (38,389/80,580 decoded bytes), reviewed with the same exact-content boundary.
 # Verified library comments: 191 current/191 proposed authored comments
 # (133,185/175,548 decoded bytes); identifiers/provenance, no program/library bytes.
+# Keyboard-query ABI: four current/four proposed analytic comments
+# (1,754/8,036 decoded bytes); authored findings and marked historical leads only.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/input-key-abi-20260926.manifest.tsv":
+        "47dec4ac21fb1c416cb5520a34d21732f30018cd26c5417fd2193e024114a875",
     "tools/cohort-specs/library-verified-20260926.manifest.tsv":
         "b9b307b6fc50cf53a65676f82c41da1919a0f7e65e8504047c4e91b9fcda6495",
     "tools/cohort-specs/library-nvtristrip-20260926.manifest.tsv":
