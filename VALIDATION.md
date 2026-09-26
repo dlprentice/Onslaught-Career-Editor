@@ -4573,6 +4573,39 @@ helper results. It establishes no turret aim, weapon, geometry, spawner or retai
 gameplay behavior; the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md)
 keeps those open.
 
+### Level 100 turret fire-control control — September 25
+
+`python -P local-data/test-runs/level100-final-wave-20260925/turret_fire_control_control.py`
+passed **21 cases** under `local-data/test-runs/level100-final-wave-20260925/fire-control-run-ob8ydblf/`.
+Receipt SHA-256 `4efecff6d05e6a33a408fff564688ab96b21d245d58fc09e3596bc104245efe2`;
+ELF SHA-256 `0a6ff38de4811e088cd116327ea89b9174c0582b4e3f441cf43592f2a2178683`;
+driver copy SHA-256 `6382a81107b62a7fa890a190650f651cd88179a72380207db1f88000346bad95`.
+
+The ELF places the unchanged `CUnit::Init` inspection range `[0x004f889a,0x004f89fb)`
+and its nine-entry jump table, the emitter lookup `0x004aa820`, CRT `stricmp`,
+`_strnicmp` and `_strncmp`, the fire-control refresh `0x004fb280`,
+`Random__NextLCGAbs`, the shipped name strings and seven constants at their retail
+addresses. Part and emitter structures come from the three shipped turret meshes
+(hashes in the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md#fire-control-control))
+through the repository CMSH parser. The C-locale fast path is supplied and the
+locale-lock path is trapped; the Euler constructor and `AddEvent_AtTime` are
+recording stubs and the ballistic solver is a trap. Every case checks stack,
+FS:0 and the x87 control word; refresh cases also check callee-saved registers.
+
+All three meshes set `+0x224`, the barrel pointer and the rest angle; Blaster and
+Pulse also set the weapon turret flag, SAT does not. Zero turn rate, a missing
+emitter or selector, the Pulse `GunB` chain, a capitalised `Barrel`, and a
+capitalised `Turret` behave as the byte reading predicts; an `x1 barrel` prefix and
+a linked second mesh are found. Each enabled refresh takes one draw and queues
+4001 at time + low16 × 0.1/65536 whether the owner is active or not; disabled and
+dying owners do neither; both angle clamps hold; two refreshes match an exact int32
+model of the generator. The first run (`fire-control-run-5gchgdb9/`) failed only in
+that model, which lacked 32-bit wraparound for a deliberately out-of-range seed.
+
+This corrects the World 110 owner's Turret 03 statement. It establishes the
+inspection and refresh transactions only, not turret aiming, firing, rendering or
+retail gameplay.
+
 ### Scheduled-event constructor boundary — September 19
 
 The [one-function boundary correction](reverse-engineering/ghidra/README.md#scheduled-event-constructor-boundary-2026-09-19)

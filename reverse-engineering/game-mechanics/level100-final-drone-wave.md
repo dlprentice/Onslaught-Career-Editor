@@ -7,10 +7,12 @@ Summary: the abort after one kill is a designed retail branch, but retail gives 
 player two helps the rebuild lacks: four friendly turrets that come online after the
 first poll below 80 % health, and the jet Missile Pod. Activated turrets can see the
 enemy drones (original-code control, 16/16 cases). Every base-world Building and
-Cannon owns an AI that draws shared RNG from level start.
+Cannon owns an AI that draws shared RNG from level start, and all four turrets run
+a fire-control refresh that draws once per event 4001 from construction onward
+(original-code control, 21/21 cases).
 Evidence: MEASURED — pristine instruction bytes read with objdump, shipped script
-source and compiled script symbols, shipped physics/configuration records, and one
-controlled original-code experiment; SOURCE — pinned GPL `references/Onslaught`
+source and compiled script symbols, shipped physics/configuration records and
+turret meshes, and two controlled original-code experiments; SOURCE — pinned GPL `references/Onslaught`
 (`5352a81c`) for damage, shields, weapon creation and thing initialization. No
 retail run was made; outcomes of whole fights are not measured.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -125,6 +127,49 @@ Receipt `turret-run-1s9s58nr/turret_targeting.json` SHA-256
 `7a6117d690170766e17e82dac1088ecd94871222c5abceadb0ace22743ebada3`. This measures
 the list, allegiance and selection transaction only.
 
+### Fire-control control
+
+Every turret mesh enables Unit fire control. `CUnit::Init` inspects the weapon's
+`Gun*` emitter part (`CMesh::FindPartField40ByNameAndOwner`, `0x004aa820`, returns
+emitter `+0x40` for a name and selector) and climbs its parent links (`+0x98`, set
+from the file's parent index by the mesh loader at `0x004a730a-0x004a7313`) when
+profile `+0xbc` is positive (`CUnitTurretTurnRate` stores it at `0x00432b17`). A part
+named exactly `turret`, or starting `X1 Turret` in any case, sets weapon `+0x94`; a
+part starting `barrel` (case-sensitive) or `X1 Barrel` sets Unit `+0x224`, weapon
+`+0x98`, barrel pointer `+0x220` and rest angle `+0xf4`.
+
+| Mesh | `GunA` selector 1 part | Parent chain | `+0x224` | Turret flag |
+| --- | --- | --- | ---: | ---: |
+| `m_ft_blaster` (`9833cd45…`) | `Emit01` (9) | `arse`, `barrel` (4), `turret` (2), `turretbase`, `base` | 1 | 1 |
+| `m_ft_sam` (`9a82f274…`) | `Emit01` (11) | `barrel` (3), `support`, `turretbase`, `base` | 1 | 0 |
+| `m_ft_pulse` (`1cc39993…`) | `Emit01` (6) | `barrel` (5), `turret` (2), `turretbase`, root | 1 | 1 |
+
+The refresh `CUnit::UpdateFireControlYawAndQueueEvent` (`0x004fb280`) returns at
+once when `+0x224` is zero or the Unit is dying. Otherwise it aims `+0xec` with the
+ballistic solver when the AI has a target (deadline `+0x20c` = time + 10.0), restores
+the rest angle when the deadline has passed, clamps to [−π/2, π], takes **one** shared
+draw and queues event 4001 at time + (low16 × 0.1/65536), which delivers the next
+refresh (`CUnit::HandleEvent`). It never reads the active flag `+0x214`. `CUnit::Init`
+calls it once at `0x004f90ce`, so each turret takes one draw at construction and then
+roughly one per frame or two for the whole level, active or not.
+
+`python -P local-data/test-runs/level100-final-wave-20260925/turret_fire_control_control.py`
+passed **21 cases**. The ELF runs the unchanged inspection range
+`[0x004f889a,0x004f89fb)` with its jump table, the emitter lookup, CRT `stricmp`,
+`_strnicmp` and `_strncmp` (C-locale fast path supplied), the refresh body and
+`Random__NextLCGAbs` against part and emitter structures built from the three
+shipped meshes by the repository parser; the Euler constructor and `AddEvent` are
+recording stubs. Controls cover zero turn rate, a missing `GunB` emitter, the Pulse
+`GunB` chain (turret without barrel), a capitalised `Barrel` and `Turret`, an
+`x1 barrel` prefix, a missing selector 1, lookup through a linked mesh, disabled and
+dying refreshes, both clamps, active and inactive owners, and two consecutive draws
+matched against an exact int32 model of the shipped generator. Receipt
+`fire-control-run-ob8ydblf/turret_fire_control.json` SHA-256
+`4efecff6d05e6a33a408fff564688ab96b21d245d58fc09e3596bc104245efe2`; ELF SHA-256
+`0a6ff38de4811e088cd116327ea89b9174c0582b4e3f441cf43592f2a2178683`. The first run
+failed only because its generator model lacked 32-bit wraparound for a deliberately
+out-of-range seed; that run is retained beside it.
+
 ### Turret profiles
 
 All three profiles have life 5.0 and behaviour 5 (`CCannon`).
@@ -193,7 +238,8 @@ Level-world and spawned units also own AIs: Target Tank and Target Truck
 (`CBuilding`), U-17 Highside Transporter (`CDropship`), Air Trainer and Target Drone
 (`CPlane`, squad-less).
 
-Each AI queues event 3000 at its construction time. An inactive owner then draws
+The four turrets also run the fire-control cycle above. Each AI queues event 3000
+at its construction time. An inactive owner then draws
 once per re-poll, every 2.0–4.0 s plus one frame. An active owner with no target
 takes `Update`'s idle arm: one draw and a delay of 1.5 + r/65536 s when owner `+0x110`
 is nonzero, otherwise 3.0 + 2r/65536 s. `+0x110` is written by the Unit 4003 handler
@@ -208,7 +254,6 @@ already orders rows 0–9 of this same base world.
 | Question | Cheapest falsifier |
 | --- | --- |
 | Turret aim and fire law: turret/barrel rotation (`CMCCannon` `0x004952a0`), fire gates A/B, bursts and volleys against a moving drone | Static read of `0x004952a0` and the Unit fire path with the existing weapon contracts, then an original-code composition with a `CCannon` owner |
-| Whether turret barrels enable the fire-control refresh (`CUnit::Init` `+0x224`), which adds event 4001 and one draw per refresh | Read each turret mesh's `GunA` part chain for barrel markers |
 | Exact first-flush order of all AI, 4003 and Actor draws in Level 100 | Extend the World 110 construction order to all base rows and the level-world rows |
 | Whether the Hangar AI's all-squads spawning probe runs (owner `+0x188`) | Read the Hangar and Airfield spawner uses and `0x004fda90` |
 | How often stray turret rounds hit the player | A copied-retail observation once David releases the desktop |
