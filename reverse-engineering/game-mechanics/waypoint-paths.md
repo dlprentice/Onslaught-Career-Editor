@@ -1,7 +1,7 @@
 # Named waypoint paths: loading, start node and following
 
 Status: active static contract for the rebuild's Level 100 and World 110
-Last updated: 2026-09-26
+Last updated: 2026-09-26 (height adjustments, nearest-node arithmetic and end-of-walk behaviour)
 Summary: how the loader builds each named waypoint path, which node `FollowWaypointWait`
 starts from, and how following advances and ends. It also gives the resulting routes
 for the units that follow paths from their authored positions.
@@ -31,16 +31,37 @@ level pass's per-row thing array. It reads a uint16 path count, then each path
 A waypoint (`CWaypoint::InitAndLink`, `0x005057b0`):
 - has collision mask −1;
 - joins `0x00855120`;
-- is raised to the ground when it lies below it (`0x005057d9-0x005057f6`);
 - binds its row's target as its next node, `+0x3c` (`0x005057f9-0x00505803`).
+
+Its height is adjusted three times, each with a strict compare. z grows downward, so a
+smaller z is higher.
+1. `CThing::Init` (`0x004f34ea-0x004f3534`): `CWaypoint` slot 44 returns 1, so the
+   heightfield is sampled. This is `0x0047eb80` with `ECX` = `0x006fadc8` and `EDX`
+   pointing at the position, the same sample `CStart::Init`'s clamp uses. When the
+   sample is below z (`fcom`, C0), the waypoint is teleported (slot 20) to x, y and the
+   sample.
+2. `CThing::Init` (`0x004f353b-0x004f3559`): slot 49 returns 0 (it may not go under
+   water). When the water level `0x006fbdfc` is below z, z becomes the water level.
+   Only z is stored.
+3. `InitAndLink` (`0x005057d4-0x005057f6`) samples again. When the sample is below z,
+   it samples once more and stores that result into z.
+
+The result is the highest of the authored z, the ground and the water level. Step 3
+cannot change it, since step 1 already raised z to the ground. The heightfield sample
+excludes water; water is the separate global.
 
 ## Following
 
 - **Start.** `FollowWaypointWait` (`0x00537e40`) finds the named path and takes its node
   nearest the unit (`0x00505c30`):
-  - distance is squared 3D, summed (dx² + dz²) + dy²;
+  - the unit's position `+0x1c`, `+0x20`, `+0x24` is compared with each waypoint's
+    position after its height adjustments;
+  - distance is squared 3D, computed on the x87 stack in this order: dx, dy, dz, then
+    (dx² + dz²) + dy²;
   - the comparison is a strict `<` against a running minimum that starts at 9999999.0,
-    walking the list in retail order, so a tie keeps the earlier list entry.
+    walking the list in retail order, so a tie keeps the earlier list entry;
+  - each new minimum is stored as a float32 (`fstp`), and the next sum is compared with
+    that stored value (`fcom`).
   It sends the unit to that node (slot 61), then suspends the script with a 2000 at −1.
   An unknown path name logs an error and returns without suspending.
 - **Each frame.** The script's 2000 runs `UpdateWaypointFollowing` (`0x00538470`).
@@ -53,6 +74,15 @@ A waypoint (`CWaypoint::InitAndLink`, `0x005057b0`):
     the next list entry. A waypoint that targets itself logs an error and ends the walk.
   - With no next node, the unit's slot 64 runs and the script resumes after
     `FollowWaypointWait`. Otherwise the unit is sent to the next node.
+  - Slot 64 differs by class:
+    - `CDropship` (`0x00459990`) does nothing; the craft keeps its last goal and its
+      velocity.
+    - `CPlane` (`0x00422750`) resets its guide (`+0x208`, slot 8, `0x0047e3d0`). The
+      guide's goal becomes the plane's position, the guide's `+0x1c` is cleared, and the
+      plane's `+0x14c` vector is zeroed. Its velocity is kept.
+    - `CGroundVehicle` uses the Unit default (`0x004fcf00`). It zeroes `+0x14c` and the
+      velocity `+0x7c`, copies `+0x114` into `+0x120`, and resets the guide the same way.
+      The fourth word of each zeroed vector is copied from an uninitialized stack slot.
   - The 2000 is filed again at −1 each frame (`0x005385d3`).
 - **What the list decides.** A path's list decides only where following starts. The
   route after that is the target chain, which may leave the named path or loop.
@@ -104,5 +134,4 @@ A waypoint (`CWaypoint::InitAndLink`, `0x005057b0`):
 
 | Question | Cheapest falsifier |
 | --- | --- |
-| Whether each unit really starts at the node computed here, including the ground lift | Log `0x00505c30`'s return and the unit position at each `FollowWaypointWait` in a copied runtime |
-| What slot 64 does at the end of a walk for each unit class | Read `CDropship`, `CPlane` and `CGroundVehicle` slot 64 |
+| Whether each unit really starts at the node computed here, including the height adjustments | Log `0x00505c30`'s return and the unit position at each `FollowWaypointWait` in a copied runtime |
