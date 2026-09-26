@@ -135,6 +135,11 @@ internal static class CompanionUiTests
         edit.Rows[4].Target.Value = 123460;
         app._UnhandledKeyInput(new InputEventKey { Keycode = Key.S, CtrlPressed = true, Pressed = true });
         check.That(edit.SaveChoice.Dialog.Visible, "Ctrl+S on Edit career opens the save choice");
+        edit.SaveChoice.Name.Text = "Bad:Name";
+        edit.SaveChoice.Name.EmitSignal(LineEdit.SignalName.TextChanged, "Bad:Name");
+        edit.SaveChoice.Name.EmitSignal(LineEdit.SignalName.TextSubmitted, "Bad:Name");
+        check.That(edit.SaveChoice.Dialog.Visible && edit.SaveChoice.Dialog.GetOkButton().Disabled,
+            "Enter in the name field does not save a name the game cannot use");
         edit.SaveChoice.Dialog.Hide();
         check.That(edit.Plan.Ok && !edit.Save.Disabled && edit.ChangesText.Contains("Aircraft kills: 3,221 → 123,456"),
             "a changed count is listed in the player's words and can be saved");
