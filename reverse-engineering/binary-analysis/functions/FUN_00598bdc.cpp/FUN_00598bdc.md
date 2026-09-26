@@ -1,7 +1,7 @@
-# FUN_00598bdc
+# D3DXShader__CNodeVariable__IsEqual
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; identity proven 2026-09-26 (linked library code)
+Last updated: 2026-09-26
 Source File: unlabeled (first gates only; do not read this as
 a pin of `CScriptObjectCode.cpp.md` / sibling
 `FUN_00598b08` / neighbour `FUN_00598c85` /
@@ -22,6 +22,10 @@ were **not** rewritten. Named
 Did not adopt C1 `FormatThenFiveMatchThenRepeCmpsb`.
 
 > Address: `0x00598bdc`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXShader__CNodeVariable__IsEqual`. Linked library code: public: virtual int __thiscall D3DXShader::CNodeVariable::IsEqual(class D3DXShader::CNode *), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\cnode.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Contract
 
@@ -65,4 +69,4 @@ empty, **or** `0x001ef264` is not `dc 8b 59 00`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00598bdc` | `FUN_00598bdc` | `56 57 8b7c240c 8bf1 e85ffbffff … e856fbffff … c20400` (169 B) | incoming-ECX thiscall; ret 0x4; 169 B; 6 E8 `CTexture__HasSameFormatClassId` + 5× `CTexture__NodePayloadMatchesTypeOrNullIsZero` / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x005ef264`. **Not** on field meaning or the callees. |
+| `0x00598bdc` | `D3DXShader__CNodeVariable__IsEqual` | `56 57 8b7c240c 8bf1 e85ffbffff … e856fbffff … c20400` (169 B) | incoming-ECX thiscall; ret 0x4; 169 B; 6 E8 `CTexture__HasSameFormatClassId` + 5× `CTexture__NodePayloadMatchesTypeOrNullIsZero` / 0 E9; 0 inbound. HIGH on ABI, unique imm at `0x005ef264`. **Not** on field meaning or the callees. |

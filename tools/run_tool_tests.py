@@ -117,6 +117,8 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/re_console_output_topology_tests.py",),
     ("tools/re_global_init515_campaign_lineage_tests.py",),
     ("tools/re_rtti_vtables_tests.py",),
+    ("tools/re_name_evidence_tests.py",),
+    ("tools/re_lib_match_tests.py",),
     ("tools/re_cmech_profile_field_tests.py",),
     ("tools/re_binary_strings_tests.py",),
     # Name-align plates (Gen34–38): keep regression guards in the sweep (Opus).

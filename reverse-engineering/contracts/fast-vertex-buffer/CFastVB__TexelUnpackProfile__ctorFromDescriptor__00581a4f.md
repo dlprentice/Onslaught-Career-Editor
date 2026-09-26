@@ -1,13 +1,17 @@
 # CFastVB__TexelUnpackProfile__ctorFromDescriptor
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-23
+Status: superseded 2026-09-26: linked library code, not game code (see Identity)
+Last updated: 2026-09-26
 Summary: specimen-bound static contract for `CFastVB__TexelUnpackProfile__ctorFromDescriptor` at `0x00581a4f` in the shared descriptor-based texel-unpack profile constructor directly called by all 23 selected numeric-format constructor plates; exact identity, selected call connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — current name/register/closure identity, retained read-only READY packet/decompile, structured edges, fresh pristine body copy and digest recomputation, and paired static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00581a4f`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXTex__CCodec__ctor`. Linked library code: protected: __thiscall D3DXTex::CCodec::CCodec(struct D3DX_BLT *, unsigned int, unsigned long), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\ccodec.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Identity
 - Body `[0x00581a4f,0x00581cbf]`, 625 bytes, 193 closure instructions. Raw pristine-body SHA-256 `65084c75d5aa9e3848174e4a9ccd5828017b304afe8a7f7a10cbd2183a3d4ffd`; closure range SHA-256 `30edebb3ba8f6a87b33f32320114977b5e49fde80a6ee0b6cc21b8b85e19503d`; packet range-plus-bytes SHA-256 `3a2f43cfb52247d3dec6e6b6aa3d8f6e178cf172f699345eb83b5f0d296d51df`. All three were independently recomputed over the exact single contiguous inclusive range.

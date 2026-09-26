@@ -1,13 +1,17 @@
 # CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG
 
-Status: active static contract (factory draft); audited 2026-09-26, corrections below
-Last updated: 2026-09-26 (RE audit: verified corrections added)
+Status: superseded 2026-09-26: linked library code, not game code (see Identity)
+Last updated: 2026-09-26
 Summary: specimen-bound static contract for `CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG` at `0x005852d5` in the direct-call-connected concrete packed-texel-to-float4 decoder; exact identity, direct codec connectivity, ABI audit, evidence limits, and no-promotion disposition are explicit.
 Evidence: MEASURED — exact-base current name/register identity, fresh read-only READY packet/decompile, structured edges, closure range, independently recomputed pristine body bytes, and paired W012/W013 static review; source and runtime limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no selected source-crosswalk owner) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x005852d5`
+
+## Identity (RE record audit, 2026-09-26)
+
+Proven: `D3DXTex__CCodec_G16R16__Decode`. Linked library code: public: virtual void __thiscall D3DXTex::CCodec_G16R16::Decode(unsigned int, unsigned int, struct D3DXCOLOR *), from the static library DirectX 9.0 SDK d3dx9.lib (SHA-256 a22ca24c92fd61912f7601f00a049f98a439763370726c724ce617020fa6526d), member obj\i386\ccodec.obj. The pristine bytes equal the library's object code apart from its relocation fields, and every relocation resolves consistently with the rest of the match (`tools/re_lib_match.py`; decision `unique`). The Ghidra cohort `library-d3dx-20260926` applied the name ([Ghidra README](../../../reverse-engineering/ghidra/README.md#re-audit-d3dx-library-names--september-26)). Everything below predates the identification: its byte facts stand, and the labels it quotes are the labels saved before that cohort.
 
 ## Audit corrections (2026-09-26)
 
