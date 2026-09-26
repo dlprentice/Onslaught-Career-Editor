@@ -3803,6 +3803,40 @@ Do not add a new test during cleanup unless implementation behavior changed,
 the regression is consequential, and no focused existing check covers it. Do
 not fix unrelated failures discovered outside the changed contract.
 
+## Third RE label cohort — September 26
+
+`label-audit-3-20260926` corrects eight names/comments/tag sets and re-derives
+two BattleEngine contact-query contracts. The pristine specimen SHA-256 is
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Private commands, logs, exact comparisons and recovery receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/label-audit-3/`.
+
+Executed locally:
+
+- `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+  `compare_exports.py rehearsal-post`: fresh PRE restore; exact eight metadata
+  changes, 8,323 untouched function rows and 671 preserved instructions.
+- `negative_controls.py`: stale comment and name collision refused on a fresh
+  PRE; wrong name/comment/tags refused on rehearsal readback. All five left
+  project bytes unchanged. The first sealed draft remains under `rejected-v1/`
+  after ambiguous Init branch wording was found; the corrected seal repeated
+  the PRE, rehearsal and controls.
+- Independent read-only review plus root reproduction; `apply_live.py`:
+  live dry/apply/readback passed and all nine exports equalled the reopened
+  rehearsal. `finish.py`: new Archive A POST copied, independently restored and
+  reopened read-only, byte-equal to live; tracked checkpoint unchanged.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+  The name-checker and public-payload self-tests passed; strict name checking
+  resolved 2,062 assertions with zero drift or unresolved entries.
+- `npm run test:safety`: passed with submodules. The first documentation gate
+  found two missing Evidence headers and one now-conforming backlog entry;
+  the headers were supplied and that single backlog entry retired. Final
+  documentation results are recorded in this owner's `docs-gate-final.log`.
+
+This is static RE and metadata/recovery validation. It runs no Godot and
+establishes no additional retail-play, audio, GPU or Windows acceptance.
+
+
 ## Remote source review — 2026-09-09 (execution pending)
 
 The following is the September 9 remote handoff record; its host execution is

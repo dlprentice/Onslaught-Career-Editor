@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[RE-audit C runtime library names](#re-audit-c-runtime-library-names--september-26);
+[third RE-audit label correction](#re-audit-label-corrections-third-cohort--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,34 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit label corrections, third cohort — September 26
+
+The [manifest](../../tools/cohort-specs/label-audit-3-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/label-audit-3-20260926.spec.tsv) correct eight names, comments
+and tag sets: `SYSTEM__Init`, `SYSTEM__Run`, `SYSTEM__Shutdown`,
+`CVBufTexture__ClearOut`, `CMonitor__dtor_thunk`,
+`CComplexThing__SetThingType`, `CActor__IsOnGround` and `CActor__IsOnObject`.
+The startup caller matches the pinned source's SYSTEM expression; its missing
+header does not prove a class name. The actor predicates use x87 C0, including
+masked unordered results; the buffer cleanup retains zero targets for zero
+counts. Shared destructor callers and composed type bits are described without
+inventing linker provenance or absent constant definitions.
+
+Exactly eight function names, nonrepeatable comments and tag sets corrected by the RE record audit (third label cohort): SYSTEM startup, CVBufTexture cleanup, shared base destruction, complex-thing type bits and actor contact predicates. All prototypes, storage, parameters, locals, types, bookmarks, instructions, bodies and the 8,323 non-target function rows are preserved. Only `commentsSha256` changes among program metrics. All nine
+live exports equal the separately reopened rehearsal. Fresh PRE restore,
+rehearsal, sealed readback, five no-write negative controls, independent review,
+live dry/apply/readback and independently restored POST recovery passed.
+The first sealed rehearsal remains under `rejected-v1/`: review found ambiguous
+Init success-branch wording, corrected before a fresh PRE restore and repeated
+rehearsal/controls. These are static identity and metadata corrections, not
+retail-play acceptance.
+
+Working identity: `db.18662`, 18 files / 121,064,308 bytes,
+inventory SHA-256 `3fe519b1b91297eb4fbe30e03b8821ede355d8201a9814fb0fe6f1e798ca68bf`; main database 70,762,496 bytes,
+SHA-256 `2fe3643045358a0b06f61ee21569fb6d1e3b837f6136e4117ddb3e736fa17e13`. PRE is the freshly matched C runtime POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-label-audit-3/post-working`. The tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/label-audit-3/`.
 
 ## RE-audit C runtime library names — September 26
 

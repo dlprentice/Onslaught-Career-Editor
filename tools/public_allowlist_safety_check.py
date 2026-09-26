@@ -209,7 +209,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # RE-audit C runtime library names: 343 current comments (prior analytic comments,
 # 150,337 decoded bytes) and 370 generated evidence comments (304,438 bytes; WinMain's
 # keeps its earlier note as a marked lead). Reviewed the same way.
+# Third RE-audit label cohort: eight current/eight proposed analytic comments
+# (4,178/7,871 decoded bytes), reviewed with the same exact-content boundary.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/label-audit-3-20260926.manifest.tsv":
+        "438b81bf3d28799f59b8190d0ff3f34d20bed7cddb729aea424590e4e4ce50bc",
     "tools/cohort-specs/library-crt-20260926.manifest.tsv":
         "b1292f792373f16b2e3cc8bd80e8abeed191cf90decbef6fb6d47cec7eb67b63",
     "tools/cohort-specs/library-d3dx-20260926.manifest.tsv":
