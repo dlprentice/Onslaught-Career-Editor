@@ -12,7 +12,7 @@ import sys
 import tempfile
 import time
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -67,6 +67,8 @@ class LauncherTests(unittest.TestCase):
             "'terrain_probe': os.environ.get('ONSLAUGHT_TERRAIN_PROBE'), "
             "'unrelated': os.environ['FAKE_UNRELATED']}) + '\\n')\n"
             "if pathlib.Path(sys.argv[0]).name == 'godot48-mono':\n"
+            "    if os.environ.get('FAKE_ENGINE_STDOUT'):\n"
+            "        print(os.environ['FAKE_ENGINE_STDOUT'])\n"
             "    report = os.environ.get('FAKE_SMOKE_REPORT')\n"
             "    for arg in sys.argv:\n"
             "        if arg.startswith('--report=') and report is not None:\n"
@@ -216,6 +218,26 @@ class LauncherTests(unittest.TestCase):
         self.assertNotEqual(Path(report).parent, Path(capture))
         self.assertTrue(Path(capture).is_relative_to(self.checkout / "local-data"))
         self.assertIn("--capture-plan=mainmenu", engine_calls[1])
+
+    def test_replay_resolves_tapes_skips_scene_import_and_keeps_the_replayer_exit(self) -> None:
+        output = io.StringIO()
+        banner = "Godot Engine v4.8.dev6.mono.official.8898c2b3d - https://godotengine.org"
+        with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "2", "FAKE_ENGINE_STDOUT": banner + "\n{\"tape\": \"a\"}"}), \
+             mock.patch.object(launcher.Path, "cwd", return_value=self.root), redirect_stdout(output):
+            self.assertEqual(2, self.invoke("replay", "--no-build", "--", "--tape", "tapes/a.json",
+                                            "--compare-tape", "/abs/b.json", "--repeat", "1"))
+        calls = self.read_calls()
+        self.assertEqual(["materialize_retail_assets.py", "godot48-mono"], [call["tool"] for call in calls])
+        replay = calls[-1]["args"]
+        self.assertIn("--headless", replay)
+        self.assertEqual("res://Client/headless_replay.gd", replay[replay.index("--script") + 1])
+        self.assertEqual(["--tape", str(self.root / "tapes/a.json"), "--compare-tape", "/abs/b.json", "--repeat", "1"],
+                         replay[replay.index("--") + 1:])
+        self.assertFalse(any(arg.startswith("--startup-media") or arg == "--prepare-level100-scene" for arg in replay))
+        self.assertEqual('{"tape": "a"}\n', output.getvalue())
+        self.assertEqual(0, launcher.main(["replay", "--no-build", "--no-prepare", "--engine", str(self.engine)]))
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            launcher.main(["replay", "--engine-arg=--verbose"])
 
     def test_scene_import_failure_stops_before_gameplay(self) -> None:
         with mock.patch.dict(os.environ, {"FAKE_ENGINE_EXIT": "9"}):

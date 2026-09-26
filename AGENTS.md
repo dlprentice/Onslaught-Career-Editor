@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-25 (lane map verified; branches reconciled)
+Last updated: 2026-09-25 (lane map verified; headless replay moved to GDScript)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -70,11 +70,11 @@ To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Care
   [promotion gate](reverse-engineering/ghidra/README.md).
 - Rebuild, in `$REPO/.worktrees/godot-editor-48-20260919`: `export BEA_LOCAL_LAB=$REPO/local-lab`, then
   `npm run build:rebuild-godot`, `npm run test:rebuild-gdscript` and `npm run test:rebuild-client` (in a worktree
-  its preparation step only verifies and links canonical inputs). World checks:
-  `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 180 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/World/WorldSceneChecks.tscn`.
+  its preparation step only verifies and links canonical inputs). World checks, after that build's import:
+  `python rebuild/tools/gdscript_checks.py --group world`.
   Smoke: the same launcher's `smoke` mode with those engine arguments and `-- --record-tape=ABS_FRESH_LOCAL_DATA_PATH`,
-  then `dotnet rebuild/OnslaughtRebuild.Headless/bin/Debug/net8.0/OnslaughtRebuild.Headless.dll --tape TAPE --repeat 2`
-  after `dotnet build rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj`.
+  then `python rebuild/tools/first_flight.py replay --no-build --no-prepare -- --tape TAPE --repeat 2` (the GDScript
+  headless replayer, `res://Client/headless_replay.gd`, on the .NET engine).
 - Companion, in `$REPO/.worktrees/main-integration-20260919`: `npm run build` and `npm test`; `npm run dev` opens a window.
 
 There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
@@ -136,8 +136,9 @@ draft. Unique ignored data from the retired companion and remote-review worktree
   the same behavior. C# stays only where a recorded measurement shows optimized GDScript cannot hold a simulation
   tick under 5 ms on this laptop, on Level 100 and on a stress scenario sized to the largest retail battle (from RE,
   else 10x Level 100's objects), or where GDScript lacks an OS guarantee (the companion's file-safety adapter).
-  The September 25 measurement in `VALIDATION.md` keeps the deterministic simulation Core in C#, with its replay,
-  trace hashing and headless replay CLI; the Godot side reaches it through one thin bridge.
+  The September 25 measurement in `VALIDATION.md` keeps the deterministic simulation Core in C#, with its replay
+  runner and trace/state hashing; the Godot side, including the GDScript headless replayer, reaches it through one
+  thin bridge (`rebuild/OnslaughtRebuild.Godot/Bridge/`), which also owns create-new tape and report writes.
 - Reviews by other agents or models are optional and follow `reverse-engineering/REVIEW-PROTOCOL.md`: read-only
   lanes, reports are input to reproduce rather than authority, and hosted reviewers never receive retail material
   or secrets.

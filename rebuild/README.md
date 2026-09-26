@@ -33,8 +33,9 @@ of readiness tooling.
   comparison models for migrated behavior. The live frontend Session and
   lifecycle now belong to native scripts under `OnslaughtRebuild.Godot/Client`
   and `Scenes/Frontend`.
-- `OnslaughtRebuild.Headless` replays command tapes and verifies versioned final
-  state and rolling trace hashes.
+- The GDScript headless replayer (`OnslaughtRebuild.Godot/Client/headless_replay.gd`,
+  `npm run run:rebuild-headless`) replays command tapes through Core's replay
+  runner and verifies versioned final state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The production rebuild is migrating to typed GDScript under the repository's
@@ -43,8 +44,8 @@ measurement requires it. The September 25 measurement
 ([VALIDATION.md](../VALIDATION.md#simulation-language-measurement--september-25))
 keeps `OnslaughtRebuild.Core` in C#: projectile launch and flight already cost
 up to about 100 ms per tick in Release C#, and matched GDScript kernels run 10–68x
-slower. The Core's replay runner, trace/state hashing and `OnslaughtRebuild.Headless`
-stay with it. The host, frontend, HUD, pause, audio, world presentation, world
+slower. The Core's replay runner and trace/state hashing stay with it; the
+headless replayer is GDScript and reaches them through the bridge. The host, frontend, HUD, pause, audio, world presentation, world
 import and assembly, and recording entry move to GDScript behind one thin C#
 bridge; C# comparison copies and GDScript ports of Core logic are retired as each
 owner is settled. The MIT companion/AppCore has its own migration owner and

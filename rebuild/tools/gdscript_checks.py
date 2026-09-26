@@ -95,7 +95,7 @@ STANDALONE = (
     ("Scenes/Shared/retail_float32_checks.gd", []), ("Tests/frontend_localization_checks.gd", []),
     ("Tests/frontend_flow_checks.gd", ["--skipfmv"]),
 )
-GROUPS = ("parity", "fixtures", "laws", "startup", "scenes", "host", "world")
+GROUPS = ("parity", "fixtures", "laws", "startup", "scenes", "host", "replay", "world")
 # Engine diagnostics a check provokes on purpose: pause_scene_checks feeds a
 # corrupt deflate stream to the AYA reader, and Godot's gzip stream logs it.
 EXPECTED_ENGINE_ERRORS = {"pause_scene_checks": ("core/io/stream_peer_gzip.cpp",)}
@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--goldens", type=Path, help=f"golden directory (default: canonical lab {GOLDENS_NAME})")
     parser.add_argument("--output-root", type=Path, help="fresh path below this checkout's local-data")
     parser.add_argument("--group", action="append", choices=GROUPS,
-                        help="run only this group; repeatable (world needs a current build:rebuild-godot import)")
+                        help="run only this group; repeatable (replay and world need a current build:rebuild-godot)")
     parser.add_argument("--standard-engine", default="godot48")
     parser.add_argument("--dotnet-engine", default="godot48-mono")
     args = parser.parse_args(argv)
@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         standard = shutil.which(args.standard_engine)
         dotnet_engine = shutil.which(args.dotnet_engine)
-        if standard is None or ("world" in groups and dotnet_engine is None):
+        if standard is None or (groups & {"replay", "world"} and dotnet_engine is None):
             raise RuntimeError("the pinned standard and .NET Godot 4.8 dev6 engines are required")
         goldens = (args.goldens or canonical_lab() / GOLDENS_NAME).expanduser().resolve()
         manifest = verify_goldens(goldens)
@@ -227,6 +227,14 @@ def main(argv: list[str] | None = None) -> int:
             report = reports / "host.json"
             run("host", standard, ["--script", "res://Tests/host_checks.gd"], [str(GOLD_CAREER), str(report)], 120)
             results["host"]["report_ok"] = report_ok(report)
+        if "replay" in groups:
+            # The replayer and tape boundary reach Core through the C# bridge.
+            owned = output / "owned" / "headless_replay_checks"
+            owned.mkdir(parents=True)
+            report = reports / "replay.json"
+            run("replay", dotnet_engine, ["--script", "res://Tests/headless_replay_checks.gd"],
+                [str(owned), str(report)], 900)
+            results["replay"]["report_ok"] = report_ok(report)
         if "world" in groups:
             text = run("world", dotnet_engine, ["--script", "res://Scenes/World/Tests/world_scene_checks.gd"], [], 900)
             results["world"]["report_ok"] = "WORLD_SCENE_CHECKS:" in text and "passed" in text

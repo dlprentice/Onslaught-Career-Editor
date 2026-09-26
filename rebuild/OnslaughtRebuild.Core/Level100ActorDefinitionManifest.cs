@@ -2,14 +2,14 @@
 
 using System.Security.Cryptography;
 using System.Text.Json;
-using OnslaughtRebuild.Core;
 
-namespace OnslaughtRebuild.Client;
+namespace OnslaughtRebuild.Core;
 
 /// <summary>
 /// Bounded decoder for the actor-definition projection inside the exact
-/// locally materialized Level 100 static-world manifest. Filesystem ownership
-/// remains with the calling client/scenario adapter.
+/// locally materialized Level 100 static-world manifest. It decodes bytes only;
+/// reading the file belongs to the caller (the Godot host, the headless replay
+/// or a test).
 /// </summary>
 public static class Level100ActorDefinitionManifest
 {

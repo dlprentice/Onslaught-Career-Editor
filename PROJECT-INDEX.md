@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-09-19 (native companion ownership; other lanes unchanged)
+Last updated: 2026-09-25 (headless replay moved to the rebuild's GDScript)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its Godot companion, retained WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -52,7 +52,6 @@ The MIT companion has no dependency on the GPL rebuild or private retail assets.
 | [`OnslaughtCareerEditor.UiTests`](OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj) | Static and native WinUI checks plus shared product regressions. It references AppCore and drives built WinUI surfaces without making UI code the business-logic owner. |
 | [`OnslaughtRebuild.Core`](rebuild/OnslaughtRebuild.Core/OnslaughtRebuild.Core.csproj) | Deterministic simulation truth; no presentation, filesystem, clock, process, network, or GPU dependency. |
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Input-to-fixed-step and presentation-lifecycle adapter; references Core. |
-| [`OnslaughtRebuild.Headless`](rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj) | Command-tape replay and deterministic verification; references Client and Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Rendering, audio, native integration, and player input; references Client and Core. |
 
 Host boundary: Linux owns native Godot, Core/Client/headless execution and the

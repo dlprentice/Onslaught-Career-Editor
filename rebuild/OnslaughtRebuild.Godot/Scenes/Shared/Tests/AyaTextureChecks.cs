@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Godot;
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 using D = Godot.Collections.Dictionary;
 
 namespace OnslaughtRebuild.GodotClient;

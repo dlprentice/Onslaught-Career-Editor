@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
 Status: active — the contract a contributor breaks first
-Last updated: 2026-09-20 (native terrain cache ordering; existing behavior boundaries retained)
+Last updated: 2026-09-25 (headless replay moved to GDScript; existing behavior boundaries retained)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -330,10 +330,12 @@ comparable byte-for-byte across hosts.
 
 ## The tape and its bounds
 
-The headless runner (`OnslaughtRebuild.Headless`) reads and replays supplied
-command tapes. `InteractiveSession` supplies the consumed input and resulting
-snapshot to `CommandTapeRecorder`; `BuildObserved` freezes hashes measured during
-that session without replaying it. The native Godot host writes a new tape at
+The GDScript headless replayer (`res://Client/headless_replay.gd`, run by
+`rebuild/tools/first_flight.py replay`) reads supplied command tapes and replays
+them through Core's `ReplayRunner` behind the simulation bridge. The GDScript
+session (`Client/interactive_session.gd`) hands each consumed input to the bridge,
+whose `CommandTapeRecorder` observes it with the resulting snapshot;
+`BuildObserved` freezes hashes measured during that session without replaying it. The native Godot host writes a new tape at
 exit when `--record-tape=/absolute/path.json` is set. A mostly idle native session
 replayed twice on September 6; a substantial player walkthrough remains open in
 `PROGRAM.md` P8. See [`README.md`](README.md) for recording commands.
@@ -376,8 +378,9 @@ hash downstream. This is expected — but it must be deliberate and recorded:
 - `Level100ColdStartTests` and the deterministic run fixtures (cold start,
   pointer-quantised, full-chain).
 - `InteractiveSessionTests` (100 000-step bounds).
-- `HeadlessApplicationTests` (8 MiB tape bound, replay determinism, `--expect`,
-  and the pinned first-flight trace/state fingerprint owner).
+- `Tests/headless_replay_checks.gd` (8 MiB tape bound, replay determinism, `--expect`,
+  the create-new tape boundary and the recorded-tape round trip) and
+  `FirstFlightFingerprintTests`, the pinned first-flight trace/state fingerprint owner.
 - `StateHasher` canonical-format tests.
 
 A contributor who touches `Simulation.cs`, `SimulationConstants.cs`,
