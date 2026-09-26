@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-09-26 (the separate World 110 stage's rows retired; World 110's base-world carry-over; the walker dash window; World 110: construction, landing-craft and fighter AI thinks, script natives and start state; waypoint walks: nearest start, node targets, load-time heights and walk ends; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in the load; cockpit Gun emitters; Level 100's construction order and unit callbacks; every round's launch basis and default launch angle; the jet Missile Pod: charge and Fire, burst and launch slots, locks, seeking flight and air burst; weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
+Last updated: 2026-09-26 (one owner for the Won career update; the separate World 110 stage's rows retired; World 110's base-world carry-over; the walker dash window; World 110: construction, landing-craft and fighter AI thinks, script natives and start state; waypoint walks: nearest start, node targets, load-time heights and walk ends; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in the load; cockpit Gun emitters; Level 100's construction order and unit callbacks; every round's launch basis and default launch angle; the jet Missile Pod: charge and Fire, burst and launch slots, locks, seeking flight and air burst; weapon stores, cooling, recoil and damage shake, the round's Init draw; the Battle Engine's crosshair and auto-aim refresh events and the retained crosshair report; September 25 scheduler and speed-provider evidence pointer kept through the C# restore).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -401,10 +401,14 @@ from Simulation takeoff after beat-6 Enable /
 names the rebuild bool),
 `RetailGameEndCountdown.LostTicks` is reached from
 `Level100Mission.DeclareLost` on the released Broke-Tutorial /
-`LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
-calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
-`Level100Mission` when `FrontEndHandoffReady` follows Won, including the
-SimInput-only chain fixture that never posts a mission event. The world-admission
+`LevelLostString` path. `Level100WonCareerHandoff.TryApply` (which calls
+the already-pinned `ForLevel100Won` / `ApplyUpdate`) is the one owner of the
+Won career update: the frontend's Won re-entry
+(`RetailFrontendSession.TryAcceptWonHandoff`) calls it when the host reports
+`FrontEndHandoffReady` after Won, and the tests and the SimInput-only chain
+fixture follow their runs' mission events the same way. The mission itself no
+longer keeps a career; its `SetSlotSave` reaches the career as a
+`Level100TutorialSlotSaved` event that the frontend stores at once. The world-admission
 rows, `IsWorldSelectable`, `IsWorldLater` and `Level100Terrain.World110`
 remain catalog/admission law. `RetailPlayerBattleEngineAssignment` separately
 carries the valid-object two-reader call transcript and God-only policy

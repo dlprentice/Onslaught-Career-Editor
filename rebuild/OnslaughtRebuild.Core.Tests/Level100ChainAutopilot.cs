@@ -176,16 +176,49 @@ internal sealed class Level100ChainAutopilot
     /// <c>Running</c>. The player-input Won e2e uses this for
     /// <see cref="SimInput.Idle"/> through the already-pinned 5.0 f overlay.
     /// </summary>
-    internal WorldSnapshot Step(SimInput input) => _host.Step(input);
+    internal WorldSnapshot Step(SimInput input) => FollowCareer(_host.Step(input));
 
     /// <summary>
-    /// The same live career object the host's <see cref="Simulation"/> owns.
-    /// Assigned only on the direct-Core <see cref="Create"/> path.
+    /// The career this run reaches, followed the way the frontend follows the
+    /// host's mission events: each <c>SetSlotSave</c> stored at once, and the
+    /// Won update applied once when the mission stands at its handoff, with
+    /// FillOut's survivors from the end state. Bound only on the direct-Core
+    /// <see cref="Create"/> path.
     /// </summary>
     internal RetailCareerCampaign Career =>
         _career ??
         throw new InvalidOperationException(
             "This driver has no live career; only Create() binds one.");
+
+    private Level100ActorDefinitionSet? _careerDefinitions;
+    private bool _careerUpdated;
+
+    private WorldSnapshot FollowCareer(WorldSnapshot state)
+    {
+        if (_career is null)
+        {
+            return state;
+        }
+
+        foreach (Level100MissionEvent missionEvent in state.Level100MissionEvents)
+        {
+            if (missionEvent is Level100TutorialSlotSaved saved)
+            {
+                RetailSetSlotSave.PersistCareerSlot(_career.Slots, saved.Slot, saved.Value);
+            }
+        }
+
+        if (!_careerUpdated)
+        {
+            _careerUpdated = Level100WonCareerHandoff.TryApply(
+                _career,
+                state.Level100Mission.Outcome,
+                state.Level100Mission.TerminalState,
+                RetailFillOutEndLevelData.BaseThingsLeft(state, _careerDefinitions!)) is not null;
+        }
+
+        return state;
+    }
 
     /// <summary>
     /// One released actor round, recorded on the first tick it is visible in
@@ -437,16 +470,15 @@ internal sealed class Level100ChainAutopilot
         // RNG is `ReleasedRandomSeed`, reseeded to 123456 at level start - but a
         // run compared against another run has to match on it anyway, or the
         // state hashes differ for a reason that is not the thing being measured.
-        var simulation = new Simulation(
-            seed,
-            actorDefinitions ?? Level100TestActorDefinitions.Create(),
-            progress);
+        Level100ActorDefinitionSet definitions = actorDefinitions ?? Level100TestActorDefinitions.Create();
+        var simulation = new Simulation(seed, definitions, progress);
         Level100ChainAutopilot driver = CreateOn(
             new Level100DirectChainHost(
                 simulation,
                 quantizeLookToClientPointerPath,
                 quantizeLookToIntegerMousePixels));
-        driver._career = simulation.Level100Career;
+        driver._career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        driver._careerDefinitions = definitions;
         driver._horizontalOnlyZoneHandoff = horizontalOnlyZoneHandoff;
         driver._beatNinePerturbation = lookPerturbation;
         return driver;
@@ -533,7 +565,7 @@ internal sealed class Level100ChainAutopilot
                 return state.Level100Mission.Outcome;
             }
 
-            WorldSnapshot next = _host.Step(NextInput(state));
+            WorldSnapshot next = FollowCareer(_host.Step(NextInput(state)));
             foreach (Level100DestructionEvent destruction in next.Level100DestructionEvents)
             {
                 if (destruction.Kind is not (

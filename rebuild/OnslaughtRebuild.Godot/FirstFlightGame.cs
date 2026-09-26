@@ -1422,6 +1422,11 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.ConsumeMissionEvents(events);
         foreach (Level100MissionEvent missionEvent in events)
         {
+            if (missionEvent is Level100TutorialSlotSaved saved)
+            {
+                _frontend?.SaveSlot(saved);
+            }
+
             if (missionEvent is Level100MessageRequested message)
             {
                 if (_smokeMode && _smokeReport is null)

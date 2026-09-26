@@ -753,6 +753,16 @@ public sealed class RetailFrontendSession
     /// leaves the page. <c>SetCurrentLevelToHighestAvailable</c> is not in the
     /// source drop and is not invented here: the highlight stays on the root.
     /// </summary>
+    /// <summary>
+    /// A mission's <c>SetSlotSave</c>: <c>CCareer::SetSlot</c> on the career
+    /// at once (<c>0x00533900</c>), before any win.
+    /// </summary>
+    public void SaveSlot(Level100TutorialSlotSaved saved)
+    {
+        ArgumentNullException.ThrowIfNull(saved);
+        RetailSetSlotSave.PersistCareerSlot(Career.Slots, saved.Slot, saved.Value);
+    }
+
     /// <param name="baseThingsLeft">
     /// FillOut's base-world survivor list from the level's end state
     /// (<see cref="RetailFillOutEndLevelData.BaseThingsLeft"/>); a first play
@@ -764,14 +774,11 @@ public sealed class RetailFrontendSession
         IReadOnlyList<int>? baseThingsLeft = null)
     {
         if (Screen != RetailFrontendScreen.Gameplay ||
-            outcome != Level100MissionOutcome.Won ||
-            terminalState != Level100MissionTerminalState.FrontEndHandoffReady)
+            Level100WonCareerHandoff.TryApply(Career, outcome, terminalState, baseThingsLeft) is not { } snapshot)
         {
             return false;
         }
 
-        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(baseThingsLeft: baseThingsLeft);
-        Career.ApplyUpdate(snapshot);
         Debriefing = RetailDebriefingProjection.From(
             snapshot,
             Career.Counters.GetAndResetGoodieNewCount(),

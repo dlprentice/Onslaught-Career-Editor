@@ -85,8 +85,6 @@ public sealed class Level100Mission
     /// </remarks>
     private int _messageBoxAllowedTick;
 
-    private readonly Level100WonCareerHandoff _wonCareerHandoff = new();
-
     public Level100Mission(
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
@@ -174,12 +172,6 @@ public sealed class Level100Mission
 
     private bool _initRan;
 
-    /// <summary>
-    /// The cold training career this mission hands to
-    /// <c>CCareer::Update</c> when it reaches
-    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/> after Won.
-    /// </summary>
-    public RetailCareerCampaign Career => _wonCareerHandoff.Career;
 
     /// <summary>The career world whose hash-pinned mission program is running.</summary>
     public int WorldNumber => _worldNumber;
@@ -1227,10 +1219,9 @@ public sealed class Level100Mission
         }
 
         // IScript::SetSlotSave at 0x00533900 also calls CCareer::SetSlot
-        // immediately. Isolated FrontEndHandoff overwrite names ApplyUpdate,
-        // not this persist. Live GAME.mSlots stay unclaimed.
-        RetailSetSlotSave.PersistCareerSlot(Career.Slots, slot, value);
-        _events.Add(new Level100TutorialSlotSaved(_tick, slot));
+        // immediately: the career's owner applies it from this event. Live
+        // GAME.mSlots stay unclaimed.
+        _events.Add(new Level100TutorialSlotSaved(_tick, slot, value));
     }
 
     private void DeclareWon()
@@ -1298,7 +1289,6 @@ public sealed class Level100Mission
         {
             _terminalState = Level100MissionTerminalState.FrontEndHandoffReady;
             _events.Add(new Level100TerminalStateChanged(_tick, _terminalState));
-            _wonCareerHandoff.TryApply(_outcome, _terminalState);
         }
         else if (_outcome == Level100MissionOutcome.Lost &&
                  _terminalTicksRemaining ==

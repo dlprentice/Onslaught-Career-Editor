@@ -168,6 +168,22 @@ public sealed class RetailCampaignFlowTests
         Assert.Empty(intact.SelectedWorldLostBaseRows);
     }
 
+    /// <summary>
+    /// <c>IScript::SetSlotSave</c> (<c>0x00533900</c>) calls
+    /// <c>CCareer::SetSlot</c> at once, so a tutorial slot the mission saves
+    /// reaches the player's career before any win (the host forwards the
+    /// mission's <see cref="Level100TutorialSlotSaved"/>).
+    /// </summary>
+    [Fact]
+    public void SlotSave_ReachesTheCareerBeforeAnyWin()
+    {
+        var frontend = AtGameplay();
+        Assert.Equal(0, frontend.Career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        frontend.SaveSlot(new Level100TutorialSlotSaved(5, RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.Equal(1, frontend.Career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.False(RetailWorldCatalog.IsWorldSelectable(frontend.Career, 110));
+    }
+
     [Fact]
     public void WonHandoff_IsRejectedUnlessGameplayWonIsReady()
     {

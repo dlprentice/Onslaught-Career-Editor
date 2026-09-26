@@ -89,34 +89,35 @@ namespace OnslaughtRebuild.Core;
 /// (<c>FrontEnd.cpp:67</c>).
 /// </para>
 /// </remarks>
-public sealed class Level100WonCareerHandoff
+public static class Level100WonCareerHandoff
 {
-    private bool _applied;
-
     /// <summary>
-    /// A fresh world-100 / world-110 training slice. Stays cold until
-    /// <see cref="TryApply"/> sees Won plus FrontEndHandoffReady.
+    /// Apply the FillOut Won snapshot to <paramref name="career"/> when the
+    /// mission has reached the frontend handoff after a win; returns the
+    /// applied snapshot, or null when the mission is not there. The frontend's
+    /// Won re-entry is the one caller in the product
+    /// (<c>RetailFrontendSession.TryAcceptWonHandoff</c>, as
+    /// <c>CFrontEnd::Init</c> calls <c>CCareer::Update</c>), once per win.
     /// </summary>
-    public RetailCareerCampaign Career { get; } =
-        RetailCareerReCalcLinks.CreateColdTrainingSlice();
-
-    /// <summary>
-    /// Apply the FillOut Won snapshot once, and only when the mission has
-    /// reached the frontend handoff after a win.
-    /// </summary>
-    public bool TryApply(
+    /// <param name="baseThingsLeft">
+    /// FillOut's base-world survivor list from the level's end state; a
+    /// first play that loses no row when omitted.
+    /// </param>
+    public static RetailEndLevelSnapshot? TryApply(
+        RetailCareerCampaign career,
         Level100MissionOutcome outcome,
-        Level100MissionTerminalState terminalState)
+        Level100MissionTerminalState terminalState,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
-        if (_applied ||
-            outcome != Level100MissionOutcome.Won ||
+        ArgumentNullException.ThrowIfNull(career);
+        if (outcome != Level100MissionOutcome.Won ||
             terminalState != Level100MissionTerminalState.FrontEndHandoffReady)
         {
-            return false;
+            return null;
         }
 
-        Career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won());
-        _applied = true;
-        return true;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(baseThingsLeft: baseThingsLeft);
+        career.ApplyUpdate(snapshot);
+        return snapshot;
     }
 }

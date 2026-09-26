@@ -101,15 +101,16 @@ public sealed class RetailWorldCatalogTests
     [Fact]
     public void IsWorldSelectable_WonRootUnlocksWorld110ButNotDistantNodes()
     {
-        var handoff = new Level100WonCareerHandoff();
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
 
-        Assert.True(handoff.TryApply(
+        Assert.NotNull(Level100WonCareerHandoff.TryApply(
+            career,
             Level100MissionOutcome.Won,
             Level100MissionTerminalState.FrontEndHandoffReady));
 
-        Assert.True(RetailWorldCatalog.IsWorldSelectable(handoff.Career, 110));
-        Assert.False(RetailWorldCatalog.IsWorldSelectable(handoff.Career, 200));
-        Assert.False(RetailWorldCatalog.IsWorldSelectable(handoff.Career, 500));
+        Assert.True(RetailWorldCatalog.IsWorldSelectable(career, 110));
+        Assert.False(RetailWorldCatalog.IsWorldSelectable(career, 200));
+        Assert.False(RetailWorldCatalog.IsWorldSelectable(career, 500));
     }
 
     private static (int, int, int, int, int) Row(int index) =>

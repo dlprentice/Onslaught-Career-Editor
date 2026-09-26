@@ -192,12 +192,6 @@ public sealed partial class Simulation
 
     public WorldSnapshot Snapshot => CreateSnapshot();
 
-    /// <summary>
-    /// The live training career <see cref="Level100Mission"/> hands to
-    /// <c>CCareer::Update</c> when Won reaches
-    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/>.
-    /// </summary>
-    internal RetailCareerCampaign Level100Career => _level100Mission.Career;
 
     /// <summary>
     /// Measurement seam. Applies exactly the two <em>capability grants</em> the

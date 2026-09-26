@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
+Last updated: 2026-09-26 (one owner for the Won career update; the separate World 110 stage retired; World 110's base-world carry-over from Level 100; the walker dash window on float32 event times; World 110 construction and start state; World 110's static world from retail data; audit corrections: the Mech Bullet's round-only damage and comments; the terrain detail texture's one-radian stage-3 matrix; waypoint walks from the nearest node; scripts start on their INIT_SCRIPT events; the level's three-second pre-run; rounds on their own MOVE and life events; influence-map and warm-up draws in Level 100's load; cockpit Gun emitters for player rounds; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod, its locks and seeking rounds; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh; September 25 three-lane baseline, reconciliation, the AYA malformed-input contract and the return to all-code C#; earlier dated validation retained).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -69,6 +69,34 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### One owner for the Won career update — September 26
+
+Two owners applied the Level 100 Won update to a career. The frontend's Won
+re-entry updates the player's career in the product. `Level100Mission` kept a
+private cold career of its own that the product never read, and it also stored
+`SetSlotSave`'s tutorial bits only there. So in the product, a slot saved
+mid-mission reached the real career only through FillOut at a win.
+- `Level100WonCareerHandoff.TryApply` is now a static Core function taking the
+  career. It is the only place the Won snapshot is applied, and it returns the
+  snapshot. `RetailFrontendSession.TryAcceptWonHandoff` calls it.
+- The mission keeps no career. `SetSlotSave` (`0x00533900`, which calls
+  `CCareer::SetSlot` at once) now reports `Level100TutorialSlotSaved` with its
+  value. The Godot host forwards that event to the frontend, which stores it at
+  once (`RetailFrontendSession.SaveSlot`).
+- The handoff tests and the chain fixture follow their runs' mission events the
+  same way.
+
+Five mutations were killed, each RED, restored byte-identical and GREEN again
+(`local-data/test-runs/one-career-owner-20260926/mutation-kills/`):
+- the frontend dropping a slot save;
+- `TryApply` ignoring the outcome;
+- `TryApply` ignoring the terminal state;
+- the slot event losing its value;
+- the Won update dropping FillOut's survivors.
+
+Suites: Core 1,477, Client 918 with the two known skips, and the Godot build.
+The Level 100 pins are unchanged (the event's value is not hashed).
 
 ### Retiring the separate World 110 stage — September 26
 
