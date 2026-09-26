@@ -18,8 +18,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// 2,506,752-byte image, so image-initial is 0. Cold sprintf is
 /// therefore <c>V1.00</c>.</para>
 ///
-/// <para><b>Not WinMain.</b> <c>CLTShell::WinMain</c> at
-/// <c>0x005121BF</c> overwrites those globals from
+/// <para><b>Not WinMain.</b> <c>WinMain</c> (<c>0x00512130</c>), at
+/// <c>0x005121BF</c>, overwrites those globals from
 /// <c>VS_FIXEDFILEINFO</c> (specimen resource is 1.0.0.0). This
 /// type does not call <c>GetFileVersionInfo</c>. Image-initial and
 /// the resource agree, so DrawMainMenu can format the image

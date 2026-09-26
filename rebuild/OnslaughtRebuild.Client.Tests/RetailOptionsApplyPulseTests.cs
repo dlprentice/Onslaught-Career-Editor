@@ -22,7 +22,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <c>CRT__FpuIntrinsicDispatch2Thunk</c>: <c>mov edx, 0x00653330 / jmp
 /// 0x00563A10</c>. The table at <c>0x00653330</c> begins
 /// <c>04 66 6D 6F 64</c> (<c>"fmod"</c>) and its first slot is
-/// <c>0x0055E3F4</c> (<c>CRT__FmodCore</c>, <c>fxch / fprem</c>). So
+/// <c>0x0055E3F4</c> (<c>fFMOD</c>, <c>fxch / fprem</c>). So
 /// ST0 = fmod(time, 2.0).</para>
 ///
 /// <para><b>Colour.</b> <c>fmul [0x005D85E0]</c> (2π) /
