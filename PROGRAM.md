@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
+Last updated: 2026-09-26 (RE record audit: labels corrected live, documents corrected; Level 100 and World 110 construction-order contracts; 2026-09-25 Level 100 final-wave contract; 2026-09-23 coupled settings and sound-manager initialization; 2026-09-19 companion P10 native migration; other lanes retain their stated evidence)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -167,29 +167,34 @@ or recorded as an open question with its cheapest falsifier. Still open:
 
 Preserve the aircraft/weapon continuation: pool initialization precedes logger
 resets after parsing; arbitrary warning state, enabled-logger callbacks and
-complete-shot RNG remain unresolved. A read-only frontend review identified
-`00459810` as a card-selection setter and `00465f10` as the outer frontend
-constructor; their saved metadata still needs the scoped byte-backed correction
-workflow. Do not use their old multiplayer/page-ID names as behavior evidence.
-These labels are still wrong in the working project, as its 2026-09-22 export
-(`local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/audio-sample-loading/live-post/functions.tsv`,
-db.18657) shows. Each is disproved by the bytes cited in the named owner, and all
-queue for the same workflow. The tracked 2026-08-31 name table is older still:
-the working project had already renamed `0055dcb0` to `CRT__AsinDispatch_ST0`,
-`00506010` to `CWeapon__Fire` and `004fe710` to `CUnitAI__Init`. Check the live
-export before calling a label wrong.
+complete-shot RNG remain unresolved.
 
-| Address | Saved label | What it is | Owner |
-| --- | --- | --- | --- |
-| `0042efd0` | `CUnitAI__InitDefaults` | Unit profile defaults (turret yaw limit `+0xdc` = 2π) | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#turret-aiming) |
-| `00509c80` | `CBattleEngine__ComputeProjectileMetricFromTargetProfile` | `CWeapon::GetActualMaxRange` | [final wave](reverse-engineering/game-mechanics/level100-final-drone-wave.md#crosshair-and-auto-aim-refresh) |
-| `004f8140` | `Mat34__SetFromEulerDegrees` | Euler matrix from integer angles in units of 2π/4096 | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
-| `0040c2e0` | `CBattleEngine__CanSpawnBurstForResolvedEntry` | `CBattleEngine::WeaponFired` | [burst](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md) |
-| `0040c340` | `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` | `CBattleEngine::RecoilWeapon` | same |
-| `00407940` | `CBattleEngine__RandomizeOffsets4B8_4C0` | `CBattleEngine::AddShockShake` | same |
-| `00407310` | `CBattleEngine__DisplayLock` | is this weapon the current part's weapon | same |
-| `00407a50` | `CBattleEngine__UpdateCameraVectorsAndInput` | `CBattleEngine::UpdateRotation` (builds `+0x3c` from yaw, pitch, roll and the shake terms) | [aiming](reverse-engineering/game-mechanics/battle-engine-aiming.md#launch-position-and-direction) |
-| `004f99b0` | `CUnit__PlayRespawnVoiceCueIfAvailable` | `CUnit::StartPlayingInitNoise` (starts the profile's `+0x34` looping sample; called for every unit after the pre-run) | [construction order](reverse-engineering/game-mechanics/level100-construction-order.md#pre-run-pan-and-the-first-rendered-frame) |
+The RE record audit corrected ten wrong saved labels in the working project on
+2026-09-26 (cohort `label-audit-20260926`, db.18658; see the
+[Ghidra README](reverse-engineering/ghidra/README.md#re-audit-label-corrections--september-26)):
+`0042efd0` `CWorldPhysicsManager__InitUnitRecordDefaults`, `00509c80`
+`CWeapon__GetActualMaxRange`, `004f8140` `Mat34__SetFromEulerUnits4096`,
+`0040c2e0` `CBattleEngine__WeaponFired`, `0040c340` `CBattleEngine__RecoilWeapon`,
+`00407940` `CBattleEngine__AddShockShake`, `00407a50` `CBattleEngine__UpdateRotation`,
+`004f99b0` `CUnit__StartPlayingInitNoise`, `00459810` `CFEPDevSelect__SetCurrentCard`
+and `00465f10` `CFrontEnd__ctor`. `00407310` `CBattleEngine__DisplayLock` was
+queued but is the source name (`BattleEngine.cpp:980-993`). The tracked
+2026-08-31 name table is older than the working project; check the live export
+before calling a label wrong.
+
+The audit found more wrong labels. The first three are verified from bytes; the
+rest are reviewers' leads to re-derive before a cohort:
+
+| Address | Saved label | What it is |
+| --- | --- | --- |
+| `004247a0` | `CGeneralVolume__InitRandomizedVelocityOffsets` | the cockpit's `AddShockShake`, called from `0x00407a22` on `+0x528`; draws only the CRT `rand` |
+| `004d3020` | `CEngine__SetOptionValueAndNotifyTarget` | `CPlayer::SetIsGod` (`Player.cpp:221-242`) |
+| `005335d0` | `IScript__CreateThingRef` | fires the script's `arrived()` event with a boxed `CInt` |
+| `0051b610` | `CFEPMultiplayerStart__SubObj4034_T3` | a member of the startup page, whose vtable RTTI is `CFEPIntro` (lead) |
+| `00513a50` | `CEngine__SetRenderStateCached` | calls the device's `SetTexture` (lead) |
+| `004eb9a0` | `CUnit__InitDefaultTuningBlock` | writes the two terrain `D3DMATERIAL9` records (lead) |
+| `00527c90` | `CReconnectInterface__ctor` | the `landscape_method` CVar constructor (lead) |
+| `0050f680` | `CSpawnerThng__IsSpawnTypeAllowed` | the preserve-size predicate (lead) |
 
 ### RE record audit — requested September 25
 
@@ -206,12 +211,15 @@ on September 25 include:
 
 Order: answer the rebuild and companion lanes' blocking questions first, then
 audit by consumer:
-1. The 26 RE documents the rebuild tree cites.
-2. The save-file documents the companion reads.
-3. The queued Ghidra labels, as one declared cohort through the
-   [promotion gate](reverse-engineering/ghidra/README.md).
+1. The RE documents the rebuild tree cites. Done on 2026-09-26 for 32
+   documents, by six read-only reviewers whose findings were re-derived before
+   any edit; errors were corrected in place and the rebuild and companion lanes
+   were told what touched their code.
+2. The save-file documents the companion reads. Done: the god flags at
+   `0x2496`/`0x249A`, displayable Goodies, the attempts field and others.
+3. The queued Ghidra labels. Done: `label-audit-20260926` (above).
 4. A sample of the factory-drafted contracts, re-derived from pristine bytes,
-   to measure their error rate before any wider pass.
+   to measure their error rate before any wider pass. Not started.
 
 Correct each document in place from the bytes, the pinned source or an
 original-code run; treat existing names, comments and reports as leads, not

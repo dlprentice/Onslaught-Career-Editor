@@ -1,7 +1,7 @@
 # CFrontEnd__Init
 
 Status: mixed — inherited function reference with scoped startup-selector corrections
-Last updated: 2026-09-19
+Last updated: 2026-09-26 (0x00459810 renamed CFEPDevSelect__SetCurrentCard by the RE audit)
 Summary: frontend initialization reference; distinguish developer selection and the separate startup selector from command-line level parsing.
 Source File: `references/Onslaught/FrontEnd.cpp` at `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` | Binary: pristine BEA.exe.original.backup, SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
 
@@ -37,7 +37,7 @@ withdrawn label can tell it was corrected and not lost.
 | --- | --- | --- | --- |
 | `0x0044b060` | `FUN_0044b060` | `CEventManager__Init` | placeholder replaced; this address carries a name now |
 | `0x0044d320` | `FUN_0044d320` | `CFrontEnd__InitPageStateDefaults` | placeholder replaced; this address carries a name now |
-| `0x00459810` | `FUN_00459810` | `CFEPMultiplayerStart__SubObj39B8__QueuePageId` | placeholder replaced; this address carries a name now |
+| `0x00459810` | `FUN_00459810` | `CFEPDevSelect__SetCurrentCard` | placeholder replaced; renamed by the 2026-09-26 RE audit |
 | `0x004687e0` | `FUN_004687e0` | `CFrontEnd__LoadSharedResources` | placeholder replaced; this address carries a name now |
 | `0x004bb8c0` | `FUN_004bb8c0` | `CMusic__PlaySelection` | placeholder replaced; this address carries a name now |
 | `0x004f2150` | `FUN_004f2150` | `CText__Ctor` | placeholder replaced; this address carries a name now |
@@ -222,7 +222,7 @@ Complex logic determines which page to show first:
 | 0x005145f0 | CController__ctor | Object constructor |
 | 0x005159b0 | PlatformInput__ResetKeyStateTables | Unknown |
 | 0x00466ae0 | CFrontEnd__SetPage | Page transition (`SetPage(page,time)`) |
-| 0x00459810 | CFEPMultiplayerStart__SubObj39B8__QueuePageId | Load level |
+| 0x00459810 | CFEPDevSelect__SetCurrentCard | Sets the device-select card when the CLI device-select field is not -1 (`FrontEnd.cpp:178-186`) |
 | 0x004e2c50 | CSoundManager__ReloadLanguageSampleBank | Conditional language sound-bank reload |
 | 0x004f2150 | CText__Ctor | Loop init |
 | 0x004f21f0 | CText__Init | Loop body (5 iterations) |

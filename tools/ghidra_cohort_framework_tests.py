@@ -217,6 +217,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # audio-sample-loading and audio-sample-parameters: two loader names, four
 # formal parameter names and four comment/tag sets; 2026-09-22. Reviewed
 # rehearsal preserves all types/storage/bodies, including the bank char extent.
+# label-audit-20260926: ten names, comments and tag sets corrected by the RE
+# record audit, 2026-09-26. Reviewed rehearsal preserves every prototype,
+# variable, type, body and non-target row; five read-only refusals passed.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -252,6 +255,7 @@ LIVE_GRANTED_COHORTS = [
     "cli-initializer-ownership",
     "audio-sample-loading",
     "audio-sample-parameters",
+    "label-audit-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -693,6 +697,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "cli-initializer-ownership",\n'
         '        "audio-sample-loading",\n'
         '        "audio-sample-parameters",\n'
+        '        "label-audit-20260926",\n'
         "    };\n",
     ),
     (

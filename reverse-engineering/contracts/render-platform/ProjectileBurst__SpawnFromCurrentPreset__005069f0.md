@@ -12,7 +12,7 @@ Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees
 ## Identity
 - Body `[0x005069f0,0x005078ab]`, 3,772 bytes ending in `ret` (`c3`); raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`, recomputed 2026-09-25.
 - Callers: `CWeapon__HandleFireBurstEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
-- The saved names of four Battle Engine callees describe them poorly, both in the tracked table and in the working project's 2026-09-22 export: `CBattleEngine__CanSpawnBurstForResolvedEntry` is `WeaponFired`, `CBattleEngine__RandomizeBurstOffsetsAndAccumulateRange` is `RecoilWeapon`, `CBattleEngine__RandomizeOffsets4B8_4C0` is `AddShockShake` and `CBattleEngine__DisplayLock` tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is already `CRT__AsinDispatch_ST0` in the working project.
+- Three Battle Engine callees had saved names that described them poorly; the RE record audit renamed them in the working project on 2026-09-26: `CBattleEngine__WeaponFired` (was `CanSpawnBurstForResolvedEntry`), `CBattleEngine__RecoilWeapon` (was `RandomizeBurstOffsetsAndAccumulateRange`) and `CBattleEngine__AddShockShake` (was `RandomizeOffsets4B8_4C0`). The tracked 2026-08-31 table still has the old names. `CBattleEngine__DisplayLock` is the source name (`BattleEngine.cpp:980-993`): it tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is `CRT__AsinDispatch_ST0` in the working project.
 
 ## Calling convention
 `__thiscall` with the firing `CWeapon` in `ecx` (kept in `ebp`), no stack arguments, one `ret`. Returns in `eax`.

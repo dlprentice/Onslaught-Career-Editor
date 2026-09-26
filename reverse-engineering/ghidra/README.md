@@ -1,14 +1,14 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-22
+Last updated: 2026-09-26
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[sample-loading correction](#sample-loading-metadata--september-22);
+[RE-audit label correction](#re-audit-label-corrections--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,46 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit label corrections — September 26
+
+The [manifest](../../tools/cohort-specs/label-audit-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/label-audit-20260926.spec.tsv) correct ten
+function names that the RE record audit disproved from the pristine bytes, with
+a comment and tag set each: `0042efd0` `CWorldPhysicsManager__InitUnitRecordDefaults`,
+`00509c80` `CWeapon__GetActualMaxRange`, `004f8140` `Mat34__SetFromEulerUnits4096`,
+`0040c2e0` `CBattleEngine__WeaponFired`, `0040c340` `CBattleEngine__RecoilWeapon`,
+`00407940` `CBattleEngine__AddShockShake`, `00407a50` `CBattleEngine__UpdateRotation`,
+`004f99b0` `CUnit__StartPlayingInitNoise`, `00459810` `CFEPDevSelect__SetCurrentCard`
+and `00465f10` `CFrontEnd__ctor`. `00407310` `CBattleEngine__DisplayLock` was
+queued too but is the source name, so it is excluded.
+
+Exactly ten function names, nonrepeatable comments and tag sets corrected by the RE record audit. All prototypes, storage, parameters, locals, types, bookmarks, instructions, bodies and the 8,321 non-target function rows are preserved.
+Only `commentsSha256` moves among program metrics. All nine live exports
+exactly equal the separately reopened rehearsal; the internal function count
+remains 8,331.
+
+Fresh independent PRE equality and restored read-only opening, isolated
+dry/apply/separate readback, a sealed-spec readback, stale-comment and
+name-collision dry refusals on a second fresh PRE restore, wrong-name, comment
+and tag readback refusals, independent exact-cohort review, live
+dry/apply/separate readback and independent POST restore passed. The review
+first blocked three factual errors in the draft comments (the Euler sine
+rounding, the UpdateRotation state-3 gate and a source range); they were fixed
+and the whole rehearsal re-run before its GO. The live applier's allowlist
+gained this cohort, and the framework's 93 tests pass.
+
+Working identity: `db.18658`, 18 files / 119,016,308 bytes,
+inventory SHA-256 `5b4b4fe9519d44f217464f7533ca8fee254f970e556687f56cff411c12dffc00`; main database
+68,714,496 bytes, SHA-256 `e1d1f5be5af284466810afb9cc217b59e72a736172b14ac6f25c2e605baf7b02`.
+PRE was the freshly matched sample-loading POST. Independent POST:
+`/srv/archive-a/onslaught-ghidra-cold/2026-09-26-label-audit/post-working`.
+It was copied, hash-compared, restored elsewhere and reopened read-only.
+The reviewed tracked checkpoint remains exactly `745c00ad…`; no refresh.
+
+Private owner: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/label-audit/`.
+`completion.json` records the exact live readback, recovery receipts and full
+export hashes. Current name lookup composes the new manifest.
 
 ## Historical Windows live-ceremony contract (suspended)
 
