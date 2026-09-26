@@ -199,9 +199,9 @@ unchecked write fallback, and normal Godot .NET exports bundle their runtime.
 **Evidence:** the lane's commit messages from 2026-09-26 record each check: `npm test`
 (one C# contract suite inside headless Godot, including the portable write path run on
 Linux, and the launcher's own cases), renders of every screen at 1280×800 and 1920×1080
-reviewed first-hand (the problems that review found are fixed and covered by tests), and
-Linux and Windows packages exported, with the Linux package started and quit cleanly
-under an isolated home. The earlier approved-workflow receipts are
+reviewed first-hand, the problems that review found fixed, covered by tests, re-rendered and
+reviewed again, and Linux and Windows packages exported, with the Linux package started and
+quit cleanly under an isolated home. The earlier approved-workflow receipts are
 in [their validation section](VALIDATION.md#companion-approved-workflows--september-26) and
 the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
 **Windows execution (the portable write path has run only on Linux), a human click-through

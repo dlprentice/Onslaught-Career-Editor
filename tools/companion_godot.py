@@ -372,9 +372,12 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
 
 def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: str, timeout: float | None,
                     env: dict[str, str], output: Path, script: str = "Development/ScreenCapture.cs",
-                    extra: list[str] | None = None) -> Path:
+                    extra: list[str] | None = None, beside: bool = False) -> Path:
     # godot-offscreen renders on a hidden Hyprland output behind the machine-wide GPU lock;
-    # the capture entry draws each screen through fixed-size SubViewports.
+    # the capture entry draws each screen through fixed-size SubViewports. With beside=True the run gets
+    # its own hidden output and a lock of its own, so it renders next to another GPU job instead of
+    # queuing behind it (David, 2026-09-26: the companion is light enough; its Compatibility renderer
+    # ran on the Intel iGPU through Mesa while a film rendered on the NVIDIA card).
     offscreen = shutil.which(os.path.expanduser(offscreen_tool))
     if offscreen is None:
         raise RuntimeError(f"godot-offscreen was not found: {offscreen_tool}")
@@ -384,7 +387,11 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
     if entry.is_absolute() or ".." in entry.parts or entry.suffix != ".cs" or not (project / entry).is_file():
         raise RuntimeError("--capture-script must name an existing relative C# capture entry")
     captures = output / "captures"
-    run_logged([offscreen, "--path", str(project), "--qa", str(output / "offscreen"),
+    wrapper: list[str] = []
+    if beside:
+        wrapper = ["--output", "COMPANION-" + output.name.rsplit("-", 1)[-1].replace("_", "-")]
+        env = {**env, "GODOT_GPU_LOCK": str(output / "companion-gpu.lock")}
+    run_logged([offscreen, *wrapper, "--path", str(project), "--qa", str(output / "offscreen"),
                 "--timeout", str(int(timeout or 900)), "--done-marker", "^CAPTURES_DONE", "--",
                 "--script", "res://" + entry.as_posix(), "--",
                 f"--output={captures}", f"--fixture={fixture}", f"--sizes={sizes}", *(extra or [])],
@@ -410,6 +417,8 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--offscreen", default="~/.local/bin/godot-offscreen", help="shared hidden-output GPU runner")
     parser.add_argument("--capture-script", default="Development/ScreenCapture.cs", help="C# capture entry (a SceneTree)")
     parser.add_argument("--capture-arg", action="append", default=[], help="argument for the capture entry, e.g. --capture-arg=--steam-root=DIR")
+    parser.add_argument("--beside-gpu-jobs", action="store_true",
+                        help="capture on its own hidden output and lock, next to another GPU job instead of queuing behind it")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
         parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
@@ -440,7 +449,7 @@ def companion_main(argv: list[str] | None = None) -> int:
             return 0
         if args.mode == "capture":
             capture_screens(project, copy_fixture(args.fixture, output), args.offscreen, args.sizes, args.timeout, env,
-                            output, args.capture_script, args.capture_arg)
+                            output, args.capture_script, args.capture_arg, beside=args.beside_gpu_jobs)
             return 0
         if args.mode == "export":
             licenses = prepare_package_licenses(engine, project, env, output)

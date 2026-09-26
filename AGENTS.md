@@ -71,7 +71,9 @@ To resume a lane, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Care
   `npm run check:rebuild`, the whole gate in one command (`-- --only core,client` runs a subset; VALIDATION.md
   lists the individual commands).
 - Companion, in `$REPO/.worktrees/companion-csharp-20260925`: `npm run build` and `npm test`;
-  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen`; `npm run dev` opens a window.
+  `npm run capture:companion-godot` renders every screen at two sizes through `godot-offscreen` (add
+  `-- --beside-gpu-jobs` to render beside another project's GPU job on its own output and lock); `npm run dev`
+  opens a window.
 
 There are no other branches. The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera
 draft. Unique ignored data from the retired companion and remote-review worktrees is in

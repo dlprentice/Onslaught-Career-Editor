@@ -222,7 +222,7 @@ class CompanionLauncherTests(unittest.TestCase):
     def test_capture_runs_the_csharp_entry_through_the_offscreen_runner(self)->None:
         offscreen=self.root/"bin/godot-offscreen"
         offscreen.write_text(f"#!{sys.executable}\nimport json,os,pathlib,sys\n"
-            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':'godot-offscreen','args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'old_bridge':None})+'\\n')\n"
+            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':'godot-offscreen','args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'lock':os.environ.get('GODOT_GPU_LOCK'),'old_bridge':None})+'\\n')\n"
             "out=pathlib.Path(next(a.split('=',1)[1] for a in sys.argv if a.startswith('--output=')))\n"
             "out.mkdir(parents=True); (out/'1280x800-01-home.png').write_bytes(b'png')\n"
             "print('CAPTURES_DONE 1 screens')\n",encoding="utf-8")
@@ -232,8 +232,16 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertEqual(0,code)
         call=next(call for call in self.calls_read() if call["tool"]=="godot-offscreen")
         self.assertIn("res://Development/ScreenCapture.cs",call["args"]);self.assertIn("--done-marker",call["args"])
+        self.assertNotIn("--output",call["args"]);self.assertIsNone(call["lock"])
         fixture=Path(next(a.split("=",1)[1] for a in call["args"] if a.startswith("--fixture=")))
         self.assertNotEqual(fixture,self.fixture);self.assertEqual(self.fixture.read_bytes(),fixture.read_bytes())
+        # Beside another GPU job: its own hidden output and a lock of its own inside its output directory.
+        with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+            code=host.companion_main(["capture","--beside-gpu-jobs","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)])
+        self.assertEqual(0,code)
+        beside=[call for call in self.calls_read() if call["tool"]=="godot-offscreen"][-1]
+        self.assertEqual("--output",beside["args"][0]);self.assertRegex(beside["args"][1],r"^COMPANION-[A-Za-z0-9-]+$")
+        self.assertTrue(beside["lock"].endswith("/companion-gpu.lock"));self.assertNotEqual(beside["lock"],"/var/tmp/godot-gpu.lock")
         with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(2,host.companion_main(["capture","--sizes","big","--engine",str(self.engine),"--shared-lock",str(self.lock),"--offscreen",str(offscreen)]))
             for script in ("/abs/Capture.cs","Development/Missing.cs","../Capture.cs"):
