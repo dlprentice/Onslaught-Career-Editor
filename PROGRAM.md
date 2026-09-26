@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: third game-label cohort promoted; NvTriStrip source divergences re-derived; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: third game-label and NvTriStrip cohorts promoted; library-comment review next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -230,29 +230,43 @@ SP6 match because the game links an older runtime build (the `asin`/`acos`/`pow`
 
 Of the 391 `CFastVB__` labels: 326 were D3DX code (named); 6 are the game's `FastVB.cpp` code
 (`0x0051a270`-`0x0051a6a0`) and 2 their unwind funclets (step 3); 57 are NVIDIA's NvTriStrip with its STL
-containers (below).
+containers, now corrected as part of the 72-function cohort below.
+
+The [NvTriStrip cohort](reverse-engineering/ghidra/README.md#re-audit-nvtristrip-library-identities--september-26)
+is live, with independent POST recovery restored and reopened. Its 72 structural
+identities distinguish the linked library and VC6 STL from game classes. These
+are not byte-identical compiled-library matches. Pristine instructions establish
+four-argument GenerateStrips and CreateStrips interfaces, two-byte retail index
+storage and 24-byte faces; the later reference has different interfaces and a
+fake-face field. The former triangle-equivalence predicate instead returns an
+unmatched vertex index or -1; the supposed degenerate-output flag is cache size,
+initially 16. Fifteen living contracts and the PrimitiveGroup constructor note
+now state the re-derived behavior and limits. Prototypes, bodies, instructions,
+types and all non-target function rows are preserved.
+
+The first sealed rehearsal remains in `library-nvtristrip/rejected-v1/` because
+FindOtherFace's comment omitted the possibility of a null selected face pointer.
+The corrected seal repeated PRE, rehearsal, refusal controls and review before
+live application. Its source graph has 69 compatible edges and two exact
+return-size exceptions; the 37 absent/transitive-call notes are comparison
+limitations, not 37 proven behavioral differences. This is no runtime/rendering
+acceptance claim.
 
 Remaining prepared work is in
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`.
 Each folder reads its predecessor's POST through `cohort_chain.py`; drafts are
 leads to re-derive, not approved mutation manifests.
-1. `library-nvtristrip/`: proposed identities for 72 saved functions in
-   `0x0056eb50`-`0x00574270`. The renewed review has already corrected assumptions
-   in its private `plan.py`: retail `GenerateStrips` receives four arguments while
-   the reference has five; retail index storage is two-byte while that source's
-   `WordVec` uses `long WORD`; retail face allocations are 24 bytes, without the
-   later `m_bIsFake` field. Three GetNextIndex calls are active in the source;
-   two others are comments. The source graph checks compatibility, not unique
-   identity; distinguish look-alike bodies before sealing. Its exception check
-   now binds exact contradictions, rejecting extra edge problems even at an
-   address with an admitted return-size mismatch. No NvTriStrip correction has
-   been promoted. Finish per-row evidence and the independent check, adapt its
-   live/finish scripts, then use the promotion gate.
-2. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose
+1. `library-verified/`: a comment-and-tag cohort (no renames) for library rows whose
    saved names are proven but whose comments are old or wrong: the 60 names that
    were right before the audit, and D3DX-cohort comments the CRT review showed are
    wrong (`0x00574577`, `0x00574abb` cite unlinked objects; `0x00589094` omits a
-   folded copy). Extend and independently check its draft before sealing.
+   folded copy). Extend and independently check its draft before sealing; do not
+   skip a row merely because it already has an audit tag. First fix and test
+   library ownership's unchecked section order and unreliable layout anchors;
+   re-run the current matcher rather than reuse older proof text. Its folded
+   representative can also differ from the proven owners. These tooling defects
+   are reproduced with synthetic inputs; their real-row consequences still
+   require fresh matching and independent evidence.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100

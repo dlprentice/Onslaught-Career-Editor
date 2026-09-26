@@ -211,7 +211,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # keeps its earlier note as a marked lead). Reviewed the same way.
 # Third RE-audit label cohort: eight current/eight proposed analytic comments
 # (4,178/7,871 decoded bytes), reviewed with the same exact-content boundary.
+# NvTriStrip identity cohort: 71 current/72 proposed analytic comments
+# (38,389/80,580 decoded bytes), reviewed with the same exact-content boundary.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/library-nvtristrip-20260926.manifest.tsv":
+        "183c67901469967fe26220a1d3701925911e05d71aef55d23482de39bb96540d",
     "tools/cohort-specs/label-audit-3-20260926.manifest.tsv":
         "438b81bf3d28799f59b8190d0ff3f34d20bed7cddb729aea424590e4e4ce50bc",
     "tools/cohort-specs/library-crt-20260926.manifest.tsv":

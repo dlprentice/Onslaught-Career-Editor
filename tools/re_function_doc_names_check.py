@@ -136,6 +136,8 @@ CURRENT_LIBRARY_CRT_OVERLAY = REPO_ROOT / "tools/cohort-specs/library-crt-202609
 CURRENT_LIBRARY_CRT_OVERLAY_SHA256 = "b1292f792373f16b2e3cc8bd80e8abeed191cf90decbef6fb6d47cec7eb67b63"
 CURRENT_LABEL_AUDIT_3_OVERLAY = REPO_ROOT / "tools/cohort-specs/label-audit-3-20260926.manifest.tsv"
 CURRENT_LABEL_AUDIT_3_OVERLAY_SHA256 = "438b81bf3d28799f59b8190d0ff3f34d20bed7cddb729aea424590e4e4ce50bc"
+CURRENT_LIBRARY_NVTRISTRIP_OVERLAY = REPO_ROOT / "tools/cohort-specs/library-nvtristrip-20260926.manifest.tsv"
+CURRENT_LIBRARY_NVTRISTRIP_OVERLAY_SHA256 = "183c67901469967fe26220a1d3701925911e05d71aef55d23482de39bb96540d"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -856,6 +858,11 @@ def run(
                 table, CURRENT_LABEL_AUDIT_3_OVERLAY,
                 expected_sha256=CURRENT_LABEL_AUDIT_3_OVERLAY_SHA256,
                 expected_rows=8, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_LIBRARY_NVTRISTRIP_OVERLAY,
+                expected_sha256=CURRENT_LIBRARY_NVTRISTRIP_OVERLAY_SHA256,
+                expected_rows=72, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

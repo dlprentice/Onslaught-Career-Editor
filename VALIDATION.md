@@ -3837,6 +3837,47 @@ This is static RE and metadata/recovery validation. It runs no Godot and
 establishes no additional retail-play, audio, GPU or Windows acceptance.
 
 
+## NvTriStrip RE identities and contracts — September 26
+
+`library-nvtristrip-20260926` corrects 72 function names/comments/tag sets and
+re-derives fifteen library contracts plus the PrimitiveGroup constructor note.
+Evidence uses pristine specimen SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Private commands, logs and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-nvtristrip/`.
+
+Executed locally:
+
+- `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+  `compare_exports.py rehearsal-post`: fresh PRE restore, 72 exact metadata
+  changes, 8,259 untouched function rows, 7,670 preserved instruction rows and
+  21,680 specimen-matched body bytes. Prototypes, storage, types, variables and
+  bookmarks remain unchanged. One previously default-named function gains a name
+  and previously absent comment.
+- `negative_controls.py`: stale comment/name collision refused on fresh PRE;
+  wrong name/comment/tags refused on rehearsal readback. Five refusals, zero
+  project-byte changes. The first seal was rejected for FindOtherFace's
+  incomplete null-return wording and remains under `rejected-v1/`; its replacement
+  repeated preservation, rehearsal and independent review.
+- Root reproduction and independent read-only review; `apply_live.py`: live
+  dry/apply/separate readback passed, with nine exports exactly equal to rehearsal.
+  `finish.py`: Archive A POST copied, independently restored, opened read-only
+  and byte-matched to live. The tracked checkpoint remains unchanged.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+  The name-checker and public-payload self-tests passed.
+- `npm run test:docs`: passed, 2,062 name assertions and zero drift or unresolved
+  assertions. Its initial failures identified a missing provenance trailer in
+  the rewritten constructor note; the final note names its reference and binary.
+  `npm run test:safety`: passed, 4,099 public candidate files with submodules.
+  `git diff --check`: passed. Logs are `docs-gate-complete.log`,
+  `safety-gate.log` and `diff-check.log` in the private owner above.
+
+The source comparison has 69 compatible call edges and two precisely admitted
+return-size differences. Its 37 absent/transitive-call notes are limitations,
+not additional behavioral findings. Structural identity and bounded static
+contracts do not certify the saved prototypes, full library behavior or retail
+rendering. No Godot, desktop input or runtime acceptance was performed.
+
 ## Remote source review — 2026-09-09 (execution pending)
 
 The following is the September 9 remote handoff record; its host execution is
