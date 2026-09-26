@@ -1,5 +1,12 @@
 # Kill Tracking System
 
+Status: active reference; the top-byte notes are corrected to the byte-level rule in [save-format.md](save-format.md#kill-counters-and-slots)
+Last updated: 2026-09-25
+Summary: kill categories, 24-bit counts and their Goodie thresholds; the first two counters' top byte is a front-end screen offset that Load resets to 0 when out of range.
+Evidence: MEASURED for the 24-bit mask and the top-byte rule (pristine bytes `0x0041C16B`, `0x0042126a`-`0x00421280`, `0x004218f0`-`0x00421960`); SOURCE for the kill categories (`Player.h`); thresholds per the cited Goodie owner.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 ## Kill Types (from source: EKilledType - Player.h)
 
 **TK = "Thing Killed"** - Confirmed via `GetNumEnemyThingKilled()` and `KilledEnemyThing()` in Player.cpp. Categorizes enemy units destroyed by type. NOT "Team Kill" (no friendly fire tracking in codebase).
@@ -68,9 +75,9 @@ For kill counters, there are two common ways you'll see offsets discussed:
 
 Binary checks and unlock logic use (in-memory dwords):
 - `kills_payload = (kill_dword & 0x00FFFFFF)` (24-bit integer payload)
-- `meta = (kill_dword >> 24)` (top byte, treated as signed-with-bias and clamped for the first two counters)
+- `meta = (kill_dword >> 24)` (top byte; for the first two counters a front-end screen offset `meta - 0x80` that Load resets to 0 when outside ±0x40)
 
-This matches `CCareer__Load` (clamps only the top byte and preserves the lower 24 bits) and `CCareer__UpdateGoodieStates` (masks with `& 0x00FFFFFF` before comparing to threshold ints like 25/50/75/100, 100/200/300/400, etc).
+This matches `CCareer__Load` (rewrites only the first two counters' top byte and preserves the lower 24 bits) and `CCareer__UpdateGoodieStates` (masks with `& 0x00FFFFFF` before comparing to threshold ints like 25/50/75/100, 100/200/300/400, etc).
 
 ### File Offsets (On-Disk)
 
@@ -95,10 +102,10 @@ This matches `CCareer__Load` (clamps only the top byte and preserves the lower 2
 - Per-level counts live in `g_LevelKillCounts` (`0x00672e30`) and are added into CCareer totals during `CCareer__UpdateThingsKilled`.
 - Helper at `0x0041c160` returns `(*(this + 0x23f4 + idx*4) & 0x00FFFFFF)` (raw lower 24-bit value).
 - `CCareer__UpdateGoodieStates` (`0x0041c470`) reads kill-related globals (e.g., `g_Career_mThingsKilled` at `0x00662a14` and adjacent addresses) to decide goodie unlocks.
-- `CCareer__Load` (`0x00421200`) clamps the **top byte** for offsets `0x23f4` and `0x23f8`, preserving the lower 24 bits.
+- `CCareer__Load` (`0x00421200`) rewrites the **top byte** for career offsets `0x23f4` and `0x23f8` (file `0x23F6`/`0x23FA`): an offset `byte - 0x80` outside ±0x40 becomes 0 (`0x0042126a`-`0x00421280`), preserving the lower 24 bits.
 - `CCareer__GetKillCounterTopByte_23F8` (`0x00421900`) and setters at `0x00421910` / `0x00421940` manipulate only the top byte (bias 0x80).
 
-These imply the binary treats kill totals as **lower 24-bit values**, with the top byte used for range/metadata (clamped to a signed-bias range around `0x80`).
+These imply the binary treats kill totals as **lower 24-bit values**, with the first two top bytes holding a biased front-end screen offset (out-of-range values reset to `0x80`).
 
 **Observed save values (retail .bes):**
 - Aligned view @ `0x23F4`: `0x005F0000` => 95 kills (`>> 16`)

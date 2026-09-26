@@ -1,7 +1,7 @@
 # World 110 serialized initial-object seed admission
 
 Status: accepted authored-data and bounded Unit static admission; runtime construction remains open
-Date: 2026-09-07
+Last updated: 2026-09-25 (Turret 03 fire-control correction; construction admission dated 2026-09-07)
 Verdict: Core admits all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
@@ -698,7 +698,17 @@ Weapon and mode source ordinals are 88 and 50; slot 0 selects mode 50 and the
 remaining slots are -1. Constructor defaults retain charge rate 2, consumption
 1, store/zoom zero and AdjustAim one. The new weapon remains active despite its
 inactive Unit. It uses the same charge/selection owners and effect-list nodes
-as the repair weapon. No barrel/part inspection or fire-control event is enabled.
+as the repair weapon.
+
+**Correction (2026-09-25).** Barrel inspection does run for this row. The profile's
+turret turn rate is 0.0698 (`CUnitTurretTurnRate` stores profile `+0xbc`,
+`0x00432b17`), and the `GunA` selector-1 emitter part `Emit01` has parent `barrel`
+in `m_ft_sam`. Unit Init therefore sets `+0x224`, the barrel pointer `+0x220` and
+rest angle `+0xf4`; the SAT has no `turret` ancestor, so weapon `+0x94` stays zero.
+The unconditional fire-control call at `0x004f90ce` then takes one shared draw and
+queues event 4001 before the final 4003 request. An original-code control of the
+unchanged inspection range and refresh body passed 21 cases; see the
+[Level 100 final-wave contract](level100-final-drone-wave.md#fire-control-control).
 
 The exact mesh `m_ft_sam.msh.aya` hashes to
 `9a82f27454863c19c05a8cdedcc99cc05300aed75b8e54467a980c94bf5ba4a2`:
@@ -719,7 +729,9 @@ owners. The combined prefix has **1,491 spatial entries, 1,513 pending events,
 four Units, 64 segments, eight empty effect nodes and ten occupancy members**.
 Named and Unit lists contain only the first four actors. Big-list tail order
 is factory, then BSWD Features 4/5/6/8. Actor draw count is ten after the 1,481
-tree draws. SAT's five events are collision, Actor, Unit4003, animation, AI;
+tree draws. SAT's events are collision, Actor, fire-control 4001, Unit4003, animation, AI;
+the counts above predate the 2026-09-25 correction and omit that 4001 event and
+its draw.
 Features append collision then Actor events to the same immediate FIFO bucket.
 
 The six `RetailWorld110CannonFeatureConstructionTests` check these connected

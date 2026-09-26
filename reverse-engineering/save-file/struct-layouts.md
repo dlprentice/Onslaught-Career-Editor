@@ -1,5 +1,12 @@
 # Struct Layouts Reference
-> Complete memory map of BES save file format
+
+Status: superseded in part — [save-format.md](save-format.md) owns the supported layout; this December 2025 map is retained for reference
+Last updated: 2026-09-25
+Summary: memory map of the 10,004-byte BES file compiled from Ghidra analysis, source and testing; the `0x0002` field and kill-counter top-byte notes are corrected to the September rechecks.
+Evidence: MEASURED for the corrected `0x0002` and kill-counter top-byte notes (pristine bytes `0x0042126a`-`0x00421280` and the September original-code reset control); the rest keeps its December 2025 evidence, partly INFERRED.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > Compiled December 2025 from Ghidra analysis, source code, and testing
 
 ## BES File Structure (Steam Build, Fixed 10,004 Bytes)
@@ -9,7 +16,7 @@
 | Offset | Size | Content                                 |
 +--------+------+-----------------------------------------+
 | 0x0000 |    2 | Version word (0x4BD1)                   |
-| 0x0002 |    4 | new_goodie_count (CCareer +0x0000)      |
+| 0x0002 |    4 | pending extra Goodies (CCareer +0x0000) |
 | 0x0006 | 6400 | CCareerNode[100] (64 bytes each)        |
 | 0x1906 | 1600 | CCareerNodeLink[200] (8 bytes each)     |
 | 0x1F46 | 1200 | CGoodie[300] (4 bytes each)             |
@@ -166,7 +173,7 @@ struct KillCounters {
 
 **Important (Feb 2026):** BEA.exe bulk-copies CCareer from `source + 2`, so the **true in-memory dwords** for these counters live at file offsets `0x23F6/0x23FA/0x23FE/0x2402/0x2406`. The binary uses:
 - `kills_payload = (dword & 0x00FFFFFF)` (24-bit integer count)
-- `meta = (dword >> 24)` (top byte; clamped for the first two counters on load)
+- `meta = (dword >> 24)` (top byte). For the first two counters it is a front-end screen offset `meta - 0x80`; Load resets an offset outside ±0x40 to 0 (`meta = 0x80`), not to the nearest limit (`0x0042126a`-`0x00421280`)
 
 **Legacy aligned-view note:** If you view the file at 4-byte aligned offsets (`file_off % 4 == 0`), you’ll see these counters “starting” at `0x23F4` due to the 2-byte header shift. Do not interpret that view as an actual `value << 16` encoding.
 
