@@ -1,5 +1,11 @@
 # The terrain material record and the `LANDSCAPE_LIGHTING` gate — both loose ends are live
 
+Status: active static contract
+Last updated: 2026-09-26 (RE audit: stage-0 ALPHAOP is DISABLE; the shipped per-GPU tweak file overrides the defaults; the reference count)
+Summary: the terrain draw's material record, the LANDSCAPE_LIGHTING and landscape_method defaults, and the resulting lighting factor; the per-GPU tweak file can override both defaults.
+Evidence: MEASURED — pristine instructions and the shipped `cardid.txt`; the runtime shadow read is cited in section 5.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; `cardid.txt` SHA-256 prefix `9855bf65364050d1`.
+
 > Verdict: **the two loose ends interlock exactly as suspected, and together they
 > are a flat, coloured, terrain-specific multiplicative factor applied outside
 > the macro cache and outside the shipped texture stages.** The terrain-only
@@ -72,8 +78,9 @@ two-element material array.**
 it), so it is zero at load and holds its values only at runtime.
 
 A whole-**file** scan of all 2,506,752 bytes for every little-endian dword in
-`[0x0083d248, 0x0083d310)` returns **33 hits, all in `.text`, and only four
-distinct addresses**:
+`[0x0083d248, 0x0083d310)` returns **33 hits, all in `.text`**. One is a
+coincidental encoding (`e9 d2 83 00 00`, `jmp 0x5c9c66` at `0x005c188f`, read as
+`0x0083d2e9`); the other 32 fall on **four distinct addresses**:
 
 | address | occurrences | form |
 | --- | ---: | --- |
@@ -180,8 +187,15 @@ default straight into `[this+0xc]`:
 
 and `0x00544690` passes `PUSH 0x1`. So the earlier conclusion inverts on this
 byte: `RenderTerrain`'s lighting-disable at `0x005455a2` is gated on
-`LANDSCAPE_LIGHTING == 0`, and the shipped default is **1**, so
-**`D3DRS_LIGHTING` is left enabled for the terrain draw.**
+`LANDSCAPE_LIGHTING == 0`, and the default is **1**, so
+**`D3DRS_LIGHTING` is left enabled for the terrain draw** unless the shipped
+per-GPU table overrides it. The installer ships `cardid.txt`, and its ATI
+Radeon 9700 section (devices 4145, 4146, 4E44, 4E64, 4E45 and 4E65) sets
+`Tweak:LANDSCAPE_LIGHTING 0` (line 49). The executable applies a `Tweak:` line
+to the named CVar when a `Device:` line has matched: the handler at
+`0x005289a6-0x00528a5f` matches `Tweak:` (`0x0064bd60`) case-insensitively,
+parses `%s %f`, and walks the CVar registry `[0x0089c018]` with `_stricmp`
+(`0x00568390`). On those cards the terrain draws unlit.
 
 The same value chooses the stage op at `0x00545675`. Taking the second gate
 site in full:
@@ -218,7 +232,7 @@ The two branches are a coherent pair: *lighting off* means plain
 ```
 00545699  SetTextureStageState(0, D3DTSS_COLORARG1 = 2, D3DTA_TEXTURE = 2)
 005456a8  SetTextureStageState(0, D3DTSS_COLORARG2 = 3, D3DTA_DIFFUSE = 0)
-005456b6  SetTextureStageState(0, D3DTSS_ALPHAOP   = 4, D3DTOP_SELECTARG1 = 1)
+005456b6  SetTextureStageState(0, D3DTSS_ALPHAOP   = 4, D3DTOP_DISABLE    = 1)
 005456c5  SetTextureStageState(0, D3DTSS_ALPHAARG1 = 5, D3DTA_TEXTURE = 2)
 ```
 
@@ -231,7 +245,11 @@ So stage 0 is **texture x vertex diffuse**, doubled.
 `0x00511fe0` with name **`USE_MODULATE_2X`** (`0x0063dc24`) and **default 1**. It
 is cleared only at `0x0051270f`, on the branch taken when
 `[caps + 0x32f34] & 0x10` is absent — `D3DTEXOPCAPS_MODULATE2X`. On retail
-hardware the flag stands and `landscape_method` keeps its default 2.
+hardware the flag stands and `landscape_method` keeps its default 2, except
+where `cardid.txt` sets `Tweak:LANDSCAPE_METHOD 0`: the 3dfx Voodoo 5500 and
+Voodoo 3 (line 250) and the S3 Savage4, Savage MX, ProSavage4 and Savage2000
+(line 683). The NVIDIA section has neither tweak, so this note's factor applies
+to unlisted adapters such as the NVIDIA capture host.
 
 ## 3. `ApplyCachedLight`'s third argument is `D3DLIGHT9.Ambient`
 
@@ -273,7 +291,7 @@ argument decides **only** whether that triple is also promoted into the light's
 ```
 005454ae  PUSH 0; ECX=0x00855bb0; CALL 0x00513af0   ; stage 0 COLOROP := MODULATE2X
 005454ba  PUSH 1; ECX=0x00855bb0; CALL 0x00513af0   ; stage 1 COLOROP := MODULATE2X
-005454c6  PUSH 1; PUSH 4; PUSH 0; CALL 0x00513820   ; stage 0 ALPHAOP := SELECTARG1
+005454c6  PUSH 1; PUSH 4; PUSH 0; CALL 0x00513820   ; stage 0 ALPHAOP := DISABLE (1)
 005454d6  MOV  EAX, [0x00888a50]
 005454db  MOV  dword [0x009c68a8], 0x0              ; D3DRS_AMBIENT := 0
 005454e5  MOV  byte  [0x009c690c], 0x1
@@ -429,6 +447,16 @@ Two things distinguish this from the candidates rejected in
   −3.0% / −3.3%.
 
 ## 7. The residual, stated rather than closed
+
+**An omitted step in the promotion argument (RE audit, 2026-09-26).** Before
+the draw, `RenderTerrain` flushes pending device state (`0x00550d50(0, 1)` at
+`0x00545a13`). That flush re-uploads every light whose dirty byte is set, with
+the Ambient term zeroed. The promotion to Ambient therefore survives only if
+those bytes are clear at the draw; a reviewer traced them being cleared by the
+sky pass's earlier flush, which this note has not re-derived. Cheapest
+falsifier: at `0x00545a18`, read `0x009c68fc`-`0x009c6903` (expect all 0) and
+`0x009c68ad` (expect 1).
+
 
 The prediction is uniformly **3.6–4.6% low**. Bounds on that gap:
 
