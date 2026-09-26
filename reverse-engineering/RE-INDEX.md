@@ -994,6 +994,7 @@ flat inventory.
 | Battle Engine auto-aim, launch position and cockpit Gun emitters | [battle-engine-aiming.md](game-mechanics/battle-engine-aiming.md) |
 | Level 100 construction order: shared draws, queued events and the first event flush | [level100-construction-order.md](game-mechanics/level100-construction-order.md) |
 | World 110 construction order, the Level 100 to World 110 transition, first flush and player start | [world-110-construction-order.md](game-mechanics/world-110-construction-order.md) |
+| Named waypoint paths: loading, start node, following and the Level 100 and World 110 routes | [waypoint-paths.md](game-mechanics/waypoint-paths.md) |
 | CMSH `CPOS`/`CORI` identity | [cmsh-cpos-cori-identity-2026-07-25.md](binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) |
 
 Machine-readable siblings, for consumers that should not be parsing prose:
