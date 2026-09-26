@@ -15,6 +15,10 @@ public sealed partial class StaticAnimationChecks : Node
     private const string ScriptPath = "res://Scenes/World/static_world_animation.gd";
     private int _checks;
     private readonly List<string> _sections = [];
+    // --write-golden=PATH records every legacy expectation, with its exact
+    // inputs, for the GDScript port (Scenes/World/static_animation_checks.gd).
+    private readonly Godot.Collections.Array _golden = [];
+    private Godot.Collections.Array? _rigSteps;
 
     public override async void _Ready()
     {
@@ -31,6 +35,9 @@ public sealed partial class StaticAnimationChecks : Node
             _sections.Add("native_admission_detachment_and_lifetime");
             Check(Input.MouseMode == pointer, "Static animation never acquires pointer ownership.");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            string? golden = OS.GetCmdlineUserArgs().Where(arg => arg.StartsWith("--write-golden=", StringComparison.Ordinal))
+                .Select(arg => arg["--write-golden=".Length..]).SingleOrDefault();
+            if (golden is not null) System.IO.File.WriteAllBytes(golden, GD.VarToBytes(_golden));
             GD.Print("STATIC_ANIMATION_CHECKS: " + System.Text.Json.JsonSerializer.Serialize(new
             {
                 completed = true, checks = _checks, failures = 0, sections = _sections,
@@ -61,7 +68,9 @@ public sealed partial class StaticAnimationChecks : Node
                 values[word] = BitConverter.UInt32BitsToSingle(bits);
             }
             var frame = new Level100RigidFrame(values[..9], values[9..]);
-            CompareTransform(LegacyDriver.ToObjSpaceTransform(frame),
+            Transform3D legacy = LegacyDriver.ToObjSpaceTransform(frame);
+            Record(new() { ["kind"] = "transform", ["frame"] = RawFrame(frame), ["expected"] = TransformWords(legacy).Select(word => (long)word).ToArray() });
+            CompareTransform(legacy,
                 Level100StaticWorldAnimationDriver.ToObjSpaceTransform(frame), $"raw transform {sample}");
         }
         foreach (Level100RigidFrame frame in new[]
@@ -73,12 +82,16 @@ public sealed partial class StaticAnimationChecks : Node
             new Level100RigidFrame(new float[10], new float[2]),
         })
         {
-            CompareFailure(Catch(() => _ = LegacyDriver.ToObjSpaceTransform(frame)),
+            Exception? legacy = Catch(() => _ = LegacyDriver.ToObjSpaceTransform(frame));
+            Record(new() { ["kind"] = "transform", ["frame"] = RawFrame(frame), ["expected_error"] = Error(legacy) });
+            CompareFailure(legacy,
                 Catch(() => _ = Level100StaticWorldAnimationDriver.ToObjSpaceTransform(frame)),
                 "Static converter null/short arrays retain the original read order.");
         }
         Level100RigidFrame extra = new(Enumerable.Range(0, 11).Select(i => (float)i).ToArray(), [1, 2, 3, 4]);
-        CompareTransform(LegacyDriver.ToObjSpaceTransform(extra),
+        Transform3D trailing = LegacyDriver.ToObjSpaceTransform(extra);
+        Record(new() { ["kind"] = "transform", ["frame"] = RawFrame(extra), ["expected"] = TransformWords(trailing).Select(word => (long)word).ToArray() });
+        CompareTransform(trailing,
             Level100StaticWorldAnimationDriver.ToObjSpaceTransform(extra), "Unused trailing frame words");
     }
 
@@ -89,18 +102,18 @@ public sealed partial class StaticAnimationChecks : Node
             0.001f, 0.125f, 0.9999f, 1.0001f, 6.5f, 123456.75f, float.MaxValue, 0.05f];
         foreach (int fps in new[] { 20, 0, -1, int.MinValue, int.MaxValue })
         {
-            using var rig = new Rig(fps, [Spec.Loop(26), Spec.Loop(25), Spec.Loop(10),
+            using var rig = NewRig(fps, [Spec.Loop(26), Spec.Loop(25), Spec.Loop(10),
                 Spec.Loop(0), Spec.Loop(-7), Spec.Loop(31) with { Playback = 1 },
                 Spec.Loop(17) with { Playback = int.MinValue }]);
             CompareState(rig, $"fps {fps} initial");
             foreach (float delta in deltas) Step(rig, delta, $"fps {fps}");
         }
-        using (var empty = new Rig(20, []))
+        using (var empty = NewRig(20, []))
             foreach (float delta in deltas) Step(empty, delta, "empty binding list");
 
         // Alias two bindings to one node: authored order, not node identity,
         // decides the final write when both select a new frame.
-        using (var aliases = new Rig(20, [Spec.Loop(3) with { NodeGroup = 0 },
+        using (var aliases = NewRig(20, [Spec.Loop(3) with { NodeGroup = 0 },
             Spec.Loop(5) with { NodeGroup = 0, Frames = Frames(5, 100) }]))
         {
             foreach (float delta in new[] { 0.051f, 0.102f, 0.25f, 0.25f, 1.0f })
@@ -119,7 +132,7 @@ public sealed partial class StaticAnimationChecks : Node
                 {
                     LoopFrames = length, Playback = 1, NullPart = true, NullNode = true,
                 }).ToArray();
-                using var rig = new Rig(fps, specs);
+                using var rig = NewRig(fps, specs);
                 foreach (float delta in deltas) Step(rig, delta, $"wrapped LCM {string.Join(',', loops)} fps {fps}");
             }
 
@@ -143,23 +156,26 @@ public sealed partial class StaticAnimationChecks : Node
             // Broken middle binding tests earlier writes and later omissions.
             // A null mesh instead fails during the full LCM scan before any
             // transform writes, even though the clock has already advanced.
-            using var rig = new Rig(20, [Spec.Loop(4), broken[index], Spec.Loop(4)]);
+            using var rig = NewRig(20, [Spec.Loop(4), broken[index], Spec.Loop(4)]);
             foreach (float delta in new[] { -1f, float.NaN, 0.001f, 0.05f, 0.001f, 0.05f, 0.15f })
                 Step(rig, delta, $"malformed case {index}");
         }
-        using (var dormant = new Rig(20, [Spec.Loop(0) with { NullNode = true, NullPart = true },
+        using (var dormant = NewRig(20, [Spec.Loop(0) with { NullNode = true, NullPart = true },
             Spec.Loop(4) with { Playback = 1, NullNode = true, NullPart = true },
             Spec.Loop(4) with { Playback = 72, NullNode = true, NullPart = true }]))
             foreach (float delta in deltas) Step(dormant, delta, "zero selection bypasses malformed part/node");
-        using (var disposed = new Rig(20, [Spec.Loop(4), Spec.Loop(4), Spec.Loop(4)]))
+        using (var disposed = NewRig(20, [Spec.Loop(4), Spec.Loop(4), Spec.Loop(4)]))
         {
             disposed.Nodes[1].Expected.Free();
             disposed.Nodes[1].Actual.Free();
+            _rigSteps!.Add(new Godot.Collections.Dictionary { ["free_node"] = 1 });
             Step(disposed, 0.001f, "freed node skipped at frame zero");
             Step(disposed, 0.05f, "freed node fails after shown-frame write");
             Step(disposed, 0.001f, "same selected frame bypasses previous setter failure");
         }
-        CompareFailure(Catch(() => _ = new LegacyDriver(20, null!)),
+        Exception? nullList = Catch(() => _ = new LegacyDriver(20, null!));
+        Record(new() { ["kind"] = "null_bindings", ["expected_error"] = Error(nullList) });
+        CompareFailure(nullList,
             Catch(() => _ = new Level100StaticWorldAnimationDriver(20, null!)), "Null binding list constructor");
     }
 
@@ -171,7 +187,7 @@ public sealed partial class StaticAnimationChecks : Node
         Spec[] specs = set.Meshes.Values.SelectMany(mesh => mesh.Parts.Select(part => new Spec(
             (int)mesh.Playback, mesh.LoopFrameCount, part.Frames.ToArray()))).ToArray();
         Check(specs.Length > 0, "The exact pinned production manifest supplies hierarchy parts.");
-        using var rig = new Rig(set.FramesPerSecond, specs);
+        using var rig = NewRig(set.FramesPerSecond, specs);
         CompareState(rig, "production tracks before any update");
         for (int frame = 0; frame < 270; frame++)
             Step(rig, frame % 7 == 0 ? 0.05001f : 0.05f, $"pinned manifest step {frame}");
@@ -220,6 +236,7 @@ public sealed partial class StaticAnimationChecks : Node
             using Variant value = created["value"];
             using RefCounted owner = value.As<RefCounted>();
             CompareTransform(Sentinel(0), node.Transform, "Configuration does not apply frame zero");
+            Record(new() { ["kind"] = "detached_copy", ["expected"] = TransformWords(LegacyDriver.ToObjSpaceTransform(frames[1])).Select(word => (long)word).ToArray() });
             mesh["loop_frame_count"] = 1;
             using (Variant first = frameRows[1])
             using (Dictionary row = first.AsGodotDictionary()) row["basis_bits"] = new long[9];
@@ -260,15 +277,68 @@ public sealed partial class StaticAnimationChecks : Node
         finally { borrowed.Free(); }
     }
 
+    private Rig NewRig(int fps, Spec[] specs)
+    {
+        _rigSteps = new Godot.Collections.Array();
+        var rows = new Godot.Collections.Array();
+        foreach (Spec spec in specs)
+        {
+            Variant frames = default;
+            if (spec.Frames is not null)
+            {
+                var values = new Godot.Collections.Array();
+                foreach (Level100RigidFrame frame in spec.Frames) values.Add(RawFrame(frame));
+                frames = values;
+            }
+            rows.Add(new Godot.Collections.Dictionary
+            {
+                ["null_binding"] = spec.NullBinding, ["null_mesh"] = spec.NullMesh, ["null_part"] = spec.NullPart,
+                ["null_node"] = spec.NullNode, ["node_group"] = spec.NodeGroup, ["playback"] = spec.Playback,
+                ["loop_frames"] = spec.LoopFrames, ["frames"] = frames,
+            });
+        }
+        Record(new() { ["kind"] = "rig", ["fps"] = fps, ["specs"] = rows, ["steps"] = _rigSteps });
+        return new Rig(fps, specs);
+    }
+
+    private void Record(Godot.Collections.Dictionary entry) => _golden.Add(entry);
+
+    private static Variant Error(Exception? error) => error is null ? default : Variant.From(new Godot.Collections.Dictionary
+    {
+        ["type"] = error.GetType().Name, ["param"] = (error as ArgumentException)?.ParamName ?? "",
+    });
+
+    private static Godot.Collections.Dictionary RawFrame(Level100RigidFrame frame) => new()
+    {
+        ["basis_bits"] = frame.Basis is null ? default : Variant.From(
+            frame.Basis.Select(value => (long)BitConverter.SingleToUInt32Bits(value)).ToArray()),
+        ["origin_bits"] = frame.Origin is null ? default : Variant.From(
+            frame.Origin.Select(value => (long)BitConverter.SingleToUInt32Bits(value)).ToArray()),
+    };
+
     private void Step(Rig rig, float delta, string label)
     {
         string sample = $"{label}; delta 0x{BitConverter.SingleToUInt32Bits(delta):X8}";
-        CompareFailure(Catch(() => rig.Reference.Update(delta)), Catch(() => rig.Native.Update(delta)), sample);
+        Exception? legacy = Catch(() => rig.Reference.Update(delta));
+        _rigSteps!.Add(new Godot.Collections.Dictionary { ["label"] = sample,
+            ["delta_bits"] = (long)BitConverter.SingleToUInt32Bits(delta), ["expected_error"] = Error(legacy) });
+        CompareFailure(legacy, Catch(() => rig.Native.Update(delta)), sample);
         CompareState(rig, sample);
     }
 
     private void CompareState(Rig rig, string label)
     {
+        using (var expected = new Godot.Collections.Array())
+        {
+            foreach ((MeshInstance3D node, MeshInstance3D _) in rig.Nodes)
+                expected.Add(GodotObject.IsInstanceValid(node)
+                    ? Variant.From(TransformWords(node.Transform).Select(word => (long)word).ToArray()) : default);
+            _rigSteps!.Add(new Godot.Collections.Dictionary { ["label"] = label, ["state"] = new Godot.Collections.Dictionary
+            {
+                ["elapsed_bits"] = BitConverter.DoubleToInt64Bits(rig.Reference.ElapsedSeconds),
+                ["shown_frames"] = rig.Reference.ShownFrames, ["transforms"] = expected.Duplicate(),
+            } });
+        }
         using Variant returned = rig.Native.NativeOwner.Call("host_snapshot");
         Check(returned.VariantType == Variant.Type.Dictionary, $"{label}: explicit native state result");
         using Dictionary state = returned.AsGodotDictionary();

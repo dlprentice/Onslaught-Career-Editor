@@ -25,6 +25,9 @@ public sealed partial class SessionBridgeChecks : Node
     private InteractiveSession _reference = null!;
     private GodotObject _native = null!;
     private GodotObject _bridge = null!;
+    // --write-golden=PATH records every operation with the retained C#
+    // session's results for the GDScript replay (Tests/interactive_session_checks.gd).
+    private readonly Godot.Collections.Array _trace = [];
 
     public override void _Ready()
     {
@@ -54,6 +57,9 @@ public sealed partial class SessionBridgeChecks : Node
         {
             _failures.Add("Harness aborted: " + error);
         }
+        string? golden = OS.GetCmdlineUserArgs().Where(arg => arg.StartsWith("--write-golden=", StringComparison.Ordinal))
+            .Select(arg => arg["--write-golden=".Length..]).SingleOrDefault();
+        if (golden is not null && _failures.Count == 0) System.IO.File.WriteAllBytes(golden, GD.VarToBytes(_trace));
         GD.Print($"SESSION_BRIDGE_CHECKS: {_checks} checks; {_frames} frames; {_steps} steps; failures={_failures.Count}");
         foreach (string failure in _failures.Take(20)) GD.Print("SESSION_BRIDGE_FAILURE " + failure);
         GetTree().Quit(_failures.Count == 0 ? 0 : 1);
@@ -76,12 +82,14 @@ public sealed partial class SessionBridgeChecks : Node
         {
             sbyte x = (sbyte)random.Next(-1, 2), z = x == 0 ? (sbyte)(random.Next(2) * 2 - 1) : (sbyte)random.Next(-1, 2);
             _reference.QueueMovementPulse(x, z);
+            Record("queue_movement_pulse", new Godot.Collections.Array { x, z });
             Ok(_native.Call("queue_movement_pulse", x, z), "movement pulse");
         }
         else if (choice < 80)
         {
             sbyte x = (sbyte)random.Next(-1, 2), y = x == 0 ? (sbyte)(random.Next(2) * 2 - 1) : (sbyte)random.Next(-1, 2);
             _reference.QueueLookPulse(x, y);
+            Record("queue_look_pulse", new Godot.Collections.Array { x, y });
             Ok(_native.Call("queue_look_pulse", x, y), "look pulse");
         }
         else if (choice < 90)
@@ -90,12 +98,14 @@ public sealed partial class SessionBridgeChecks : Node
             if (random.Next(20) == 0) x = random.Next(2) == 0 ? 2_000_000 : -2_000_000;
             if (x == 0 && y == 0) y = 1;
             _reference.QueuePointerMotionMilliPixels(x, y);
+            Record("queue_pointer_motion_milli_pixels", new Godot.Collections.Array { x, y });
             Ok(_native.Call("queue_pointer_motion_milli_pixels", x, y), "pointer motion");
         }
         else if (choice < 93)
         {
             bool paused = random.Next(2) == 0;
             _reference.SetAuthenticMenuPaused(paused);
+            Record("set_authentic_menu_paused", new Godot.Collections.Array { paused });
             _native.Call("set_authentic_menu_paused", paused);
         }
         else if (choice < 95) Both(s => s.SuspendInputUntilReleased(), "suspend_input_until_released");
@@ -104,6 +114,7 @@ public sealed partial class SessionBridgeChecks : Node
         {
             float sensitivity = random.Next(4) == 0 ? 7f : (random.Next(21) + 1) * 3f;
             _reference.SetMouseSensitivity(sensitivity);
+            Record("set_mouse_sensitivity", new Godot.Collections.Array { (double)sensitivity });
             Ok(_native.Call("set_mouse_sensitivity", sensitivity), "sensitivity");
         }
         else Both(s => s.QueueReset(), "queue_reset");
@@ -113,6 +124,12 @@ public sealed partial class SessionBridgeChecks : Node
     private void Observe(InteractiveInput input)
     {
         _reference.ObserveInput(input);
+        Record("observe_input", new Godot.Collections.Array { new D
+        {
+            ["move_x"] = input.MoveX, ["move_z"] = input.MoveZ, ["fire_held"] = input.FireHeld,
+            ["toggle_mode_held"] = input.ToggleModeHeld, ["reset_held"] = input.ResetHeld,
+            ["look_x"] = input.LookX, ["look_y"] = input.LookY, ["landing_jets_held"] = input.LandingJetsHeld,
+        } });
         Ok(_native.Call("observe_input", new D
         {
             ["move_x"] = input.MoveX, ["move_z"] = input.MoveZ, ["fire_held"] = input.FireHeld,
@@ -124,12 +141,38 @@ public sealed partial class SessionBridgeChecks : Node
     private void Both(Action<InteractiveSession> reference, string native)
     {
         reference(_reference);
+        Record(native, new Godot.Collections.Array());
         _native.Call(native);
+    }
+
+    private void Record(string method, Godot.Collections.Array arguments, D? expected = null)
+    {
+        var entry = new D { ["method"] = method, ["arguments"] = arguments };
+        if (expected is not null) entry["expected"] = expected;
+        _trace.Add(entry);
     }
 
     private void Advance(long elapsedTicks)
     {
         FrameAdvanceResult expected = _reference.AdvanceFrameTicks(elapsedTicks);
+        var frame = new D
+        {
+            ["steps_advanced"] = expected.StepsAdvanced, ["frame_time_capped"] = expected.FrameTimeCapped,
+            ["interpolation_phase"] = expected.InterpolationPhase,
+            ["interpolation_alpha_bits"] = BitConverter.DoubleToInt64Bits(expected.InterpolationAlpha),
+        };
+        if (expected.StepsAdvanced > 0)
+        {
+            SimInput last = _reference.LastConsumedInput!.Value;
+            frame["state_hash"] = StateHasher.ComputeHex(expected.CurrentSnapshot);
+            frame["consumed"] = new D
+            {
+                ["move_x"] = last.MoveX, ["move_z"] = last.MoveZ, ["actions"] = (int)last.Actions,
+                ["look_x"] = last.LookX, ["look_y"] = last.LookY,
+                ["look_x_analog_permille"] = last.LookXAnalogPermille, ["look_y_analog_permille"] = last.LookYAnalogPermille,
+            };
+        }
+        Record("advance_frame_ticks", new Godot.Collections.Array { elapsedTicks }, frame);
         D actual = Ok(_native.Call("advance_frame_ticks", elapsedTicks), "advance").AsGodotDictionary();
         _frames++;
         _steps += expected.StepsAdvanced;
@@ -156,6 +199,21 @@ public sealed partial class SessionBridgeChecks : Node
     private void Compare(string where)
     {
         InteractiveSessionMetrics metrics = _reference.Metrics;
+        _trace.Add(new D
+        {
+            ["compare"] = where,
+            ["metrics"] = new D
+            {
+                ["total_steps"] = metrics.TotalSteps, ["toggle_edges_consumed"] = metrics.ToggleEdgesConsumed,
+                ["reset_edges_consumed"] = metrics.ResetEdgesConsumed, ["reset_generation"] = metrics.ResetGeneration,
+                ["fire_held_ticks_sampled"] = metrics.FireHeldTicksSampled, ["fire_pulse_edges_consumed"] = metrics.FirePulseEdgesConsumed,
+                ["change_weapon_edges_consumed"] = metrics.ChangeWeaponEdgesConsumed,
+                ["movement_pulse_edges_consumed"] = metrics.MovementPulseEdgesConsumed,
+                ["capped_frame_count"] = metrics.CappedFrameCount, ["dropped_elapsed_ticks"] = metrics.DroppedElapsedTicks,
+            },
+            ["flags"] = new Godot.Collections.Array { _reference.IsPaused, _reference.IsAuthenticMenuPaused,
+                _reference.InputSuspendedUntilReleased, _reference.HasHeldOrPendingInput, _reference.InterpolationPhase },
+        });
         D actual = _native.Call("metrics").AsGodotDictionary();
         Check(actual["total_steps"].AsInt64() == metrics.TotalSteps &&
             actual["toggle_edges_consumed"].AsInt64() == metrics.ToggleEdgesConsumed &&
@@ -193,6 +251,7 @@ public sealed partial class SessionBridgeChecks : Node
         string? expected = null;
         try { reference(); }
         catch (Exception error) { expected = error.GetType().Name; }
+        _trace.Add(new D { ["refusal"] = name, ["expected_type"] = expected ?? "" });
         D result = native.AsGodotDictionary();
         Check(expected is not null, name + ": reference accepted a refused operation");
         Check(!result["ok"].AsBool() && result["error_type"].AsString() == expected, $"{name}: native refusal type {Get(result, "error_type")} vs {expected}");
