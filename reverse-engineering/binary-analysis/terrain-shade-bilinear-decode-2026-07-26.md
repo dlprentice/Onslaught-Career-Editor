@@ -1,5 +1,10 @@
 # Terrain shade interpolation — the exact 8.8 fixed-point stepping, decoded from bytes
 
+Status: active static contract
+Last updated: 2026-09-26 (RE audit: the loop labels, the destination argument and the edge distance)
+Summary: the landscape blit's bilinear shade stepping in 8.8 fixed point, which the reconstruction implements exactly.
+Evidence: MEASURED — capture-target instructions (identical to the pristine specimen here) and the materialized shade plane.
+
 > Verdict: the landscape blit's bilinear shade interpolation is decoded
 > instruction by instruction, and **the reconstruction already implements it
 > exactly.** At the one level where the reconstruction takes a single corner —
@@ -43,7 +48,7 @@ unresolved. The call site settles it. `CLandscapeTexture__UpdateTile`
 0048eb38   6a 05                push 5              ; arg6   [esp+0x18]
 0048eb3a   57                   push edi            ; arg5  tile_flags = tile_coord & 0xffff
 0048eb3d   50                   push eax            ; arg4  dst_stride = pitch/2
-0048eb42   50                   push eax            ; arg3  src_base
+0048eb42   50                   push eax            ; arg3  dst_bits (the locked surface, LockRect at 0x0048eb14)
 0048eb57   51                   push ecx            ; arg2  tile_ctx
 0048eb58   52                   push edx            ; arg1  lod_shift = [this+0x34]
 0048eb59   b9 c8 ad 6f 00       mov ecx, 0x6fadc8   ; this  = the global height field
@@ -58,8 +63,15 @@ prologue is `sub esp,0x80` plus four pushes, so argument *n* lives at
 | --- | --- | --- | --- |
 | `1 << lod_shift` | `0047f016  d3 e5  shl ebp, cl` (`cl` from `[esp+0x8c]` pre-push) | arg1 | object mip |
 | tile flag tests | `0047f034  8b 8c 24 a4 00 00 00` → `test cl,1` | arg5 | `tile_coord & 0xffff` |
-| outer loop start | `0047f183  8b 84 24 ac 00 00 00` | arg7 | 0 |
-| outer loop end | `0047f19a  8b 8c 24 b4 00 00 00 / 3b c1 / jge` | arg9 | 8 |
+| outer loop over rows, start | `0047f070  8b b4 24 b0 00 00 00` | arg8 | 0 |
+| outer loop over rows, end | `0047f139  8b 84 24 b8 00 00 00` … `0047f142  jge` | arg10 | 8 |
+| inner loop over columns, start | `0047f183  8b 84 24 ac 00 00 00` | arg7 | 0 |
+| inner loop over columns, end | `0047f19a  8b 8c 24 b4 00 00 00`; `0047f6c1-0047f6d4  inc / cmp / jl` | arg9 | 8 |
+
+Argument 3 is the destination: the blit builds its 16-bit output pointer from it
+(`0047f092-0047f09f`) and stores through that pointer (`mov [edi-2],dx`, `0047f5b6`).
+The shade is read from `[0x0089bd84]`. Each outer pass advances the row by `0x200`
+(`0047f71a`).
 
 Argument 6 (`5`) is never read by the body — the blit ignores it. The loop
 therefore runs 8 × 8 **units** per tile, and each unit expands to
@@ -178,7 +190,10 @@ column 511 it reads the first byte of the next plane row and at row 511 it
 reads past the buffer. The reconstruction clamps to 511 instead. The Level 100
 island's non-zero support spans rows 144–368 and columns 136–432
 (`terrain-shade-plane-origin-2026-07-26.md` §4), so no island texel is within
-143 units of either edge and the two readings cannot differ on this map.
+79 units of an edge (column 432 is 79 from 511) and the two readings cannot differ
+for island texels. At row 511 retail reads past the plane into whatever follows it,
+so the bottom row of the full 512×512 root map may differ from the clamped
+reconstruction.
 
 ## Boundary
 
@@ -186,5 +201,5 @@ Static evidence from the capture-target specimen named in the header
 (`e1436ef7…`, pristine + `force_windowed`), plus arithmetic over locally
 materialized Level 100 asset bytes. It establishes the blit's interpolation
 exactly and shows the reconstruction reproduces it. It does **not** identify
-the mechanism behind retail's measured 1.40 / 1.30 / 1.08 terrain chain gain;
+the mechanism behind retail's measured 1.40 / 1.30 / 1.08 terrain chain gain (the ambient-light note's later measurement is 1.457 / 1.389 / 1.147; the two have not been reconciled);
 this pass removes the interpolation from the candidate list.
