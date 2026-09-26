@@ -406,8 +406,6 @@ reverse-engineering/save-file/career-links.md
 reverse-engineering/save-file/career-unlock-recipes.md
 reverse-engineering/save-file/goodies-system.md
 reverse-engineering/save-file/grade-system.md
-reverse-engineering/save-file/kill-tracking.md
-reverse-engineering/save-file/struct-layouts.md
 reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md
 reverse-engineering/source-code/core/_index.md
