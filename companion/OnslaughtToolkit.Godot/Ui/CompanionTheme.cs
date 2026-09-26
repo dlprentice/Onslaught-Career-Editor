@@ -418,6 +418,8 @@ internal static class CompanionTheme
         // A choice in a dialog: raised, and outlined in amber when it is the chosen one.
         PanelVariation(theme, "Choice", Box(Palette.Raised, 8, Palette.Border, padX: 14, padY: 12));
         PanelVariation(theme, "ChoiceChosen", Box(Palette.Raised.Blend(new Color(Palette.Accent, 0.08f)), 8, Palette.Accent, padX: 14, padY: 12));
+        // Unsaved changes under a page: raised, outlined in amber like the save it leads to.
+        PanelVariation(theme, "ChangesBar", Box(Palette.Raised, 8, Palette.Accent, padX: 16, padY: 10));
         theme.SetStylebox("separator", "HSeparator", new StyleBoxLine { Color = Palette.Border, Thickness = 1 });
         theme.SetConstant("separation", "HSeparator", 12);
     }

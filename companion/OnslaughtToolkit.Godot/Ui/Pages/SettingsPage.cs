@@ -29,6 +29,7 @@ internal sealed class SettingsPage : Page
     private readonly Dictionary<(int EntryId, int Slot), Button> _keyButtons = [];
     private readonly List<string> _sourcePaths = [];
     private readonly SaveChoice _saveChoice;
+    private readonly ScrollContainer _scroll;
     private SaveSession? _file;
     private OptionsReading? _reading;
     private OptionsEdit _edit = new();
@@ -39,8 +40,9 @@ internal sealed class SettingsPage : Page
     internal SettingsPage(AppServices app) : base("settings", "Game settings", "settings")
     {
         _app = app;
-        (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
-        Root = scroll;
+        (_scroll, VBoxContainer content) = Build.Scroller();
+        Bar = new ChangesBar("Save settings…");
+        Root = Bar.Wrap(_scroll);
 
         (PanelContainer which, VBoxContainer whichBody) = Build.Card("Which settings");
         whichBody.Add(Build.Text("The game starts with its default settings. Each career also keeps its own, and loading a career " +
@@ -154,10 +156,9 @@ internal sealed class SettingsPage : Page
         OpenDialog.FileSelected += path => _app.Status.Track(OpenAsync(path));
         SaveDialog.FileSelected += path => _app.Status.Track(SaveElsewhereAsync(path));
         Save.Pressed += AskToSave;
-        UndoAll.Pressed += () =>
-        {
-            if (_file is SaveSession file) _app.Status.Track(OpenAsync(file.Path));
-        };
+        Bar.Save.Pressed += AskToSave;
+        UndoAll.Pressed += UndoChanges;
+        Bar.Undo.Pressed += UndoChanges;
         _app.Game.Changed += ShowSources;
         foreach (Control section in _needsFile) section.Visible = false;
     }
@@ -165,6 +166,7 @@ internal sealed class SettingsPage : Page
     internal override Control Root { get; }
     internal override string Subtitle => _file is SaveSession file ? $"Changing {Describe(file.Path)}" : "Sound, controls, mouse, screen and keys";
     internal OptionButton Source { get; }
+    internal ChangesBar Bar { get; }
     internal Button OpenOther { get; }
     internal Button UndoKeys { get; }
     internal Button Save { get; }
@@ -357,6 +359,7 @@ internal sealed class SettingsPage : Page
         if (_file is not SaveSession file)
         {
             Save.Disabled = UndoAll.Disabled = true;
+            Bar.Show(0, false);
             return;
         }
         _plan = OptionsFile.Preview(file.CopyBytes(), _edit);
@@ -375,6 +378,12 @@ internal sealed class SettingsPage : Page
         bool ready = !_app.Workspace.Busy;
         Save.Disabled = !ready || !_plan.Ok;
         UndoAll.Disabled = !ready || !_plan.Ok;
+        Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready);
+    }
+
+    private void UndoChanges()
+    {
+        if (_file is SaveSession file) _app.Status.Track(OpenAsync(file.Path));
     }
 
     private (HSlider Slider, Label Value) Slider(VBoxContainer parent, string name)
@@ -437,5 +446,6 @@ internal sealed class SettingsPage : Page
         _result.Visible = true;
         _result.ThemeTypeVariation = ok ? "SuccessNotice" : "FailureNotice";
         _resultText.Text = text;
+        Callable.From(() => _scroll.EnsureControlVisible(_result)).CallDeferred();
     }
 }

@@ -24,13 +24,15 @@ internal sealed class EditCareerPage : Page
     private readonly List<Control> _needsCareer = [];
     private readonly Label _intro;
     private readonly SaveChoice _saveChoice;
+    private readonly ScrollContainer _scroll;
     private Outcome<EditPlan> _plan = Outcome<EditPlan>.Refusal("No changes yet.");
 
     internal EditCareerPage(AppServices app) : base("edit", "Edit career", "edit")
     {
         _app = app;
-        (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
-        Root = scroll;
+        (_scroll, VBoxContainer content) = Build.Scroller();
+        Bar = new ChangesBar("Save changes…");
+        Root = Bar.Wrap(_scroll);
         _intro = content.Add(Build.Text("Choose a career to change.", "Lead"));
         _choose = new CareerCards(app);
         content.Add(_choose.Root);
@@ -99,10 +101,9 @@ internal sealed class EditCareerPage : Page
             RefreshPreview();
         };
         Save.Pressed += AskToSave;
-        UndoAll.Pressed += () =>
-        {
-            if (_app.Workspace.Session is SaveSession session) ShowSession(session);
-        };
+        Bar.Save.Pressed += AskToSave;
+        UndoAll.Pressed += UndoChanges;
+        Bar.Undo.Pressed += UndoChanges;
         OpenResult.Pressed += () => _app.Status.Track(_app.OpenCareer(_app.Workspace.LastVerifiedOutput.Length > 0
             ? _app.Workspace.LastVerifiedOutput : _lastInstalled));
         ShowEmpty();
@@ -116,6 +117,7 @@ internal sealed class EditCareerPage : Page
         : "Change kill counts and Goodies, then save";
 
     internal IReadOnlyList<KillRow> Rows { get; }
+    internal ChangesBar Bar { get; }
     internal IReadOnlyDictionary<int, GoodieState> GoodieTargets => _goodieTargets;
     internal IReadOnlyList<OptionButton> GoodiePickers => _goodieRows.FindChildren("*", nameof(OptionButton), true, false).OfType<OptionButton>().ToArray();
     internal Button UnlockAll { get; }
@@ -162,6 +164,12 @@ internal sealed class EditCareerPage : Page
         UndoAll.Disabled = !ready || !_plan.Ok;
         UnlockAll.Disabled = ClearGoodies.Disabled = !ready;
         foreach (KillRow row in Rows) row.SetLocked(!ready);
+        Bar.Show(_app.Workspace.Session is null ? 0 : Rows.Count(row => row.IsChanged) + _goodieTargets.Count, ready && _plan.Ok);
+    }
+
+    private void UndoChanges()
+    {
+        if (_app.Workspace.Session is SaveSession session) ShowSession(session);
     }
 
     /// <summary>Adds a Goodie aiming at the opposite of what it has now: locked ones become unlocked, unlocked ones locked.</summary>
@@ -377,6 +385,8 @@ internal sealed class EditCareerPage : Page
         Result.Text = text;
         ResultPanel.ThemeTypeVariation = variation;
         ResultPanel.Visible = true;
+        // The result sits under the changes; bring it into view wherever the player saved from.
+        Callable.From(() => _scroll.EnsureControlVisible(ResultPanel)).CallDeferred();
     }
 }
 

@@ -121,6 +121,8 @@ internal static class CompanionUiTests
         edit.Rows[4].Target.Value = 123460;
         check.That(edit.Plan.Ok && !edit.Save.Disabled && edit.ChangesText.Contains("Aircraft kills: 3,221 → 123,456"),
             "a changed count is listed in the player's words and can be saved");
+        check.That(edit.Bar.Root.Visible && edit.Bar.Summary.Text.StartsWith("2 changes not saved yet", StringComparison.Ordinal) &&
+            !edit.Bar.Save.Disabled, "a bar under the page counts the unsaved changes and offers Save");
         edit.AskToSave();
         check.That(edit.SaveChoice.Dialog.Visible && edit.SaveChoice.Offers(SaveTarget.NewCareer) && edit.SaveChoice.Offers(SaveTarget.Replace) &&
             edit.SaveChoice.Offers(SaveTarget.Elsewhere) && edit.SaveChoice.Name.Text == "Career One (edited)" && edit.SaveChoice.InGameAvailable,
@@ -242,7 +244,8 @@ internal static class CompanionUiTests
         check.That(goodieWritten.Ok && onlyGoodie && BinaryPrimitives.ReadUInt32LittleEndian(goodieBytes.AsSpan(0x1F4E)) ==
             (target == GoodieState.Hint ? 1u : 0u), "the Goodie copy changes only Goodie 002's four bytes, to the chosen state");
 
-        edit.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        edit.Bar.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(!edit.Bar.Root.Visible && !edit.HasChanges, "Undo on the bar clears every change and hides the bar");
         edit.UnlockEveryGoodie();
         int locked = app.Workspace.Session.Analysis.Goodies.Count(goodie => goodie.Shown && goodie.State is GoodieState.Locked or GoodieState.Hint);
         check.That(edit.GoodieTargets.Count == locked && locked > 0 && edit.ChangesText.Contains("unlocked (new)"),
@@ -293,6 +296,8 @@ internal static class CompanionUiTests
         check.That(settings.Capture(Key.T), "a captured key is accepted");
         check.That(settings.PreviewText.Contains("Music volume") && settings.PreviewText.Contains("transform → T"),
             "the changes name the music volume and the new key");
+        check.That(settings.Bar.Root.Visible && settings.Bar.Summary.Text.StartsWith("2 changes", StringComparison.Ordinal),
+            "the settings page's bar counts its unsaved changes");
         string optionsCopy = Path.Combine(outputDirectory, "options-copy.bea");
         PublicationReceipt optionsWritten = await settings.SaveElsewhereAsync(optionsCopy);
         byte[] optionsBytes = File.Exists(optionsCopy) ? File.ReadAllBytes(optionsCopy) : [];
