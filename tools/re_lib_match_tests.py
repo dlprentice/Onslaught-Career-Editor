@@ -230,6 +230,115 @@ class ResolverTests(unittest.TestCase):
         res.run()
         return res
 
+    def alias_case(self, alias_body, body=b"\x33\xc0\x40\x40\x40\x40\x40\xc3"):
+        target = self.LO + 0x300
+        members, blobs = [], {target: body + b"\xcc" * 8}
+        for i, symbol in enumerate(("_a", "_longalias")):
+            va = self.LO + i * 0x100
+            prefix = bytes(range(0x40 + i * 0x20, 0x54 + i * 0x20))
+            obj = coff([(".text", COMDAT, prefix + b"\xe8\0\0\0\0\xc3", [(21, 1, M.REL_I386_REL32)])],
+                       [(f"_caller{i}", 0, 1, FUNC, EXT, b""), (symbol, 0, 0, FUNC, EXT, b"")])
+            members.append((f"caller{i}.obj", obj))
+            blobs[va] = prefix + b"\xe8" + struct.pack("<i", target - (va + 25)) + b"\xc3"
+        for symbol, data in [("_a", body), ("_rival", body), ("_longalias", alias_body)]:
+            members.append((symbol + ".obj", coff([(".text", COMDAT, data, [])],
+                                                [(symbol, 0, 1, FUNC, EXT, b"")])))
+        return self.resolve(members, blobs, list(blobs)), target
+
+    def test_reference_to_different_body_is_not_a_folded_alias(self):
+        res, target = self.alias_case(b"\x90" * 8 + b"\xc3")
+        self.assertEqual(res.decided[target]["how"], "called")
+        self.assertNotIn("_longalias", res.decided[target].get("aliases", []))
+        self.assertNotIn("_longalias", res.decided_syms[target])
+
+    def test_matching_prefix_with_different_extent_is_not_identical_body(self):
+        short = b"\x33\xc0\x40\x40\x40\x40\x40\xc3"
+        res, target = self.alias_case(short + b"\xcc" * 4, short)
+        self.assertEqual(res.decided[target]["how"], "called")
+        self.assertNotIn("_longalias", res.decided[target].get("aliases", []))
+
+    def test_equal_complete_body_and_references_support_folding(self):
+        body = b"\x33\xc0\x40\x40\x40\x40\x40\xc3"
+        res, target = self.alias_case(body, body)
+        self.assertEqual(res.decided[target]["how"], "folded")
+        self.assertEqual(res.decided[target]["aliases"], ["_longalias"])
+        p, = M.proposals(res, {target: {"name": "old", "nameSource": "USER_DEFINED"}}, {})
+        self.assertIn("linker-folded", p["tags"])
+        self.assertIn("has the same bytes", p["proof"])
+
+    def test_reference_only_alias_is_not_accepted_as_a_verified_saved_name(self):
+        res, target = self.alias_case(b"\x90" * 8 + b"\xc3")
+        verified = []
+        p, = M.proposals(res, {target: {"name": "_longalias", "nameSource": "USER_DEFINED"}}, {}, verified=verified)
+        self.assertEqual(p["proposed"], "_a")
+        self.assertEqual(verified, [])
+        self.assertNotIn("linker-folded", p["tags"])
+        self.assertIn("not establish byte identity", p["proof"])
+
+    def test_also_named_reference_does_not_certify_a_unique_body_alias(self):
+        res, target = self.alias_case(b"\x90" * 8 + b"\xc3", BODY)
+        # Force a uniquely identified body, as happens before the reference pool settles.
+        cands = [c for c in res.cands[target] if c.fn.symbol == "_a"]
+        res.decided[target] = {"how": "unique", "cands": cands}
+        verified = []
+        p, = M.proposals(res, {target: {"name": "_longalias", "nameSource": "USER_DEFINED"}}, {}, verified=verified)
+        self.assertEqual(p["proposed"], "_a")
+        self.assertNotIn("linker-folded", p["tags"])
+        self.assertIn("not establish byte identity", p["proof"])
+
+    def test_object_entry_aliases_are_proven_without_inventing_linker_folding(self):
+        for offset, proven in [(0, True), (4, False)]:
+            with self.subTest(offset=offset):
+                obj = coff([(".text", COMDAT, BODY, [])],
+                           [("_a", 0, 1, FUNC, EXT, b""), ("_alias", offset, 1, FUNC, EXT, b"")])
+                lib = library([("same.obj", obj)])
+                res = M.Resolver(lib, FakeImage(0x400000, {self.LO: BODY}), {}, self.LO, self.LO + 0x1000, [self.LO])
+                # Use the whole-body candidate independently of the synthetic interior label's split.
+                fn = M.ObjFunc("same.obj", 1, 0, len(BODY), "_a", EXT, True, 1)
+                c = M.Candidate(self.LO, fn, len(BODY), own=M.own_symbols(lib.objects['same.obj'], fn, self.LO))
+                res.cands[self.LO] = [c]
+                res._accept(self.LO, "unique", [c]); res._settle()
+                # A caller-derived address cannot turn an interior symbol into an entry alias.
+                res.pool[("g", "_alias")] = self.LO
+                verified = []
+                proposed = M.proposals(res, {self.LO: {"name": "_alias", "nameSource": "USER_DEFINED"}}, {}, verified=verified)
+                self.assertEqual(bool(verified), proven)
+                p, = verified if proven else proposed
+                self.assertNotIn("linker-folded", p["tags"])
+                if proven:
+                    self.assertIn("same section offset", p["proof"])
+                    self.assertIn("_alias", res.decided_syms[self.LO])
+
+    def test_folded_alias_extent_follows_the_compared_representative(self):
+        short = b"\x33\xc0\x40\x40\x40\x40\x40\xc3"
+        old, target = self.alias_case(short, short)
+        anchor = bytes(range(0x80, 0x94)); av = target - 0x40
+        raw = coff([(".text", COMDAT, anchor, []), (".text", COMDAT, short + b"\xcc" * 4, [])],
+                   [("_anchor", 0, 1, FUNC, EXT, b""), ("_a", 0, 2, FUNC, EXT, b"")])
+        obj = M.parse_coff("b.obj", raw)
+        old.lib.objects['b.obj'] = obj; old.lib.functions.extend(M.object_functions(obj))
+        old.image.mem[av-old.image.start:av-old.image.start+len(anchor)] = anchor
+        res = M.Resolver(old.lib, old.image, {}, old.lo, old.hi, old.starts + [av])
+        res.run()
+        d = res.decided[target]; representative = res.representative(target, d)
+        self.assertEqual((representative.fn.member, representative.fn.end-representative.fn.start), ("b.obj", 12))
+        self.assertNotIn("_longalias", d.get("aliases", []))
+        for late_ownership in (False, True):
+            with self.subTest(late_ownership=late_ownership):
+                if late_ownership:
+                    d.update(how="folded", aliases=["_longalias"])
+                p, = M.proposals(res, {target: {"name": "old", "nameSource": "USER_DEFINED"}}, {})
+                self.assertEqual(p["how"], "called")
+                self.assertNotIn("_longalias", p["alts"])
+                self.assertNotIn("linker-folded", p["tags"])
+                self.assertNotIn("members define it identically", p["proof"])
+                self.assertNotIn("has the same bytes", p["proof"])
+                self.assertIn("differing extents (8, 12 bytes)", p["proof"])
+        res.decided_syms[target].add("_longalias")
+        res.revalidate_aliases()
+        self.assertEqual(res.decided[target]["how"], "called")
+        self.assertNotIn("_longalias", res.decided_syms[target])
+
     def test_unique_match_and_call_placement(self):
         # _caller calls _helper (another object); the call lands on the matched helper
         caller = coff([(".text", COMDAT, BODY + b"\xe8\0\0\0\0\xc3", [(21, 1, M.REL_I386_REL32)])],
