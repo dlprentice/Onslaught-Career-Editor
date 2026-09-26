@@ -1,16 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-09-26 (World 110 constructed in Core through its start state, with Level 100's surviving base world; waypoint walks from the nearest node along each node's target, at load-time heights; scripts on their INIT_SCRIPT events; the level's pre-run; rounds on their own MOVE and life events; influence-map and warm-up load draws; cockpit Gun emitters; Level 100's retail construction order and unit callbacks; every round's retail launch basis; the jet Missile Pod with locks and seeking missiles; weapon stores, recoil shake and round Init draws; the Battle Engine's crosshair and auto-aim refresh on the shared event clock; September 25: C# only and built in code, restored from b0b9c5e7 with the later evidenced fixes).
-The bounded world-110 all-40 serialized
-initial-object seed, authored-definition, serialized player-start, complete
-ordered start-list resolution, adapter-supplied every-match assignment
-composition, and
-`CStart::Init` terrain-height projections, plus the standalone ordered
-player/Battle Engine assignment,
-native-88 direct mission execution, career read/load frontend slice, and world-admission
-claims below are the newly re-reviewed surface.
-Other sections retain their narrower dated evidence boundaries.
+Last updated: 2026-09-26 (the U-17 flies; one gate command)
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
@@ -42,12 +33,9 @@ check scenes). From September 19 to 25 much of the Godot side was ported to
 typed GDScript and editor scenes. On September 25 it returned to the last
 all-code C# rebuild (`b0b9c5e7`), with the pause menu's tree built in code again
 and the later C# changes that carry evidence: the strict AYA texture admission
-below, the 2,148-step smoke-validator pin (`53c1cc64…`, re-pinned on September 26 to `8649ff2b…`
-as the Battle Engine's refresh, recoil and round Init draws, every round's launch basis, the retail
-load order's construction draws and unit callbacks, the cockpit Gun emitters, the influence map's
-and warm-up units' load draws, the rounds' own MOVE and life events, the level's three-second
-pre-run, scripts started on their INIT_SCRIPT events and waypoint walks from the nearest node
-changed the run), and two refusals of
+below, the 2,148-step smoke validator's state pin (re-pinned whenever an
+evidenced retail law changes the run; `rebuild/tools/FirstFlightSmokeValidation.psm1`
+holds the current value), and two refusals of
 impossible input (an emitter `Life` of Int32.MaxValue, whose Int32 turn loop
 cannot end, and an invalid terrain-compositor level, refused before its shifted
 block is allocated). [VALIDATION.md](../VALIDATION.md) records the proof. The
@@ -196,6 +184,14 @@ npm run build:rebuild-godot
 npm run run:rebuild-godot
 ```
 
+`npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`) runs the lane's whole
+gate: the build, the Core and Client suites (the cold-start test writes its won
+tape), the pause and AYA checks in headless Godot, the headless smoke with its
+recorded tape, and two C# replays of each tape. Its summary prints the suite
+counts and the tapes' trace and state hashes; logs go to a fresh
+`local-data/test-runs/rebuild-gate-*` directory. `--only core,client` runs a
+subset.
+
 `rebuild/tools/first_flight.py` discovers the user's Linux Steam libraries or
 accepts `--game-root "/absolute/game/root"`. In the canonical checkout it prepares
 the supported retail inputs through `local-lab/rebuild-godot/` and startup media
@@ -310,7 +306,10 @@ squads, landing craft and turret children, fighters and scripts, then the
 pre-run and the start state, where the player is activated on frame 140. It
 follows the RE lane's construction contract. VALIDATION.md's "World 110
 construction and start state" lists what is carried and what is open:
-landing-craft flight, landing and cargo, and squad formation. A Level 100 win
+landing-craft flight, landing and cargo, and squad formation. Level 100's U-17
+flies its path, retreats to its side's nearest safe side and leaves
+(`Level100ActorDropshipRuntime`, from the RE lane's dropship contracts); World
+110's landing craft wait for the landing states, since one lands at once. A Level 100 win
 hands World 110 its surviving base world through the career ("World 110's
 base-world carry-over from Level 100"). The Godot host still starts only
 Level 100; World 110 has no presentation yet.

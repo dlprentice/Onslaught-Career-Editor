@@ -491,7 +491,8 @@ public sealed class Level100ActorPlaneRuntimeTests
         // The load, where the Air Trainer still rests at the Airfield.
         var simulation = new Simulation(1, Level100TestActorDefinitions.LoadMaterialized());
         WorldSnapshot baseline = simulation.LoadSnapshotForMeasurement!;
-        Level100ActorBaseStateSnapshot plane = baseline.Level100Actors.BaseStates.Single(item => item.State.RetailPlane is not null);
+        Level100ActorId trainer = baseline.Level100Actors.Actors.Single(actor => actor.Name == "Air Trainer").ActorId;
+        Level100ActorBaseStateSnapshot plane = baseline.Level100Actors.BaseStates.Single(item => item.ActorId == trainer);
         string initial = StateHasher.ComputeHex(baseline);
         WorldSnapshot WithPhysical(ThingActorBaseStateSnapshot state) => baseline with
         {

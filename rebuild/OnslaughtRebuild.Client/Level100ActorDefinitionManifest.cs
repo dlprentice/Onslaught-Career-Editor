@@ -24,10 +24,13 @@ public static class Level100ActorDefinitionManifest
     // Aircraft profiles additionally carry ordered field7 weapon uses and
     // GunA/B selector1 model poses; live muzzle/cache state remains separate.
     // Definition identity hashes those exact words, so replay pins move too.
+    // Schema v15 adds each air unit's flight scalars from its unit record
+    // (CUnitAirVelocity, CUnitAirTurnRate, CUnitBig, the MinAltitude default
+    // and a Big unit's render radius) and the level's four CSafeSides.
     public const string ExpectedManifestSha256 =
-        "17D6112A96D548FB546999B79D3980D173CE5BB0A6F0DA4573EAE28FC5B62C09";
+        "350AC9C4FDCCCECBBEA9F6C0D3CB7099EE915DF8971123E6A030BBF574168561";
 
-    private const string ExpectedSchema = "onslaught.level100-static-world.v14";
+    private const string ExpectedSchema = "onslaught.level100-static-world.v15";
     private const string ExpectedSourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string ExpectedPhysicsSourceSha256 =
@@ -36,8 +39,8 @@ public static class Level100ActorDefinitionManifest
 
     /// <summary>The materializer's <c>WORLD110_STATIC_WORLD_SHA256</c>.</summary>
     public const string ExpectedWorld110ManifestSha256 =
-        "431A0B04FD4AA48354F5882B73E683DF57B9B4957BEBEF3DA30A8CE743DC21CE";
-    private const string ExpectedWorld110Schema = "onslaught.world110-static-world.v1";
+        "F5E411A1717C3D278E8E314C049BFF54C3081744C3A7E512A9F8857B9584FA58";
+    private const string ExpectedWorld110Schema = "onslaught.world110-static-world.v2";
     private const string ExpectedWorld110ArchiveSha256 =
         "4E041C758B9D41BA18311B1FADEACB95FC31AF51320861480B97033BC24E3C2B";
 
@@ -107,6 +110,7 @@ public static class Level100ActorDefinitionManifest
             manifest.SpawnDefinitions.Length != 10 ||
             manifest.WaypointPaths.Length != 8 ||
             manifest.MotionDefinitions.Length != 5 ||
+            manifest.SafeSides.Length != 4 ||
             manifest.ActorDefinitions.Count(definition =>
                 definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33 ||
             manifest.PineInstanceCount != 1_481 ||
@@ -200,16 +204,18 @@ public static class Level100ActorDefinitionManifest
             spawns,
             waypointPaths,
             motionDefinitions,
-            baseWorldPineCount: manifest.PineInstanceCount);
+            baseWorldPineCount: manifest.PineInstanceCount,
+            safeSides: manifest.SafeSides.Select(DecodeSafeSide));
     }
 
     /// <summary>
     /// Decodes the materialized World 110 static world
     /// (<c>level110-static-world.json</c>, schema
-    /// <c>onslaught.world110-static-world.v1</c>): the shared base world with
+    /// <c>onslaught.world110-static-world.v2</c>): the shared base world with
     /// each building's life, the level rows with their sides, the five squads,
-    /// the four landing craft's turret children and the named paths as retail
-    /// loads them. Filesystem ownership remains with the caller.
+    /// the four landing craft's turret children, the named paths as retail
+    /// loads them and the base world's two CSafeSides. Filesystem ownership
+    /// remains with the caller.
     /// </summary>
     public static Level100ActorDefinitionSet DecodeWorld110(ReadOnlySpan<byte> manifestBytes)
     {
@@ -237,6 +243,7 @@ public static class Level100ActorDefinitionManifest
             manifest.Components.Length != 4 ||
             manifest.WaypointPaths.Length != 4 ||
             manifest.MotionDefinitions.Length != 6 ||
+            manifest.SafeSides.Length != 2 ||
             manifest.PineInstanceCount != 1_481 ||
             manifest.Pines.Length != manifest.PineInstanceCount ||
             // The level world's pan length, settings word 4 (0x0050d2c5).
@@ -277,8 +284,21 @@ public static class Level100ActorDefinitionManifest
             components: manifest.Components.Select(component => new Level100ComponentDefinition(
                 component.ChildIdentity,
                 component.ParentIdentity,
-                component.DefinitionName)));
+                component.DefinitionName)),
+            safeSides: manifest.SafeSides.Select(DecodeSafeSide));
     }
+
+    private static Level100SafeSideDefinition DecodeSafeSide(SafeSide source) =>
+        new(
+            source.World switch
+            {
+                "base" => true,
+                "level" => false,
+                _ => throw new InvalidDataException($"A safe side's world is invalid: {source.World}."),
+            },
+            source.Row,
+            DecodeFloatVector(source.RetailPositionFloatBits, "safe-side position"),
+            source.Allegiance);
 
     private static Level100ActorDefinition DecodeActor(ActorDefinition source) =>
         new(
@@ -322,7 +342,10 @@ public static class Level100ActorDefinitionManifest
                     DecodeBasis(mount.ModelTransform.LocalBasisFloatBits, "weapon model basis"))))
                 .ToArray(),
             source.AirVelocityFloatBits,
-            source.AirTurnRateFloatBits);
+            source.AirTurnRateFloatBits,
+            source.Big,
+            source.MinimumAltitudeFloatBits,
+            source.MeshRadiusFloatBits);
 
     private static Level100WaypointPointDefinition DecodeWaypointPoint(WaypointPoint point, int? target)
     {
@@ -445,7 +468,16 @@ public static class Level100ActorDefinitionManifest
         public int WorldNumber { get; init; }
         public Squad[] Squads { get; init; } = [];
         public Component[] Components { get; init; } = [];
+        public SafeSide[] SafeSides { get; init; } = [];
         public Settings? Settings { get; init; }
+    }
+
+    private sealed record SafeSide
+    {
+        public int Allegiance { get; init; }
+        public int[] RetailPositionFloatBits { get; init; } = [];
+        public int Row { get; init; }
+        public string World { get; init; } = string.Empty;
     }
 
     private sealed record Squad
@@ -496,6 +528,9 @@ public static class Level100ActorDefinitionManifest
         public WeaponMount[]? WeaponMounts { get; init; }
         public int? AirVelocityFloatBits { get; init; }
         public int? AirTurnRateFloatBits { get; init; }
+        public bool? Big { get; init; }
+        public int? MinimumAltitudeFloatBits { get; init; }
+        public int? MeshRadiusFloatBits { get; init; }
     }
 
     private sealed record WeaponMount

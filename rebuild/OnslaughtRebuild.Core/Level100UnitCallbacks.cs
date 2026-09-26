@@ -200,6 +200,12 @@ public sealed partial class Level100ActorMechanics
     /// <summary>A unit's AI listener, for tests that read the first bucket.</summary>
     internal static int UnitAiListener(Level100ActorId actorId) => UnitListener(actorId, UnitCallbackOwner.Ai);
 
+    /// <summary>A unit's own listener (its 4003 and SHUTDOWN), for tests.</summary>
+    internal static int UnitOwnListener(Level100ActorId actorId) => UnitListener(actorId, UnitCallbackOwner.Unit);
+
+    /// <summary>An air unit's Actor MOVE listener, for tests.</summary>
+    internal static int AirUnitMoveListener(Level100ActorId actorId) => PlaneListener(actorId, 0);
+
     private static bool IsUnitListener(int listener) =>
         listener >= UnitListenerBase && listener < InfluenceMapListener;
 
@@ -439,8 +445,13 @@ public sealed partial class Level100ActorMechanics
                 FileSquadEvent(events, actorId, 4002, -1);
                 break;
             case Level100ConstructionClass.Dropship:
-                // A landing craft builds its turret child after its own Actor
-                // draw (World 110 contract, "Landing craft and their turrets").
+                // Its MOVE comes with the Actor draw; a landing craft builds its
+                // turret child after both (World 110 contract, "Landing craft
+                // and their turrets").
+                if (_actors.GetBaseState(actorId).RetailPlane is not null)
+                {
+                    RegisterDropship(events, actorId);
+                }
                 ConstructComponents(actorId);
                 FileUnitRefresh(events, actorId);
                 FileScriptReady(actorId);
@@ -694,6 +705,9 @@ public sealed partial class Level100ActorMechanics
             case (UnitCallbackOwner.Unit, 4003):
                 RefreshUnit(events, dispatch, state, actor);
                 return;
+            case (UnitCallbackOwner.Unit, 2000) when state.Class == Level100ConstructionClass.Dropship:
+                ShutDownUnit(actorId);
+                return;
             case (UnitCallbackOwner.Ai, 3000):
             case (UnitCallbackOwner.Ai, 3001):
                 HandleAiEvent(events, dispatch, state, actor);
@@ -790,7 +804,8 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
-        if (!actor.Active || aiState != 0)
+        // A unit leaving (+0x244 is 1 or 2) only polls (0x004ff340-0x004ff34f).
+        if (!actor.Active || aiState != 0 || mechanics?.PlaneGuide?.SpeedMode is 1 or 2)
         {
             Poll();
             return;
@@ -926,6 +941,8 @@ public sealed partial class Level100ActorMechanics
         return (owner, slot.EventNum) switch
         {
             (UnitCallbackOwner.Unit, 4003) => true,
+            // A running-out dropship's own SHUTDOWN (slot 116).
+            (UnitCallbackOwner.Unit, 2000) => state.Class == Level100ConstructionClass.Dropship,
             (UnitCallbackOwner.Ai, 3000 or 3001 or 3003) => Level100ConstructionClasses.HasAi(state.Class),
             (UnitCallbackOwner.FireControl, 4001) => Level100ConstructionClasses.HasFireControl(state.Class),
             (UnitCallbackOwner.Squad, 4000 or 4001 or 4002) =>

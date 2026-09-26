@@ -727,46 +727,15 @@ public static class SimulationConstants
     // ---------------------------------------------------------------------
     // Plane (behaviour class 9) motion.
     //
-    // Every value below is a shipped byte. `data/default physics.dat`
-    // (sha256 e1fb3ded...ada14, 175,603 bytes, 777 statements):
-    //
-    //   Unit  Target Drone @0x24e76 (name string @0x24e7e)
-    //           [39] CUnitBasedOn        "Base Air Unit"
-    //           [ 8] CUnitBehaviour      9
-    //           [ 2] CUnitAirVelocity    5.5   (0x40B00000)
-    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
-    //           [ 3] CUnitLife           1.0   (0x3F800000)
-    //           [22] CUnitStrafeChange   0.01  (0x3C23D70A)
-    //           [23] CUnitMaxTargetRange 500.0 (0x43FA0000)
-    //   Unit  Air Trainer  @0x1e198 (name string @0x1e1a0)
-    //           [ 2] CUnitAirVelocity    9.2   (0x41133333)
-    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
-    //           [ 3] CUnitLife           3.0   (0x40400000)
-    //           [23] CUnitMaxTargetRange 300.0 (0x43960000)
-    //
-    // The value-id -> class map is
-    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md;
-    // ids 2/6 write unit-record +0xb4/+0xb8. CAirUnit Init copies +0xb8 to
-    // all three Euler rate fields at 0x00402b0c..0x00402b32. The factor 1/3
-    // at 0x00402fc5 applies only while TF_DYING; living Plane motion uses
-    // the full rate. The air and ground guides have different move paths.
-    //
-    // Level 100's Plane path reads these constants; its manifest motion
-    // scalars remain null. materialize_retail_assets.py validates these exact
-    // profile words in _level100_actor_motion_definitions. Other worlds'
-    // motion rows carry their planes' ids 2 and 6 themselves.
-    //
-    // CAirGuide slot 3 writes drive using GetMaxVelocity() * 0.05 * 4.0.
-    // AirUnit motion subsequently clamps velocity to GetMaxVelocity() * 0.05
-    // before Unit moves the Actor. The current reconstruction uses that cap
-    // as constant speed; it does not yet reproduce the retained drive,
-    // friction, gravity and velocity transaction. Plane's multiplier is 1.0;
-    // the guide's factor 4 is not GroundVehicle's four-tick cadence.
-    public const int Level100TargetDroneAirSpeedMillimetersPerSecond = 5_500;
-    public const int Level100AirTrainerAirSpeedMillimetersPerSecond = 9_200;
-    public const int Level100PlaneAirTurnRateFloatBits = 0x3D32B8C2;
-    public const int Level100AirTrainerAirVelocityFloatBits = 0x41133333;
-    public const int Level100TargetDroneAirVelocityFloatBits = 0x40B00000;
+    // Each air unit's CUnitAirVelocity (id 2, unit record +0xb4) and
+    // CUnitAirTurnRate (id 6, +0xb8) come from its unit record in
+    // `data/default physics.dat` (sha256 e1fb3ded...ada14) through its
+    // manifest motion row (materialize_retail_assets.py,
+    // _air_unit_motion_fields); the value-id -> class map is
+    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md.
+    // CAirUnit Init copies +0xb8 to all three Euler rate fields at
+    // 0x00402b0c..0x00402b32. The factor 1/3 at 0x00402fc5 applies only while
+    // TF_DYING; living Plane motion uses the full rate.
 
     // Air-guide altitude band, read out of the pristine BEA.exe
     // (sha256 74154bfa...7750). CAirGuide__UpdateGroundClearanceCache

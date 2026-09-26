@@ -1772,10 +1772,11 @@ public sealed class InteractiveSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+        // The U-17 retreats inside the smoke, so the prior set keeps the safe sides.
         var priorDefinitions = new Level100ActorDefinitionSet(definitions.Actors,
             definitions.Spawns, definitions.WaypointPaths,
             definitions.MotionDefinitions.Select(definition => definition with { WeaponMounts = null }),
-            baseWorldPineCount: definitions.BaseWorldPineCount);
+            baseWorldPineCount: definitions.BaseWorldPineCount, safeSides: definitions.SafeSides);
         var priorSession = new InteractiveSession(Seed, priorDefinitions);
         var session = new InteractiveSession(Seed, definitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
@@ -1846,14 +1847,14 @@ public sealed class InteractiveSessionTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.ComputeHex(priorState), StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("4a1cbbbf20d2f4d5c682df32cd7f60fea5476d5824b75236a637da25a33f2a37",
+        Assert.Equal("1a1768635eec50df41f735f56a921a577078671313eb11e69e5e369401774c42",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("865d846bedb910f548376f9076f9030c046a9ea95b45bca07a557aed1bad5726",
+        Assert.Equal("235efb1ea617aeff589e45bf7ea0fb084ffcfd9aceb944707cb48bd3bb9ebc09",
             StateHasher.ComputeHex(session.CurrentSnapshot with
             { Level100Actors = session.CurrentSnapshot.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
         Assert.True(
-            finalStateHash == "46ea8d17883a52cc16dbd315acbe4afde87af0f4a4578779c399600108956ad7",
+            finalStateHash == "97f51bc66b5cad87f8076dc1169380a235fea88f4b5fe37522a55a1d0fa0c3fb",
             $"First-flight final state hash: {finalStateHash}");
     }
 

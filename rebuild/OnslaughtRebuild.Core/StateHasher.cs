@@ -762,7 +762,8 @@ public static class StateHasher
                 if (state.RetailPlane is { } plane)
                 {
                     Level100ActorSnapshot actor = actors.Single(value => value.ActorId == item.ActorId);
-                    if (actor.DefinitionName is not ("Air Trainer" or "Target Drone"))
+                    // Level 100's two planes and its U-17 dropship.
+                    if (actor.DefinitionName is not ("Air Trainer" or "Target Drone" or "U-17 Highside Transporter"))
                         throw new NotSupportedException("Raw Plane hashing requires an admitted aircraft definition.");
                     _ = new ThingActorBaseState(state);
                     if (actor.Pose.PositionMillimeters != state.CurrentPose.PositionMillimeters ||

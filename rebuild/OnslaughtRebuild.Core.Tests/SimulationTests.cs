@@ -78,12 +78,12 @@ public sealed class SimulationTests
             { DefinitionSetIdentitySha256 = priorDefinitions.IdentitySha256 },
         };
         Assert.Equal(StateHasher.GetCanonicalBytes(prior.Snapshot), StateHasher.GetCanonicalBytes(priorIdentityOnly));
-        Assert.Equal("2b590f17bb59a94b43837c29ab46a82e38a50735e82908c8a750c3ad5b6d68c5",
+        Assert.Equal("9267f6a7d83403582b2216c9881b1274916706f7fae7478d4d3aeb65f6140967",
             StateHasher.ComputeHex(priorIdentityOnly));
-        Assert.Equal("8a07b3c9e8b94b0e082ae445cef560c5646b1ba3ad12f03d9e1d3671ddf593fb",
+        Assert.Equal("eaadf29f32ea0b4c02f6d11a648e030558a8830a39a160c63ef7268fd2732ec0",
             StateHasher.ComputeHex(rootState with { Level100Actors = rootState.Level100Actors with
                 { DefinitionSetIdentitySha256 = legacyDefinitions.IdentitySha256 } }));
-        Assert.True(hash == "d8e9fe1ed5de36f20a8f464e1c0406e880bc79ed84a36bbf5d80746dd0f632cd",
+        Assert.True(hash == "6fb8f61179c0844b685e019f29eaff19a17b5ea99c62839ae7f044c3d525ff23",
             $"Canonical state hash: {hash}");
         Assert.Equal(52, CanonicalSchemaVersion(rootState));
 

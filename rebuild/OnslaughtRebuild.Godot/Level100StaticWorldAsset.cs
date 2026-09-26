@@ -789,12 +789,11 @@ internal sealed partial class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        // v13 -> v14 on 2026-07-27 with the waypoint-path coordinate
-        // correction. This loader reads no waypoint field, so nothing here
-        // changes behaviour - but the schema string is pinned independently of
-        // Level100ActorDefinitionManifest, so leaving it at v13 would have
-        // thrown at world load while every managed test still passed.
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v14") ||
+        // The schema string is pinned independently of
+        // Level100ActorDefinitionManifest, so it moves with every schema step
+        // (v15 on 2026-09-26 adds the air units' flight scalars and the
+        // CSafeSides, which this loader does not read).
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v15") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||

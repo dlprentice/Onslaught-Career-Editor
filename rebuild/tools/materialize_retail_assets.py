@@ -319,7 +319,7 @@ WORLD110_INITIAL_MESHES = (
 )
 LEVEL110_STATIC_WORLD = CORE_ASSETS / "Level110/level110-static-world.json"
 WORLD110_STATIC_WORLD_SHA256 = (
-    "431a0b04fd4aa48354f5882b73e683df57b9b4957bebef3da30a8ce743dc21ce"
+    "f5e411a1717c3d278e8e314c049bff54c3081744c3a7e512a9f8857b9584fa58"
 )
 LEVEL110_PLAYER_INPUTS = CORE_ASSETS / "Level110/level110-player-inputs.json"
 WORLD110_PLAYER_INPUTS_SHA256 = (
@@ -592,7 +592,7 @@ STATIC_WORLD_ANIMATED_MESHES = {
 # 10 spawns. The subsequent Trainer-life correction changes only the authored
 # Flyby and AirTrainer spawn initialHealth from 0 to 3000, from physics field3.
 # Keep this pin aligned with Level100ActorDefinitionManifest.ExpectedManifestSha256.
-STATIC_WORLD_MANIFEST_SHA256 = "17d6112a96d548fb546999b79d3980d173ce5bb0a6f0da4573eae28fc5b62c09"
+STATIC_WORLD_MANIFEST_SHA256 = "350ac9c4fdcccecbbea9f6c0d3cb7099ee915df8971123e6a030bbf574168561"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -1196,9 +1196,44 @@ def _definition_string(
     return value[:-1].decode("ascii")
 
 
+# The profile constructor's MinAltitude default, 4.0 (`mov [ebx+0x15c],
+# 0x40800000` at 0x0042f0e9); no released air profile sets field 42.
+AIR_UNIT_DEFAULT_MINIMUM_ALTITUDE_BITS = 0x40800000
+
+
+def _air_unit_motion_fields(
+    fields: _PhysicsFields, definition_name: str, mesh_radius_bits: int | None,
+) -> dict[str, object]:
+    """An air unit's flight scalars from its unit record: id 2
+    CUnitAirVelocity (+0xb4), id 6 CUnitAirTurnRate (+0xb8), id 56 CUnitBig
+    (+0x124) and MinAltitude (+0x15c, the constructor default). A Big unit's
+    air step damps by 0.95 while its render radius (the mesh's +0x164,
+    CRTMesh +0x20) times 0.2 reaches the water (0x00402fa0)."""
+    if 42 in fields or 2 not in fields or 6 not in fields:
+        raise RuntimeError(f"{definition_name} air-unit fields changed")
+    big = struct.unpack("<i", fields[56])[0] != 0 if 56 in fields else False
+    if big and mesh_radius_bits is None:
+        raise RuntimeError(f"{definition_name} is Big but has no render radius")
+    return {
+        "airTurnRateFloatBits": struct.unpack("<i", fields[6])[0],
+        "airVelocityFloatBits": struct.unpack("<i", fields[2])[0],
+        "big": big,
+        "meshRadiusFloatBits": mesh_radius_bits if big else None,
+        "minimumAltitudeFloatBits": AIR_UNIT_DEFAULT_MINIMUM_ALTITUDE_BITS,
+    }
+
+
+def _cmsh_radius_bits(inflated_mesh: bytes) -> int:
+    """The mesh's radius word, CMesh +0x164 (the CMSH payload starts at 8)."""
+    if inflated_mesh[:4] != b"CMSH":
+        raise RuntimeError("mesh is not a CMSH stream")
+    return struct.unpack_from("<i", inflated_mesh, 8 + 0x164)[0]
+
+
 def _level100_actor_motion_definitions(
     physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
     aircraft_mesh,
+    transporter_radius_bits: int,
 ) -> list[dict[str, object]]:
     # Released PC IScript waypoint completion, `0x00538470`, computes horizontal
     # distance and arrives only when `distance < radius`. For `mThingType &
@@ -1246,10 +1281,9 @@ def _level100_actor_motion_definitions(
             }
         )
 
-    # Air-unit motion scalars remain in SimulationConstants.Level100Plane*.
-    # The manifest's ground-motion fields stay null for these classes. Guard
-    # the released words here so those constants cannot silently drift from
-    # the selected input. Ordered weapon uses/model poses are admitted below.
+    # The manifest's ground-motion fields stay null for the air units; their
+    # flight scalars come from _air_unit_motion_fields. Ordered weapon
+    # uses/model poses are admitted below.
     #
     # id 2 = CUnitAirVelocity (unit record +0xb4), id 6 = CUnitAirTurnRate
     # (+0xb8), id 23 = CUnitMaxTargetRange (+0x158); see
@@ -1283,13 +1317,19 @@ def _level100_actor_motion_definitions(
                 "motionClass": "Plane",
                 "steamClassVtableAddress": 0x005E1930,
                 "weaponMounts": _aircraft_weapon_mounts(aircraft_mesh, fields),
+                **_air_unit_motion_fields(fields, definition_name, None),
             }
         )
 
     transporter_name = "U-17 Highside Transporter"
     transporter_fields = _physics_record(physics, 1, transporter_name)
-    if transporter_fields.get(8) != struct.pack("<i", 12):
-        raise RuntimeError("Level 100 transporter dropship behavior changed")
+    if (
+        transporter_fields.get(8) != struct.pack("<i", 12)
+        or transporter_fields.get(2) != struct.pack("<I", 0x40A00000)
+        or transporter_fields.get(6) != struct.pack("<I", 0x3BE4C388)
+        or transporter_fields.get(56) != struct.pack("<i", 1)
+    ):
+        raise RuntimeError("Level 100 transporter dropship fields changed")
     rows.append(
         {
             "arrivalRadiusMillimeters": 8_000,
@@ -1303,6 +1343,7 @@ def _level100_actor_motion_definitions(
             "maximumTurnRadiansPerBaseTickFloatBits": None,
             "motionClass": "Dropship",
             "steamClassVtableAddress": 0x005E1DD8,
+            **_air_unit_motion_fields(transporter_fields, transporter_name, transporter_radius_bits),
         }
     )
     return rows
@@ -1596,7 +1637,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v14"
+        manifest.get("schema") != "onslaught.level100-static-world.v15"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("physicsSourceSha256") != PHYSICS_DEFINITIONS_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
@@ -1732,7 +1773,14 @@ def _reuse_canonical_assets() -> int:
     configured_lab = os.environ.get("BEA_LOCAL_LAB")
     if configured_lab and Path(configured_lab).resolve() != (canonical / "local-lab").resolve():
         raise RuntimeError("BEA_LOCAL_LAB must name this worktree's canonical local-lab")
-    outputs = tuple(dict.fromkeys(_all_outputs(canonical)))
+    # The static-world manifest lists further outputs. A checkout that holds
+    # the exact pinned manifest as its own file lists them from it, since the
+    # canonical checkout may not have republished it yet; every listed output
+    # is still verified below.
+    own_manifest = ROOT / STATIC_WORLD_MANIFEST
+    listing_root = ROOT if (not own_manifest.is_symlink() and own_manifest.is_file()
+                            and _sha256(own_manifest.read_bytes()) == STATIC_WORLD_MANIFEST_SHA256) else canonical
+    outputs = tuple(dict.fromkeys(_all_outputs(listing_root)))
     pending: list[tuple[Path, Path]] = []
     for relative, expected in outputs:
         source = canonical / relative
@@ -2195,6 +2243,7 @@ def _require_snow_tree_groups(table: _WorldTreeTable) -> None:
 
 def _parse_static_world_inputs(
     raw_level: bytes, *, preserve_serialized_names: bool = False,
+    safe_sides: list[dict[str, object]] | None = None,
 ) -> tuple[list[dict[str, object]], _WorldTreeTable]:
     bswd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"BSWD")
     reader = _WorldReader(bswd)
@@ -2231,6 +2280,10 @@ def _parse_static_world_inputs(
             raise RuntimeError(f"unsupported Level 100 base-world thing type {thing_type}")
 
         if thing_type == 37:
+            # A CSafeSide: no actor, but a retreat target
+            # (_safe_side_record; 0x004fd910 walks their list).
+            if safe_sides is not None:
+                safe_sides.append(_safe_side_record("base", ordinal, position, allegiance))
             continue
         mesh_key = STATIC_MESH_BY_DEFINITION.get(definition)
         if mesh_key is None:
@@ -2263,6 +2316,32 @@ def _parse_static_world_inputs(
     if len(objects) != 33 or reader.position != 29_549:
         raise RuntimeError("Level 100 base-world object/tree counts do not reproduce")
     return objects, trees
+
+
+def _safe_side_record(world: str, row: int, position: list[float], allegiance: int) -> dict[str, object]:
+    """One CSafeSide (type 37): Init 0x004de190 prepends it to the list at
+    0x00855160 and keeps the row's allegiance (+0x7c, read by slot 66
+    0x004bfc10); a unit's retreat point (0x004fd910) is the nearest one of its
+    own side. Rows are listed in construction order."""
+    return {
+        "allegiance": allegiance,
+        "retailPositionFloatBits": [struct.unpack("<i", struct.pack("<f", value))[0] for value in position],
+        "row": row,
+        "world": world,
+    }
+
+
+def _level100_safe_sides(
+    raw_level: bytes, level_actors: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Level 100's CSafeSides in construction order: the base world's rows,
+    then the level world's (level100-construction-order.md)."""
+    safe_sides: list[dict[str, object]] = []
+    _parse_static_world_inputs(raw_level, safe_sides=safe_sides)
+    return safe_sides + [
+        _safe_side_record("level", int(actor["ordinal"]), list(actor["retailPosition"]), int(actor["allegiance"]))
+        for actor in level_actors if actor["thingType"] == 37
+    ]
 
 
 def _parse_static_world(
@@ -4033,7 +4112,7 @@ def _world110_initial_actor_bytes(
     }, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
-WORLD110_STATIC_WORLD_SCHEMA = "onslaught.world110-static-world.v1"
+WORLD110_STATIC_WORLD_SCHEMA = "onslaught.world110-static-world.v2"
 
 # World 110's level rows as the RE lane's construction contract classes them
 # (reverse-engineering/game-mechanics/world-110-construction-order.md,
@@ -4158,7 +4237,7 @@ def _parse_world110_paths_and_settings(
     return paths, {"panLengthFloatBits": words[4], "preRunWordBits": words[3]}
 
 
-def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes:
+def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes, landing_craft_mesh: bytes) -> bytes:
     """World 110's level for the Simulation, in Level 100's manifest shape.
 
     The shared base world's 33 objects and 1,481 pines as Level 100's manifest
@@ -4174,8 +4253,14 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
     """
     if _sha256(physics_data) != PHYSICS_DEFINITIONS_SHA256:
         raise RuntimeError("world 110 physics source identity changed")
+    if _sha256(landing_craft_mesh) != WORLD110_LANDING_CRAFT_MESH_SHA256:
+        raise RuntimeError("world 110 landing-craft mesh identity changed")
+    from cmsh_static_preview import inflate_aya
+    landing_craft_radius_bits = _cmsh_radius_bits(inflate_aya(landing_craft_mesh))
     physics = _physics_records(physics_data)
-    base_objects, base_trees = _parse_static_world_inputs(raw_world)
+    # The level world has no CSafeSide; the shared base world's are its list.
+    safe_sides: list[dict[str, object]] = []
+    base_objects, base_trees = _parse_static_world_inputs(raw_world, safe_sides=safe_sides)
     seeds = _parse_world110_initial_object_seeds(raw_world)
     paths, settings = _parse_world110_paths_and_settings(raw_world, seeds)
 
@@ -4334,10 +4419,9 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
                         "motionClass": "GroundVehicle", "steamClassVtableAddress": 0x005E297C})
         elif behaviour in (9, 12):
             # id 2 CUnitAirVelocity (+0xb4) and id 6 CUnitAirTurnRate (+0xb8)
-            # (factory jump table 0x00432908); Level 100 keeps its two planes'
-            # in SimulationConstants.
-            row.update({"airTurnRateFloatBits": struct.unpack("<i", fields[6])[0],
-                        "airVelocityFloatBits": struct.unpack("<i", fields[2])[0]})
+            # (factory jump table 0x00432908), CUnitBig and MinAltitude.
+            row.update(_air_unit_motion_fields(
+                fields, definition, landing_craft_radius_bits if behaviour == 12 else None))
             if behaviour == 9:
                 row.update({"arrivalRadiusMillimeters": 5_000, "motionClass": "Plane",
                             "steamClassVtableAddress": 0x005E1930})
@@ -4360,6 +4444,7 @@ def _world110_static_world_bytes(raw_world: bytes, physics_data: bytes) -> bytes
         "pineInstanceCount": len(pines.placements),
         "pines": [[*struct.unpack("<2f", struct.pack("<2i", x, y)), variant]
                   for x, y, variant in pines.placements],
+        "safeSides": safe_sides,
         "schema": WORLD110_STATIC_WORLD_SCHEMA,
         "settings": settings,
         "sourceArchiveSha256": WORLD110_ARCHIVE_SHA256,
@@ -4997,6 +5082,7 @@ def _materialize_static_world(
 
     objects, pines, fern_count = _parse_static_world(raw_level)
     level_actors, waypoint_paths = _parse_level_world_actors_and_waypoints(raw_level)
+    safe_sides = _level100_safe_sides(raw_level, level_actors)
     texture_blend_flags = _texture_blend_alpha_flags(raw_level)
     resolver = build_asset_resolver(game_root / "data/resources")
     source_data: dict[Path, bytes] = {}
@@ -5115,7 +5201,12 @@ def _materialize_static_world(
         if item[1] == "data/resources/meshes/m_FA_F24_training.msh.aya")
     aircraft_mesh = parse_cmsh_stream(inflate_aya(
         _read_exact(game_root / aircraft_source, aircraft_hash)))
-    motion_definitions = _level100_actor_motion_definitions(physics, aircraft_mesh)
+    _, transporter_source, transporter_hash = next(
+        item for item in DIRECT_ASSETS
+        if item[1] == "data/resources/meshes/m_f_lifter.msh.aya")
+    motion_definitions = _level100_actor_motion_definitions(
+        physics, aircraft_mesh,
+        _cmsh_radius_bits(inflate_aya(_read_exact(game_root / transporter_source, transporter_hash))))
 
     pine_views = _pine_imposter_views(raw_level)
     pine_centers = [
@@ -5328,7 +5419,8 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v14",
+        "safeSides": safe_sides,
+        "schema": "onslaught.level100-static-world.v15",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
@@ -6313,6 +6405,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
             static_data = _world110_static_world_bytes(
                 raw_world,
                 _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256),
+                _read_exact(game_root / WORLD110_LANDING_CRAFT_MESH, WORLD110_LANDING_CRAFT_MESH_SHA256),
             )
             static_hash = _sha256(static_data)
             if static_hash != WORLD110_STATIC_WORLD_SHA256:

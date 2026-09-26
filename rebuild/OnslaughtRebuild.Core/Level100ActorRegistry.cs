@@ -270,7 +270,23 @@ public sealed record Level100ActorMotionDefinition(
     int? CoreGroundOriginOffsetMillimeters,
     IReadOnlyList<Level100ActorWeaponMountDefinition>? WeaponMounts = null,
     int? AirVelocityFloatBits = null,
-    int? AirTurnRateFloatBits = null);
+    int? AirTurnRateFloatBits = null,
+    bool? Big = null,
+    int? MinimumAltitudeFloatBits = null,
+    int? MeshRadiusFloatBits = null);
+
+/// <summary>
+/// A <c>CSafeSide</c> (a type-37 row, no actor): its Init (<c>0x004de190</c>)
+/// prepends it to the list at <c>0x00855160</c> and keeps the row's
+/// allegiance, and a unit's retreat point (<c>0x004fd910</c>) is the nearest
+/// one of its own side. <paramref name="BaseWorld"/> tells which world file
+/// holds <paramref name="Row"/>; a set lists them in construction order.
+/// </summary>
+public sealed record Level100SafeSideDefinition(
+    bool BaseWorld,
+    int Row,
+    Level100FloatVector3Bits RetailPositionFloatBits,
+    int Allegiance);
 
 /// <summary>One ordered Unit weapon use and its exact selected model pose.</summary>
 public sealed record Level100ActorWeaponMountDefinition(
@@ -294,6 +310,7 @@ public sealed class Level100ActorDefinitionSet
     private readonly IReadOnlyList<Level100ActorMotionDefinition> _motionDefinitions;
     private readonly IReadOnlyList<Level100SquadDefinition> _squads;
     private readonly IReadOnlyList<Level100ComponentDefinition> _components;
+    private readonly IReadOnlyList<Level100SafeSideDefinition> _safeSides;
     private readonly Dictionary<string, Level100ActorDefinition> _actorsByIdentity;
     private readonly Dictionary<string, Level100SpawnDefinition> _spawnsByIdentity;
     private readonly Dictionary<SpawnKey, Level100SpawnDefinition> _spawnsByRequest;
@@ -308,7 +325,8 @@ public sealed class Level100ActorDefinitionSet
         int worldNumber = RetailWorldCatalog.RootWorldNumber,
         int baseWorldPineCount = 0,
         IEnumerable<Level100SquadDefinition>? squads = null,
-        IEnumerable<Level100ComponentDefinition>? components = null)
+        IEnumerable<Level100ComponentDefinition>? components = null,
+        IEnumerable<Level100SafeSideDefinition>? safeSides = null)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
@@ -465,6 +483,7 @@ public sealed class Level100ActorDefinitionSet
         _motionDefinitions = Array.AsReadOnly(motionDefinitionArray);
         _squads = Array.AsReadOnly(AdmitSquads(squads));
         _components = Array.AsReadOnly(AdmitComponents(components));
+        _safeSides = Array.AsReadOnly(AdmitSafeSides(safeSides));
         IdentitySha256 = ComputeIdentity(
             actorArray,
             spawnArray,
@@ -472,7 +491,26 @@ public sealed class Level100ActorDefinitionSet
             _motionDefinitions,
             baseWorldPineCount,
             _squads,
-            _components);
+            _components,
+            _safeSides);
+    }
+
+    private static Level100SafeSideDefinition[] AdmitSafeSides(IEnumerable<Level100SafeSideDefinition>? safeSides)
+    {
+        Level100SafeSideDefinition[] array = safeSides?.ToArray() ?? [];
+        var rows = new HashSet<(bool, int)>();
+        foreach (Level100SafeSideDefinition safeSide in array)
+        {
+            if (safeSide is null || safeSide.Row < 0 || !rows.Add((safeSide.BaseWorld, safeSide.Row)) ||
+                !float.IsFinite(BitConverter.Int32BitsToSingle(safeSide.RetailPositionFloatBits.X)) ||
+                !float.IsFinite(BitConverter.Int32BitsToSingle(safeSide.RetailPositionFloatBits.Y)) ||
+                !float.IsFinite(BitConverter.Int32BitsToSingle(safeSide.RetailPositionFloatBits.Z)))
+            {
+                throw new ArgumentException("Invalid Level 100 safe side.", nameof(safeSides));
+            }
+        }
+
+        return array;
     }
 
     private Level100SquadDefinition[] AdmitSquads(IEnumerable<Level100SquadDefinition>? squads)
@@ -562,6 +600,9 @@ public sealed class Level100ActorDefinitionSet
 
     /// <summary>The components built inside their parents' construction.</summary>
     public IReadOnlyList<Level100ComponentDefinition> Components => _components;
+
+    /// <summary>The level's <c>CSafeSide</c>s, in construction order.</summary>
+    public IReadOnlyList<Level100SafeSideDefinition> SafeSides => _safeSides;
 
     public string IdentitySha256 { get; }
 
@@ -780,7 +821,8 @@ public sealed class Level100ActorDefinitionSet
         IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions,
         int baseWorldPineCount,
         IReadOnlyList<Level100SquadDefinition> squads,
-        IReadOnlyList<Level100ComponentDefinition> components)
+        IReadOnlyList<Level100ComponentDefinition> components,
+        IReadOnlyList<Level100SafeSideDefinition> safeSides)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
@@ -795,12 +837,17 @@ public sealed class Level100ActorDefinitionSet
             // retail list order and each node's own target. Format 14 is 13
             // plus each actor's allegiance, each motion row's air scalars, the
             // squads and the components, and only a set that carries any of
-            // them selects it.
-            bool hasSides = squads.Count > 0 || components.Count > 0 ||
+            // them selects it. Format 15 is 14 plus each motion row's Big
+            // flag, MinAltitude and render radius and the safe sides; a set
+            // that carries any of them selects it.
+            bool hasFlight = safeSides.Count > 0 || motionDefinitions.Any(definition =>
+                definition.Big is not null || definition.MinimumAltitudeFloatBits is not null ||
+                definition.MeshRadiusFloatBits is not null);
+            bool hasSides = hasFlight || squads.Count > 0 || components.Count > 0 ||
                 actors.Any(actor => actor.Allegiance != 0) ||
                 motionDefinitions.Any(definition =>
                     definition.AirVelocityFloatBits is not null || definition.AirTurnRateFloatBits is not null);
-            writer.Write(hasSides ? 14 : baseWorldPineCount > 0 ? 13 : hasWeaponMounts ? 12 : hasSpawnerExits ? 11 : 10);
+            writer.Write(hasFlight ? 15 : hasSides ? 14 : baseWorldPineCount > 0 ? 13 : hasWeaponMounts ? 12 : hasSpawnerExits ? 11 : 10);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -967,6 +1014,25 @@ public sealed class Level100ActorDefinitionSet
                     writer.Write(component.DefinitionName);
                 }
             }
+
+            if (hasFlight)
+            {
+                foreach (Level100ActorMotionDefinition definition in motionDefinitions)
+                {
+                    writer.Write(definition.Big is { } big ? (big ? 1 : 0) : -1);
+                    WriteNullableInt(writer, definition.MinimumAltitudeFloatBits);
+                    WriteNullableInt(writer, definition.MeshRadiusFloatBits);
+                }
+
+                writer.Write(safeSides.Count);
+                foreach (Level100SafeSideDefinition safeSide in safeSides)
+                {
+                    writer.Write(safeSide.BaseWorld);
+                    writer.Write(safeSide.Row);
+                    WriteVector(writer, safeSide.RetailPositionFloatBits);
+                    writer.Write(safeSide.Allegiance);
+                }
+            }
         }
 
         return Convert.ToHexString(SHA256.HashData(stream.ToArray())).ToLowerInvariant();
@@ -1047,6 +1113,9 @@ public enum Level100ActorFactKind
     StartedDying = 2,
     Died = 3,
     TriggerDispatchReady = 4,
+
+    /// <summary>The thing left the world without dying (event 2000).</summary>
+    ShutDown = 5,
 }
 
 public sealed record Level100ActorFactSnapshot(
@@ -1429,11 +1498,12 @@ public sealed class Level100ActorRegistry
         return Require(actorId).BaseState;
     }
 
+    /// <summary>A plane's or dropship's raw air state.</summary>
     internal ThingActorBaseState GetPlaneState(Level100ActorId actorId)
     {
         Actor actor = Require(actorId);
-        if (!IsAdmittedPlane(actor.DefinitionName) || !actor.BaseState.HasRetailPlaneMotion)
-            throw new InvalidOperationException("The actor has no admitted Level100 Plane state.");
+        if (!IsAdmittedAirUnit(actor.DefinitionName) || !actor.BaseState.HasRetailPlaneMotion)
+            throw new InvalidOperationException("The actor has no admitted Level100 air-unit state.");
         return actor.BaseState;
     }
 
@@ -1746,6 +1816,26 @@ public sealed class Level100ActorRegistry
         return true;
     }
 
+    /// <summary>
+    /// A unit's SHUTDOWN (event 2000) without a death, as a dropship's
+    /// run-out posts it (slot 116, <c>0x004fe5f0</c>):
+    /// <c>CComplexThing::HandleEvent</c> runs the script's <c>shutdown()</c>
+    /// (<c>IScript</c> slot 2, <c>0x00533810</c>, built-in 7) and then the
+    /// thing's own shutdown (<c>references/Onslaught/thing.cpp:675-684</c>).
+    /// <c>CUnit</c>'s (<c>0x004f95d0</c>) takes it off its side's count
+    /// (<c>0x004f97b6-0x004f97ef</c>), and the thing leaves the world.
+    /// </summary>
+    internal bool ReportShutdown(Level100ActorId actorId)
+    {
+        Actor actor = RequireMutable(actorId);
+        if (actor.Lifecycle != Level100ActorLifecycle.Alive) return false;
+        actor.Lifecycle = Level100ActorLifecycle.Destroyed;
+        actor.Active = false;
+        actor.IsObjective = false;
+        EnqueueFact(Level100ActorFactKind.ShutDown, actorId, null, 0);
+        return true;
+    }
+
     internal bool ReportGroundUnitDied(Level100ActorId actorId)
     {
         Actor actor = RequireMutable(actorId);
@@ -2002,8 +2092,8 @@ public sealed class Level100ActorRegistry
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = definition.InitialHealth,
-            BaseState = IsAdmittedPlane(definition.DefinitionName)
-                ? CreateAuthoredPlaneState(definition)
+            BaseState = IsAdmittedAirUnit(definition.DefinitionName)
+                ? CreateAuthoredAirUnitState(definition)
                 : CreateBaseState(pose, definition.ThingTypeMask),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = definition.TargetOrdinal,
@@ -2017,31 +2107,58 @@ public sealed class Level100ActorRegistry
         _definitions.FindMotionDefinition(definitionName)?.MotionClass == Level100ActorMotionClass.Plane;
 
     /// <summary>
-    /// A plane type's air velocity (unit field id 2, <c>+0xb4</c>): its motion
-    /// row's value, or Level 100's two planes' guarded constants.
+    /// Level 100's U-17 (behaviour 12, <c>CDropship</c>), which keeps raw air
+    /// state from construction like the planes. World 110's landing craft
+    /// wait for the landing states: one lands at once.
+    /// </summary>
+    private bool IsAdmittedDropship(string? definitionName) =>
+        _initializeSupport &&
+        _definitions.WorldNumber == 100 && definitionName is "U-17 Highside Transporter" &&
+        _definitions.FindMotionDefinition(definitionName)?.MotionClass == Level100ActorMotionClass.Dropship;
+
+    private bool IsAdmittedAirUnit(string? definitionName) =>
+        IsAdmittedPlane(definitionName) || IsAdmittedDropship(definitionName);
+
+    /// <summary>
+    /// A dropship's Euler rates: <c>CAirUnit::Init</c> sets all three to the
+    /// air turn rate, then <c>CDropship::Init</c> sets pitch and roll to a
+    /// quarter of it (0.25 at <c>0x005d858c</c>, <c>0x00446dc2-0x00446e0c</c>).
+    /// A plane keeps all three.
+    /// </summary>
+    private Level100FloatVector3Bits AirUnitRates(string? definitionName)
+    {
+        int rate = PlaneAirTurnRateFloatBits(definitionName);
+        if (!IsAdmittedDropship(definitionName)) return new(rate, rate, rate);
+        int quarter = BitConverter.SingleToInt32Bits(
+            (float)RetailFloat24.Multiply(BitConverter.Int32BitsToSingle(rate), 0.25));
+        return new(rate, quarter, quarter);
+    }
+
+    /// <summary>The world's heightfield, for the air units' ground and floor samples.</summary>
+    internal Level100Terrain Terrain => _terrain.Heightfield;
+
+    /// <summary>
+    /// An air unit's air velocity (unit field id 2, <c>+0xb4</c>), from its
+    /// motion row.
     /// </summary>
     internal int PlaneAirVelocityFloatBits(string? definitionName) =>
-        _definitions.FindMotionDefinition(definitionName)?.AirVelocityFloatBits ?? definitionName switch
-        {
-            "Air Trainer" => SimulationConstants.Level100AirTrainerAirVelocityFloatBits,
-            "Target Drone" => SimulationConstants.Level100TargetDroneAirVelocityFloatBits,
-            _ => throw new NotSupportedException($"No air velocity for '{definitionName}'."),
-        };
+        _definitions.FindMotionDefinition(definitionName)?.AirVelocityFloatBits ??
+        throw new NotSupportedException($"No air velocity for '{definitionName}'.");
 
-    /// <summary>A plane type's air turn rate (unit field id 6, <c>+0xb8</c>).</summary>
+    /// <summary>An air unit's air turn rate (unit field id 6, <c>+0xb8</c>).</summary>
     private int PlaneAirTurnRateFloatBits(string? definitionName) =>
         _definitions.FindMotionDefinition(definitionName)?.AirTurnRateFloatBits ??
-        SimulationConstants.Level100PlaneAirTurnRateFloatBits;
+        throw new NotSupportedException($"No air turn rate for '{definitionName}'.");
 
-    private ThingActorBaseState CreateAuthoredPlaneState(Level100ActorDefinition definition)
+    private ThingActorBaseState CreateAuthoredAirUnitState(Level100ActorDefinition definition)
     {
         if (definition.InitialPose.LinearVelocityMillimetersPerTick != SimVector3.Zero ||
             definition.InitialPose.AngularVelocityMicroRadiansPerTick != SimVector3.Zero)
-            throw new NotSupportedException("Selected Plane construction requires the admitted zero initial velocity.");
+            throw new NotSupportedException("Selected air-unit construction requires the admitted zero initial velocity.");
         Level100AuthoredTransform input = definition.AuthoredTransform;
         return CreatePlaneState(input.RetailPositionFloatBits,
             input.RetailEulerFloatBits, definition.ThingTypeMask, 0,
-            PlaneAirTurnRateFloatBits(definition.DefinitionName));
+            AirUnitRates(definition.DefinitionName));
     }
 
     private ThingActorBaseState CreateSpawnedPlaneState(Actor owner,
@@ -2061,7 +2178,7 @@ public sealed class Level100ActorRegistry
             throw new NotSupportedException("The zero-emitter owner fallback is outside the selected Airfield route.");
         Level100FloatVector3Bits euler = RetailPlaneMotion.EulerFromSpawnerBasis(emitter.BasisFloatBits);
         return CreatePlaneState(position, euler, definition.ThingTypeMask, eventTimeFloatBits,
-            PlaneAirTurnRateFloatBits(definition.DefinitionName));
+            AirUnitRates(definition.DefinitionName));
     }
 
     /// <summary>
@@ -2118,7 +2235,7 @@ public sealed class Level100ActorRegistry
     }
 
     private ThingActorBaseState CreatePlaneState(Level100FloatVector3Bits position,
-        Level100FloatVector3Bits euler, uint specificTypeMask, int eventTimeFloatBits, int turnRateFloatBits)
+        Level100FloatVector3Bits euler, uint specificTypeMask, int eventTimeFloatBits, Level100FloatVector3Bits rates)
     {
         // Pristine 74154bfa…7750: Actor [401255,40131a) and ComplexThing
         // [4f4008,4f40cd) use the same trig/arithmetic/stores as Unit's
@@ -2127,7 +2244,7 @@ public sealed class Level100ActorRegistry
         var pose = new RetailActorPoseSnapshot(position, RetailUnitEuler.BuildBasis(euler));
         var state = new ThingActorBaseState(new(SimVector3.Zero, pose.BasisFloatBits),
             SimVector3.Zero, SimVector3.Zero, specificTypeMask);
-        state.BeginRetailPlane(pose, RetailPlaneMotion.CreateInitial(pose, euler, turnRateFloatBits),
+        state.BeginRetailPlane(pose, RetailPlaneMotion.CreateInitial(pose, euler, rates),
             eventTimeFloatBits, specificTypeMask);
         // Unit seating happens after Actor Init: the ground arm teleports
         // both positions; the later water clamp changes current position only.
@@ -2147,10 +2264,10 @@ public sealed class Level100ActorRegistry
         Level100ActorSnapshot source,
         Level100ActorRegistrySnapshot snapshot)
     {
-        if (IsAdmittedPlane(source.DefinitionName) && !actor.BaseState.HasRetailPlaneMotion)
-            throw new ArgumentException("Selected Plane snapshots require their creation-owned raw state.", nameof(snapshot));
-        if (actor.BaseState.HasRetailPlaneMotion && !IsAdmittedPlane(source.DefinitionName))
-            throw new NotSupportedException("Raw Plane motion is admitted only for each world's selected aircraft definitions.");
+        if (IsAdmittedAirUnit(source.DefinitionName) && !actor.BaseState.HasRetailPlaneMotion)
+            throw new ArgumentException("Selected air-unit snapshots require their creation-owned raw state.", nameof(snapshot));
+        if (actor.BaseState.HasRetailPlaneMotion && !IsAdmittedAirUnit(source.DefinitionName))
+            throw new NotSupportedException("Raw air motion is admitted only for each world's selected aircraft definitions.");
         if (source.Pose is null ||
             !HasFinitePose(source.Pose) ||
             actor.Health < 0 ||

@@ -274,15 +274,21 @@ public sealed partial class Level100ActorMechanics
     /// with its own. Core has no pan camera, so the caller supplies the Battle
     /// Engine's position, which is exactly the first-person camera's.
     /// </param>
+    /// <param name="settleFacts">
+    /// Settles the facts a callback reported (a unit's SHUTDOWN), inside the
+    /// flush, before the next callback.
+    /// </param>
     internal IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick(uint eventFrameCount,
         Action<Level100ActorId>? dispatchReady = null,
         Action<Level100ActorId>? startPlaneDeath = null,
         Action<RetailEventScheduler, RetailEventDispatch>? battleEngineEvent = null,
-        SimVector3? cameraPosition = null)
+        SimVector3? cameraPosition = null,
+        Action? settleFacts = null)
     {
         if (_planeEvents is not null && _planeEvents.FrameCount != eventFrameCount)
             throw new InvalidOperationException("Aircraft callbacks must share the Simulation event clock.");
         _cameraPosition = cameraPosition;
+        _settleFacts = settleFacts;
         try
         {
             return AdvanceRetailBaseTick(dispatchReady, startPlaneDeath, battleEngineEvent);
@@ -290,6 +296,7 @@ public sealed partial class Level100ActorMechanics
         finally
         {
             _cameraPosition = null;
+            _settleFacts = null;
         }
     }
 
@@ -353,8 +360,20 @@ public sealed partial class Level100ActorMechanics
                     BeginAttack(command);
                     break;
                 case Level100ActorScriptCommandKind.Retreat:
-                    SetSimpleIntent(command, Level100ActorCommandIntent.Retreating);
+                {
+                    // A dropship's Retreat is slot 100 alone: its guide flies
+                    // to the retreat point and nothing else stops.
+                    ActorState state = RequireState(command);
+                    if (state.PlaneGuide is not null && IsDropship(state.ActorId))
+                    {
+                        RetreatDropship(state);
+                    }
+                    else
+                    {
+                        SetSimpleIntent(command, Level100ActorCommandIntent.Retreating);
+                    }
                     break;
+                }
                 case Level100ActorScriptCommandKind.Stop:
                     Stop(command);
                     break;
@@ -645,17 +664,31 @@ public sealed partial class Level100ActorMechanics
             GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
             path.Point(state.WaypointNodeIndex!.Value);
-        long deltaX =
-            (long)point.PositionMillimeters.X -
-            actor.Pose.PositionMillimeters.X;
-        long deltaZ =
-            (long)point.PositionMillimeters.Z -
-            actor.Pose.PositionMillimeters.Z;
-        long radius = motion.ArrivalRadiusMillimeters;
-        if ((deltaX * deltaX) + (deltaZ * deltaZ) >=
-            radius * radius)
+        if (motion.MotionClass == Level100ActorMotionClass.Dropship && state.PlaneGuide is not null)
         {
-            return;
+            // A dropship arrives on the follower's own float test.
+            if (!RetailDropshipMotion.Arrived(
+                    _actors.GetBaseState(state.ActorId).RetailPoses!.Current.PositionFloatBits,
+                    point.RetailComponentsFloatBits,
+                    RetailDropshipMotion.ArrivalRadius))
+            {
+                return;
+            }
+        }
+        else
+        {
+            long deltaX =
+                (long)point.PositionMillimeters.X -
+                actor.Pose.PositionMillimeters.X;
+            long deltaZ =
+                (long)point.PositionMillimeters.Z -
+                actor.Pose.PositionMillimeters.Z;
+            long radius = motion.ArrivalRadiusMillimeters;
+            if ((deltaX * deltaX) + (deltaZ * deltaZ) >=
+                radius * radius)
+            {
+                return;
+            }
         }
 
         // On arrival the next node is the waypoint's own target

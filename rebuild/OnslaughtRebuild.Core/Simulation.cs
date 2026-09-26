@@ -1035,7 +1035,8 @@ public sealed partial class Simulation
                 _level100Destruction.StartPlaneDeathAfterSpawnerLoss(actorId);
                 DrainAndDispatchLevel100ActorFacts();
             }, HandleBattleEngineEvent,
-            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z));
+            new SimVector3(PlayerPosition.X, PlayerElevationMillimeters, PlayerPosition.Z),
+            DrainAndDispatchLevel100ActorFacts);
         foreach (Level100ActorMechanicsWaitCompletion completion in completions)
         {
             if (!_level100ActorScripts.CompleteMechanicsWait(

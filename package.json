@@ -48,6 +48,7 @@
     "export:companion-godot": "python ./tools/companion_godot.py export",
     "capture:companion-godot": "python ./tools/companion_godot.py capture",
     "build:rebuild-godot": "python ./rebuild/tools/first_flight.py build",
+    "check:rebuild": "python ./rebuild/tools/rebuild_gate.py",
     "run:rebuild-godot:windows": "npm run require:windows-host && pwsh -NoLogo -NoProfile -File ./rebuild/tools/Run-FirstFlight.ps1",
     "test:rebuild-godot-smoke:windows": "npm run require:windows-host && pwsh -NoLogo -NoProfile -File ./rebuild/tools/Smoke-FirstFlight.ps1",
     "capture:rebuild-godot": "python ./rebuild/tools/first_flight.py capture"

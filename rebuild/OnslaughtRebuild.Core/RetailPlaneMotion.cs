@@ -44,13 +44,24 @@ public static class RetailPlaneMotion
 
     /// <summary>The selected living CPlane initializer starts at rest.</summary>
     public static RetailPlaneMotionSnapshot CreateInitial(RetailActorPoseSnapshot pose,
-        Level100FloatVector3Bits euler, int turnRateFloatBits = SimulationConstants.Level100PlaneAirTurnRateFloatBits)
+        Level100FloatVector3Bits euler, int turnRateFloatBits) =>
+        // The Euler rates start at the type's air turn rate (unit +0xb8).
+        CreateInitial(pose, euler,
+            new Level100FloatVector3Bits(turnRateFloatBits, turnRateFloatBits, turnRateFloatBits));
+
+    /// <summary>
+    /// An air unit at rest with its own yaw, pitch and roll rates:
+    /// <c>CAirUnit::Init</c> sets all three to the air turn rate
+    /// (<c>0x00402b0c-0x00402b32</c>), and <c>CDropship::Init</c> then quarters
+    /// the pitch and roll rates (<c>0x00446dc2-0x00446e0c</c>).
+    /// </summary>
+    public static RetailPlaneMotionSnapshot CreateInitial(RetailActorPoseSnapshot pose,
+        Level100FloatVector3Bits euler, Level100FloatVector3Bits rates)
     {
         ArgumentNullException.ThrowIfNull(pose);
         _ = Read(euler.X); _ = Read(euler.Y); _ = Read(euler.Z);
-        // The Euler rates start at the type's air turn rate (unit +0xb8).
-        return new(default, default, euler, euler,
-            new(turnRateFloatBits, turnRateFloatBits, turnRateFloatBits), 0);
+        _ = Read(rates.X); _ = Read(rates.Y); _ = Read(rates.Z);
+        return new(default, default, euler, euler, rates, 0);
     }
 
     /// <summary>
@@ -136,13 +147,29 @@ public static class RetailPlaneMotion
         Level100FloatVector3Bits velocity,
         Level100FloatVector3Bits drive,
         int airSpeedFloatBits,
+        int speedMode) =>
+        IntegrateAirVelocity(velocity, drive, 0x3f7ae148, airSpeedFloatBits, speedMode);
+
+    /// <summary>
+    /// The living air-unit step (<c>0x00402fa0</c>) before its unit step: add
+    /// the drive, add the unit's gravity (slot 45, zero for a living plane or
+    /// dropship), damp by <paramref name="dampingFloatBits"/> (slot 73, or
+    /// 0.95 for a Big unit in the water), then the strict stored-norm cap
+    /// <c>+0xb4</c> × 0.05, the air velocity times 1.5 while retreating
+    /// (slot 111, <c>0x004fe5c0</c>).
+    /// </summary>
+    public static Level100FloatVector3Bits IntegrateAirVelocity(
+        Level100FloatVector3Bits velocity,
+        Level100FloatVector3Bits drive,
+        int dampingFloatBits,
+        int airSpeedFloatBits,
         int speedMode)
     {
         double x = Store(RetailFloat24.Add(Read(velocity.X), Read(drive.X)));
         double y = Store(RetailFloat24.Add(Read(velocity.Y), Read(drive.Y)));
         double z = Store(RetailFloat24.Add(Read(velocity.Z), Read(drive.Z)));
         z = Store(RetailFloat24.Add(z, 0.0));
-        double friction = Read(0x3f7ae148);
+        double friction = Read(dampingFloatBits);
         x = Store(RetailFloat24.Multiply(x, friction));
         y = Store(RetailFloat24.Multiply(y, friction));
         z = Store(RetailFloat24.Multiply(z, friction));

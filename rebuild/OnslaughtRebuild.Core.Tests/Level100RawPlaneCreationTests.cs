@@ -47,7 +47,7 @@ public sealed class Level100RawPlaneCreationTests
         Level100ActorDefinitionSet With(IReadOnlyList<Level100SpawnerExitPoint>? points) => new(
             original.Actors, original.Spawns.Select(item => item == source
                 ? item with { SpawnerExitWaypoints = points } : item), original.WaypointPaths, original.MotionDefinitions,
-            baseWorldPineCount: original.BaseWorldPineCount);
+            baseWorldPineCount: original.BaseWorldPineCount, safeSides: original.SafeSides);
         Level100ActorDefinitionSet owned = With(callerOwned);
         callerOwned.Clear();
         Assert.Equal(original.IdentitySha256, owned.IdentitySha256);
