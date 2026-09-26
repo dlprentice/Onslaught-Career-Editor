@@ -48,10 +48,11 @@ class HelperTests(unittest.TestCase):
         keys = {f.key: f for f in funcs}
         self.assertEqual(sorted(keys), ["CThing::Load", "CThing::~CThing"])
         load = keys["CThing::Load"]
-        self.assertEqual((load.file, load.line), ("Thing.cpp", 2))
+        self.assertEqual((load.file, load.line, load.end_line), ("Thing.cpp", 2, 6))
         self.assertEqual(load.literals, ["loading %d\n", "x.dat"])
         self.assertIn(("Open", "x.dat", 1), load.lit_calls)
-        self.assertEqual(E.source_key_to_name("CThing::~CThing"), "CThing__dtor_CThing")
+        self.assertEqual(E.source_key_to_name("CThing::~CThing"), "CThing__dtor")
+        self.assertEqual(E.source_key_to_name("CThing::CThing"), "CThing__ctor")
         self.assertEqual(E.source_key_to_name("CGame::LoadLevel"), "CGame__LoadLevel")
 
     def test_c_unescape_keeps_escaped_backslashes(self):

@@ -575,6 +575,7 @@ class SourceFunc:
     body: str
     literals: list[str]
     lit_calls: list[tuple[str, str, int]]   # (callee text, literal, argument index)
+    end_line: int = 0      # line of the closing brace
 
 
 def strip_comments(text: str) -> str:
@@ -606,13 +607,20 @@ def index_source(root: Path = SOURCE) -> list[SourceFunc]:
             for cm in _CALL_LIT.finditer(body):
                 argidx = cm.group("pre").count(",")
                 calls.append((cm.group("callee"), c_unescape(cm.group("lit")), argidx))
-            out.append(SourceFunc(key, path.name, text.count("\n", 0, m.start()) + 1, body, literals, calls))
+            out.append(SourceFunc(key, path.name, text.count("\n", 0, m.start()) + 1, body, literals, calls,
+                                  text.count("\n", 0, j - 1) + 1))
     return out
 
 
 def source_key_to_name(key: str) -> str:
-    """'CGame::LoadLevel' -> 'CGame__LoadLevel'; '~CThing' destructors -> 'dtor'."""
-    return key.replace("::~", "__dtor_").replace("::", "__").replace("~", "dtor_")
+    """'CGame::LoadLevel' -> 'CGame__LoadLevel'; constructors and destructors take the project's ctor/dtor
+    ('CThing::CThing' -> 'CThing__ctor', 'CThing::~CThing' -> 'CThing__dtor')."""
+    parts = key.split("::")
+    if len(parts) >= 2 and parts[-1] == parts[-2]:
+        parts[-1] = "ctor"
+    elif len(parts) >= 2 and parts[-1] == "~" + parts[-2]:
+        parts[-1] = "dtor"
+    return "__".join(parts)
 
 
 # ---------------------------------------------------------------------------
