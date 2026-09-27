@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified compiler deleting entries](#re-audit-verified-compiler-deleting-entries--september-27);
+[Options instruction repair](#re-audit-options-instruction-repair--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,53 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit Options instruction repair — September 27
+
+The [manifest](../../tools/cohort-specs/frontend-options-instruction-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/frontend-options-instruction-20260927.spec.tsv) repair the saved listing
+within `[0051f7be,0051f7c6)` in the existing Options render function. The
+frontend name preparation refused before sealing because the old listing
+contained instruction starts at `0051f7c0` and `0051f7c2`, separated by four
+undefined bytes. Fresh pristine decoding establishes one eight-byte MOV
+writing float 1.0 into the first stack argument. Both existing conditional
+branches at `0051f771` and `0051f776` target its correct start. The successor
+at `0051f7c6`, RET 8 at `0051f7d8` and 219-byte function body stay unchanged.
+
+Pristine specimen: `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The eight-byte span hashes to `25725d401eefab6ee1b43edfcf8209285b9daa48b1b17e3994e00e960b17e625`;
+the complete body hashes to `12d6f1309699a794d9dd19f8ce7d169e0a1fb5c916782ade5f820f8e66359e6e`.
+An independent raw-byte review was reproduced; a separate read-only Ghidra
+inspection confirmed the actual units and incoming references, with no saved
+interior metadata. This repairs analysis, not retail executable bytes.
+
+The existing promotion framework now has a standalone instruction-gap verb.
+Its old geometry verbs require body growth and could not express this repair.
+Review caught possible loss of equates, outgoing references and undefined-data
+settings, a non-function preflight bypass and delay-slot range expansion. The
+final tool refuses these cases, pins the exact PRE layout/bytes and POST
+instruction, and freezes code/references outside the range and all function
+metadata. Root checked the relevant installed Ghidra clearing implementation.
+The 94 framework tests include real Java gate execution (valid PRE/POST, 19
+refusals and equal-count outside-code/reference controls). Six malformed-input
+checks on actual disposable databases refused without changing a project byte.
+
+The first isolated repair passed. After hardening the tool, a fresh PRE copy
+reproduced the same nine exports; the earlier spec and receipts remain private.
+The independent export comparator initially demanded byte-identical function
+rows, then was corrected to admit exactly the target's measured `instrCount`
+69→68. It admits no other function-field change. Live dry/apply/separate
+readback and independently restored Archive A POST passed. One saved instruction-layout defect repaired in Options render at [0051f7be,0051f7c6): two misaligned instructions and four undefined bytes replaced by one eight-byte MOV. No executable bytes, function names/prototypes/comments/tags/bodies, references, locals, types, bookmarks or symbols changed. Only the target instruction count and program instruction-layout/undefined-byte metrics changed. This is static analysis repair, not retail runtime acceptance.
+All 67 other target instructions and all nine live/rehearsal exports agree.
+Names and ABI defects remain for separate frontend cohorts; audit name counts
+do not increase for this structural repair.
+
+Working identity: `db.18675`, 18 files / 122,801,012 bytes,
+inventory SHA-256 `41cf3db276c5876058f381d46592b877351271718ded629377e0b4051696448e`; main database 72,499,200 bytes,
+SHA-256 `f81c8b9b004acc40b7b4403e14d507426473a6c68dc45d1bfbf6eb699ccb92b9`. The verified compiler deleting-entry POST served as PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-frontend-options-instruction/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-options-instruction/`.
 
 ## RE-audit verified compiler deleting entries — September 27
 

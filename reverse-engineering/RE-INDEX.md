@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (113 compiler deleting-entry identities dispositioned; broader audit unfinished)
+Last updated: 2026-09-27 (Options instruction repair and bounded transition-factor execution; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -11,6 +11,11 @@ Ghidra checkpoint and sole mutable Linux owner through
 [`ghidra/README.md`](ghidra/README.md). The mutable PC project is
 `local-lab/ghidra-projects/BEA/`; its latest measured state and correction are in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
+corrects one saved instruction boundary without changing retail bytes or function
+metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+records the page-dispatch argument contract and 85 isolated original-tail cases;
+full visual acceptance and the frontend name/ABI promotions remain separate.
 The [third game-label audit](ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
 corrects startup object identities, buffer cleanup, base destruction, type bits
 and actor contact predicates. Its BattleEngine consumer contracts resolve

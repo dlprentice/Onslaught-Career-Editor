@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (compiler deleting-entry promotion recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (Options instruction repair and bounded transition execution; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7112,3 +7112,46 @@ Commands and private receipts:
 `npm run test:safety` passed for 4,122 public candidate files, including
 submodules. `git diff --check` passed. The same private owner contains
 `framework-tests.log`, `projection.log`, `docs.log` and `safety.log`.
+
+## RE Options instruction and transition factor — September 27
+
+The exact `frontend-options-instruction-20260927` cohort repaired the saved
+listing at `[0051f7be,0051f7c6)`: pristine bytes already contain one eight-byte
+MOV. Two unrelated saved instructions and four undefined bytes become that
+instruction. No executable bytes, function names, prototypes, comments, tags
+or body extents change. The Options instruction count changes from 69 to 68;
+8,330 other function rows remain exact.
+
+PRE restoration, reviewed rehearsal, separate/sealed readbacks, six real-database
+byte-stable refusal controls, independent method/payload review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal the reviewed rehearsal. Earlier rehearsal and
+refused PRE attempts remain preserved; the comparison helper was corrected to
+expect the single target instruction-count change instead of requiring every
+function field to remain equal.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed. Its Java
+execution cases cover the production instruction-repair guards, 19 refusals
+and equal-count outside instruction/reference changes. Private receipts and
+exact commands: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-options-instruction/`.
+The final framework log is
+`local-data/test-runs/re-audit-20260926/evidence/instruction-gap-framework-registered.log`.
+
+`python local-data/test-runs/re-audit-20260926/frontend-options/original_fade.py`:
+85 original-code cases passed. Each executed the unchanged 109-byte retail
+Options tail, with authored entry state and the final drawing call intercepted.
+Boundary neighbors, adjacent page IDs, infinities, quiet/signaling NaNs, RET 8,
+callee-saved registers and x87 stack balance were checked. Loaded code and
+constants were compared with the pristine specimen; the syscall refusal was
+verified. Results and exact input/output files are in sibling
+`run-5aleo33r/`. This is bounded original-code execution, not a rendered game,
+player test or validation of the earlier Options helpers. The re-derived
+[render contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+records the opposite-endpoint argument and retail Credits/Screen Position IDs.
+
+`npm run test:docs` passed after restoring the render note's machine-readable
+address header (the first run refused its unsupported identity form); zero
+name drift or unresolved assertions remain. `npm run test:safety` passed for
+4,124 public candidate files including submodules. `git diff --check` passed.
+Logs `docs.log`, `docs-final.log` and `safety.log` are retained in the cohort
+owner. Names and the running audit counts remain unchanged by this milestone.

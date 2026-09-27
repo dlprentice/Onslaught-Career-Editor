@@ -52,6 +52,19 @@ class SourceGraphTests(unittest.TestCase):
         self.assertIsNone(G.param_bytes("unsignedMystery"))
         self.assertIsNone(G.param_bytes("FVector v"))
 
+    def test_template_arguments_do_not_turn_aggregates_into_pointer_abis(self):
+        for declaration in ('Aggregate<int*>', 'Aggregate<int&>', 'Outer<Inner<void*>>',
+                            'int Owner::*', 'Aggregate<int*'):
+            with self.subTest(declaration=declaration):
+                self.assertIsNone(G.param_bytes(declaration+' value'))
+                fn=G.E.SourceFunc('Thing::Run','test.h',1,'',[],[],args='int value',head='virtual '+declaration)
+                self.assertIsNone(G.expected_pop(G.Source({},set(),set()),fn))
+        for declaration in ('Aggregate<int*>*', 'Aggregate<int&>&', 'Outer<Inner<void*>>*'):
+            with self.subTest(declaration=declaration):
+                self.assertEqual(G.param_bytes(declaration+' value'),4)
+                fn=G.E.SourceFunc('Thing::Run','test.h',1,'',[],[],args='int value',head='virtual '+declaration)
+                self.assertEqual(G.expected_pop(G.Source({},set(),set()),fn),4)
+
     def test_name_candidates_withhold_overloads_duplicates_and_analytic_suffixes(self):
         functions = [{'address': hex(a), 'name': name} for a, name in [
             (1, 'Thing__Run'), (2, 'Thing__Over'), (3, 'Thing__Leaf_Approximation'),

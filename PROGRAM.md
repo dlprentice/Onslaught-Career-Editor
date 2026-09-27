@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 113 compiler deleting-entry identities dispositioned; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Options instruction repair and original-code transition evidence; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -525,6 +525,34 @@ neutral names; preserve displaced names as explicitly fallible comment leads.
 Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
+
+**Frontend interface evidence (September 27, names pending).** The existing
+name-evidence tool now binds seven surviving `CFEPGoodies` virtual declarations
+to the common page callers and the constructor's receiver/table installation;
+it does not invent the absent base header's declaration order. Fresh pristine
+decoding reproduced 97 proposed identities (23 renames, 74 retained names),
+while 35 candidates remain withheld. These are not yet added to the coverage
+counts. The 77 focused evidence-tool cases passed, including rejection of
+template aggregates mistaken for pointer parameters/returns. Independent
+reviews were re-derived against the specimen and source.
+
+The 23-name PRE check stopped before sealing: Options render at `0x0051f700`
+contains an incorrect saved instruction layout at `[0x0051f7be,0x0051f7c6)`.
+Fresh pristine decoding and a read-only Ghidra inspection show one eight-byte
+instruction where the listing has two unrelated instructions and four
+undefined bytes. Its two incoming branches target the proper start; no saved
+interior reference, comment or non-dynamic symbol was found. The exact span is now
+repaired through the promotion gate, with independently restored POST recovery;
+resume the name cohort from that new authority. Two saved frontend
+prototype defects and the retail/source transition-timer difference remain
+separate findings, not certified by name matching. Evidence and the rejected
+pre-seal attempt are in `re-audit-20260926/frontend-page-identities/` under the
+private owner above. The [render note](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+now records the opposite-endpoint argument and retail Credits/Screen Position
+identity. Eighty-five native original-tail cases verify the Options factor
+thresholds and exceptional float inputs; no rendering or player acceptance
+is claimed. Name/prototype coverage counts are unchanged by this structural
+repair and bounded execution.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

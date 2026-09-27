@@ -265,6 +265,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Verified compiler deleting entries: 80 existing names retained, comments/tags only;
 # fixed compiler bodies, all known RTTI holders and bounded normal-flow proof;
 # exact rehearsal, five byte-stable refusals and independent payload review.
+# Options instruction repair: exact eight-byte interior gap, no function-metadata
+# authority. Reviewed fresh rehearsal, six byte-stable DB refusals, Java adverse
+# controls and independent byte/method review; original program bytes preserved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -317,6 +320,7 @@ LIVE_GRANTED_COHORTS = [
     "controller-engine-verified-20260927",
     "compiler-destructor-identities-20260927",
     "compiler-destructor-verified-20260927",
+    "frontend-options-instruction-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -568,7 +572,7 @@ FROZEN_COLUMNS = [
 
 VERBS = [
     "CREATE_FUNCTION",
-    "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REMOVE_STALE_BOOKMARK",
+    "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REPAIR_INSTRUCTION_GAP", "REMOVE_STALE_BOOKMARK",
     "SET_BODY", "SET_NAME", "SET_PROTOTYPE", "SET_DATA_POINTER",
     "SET_COMMENT", "SET_REPEATABLE_COMMENT", "SET_TAGS",
 ]
@@ -588,8 +592,8 @@ AUTHORIZED_MUTATION_CALLS = {
     ".setComment(": 1,
     ".setRepeatableComment(": 1,
     ".removeBookmark(": 1,
-    ".disassemble(": 2,        # bounded phase 1, and the escape fault injector
-    ".clearCodeUnits(": 5,     # resync, precedent, extraclear, clearescape,
+    ".disassemble(": 3,        # bounded phase 1, instruction gap, escape injector
+    ".clearCodeUnits(": 6,     # instruction gap, resync, precedent, extraclear, clearescape,
                                # strand - the last four are fault injectors that
                                # can never commit
 }
@@ -775,6 +779,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "controller-engine-verified-20260927",\n'
         '        "compiler-destructor-identities-20260927",\n'
         '        "compiler-destructor-verified-20260927",\n'
+        '        "frontend-options-instruction-20260927",\n'
         "    };\n",
     ),
     (
@@ -2109,8 +2114,135 @@ class CreationGateProbe {
         if(!live.isEmpty())throw new AssertionError("empty set");
         System.out.println("tag gates PASS: replacement, preservation, POST, empty and stale/malformed controls");
     }
+    @SuppressWarnings("unchecked") static void gapCheck(String test,boolean post,String refusal) throws Exception {
+        final long lo=0x1010,hi=0x1017;
+        List<CodeUnit> units=new ArrayList<>();
+        for(long v=lo;v<=hi;) {
+            final long start=v, end=post?hi:(v==lo+2||v==lo+4)?v+1:v;
+            boolean isInstruction=post||v==lo+2||v==lo+4;
+            if(isInstruction) units.add(mock(Instruction.class,(n,args)->switch(n) {
+                case "getMinAddress","getAddress" -> a(start);
+                case "getMaxAddress" -> a(end);
+                case "getFlowOverride" -> test.equals("override")?FlowOverride.BRANCH:FlowOverride.NONE;
+                case "isInDelaySlot" -> test.equals("delay-slot");
+                case "getFlows" -> new Address[0];
+                case "getFlowType" -> RefType.FALL_THROUGH;
+                case "getFallThrough" -> a(end+1);
+                case "toString" -> "MOV dword ptr [ESP + 0x10],0x3f800000";
+                default -> null;
+            }));
+            else units.add(mock(Data.class,(n,args)->switch(n) {
+                case "getMinAddress","getAddress","getMaxAddress" -> a(start);
+                case "isDefined" -> test.equals("data");
+                case "isEmpty" -> !test.equals("settings");
+                default -> null;
+            }));
+            v=end+1;
+        }
+        Listing listing=mock(Listing.class,(n,args)-> {
+            if(n.equals("getComment"))return test.equals("comment")?"retained":null;
+            if(n.equals("getCodeUnitContaining")||n.equals("getInstructionAt")) {
+                Address p=(Address)args[0];
+                for(CodeUnit u:units)if(n.equals("getCodeUnitContaining")?
+                        u.getMinAddress().compareTo(p)<=0&&u.getMaxAddress().compareTo(p)>=0:
+                        u instanceof Instruction&&u.getMinAddress().equals(p))return u;
+            }
+            return null;
+        });
+        Function f=mock(Function.class,(n,args)->n.equals("getBody")?
+            new AddressSet(a(0x1000),a(test.equals("owner")?0x100f:0x1030)):null);
+        Reference ref=mock(Reference.class,(n,args)->n.equals("getReferenceType")?RefType.CONDITIONAL_JUMP:
+            n.equals("getFromAddress")?a(0x1001):null);
+        Memory memory=mock(Memory.class,(n,args)->switch(n) {
+            case "getBlock" -> mock(MemoryBlock.class,(k,x)->switch(k){
+                case "getName" -> ".text";case "isExecute" -> !test.equals("nonexec");
+                case "getEnd" -> a(0x2000);default -> null;});
+            case "getBytes" -> {Arrays.fill((byte[])args[1],(byte)0x90);yield ((byte[])args[1]).length;}
+            default -> null;
+        });
+        Program program=mock(Program.class,(n,args)->switch(n) {
+            case "getLanguageID" -> new ghidra.program.model.lang.LanguageID(test.equals("architecture")?"MIPS:BE:32:default":"x86:LE:32:default");
+            case "getAddressFactory" -> new DefaultAddressFactory(new AddressSpace[]{space},space);
+            case "getListing" -> listing;case "getMemory" -> memory;
+            case "getFunctionManager" -> mock(FunctionManager.class,(k,x)->k.equals("getFunctionAt")?f:null);
+            case "getSymbolTable" -> mock(SymbolTable.class,(k,x)->k.equals("getSymbols")?
+                (test.equals("symbol")?new Symbol[]{mock(Symbol.class,(j,y)->null)}:new Symbol[0]):null);
+            case "getEquateTable" -> mock(EquateTable.class,(k,x)->k.equals("getEquates")?
+                (test.equals("equate")?List.of(mock(Equate.class,(j,y)->null)):List.of()):null);
+            case "getReferenceManager" -> mock(ReferenceManager.class,(k,x)->switch(k){
+                case "getReferencesFrom" -> test.equals("outgoing")?new Reference[]{ref}:new Reference[0];
+                case "getReferencesTo" -> iterator(ReferenceIterator.class,
+                    test.equals("incoming")&&x[0].equals(a(lo+1))?List.of(ref):List.of());
+                default -> null;});
+            default -> null;
+        });
+        GhidraApplyCohortManifest script=new GhidraApplyCohortManifest();
+        field(script.getClass(),"currentProgram").set(script,program);
+        Class<?> rc=Class.forName("GhidraApplyCohortManifest$Row");
+        Constructor<?> ctor=rc.getDeclaredConstructor();ctor.setAccessible(true);Object row=ctor.newInstance();
+        field(rc,"entry").set(row,a(0x1000));field(rc,"addrText").set(row,"0x00001000");
+        field(rc,"liveKind").set(row,test.equals("kind")?"SYMBOL:Label":"FUNCTION");
+        Map<String,String> cells=(Map<String,String>)field(rc,"cells").get(row);
+        cells.put("repairRange",test.equals("clip")?"1013-1017":test.equals("large")?"1010-1020":"1010-1017");
+        byte[] raw=new byte[8];Arrays.fill(raw,(byte)0x90);
+        cells.put("repairBytesSha256",test.equals("hash")?"00":HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw)));
+        cells.put("currentInstructionLayout",test.equals("layout")?"stale":"U:00001010-00001010;U:00001011-00001011;I:00001012-00001013;I:00001014-00001015;U:00001016-00001016;U:00001017-00001017");
+        cells.put("proposedInstruction",test.equals("post-instruction")?"wrong":"MOV dword ptr [ESP + 0x10],0x3f800000");
+        Method gate=script.getClass().getDeclaredMethod("gateInstructionGap",rc,boolean.class,AddressSet.class);gate.setAccessible(true);
+        gate.invoke(script,row,post,test.equals("overlap")?new AddressSet(a(lo),a(hi)):new AddressSet());
+        List<?> failures=(List<?>)field(script.getClass(),"failures").get(script);
+        if(refusal==null?!failures.isEmpty():failures.stream().noneMatch(v->v.toString().contains(refusal)))
+            throw new AssertionError("gap "+test+" "+failures);
+        if(failures.stream().anyMatch(v->v.toString().contains("gate threw")))throw new AssertionError(failures);
+    }
+    static String outsideDigest(String change) throws Exception {
+        List<Instruction> code=new ArrayList<>();
+        for(long start:new long[]{0x1000,0x1010}) {
+            code.add(mock(Instruction.class,(n,args)->switch(n){
+                case "getMinAddress","getMaxAddress" -> a(start);
+                case "toString" -> (change.equals("outside-code")&&start==0x1000)||
+                    (change.equals("inside-code")&&start==0x1010)?"XOR EAX,EAX":"NOP";
+                case "getFlowType" -> RefType.FALL_THROUGH;
+                case "getFlowOverride" -> FlowOverride.NONE;
+                case "getFallThrough" -> a(start+1);
+                default -> null;
+            }));
+        }
+        Program p=mock(Program.class,(n,args)->switch(n){
+            case "getListing" -> mock(Listing.class,(k,x)->k.equals("getInstructions")?iterator(InstructionIterator.class,code):null);
+            case "getReferenceManager" -> mock(ReferenceManager.class,(k,x)->switch(k){
+                case "getReferenceSourceIterator" -> iterator(AddressIterator.class,List.of(a(0x1000),a(0x1010)));
+                case "getReferencesFrom" -> new Reference[]{mock(Reference.class,(q,y)->switch(q){
+                    case "getFromAddress" -> x[0];
+                    case "getToAddress" -> a(change.equals("outside-ref")&&x[0].equals(a(0x1000))?0x2001:0x2000);
+                    case "getReferenceType" -> RefType.READ;
+                    case "getSource" -> SourceType.ANALYSIS;
+                    default -> null;})};
+                default -> null;});
+            default -> null;
+        });
+        GhidraApplyCohortManifest script=new GhidraApplyCohortManifest();field(script.getClass(),"currentProgram").set(script,p);
+        Method m=script.getClass().getDeclaredMethod("codeDigestOutside",AddressSetView.class);m.setAccessible(true);
+        return (String)m.invoke(script,new AddressSet(a(0x1010),a(0x1017)));
+    }
     public static void main(String[] args) throws Exception {
+        String outside=outsideDigest("base");
+        if(!outside.equals(outsideDigest("inside-code")))throw new AssertionError("admitted instruction included");
+        for(String changed:List.of("outside-code","outside-ref"))
+            if(outside.equals(outsideDigest(changed)))throw new AssertionError("missed equal-count "+changed);
+        System.out.println("outside repair digest PASS: equal-count instruction and reference changes refused");
         tagChecks();
+        gapCheck("valid",false,null);gapCheck("valid",true,null);
+        String[][] gapCases={{"kind","requires FUNCTION"},{"owner","invalid range or owner"},{"large","invalid range or owner"},
+            {"clip","clips a code unit"},{"architecture","requires x86"},{"nonexec","outside executable .text"},
+            {"data","defined data"},{"settings","undefined-data settings"},{"equate","saved equate"},
+            {"outgoing","existing outgoing reference"},{"incoming","ambiguous incoming reference"},
+            {"comment","saved comment"},{"symbol","saved symbol"},{"override","instruction override"},
+            {"delay-slot","instruction override"},{"hash","byte hash mismatch"},{"layout","current layout mismatch"},
+            {"overlap","target overlap"}};
+        for(String[] c:gapCases)gapCheck(c[0],false,c[1]);
+        gapCheck("post-instruction",true,"proposed instruction mismatch");
+        System.out.println("instruction gap gates PASS: valid PRE/POST and 19 negatives");
         check("valid",false,true);check("valid",true,true);
         for(String n:List.of("owned","data","gap","cut","escape","interior","symbol","comment","hash","disjoint","overlap"))check(n,false,false);
         check("bad-name",true,false);check("bad-abi",true,false);
@@ -2130,6 +2262,28 @@ class CreationGateProbe {
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("13 negatives", result.stdout)
             self.assertIn("tag gates PASS", result.stdout)
+            self.assertIn("instruction gap gates PASS: valid PRE/POST and 19 negatives", result.stdout)
+            self.assertIn("outside repair digest PASS", result.stdout)
+
+
+class InstructionGapVerbTests(unittest.TestCase):
+    def test_gap_repair_has_no_metadata_authority_and_is_preflighted(self):
+        source = BASE.read_text(encoding="utf-8")
+        self.assertIn('REPAIR_INSTRUCTION_GAP must be the only verb', source)
+        for field in ('repairRange', 'repairBytesSha256', 'currentInstructionLayout', 'proposedInstruction'):
+            self.assertIn('"col.' + field + '"', source)
+        mutable = source.split('static Set<String> mutableColumnsFor(', 1)[1].split('static final Pattern', 1)[0]
+        self.assertNotIn('V_REPAIR_GAP', mutable)
+        self.assertLess(source.index('gateInstructionGap(row, readback, admitted);'),
+                        source.index('writesAttempted = true;'))
+        self.assertIn('!preOutsideRepair.equals(codeDigestOutside(admitted))', source)
+        self.assertIn('.disassemble(new AddressSet(start, start), row.added, false)', source)
+        for refusal in ('invalid range or owner', 'clips a code unit', 'byte hash mismatch',
+                        'defined data', 'saved comment', 'saved symbol', 'instruction override',
+                        'saved equate', 'existing outgoing reference', 'proposed instruction mismatch',
+                        'ambiguous incoming reference', 'current layout mismatch',
+                        'post is not one fallthrough instruction'):
+            self.assertIn('REPAIR_INSTRUCTION_GAP ' + refusal, source)
 
 
 class CommentCohortTests(unittest.TestCase):
