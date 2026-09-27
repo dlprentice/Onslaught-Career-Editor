@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[frontend callback ABI](#re-audit-frontend-callback-abi--september-27);
+[class-name getter identities](#re-audit-class-name-getter-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,45 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit class-name getter identities — September 27
+
+The [62-row manifest](../../tools/cohort-specs/class-name-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/class-name-identities-20260927.spec.tsv) bind `_GetClassName` to
+observed retail interface entries across the CThing family. Specimen: pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Pinned source `5352a81c`, `game.cpp:943`, copies the result of
+`item->ToRead()->_GetClassName()`. The unique caller literal and active-reader
+flow bind this to `0046d519`, primary slot 7. The exact 46-byte dispatch and
+inlined string-copy sequence is checked. Each target has one zero-offset
+CThing base, one RTTI holder and aligned non-code pointer cell, an exact
+six-byte literal getter and an initially matching class-name string.
+The method's leading underscore is retained, hence labels such as
+`CThing___GetClassName`. Saved labels never supply identity evidence.
+
+The 62 names replace 47 structural placeholders and 15 descriptive spellings.
+All initial strings are in writable `.data`; immutability and source constness
+are not asserted. Missing declaration macros/qualifiers and possible inlined
+forwarding remain unresolved. All earlier plate notes are retained as fallible
+leads. Fourteen inherited `signature-hardened` tags describe earlier metadata
+work; they do not renew ABI certification. Prototype coverage does not increase.
+
+The reviewed game.cpp:943 source call is bound to the pristine caller by its unique fatal-count literal, active-reader receiver flow and complete 46-byte virtual-dispatch/string-copy window. Every admitted getter has a unique fixed primary CThing base, one raw RTTI holder/slot 7, exact six-byte immediate-pointer/plain-RET body and matching initialized class literal. All literals are writable .data; runtime immutability, missing macro/declaration/qualifiers, possible inlined forwarding and saved prototypes remain unproved. Independent review found incomplete copy-tail and repeated-base guards in the draft matcher; both were fixed and covered by adversarial re-pinned inputs before sealing. All 85 focused evidence-tool cases passed. The existing generic header-vtable admission was not relaxed.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusals, independent review/root reproduction, live readback and independently
+restored POST passed. All nine live exports equal rehearsal. Exactly 62 primary CThing-family class-name getter names/comments/tags corrected. The complete 372 code bytes / 124 instruction rows, all saved prototype types/storage, locals and 8,269 non-target function rows remain unchanged. Twenty-seven previously empty plate comments are added. Retained notes and undated ABI confidence tags are historical leads, not renewed prototype certification.
+Only `comments` (+27) and `commentsSha256` change at program scope. The full
+8,331-name projection is checked against live; frozen historical tables remain.
+
+Working identity: `db.18679`, 18 files / 123,571,060 bytes,
+inventory SHA-256 `1d781d6f26689c03519bccf8103c581981d10c6fd4dd451bc6f45626a3e2444b`; main database 73,269,248 bytes,
+SHA-256 `b1150cc71145b4bb44f10eaf3f2968f243feb02fa2d070e04f47dd4c79360046`. The restored frontend ABI POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-class-name-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/class-name-identities/`. Complete persistence behavior and retail runtime
+acceptance are separate from these static interface identities.
 
 ## RE-audit frontend callback ABI — September 27
 

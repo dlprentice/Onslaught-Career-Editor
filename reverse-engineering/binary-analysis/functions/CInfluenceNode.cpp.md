@@ -1,7 +1,7 @@
 # CInfluenceNode function map
 
 Status: active static function map
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (class-name getter identity; earlier behavioral evidence keeps its stated limits)
 Source File: `C:\dev\ONSLAUGHT2\InfluenceMap.cpp` (named by the shipped image at `0x0062d61c`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` at the
@@ -22,11 +22,20 @@ in dated prose and filenames are retained aliases; the cohort manifest preserves
 their exact mapping. This correction does not re-verify the rest of this note
 or certify its prototypes or runtime behavior.
 
+## September 27 class-name getter correction
+
+The [class-name cohort](../../ghidra/README.md#re-audit-class-name-getter-identities--september-27)
+binds primary slot 7 to the source-call interface `_GetClassName`, using the
+retail caller, RTTI holder and complete six-byte getter. It does not establish
+missing declaration qualifiers or certify the saved prototype. The returned
+address lies in writable `.data`; the initial string is proven, not immutable.
+The rest of this note is outside that correction's scope.
+
 ## Functions
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0048b5f0` | `CInfluenceNode__GetTypeName_0048b5f0` | `b8 58d66200 c3` | Returns the constant pointer `0x0062d658`, the shipped string `"CInfluenceNode"` — i.e. `const char* GetTypeName()`. HIGH. |
+| `0x0048b5f0` | `CInfluenceNode___GetClassName` | `b8 58d66200 c3` | Returns address `0x0062d658` in EAX, initially holding `"CInfluenceNode"`. Primary slot 7 implements the observed `_GetClassName` interface; source qualifiers and runtime string immutability remain unproved. |
 | `0x0048b600` | `CInfluenceNode__GetTypeId_0048b600` | `b8 1e000000 c3` | Returns the constant `0x1E` (30) — `int GetTypeId()`. HIGH. |
 | `0x0048b610` | `CInfluenceNode__GetRadius` | `d9 81 94000000 c3` | Returns the float field at `this+0x94` via `fld [ecx+0x94]`. HIGH that it is a stored-radius getter; the field's meaning/units remain open. |
 | `0x0048c2e0` | `CInfluenceNode__scalar_deleting_dtor` | `56 8bf1 e8 18000000 … f6 442408 01 74 0b 56 b9 f03d9c00 e8 …` | Standard MSVC scalar deleting destructor: calls the real destructor (`+0x18`), and when flags bit 0 is set frees `this` through pool `0x009c3df0`. HIGH on the shape; the destructor body itself is unexamined. |

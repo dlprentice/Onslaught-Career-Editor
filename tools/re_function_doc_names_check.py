@@ -148,6 +148,8 @@ CURRENT_COMPILER_DESTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/compiler-d
 CURRENT_COMPILER_DESTRUCTOR_OVERLAY_SHA256 = "5586a02c772122a4eb2003bc189b03566feb8d7c53eff8334033b6816fc294bf"
 CURRENT_FRONTEND_PAGE_OVERLAY = REPO_ROOT / "tools/cohort-specs/frontend-page-identities-20260927.manifest.tsv"
 CURRENT_FRONTEND_PAGE_OVERLAY_SHA256 = "3f2c77b5f7bd530395bee5fb46c48ea7877f569e23ee9331ec8311e329491310"
+CURRENT_CLASS_NAME_OVERLAY = REPO_ROOT / "tools/cohort-specs/class-name-identities-20260927.manifest.tsv"
+CURRENT_CLASS_NAME_OVERLAY_SHA256 = "3b4cb6df7686b0b1261a1dcfed796ae51cdba72ae469d4e3bbbe211d174533bb"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -898,6 +900,11 @@ def run(
                 table, CURRENT_FRONTEND_PAGE_OVERLAY,
                 expected_sha256=CURRENT_FRONTEND_PAGE_OVERLAY_SHA256,
                 expected_rows=23, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_CLASS_NAME_OVERLAY,
+                expected_sha256=CURRENT_CLASS_NAME_OVERLAY_SHA256,
+                expected_rows=62, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

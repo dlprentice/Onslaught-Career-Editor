@@ -1,7 +1,7 @@
 # CGame__FillOutEndLevelData
 
 Status: active static function note
-Last updated: 2026-09-26 (RE audit: instruction counts and starts, the type-37 evidence, the second exit, and the goodie claim withdrawn)
+Last updated: 2026-09-27 (class-name getter call rechecked; earlier findings keep their stated limits)
 Summary: FillOut's score-time arm is live on L100: last LoadWorld
 stores RLWD `300.0f` / `500.0f` so `(pct − full)=200>0`. Base-things
 `Size` is 35 (At() membership, including two type-37 `CSafeSide`).
@@ -76,6 +76,23 @@ sets `TF_DYING`. Init seeds `[this+0xe0]` from `[data+0x18]`. Empty
 iceberg scripts cannot post `Broke Tutorial`. L100
 `[data+0x10]` / `[data+0x18]` values and a TTD dword at FillOut are
 **not** claimed.
+
+### Class-name call recheck — September 27
+
+The [62-getter cohort](../../../ghidra/README.md#re-audit-class-name-getter-identities--september-27)
+re-read this complete 920-byte body from the pristine specimen named above.
+The unique fatal-count literal, active-reader receiver flow and exact 46-byte
+window `[0x0046d511,0x0046d53f)` bind the virtual call at `0x0046d519` to
+primary slot 7. Its result is copied to a local character buffer, matching
+`game.cpp:943` at source pin `5352a81c`. That source calls `_GetClassName`;
+the missing declaration macros and possible inlined forwarding remain unknown.
+The window SHA-256 is
+`df941fe9779ec34153ba130d27b3f5a10bb392d49a55d114b4e3b6dd8cf4d510`.
+
+This local name copy does not establish class-name serialization in a career.
+It is separate from the base-thing alive/dead writes above. The correction
+establishes a caller/interface identity, not complete persistence acceptance or
+a fresh verification of every earlier semantic claim in this note.
 
 ### Scalars, objectives, slots, kills
 
