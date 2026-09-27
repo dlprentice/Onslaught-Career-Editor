@@ -34,6 +34,15 @@ A wrapped Skip delta must be interpreted there, not assumed to be harmless.
 The constructor, destructor and both Open overloads have only static evidence
 in this pass. Four smaller routines also have the isolated controls below.
 
+The [six-interface correction](../../ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+is promoted with exact live readback and independently restored recovery.
+Constructor, destructor, Close, GetNext and Skip now use automatic thiscall
+receivers in the same physical ECX location. Read returns int in full EAX,
+replacing the saved bool/AL type. Its three stack arguments do not move;
+low-word multiplication alone does not settle size/count signedness. The
+constructor's machine EAX=this return and the destructor's void return remain.
+These are bounded machine-interface corrections, not complete class typedefs.
+
 Each chunk header is a four-byte tag followed by a four-byte payload size.
 `GetNext` does not search for a requested tag, validate nesting or distinguish
 clean EOF from a short tag/size read. Callers decide which nested chunk to read

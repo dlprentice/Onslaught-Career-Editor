@@ -251,7 +251,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # source/transport witnesses and explicitly retained fallible earlier notes.
 # Resource-reader identities:5 old/5 authored comments (2,574/7,497 decoded bytes);
 # bounded source/caller identities, divergences and preserved fallible older notes.
+# Chunk-reader ABI:6 old/6 authored comments (2,109/9,691 decoded bytes);
+# source/body/member transport and bounded original-code evidence, with old leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/reader-abi-20260927.manifest.tsv":
+        "d6f4df28fd21be4faa9a0c47912b05669e8898037ba924cd90060104f52e9d4f",
     "tools/cohort-specs/resource-reader-identities-20260927.manifest.tsv":
         "63760c8e48b9d0611ca942d4273c32fb69801ec31552a92568d6849e662c449a",
     "tools/cohort-specs/membuffer-abi-20260927.manifest.tsv":

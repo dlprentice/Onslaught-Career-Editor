@@ -20,8 +20,10 @@ label. `0x00548570` body is **not** this proof.
 Fresh complete-body decoding reproduces the 45-byte body and hash below.
 The multiplication and count addition wrap to 32 bits; the requested count
 is added before the underlying Read result is known. No instruction checks
-Size or reproduces the source ASSERT. The result is full EAX 0/1; this pass
-does not certify the saved one-byte bool return prototype. Fourteen isolated
+Size or reproduces the source ASSERT. The result is full EAX 0/1; the subsequent
+[reader-interface cohort](../../../ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+corrected the saved bool/AL return to int/EAX. The existing three stack arguments
+remain unchanged; size/count signedness is not proved by low-word multiplication. Fourteen isolated
 original-code cases reproduce request transport, wrapping and pre-call counter
 updates. They copy zero destination bytes; buffer copying is not tested.
 An altered probe omitting the counter store changes the callee-entry and final

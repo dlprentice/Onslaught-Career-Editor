@@ -327,6 +327,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "listener-identities-20260927",
         "membuffer-abi-20260927",
         "resource-reader-identities-20260927",
+        "reader-abi-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

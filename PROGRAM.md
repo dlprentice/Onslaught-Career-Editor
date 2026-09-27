@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: resource-reader identities corrected and isolated reader behavior measured; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: reader identities and interfaces corrected with bounded original-code evidence; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the resource-reader identity cohort (September 27).**
+**Running coverage after the reader-interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 1,985 unique functions; 1,986 rename rows include one repeated correction. The latest five establish resource-accumulator, reader-overload and platform-deserializer identities. |
-| Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 300 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend and six reader identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,052 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 16 interfaces: four keyboard queries, cockpit shake, three frontend callbacks and eight memory-buffer member/thunk interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,289 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Names still outside that accounted set | 6,046 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Prototypes corrected | 22 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces and six reader interfaces. Full ABI coverage is not yet counted. |
+| Comments corrected | 2,295 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -510,9 +510,9 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
-`membuffer-abi-20260927` and `resource-reader-identities-20260927`, the final
+`membuffer-abi-20260927`, `resource-reader-identities-20260927` and `reader-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
@@ -532,9 +532,16 @@ original-code reader cases plus two counterfactual controls distinguish partial
 header updates, wrapped requested counts, pre-call consumed-count updates and
 Close result translation. Buffer calls are intercepted; no real asset or game
 was loaded. Goodies image loading uses one texture and derived height, unlike
-the source image loop. Next: six bounded reader-interface discrepancies, kept
-reader/consumer comment evidence and unresolved concrete owner types. Do not
-infer an owner solely from the class of an object a factory creates.
+the source image loop. The subsequent [reader-interface correction](reverse-engineering/ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+normalizes five existing ECX receivers to member conventions and corrects Read's
+return from AL/bool to EAX/int. Constructor EAX=this and destructor void are
+retained; size/count signedness remains open. All nine exports match rehearsal
+and independently restored recovery. Six names are verified and kept; no
+instruction, local or other function changed. The tag-call proof was rerun
+after the five-name promotion: all twelve results and limits stayed identical.
+Next mechanized lead: bounded switch tables in frontend and listener methods,
+currently withheld by the ABI admission tool. Consumer comments and concrete
+owner types remain open; do not infer an owner solely from a factory's result.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header
@@ -557,9 +564,8 @@ uses CRT streams, distinct from CDXMemBuffer and the source's older PC writer.
 Evidence remains in `local-data/test-runs/save-startup-20260919/`; the existing
 [save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-27-slot-save-failure-boundary)
 and backend/function notes own the correction. No Ghidra disposition count
-changes. The next resource/chunk-reader family has 13 direct source-identity
-leads and nine further tag/owner leads, with retail/source divergences already
-flagged; root byte reproduction and admission remain pending.
+changes. The resource/chunk-reader follow-up above now separates promoted
+identities/interfaces from still-unproved consumer owners and payload schemas.
 
 **Memory-buffer ABI (September 27).** Eight interfaces are corrected live with
 independently restored POST recovery: six members and two byte-proven direct
@@ -687,10 +693,9 @@ The complete original ReadString body ran in 67 bounded authored-buffer cases,
 and Write/Close ran in 71. These reproduce CR/non-LF truncation, stale-byte
 consumption after an empty refill, and failed/short-write continuation. Close's
 success result alone does not establish persistence. Neither experiment used
-real Windows file APIs, compressed decoding or original saves. The seven
-retained-name comments and six demonstrated ABI corrections (a destructor
-receiver, signed size and four DWORD return transports) remain follow-up, not
-new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
+real Windows file APIs, compressed decoding or original saves. The saved ABI corrections have since been promoted as eight explicit rows,
+including two direct thunk dependents, as recorded above. Remaining
+retained-name comment corrections are follow-up, not new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
 `local-data/test-runs/re-audit-20260926/membuffer/`.
 
 Next listener work: five newly reviewed kept names need comments/tags; the
@@ -699,10 +704,10 @@ closes the two cached coverage gaps with exact bytes, ownership and ABI checks;
 82 focused cases and independent review pass. The new InfantryGuide/MechGuide
 name candidates remain unpromoted. Five switch bodies still need a bounded
 dispatch-table proof; other shared/ambiguous entries remain withheld.
-The buffer ABI rehearsal also exposed two direct thunks whose inherited
-prototype changes must be declared with their targets. The rejected attempts
-are preserved; support for explicitly checked followers is being validated
-before any live write. Continue consumer-priority ABI findings alongside this family.
+The buffer ABI rehearsal exposed two direct thunks whose inherited prototype
+changes needed declaration with their targets. The rejected attempts remain
+preserved; explicit follower checks and the eight-row live correction are
+complete. Continue consumer-priority ABI findings alongside this family.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

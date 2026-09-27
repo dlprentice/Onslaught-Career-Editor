@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (resource-reader identities and bounded original-code controls recorded; broader audit unfinished)
+Last updated: 2026-09-27 (resource-reader identities, interfaces and bounded original-code controls recorded; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -17,6 +17,10 @@ resolves five names with exact live readback and restored recovery. Its
 retail consumer transports, source differences and 49 original-code reader
 cases plus two counterfactual controls. Tag-family and reader validation claims
 were corrected; complete payload schemas and real loading remain open.
+The [reader-interface correction](ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+fixes five member conventions and Read's full-width return, retaining six
+verified names. Source typedef precision and complete underlying I/O remain
+outside that correction; all live exports and restored recovery match rehearsal.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
