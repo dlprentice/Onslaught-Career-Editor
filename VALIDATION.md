@@ -71,6 +71,53 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Switch-backed method identities — September 27
+
+The [six-row cohort](reverse-engineering/ghidra/README.md#re-audit-switch-backed-method-identities--september-27)
+corrects multiplayer Init/Shutdown, Options Process and MessageBox/Round/UnitAI
+HandleEvent. All 2,215 original body bytes / 679 instructions, prototypes, locals
+and 8,325 other function rows are unchanged. Nine live exports byte-equal the
+separately reopened rehearsal; independent Archive A POST restore passed.
+
+The first seal was rejected because it removed CRound's unresolved source-owner
+tag. The revised seal retains it, with a fresh PRE, exact rehearsal/readbacks and
+five project-byte-stable refusal controls. Independent read-only review and root
+reproduction cover six identities, 26 RTTI uses, 49 switch-table words and the
+public authored comments. The 94 framework tests pass. The complete 8,331-name
+projection matches live: 1,991 uniquely corrected names, 300 additional kept names,
+6,040 outside that set, 22 corrected interfaces and 2,301 updated comments.
+Evidence: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/switch-identities/`.
+These are interface identities and bounded normal-flow checks, not complete ABI,
+source-body ownership or runtime acceptance. Options execution is separate below.
+
+### Original options callback — September 27
+
+`python local-data/test-runs/re-audit-20260926/switch-admission/original_options.py`
+passed **21 original-code cases and two separate counterfactual controls**.
+The unchanged 102-byte callback, 24-byte switch table and six-byte constant
+helper run at their original addresses in a native i386 probe. The process
+admits only read/write/exit syscalls and records denied getpid. Transition and
+larger persistence calls are intercepted; no real save or device is accessed.
+
+Accepted receipt:
+`local-data/test-runs/re-audit-20260926/switch-admission/options-3m2h2ur2/results.json`,
+SHA-256 `8412c51d4ecda296b726d8320d0162c615d8888460152ace0f24e9c0b1740e61`.
+ELF SHA-256 `340799aed34352f7a6a383a3f7b69ca81c82133398c0c55549aa4ecd31f9d18a`.
+All bytes of two authored 24-byte surrogate buffers and one global pointer,
+nonvolatile registers, final ESP delta and callee arguments are compared.
+Writer ECX is observational; residual EAX is not an integer result contract.
+The counterfactuals change only helper constant 2→1 or full-DWORD→low-byte
+state testing. They respectively change normalized state 4→6 and make state
+`0x100` request persistence. The executed driver and ELF/assembly are retained.
+`options-review.json` records independent artifact/output review and narrows
+the receipt's shorthand: complete retail objects, all registers/flags, stack
+contents, helper invocation counts and runtime device/file behavior were not
+measured. Core-size limit zero is configuration evidence, not a guarantee
+about the host's piped crash handler. Existing
+[settings](reverse-engineering/binary-analysis/functions/display-settings.md#september-27-options-processing-recheck)
+and [save compatibility](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-27-options-callback-entry-to-persistence)
+contracts carry the bounded result.
+
 ### Bounded switch admission — September 27
 
 `python -m unittest tools.re_name_evidence_tests`: **98 passed** after independent

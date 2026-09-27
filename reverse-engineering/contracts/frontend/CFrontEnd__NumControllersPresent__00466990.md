@@ -1,13 +1,26 @@
 # CFrontEnd__NumControllersPresent
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (bounded options-caller recheck)
 Summary: specimen-bound static contract for `CFrontEnd__NumControllersPresent` at `0x00466990`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/FrontEnd.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00466990`
+
+## September 27 bounded recheck
+
+The pristine helper is exactly `mov eax,2; ret` (six bytes, raw hash below): no
+receiver dereference, device query or branch. Its constant return was re-executed
+inside 21 isolated options-callback cases; a one-byte counterfactual changing the
+constant to 1 changes normalization of state 4. This is a confirmed retail/source
+difference: the pinned `FrontEnd.cpp:464–474` implementation counts present
+controllers. The name remains a source-adjacent description, not proof of device
+detection. The historical factory limits below must not obscure this exact-body
+finding. See the [options recheck](../../binary-analysis/functions/display-settings.md#september-27-options-processing-recheck)
+for preserved inputs, measured outputs and execution limits. This does not add a
+newly verified name to the audit count.
 
 ## Identity
 - Body `[0x00466990,0x00466995]`, 6 bytes, 2 closure instructions. Raw pristine-body SHA-256 `7140f35dee6220b79b12aecc27acf5105bf3b77d1588e89fce345de7c16c72b7`; closure range SHA-256 `be1a48a97339d6a8d8bb2b8b2b22ff7cc55d7cb4207feeed020db864c01de5d1`; packet range-plus-bytes SHA-256 `2eccf788caee7f506a3d6727b9e88f6c307be5464d5309977267fe4820251641`. All three were independently recomputed over the exact single contiguous inclusive range.
@@ -33,7 +46,7 @@ The packet signature declares `int`. Exact domain meaning of the returned bits/v
 ## Callees relied on / callers
 - Callees: none in the packet structured array.
 - Caller `CFEPMain__GetActionCount` `0x004621e0` ×1 site(s) (instruction-flow).
-- Caller `CFEPOptions__ProcessInput` `0x0051f600` ×1 site(s) (instruction-flow).
+- Caller `CFEPOptions__Process` `0x0051f600` ×1 site(s) (instruction-flow).
 - Structured packet arrays prove the listed direct/static edge identities and site counts only. Indirect vtable targets, library inlining, and data-driven dispatch remain unresolved unless separately named in the packet.
 
 ## Behavior summary

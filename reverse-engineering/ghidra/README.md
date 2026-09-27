@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[chunk-reader interfaces](#re-audit-chunk-reader-interfaces--september-27);
+[switch-backed method identities](#re-audit-switch-backed-method-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,31 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit switch-backed method identities — September 27
+
+The [six-row manifest](../../tools/cohort-specs/switch-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/switch-identities-20260927.spec.tsv) correct method names against
+pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Six virtual method identities corrected: multiplayer Init/Shutdown, Options Process and MessageBox/Round/UnitAI HandleEvent. All 2,215 code bytes / 679 instructions, interfaces, locals and 8,325 non-target function rows remain unchanged. One previously empty comment is added; only the program comment count/digest change. Prior names and comments remain fallible leads. Source-body ownership uncertainty tags are preserved.
+
+The existing header/RTTI tool now admits unsigned-bounded absolute switches with separately pinned tables. Independent page-array and guarded event-recipient callers establish slots; every known holder agrees. Complete bodies and 49 table words passed entry decoding, unsigned guard/selector preservation, possible bypass checks and return-cleanup agreement. Matching switch shapes do not supply method identities. Independent review rejected the first seal for dropping CRound source-identity-deferred; an inherited interface plus nonexclusive RTTI context does not identify a missing source body. The tag was retained and a fresh PRE and exact revised rehearsal/readbacks and five byte-stable refusal controls passed. These are names and bounded normal-flow evidence, not complete ABI, stack-balance, source-body or runtime semantics. The separate Options experiment runs unchanged code with two intercepted callees; its contract carries the limits.
+
+All nine live exports equal the separately reopened revised rehearsal.
+Independent read-only review, root reproduction, live readback and independently
+restored Archive A POST passed. The tracked checkpoint was never write-opened.
+Seventeen additional kept-name candidates and two withheld raw-pointer leads
+remain outside this six-row promotion. Saved prototype types are unchanged;
+in particular MessageBox's event argument still needs its separate correction.
+
+Working identity: `db.18685`, 18 files / 123,767,668 bytes,
+inventory SHA-256 `7c19c9ce263e11a16cdc9c728ffb914cdf37430ababfb0016c760a3749c69f95`; main database 73,465,856 bytes,
+SHA-256 `70c4d0899b3d81059f8a856ef15f244fe6f970eac07270a7276b34c5b74c5649`. Restored chunk-reader POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-switch-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private gate receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/switch-identities/`; proof and original-code controls:
+`local-data/test-runs/re-audit-20260926/switch-admission/`.
 
 ## RE-audit chunk-reader interfaces — September 27
 

@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (resource-reader identities, interfaces and bounded original-code controls recorded; broader audit unfinished)
+Last updated: 2026-09-27 (bounded-switch identities and original options controls recorded; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -21,6 +21,14 @@ The [reader-interface correction](ghidra/README.md#re-audit-chunk-reader-interfa
 fixes five member conventions and Read's full-width return, retaining six
 verified names. Source typedef precision and complete underlying I/O remain
 outside that correction; all live exports and restored recovery match rehearsal.
+The [switch-backed identity correction](ghidra/README.md#re-audit-switch-backed-method-identities--september-27)
+resolves six method names without changing code or prototypes. The
+[options callback recheck](binary-analysis/functions/display-settings.md#september-27-options-processing-recheck)
+records 21 original-code cases and two counterfactuals: inactive normalization,
+full-width page-state admission and context-directed calls. Transition/persistence
+callees are intercepted. Seventeen existing-name candidates remain for a separate
+comment/tag cohort; two raw-pointer questions stay withheld. Exact live readback
+and independently restored recovery passed for the six corrected names.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

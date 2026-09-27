@@ -1,28 +1,48 @@
-# CUnitAI__DispatchTimedAIEvent_004ff330
+# CUnitAI__HandleEvent
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
-Summary: specimen-bound static contract for `CUnitAI__DispatchTimedAIEvent_004ff330` at `0x004ff330`; packet-described behavior is retained with explicit unknowns and no promotion claim.
+Status: active static contract; historical factory behavior retained
+Last updated: 2026-09-27 (interface identity and stale argument declaration)
+Summary: `CUnitAI::HandleEvent` interface identity at `0x004ff330`; historical timed-event findings remain bounded and its return meaning is unresolved.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x004ff330`
 
-## Identity
+## September 27 identity and argument recheck
+
+The [reviewed six-name scope](../../../tools/cohort-specs/switch-identities-20260927.manifest.tsv)
+identifies `CUnitAI__HandleEvent` through the inherited `IListener` interface,
+pinned `thing.h:110` declaration and the guarded recipient calls in the complete
+`CEventManager::Flush` body at `0x0044b640` (`eventmanager.cpp:341,359`).
+All 20 known RTTI holder uses agree on primary slot 0. This supplies a method
+identity in the nonexclusive CUnitAI naming context, not an exclusive source-body
+owner or complete semantic proof. Source pin: `5352a81c`.
+
+All 422 original bytes / 148 instructions were compared with the pristine specimen
+above. The unsigned switch bound at `0x004ff3d2`, branch at `0x004ff3d5` and jump
+at `0x004ff3d7` select four DWORDs at `0x004ff4d8`. Complete normal-flow targets and
+`RET 4` agree with one explicit stack argument. The incoming argument is
+**dereferenced as an event record** (`word [event+4]`), not passed as a scalar event
+code. The earlier factory signature below contradicted its own quoted plate note.
+The working signature already uses `void * eventRecord`; this identity correction
+does not change its provisional `int` return or certify a return-value contract.
+No new original-code execution of this handler was performed for this recheck.
+
+## Historical factory identity
 - Body `[0x004ff330,0x004ff4d5]`, 422 bytes, 148 closure instructions. Raw pristine-body SHA-256 `3c35a60a6a8ab5f2e4ceddc0f745c2793413929995c8a1e7bb713c9e2a5af67d`; closure range SHA-256 `602dca9d477b14361fe8da85f05afbb969eb30f3bd2b82b6fc75336b20b263c5`; packet range-plus-bytes SHA-256 `19420ca0220d2fbbba341502ecfbadcfeee5f4fef8d94c6873c53f03c2defa24`. All three were independently recomputed over the exact single contiguous inclusive range.
-- Canonical name `CUnitAI__DispatchTimedAIEvent_004ff330` comes from the current closure/register row. Packet label matches canonical tracked name `CUnitAI__DispatchTimedAIEvent_004ff330`.
+- Historical closure/register and packet label: `CUnitAI__DispatchTimedAIEvent_004ff330`. It remains a lead in the plate comment; the current interface identity is `CUnitAI__HandleEvent`.
 - Packet name source `USER_DEFINED` and signature source `USER_DEFINED` are counted provenance, not semantic proof.
 - Campaign grade `C1_CANDIDATE_PARTIAL` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `MEDIUM_STATIC`. Proposed promotion: false.
 
 ## Calling convention
-Packet records `__thiscall` for `int __thiscall CUnitAI__DispatchTimedAIEvent_004ff330(void * this, int event_code)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
+The historical packet records `__thiscall` for `int __thiscall CUnitAI__DispatchTimedAIEvent_004ff330(void * this, int event_code)`. The September 27 body/caller recheck above supports an ECX receiver and one explicit stack argument; complete parameter types and return semantics remain separate.
 
 ## Prototype and parameter semantics
 ```c
-int __thiscall CUnitAI__DispatchTimedAIEvent_004ff330(void * this, int event_code)
+int __thiscall CUnitAI__HandleEvent(void * this, void * eventRecord)
 ```
-- Packet-declared parameter list: `void * this, int event_code`. Parameter labels are analyst/source intent; concrete object layouts, units, ownership, aliasing, and nullability remain not_determinable unless directly stated by the quoted packet comment below.
+- This is the current saved signature, with provisional return type. The historical packet list `void * this, int event_code` is superseded by the event-pointer finding. Concrete record layout, ownership, aliasing and nullability remain bounded to separately established field accesses.
 
 ## Return value meaning
 The packet signature declares `int`. Exact domain meaning of the returned bits/value is not_determinable from identity and decompile evidence alone; no stronger meaning is invented here.
@@ -56,7 +76,7 @@ No TTD execution row exists for this VA in the bounded `ttd-deep-mine/values.tsv
 - Source crosswalk: no row for this VA in the current tracked crosswalk.
 
 ## Confidence
-1 — exact identity, contiguous pristine bytes, digest derivations, signature text, and structured edge inventory are reconciled; field-level semantics and runtime causality remain bounded to the packet/decompile and any cited source/TTD rows. A packet/canonical name discrepancy forces confidence 0. Proposed promotion: false.
+Historical factory grade 1 — retained receipt, not a grade for this recheck. Its stale name/scalar argument are superseded above; field-level semantics and runtime causality remain bounded to the packet/decompile and any cited source/TTD rows. The packet is preserved as history; its label is not the current name authority. The historical packet proposed no promotion.
 
 ## Unresolved questions
 - Instruction-level read/write direction and concrete layout for every referenced field/global.
