@@ -24,8 +24,9 @@ the loop. Eighteen isolated original-code cases now reproduce signed count
 admission, zero/high-bit tags and partial Size writes; an altered unsigned
 branch changes the supplied negative-count case. Buffer calls are intercepted.
 The [reader contract](../../../source-code/io/chunker-system.md#isolated-original-code-controls--september-27)
-owns the exact inputs, controls and limits. The saved calling-convention label
-remains a separate correction. No console specimen was rechecked; the older
+owns the exact inputs, controls and limits. The [reader-interface cohort](../../../ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+subsequently corrected the saved convention to thiscall, retaining physical
+ECX input and the uint/EAX result. No console specimen was rechecked; the older
 inbound-call census remains an inherited result.
 
 ## Contract

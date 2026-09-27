@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (resource-reader identities and original-code controls recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (reader-interface promotion and original-code controls recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,38 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Reader interfaces — September 27
+
+The [six-row reader cohort](reverse-engineering/ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)
+passed restored PRE, rehearsal, separate/sealed readbacks, seven byte-stable
+refusal controls, independent exact-payload review with root reproduction,
+live readback and independently restored Archive A POST. All nine live exports
+equal rehearsal. Five ECX receivers retain their machine location under
+automatic thiscall; Read's return changes from bool/AL to int/EAX. All names,
+locals, 300 code bytes / 111 instructions and 8,325 other rows are unchanged.
+Constructor EAX=this, destructor void and unresolved size/count signedness
+are retained explicitly. This is not complete class/type or I/O validation.
+
+Private gate owner:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/reader-abi/`.
+Its `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` record exact commands/outcomes.
+`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+The 8,331-name projection equals live; deduplicated counts are 1,985 corrected
+names, 300 additional kept names, 6,046 outside that name set, 22 corrected
+interfaces and 2,295 updated comments. Earlier 49 original-code reader cases
+and two counterfactuals were reviewed for these claims, not rerun as a new pass.
+
+The existing `tag-calls` command was rerun against the preceding name-corrected
+live export; all twelve result rows and limits equal the earlier accepted
+report despite changed names. Exact invocation/output:
+`local-data/test-runs/re-audit-20260926/resource-dispatch/tag-calls-after-names.command.json`
+and adjacent `.json`/`.log`. Saved names do not decide that evidence.
+`npm run test:docs`, `npm run test:safety` and `git diff --check` passed;
+logs are in the private gate owner. No Godot, physical desktop or
+implementation-lane checks were run.
 
 ### Resource-reader identities and controls — September 27
 

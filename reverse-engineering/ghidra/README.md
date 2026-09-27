@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[resource-reader identities](#re-audit-resource-reader-identities--september-27);
+[chunk-reader interfaces](#re-audit-chunk-reader-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,30 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit chunk-reader interfaces — September 27
+
+The [six-row manifest](../../tools/cohort-specs/reader-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/reader-abi-20260927.spec.tsv) correct reader interfaces
+without changing names or code. Specimen: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Six CChunkReader interfaces/comments/tags corrected. Five no-stack-argument members change explicit fastcall ECX receivers to automatic thiscall receivers at the same physical ECX location. Read changes bool/AL:1 to int/EAX:4 while retaining its three stack arguments and unresolved size/count signedness. All six existing method identities are independently supported and kept. Every name, local, code byte, instruction, reference, bookmark and non-target variable stays unchanged; 8,325 non-target rows remain exact. Two historical confidence tags per target are removed; older comments remain explicitly fallible leads. Only the program comment digest changes.
+
+Complete pristine coverage is 300 bytes and 111 instructions. The constructor allocation literal/line anchor, pinned member declarations, complete bodies and resource-dispatch caller transports establish the family. The constructor retains its machine EAX=this pointer return and the destructor remains void. Return-width evidence for Read comes from the complete callee and BOOL declaration, not a caller AL/EAX distinction. The existing 49 original-code reader cases and two explicit counterfactuals support bounded arithmetic/ordering/return statements with intercepted buffer calls; Read cases copy zero destination bytes. Low-word multiplication does not settle signedness; full class layouts, exact typedefs, underlying buffer operations, heap/EH and real file acceptance remain outside this correction. Independent review reproduced every sealed signature, transport and authored comment, including all old PRE pins and tag changes. No thunk dependent exists in the complete current function inventory.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, seven actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. Both Open overloads remain unchanged; the previous
+identity cohort owns their names. The [reader contract](../source-code/io/chunker-system.md)
+separates interfaces, original-code experiments and runtime unknowns.
+
+Working identity: `db.18684`, 18 files / 123,751,284 bytes,
+inventory SHA-256 `3d3747eebb2094cf7caed6bffcefafd97faffb8ec365d5cd331572c197cf9974`; main database 73,449,472 bytes,
+SHA-256 `4b64645063466390ade5bf0172789bf536a50275da7584e5792097a6d8d5b57c`. Restored resource-reader identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-reader-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/reader-abi/`.
 
 ## RE-audit resource-reader identities — September 27
 
