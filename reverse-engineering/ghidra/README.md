@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified console-menu names](#re-audit-verified-console-menu-names--september-27);
+[vertex-menu argument interface](#re-audit-vertex-menu-argument-interface--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,33 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit vertex-menu argument interface — September 27
+
+The [one-row manifest](../../tools/cohort-specs/vertex-menu-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/vertex-menu-abi-20260927.spec.tsv) correct parameter/convention
+metadata in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One vertex-menu argument interface, comment and tag set corrected: 00503ef0 now takes automatic ECX this, an integer index at Stack[4] and an output character buffer at Stack[8]. Both exits physically RET8. Saved undefined return type and unassigned return storage remain unchanged, as do all names, 146 code bytes / 47 instructions, locals, types and 8,331 other function records. Signature source changes from analysis to user-defined. Old notes and tags remain historical leads rather than complete certification.
+
+Fresh complete instruction and stack analysis agrees with 23 isolated original-code cases (16 GetEntry and seven stack-probe sizes) plus two altered-copy controls. The actual __chkstk body preserves original ECX and reserves 4096 bytes; the selected-body stack argument references resolve to entry ESP+4/+8. RET8 and the receiver+0x14 branch are independently falsified by disposable ELF changes. Formatting/shader-text callees are hooks; the hook EAX is incidental and no meaningful returned-value API is established. Output guards cover boundary words, not all writes; no invalid-list, real formatting, Windows guard-page, graphics, player or audible acceptance is claimed. No independent receiver-bound indirect callsite was recovered. Evidence: local-data/test-runs/re-audit-20260926/console-menu/vertex-t4bw7ii_/receipt.json.
+
+The initial exact export comparator rejected the expected signature-source
+transition from ANALYSIS to USER_DEFINED; its target-specific expectation was
+corrected without changing the sealed payload or rerunning the mutation.
+Independent review and root reproduction checked the exact payload and the
+retained original-code harness. Fresh PRE restoration, rehearsal, separate/sealed
+readbacks, seven byte-stable refusal controls, live readback and independently
+restored Archive A POST passed. All nine live exports equal rehearsal; only
+the program comment digest changes. No names are added to audit dispositions.
+
+Working identity: `db.18699`, 18 files / 124,750,708 bytes,
+inventory SHA-256 `05e9215ced568c00cd20c289c2570951dacb82b52a1c21dca23cf70bbc3db0c6`; main database 74,448,896 bytes,
+SHA-256 `16db4e1a18b4d4df6ea03973a4639ac7309970d142a0e49f552005c5f819404b`. Restored verified-console-menu POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-vertex-menu-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/vertex-menu-abi/`; evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/console-menu/`.
 
 ## RE-audit verified console-menu names — September 27
 

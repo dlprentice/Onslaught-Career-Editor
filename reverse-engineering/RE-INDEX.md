@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (console-menu identities and kept-name evidence promoted; broader name/prototype/comment audit remains)
+Last updated: 2026-09-27 (console-menu identities and vertex argument metadata promoted; broader name/prototype/comment audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -72,7 +72,7 @@ The [console-menu identity cohort](ghidra/README.md#re-audit-console-menu-identi
 now corrects twelve inherited callbacks, with complete body/RTTI/source evidence,
 exact live readback and restored independent recovery. The [nine kept-name comments](ghidra/README.md#re-audit-verified-console-menu-names--september-27)
 are also live after the same gates; all names, code and interfaces remain unchanged. Twenty-three isolated original-code cases and two altered-copy
-controls establish the pending Vertex GetEntry argument correction; formatter
+controls support the now-promoted [Vertex GetEntry argument correction](ghidra/README.md#re-audit-vertex-menu-argument-interface--september-27); formatter
 and shader-text hooks do not establish real menu behavior or rendering.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function

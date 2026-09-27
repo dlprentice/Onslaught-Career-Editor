@@ -342,6 +342,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "postevent-cleanup-20260927",
         "console-menu-identities-20260927",
         "console-menu-verified-20260927",
+        "vertex-menu-abi-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

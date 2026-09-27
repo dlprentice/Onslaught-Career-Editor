@@ -8183,3 +8183,38 @@ Execution logs use `kept-` under
 
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` and `git diff --check` passed.
+
+
+## RE vertex-menu argument interface — September 27
+
+`vertex-menu-abi-20260927` corrects 00503ef0 from a zero-argument stdcall to
+automatic ECX receiver plus index at Stack[4] and output buffer at Stack[8].
+The complete `undefined`/`<UNASSIGNED>` return row, name, 146 body bytes / 47
+instructions, stack purge, locals, types and 8,331 non-target functions remain
+unchanged. The target signature source changes from ANALYSIS to USER_DEFINED.
+The initial exact comparator rejected that expected provenance transition;
+its target-specific expectation was corrected without altering the sealed payload.
+
+Fresh PRE restoration, rehearsal/separate/sealed readbacks, seven byte-stable
+refusal controls, exact independent review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal. `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+The name projection matches all 8,332 entries; names remain 2,054 corrected,
+369 additionally kept and 5,909 outside those sets. Prototype corrections become
+53; updated comments remain 2,436 unique functions.
+
+The previously recorded 23-case original-code run and two altered-copy controls
+were independently reviewed, not rerun for this promotion. Formatting and
+shader-text calls remain hooks. The two output-boundary guards do not cover
+all writes; Linux probe execution does not establish Windows guard-page behavior.
+No real menu, graphics, audio or player acceptance is claimed.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/vertex-menu-abi/`.
+Execution logs use `vertex-abi-` under
+`local-data/test-runs/re-audit-20260926/console-menu/`.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,172 candidate files. `git diff --check` passed.
