@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (205 virtual-method identities promoted through mechanized evidence; broader audit unfinished)
+Last updated: 2026-09-26 (205 virtual identities corrected; 65 kept-name comments reviewed; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -42,9 +42,13 @@ now promotes 205 names/comments/tag sets from 29 independently reviewed slot
 anchors and fixed RTTI inheritance. It preserves all interfaces and bodies;
 all nine live exports equal rehearsal and independent POST restoration passed.
 Notable corrections distinguish Shutdown from a destructor and animation
-completion from firing/deactivation. Sixty-five kept-name candidates and
-28 unresolved targets remain outside this cohort. The method withholds
-conflicting aliases, uncertain owners and unsupported body/stack cases.
+completion from firing/deactivation. The separate
+[65 kept-name review](ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+now preserves those names and corrects their evidence comments/tags, including
+five stale or overstated claims. It changes no prototype or body; exact live
+readback and independent POST restoration passed. Twenty-eight unresolved
+targets remain withheld for conflicting aliases, uncertain owners or unsupported
+body/stack cases. Historical TTD counts were not revalidated.
 [PROGRAM.md](../PROGRAM.md#re-record-audit--requested-september-25) separates
 unique name dispositions from ABI/comment coverage and the unmeasured document
 remainder. Extend the mechanized evidence across further interfaces; identity

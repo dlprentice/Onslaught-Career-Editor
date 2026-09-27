@@ -15,6 +15,15 @@ in dated prose and filenames are retained aliases; the cohort manifest preserves
 their exact mapping. This correction does not re-verify the rest of this note
 or certify its prototypes or runtime behavior.
 
+The [kept-name review](../../ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+also rechecks `CCarver__Init` at `0x00422440`. Its current saved body is
+`[0x00422440,0x00422558)`: 280 bytes, 79 instructions, ending in `RET 4` at
+`0x00422555`. The raw body in pristine `BEA.exe.original.backup`
+(SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`)
+hashes to `65ff83b88d6b436fa94d7719fe4dd0cb1a0b9f70dfb8f2f4c5b33dcf63ba9047`.
+The older W002 truncated-prologue claim is stale. This review changes no body
+boundary and does not revalidate every initializer side effect described below.
+
 ## Name corrections — 2026-07-28
 
 Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the

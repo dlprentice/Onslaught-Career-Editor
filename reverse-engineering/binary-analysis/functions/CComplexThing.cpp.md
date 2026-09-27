@@ -26,6 +26,15 @@ in dated prose and filenames are retained aliases; the cohort manifest preserves
 their exact mapping. This correction does not re-verify the rest of this note
 or certify its prototypes or runtime behavior.
 
+The [kept-name review](../../ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+also corrects Init's old authored-basis branch label. At `0x004f3ffd`, the
+pristine body reads `init+0x60`; the branch at `0x004f4002` sends every nonzero
+value to `0x004f40ed`. Its comparison and branch at `0x004f40ed`/`0x004f40f0`
+copy 12 matrix dwords only when that value is 1. Every other nonzero value skips
+the copy and still reaches `CThing__Init` at `0x004f4102`. The historical count
+of zero calls through that site does not narrow the site's static reach to
+mode 1. No retained TTD query or retail launch was rerun for this correction.
+
 ## Shape
 
 `CComplexThing` is the 0x7c-byte thing that can carry a mission script. The

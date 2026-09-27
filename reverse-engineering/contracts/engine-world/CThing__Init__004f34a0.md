@@ -1,13 +1,33 @@
 # CThing__Init
 
 Status: active — **RED C2 gate; static contract retained**
-Last updated: 2026-08-24
+Last updated: 2026-09-26 (static identity and evidence limits rechecked; August runtime receipts not rerun)
 Verdict: **RED — retained evidence proves execution and caller-family counts, but no retained target-specific call→entry→return record binds `this`, `init`, receiver writes, and registration readback. The grade remains `C1_CANDIDATE_PARTIAL / OPEN_EXECUTED`; no C2 promotion is claimed.**
 Evidence: MEASURED — exact specimen/body receipts, tracked layout, retained trace counts, and a current 98-file call-context census with can-fail corpus controls; the requested runtime state transfer remains UNKNOWN.
 Specimen: pristine PC retail `BEA.exe`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` for static identity. Retained TTD captures ran force-windowed image `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`; they are not substituted for the pristine specimen.
 Source File: references/Onslaught/thing.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x004f34a0`
+
+## September 26 identity and evidence limits
+
+The [verified virtual-identity cohort](../../ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+supports the existing Init identity from pristine bytes and fixed RTTI slots.
+It preserves the saved name, prototype and body. The August runtime records
+below remain historical evidence, with their original limits; they were not
+queried again. Their original TTD recordings have been retired.
+
+The saved plate's inference that 1,579 Init calls could not include repeated
+initialization of fewer objects is not established. List insertion and the
+number of direct caller sites do not identify receiver lifetimes. A controlled
+trace must correlate each receiver, repeated Init calls and intervening removals
+before making that inference.
+
+The ComplexThing call at `0x004f4102` is the **nonzero-mode** arm, not exclusively
+an authored-matrix arm. Fresh pristine instructions at `0x004f3ffd`/`0x004f4002`
+select it for every nonzero `init+0x60`; `0x004f40ed`/`0x004f40f0` restrict the
+12-dword matrix copy to value 1. Other nonzero modes skip the copy and reach the
+same call. This corrects the branch label without changing the historical counts.
 
 ## Identity
 
@@ -72,7 +92,7 @@ excluded.
 ### What the retained traces do prove
 
 - Historical play-Level-100 query report SHA-256 `7a48338e5db25db2f324f9a22ef6875b6e58b8117a432c555b6de23c6833e674` pins 1,579 calls in trace SHA-256 `03599cea7459810f601174a6713ebf17cf12dfe88d593d7f87fd5b94c564e40e`.
-- That trace's caller histogram partitions exactly into `CTree__Init` 1,481, `CComplexThing__Init` Euler branch 68, authored-basis branch 0, and `CWaypoint__InitAndLink` 30. It also states that per-call `this` was not read.
+- That trace's retained caller histogram reports `CTree__Init` 1,481, `CComplexThing__Init` Euler branch 68, nonzero-mode branch 0 (historically labelled authored-basis), and `CWaypoint__InitAndLink` 30. It also states that per-call `this` was not read. These counts were not rerun on September 26.
 - Independent retained query report SHA-256 `e1c762863092f245c3c8311cd6fa4d8f29fc1c5fa12082511e8fe4d0c8c382e9` records 1,579 calls in play-Level-100 and 1,578 in damage-script-Level-100; the latter trace SHA-256 is `994a6aa99444176ec4b8985d03bd95549a07f9eead6e41492a24c4567c9befcd`.
 - These traces recorded force-windowed image `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`. The call counts and families are bounded runtime evidence; they do not identify receiver/init pointers or owned writes.
 
@@ -108,4 +128,4 @@ excluded.
 - Include a preregistered raw-field contrast such as `init+0x3ac == 0` versus non-zero, without assigning a semantic label until measured.
 - Require can-fail controls: wrong receiver base, invocation-A receiver with invocation-B `init`, wrong destination offset/value pairing, and invocation-A entry joined to invocation-B return. Every poison must fail.
 - For world insertion, inspect the access-scan event at the selected return, follow the resulting set node, and prove its element pointer equals the same receiver. Use touched-memory controls; arbitrary-position `dd` is already refuted for this BSS region.
-- Cheapest offline instrument: query the existing hash-bound play-Level-100 capture only. First select one invocation from two caller-family return-address groups; then run [`tools/Invoke-TtdCallContextV2.ps1`](../../../tools/Invoke-TtdCallContextV2.ps1) for bounded call/entry/return windows and [`tools/Invoke-TtdDataWrites.ps1`](../../../tools/Invoke-TtdDataWrites.ps1) for preregistered receiver/set ranges. Do not record a new session unless retained traces cannot supply the two envelopes.
+- The former offline plan depended on querying the original play-Level-100 TTD recording. That recording is retired; retained extracts cannot supply new queries, and the PowerShell tools are historical provenance. The remaining falsifier needs a new controlled run on an owned game copy: capture two caller families' entry/return state, receiver identity, repeated Init calls and intervening removals. No runtime run is claimed here.
