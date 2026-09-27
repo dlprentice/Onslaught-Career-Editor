@@ -7884,3 +7884,34 @@ Commands and receipts under
 `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,158 candidate files. `git diff --check` passed.
+
+## RE ordered frontend argument checker — September 27
+
+`tools/re_name_evidence.py` now optionally checks ordered DWORD arguments on
+reviewed common-interface paths. It captures values at PUSH, reverses that
+sequence into callee stack offsets, binds source order/types and each known
+holder, and requires fresh receiver/slot decoding to agree with the validated
+instruction window. Return metadata and unresolved source typedefs are excluded.
+Shared CALL joins are reported as local-path limits; external register/stack
+meanings remain reviewed premises, with object/stack non-aliasing stated.
+
+`python -m unittest tools.re_name_evidence_tests`: 141 passed. Controls cover
+swapped arguments with identical cleanup, register overwrites after PUSH,
+pre-push ESP addressing, narrow pushes, partial-register writes, extra register
+claims, wrong source order/type, interior entries, missing holder evidence,
+source assignments and complete/partial outgoing-stack reloads. Review exposed
+three stale-cache dispatch mutations; the pre-fix test failed all three as
+expected, then passed after the correction. Pre-push stack cleanup is refused
+in this optional route; the existing identity-only route is unchanged.
+
+The private `frontend-options/ordered_argument_proof.py` rerun admitted all
+22 selected targets through 32 known holder words. The timed transition
+counterexample carries page on the stack while EDX holds a vptr. Independent
+review checked the packet and its 23 code-span pins; root reproduced the
+instructions and inputs. This establishes a proposed argument-storage
+correction, not a live promotion or full menu/runtime acceptance.
+
+Evidence and exact logs are under
+`local-data/test-runs/re-audit-20260926/frontend-options/`:
+`ordered-argument-proof.json`, `ordered-stale-model-negative-before.log`,
+`ordered-arguments-suite-v4.log` and `ordered-proof-v4.log`.
