@@ -757,7 +757,16 @@ all 8,332 projected names match live. The [shared-music note](reverse-engineerin
 now separates source agreement on null-song assignment from genuine divergences,
 bounds deferred selection writes and stop branches, and withdraws unsupported
 high-level names for override guards. No audible or new runtime acceptance is claimed.
-GenericSPtrSet identities and remaining camera interfaces follow.
+GenericSPtrSet identities and remaining camera interfaces follow. Their source
+recheck exposed and corrected a parser defect: constructor initializer lists
+were included in formal arguments. Balanced, literal-aware extents now separate
+parameters, initializers and bodies; initializer calls reach the graph, and
+assignment operators are indexed explicitly. Unsupported defaults withhold the
+whole overload family. All 1,054 prior pinned .cpp definitions and their body
+spans remain; eleven constructor argument lists are corrected and the missing
+GenericSPtrSet assignment is admitted. These are source-index corrections, not
+new retail dispositions. Both evidence-tool suites pass 197 tests; the next
+14 container candidates still require their complete promotion gate.
 Keep the CUnitAI/CMechAI collision separate; never
 move an excluded label simply to free a spelling. Evidence and failed/passing
 controls: `local-data/test-runs/re-audit-20260926/frontend-options/cleanup-*`.

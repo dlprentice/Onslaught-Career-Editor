@@ -96,6 +96,8 @@ class SourceGraphTests(unittest.TestCase):
     def test_parameters_and_sizes(self):
         self.assertEqual(G.params("void"), [])
         self.assertEqual(G.params("int a, std::map<int, int> m, int b = 3"), ["int a", "std::map<int, int> m", "int b"])
+        self.assertEqual(G.params('void (*hook)(int), int count = Make(1, 2), int last = 0'),
+                         ['void (*hook)(int)', 'int count', 'int last'])
         self.assertEqual(G.param_bytes("const unsigned short v0"), 4)
         self.assertEqual(G.param_bytes("NvEdgeInfoVec &edgeInfos"), 4)
         self.assertEqual(G.param_bytes("double d"), 8)
@@ -137,6 +139,20 @@ class SourceGraphTests(unittest.TestCase):
                                   {'address': '0x30', 'name': 'Other__ctor'}], src)
         self.assertEqual(mapping, {0x10: 'Thing::Thing', 0x20: 'Thing::~Thing'})
 
+    def test_constructor_arity_ignores_initializers_and_keeps_overloads_ambiguous(self):
+        Path(self.tmp.name, 'construct.cpp').write_text(
+            'Bag::Bag() : first(NULL), size(0) { }\n'
+            'Bag::Bag(const Bag& other) : first(NULL), size(0) { }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        self.assertIsNone(G.resolve(src, 'Bag::Bag'))
+        empty, copy = G.resolve(src, 'Bag::Bag/0'), G.resolve(src, 'Bag::Bag/1')
+        self.assertIsNotNone(empty)
+        self.assertIsNotNone(copy)
+        self.assertEqual((G.expected_pop(src, empty), G.expected_pop(src, copy)), (0, 4))
+        mapping, rows = G.map_names([{'address': '0x10', 'name': 'Bag__ctor'}], src)
+        self.assertEqual(mapping, {})
+        self.assertEqual(rows[0]['status'], 'ambiguous-source-definition')
+
     def test_inline_same_arity_overloads_are_retained_and_withheld(self):
         Path(self.tmp.name, 'over.h').write_text(
             'class Inline { public: int F(int a) { return a; }\n'
@@ -146,6 +162,79 @@ class SourceGraphTests(unittest.TestCase):
         self.assertEqual(mapping, {})
         self.assertEqual(rows[0]['status'], 'ambiguous-source-definition')
         self.assertEqual(len(rows[0]['candidates']), 2)
+
+    def test_constructor_initializer_cast_cannot_admit_a_wrong_stack_pop(self):
+        Path(self.tmp.name, 'construct.cpp').write_text('Bag::Bag() : ptr((void*)0) { }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        fn = G.resolve(src, 'Bag::Bag')
+        self.assertEqual(G.expected_pop(src, fn), 0)
+        bad = G.check({0x10: 'Bag::Bag'}, {0x10: []}, {0x10: {4}}, src, {0x10: 24}, 16, set())
+        good = G.check({0x10: 'Bag::Bag'}, {0x10: []}, {0x10: {0}}, src, {0x10: 24}, 16, set())
+        self.assertEqual((bad['contradicted'], good['contradicted']), (1, 0))
+
+    def test_defaults_cannot_hide_a_following_parameter(self):
+        for args in ('const char *text="<", int flags=0', 'int count=(1<2), int flags=0',
+                     'int count=object->field, int flags=0', 'int count=Make(1, 2), int flags=0'):
+            with self.subTest(args=args):
+                Path(self.tmp.name, 'defaults.cpp').write_text(f'void Bag::Set({args}) {{ }}\n')
+                src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+                fn = G.resolve(src, 'Bag::Set')
+                self.assertEqual(G.expected_pop(src, fn), 8)
+                report = G.check({0x10: 'Bag::Set'}, {0x10: []}, {0x10: {4}}, src, {0x10: 24}, 16, set())
+                self.assertEqual(report['contradicted'], 1)
+        for args in ('int count=Factory<int, int>(), int flags=0', 'int count=1<2, int flags=0'):
+            with self.subTest(args=args):
+                Path(self.tmp.name, 'defaults.cpp').write_text(f'void Bag::Set({args}) {{ }}\n')
+                src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+                self.assertIsNone(G.resolve(src, 'Bag::Set'))
+
+    def test_initializer_calls_are_retained_and_literal_calls_are_excluded(self):
+        Path(self.tmp.name, 'construct.cpp').write_text(
+            'int Factory() { return 1; }\n'
+            'Bag::Bag() : value(Factory()) { Log("Free()"); }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        self.assertEqual(src.calls['Bag::Bag'], {'Factory'})
+        report = G.check({0x10: 'Bag::Bag', 0x20: 'Factory'}, {0x10: [0x20], 0x20: []},
+                         {0x10: {0}, 0x20: {0}}, src, {0x10: 24, 0x20: 24}, 16, set())
+        self.assertEqual(report['contradicted'], 0)
+
+    def test_refused_default_does_not_make_another_overload_unique(self):
+        for text in ('void Bag::Set(int x) {}\nvoid Bag::Set(float x=1<2) {}\n',
+                     'void Bag::Set(int x) {}\nvoid Bag::Set(int x=Factory<int,int>()) {}\n',
+                     'class Bag { public: void Set(int x) {}\nvoid Set(float x=1<2) {} };\n'):
+            with self.subTest(text=text):
+                Path(self.tmp.name, 'refused.cpp').write_text(text + 'void Other::Set(int x) {}\n')
+                src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+                self.assertIsNone(G.resolve(src, 'Bag::Set'))
+                self.assertIsNone(G.resolve(src, 'Bag::Set/1'))
+                self.assertIsNone(G.resolve(src, 'Set'))
+                mapping, _ = G.map_names([{'address': '0x10', 'name': 'Bag__Set'}], src)
+                self.assertEqual(mapping, {})
+
+    def test_inline_constructor_and_body_use_the_same_balanced_parser(self):
+        Path(self.tmp.name, 'inline.h').write_text(
+            'class Bag { public: Bag() : value(Thing::Helper(1)) { Log("}"); }\n'
+            'int Get() { char x = \'{\'; return value; }\n'
+            'Bag& operator = (const Bag& copy) { value = copy.value; return *this; } };\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        ctor = G.resolve(src, 'Bag::Bag')
+        self.assertIsNotNone(ctor)
+        self.assertEqual((ctor.args, G.expected_pop(src, ctor)), ('', 0))
+        self.assertEqual(src.calls['Bag::Bag'], {'Helper'})
+        self.assertIn('return value;', G.resolve(src, 'Bag::Get').body)
+        self.assertEqual(G.expected_pop(src, G.resolve(src, 'Bag::Get')), 0)
+        self.assertIsNotNone(G.resolve(src, 'Bag::operator='))
+        self.assertEqual((ctor.line, G.resolve(src, 'Bag::Get').line,
+                          G.resolve(src, 'Bag::operator=').line), (1, 2, 3))
+
+    def test_inline_access_label_preserves_scalar_and_qualified_return_types(self):
+        Path(self.tmp.name, 'inline.h').write_text(
+            'class Inline { public: int Get(int n) { return n; }\n'
+            'private: ns::Item* Item() { return 0; } };\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        self.assertEqual(G.expected_pop(src, G.resolve(src, 'Inline::Get')), 4)
+        self.assertIn('ns::Item*', G.resolve(src, 'Inline::Item').head)
+        self.assertEqual(G.expected_pop(src, G.resolve(src, 'Inline::Item')), 0)
 
     def test_same_arity_overload_calls_are_possible_union_not_last_definition(self):
         Path(self.tmp.name, 'over.cpp').write_text(

@@ -630,11 +630,10 @@ def ancestors_or_self(prog: "Program", klass: str) -> set[str]:
 # ---------------------------------------------------------------------------
 
 _C_STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
-# A definition at the start of a line: an optional return type ending in whitespace, '*' or '&', the qualified
-# name (constructors and destructors have no return type), the parameters, an optional const and an optional
-# constructor initializer list, then the body's brace.
-_FUNC_DEF = re.compile(r"^(?P<head>(?:[A-Za-z_][^;{}()\n]*?[\s*&])?)(?P<qual>(?:[A-Za-z_]\w*::)*)(?P<name>~?[A-Za-z_]\w*)"
-                       r"\s*\((?P<args>[^;{}]*)\)\s*(?:const\s*)?(?::[^;{]*)?\{", re.M)
+# Only the prefix is a regex. Parameters, constructor initializers and bodies
+# have separate balanced extents; initializer parentheses are not parameters.
+_FUNC_DEF = re.compile(r"^(?P<head>(?:[A-Za-z_][^;{}()\n]*?[\s*&])?)(?P<qual>(?:[A-Za-z_]\w*::)*)"
+                       r"(?P<name>operator\s*=(?=\s*\()|~?[A-Za-z_]\w*)\s*\(", re.M)
 _CALL_LIT = re.compile(r"(?P<callee>(?:[A-Za-z_]\w*(?:::|\.|->))*[A-Za-z_]\w*)\s*\(\s*(?P<pre>(?:[^();\"]|\([^();]*\))*?)\"(?P<lit>(?:[^\"\\\n]|\\.)*)\"")
 
 
@@ -654,6 +653,7 @@ class SourceFunc:
     end_line: int = 0      # line of the closing brace
     args: str = ""         # the parameter list as written
     head: str = ""         # what precedes the name: return type, 'static', 'inline', 'virtual'
+    initializers: str = "" # separate from parameters and the brace-delimited body
 
 
 _COMMENT_OR_LITERAL = re.compile(r"//[^\n]*|/\*.*?\*/|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'", re.S)
@@ -672,32 +672,120 @@ def strip_comments(text: str) -> str:
     return _COMMENT_OR_LITERAL.sub(keep, text)
 
 
+def mask_source_literals(text: str) -> str | None:
+    """Position-preserving literal mask; incomplete literals withhold the file.
+
+    Ordinary C++ literals plus the pinned PS2 source's multiline first operand
+    of asm __volatile__ are supported. Comments must already be stripped.
+    """
+    ordinary = re.compile(r'"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', re.S)
+    literal = re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\\n])*\'', re.S)
+    invalid = False
+    def mask(m):
+        nonlocal invalid
+        if ordinary.fullmatch(m.group()) is None and not re.search(
+                r'\basm\s+__volatile__\s*\(\s*$', text[:m.start()]):
+            invalid = True
+        return ''.join('\n' if c == '\n' else ' ' for c in m.group())
+    masked = literal.sub(mask, text)
+    # strip_comments removes every complete block comment. A remaining opener
+    # outside literals is an unfinished comment, not permission to index its text.
+    return None if invalid or '"' in masked or "'" in masked or '/*' in masked else masked
+
+
+def source_delimiter_end(text: str, start: int) -> int | None:
+    """Return the index after a complete delimiter group in literal-masked text."""
+    pairs = {'(': ')', '[': ']', '{': '}'}
+    if start >= len(text) or text[start] not in pairs:
+        return None
+    stack = []
+    for pos in range(start, len(text)):
+        char = text[pos]
+        if char in pairs:
+            stack.append(pairs[char])
+        elif char in ')]}':
+            if not stack or char != stack.pop():
+                return None
+            if not stack:
+                return pos + 1
+    return None
+
+
+def source_definition_parts(masked: str, opening: int, constructor: bool):
+    """Supported definition suffix: parameters, const, parenthesized ctor initializers, body.
+
+    Return parameter end, initializer span, body opening and body end. Unknown
+    suffixes and incomplete groups are withheld, never guessed into an extent.
+    """
+    args_end = source_delimiter_end(masked, opening)
+    if args_end is None or any(c in masked[opening + 1:args_end - 1] for c in ';{}'):
+        return None
+    pos = args_end
+    def spaces(p):
+        while p < len(masked) and masked[p].isspace():
+            p += 1
+        return p
+    pos = spaces(pos)
+    const = re.match(r'const\b', masked[pos:])
+    if const:
+        pos = spaces(pos + const.end())
+    initial_start = initial_end = pos
+    if masked[pos:pos + 1] == ':':
+        if not constructor or const:
+            return None
+        initial_start = pos + 1
+        pos = spaces(initial_start)
+        while True:
+            member = re.match(r'(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\s*\(', masked[pos:])
+            if member is None:
+                return None
+            end = source_delimiter_end(masked, pos + member.end() - 1)
+            if end is None or ';' in masked[pos:end]:
+                return None
+            initial_end = end
+            pos = spaces(end)
+            if masked[pos:pos + 1] != ',':
+                break
+            pos = spaces(pos + 1)
+    if masked[pos:pos + 1] != '{':
+        return None
+    end = source_delimiter_end(masked, pos)
+    return None if end is None else (args_end, initial_start, initial_end, pos, end)
+
+
 def index_source(root: Path = SOURCE, patterns: tuple[str, ...] = ("*.cpp",)) -> list[SourceFunc]:
     out = []
     for path in sorted({p for pattern in patterns for p in root.glob(pattern)}):
         text = strip_comments(path.read_text(errors="replace"))
-        for m in _FUNC_DEF.finditer(text):
-            name = m.group("name")
+        masked = mask_source_literals(text)
+        if masked is None:
+            continue
+        covered_until = 0
+        for m in _FUNC_DEF.finditer(masked):
+            if m.start() < covered_until:
+                continue
+            name = re.sub(r'\s+', '', m.group("name"))
             if name in ("if", "for", "while", "switch", "return", "sizeof", "catch"):
                 continue
             head = m.group("head").strip()
             if head.startswith(("else", "return", "case", "#")):
                 continue
-            start = m.end()
-            depth, j = 1, start
-            while j < len(text) and depth:
-                c = text[j]
-                depth += (c == "{") - (c == "}")
-                j += 1
-            body = text[start:j - 1]
             key = (m.group("qual") or "") + name
+            parts = key.split('::')
+            spans = source_definition_parts(masked, m.end() - 1, len(parts) >= 2 and parts[-1] == parts[-2])
+            if spans is None:
+                continue
+            args_end, init_start, init_end, opening, j = spans
+            covered_until = j
+            body = text[opening + 1:j - 1]
             literals = [c_unescape(x) for x in _C_STRING.findall(body)]
             calls = []
             for cm in _CALL_LIT.finditer(body):
                 argidx = cm.group("pre").count(",")
                 calls.append((cm.group("callee"), c_unescape(cm.group("lit")), argidx))
             out.append(SourceFunc(key, path.name, text.count("\n", 0, m.start()) + 1, body, literals, calls,
-                                  text.count("\n", 0, j - 1) + 1, m.group("args"), head))
+                                  text.count("\n", 0, j - 1) + 1, text[m.end():args_end - 1], head,
+                                  text[init_start:init_end]))
     return out
 
 
@@ -709,6 +797,8 @@ def source_key_to_name(key: str) -> str:
         parts[-1] = "ctor"
     elif len(parts) >= 2 and parts[-1] == "~" + parts[-2]:
         parts[-1] = "dtor"
+    elif parts[-1] == 'operator=':
+        parts[-1] = 'operator_assign'
     return "__".join(parts)
 
 

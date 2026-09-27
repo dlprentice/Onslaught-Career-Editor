@@ -63,19 +63,42 @@ def short(key: str) -> str:
 
 
 def params(args: str) -> list[str]:
-    """Parameters as written, without default values; '' and 'void' mean none."""
-    args = re.sub(r"=\s*[^,]+", "", args).strip()
+    """Parameters without defaults; nested groups and literals cannot split them.
+
+    A top-level angle operator in a default expression is ambiguous without C++
+    name lookup (comparison versus template). Refuse it instead of certifying
+    an argument count; callers indexing source withhold that definition.
+    """
+    args = args.strip()
     if args in ("", "void"):
         return []
-    depth, cur, out = 0, "", []
-    for ch in args:
-        depth += (ch in "<(") - (ch in ">)")
-        if ch == "," and depth == 0:
-            out.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    return out + [cur.strip()]
+    masked = E.mask_source_literals(args)
+    if masked is None:
+        raise ValueError('incomplete parameter literal')
+    depth, start, default, pos, out = 0, 0, None, 0, []
+    while pos < len(masked):
+        ch = masked[pos]
+        if ch in '([{':
+            end = E.source_delimiter_end(masked, pos)
+            if end is None:
+                raise ValueError('incomplete parameter group')
+            pos = end
+            continue
+        if default is None:
+            depth += (ch == '<') - (ch == '>')
+            if depth < 0:
+                raise ValueError('unmatched parameter angle bracket')
+            if ch == '=' and depth == 0:
+                default = pos
+        elif ch in '<>' and not (ch == '>' and pos and masked[pos - 1] == '-'):
+            raise ValueError('ambiguous angle operator in parameter default')
+        if ch == ',' and depth == 0:
+            out.append(args[start:default if default is not None else pos].strip())
+            start, default = pos + 1, None
+        pos += 1
+    if depth:
+        raise ValueError('unmatched parameter angle bracket')
+    return out + [args[start:default].strip()]
 
 
 def outer_type_text(declaration: str) -> str | None:
@@ -131,33 +154,53 @@ def index(root: Path, patterns: tuple[str, ...], extra_inline: set[str]) -> Sour
     statics, inline, enum_types = set(), set(extra_inline), set()
     for path in sorted({p for pattern in patterns for p in root.glob(pattern)}):
         text = E.strip_comments(path.read_text(errors="replace"))
-        enum_types.update(re.findall(r'\benum\s+(?:class\s+|struct\s+)?(\w+)\s*(?::[^;{}]+)?\{', text))
-        for cm in re.finditer(r"\b(?:class|struct)\s+(\w+)(?:\s+final)?\s*(?::[^;{}()]*)?\{", text):
-            depth, j = 1, cm.end()
-            while j < len(text) and depth:
-                depth += (text[j] == "{") - (text[j] == "}")
-                j += 1
+        masked = E.mask_source_literals(text)
+        if masked is None:
+            continue
+        enum_types.update(re.findall(r'\benum\s+(?:class\s+|struct\s+)?(\w+)\s*(?::[^;{}]+)?\{', masked))
+        for cm in re.finditer(r"\b(?:class|struct)\s+(\w+)(?:\s+final)?\s*(?::[^;{}()]*)?\{", masked):
+            j = E.source_delimiter_end(masked, cm.end() - 1)
+            if j is None:
+                continue
             body = text[cm.end():j - 1]
-            for m in re.finditer(r"\bstatic\s+[^;(){}]*?\b(~?\w+)\s*\(", body):
+            body_mask = masked[cm.end():j - 1]
+            for m in re.finditer(r"\bstatic\s+[^;(){}]*?\b(~?\w+)\s*\(", body_mask):
                 statics.add((cm.group(1), m.group(1)))
             # methods defined inside the class body are implicitly inline
-            for m in re.finditer(r"(?:^|[;{}])\s*(?P<head>[\w:<>*&\s]*?)\b(?P<name>~?[A-Za-z_]\w*)\s*\((?P<args>[^;{}()]*)\)"
-                                 r"\s*(?:const\s*)?(?::[^;{]*)?\{", body):
-                if m.group("name") in _KEYWORDS:
+            covered_until = 0
+            for m in re.finditer(r"(?:^|[;{}])\s*(?P<head>[\w:<>*&\s]*?)\b"
+                                 r"(?P<name>operator\s*=(?=\s*\()|~?[A-Za-z_]\w*)\s*\(", body_mask):
+                name = re.sub(r'\s+', '', m.group('name'))
+                if name in _KEYWORDS or m.start('name') < covered_until:
                     continue
-                depth, k = 1, m.end()
-                while k < len(body) and depth:
-                    depth += (body[k] == "{") - (body[k] == "}")
-                    k += 1
-                key = f"{cm.group(1)}::{m.group('name')}"
-                method_body = body[m.end():k - 1]
+                spans = E.source_definition_parts(body_mask, m.end() - 1, name == cm.group(1))
+                if spans is None:
+                    continue
+                args_end, init_start, init_end, opening, k = spans
+                covered_until = k
+                key = f"{cm.group(1)}::{name}"
+                method_body = body[opening + 1:k - 1]
                 # Each definition position is distinct. Equal arguments/body
                 # do not collapse const/nonconst overloads (or conditional
                 # duplicate definitions) into a uniquely resolved identity.
-                defs.append(E.SourceFunc(key, path.name, text.count("\n", 0, cm.end() + m.start()) + 1,
-                                         method_body, [], [], 0, m.group("args"), "inline " + m.group("head")))
+                defs.append(E.SourceFunc(key, path.name, text.count("\n", 0, cm.end() + m.start('name')) + 1,
+                                         method_body, [], [], text.count('\n', 0, cm.end() + k - 1) + 1,
+                                         body[m.end():args_end - 1], "inline " + re.sub(
+                                             r'^\s*(?:(?:public|protected|private)\s*:\s*)+', '', m.group("head")),
+                                         body[init_start:init_end]))
     funcs: dict[str, list[E.SourceFunc]] = defaultdict(list)
+    unsupported_names = set()
     for f in defs:
+        try:
+            params(f.args)
+        except ValueError:
+            unsupported_names.add(short(f.key))
+    for f in defs:
+        # Dropping only the refused overload can make another one falsely
+        # unique. Withhold this entire short-name family, including unqualified
+        # resolution, until all its parameter lists can be distinguished.
+        if short(f.key) in unsupported_names:
+            continue
         funcs[short(f.key)].append(f)
         if f.file.endswith((".h", ".hpp", ".inl")) or re.search(r"\binline\b", f.head):
             inline.add(short(f.key))
@@ -166,7 +209,9 @@ def index(root: Path, patterns: tuple[str, ...], extra_inline: set[str]) -> Sour
     names = set(funcs)
     for name, fs in funcs.items():
         for f in fs:
-            called = {c for c in re.findall(r"(?<!\w)(~?[A-Za-z_]\w*)\s*\(", f.body) if c not in _KEYWORDS}   # obj.f( and p->f( too
+            call_text = E.mask_source_literals(f.initializers + '\n' + f.body)
+            called = {c for c in re.findall(r"(?<!\w)(~?[A-Za-z_]\w*)\s*\(", call_text or '')
+                      if c not in _KEYWORDS}   # obj.f( and p->f( too; literals are not calls
             # Equal-arity overloads cannot be resolved by this partial parser.
             # Preserve the union as possible calls; never silently select the
             # last definition. resolve() still withholds the ambiguous identity.

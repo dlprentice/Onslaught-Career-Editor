@@ -71,6 +71,34 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Source definition and constructor indexing — September 27
+
+`python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:
+**197 passed** after reproducing the malformed constructor-argument and
+literal-brace failures. Controls reject false RET4 admission from initializer
+casts and defaults containing comparisons, quoted angles or member access;
+unknown default syntax cannot erase an overload and make another falsely unique.
+Initializer calls remain in graph evidence while strings are excluded. Incomplete
+comments/literals/bodies refuse. The pinned PS2 multiline first asm operand is
+accepted narrowly; ordinary multiline strings remain withheld. Inline source
+lines now point to the method declaration, preserving qualified return types.
+
+A before/after check against pinned Onslaught source retained all 1,054 earlier
+.cpp definitions and every existing body hash/closing line. It corrected eleven
+constructor parameter lists and added the previously omitted GenericSPtrSet
+assignment, yielding 1,055 definitions. The header parser still reads 115 classes;
+that count is not a verified-layout count. The selected constructor overloads
+and assignment have arities 0/1/1 and expected cleanup 0/4/4. Earlier candidates
+had withheld these identities; no GenericSPtrSet rename is certified by this tool
+repair. Parsing remains partial, with no general C++ or runtime acceptance claim.
+
+Commands, initial failures, reviewer corrections and pinned before/after output:
+`local-data/test-runs/re-audit-20260926/music/source-index-*`.
+`source-index-pinned-v1.json` exposed over-withholding of the PS2 assembly dialect;
+`source-index-pinned-v2.json` records the corrected whole-source comparison.
+The final suite log is `source-index-full-v6.log`. No Ghidra mutation belongs to
+this tool change.
+
 ### Shared-music records — September 27
 
 The [eight-row cohort](reverse-engineering/ghidra/README.md#re-audit-verified-music-records--september-27)

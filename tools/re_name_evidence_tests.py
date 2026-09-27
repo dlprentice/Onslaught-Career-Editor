@@ -1564,6 +1564,72 @@ class HelperTests(unittest.TestCase):
         self.assertIn("void A::G()", out)
         self.assertEqual(out.count("\n"), text.count("\n"))
 
+    def test_source_constructor_parameters_exclude_initializer_lists(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'bag.cpp').write_text(
+                'Bag::Bag() : first(NULL), last(NULL), size(0) { }\n'
+                'Bag::Bag(const Bag& other)\n'
+                ' : first(NULL), last(Make(1, Pair(2, 3))), size(0)\n'
+                '{ Append(other); }\n')
+            funcs = E.index_source(Path(tmp))
+        self.assertEqual([f.key for f in funcs], ['Bag::Bag', 'Bag::Bag'])
+        self.assertEqual([f.args for f in funcs], ['', 'const Bag& other'])
+        self.assertEqual((funcs[1].line, funcs[1].end_line), (2, 4))
+        self.assertEqual(funcs[1].body.strip(), 'Append(other);')
+        self.assertIn('Make(1, Pair(2, 3))', funcs[1].initializers)
+        self.assertNotIn('Append', funcs[1].initializers)
+
+    def test_source_nested_parameters_and_assignment_operator(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'bag.cpp').write_text(
+                'void Bag::Set(void (*hook)(int), int count = Make(1, 2)) { hook(count); }\n'
+                'Bag& Bag::operator = (Bag& other) { Copy(other); return *this; }\n'
+                'bool Bag::operator == (const Bag& other) { return true; }\n')
+            funcs = E.index_source(Path(tmp))
+        self.assertEqual([f.key for f in funcs], ['Bag::Set', 'Bag::operator='])
+        self.assertEqual(funcs[0].args, 'void (*hook)(int), int count = Make(1, 2)')
+        self.assertEqual((funcs[1].head, funcs[1].args), ('Bag&', 'Bag& other'))
+        self.assertEqual(E.source_key_to_name('Bag::operator='), 'Bag__operator_assign')
+
+    def test_source_body_braces_in_literals_do_not_truncate_or_capture_next_definition(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'bag.cpp').write_text(
+                'void Bag::One() {\n'
+                ' Log("}"); char brace = \'{\';\n'
+                ' if (brace) { Finish(); }\n'
+                '}\n'
+                'void Bag::Two() { End(); }\n')
+            funcs = E.index_source(Path(tmp))
+        self.assertEqual([f.key for f in funcs], ['Bag::One', 'Bag::Two'])
+        self.assertEqual((funcs[0].line, funcs[0].end_line), (1, 4))
+        self.assertIn('Finish();', funcs[0].body)
+        self.assertNotIn('Bag::Two', funcs[0].body)
+        self.assertEqual(funcs[0].literals, ['}'])
+
+    def test_source_incomplete_bodies_and_unsupported_suffixes_are_withheld(self):
+        for text in ('void Bag::Bad() { Log("}");',
+                     '/* no close\nvoid Bag::Bad(int n) { return; }\n',
+                     'void Bag::Bad(int x { Work(); }',
+                     'Bag::Bag() : value(Make(1) { Work(); }',
+                     'void Bag::Bad() { Log("unterminated); }',
+                     'void Bag::Bad() { Log("unescaped\nnewline"); }',
+                     "void Bag::Bad() { char x = '{; }",
+                     'void Bag::Bad() noexcept { Work(); }',
+                     'void Bag::Bad() : field(1) { Work(); }'):
+            with self.subTest(text=text), tempfile.TemporaryDirectory() as tmp:
+                Path(tmp, 'bag.cpp').write_text(text)
+                self.assertEqual(E.index_source(Path(tmp)), [])
+
+    def test_pinned_multiline_asm_dialect_keeps_following_definitions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'bag.cpp').write_text(
+                'void Bag::One() { asm __volatile__ (\n"\n asm } body {\\n\n"\n: "=j" (out)); }\n'
+                'void Bag::Two() { Finish(); }\n')
+            funcs = E.index_source(Path(tmp))
+        self.assertEqual([f.key for f in funcs], ['Bag::One', 'Bag::Two'])
+        self.assertIn('"=j"', funcs[0].body)
+        self.assertNotIn('Bag::Two', funcs[0].body)
+
     def test_c_unescape_keeps_escaped_backslashes(self):
         self.assertEqual(E.c_unescape(r"C:\\dev\\a.cpp\n"), "C:\\dev\\a.cpp\n")
 
