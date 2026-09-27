@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified music records](#re-audit-verified-music-records--september-27);
+[GenericSPtrSet forwarding entry](#re-audit-genericsptrset-forwarding-entry--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit GenericSPtrSet forwarding entry — September 27
+
+The [one-row manifest](../../tools/cohort-specs/sptrset-forwarder-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sptrset-forwarder-20260927.spec.tsv) name the direct forwarding
+entry `0042f220` as `GenericSPtrSet__RemoveAll_thunk`. Specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One structural forwarding name, comment and tag set corrected at 0042f220. Its five-byte direct jump to 004e5c60, saved thunk association, complete interface, variables and all 8,331 other function records remain unchanged.
+
+Fresh pristine instructions establish receiver/stack-neutral forwarding. Complete target-body/source/caller review identifies GenericSPtrSet::RemoveAll; the target itself is corrected only by a subsequent cohort. The name does not certify a concrete template instantiation, unique source wrapper or full target ABI. The prior DEFAULT name followed its target automatically; a disposable fourteen-row rehearsal caught that fifteenth mutation and refused it before any live change. The rejected evidence is retained. An explicit one-row forwarding name avoids changing the collision or collateral gates. All prior comment bytes remain qualified leads.
+
+The exact 4,091-byte manifest was independently reviewed and reproduced by root.
+All 616 old comment bytes and historical tags remain. Fresh PRE restoration,
+rehearsal, separate/sealed readback, five byte-stable refusal controls, live
+readback and independently restored Archive A POST passed. All nine live exports
+match rehearsal. The exact comparator includes name-source promotion from
+DEFAULT to USER_DEFINED; the target record and thunk association remain frozen.
+The later fourteen-row rehearsal must independently confirm no follower change.
+
+Working identity: `db.18704`, 18 files / 125,471,604 bytes,
+inventory SHA-256 `c249dc325c2efff362472e5cde8fe9af09dcfb47cdd6f3f215fd4ea436598e8e`; main database 75,169,792 bytes,
+SHA-256 `0f386541105ef23af0fa9fb91a418d5aa9b119f9395c99fede44777591bd4d3e`. Restored verified-music POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sptrset-forwarder/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-forwarder/`; logs:
+`local-data/test-runs/re-audit-20260926/sptrset/forwarder-*`.
 
 ## RE-audit verified music records — September 27
 
