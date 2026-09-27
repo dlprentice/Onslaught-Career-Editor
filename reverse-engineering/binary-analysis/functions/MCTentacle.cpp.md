@@ -1,8 +1,13 @@
 # MCTentacle.cpp Functions
 
+Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
+Status: active bounded static identity reference
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
 > Source File: MCTentacle.cpp | Binary: BEA.exe
 > Debug Path: `[maintainer-local-source-export-root]\MCTentacle.cpp` at `0x0062e06c`
 > Current evidence: Wave435 saved Ghidra read-back on 2026-05-16; Wave515 follow-up saved the adjacent `0x004f0c50` matrix helper on 2026-05-17
+
+> **September 27 deleting-entry recheck:** `0x0049cb20 CMCTentacle__scalar_deleting_dtor`; `0x0049efa0 CMCWarspiteDome__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Name corrections — 2026-07-28
 
@@ -47,7 +52,7 @@ Wave756 static read-back (`unwind-continuation-wave756`, `wave756-readback-verif
 | Address | Name | Purpose |
 | --- | --- | --- |
 | `0x0049cad0` | `CMCTentacle__Constructor` | Calls the base motion-controller constructor, installs vtable `0x005dc450`, stores owner tentacle at `+0x08`, and clears setup state. |
-| `0x0049cb20` | `CMCTentacle__ScalarDeletingDestructor` | Delete-flags wrapper for `CMCTentacle__Destructor`; frees through `OID__FreeObject` when flag bit 0 is set. |
+| `0x0049cb20` | `CMCTentacle__scalar_deleting_dtor` | Delete-flags wrapper for `CMCTentacle__Destructor`; conditionally calls `CDXMemoryManager__Free` at `0x00549220` with manager `0x009c3df0` when flag bit 0 is set. The earlier `OID__FreeObject` label is superseded. |
 | `0x0049cb40` | `CMCTentacle__Destructor` | Restores vtable `0x005dc450`, releases owned buffers, clears owner/setup fields, and tails into the base motion-controller destructor. |
 | `0x0049cc40` | `CMCTentacle__Init` | Initializes tentacle controller state from a mesh model, allocates bone/spline buffers, and finds the special tentacle control bones. |
 | `0x0049d280` | `CMCTentacle__UpdateBone` | Recursively updates per-bone transforms and cached interpolation state for the tentacle bone hierarchy. |
@@ -62,7 +67,7 @@ Wave756 static read-back (`unwind-continuation-wave756`, `wave756-readback-verif
 | `0x0049eca0` | `CMeshPart__NameAvoidsTentacleOptimizationTokens` | Mesh-part token filter; returns false for protected tentacle tokens and true for names that avoid this special path. |
 | `0x0049ed30` | `CMesh__HasTentacleBone` | Mesh-level scan for a `tentacle` bone name. |
 | `0x0049ef80` | `CMCWarspiteDome__Constructor` | Adjacent dome motion-controller constructor; installs vtable `0x005dc484` and stores owner dome at `+0x08`. |
-| `0x0049efa0` | `CMCWarspiteDome__ScalarDeletingDestructor` | Delete-flags wrapper for `CMCWarspiteDome__Destructor`. |
+| `0x0049efa0` | `CMCWarspiteDome__scalar_deleting_dtor` | Delete-flags wrapper for `CMCWarspiteDome__Destructor`. |
 | `0x0049efc0` | `CMCWarspiteDome__Destructor` | Restores vtable `0x005dc484`, clears owner/cached fields, and tails into the base motion-controller destructor. |
 | `0x0049efe0` | `CMCWarspiteDome__VFunc_04_UpdateNamedPartTransforms_0049efe0` | Dome motion-controller slot 4; updates dome mesh-part transforms and cached owner-driven state. |
 

@@ -1,5 +1,8 @@
 # ScriptObjectCode.cpp Function Analysis
 
+Summary: preserved mapping history with current deleting-entry identities distinguished.
+Status: retired evidence; current identities linked below
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
 > **Superseded for current byte contracts (2026-08-17).** The active
 > byte-level map is [`CScriptObjectCode.cpp.md`](CScriptObjectCode.cpp.md)
 > (CopyState/Reset/CallEvent/CallEventDirect/GotoInstruction/Run, measured
@@ -26,9 +29,14 @@ proof.
 `CMissionScriptObjectCode__LoadAsync` load script object code through a
 `CDXMemBuffer`; packed-versus-loose source selection remains runtime-unproven.
 
-**Source File:** `[maintainer-local-source-export-root]\MissionScript\ScriptObjectCode.cpp`
+**Source File:** `[maintainer-local-source-export-root]\MissionScript\ScriptObjectCode.cpp` | Binary: BEA.exe (historical map; the current measured deleting entry is scoped above)
 **Analysis Date:** December 2025
 **Binary:** BEA.exe (Steam release)
+
+> **September 27 deleting-entry recheck:** `0x00535330 CVM__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
+
+Historical table spellings below remain unchanged; the identities above supersede them.
+<!-- ghidra-name-drift-accepted: 0x00535330 CVM__scalar_deleting_dtor (2026-09-27) -->
 
 ## Name corrections — 2026-07-28
 

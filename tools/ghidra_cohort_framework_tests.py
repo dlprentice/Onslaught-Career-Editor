@@ -312,6 +312,7 @@ LIVE_GRANTED_COHORTS = [
     "thing-virtual-verified-20260926",
     "header-interface-identities-20260926",
     "controller-engine-verified-20260927",
+    "compiler-destructor-identities-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -768,6 +769,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "thing-virtual-verified-20260926",\n'
         '        "header-interface-identities-20260926",\n'
         '        "controller-engine-verified-20260927",\n'
+        '        "compiler-destructor-identities-20260927",\n'
         "    };\n",
     ),
     (

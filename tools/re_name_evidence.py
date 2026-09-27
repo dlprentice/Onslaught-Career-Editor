@@ -1249,6 +1249,273 @@ def vtable_name_proposals(prog: Program, propagated: dict, admission: dict) -> d
 
 
 # ---------------------------------------------------------------------------
+# Compiler deleting entries
+# ---------------------------------------------------------------------------
+
+def scalar_delete_entry(raw: bytes, address: int, manager: int, free: int) -> int | None:
+    """Recognize one unadjusted x86 deleting-entry shape; return its cleanup callee.
+
+    This is an authored instruction pattern, not an identity oracle. The caller
+    must independently bind the destructor slot, cleanup chain and allocator.
+    No other compiler variant, adjusted receiver or vector delete is admitted.
+    """
+    pattern = (bytes.fromhex('56 8b f1 e8') + bytes(4)
+               + bytes.fromhex('f6 44 24 08 01 74 0b 56 b9')
+               + struct.pack('<I', manager) + b'\xe8' + bytes(4)
+               + bytes.fromhex('8b c6 5e c2 04 00'))
+    masked = set(range(4, 8)) | set(range(22, 26))
+    if len(raw) != 32 or any(raw[i] != pattern[i] for i in range(32) if i not in masked):
+        return None
+    target = lambda offset: (address + offset + 4 + struct.unpack_from('<i', raw, offset)[0]) & 0xffffffff
+    if target(22) != free:
+        return None
+    return target(4)
+
+
+_CLEANUP_OPS = frozenset(('add', 'call', 'cmp', 'dec', 'imul', 'inc', 'je', 'jl', 'jle',
+                          'jmp', 'jne', 'lea', 'mov', 'pop', 'push', 'ret', 'sub', 'test', 'xor'))
+
+
+def _function_cfg(prog: Program, address: int):
+    """Exact saved extent and explicit normal control flow; unknown edges refuse."""
+    fn = prog.by_va.get(address)
+    if (fn is None or fn.lo != address or fn.body_ranges != 1
+            or fn.declared_hi != fn.hi or fn.body_bytes != fn.hi - address + 1):
+        raise ValueError('missing, clipped or noncontiguous function boundary')
+    body = prog.body(fn)
+    cursor = address
+    for ins in body:
+        if ins.va != cursor or ins.size <= 0 or ins.mnem in ('(bad)', '.byte', '.word', '.long'):
+            raise ValueError('incomplete or invalid instruction decoding')
+        if ins.mnem not in _CLEANUP_OPS:
+            raise ValueError('unsupported instruction in cleanup: ' + ins.mnem)
+        if ins.ops.split(',')[0] in ('esp', 'sp') and ins.mnem not in ('cmp', 'test', 'push') \
+                and not (ins.mnem in ('add', 'sub') and re.fullmatch(r'esp,0x[0-9a-f]+', ins.ops)) \
+                and not (ins.mnem == 'mov' and ins.ops == 'esp,ebp'):
+            raise ValueError('opaque cleanup stack-pointer write')
+        cursor += ins.size
+    if cursor != fn.hi + 1 or len(prog.img.read(address, fn.body_bytes)) != fn.body_bytes:
+        raise ValueError('instruction/body extent mismatch')
+    insns = {i.va: i for i in body}
+    edges, exits = {}, {}
+    for ins in body:
+        after = ins.va + ins.size
+        if ins.mnem == 'ret':
+            if ins.ops not in ('', '0x0'):
+                raise ValueError('non-deleting cleanup pops arguments')
+            edges[ins.va] = []
+            exits[ins.va] = ('ret', None)
+        elif ins.mnem.startswith(('j', 'loop')):
+            if not _DIRECT.fullmatch(ins.ops):
+                raise ValueError('unresolved indirect control-flow edge')
+            dest = int(ins.ops, 16)
+            if dest not in insns:
+                if ins.mnem != 'jmp' or fn.lo <= dest <= fn.hi:
+                    raise ValueError('branch outside body or into an instruction')
+                edges[ins.va] = []
+                exits[ins.va] = ('tail', dest)
+            else:
+                edges[ins.va] = [dest] + ([] if ins.mnem == 'jmp' else [after])
+        else:
+            edges[ins.va] = [after]
+        if any(t not in insns for t in edges[ins.va]):
+            raise ValueError('unresolved fallthrough beyond body')
+    reachable, todo = set(), [address]
+    while todo:
+        node = todo.pop()
+        if node not in reachable:
+            reachable.add(node)
+            todo.extend(edges[node])
+    exits = {a: v for a, v in exits.items() if a in reachable}
+    if not exits:
+        raise ValueError('no normal return path')
+    return fn, insns, edges, exits, reachable
+
+
+def _this_after(ins: Insn, before: frozenset[str]) -> frozenset[str]:
+    """Original-this provenance under the x86 nonvolatile-register convention.
+
+    Calls clobber EAX/ECX/EDX. This does not certify callee behavior or unwinding.
+    Memory reloads and partial writes lose proof. Unknown opcodes clear all
+    provenance here and are refused by _function_cfg, including implicit writes
+    (RDTSCP, string and BCD operations) and two-destination operations such as XADD.
+    """
+    after = set(before)
+    if ins.mnem not in _CLEANUP_OPS:
+        return frozenset()
+    operands = ins.ops.split(',')
+    aliases = {part: reg for reg, parts in (
+        ('eax', ('eax', 'ax', 'al', 'ah')), ('ecx', ('ecx', 'cx', 'cl', 'ch')),
+        ('edx', ('edx', 'dx', 'dl', 'dh')), ('ebx', ('ebx', 'bx', 'bl', 'bh')),
+        ('esi', ('esi', 'si')), ('edi', ('edi', 'di')), ('ebp', ('ebp', 'bp')))
+        for part in parts}
+    if ins.mnem == 'call':
+        return frozenset(after - {'eax', 'ecx', 'edx'})
+    if ins.mnem == 'imul' and len(operands) == 1:
+        after -= {'eax', 'edx'}
+    if ins.mnem not in ('cmp', 'test', 'push', 'jmp', 'ret') and not ins.mnem.startswith(('j', 'loop')):
+        dest = aliases.get(operands[0])
+        if dest:
+            after.discard(dest)
+            if ins.mnem == 'mov' and len(operands) == 2 and operands[0] == dest and operands[1] in before:
+                after.add(dest)
+    return frozenset(after)
+
+
+def destructor_teardown_chain(prog: Program, address: int, base: int, seen=frozenset()) -> dict:
+    """Require a reviewed base teardown on every explicit normal return path.
+
+    The base's complete bytes are pinned by compiler_destructors(). Normal CFG
+    dominance and original-this propagation cover internal backward blocks;
+    frameless direct tails additionally need a stack-neutral prefix. Exceptions,
+    arbitrary callees' preservation and full cleanup semantics stay outside proof.
+    """
+    if address in seen or len(seen) >= 8:
+        raise ValueError('teardown chain cycle or depth limit')
+    fn, insns, edges, exits, reachable = _function_cfg(prog, address)
+    evidence = {'address': f'0x{address:08x}', 'bytes': fn.body_bytes,
+                'sha256': hashlib.sha256(prog.img.read(address, fn.body_bytes)).hexdigest(), 'exits': []}
+    if address == base:
+        if any(kind != 'ret' for kind, _ in exits.values()):
+            raise ValueError('reviewed base has an unresolved tail')
+        evidence['reviewedBase'] = True
+        return evidence
+    incoming = {address: frozenset({'ecx'})}
+    todo = [address]
+    while todo:
+        node = todo.pop()
+        state = _this_after(insns[node], incoming[node])
+        for dest in edges[node]:
+            merged = state if dest not in incoming else incoming[dest] & state
+            if dest not in incoming or merged != incoming[dest]:
+                incoming[dest] = merged
+                todo.append(dest)
+    preds = {a: set() for a in reachable}
+    for a in reachable:
+        for b in edges[a]:
+            preds[b].add(a)
+    dominators = {a: ({a} if a == address else set(reachable)) for a in reachable}
+    changed = True
+    while changed:
+        changed = False
+        for a in sorted(reachable - {address}):
+            new = {a} | set.intersection(*(dominators[p] for p in preds[a]))
+            if new != dominators[a]:
+                dominators[a] = new
+                changed = True
+    for site, (kind, target) in sorted(exits.items()):
+        if kind == 'tail':
+            if 'ecx' not in incoming[site] or any(
+                i.mnem in ('push', 'pop', 'call', 'enter', 'leave', 'pushf', 'popf', 'pusha', 'popa',
+                           'pushad', 'popad', 'pushfd', 'popfd')
+                or re.search(r'\b(?:esp|sp|ebp|bp|ss)\b', i.ops) for i in insns.values()):
+                raise ValueError('tail lacks unchanged-this and stack-neutral proof')
+            chain = destructor_teardown_chain(prog, target, base, seen | {address})
+            evidence['exits'].append({'site': f'0x{site:08x}', 'kind': 'tail', 'chain': chain})
+            continue
+        candidates = [a for a in dominators[site] if insns[a].mnem == 'call'
+                      and _DIRECT.fullmatch(insns[a].ops) and 'ecx' in incoming[a]]
+        for call in sorted(candidates, key=lambda a: len(dominators[a]), reverse=True):
+            try:
+                chain = destructor_teardown_chain(prog, int(insns[call].ops, 16), base, seen | {address})
+            except ValueError:
+                continue
+            evidence['exits'].append({'site': f'0x{site:08x}', 'kind': 'ret',
+                                     'dominatingCall': f'0x{call:08x}', 'chain': chain})
+            break
+        else:
+            raise ValueError('return lacks a dominating original-this base teardown')
+    return evidence
+
+
+def compiler_destructors(prog: Program, document: dict) -> dict:
+    """Admit one reviewed zero-offset destructor family, never from saved names.
+
+    This separate route does not fabricate missing headers or relax source ABI
+    admission. Its seed/allocator/witness pins require independent semantic review.
+    """
+    if document.get('specimenSha256') != prog.img.sha256 or not document.get('evidence'):
+        raise ValueError('compiler-entry evidence/specimen pin missing or mismatched')
+    seed = document['seed']
+    tables = {t.va: t for t in prog.model.rtti.vtables}
+    table = tables.get(int(seed['table'], 16)); slot = seed['slot']
+    if (table is None or table.klass != seed['class'] or table.offset != 0
+            or type(slot) is not int or not 0 <= slot < len(table.slots)):
+        raise ValueError('compiler-entry seed table/class/slot mismatch')
+    target, base = int(seed['target'], 16), int(document['teardown']['address'], 16)
+    manager, free = int(document['manager'], 16), int(document['deallocator']['address'], 16)
+    for pin in [seed['body'], document['teardown'], document['deallocator'], *document.get('witnesses', [])]:
+        address, size = int(pin['address'], 16), pin['bytes']
+        if type(size) is not int or size <= 0 or len(prog.img.read(address, size)) != size \
+                or hashlib.sha256(prog.img.read(address, size)).hexdigest() != pin['sha256']:
+            raise ValueError('compiler-entry witness body hash/range mismatch')
+    if (int(seed['body']['address'], 16) != target or seed['body']['bytes'] != 32
+            or table.slots[slot] != target or prog.img.u32(table.va + slot * 4) != target
+            or scalar_delete_entry(prog.img.read(target, 32), target, manager, free) != base):
+        raise ValueError('compiler-entry seed shape/target mismatch')
+    seedfn = prog.by_va.get(target)
+    if (seedfn is None or seedfn.lo != target or seedfn.hi != target + 31
+            or seedfn.declared_hi != target + 31 or seedfn.body_ranges != 1 or seedfn.body_bytes != 32):
+        raise ValueError('compiler-entry seed function boundary mismatch')
+    if prog.by_va.get(base) is None or prog.by_va[base].body_bytes != document['teardown']['bytes']:
+        raise ValueError('reviewed teardown boundary mismatch')
+    destructor_teardown_chain(prog, base, base)
+    mapped, excluded = defaultdict(list), []
+    for vt in tables.values():
+        bases = [offset for klass, offset in prog.bases.get(vt.klass, []) if klass == seed['class']]
+        fixed = [offset for klass, offset in prog.fixed_bases.get(vt.klass, []) if klass == seed['class']]
+        if vt.offset != 0 or bases != [0] or fixed != [0] or slot >= len(vt.slots):
+            if bases:
+                excluded.append({'table': f'0x{vt.va:08x}', 'class': vt.klass, 'offset': vt.offset,
+                                 'baseOffsets': bases, 'fixedOffsets': fixed,
+                                 'reason': 'secondary/repeated/dynamic ancestry or missing slot'})
+            continue
+        address = vt.slots[slot]
+        if prog.img.u32(vt.va + slot * 4) != address:
+            raise ValueError('descendant destructor slot word mismatch')
+        mapped[address].append({'class': vt.klass, 'offset': 0, 'slot': slot,
+                               'table': f'0x{vt.va:08x}', 'method': 'scalar_deleting_dtor',
+                               'parameters': ['deleting_flag_word'], 'qualifiers': ''})
+    rows, admission = [], []
+    for address, uses in sorted(mapped.items()):
+        fn = prog.by_va.get(address)
+        owners = sorted(prog.defining_classes(fn)) if fn else []
+        covered = {(u['class'], 0, slot, int(u['table'], 16)) for u in uses}
+        unknown = sorted(set(prog.slots.get(address, [])) - covered)
+        row = {'target': f'0x{address:08x}', 'uses': uses, 'leastDerivedHolders': owners,
+               'uncoveredHolders': unknown, 'status': 'compiler-destructor-candidate'}
+        issues = []
+        if unknown: issues.append('unmapped destructor aliases')
+        if len(owners) != 1: issues.append('no unique RTTI naming owner')
+        if (fn is None or fn.va != fn.lo or fn.body_ranges != 1 or fn.body_bytes != 32
+                or fn.declared_hi != fn.va + 31 or fn.hi != fn.va + 31):
+            issues.append('not an exact unadjusted compiler-entry extent')
+        else:
+            cleanup = scalar_delete_entry(prog.img.read(address, 32), address, manager, free)
+            if cleanup is None:
+                issues.append('not the reviewed unadjusted compiler-entry shape')
+            else:
+                row['cleanupTarget'] = f'0x{cleanup:08x}'
+                row['bodySha256'] = hashlib.sha256(prog.img.read(address, 32)).hexdigest()
+                try:
+                    row['teardownProof'] = destructor_teardown_chain(prog, cleanup, base)
+                except ValueError as error:
+                    issues.append(str(error))
+        rows.append(row)
+        admission.append({'target': row['target'], 'status': 'withheld' if issues else 'mechanical-checks-pass',
+                          'flags': sorted(set(issues))})
+    proposals = vtable_name_proposals(prog, {'rows': rows}, {'rows': admission})
+    proposals['limits'] = ('Compiler-entry kind and nonexclusive RTTI naming context, not original source spelling '
+                          'or complete cleanup semantics. All names are output comparisons only. '
+                          'Independent review and the full Ghidra gate precede mutation.')
+    return {'rows': rows, 'excludedTables': excluded, 'admission': {'rows': admission}, 'proposals': proposals,
+            'limits': 'Normal explicit control flow only; x86 callee-preserved register convention assumed. '
+                      'No exception, callee internals, full ABI or runtime certification. '
+                      'Only the reviewed cleanup instruction set is supported. Other wrapper shapes, '
+                      'secondary/repeated bases, aliases and collisions are withheld.'}
+
+
+# ---------------------------------------------------------------------------
 # Anchors from strings
 # ---------------------------------------------------------------------------
 
@@ -1479,7 +1746,34 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument('--undefine', action='append', default=[])
     v.add_argument('--anchors', type=Path)
     v.add_argument('--out', type=Path, required=True, help='new private JSON report')
+    d = sub.add_parser('destructors', help='reviewed compiler-entry family with pinned teardown evidence')
+    d.add_argument('--functions', type=Path, required=True)
+    d.add_argument('--source', type=Path, default=SOURCE)
+    d.add_argument('--model', type=Path, required=True)
+    d.add_argument('--evidence', type=Path, required=True)
+    d.add_argument('--out', type=Path, required=True, help='new private JSON report')
     args = ap.parse_args(argv)
+    if args.cmd == 'destructors':
+        if args.out.exists():
+            ap.error('compiler-entry report must be a new path')
+        img, model = load_or_build(args.model)
+        prog = Program(img, model, load_functions(args.functions))
+        import re_source_graph as G
+        pins = G.input_pins(args.functions, args.source, ('*.cpp', '*.h'))
+        try:
+            document = json.loads(args.evidence.read_text())
+            if document.get('sourceSha256') != pins['sourceSha256']:
+                raise ValueError('compiler-entry source content pin mismatch')
+            report = compiler_destructors(prog, document)
+        except (KeyError, TypeError, ValueError) as error:
+            ap.error(str(error))
+        report['inputs'] = dict(pins, specimenSha256=img.sha256,
+                               evidenceSha256=hashlib.sha256(args.evidence.read_bytes()).hexdigest())
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=1) + '\n')
+        from collections import Counter
+        print('Compiler-entry proposals:', json.dumps(Counter(r['status'] for r in report['proposals']['rows']), sort_keys=True))
+        return 0
     if args.cmd == 'vtables':
         if args.out.exists():
             ap.error('vtable report must be a new path')

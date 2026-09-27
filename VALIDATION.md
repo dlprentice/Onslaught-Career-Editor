@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (RE Controller/Engine comment/tag promotion recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (compiler deleting-entry promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,38 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE compiler deleting-entry identities — September 27
+
+The [33-row cohort](reverse-engineering/ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27)
+passed fresh PRE restoration, rehearsal with separate and sealed readbacks,
+five no-write refusal controls, independent review with root reproduction,
+exact live readback and an independently restored Archive A POST. All nine
+live exports equal rehearsal; 8,298 other function rows and all 363 target
+instruction rows remain unchanged. Only program `commentsSha256` changed.
+The rejected first rehearsal preserves the stale-date-tag error caught before
+live. Encoded comments were individually reviewed: 33 old/33 new authored
+comments, 12,430/94,572 decoded bytes, with earlier notes marked as leads.
+
+Private commands and outputs are in
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/compiler-destructor-identities/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. All were executed with `python`.
+The last check matches all 8,331 current projected names to live and reproduces
+the deduplicated counts. Eleven function/reference documents were updated;
+two retired mapping tables keep their historical text with current pointers.
+
+`python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:
+69 passed. Unsupported XADD, implicit-register operations and opaque stack
+writes are rejected; direct tails, backward blocks, aliases, input pins and
+collisions have adverse cases. Independent review found the provenance flaw
+before any promotion. `python -m unittest tools.ghidra_cohort_framework_tests tools.re_ghidra_name_projection_tests`:
+97 passed. Raw method evidence in sibling `compiler-destructors/` includes
+fresh recovery of 724 RTTI tables and 165 mapped slot uses, and fresh PE
+disassembly equality for 5,590 instructions across 227 admitted proof bodies.
+These are static identity/normal-flow findings. No full cleanup, saved ABI,
+exception behavior, game, Godot or desktop acceptance was established.
 
 ### RE Controller/Engine identities — September 27
 

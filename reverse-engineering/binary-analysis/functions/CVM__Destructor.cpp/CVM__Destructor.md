@@ -1,7 +1,8 @@
 # CVM__Destructor
 
+Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 Source File: MissionScript / CVM (first gates only; do not
 read this as a pin of `CScriptObjectCode.cpp.md` /
 `ScriptObjectCode.cpp.md` / `CMonitor.cpp.md`)
@@ -13,12 +14,14 @@ Evidence: MEASURED — independently re-read 2026-08-19 from official
 matches (2506752 equal). The Ghidra database was not opened. Table
 name is a research label. Already-pinned `ClearStack` /
 `FUN_005398c0` / `CScriptObjectCode.cpp.md` / table
-`CMonitor__Shutdown` / table `CVM__ScalarDeletingDestructor`
+`CMonitor__Shutdown` / table `CVM__scalar_deleting_dtor`
 were **not** written. Steward cycle 43 accepted prior four.
 This wake landed `da0426b4`. Did not steal `t_15e3a6ed` /
 `t_c7affed5`.
 
 > Address: `0x00535350`
+
+> **September 27 deleting-entry recheck:** `0x00535330 CVM__scalar_deleting_dtor`. The [compiler-entry audit](../../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Contract
 
@@ -30,7 +33,7 @@ SHA-256
 Two `E8`, zero `E9`. Four nops after the `ret` are **not**
 in the body (neighbour table
 `IScript__GetRatioBattleLineNodes` starts at `0x005353a0`;
-low neighbour table `CVM__ScalarDeletingDestructor` ends
+low neighbour table `CVM__scalar_deleting_dtor` ends
 at `0x0053534f`).
 
 Incoming ECX is parked in `ESI` and also stored at
@@ -54,7 +57,7 @@ Two inbound `.text` sites (1 `E8` + 1 `E9`), zero image
 encodings of imm `50 53 53 00`:
 
 `0x00535333` `E8` inside table
-`CVM__ScalarDeletingDestructor` (host does `esi = ecx`
+`CVM__scalar_deleting_dtor` (host does `esi = ecx`
 then this call, then `test byte [esp+8], 1` and on set
 `E8` `0x00549220` with `ecx = 0x009c3df0` / `push esi`,
 then `EAX = esi` / `ret 4`; not claimed).

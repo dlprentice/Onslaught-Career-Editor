@@ -1,8 +1,15 @@
 # EventFunction.cpp - Function Mappings
 
+Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
+Status: active bounded static identity reference
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
+Source File: retail-derived MissionScript/EventFunction map; full source-body identity unverified | Binary: pristine BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+
 > Source file/debug path: `[maintainer-local-source-export-root]\MissionScript\EventFunction.cpp` (0x0064cce0)
 > Last updated: 2026-08-18 (ctor entry-PC + Execute CallEventDirect pin;
 > named-event occupancy) — RTTI 2026-08-17; prior text 2026-05-19
+
+> **September 27 deleting-entry recheck:** `0x0052fa50 CEventFunction__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Overview
 
@@ -35,7 +42,7 @@ Wave577 targeted the adjacent queue-head EventFunction tranche and applied no re
 | Address | Saved signature | Evidence summary |
 | --- | --- | --- |
 | `0x0052f9a0` | `void __thiscall CEventFunction__Destructor(void * this)` | Installs `0x005e4ef8`, walks the CSPtrSet at `this+0x0c` through iterator slot `this+0x14`, frees 8-byte wrappers through `DAT_009c3df0`, clears the set twice, then calls `CMonitor__Shutdown`. |
-| `0x0052fa50` | `void * __thiscall CEventFunction__ScalarDeletingDestructor(void * this, byte flags)` | Vtable slot at `0x005e4efc`; `RET 0x4` confirms one `flags` stack argument after `ECX=this`; frees `this` when `flags&1` is set. |
+| `0x0052fa50` | `void * __thiscall CEventFunction__scalar_deleting_dtor(void * this, byte flags)` | Vtable slot at `0x005e4efc`; `RET 0x4` confirms one `flags` stack argument after `ECX=this`; frees `this` when `flags&1` is set. |
 | `0x0052fa70` | `void * __thiscall CEventFunction__CEventFunction(void * this, void * script_object_code, void * bytecode_reader)` | `RET 0x8`; switches from the `0x005d92d4` `CMonitor` base vtable to `0x005e4ef8`, stores owner at `this+0x1c`, reads **entry PC** into `this+8` then param count, resolves each symbol index through `[owner+0x58]`, requires datatype id `3`, and appends wrappers allocated at EventFunction.cpp line `0x40`. |
 | `0x0052fbb0` | `void * __thiscall CEventFunction__Clone(void * this, void * cloned_script_object_code)` | `RET 0x4`; allocates a `0x20`-byte clone at line `0x4e`, copies the event id, initializes the parameter list, resolves source symbols through owner `+0x58`, verifies datatype id `3`, compares string getter slot `+0x38`, and appends line-`0x1b` wrapper nodes. |
 | `0x0052fda0` | `void __thiscall CEventFunction__Execute(void * this)` | Register-only `this`; walks `this+0x0c`, allocates 8-byte `CBoolDataType` wrappers (vtable `0x005e4d50`, line `0x96`), copies `byte [listenerElement+0x14]` into `wrapper+4`, and calls `CScriptObjectCode__CallEventDirect`. The 994 shipped entry PCs are all `JMPFALSE` on that bool. |
@@ -52,7 +59,7 @@ Read-back artifacts:
 | Address | Name | Wave577 status | Notes |
 | --- | --- | --- | --- |
 | `0x0052f9a0` | `CEventFunction__Destructor` | Signature/comment/tag saved | Parameter-list cleanup and monitor shutdown. |
-| `0x0052fa50` | `CEventFunction__ScalarDeletingDestructor` | Signature/comment/tag saved | MSVC scalar-deleting destructor wrapper. |
+| `0x0052fa50` | `CEventFunction__scalar_deleting_dtor` | Signature/comment/tag saved | MSVC scalar-deleting destructor wrapper. |
 | `0x0052fa70` | `CEventFunction__CEventFunction` | Signature/comment/tag saved | Bytecode-backed constructor over event id and string parameter symbols. |
 | `0x0052fbb0` | `CEventFunction__Clone` | Signature/comment/tag saved | Clone path with symbol-table lookup and string-name comparison. |
 | `0x0052fda0` | `CEventFunction__Execute` | Signature/comment/tag saved | Event dispatch wrapper allocation and `CScriptObjectCode__CallEventDirect` call. |
@@ -63,7 +70,7 @@ Read-back artifacts:
 
 | Address | Evidence | Notes |
 | --- | --- | --- |
-| `0x005e4ef8` | `CEventFunction` vtable | Slot `+0x04` points at `CEventFunction__ScalarDeletingDestructor`. |
+| `0x005e4ef8` | `CEventFunction` vtable | Slot `+0x04` points at `CEventFunction__scalar_deleting_dtor`. |
 | `0x005e4d50` | `CBoolDataType` vtable (RTTI `.?AVCBoolDataType@@`) | Execute installs this on the transient 8-byte latch wrapper. Slot `+0x3c` is `CBoolDataType__VFunc_15_0052e480`. The live name-cohort label superseded `CEventFunctionParam`. |
 | `0x005d92d4` | `CMonitor` base vtable | Constructor/destructor setup uses this before switching to `CEventFunction`. RTTI-settled 2026-08-17, not `CRelaxedSquad`-like. |
 
@@ -85,7 +92,7 @@ array is `CEventFunction` → `CMonitor` (`.?AVCMonitor@@`) →
 `IListener` (`.?AVIListener@@`). The vtable `0x005e4ef8` therefore overrides
 the three `CMonitor` virtuals as: slot 0 `HandleEvent` = the shared base no-op
 `0x004014c0` (a `CEventFunction` used as an event-manager `to_call` ignores
-the event), slot 1 = `CEventFunction__ScalarDeletingDestructor`
+the event), slot 1 = `CEventFunction__scalar_deleting_dtor`
 (`0x0052fa50`), slot 2 = base `CMonitor__Shutdown_Core` (`0x004bacb0`). The
 dword at `0x005e4f04` (`vtable+0xc`) is the adjacent `IScript` vtable's COLOC
 `0x00619588`, not a fourth `CEventFunction` slot. See
@@ -97,8 +104,8 @@ dword at `0x005e4f04` (`vtable+0xc`) is the adjacent `IScript` vtable's COLOC
 
 | Function | Observed callers / data refs |
 | --- | --- |
-| `CEventFunction__Destructor` | Called by `CEventFunction__ScalarDeletingDestructor`. |
-| `CEventFunction__ScalarDeletingDestructor` | Data ref from vtable slot `0x005e4efc`. |
+| `CEventFunction__Destructor` | Called by `CEventFunction__scalar_deleting_dtor`. |
+| `CEventFunction__scalar_deleting_dtor` | Data ref from vtable slot `0x005e4efc`. |
 | `CEventFunction__CEventFunction` | Called by `CScriptObjectCode__CScriptObjectCode`. |
 | `CEventFunction__Clone` | Called by `CScriptObjectCode__Clone`. |
 | `CEventFunction__Execute` | Called by `CScriptEventNB__PostEvent` and `CScriptEventNB__HandleEventMessage`. |
