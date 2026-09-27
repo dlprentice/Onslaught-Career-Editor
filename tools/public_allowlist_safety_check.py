@@ -278,7 +278,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Music: eight old notes/ten authored comments (5,848/21,782 bytes); old notes remain leads.
 # Thing gameplay: 47 old notes/60 authored comments (34,328/154,819 bytes); old notes remain leads.
 # Thing gameplay ABI: 32 old/authored notes (83,744/128,922 bytes); old notes remain leads.
+# Music verified: eight old/authored notes (3,624/17,063 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/music-verified-20260927.manifest.tsv":
+        "33cc495d11569cabeb256bfa24ac436ab1f963ece1cc86e6401b8abc4c31e608",
     "tools/cohort-specs/thing-gameplay-abi-20260927.manifest.tsv":
         "bc7232579531bb63bfd424661bf26d5fb44cde1277b08c2dffa6b092d3c81c72",
     "tools/cohort-specs/thing-gameplay-identities-20260927.manifest.tsv":

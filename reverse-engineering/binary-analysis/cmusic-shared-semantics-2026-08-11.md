@@ -23,15 +23,29 @@ The [music identity promotion](../ghidra/README.md#re-audit-music-identities--se
 corrects `004bb380` to `CMusic__Initialise`, `004bb450` to
 `CMusic__DeviceChangeTrack`, and `004bb7c0` to
 `CMusic__AddDirectoryToPlaylist`, alongside seven PC adapter names. It preserves
-their existing interfaces and code. Eight already-correct shared names still
-need their separate live comment/tag disposition. This is a static identity
+their existing interfaces and code. The subsequent
+[eight kept-name records](../ghidra/README.md#re-audit-verified-music-records--september-27)
+correct the remaining shared comments and qualify source-parity tags while
+preserving every name, interface and instruction. This is a static identity
 audit, not a new execution of the reset, setter or demo experiments below.
 
-The fresh bodies confirm the previously documented source differences: OGG-only
-directory admission, the assignment to random playback on the null-song path,
-linear configured volume with x87 conversion, and the missing source console
-registration in Initialise. They do not establish filesystem contents, worker
+The fresh bodies confirm OGG-only directory admission, linear configured volume
+with x87 conversion, and the missing source console registration in Initialise
+as source differences. Assignment to random playback on the immediate null-song
+path is agreement with the source, despite its surprising behavior. These
+findings do not establish filesystem contents, worker
 timing or audible playback. Missing complete ABI details remain open.
+
+The eight complete bodies total 1,432 bytes / 542 instructions. Fresh control-flow
+inspection also bounds previously broad descriptions: deferred PlaySelection
+queues a song and zero target without updating the saved selection or mode;
+those writes occur on its immediate path. UpdateStatus calls the device update
+slot before checking playing. Its linear finish path stops only if advancing
+and wrapping still leaves a null current pointer; the random finish path stops
+on a null head. Shutdown directly clears the list head, leaving current, queued
+and initialized fields untouched in this body; callee effects and lifetime
+safety are separate. Playlist paths are copied without a local length guard.
+No runtime safety or decoder behavior is inferred from these branches.
 
 ## September 20 independent volume recheck
 
@@ -118,8 +132,8 @@ registration is not present in the released `CMusic::Initialise` body; this
 report does not relocate that responsibility without evidence.
 
 Playlist insertion is case-insensitive for duplicate rejection and
-case-insensitive alphabetical ordering. A null direct `PlayFromList` request
-selects a random playlist member. A supplied request while already playing and
+case-insensitive alphabetical ordering. An immediate null `PlayFromList` request
+sets random mode and selects from a nonempty playlist. A request while already playing and
 fading queues only a different song, sets target volume to zero, and waits for
 the fade helper to start it.
 
@@ -135,9 +149,10 @@ Selection indices are exact in the released PC builds: frontend is 8 (or 1 in
 playable-demo mode), credits 7, tutorial 3, and stealth/gameplay use
 `(rand() >> 8) % 8` with 7 remapped to 9 (or 0 in playable-demo mode).
 
-## Released differences from the retained source
+## Released source agreements and differences
 
-The binaries decide three places where source reading alone would be wrong:
+The retail recheck distinguishes these three cases; the older demo comparison
+is retained evidence:
 
 - `CMusic::AddDirectoryToPlaylist @ 0x004BB7C0` makes one platform call with
   literal `ogg` at `0x00630A04`. The retained PC branch requests MP3 and WAV.
@@ -146,14 +161,19 @@ The binaries decide three places where source reading alone would be wrong:
 - The suspicious retained expression `mPlayType=MPT_RANDOM` is not a
   transcription accident. `CMusic::PlayFromList @ 0x004BB7E0` unconditionally
   writes enum value 2 on its null-song path in both retail and demo. The
-  assignment bug is therefore released behavior.
+  assignment is released behavior and source agreement, not a source divergence.
 - `CMusic::SetVolume @ 0x004BBA10` does not use the retained non-PS2 tangent
-  curve. Both PC builds execute `round(volume * 127)`, log the integer, and
-  persist the original float to career state.
+  curve. The retail body multiplies by 127, converts through x87 `FISTP` under
+  the ambient rounding mode, keeps the low DWORD, logs, and persists the
+  original float to career state. There is no local rounding-mode override,
+  clamp or device-volume submission. The September 20 controls above establish
+  selected rounding cases; exceptional inputs and actual device FPU state stay open.
 
-The released update, list-play, and selection paths also contain a developer or
-all-cheats override that substitutes `data\\music\\BEA 08(Master).wma`. That
-literal is measured control-flow behavior; this report does not claim the file
+The released update, list-play, and selection paths also contain an override
+that substitutes `data\\music\\BEA 08(Master).wma`, guarded by the DWORD at
+`00662df4` and byte at `00679ec1`. Their earlier developer/all-cheats meanings
+are unverified leads. The literal and branches are measured instruction facts;
+this report does not claim the file
 exists in an ordinary retail installation or that the override succeeds.
 
 ## Corrected identity and boundary
