@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[keyboard query ABI](#re-audit-keyboard-query-abi--september-26);
+[startup identities](#re-audit-startup-identities--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,34 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit startup identities — September 26
+
+The [manifest](../../tools/cohort-specs/startup-identities-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/startup-identities-20260926.spec.tsv) correct four identities:
+`CCLIParams__GetParams`, `CPCController__ctor`, `CPCPlatform__InitFonts`
+and `CPCSoundManager__DeviceInit`. Pristine bodies, callers and RTTI support
+the pinned-source counterparts without importing source-only arguments or
+behavior. The controller has three explicit arguments; the font filename is
+`font22.512.tga`, with a distinct debug font and cleared Xbox slots; sound
+initialization uses 64 slots and quality-dependent primary output. The numeric
+source-line overlap with PlaySound was a false lead. The sound-device index
+check normalizes only values at or above the count, not negative indices.
+
+Exactly four function names, nonrepeatable comments and tag sets corrected: CCLIParams__GetParams, CPCController__ctor, CPCPlatform__InitFonts and CPCSoundManager__DeviceInit. Every prototype shape, calling convention, storage, parameter, local, type, bookmark, instruction and body and all 8,327 non-target function rows are preserved. Only `commentsSha256` changes among program metrics. All nine
+live exports equal the separately reopened rehearsal. Fresh PRE restore,
+rehearsal, sealed readback, five byte-stable refusal controls, independent
+review with root reproduction, live dry/apply/readback and independently
+restored POST recovery passed. Earlier plate text remains explicitly marked
+as a lead; the incorrect font spelling and broad index-clamp claim are corrected.
+This cohort establishes static identity and documented differences, not retail
+startup, rendering, device or audible acceptance.
+
+Working identity: `db.18666`, 18 files / 121,408,372 bytes,
+inventory SHA-256 `4129420634535b7e36ba6df6b78cc2f410c73409b3a20ffacf5025ca38b4533f`; main database 71,106,560 bytes,
+SHA-256 `0d92337f04386ea1a4723db0f111deac32ba86736487e2bee8bcb790000d5f1f`. PRE is the freshly restored keyboard-query POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-startup-identities/post-working`. Tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-identities/`.
 
 ## RE-audit keyboard query ABI — September 26
 

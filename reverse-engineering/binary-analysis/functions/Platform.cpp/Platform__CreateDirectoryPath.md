@@ -1,5 +1,11 @@
 # Platform__CreateDirectoryPath
 
+Status: mixed — retained function evidence with scoped caller-name corrections
+Last updated: 2026-09-26 (caller names only; other claims retain their earlier evidence)
+Summary: retained directory-helper evidence with current parser caller.
+Source File: Retail helper body; pinned CLIParams.cpp supplies the caller context; Binary: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > Address: `0x004d2600`
 >
 > Source: retail binary evidence; source implementation not present in the current Stuart source snapshot
@@ -18,7 +24,7 @@ void __stdcall Platform__CreateDirectoryPath(char * path, int strip_filename);
 - The retail body copies `path` into a 260-byte stack buffer, using the stack argument loaded from `[ESP + 0x110]` after local allocation and saved registers.
 - The second stack argument, loaded from `[ESP + 0x114]`, gates an optional `_strrchr(buffer, '\\')` truncation that NUL-terminates after the final backslash.
 - The function walks path components with `_strchr(buffer, '\\')`, temporarily writes `NUL` over each separator, calls `Platform__CreateDirectoryWithErrno`, restores `'\\'`, and advances to the next separator.
-- `CLIParams__ParseCommandLine` calls this helper at `0x00424091` after pushing `strip_filename = 1` and the destination path buffer at `0x00662cb0`.
+- `CCLIParams__GetParams` calls this helper at `0x00424091` after pushing `strip_filename = 1` and the destination path buffer at `0x00662cb0`.
 - The function returns with `RET 0x8`, confirming the two stack arguments are callee-cleaned.
 
 ## Notes

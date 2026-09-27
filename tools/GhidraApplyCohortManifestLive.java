@@ -306,6 +306,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "library-nvtristrip-20260926",
         "library-verified-20260926",
         "input-key-abi-20260926",
+        "startup-identities-20260926",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

@@ -200,7 +200,6 @@ reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen
 reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md
 reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__GetSysTimeFloat.md
 reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__Process.md
-reverse-engineering/binary-analysis/functions/Platform.cpp/Platform__CreateDirectoryPath.md
 reverse-engineering/binary-analysis/functions/Platform.cpp/Platform__CreateDirectoryWithErrno.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__AssignBattleEngine.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__GotoPanView.md
@@ -222,7 +221,6 @@ reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__BallisticAimState.
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__FinishedPlayingCurrentAnimation.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__TriggerEffect.md
 reverse-engineering/binary-analysis/functions/console.cpp/CConsole__AppendToStatusBufferV.md
-reverse-engineering/binary-analysis/functions/display-settings.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PostRender.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PreRender.md
 reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__Render.md
@@ -254,7 +252,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonActio
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Render.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RespawnPlayer.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RollCredits.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunIntroFMV.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunOutroFMV.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCamera.md
@@ -283,7 +280,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/con_resetmemsizes.md
 reverse-engineering/binary-analysis/functions/game.cpp/con_win.md
 reverse-engineering/binary-analysis/functions/game.cpp/lookup_FMV.md
 reverse-engineering/binary-analysis/functions/gcgamut.cpp.md
-reverse-engineering/binary-analysis/functions/import-thunks.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__Process.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__UpdateFlightWalkerTransitionState.md
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md
@@ -376,7 +372,6 @@ reverse-engineering/quick-reference/_index.md
 reverse-engineering/quick-reference/aya-resource-chunks.md
 reverse-engineering/quick-reference/aya-tags.md
 reverse-engineering/quick-reference/battleengine-config-values.md
-reverse-engineering/quick-reference/cli-parameters.md
 reverse-engineering/quick-reference/engine-singletons.md
 reverse-engineering/quick-reference/msl-commands.md
 reverse-engineering/quick-reference/save-goodies.md
@@ -394,7 +389,6 @@ reverse-engineering/source-code/_index.md
 reverse-engineering/source-code/core/_index.md
 reverse-engineering/source-code/core/actor-system.md
 reverse-engineering/source-code/core/engine-system.md
-reverse-engineering/source-code/core/platform-system.md
 reverse-engineering/source-code/core/thing-system.md
 reverse-engineering/source-code/frontend/_index.md
 reverse-engineering/source-code/full-source-parse-2026-02-11.md

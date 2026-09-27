@@ -1,5 +1,12 @@
 # Platform System
 
+Status: mixed — source architecture with bounded retail corrections
+Last updated: 2026-09-26 (font initialization rechecked; other sections retain their dates)
+Summary: platform source reference, with the retail font initializer separated from source-only Xbox behavior.
+Evidence: MEASURED — pristine font body, strings, caller and RTTI; SOURCE — the pinned platform implementation elsewhere below.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > Analysis from Platform.cpp/h, PCPlatform.cpp/h, and d3dapp.cpp/h - December 2025
 
 ## Overview
@@ -94,7 +101,7 @@ Returned by `CPlatform::Process()` to signal the game loop about desired state t
 |----------|-------|-------------|
 | `FONT_NORMAL` | 0 | Standard game text (22pt bitmap) |
 | `FONT_SMALL` | 1 | Small text (13pt bitmap) |
-| `FONT_DEBUG` | 2 | Debug overlay (7pt system font "Terminal") |
+| `FONT_DEBUG` | 2 | Debug overlay (system font "Terminal", size argument 7) |
 | `FONT_TITLE` | 3 | Title/header text (32pt bitmap) |
 
 The font system uses bitmap fonts loaded from TGA texture files. Each platform may use different font assets (PC vs Xbox have separate font files).
@@ -234,18 +241,37 @@ The game was designed for GeForce 3 hardware (the first GPU with programmable ve
 
 ## Font System
 
-Six font objects are managed (`PCPlatform.cpp` lines 82-129):
+The pinned source initializes six font slots (`PCPlatform.cpp:77–131`). The
+retail initializer `0x005155e0`, `CPCPlatform__InitFonts`, initializes four and
+unconditionally clears the two Xbox slots. Its complete 457-byte body ends at
+`0x005157a9`, SHA-256
+`ec8ec8533b96948d5c4854cb3a1750b7eae3165945b77668129f33b781c9bfe0`.
+This September 26 recheck corrects the earlier retail filename claim.
 
 | Font | Texture File | Size | Purpose |
 |------|--------------|------|---------|
-| `mFont` | `font22_512.tga` in retail read-back (`font22.512.tga` in older source notes) | 32 | Normal text |
-| `mDebugFont` | System "Terminal" | 7pt | Debug overlay |
+| `mFont` / retail `+0x18` | `font22.512.tga` | 32 | Normal text |
+| `mDebugFont` | System "Terminal" | Argument 7 | Debug overlay |
 | `mSmallFont` | `Font13PS.tga` | 16 | Small text |
 | `mTitleFont` | `TitleFont.tga` | 32 | Titles |
-| `mXboxFont` | `font22.512Xbox.tga` | 32 | Xbox-specific |
-| `mSmallXboxFont` | `font13Xbox.tga` | 16 | Xbox small text |
+| `mXboxFont` | `font22.512Xbox.tga` in source; retail clears `+0x28` | 32 in source | Source-only initialization |
+| `mSmallXboxFont` | `font13Xbox.tga` in source; retail clears `+0x2c` | 16 in source | Source-only initialization |
 
-Wave595 retail read-back saved the PC font-slot helpers as `CDXBitmapFont__InitTextureFontSlot` for `font22_512.tga`, `Font13PS.tga`, and `TitleFont.tga`, and `CDXBitmapFont__InitNamedFontSlot` for the Terminal debug font. This confirms the Steam retail texture names and ABIs at the saved-Ghidra level, not runtime rendering behavior or exact `CBITMAPFONT`/`CDXBitmapFont` layout.
+The actual string at `0x0063e178` is `font22.512.tga`; the former
+`font22_512.tga` claim was wrong. Four independent null guards cover
+`+0x18/+0x1c/+0x20/+0x24`. The main font gets `+0x168=1` at `0x00515659`.
+The debug object installs vtable `0x005e4980` at `0x005156a7`; its RTTI
+identifies `CDXBitmapDebugFont`, after the ordinary bitmap base constructor.
+It receives `Terminal`, 7 and 0. The small/title strings are `Font13PS.tga`
+and `TitleFont.tga`, with sizes 16 and 32. Stores `0x00515796/0x00515799`
+clear the two Xbox fields even when their previous values were nonzero.
+
+SYSTEM startup supplies receiver `0x0088a0a8` and calls at `0x004eff2d`
+without an explicit argument. The function keeps its `void __thiscall(this)`
+interface. Its allocation coordinates and ordered operations identify the source
+method, but do not establish source parity. Initialization return values are
+unchecked here. Resource availability, allocation-failure behavior, full object
+layout and rendered glyphs were not executed or accepted by this static audit.
 
 ### Character Swap Hack
 

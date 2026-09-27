@@ -3,18 +3,18 @@
 > Investigation of `-forcewindowed` parsing and startup-flow behavior across Steam baselines
 > Generated: December 2025
 
-Status: **partially superseded 2026-07-28** — the `DAT_00662f3e` guard-byte claim
+Status: **partially superseded 2026-07-28**, parser scope corrected 2026-09-26 — the `DAT_00662f3e` guard-byte claim
 and the hex-edit instruction built on it are **withdrawn as false**. The two-gate
 model, the startup-flow patch guidance, and the wrapper workarounds stand
 unchanged. See "Correction 2026-07-28" immediately below.
-Last updated: 2026-07-28
+Last updated: 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date)
 Verdict: `-forcewindowed` is real and reachable, but its parser gate
-`DAT_00662f3e` is **BSS — zero at load** and is set only by the `-testeur`
-switch appearing **earlier on the same command line**. So `-forcewindowed` alone
+`DAT_00662f3e` is **BSS — zero at load**; on the inspected startup route,
+the parser sets it for `-testeur` appearing **earlier on the same command line**. So `-forcewindowed` alone
 does nothing on a stock invocation, and the byte cannot be normalised with a hex
 editor because it has no file byte to edit. The startup-flow byte patch at file
 offset `0x12A644` remains the operational path.
-Evidence: MEASURED — PE section table, `tools/pe_read_va.py`,
+Evidence: MEASURED — September 26 initializer/parser reinspection, plus the dated PE section table, `tools/pe_read_va.py`,
 `tools/operand_scan.py` and `tools/disasm_va.py` read over the pristine specimen
 on 2026-07-28; corroborated by the runtime run recorded in
 [`retail-capture-provenance-2026-07-25.md`](retail-capture-provenance-2026-07-25.md).
@@ -65,7 +65,7 @@ not opened or mutated.
 3. **The mechanism is the opposite of what was described.** `tools/operand_scan.py`
    finds exactly **two** absolute references to `0x00662f3e` in the image, and
    **both are reads** — `0x00424150` and `0x004714f0`, each `mov al, byte ptr
-   [0x662f3e]`. There is **no absolute write**. The only writer is object-relative:
+   [0x662f3e]`. That scan found no absolute write. The setting writer is object-relative:
 
    ```
    00423c6b  68 18 46 62 00             push      0x624618            ; "-testeur"
@@ -80,6 +80,12 @@ not opened or mutated.
    `mov ecx, 0x662db8` at `0x004239c0`), and `0x00662DB8 + 0x186 = 0x00662F3E`
    exactly. So the guard is a **member of the CLI-parameter object that
    `-testeur` sets at runtime**, not a shipped constant.
+
+   September 26 reinspection also establishes the initializer's object-relative
+   clear at `0x00423ad6`. Thus “the only writer” was too broad. The complete
+   [parser contract](functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+   distinguishes the zeroing initializer, canonical receiver, ordered options
+   and bounds of the writer search.
 
 4. **Ordering matters, and it is structural.** `0x0042418d` is
    `jl 0x423c6b` — the token comparisons are one pass per argument, with the
@@ -126,7 +132,7 @@ Users historically reported inconsistent `-forcewindowed` behavior across Steam 
 
 ### CLI Parsing (GUARD-GATED)
 
-In `CLIParams__ParseCommandLine` at `0x00423bc0`:
+In `CCLIParams__GetParams` at `0x00423bc0`:
 
 ```c
 // At 0x00424150-0x00424168
@@ -143,8 +149,9 @@ if ((DAT_00662f3e != '\0') &&                              // Guard check
   `mov byte ptr [ebx + 0x186], 1` at `0x00423c7d`. See "Correction 2026-07-28".)*
 - *(Corrected 2026-07-28. This previously read: "Historical baseline reports with
   `0x00` explain why some users saw the parser path skipped." Withdrawn — the
-  parser path is skipped on **every** stock command line, in every build,
-  because the guard starts at zero. The historical `0x00`/`0x01` reports are
+  parser path is skipped for `-forcewindowed` alone on the inspected pristine
+  startup route. The ordered `-testeur -forcewindowed` sequence enables it.
+  This does not establish every binary variant. The historical `0x00`/`0x01` reports are
   UNKNOWN in origin and are no longer offered as an explanation.)*
 
 ### D3D Initialization (Startup Fullscreen Gate)

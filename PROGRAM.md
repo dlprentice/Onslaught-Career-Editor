@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: keyboard ABI/cache contract corrected; startup identities next; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: keyboard ABI and startup identities corrected; damage contract under review; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -289,9 +289,24 @@ interfaces. All names/bodies and 8,327 non-target rows are preserved; the live
 readback matches rehearsal and independently restored Archive A POST recovery.
 Real Windows events, physical input and complete runtime acceptance remain open.
 
-Next: finish the CPCController constructor, command-line parser and font
-initializer identities, reconciling their existing consumer contracts. Source
-signatures and label matches do not establish retail argument counts or behavior.
+The [startup identity cohort](reverse-engineering/ghidra/README.md#re-audit-startup-identities--september-26)
+now corrects four names/comments/tag sets: the command-line string parser,
+derived CPCController constructor, font initializer and sound-device initializer.
+Their existing interfaces and bodies are preserved. The font filename is
+`font22.512.tga`; the debug font has its own RTTI identity, and retail clears the
+Xbox slots. Sound setup uses 64 slots and quality-dependent PCM settings; its
+signed index check handles only indices at or above the count. The numeric
+source-line overlap with PlaySound was a false lead. The LoadLevel consumer
+note also corrects the three constructor arguments and its `0.5f` field value.
+Fresh PRE, rehearsal, five no-write controls, independent review, exact live
+readback and independent POST recovery passed. No new retail startup, rendering,
+physical-device or audible acceptance is claimed.
+
+Next: re-derive Damage's common tail and reconcile its historical field-offset
+summary. Its source-line overlap with HandleEngines is another false identity
+lead: the complete body and virtual caller support the existing Damage name.
+The old zero/negative early-out description and three plate offsets conflict
+with pristine instructions; isolated original-code checks are in progress.
 
 Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
 game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
@@ -300,12 +315,13 @@ return sizes against the pinned source, allowing inlining within a translation u
 folded bodies). First run on the live export: 148 verified, 65 contradicted, 931 structural placeholders,
 3,474 unsupported; for the 619 functions the rebuild cites, 50 verified and 17 contradicted. "Unsupported"
 is inflated until vtable layouts from the headers and call-site alignment exist; neutralize nothing until
-they do. Contradicted leads worth taking first: `BattleEngineConfigurations__Load` (the class is
-`UBattleEngineConfigurations`), `CLIParams__ParseCommandLine` (`CCLIParams::GetParams`),
-`PCPlatform__LoadFonts` (`CPCPlatform::InitFonts`), `CPCSoundManager__Init` (lines in `PlaySound`),
-`CBattleEngine__Damage` (lines in `HandleEngines`), and return sizes that disagree with the source
-(`CCareer__GetGradeFromRanking`, `CGame__RunLevel`, `CController__ctor`). The
-`CPCController` key-query argument/result discrepancy is resolved above.
+they do. Remaining leads include `BattleEngineConfigurations__Load` (the source class is
+`UBattleEngineConfigurations`) and source return-size disagreements for
+`CCareer__GetGradeFromRanking` and `CGame__RunLevel`. Constructor, parser, font
+and sound identities are resolved above. Damage's name survives inspection;
+its behavioral annotations need correction. The `CPCController` key-query
+argument/result discrepancy is also resolved. These resolutions demonstrate why
+numeric allocation coordinates alone must not decide an identity.
 
 Follow-ups:
 - NvTriStrip also exposes an absent function candidate at `0x00572e20`, passed

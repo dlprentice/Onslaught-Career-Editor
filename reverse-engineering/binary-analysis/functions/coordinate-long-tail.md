@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-22 (sample-loader name; earlier measurement limits retained)
+Last updated: 2026-09-26 (font/device initializer identities; earlier measurement limits retained)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -17,7 +17,9 @@ callee-popped argument count from `ret imm`, the compiler's own
 `__FILE__`/`__LINE__` coordinates, and the heaviest direct callees. **No purpose
 is invented anywhere in this document.** Where a current name already describes
 the function, that name is the claim and the evidence is consistent or silent;
-nothing here contradicts one.
+source coordinates alone neither prove nor disprove it. The September 26
+DeviceInit recheck shows why: retail allocation line 229 falls inside a different
+function in the pinned source. Match operations and callers before transferring a name.
 
 Argument counts are callee-popped stack arguments; `this` travels in ECX and is
 not counted. A comma-separated count means the body has several `ret imm` forms.
@@ -473,7 +475,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x005154E0` | `PCPlatform__Init` | 253 | 0 | 27 | `CDebugLog__Printf` x3; `CDXMemoryManager__Alloc` x1 |
-| `0x005155E0` | `PCPlatform__LoadFonts` | 457 | 0 | 79–103 | `DebugTrace` x4; `CDXMemoryManager__Alloc` x4 |
+| `0x005155E0` | `CPCPlatform__InitFonts` | 457 | 0 | 79–103 | `DebugTrace` x4; `CDXMemoryManager__Alloc` x4 |
 
 ### `PCRTID.cpp` (1)
 
@@ -485,7 +487,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x005169B0` | `CPCSoundManager__Init` | 1300 | 0 | 229 | `CDebugLog__Printf` x13; `CDXMemoryManager__Alloc` x1 |
+| `0x005169B0` | `CPCSoundManager__DeviceInit` | 1300 | 0 | 229 | `CDebugLog__Printf` x13; `CDXMemoryManager__Alloc` x1 |
 | `0x005172A0` | `CPCSoundManager__LoadSampleFromBuffer` | 411 | 3 | 679–714 | `CDXMemoryManager__Free` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x005176D0` | `CPCSoundManager__CreateSampleFromData` | 184 | 4 | 753 | `CDXMemoryManager__Free` x1; `CDXMemoryManager__Alloc` x1 |
 
