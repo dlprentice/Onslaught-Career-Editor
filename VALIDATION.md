@@ -8467,3 +8467,24 @@ player or audible acceptance was performed for this static metadata cohort.
 `npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
 passed across 4,178 candidate files. `git diff --check` passed. Detailed output
 is in `thing-gameplay/abi-docs.log` and `thing-gameplay/abi-safety.log` under the log owner above.
+
+## Ghidra probe retention — September 27
+
+`PYTHONPATH=tools python -m unittest tools.ghidra_project_backup_tests` passed
+16 tests. Focused controls cover second-output publication failure, partial
+cleanup, finalization and directory-sync failure, changed/replaced receipts,
+changed source/target bytes, extra project payload, locks, links and wrong scope.
+The successful exact-pair control retains the creation manifest and unrelated
+evidence. These synthetic tests do not reopen a real Ghidra project.
+The 94 cohort-framework tests, `npm run test:docs`, `npm run test:safety`
+and `git diff --check` also passed. Their logs use the `storage-retention-`
+prefix in the same private output owner below.
+
+The authorized cleanup separately compared 100 real project pairs against
+retained Archive A recovery with fresh per-file hashes immediately before
+removal. All 100 manifests and original restore receipts were checked unchanged
+afterward; 89 excluded projects remain. Working/checkpoint hashes also remained
+unchanged. No Ghidra was opened and no new restore-open result is claimed.
+Logs and per-copy proofs:
+`local-data/test-runs/re-audit-20260926/sptrset/backup-retention-tests.log` and
+`local-data/test-runs/re-audit-20260926/sptrset/storage-retirement-20260927/`.

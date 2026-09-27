@@ -604,6 +604,140 @@ def safe_remove_probe_copy(probe_copy: Path, scratch_root: Path, project_name: s
     shutil.rmtree(probe_copy)
 
 
+def sync_output_directory(path: Path) -> None:
+    """Order local receipt publication before deleting its scratch payload."""
+    if os.name == "posix":
+        descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def finalize_owned_receipt(path: Path, expected: bytes, final: bytes) -> None:
+    """Finalize only a receipt created by this operation, never a historical one.
+
+    A failure leaves the already published verification/intent record available.
+    Callers must serialize access to their output directory.
+    """
+    require_plain_path(path, "owned receipt")
+    before = path.stat()
+    if path.read_bytes() != expected:
+        raise BackupError("refusing to finalize a changed receipt")
+    staged = path.parent / f".{path.name}.final-{uuid.uuid4().hex}"
+    try:
+        with staged.open("xb") as stream:
+            stream.write(final)
+            stream.flush()
+            os.fsync(stream.fileno())
+        require_plain_path(path, "owned receipt")
+        after = path.stat()
+        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns,
+                before.st_ctime_ns) != (
+                after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns,
+                after.st_ctime_ns):
+            raise BackupError("refusing to finalize a replaced receipt")
+        os.replace(staged, path)
+        sync_output_directory(path.parent)
+    finally:
+        staged.unlink(missing_ok=True)
+
+
+def retire_verified_probe_payload(
+    probe_copy: Path,
+    scratch_root: Path,
+    retained: ProjectManifest,
+    receipt_path: Path,
+) -> dict[str, object]:
+    """Retire an exact project-pair twin, retaining all other probe evidence.
+
+    The caller owns authorization, quiescence and completed recovery/gate checks.
+    This is not for failed or in-use rehearsals. Fresh hashes must match the
+    supplied retained manifest at both ends; no semantic-equivalence substitute.
+    A durable intent receipt precedes deletion. Partial failure leaves that
+    receipt and raises; only completed removal earns the final disposition.
+    """
+    project_name = retained.project_name
+    probe_copy = resolve_plain_path(probe_copy, "probe copy", strict=True)
+    scratch_root = resolve_plain_path(scratch_root, "scratch root", strict=True)
+    if probe_copy.parent != scratch_root or not re.fullmatch(
+        re.escape(project_name) + r"-open-probe-[0-9a-f]{32}", probe_copy.name
+    ):
+        raise BackupError("refusing retirement outside the exact tool-created scratch scope")
+    source = resolve_plain_path(retained.root, "retained source", strict=True)
+    require_disjoint_paths(source, scratch_root, "retained source and scratch")
+    receipt_path = validate_external_output_path(
+        receipt_path, [source, scratch_root], "retirement receipt"
+    )
+
+    def snapshot(root: Path) -> dict[Path, os.stat_result]:
+        marker, store = root / f"{project_name}.gpr", root / f"{project_name}.rep"
+        result = {}
+        for path in [root, marker, store, *sorted(store.rglob("*"))]:
+            info = path.lstat()
+            if not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)):
+                raise BackupError("refusing retirement of a nonregular project entry")
+            if info.st_dev != root.stat().st_dev:
+                raise BackupError("refusing retirement across a nested mount")
+            if stat.S_ISREG(info.st_mode) and info.st_nlink != 1:
+                raise BackupError("refusing retirement of a multiply linked project entry")
+            result[path] = info
+        for path in root.rglob("*"):
+            if path.name.endswith((".lock", ".lock~")):
+                raise BackupError("refusing retirement of a locked project")
+        return result
+
+    def identity(info: os.stat_result) -> tuple[int, ...]:
+        return (info.st_dev, info.st_ino, info.st_mode, info.st_size,
+                info.st_mtime_ns, info.st_ctime_ns, info.st_nlink)
+
+    sources, targets = snapshot(source), snapshot(probe_copy)
+    if {(s.st_dev, s.st_ino) for s in sources.values()} & {
+        (s.st_dev, s.st_ino) for s in targets.values()
+    }:
+        raise BackupError("retained source and probe alias the same physical project")
+    if not compare_manifests(retained, build_manifest(source, project_name)).matches:
+        raise BackupError("retained source differs from the declared recovery manifest")
+    measured = build_manifest(probe_copy, project_name)
+    if not compare_manifests(retained, measured).matches:
+        raise BackupError("probe payload is not an exact retained twin")
+    for root, before in ((source, sources), (probe_copy, targets)):
+        after = snapshot(root)
+        if before.keys() != after.keys() or any(
+            identity(info) != identity(after[path]) for path, info in before.items()
+        ):
+            raise BackupError("project changed during retirement verification")
+    payload = {
+        "schemaVersion": SCHEMA_VERSION,
+        "verifiedAtUtc": utc_now(),
+        "source": retained.to_json(),
+        "probeCopy": str(probe_copy),
+        "payload": measured.to_json(include_root=False),
+        "disposition": "VERIFIED_BEFORE_RETIREMENT",
+        "retainedEvidence": sorted(p.name for p in probe_copy.iterdir()
+                                   if p.name not in (f"{project_name}.gpr", f"{project_name}.rep")),
+    }
+    intent = json_bytes(payload)
+    write_bytes_atomic_new(receipt_path, intent)
+    sync_output_directory(receipt_path.parent)
+    # Remove only previously measured files. Unexpected late entries make rmdir
+    # fail instead of being swept up by recursive deletion. Preserve the root.
+    for row in measured.files:
+        path = probe_copy / row.relative_path
+        if identity(path.lstat()) != identity(targets[path]):
+            raise BackupError("probe entry changed before retirement")
+        path.unlink()
+    directories = [p for p, s in targets.items()
+                   if p != probe_copy and stat.S_ISDIR(s.st_mode)]
+    for path in sorted(directories, key=lambda p: len(p.parts), reverse=True):
+        path.rmdir()
+    sync_output_directory(probe_copy)
+    payload["disposition"] = "PROJECT_PAYLOAD_RETIRED_EVIDENCE_RETAINED"
+    payload["completedAtUtc"] = utc_now()
+    finalize_owned_receipt(receipt_path, intent, json_bytes(payload))
+    return payload
+
+
 def publish_verification_result(
     result: VerificationResult,
     receipt_path: Path,
@@ -627,24 +761,26 @@ def publish_verification_result(
         raise BackupError(f"refusing to overwrite existing output: {receipt_path}")
     if log_path.exists():
         raise BackupError(f"refusing to overwrite existing output: {log_path}")
-    disposition = (
-        "RETAINED_AT_VERIFICATION" if keep_probe_copy else "DELETED_AFTER_VERIFICATION"
-    )
     log_bytes = result.open_result.combined_output.encode("utf-8")
     probe_log = {
         "path": os.path.relpath(log_path, receipt_path.parent),
         "bytes": len(log_bytes),
         "sha256": hashlib.sha256(log_bytes).hexdigest(),
     }
-    receipt_bytes = json_bytes(verification_receipt(result, probe_log, disposition))
+    receipt = verification_receipt(result, probe_log, "RETAINED_AT_VERIFICATION")
+    receipt_bytes = json_bytes(receipt)
     log_partial = stage_bytes_atomic_new(log_path, log_bytes)
     receipt_partial: Path | None = None
     try:
         receipt_partial = stage_bytes_atomic_new(receipt_path, receipt_bytes)
         publish_staged_atomic_new(log_partial, log_path)
-        if not keep_probe_copy:
-            safe_remove_probe_copy(result.probe_copy, scratch_root, project_name)
         publish_staged_atomic_new(receipt_partial, receipt_path)
+        if not keep_probe_copy:
+            sync_output_directory(receipt_path.parent)
+            safe_remove_probe_copy(result.probe_copy, scratch_root, project_name)
+            sync_output_directory(scratch_root)
+            receipt["probeCopyDisposition"] = "DELETED_AFTER_VERIFICATION"
+            finalize_owned_receipt(receipt_path, receipt_bytes, json_bytes(receipt))
     finally:
         log_partial.unlink(missing_ok=True)
         if receipt_partial is not None:
