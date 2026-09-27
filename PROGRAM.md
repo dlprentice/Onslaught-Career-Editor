@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the shared-music record cohort (September 27).**
+**Running coverage after the GenericSPtrSet interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,7 +501,7 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 377 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu and eight shared-music identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 5,816 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 85 interfaces: the prior 53 plus 32 Thing gameplay rows, including one parameter-name-only correction. Three unresolved frontend returns and ten custom-storage floating rows remain outside these corrections; a corrected parameter list is not complete ABI validation. |
+| Prototypes corrected | 93 interfaces: the prior 85 plus seven direct GenericSPtrSet corrections and one dependent forwarding entry. Three unresolved frontend returns and ten custom-storage floating rows remain outside these corrections; a corrected parameter list is not complete ABI validation. |
 | Comments corrected | 2,529 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -757,7 +757,7 @@ all 8,332 projected names match live. The [shared-music note](reverse-engineerin
 now separates source agreement on null-song assignment from genuine divergences,
 bounds deferred selection writes and stop branches, and withdraws unsupported
 high-level names for override guards. No audible or new runtime acceptance is claimed.
-GenericSPtrSet identities and remaining camera interfaces follow. Their source
+The GenericSPtrSet source
 recheck exposed and corrected a parser defect: constructor initializer lists
 were included in formal arguments. Balanced, literal-aware extents now separate
 parameters, initializers and bodies; initializer calls reach the graph, and
@@ -772,9 +772,15 @@ rehearsal caught an undeclared automatic thunk rename and was retained without
 any live application. The separate [forwarding-entry correction](reverse-engineering/ghidra/README.md#re-audit-genericsptrset-forwarding-entry--september-27)
 preceded the successful second rehearsal; its complete record stayed unchanged.
 All 1,065 target bytes, 363 instructions, saved interfaces and non-target rows
-remain unchanged. Seven physical interfaces plus the dependent thunk remain
-for a separate ABI cohort: automatic receivers, full EAX results and static
-pool-method conventions. The current projection matches all 8,332 live names. The [list experiment](VALIDATION.md#original-pointer-list-operations--september-27)
+remain unchanged. The subsequent [interface cohort](reverse-engineering/ghidra/README.md#re-audit-genericsptrset-interfaces--september-27)
+now corrects seven direct records and the dependent thunk: automatic receivers,
+full EAX results and source-correlated static pool-method conventions. Complete
+body/caller evidence, eight no-write refusal controls, exact live readback and
+independently restored POST recovery passed. Its 339 bytes / 121 instructions,
+frames, names and non-target records are unchanged. The constructor's EAX result
+does not assert a C++ pointer return or an external consumer; zero-argument RET
+alone cannot identify a calling convention. The current projection matches all
+8,332 live names. The [list experiment](VALIDATION.md#original-pointer-list-operations--september-27)
 passed 42 original-code cases and two altered-copy controls. The existing career
 child/parent-link and ReCalcLinks notes now record null-item truncation and
 the hidden result copy, separately from unexecuted complete career/save paths.
@@ -810,9 +816,10 @@ exports retained. Archive A history stays intact; 89 changed/rejected/incomplete
 pairs remain. Working and checkpoint inventories still match their recorded
 identities. The [closeout retention rule](reverse-engineering/ghidra/README.md#scratch-retention-after-completed-promotions)
 now uses the existing backup tool's exact-pair retirement helper after all gates;
-its publication-failure controls preserve evidence. The next `sptrset-abi`
-adapter exposes `cohort_ops.retire_completed_probes()` for invocation after
-`finish.py`, before starting another cohort. Keep PRE through all consumers and
+its publication-failure controls preserve evidence. The completed `sptrset-abi`
+closeout used `cohort_ops.retire_completed_probes()` after independent POST
+restoration, retiring two additional exact twins (251,139,816 bytes) while
+preserving both manifests and original receipts. Keep PRE through all consumers and
 do not retire changed rehearsals by semantic-export equality. This bounded
 cleanup does not settle historical lab recovery or authorize cold-history pruning.
 

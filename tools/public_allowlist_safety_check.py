@@ -281,7 +281,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Music verified: eight old/authored notes (3,624/17,063 bytes); old notes remain leads.
 # GenericSPtrSet forwarder: one old/authored note (616/1,964 bytes); old note retained as a lead.
 # GenericSPtrSet identities: fourteen old/authored notes (4,707/26,635 bytes); old notes retained as leads.
+# GenericSPtrSet ABI: eight old/authored notes (14,732/24,562 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/sptrset-abi-20260927.manifest.tsv":
+        "fe76eb6dd2320aca12ae8567c97ad6f177cfa872d568e77c3e22564ffe300b17",
     "tools/cohort-specs/sptrset-identities-20260927.manifest.tsv":
         "9ce5e7d3871208383f3d85397bbf7ca40bb3f315e756dc33484d4ac7908f22ed",
     "tools/cohort-specs/sptrset-forwarder-20260927.manifest.tsv":

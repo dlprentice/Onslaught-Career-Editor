@@ -349,6 +349,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "music-verified-20260927",
         "sptrset-forwarder-20260927",
         "sptrset-identities-20260927",
+        "sptrset-abi-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
