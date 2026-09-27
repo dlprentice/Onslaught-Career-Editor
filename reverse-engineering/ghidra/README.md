@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[GetBPP identity and interface](#re-audit-getbpp-identity-and-interface--september-27);
+[frontend argument interfaces](#re-audit-frontend-argument-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,65 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit frontend argument interfaces — September 27
+
+The [22-row manifest](../../tools/cohort-specs/frontend-argument-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/frontend-argument-abi-20260927.spec.tsv) correct argument metadata from
+pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Twenty-two argument interfaces, comments and tag sets corrected. Six transitions lose an invented EDX formal; four render and one button interfaces gain the correct stack meanings; eleven other methods gain their missing formal receiver. All use automatic ECX this. Fifteen render interfaces retain float transition at stack+4 and opaque other-page DWORD at+8; ButtonPressed uses button DWORD then float value; transitions use one page DWORD. Names, all return types/storage (including three undefined/unassigned returns), stack purge, locals, 8,059 code bytes / 2,234 instructions and 8,310 non-target functions remain unchanged. Older notes remain fallible leads.
+
+The ordered extension to re_name_evidence.py validates source declarations/calls, fresh versus cached receiver/slot decoding, values frozen at each PUSH, stack offsets and every known holder. Independent review and root reproduction cover all 32 holder words and exact selected bodies. The timed SetPage path carries page on stack while EDX holds the vptr, disproving a required EDX page argument; the immediate path alone could mislead because EDX coincidentally equals the pushed word. Source typedef signedness, external-premise aliasing, return semantics, whole-caller domination and actual menu/input/render behavior remain outside this local-path proof. Shared CALL joins and the nine-holder RenderPreCommon qualification remain explicit. Tool review exposed stale dispatch, assignment-expression loss and outgoing-stack reload cases; the fixes pass the 141-test suite and the real 22-target packet. No new retail runtime experiment is claimed.
+
+The [frontend render note](../binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md#september-27-ordered-page-argument-interfaces)
+records exact source/caller locations, the three schemas, preserved returns
+and limits. The source spells its page argument `dest`; retail incoming and
+outgoing pages receive the opposite endpoint. No page-enum definition or SINT
+typedef is synthesized. Existing signed annotations weaken to undefined4.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, seven actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. All 8,332 current names match the projection; this
+cohort adds no newly verified or corrected names. It adds 22 interface
+corrections to the audit count, preserving unrelated return uncertainty.
+
+Working identity: `db.18693`, 18 files / 124,439,412 bytes,
+inventory SHA-256 `36dc1b5d6c90a3d05bb2249bce4e406b33e6452fdfa225e6696e44eaa9b2213b`; main database 74,137,600 bytes,
+SHA-256 `653db8824a0d8e48554c00513452596e20aa440684d6cef318e4a2dc9dbd4e18`. Restored window-callback POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-frontend-argument-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-argument-abi/`; proof, tests and logs:
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+
+## RE-audit window callback boundary — September 27
+
+The [one-row manifest](../../tools/cohort-specs/window-callback-boundary-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/window-callback-boundary-20260927.spec.tsv) add a default boundary from
+pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One default FUN_00529070 function added over the existing 34-byte / 12-instruction window callback. All 8,331 existing function rows, code, references, data, variables, comments, types and bookmarks are preserved. New metadata remains default: undefined return, unknown convention, no parameters, tags or comments. Only the program function count rises to 8,332; this is a boundary correction, not a completed semantic or ABI disposition.
+
+Fresh pristine instructions, RegisterClassA callback-field assignment at 00529151, source d3dapp.cpp lines 79–81 and a read-only disposable-project ownership inspection establish the separate extent 00529070–00529091. The source-correlated WndProc name and four-argument callee-clean interface require a separate metadata cohort. Previously retained isolated message experiments are reused, not rerun. Dynamic Windows dispatch, all indirect entries and full runtime behavior remain outside this correction. Existing CREATE_FUNCTION gates require fully decoded instructions and refuse conflicting code/data/function/symbol ownership; no disassembly or framework weakening was needed.
+
+The [platform note](../source-code/core/platform-system.md#retail-startup-shell--september-27-correction)
+records callback registration and forwarding. The complete body loads the
+application global, forwards four stack arguments through slot 12 and returns
+with RET 16; surrounding padding stays outside the new function.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; the complete name projection matches all 8,332 entries.
+
+Working identity: `db.18692`, 18 files / 124,029,812 bytes,
+inventory SHA-256 `d673c565915343f5955fffef0250e390550de5e47e63788c67d28af69d8b5b0f`; main database 73,728,000 bytes,
+SHA-256 `9c41d793cc8f5d635ca41c7d0ebb41b360e2f1031b02c47e44df044693e9190c`. Restored GetBPP POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-window-callback-boundary/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-boundary/`; evidence and focused-test logs:
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
 
 ## RE-audit GetBPP identity and interface — September 27
 

@@ -267,7 +267,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # partial virtual-slot witnesses and exact registration body; earlier notes retained.
 # GetBPP: one old/authored comment (433/2,253 bytes); caller/source identity
 # and bounded physical interface; old note retained as a fallible lead.
+# Frontend argument interfaces: 22 old/22 authored comments (69,297/101,160 bytes);
+# ordered local transport with return uncertainty and fallible old notes retained.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/frontend-argument-abi-20260927.manifest.tsv":
+        "7956c0b2795768913f74dd6848b64415bdb4685bd7a0d3ff412083c2e25d3ddd",
     "tools/cohort-specs/getbpp-abi-20260927.manifest.tsv":
         "168042f8d46217c420461ac7322d4142bc503781d3ed9a86f3e93441117af315",
     "tools/cohort-specs/startup-shell-20260927.manifest.tsv":

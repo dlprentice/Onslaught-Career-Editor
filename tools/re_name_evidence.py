@@ -1649,6 +1649,154 @@ def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMeth
     return base, expected
 
 
+
+def ordered_interface_arguments(prog: Program, method: HeaderMethod, anchor: dict,
+                                source_root: Path) -> dict:
+    """Check ordered DWORD transport on one independently reviewed local path.
+
+    Called after common_interface_witness's source/receiver/slot checks. Values
+    are frozen when pushed, not read from registers at CALL. Source semantics
+    and external register/stack bindings remain explicitly reviewed premises;
+    this is neither whole-caller domination nor return-type certification.
+    """
+    import re_source_graph as G
+    witness = anchor['interfaceDispatch']
+    ordered = witness['orderedArguments']
+    if witness.get('kind') not in (None, 'straight-line'):
+        raise ValueError('ordered arguments require the straight-line interface route')
+    if hashlib.sha256((source_root / method.file).read_bytes()).hexdigest() != ordered['headerSha256']:
+        raise ValueError('ordered argument source header hash mismatch')
+    source_call = witness['source']['call']
+    call = re.search(r'->' + re.escape(method.name) + r'\(([^()]*)\);$', source_call)
+    if not call:
+        raise ValueError('ordered argument source call is unsupported')
+    if '=' in call[1]:
+        raise ValueError('ordered argument source assignments are unsupported')
+    expressions = G.params(call[1])
+    records = ordered['parameters']
+    if len(records) != len(method.parameters) or not records:
+        raise ValueError('ordered argument declaration arity mismatch')
+    for index, (record, declared, expression) in enumerate(zip(records, method.parameters, expressions)):
+        if (record['sourceType'] != declared or record['sourceArgument'] != expression.strip()
+                or type(record['stackOffset']) is not int or record['stackOffset'] != 4 + index*4):
+            raise ValueError('ordered argument source order/type or storage mismatch')
+        width = G.param_bytes(declared)
+        if width is not None and width != 4:
+            raise ValueError('ordered argument is not one DWORD')
+
+    caller = prog.by_va[int(witness['caller']['address'], 16)]
+    complete = decode_entry_body(prog.img, caller)
+    start = int(witness['window']['address'], 16)
+    end = start + witness['window']['bytes']
+    body = [ins for ins in complete if start <= ins.va < end]
+    if (not body or body[0].va != start or body[-1].va + body[-1].size != end
+            or body[-1].va != int(witness['callAddress'], 16) or body[-1].mnem != 'call'):
+        raise ValueError('ordered argument window is not freshly decoded instruction-aligned code')
+    if body != [ins for ins in prog.body(caller) if start <= ins.va < end]:
+        raise ValueError('ordered argument fresh decode differs from the validated interface window')
+    # A shared CALL may join separately prepared paths. Retain that limitation;
+    # an entry inside the setup instead makes this bounded witness ambiguous.
+    joins = set()
+    references = getattr(prog.model, 'refs_to', {})
+    targets = [(int(ins.ops, 16), ins.va) for ins in complete
+               if (ins.mnem.startswith(('j', 'loop')) or ins.mnem == 'call')
+               and _DIRECT.fullmatch(ins.ops)]
+    targets += [(dest, site) for dest, refs in references.items()
+                for kind, site in refs if kind in ('call', 'jmp', 'jcc')]
+    for dest, site in targets:
+        if start < dest < end:
+            if dest == body[-1].va:
+                joins.add(site)
+            else:
+                raise ValueError('ordered argument setup has a possible interior entry')
+
+    registers = {'eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp'}
+    facts = {reg: 'window.' + reg for reg in registers}
+    stack_delta, pushes = 0, []
+
+    def value(operand):
+        if operand in facts:
+            return facts[operand]
+        if _DIRECT.fullmatch(operand):
+            n = int(operand, 16)
+            if n > 0xffffffff:
+                raise ValueError('ordered argument constant exceeds DWORD')
+            return f'constant32:0x{n:08x}'
+        memory = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp|sp))'
+                              r'(?:\+(e(?:ax|bx|cx|dx|si|di|bp))\*([1248]))?'
+                              r'(?:\+(0x[0-9a-f]+))?\]', operand)
+        if not memory:
+            raise ValueError('ordered argument transport uses an unsupported operand')
+        base, index, scale, offset = memory.groups()
+        displacement = int(offset or '0', 16)
+        if base == 'esp':
+            if index:
+                raise ValueError('ordered argument uses indexed stack addressing')
+            relative = stack_delta + displacement
+            if stack_delta < 0 and relative < 0 and relative + 4 > stack_delta:
+                raise ValueError('ordered argument reloads memory overwritten by an outgoing push')
+            return f'load32(window.esp{relative:+d})'
+        address = facts[base]
+        if index:
+            address += f'+({facts[index]})*{scale}'
+        if displacement:
+            address += f'+0x{displacement:x}'
+        return 'load32(' + address + ')'
+
+    for ins in body[:-1]:
+        raw = prog.img.read(ins.va, ins.size)
+        if not raw or raw[0] in (0x66, 0x67):
+            raise ValueError('ordered argument transport has an unsupported width prefix')
+        if ins.mnem == 'mov':
+            dest, sep, operand = ins.ops.partition(',')
+            if not sep or dest not in registers:
+                raise ValueError('ordered argument move is not a full register write')
+            facts[dest] = value(operand)
+        elif ins.mnem == 'push':
+            captured = value(ins.ops)  # evaluate memory relative to pre-push ESP
+            if raw[0] == 0x6a:
+                signed = struct.unpack('b', raw[1:2])[0] & 0xffffffff
+                if captured != f'constant32:0x{signed:08x}':
+                    raise ValueError('ordered argument imm8 sign extension disagrees with bytes')
+            pushes.append({'pushAddress': f'0x{ins.va:08x}', 'value': captured})
+            stack_delta -= 4
+        else:
+            raise ValueError('ordered argument setup is not supported MOV/PUSH transport')
+    if len(pushes) != len(records):
+        raise ValueError('ordered argument push count mismatch')
+    result = []
+    for record, observed in zip(records, reversed(pushes)):
+        if (int(record['pushAddress'], 16) != int(observed['pushAddress'], 16)
+                or record['value'] != observed['value']):
+            raise ValueError('ordered argument value or push site mismatch')
+        result.append(dict(observed, stackOffset=record['stackOffset'], physicalBytes=4,
+                           sourceType=record['sourceType'], sourceArgument=record['sourceArgument'],
+                           typeLimit=('explicit source float; transport is its raw DWORD'
+                                      if record['sourceType'] == 'float' else
+                                      'DWORD transport only; typedef, signedness and pointee not inferred')))
+    needed = set(re.findall(r'window\.(e(?:ax|bx|cx|dx|si|di|bp|sp))',
+                            ' '.join(r['value'] for r in result)))
+    bindings = ordered.get('externalBindings', [])
+    if len({b['register'] for b in bindings}) != len(bindings) or {b['register'] for b in bindings} != needed:
+        raise ValueError('ordered argument external bindings are absent, duplicate or unused')
+    for binding in bindings:
+        if not binding.get('meaning') or not binding.get('evidence') or not binding.get('spans'):
+            raise ValueError('ordered argument external binding requires a reviewed byte premise')
+        for span in binding['spans']:
+            address, count = int(span['address'], 16), span['bytes']
+            if type(count) is not int or count <= 0:
+                raise ValueError('ordered argument external span size is invalid')
+            raw = prog.img.read(address, count)
+            if len(raw) != count or hashlib.sha256(raw).hexdigest() != span['sha256']:
+                raise ValueError('ordered argument external span hash mismatch')
+    return {'parameters': result, 'receiver': 'ECX', 'registerValuesAtCall': facts,
+            'externalBindings': bindings, 'otherEntriesAtCall': [f'0x{a:08x}' for a in sorted(joins)],
+            'scope': 'reviewed local path only; external bindings are independently reviewed premises',
+            'limits': 'No whole-caller domination, hidden-result, return type/storage, runtime behavior '
+                      'or missing source typedef certification. External object-memory bindings '
+                      'presume no alias with outgoing stack writes.'}
+
+
 def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], document: dict,
                              source_root: Path | None = None) -> dict:
     """Propagate explicitly supplied source/byte witnesses through fixed RTTI ancestry.
@@ -2218,6 +2366,7 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
     import re_source_graph as G
     anchor_by_slot = {(int(a['table'],16), a['slot']): a for a in document['anchors']}
     witnessed_pops = {}
+    ordered_witnesses = {}
     tables = {t.va:t for t in prog.model.rtti.vtables}
     typed = (typed_list_witnesses(prog, document, source_root)
              if document.get('kind') == 'typed-list-interface-v1' else None)
@@ -2231,6 +2380,8 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
             if len(methods) != 1:
                 raise ValueError('common-interface source declaration is absent or ambiguous')
             _, witnessed_pops[key] = common_interface_witness(prog, cls, methods[0], tables[key[0]], a, source_root)
+            if 'orderedArguments' in a['interfaceDispatch']:
+                ordered_witnesses[key] = ordered_interface_arguments(prog, methods[0], a, source_root)
 
     # Invocation-local only: reference caches must remain consistent with the
     # original whole-image instruction model, and later calls may use new bytes.
@@ -2374,10 +2525,29 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
             if match and tiny and tiny.startswith('const:'):
                 want=1 if match.group(1) in ('TRUE','true','1') else 0
                 if tiny.split(':')[1]!=str(want): issues.append('tiny constant contradicts source implementation')
+        arguments = []
+        for use in row['uses']:
+            key = (int(use['anchorTable'], 16), use['anchorSlot'])
+            if key in ordered_witnesses:
+                arguments.append(ordered_witnesses[key])
+        storage = None
+        if arguments:
+            layouts = {tuple((p['stackOffset'], p['physicalBytes'], p['sourceType'])
+                             for p in witness['parameters']) for witness in arguments}
+            if len(arguments) != len(row['uses']) or len(layouts) != 1:
+                issues.append('ordered argument layouts conflict or leave a holder uncovered')
+            elif not issues:
+                storage = {'status': 'reviewed-local-transport-pass', 'receiver': 'ECX',
+                           'parameters': arguments[0]['parameters'],
+                           'returnTypeAndStorage': 'excluded; preserve independently',
+                           'limits': 'Conditional on reviewed source and external-value bindings; '
+                                     'not whole-caller or complete ABI certification.'}
         rows.append({'target':row['target'],'status':'mechanical-checks-pass' if not issues else 'withheld',
                      'expectedReturnPop':sorted(expected),'observedReturnPop':sorted(actual),
-                     'flags':sorted(set(issues))})
-    return {'rows':rows,'entryDecodings':[entry_decodes[k][1] for k in sorted(entry_decodes)],
+                     'argumentStorage':storage, 'flags':sorted(set(issues))})
+    return {'rows':rows, 'orderedArgumentWitnesses': [dict(anchorTable=f'0x{k[0]:08x}', anchorSlot=k[1], **v)
+                for k,v in sorted(ordered_witnesses.items())],
+            'entryDecodings':[entry_decodes[k][1] for k in sorted(entry_decodes)],
             'switchProofs':[dict(target=f'0x{k:08x}', **switch_proofs[k]) for k in sorted(switch_proofs)
                             if switch_proofs[k]['tables'] or switch_proofs[k]['refusals']],
             'limits':'Conditional on independently rederived seed identities. '

@@ -1,6 +1,6 @@
 # CFrontEnd__Render
 
-Status: active — retail dispatch and three frontend ABIs rechecked; bounded Options tail execution
+Status: active — retail dispatch and ordered page arguments rechecked; bounded Options tail execution
 Last updated: 2026-09-27
 Summary: page render ordering and argument transport, including the Options
 transition-factor exception; complete visual behavior remains unvalidated.
@@ -47,6 +47,52 @@ The higher-numbered page is dispatched first. Stable active rendering passes
 `(1.0f, -2)`. The second argument is therefore the **other endpoint**, despite
 the source parameter name `dest`; it is not always the incoming destination.
 The common page is rendered between the pre-common and ordinary page passes.
+
+## September 27 ordered page argument interfaces
+
+The [22-function argument cohort](../../../ghidra/README.md#re-audit-frontend-argument-interfaces--september-27)
+uses the existing page identities and all 32 known holder words to establish
+these physical interfaces. Each has an automatic ECX receiver:
+
+| Page method | Entry stack+4 | Entry stack+8 | Callee cleanup |
+| --- | --- | --- | --- |
+| TransitionNotification | opaque source-page DWORD | none | 4 bytes |
+| RenderPreCommon / Render | float transition | opaque opposite-endpoint page DWORD | 8 bytes |
+| ButtonPressed | opaque button DWORD | float value | 8 bytes |
+
+Fifteen selected render interfaces, six transition interfaces and one button
+interface are corrected. Eleven had displaced/invented arguments; eleven
+other methods needed the member receiver recorded. An omitted receiver alone
+does not prove incorrect runtime values or that the body reads incoming ECX.
+All names and return annotations are preserved, including the unresolved
+`undefined`/unassigned returns at `0x00452b70`, `0x0051b840` and `0x0051d160`.
+The shared `0x0051ae50` body has nine holders; its saved class qualification
+must not imply exclusive ownership.
+
+Source `FEPGoodies.h:57–62` supplies the explicit method declarations.
+At calls `0x0046836f` and `0x00468415`, stable-page setup pushes `-2` first,
+then binary32 `1.0`, producing transition at stack+4 and page at+8.
+Other branches join those CALLs, so these are reviewed local paths, not a
+proof that one setup block dominates every invocation. The tool checks actual
+values captured at each PUSH; matching total cleanup alone is insufficient.
+
+Button call `0x00466a58` pushes value then button. Caller `0x004669a0`
+loads button from its entry stack+8 and value from entry stack+12; its three
+saved registers explain the later `ESP+0x18` value load. `FrontEnd.cpp:477`
+explicitly declares the caller's `int button, float val`, but the page method's
+`SINT` typedef is missing. Its slot therefore retains opaque DWORD typing;
+float is explicit in the page declaration. The Credits body at `0x0051a7f0`
+compares its first stack word with `0x2e`; `0x0051a880` reads the first render
+word with FLD and the page from stack+8, contradicting the old stack-`this`
+interpretations.
+
+The [SetPage contract](../../../contracts/frontend/CFrontEnd__SetPage__00466ae0.md#september-27-complete-dispatch-body-recheck)
+records the two slot-6 callers and their different EDX values. Page and button
+`undefined4` annotations avoid claiming unrecovered enum/typedef signedness.
+External receiver/stack premises are independently reviewed; object memory is
+assumed not to alias outgoing stack writes. Complete return semantics,
+reentrancy, hidden indirect entries and actual menu/render acceptance remain
+open. These are static transport findings, not new original-game runtime runs.
 
 ## Options transition factor
 

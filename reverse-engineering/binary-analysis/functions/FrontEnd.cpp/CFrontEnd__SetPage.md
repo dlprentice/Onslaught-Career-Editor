@@ -1,36 +1,17 @@
 # CFrontEnd__SetPage
 
-> Address: `0x00466ae0` | Source: `references/Onslaught/FrontEnd.cpp` | Line: ~563
+Status: active — complete static dispatch body rechecked; runtime callbacks remain open
+Last updated: 2026-09-27
+Summary: entry point for the authoritative SetPage transport/order contract; unqualified source parity is withdrawn.
+Source File: references/Onslaught/FrontEnd.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
-## Summary
+Address: `0x00466ae0`. Pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
-Changes the active frontend page, optionally with a timed transition.
-
-Source-parity with:
-
-```cpp
-void CFrontEnd::SetPage(EFrontEndPage page, SINT time)
-```
-
-## Signature
-
-```c
-// thiscall - ECX = CFrontEnd* this
-void CFrontEnd__SetPage(void * this, int page, int time);
-```
-
-## Behavior
-
-- If `time == 0`:
-  - Calls `DeActiveNotification()` on the current page
-  - Calls `TransitionNotification(from_page)` then `ActiveNotification(from_page)` on the destination page
-  - Sets `mActivePage = page`
-- If `time != 0`:
-  - Sets up transition fields (`mTransitionFrom`, `mTransitionTo`, `mTransitionCount`, `mTransitionTime`)
-  - Sets `mActivePage = FEP_TRANSITION`
-  - Calls `TransitionNotification(mTransitionFrom)` on the destination page
-
-## Notes
-
-- This function drives the per-page virtual notification hooks used throughout the frontend (FEP) system.
-- Many FEP page handlers call this directly to transition between menu pages.
+The [existing SetPage contract](../../../contracts/frontend/CFrontEnd__SetPage__00466ae0.md#september-27-complete-dispatch-body-recheck)
+now owns the re-derived receiver, two stack arguments, immediate/timed callback
+order, field writes and falsifiers. The function forwards the source page on
+the stack; EDX holds different things at its two transition dispatches. The
+immediate path rereads active-page state after callbacks, and the timed path
+stores float duration, so the old blanket “source-parity” description was
+unsupported. No SetPage runtime or complete frontend acceptance is claimed.

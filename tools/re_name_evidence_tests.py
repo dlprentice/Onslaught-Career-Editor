@@ -889,6 +889,183 @@ class CommonInterfaceTests(unittest.TestCase):
                          ['mechanical-checks-pass','withheld','withheld'])
 
 
+
+class OrderedInterfaceArgumentsTests(unittest.TestCase):
+    def fixture(self, code=None, expected=None):
+        root, _, _, document = CommonInterfaceTests.fixture(self)
+        (root/'types.h').write_text('class Child : public Base { public: '
+                                   'virtual void Run(float transition, MissingEnum dest); };\n')
+        source = root/'Caller.cpp'
+        source.write_text('void Host::Tick()\n{\n pages[index]->Run(1.f, target);\n}\n')
+        classes = E.header_classes(root, set())
+        method = classes['Child'].methods[0]
+        code = code or bytes.fromhex('8b0f 6afe 680000803f 8b11 ff12 c3')
+        raw = {0x401000:b'\xc2\x08\x00',0x401100:b'\xc2\x08\x00',
+               0x401200:b'\xc2\x08\x00',0x402000:code}
+        memory = {a+i:v for a,b in raw.items() for i,v in enumerate(b)}
+        read = lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        tables = [SimpleNamespace(va=0x600000,klass='Base',offset=0,slots=[0x401000]),
+                  SimpleNamespace(va=0x600100,klass='Child',offset=0,slots=[0x401100]),
+                  SimpleNamespace(va=0x600200,klass='Sibling',offset=0,slots=[0x401200])]
+        for table in tables:
+            memory.update({table.va+i:b for i,b in enumerate(struct.pack('<I',table.slots[0]))})
+        sec = E.Section('.text',0x401000,0x2000,read(0x401000,0x2000),0x20000000)
+        img = SimpleNamespace(sha256='f'*64,read=read,u32=lambda a:struct.unpack('<I',read(a,4))[0],
+                              section_of=lambda a:sec if sec.contains(a) else None,sections=[sec])
+        funcs = [SimpleNamespace(va=a,lo=a,hi=a+len(b)-1,declared_hi=a+len(b)-1,
+                                  body_bytes=len(b),body_ranges=1) for a,b in raw.items()]
+        insns = [ins for fn in funcs for ins in E.decode_entry_body(img,fn)]
+        bases = {'Base':[('Base',0)],'Child':[('Child',0),('Base',0)],
+                 'Sibling':[('Sibling',0),('Base',0)]}
+        model = SimpleNamespace(rtti=SimpleNamespace(vtables=tables,class_bases=bases,fixed_bases=bases),
+                                insns=insns,refs_to={})
+        prog = E.Program(img,model,funcs)
+        pin=lambda a,n:dict(address=hex(a),bytes=n,sha256=hashlib.sha256(read(a,n)).hexdigest())
+        a=document['anchors'][0]
+        a.update(parameters=['float','MissingEnum'],sourceLine=method.line,body=pin(0x401100,3))
+        w=a['interfaceDispatch']
+        call=next(ins for ins in insns if ins.va>=0x402000 and ins.mnem=='call')
+        w.update(caller=pin(0x402000,len(code)),window=pin(0x402000,call.va+call.size-0x402000),
+                 callAddress=hex(call.va),parameterStackBytes=[4,4],receiverSpans=[pin(0x402000,2)],
+                 source=dict(file='Caller.cpp',sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                             function='Host::Tick',line=3,call='pages[index]->Run(1.f, target);'))
+        expected=expected or [(0x402004,'constant32:0x3f800000'),(0x402002,'constant32:0xfffffffe')]
+        w['orderedArguments']={'headerSha256':hashlib.sha256((root/'types.h').read_bytes()).hexdigest(),
+            'parameters':[dict(pushAddress=hex(site),value=value,stackOffset=4+4*n,
+                               sourceType=['float','MissingEnum'][n],sourceArgument=['1.f','target'][n])
+                          for n,(site,value) in enumerate(expected)],'externalBindings':[]}
+        return root,classes,prog,document,pin
+
+    def evaluate(self, fixture):
+        root,classes,prog,document,_=fixture
+        propagated=E.propagate_vtable_anchors(prog,classes,document,root)
+        return E.vtable_abi_admission(prog,classes,document,propagated,root)
+
+    def test_ordered_transport_keeps_return_and_source_typedef_limits(self):
+        result=self.evaluate(self.fixture())
+        self.assertEqual([r['status'] for r in result['rows']],['mechanical-checks-pass']*3)
+        for row in result['rows']:
+            p=row['argumentStorage']['parameters']
+            self.assertEqual([(x['stackOffset'],x['sourceType']) for x in p],[(4,'float'),(8,'MissingEnum')])
+            self.assertEqual(row['argumentStorage']['returnTypeAndStorage'],'excluded; preserve independently')
+            self.assertIn('typedef',p[1]['typeLimit'])
+
+    def test_same_cleanup_but_swapped_values_is_refused(self):
+        fixture=self.fixture(bytes.fromhex('8b0f 680000803f 6afe 8b11 ff12 c3'))
+        with self.assertRaisesRegex(ValueError,'value or push site'):self.evaluate(fixture)
+
+    def test_push_captures_value_before_register_is_overwritten(self):
+        fixture=self.fixture(bytes.fromhex('8b0f b80000803f 6afe 50 b800000000 8b11 ff12 c3'),
+                             [(0x402009,'constant32:0x3f800000'),(0x402007,'constant32:0xfffffffe')])
+        proof=self.evaluate(fixture)['orderedArgumentWitnesses'][0]
+        self.assertEqual(proof['registerValuesAtCall']['eax'],'constant32:0x00000000')
+        self.assertEqual(proof['parameters'][0]['value'],'constant32:0x3f800000')
+
+    def test_stack_sources_use_pre_push_esp_and_require_external_binding(self):
+        fixture=self.fixture(bytes.fromhex('8b0f ff742408 ff742408 8b11 ff12 c3'),
+                             [(0x402006,'load32(window.esp+4)'),(0x402002,'load32(window.esp+8)')])
+        root,classes,prog,doc,pin=fixture
+        with self.assertRaisesRegex(ValueError,'external bindings'):self.evaluate(fixture)
+        ordered=doc['anchors'][0]['interfaceDispatch']['orderedArguments']
+        ordered['externalBindings']=[dict(register='esp',meaning='caller stack at the selected entry',
+                                           evidence='Synthetic source/stack correspondence',spans=[pin(0x402000,2)])]
+        self.assertEqual(self.evaluate(fixture)['rows'][0]['argumentStorage']['status'],
+                         'reviewed-local-transport-pass')
+        ordered['externalBindings'][0]['spans'][0]['sha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'external span hash'):self.evaluate(fixture)
+
+    def test_declaration_order_signed_immediate_and_exact_storage_are_checked(self):
+        for change in ('float-order','source-expression','offset','unsigned-imm8','header-hash','extra-register'):
+            with self.subTest(change=change):
+                fixture=self.fixture();root,classes,prog,doc,pin=fixture
+                ordered=doc['anchors'][0]['interfaceDispatch']['orderedArguments']
+                if change=='float-order':ordered['parameters'][0]['sourceType']='MissingEnum'
+                if change=='source-expression':ordered['parameters'][0]['sourceArgument']='target'
+                if change=='offset':ordered['parameters'][0]['stackOffset']=8
+                if change=='unsigned-imm8':ordered['parameters'][1]['value']='constant32:0x000000fe'
+                if change=='header-hash':ordered['headerSha256']='0'*64
+                if change=='extra-register':ordered['externalBindings']=[dict(register='edx')]
+                with self.assertRaises(ValueError):self.evaluate(fixture)
+
+    def test_interior_entry_refused_shared_call_is_explicitly_local(self):
+        fixture=self.fixture();root,classes,prog,doc,_=fixture
+        prog.model.refs_to={0x402004:[('jmp',0x403000)]}
+        with self.assertRaisesRegex(ValueError,'interior entry'):self.evaluate(fixture)
+        call=int(doc['anchors'][0]['interfaceDispatch']['callAddress'],16)
+        prog.model.refs_to={call:[('jmp',0x403000)]}
+        proof=self.evaluate(fixture)['orderedArgumentWitnesses'][0]
+        self.assertEqual(proof['otherEntriesAtCall'],['0x00403000'])
+        self.assertIn('local path only',proof['scope'])
+
+    def test_fresh_dispatch_cannot_borrow_a_stale_cached_receiver_or_slot(self):
+        for offset,replacement in ((12,0x10),(1,0x07),(10,0x10)):
+            with self.subTest(offset=offset):
+                fixture=self.fixture();root,classes,prog,doc,_=fixture
+                original=prog.img.read
+                def read(address,count):
+                    data=bytearray(original(address,count))
+                    if address <= 0x402000+offset < address+count:
+                        data[0x402000+offset-address]=replacement
+                    return bytes(data)
+                prog.img.read=read
+                w=doc['anchors'][0]['interfaceDispatch']
+                for span in (w['caller'],w['window'],*w['receiverSpans']):
+                    span['sha256']=hashlib.sha256(read(int(span['address'],16),span['bytes'])).hexdigest()
+                with self.assertRaisesRegex(ValueError,'fresh decode'):
+                    self.evaluate(fixture)
+
+    def test_source_assignment_is_not_misread_as_a_default_parameter(self):
+        fixture=self.fixture();root,classes,prog,doc,_=fixture
+        w=doc['anchors'][0]['interfaceDispatch']
+        source=root/'Caller.cpp'
+        source.write_text('void Host::Tick()\n{\n pages[index]->Run(transition = 2.f, target);\n}\n')
+        w['source'].update(sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                           call='pages[index]->Run(transition = 2.f, target);')
+        w['orderedArguments']['parameters'][0]['sourceArgument']='transition'
+        with self.assertRaisesRegex(ValueError,'source assignments'):self.evaluate(fixture)
+
+    def test_pushed_memory_cannot_be_reintroduced_as_an_external_stack_value(self):
+        fixture=self.fixture(bytes.fromhex('8b0f 6afe ff3424 8b11 ff12 c3'),
+                             [(0x402004,'load32(window.esp-4)'),(0x402002,'constant32:0xfffffffe')])
+        with self.assertRaisesRegex(ValueError,'overwritten by an outgoing push'):self.evaluate(fixture)
+
+    def test_every_folded_holder_needs_the_same_ordered_witness(self):
+        fixture=self.fixture();root,classes,prog,doc,_=fixture
+        header=root/'types.h'
+        header.write_text(header.read_text()+'class Sibling : public Base { public: '
+                          'virtual void Run(float transition, MissingEnum dest); };\n')
+        classes=E.header_classes(root,set())
+        a=doc['anchors'][0]
+        a['interfaceDispatch']['orderedArguments']['headerSha256']=hashlib.sha256(header.read_bytes()).hexdigest()
+        second=copy.deepcopy(a)
+        second.update(table='0x00600200',target='0x00401200',sourceLine=classes['Sibling'].methods[0].line)
+        second['class']='Sibling';second['body']['address']='0x00401200'
+        doc['anchors'].append(second)
+        fixture=(root,classes,prog,doc,fixture[4])
+        self.assertTrue(all(r['argumentStorage'] for r in self.evaluate(fixture)['rows']))
+        del second['interfaceDispatch']['orderedArguments']
+        result=self.evaluate(fixture)
+        self.assertTrue(all(r['status']=='withheld' and r['argumentStorage'] is None for r in result['rows']))
+        self.assertTrue(all('ordered argument layouts conflict or leave a holder uncovered' in r['flags']
+                            for r in result['rows']))
+
+    def test_prior_cleanup_and_partial_outgoing_stack_overlap_are_refused(self):
+        for code,expected in (
+            ('8b0f 83c408 6afe ff3424 8b11 ff12 c3',
+             [(0x402007,'load32(window.esp+4)'),(0x402005,'constant32:0xfffffffe')]),
+            ('8b0f 6afe ff742402 8b11 ff12 c3',
+             [(0x402004,'load32(window.esp-2)'),(0x402002,'constant32:0xfffffffe')])):
+            with self.subTest(code=code):
+                with self.assertRaises(ValueError):self.evaluate(self.fixture(bytes.fromhex(code),expected))
+
+    def test_narrow_push_partial_write_and_post_push_cleanup_refused(self):
+        for code in ('8b0f 666afe 680000803f 8b11 ff12 c3',
+                     '8b0f 6afe 680000803f 6689c0 8b11 ff12 c3',
+                     '8b0f 6afe 680000803f 83c404 8b11 ff12 c3'):
+            with self.subTest(code=code):
+                with self.assertRaises(ValueError):self.evaluate(self.fixture(bytes.fromhex(code)))
+
+
 class GuardedEventInterfaceTests(unittest.TestCase):
     def fixture(self):
         tmp = tempfile.TemporaryDirectory(); self.addCleanup(tmp.cleanup)

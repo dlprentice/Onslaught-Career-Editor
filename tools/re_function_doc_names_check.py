@@ -177,6 +177,8 @@ CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboa
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256 = "d72a96b732e884d83dddc9467d5c8be64ca181c5c1d04b92d4579d8a679c3c8a"
+CURRENT_WINDOW_CALLBACK_OVERLAY = REPO_ROOT / "tools/cohort-specs/window-callback-boundary-20260927.manifest.tsv"
+CURRENT_WINDOW_CALLBACK_OVERLAY_SHA256 = "ded89a5cda9328a4ac650bc44eb134839f7167d041121379727d75180627218a"
 BASELINE_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
@@ -813,6 +815,10 @@ def run(
             table = apply_current_creation_overlay(
                 table, CURRENT_EVENT_CONSTRUCTOR_OVERLAY,
                 expected_sha256=CURRENT_EVENT_CONSTRUCTOR_OVERLAY_SHA256,
+            )
+            table = apply_current_creation_overlay(
+                table, CURRENT_WINDOW_CALLBACK_OVERLAY,
+                expected_sha256=CURRENT_WINDOW_CALLBACK_OVERLAY_SHA256,
             )
             table = apply_current_name_overlay(
                 table, CURRENT_BOUNDING_BOX_OVERLAY,
