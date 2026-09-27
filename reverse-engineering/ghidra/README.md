@@ -1,14 +1,14 @@
 # Canonical Ghidra project
 
 Status: active — reviewed checkpoint, never a writable project
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 Summary: checkpoint identity, writable-project routing and external recovery.
 
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[header interface identities](#re-audit-header-interface-identities--september-26);
+[verified Controller and Engine identities](#re-audit-verified-controller-and-engine-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,44 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified Controller and Engine identities — September 27
+
+The [manifest](../../tools/cohort-specs/controller-engine-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/controller-engine-verified-20260927.spec.tsv) change 14 comments/tag sets,
+retaining all names. Twelve explicit source/body anchors and raw table words
+cover all 15 known RTTI uses. All 643 target instruction rows match pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Nine Controller identities are bound individually because the source header's
+15 slots do not describe retail's 18-slot layout. The
+[Controller contract](../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-joystick-and-recording-recheck)
+records signed upper-only pad guards, RightY's earlier indexed flag access,
+exact x87 scaling and three-DWORD Record/Read transfers. The source's four
+further analogue transfers are absent in these retail bodies. No device input
+or recording file was exercised by this cohort.
+
+Five [Engine methods](../source-code/core/engine-system.md#september-27-retail-initialization-recheck)
+retain their names with corrected evidence. Init and InitResources occupy
+slots 1 and 2 of `0x005e4fc4`; their old slot tags are replaced. Direct CGame
+calls are not virtual dispatch. KempyCube was incorrectly described as a HUD
+allocation. The `Sun Sprite` particle descriptor is not established physics
+node data. Source screen-texture/capture and basicpanel operations omitted
+from the inspected retail bodies are documented as local divergences.
+
+Exactly 14 existing names retained and verified within static identity limits: nine Controller methods and five Engine methods. Comments/tags only; two Engine slot tags corrected. All names, prototypes, conventions, storage, parameters, locals, types, bookmarks, bodies, instructions and all 8,317 non-target rows preserved. Historical notes remain marked leads. Only program `commentsSha256` changes. Exact fresh PRE,
+rehearsal/separate and sealed readback, five byte-stable refusal controls,
+independent semantic/payload and preservation reviews with root reproduction,
+live readback and independent POST restoration passed. All nine live exports
+equal the reopened rehearsal. These are static identity/comment dispositions,
+not certification of every existing prototype or full behavioral equivalence.
+
+Working identity: `db.18672`, 18 files / 122,325,876 bytes,
+inventory SHA-256 `3993994fe38f6de587da64c309a013cfb9bc1a4039cdfdfad8f14143db48d378`; main database 72,024,064 bytes,
+SHA-256 `473a138be77ec7652ac21d4815f5a82c71a0c2eeeba5ee287c572571ebee45c5`. Freshly restored header-interface POST served as PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-controller-engine-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/controller-engine-verified/`.
 
 ## RE-audit header interface identities — September 26
 

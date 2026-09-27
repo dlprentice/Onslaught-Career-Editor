@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (RE initializer/engine promotion and original copy/load checks recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (RE Controller/Engine comment/tag promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,35 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE Controller/Engine identities — September 27
+
+The [14-row cohort](reverse-engineering/ghidra/README.md#re-audit-verified-controller-and-engine-identities--september-27)
+retains every name/prototype/body and changes only comments/tags. Root and
+independent reviewers re-derived 12 anchors, all 15 RTTI uses and 643 target
+instruction rows / 2,099 bytes from the pristine specimen. The exact encoded
+payload contains 14 old and 14 new authored comments (6,132/30,168 decoded
+bytes); historical notes remain fallible leads.
+
+Executed private commands, relative to
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/controller-engine-verified/`:
+`python prepare_preservation.py`, `python prepare.py`, `python rehearse.py`,
+`python compare_exports.py rehearsal-post`, `python negative_controls.py`,
+`python apply_live.py`, `python finish.py` and `python verify_projection.py`.
+Fresh PRE, separate/sealed readback, five no-write refusal controls, exact nine
+live/rehearsal exports and independently restored Archive A POST passed.
+Only program `commentsSha256` changed; all 8,317 non-target rows and the tracked
+checkpoint stayed unchanged. All 8,331 current projected names match live.
+`python -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+Documentation and public-payload checks are recorded with the scoped commit.
+
+The Controller contract distinguishes signed upper-only pad guards, RightY's
+flag-read ordering, float32 scales and three-DWORD recording from the source's
+analogue transfers. Engine comments correct slot cells, direct calls,
+KempyCube/HUD confusion, the Sun Sprite descriptor and local source omissions.
+No Godot, physical input, full game or recording file was run. This cohort
+adds static identity/comment evidence; existing prototypes and complete
+runtime behavior remain separate.
 
 ### RE verified virtual-method comments — September 26
 

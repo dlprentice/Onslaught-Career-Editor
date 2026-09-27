@@ -229,7 +229,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (36,186/109,949 decoded bytes); static identity evidence and qualified older leads.
 # Header interface identities: 14 current/16 proposed analytic comments
 # (11,474/36,028 decoded bytes); bounded source/RTTI/body evidence and old leads.
+# Controller/Engine verified identities: 14 current/14 proposed authored comments
+# (6,132/30,168 decoded bytes); source/RTTI/body evidence and marked older leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/controller-engine-verified-20260927.manifest.tsv":
+        "9d5a41056274491e780de80a73f775e9b9a55406ecf35c8651d3e5f51d307c86",
     "tools/cohort-specs/header-interface-identities-20260926.manifest.tsv":
         "1d69f0b76974d06ece27b6270e779bf991296ff3bd699af6a29da4c6ee42fc8a",
     "tools/cohort-specs/thing-virtual-verified-20260926.manifest.tsv":

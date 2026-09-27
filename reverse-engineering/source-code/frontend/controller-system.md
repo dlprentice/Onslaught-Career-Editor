@@ -1,10 +1,11 @@
 # Controller System
 
 Status: active — mixed source reference and bounded retail evidence
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 Summary: controller architecture and retail differences; the keyboard queries
 and POV neutral comparison were rechecked on September 26, while other sections
-retain their own dated evidence and limitations.
+retain their own dated evidence and limitations. The September 27 joystick and
+recording recheck supplies exact retail guards, scales and transfer counts.
 Evidence: MEASURED — bounded retail keyboard recheck and the dated evidence below;
 the separate pinned-source architecture is a reference, not proof of retail parity.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256
@@ -16,6 +17,13 @@ uses pristine SHA-256
 and controlled original-code experiments. It supersedes the older held-state
 interpretation of the third key table and the consume-on-first-query shorthand.
 Source interfaces are not literal retail signatures.
+
+The [joystick and recording recheck](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-joystick-and-recording-recheck)
+also distinguishes the 18-slot retail interface from the 15-slot source layout.
+The joystick routines scale without clamping; their signed pad guards and
+RightY's early flag access must not be inferred from the source implementation.
+Static recording transfers three button words, without the source's additional
+four analogue fields. Physical device timing and complete playback remain untested.
 
 ## PC Controller System (PCController.cpp/h)
 

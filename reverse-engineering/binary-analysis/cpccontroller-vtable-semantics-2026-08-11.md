@@ -1,13 +1,14 @@
 # `CPCController` platform-interface semantic crosswalk
 
 Status: active, bounded platform-interface evidence
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 Evidence: MEASURED — fresh pristine instructions, RTTI and controlled original-code keyboard
 experiments; the dated retail/demo comparison below is retained evidence.
 Verdict: the keyboard receiver/return contract, repeated-query cache and release
 table are re-grounded below. The earlier claim that all 15 targets have exact
 behavior was too broad; historical source spelling, device timing and complete
-runtime equivalence remain separate questions.
+runtime equivalence remain separate questions. The September 27 static recheck
+below bounds joystick queries, slot differences and the recording interface.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
@@ -128,6 +129,72 @@ cursor and dispatches across real keydown/repeat/keyup, focus changes and menu
 transitions. The static/isolated result predicts the internal transitions;
 physical device and operating-system ordering remains unmeasured.
 
+## September 27 joystick and recording recheck
+
+The same pristine retail specimen and pinned source above were re-read for nine
+complete bodies. All 451 bytes match the specimen; the working export supplies
+boundaries, not method identity. Explicit source/body anchors, raw RTTI table
+words and real dispatch sites establish the following identities. The pinned
+`Controller.h`/`PCController.h` layout has 15 slots; retail has 18. The additional
+key query and two POV queries shift later slots. Do not transfer header slot
+numbers into retail without this crosswalk.
+
+| Retail slot / address | Re-derived contract |
+| --- | --- |
+| 3 / `0x005147b0` | `GetJoyButtonOnce`: old button byte is zero and current byte is nonzero. |
+| 4 / `0x005147f0` | `GetJoyButtonOn`: current button byte is nonzero. |
+| 5 / `0x00514810` | `GetJoyButtonRelease`: old byte is nonzero and current byte is zero. |
+| 9 / `0x00514640` | `GetJoyAnalogueLeftX`: signed integer state field `+0x00`, scaled as below. |
+| 10 / `0x00514670` | `GetJoyAnalogueLeftY`: signed integer state field `+0x04`, same scale. |
+| 11 / `0x005146a0` | `GetJoyAnalogueRightX`: signed integer state field `+0x08`, same scale. |
+| 12 / `0x005146d0` | `GetJoyAnalogueRightY`: signed integer state field `+0x14`, separate flag and scale. |
+| 16 / `0x00514720` | `RecordControllerState`: three ordered four-byte writes from receiver `+0x14/+0x18/+0x1c`. |
+| 17 / `0x00514760` | `ReadControllerState`: three ordered four-byte reads into those same fields, followed by the EOF query. |
+
+The button methods index pointer tables `0x00888fa4` (old) and `0x00888f94`
+(current) by pad, then access `state+0x30+button`. They normalize full EAX to
+0 or 1 and return with `RET 8`; no range guard
+is present. Calls at `0x0042dca3`, `0x0042dcce` and `0x0042dde1` supply the pad
+and button to slots 3, 4 and 5. These are state comparisons, not evidence of
+device-event delivery or a consuming button cache.
+
+Left X/Y and right X first require signed `*(int*)0x00888ff8 > pad`; otherwise
+they return x87 zero. This is an upper-bound test, **not a nonnegative-index
+check**. Each accepted query uses `FILD` then multiplies by the float32 value at
+`0x005dc6e4`: bits `0x3a83126f`, approximately `0.0010000000474974513`. Pinned
+`PCController.cpp:152–181` instead divides by 1000 and has no such guard.
+The instructions do not clamp the result, and multiplication is not certified
+bit-equivalent to the source division.
+
+Right Y first indexes the flag array at `0x00889014+4*pad`. Zero returns x87
+zero; only after a nonzero flag does it perform the signed count test. The
+accepted path loads state `+0x14`, subtracts float32 32768, and multiplies by
+exactly `1/32768`. Both guards are absent from `PCController.cpp:184–192`.
+All four methods return in ST0 and pop four stack bytes. The six-way selector
+at `0x0042e3d0`, table `0x0042e494`, maps input codes -1 through -6 to slots
+9 through 14 respectively; the POV methods remain the two additional entries.
+
+Record/Read pass the buffer at receiver `+0x2c` to `0x00548a70`/`0x00548570`.
+After all three reads, `0x00548d30` tests EOF; a nonzero result calls
+`0x00548c00` and clears receiver byte `+0x161`. The routines do not branch on
+each individual read result. The source's four further analogue transfers at
+`PCController.cpp:196–225` are absent from these complete retail bodies.
+Recording flag `+0x160` gates the slot-16 call at `0x0042e335`; playback flag
+`+0x161` gates the slot-17 call at `0x0042db96`.
+
+Private evidence: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/controller-engine-verified/`.
+Its nine Controller targets and five Engine targets total 643 fresh instruction
+rows, with exact body hashes and source declarations in `anchors.json` and
+`alignment.json`. All 15 known RTTI uses are covered. The nine Controller names
+are retained; comments/tags are the declared mutation scope, not prototypes.
+
+These are static findings. No joystick, operating-system event path or actual
+recording file was exercised. The cheapest remaining checks are isolated
+original queries with varied pad/count/flag/state values, followed by the
+original reader with short/zero reads. Real device ordering and gameplay replay
+still require a controlled retail run; the three-word format alone does not
+establish complete deterministic playback.
+
 ## Dated August 11 comparison
 
 Strict RTTI pairs the 18-slot retail table at `0x005E48E0` with the demo table
@@ -151,8 +218,8 @@ Lost Toys' 2002 GDC presentation. Shared `CController` owns mapping, repeat,
 record/playback orchestration, and delivery to `IController`; `CPCController`
 adapts PC input primitives into that interface:
 
-- DirectInput joystick X/Y/Z axes are normalized into the shared `[-1, 1]`
-  convention, with right Y using the released `32768` centre/range law;
+- DirectInput joystick X/Y/Z values are scaled without a local clamp, with
+  right Y using the `32768` centre/range law and guards described above;
 - button once/on/release wrappers delegate to the current/old DirectInput
   button-state helpers;
 - keyboard once/on wrappers delegate to the global platform object;

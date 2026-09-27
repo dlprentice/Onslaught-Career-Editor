@@ -312,6 +312,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "thing-virtual-identities-20260926",
         "thing-virtual-verified-20260926",
         "header-interface-identities-20260926",
+        "controller-engine-verified-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
