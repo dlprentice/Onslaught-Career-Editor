@@ -1,10 +1,10 @@
-# CUnit__ApplyDamage
+# CUnit__Damage
 
 > Address: `0x004f9a90`
 
 Status: active static function note — byte contract supersedes the Wave835
 static read-back summary in place (see Prior-art corrections)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (current interface identity; August behavior record retains its date)
 Source File: none — `Unit.cpp` has no source body in `references/Onslaught/`
 (checked 2026-08-22); only `thing.h:176`'s virtual declaration and
 `Player.cpp:273-277` survive | Binary: BEA.exe pristine specimen
@@ -29,6 +29,17 @@ and pinned `references/Onslaught/BattleEngine.cpp:2127-2180` /
 `FUN_*` milled; no Core owner changed.
 
 > Address: `0x004f9a90`
+
+## September 27 identity correction
+
+The [gameplay interface audit](../../../ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
+now records `CUnit__Damage`, with corresponding AirUnit, Building and HiveBoss
+Damage identities. Fixed primary slot 40, the retail script registry/callback,
+header declaration and complete argument-forwarding bodies were reread from
+the pristine specimen. The first argument is a float amount; four argument
+words are retained even in overrides that ignore some of them. This identity
+correction does not revalidate every August behavior claim below or certify
+all saved signatures. The historical filename remains for existing links.
 
 ## Headline finding
 
@@ -188,9 +199,9 @@ Ghidra symbol.
 
 | Site | Caller (name-table identity) | Shape |
 | --- | --- | --- |
-| `0x004037be` | `CAirUnit__ApplyDamageAndResolveSlot19Vector_004037a0` | forwards its four args unchanged, then compares life to 0 |
-| `0x00417a16` | `CBuilding__VFunc_40_004179a0` | pure forwarder; skips when `[this+0x178]` live or `[this+0x2c]` bit 4 set — matches the rebuild's PROVENANCE account of the prison-building slot 40 |
-| `0x0048006d` | `CHiveBoss__ForwardApplyDamageUnlessFlag01000000_00480050` | skips when `[src+0x34] & 0x1000000`; passes `eax` twice (source reused as mesh arg slot per caller window) |
+| `0x004037be` | `CAirUnit__Damage` | forwards its four args unchanged, then compares life to 0 |
+| `0x00417a16` | `CBuilding__Damage` | pure forwarder; skips when `[this+0x178]` live or `[this+0x2c]` bit 4 set — matches the rebuild's PROVENANCE account of the prison-building slot 40 |
+| `0x0048006d` | `CHiveBoss__Damage` | skips when `[src+0x34] & 0x1000000`; passes `eax` twice (source reused as mesh arg slot per caller window) |
 | `0x004898b0` | `CInfantryUnit__Damage` | collision-damage reaction passing computed args |
 
 Caller names are the current name-table identities; the table's own

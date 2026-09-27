@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: console-menu interfaces and music identities corrected; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Thing gameplay identities corrected; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the music identity cohort (September 27).**
+**Running coverage after the Thing gameplay identity cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,064 unique functions; 2,065 rename rows include one repeated correction. The latest cohort corrects ten shared/device music identities. |
+| Names corrected | 2,124 unique functions; 2,125 rename rows include one repeated correction. The latest cohort corrects sixty Thing gameplay interface identities. |
 | Names verified and kept | 369 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body and nine console-menu identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,899 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,839 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 53 interfaces: the prior 29, 22 frontend argument layouts, WndProc and VertexShader GetEntry. Three unresolved frontend returns remain unassigned; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,446 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,506 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927`, `thing-gameplay-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -725,8 +725,24 @@ it does not rerun the older demo or isolated-code experiments. Eight kept shared
 names still need their separate comment dispositions. The source-graph tool now
 uses complete entry-seeded bodies (21 focused tests), fixing cached switch-data
 spill at SetVolume without claiming a Ghidra boundary defect.
-Next larger candidates are Thing physics/activation/combat virtual interfaces,
-with independent consumer anchors required before admitting whole families.
+The [Thing gameplay identity cohort](reverse-engineering/ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
+now corrects sixty names across eleven movement, activation and combat interfaces.
+The packet covers 62 fixed-primary holders: eight kept names and eighteen
+ambiguous/unresolved targets remain outside the mutation. All 7,714 body bytes,
+2,386 instructions and saved interfaces are unchanged. Independent review,
+five refusal controls, exact live readback and independently restored POST passed.
+Two superseded rehearsal seals remain preserved; their prose/tag issues were
+corrected before live. The full 8,332-row current name projection matches live.
+The tree Damage note now withdraws the old elapsed-time/cooldown interpretation:
+the incoming float is damage amount. This is a static interface/body correction,
+not observed retail tree behavior. Next is the prepared 32-row physical-interface
+cohort: six scalar queries, sixteen activation methods and ten Hit/Damage rows,
+including the Tree parameter-name-only correction. Ten custom-storage floating
+rows remain deferred because the current gate cannot represent source float
+in ST0:10 without a separately reviewed storage-policy extension.
+Evidence remains in `local-data/test-runs/re-audit-20260926/thing-gameplay/`;
+cohorts are under `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`.
+Remaining music comments, GenericSPtrSet identities and camera interfaces follow.
 Keep the CUnitAI/CMechAI collision separate; never
 move an excluded label simply to free a spelling. Evidence and failed/passing
 controls: `local-data/test-runs/re-audit-20260926/frontend-options/cleanup-*`.

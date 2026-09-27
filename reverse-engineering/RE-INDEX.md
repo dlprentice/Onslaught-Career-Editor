@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (console-menu interfaces and music identities promoted; broader name/prototype/comment audit remains)
+Last updated: 2026-09-27 (Thing gameplay identities promoted; physical interfaces and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -81,6 +81,14 @@ The [shared policy](binary-analysis/cmusic-shared-semantics-2026-08-11.md) and
 [device crosswalk](binary-analysis/cpcmusic-vtable-semantics-2026-08-11.md) separate
 fresh retail inspection from retained demo/runtime findings and remaining ABI,
 filesystem and audible acceptance. Eight kept shared names await comment disposition.
+The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
+now corrects sixty names across shared movement, activation and combat interfaces,
+with independently bound retail callers, complete target bodies and all recognized
+RTTI aliases. Eighteen ambiguous cases and eight kept-name comments remain separate.
+Exact live readback and independently restored recovery passed; saved interfaces
+are unchanged. The [tree Damage note](binary-analysis/functions/tree.cpp/CTree__VFunc_28_CreateFallingTreeAfterDelay.md)
+withdraws the inherited elapsed-time/cooldown interpretation. Physical-interface
+corrections are the next cohort; names alone do not establish full semantics.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
