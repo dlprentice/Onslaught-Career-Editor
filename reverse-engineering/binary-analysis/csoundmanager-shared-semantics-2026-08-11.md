@@ -2,7 +2,7 @@
 
 Status: active, bounded semantic recovery
 Last updated: 2026-09-27
-Evidence: MEASURED — September 27 original event-queue execution; September 20 volume/event/backend execution retains its date. Earlier source/demo/deck analysis below remains bounded evidence.
+Evidence: MEASURED — September 27 original event-queue and intercepted sample-lookup execution; September 20 volume/event/backend execution retains its date. Earlier source/demo/deck analysis below remains bounded evidence.
 Verdict: event acquisition preserves the existing active head and inserts after a selected node; earlier head-insertion wording is corrected. Device, mixer and audible behavior retain explicit limits.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
@@ -97,6 +97,49 @@ The findings above are static rechecks, not new retail runs. Controlled original
 calls with recorded RNG draws, paused/frozen combinations and device-call hooks
 are the next inexpensive falsifiers; actual mixer/device/audible acceptance
 remains separate.
+
+## September 27 sample-lookup correction
+
+The complete pristine body at `[004e0a00,004e0a8e)` is 142 bytes, SHA-256
+`b08bf0f23aa00b948de2a47e6d906d92b1a3bb09c32121cdc2f2eea41d0a0cab`,
+from `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+It corresponds to `CSoundManager::GetSample` in pinned SoundManager.cpp
+lines 300–333, with retail additions. Its saved GetOrCreateSample name and
+`channel_type` argument label remain pending correction; the second argument
+is music, as shown by the complete CreateSample body and the backend reload
+caller at `00517f81–00517f90`.
+
+Original-code execution in an isolated native i386 harness passed **76 cases
+and two consequential altered-copy controls**. ASCII name comparison and
+CreateSample are intercepted; this tests the original lookup body and call
+transport, not CRT collation or actual loading. Inputs cover initialized/empty
+guards, missing and duplicate names, case differences, reload values
+`0/1/0x100/0x101`, both global gates, full-width music values and zero/nonzero
+creation responses. The output checks include all authored object memory,
+both gates, callee-saved registers, stack balance and call arguments.
+
+- The first case-insensitive name match returns unchanged when the low byte
+  of `reload_if_exists` is zero. Thus `0x100` does not request reload.
+- Missing names or an admitted reload reach CreateSample only when
+  DWORD `[00662dd4] != 0` or DWORD `[0066307c] == 0`. An existing match with
+  no reload bypasses those creation gates.
+- The full second DWORD is forwarded as music, followed by a null reader.
+  Only the low byte of the final reuse argument is normalized by `SETNE CL`.
+  A second harness variant lets the comparison hook clobber volatile ECX;
+  original code forwards `0xa5a5be00/01`, preserving the upper 24 bits.
+- The lookup returns the intercepted CreateSample result unchanged. This is
+  a transport observation: the actual null-reader route bypasses reuse search
+  and reaches filename-loader stub `00517290`, which returns zero. A reload
+  request does not prove successful loading or reuse.
+
+The two altered-copy controls invert the initialized gate or the matched-name
+reload gate; each produces the predicted contrary result. Receipts and complete
+input/output files are in the existing private sound owner under
+`sample-lookup-4qft4rv1/` and `sample-lookup-kv0o1crh/`; drivers are
+`original_sample_lookup.py` and `original_sample_lookup_v2.py`. The latter
+variant supplies the nonzero upper-ECX witness. No real device, sample resource,
+non-ASCII comparison, allocator/lifetime or audible result is established.
 
 ## September 20 independent volume/event recheck
 
@@ -285,8 +328,14 @@ fades.
 ## Spatial, owner, and pause policy
 
 `UpdateSoundPosition` consumes two stack arguments and does not read incoming
-ECX. This does not alone prove the saved stdcall annotation; the source declares
-a member. It updates position/velocity for tracking modes, chooses the
+ECX. The [sound interface cohort](../ghidra/README.md#re-audit-sound-interfaces--september-27)
+corrects its saved stdcall annotation to an automatic member receiver using
+source identity and explicit ECX delivery in all three decoded direct callers.
+StopSoundEvent receives the same bounded correction; UpdateStatus's explicit
+fastcall receiver becomes automatic thiscall. IsEffectPlaying's full EAX
+production and consumption correct saved bool/AL to int/EAX. These annotations
+do not certify every retained argument spelling or indirect caller.
+UpdateSoundPosition updates position/velocity for tracking modes, chooses the
 nearest camera in multiplayer, transforms into camera-local coordinates,
 handles `_L`/`_R` offsets and X inversion, and refreshes pan. `UpdateStatus`
 combines that with camera state, backend globals, fades, pitch, volume,

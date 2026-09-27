@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Thing gameplay identities and interfaces corrected; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: sound interfaces and bounded sample lookup corrected; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the kept sound-name cohort (September 27).**
+**Running coverage after the sound-interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,7 +501,7 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 418 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music and 41 shared/PC-sound identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 5,775 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 93 interfaces: the prior 85 plus seven direct GenericSPtrSet corrections and one dependent forwarding entry. Three unresolved frontend returns and ten custom-storage floating rows remain outside these corrections; a corrected parameter list is not complete ABI validation. |
+| Prototypes corrected | 103 interfaces: the prior 93 plus nine sound member-receiver normalizations and one full-width Boolean return correction. Receiver normalization does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
 | Comments corrected | 2,570 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927` and `sound-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -822,10 +822,16 @@ lookup lead at `004e0a00` matches source GetSample, with an extra retail reload
 argument and a second argument carrying music; it still needs exact cohort
 review. The source-name and interface work must not claim successful loading
 through the retail filename-loader stub.
-Ten prepared interface candidates cover nine receiver-annotation changes and
-the full-width IsEffectPlaying return. They remain leads in
-`shared-interface-candidates-v1.json` and `pc-interface-candidates-v1.json`,
-not promoted corrections; GetSampleLength's return type remains unresolved.
+The [ten sound interface corrections](reverse-engineering/ghidra/README.md#re-audit-sound-interfaces--september-27)
+are now promoted: nine receiver-annotation changes and the full-width
+IsEffectPlaying return. Exact live/rehearsal equality and independently restored
+recovery passed. GetSampleLength's return type remains unresolved.
+The [original sample-lookup experiment](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sample-lookup-correction)
+passes 76 cases and two altered-copy controls in each of two bounded harness
+variants. It measures full-width music, low-byte reload and low-byte-only
+reuse normalization; comparison/creation are intercepted. Actual loading and
+audio remain outside it. Next: the two sound source names and misleading
+argument labels, preserving types/storage unless separately justified.
 Private owner: `local-data/test-runs/re-audit-20260926/sound/`.
 
 The existing source-graph tool now checks selected direct-call witnesses against

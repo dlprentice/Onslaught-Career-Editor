@@ -302,6 +302,7 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # GenericSPtrSet identities: fourteen names/comments/tag sets; interfaces, code and explicit thunk unchanged.
 # GenericSPtrSet ABI: seven direct prototypes and one thunk dependency; all names/code/locals preserved.
 # Sound verified: forty-one kept names; only comments and tag sets change.
+# Sound ABI: ten interfaces, comments and tags; all names/code/locals preserved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -387,6 +388,7 @@ LIVE_GRANTED_COHORTS = [
     "sptrset-identities-20260927",
     "sptrset-abi-20260927",
     "sound-verified-20260927",
+    "sound-abi-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -878,6 +880,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "sptrset-identities-20260927",\n'
         '        "sptrset-abi-20260927",\n'
         '        "sound-verified-20260927",\n'
+        '        "sound-abi-20260927",\n'
         "    };\n",
     ),
     (
