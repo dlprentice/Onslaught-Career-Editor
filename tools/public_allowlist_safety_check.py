@@ -223,7 +223,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (1,530/7,102 decoded bytes); authored findings and superseded historical leads.
 # Cockpit float ABI: one current/one proposed analytic comment
 # (848/3,262 decoded bytes); authored argument/arithmetic evidence and limits.
+# Thing virtual identities: 172 current/205 proposed analytic comments
+# (109,294/332,698 decoded bytes); source/RTTI proofs and marked historical leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/thing-virtual-identities-20260926.manifest.tsv":
+        "a493b499e16ed804cd5ca4209c5e31b9f7654c090598820a2bdc26972a29b3df",
     "tools/cohort-specs/cockpit-shake-abi-20260926.manifest.tsv":
         "fb211b8eb5f13776511572f4b2aa7e724b55a4f3e8c9d34427ca1aa38e5acf5e",
     "tools/cohort-specs/damage-shake-comments-20260926.manifest.tsv":

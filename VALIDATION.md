@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (the rebuild's final capture recorded; each dated section keeps its own date).
+Last updated: 2026-09-26 (RE virtual-method promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,45 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE virtual-method identity promotion — September 26
+
+The [205-row cohort](reverse-engineering/ghidra/README.md#re-audit-thing-family-virtual-identities--september-26)
+corrects method names, comments and tags from 29 independently reviewed slot
+anchors, fixed RTTI inheritance and complete saved-body admission checks.
+Saved labels are excluded from alignment inputs. All aliases and ambiguous
+owners are accounted for; unsupported dispatch/stack cases are withheld.
+
+- `python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:
+  55 passed. Adverse cases cover incomplete decoding, branch escapes, unsafe
+  stack writes, backward tail branches, conflicting aliases and 64-bit argument
+  widths. They validate the bounded admission method, not full ABI correctness.
+- `python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after
+  registering the exact cohort.
+- Fresh PRE restore/open, rehearsal dry/apply/separate readback, sealed readback
+  and five no-write refusal controls passed. An earlier seal with ambiguous
+  hexadecimal wording in two comments was retained and replaced; the final seal
+  repeated the complete gate.
+- Live readback matches all nine rehearsal exports. Exactly 205 target rows
+  have the declared changes; 8,126 other functions and all protected body,
+  variable, type, stack and bookmark data remain unchanged. All 13,343 exported
+  target instruction rows are preserved apart from their function-name column.
+- Independent Archive A POST was restored elsewhere and opened read-only;
+  working, cold and restored inventories agree. The tracked checkpoint is
+  byte-identical. No runtime launch or player/device acceptance occurred.
+
+Private commands, comparisons, refusal receipts and recovery:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-identities/`.
+The live parent command ended with exit 143 after a successful read-only dry
+run and before apply began. No write was attempted; working bytes were checked
+equal to PRE before resuming only apply and readback. The cause is unknown.
+
+Publication checks are `npm run test:docs`, `npm run test:safety`,
+`git diff --check`, and exact comparison of the composed current name projection
+against all 8,331 live export entries. Their logs and count receipt belong to
+the same private cohort owner. The 65 kept-name proposals and 28 unresolved
+targets in the broader report are not part of this promotion; unchanged
+prototypes and retained old comments are not certified by these results.
 
 ### One owner for the Won career update — September 26
 

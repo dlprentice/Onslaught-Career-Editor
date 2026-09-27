@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[cockpit shake ABI](#re-audit-cockpit-shake-abi--september-26);
+[Thing-family virtual identities](#re-audit-thing-family-virtual-identities--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,56 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit Thing-family virtual identities — September 26
+
+The [manifest](../../tools/cohort-specs/thing-virtual-identities-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/thing-virtual-identities-20260926.spec.tsv) correct 205 method identities.
+Twenty-nine anchors were re-derived from pristine instructions, source declarations,
+script registrations and observed virtual call sites, then independently reviewed.
+Fixed RTTI inheritance carries those slots through 1,677 table uses and 298 distinct
+targets. Saved names were never alignment inputs. The strengthened admission tool
+supports 205 rename proposals and 65 existing-name proposals; 28 targets are withheld
+for unresolved dispatch, alias or owner evidence. Only the 205 renames are promoted.
+
+Notable corrections include `CAirUnit__dtor_base` to `CAirUnit__Shutdown` (the
+deleting destructor has a separate slot/body), `CCarver__Fire` and
+`CSentinel__Deactivate` to their animation-completion callback identities, and
+`CBattleEngine__ResetAndSetActiveReader` to `CBattleEngine__DeclareOnObject`.
+The latter matches the source receiver/standing-object call chain. These names
+describe the virtual interfaces; earlier descriptive behavior notes remain leads.
+Script `Stop` calls `GoToPoint` with the current position, so its name is not proof
+of the virtual `Stop` slot. The Actor `Stop` body zeros XYZ but copies an
+uninitialized fourth stack word. Numeric flag masks come from the retail bytes.
+
+Independent reviews covered all 29 anchors, the propagation/admission method,
+every flagged alias/owner case, representative surprising overrides and all encoded
+comments. Root reproduced the byte witnesses and all 1,677 fresh RTTI table words.
+Adversarial controls hardened decoding, branch, tail-stack and argument-width checks.
+The first seal was retained under `rejected-v1/`: two flag-mask comments needed
+explicit hexadecimal notation. The corrected seal repeated the preservation gate.
+A parent command ended with exit 143 after the live read-only dry receipt; no apply
+command had begun. Working bytes were rechecked equal to cold PRE before the exact
+apply/readback steps resumed. The termination cause was not established.
+This is static identity evidence, not full stack/type/behavior or runtime proof.
+Unknown prototypes and unreviewed retained notes remain in the audit queue.
+
+Exactly 205 function names, nonrepeatable comments and tag sets are corrected
+through reviewed CThing, CComplexThing and CActor virtual-slot anchors and fixed
+RTTI inheritance. Every prototype shape, calling convention, storage, parameter,
+local, type, bookmark, instruction and body and all 8,126 non-target function
+rows are preserved. Earlier names and notes remain fallible leads.
+Program comment count increases by 33; only that metric and
+`commentsSha256` change. All nine live exports equal separately reopened rehearsal.
+Fresh PRE restoration, dry/apply/separate readback, sealed readback, five byte-stable
+refusal controls, independent review, live readback and independently restored POST
+passed. No checkpoint refresh or runtime launch occurred.
+
+Working identity: `db.18669`, 18 files / 121,932,660 bytes,
+inventory SHA-256 `9d3698fc7228741547cd7f5c6f306ec409f640696a76f98a8c46be0173b8a80e`; main database 71,630,848 bytes,
+SHA-256 `193408a2ebb40d55812f06ced45782f7d7ef2e4beb88774f766afe30d91e0544`. PRE is the restored cockpit-shake POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-thing-virtual-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-identities/`.
 
 ## RE-audit cockpit shake ABI — September 26
 

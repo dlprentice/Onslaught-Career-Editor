@@ -1,9 +1,9 @@
-# CTentacle__VFunc_50_004f1050
+# CTentacle__StartDieProcess
 
 > Address: `0x004F1050`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
 Source File: none — `Tentacle.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -19,6 +19,14 @@ Evidence: MEASURED — pristine SHA verified before complete-body disassembly
 and hashing, whole-`.text` rel32 scan, image-wide imm32 census, RTTI/vtable
 readback, and complete direct/indirect-call classification. The current saved
 address-qualified name is retained; no Ghidra or rebuild owner changed.
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Contract (byte-exact)
 

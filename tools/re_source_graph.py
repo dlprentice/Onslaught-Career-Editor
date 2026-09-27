@@ -83,6 +83,14 @@ def param_bytes(p: str) -> int | None:
     t = re.sub(r"\b(const|volatile|register|struct|class|enum|unsigned|signed)\b", " ", p)
     if "*" in t or "&" in t:
         return 4
+    # Header identity normalization removes whitespace between type words.
+    # Do not let an unsigned prefix turn an eight-byte integer into four.
+    if p.strip() in ('longlong', 'signedlonglong', 'unsignedlonglong',
+                     'signed__int64', 'unsigned__int64', 'longdouble'):
+        return 8
+    if p.strip() in {sign+kind for sign in ('signed', 'unsigned')
+                    for kind in ('char', 'short', 'shortint', 'int', 'long', 'longint')}:
+        return 4
     words = t.split()
     base = words[0] if words else ""
     if base in ("double", "__int64") or "long long" in p:
@@ -90,7 +98,7 @@ def param_bytes(p: str) -> int | None:
     if base in ("int", "short", "char", "bool", "float", "long", "WORD", "DWORD", "BYTE", "BOOL", "UINT", "size_t",
                 "unsigned", "SINT", "UBYTE", "UWORD", "ULONG", "LONG", "WPARAM", "LPARAM", "HRESULT", "LRESULT",
                 "INT_PTR", "UINT_PTR", "DWORD_PTR", "LONG_PTR", "WCHAR", "TCHAR") \
-            or p.strip().startswith(("unsigned", "signed")) or re.match(r"^(LP|H)[A-Z0-9]+$", base):
+            or re.match(r"^(unsigned|signed)\b", p.strip()) or re.match(r"^(LP|H)[A-Z0-9]+$", base):
         return 4                                    # LPxxx pointers and Hxxx handles are 4 bytes
     return None
 

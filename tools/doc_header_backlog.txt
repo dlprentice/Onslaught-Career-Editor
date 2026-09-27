@@ -97,7 +97,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CGrade__ctor_char.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CGrade__operator_gte.md
 reverse-engineering/binary-analysis/functions/Career.cpp/TOTAL_S_GRADES.md
 reverse-engineering/binary-analysis/functions/Carrier.cpp/CCarrier__Init.md
-reverse-engineering/binary-analysis/functions/Carver.cpp.md
 reverse-engineering/binary-analysis/functions/Cockpit.cpp/CCockpit__ctor.md
 reverse-engineering/binary-analysis/functions/Controller.cpp/CController__GetToControl.md
 reverse-engineering/binary-analysis/functions/Controller.cpp/CController__InactivityMeansQuitGame.md
@@ -179,8 +178,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/FrontEnd__HasStandard
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/Frontend__XorWideTextBlock100BytesToScratch.md
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginFlyToWalkTransition.md
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginWalkToFlyTransition.md
-reverse-engineering/binary-analysis/functions/GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md
-reverse-engineering/binary-analysis/functions/Hazard.cpp/CHazard__VFunc02_CleanupWorldSoundAndLinkedState.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
 reverse-engineering/binary-analysis/functions/MCMech.cpp.md
 reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md
@@ -206,10 +203,8 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__SnapshotHelper
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ViewHelpers.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
-reverse-engineering/binary-analysis/functions/Pod.cpp/CPod__VFunc_66_UpdateMotionAndAccumulateScalar.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
 reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
-reverse-engineering/binary-analysis/functions/Sentinel.cpp.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
 reverse-engineering/binary-analysis/functions/Symtab.cpp.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateGuide.md

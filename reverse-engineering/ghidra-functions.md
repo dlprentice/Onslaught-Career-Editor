@@ -3,7 +3,7 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-09-26 (startup identities corrected; dated evidence below retains its limits).
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
 Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
@@ -166,6 +166,14 @@ is pristine only relative to the project's patch catalog; this research does
 not establish its Steam depot identity.
 
 ---
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Current complete-RE replay authority — dynamic pointer
 
@@ -942,10 +950,10 @@ These were not merely weak names; the evidence contradicted them. Five have
 since received bounded saved-name corrections. The sixth remains a current
 saved-name problem; none of the name changes alone proves runtime behavior.
 
-| Address | 2026-08-31 current saved name | Status / safer interpretation |
+| Address | Current saved name (September 26 refresh) | Status / safer interpretation |
 | --- | --- | --- |
-| `0x004e9600` | `CNormalSquad__VFunc_20_004e9600` | Corrected owner; `CSquadNormal` has no image RTTI. <!-- ghidra-current-name: 0x004e9600 CNormalSquad__VFunc_20_004e9600 --> |
-| `0x004e96f0` | `CNormalSquad__VFunc_21_004e96f0` | Corrected transposed/invented owner. <!-- ghidra-current-name: 0x004e96f0 CNormalSquad__VFunc_21_004e96f0 --> |
+| `0x004e9600` | `CNormalSquad__Teleport` | Corrected owner; `CSquadNormal` has no image RTTI. <!-- ghidra-current-name: 0x004e9600 CNormalSquad__Teleport --> |
+| `0x004e96f0` | `CNormalSquad__TeleportOrientation` | Corrected transposed/invented owner. <!-- ghidra-current-name: 0x004e96f0 CNormalSquad__TeleportOrientation --> |
 | `0x004e9f00` | `CNormalSquad__VFunc_52_004e9f00` | Corrected transposed/invented owner. <!-- ghidra-current-name: 0x004e9f00 CNormalSquad__VFunc_52_004e9f00 --> |
 | `0x00527d00` | `CRenderMethod__VFunc_0_00527d00` | Corrected to the only owning vtable. <!-- ghidra-current-name: 0x00527d00 CRenderMethod__VFunc_0_00527d00 --> |
 | `0x004eaae0` | `CRelaxedSquad__VFunc_52_004eaae0` | Corrected to primary-vtable slot 52. <!-- ghidra-current-name: 0x004eaae0 CRelaxedSquad__VFunc_52_004eaae0 --> |
