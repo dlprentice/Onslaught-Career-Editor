@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (sound interfaces and original sample lookup; broader audit remains)
+Last updated: 2026-09-27 (sound source names and argument labels corrected; sample-length return boundary retained; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -116,8 +116,11 @@ volume semantics. The [ten sound-interface corrections](ghidra/README.md#re-audi
 now have exact live readback and restored recovery. The
 [sample-lookup probe](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sample-lookup-correction)
 measures argument widths and lookup/reload gates with intercepted comparison
-and creation. Source-name corrections and remaining ABI questions are separate;
-actual device/audible behavior is not established.
+and creation. The [two source-name corrections](ghidra/README.md#re-audit-sound-source-names-and-arguments--september-27)
+are now live, with music and insert_after_head argument labels and unchanged
+physical interfaces. The [sample-length caller recheck](binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#getsamplelength-caller-and-precision-boundary--september-27)
+supports its member-call annotation but leaves float/double return precision
+unresolved. Actual device/audible behavior is not established.
 The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
 now corrects sixty names across shared movement, activation and combat interfaces,
 with independently bound retail callers, complete target bodies and all recognized
