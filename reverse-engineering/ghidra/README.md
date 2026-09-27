@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[music identities](#re-audit-music-identities--september-27);
+[music identities](#re-audit-thing-gameplay-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,38 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit Thing gameplay identities — September 27
+
+The [sixty-row manifest](../../tools/cohort-specs/thing-gameplay-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/thing-gameplay-identities-20260927.spec.tsv) correct gameplay interface
+identities in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Sixty Thing-family gameplay names corrected across eleven interface roles: speed limit, activation/deactivation, Hit, Damage and the six ground/gravity queries. All 7,714 body bytes / 2,386 instructions, existing signatures apart from name text, variables, locals, types and 8,272 other function records are preserved. Forty-seven old notes remain explicitly fallible leads; thirteen targets gain their first comments. The demonstrably stale infantry vfunc38 tag is replaced with vtable-slot-39; the old note is preserved and its shifted table start explicitly corrected.
+
+Source-correlated Actor movement and Thing initialization/collision callers, complete retail script-registry bindings and independently checked receiver-bound dispatches establish the eleven methods; fixed-primary RTTI and all recognized aliases delimit their holders. Fresh parsing agrees with the cached 724-table model using the same parser, which is cache consistency rather than independent algorithmic evidence. The packet covers 62 Thing-family holders and 86 unique targets; 60 names are admitted, eight kept names remain for separate comment disposition and eighteen ambiguous/unresolved targets are withheld. Shared constants, conflicting methods, incomplete aliases, ambiguous least-derived owners and an unresolved indirect tail are not renamed. Two earlier rehearsals passed their mechanical checks but their seals remain under rejected-v1 and rejected-v2: review corrected overclaimed RTTI independence, ambiguous offset/argument prose, the stale infantry slot tag, and precise COL-pointer/source-value wording before the final fresh seal and rehearsal. Method identities do not certify full derived behavior, saved parameter/return types, source-body ownership or runtime parity. Existing physical-interface defects remain a separate explicitly scoped correction.
+
+The fresh packet includes 97 complete body spans (29,429 bytes) and fourteen
+registry/dispatch spans. The Activate, Deactivate and Damage script names are
+bound to their callbacks through the complete straight-line registry
+initializer, rather than inferred from saved handler names. The Hit argument
+order is peer then report at target entry; the machine pushes report first.
+CUnit's ObeyGravity query is bounded to its observed pointer/field predicate;
+the meaning of that state value remains unknown.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports equal
+rehearsal; only comment-count/digest program metrics change. The tracked name
+projection is separately checked against all 8,332 live function rows.
+
+Working identity: `db.18701`, 18 files / 124,980,084 bytes,
+inventory SHA-256 `9c31783f31a6e5a4e8caa58acc62f72e9465517aba8e9a73293be9ae2645b86f`; main database 74,678,272 bytes,
+SHA-256 `24d6dea1315667594543b4473939bec798687a296ecb6a58216a471e83362642`. Restored music identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-thing-gameplay-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-gameplay-identities/`; fresh evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/thing-gameplay/`.
 
 ## RE-audit music identities — September 27
 

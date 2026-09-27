@@ -8279,3 +8279,46 @@ eight kept shared names await separate live comment disposition. No Godot ran.
 
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,174 candidate files. `git diff --check` passed.
+
+
+## RE Thing gameplay identity promotion — September 27
+
+`thing-gameplay-identities-20260927` corrects sixty function names/comments/tags
+across eleven shared movement, activation and combat methods. Evidence comprises
+97 complete pristine body spans (29,429 bytes), fourteen registry/dispatch spans,
+source declarations, independent receiver-bound callers and fixed-primary RTTI.
+The promoted subset preserves 7,714 bytes / 2,386 instructions, all existing
+interfaces, variables, locals, types and 8,272 non-target function records.
+The infantry slot-38 tag is corrected to slot 39 with its true table base;
+47 old notes (34,328 bytes) remain explicitly fallible leads. Eighteen ambiguous
+or incomplete cases and eight kept names remain outside this cohort.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports match
+rehearsal. Two superseded seals remain under `rejected-v1`/`rejected-v2`;
+review caught overclaimed parser independence, slot/prose defects and precise
+pointer/value wording before live writes. Same-parser cache agreement is not
+independent RTTI inference.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py`, `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-gameplay-identities/`.
+Logs: `local-data/test-runs/re-audit-20260926/thing-gameplay/`, including
+`preservation-v3.log`, `seal-v3.log`, `rehearsal-v3.log`,
+`negative-controls-v3.log`, `live.log`, `finish.log`, `framework.log`,
+`projection.log`. The cohort framework suite passed 94 tests.
+
+The full 8,332-row projection equals live: 2,124 unique corrected names, 369
+additional kept names, zero newly neutralized, 5,839 outside those sets,
+53 corrected interfaces and 2,506 comments. Seven existing function owners
+were updated. The tree Damage note withdraws an elapsed-time interpretation:
+its incoming float is a damage amount. Source-correlated static identities and
+finite body facts do not establish full derived behavior or runtime parity.
+No Godot or retail game was launched. The next physical-interface cohort is
+separate from these counts.
+
+`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+passed across 4,176 candidate files. `git diff --check` passed. Detailed output
+is in `thing-gameplay/docs.log` and `thing-gameplay/safety.log` under the log owner above.

@@ -1,7 +1,7 @@
 # CPlane Hit And Animation Helpers
 
 Status: active static function note; reviewed contact role names
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (Hit interface identity; earlier behavioral evidence keeps its stated limits)
 Summary: contact-triggered Plane shutdown and retained animation helpers; the
 hit body does not inspect life or require fatal damage.
 
@@ -16,11 +16,20 @@ in dated prose and filenames are retained aliases; the cohort manifest preserves
 their exact mapping. This correction does not re-verify the rest of this note
 or certify its prototypes or runtime behavior.
 
+## September 27 Hit identity
+
+The [gameplay interface audit](../../../ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
+now records the shared interface name `CPlane__Hit`; its primary slot 39 and
+caller argument order are independently established. The older descriptive
+suffix remains a historical behavior lead. The shared air-contact routine has
+no unique least-derived RTTI owner and remains outside this rename cohort.
+This updates identity without certifying the rest of the older contact analysis.
+
 ## Functions
 
 | Address | Name | Saved signature |
 | --- | --- | --- |
-| `0x004d1f10` | `CPlane__Hit_RequestShutdownOnQualifiedContact` | `void __thiscall CPlane__Hit_RequestShutdownOnQualifiedContact(void * this, void * hit_thing, void * hit_context)` |
+| `0x004d1f10` | `CPlane__Hit` | `void __thiscall CPlane__Hit(void * this, void * hit_thing, void * hit_context)` |
 | `0x00403ba0` | `AirContact__Hit_RequestShutdownOnDyingContact` | `void __thiscall AirContact__Hit_RequestShutdownOnDyingContact(void * this, void * otherThing, void * collisionReport)` |
 | `0x004d1f90` | `CPlane__PlayWingOpenAnimationOnce` | `void __fastcall CPlane__PlayWingOpenAnimationOnce(void * this)` |
 | `0x004d1fd0` | `CPlane__PlayWingCloseAnimationOnce` | `void __fastcall CPlane__PlayWingCloseAnimationOnce(void * this)` |
@@ -31,8 +40,7 @@ or certify its prototypes or runtime behavior.
 - September 8 re-read pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
   2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
   The former fatal-damage label was misleading: this body reads no life/damage
-  value and its main arm does not require `TF_DYING`. The reviewed labels above
-  describe measured roles, not recovered source method names.
+  value and its main arm does not require `TF_DYING`. Those September 8 descriptive labels expressed measured roles. The September 27 correction above separately establishes the shared Hit interface name.
 - `CPlane` vtable `0x005e1930` slot 39 points to `0x004d1f10`, while `CDiveBomber`, `CGroundAttackAircraft`, and `CBomber` use different slot-39 hit handlers.
 - The main arm requires `this+0x164->0x11c == 0`. `hit_thing+0x34` is the
   **type mask**, not the flag word. Same-allegiance AirUnit (`0x400`) contact

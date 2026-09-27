@@ -174,6 +174,8 @@ CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/consol
 CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY_SHA256 = "ab9cf380e888890a2c8e10deb447c6f19fe380126e89903458d06c89866ea64e"
 CURRENT_MUSIC_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/music-identities-20260927.manifest.tsv"
 CURRENT_MUSIC_IDENTITIES_OVERLAY_SHA256 = "cca35b9b460735c991414dc4f1725a77bf6c8be2335455c2f0bda8a6ad8df559"
+CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/thing-gameplay-identities-20260927.manifest.tsv"
+CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY_SHA256 = "43ea56ebd707ad49e5da1383de8bcf6ce65c82f3b24742973db7a8c6d31ee058"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -1002,6 +1004,11 @@ def run(
                 table, CURRENT_MUSIC_IDENTITIES_OVERLAY,
                 expected_sha256=CURRENT_MUSIC_IDENTITIES_OVERLAY_SHA256,
                 expected_rows=10, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY,
+                expected_sha256=CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY_SHA256,
+                expected_rows=60, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

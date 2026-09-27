@@ -1,11 +1,15 @@
 # Carver.cpp Functions
 
 Status: active function identity reference; earlier behavior claims retain their limits
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (Hit identity corrected; earlier behavioral evidence keeps its stated limits)
 Summary: current method identities with preserved historical evidence and superseded labels.
 
 > Source File: Carver.cpp | Binary: BEA.exe
 > Debug Path: 0x00624400 (`[maintainer-local-source-export-root]\Carver.cpp`)
+
+## September 27 Hit identity
+
+The [gameplay interface audit](../../ghidra/README.md#re-audit-thing-gameplay-identities--september-27) establishes `CCarver__Hit` at `0x004227e0` from the pristine specimen, fixed primary RTTI and the shared collision-call interface. The older `OnHit` label is superseded; this does not certify every inherited behavior claim.
 
 ## September 26 virtual-method identity correction
 
@@ -35,7 +39,7 @@ withdrawn label can tell it was corrected and not lost.
 
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
-| `0x004227e0` | `CCarverAI__OnHit` | `CCarver__OnHit` | class prefix moved; suffix unchanged |
+| `0x004227e0` | `CCarverAI__OnHit` | `CCarver__Hit` | July 28 corrected the class; September 27 identifies the shared Hit interface at slot 39. |
 | `0x00422820` | `CCarverAI__Fire` | `CCarver__FinishedPlayingCurrentAnimation` | July 28 changed the class prefix; September 26 identifies the animation-completion callback, superseding `Fire`. |
 | `0x00422910` | `CCarver__VFunc104_IsWingBlendAboveThreshold` | `CCarver__VFunc105_IsWingBlendAtOrBelowThreshold` | Same class; the predicate is **inverted** (`Above` to `AtOrBelow`). Any text written for the old sense is now wrong in direction, not just in name. The slot ordinal was corrected separately on 2026-08-17 (`104` to `105`); see the note below. |
 | `0x00422970` | `CCarverAI__CanStartAttack` | `CCarver__CanStartAttack` | class prefix moved; suffix unchanged |
@@ -106,7 +110,7 @@ Wave1129 (`wave1129-lifecycle-init-current-risk-review`) re-read and tag-normali
 | 0x00422750 | CCarver__Thunk_CallGuideVFunc08 | `void __fastcall CCarver__Thunk_CallGuideVFunc08(void * this)` | Wave945 recovered CCarver vtable slot 63 thunk; loads guide/controller pointer from `this+0x208` and tail-jumps guide vtable byte offset `+0x20` (slot 8). |
 | 0x00422760 | CCarverAI__OpenWings | `void __fastcall CCarverAI__OpenWings(void * this)` | Wing-open animation helper. |
 | 0x004227a0 | CCarverAI__CloseWings | `void __fastcall CCarverAI__CloseWings(void * this)` | Wing-close animation helper. |
-| 0x004227e0 | CCarver__OnHit | `void __thiscall CCarver__OnHit(void * this, void * otherThing, void * collisionReport)` | Hit override with explicit stack arguments. |
+| 0x004227e0 | CCarver__Hit | `void __thiscall CCarver__Hit(void * this, void * otherThing, void * collisionReport)` | Hit override with explicit stack arguments. |
 | 0x00422820 | CCarver__FinishedPlayingCurrentAnimation | `int __fastcall CCarver__FinishedPlayingCurrentAnimation(void * this)` | Animation-completion callback (primary slot 59); the earlier Fire identity is withdrawn. Runtime weapon behavior remains unproven. |
 | 0x004228b0 | CCarver__VFunc36_RenderWithFadeGlobal | `void __thiscall CCarver__VFunc36_RenderWithFadeGlobal(void * this, uint render_flags)` | Wave945 recovered CCarver vtable slot 36 render wrapper; compares `this+0x280` against `0x005d856c`, wraps `CThing__Render(this, render_flags | 0x40)` with global `0x0063012c`, and returns with `RET 0x4`. |
 | 0x00422910 | CCarver__VFunc105_IsWingBlendAtOrBelowThreshold | `int __fastcall CCarver__VFunc105_IsWingBlendAtOrBelowThreshold(void * this)` | Wave945 recovered CCarver vtable slot 105 predicate; compares `this+0x280` against `0x005d856c` and returns `1` on the above-threshold path or `0` otherwise. **The direction of that return sentence still reads for the withdrawn `Above` name and has not been re-measured; see the 2026-07-28 correction table above.** |
