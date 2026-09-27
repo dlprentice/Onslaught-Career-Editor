@@ -8601,3 +8601,54 @@ not promote the pending sound identities or establish audible acceptance.
 `npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
 passed across 4,186 candidate files; `git diff --check` passed. Logs are
 `direct-call-docs.log` and `direct-call-safety.log` in the same private owner.
+
+## Sound identity and comment audit — September 27
+
+The `sound-verified-20260927` comment/tag cohort retains 29 shared and 12 PC
+sound names. Complete pristine bodies cover 11,752 bytes / 3,885 instructions.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Pinned source commit: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+
+The first seal was rejected before live use. Independent review and root
+instruction checks corrected five inlined stop-sequence descriptions, the
+KillAllSamples backend flag (zero), and whole-DWORD versus normalized-DL wording.
+Its rehearsal, controls and seal remain under `sound-verified/rejected-v1/`.
+The final manifest is 169,820 bytes, SHA-256
+`f614617973c1c4153486fbe5b787327732ffd69ddfba8880edd3dafcd111bcac`.
+It preserves 23,740 old comment bytes as fallible leads within 86,153 new bytes;
+no raw executable bytes or decompiler output were published.
+
+Executed from the canonical checkout with the existing gate scripts under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-verified/`:
+
+- `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+  `compare_exports.py rehearsal-post`, `negative_controls.py`: PASS for the
+  corrected seal. Five wrong-comment/tag/specimen cases refused without project
+  byte changes. The PRE restoration and all nine exports match the prior state.
+- Independent exact-row reviews: GO for 29 shared and twelve PC rows, with root
+  reproduction. Saved interfaces, runtime devices and audible parity were not
+  certified by those identity reviews.
+- `apply_live.py`, `finish.py`, `verify_projection.py`: PASS. Exactly 41 comments
+  and tag sets changed; all names, prototypes, code, variables and 8,291 other
+  function records stayed unchanged. Nine live exports equal rehearsal; the
+  independently restored Archive A POST equals the working project. The tracked
+  checkpoint remains unchanged. All 8,332 production name entries match live.
+- The closeout retired only its two successful exact PRE/control and POST-open
+  twins, totaling 251,352,808 bytes. Both manifests and original receipts remain;
+  the changed rehearsal, rejected seal and all Archive A history remain. Exact
+  targets and preservation checks are appended to the migration deletion queue.
+
+Fresh execution logs are under
+`local-data/test-runs/re-audit-20260926/sound/verified-*`; the completed gate's
+`completion.json` and `projection-counts.json` hold exact identities/counts.
+Prepared follow-up leads in `sample-lookup-evidence-v1.json` and
+the shared/PC `*-interface-candidates-v1.json` packets are not promoted results. No new original-code,
+retail-device or audible run was made by this cohort; the earlier event-queue
+experiment retains its separately stated scope.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed all 94 cases
+against the final registered spec. `npm run test:docs` passed with zero drifted
+assertions; `npm run test:safety` passed across 4,188 candidate files.
+`git diff --check` passed. The refreshed UpdateStatus function note now meets the
+current provenance-header rule and has been removed from the legacy backlog.

@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (sound queue correction and direct-call evidence; broader audit remains)
+Last updated: 2026-09-27 (sound names/comments and direct-call evidence; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -108,8 +108,12 @@ altered-copy controls. Both nonempty paths preserve the active head; the flag
 selects insertion after the head or after the first negative-channel node/tail.
 Eight direct shared-to-PC call transports also pass the
 [source-call checker](../VALIDATION.md#direct-source-call-evidence--september-27),
-with seven invalid witness refusals. Sound-family Ghidra promotions and actual
-device/audible behavior remain separate work.
+with seven invalid witness refusals. The
+[41 kept sound names](ghidra/README.md#re-audit-verified-sound-records--september-27)
+now have reviewed live comments/tags, exact readback and independently restored
+recovery. The notes correct pause/frozen scope, effect lookup/RNG and backend
+volume semantics. The source-name corrections and saved ABI questions remain
+separate; actual device/audible behavior is not established.
 The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
 now corrects sixty names across shared movement, activation and combat interfaces,
 with independently bound retail callers, complete target bodies and all recognized

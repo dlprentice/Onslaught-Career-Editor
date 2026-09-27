@@ -1,7 +1,7 @@
 # `CPCSoundManager` DirectSound backend semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-26 (DeviceInit re-grounded; other measurements retain their dates)
+Last updated: 2026-09-27 (backend identities and stale sample-route/volume wording rechecked; older measurements retain their dates)
 Evidence: SOURCE — pinned `pcsoundmanager.cpp`/`.h` and the first-party GDC
 shared/platform architecture; MEASURED — complete pristine retail bodies,
 DirectSound calls, formats, tables, constants, and twenty normalized-identical
@@ -59,6 +59,53 @@ No DirectSound driver, playback, audible output or complete failure recovery
 was executed in this static recheck. A controlled copied-runtime observation
 of device selection, requested format and failure/retry is the remaining falsifier.
 
+## Backend identity and wording recheck — September 27
+
+Twelve complete bodies beyond DeviceInit were independently re-decoded and
+reviewed: 1,618 bytes / 531 instructions, including CPCSample's nondeleting
+destructor. The parent sound-family record is
+`local-data/test-runs/re-audit-20260926/sound/identity-evidence-v4.json`.
+These twelve kept names are part of the completed
+[41-row sound comment/tag cohort](../ghidra/README.md#re-audit-verified-sound-records--september-27).
+Exact live readback and independently restored recovery passed; saved interfaces
+were preserved without new certification.
+The [direct-call evidence](../../VALIDATION.md#direct-source-call-evidence--september-27)
+binds eight shared calls to their target, receiver and ordered arguments;
+complete-body/source inspection supplies the explicitly separate identity
+premises. These are static findings, not new device runs.
+
+- The stale sample-route statement below is corrected: original `00517290`
+  is the five-byte zero-return/RET8 stub reached by CreateSample's **file**
+  branch, matching the LoadNewSample role. Its nonnull stream branch reaches
+  `005172a0`. The pinned header instead supplies a null inline
+  LoadSampleFromBuffer implementation; that source version must not select
+  the retail name. The [September 22 contract](save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+  owns the earlier original-code checks; they were not rerun here.
+- Backend UpdateSound `00517ae0` reads event pre-distance volume `+0x64`,
+  not attenuated `+0x68`. Below -4000 it submits `3*v+8000`; velocity XYZ is
+  multiplied by 20. Its status-bit check is skipped for first-time or paused
+  events. Frequency gate byte `008964d0` is distinct from effect-randomization
+  gate `00896c58`. These gates do not by themselves identify device capabilities.
+- StopSound `005179b0` ignores its second argument. The 3D-buffer release is
+  inside the ordinary-buffer-nonnull branch, not unconditional. PlaySound
+  `00517790` sets the event playing byte without checking the final Play result.
+- UpdateGlobals `00517a20` constructs and submits a 64-byte listener descriptor;
+  the corresponding pinned source body is entirely commented out. The retail
+  descriptor uses zero position/velocity, front `(0,1,0)`, top `(0,0,-1)`,
+  distance/doppler 1 and a rolloff read from `0063e2ac`. This is not evidence
+  that the global remains at its initial approximately 0.7 value.
+- FindFreeChannel `00517cb0` reads its bound and buffer array through the
+  receiver, but reads active-event head from fixed `00896994`. A hypothetical
+  second manager instance therefore cannot be modeled with only its own list.
+- GetSampleLength `00517c60` returns through ST0/RET4. Source float-member
+  versus saved double-stdcall remains unresolved: an unused incoming ECX and
+  x87 result alone cannot settle either source type or calling convention.
+
+Device opening, real HRESULT behavior, mixer output and audible parity remain
+open. Use owned COM objects to falsify call ordering/arguments before any live
+device experiment; preserve the distinction between those tests and hearing
+the complete game.
+
 ## Dated August 11 comparison
 
 These twenty functions cover 4,311 retail bytes and 1,402 decoded
@@ -104,8 +151,8 @@ unused index.
 
 ## Production sample pipeline
 
-The retained PC `LoadSampleFromBuffer` path is genuinely a two-argument null
-stub in retail and demo. Production compressed-bank loading instead passes a
+The retail file-loading route `00517290` is a two-argument null stub, corresponding
+to LoadNewSample as rechecked above. Production compressed-bank loading passes a
 serialized sample record to `0x005172A0`: read compressed byte count, allocate
 or refresh a `0x84`-byte PC sample, read ADPCM, create and lock a secondary
 buffer, decode to PCM16, convert to the selected output quality, unlock, and
@@ -134,16 +181,18 @@ length is decoded bytes divided by the selected rate and two bytes per sample.
 `PlaySound` computes authored start/end sample offsets, duplicates the sample's
 DirectSound buffer into the assigned channel, obtains its 3D buffer interface,
 seeds position/volume/frequency, seeks, starts with the event loop flag, and
-marks the shared event playing. Pause stops without releasing; unpause calls
-Play again with the loop flag; full stop releases and nulls both ordinary and
-3D buffer slots. The retained `blockuntilstopped` argument has no observed
+marks the shared event playing without testing the final Play result. Pause
+stops without releasing; unpause calls Play again with the loop flag. Full stop
+releases/nulls the ordinary buffer and, within that nonnull branch, the 3D buffer.
+The retained `blockuntilstopped` argument has no observed
 branch in the PC stop body.
 
 Global updates submit a neutral listener transform plus distance/doppler state
 with deferred application. Per-event updates submit position and velocity to
-the 3D buffer, combine shared attenuation with backend rolloff, set DirectSound
-volume, update playback frequency only when continuous-rate support was
-reported, and detect a channel whose play/loop status has ended. `UpdatesDone`
+the 3D buffer, use the shared pre-distance volume field for DirectSound volume,
+and update frequency when byte `008964d0` permits. A non-first-time, unpaused
+event also gets a playback-status check. These branches do not establish actual
+audible attenuation or the meaning of every capability flag. `UpdatesDone`
 commits all deferred listener settings once per shared-manager update.
 
 ## Architecture conclusion and boundary
