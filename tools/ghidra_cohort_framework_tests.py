@@ -292,6 +292,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Cleanup bodies:43 existing names retained; comments/tags only, exact code/ABI preservation.
 # CPostEventData: one cleanup name/comment/tag correction; ABI and code unchanged.
 # Console menu: twelve inherited interface names/comments/tags; ABI and code unchanged.
+# Console kept names: nine comments/tag sets only; all names, ABI and code unchanged.
+# Vertex menu: one physical argument interface corrected; return storage/name/code preserved.
+# Music: ten names/comments/tag sets; interfaces, thunk targets and code unchanged.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -367,6 +370,9 @@ LIVE_GRANTED_COHORTS = [
     "cleanup-body-verified-20260927",
     "postevent-cleanup-20260927",
     "console-menu-identities-20260927",
+    "console-menu-verified-20260927",
+    "vertex-menu-abi-20260927",
+    "music-identities-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -848,6 +854,9 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "cleanup-body-verified-20260927",\n'
         '        "postevent-cleanup-20260927",\n'
         '        "console-menu-identities-20260927",\n'
+        '        "console-menu-verified-20260927",\n'
+        '        "vertex-menu-abi-20260927",\n'
+        '        "music-identities-20260927",\n'
         "    };\n",
     ),
     (

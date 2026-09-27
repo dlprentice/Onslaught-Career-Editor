@@ -8154,3 +8154,128 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-identities/`.
 Proof, failed/passing logs and original-code experiments:
 `local-data/test-runs/re-audit-20260926/console-menu/`.
+
+
+## RE verified console-menu names — September 27
+
+`console-menu-verified-20260927` records bounded interface-identity proof for nine
+existing names. Only comments/tags change: all 758 body bytes / 257 instructions,
+names, interfaces, locals, types and 8,323 other functions remain unchanged. All
+5,027 bytes of inherited notes remain explicitly fallible leads. Historical
+signature/wave tags do not certify complete ABI or behavior.
+
+Fresh PRE restoration, rehearsal/separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal; the program comment digest is the only changed program metric.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+The projection matches all 8,332 live entries: 2,054 unique corrected names,
+369 additional kept, zero newly neutralized and 5,909 outside those sets.
+Prototype corrections remain 52; corrected comments total 2,436 unique functions.
+These are audit dispositions, not semantic or gameplay-completion percentages.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-verified/`.
+Execution logs use `kept-` under
+`local-data/test-runs/re-audit-20260926/console-menu/`.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` and `git diff --check` passed.
+
+
+## RE vertex-menu argument interface — September 27
+
+`vertex-menu-abi-20260927` corrects 00503ef0 from a zero-argument stdcall to
+automatic ECX receiver plus index at Stack[4] and output buffer at Stack[8].
+The complete `undefined`/`<UNASSIGNED>` return row, name, 146 body bytes / 47
+instructions, stack purge, locals, types and 8,331 non-target functions remain
+unchanged. The target signature source changes from ANALYSIS to USER_DEFINED.
+The initial exact comparator rejected that expected provenance transition;
+its target-specific expectation was corrected without altering the sealed payload.
+
+Fresh PRE restoration, rehearsal/separate/sealed readbacks, seven byte-stable
+refusal controls, exact independent review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal. `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+The name projection matches all 8,332 entries; names remain 2,054 corrected,
+369 additionally kept and 5,909 outside those sets. Prototype corrections become
+53; updated comments remain 2,436 unique functions.
+
+The previously recorded 23-case original-code run and two altered-copy controls
+were independently reviewed, not rerun for this promotion. Formatting and
+shader-text calls remain hooks. The two output-boundary guards do not cover
+all writes; Linux probe execution does not establish Windows guard-page behavior.
+No real menu, graphics, audio or player acceptance is claimed.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/vertex-menu-abi/`.
+Execution logs use `vertex-abi-` under
+`local-data/test-runs/re-audit-20260926/console-menu/`.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,172 candidate files. `git diff --check` passed.
+
+
+## RE source-graph entry decoding — September 27
+
+`tools/re_source_graph.py` now extracts local calls, return cleanup and byte
+counts from complete entry-seeded decoding of selected pristine bodies. The
+whole-image linear cache began at 004bba12 after preceding switch data, omitting
+SetVolume's actual 004bba10 entry. Fresh decoding gives 65 bytes / 17 instructions,
+CALL 004bba3d to 00441740 and RET4. The body SHA-256 is
+`0f88e91799dc179cfaecd7e5327a66d447f37968eb335324c342b3ab89cf6303`.
+
+Exact entries, unique exported rows and nonoverlapping complete extents are
+required. Inconsistent extents or undecodable/truncated bytes are rejected.
+A valid linear decode still does not prove CFG reachability or distinguish
+plausibly decodable embedded data. Source identity and reviewed semantic
+correspondence remain separate; three matching direct edges are not a complete
+music audit. No Ghidra or game mutation is part of this tooling correction.
+
+`python -m unittest tools.re_source_graph_tests`: 21 tests passed, including
+missing cached calls, interior/missing entries, duplicate/overlapping exports,
+inconsistent extents and truncated instructions. Independent read-only review
+checked the updated diff and freshly reproduced the selected retail body.
+The actual CLI `check` against the eleven-entry music map and current live export
+reports three checked direct edges and zero contradictions. Evidence and command
+results are `local-data/test-runs/re-audit-20260926/music/source-map.tsv`,
+`source-graph-v2.json`, `source-graph-v2.log` and `entry-decode-tests-v2.log`.
+
+
+## RE music identity promotion — September 27
+
+`music-identities-20260927` corrects ten shared/device music names from complete
+retail bodies, pinned source, fresh RTTI, singleton installation and concrete
+virtual calls. Eight old notes (5,848 bytes) remain explicitly fallible leads;
+two targets gain first comments. All 543 code bytes / 184 instructions, saved
+interfaces, variables, locals, types, two thunk links and 8,322 other function
+records are unchanged. No old tags were removed.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live
+readback and independent POST restoration passed. All nine live exports equal
+rehearsal. The complete source packet retains its actual earlier export pin;
+`report-pre-binding.json` proves only the intervening vertex argument row differs
+and all eighteen music rows are unchanged. The projection matches all 8,332
+live entries: 2,064 unique corrected names, 369 additional kept, zero newly
+neutralized, 5,899 outside those sets, 53 corrected interfaces and 2,446 comments.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/music-identities/`.
+Logs and fresh body evidence:
+`local-data/test-runs/re-audit-20260926/music/identities-*` and
+`fresh-evidence-v1.json`. The cohort framework suite passes 94 tests.
+
+The fresh static work confirms previously documented OGG/source divergence and
+configured-volume behavior. Older demo and original-code runs were not rerun.
+Complete device ABI, worker timing, filesystem and audible acceptance remain open;
+eight kept shared names await separate live comment disposition. No Godot ran.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,174 candidate files. `git diff --check` passed.

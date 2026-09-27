@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[console-menu identities](#re-audit-console-menu-identities--september-27);
+[music identities](#re-audit-music-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,96 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit music identities — September 27
+
+The [ten-row manifest](../../tools/cohort-specs/music-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/music-identities-20260927.spec.tsv) correct music source/interface
+identities in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Ten music names corrected: the shared Initialise, DeviceChangeTrack and AddDirectoryToPlaylist identities, plus seven PC device adapter roles. All 543 body bytes / 184 instructions, signatures apart from their name text, variables, locals, types and 8,322 other function records are preserved. The two direct-tail entries remain thunks to their unchanged destinations. Eight old notes (5,848 bytes) remain explicitly fallible leads; two targets gain their first comments. The shared DeviceChangeTrack implementation is named for CMusic, separately from its CPCMusic table holder.
+
+Fresh complete bodies, nine base declarations, raw fixed-primary CPCMusic-to-CMusic RTTI, singleton installation and shared-body dispatch sites corroborate every selected slot. Shared-source bodies and the Music.cpp allocation anchor independently bind the surrounding subsystem. Pinned PC source differs: the retail directory wrapper requests OGG once, initialization omits the source console-registration block, and volume uses linear float times127 plus x87 integer conversion rather than the tangent expression. The metadata correction rechecks previously documented facts; the August11 demo comparison and September20 isolated execution are not rerun here. Eight additional kept-name comments remain a separate cohort. Shared slot8 is excluded; missing PCMusic source, complete interfaces, filesystem outcomes, worker scheduling, device and audible acceptance remain open. No old tags were removed; previous groupings remain explicitly historical.
+
+The existing [shared-music](../binary-analysis/cmusic-shared-semantics-2026-08-11.md)
+and [device-interface](../binary-analysis/cpcmusic-vtable-semantics-2026-08-11.md)
+owners retain the prior experiments and their limits. The source graph checks
+three direct edges among eleven mapped shared functions with zero contradictions;
+that sparse graph alone cannot distinguish Play from DeviceChangeTrack.
+Fresh entry decoding corrects the analysis tool's cached switch-table spill
+at SetVolume; this is not evidence of a saved Ghidra boundary defect there.
+
+The source/body packet honestly pins the previous kept-menu export. Full-table
+comparison with this freshly restored PRE finds only the intervening vertex
+argument row changed; all eighteen music rows are identical. The private
+`report-pre-binding.json` records both hashes and that bounded correspondence.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports equal
+rehearsal; only comment-count/digest program metrics change.
+
+Working identity: `db.18700`, 18 files / 124,783,476 bytes,
+inventory SHA-256 `3a4413ec43c3a6cd76241fad7a4c5f853bef9bb36e2b2dde678f17c88fadcace`; main database 74,481,664 bytes,
+SHA-256 `50e71c9ffd385ceb69a41f50bea2a6e2cedff3a6c249e5eace3f67dc196fdd11`. Restored vertex-menu argument POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-music-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/music-identities/`; fresh evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/music/`.
+
+## RE-audit vertex-menu argument interface — September 27
+
+The [one-row manifest](../../tools/cohort-specs/vertex-menu-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/vertex-menu-abi-20260927.spec.tsv) correct parameter/convention
+metadata in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One vertex-menu argument interface, comment and tag set corrected: 00503ef0 now takes automatic ECX this, an integer index at Stack[4] and an output character buffer at Stack[8]. Both exits physically RET8. Saved undefined return type and unassigned return storage remain unchanged, as do all names, 146 code bytes / 47 instructions, locals, types and 8,331 other function records. Signature source changes from analysis to user-defined. Old notes and tags remain historical leads rather than complete certification.
+
+Fresh complete instruction and stack analysis agrees with 23 isolated original-code cases (16 GetEntry and seven stack-probe sizes) plus two altered-copy controls. The actual __chkstk body preserves original ECX and reserves 4096 bytes; the selected-body stack argument references resolve to entry ESP+4/+8. RET8 and the receiver+0x14 branch are independently falsified by disposable ELF changes. Formatting/shader-text callees are hooks; the hook EAX is incidental and no meaningful returned-value API is established. Output guards cover boundary words, not all writes; no invalid-list, real formatting, Windows guard-page, graphics, player or audible acceptance is claimed. No independent receiver-bound indirect callsite was recovered. Evidence: local-data/test-runs/re-audit-20260926/console-menu/vertex-t4bw7ii_/receipt.json.
+
+The initial exact export comparator rejected the expected signature-source
+transition from ANALYSIS to USER_DEFINED; its target-specific expectation was
+corrected without changing the sealed payload or rerunning the mutation.
+Independent review and root reproduction checked the exact payload and the
+retained original-code harness. Fresh PRE restoration, rehearsal, separate/sealed
+readbacks, seven byte-stable refusal controls, live readback and independently
+restored Archive A POST passed. All nine live exports equal rehearsal; only
+the program comment digest changes. No names are added to audit dispositions.
+
+Working identity: `db.18699`, 18 files / 124,750,708 bytes,
+inventory SHA-256 `05e9215ced568c00cd20c289c2570951dacb82b52a1c21dca23cf70bbc3db0c6`; main database 74,448,896 bytes,
+SHA-256 `16db4e1a18b4d4df6ea03973a4639ac7309970d142a0e49f552005c5f819404b`. Restored verified-console-menu POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-vertex-menu-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/vertex-menu-abi/`; evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/console-menu/`.
+
+## RE-audit verified console-menu names — September 27
+
+The [nine-row comment manifest](../../tools/cohort-specs/console-menu-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/console-menu-verified-20260927.spec.tsv) record bounded verification of existing interface names
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Nine existing console-menu callback names are verified within inherited-interface identity limits; only comments and tags change. All names, 758 body bytes, 257 instructions, saved interfaces, locals, types and 8,323 other function rows are unchanged. All 5,027 old comment bytes are retained as explicitly fallible historical leads. Old recovery/signature tags are historical provenance, not certification of complete current types or behavior.
+
+Complete source overrides and fresh retail bodies establish GetName, GetNumEntries, GetEntry and OnClick roles. Seven table-specific raw RTTI chains, inherited abstract-prefix/concrete-suffix continuity, two same-object base/derived constructions, exact physical cleanup and all-holder agreement support propagation. Saved labels are not proof inputs; the missing CConsoleMenu header is not invented. The ordinary VC6 slot-continuity premise is explicit. The real click consumer confirms slot1 count then signed-upper-bound selection to slot3, without a nonnegative guard. Folded stubs and unanchored slots remain withheld. The GetShowSubmenus declaration order differs from its retail slot4. Source-exact implementation ownership, complete ABI, correct behavior and runtime acceptance remain open. In particular VertexShader GetEntry at00503ef0 retains an incomplete zero-argument stdcall signature; its consumed ECX and two stack arguments are a separately recorded physical-interface correction.
+
+Independent review and root reproduction checked the exact payload. Tool review
+first reproduced conditional-source, macro, numeric-address, partial-register and
+aggregated-RTTI counterexamples; the corrected evidence suite passes 164 tests.
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only the program comment digest
+changes. Together with the prior twelve renames, all 21 admitted interface identities
+have current bounded evidence; shared/conflicting targets remain withheld.
+
+Working identity: `db.18698`, 18 files / 124,734,324 bytes,
+inventory SHA-256 `0a53d52e240e63a1350aa6738191328a292706bf40bcc8815dbfe10012a8a97a`; main database 74,432,512 bytes,
+SHA-256 `9261cc8eb95fd5a2505fa63fa46bb03f1e9adc649888d977e3c79187c8a7125e`. Restored console-menu identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-console-menu-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-verified/`; proof, tests and execution logs:
+`local-data/test-runs/re-audit-20260926/console-menu/`.
 
 ## RE-audit console-menu identities — September 27
 
