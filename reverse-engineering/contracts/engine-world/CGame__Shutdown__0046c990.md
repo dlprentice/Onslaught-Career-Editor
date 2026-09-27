@@ -1,7 +1,7 @@
 # CGame__Shutdown
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-26 (Engine callee identity; earlier packet evidence retains its date)
 Summary: specimen-bound static contract for `CGame__Shutdown` at `0x0046c990`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -16,6 +16,11 @@ Source File: references/Onslaught/game.cpp | Binary: BEA.exe, SHA-256 `74154bfae
 - Campaign grade `C1_CANDIDATE_PARTIAL` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `HIGH`. Proposed promotion: false.
 
 ## Calling convention
+The September 26 [interface correction](../../ghidra/README.md#re-audit-header-interface-identities--september-26)
+updates the callee at `0x0053d3e0` to case-distinct `CDXEngine::ShutDown`,
+derived slot 3. It does not re-certify this caller's packet-derived ABI or
+remaining behavioral claims.
+
 Packet records `__fastcall` for `void __fastcall CGame__Shutdown(void * this)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
 
 ## Prototype and parameter semantics
@@ -47,7 +52,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Callee `CTexture__FreeLevelResources` `0x004f2b40` ×1 site(s) (STATIC_DIRECT).
 - Callee `CWaypoint__CleanupEndLevelVBufTextures` `0x00501360` ×1 site(s) (STATIC_DIRECT).
 - Callee `CEngine__SetRenderStateCached` `0x00513a50` ×1 site(s) (STATIC_DIRECT).
-- Callee `CDXEngine__Shutdown` `0x0053d3e0` ×1 site(s) (STATIC_DIRECT).
+- Callee `CDXEngine__ShutDown` `0x0053d3e0` ×1 site(s) (STATIC_DIRECT).
 - Callee `CDXImposter__ShutdownAll` `0x00542990` ×1 site(s) (STATIC_DIRECT).
 - Callee `MEM_MANAGER__Cleanup` `0x00549270` ×1 site(s) (STATIC_DIRECT).
 - Callee `DXParticleTexture__DestroyAll` `0x0054fee0` ×1 site(s) (STATIC_DIRECT).

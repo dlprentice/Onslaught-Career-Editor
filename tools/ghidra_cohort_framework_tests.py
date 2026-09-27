@@ -257,6 +257,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # prototypes, bodies, storage and all non-target rows remain frozen.
 # Verified Thing virtual identities: 65 existing names kept, comments/tags only;
 # five stale claims corrected or qualified, with all names/ABI/bodies preserved.
+# Header interface identities: 16 initializer/engine names/comments/tags;
+# reviewed header/RTTI anchors and complete pristine bodies; no ABI/body changes.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -305,6 +307,7 @@ LIVE_GRANTED_COHORTS = [
     "cockpit-shake-abi-20260926",
     "thing-virtual-identities-20260926",
     "thing-virtual-verified-20260926",
+    "header-interface-identities-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -759,6 +762,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "cockpit-shake-abi-20260926",\n'
         '        "thing-virtual-identities-20260926",\n'
         '        "thing-virtual-verified-20260926",\n'
+        '        "header-interface-identities-20260926",\n'
         "    };\n",
     ),
     (

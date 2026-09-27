@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: 205 virtual identities corrected and 65 kept-name comments reviewed; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: initializer/engine identities and original copy/load contracts added; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -372,25 +372,54 @@ restored Archive A POST passed. The 65 targets add 63 unique kept-name
 dispositions; two were already counted as corrected by the third label cohort.
 The 28 unresolved targets remain outside the completed counts.
 The separate complete-header route requires exact slot counts and unambiguous
-single inheritance. It currently aligns 26 classes / 64 distinct targets but
-has not promoted them. Missing macro/base definitions, conditional declarations
+single inheritance. Its 26-class / 64-target candidate report yielded the
+selected InitThing/Engine interfaces below; candidates outside the declared
+cohort remain unpromoted. Missing macro/base definitions, conditional declarations
 and overload ordering remain exclusions; CThing's missing interface headers
 are bridged only by individually established slot anchors. Controller layouts
 with 15 source slots versus 18 retail slots remain unresolved.
 
-The tools have 55 passing focused tests, including adverse decoding, backward
-tail-branch and argument-width cases; the cohort framework has 93 passing tests.
+The tools now have 57 passing focused tests, including adverse decoding,
+backward tail-branch, argument-width and unsupported-ABI cases; the cohort
+framework has 93 passing tests.
 The accepted report is `local-data/test-runs/re-audit-20260926/step3-shake-post/vtables-v6.json`;
 the full gate is under `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-identities/`.
 Twenty-one existing notes had current identity assertions refreshed; their
 remaining semantics and saved prototypes are not thereby audited. This refresh
 also corrected Sentinel's misidentified table starts and shifted slot numbers.
 
-Next extend the same evidence across further interface families. The read-only
-complete-header review identifies InitThing Copy/Load and Engine methods as
-the next coherent candidates, with concrete field/version/string witnesses;
-root reproduction and exact cohort admission remain required. Camera candidates
-need explicit aggregate-return, deleting-destructor and folded-alias handling.
+The [header-interface cohort](reverse-engineering/ghidra/README.md#re-audit-header-interface-identities--september-26)
+now promotes **16 names/comments/tag sets**: 15 initializer Copy/Load identities
+and case-distinct `CDXEngine::ShutDown`. Seven source/byte anchors, all 27 known
+RTTI uses and complete target instruction bodies were reviewed. Five kept
+Engine names and the shared Sphere/Unit Copy body were not changed. Four draft
+comment errors were caught, preserved under `rejected-v1/`, corrected and
+resealed before live application. Exact live/rehearsal equality, five no-write
+refusals and independently restored Archive A POST passed. All 8,331 projected
+names match the live readback; the tracked checkpoint remains unchanged.
+
+The [initializer contract](reverse-engineering/game-mechanics/world-initializer-copy-load.md)
+is backed by 64 isolated original Copy cases and 1,288 original-loader cases
+(1,072 distinct loader inputs) using an authored full-read interceptor. It
+separates selective copies, Squad overloads, versioned reads, untouched fields
+and signed-byte string wrap. Spawner loading remains static; original-reader
+short/zero reads, constructor defaults and full-game loading remain untested.
+The private copy/load receipts are under
+`local-data/test-runs/re-audit-20260926/initializer-copy/` and `initializer-load/`.
+
+ABI admission now withholds unknown source widths and destructor entry kinds;
+a purecall seed's `RET` is no longer an inferred interface convention. The older
+Thing-family `SetAnimMode` and `GoToPoint` identities retain independent manual
+call-site evidence: `0x004f450b` through `0x004f4511` forwards three DWORDs;
+`0x00534f00` through `0x00534f1c` supplies a 16-byte vector plus a BOOL to
+slot 61. The stricter automated route awaits pinned parameter-width witnesses
+for those unknown source types. It does not establish a new prototype audit.
+
+Next review the five kept Engine comments and reproduce the Controller
+source/retail slot differences, using explicit independently witnessed slots
+where the complete header layout differs. Camera candidates need explicit
+aggregate-return, deleting-destructor and folded-alias handling. Follow up the
+loader contract with original-reader short/zero reads and the inlined Spawner.
 Re-derive unresolved cases where the evidence can support a whole family, and
 neutralize nothing merely for missing tool support. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
@@ -426,18 +455,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the Thing-family kept-name review (September 26).**
+**Running coverage after the header-interface correction (September 26).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,825 unique functions; 1,826 rename rows include one repeated correction. |
+| Names corrected | 1,841 unique functions; 1,842 rename rows include one repeated correction. |
 | Names verified and kept | 126 additional functions: 62 library/import identities, Damage and 63 newly verified virtual identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,380 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,364 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 1,955 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 1,971 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted `tools/cohort-specs/*-20260926.manifest.tsv`, the final

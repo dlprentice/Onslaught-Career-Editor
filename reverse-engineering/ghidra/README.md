@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified Thing-family identities](#re-audit-verified-thing-family-identities--september-26);
+[header interface identities](#re-audit-header-interface-identities--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,45 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit header interface identities — September 26
+
+The [manifest](../../tools/cohort-specs/header-interface-identities-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/header-interface-identities-20260926.spec.tsv) correct 16 identities:
+15 initializer Copy/Load bodies and `CDXEngine::ShutDown`. Seven independently
+reviewed source/byte anchors establish the interfaces; all 27 known target uses
+across 15 RTTI tables agree. The admitted report has five additional kept Engine
+names and a shared Sphere/Unit Copy body; those six targets are not mutated here.
+Saved names are not alignment inputs. All 2,045 target instruction rows match
+pristine bytes. Slot, alias, source-width and complete-body checks passed.
+
+The case-distinct `ShutDown` appends Engine slot 3 rather than overriding base
+`Shutdown` in slot 0. The old slot-2 tag is corrected. Squad's typed Copy has
+slot 2; its base-pointer overload in slot 0 omits Squad-specific fields.
+The [initializer contract](../game-mechanics/world-initializer-copy-load.md)
+records selective copies, version-dependent loads and signed-byte string loops.
+Eight unchanged original Copy bodies separately passed 64 isolated cases;
+that experiment does not execute loaders or establish complete game loading.
+
+The first seal is retained under `rejected-v1/`. Independent review rejected
+four draft comments: the old base Load arm reads no strings, Start fields are
+plane mode/player number, and Wall Copy/Load handle a wall-type string. Root
+reproduced every correction. The replacement seal passed fresh PRE restoration,
+rehearsal, separate and sealed readback, five byte-stable refusal controls and
+independent exact-payload review. No rejected comment reached the live project.
+
+Exactly 16 function names, nonrepeatable comments and tag sets corrected: 15 initializer Copy/Load identities and case-distinct CDXEngine::ShutDown. Seven source/byte anchors establish the interfaces; every known RTTI use and owner is checked. Every prototype, storage, parameter, local, type, bookmark, instruction and body and all 8,315 non-target function rows are preserved. Earlier names and notes remain fallible leads. Program comment count increases by 2; only that metric and
+`commentsSha256` change. All nine live exports equal separately reopened
+rehearsal. Live readback and independently restored Archive A POST passed.
+No checkpoint refresh, prototype certification or retail runtime launch occurred.
+The evidence tool now withholds unknown source cleanup and destructor entry
+kinds; it cannot borrow a purecall seed's return cleanup as an ABI proof.
+
+Working identity: `db.18671`, 18 files / 122,276,724 bytes,
+inventory SHA-256 `829ef9cee960b6d43cf404dd24c1c4e36355f65629ddbe3815f48d476296a285`; main database 71,974,912 bytes,
+SHA-256 `a686cbc760cc5754575b05e76c7f0bf6be0060aa65d6c082d02dc9c95b99500e`. PRE is the restored verified-Thing POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-header-interface-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/header-interface-identities/`.
 
 ## RE-audit verified Thing-family identities — September 26
 

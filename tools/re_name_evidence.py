@@ -1157,11 +1157,16 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
             sf=SourceFunc(method.owner+'::'+method.name,method.file,method.line,'',[],[],
                           args=', '.join(method.parameters),head=method.head)
             n=G.expected_pop(G.Source({},set(),set()),sf)
-            if n is None:
-                measured, unknown=pops(int(a['target'],16))
-                if unknown or len(measured)!=1:
-                    issues.append('seed cleanup is unresolved')
-                expected.update(measured)
+            if method.name.startswith('~'):
+                # An ordinary source destructor does not describe the compiler's
+                # deleting entry (flag, optional deallocation, adjusted this).
+                # Keep these out until a separately witnessed entry kind exists.
+                issues.append('destructor entry kind needs an independent ABI witness')
+            elif n is None:
+                # A purecall/abort seed can end in RET without implementing the
+                # interface. Its cleanup cannot prove an aggregate's hidden
+                # result argument, even when descendants happen to agree.
+                issues.append('source interface cleanup needs an independent ABI witness')
             else:
                 expected.add(n)
         actual, unknown=pops(target)

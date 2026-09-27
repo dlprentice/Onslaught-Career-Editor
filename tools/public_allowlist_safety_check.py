@@ -227,7 +227,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (109,294/332,698 decoded bytes); source/RTTI proofs and marked historical leads.
 # Verified Thing virtual identities: 65 current/65 proposed analytic comments
 # (36,186/109,949 decoded bytes); static identity evidence and qualified older leads.
+# Header interface identities: 14 current/16 proposed analytic comments
+# (11,474/36,028 decoded bytes); bounded source/RTTI/body evidence and old leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/header-interface-identities-20260926.manifest.tsv":
+        "1d69f0b76974d06ece27b6270e779bf991296ff3bd699af6a29da4c6ee42fc8a",
     "tools/cohort-specs/thing-virtual-verified-20260926.manifest.tsv":
         "0223080a54241030cd083172a94ebd77f09585a22e603b2ea3b788c4cdb6ce88",
     "tools/cohort-specs/thing-virtual-identities-20260926.manifest.tsv":

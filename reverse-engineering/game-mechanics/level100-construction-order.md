@@ -357,8 +357,10 @@ Tanks and row 40 the Air Trainer, so two warm-ups remain:
 ## Allegiance at construction
 
 A unit's allegiance `+0x138` is its initializer's `+0xa0`, copied by `CUnit::Init`
-at `0x004f8fba`. For a world row `CInitThing::LoadFromMemBuffer` (`0x0040e280`)
-reads it from the row, after the mesh number. `onsldef.msl` names 0 friendly,
+at `0x004f8fba`. For a world row `CInitThing::Load` (`0x0040e280`)
+reads it from the row, after the mesh number. The September 26
+[initializer recheck](world-initializer-copy-load.md) separates versioned reads,
+selective copies and fields left unchanged. `onsldef.msl` names 0 friendly,
 1 enemy and 2 neutral.
 - The physics file's `CUnitAlligence` is parsed, but its apply slot is the shared
   no-op `0x004014c0` (vtable `0x005d9d28` slot 1), so profiles never set it.

@@ -381,6 +381,42 @@ class HeaderVtableTests(unittest.TestCase):
         report=E.vtable_abi_admission(prog,classes,anchors,E.propagate_vtable_anchors(prog,classes,anchors))
         self.assertEqual([r['status'] for r in report['rows']],['withheld']*2)
 
+    def test_aggregate_cleanup_cannot_be_inferred_from_a_stub_or_matching_returns(self):
+        # A RET-only seed may be purecall glue, not an implementation of the
+        # source's hidden-result interface. Neither matching nor differing
+        # descendant cleanup establishes that convention.
+        for seed_pop, child_pop in [(0, 0), (0, 4), (4, 4)]:
+            with self.subTest(seed=seed_pop, child=child_pop):
+                _,prog,anchors=self.fixture()
+                classes=self.parse('class Base { virtual FVector Run(); };\n'
+                                   'class Child : public Base {};\n')
+                def body(fn):
+                    n=seed_pop if fn.va==0x401000 else child_pop
+                    return [E.Insn(fn.va,3 if n else 1,'ret',hex(n) if n else '')]
+                for fn in prog.funcs: fn.hi=fn.va+body(fn)[0].size-1
+                prog.body=body
+                report=E.vtable_abi_admission(prog,classes,anchors,
+                    E.propagate_vtable_anchors(prog,classes,anchors))
+                self.assertEqual([r['status'] for r in report['rows']],['withheld']*2)
+                self.assertTrue(all('source interface cleanup needs an independent ABI witness'
+                                    in r['flags'] for r in report['rows']))
+
+    def test_destructor_source_does_not_certify_a_deleting_entry(self):
+        for cleanup in (0, 4):
+            with self.subTest(cleanup=cleanup):
+                _,prog,anchors=self.fixture()
+                classes=self.parse('class Base { virtual ~Base() {} };\n'
+                                   'class Child : public Base {};\n')
+                anchors['anchors'][0]['method']='~Base'
+                for fn in prog.funcs: fn.hi=fn.va+(2 if cleanup else 0)
+                prog.body=lambda fn:[E.Insn(fn.va,3 if cleanup else 1,
+                                          'ret',hex(cleanup) if cleanup else '')]
+                report=E.vtable_abi_admission(prog,classes,anchors,
+                    E.propagate_vtable_anchors(prog,classes,anchors))
+                self.assertEqual([r['status'] for r in report['rows']],['withheld']*2)
+                self.assertTrue(all('destructor entry kind needs an independent ABI witness'
+                                    in r['flags'] for r in report['rows']))
+
     def test_batch_constant_control_uses_actual_override_not_base_default(self):
         classes,prog,anchors=self.fixture()
         classes['Base'].methods[0].body='return TRUE;'
