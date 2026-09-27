@@ -39,7 +39,8 @@ For valid backing pointers and pool state, the normal-path composition is:
 This is a static composition of the complete caller with independently executed
 container code. The [original list experiment](../../../../VALIDATION.md#original-pointer-list-operations--september-27)
 ran unchanged copy, assignment, Append, Contains and RemoveAll bodies in 42 cases
-and two altered-copy controls. A null-first list copied as empty; a middle null
+and two altered-code controls: copy-through-null and search-through-null.
+A null-first list copied as empty; a middle null
 truncated the copy. It did **not** execute this career caller, Windows exception
 handling, a real save or an authored campaign graph.
 

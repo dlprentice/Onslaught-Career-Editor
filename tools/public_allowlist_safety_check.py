@@ -280,7 +280,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Thing gameplay ABI: 32 old/authored notes (83,744/128,922 bytes); old notes remain leads.
 # Music verified: eight old/authored notes (3,624/17,063 bytes); old notes remain leads.
 # GenericSPtrSet forwarder: one old/authored note (616/1,964 bytes); old note retained as a lead.
+# GenericSPtrSet identities: fourteen old/authored notes (4,707/26,635 bytes); old notes retained as leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/sptrset-identities-20260927.manifest.tsv":
+        "9ce5e7d3871208383f3d85397bbf7ca40bb3f315e756dc33484d4ac7908f22ed",
     "tools/cohort-specs/sptrset-forwarder-20260927.manifest.tsv":
         "c908006dda77b5af235ee112124212708f9d91813b7d5465cabcb05c6e843e55",
     "tools/cohort-specs/music-verified-20260927.manifest.tsv":

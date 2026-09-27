@@ -6,6 +6,12 @@ Status: retired evidence; current byte owners are linked below
 Last updated: 2026-09-27 (current listener/cleanup identities linked; historical rows preserved)
 Summary: preserved script-event mapping history, superseded for current byte contracts.
 
+The September 27 [container identity correction](../../ghidra/README.md#re-audit-genericsptrset-identities--september-27)
+resolves the historical list rows below as `GenericSPtrSet__Remove` and
+`GenericSPtrSet__RemoveAll`; their retired packet wording remains unchanged.
+<!-- ghidra-name-drift-accepted: 0x004e5bd0 GenericSPtrSet__Remove (2026-09-27) -->
+<!-- ghidra-name-drift-accepted: 0x004e5c60 GenericSPtrSet__RemoveAll (2026-09-27) -->
+
 The retained `CConsole__Printf` label at `0x00441740` now resolves to
 `CDebugLog__Printf`; see [the current logger contract](string-helpers.md#debug-log-ownership-and-history--september-19).
 Its older table and pseudocode below remain historical evidence.

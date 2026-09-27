@@ -84,7 +84,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsEpisodeAvail
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsWorldLater.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Later.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__NodeArrayAt.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__ReCalcLinks.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F4.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F8.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlot.md

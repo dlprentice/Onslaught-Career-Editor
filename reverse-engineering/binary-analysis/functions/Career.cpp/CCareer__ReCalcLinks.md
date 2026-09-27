@@ -1,13 +1,33 @@
 # CCareer__ReCalcLinks
 
+Status: active — container traversal rechecked; remaining progression policy is a retained lead
+Last updated: 2026-09-27
+Summary: progression traverses the returned child-link prefix, not unconditionally both slots.
+Source File: references/Onslaught/Career.cpp | Binary: BEA.exe (pristine specimen below)
+
 > Address: `0x0041bdf0`
 >
 > Source: `references/Onslaught/Career.cpp` (`CCareer::ReCalcLinks()`)
 
-## Status
-- **Named in Ghidra:** Yes
-- **Signature Set:** Yes
-- **Verified vs Source:** Yes
+## September 27 traversal correction
+
+The prior blanket source/signature verification is withdrawn. In pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+complete body `[0041bdf0,0041c158)` is 872 bytes, SHA-256
+`32c68885a123f7d84e7ddc865353f2d1450dd77459c429fe5d9ec5ab15702d4c`.
+Call `0041be55` obtains [GetChildLinks](CCareerNode__GetChildLinks.md);
+`0041be5a–0041be87` tests the returned head/item, and
+`0041c0f2–0041c12e` advances through next/item with null termination.
+Thus the loop sees the returned prefix: zero, one or two items. A null lower
+slot suppresses a non-null higher slot during the preceding copy.
+
+These instructions and the separate isolated container experiment establish
+that composition, not an actual occurrence in shipped career data. Remaining
+secondary-objective/world-500/completion policy below is retained from earlier
+work and needs a complete instruction-by-instruction policy recheck and an owned
+original-code graph run. The 42 container cases did not execute this routine or
+save persistence. Its saved prototype is not promoted by this document.
 
 ## Purpose
 Recalculate child link completion after a level win.
@@ -19,8 +39,8 @@ This is where the campaign graph “unlocks” the next missions and where alter
 void CCareer::ReCalcLinks(void);
 ```
 
-## Key Rules (Source-Parity)
-- Iterates the two child links of the finished node:
+## Previously reported policy (not fully revalidated)
+- Traverses the returned child-link prefix of the finished node; the following eligibility policies remain to be fully revalidated:
   - Lower link: always eligible to complete.
   - Higher link: only completes if `END_LEVEL_DATA.IsAllSecondaryObjectivesComplete()` is true.
 - Special-case `world == 500`: completion is gated by tech-slot bits (see below).

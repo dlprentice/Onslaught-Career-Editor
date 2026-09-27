@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[GenericSPtrSet forwarding entry](#re-audit-genericsptrset-forwarding-entry--september-27);
+[GenericSPtrSet identities](#re-audit-genericsptrset-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,42 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit GenericSPtrSet identities — September 27
+
+The [fourteen-row manifest](../../tools/cohort-specs/sptrset-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sptrset-identities-20260927.spec.tsv) replace the historical
+`CSPtrSet` labels with the source-proven `GenericSPtrSet` owner and method names.
+The object constructor and static pool Init are distinguished; Add/Append and
+RemoveAll take their actual source identities. Specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Fourteen shared GenericSPtrSet names, comments and tag sets corrected from complete source/body/caller evidence. All saved interfaces, locals, stack layouts, 1,065 code bytes / 363 instructions, the separately named forwarding entry and 8,318 other function records remain unchanged.
+
+The pinned GenericSPtrSet source owner matches complete target bodies, allocation anchors, node/pool layout and eleven complete caller spans. Two source-graph direct edges corroborate rather than establish the identities. Copy/assignment/search stop at null items, self-assignment clears its list, and RemoveAll leaves the iterator unchanged. Five source-parity tags are removed and exact prior comments remain qualified leads. No concrete template type, exhaustive alias identity, full ABI, allocator correctness or gameplay parity is claimed. An initial rehearsal caught an automatic forwarding-name mutation; its failed replica/seal remain preserved and the separate forwarding promotion precedes this successful rehearsal. No safety gate was relaxed.
+
+All 4,707 earlier comment bytes remain qualified leads. Independent complete
+body/caller and exact-payload reviews were reproduced by root. The reviewer
+corrected a misleading stack-pointer phrase before this final seal. Fresh PRE
+restoration, rehearsal, separate/sealed readbacks, five byte-stable refusal
+controls, exact live readback and independently restored Archive A POST passed.
+All nine live exports match rehearsal. The forwarding record, thunk association
+and every interface remain unchanged; the original collateral failure is resolved.
+
+The [list experiment](../../VALIDATION.md#original-pointer-list-operations--september-27)
+separately ran five unchanged original bodies in 42 cases plus two altered-copy
+controls. The career child/parent-link notes distinguish that execution from
+static composition of their callers. Full career/save graphs, allocation
+failure, invalid traversal, Windows exception handling and real gameplay remain
+open. Seven target interfaces and their thunk dependency need a separate ABI
+cohort; this name correction does not certify those saved signatures.
+
+Working identity: `db.18705`, 18 files / 125,553,524 bytes,
+inventory SHA-256 `013d44b5277c4ae0bbb54da2ac95de33a3d509fd106d99a7c78ae12d91333606`; main database 75,251,712 bytes,
+SHA-256 `d0f22777d6026cbb874d44f5c3dfdfa30e321e0261d0d89691be6bfa89f4c8b6`. Restored forwarding-entry POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sptrset-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-identities/`; logs:
+`local-data/test-runs/re-audit-20260926/sptrset/identities-*`.
 
 ## RE-audit GenericSPtrSet forwarding entry — September 27
 

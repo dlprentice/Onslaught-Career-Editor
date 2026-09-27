@@ -71,6 +71,34 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### GenericSPtrSet identities and dependent forwarder — September 27
+
+The one-row forwarding cohort and fourteen-row identity cohort passed the
+preservation/rehearsal/readback/recovery gate separately. The first fourteen-row
+rehearsal caught an automatic fifteenth rename and never reached the live
+project. Its failed seal and disposable project remain in the existing private
+owner. A separately proven five-byte forwarding name resolved that dependency;
+the second fourteen-row rehearsal leaves its entire record unchanged.
+
+For both cohorts: fresh PRE restore/open, exact rehearsal delta, five byte-stable
+refusal controls, independent read-only review reproduced by root, live readback
+matching all nine rehearsal exports, and independently restored Archive A POST
+passed. The target bodies remain 1,065 bytes / 363 instructions; all signatures,
+variables, frames and non-target records are preserved. No runtime behavior is
+established by those metadata checks.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed** after
+each scoped allowlist registration. Production projection checks match **all
+8,332 live names**; running unique counts are 2,139 names corrected, 377 kept,
+0 newly neutralized and 5,816 outside that accounted set. Existing consumer
+notes distinguish current labels from retained historical packet rows. The
+separate 42-case list experiment below is the executed behavior evidence.
+
+Private gate owners:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-forwarder/`
+and `sptrset-identities/`; command logs, exact projection receipts and complete
+body/caller evidence: `local-data/test-runs/re-audit-20260926/sptrset/`.
+
 ### Original pointer-list operations — September 27
 
 `python local-data/test-runs/re-audit-20260926/sptrset/original_list_operations.py`:

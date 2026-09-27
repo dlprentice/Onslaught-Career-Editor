@@ -497,12 +497,12 @@ and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,125 unique functions; 2,126 rename rows include one repeated correction. The latest cohort separates the GenericSPtrSet forwarding name from its target. |
+| Names corrected | 2,139 unique functions; 2,140 rename rows include one repeated correction. The latest cohort corrects fourteen shared GenericSPtrSet identities after a separate forwarding-entry correction. |
 | Names verified and kept | 377 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu and eight shared-music identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,830 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,816 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 85 interfaces: the prior 53 plus 32 Thing gameplay rows, including one parameter-name-only correction. Three unresolved frontend returns and ten custom-storage floating rows remain outside these corrections; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,515 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,529 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -766,14 +766,21 @@ whole overload family. All 1,054 prior pinned .cpp definitions and their body
 spans remain; eleven constructor argument lists are corrected and the missing
 GenericSPtrSet assignment is admitted. These are source-index corrections, not
 new retail dispositions. Both evidence-tool suites pass 197 tests; the next
-14 container candidates still require their complete promotion gate. Their first
+14 container identities are now [promoted](reverse-engineering/ghidra/README.md#re-audit-genericsptrset-identities--september-27)
+with exact live readback and independently restored recovery. Their first
 rehearsal caught an undeclared automatic thunk rename and was retained without
 any live application. The separate [forwarding-entry correction](reverse-engineering/ghidra/README.md#re-audit-genericsptrset-forwarding-entry--september-27)
-is now live with exact readback and independently restored recovery; the next
-14-row rehearsal must preserve it. The [list experiment](VALIDATION.md#original-pointer-list-operations--september-27)
+preceded the successful second rehearsal; its complete record stayed unchanged.
+All 1,065 target bytes, 363 instructions, saved interfaces and non-target rows
+remain unchanged. Seven physical interfaces plus the dependent thunk remain
+for a separate ABI cohort: automatic receivers, full EAX results and static
+pool-method conventions. The current projection matches all 8,332 live names. The [list experiment](VALIDATION.md#original-pointer-list-operations--september-27)
 passed 42 original-code cases and two altered-copy controls. The existing career
-child/parent-link notes now record null-item truncation and the hidden result
-copy, separately from unexecuted complete career/save paths.
+child/parent-link and ReCalcLinks notes now record null-item truncation and
+the hidden result copy, separately from unexecuted complete career/save paths.
+The monitor map also corrects its false only-writer claim: Shutdown clears the
+pool-base pointer. Current consumer identities and W4 compatibility guidance
+are updated; frozen packet and campaign receipts remain historical.
 Keep the CUnitAI/CMechAI collision separate; never
 move an excluded label simply to free a spelling. Evidence and failed/passing
 controls: `local-data/test-runs/re-audit-20260926/frontend-options/cleanup-*`.
