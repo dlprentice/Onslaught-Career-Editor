@@ -1,13 +1,36 @@
 # CBattleEngine__Damage
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
-Summary: specimen-bound static contract for `CBattleEngine__Damage` at `0x0040a890`; packet-described behavior is retained with explicit unknowns and no promotion claim.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
+Status: active contract with bounded original-code recheck; dated factory evidence retained
+Last updated: 2026-09-26
+Summary: Damage identity, common-tail order and field offsets corrected from pristine instructions, original-code cases and retained observations; full-game acceptance remains open.
+Evidence: MEASURED — September 26 pristine-body/caller recheck and 41 isolated original-code cases; older packet/closure/TTD records below retain their dates and limits.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/BattleEngine.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x0040a890`
+
+## September 26 recheck
+
+The [current function contract](../../binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Damage.md)
+re-derives the complete body and virtual caller, retaining the Damage name and
+four-argument interface. It corrects the old nonpositive early-out description:
+zero/negative amounts still execute the common tail, and repair can reduce
+vibration. Invulnerability restores life/shields/energy after shake and does
+not restore RNG, statistics, augmentation, timestamp or vibration.
+
+The historical packet quote below contains a **transcription defect**:
+augmentation is `+0x2f8`, life `+0xf8` and time `+0x2d4`, not its
+`+0x168/+0x154/+0x174`. Both retained raw observation extracts and frozen
+`observation.json` already have the correct offsets. Those receipts and their
+hash-pinned historical author are preserved; they were read, not replayed.
+The quoted text is superseded on those offsets and is not a current field map.
+
+Private original-code receipt:
+`local-data/test-runs/re-audit-20260926/battleengine-damage/run-iekrvvq7/damage.json`,
+SHA-256 `f6a2aab65ef85d1558332a3a3605845cd786a7c1c8949149dac52e9b2a6c130d`.
+Six unchanged retail bodies, authored objects, null source and explicitly
+substituted death/thread-data boundaries bound the 41 cases. No campaign-grade
+promotion, complete death/flash behavior or full-game parity follows.
 
 ## Identity
 - Body `[0x0040a890,0x0040ac24]`, 917 bytes, 233 closure instructions. Raw pristine-body SHA-256 `224c0577b539bbf0d6fa118a6355502f9aead3bc588e59ae3bf08bdf3cd1ff91`; closure range SHA-256 `7b3b41b512c777438736116c9c5627a3b832ad47e5f71458a265e145cd99a127`; packet range-plus-bytes SHA-256 `e91bfaaa4ed94e43781fc7b7fb3d91f6cdd92795e223ee7b5e78239879fa6507`. All three were independently recomputed over the exact single contiguous inclusive range.
@@ -16,7 +39,7 @@ Source File: references/Onslaught/BattleEngine.cpp | Binary: BEA.exe, SHA-256 `7
 - Campaign grade `C2_BOUNDED_RUNTIME` / closure class `PREEXISTING_GEN19_C1_OR_C2` / packet confidence `BOUNDED_CONTRACT`. Proposed promotion: false.
 
 ## Calling convention
-Packet records `__thiscall` for `void __thiscall CBattleEngine__Damage(void * this, float amount, void * inByThis, int inDamageShields, int meshPartNo)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
+September 26 instruction review confirms ECX as receiver and four explicit dwords removed by `RET 0x10`: float amount, source pointer, 32-bit shield flag and unused mesh-part number. The existing packet signature has this shape; it remains unchanged.
 
 ## Prototype and parameter semantics
 ```c
@@ -31,10 +54,10 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Decompile symbol references: `DAT_00672fd0`, `DAT_009c3df0`, `s_C__dev_ONSLAUGHT2_BattleEngine_c_006230bc`. Read/write direction for each symbol is not independently instruction-verified in this factory draft.
 
 ## Callees relied on / callers
-- Callee `CBattleEngine__RandomizeOffsets4B8_4C0` `0x00407940` ×1 site(s) (STATIC_DIRECT).
+- Callee `CBattleEngine__AddShockShake` `0x00407940` at `0x0040abc2`; the historical packet used the former analytic label.
 - Callee `CSPtrSet__AddToHead` `0x004e5a80` ×1 site(s) (STATIC_DIRECT).
 - Callee `CDXMemoryManager__Alloc` `0x005490e0` ×1 site(s) (STATIC_DIRECT).
-- Callers: none in the packet structured array.
+- The historical packet has no direct callers. September 26 recheck verifies virtual caller `0x0040c90d` through CBattleEngine slot 40; absence from the packet is not absence of callers.
 - Structured packet arrays prove the listed direct/static edge identities and site counts only. Indirect vtable targets, library inlining, and data-driven dispatch remain unresolved unless separately named in the packet.
 
 ## Behavior summary
@@ -42,7 +65,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Source algorithm skeleton (mechanical, not a retail claim): control counts if=20, switch=0, for=0, while=0; named call tokens `AddDamageFlash`, `AddShockShake`, `GetAugWeapon`, `GetPos`, `GetTime`, `IncStat`, `StartDieProcess`.
 - Source-to-retail status: `SOURCE_ANALOG` is architecture/name intent only. Every source branch, call, field name, and ordering rule remains a hypothesis until the retail packet/body below independently agrees.
 - Source-vs-retail delta/unknown boundary: no unlisted equivalence is assumed; platform conditionals, concrete layouts, omitted/inlined calls, constants, failure paths, and runtime causality remain open unless the packet comment/decompile or cited tracked evidence states the same fact.
-- Existing packet analyst comment (quoted as bounded packet evidence, not silently upgraded): “Retail/source identity and bounded runtime contract: 0x0040A890 matches CBattleEngine::Damage (BattleEngine.h:133; BattleEngine.cpp:2127 onward). The 917-byte retail body and RET 0x10 prove four 4-byte explicit arguments. Source prototype: void Damage(float amount, CThing *inByThis, BOOL inDamageShields, int mesh_part_no); Ghidra records BOOL as int to preserve its 32-bit ABI and keeps object types opaque. Generation 12 witnessed one replicated invocation writing, in order, mShields +0x100, mAugValue +0x168, mLife +0x154, mLastDamageTime +0x174, and mEnergy +0xFC, plus two zero-write controls. Five nontrivial observation gaps and nine continuity breaks forbid a complete write-set or universal-path claim. Rebuild state is PARTIAL_CONTRACT, not REBUILD_READY; negative damage, lethal/StartDie, source-flash, branch, return-context, and unobserved-path behavior remain open. Gen12 READY 9d2b903d451c; proof ffb2e0b8692d.”
+- Historical packet analyst comment (its three incorrect offsets are explicitly superseded above; the text is retained for traceability): “Retail/source identity and bounded runtime contract: 0x0040A890 matches CBattleEngine::Damage (BattleEngine.h:133; BattleEngine.cpp:2127 onward). The 917-byte retail body and RET 0x10 prove four 4-byte explicit arguments. Source prototype: void Damage(float amount, CThing *inByThis, BOOL inDamageShields, int mesh_part_no); Ghidra records BOOL as int to preserve its 32-bit ABI and keeps object types opaque. Generation 12 witnessed one replicated invocation writing, in order, mShields +0x100, mAugValue +0x168, mLife +0x154, mLastDamageTime +0x174, and mEnergy +0xFC, plus two zero-write controls. Five nontrivial observation gaps and nine continuity breaks forbid a complete write-set or universal-path claim. Rebuild state is PARTIAL_CONTRACT, not REBUILD_READY; negative damage, lethal/StartDie, source-flash, branch, return-context, and unobserved-path behavior remain open. Gen12 READY 9d2b903d451c; proof ffb2e0b8692d.”
 - The displayed decompile is non-empty and SHA-256 `1f4ba17d86ab3c6ebb38f8efc9a3eb45d74906b07c9497a79edd133390fc2d94`. This factory draft preserves that packet-described control/side-effect intent but does not infer unstated field meanings, units, ordering guarantees, or runtime causality.
 - Structured inventory for this body: 0 caller record(s), 3 callee record(s), and 1 string-ref record(s).
 
@@ -71,7 +94,7 @@ The bounded TTD table contains these exact rows; they establish only execution/c
 - Source crosswalk: `references/Onslaught/BattleEngine.cpp` `CBattleEngine::Damage` line 2127 (`SOURCE_ANALOG`), evidence `reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Damage.md`. This is source/name architecture evidence at the stated class, not independent retail behavior proof.
 
 ## Confidence
-1 — exact identity, contiguous pristine bytes, digest derivations, signature text, and structured edge inventory are reconciled; field-level semantics and runtime causality remain bounded to the packet/decompile and any cited source/TTD rows. A packet/canonical name discrepancy forces confidence 0. Proposed promotion: false.
+The September 26 function note supplies instruction-derived identity, field and ordering evidence plus bounded original-code execution. The factory's earlier numeric confidence and campaign grade were not a semantic-completeness measure. Frozen campaign promotion remains false; no full-game runtime acceptance is claimed.
 
 ## Unresolved questions
 - Instruction-level read/write direction and concrete layout for every referenced field/global.

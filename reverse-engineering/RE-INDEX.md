@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (keyboard ABI and startup identities corrected; damage contract under review; broader audit unfinished)
+Last updated: 2026-09-26 (keyboard ABI and startup identities corrected; damage/shake corrections promoted; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -31,9 +31,16 @@ real device acceptance. The [startup identity correction](ghidra/README.md#re-au
 now resolves the string parser, derived controller constructor, font initializer
 and sound-device initializer while preserving all interfaces and bodies. Its
 consumer notes separate source differences from static retail findings; five
-refusal controls and independent POST recovery passed. Damage's common-tail and
-historical field-offset annotations are under recheck next. Library identity
-coverage does not imply semantic coverage of the game's own code.
+refusal controls and independent POST recovery passed. The [Damage/shake comments](ghidra/README.md#re-audit-damage-and-shake-comments--september-26)
+and [cockpit float ABI](ghidra/README.md#re-audit-cockpit-shake-abi--september-26)
+are now corrected live, with 41 bounded original-code cases and independent
+POST restoration. Damage's name remains correct; three old comment offsets did
+not match its already-correct retained observations. Full-game death/flash,
+rendered motion and physical devices remain outside those experiments.
+[PROGRAM.md](../PROGRAM.md#re-record-audit--requested-september-25) separates
+unique name dispositions from ABI/comment coverage and the unmeasured document
+remainder. Mechanized evidence is the next priority; library identity coverage
+does not imply semantic coverage of the game's own code.
 
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or

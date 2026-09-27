@@ -34,7 +34,7 @@ SPECIMEN = ROOT / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"
 SPECIMEN_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 SOURCE = ROOT / "references/Onslaught"
 IMAGE_BASE = 0x400000
-MODEL_VERSION = 3   # 2: bare ds:0x memory operands are memory references; 3: strict RTTI census
+MODEL_VERSION = 4   # 4: retain only proven fixed PMDs for subobject-offset composition
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +217,7 @@ class RttiModel:
     type_names: dict[int, str]                 # type descriptor VA -> decorated name
     class_bases: dict[str, list[tuple[str, int]]]  # class -> [(base class, mdisp)] in CHD order (self first)
     vtables: list[Vtable]
+    fixed_bases: dict[str, list[tuple[str, int]]] = field(default_factory=dict)
 
 
 def demangle_type(name: str) -> str:
@@ -235,15 +236,23 @@ def scan_rtti(img: Image) -> RttiModel:
     plain = lambda raw: demangle_type(".?AV" + raw + "@@")
     type_names = {va: plain(td.name) for va, td in census.type_descriptors.items()}
     class_bases: dict[str, list[tuple[str, int]]] = {}
+    fixed_bases: dict[str, list[tuple[str, int]]] = {}
     for h in census.hierarchies.values():
-        class_bases.setdefault(plain(h.root_class),
+        root = plain(h.root_class)
+        class_bases.setdefault(root,
                                [(plain(r.descriptor.class_name), r.descriptor.mdisp) for r in h.rows])
+        fixed = [(plain(r.descriptor.class_name), r.descriptor.mdisp) for r in h.rows
+                 if r.descriptor.pdisp == -1 and r.descriptor.vdisp == 0 and r.descriptor.mdisp >= 0]
+        if root in fixed_bases:
+            fixed_bases[root] = [item for item in fixed_bases[root] if item in fixed]
+        else:
+            fixed_bases[root] = fixed
     slots: dict[int, list[int]] = defaultdict(list)
     for slot in sorted(census.slots, key=lambda x: (x.vtable_va, x.slot)):
         slots[slot.vtable_va].append(slot.function_va)
     vtables = [Vtable(va, plain(v.class_name), census.cols[v.col_va].offset, slots[va])
                for va, v in sorted(census.vtables.items())]
-    return RttiModel(type_names, class_bases, vtables)
+    return RttiModel(type_names, class_bases, vtables, fixed_bases)
 
 
 @dataclass
@@ -351,6 +360,7 @@ class Program:
             for i, t in enumerate(vt.slots):
                 self.slots[t].append((vt.klass, vt.offset, i, vt.va))
         self.bases = model.rtti.class_bases
+        self.fixed_bases = model.rtti.fixed_bases
 
     def func_at(self, va: int) -> Func | None:
         i = bisect.bisect_right(self.starts, va) - 1
@@ -384,13 +394,23 @@ class Program:
         return any(b == base for b, _ in self.bases.get(klass, [])[1:])
 
     def defining_classes(self, f: Func) -> set[str]:
-        """Classes that introduce or override f: holders none of whose own bases also hold f
-        at the same slot of the matching vtable."""
+        """RTTI holders with a slot not inherited at the same subobject offset.
+
+        A folded body may occupy several unrelated slots. Inheritance of one
+        occurrence must not erase a new occurrence in the derived class. This
+        identifies slot holders, not the semantic owner of every folded body.
+        Negative/dynamic base offsets cannot establish this relationship.
+        """
         holders = self.slots.get(f.va, [])
-        classes = {k for k, _o, _i, _v in holders}
         minimal = set()
-        for k in classes:
-            if not any(self.is_ancestor(other, k) for other in classes if other != k):
+        for k, offset, slot, _table in holders:
+            inherited = any(
+                other != k and other_slot == slot
+                and any(base == other and displacement >= 0
+                        and displacement + other_offset == offset
+                        for base, displacement in self.fixed_bases.get(k, []))
+                for other, other_offset, other_slot, _other_table in holders)
+            if not inherited:
                 minimal.add(k)
         return minimal
 
@@ -761,7 +781,7 @@ def audit(prog: "Program", src: list[SourceFunc], graph: dict | None = None, cal
     """One evidence row per user-defined game function name (library code excluded): what supports the name,
     what contradicts it, and a verdict. graph: re_source_graph.check() report over the same functions.
     verified: the name is a pinned-source definition and a line anchor (after its file's drift) or a string
-      anchor names it, or it is virtual, its owner is the defining class and its calls agree with the source;
+      anchor names it. This is an automated evidence lead, not a completed semantic disposition;
     contradicted: an anchor names another function, its calls or return disagree with the source, its owner is
       not the class that defines it, or a tiny body contradicts the name;
     neutral: a structural placeholder (FUN_, SharedVFunc__, Class__VFunc_NN_addr, ...) that claims no identity;
@@ -808,20 +828,28 @@ def audit(prog: "Program", src: list[SourceFunc], graph: dict | None = None, cal
             else:
                 con.append(f"string unique to {k}")
         defs = prog.defining_classes(f)
-        if defs and owner and owner not in defs and not any(prog.is_ancestor(owner, d) for d in defs):
+        holders = {klass for klass, _offset, _slot, _table in prog.slots.get(f.va, [])}
+        # A derived override can fold into its base's identical body. Pruning
+        # inherited slots cannot distinguish that from simple inheritance and
+        # must not contradict a saved owner that actually holds the body.
+        if defs and owner and owner not in holders and not any(prog.is_ancestor(owner, d) for d in defs):
             con.append(f"vtables say it belongs to {'/'.join(sorted(defs))}")
         g = rows_g.get(f.va)
-        if g:
+        # A manual mapping may test another identity at the same address.
+        # Pins establish its inputs, not agreement with this saved name. A
+        # /N overload selection is also withheld: the saved name chooses none.
+        if g and g.get("source") == key:
             con.extend(g["contradictions"])
         tiny = check_tiny_name(method, tiny_semantics(prog, f))
         if tiny == "disagree":
             con.append("its tiny body contradicts the name")
-        edges_ok = bool(g) and not g["contradictions"] and g.get("absent") is not None
         if _STRUCTURAL.search(f.name) and not in_source:
             verdict = "contradicted" if tiny == "disagree" else "neutral"
         elif con:
             verdict = "contradicted"
-        elif in_source and (pro or (defs and owner in defs and edges_ok)):
+        # A compatible graph is not a unique method identity. In particular an
+        # empty graph row plus a matching RTTI class proves no source method.
+        elif in_source and pro:
             verdict = "verified"
         else:
             verdict = "unsupported"
@@ -858,7 +886,13 @@ def main(argv: list[str] | None = None) -> int:
         prog = Program(img, model, load_functions(args.functions))
         import re_source_graph as G
         gsrc = G.index(SOURCE, ("*.cpp", "*.h"), set())
-        rows = audit(prog, index_source(SOURCE), json.loads(args.graph.read_text()) if args.graph else None,
+        graph = json.loads(args.graph.read_text()) if args.graph else None
+        if graph is not None:
+            pins = graph.get('inputs', {})
+            expected = G.input_pins(args.functions, SOURCE, ('*.cpp', '*.h'))
+            if any(pins.get(key) != value for key, value in expected.items()):
+                ap.error('graph inputs are stale or unpinned; regenerate with re_source_graph.py check')
+        rows = audit(prog, index_source(SOURCE), graph,
                      lambda key, file: G.reach(gsrc, key, file))
         with (args.out / "name-audit.tsv").open("w") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
