@@ -8108,3 +8108,49 @@ Private evidence/logs: `local-data/test-runs/re-audit-20260926/console-menu/`:
 `override-admission-v4.json` and `root-fresh-bodies.json`. The first CLI attempt
 refused a missing source-content pin; the admitted packet includes that pin.
 No Ghidra mutation is part of this tooling change.
+
+## RE console-menu identity promotion — September 27
+
+`console-menu-identities-20260927` promotes twelve inherited interface names.
+All 734 code bytes / 276 instructions, saved interfaces, locals, types and 8,320
+other function records are unchanged. Seven previous notes (6,842 bytes) remain
+explicitly fallible leads; five functions gain their first plate comments.
+The first seal was rejected for abstract-prefix and destination-buffer wording;
+its artifacts remain in `console-menu-identities/rejected-v1/`. No live writes
+used that seal. The revised packet is `override-admission-v5.json` with
+`override-anchors-v5.json`; the reviewed tool and 164-test result are unchanged.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal. The first registration helper stopped on an ambiguous text match,
+leaving a partial allowlist update; its framework run correctly failed. After
+completing the exact four registrations, **all 94 framework tests passed before
+any live application**. Both logs are retained.
+
+The current projection matches all 8,332 live entries: 2,054 unique corrected
+names, 360 additional kept names, zero newly neutralized and 5,918 outside the
+accounted sets. Prototype corrections remain 52; updated comments total 2,427.
+These are audit dispositions, not semantic or gameplay-completion percentages.
+
+Separately, `original_vertex_entry.py` ran 23 cases with the unchanged 146-byte
+GetEntry and 47-byte stack-probe bodies. They verify two stack arguments, original
+ECX preservation through the probe, both GetEntry exits' RET8, nonvolatile
+registers and the detailed/ordinary formatter paths. Seven standalone probe cases
+span allocations from zero through 12,288 bytes. Wrong RET4 and receiver-member
+offset controls alter only disposable ELF copies and change the required causal
+fields. Full EAX carries the formatter hook marker; it does not prove an integer
+result API. The pending parameter correction must preserve the unresolved return.
+
+This uses authored objects/list nodes and explicit formatting/shader-text hooks
+inside the existing seccomp-limited i386 runner. No game, Godot, Windows service,
+GPU, desktop, actual formatting, invalid-pointer behavior or real menu was tested.
+The latest receipt is `vertex-t4bw7ii_/receipt.json`; the second run tightens the
+control comparison to specific fields rather than address-containing output.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-identities/`.
+Proof, failed/passing logs and original-code experiments:
+`local-data/test-runs/re-audit-20260926/console-menu/`.

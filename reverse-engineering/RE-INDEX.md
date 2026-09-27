@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (43 cleanup identities verified and CPostEventData corrected after window/menu interfaces; broader audit remains)
+Last updated: 2026-09-27 (console-menu identities promoted; broader name/prototype/comment audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -68,7 +68,12 @@ Only comments/tags change; old notes remain fallible leads. Exact live readback
 and independent POST restoration passed. The [CPostEventData cleanup correction](ghidra/README.md#re-audit-cposteventdata-cleanup-identity--september-27)
 now names its formerly neutral body while preserving all bytes and the saved
 interface. Historical subsystem tags and old notes remain qualified leads.
-Console-menu interfaces remain next; no new runtime or full menu acceptance follows.
+The [console-menu identity cohort](ghidra/README.md#re-audit-console-menu-identities--september-27)
+now corrects twelve inherited callbacks, with complete body/RTTI/source evidence,
+exact live readback and restored independent recovery. Nine kept-name comments
+remain queued. Twenty-three isolated original-code cases and two altered-copy
+controls establish the pending Vertex GetEntry argument correction; formatter
+and shader-text hooks do not establish real menu behavior or rendering.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

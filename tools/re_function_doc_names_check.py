@@ -170,6 +170,8 @@ CURRENT_WINDOW_CALLBACK_ABI_OVERLAY = REPO_ROOT / "tools/cohort-specs/window-cal
 CURRENT_WINDOW_CALLBACK_ABI_OVERLAY_SHA256 = "55a506c425543cbbfc41ef95f7e948f25bbede5400cdb1b45fd2ed36d33b501c"
 CURRENT_POSTEVENT_CLEANUP_OVERLAY = REPO_ROOT / "tools/cohort-specs/postevent-cleanup-20260927.manifest.tsv"
 CURRENT_POSTEVENT_CLEANUP_OVERLAY_SHA256 = "999d6e415a432c3e7f5a0858f5e297f5472e57d43936041b0712eaf01141383a"
+CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/console-menu-identities-20260927.manifest.tsv"
+CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY_SHA256 = "ab9cf380e888890a2c8e10deb447c6f19fe380126e89903458d06c89866ea64e"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -988,6 +990,11 @@ def run(
                 table, CURRENT_POSTEVENT_CLEANUP_OVERLAY,
                 expected_sha256=CURRENT_POSTEVENT_CLEANUP_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY,
+                expected_sha256=CURRENT_CONSOLE_MENU_IDENTITIES_OVERLAY_SHA256,
+                expected_rows=12, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

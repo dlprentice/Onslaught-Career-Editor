@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[CPostEventData cleanup identity](#re-audit-cposteventdata-cleanup-identity--september-27);
+[console-menu identities](#re-audit-console-menu-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit console-menu identities — September 27
+
+The [twelve-row manifest](../../tools/cohort-specs/console-menu-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/console-menu-identities-20260927.spec.tsv) record inherited interface names
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Twelve primary console-menu interface names are corrected across Music, Sound, Variable and VertexShader menus. Only names, comments and tags change; all 734 body bytes, 276 instructions, saved interfaces, locals, types and 8,320 other function rows remain unchanged. All 6,842 prior comment bytes remain explicitly fallible leads; five targets gain their first comments. Signature text changes only its function name.
+
+Complete source overrides and fresh retail bodies establish GetName, GetNumEntries, GetEntry and OnClick roles. Seven table-specific raw RTTI chains, inherited abstract-prefix/concrete-suffix continuity, two same-object base/derived constructions, exact physical cleanup and all-holder agreement support propagation. Saved labels are not proof inputs; the missing CConsoleMenu header is not invented. The ordinary VC6 slot-continuity premise is explicit. The real click consumer confirms slot1 count then signed-upper-bound selection to slot3, without a nonnegative guard. Folded stubs and unanchored slots remain withheld. The GetShowSubmenus declaration order differs from its retail slot4. Source-exact implementation ownership, complete ABI, correct behavior and runtime acceptance remain open. In particular VertexShader GetEntry at00503ef0 retains an incomplete zero-argument stdcall signature; its consumed ECX and two stack arguments are a separately recorded physical-interface correction.
+
+Independent review and root reproduction checked the exact payload. Tool review
+first reproduced conditional-source, macro, numeric-address, partial-register and
+aggregated-RTTI counterexamples; the corrected evidence suite passes 164 tests.
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only comment count/digest program metrics
+change. Nine additional kept-name comment dispositions remain a separate cohort.
+
+Working identity: `db.18697`, 18 files / 124,668,788 bytes,
+inventory SHA-256 `fd03e659a6b5e66d169851c4cac8ad1a49e946f1aa5ea775959decf7973a95a8`; main database 74,366,976 bytes,
+SHA-256 `e94c2b511adc783c588d4777fbe16d2c3e11c732a351b4c6683b2e464124763b`. Restored CPostEventData POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-console-menu-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-identities/`; proof, tests and execution logs:
+`local-data/test-runs/re-audit-20260926/console-menu/`.
 
 ## RE-audit CPostEventData cleanup identity — September 27
 
