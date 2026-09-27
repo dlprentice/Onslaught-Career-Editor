@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[music identities](#re-audit-thing-gameplay-identities--september-27);
+[Thing gameplay interfaces](#re-audit-thing-gameplay-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,43 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit Thing gameplay interfaces — September 27
+
+The [32-row manifest](../../tools/cohort-specs/thing-gameplay-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/thing-gameplay-abi-20260927.spec.tsv) correct saved physical
+interfaces in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Thirty-two Thing gameplay interfaces corrected: six scalar queries, sixteen Activate/Deactivate methods and ten Hit/Damage rows. Twenty-two explicit ECX receivers normalize to automatic thiscall. Five scalar predicates use int/EAX:4; CRound GetMaxVelocity uses source float with ST0:10 preserved. Void interface returns, opaque pointer and float/int argument types are made explicit. AirUnit and HiveBoss arguments gain interface-correct names; CTree Damage only changes elapsed_time to amount. All 3,299 body bytes / 1,035 instructions, names, argument stack locations/arity, 29 locals, frame sizes and 8,300 other function records are preserved.
+
+Pinned thing.h declarations, complete source-correlated callers, the retail script registry and callback transport, complete target bodies and 103 raw RTTI uses support the selected interfaces. Original-code runs and retail/device observations were not performed for this static metadata cohort. Incidental EAX/x87 contents do not establish a source result; callback RET12 is not target argument cleanup. Unread Hit/Damage arguments remain present. Five full-EAX predicates are not narrowed to AL, and x87 float returns are not changed to ST0:4. Ten additional custom-storage floating rows remain outside this cohort because the current framework cannot express their source-type correction while preserving ST0:10. This is not full class-layout or derived-semantic certification. All older notes remain explicitly fallible leads.
+
+The Tree Damage correction matters to reconstruction: the body subtracts damage
+amount from its field, not elapsed time from a cooldown. It stores float32 before
+comparing the still-held x87 result. Its initial field meaning, exceptional-float
+behavior and callee effects remain separate questions. Only three local vector
+words are initialized; no full four-word vector contract is asserted.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, seven byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports equal
+rehearsal. Full variable comparison checks receiver-auto and declared return/type
+changes, preserves every local/frame and rejects changes outside the cohort.
+The current name projection is unchanged and equals all 8,332 live entries.
+The initial comparator incorrectly expected USER_DEFINED provenance for fourteen
+preserved `param_N` names. Installed Ghidra `VariableSymbolDB` and
+`SymbolUtilities` require DEFAULT for those names. The corrected comparison
+derives that exact expectation from manifest names; all other equalities stay
+strict. The sealed mutation was unchanged, and independent review reproduced
+the rule and every variable delta before live application.
+
+Working identity: `db.18702`, 18 files / 125,438,836 bytes,
+inventory SHA-256 `7ad24d16602a2c266e72888d8ee29b5199a7d621e4a67ff8075d77fc86de6dec`; main database 75,137,024 bytes,
+SHA-256 `92d7c7305218d87c32b810560bde32072577a40a539273f19be7be8b1a763d47`. Restored Thing identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-thing-gameplay-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-gameplay-abi/`; fresh evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/thing-gameplay/abi-*`.
 
 ## RE-audit Thing gameplay identities — September 27
 

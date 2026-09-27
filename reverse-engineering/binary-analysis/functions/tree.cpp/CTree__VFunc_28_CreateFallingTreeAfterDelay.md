@@ -9,13 +9,13 @@ identifies this entry from the shared interface, independent retail callers and
 primary RTTI. Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 The former `CTree__VFunc_40_CreateFallingTreeAfterDelay` label and older hexadecimal ordinal in this filename
-are superseded. The saved signature below records existing metadata; parameter
-corrections are a separate cohort.
+are superseded. The saved signature includes the separately promoted
+[parameter correction](../../../ghidra/README.md#re-audit-thing-gameplay-interfaces--september-27).
 
 | Property | Value |
 | --- | --- |
 | Address | `0x004f68e0` |
-| Saved signature | `void __thiscall CTree__Damage(void * this, float elapsed_time, void * other_thing, int unused_arg2, int unused_arg3)` |
+| Saved signature | `void __thiscall CTree__Damage(void * this, float amount, void * other_thing, int unused_arg2, int unused_arg3)` |
 | Wave | Wave520 CTree static re-audit |
 
 **Ordinal correction, 2026-08-17.** The `_28_` in the old name was the slot
@@ -36,8 +36,8 @@ vector from the source object's position toward this tree, normalizes a
 nonzero vector, and passes it to `0x004f69b0`. Only the local XYZ words are
 initialized; the fourth word is not written by this body. The initial field's authored name
 and exceptional-float behavior are not established here. No clock value or
-frame delta is read. The misleading saved parameter `elapsed_time` is queued
-for a parameter-name-only correction; the four argument words remain intact.
+frame delta is read. The misleading saved parameter `elapsed_time` is now
+`amount`; the four argument words, types, locals and code remain intact.
 
 Evidence: CTree vtable `0x005dd9d8` slot 40 points to `0x004f68e0`, body returns with `RET 0x10`, callsite `0x004f699c` calls `CTree__CreateFallingTree`, and post boundary probe read-back names the function.
 

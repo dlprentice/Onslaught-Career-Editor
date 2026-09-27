@@ -8322,3 +8322,38 @@ separate from these counts.
 `npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
 passed across 4,176 candidate files. `git diff --check` passed. Detailed output
 is in `thing-gameplay/docs.log` and `thing-gameplay/safety.log` under the log owner above.
+
+## RE Thing gameplay interface promotion — September 27
+
+`thing-gameplay-abi-20260927` corrects 32 saved interfaces/comments/tag sets:
+six scalar queries, sixteen Activate/Deactivate methods and ten Hit/Damage rows.
+Twenty-two receivers normalize to automatic thiscall; full-EAX predicate widths,
+float with retained ST0:10, void results and float/pointer/int argument transport
+follow complete pristine bodies and independent source-correlated retail callers.
+Tree Damage changes only its misleading parameter name to `amount`.
+Specimen SHA-256: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Fresh PRE restore/census, rehearsal and separate/sealed readbacks, seven byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal. The comparator initially expected USER_DEFINED for fourteen default
+parameter names; installed Ghidra source proved DEFAULT is required. That
+expectation was corrected and independently reproduced, with no mutation change.
+All 125 target variable records match the declared result; 32,601 other variable
+records, 29 locals, frames, stack positions, 3,299 body bytes / 1,035 instructions,
+all names and 8,300 non-target function records remain unchanged.
+
+Commands: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `compare_exports.py live-post`, `finish.py`, `verify_projection.py`
+in `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-gameplay-abi/`.
+Execution logs: `local-data/test-runs/re-audit-20260926/thing-gameplay/abi-*`.
+The cohort framework suite passed 94 tests. The full 8,332-row name projection
+matches live: 2,124 unique corrected names, 369 additional kept, zero newly
+neutralized, 5,839 outside those sets; 85 corrected interfaces and 2,506 comments.
+Ten custom-storage floating rows remain deferred. No Godot, retail execution,
+player or audible acceptance was performed for this static metadata cohort.
+
+`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+passed across 4,178 candidate files. `git diff --check` passed. Detailed output
+is in `thing-gameplay/abi-docs.log` and `thing-gameplay/abi-safety.log` under the log owner above.

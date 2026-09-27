@@ -9,13 +9,13 @@ identifies this entry from the shared interface, independent retail callers and
 primary RTTI. Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 The former `CTree__VFunc_39_CreateFallingTreeFromThing` label and older hexadecimal ordinal in this filename
-are superseded. The saved signature below records existing metadata; parameter
-corrections are a separate cohort.
+are superseded. The saved signature includes the separately promoted
+[argument-type correction](../../../ghidra/README.md#re-audit-thing-gameplay-interfaces--september-27).
 
 | Property | Value |
 | --- | --- |
 | Address | `0x004f6aa0` |
-| Saved signature | `void __thiscall CTree__Hit(void * this, void * other_thing, int unused_context)` |
+| Saved signature | `void __thiscall CTree__Hit(void * this, void * other_thing, void * unused_context)` |
 | Wave | Wave520 CTree static re-audit |
 
 **Ordinal correction, 2026-08-17.** The `_27_` in the old name was the slot
@@ -30,4 +30,4 @@ Recovered CTree vtable slot-39 boundary. The body checks the peer word at `+0x34
 
 Evidence: CTree vtable `0x005dd9d8` slot 39 points to `0x004f6aa0`, body returns with `RET 0x8`, callsite `0x004f6b6f` calls `CTree__CreateFallingTree`, and post boundary probe read-back names the function.
 
-The shared call interface is `Hit(peer, report)` with two pointer arguments and RET 8. This complete body never reads the report; its saved `int unused_context` is therefore an interface-type defect, not evidence that the argument is absent. Runtime collision/destruction behavior and rebuild parity remain unproven.
+The shared call interface is `Hit(peer, report)` with two pointer arguments and RET 8. This complete body never reads the report. The saved `int unused_context` defect is now corrected to an opaque pointer; its stack word remains present. Runtime collision/destruction behavior and rebuild parity remain unproven.
