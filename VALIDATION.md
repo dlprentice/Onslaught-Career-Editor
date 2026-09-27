@@ -71,6 +71,30 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Bounded switch admission — September 27
+
+`python -m unittest tools.re_name_evidence_tests`: **98 passed** after independent
+review and root reproduction of two false-admission controls. The checker now
+rejects entry into a comparison's interior and possible pointers omitted by
+the model's cached census, including unaligned/final words in `.text`. It also
+includes address-forming memory references and checks all local switch tables
+together. Other controls cover signed/inverted guards, selector/flag clobber,
+missing zero extension, truncated/writable tables, ownership/target boundaries
+and table-reached return-cleanup disagreement.
+
+Fresh `vtables` runs against the current reader POST export admit 23 selected
+identities that were previously blocked by computed jumps: six proposed name
+corrections and seventeen kept names. Their bodies total 29,287 bytes / 8,134
+instructions and contain 28 separately pinned switch sites. Two further
+functions remain withheld on raw-word candidates; those occurrences are not
+established control-flow edges. These reports do not promote Ghidra changes.
+Exact commands, source/specimen/tool pins and reports are in
+`local-data/test-runs/re-audit-20260926/switch-admission/`:
+`frontend-v3.command.json`, `listener-v3.command.json`, their reports/logs,
+`selected-v3.json`, `tool-review.json` and `tests-final.log`. Rejected drafts
+remain preserved. No runtime table immutability, stack-balance, full ABI or
+gameplay claim follows from this static admission.
+
 ### Reader interfaces — September 27
 
 The [six-row reader cohort](reverse-engineering/ghidra/README.md#re-audit-chunk-reader-interfaces--september-27)

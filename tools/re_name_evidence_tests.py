@@ -645,6 +645,157 @@ class EntryDecodeTests(unittest.TestCase):
         with self.assertRaises(ValueError):E.decode_entry_body(img,fn)
 
 
+class BoundedSwitchTests(unittest.TestCase):
+    def fixture(self, remap=False, gap=b'', different_pop=False):
+        start, table, selector = 0x401100, 0x402000, 0x403000
+        code = bytearray(b'\x90'*5+b'\x83\xf8'+bytes([3 if remap else 2])+gap)
+        compare = start+5
+        guard = start+len(code); code.extend(b'\x77\x00')
+        if remap:
+            code.extend(b'\x31\xd2\x8a\x90'+struct.pack('<I', selector))
+        jump = start+len(code)
+        code.extend((b'\xff\x24\x95' if remap else b'\xff\x24\x85')+struct.pack('<I', table))
+        default = start+len(code); code[guard-start+1] = default-guard-2
+        code.extend(b'\xc3\xc3'+(b'\xc2\x04\x00' if different_pop else b'\xc3'))
+        memory = {}
+        def write(address, data):memory.update({address+i:b for i,b in enumerate(data)})
+        write(start, code); write(table, struct.pack('<III',default,default+1,default+2))
+        write(selector, bytes([2,0,2,1]))
+        sections = [E.Section('.text',start,len(code),bytes(code),0x60000020),
+                    E.Section('.rdata',table,12,bytes(12),0x40000040),
+                    E.Section('.rdata',selector,4,bytes(4),0x40000040)]
+        def read(a,n):
+            raw=bytearray()
+            for i in range(n):
+                if a+i not in memory:break
+                raw.append(memory[a+i])
+            return bytes(raw)
+        img=SimpleNamespace(read=read,sections=sections,
+                            section_of=lambda a:next((s for s in sections if s.contains(a)),None))
+        fn=E.Func(start,'Untrusted__Name','USER_DEFINED',start,start+len(code)-1,'','',False,'',False,1,len(code),start+len(code)-1)
+        model=SimpleNamespace(refs_to={},data_ptrs_to={},rtti=SimpleNamespace(vtables=[]))
+        prog=SimpleNamespace(img=img,model=model,funcs=[fn],by_va={start:fn})
+        prog.body=lambda f:E.decode_entry_body(img,f)
+        return prog,fn,memory,sections,dict(compare=compare,guard=guard,jump=jump,default=default,table=table,selector=selector)
+
+    def prove(self, prog, fn):return E.bounded_switch_targets(prog,fn,prog.body(fn))
+
+    def test_direct_and_remapped_tables_pin_exact_selector_footprints(self):
+        for remap in (False,True):
+            with self.subTest(remap=remap):
+                prog,fn,_,_,p=self.fixture(remap)
+                report=self.prove(prog,fn);self.assertFalse(report['refusals'])
+                row=report['tables'][0]
+                wanted=[p['default']+i for i in ([2,0,2,1] if remap else range(3))]
+                self.assertEqual([int(t,16) for t in row['targets']],wanted)
+                self.assertEqual(row['table']['bytes'],12)
+                self.assertEqual(row['table']['sha256'],hashlib.sha256(prog.img.read(p['table'],12)).hexdigest())
+                if remap:self.assertEqual(row['remap']['bytes'],4)
+                else:self.assertIsNone(row['remap'])
+
+    def test_only_flag_and_selector_preserving_guard_gaps_are_admitted(self):
+        cases=[(b'\x8b\xf1',True),(b'\x57\x8b\xf1',True),
+               (b'\x89\x4c\x24\x04',True),(b'\x89\x0d\x00\x00\x70\x00',True),
+               (b'\x40',False),(b'\xf8',False),(b'\xb0\x00',False),
+               (b'\x8b\xc1',False),(b'\x31\xc0',False)]
+        for gap,admit in cases:
+            with self.subTest(gap=gap.hex()):
+                prog,fn,*_=self.fixture(gap=gap)
+                self.assertEqual(bool(self.prove(prog,fn)['tables']),admit)
+
+    def test_signed_or_inverted_guard_and_missing_high_byte_clear_are_refused(self):
+        for patch_kind in ('signed','inverted','clear','selector-clobber'):
+            with self.subTest(patch=patch_kind):
+                prog,fn,m,_,p=self.fixture(remap=True)
+                if patch_kind=='signed':m[p['guard']]=0x7f
+                elif patch_kind=='inverted':m[p['guard']]=0x76
+                elif patch_kind=='clear':m[p['guard']+2]=m[p['guard']+3]=0x90
+                else:m[p['guard']+3]=0xc0  # XOR EAX,EAX instead of EDX
+                self.assertFalse(self.prove(prog,fn)['tables'])
+
+    def test_known_entries_cannot_bypass_comparison_or_zero_extension(self):
+        for kind in ('local-branch','local-call','outside-call','immediate','data-pointer','table',
+                     'compare-interior-reference','compare-interior-pointer','address-forming-lea'):
+            with self.subTest(kind=kind):
+                prog,fn,m,_,p=self.fixture(remap=True)
+                dest=p['jump']
+                if kind=='local-branch':m[fn.va]=0xeb;m[fn.va+1]=dest-fn.va-2
+                elif kind=='local-call':
+                    m[fn.va]=0xe8
+                    m.update({fn.va+1+i:b for i,b in enumerate(struct.pack('<i',dest-fn.va-5))})
+                elif kind=='outside-call':prog.model.refs_to[dest]=[('call',0x405000)]
+                elif kind=='immediate':prog.model.refs_to[dest]=[('imm',0x405000)]
+                elif kind=='data-pointer':prog.model.data_ptrs_to[dest]=[0x406000]
+                elif kind=='compare-interior-reference':prog.model.refs_to[p['compare']+1]=[('jmp',0x405000)]
+                elif kind=='compare-interior-pointer':prog.model.data_ptrs_to[p['compare']+1]=[0x406000]
+                elif kind=='address-forming-lea':prog.model.refs_to[dest]=[('mem',0x405000)]
+                else:m.update({p['table']+i:b for i,b in enumerate(struct.pack('<I',dest))})
+                report=self.prove(prog,fn)
+                self.assertFalse(report['tables'])
+                self.assertTrue(any('bypasses' in r['reason'] for r in report['refusals']))
+
+    def test_table_extent_and_instruction_ownership_refusals(self):
+        for kind in ('short-table','short-remap','writable','overlap','exterior','mid-instruction','remap-overrun'):
+            with self.subTest(kind=kind):
+                prog,fn,m,sections,p=self.fixture(remap=True)
+                if kind=='short-table':del m[p['table']+11]
+                elif kind=='short-remap':del m[p['selector']+3]
+                elif kind=='writable':sections[1].characteristics |= 0x80000000
+                elif kind=='overlap':prog.funcs.append(SimpleNamespace(lo=p['table'],hi=p['table']+1))
+                elif kind=='remap-overrun':m[p['selector']]=255
+                else:
+                    dest=0x407000 if kind=='exterior' else p['compare']+1
+                    m.update({p['table']+i:b for i,b in enumerate(struct.pack('<I',dest))})
+                self.assertFalse(self.prove(prog,fn)['tables'])
+
+    def test_fresh_bytes_override_a_plausible_cached_guard(self):
+        prog,fn,m,_,p=self.fixture();body=prog.body(fn)
+        m[p['guard']]=0x7f
+        with self.assertRaisesRegex(ValueError,'fresh entry decoding'):
+            E.bounded_switch_targets(prog,fn,body)
+
+    def test_cross_function_table_in_text_is_not_hidden_by_cached_pointer_census(self):
+        for offset in (0,1,2,3):
+            with self.subTest(offset=offset):
+                prog,fn,_,sections,p=self.fixture()
+                # Last DWORD, possibly unaligned, lies outside the function.
+                # The model deliberately has no pointer/reference entry.
+                sections[0].raw+=b'\x90'*offset+struct.pack('<I',p['jump'])
+                sections[0].size=len(sections[0].raw)
+                report=self.prove(prog,fn)
+                self.assertFalse(report['tables'])
+                self.assertTrue(any('bypasses' in r['reason'] for r in report['refusals']))
+
+    def test_second_switch_table_cannot_bypass_first_switch_guard(self):
+        prog,fn,m,sections,p=self.fixture()
+        raw=prog.img.read(fn.va,fn.body_bytes)
+        table2=0x404000
+        extra=b'\x83\xf9\x00\x77\x07\xff\x24\x8d'+struct.pack('<I',table2)+b'\xc3'
+        raw+=extra
+        m.update({fn.va+i:b for i,b in enumerate(raw)})
+        m.update({table2+i:b for i,b in enumerate(struct.pack('<I',p['jump']))})
+        fn.hi=fn.declared_hi=fn.va+len(raw)-1;fn.body_bytes=len(raw)
+        sections[0].raw=raw;sections[0].size=len(raw)
+        sections.append(E.Section('.rdata',table2,4,bytes(4),0x40000040))
+        report=self.prove(prog,fn)
+        self.assertTrue(any(r.get('jump')==f"0x{p['jump']:08x}" and 'bypasses' in r['reason']
+                            for r in report['refusals']))
+
+    def test_different_pop_reachable_via_table_stays_withheld(self):
+        for wrong in (False,True):
+            with self.subTest(wrong=wrong):
+                prog,fn,*_=self.fixture(different_pop=wrong)
+                method=E.HeaderMethod('Base','Run',(),'',True,'types.h',1,'void',None)
+                classes={'Base':E.HeaderClass('Base',[],[method],[],'types.h',1)}
+                doc={'anchors':[dict(table='0x600000',slot=0,method='Run',parameters=[],**{'class':'Base'})]}
+                row=dict(target=hex(fn.va),status='anchored-method-candidate',uses=[dict(
+                    anchorTable='0x600000',anchorSlot=0,method='Run',parameters=[],qualifiers='',**{'class':'Base'})])
+                report=E.vtable_abi_admission(prog,classes,doc,{'rows':[row]})
+                self.assertEqual(report['rows'][0]['status'],'withheld' if wrong else 'mechanical-checks-pass')
+                self.assertEqual(report['rows'][0]['observedReturnPop'],[0,4] if wrong else [0])
+                self.assertEqual(len(report['switchProofs'][0]['tables']),1)
+
+
 class HeaderVtableTests(unittest.TestCase):
     def parse(self, text, undefined=frozenset()):
         with tempfile.TemporaryDirectory() as tmp:

@@ -540,8 +540,18 @@ and independently restored recovery. Six names are verified and kept; no
 instruction, local or other function changed. The tag-call proof was rerun
 after the five-name promotion: all twelve results and limits stayed identical.
 Next mechanized lead: bounded switch tables in frontend and listener methods,
-currently withheld by the ABI admission tool. Consumer comments and concrete
-owner types remain open; do not infer an owner solely from a factory's result.
+now resolved by the existing ABI admission tool for 23 selected identities:
+six proposed corrections and seventeen kept names, not yet promoted. The tool
+pins each table and byte-remap span, checks unsigned guards and possible
+bypassing entries, and retains cleanup/owner exclusions. Two additional names
+remain withheld because raw instruction/string bytes resemble guard-interior
+pointers; this does not prove an actual incoming branch. Independent review
+caught guard-interior and incomplete pointer-census defects before promotion;
+root reproduced and fixed them. The 98 focused tests pass. Private evidence is
+`local-data/test-runs/re-audit-20260926/switch-admission/`; use `selected-v3.json`
+and the `frontend-v3.json` / `listener-v3.json` reports, not rejected drafts.
+Consumer comments and concrete owner types remain open; do not infer an owner
+solely from a factory's result.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header
