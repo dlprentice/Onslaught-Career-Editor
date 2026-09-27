@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (Options interface identity; earlier behavioral evidence keeps its stated limits)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -275,7 +275,12 @@ or certify its prototypes or runtime behavior.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0051F7E0` | `CFEPOptions__EnsureOptionsContext` | 253 | 1 | 406 | `PLATFORM__GetSysTimeFloat` x1; `CCareer__GetKillCounterTopByte_23F4` x1 |
+| `0x0051F7E0` | `CFEPOptions__TransitionNotification` | 253 | 1 | 406 | `PLATFORM__GetSysTimeFloat` x1; `CCareer__GetKillCounterTopByte_23F4` x1 |
+
+September 27: raw Options RTTI slot 6 and the reviewed common page interface
+establish TransitionNotification; the earlier label was
+`CFEPOptions__EnsureOptionsContext`. The other row fields remain inherited
+coordinate/callee evidence, not new behavioral validation.
 
 ### `FEPWingmen.cpp` (1)
 

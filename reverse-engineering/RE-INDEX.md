@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (Options instruction repair and bounded transition-factor execution; broader audit unfinished)
+Last updated: 2026-09-27 (23 frontend interface identities promoted; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -15,7 +15,10 @@ The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-r
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
 records the page-dispatch argument contract and 85 isolated original-tail cases;
-full visual acceptance and the frontend name/ABI promotions remain separate.
+full visual acceptance and ABI promotion remain separate. The subsequent
+[frontend identity cohort](ghidra/README.md#re-audit-frontend-page-identities--september-27)
+corrects 23 page-method names; 74 kept names await their separate evidence comments
+and 35 ambiguous or unsupported candidates remain withheld.
 The [third game-label audit](ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
 corrects startup object identities, buffer cleanup, base destruction, type bits
 and actor contact predicates. Its BattleEngine consumer contracts resolve

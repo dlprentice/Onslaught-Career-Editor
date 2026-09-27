@@ -1,9 +1,18 @@
-# CFEPDebriefing__Initialize
+# CFEPDebriefing__Init
+
+Status: active — interface identity re-derived; complete behavior remains open
+Last updated: 2026-09-27
+Summary: retail debrief-page Init identity, bounded allocation-body observations,
+and separately inherited sibling-function claims.
+Source File: retail `FEPDebriefing.cpp` | Binary: `BEA.exe.original.backup`
 
 > Address: `0x00456780` | Pristine PC `BEA.exe.original.backup`
 > Exact body: `0x00456780..0x0045682F` (176 bytes, 52 instructions)
 > Body SHA-256: `249e35617340b38cccb3944b278be54cea5db67a308129ef2ec56753cc922b44`
 > Source path embedded by retail: `FEPDebriefing.cpp`; that file is absent from the pinned Stuart drop
+
+That source body is absent from the pinned source; the common-interface
+declaration survives in `references/Onslaught/FEPGoodies.h`.
 
 ## Status
 
@@ -14,19 +23,29 @@
 ## Signature
 
 ```c
-int __fastcall CFEPDebriefing__Initialize(void *this);
+int __fastcall CFEPDebriefing__Init(void *this);
 ```
 
 The receiver is in `ECX` and the body returns with a plain `RET`. With no stack
 arguments, one-argument MSVC fastcall and thiscall spellings are ABI-equivalent;
 the saved declaration is retained rather than claiming unavailable source syntax.
 
+The September 27 frontend cohort proves the slot-0 **Init** identity through
+raw `CFEPDebriefing` RTTI at table `005db9c0`, the surviving `CFEPGoodies`
+declaration and common initializer call `00466522`. It replaces the old
+`CFEPDebriefing__Initialize` label without promoting a prototype. The complete
+176-byte body and 52 instructions were rechecked against pristine. See the
+[frontend cohort](../../../ghidra/README.md#re-audit-frontend-page-identities--september-27)
+for the method, exclusions and preservation/readback evidence.
+
 ## Exact behavior
 
 1. Allocates `0x324` bytes at 128-byte alignment. The leading dword is set to
    `100`; the returned array begins four bytes later.
-2. Constructs exactly 100 eight-byte global-list/particle-link elements with
-   `eh_vector_constructor_iterator`, storing the array at `this+0x20`.
+2. Calls the vector-constructor iterator for 100 eight-byte elements, with
+   callbacks `00456830` and `00405d80`, storing the array at `this+0x20`.
+   The earlier global-list/particle-link interpretation requires separate
+   callback evidence; this identity audit does not certify it.
 3. Allocates a second `0x640`-byte block at 128-byte alignment and stores it at
    `this+0x24`.
 4. Clears `this+0x1C`, `this+0x10`, and `this+0x18`.
@@ -39,6 +58,9 @@ iterator. This body does **not** read `END_LEVEL_DATA`, call Career, calculate a
 grade, inspect kills or goodies, draw UI, or play sound.
 
 ## Work owned by sibling functions
+
+The following behavioral descriptions are inherited leads, not re-verified
+by the September 27 Init identity/body check:
 
 - `CFEPDebriefing__Render` (`0x00456DD0`) reads final state, objective statuses,
   world number, and ranking; it draws the mission/objective summary and the
@@ -55,7 +77,7 @@ grade, inspect kills or goodies, draw UI, or play sound.
 
 ## Evidence and remaining falsifier
 
-Primary read-back:
+Historical read-back lead (decompiler output alone is not proof):
 `local-lab/ghidra-fullpass-2026-07-23/exports/W004/decompile/00456780_CFEPDebriefing__Initialize.c`
 (decompile SHA-256
 `898b0bc6e120ac24fc656bb2fdd01a9521cacecc144768f220782f4f4222bad0`).

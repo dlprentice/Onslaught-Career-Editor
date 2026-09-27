@@ -86,8 +86,10 @@ driver/ELF hashes. Fresh static packets are in
 
 The saved listing's split instruction at `[0051f7be,0051f7c6)` was corrected
 through the [Options instruction promotion](../../../ghidra/README.md#re-audit-options-instruction-repair--september-27).
-The original bytes were always intact. The name/prototype promotions are
-separate; this note does not claim they were applied with that structural repair.
+The original bytes were always intact. The subsequent
+[frontend identity cohort](../../../ghidra/README.md#re-audit-frontend-page-identities--september-27)
+corrected the Options name to `CFEPOptions__Render`. Its prototype correction
+remains separate; the saved stack-parameter interpretation is not endorsed.
 
 ## Remaining limits
 

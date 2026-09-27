@@ -115,9 +115,7 @@ reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
 reverse-engineering/binary-analysis/functions/DataType.cpp.md
 reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md
-reverse-engineering/binary-analysis/functions/FEPDebriefing.cpp/CFEPDebriefing__Initialize.md
 reverse-engineering/binary-analysis/functions/FEPDemoMain.cpp.md
-reverse-engineering/binary-analysis/functions/FEPDevelopment.cpp.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__BuildStaticGoodieDataTable.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__ButtonPressed.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Deserialise.md

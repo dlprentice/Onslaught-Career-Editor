@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Options instruction repair and original-code transition evidence; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 23 frontend identities promoted after Options instruction repair; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,22 +491,23 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the compiler deleting-entry family (September 27).**
+**Running coverage after the frontend name corrections (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,874 unique functions; 1,875 rename rows include one repeated correction. The latest 33 are compiler-entry spelling normalizations with fresh identity proof. |
+| Names corrected | 1,897 unique functions; 1,898 rename rows include one repeated correction. The latest 23 establish frontend common-interface identities. |
 | Names verified and kept | 220 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine and 80 compiler deleting-entry identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,237 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,214 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,098 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,121 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
-`compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`, the final
+`compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`,
+`frontend-page-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -526,13 +527,13 @@ Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
 
-**Frontend interface evidence (September 27, names pending).** The existing
+**Frontend interface evidence (September 27).** The existing
 name-evidence tool now binds seven surviving `CFEPGoodies` virtual declarations
 to the common page callers and the constructor's receiver/table installation;
 it does not invent the absent base header's declaration order. Fresh pristine
 decoding reproduced 97 proposed identities (23 renames, 74 retained names),
-while 35 candidates remain withheld. These are not yet added to the coverage
-counts. The 77 focused evidence-tool cases passed, including rejection of
+while 35 candidates remain withheld. The 23 corrections are promoted and counted;
+the 74 retained names await their separate comment cohort. The 77 focused evidence-tool cases passed, including rejection of
 template aggregates mistaken for pointer parameters/returns. Independent
 reviews were re-derived against the specimen and source.
 
@@ -542,8 +543,11 @@ Fresh pristine decoding and a read-only Ghidra inspection show one eight-byte
 instruction where the listing has two unrelated instructions and four
 undefined bytes. Its two incoming branches target the proper start; no saved
 interior reference, comment or non-dynamic symbol was found. The exact span is now
-repaired through the promotion gate, with independently restored POST recovery;
-resume the name cohort from that new authority. Two saved frontend
+repaired through the promotion gate, with independently restored POST recovery.
+The subsequent 23-name cohort also passed fresh PRE, rehearsal, five byte-stable
+refusals, independent review/root reproduction, live readback and independently
+restored POST. All 8,331 projected names match live; 2,573 target instruction rows
+and 8,308 non-target functions remain exact. Two saved frontend
 prototype defects and the retail/source transition-timer difference remain
 separate findings, not certified by name matching. Evidence and the rejected
 pre-seal attempt are in `re-audit-20260926/frontend-page-identities/` under the
@@ -551,8 +555,10 @@ private owner above. The [render note](reverse-engineering/binary-analysis/funct
 now records the opposite-endpoint argument and retail Credits/Screen Position
 identity. Eighty-five native original-tail cases verify the Options factor
 thresholds and exceptional float inputs; no rendering or player acceptance
-is claimed. Name/prototype coverage counts are unchanged by this structural
-repair and bounded execution.
+is claimed. The structural repair and bounded execution add no name/prototype
+dispositions; the separate 23-name promotion adds the counts above. Next complete
+the 74 kept-name records, then reconcile the independently re-derived Options
+and Intro ABI defects without extending their saved types beyond the evidence.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career
