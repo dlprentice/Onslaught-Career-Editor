@@ -434,6 +434,64 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(E.insn_refs(E.Insn(0x401000, 5, "push", "0x29"), img), [])
 
 
+
+class EntryDecodeTests(unittest.TestCase):
+    def fixture(self, raw=b'\x90\xc3'):
+        va=0x401100
+        sec=E.Section('.text',va,len(raw),raw,0x20000000)
+        img=SimpleNamespace(section_of=lambda a:sec if sec.contains(a) else None,
+                            read=lambda a,n:raw[a-va:a-va+n])
+        fn=E.Func(va,'untrusted','USER_DEFINED',va,va+len(raw)-1,'','',False,'',False,
+                  body_bytes=len(raw),declared_hi=va+len(raw)-1)
+        return img,fn
+
+    def test_exact_byte_rows_are_required(self):
+        img,fn=self.fixture()
+        good='401100:\t90 \tnop\n401101:\tc3 \tret\n'
+        with patch.object(E.subprocess,'run',return_value=SimpleNamespace(stdout=good)) as call:
+            self.assertEqual([(i.va,i.mnem) for i in E.decode_entry_body(img,fn)],
+                             [(0x401100,'nop'),(0x401101,'ret')])
+            self.assertIn('-z',call.call_args.args[0])
+            self.assertEqual(call.call_args.kwargs['timeout'],30)
+        bad=[good.split('\n',1)[1], good+good, good.replace('401101','401100'),
+             good.replace('90 ','91 '), good.replace('c3 ','c3 90 '),
+             good.replace('nop','(bad)'),good.replace('nop','.byte 0x90'),'',
+             '401100:\t90 \tnop\n...\n']
+        for output in bad:
+            with self.subTest(output=output),patch.object(E.subprocess,'run',return_value=SimpleNamespace(stdout=output)):
+                with self.assertRaises(ValueError):E.decode_entry_body(img,fn)
+
+    def test_extent_and_executable_backing_precede_decoder(self):
+        for field,value in [('lo',0x4010ff),('body_ranges',2),('declared_hi',0x401102),
+                            ('body_bytes',1),('body_bytes',None)]:
+            with self.subTest(field=field):
+                img,fn=self.fixture();setattr(fn,field,value)
+                with patch.object(E.subprocess,'run') as call:
+                    with self.assertRaises(ValueError):E.decode_entry_body(img,fn)
+                    call.assert_not_called()
+        for mode in ('non-executable','unbacked','missing','short-read'):
+            with self.subTest(mode=mode):
+                img,fn=self.fixture();sec=img.section_of(fn.va)
+                if mode=='non-executable':sec.characteristics=0
+                if mode=='unbacked':sec.raw=b'\x90'
+                if mode=='missing':img.section_of=lambda a:None
+                if mode=='short-read':img.read=lambda a,n:b'\x90'
+                with patch.object(E.subprocess,'run') as call:
+                    with self.assertRaises(ValueError):E.decode_entry_body(img,fn)
+                    call.assert_not_called()
+
+    def test_real_decoder_preserves_zeros_and_rejects_truncation(self):
+        # Authored bytes only. No project fixture or retail payload is loaded.
+        import shutil
+        if not shutil.which('objdump'):self.skipTest('GNU objdump unavailable')
+        img,fn=self.fixture(b'\x00\x00'*8+b'\xc3')
+        body=E.decode_entry_body(img,fn)
+        self.assertEqual(sum(i.size for i in body),17)
+        self.assertEqual(body[-1].mnem,'ret')
+        img,fn=self.fixture(b'\x90\x0f')
+        with self.assertRaises(ValueError):E.decode_entry_body(img,fn)
+
+
 class HeaderVtableTests(unittest.TestCase):
     def parse(self, text, undefined=frozenset()):
         with tempfile.TemporaryDirectory() as tmp:
@@ -717,6 +775,85 @@ class HeaderVtableTests(unittest.TestCase):
         report=E.vtable_abi_admission(prog,classes,anchors,E.propagate_vtable_anchors(prog,classes,anchors))
         self.assertEqual(report['rows'][0]['status'],'mechanical-checks-pass')
         self.assertIn('noncontiguous or clipped function boundary',report['rows'][1]['flags'])
+
+    def entry_gap_fixture(self, raw):
+        classes,prog,anchors=self.fixture()
+        fn=prog.by_va[0x401100];fn.hi=fn.va+len(raw)-1
+        fn.body_ranges=1;fn.body_bytes=len(raw);fn.declared_hi=fn.hi
+        sec=E.Section('.text',fn.va,len(raw),raw,0x20000000)
+        read=prog.img.read
+        prog.img.read=lambda a,n:raw[a-fn.va:a-fn.va+n] if fn.va<=a<=fn.hi else read(a,n)
+        prog.img.section_of=lambda a:sec if sec.contains(a) else None
+        prog.body=lambda f:[E.Insn(f.va,1,'ret','')] if f.va==0x401000 else []
+        return classes,prog,anchors
+
+    def test_entry_gap_repair_still_applies_all_abi_refusals(self):
+        import shutil
+        if not shutil.which('objdump'):self.skipTest('GNU objdump unavailable')
+        cases=[(b'\x90\xc3',None),
+               (b'\xeb\xff\xc3','instruction boundary'),
+               (b'\x74\x01\xc3\xc2\x08\x00','return cleanup disagrees'),
+               (b'\xff\xe0','indirect tail'),
+               (b'\x74\x40\xc3','conditional branch outside'),
+               (b'\x89\xc4\xc3','opaque stack-pointer'),
+               (b'\x50\xe9\xfa\xfe\xff\xff','stack-neutral')]
+        for raw,wanted in cases:
+            with self.subTest(raw=raw.hex()):
+                classes,prog,anchors=self.entry_gap_fixture(raw)
+                original=list(prog.model.insns)
+                propagated=E.propagate_vtable_anchors(prog,classes,anchors)
+                report=E.vtable_abi_admission(prog,classes,anchors,propagated)
+                row=report['rows'][1]
+                self.assertEqual(row['status'],'withheld' if wanted else 'mechanical-checks-pass')
+                if wanted:self.assertTrue(any(wanted in v for v in row['flags']),row)
+                evidence=report['entryDecodings'][0]
+                self.assertEqual(evidence['status'],'complete-byte-coverage')
+                self.assertEqual(evidence['bodySha256'],hashlib.sha256(raw).hexdigest())
+                self.assertEqual(prog.model.insns,original)
+
+    def test_entry_decode_is_also_used_for_inline_constant_contradictions(self):
+        import shutil
+        if not shutil.which('objdump'):self.skipTest('GNU objdump unavailable')
+        for raw,expected in [(b'\x31\xc0\xc3','withheld'),
+                             (b'\xb8\x01\x00\x00\x00\xc3','mechanical-checks-pass')]:
+            with self.subTest(raw=raw.hex()):
+                _,prog,anchors=self.entry_gap_fixture(raw)
+                classes=self.parse('class Base { public: virtual BOOL Run(); };\n'
+                                   'class Child : public Base { public: virtual BOOL Run(){ return TRUE; } };\n')
+                # The old cache sees only RET and would miss XOR/MOV EAX.
+                prog.body=lambda f:[E.Insn(f.hi,1,'ret','')]
+                report=E.vtable_abi_admission(prog,classes,anchors,E.propagate_vtable_anchors(prog,classes,anchors))
+                self.assertEqual(report['rows'][1]['status'],expected)
+                if expected=='withheld':
+                    self.assertIn('tiny constant contradicts source implementation',report['rows'][1]['flags'])
+
+    def test_entry_decode_failure_is_withheld_and_cache_is_per_invocation(self):
+        classes,prog,anchors=self.entry_gap_fixture(b'\x90\xc3')
+        propagated=E.propagate_vtable_anchors(prog,classes,anchors)
+        for error in (E.subprocess.TimeoutExpired('objdump',30),
+                      E.subprocess.CalledProcessError(1,'objdump'),OSError('missing')):
+            with self.subTest(error=type(error).__name__),patch.object(E.subprocess,'run',side_effect=error):
+                report=E.vtable_abi_admission(prog,classes,anchors,propagated)
+                self.assertEqual(report['rows'][1]['status'],'withheld')
+                self.assertEqual(report['entryDecodings'][0]['status'],'refused')
+        with patch.object(E.subprocess,'run',return_value=SimpleNamespace(stdout='401100:\t90 \tnop\n401101:\tc3 \tret\n')) as call:
+            for _ in range(2):
+                report=E.vtable_abi_admission(prog,classes,anchors,propagated)
+                self.assertEqual(report['rows'][1]['status'],'mechanical-checks-pass')
+            self.assertEqual(call.call_count,2)
+            read=prog.img.read
+            prog.img.read=lambda a,n:b'\x91\xc3'[:n] if a==0x401100 else read(a,n)
+            report=E.vtable_abi_admission(prog,classes,anchors,propagated)
+            self.assertEqual(report['rows'][1]['status'],'withheld')
+
+    def test_overlapping_export_cannot_be_repaired_by_local_decode(self):
+        classes,prog,anchors=self.entry_gap_fixture(b'\x90\xc3')
+        # Even a different function's clipped bounding box retains ownership.
+        prog.by_va[0x401000].declared_hi=0x401100
+        with patch.object(E.subprocess,'run') as call:
+            report=E.vtable_abi_admission(prog,classes,anchors,E.propagate_vtable_anchors(prog,classes,anchors))
+            self.assertIn('overlapping exported function ownership',report['rows'][1]['flags'])
+            call.assert_not_called()
 
     def test_proposals_do_not_pick_one_folded_owner_or_move_a_name_between_targets(self):
         fn=lambda va,name:SimpleNamespace(va=va,name=name)

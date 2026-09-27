@@ -71,6 +71,27 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### RE selected-body decoder — September 27
+
+`python -m unittest tools.re_name_evidence_tests` passed **82 cases**. A
+bounded entry decode repairs coverage only when the cached whole-image decode
+misses an exact, file-backed executable body. Exact raw bytes, exported
+ownership, branch boundaries, return cleanup and other ABI refusals remain
+checked. The global instruction/reference caches are unchanged.
+
+Independent review caught the inline-constant check rereading the old cache;
+it now uses the same complete instructions. Authored contradictory TRUE/false
+and matching TRUE/one cases reproduce both outcomes. Fresh pristine reads
+confirm the two listener bodies: 107 bytes/32 instructions and 101 bytes/31
+instructions, each RET 4. Final retail output changes exactly those two
+admissions; nine other targets remain withheld. These two names have **not**
+been promoted.
+
+Private reports, commands and review: `local-data/test-runs/re-audit-20260926/listener/`,
+`alignment-entry-v2.json`, `entry-decoder-tests-v2.log`, `entry-decoder-review.json`.
+The first 81-case run preceded the constant-check regression case and is
+retained. No game, Godot or desktop execution.
+
 ### RE event-listener identity promotion — September 27
 
 Sixteen exact name/comment/tag rows passed fresh PRE restoration, rehearsal,

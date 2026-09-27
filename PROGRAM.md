@@ -642,10 +642,15 @@ new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
 `local-data/test-runs/re-audit-20260926/membuffer/`.
 
 Next listener work: five newly reviewed kept names need comments/tags; the
-sixteen renames are complete as recorded above. Add entry-seeded decoding for
-two cached instruction gaps with strict branch/coverage checks; require a
-bounded dispatch-table proof for five switch bodies. Shared/ambiguous entries
-remain withheld. Continue consumer-priority ABI findings alongside this family.
+sixteen renames are complete as recorded above. The entry-seeded decoder now
+closes the two cached coverage gaps with exact bytes, ownership and ABI checks;
+82 focused cases and independent review pass. The new InfantryGuide/MechGuide
+name candidates remain unpromoted. Five switch bodies still need a bounded
+dispatch-table proof; other shared/ambiguous entries remain withheld.
+The buffer ABI rehearsal also exposed two direct thunks whose inherited
+prototype changes must be declared with their targets. The rejected attempts
+are preserved; support for explicitly checked followers is being validated
+before any live write. Continue consumer-priority ABI findings alongside this family.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

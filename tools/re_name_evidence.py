@@ -139,13 +139,19 @@ def disassemble(img: Image) -> list[Insn]:
             ["objdump", "-D", "-b", "binary", "-m", "i386", "-M", "intel", "-w",
              f"--adjust-vma={sec.start:#x}", tmp.name],
             capture_output=True, text=True, check=True).stdout
-    insns: list[Insn] = []
+    return [ins for ins, _raw in parse_objdump(out)]
+
+
+def parse_objdump(out: str) -> list[tuple[Insn, bytes]]:
+    """Parse GNU Intel rows, retaining raw bytes for bounded coverage checks."""
+    insns: list[tuple[Insn, bytes]] = []
     for line in out.splitlines():
         m = _OBJDUMP_LINE.match(line)
         if not m:
             continue
         va = int(m.group(1), 16)
-        size = len(m.group(2).split())
+        raw = bytes.fromhex(m.group(2))
+        size = len(raw)
         text = m.group(3).strip()
         if not text:
             continue
@@ -154,8 +160,50 @@ def disassemble(img: Image) -> list[Insn]:
         ops = parts[1] if len(parts) > 1 else ""
         # drop objdump's symbolic comments such as "# 0x..." or "<...>"
         ops = ops.split("#", 1)[0].strip()
-        insns.append(Insn(va, size, mnem, ops))
+        insns.append((Insn(va, size, mnem, ops), raw))
     return insns
+
+def decode_entry_body(img: Image, fn: Func) -> list[Insn]:
+    """Decode one complete exported body from its entry, never patch the model.
+
+    Whole-image linear decoding may consume entry bytes as part of a preceding
+    instruction. A local decode may repair coverage only; callers must still
+    check control flow, ownership and ABI. Raw output is checked against every
+    input byte, and undecodable/truncated rows are rejected.
+    """
+    size = fn.hi - fn.va + 1
+    if (fn.lo != fn.va or getattr(fn, 'body_ranges', None) != 1
+            or getattr(fn, 'declared_hi', None) != fn.hi
+            or getattr(fn, 'body_bytes', None) != size or not 0 < size <= 1024 * 1024):
+        raise ValueError('exact single-range exported extent required')
+    sec = img.section_of(fn.va)
+    if (sec is None or not sec.characteristics & 0x20000000
+            or fn.hi >= sec.start + min(sec.size, len(sec.raw))):
+        raise ValueError('complete body must have executable file-backed bytes')
+    raw = img.read(fn.va, size)
+    if len(raw) != size:
+        raise ValueError('short selected-body read')
+    with tempfile.NamedTemporaryFile(suffix='.bin') as tmp:
+        tmp.write(raw)
+        tmp.flush()
+        out = subprocess.run(
+            ['objdump', '-D', '-z', '-b', 'binary', '-m', 'i386', '-M', 'intel', '-w',
+             f'--adjust-vma={fn.va:#x}', tmp.name],
+            capture_output=True, text=True, check=True, timeout=30).stdout
+    body = []
+    cursor = fn.va
+    for ins, decoded in parse_objdump(out):
+        if (ins.va != cursor or not 1 <= ins.size <= 15
+                or cursor + ins.size > fn.hi + 1
+                or decoded != raw[cursor - fn.va:cursor - fn.va + ins.size]):
+            raise ValueError('entry decode has a gap, overlap, overshoot or byte mismatch')
+        if ins.mnem == '(bad)' or ins.mnem.startswith('.'):
+            raise ValueError('invalid or data instruction in entry decode')
+        body.append(ins)
+        cursor += ins.size
+    if cursor != fn.hi + 1:
+        raise ValueError('entry decode does not cover the complete body')
+    return body
 
 
 def insn_refs(insn: Insn, img: Image) -> list[tuple[str, int]]:
@@ -437,12 +485,14 @@ def split_name(name: str) -> tuple[str | None, str]:
 _PAD = {"nop", "int3", "xchg"}
 
 
-def tiny_semantics(prog: "Program", f: Func, limit: int = 6) -> str | None:
+def tiny_semantics(prog: "Program", f: Func, limit: int = 6,
+                   *, instructions: list[Insn] | None = None) -> str | None:
     """Canonical description of a very small body, or None.
 
     Forms: noop:retN, const:V:retN, field:OFF:retN, this:retN, fconst:ADDR:retN,
     store:OFF:SRC:retN, thunk:TARGET, jmpimport:NAME."""
-    body = [i for i in prog.body(f) if i.mnem not in _PAD]
+    selected = prog.body(f) if instructions is None else instructions
+    body = [i for i in selected if i.mnem not in _PAD]
     if not body or len(body) > limit:
         return None
     last = body[-1]
@@ -1383,6 +1433,10 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
                 raise ValueError('common-interface source declaration is absent or ambiguous')
             _, witnessed_pops[key] = common_interface_witness(prog, cls, methods[0], tables[key[0]], a, source_root)
 
+    # Invocation-local only: reference caches must remain consistent with the
+    # original whole-image instruction model, and later calls may use new bytes.
+    entry_decodes = {}
+
     def pops(va, seen=frozenset()):
         if va in seen or len(seen) >= 8 or va not in prog.by_va:
             return set(), {'unresolved tail target or cycle'}
@@ -1393,14 +1447,35 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
                 or getattr(fn, 'body_bytes', None) not in (None, fn.hi-fn.lo+1)
                 or fn.lo != fn.va):
             return set(), {'noncontiguous or clipped function boundary'}
+        if any(other.va != fn.va and other.lo <= fn.hi
+               and (getattr(other, 'declared_hi', None) or other.hi) >= fn.lo
+               for other in prog.funcs):
+            return set(), {'overlapping exported function ownership'}
         body = prog.body(fn)
         cursor = fn.va
+        covered = True
         for ins in body:
-            if ins.va != cursor:
-                issues.add('instruction decoding does not cover the exact function range')
+            covered &= ins.va == cursor and 1 <= ins.size <= 15
             cursor = ins.va + ins.size
-        if cursor != fn.hi+1:
-            issues.add('instruction decoding does not cover the exact function range')
+        covered &= cursor == fn.hi + 1
+        if not covered:
+            if va not in entry_decodes:
+                evidence = {'target': f'0x{va:08x}', 'source': 'entry-seeded GNU objdump',
+                            'start': f'0x{va:08x}', 'endExclusive': f'0x{fn.hi+1:08x}'}
+                try:
+                    decoded = decode_entry_body(prog.img, fn)
+                except (ValueError, OSError, subprocess.SubprocessError) as exc:
+                    evidence.update(status='refused', reason=str(exc))
+                    entry_decodes[va] = ([], evidence)
+                else:
+                    evidence.update(status='complete-byte-coverage', instructions=len(decoded),
+                                    bytes=fn.hi-fn.va+1,
+                                    bodySha256=hashlib.sha256(prog.img.read(fn.va, fn.hi-fn.va+1)).hexdigest())
+                    entry_decodes[va] = (decoded, evidence)
+            body, evidence = entry_decodes[va]
+            if evidence['status'] != 'complete-byte-coverage':
+                return set(), {'instruction decoding does not cover the exact function range',
+                               'entry decoding refused: ' + evidence['reason']}
         if not body or body[-1].mnem not in ('ret', 'jmp'):
             issues.add('unresolved fallthrough beyond function range')
         starts = {ins.va for ins in body}
@@ -1472,7 +1547,11 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
         if len(expected)!=1 or actual!=expected:
             issues.append('return cleanup disagrees with anchor interface')
         fn=prog.by_va.get(target)
-        tiny=tiny_semantics(prog,fn) if fn else None
+        # Use the same byte-checked entry decode for constant contradictions.
+        # Reading the gapped cache again could conceal a decisive XOR/MOV.
+        decoded = entry_decodes.get(target)
+        tiny = (tiny_semantics(prog, fn, instructions=decoded[0] if decoded else None)
+                if fn else None)
         # Only compare constant bodies for classes that actually declare this
         # implementation; never impose a base default on a derived override.
         for use in row['uses']:
@@ -1488,7 +1567,7 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
         rows.append({'target':row['target'],'status':'mechanical-checks-pass' if not issues else 'withheld',
                      'expectedReturnPop':sorted(expected),'observedReturnPop':sorted(actual),
                      'flags':sorted(set(issues))})
-    return {'rows':rows,'limits':'Conditional on independently rederived seed identities. '
+    return {'rows':rows,'entryDecodings':[entry_decodes[k][1] for k in sorted(entry_decodes)],'limits':'Conditional on independently rederived seed identities. '
             'Current function ranges and direct tail paths are checked; indirect tails and other unresolved '
             'paths are withheld. No return/parameter type or runtime-behavior certification. '
             'Promotion additionally requires reviewed owners/names and the existing Ghidra gate.'}
