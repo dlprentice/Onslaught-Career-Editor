@@ -275,7 +275,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Console menu: seven old notes/12 authored comments (6,842/31,807 bytes); old notes remain leads.
 # Console kept names: nine old/new notes (5,027/24,150 bytes); only bounded role evidence is verified.
 # Vertex menu: one old/new note (3,310/5,060 bytes); parameter-only ABI evidence.
+# Music: eight old notes/ten authored comments (5,848/21,782 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/music-identities-20260927.manifest.tsv":
+        "cca35b9b460735c991414dc4f1725a77bf6c8be2335455c2f0bda8a6ad8df559",
     "tools/cohort-specs/vertex-menu-abi-20260927.manifest.tsv":
         "a2f578d0ee7418cf0698d3640fcc43949e4bb10b982610fc93e72fe49a827511",
     "tools/cohort-specs/console-menu-verified-20260927.manifest.tsv":

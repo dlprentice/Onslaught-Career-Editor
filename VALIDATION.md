@@ -8244,3 +8244,38 @@ The actual CLI `check` against the eleven-entry music map and current live expor
 reports three checked direct edges and zero contradictions. Evidence and command
 results are `local-data/test-runs/re-audit-20260926/music/source-map.tsv`,
 `source-graph-v2.json`, `source-graph-v2.log` and `entry-decode-tests-v2.log`.
+
+
+## RE music identity promotion — September 27
+
+`music-identities-20260927` corrects ten shared/device music names from complete
+retail bodies, pinned source, fresh RTTI, singleton installation and concrete
+virtual calls. Eight old notes (5,848 bytes) remain explicitly fallible leads;
+two targets gain first comments. All 543 code bytes / 184 instructions, saved
+interfaces, variables, locals, types, two thunk links and 8,322 other function
+records are unchanged. No old tags were removed.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live
+readback and independent POST restoration passed. All nine live exports equal
+rehearsal. The complete source packet retains its actual earlier export pin;
+`report-pre-binding.json` proves only the intervening vertex argument row differs
+and all eighteen music rows are unchanged. The projection matches all 8,332
+live entries: 2,064 unique corrected names, 369 additional kept, zero newly
+neutralized, 5,899 outside those sets, 53 corrected interfaces and 2,446 comments.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/music-identities/`.
+Logs and fresh body evidence:
+`local-data/test-runs/re-audit-20260926/music/identities-*` and
+`fresh-evidence-v1.json`. The cohort framework suite passes 94 tests.
+
+The fresh static work confirms previously documented OGG/source divergence and
+configured-volume behavior. Older demo and original-code runs were not rerun.
+Complete device ABI, worker timing, filesystem and audible acceptance remain open;
+eight kept shared names await separate live comment disposition. No Godot ran.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,174 candidate files. `git diff --check` passed.

@@ -1,14 +1,37 @@
 # `CMusic` shared music-policy semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-20
-Evidence: MEASURED — September 20 original setter execution and fresh selected pristine instructions; the August 11 source/demo comparison below is retained evidence, not rerun here.
-Verdict: configured music volume and its persistence are independently rechecked; fade/device consumers remain distinct, with earlier static findings explicitly dated.
+Last updated: 2026-09-27
+Evidence: MEASURED — September 27 complete retail bodies and interface identities; September 20 original-code controls and August 11 source/demo comparison are retained evidence, not rerun here.
+Verdict: shared identities and source differences are rechecked; configured volume, later fade consumption and device acceptance remain distinct.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
+
+## September 27 identity recheck
+
+Fresh entry-seeded decoding of all eleven shared retail bodies confirms the
+1,631-byte / 604-instruction extent below. Comparison with the pinned source,
+the `Music.cpp` allocation anchor in AddToPlayList, concrete virtual calls and
+the freshly read device table establishes the selected identities independently
+of their saved names. The source graph checks only three direct edges among
+these eleven bodies; those edges alone cannot identify the virtual operations.
+
+The [music identity promotion](../ghidra/README.md#re-audit-music-identities--september-27)
+corrects `004bb380` to `CMusic__Initialise`, `004bb450` to
+`CMusic__DeviceChangeTrack`, and `004bb7c0` to
+`CMusic__AddDirectoryToPlaylist`, alongside seven PC adapter names. It preserves
+their existing interfaces and code. Eight already-correct shared names still
+need their separate live comment/tag disposition. This is a static identity
+audit, not a new execution of the reset, setter or demo experiments below.
+
+The fresh bodies confirm the previously documented source differences: OGG-only
+directory admission, the assignment to random playback on the null-song path,
+linear configured volume with x87 conversion, and the missing source console
+registration in Initialise. They do not establish filesystem contents, worker
+timing or audible playback. Missing complete ABI details remain open.
 
 ## September 20 independent volume recheck
 
@@ -75,7 +98,7 @@ Its interface is `references/Onslaught/Music.h`, 2,826 bytes, SHA-256
 `8715ff13802163367e2e6009c1a14124cb8cf7d76de5135a3fa2548a449ad27a`.
 Released decompiles are retained under
 `local-lab/ghidra-fullpass-2026-07-23/exports/W006/decompile/`. The PC device
-side is separately closed in
+side is separately bounded in
 [`cpcmusic-vtable-semantics-2026-08-11.md`](cpcmusic-vtable-semantics-2026-08-11.md).
 
 ## Shared state and policy
@@ -135,8 +158,9 @@ exists in an ordinary retail installation or that the override succeeds.
 
 ## Corrected identity and boundary
 
-The saved name `CMusic__Play @ 0x004BB450` is wrong. Its sole reference is
-`CPCMusic` vtable slot 7, and its body exactly matches retained
+The former saved name `CMusic__Play @ 0x004BB450` was wrong; the September 27
+promotion replaces it with `CMusic__DeviceChangeTrack`. It occupies
+`CPCMusic` vtable slot 7, and its body matches retained
 `CMusic::DeviceChangeTrack`: stop, restore current and target volume, set device
 volume, play the filename, and mark playback active. The ordinary
 `CMusic::Play` policy is inlined at its released call sites and is not assigned
@@ -144,8 +168,9 @@ a separate entry here.
 
 The retained report covers shared state layout, playlist construction/order,
 track selection, fade arithmetic and shared/platform boundaries. Its demo
-comparisons and unexecuted subsystems have not been independently rerun by the
-September 20 recheck. It does not prove async
+comparisons have not been rerun by the September 20 or September 27 rechecks.
+It does not prove async
 worker cadence, decoder buffering, DirectSound behavior, live filesystem
 enumeration results, audible loudness, or PS2/Xbox instruction parity. No
-Ghidra or executable mutation is part of this report.
+executable mutation is part of this report; the September 27 Ghidra metadata
+promotion is recorded separately above.

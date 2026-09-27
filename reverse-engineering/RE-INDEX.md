@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (console-menu identities and vertex argument metadata promoted; broader name/prototype/comment audit remains)
+Last updated: 2026-09-27 (console-menu interfaces and music identities promoted; broader name/prototype/comment audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -74,6 +74,13 @@ exact live readback and restored independent recovery. The [nine kept-name comme
 are also live after the same gates; all names, code and interfaces remain unchanged. Twenty-three isolated original-code cases and two altered-copy
 controls support the now-promoted [Vertex GetEntry argument correction](ghidra/README.md#re-audit-vertex-menu-argument-interface--september-27); formatter
 and shader-text hooks do not establish real menu behavior or rendering.
+The [music identity cohort](ghidra/README.md#re-audit-music-identities--september-27)
+now corrects ten shared/device names with complete body/source/dispatch evidence,
+unchanged interfaces and thunk links, exact live readback and independent recovery.
+The [shared policy](binary-analysis/cmusic-shared-semantics-2026-08-11.md) and
+[device crosswalk](binary-analysis/cpcmusic-vtable-semantics-2026-08-11.md) separate
+fresh retail inspection from retained demo/runtime findings and remaining ABI,
+filesystem and audible acceptance. Eight kept shared names await comment disposition.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
