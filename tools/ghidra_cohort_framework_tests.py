@@ -326,6 +326,7 @@ LIVE_GRANTED_COHORTS = [
     "frontend-callback-abi-20260927",
     "class-name-identities-20260927",
     "membuffer-identities-20260927",
+    "listener-identities-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -790,6 +791,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "frontend-callback-abi-20260927",\n'
         '        "class-name-identities-20260927",\n'
         '        "membuffer-identities-20260927",\n'
+        '        "listener-identities-20260927",\n'
         "    };\n",
     ),
     (

@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -17,6 +17,8 @@ ranges, independently reproduced without Ghidra. Function names retain their dat
 contracts are independent of those labels.
 
 > **September 27 deleting-entry recheck:** `0x00533430 IScript__scalar_deleting_dtor`; `0x00535330 CVM__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
+
+> **September 27 listener identity recheck:** `0x005385e0 IScript__HandleEvent` (formerly `IScript__HandleMessage`). The [guarded-dispatch and RTTI audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Shape
 
@@ -39,7 +41,7 @@ is at `0x005e4f08` (the dword before it, `0x005e4f04`, is the COLOC pointer):
 
 | Slot | Address | Name |
 | --- | --- | --- |
-| 0 | `0x005385e0` | `IScript__HandleMessage` — the scheduled-event handler this map covers |
+| 0 | `0x005385e0` | `IScript__HandleEvent` — the scheduled-event handler this map covers |
 | 1 | `0x00533430` | `IScript__scalar_deleting_dtor` |
 | 2 | `0x00533810` | `IScript__VFunc_2_00533810` |
 
@@ -51,7 +53,7 @@ float constant `57.29578f` = `180/π` (`RAD2DEG`), read by
 Delivery: `CEventManager__Flush` executes
 `event->[+0] target->vftable[0](target, event)` for each due event
 ([`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) → "Message 0x7d0 fire
-path"), and `IScript__HandleMessage` is exactly that slot-0 handler. The
+path"), and `IScript__HandleEvent` is exactly that slot-0 handler. The
 post side of the same chain — `IScript__PostEvent` (`0x005383c0`) cloning the
 name value into a `CPostEventData` and scheduling event `0x7d0` against the
 `CScriptEventNB` singleton — is byte-closed in
@@ -104,7 +106,7 @@ these instruction findings do not establish a new runtime or rebuild result.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x005385e0` | `IScript__HandleMessage` | `56 57 8bf9 8b4c240c 0fbf4104 2dd0070000 0f84a2000000 48 7448 48 0f859f000000 …` | `ret 4`; one arg = message struct at `[esp+0xc]`. **Signed** word dispatch `movsx eax, word [msg+4]; sub eax,0x7d0`: `0x7d0` (2000) → waypoint arm, `0x7d1` (2001) → **CVM wait-resume**, `0x7d2` (2002) → timer arm, anything else returns. HIGH on the dispatch shape; the arms are byte-mapped below. |
+| `0x005385e0` | `IScript__HandleEvent` | `56 57 8bf9 8b4c240c 0fbf4104 2dd0070000 0f84a2000000 48 7448 48 0f859f000000 …` | `ret 4`; one arg = message struct at `[esp+0xc]`. **Signed** word dispatch `movsx eax, word [msg+4]; sub eax,0x7d0`: `0x7d0` (2000) → waypoint arm, `0x7d1` (2001) → **CVM wait-resume**, `0x7d2` (2002) → timer arm, anything else returns. HIGH on the dispatch shape; the arms are byte-mapped below. |
 | `0x00538470` | `IScript__UpdateWaypointFollowing` | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Arrival check: `float32(sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2)) < radius`, or an unordered compare; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CDebugLog__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
 
 | `0x00535cd0` | `IScript__Die` | `51 8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff 59 c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
@@ -216,7 +218,7 @@ The Ghidra cohort `label-audit-2-20260926` renamed this function from
   whole-image immediate census of `0x0089c590` finds only the
   register/post/lifecycle sites listed in
   [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md)).
-- Its only caller is `IScript__HandleMessage`, which passes its own `this`
+- Its only caller is `IScript__HandleEvent`, which passes its own `this`
   (`mov ecx,edi` at `0x00538699`).
 - Its tail reschedules against **itself**: `push edi(0); push edi(0);
   lea ecx,[esp+0x18]; push edi(0); push ecx(&time); push esi(this);

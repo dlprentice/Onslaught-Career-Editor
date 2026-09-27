@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (memory-buffer corrections and original-code findings recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (event-listener identity promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -71,10 +71,29 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### RE event-listener identity promotion — September 27
+
+Sixteen exact name/comment/tag rows passed fresh PRE restoration, rehearsal,
+separate/sealed readback, five actual byte-stable refusals, independent review
+with root reproduction, live readback and independently restored POST. All nine
+live exports equal rehearsal; 708 instructions / 2,037 code bytes, all saved
+prototypes/locals and 8,315 non-target function rows are unchanged. The program
+comment count grows by seven. The full 8,331-name projection equals live.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+Current-name documentation checks first found eight old assertions, then three
+historical acceptance markers using the wrong side of the mapping. Those were
+corrected without rewriting the historical rows; final strict projection passes.
+Private exact commands, outputs and preservation receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/listener-identities/`.
+Final documentation/public-payload checks accompany publication there.
+No game, Godot, desktop or complete handler-runtime acceptance occurred.
+
 ### RE guarded event-interface evidence — September 27
 
-`python -m unittest tools.re_name_evidence_tests` passed 90 cases after adding
-the guarded-event witness. The existing frontend straight-line witness keeps
+`python -m unittest tools.re_name_evidence_tests` passed 75 cases after adding
+the guarded-event witness. The first tool commit incorrectly called this 90;
+the retained command log records 75, which is the count used here. The existing frontend straight-line witness keeps
 its stricter separate rules. Fresh pristine RTTI equals the cached model; all
 169 listener uses have the receiver's unique fixed interface occurrence. Both
 reviewed EventManager queue calls agree with the surviving CThing declaration.

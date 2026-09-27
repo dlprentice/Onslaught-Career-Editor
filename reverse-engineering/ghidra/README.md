@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[memory-buffer identities](#re-audit-memory-buffer-identities--september-27);
+[event-listener identities](#re-audit-event-listener-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,36 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit event-listener identities — September 27
+
+The [sixteen-row manifest](../../tools/cohort-specs/listener-identities-20260927.manifest.tsv)
+and [spec](../../tools/cohort-specs/listener-identities-20260927.spec.tsv) correct shared
+`HandleEvent` interface identities from guarded retail calls and fixed RTTI.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Both complete guarded EventManager queue transports bind IListener slot 0 to the surviving CThing HandleEvent(CEvent*) declaration. The tool verifies the unique fixed primary RTTI chain, all holders, complete body/return cleanup, naming owner and collisions. Fresh RTTI and 169 table uses were checked; the sixteen renamed entries are all primary-offset handlers. Review corrected reversed CThing event-branch wording in the first private packet: 2000 reaches slot 2, 2002 reaches slot 50. Root reproduced the adverse implicit-register-write and indirect-jump controls; a diagnostic must be a decoded PUSH. The 75 focused evidence-tool cases passed. The first tool commit called that 90 incorrectly; the actual log and corrected VALIDATION record 75. Missing interface headers, default-path semantics, saved types and all runtime handler behavior remain uncertified.
+
+The other proposed kept names are a separate cohort. Purecall, a shared no-op,
+ambiguous owners, unresolved switch dispatches and two cached whole-image
+instruction gaps are excluded. The latter gaps are not demonstrated Ghidra
+boundary defects. Saved signatures remain unchanged, including known pointer
+and return-type problems; no per-handler event semantics are inferred from an
+interface name. EBP preservation across callbacks assumes the x86 ABI.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusal controls, independent read-only review/root reproduction,
+live readback and independently restored POST passed. All nine live exports
+match rehearsal. Exactly sixteen event-listener names/comments/tags corrected to the observed IListener HandleEvent interface. The complete 2,037 code bytes / 708 instruction rows, saved prototype types/storage, locals and 8,315 non-target function rows remain unchanged. Earlier notes remain fallible leads; saved pointer/return type defects, including CInfluenceMap float-as-event, are separate declared follow-up work. Only the program comment count (+7) and digest
+change; the full current name projection is checked against live.
+
+Working identity: `db.18681`, 18 files / 123,669,364 bytes,
+inventory SHA-256 `f81a43030a7e5322f4f931615c48338baf7129fe233d13fb4c829c21fa0e8c34`; main database 73,367,552 bytes,
+SHA-256 `3b57260d99b836abf90bb007fbe7a10f901678a496ad871d6e01094a4faec236`. Restored memory-buffer POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-listener-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private gate receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/listener-identities/`; interface/tool witnesses and rejected drafts:
+`local-data/test-runs/re-audit-20260926/listener/`.
 
 ## RE-audit memory-buffer identities — September 27
 

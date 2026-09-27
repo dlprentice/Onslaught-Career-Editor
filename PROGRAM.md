@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: memory-buffer identities and bounded original-code findings recorded; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: shared event-listener identities corrected; memory-buffer ABI follow-up prepared; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,25 +491,25 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the memory-buffer identity cohort (September 27).**
+**Running coverage after the event-listener identity cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,964 unique functions; 1,965 rename rows include one repeated correction. The latest five establish CDXMemBuffer method identities. |
+| Names corrected | 1,980 unique functions; 1,981 rename rows include one repeated correction. The latest sixteen establish the common event-listener method identity. |
 | Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,073 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,057 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 8 interfaces: four keyboard queries, cockpit shake and three frontend callbacks. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,263 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,279 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
 `compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`,
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
-`membuffer-identities-20260927`, the final
+`membuffer-identities-20260927` and `listener-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -528,6 +528,28 @@ neutral names; preserve displaced names as explicitly fallible comment leads.
 Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
+
+**Event-listener identities (September 27).** The existing vtable tool now
+binds both guarded EventManager queue calls to the surviving `CThing::HandleEvent`
+declaration through raw fixed RTTI and the actual event receiver. All 169 uses
+were checked without using saved names as evidence. Sixteen source-identity
+renames are live with unchanged bodies/prototypes, exact readback and an
+independently restored POST. The complete name projection matches all 8,331
+live entries. Five additional kept names need a separate comments/tags cohort;
+previously counted names are excluded from new coverage. Eleven targets remain
+withheld for shared bodies, ambiguous owners, purecall, bounded-switch proof
+or two whole-image disassembly-cache gaps. Entry-seeded decoding resolves the
+latter bytes; they are not demonstrated Ghidra boundary defects.
+
+Private proof and rejected draft: `local-data/test-runs/re-audit-20260926/listener/`;
+promotion: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/listener-identities/`.
+Review corrected reversed event-branch wording and tightened three adverse
+matcher cases; the evidence-tool module passed **75**, not the 90 mistakenly
+quoted in the first tool commit. Per-handler semantics and saved types remain
+separate work. In particular the influence handler consumes a pointer, despite
+its saved float parameter. Six memory-buffer ABI corrections are prepared but
+not yet promoted; full-width returns and a missing receiver matter to accurate
+loading/saving analysis. Real Windows I/O and player runtime acceptance remain open.
 
 **Frontend interface evidence (September 27).** The existing
 name-evidence tool now binds seven surviving `CFEPGoodies` virtual declarations
@@ -619,15 +641,11 @@ receiver, signed size and four DWORD return transports) remain follow-up, not
 new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
 `local-data/test-runs/re-audit-20260926/membuffer/`.
 
-Next mechanized family: bind IListener's shared HandleEvent slot through both
-retail EventManager queue dispatches and the surviving CThing declaration.
-Missing interface headers stay missing; fixed RTTI ancestry, all holders and
-return cleanup must agree before promotion. The recognizer now checks both guarded caller transports and a unique fixed
-primary RTTI path. It proposes 16 new renames and five newly reviewed kept names;
-none are counted live yet. Two whole-image decoder gaps, five switch bodies and
-ambiguous/shared entries stay withheld. Review corrected reversed event-branch
-wording and closed three adverse-admission gaps before sealing. Continue
-consumer-priority ABI findings alongside this family.
+Next listener work: five newly reviewed kept names need comments/tags; the
+sixteen renames are complete as recorded above. Add entry-seeded decoding for
+two cached instruction gaps with strict branch/coverage checks; require a
+bounded dispatch-table proof for five switch bodies. Shared/ambiguous entries
+remain withheld. Continue consumer-priority ABI findings alongside this family.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career
