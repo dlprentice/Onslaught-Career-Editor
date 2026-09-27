@@ -189,7 +189,6 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ViewHelpers.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
-reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
 reverse-engineering/binary-analysis/functions/Symtab.cpp.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateGuide.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateLegMotion.md

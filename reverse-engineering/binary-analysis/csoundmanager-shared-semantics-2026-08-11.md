@@ -44,6 +44,60 @@ actual output chains and both control differences. These checks cover authored
 valid links and final state, not all process writes, malformed lists, concurrent
 use, channel arbitration, playback, devices or audible behavior.
 
+## September 27 sound-family identity and documentation recheck
+
+Complete pristine bodies for 42 shared/backend candidates cover 11,886 bytes /
+3,939 instructions, excluding the already-promoted DeviceInit anchor. The
+prepared identity record is `local-data/test-runs/re-audit-20260926/sound/identity-evidence-v4.json`.
+It is bound to the current export, source hashes and freshly decoded original
+bytes. The [41 kept-name comment/tag records](../ghidra/README.md#re-audit-verified-sound-records--september-27)
+have now been promoted and counted, with exact live readback and independently
+restored recovery. The GetSoundEvent source-name correction remains pending.
+Saved interfaces and old plate notes remain fallible; identity is a narrower
+claim than complete behavior. Source references below use the pinned commit
+`5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+
+Consequential fresh instruction findings:
+
+- Init `004e00d0` uses the raw saved master float and clears manager initialized
+  byte `+4` when DeviceInit returns zero AL at `004e0298–004e029c`. The pinned
+  source's failure return does not clear it. Sample creation `004e0890` has a
+  fourth reuse argument beyond the source's three; the existing September 22
+  sample contract remains the owner of the earlier controlled execution.
+- `PlaySample` checks master volume before pre-run and duplicate suppression.
+  At `004e0b3e–004e0b4c`, x87 comparison C3 causes an early return, including
+  zero and unordered results. This gate is absent from pinned source lines 359–405.
+- Effect variant selection calls CRT RNG `0055dbfe` even for a singleton chain
+  (`004e196b`). A second draw at `004e19c4` requires both nonzero variance and
+  nonzero AL from `00517ad0`, whose complete body reads byte `00896c58` and
+  returns. Source lines 1150–1201 lack that gate. For positive variance, the remainder
+  is nonnegative and is added to pitch; this is **not symmetric variation**.
+  The minimum-pitch clamp belongs only to that admitted variance path.
+- `CEffect::GetEffectByName` `004e2a90` follows main-list links `+0xd8`, counting
+  matching names; it never follows variant links `+0xd4`. `PlayEffect` chooses a
+  variant separately, and `IsEffectPlaying` explicitly searches that chain.
+- Effect-file allocation carries retail line 1566 versus pinned source line 1526.
+  A single file-wide line delta is therefore insufficient. The body retains
+  signed version thresholds 101/103, but no executable upper-version assertion.
+  Its inlined ReadLine overwrites the last returned byte without first testing
+  for CR/LF; the final discarded line also skips leading-`#` records. These are
+  static observations, not proof of safe malformed-file handling.
+- Paused `UpdateStatus` events skip elapsed-time advancement and the pitch/fade/
+  owner branch, but the jump at `004e1dff` rejoins at `004e221a`, before the
+  playing/channel check and backend call `004e222b`. The pinned source nests
+  that call inside the unpaused branch. Frozen state gates position refresh and
+  final event recycling; it does not stop the entire updater. A separate
+  stopped-event, time-greater-than-five owner-clear path precedes the pause gate.
+- UpdateSoundPosition's X inversion at `004e1752–004e175f` is in the shared
+  tail. It can negate a retained position when the refresh branch was skipped,
+  so it must not be restricted to newly transformed coordinates.
+
+The source-call checker and native queue experiment have separate, stated limits.
+The findings above are static rechecks, not new retail runs. Controlled original
+calls with recorded RNG draws, paused/frozen combinations and device-call hooks
+are the next inexpensive falsifiers; actual mixer/device/audible acceptance
+remains separate.
+
 ## September 20 independent volume/event recheck
 
 The selected executable is `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`
@@ -184,17 +238,20 @@ attenuation; recycles inaudible non-looping starts; and starts an assigned
 backend channel.
 
 `PlayEffect` counts a chained effect family, randomly chooses one member,
-multiplies its authored volume, resolves once/loop state, applies symmetric
-pitch variance, toggles language-dependent loading around sample resolution,
-then delegates to `PlaySample`. Its released ABI carries one additional
-owner-position flag beyond the retained source signature. Lookup and
-`IsEffectPlaying` operate across all variants, not merely the chain head.
+multiplies its authored volume, resolves once/loop state, conditionally adds
+pitch variance under the September 27 gates, and toggles language-dependent
+loading around sample resolution before reaching `PlaySample`. Its released
+ABI carries one additional owner-position flag beyond the retained source
+signature. Name lookup walks the main effect list; `IsEffectPlaying` searches
+the selected effect's variant chain.
 
 All stop families converge on the same policy: optional owner completion
 callback, backend channel release when assigned, playing clear, and monitored
 owner-reader clear. The selectors differ—owner, owner+sample pointer,
-all instances of a sample, name+owner, or all events—and only the
-all-instances path forwards `block_until_stopped=true`.
+all instances of a sample, name+owner, or all events. These selector bodies
+inline the shared stop sequence. Only all-instances passes backend
+`block_until_stopped=true`; the other four pass false. The PC backend ignores
+that argument. The September 27 instruction recheck confirms this distinction.
 
 ## Volume, pitch, fades, and channel arbitration
 
@@ -214,7 +271,9 @@ assigned channels beyond the budget are stopped, while unpaused high-priority
 events inside it acquire free channels. This is the production arbitration
 law, not the deck's simplified `ShouldIBePlaying` example.
 
-`SetPitch` stores the target and `round(seconds * 20)` update ticks. Each status
+`SetPitch` stores the target and uses x87 integer conversion of `seconds * 20`,
+writing the low DWORD to the remaining-update field. Rounding depends on the
+x87 control state; generic language `round` is not an adequate contract. Each status
 update moves pitch by the remaining-error/remaining-ticks fraction. `FadeTo`
 stores a destination and a signed speed. Status adds the signed step once per
 update and completes only after a strict crossing (`>` for positive, `<` for
@@ -225,8 +284,9 @@ fades.
 
 ## Spatial, owner, and pause policy
 
-`UpdateSoundPosition` has a released stack-only ABI because it does not need a
-manager instance. It updates position/velocity for tracking modes, chooses the
+`UpdateSoundPosition` consumes two stack arguments and does not read incoming
+ECX. This does not alone prove the saved stdcall annotation; the source declares
+a member. It updates position/velocity for tracking modes, chooses the
 nearest camera in multiplayer, transforms into camera-local coordinates,
 handles `_L`/`_R` offsets and X inversion, and refreshes pan. `UpdateStatus`
 combines that with camera state, backend globals, fades, pitch, volume,
@@ -246,7 +306,8 @@ Four bodies have no exact retained shared-source counterpart:
 - tear down active events/voices/samples and reload that changed bank;
 - parse the cached compressed XAP stream into named samples, subject to
   resource-build and compressed-audio gates;
-- expose the output-enabled byte used by effect playback.
+- expose byte `00896c58`, which gates effect pitch randomization; this recheck
+  does not establish that it is a general output-enabled flag.
 
 Device-loss recovery extends retained `Reset`: delete samples, shut down music
 and message-box voice, release voice buffers, reinitialize the PC sound device

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[GenericSPtrSet interfaces](#re-audit-genericsptrset-interfaces--september-27);
+[verified sound records](#re-audit-verified-sound-records--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,41 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified sound records — September 27
+
+The [41-row manifest](../../tools/cohort-specs/sound-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sound-verified-20260927.spec.tsv) retain 29 shared sound and
+12 PC-backend names, correct their plate notes and qualify tags. Specimen:
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Forty-one existing shared/PC sound names verified within stated complete-body/source limits; only their plate comments and tag sets change. Old notes remain qualified leads. All names, prototypes, variables, locals, frames, 11,752 code bytes / 3,885 instructions and 8,291 other function records stay unchanged.
+
+All complete pristine bodies were freshly decoded and reviewed against pinned SoundManager.cpp/.h and pcsoundmanager.cpp/.h. Caller transport, strings, allocation anchors, field predicates and raw CPCSample RTTI support the identities. Eight selected shared/backend direct-call witnesses passed the existing checker; authored identity premises remain separate. Retail differences include raw master volume, sample reuse, paused backend submission, conditional pitch RNG, backend predistance volume and 64 channel slots. This does not certify every saved interface, malformed-input behavior, real device success or audible parity. The source-name correction GetSoundEvent and unresolved interfaces remain separate work.
+
+The [shared note](../binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sound-family-identity-and-documentation-recheck)
+separates main-list effect lookup from randomized variants, records paused and
+frozen processing limits and the shared-tail X inversion. The
+[backend note](../binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#backend-identity-and-wording-recheck--september-27)
+corrects file-loader versus buffer-loader wording, predistance volume and
+conditional buffer release. Source-parity tags are removed from these rows;
+earlier notes remain leads, including older runtime claims with their dates.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent review of all 41 exact rows with root reproduction,
+live readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. Only the program comment digest moves; names,
+prototypes, code and other analysis remain unchanged. The production name
+projection is checked against the complete live export separately.
+
+Working identity: `db.18707`, 18 files / 125,766,516 bytes,
+inventory SHA-256 `8159e28c9d27bdfea50016f1fc0d141c8d08f42fceb29696f5b952dec1c07bd7`; main database 75,464,704 bytes,
+SHA-256 `db703a891b00bcbce293a6fb60ebf7d02b5f980e7849cb1370c489f89b9a3ee2`. Restored GenericSPtrSet interface POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sound-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-verified/`; evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/sound/verified-*` and
+`identity-evidence-v4.json` in that same sound owner.
 
 ## RE-audit GenericSPtrSet interfaces — September 27
 

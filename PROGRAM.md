@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the GenericSPtrSet interface cohort (September 27).**
+**Running coverage after the kept sound-name cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 2,139 unique functions; 2,140 rename rows include one repeated correction. The latest cohort corrects fourteen shared GenericSPtrSet identities after a separate forwarding-entry correction. |
-| Names verified and kept | 377 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu and eight shared-music identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 418 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music and 41 shared/PC-sound identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,816 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,775 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 93 interfaces: the prior 85 plus seven direct GenericSPtrSet corrections and one dependent forwarding entry. Three unresolved frontend returns and ten custom-storage floating rows remain outside these corrections; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,529 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,570 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,9 +512,9 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
@@ -799,16 +799,33 @@ Remaining memory-buffer/listener comments and ABI questions remain in scope.
 Private proof/experiment owner: `local-data/test-runs/re-audit-20260926/camera-interface/`;
 completed gate: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-position-v2/`.
 
-The next shared sound/backend family has 42 candidate identities beyond the
-already-promoted DeviceInit. Complete pristine entry decoding covers 13,186 bytes
-/ 4,311 instructions including that anchor; this is an inventory, not 42 new
-dispositions. The [event-queue correction](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
+The shared sound/backend review began with 42 candidates beyond the already
+promoted DeviceInit: 13,186 bytes / 4,311 decoded instructions including that
+anchor. The inventory alone established no dispositions; the completed subset
+is recorded below. The [event-queue correction](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
 already resolves an inherited head-insertion error with 60 original-code cases
 and two consequential altered-copy controls. Nonempty queues retain their head;
 the flag selects insertion after the head or after the first negative-channel
 node/tail. Device and audible behavior remain untested by this experiment.
-Continue through complete body/source/caller review and the existing promotion
-gate; the prepared sound research has not yet changed any Ghidra record.
+Complete body/source/caller review produced 42 identity records. The
+[41 kept-name sound cohort](reverse-engineering/ghidra/README.md#re-audit-verified-sound-records--september-27)
+is now promoted with exact live readback and independently restored recovery.
+The source-name correction AllocateSoundEvent → GetSoundEvent remains pending. The [shared note](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sound-family-identity-and-documentation-recheck)
+corrects asymmetric pitch-RNG, main-list versus chain lookup, pause/frozen scope
+and source-version claims. The [backend note](reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#backend-identity-and-wording-recheck--september-27)
+also repairs stale sample-route and volume-field wording. The first seal was
+rejected before live use: five stop sequences were inlined rather than calls,
+and KillAllSamples forwards block zero. The corrected 41-row seal passed a fresh
+rehearsal, refusals and independent review. Keep interface changes separate,
+particularly source-member versus saved stack-only annotations. The next
+lookup lead at `004e0a00` matches source GetSample, with an extra retail reload
+argument and a second argument carrying music; it still needs exact cohort
+review. The source-name and interface work must not claim successful loading
+through the retail filename-loader stub.
+Ten prepared interface candidates cover nine receiver-annotation changes and
+the full-width IsEffectPlaying return. They remain leads in
+`shared-interface-candidates-v1.json` and `pc-interface-candidates-v1.json`,
+not promoted corrections; GetSampleLength's return type remains unresolved.
 Private owner: `local-data/test-runs/re-audit-20260926/sound/`.
 
 The existing source-graph tool now checks selected direct-call witnesses against
@@ -841,7 +858,9 @@ now uses the existing backup tool's exact-pair retirement helper after all gates
 its publication-failure controls preserve evidence. The completed `sptrset-abi`
 closeout used `cohort_ops.retire_completed_probes()` after independent POST
 restoration, retiring two additional exact twins (251,139,816 bytes) while
-preserving both manifests and original receipts. Keep PRE through all consumers and
+preserving both manifests and original receipts. The sound kept-name closeout
+uses the same rule for its two successful exact twins; its rejected first seal
+and byte-different rehearsal remain preserved. Keep PRE through all consumers and
 do not retire changed rehearsals by semantic-export equality. This bounded
 cleanup does not settle historical lab recovery or authorize cold-history pruning.
 
