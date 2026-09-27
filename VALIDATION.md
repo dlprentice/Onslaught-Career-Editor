@@ -71,6 +71,25 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### Verified switch-backed methods — September 27
+
+The [17-row comment/tag cohort](reverse-engineering/ghidra/README.md#re-audit-verified-switch-backed-methods--september-27)
+keeps all names and corrects their evidence records. Fresh reports against the
+preceding complete live export preserve every selected body/RTTI/admission/switch
+proof. All 27,072 original bytes / 7,455 instructions, prototypes, locals and
+8,314 other function rows remain unchanged. All nine live exports equal the
+separately reopened rehearsal; independent Archive A POST restore passed.
+
+Independent payload/PRE review and root reproduction cover 46 holder uses,
+22 tables / 135 DWORDs, 11 remaps and every authored comment. All 8,345 old note
+bytes and every old tag are preserved. Five project-byte-stable refusal controls,
+94 framework tests and the complete live-name projection passed. Deduplicated
+counts are 1,991 corrected names, 317 additional kept names, 6,023 outside that
+set, 22 corrected interfaces and 2,318 updated comments.
+Evidence: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/switch-verified/`.
+This does not validate old semantic claims, saved prototypes or runtime behavior;
+three second-argument type questions are explicit in the new notes.
+
 ### Switch-backed method identities — September 27
 
 The [six-row cohort](reverse-engineering/ghidra/README.md#re-audit-switch-backed-method-identities--september-27)

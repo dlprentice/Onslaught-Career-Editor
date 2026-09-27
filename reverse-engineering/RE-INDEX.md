@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (bounded-switch identities and original options controls recorded; broader audit unfinished)
+Last updated: 2026-09-27 (bounded-switch identities and kept-name evidence promoted; camera witnesses next)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -26,9 +26,11 @@ resolves six method names without changing code or prototypes. The
 [options callback recheck](binary-analysis/functions/display-settings.md#september-27-options-processing-recheck)
 records 21 original-code cases and two counterfactuals: inactive normalization,
 full-width page-state admission and context-directed calls. Transition/persistence
-callees are intercepted. Seventeen existing-name candidates remain for a separate
-comment/tag cohort; two raw-pointer questions stay withheld. Exact live readback
-and independently restored recovery passed for the six corrected names.
+callees are intercepted. The [17 kept-name cohort](ghidra/README.md#re-audit-verified-switch-backed-methods--september-27)
+also has exact live readback and independently restored recovery. Names, bodies
+and prototypes are unchanged; three saved second arguments need separate ABI
+review. Two raw-pointer questions stay withheld. Camera header/result-buffer
+witnesses are the next mechanized leads, with no camera promotion yet.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
