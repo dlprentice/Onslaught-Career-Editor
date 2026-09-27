@@ -48,6 +48,78 @@ class SourceGraphTests(unittest.TestCase):
         self.assertEqual(G.param_bytes("double d"), 8)
         self.assertIsNone(G.param_bytes("FVector v"))
 
+    def test_name_candidates_withhold_overloads_duplicates_and_analytic_suffixes(self):
+        functions = [{'address': hex(a), 'name': name} for a, name in [
+            (1, 'Thing__Run'), (2, 'Thing__Over'), (3, 'Thing__Leaf_Approximation'),
+            (4, 'Free'), (5, 'Thing__Helper'), (6, 'Thing__Helper')]]
+        mapping, rows = G.map_names(functions, self.src)
+        self.assertEqual(mapping, {1: 'Thing::Run', 4: 'Free'})
+        self.assertEqual([r['status'] for r in rows], ['candidate', 'ambiguous-source-definition',
+            'no-exact-source-definition', 'candidate', 'ambiguous-saved-name', 'ambiguous-saved-name'])
+        with self.assertRaisesRegex(ValueError, 'duplicate function address'):
+            G.map_names(functions + [functions[0]], self.src)
+
+    def test_name_candidates_map_ctor_dtor_without_guessing_class_prefix(self):
+        Path(self.tmp.name, 'construct.cpp').write_text('Thing::Thing() { }\nThing::~Thing() { }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        mapping, _ = G.map_names([{'address': '0x10', 'name': 'Thing__ctor'},
+                                  {'address': '0x20', 'name': 'Thing__dtor'},
+                                  {'address': '0x30', 'name': 'Other__ctor'}], src)
+        self.assertEqual(mapping, {0x10: 'Thing::Thing', 0x20: 'Thing::~Thing'})
+
+    def test_inline_same_arity_overloads_are_retained_and_withheld(self):
+        Path(self.tmp.name, 'over.h').write_text(
+            'class Inline { public: int F(int a) { return a; }\n'
+            'int F(float a) { return int(a); } };\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        mapping, rows = G.map_names([{'address': '0x10', 'name': 'Inline__F'}], src)
+        self.assertEqual(mapping, {})
+        self.assertEqual(rows[0]['status'], 'ambiguous-source-definition')
+        self.assertEqual(len(rows[0]['candidates']), 2)
+
+    def test_same_arity_overload_calls_are_possible_union_not_last_definition(self):
+        Path(self.tmp.name, 'over.cpp').write_text(
+            'void Thing::Same(int a) { Leaf(a); }\n'
+            'void Thing::Same(float a) { Helper(int(a)); }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        self.assertIsNone(G.resolve(src, 'Thing::Same/1'))
+        self.assertEqual(src.calls['Thing::Same/1'], {'Leaf', 'Helper'})
+
+    def test_identical_inline_const_overloads_stay_ambiguous(self):
+        Path(self.tmp.name, 'const.h').write_text(
+            'class Reader { public: int Read() { return 1; } '
+            'int Read() const { return 1; } };\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        mapping, rows = G.map_names([{'address': '0x10', 'name': 'Reader__Read'}], src)
+        self.assertEqual(mapping, {})
+        self.assertEqual(rows[0]['status'], 'ambiguous-source-definition')
+        self.assertEqual(len(rows[0]['candidates']), 2)
+        self.assertIsNone(G.resolve(src, 'Reader::Read/0'))
+
+    def test_elaborated_return_type_does_not_create_a_class_scope(self):
+        Path(self.tmp.name, 'elaborated.h').write_text(
+            'class Real { public: virtual class Shadow *GetShadow() { return 0; }\n'
+            'static int Helper(int a) { return a; } };\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        keys = {f.key for group in src.funcs.values() for f in group}
+        self.assertIn('Real::GetShadow', keys)
+        self.assertIn('Real::Helper', keys)
+        self.assertFalse(any(k.startswith('Shadow::') for k in keys))
+
+    def test_source_pin_changes_with_content_or_filename_and_mapping_rejects_duplicates(self):
+        root = Path(self.tmp.name)
+        before = G.source_digest(root, ('*.cpp', '*.h'))
+        p = root/'thing.cpp'
+        p.write_text(BODY+'\n// changed\n')
+        after = G.source_digest(root, ('*.cpp', '*.h'))
+        self.assertNotEqual(before, after)
+        p.rename(root/'other.cpp')
+        self.assertNotEqual(after, G.source_digest(root, ('*.cpp', '*.h')))
+        mapping = root/'map.tsv'
+        mapping.write_text('address\tsource\n0x10\tThing::Run\n0x10\tThing::Leaf\n')
+        with self.assertRaisesRegex(ValueError, 'duplicate address'):
+            G.read_mapping(mapping)
+
     def test_statics_inline_and_overloads(self):
         self.assertIn(("Thing", "Helper"), self.src.statics)
         self.assertIn("Inl", self.src.inline)
@@ -93,10 +165,21 @@ class SourceGraphTests(unittest.TestCase):
         report = G.check(mapping, calls, rets, src, {0x70: 6}, small=8)
         by = {r["address"]: r for r in report["rows"]}
         self.assertEqual(report["contradicted"], 0, [r for r in report["rows"] if r["contradictions"]])
-        self.assertEqual(by["0x00000050"]["expectedPop"], 4)               # the hidden result pointer
+        self.assertIsNone(by["0x00000050"]["expectedPop"])              # type name alone does not prove aggregate ABI
         self.assertEqual(by["0x00000060"]["expectedPop"], 16)              # static, but CALLBACK is __stdcall
         self.assertEqual(by["0x00000040"]["smallTargets"], ["0x00000070 Kid::Accel"])
         self.assertEqual(report["edgesChecked"], 2)
+
+    def test_scalar_typedef_and_declared_enum_do_not_invent_hidden_return_pointer(self):
+        Path(self.tmp.name, 'grade.h').write_text('enum EQuitType { Done, Failed };\n')
+        Path(self.tmp.name, 'grade.cpp').write_text(
+            'WCHAR Career::Grade(float f) { return 0; }\n'
+            'EQuitType Game::Run(int level) { return Done; }\n'
+            'UnknownResult Game::Unresolved(int x) { }\n')
+        src = G.index(Path(self.tmp.name), ('*.cpp', '*.h'), set())
+        self.assertEqual(G.expected_pop(src, G.resolve(src, 'Career::Grade')), 4)
+        self.assertEqual(G.expected_pop(src, G.resolve(src, 'Game::Run')), 4)
+        self.assertIsNone(G.expected_pop(src, G.resolve(src, 'Game::Unresolved')))
 
 
     def test_implicit_calls(self):

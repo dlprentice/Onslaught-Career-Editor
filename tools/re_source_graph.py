@@ -7,9 +7,9 @@ A name taken from source is only as good as the structure that supports it. For 
   function defined in the caller's own file (VC6 /Ob2 inlines within a translation unit);
 - which source calls between two mapped functions the program lacks (the compiler inlined them, or the source is a
   different version: a lead, not a failure);
-- its return against the source's parameters: a non-static member (__thiscall) or a __stdcall function pops its
-  parameters with `ret N` (plus four for the hidden result pointer of a by-value class return), a static member or
-  free __cdecl function returns with a bare `ret`.
+- its return against the source's parameters for known scalar/pointer results: a non-static member (__thiscall)
+  or __stdcall function pops its parameters with `ret N`. Unknown/aggregate result ABIs are withheld: a type name
+  alone does not prove hidden-result storage. Static members/free __cdecl functions use caller cleanup.
 
 Calls into bodies of at most --small bytes are reported apart, never as contradictions: the linker folds identical
 small bodies, so such a target's saved name may be any one of its folded identities. So are implicit calls, which
@@ -21,6 +21,8 @@ A contradiction means the mapping is wrong, or the source differs from the progr
 recorded, never smoothed over.
 
 Usage:
+  python tools/re_source_graph.py map-names --functions FUNCTIONS.tsv --source DIR --out MAP.tsv
+      --report CANDIDATES.json
   python tools/re_source_graph.py check --mapping MAP.tsv --source DIR [--functions functions.tsv]
       [--pattern '*.cpp' --pattern '*.h'] [--inline NAME ...] [--out report.json]
 
@@ -31,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import re
 import sys
@@ -52,6 +55,7 @@ class Source:
     statics: set[tuple[str, str]]                     # (class, method) declared static
     inline: set[str]                                  # short names the compiler may have inlined
     calls: dict[str, set[str]] = field(default_factory=dict)   # key (with /N for overloads) -> short names called
+    enum_types: set[str] = field(default_factory=set)
 
 
 def short(key: str) -> str:
@@ -93,10 +97,11 @@ def param_bytes(p: str) -> int | None:
 
 def index(root: Path, patterns: tuple[str, ...], extra_inline: set[str]) -> Source:
     defs = E.index_source(root, patterns)
-    statics, inline = set(), set(extra_inline)
+    statics, inline, enum_types = set(), set(extra_inline), set()
     for path in sorted({p for pattern in patterns for p in root.glob(pattern)}):
         text = E.strip_comments(path.read_text(errors="replace"))
-        for cm in re.finditer(r"\b(?:class|struct)\s+(\w+)[^;{]*\{", text):
+        enum_types.update(re.findall(r'\benum\s+(?:class\s+|struct\s+)?(\w+)\s*(?::[^;{}]+)?\{', text))
+        for cm in re.finditer(r"\b(?:class|struct)\s+(\w+)(?:\s+final)?\s*(?::[^;{}()]*)?\{", text):
             depth, j = 1, cm.end()
             while j < len(text) and depth:
                 depth += (text[j] == "{") - (text[j] == "}")
@@ -114,20 +119,28 @@ def index(root: Path, patterns: tuple[str, ...], extra_inline: set[str]) -> Sour
                     depth += (body[k] == "{") - (body[k] == "}")
                     k += 1
                 key = f"{cm.group(1)}::{m.group('name')}"
-                if not any(f.key == key for f in defs):
-                    defs.append(E.SourceFunc(key, path.name, text.count("\n", 0, cm.end() + m.start()) + 1,
-                                             body[m.end():k - 1], [], [], 0, m.group("args"), "inline " + m.group("head")))
+                method_body = body[m.end():k - 1]
+                # Each definition position is distinct. Equal arguments/body
+                # do not collapse const/nonconst overloads (or conditional
+                # duplicate definitions) into a uniquely resolved identity.
+                defs.append(E.SourceFunc(key, path.name, text.count("\n", 0, cm.end() + m.start()) + 1,
+                                         method_body, [], [], 0, m.group("args"), "inline " + m.group("head")))
     funcs: dict[str, list[E.SourceFunc]] = defaultdict(list)
     for f in defs:
         funcs[short(f.key)].append(f)
         if f.file.endswith((".h", ".hpp", ".inl")) or re.search(r"\binline\b", f.head):
             inline.add(short(f.key))
     src = Source(funcs, statics, inline)
+    src.enum_types = enum_types
     names = set(funcs)
     for name, fs in funcs.items():
         for f in fs:
             called = {c for c in re.findall(r"(?<!\w)(~?[A-Za-z_]\w*)\s*\(", f.body) if c not in _KEYWORDS}   # obj.f( and p->f( too
-            src.calls[f.key if len(fs) == 1 else f"{f.key}/{len(params(f.args))}"] = called & names
+            # Equal-arity overloads cannot be resolved by this partial parser.
+            # Preserve the union as possible calls; never silently select the
+            # last definition. resolve() still withholds the ambiguous identity.
+            key = f.key if len(fs) == 1 else f"{f.key}/{len(params(f.args))}"
+            src.calls.setdefault(key, set()).update(called & names)
     return src
 
 
@@ -169,12 +182,11 @@ def reach(src: Source, key: str, file: str | None = None) -> set[str]:
 
 _STDCALL = re.compile(r"\b(__stdcall|CALLBACK|WINAPI|PASCAL|APIENTRY|STDMETHODCALLTYPE)\b")
 _SCALAR_RET = re.compile(r"^(void|bool|BOOL|char|short|int|long|float|double|unsigned|signed|DWORD|WORD|BYTE|UINT|"
-                         r"HRESULT|LRESULT|INT_PTR|LONG|ULONG|SINT|UBYTE|UWORD|size_t|__int64|HWND|HANDLE)\b")
+                         r"HRESULT|LRESULT|INT_PTR|LONG|ULONG|SINT|UBYTE|UWORD|WCHAR|size_t|__int64|HWND|HANDLE)\b")
 
 
 def expected_pop(src: Source, f: E.SourceFunc) -> int | None:
-    """Bytes the callee pops: its parameters for a non-static member or a __stdcall function (plus the hidden result
-    pointer of a by-value class return), nothing for a static member or free __cdecl function."""
+    """Expected pop for known scalar/pointer results; aggregate/unknown ABI stays unresolved."""
     parts = f.key.split("::")
     member = len(parts) >= 2 and (parts[-2], parts[-1]) not in src.statics and not re.search(r"\bstatic\b", f.head)
     if not member and not _STDCALL.search(f.head):
@@ -182,11 +194,12 @@ def expected_pop(src: Source, f: E.SourceFunc) -> int | None:
     sizes = [param_bytes(p) for p in params(f.args)]
     if None in sizes:
         return None
-    ret = re.sub(r"\b(virtual|static|inline|const|__\w+|CALLBACK|WINAPI|PASCAL|APIENTRY|STDMETHODCALLTYPE)\b", " ",
+    ret = re.sub(r"\b(virtual|static|inline|const|__cdecl|__stdcall|__thiscall|__fastcall|__forceinline|CALLBACK|WINAPI|PASCAL|APIENTRY|STDMETHODCALLTYPE)\b", " ",
                  f.head).strip()
-    hidden = 4 if ret and not ("*" in ret or "&" in ret or _SCALAR_RET.match(ret)) and \
-        not (parts[-1] == (parts[-2] if len(parts) >= 2 else None) or parts[-1].startswith("~")) else 0
-    return sum(sizes) + hidden
+    constructor = parts[-1] == (parts[-2] if len(parts) >= 2 else None) or parts[-1].startswith('~')
+    if not constructor and not ('*' in ret or '&' in ret or _SCALAR_RET.match(ret) or ret in src.enum_types):
+        return None
+    return sum(sizes)
 
 
 def _implicit(src: Source, caller: E.SourceFunc, target: str, implicit: set[str]) -> bool:
@@ -259,9 +272,74 @@ def program_facts(functions: Path, model: Path, addresses: set[int]):
     return calls, rets, sizes
 
 
+def source_digest(root: Path, patterns: tuple[str, ...]) -> str:
+    """Pin the exact source inputs, including names; neither mtimes nor saved labels are authority."""
+    files = sorted({p for pattern in patterns for p in root.glob(pattern)})
+    records = [(p.relative_to(root).as_posix(), hashlib.sha256(p.read_bytes()).hexdigest()) for p in files]
+    return hashlib.sha256(json.dumps(records, separators=(',', ':')).encode()).hexdigest()
+
+
+def input_pins(functions: Path, source: Path, patterns: tuple[str, ...]) -> dict:
+    return {'functionsSha256': hashlib.sha256(functions.read_bytes()).hexdigest(),
+            'sourceSha256': source_digest(source, patterns), 'sourcePatterns': list(patterns),
+            'toolSha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in [Path(__file__), Path(E.__file__)]}}
+
+
+def map_names(functions: list[dict], src: Source) -> tuple[dict[int, str], list[dict]]:
+    """Exact-spelling candidate map; ambiguity is retained, never resolved from an inherited ABI.
+
+    A spelling match is a hypothesis for graph checks, not identity evidence.
+    Overloads, duplicate definitions and multiple saved entries with the same
+    source spelling are withheld even if their saved parameter counts differ.
+    """
+    defs = defaultdict(list)
+    for group in src.funcs.values():
+        for f in group:
+            defs[E.source_key_to_name(f.key)].append(f)
+    counts = defaultdict(int)
+    seen = set()
+    for r in functions:
+        address = int(r['address'], 16)
+        if address in seen:
+            raise ValueError(f'duplicate function address {address:#x}')
+        seen.add(address)
+        counts[r['name']] += 1
+    mapping, rows = {}, []
+    for r in sorted(functions, key=lambda row: int(row['address'], 16)):
+        address, name = int(r['address'], 16), r['name']
+        candidates = defs.get(name, [])
+        status = ('no-exact-source-definition' if not candidates else
+                  'ambiguous-source-definition' if len(candidates) != 1 else
+                  'ambiguous-saved-name' if counts[name] != 1 else 'candidate')
+        if status == 'candidate':
+            mapping[address] = candidates[0].key
+        rows.append({'address': f'0x{address:08x}', 'name': name, 'status': status,
+                     'candidates': [{'source': f.key, 'file': f.file, 'line': f.line,
+                                     'parameters': f.args} for f in candidates]})
+    return mapping, rows
+
+
+def read_mapping(path: Path) -> dict[int, str]:
+    result = {}
+    with path.open() as stream:
+        for row in csv.DictReader(stream, delimiter='\t'):
+            address = int(row['address'], 16)
+            if address in result or not row['source'].strip():
+                raise ValueError(f'duplicate address or empty source in mapping: {address:#x}')
+            result[address] = row['source']
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    m = sub.add_parser('map-names', help='exact-spelling candidates, not verified identities')
+    m.add_argument('--functions', type=Path, required=True)
+    m.add_argument('--source', type=Path, required=True)
+    m.add_argument('--pattern', action='append')
+    m.add_argument('--out', type=Path, required=True, help='new mapping TSV; never overwrite evidence')
+    m.add_argument('--report', type=Path, required=True, help='new candidate/ambiguity JSON')
     c = sub.add_parser("check")
     c.add_argument("--mapping", type=Path, required=True)
     c.add_argument("--source", type=Path, required=True)
@@ -273,11 +351,30 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--implicit", action="append", default=[], help="a name source code reaches without writing a call")
     c.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
-    with args.mapping.open() as fh:
-        mapping = {int(r["address"], 16): r["source"] for r in csv.DictReader(fh, delimiter="\t")}
-    src = index(args.source, tuple(args.pattern or ("*.cpp", "*.h")), set(args.inline))
+    patterns = tuple(args.pattern or ('*.cpp', '*.h'))
+    src = index(args.source, patterns, set(getattr(args, 'inline', [])))
+    inputs = input_pins(args.functions, args.source, patterns)
+    if args.cmd == 'map-names':
+        if args.out.resolve() == args.report.resolve() or args.out.exists() or args.report.exists():
+            ap.error('mapping/report must be distinct new paths')
+        with args.functions.open() as stream:
+            mapping, rows = map_names(list(csv.DictReader(stream, delimiter='\t')), src)
+        report = {'inputs': inputs, 'mappedCandidates': len(mapping), 'rows': rows,
+                  'limits': 'Spelling-only candidate map; no retail identity or semantic verification. '
+                            'Source parsing is partial; conditional branches/macros are not resolved. '
+                            'Ambiguous definitions/overloads/saved names are withheld.'}
+        with args.out.open('x') as stream:
+            writer = csv.writer(stream, delimiter='\t', lineterminator='\n')
+            writer.writerow(['address', 'source'])
+            writer.writerows((f'0x{a:08x}', key) for a, key in sorted(mapping.items()))
+        with args.report.open('x') as stream:
+            stream.write(json.dumps(report, indent=1)+'\n')
+        print(f'{len(mapping)} candidates; {len(rows)-len(mapping)} withheld; no names verified')
+        return 0
+    mapping = read_mapping(args.mapping)
     calls, rets, sizes = program_facts(args.functions, args.model, set(mapping))
     report = check(mapping, calls, rets, src, sizes, args.small, set(args.implicit))
+    report['inputs'] = inputs | {'mappingSha256': hashlib.sha256(args.mapping.read_bytes()).hexdigest()}
     if args.out:
         args.out.write_text(json.dumps(report, indent=1) + "\n")
     print(f"{report['mapped']} mapped; {report['edgesChecked']} call edges checked; "

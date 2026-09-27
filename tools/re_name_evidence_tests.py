@@ -4,6 +4,8 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -18,6 +20,95 @@ class FakeImage:
 
 
 class HelperTests(unittest.TestCase):
+    def test_folded_body_new_derived_slot_is_not_erased_by_inherited_slots(self):
+        # Retail RET4 at 004014c0: CThing has 59 slots, while the same body
+        # also occupies CComplexThing's new slot 63. Synthetic addresses here.
+        prog = E.Program.__new__(E.Program)
+        prog.bases = {'Base': [('Base', 0)],
+                      'Derived': [('Derived', 0), ('Base', 0)]}
+        prog.fixed_bases = prog.bases
+        prog.slots = {0x1000: [('Base', 0, 6, 0x2000),
+                             ('Derived', 0, 6, 0x3000),
+                             ('Derived', 0, 63, 0x3000)]}
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=0x1000)),
+                         {'Base', 'Derived'})
+        prog.slots[0x1000].pop()
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=0x1000)), {'Base'})
+
+    def test_inherited_slots_require_composed_subobject_offsets(self):
+        prog = E.Program.__new__(E.Program)
+        prog.bases = {'Base': [('Base', 0)],
+                      'Derived': [('Derived', 0), ('Base', 16)]}
+        prog.fixed_bases = prog.bases
+        prog.slots = {1: [('Base', 8, 3, 100), ('Derived', 24, 3, 200)]}
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=1)), {'Base'})
+        prog.slots[1][1] = ('Derived', 8, 3, 200)
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=1)), {'Base', 'Derived'})
+        prog.bases['Derived'][1] = ('Base', -8)
+        prog.slots[1][1] = ('Derived', 0, 3, 200)
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=1)), {'Base', 'Derived'})
+
+    def test_rtti_virtual_base_nonnegative_mdisp_is_not_fixed_offset_evidence(self):
+        descriptor = lambda name, pdisp, vdisp: SimpleNamespace(
+            class_name=name, mdisp=0, pdisp=pdisp, vdisp=vdisp)
+        census = SimpleNamespace(type_descriptors={}, slots=[], vtables={}, cols={}, hierarchies={1:
+            SimpleNamespace(root_class='Derived', rows=[
+                SimpleNamespace(descriptor=descriptor('Derived', -1, 0)),
+                SimpleNamespace(descriptor=descriptor('Base', 0, 4))])})
+        with patch('re_rtti_vtables.parse_rtti', return_value=census):
+            rtti = E.scan_rtti(SimpleNamespace(data=b'synthetic'))
+        self.assertIn(('Base', 0), rtti.class_bases['Derived'])
+        self.assertNotIn(('Base', 0), rtti.fixed_bases['Derived'])
+        prog = E.Program.__new__(E.Program)
+        prog.bases, prog.fixed_bases = rtti.class_bases, rtti.fixed_bases
+        prog.slots = {1: [('Base', 0, 2, 100), ('Derived', 0, 2, 200)]}
+        self.assertEqual(prog.defining_classes(SimpleNamespace(va=1)), {'Base', 'Derived'})
+    def test_matching_class_and_compatible_graph_do_not_verify_method_identity(self):
+        fn = SimpleNamespace(va=0x401000, name='Thing__Run', source='USER_DEFINED')
+        src = [E.SourceFunc('Thing::Run', 'Thing.cpp', 1, '', [], [], 2, '', 'void')]
+        prog = SimpleNamespace(funcs=[fn], defining_classes=lambda f: {'Thing'},
+                               slots={fn.va: [('Thing', 0, 0, 0x600000)]})
+        graph = {'rows': [{'address': '0x00401000', 'contradictions': [], 'absent': []}]}
+        with patch.object(E, 'file_line_anchors', return_value={}), \
+             patch.object(E, 'string_anchors', return_value=({}, {})), \
+             patch.object(E, 'tiny_semantics', return_value=None):
+            result = E.audit(prog, src, graph)
+        self.assertEqual(result[0]['verdict'], 'unsupported')
+        self.assertEqual(result[0]['against'], '')
+
+    def test_folded_derived_override_holder_is_not_contradicted_or_verified(self):
+        fn = SimpleNamespace(va=0x401000, name='Derived__Run', source='USER_DEFINED')
+        src = [E.SourceFunc('Derived::Run', 'Thing.cpp', 1, '', [], [], 2, '', 'void')]
+        prog = E.Program.__new__(E.Program)
+        prog.funcs = [fn]
+        prog.bases = {'Derived': [('Derived', 0), ('Base', 0)], 'Base': [('Base', 0)]}
+        prog.fixed_bases = prog.bases
+        prog.slots = {fn.va: [('Base', 0, 2, 0x600000), ('Derived', 0, 2, 0x600100)]}
+        self.assertEqual(prog.defining_classes(fn), {'Base'})
+        with patch.object(E, 'file_line_anchors', return_value={}), \
+             patch.object(E, 'string_anchors', return_value=({}, {})), \
+             patch.object(E, 'tiny_semantics', return_value=None):
+            row = E.audit(prog, src)[0]
+        self.assertEqual(row['verdict'], 'unsupported')
+        self.assertEqual(row['against'], '')
+
+    def test_graph_contradictions_must_target_this_saved_identity(self):
+        fn = SimpleNamespace(va=0x401000, name='Base__Run', source='USER_DEFINED')
+        src = [E.SourceFunc('Base::Run', 'Thing.cpp', 1, '', [], [], 2, '', 'void')]
+        prog = SimpleNamespace(funcs=[fn], defining_classes=lambda f: set(), slots={})
+        for source, wanted in [('Base::Different', 'unsupported'),
+                               ('Base::Run/0', 'unsupported'),
+                               ('Base::Run', 'contradicted')]:
+            with self.subTest(source=source), \
+                 patch.object(E, 'file_line_anchors', return_value={}), \
+                 patch.object(E, 'string_anchors', return_value=({}, {})), \
+                 patch.object(E, 'tiny_semantics', return_value=None):
+                graph = {'rows': [{'address': hex(fn.va), 'source': source,
+                                   'contradictions': ['ret size differs']}]}
+                row = E.audit(prog, src, graph)[0]
+                self.assertEqual(row['verdict'], wanted)
+                self.assertEqual(row['against'], 'ret size differs' if wanted == 'contradicted' else '')
+
     def test_demangle_type(self):
         self.assertEqual(E.demangle_type(".?AVCBattleEngine@@"), "CBattleEngine")
         self.assertEqual(E.demangle_type(".?AUCRenderMethod@@"), "CRenderMethod")
