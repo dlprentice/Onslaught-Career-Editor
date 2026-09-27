@@ -803,6 +803,19 @@ Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
 
+**Scratch retention (September 27).** David authorized retiring proven duplicate
+audit copies. Fresh hashes supported removal of 100 completed probe project pairs
+on B (12,301,973,840 bytes), with their 100 manifests, original receipts and all
+exports retained. Archive A history stays intact; 89 changed/rejected/incomplete
+pairs remain. Working and checkpoint inventories still match their recorded
+identities. The [closeout retention rule](reverse-engineering/ghidra/README.md#scratch-retention-after-completed-promotions)
+now uses the existing backup tool's exact-pair retirement helper after all gates;
+its publication-failure controls preserve evidence. The next `sptrset-abi`
+adapter exposes `cohort_ops.retire_completed_probes()` for invocation after
+`finish.py`, before starting another cohort. Keep PRE through all consumers and
+do not retire changed rehearsals by semantic-export equality. This bounded
+cleanup does not settle historical lab recovery or authorize cold-history pruning.
+
 **Slot-save result boundary (September 27).** Five original-code adapter cases
 and one separate counterfactual show that a complete CRT item write followed
 by close error still returns zero; non-one item results return one without

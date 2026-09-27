@@ -2574,6 +2574,34 @@ copies under the approved storage plan with exact-path/hash records; do not ask 
 for a batch number. A larger database generation counter in a rehearsal
 copy does not make it the reviewed or writable authority.
 
+### Scratch retention after completed promotions
+
+PRE/rehearsal/control copies stay available until their consumers and all promotion
+gates finish. At successful closeout, retire the unchanged control and POST-open
+project pairs after fresh file-by-file comparison with retained, restore-proven
+Archive A recovery. Use `retire_verified_probe_payload` in
+`tools/ghidra_project_backup.py`: it removes only the exact `.gpr`/`.rep` payload,
+preserves `backup_manifest.json` and other evidence, and publishes the intent
+before removal and the result afterward. The caller must establish authorization,
+quiescence and completed gates. Record exact paths, bytes, preservation and outcome
+in the existing migration `DELETE-QUEUE.md`. Keep original verification receipts
+unchanged; `RETAINED_AT_VERIFICATION` describes their historical observation.
+
+Do not retire a byte-different rehearsal merely because its measured exports
+equal live. Keep failed/rejected states, unresolved copies, manifests, logs,
+scripts and exports. Independent cold history and the tracked checkpoint remain
+protected. This is retention after verification, not removal of any gate.
+
+David authorized the September 27 exact-twin cleanup: 100 completed-audit probe
+pairs (1,800 files, 12,301,973,840 bytes) were freshly compared with their retained
+Archive A sources and retired on B. All 100 small manifests and original restore
+receipts were checked unchanged afterward. The 89 other pairs remain (54 changed
+states, 32 rejected and three incomplete); no cold copy was removed. The working
+and tracked checkpoint inventories were rechecked unchanged, without opening
+Ghidra. Private per-file proofs and outcomes are under
+`local-data/test-runs/re-audit-20260926/sptrset/storage-retirement-20260927/`;
+the existing migration queue records every exact target and retained source.
+
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
 live under real, ignored canonical-checkout `local-lab/` — do not commit them.
 The complete repository is on encrypted Archive B with a bind/automount at its familiar Projects

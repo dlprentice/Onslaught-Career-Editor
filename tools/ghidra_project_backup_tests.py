@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -38,6 +39,175 @@ def completed(command: list[str], *, sha256: str = SHA256, functions: int = 7555
 
 
 class GhidraBackupTests(unittest.TestCase):
+    def probe(self, root: Path):
+        return backup.verify_on_copy(
+            make_project(root / "project"), root / "scratch", "BEA", PROGRAM,
+            root / "analyzeHeadless", root, program_md5=MD5,
+            program_sha256=SHA256, runner=lambda command: completed(command),
+        )
+
+    def test_second_publication_failure_preserves_probe(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = self.probe(root)
+            receipt = root / "evidence" / "open.json"
+            publish = backup.publish_staged_atomic_new
+
+            def fail_receipt(partial, final):
+                if final == receipt:
+                    raise backup.BackupError("second publication failed")
+                publish(partial, final)
+
+            with patch.object(backup, "publish_staged_atomic_new", side_effect=fail_receipt):
+                with self.assertRaisesRegex(backup.BackupError, "second publication"):
+                    backup.publish_verification_result(
+                        result, receipt, root / "scratch", "BEA", keep_probe_copy=False)
+            self.assertTrue(result.probe_copy.is_dir())
+            self.assertTrue(receipt.with_name("open.open-probe.log").is_file())
+            self.assertFalse(receipt.exists())
+            self.assertTrue(backup.compare_manifests(
+                result.source_manifest, backup.build_manifest(result.probe_copy, "BEA")).matches)
+
+    def test_cleanup_failures_leave_published_verification_without_deletion_claim(self) -> None:
+        for partial in (False, True):
+            with self.subTest(partial=partial), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                result = self.probe(root)
+                receipt = root / "open.json"
+
+                def fail_cleanup(*args):
+                    if partial:
+                        (result.probe_copy / "BEA.gpr").unlink()
+                    raise OSError("cleanup failed")
+
+                with patch.object(backup, "safe_remove_probe_copy", side_effect=fail_cleanup):
+                    with self.assertRaisesRegex(OSError, "cleanup failed"):
+                        backup.publish_verification_result(
+                            result, receipt, root / "scratch", "BEA", keep_probe_copy=False)
+                self.assertEqual("RETAINED_AT_VERIFICATION",
+                                 json.loads(receipt.read_text())["probeCopyDisposition"])
+                self.assertTrue(receipt.with_name("open.open-probe.log").is_file())
+                self.assertEqual(not partial, (result.probe_copy / "BEA.gpr").exists())
+
+    def test_finalization_failure_keeps_verification_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = self.probe(root)
+            receipt = root / "open.json"
+            with patch.object(backup, "finalize_owned_receipt", side_effect=OSError("finalize failed")):
+                with self.assertRaisesRegex(OSError, "finalize failed"):
+                    backup.publish_verification_result(
+                        result, receipt, root / "scratch", "BEA", keep_probe_copy=False)
+            self.assertFalse(result.probe_copy.exists())
+            document = json.loads(receipt.read_text())
+            self.assertEqual("RETAINED_AT_VERIFICATION", document["probeCopyDisposition"])
+            self.assertTrue(document["readonlyOpen"]["opened"])
+
+    def test_finalization_refuses_receipt_changed_or_replaced_during_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "receipt.json"
+            path.write_bytes(b"other owner")
+            with self.assertRaisesRegex(backup.BackupError, "changed receipt"):
+                backup.finalize_owned_receipt(path, b"expected", b"final")
+            original_fsync = os.fsync
+
+            def replace_receipt(fd):
+                path.unlink()
+                path.write_bytes(b"other owner")
+                original_fsync(fd)
+
+            with patch.object(backup.os, "fsync", side_effect=replace_receipt):
+                with self.assertRaisesRegex(backup.BackupError, "replaced receipt"):
+                    backup.finalize_owned_receipt(path, b"other owner", b"final")
+            self.assertEqual(b"other owner", path.read_bytes())
+
+    def test_pair_retirement_keeps_extra_evidence_and_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = self.probe(root)
+            proof = result.probe_copy / "backup_manifest.json"
+            original_proof = proof.read_bytes()
+            extra = result.probe_copy / "unique-review.txt"
+            extra.write_bytes(b"keep me")
+            receipt = root / "retirement.json"
+            backup.retire_verified_probe_payload(
+                result.probe_copy, root / "scratch", result.source_manifest, receipt)
+            self.assertEqual({"backup_manifest.json", "unique-review.txt"},
+                             {p.name for p in result.probe_copy.iterdir()})
+            self.assertEqual(original_proof, proof.read_bytes())
+            self.assertEqual(b"keep me", extra.read_bytes())
+            self.assertTrue(backup.compare_manifests(
+                result.source_manifest, backup.build_manifest(root / "project", "BEA")).matches)
+            self.assertEqual("PROJECT_PAYLOAD_RETIRED_EVIDENCE_RETAINED",
+                             json.loads(receipt.read_text())["disposition"])
+
+    def test_pair_retirement_refuses_changed_locked_linked_or_wrong_scope(self) -> None:
+        for case in ("target drift", "source drift", "extra payload", "lock", "symlink", "hardlink", "wrong scope"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                result = self.probe(root)
+                target = result.probe_copy
+                payload = target / "BEA.rep/idata/00/~00000000.db/db.1.gbf"
+                if case == "target drift":
+                    payload.write_bytes(b"unique changed state")
+                elif case == "source drift":
+                    (root / "project/BEA.rep/idata/~index.dat").write_bytes(b"changed")
+                elif case == "extra payload":
+                    (target / "BEA.rep/unique.txt").write_text("keep")
+                elif case == "lock":
+                    (target / "BEA.lock").touch()
+                elif case == "symlink":
+                    (target / "BEA.rep/link").symlink_to(root / "project", target_is_directory=True)
+                elif case == "hardlink":
+                    os.link(payload, root / "another-link")
+                receipt = root / "retirement.json"
+                with self.assertRaises(backup.BackupError):
+                    backup.retire_verified_probe_payload(
+                        target, root if case == "wrong scope" else root / "scratch",
+                        result.source_manifest, receipt)
+                self.assertTrue(payload.is_file())
+                self.assertTrue((target / "BEA.gpr").is_file())
+                self.assertFalse(receipt.exists())
+
+    def test_pair_retirement_cannot_delete_before_intent_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = self.probe(root)
+            with patch.object(backup, "write_bytes_atomic_new", side_effect=OSError("disk full")):
+                with self.assertRaisesRegex(OSError, "disk full"):
+                    backup.retire_verified_probe_payload(
+                        result.probe_copy, root / "scratch", result.source_manifest, root / "retired.json")
+            self.assertTrue(backup.compare_manifests(
+                result.source_manifest, backup.build_manifest(result.probe_copy, "BEA")).matches)
+
+    def test_removal_is_synced_before_a_completed_disposition(self) -> None:
+        for pair_only in (False, True):
+            with self.subTest(pair_only=pair_only), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                result = self.probe(root)
+                receipt = root / "retirement.json"
+                sync_parent = result.probe_copy if pair_only else root / "scratch"
+                sync = backup.sync_output_directory
+
+                def fail_removal_sync(path):
+                    if path == sync_parent:
+                        self.assertFalse((result.probe_copy / "BEA.gpr").exists())
+                        raise OSError("removal sync failed")
+                    sync(path)
+
+                with patch.object(backup, "sync_output_directory", side_effect=fail_removal_sync):
+                    with self.assertRaisesRegex(OSError, "removal sync failed"):
+                        if pair_only:
+                            backup.retire_verified_probe_payload(
+                                result.probe_copy, root / "scratch", result.source_manifest, receipt)
+                        else:
+                            backup.publish_verification_result(
+                                result, receipt, root / "scratch", "BEA", keep_probe_copy=False)
+                document = json.loads(receipt.read_text())
+                self.assertEqual(
+                    "VERIFIED_BEFORE_RETIREMENT" if pair_only else "RETAINED_AT_VERIFICATION",
+                    document["disposition" if pair_only else "probeCopyDisposition"])
+
     def test_reopen_receipt_uses_observed_identity_and_function_count(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
