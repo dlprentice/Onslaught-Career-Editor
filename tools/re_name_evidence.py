@@ -982,7 +982,134 @@ def align_header_vtables(prog: Program, classes: dict[str, HeaderClass]) -> dict
                       'Matching counts do not prove source version or semantics; rederive byte witnesses before promotion.'}
 
 
-def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], document: dict) -> dict:
+def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
+                             seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
+    """Bind a reviewed common-interface call to a surviving derived declaration.
+
+    This intentionally supports only a direct, fixed, zero-offset base, equal
+    table lengths and straight-line DWORD argument transport. Source/receiver
+    correspondence still requires semantic review; pins and instruction checks
+    prevent that reviewed witness from silently drifting. No missing header is
+    invented, and parameter widths apply only to this witnessed interface.
+    """
+    import re_source_graph as G
+    witness = anchor['interfaceDispatch']
+    tables = {t.va: t for t in prog.model.rtti.vtables}
+    base = tables.get(int(witness['table'], 16))
+    if (base is None or base.klass != witness['class'] or base.offset != 0 or seed.offset != 0
+            or cls.bases != [base.klass] or not method.virtual
+            or prog.bases.get(cls.name) != [(cls.name, 0), (base.klass, 0)]
+            or prog.fixed_bases.get(cls.name) != [(cls.name, 0), (base.klass, 0)]
+            or len(seed.slots) != len(base.slots)):
+        raise ValueError('common-interface base is not a unique fixed direct interface')
+    if (anchor.get('sourceFile'), anchor.get('sourceLine')) != (method.file, method.line):
+        raise ValueError('common-interface declaration location mismatch')
+    if not witness.get('evidence') or not witness.get('receiverEvidence'):
+        raise ValueError('common-interface needs reviewed receiver and semantic evidence')
+
+    source = witness['source']
+    if source_root is None or Path(source['file']).name != source['file']:
+        raise ValueError('common-interface needs a bounded pinned source file')
+    path = source_root / source['file']
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('common-interface source file hash mismatch')
+    functions = [f for f in index_source(source_root, (source['file'],))
+                 if f.key == source['function']]
+    line = source['line']
+    if (len(functions) != 1 or not isinstance(line, int) or isinstance(line, bool)
+            or not functions[0].line <= line <= functions[0].end_line):
+        raise ValueError('common-interface source caller is absent or ambiguous')
+    actual = strip_comments(path.read_text(errors='replace')).splitlines()[line-1].strip()
+    call = re.fullmatch(r'(?:[A-Za-z_]\w*\s*&=\s*)?[A-Za-z_]\w*(?:\[[^\]\n]+\])?->'
+                        + re.escape(method.name) + r'\(([^()]*)\);', actual)
+    if actual != source['call'] or not call or len(G.params(call[1])) != len(method.parameters):
+        raise ValueError('common-interface source call does not match declaration')
+
+    def pinned_span(record):
+        address, size = int(record['address'], 16), record['bytes']
+        if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
+            raise ValueError('common-interface invalid byte span')
+        raw = prog.img.read(address, size)
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != record['sha256']:
+            raise ValueError('common-interface byte span hash mismatch')
+        return address, address + size
+
+    caller_lo, caller_end = pinned_span(witness['caller'])
+    fn = prog.by_va.get(caller_lo)
+    if (fn is None or fn.lo != caller_lo or fn.hi+1 != caller_end
+            or getattr(fn, 'body_ranges', 1) != 1
+            or getattr(fn, 'declared_hi', fn.hi) not in (None, fn.hi)
+            or getattr(fn, 'body_bytes', caller_end-caller_lo) not in (None, caller_end-caller_lo)):
+        raise ValueError('common-interface caller boundary mismatch')
+    start, end = pinned_span(witness['window'])
+    if not caller_lo <= start < end <= caller_end:
+        raise ValueError('common-interface dispatch window outside caller')
+    body = [i for i in prog.body(fn) if start <= i.va < end]
+    cursor = start
+    for ins in body:
+        if ins.va != cursor:
+            raise ValueError('common-interface dispatch window decoding gap')
+        cursor += ins.size
+    if not body or cursor != end or body[-1].va != int(witness['callAddress'], 16):
+        raise ValueError('common-interface dispatch window boundary mismatch')
+    # Bind every auxiliary receiver witness too; its meaning is independently
+    # reviewed, not inferred merely from a correct hash.
+    if not witness.get('receiverSpans'):
+        raise ValueError('common-interface receiver bindings are absent')
+    for span in witness['receiverSpans']:
+        pinned_span(span)
+
+    receiver_load = int(witness['receiverLoad'], 16)
+    facts, pushes, seen_receiver = {}, 0, False
+    registers = {'eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp'}
+    for ins in body[:-1]:
+        if ins.mnem == 'mov':
+            dest, sep, value = ins.ops.partition(',')
+            if not sep or dest not in registers:
+                raise ValueError('common-interface unsupported move')
+            if ins.va == receiver_load:
+                if not re.fullmatch(r'DWORD PTR \[[^\]]+\]', value):
+                    raise ValueError('common-interface receiver is not a pointer load')
+                facts[dest], seen_receiver = 'receiver', True
+            elif value in registers:
+                facts[dest] = facts.get(value)
+            else:
+                load = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp))\]', value)
+                facts[dest] = 'vptr' if load and facts.get(load[1]) == 'receiver' else None
+        elif ins.mnem == 'push' and (ins.ops in registers or _DIRECT.fullmatch(ins.ops)
+                                     or re.fullmatch(r'DWORD PTR \[[^\]]+\]', ins.ops)):
+            pushes += 1
+        elif ins.mnem == 'add' and re.fullmatch(r'esp,0x[0-9a-f]+', ins.ops) and pushes == 0:
+            # Some callers finish cleaning a preceding cdecl call before
+            # setting up this interface; no current argument may be removed.
+            pass
+        else:
+            raise ValueError('common-interface dispatch window is not supported straight-line transport')
+    call_ins = body[-1]
+    match = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp))(?:\+0x([0-9a-f]+))?\]', call_ins.ops)
+    if (call_ins.mnem != 'call' or not match or not seen_receiver or facts.get('ecx') != 'receiver'
+            or facts.get(match[1]) != 'vptr' or int(match[2] or '0', 16) != anchor['slot']*4):
+        raise ValueError('common-interface call does not use the witnessed receiver and slot')
+    widths = witness['parameterStackBytes']
+    if (len(widths) != len(method.parameters) or any(type(n) is not int or n != 4 for n in widths)
+            or pushes != len(widths)):
+        raise ValueError('common-interface argument transport mismatch')
+    for parameter, width in zip(method.parameters, widths):
+        known = G.param_bytes(parameter)
+        if known is not None and known != width:
+            raise ValueError('common-interface width contradicts known source parameter')
+    # Unknown parameter names can use these local byte witnesses; unknown or
+    # aggregate return types cannot borrow a hidden-result ABI from them.
+    sf = SourceFunc(method.owner+'::'+method.name, method.file, method.line, '', [], [],
+                    args=', '.join('int' for _ in widths), head=method.head)
+    expected = G.expected_pop(G.Source({}, set(), set()), sf)
+    if method.name.startswith('~') or expected != sum(widths):
+        raise ValueError('common-interface return ABI needs an independent witness')
+    return base, expected
+
+
+def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], document: dict,
+                             source_root: Path | None = None) -> dict:
     """Propagate explicitly supplied source/byte witnesses through fixed RTTI ancestry.
 
     Anchors are research inputs requiring independent semantic review, not
@@ -1040,7 +1167,9 @@ def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], doc
                 todo.extend(classes[base].bases)
         if not anchor.get('evidence'):
             raise ValueError('anchor needs an explicit semantic evidence explanation')
-        anchors.append((anchor, table, methods[0]))
+        if 'interfaceDispatch' in anchor:
+            table, _ = common_interface_witness(prog, cls, method, table, anchor, source_root)
+        anchors.append((anchor, table, method))
     mapped, gaps = defaultdict(list), []
     for anchor, seed, method in anchors:
         for table in tables.values():
@@ -1077,7 +1206,8 @@ def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], doc
                       'unmapped/conflicting aliases remain unresolved. No prototype or behavior is inferred.'}
 
 
-def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], document: dict, propagated: dict) -> dict:
+def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], document: dict, propagated: dict,
+                         source_root: Path | None = None) -> dict:
     """Apply the same return/alias/boundary checks to every proposed method identity.
 
     This is the mechanical part of cohort admission. An independent review must
@@ -1086,6 +1216,16 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
     """
     import re_source_graph as G
     anchor_by_slot = {(int(a['table'],16), a['slot']): a for a in document['anchors']}
+    witnessed_pops = {}
+    tables = {t.va:t for t in prog.model.rtti.vtables}
+    for key, a in anchor_by_slot.items():
+        if 'interfaceDispatch' in a:
+            cls = classes[a['class']]
+            methods = [m for m in cls.methods if m.name == a['method']
+                       and m.parameters == tuple(a['parameters']) and m.qualifiers == a.get('qualifiers', '')]
+            if len(methods) != 1:
+                raise ValueError('common-interface source declaration is absent or ambiguous')
+            _, witnessed_pops[key] = common_interface_witness(prog, cls, methods[0], tables[key[0]], a, source_root)
 
     def pops(va, seen=frozenset()):
         if va in seen or len(seen) >= 8 or va not in prog.by_va:
@@ -1156,7 +1296,9 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
                         and m.parameters==tuple(a['parameters']) and m.qualifiers==a.get('qualifiers',''))
             sf=SourceFunc(method.owner+'::'+method.name,method.file,method.line,'',[],[],
                           args=', '.join(method.parameters),head=method.head)
-            n=G.expected_pop(G.Source({},set(),set()),sf)
+            n=witnessed_pops.get((int(a['table'],16),a['slot']))
+            if n is None:
+                n=G.expected_pop(G.Source({},set(),set()),sf)
             if method.name.startswith('~'):
                 # An ordinary source destructor does not describe the compiler's
                 # deleting entry (flag, optional deallocation, adjusted this).
@@ -1791,8 +1933,8 @@ def main(argv: list[str] | None = None) -> int:
                 anchors = json.loads(args.anchors.read_text())
                 if anchors.get('sourceSha256') != report['inputs']['sourceSha256']:
                     raise ValueError('anchor source content pin mismatch')
-                report['anchored'] = propagate_vtable_anchors(prog, classes, anchors)
-                report['admission'] = vtable_abi_admission(prog, classes, anchors, report['anchored'])
+                report['anchored'] = propagate_vtable_anchors(prog, classes, anchors, args.source)
+                report['admission'] = vtable_abi_admission(prog, classes, anchors, report['anchored'], args.source)
                 report['proposals'] = vtable_name_proposals(prog, report['anchored'], report['admission'])
             except (KeyError, TypeError, ValueError) as e:
                 ap.error(str(e))

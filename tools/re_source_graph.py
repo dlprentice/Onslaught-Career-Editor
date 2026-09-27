@@ -78,10 +78,33 @@ def params(args: str) -> list[str]:
     return out + [cur.strip()]
 
 
+def outer_type_text(declaration: str) -> str | None:
+    """Ignore template arguments when classifying indirection of the type itself.
+
+    Aggregate<T*> is a by-value aggregate, unlike Aggregate<T*>*. An unmatched
+    template or a pointer-to-member needs independent ABI evidence.
+    """
+    depth, out = 0, []
+    for char in declaration:
+        if char == '<':
+            depth += 1
+        elif char == '>':
+            depth -= 1
+            if depth < 0:
+                return None
+        elif depth == 0:
+            out.append(char)
+    outer = ''.join(out)
+    return None if depth or re.search(r'::\s*\*', outer) else outer
+
+
 def param_bytes(p: str) -> int | None:
     """Stack bytes one parameter takes; None when a by-value aggregate makes it unknown."""
     t = re.sub(r"\b(const|volatile|register|struct|class|enum|unsigned|signed)\b", " ", p)
-    if "*" in t or "&" in t:
+    outer = outer_type_text(t)
+    if outer is None:
+        return None
+    if "*" in outer or "&" in outer:
         return 4
     # Header identity normalization removes whitespace between type words.
     # Do not let an unsigned prefix turn an eight-byte integer into four.
@@ -205,7 +228,10 @@ def expected_pop(src: Source, f: E.SourceFunc) -> int | None:
     ret = re.sub(r"\b(virtual|static|inline|const|__cdecl|__stdcall|__thiscall|__fastcall|__forceinline|CALLBACK|WINAPI|PASCAL|APIENTRY|STDMETHODCALLTYPE)\b", " ",
                  f.head).strip()
     constructor = parts[-1] == (parts[-2] if len(parts) >= 2 else None) or parts[-1].startswith('~')
-    if not constructor and not ('*' in ret or '&' in ret or _SCALAR_RET.match(ret) or ret in src.enum_types):
+    outer = outer_type_text(ret)
+    if not constructor and (outer is None or not (
+            '*' in outer or '&' in outer or (_SCALAR_RET.match(ret) and '<' not in ret)
+            or ret in src.enum_types)):
         return None
     return sum(sizes)
 

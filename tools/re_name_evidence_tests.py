@@ -21,6 +21,139 @@ class FakeImage:
         return object() if 0x401000 <= va < 0x700000 else None
 
 
+class CommonInterfaceTests(unittest.TestCase):
+    def fixture(self, parameter='MissingEnum', result='void'):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root/'types.h').write_text('class Child : public Base { public: virtual '
+                                  + result + ' Run(' + parameter + ' state); };\n')
+        source = root/'Caller.cpp'
+        source.write_text('void Host::Tick()\n{\n pages[index]->Run(state);\n}\n')
+        classes = E.header_classes(root, set())
+        method = classes['Child'].methods[0]
+        tables = [SimpleNamespace(va=0x600000, klass='Base', offset=0, slots=[0x401000]),
+                  SimpleNamespace(va=0x600100, klass='Child', offset=0, slots=[0x401100]),
+                  SimpleNamespace(va=0x600200, klass='Sibling', offset=0, slots=[0x401200])]
+        raw = {t.va:struct.pack('<I',t.slots[0]) for t in tables}
+        raw.update({a:b'\xc2\x04\x00' for a in (0x401000,0x401100,0x401200)})
+        raw[0x402000] = b'\x8b\x0f\x50\x8b\x11\xff\x12\xc3'
+        memory = {a+i:v for a,b in raw.items() for i,v in enumerate(b)}
+        read = lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        img = SimpleNamespace(sha256='f'*64,read=read,u32=lambda a:struct.unpack('<I',read(a,4))[0])
+        insns = [E.Insn(a,3,'ret','0x4') for a in (0x401000,0x401100,0x401200)]
+        insns += [E.Insn(0x402000,2,'mov','ecx,DWORD PTR [edi]'),
+                  E.Insn(0x402002,1,'push','eax'), E.Insn(0x402003,2,'mov','edx,DWORD PTR [ecx]'),
+                  E.Insn(0x402005,2,'call','DWORD PTR [edx]'),E.Insn(0x402007,1,'ret','')]
+        bases = {'Base':[('Base',0)],'Child':[('Child',0),('Base',0)],
+                 'Sibling':[('Sibling',0),('Base',0)]}
+        model = SimpleNamespace(rtti=SimpleNamespace(vtables=tables,class_bases=bases,fixed_bases=bases),insns=insns)
+        funcs = [SimpleNamespace(va=a,lo=a,hi=a+len(b)-1) for a,b in raw.items() if a<0x600000]
+        prog = E.Program(img,model,funcs)
+        span = lambda a,n:dict(address=hex(a),bytes=n,sha256=hashlib.sha256(read(a,n)).hexdigest())
+        anchor = dict(table=hex(tables[1].va),offset=0,slot=0,target='0x00401100',method='Run',
+                      parameters=[parameter],qualifiers='',sourceFile=method.file,sourceLine=method.line,
+                      body=span(0x401100,3),evidence='Synthetic derived-method identity')
+        anchor['class'] = 'Child'
+        anchor['interfaceDispatch'] = dict(table=hex(tables[0].va),evidence='Synthetic call correspondence',
+            receiverEvidence='Synthetic page-array/object binding, independently reviewed',
+            receiverSpans=[span(0x402000,2)], caller=span(0x402000,8),window=span(0x402000,7),
+            receiverLoad='0x00402000',callAddress='0x00402005',parameterStackBytes=[4],
+            source=dict(file='Caller.cpp',sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                        function='Host::Tick',line=3,call='pages[index]->Run(state);'))
+        anchor['interfaceDispatch']['class'] = 'Base'
+        document = dict(specimenSha256=img.sha256,anchors=[anchor])
+        return root,classes,prog,document
+
+    def test_missing_base_header_can_use_reviewed_common_dispatch_without_inventing_layout(self):
+        root,classes,prog,doc = self.fixture()
+        self.assertNotIn('Base',classes)
+        report = E.propagate_vtable_anchors(prog,classes,doc,root)
+        self.assertEqual(len(report['rows']),3)
+        self.assertEqual([r['status'] for r in report['rows']],['anchored-method-candidate']*3)
+        admitted = E.vtable_abi_admission(prog,classes,doc,report,root)
+        self.assertEqual([r['observedReturnPop'] for r in admitted['rows']],[[4]]*3)
+        self.assertEqual([r['status'] for r in admitted['rows']],['mechanical-checks-pass']*3)
+        import re_source_graph as G
+        self.assertIsNone(G.param_bytes('MissingEnum'))  # no global width rule
+
+    def test_direct_base_and_exact_table_relationship_are_required(self):
+        for change in ('repeated','virtual','offset','extra-slot','unrelated','no-virtual'):
+            with self.subTest(change=change):
+                root,classes,prog,doc = self.fixture()
+                if change=='repeated': prog.bases['Child'].append(('Base',4))
+                if change=='virtual': prog.fixed_bases=dict(prog.fixed_bases,Child=[('Child',0)])
+                if change=='offset': prog.model.rtti.vtables[0].offset=4
+                if change=='extra-slot': prog.model.rtti.vtables[0].slots.append(0x401000)
+                if change=='unrelated': classes['Child'].bases=['Other']
+                if change=='no-virtual': classes['Child'].methods[0].virtual=False
+                with self.assertRaises(ValueError): E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_source_call_and_all_byte_pins_are_required(self):
+        for change in ('source-hash','source-call','source-owner','source-line','decl-line','caller',
+                       'window','receiver-span','no-receiver-span','source-path'):
+            with self.subTest(change=change):
+                root,classes,prog,doc = self.fixture();a=doc['anchors'][0];w=a['interfaceDispatch']
+                if change=='source-hash':w['source']['sha256']='0'*64
+                if change=='source-call':w['source']['call']='pages[index]->Stop(state);'
+                if change=='source-owner':w['source']['function']='Host::Unknown'
+                if change=='source-line':w['source']['line']=100
+                if change=='decl-line':a['sourceLine']+=1
+                if change in ('caller','window'):w[change]['sha256']='0'*64
+                if change=='receiver-span':w['receiverSpans'][0]['sha256']='0'*64
+                if change=='no-receiver-span':w['receiverSpans']=[]
+                if change=='source-path':w['source']['file']='../Caller.cpp'
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_transport_refuses_wrong_slot_clobbered_receiver_and_nonlocal_flow(self):
+        for change in ('wrong-slot','wrong-receiver','wrong-vptr','branch','call','wrong-load',
+                       'wrong-push','width','missing-arg','out-of-body','clipped-body'):
+            with self.subTest(change=change):
+                root,classes,prog,doc = self.fixture();w=doc['anchors'][0]['interfaceDispatch']
+                ins=prog.model.insns
+                if change=='wrong-slot':ins[-2].ops='DWORD PTR [edx+0x4]'
+                if change=='wrong-receiver':ins[-3].ops='ecx,DWORD PTR [ecx]'
+                if change=='wrong-vptr':ins[-3].ops='edx,DWORD PTR [eax]'
+                if change=='branch':ins[-4].mnem='jmp'
+                if change=='call':ins[-4].mnem='call'
+                if change=='wrong-load':w['receiverLoad']='0x00402001'
+                if change=='wrong-push':ins[-4].ops='ax'
+                if change=='width':w['parameterStackBytes']=[8]
+                if change=='missing-arg':w['parameterStackBytes']=[]
+                if change=='out-of-body':w['callAddress']='0x00401100'
+                if change=='clipped-body':prog.by_va[0x402000].declared_hi=0x402100
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_dispatch_cannot_supply_unknown_return_or_override_known_parameter_width(self):
+        for parameter,result in [('double','void'),('MissingEnum','Vector'),
+                                 ('MissingEnum','Aggregate<int*>'),('MissingEnum','Aggregate<int&>')]:
+            with self.subTest(parameter=parameter,result=result):
+                root,classes,prog,doc=self.fixture(parameter,result)
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_source_call_allows_bool_accumulation_but_not_unrelated_prefixes(self):
+        for prefix,accepted in [('ok &= ',True),('Ignore("',False),('other + ',False)]:
+            with self.subTest(prefix=prefix):
+                root,classes,prog,doc=self.fixture(result='BOOL')
+                source=root/'Caller.cpp';line=prefix+'pages[index]->Run(state);'
+                source.write_text('void Host::Tick()\n{\n '+line+'\n}\n')
+                witness=doc['anchors'][0]['interfaceDispatch']['source']
+                witness.update(sha256=hashlib.sha256(source.read_bytes()).hexdigest(),call=line)
+                if accepted:
+                    self.assertEqual(len(E.propagate_vtable_anchors(prog,classes,doc,root)['rows']),3)
+                else:
+                    with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_common_interface_does_not_hide_unmapped_alias_or_bad_return(self):
+        root,classes,prog,doc = self.fixture()
+        prog.slots[0x401200].append(('Unrelated',0,6,0x601000))
+        prog.model.insns[1].ops='0x8'
+        report=E.propagate_vtable_anchors(prog,classes,doc,root)
+        checked=E.vtable_abi_admission(prog,classes,doc,report,root)
+        self.assertEqual([r['status'] for r in checked['rows']],
+                         ['mechanical-checks-pass','withheld','withheld'])
+
+
 class HelperTests(unittest.TestCase):
     def test_folded_body_new_derived_slot_is_not_erased_by_inherited_slots(self):
         # Retail RET4 at 004014c0: CThing has 59 slots, while the same body

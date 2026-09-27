@@ -526,6 +526,28 @@ Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
 
+**Frontend interface evidence (September 27, promotion pending).** The existing
+name-evidence tool now binds seven surviving `CFEPGoodies` virtual declarations
+to the common page callers and the constructor's receiver/table installation;
+it does not invent the absent base header's declaration order. Fresh pristine
+decoding reproduced 97 proposed identities (23 renames, 74 retained names),
+while 35 candidates remain withheld. These are not yet added to the coverage
+counts. The 77 focused evidence-tool cases passed, including rejection of
+template aggregates mistaken for pointer parameters/returns. Independent
+reviews were re-derived against the specimen and source.
+
+The 23-name PRE check stopped before sealing: Options render at `0x0051f700`
+contains an incorrect saved instruction layout at `[0x0051f7be,0x0051f7c6)`.
+Fresh pristine decoding and a read-only Ghidra inspection show one eight-byte
+instruction where the listing has two unrelated instructions and four
+undefined bytes. Its two incoming branches target the proper start; no saved
+interior reference, comment or non-dynamic symbol was found. Repair this exact
+span through the promotion gate, then resume the names. Two saved frontend
+prototype defects and the retail/source transition-timer difference remain
+separate findings, not certified by name matching. Evidence and the rejected
+pre-seal attempt are in `re-audit-20260926/frontend-page-identities/` under the
+private owner above.
+
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career
 receiver in ECX.
