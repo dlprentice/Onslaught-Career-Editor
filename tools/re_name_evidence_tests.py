@@ -756,6 +756,237 @@ class FakeImage:
         return object() if 0x401000 <= va < 0x700000 else None
 
 
+class OverridePrefixTests(unittest.TestCase):
+    def fixture(self, external=False):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        declaration = ('virtual void Run(int index, char* out);' if external else
+                       'virtual void Run(char* out) { strcpy(out,"Menu"); }')
+        (root/'types.h').write_text('class Child : public Base { public: '+declaration+' };\n')
+        if external:
+            (root/'Impl.cpp').write_text('void Child::Run(int index, char* out)\n{\n}\n')
+        classes = E.header_classes(root, set()); method = classes['Child'].methods[0]
+        tables = [E.Vtable(0x600000,'Base',0,[0x401000,0x401000,0x401010]),
+                  E.Vtable(0x600100,'Child',0,[0x401100,0x401200,0x401010]),
+                  E.Vtable(0x600200,'Peer',0,[0x401300,0x401200,0x401010])]
+        raw = {0x401000:b'\xc2\x04\x00',0x401010:b'\xc2\x04\x00',
+               0x401200:b'\xb8\x01\x00\x00\x00\xc2\x04\x00',
+               0x401300:b'\xc2\x04\x00'}
+        copy_leaf = bytes.fromhex('5657bf0000610083c9ff33c0f2aef7d12bf98bc18bf7'
+                                  '8b7c240cc1e902f3a58bc883e103f3a45f5ec20400')
+        raw[0x401100] = b'\xc2\x08\x00' if external else copy_leaf
+        raw[0x402000] = bytes.fromhex('8bc133c9c700')+struct.pack('<I',tables[0].va)+bytes.fromhex('894804c3')
+        def construct(va,table):
+            return (b'\xb9'+struct.pack('<I',0x700000)+b'\xe8'+struct.pack('<i',0x402000-(va+10))
+                    +b'\xc7\x05'+struct.pack('<II',0x700000,table)+b'\xc3')
+        raw[0x402100]=construct(0x402100,tables[1].va)
+        raw[0x402200]=construct(0x402200,tables[2].va)
+        functions = [E.Func(a,'untrusted_'+hex(a),'USER_DEFINED',a,a+len(b)-1,'','',False,'',False,
+                            1,len(b),a+len(b)-1) for a,b in sorted(raw.items())]
+        for n,t in enumerate(tables):
+            col=0x620000+32*n
+            raw[t.va-4]=struct.pack('<I',col)
+            raw[t.va]=struct.pack('<3I',*t.slots)
+            raw[col]=b'\0'*12
+        raw[0x610000]=b'Menu\0'
+        memory={a+i:v for a,b in raw.items() for i,v in enumerate(b)}
+        read=lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        section=E.Section('.text',0x401000,0x2000,read(0x401000,0x2000),0x60000020)
+        img=SimpleNamespace(sha256='f'*64,read=read,u32=lambda a:struct.unpack('<I',read(a,4))[0],
+                            section_of=lambda a:section if section.contains(a) else None,sections=[section])
+        bases={'Base':[('Base',0)],'Child':[('Child',0),('Base',0)],'Peer':[('Peer',0),('Base',0)]}
+        rtti=E.RttiModel({},bases,tables,copy.deepcopy(bases))
+        model=SimpleNamespace(rtti=rtti,insns=[],refs_to={},refs_from={},strings={},data_ptrs_to={})
+        prog=E.Program(img,model,functions)
+        # Separate per-COL hierarchy: the aggregated model can conceal a second
+        # differing CHD for the same class, so it is not this witness's oracle.
+        census=SimpleNamespace(vtables={},cols={},hierarchies={})
+        for n,t in enumerate(tables):
+            col=0x620000+32*n;chd=0x621000+64*n
+            census.vtables[t.va]=SimpleNamespace(col_va=col)
+            census.cols[col]=SimpleNamespace(hierarchy_va=chd,offset=0,cd_offset=0)
+            census.hierarchies[chd]=SimpleNamespace(rows=[
+                SimpleNamespace(descriptor=SimpleNamespace(class_name=name,mdisp=offset,pdisp=-1,vdisp=0),
+                                parent_index=None if j==0 else 0)
+                for j,(name,offset) in enumerate(bases[t.klass])])
+        prog.test_raw_rtti=census;img.data=b'authored RTTI fixture'
+        model.insns=[i for f in functions for i in E.decode_entry_body(img,f)]
+        prog.insn_vas=[i.va for i in model.insns]
+        pin=lambda a:dict(address=hex(a),bytes=prog.by_va[a].body_bytes,
+                          sha256=hashlib.sha256(read(a,prog.by_va[a].body_bytes)).hexdigest())
+        if external:
+            f=E.index_source(root)[0];filename,line,definition=f.file,f.line,f.body
+        else:filename,line,definition=method.file,method.line,method.body
+        source=dict(file=filename,line=line,function='Child::Run',inline=not external,
+                    sha256=hashlib.sha256((root/filename).read_bytes()).hexdigest(),
+                    bodySha256=hashlib.sha256(definition.encode()).hexdigest(),correspondence='Authored fixture')
+        w=dict(kind='reviewed-override-primary-prefix',table=hex(tables[0].va),slotCount=3,abstractPrefix=2,
+               concreteSuffix=[hex(0x401010)],familyTables=[hex(t.va) for t in tables],
+               evidence='Authored fixed prefix',sourceDivergences='None in this fixture',
+               inheritancePremise='Direct primary prefix',definition=source,baseConstruction=pin(0x402000),
+               constructions=[dict(table=hex(t.va),body=pin(a),windowStart=hex(a),receiver='0x700000',
+                                   evidence='Authored same object installation')
+                              for t,a in zip(tables[1:],(0x402100,0x402200))])
+        w['class']='Base'
+        anchor=dict(table=hex(tables[1].va),offset=0,slot=0,target=hex(0x401100),method='Run',
+                    parameters=list(method.parameters),qualifiers=method.qualifiers,
+                    sourceFile=method.file,sourceLine=method.line,body=pin(0x401100),
+                    evidence='Authored override',interfaceDispatch=w)
+        anchor['class']='Child'
+        return root,classes,prog,dict(specimenSha256=img.sha256,anchors=[anchor]),memory,pin
+
+    def invoke(self, root, classes, prog, document):
+        with patch.object(E,'scan_rtti',return_value=copy.deepcopy(prog.model.rtti)), \
+                patch('re_rtti_vtables.parse_rtti',return_value=prog.test_raw_rtti):
+            return E.propagate_vtable_anchors(prog,classes,document,root)
+
+    def test_literal_and_external_definition_transfer_existing_prefix_role(self):
+        for external in (False,True):
+            with self.subTest(external=external):
+                root,classes,prog,d,_,_=self.fixture(external)
+                report=self.invoke(root,classes,prog,d)
+                self.assertEqual(len(report['rows']),3)
+                self.assertEqual({u['method'] for r in report['rows'] for u in r['uses']},{'Run'})
+
+    def test_same_width_slot_swap_cannot_substitute_action_for_literal_copy(self):
+        root,classes,prog,d,_,pin=self.fixture();a=d['anchors'][0]
+        a.update(slot=1,target='0x401200',body=pin(0x401200))  # RET4 still agrees
+        with self.assertRaisesRegex(ValueError,'literal copy'):
+            self.invoke(root,classes,prog,d)
+
+    def test_shortened_body_and_appended_slot_are_not_override_evidence(self):
+        for change in ('short','appended','missing-family','duplicate-family','suffix','constructor-count'):
+            with self.subTest(change=change):
+                root,classes,prog,d,_,pin=self.fixture();a=d['anchors'][0];w=a['interfaceDispatch']
+                if change=='short':a['body'].update(bytes=1,sha256=hashlib.sha256(prog.img.read(0x401100,1)).hexdigest())
+                if change=='appended':a.update(slot=2,target='0x401010',body=pin(0x401010))
+                if change=='missing-family':w['familyTables'].pop()
+                if change=='duplicate-family':w['familyTables'].append(w['familyTables'][-1])
+                if change=='suffix':w['concreteSuffix']=['0x401200']
+                if change=='constructor-count':w['constructions']=w['constructions'][:1]
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_changed_receiver_col_literal_and_cached_body_refuse(self):
+        for change in ('receiver','col-offset','col-construction','literal','cache','fixed-base','overlap'):
+            with self.subTest(change=change):
+                root,classes,prog,d,m,pin=self.fixture();w=d['anchors'][0]['interfaceDispatch']
+                if change=='receiver':
+                    m[0x402100+12]=4  # store at global+4, while call still receives global
+                    prog.model.insns=[i for f in prog.funcs for i in E.decode_entry_body(prog.img,f)]
+                    prog.insn_vas=[i.va for i in prog.model.insns]
+                    w['constructions'][0]['body']=pin(0x402100)
+                if change=='col-offset':m[0x620000+32+4]=4
+                if change=='col-construction':m[0x620000+32+8]=4
+                if change=='literal':m[0x610000]=ord('X')
+                if change=='cache':next(i for i in prog.model.insns if i.va==0x401200).ops='eax,0x2'
+                if change=='fixed-base':prog.model.rtti.fixed_bases['Peer']=[('Peer',0)]
+                if change=='overlap':prog.by_va[0x401010].declared_hi=0x401101
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_definition_identity_order_return_and_conditions_refuse(self):
+        for change in ('function','line','order','return','conditional','duplicate','method-macro','owner-macro'):
+            with self.subTest(change=change):
+                root,classes,prog,d,_,_=self.fixture(external=True)
+                source=d['anchors'][0]['interfaceDispatch']['definition'];path=root/source['file']
+                if change=='function':source['function']='Other::Run'
+                if change=='line':source['line']+=1
+                if change=='order':path.write_text('void Child::Run(char* out, int index)\n{\n}\n')
+                if change=='return':path.write_text('int Child::Run(int index, char* out)\n{\n}\n')
+                if change=='conditional':path.write_text('void Child::Run(int index, char* out)\n{\n#if MAYBE\n#endif\n}\n')
+                if change=='duplicate':path.write_text(path.read_text()*2)
+                if change=='method-macro':path.write_text('#define Run Other\n'+path.read_text())
+                if change=='owner-macro':path.write_text('#define Child Other\n'+path.read_text())
+                source['sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+                if change=='conditional':source['bodySha256']=hashlib.sha256(E.index_source(root)[0].body.encode()).hexdigest()
+                if change.endswith('-macro'):source['line']=E.index_source(root)[0].line
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_unmapped_alias_is_not_named_and_saved_names_are_not_inputs(self):
+        root,classes,prog,d,_,_=self.fixture()
+        prog.slots[0x401100].append(('Unrelated',0,9,0x630000))
+        report=self.invoke(root,classes,prog,d)
+        row=next(r for r in report['rows'] if int(r['target'],16)==0x401100)
+        self.assertEqual(row['status'],'unmapped-vtable-aliases')
+        before=copy.deepcopy(report)
+        for f in prog.funcs:f.name='convincing_but_wrong_'+hex(f.va)
+        self.assertEqual(self.invoke(root,classes,prog,d),before)
+
+    def test_reviewed_inline_conditions_and_numeric_construction_identity(self):
+        for change in ('inline-condition','duplicate-construction'):
+            with self.subTest(change=change):
+                root,classes,prog,d,_,_=self.fixture();a=d['anchors'][0];w=a['interfaceDispatch']
+                if change=='inline-condition':
+                    path=root/'types.h'
+                    path.write_text('class Child : public Base { public: virtual void Run(char* out) {\n'
+                                    '#if MAYBE\n out=0;\n#endif\n} };\n')
+                    classes=E.header_classes(root,set());method=classes['Child'].methods[0]
+                    w['definition'].update(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                                           bodySha256=hashlib.sha256(method.body.encode()).hexdigest())
+                else:
+                    w['constructions']=[w['constructions'][0],copy.deepcopy(w['constructions'][0])]
+                    w['constructions'][1]['table']='0x00600100'
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_partial_callee_register_write_invalidates_same_object_installation(self):
+        root,classes,prog,d,m,pin=self.fixture();w=d['anchors'][0]['interfaceDispatch']
+        def replace_body(va,raw):
+            for n,v in enumerate(raw):m[va+n]=v
+            f=prog.by_va[va];f.hi=f.declared_hi=va+len(raw)-1;f.body_bytes=len(raw)
+            prog.model.insns=[i for f in prog.funcs for i in E.decode_entry_body(prog.img,f)]
+            prog.insn_vas=[i.va for i in prog.model.insns]
+        old=prog.img.read(0x402000,prog.by_va[0x402000].body_bytes)
+        replace_body(0x402000,old[:-1]+b'\x66\x31\xff\xc3')  # XOR DI,DI
+        w['baseConstruction']=pin(0x402000)
+        raw=(b'\x8b\xcf\xe8'+struct.pack('<i',0x402000-(0x402100+7))
+             +b'\xc7\x07'+struct.pack('<I',0x600100)+b'\xc3')
+        replace_body(0x402100,raw)
+        w['constructions'][0].update(body=pin(0x402100),receiver='edi')
+        with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_stack_and_segment_writes_are_not_simple_base_initializers(self):
+        for mutation in (b'\x66\x31\xe4', b'\x31\xe4', b'\x8e\xd8'):
+            with self.subTest(mutation=mutation.hex()):
+                root,classes,prog,d,m,pin=self.fixture()
+                fn=prog.by_va[0x402000];raw=prog.img.read(fn.va,fn.body_bytes)[:-1]+mutation+b'\xc3'
+                for n,v in enumerate(raw):m[fn.va+n]=v
+                fn.hi=fn.declared_hi=fn.va+len(raw)-1;fn.body_bytes=len(raw)
+                prog.model.insns=[i for f in prog.funcs for i in E.decode_entry_body(prog.img,f)]
+                prog.insn_vas=[i.va for i in prog.model.insns]
+                d['anchors'][0]['interfaceDispatch']['baseConstruction']=pin(fn.va)
+                with self.assertRaisesRegex(ValueError,'simple leaf'):self.invoke(root,classes,prog,d)
+
+    def test_collapsed_hierarchy_cannot_hide_the_tables_actual_extra_base(self):
+        root,classes,prog,d,_,_=self.fixture()
+        # The cached/aggregated view remains [Peer, Base]; the table's own COL
+        # selects the other valid hierarchy. Both must be checked independently.
+        chd=prog.test_raw_rtti.hierarchies[0x621080]
+        chd.rows.append(SimpleNamespace(descriptor=SimpleNamespace(
+            class_name='Extra',mdisp=0,pdisp=-1,vdisp=0),parent_index=0))
+        with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+    def test_per_table_parent_and_virtual_displacement_are_required(self):
+        for field,value in (('parent_index',None),('pdisp',4),('vdisp',4)):
+            with self.subTest(field=field):
+                root,classes,prog,d,_,_=self.fixture()
+                row=prog.test_raw_rtti.hierarchies[0x621080].rows[1]
+                setattr(row if field=='parent_index' else row.descriptor,field,value)
+                with self.assertRaisesRegex(ValueError,'table-specific'):self.invoke(root,classes,prog,d)
+
+    def test_raw_descendant_cannot_be_hidden_from_family_discovery(self):
+        root,classes,prog,d,m,_=self.fixture()
+        table=E.Vtable(0x600300,'Hidden',0,[0x401300,0x401200,0x401010])
+        prog.model.rtti.vtables.append(table)
+        for field in ('class_bases','fixed_bases'):
+            getattr(prog.model.rtti,field)['Hidden']=[('Hidden',0),('Other',0)]
+        c=prog.test_raw_rtti;c.vtables[table.va]=SimpleNamespace(col_va=0x620060)
+        c.cols[0x620060]=SimpleNamespace(hierarchy_va=0x6210c0,offset=0,cd_offset=0)
+        c.hierarchies[0x6210c0]=SimpleNamespace(rows=[SimpleNamespace(
+            descriptor=SimpleNamespace(class_name=name,mdisp=0,pdisp=-1,vdisp=0),
+            parent_index=None if n==0 else 0) for n,name in enumerate(('Hidden','Base'))])
+        with self.assertRaises(ValueError):self.invoke(root,classes,prog,d)
+
+
 class CommonInterfaceTests(unittest.TestCase):
     def fixture(self, parameter='MissingEnum', result='void'):
         tmp = tempfile.TemporaryDirectory()

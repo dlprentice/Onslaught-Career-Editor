@@ -8077,3 +8077,34 @@ Execution logs use `postevent-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,166 candidate files. `git diff --check` passed.
+
+## RE console-menu interface evidence — September 27
+
+`tools/re_name_evidence.py` can bind a reviewed derived override to an inherited
+primary-interface prefix without inventing a missing header. Admission requires
+table-specific raw RTTI ancestry/PMDs, the complete raw family, unchanged concrete
+suffix slots, two distinct same-object construction witnesses, pinned complete
+bodies and source definitions, physical return cleanup and all-holder agreement.
+The literal-name-copy witness checks the entire instruction template and literal.
+Source/body correspondence remains a review obligation; this does not certify
+complete prototypes, implementation ownership or runtime effects.
+
+Independent read-only review exposed inline conditional definitions, source-name
+macros, duplicate construction addresses with different spellings, partial-register
+clobbers and class-aggregated RTTI losing table-specific ancestry. Root reproduced
+the failures before fixing them, including a raw descendant omitted by aggregated
+family discovery. Stack/segment writes and malformed ancestry have adverse cases.
+`python -m unittest tools.re_name_evidence_tests`: **164 passed** after the fixes.
+
+The actual CLI with the revised witnesses admits 21 identities: 12 proposed name
+corrections and nine existing names; three folded/conflicting targets remain
+withheld. All 21 bodies were freshly decoded (1,492 bytes / 533 instructions).
+The seven raw tables have the required direct ancestry. This is static evidence,
+not a retail or Godot run; the known incomplete vertex-menu GetEntry signature is
+explicitly outside the name cohort.
+
+Private evidence/logs: `local-data/test-runs/re-audit-20260926/console-menu/`:
+`review-negatives-before.log`, `override-suite-v4.log`, `override-anchors-v3.json`,
+`override-admission-v4.json` and `root-fresh-bodies.json`. The first CLI attempt
+refused a missing source-content pin; the admitted packet includes that pin.
+No Ghidra mutation is part of this tooling change.
