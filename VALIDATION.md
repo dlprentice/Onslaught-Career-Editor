@@ -8014,3 +8014,35 @@ Logs use prefix `abi-` under
 `local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,162 candidate files. `git diff --check` passed.
+
+
+## RE verified cleanup-body identities — September 27
+
+`cleanup-body-verified-20260927` verifies 43 existing names within bounded
+class-associated nondeleting-cleanup identity limits. Only comments and tags
+change. All names, interfaces, locals, types, saved stack metadata, 6,586 body
+bytes, 1,973 instructions and 8,289 non-target function records remain exact.
+All 16,761 previous comment bytes remain verbatim as explicitly fallible leads.
+This adds no complete cleanup, exception-path or retail runtime acceptance.
+
+The already-tested admission tool's 152 cases and revised fresh-input packet
+support this scope. Exact independent payload/POST review, root reproduction,
+restored PRE, rehearsal, separate/sealed readbacks, five byte-stable refusal
+controls, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only the program comment digest changes.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+
+`verify_projection.py` matches all 8,332 live names: 2,041 corrected, 360
+additional verified/kept, zero newly neutralized and 5,931 outside those sets.
+Prototype corrections remain 52; unique corrected comments total 2,414.
+These are audit dispositions, not semantic-completion percentages. CPostEventData's
+single proposed name correction and 69 withheld cleanup cases remain separate.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cleanup-body-verified/`.
+Evidence and execution logs use `cleanup-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed. `git diff --check` passed.

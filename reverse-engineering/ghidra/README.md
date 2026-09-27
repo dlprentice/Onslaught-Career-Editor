@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[window callback identity and interface](#re-audit-window-callback-identity-and-interface--september-27);
+[verified cleanup bodies](#re-audit-verified-cleanup-bodies--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,33 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified cleanup bodies — September 27
+
+The [43-row manifest](../../tools/cohort-specs/cleanup-body-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/cleanup-body-verified-20260927.spec.tsv) verify existing cleanup names
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Exactly 43 existing cleanup names verified within bounded class-associated nondeleting identity limits. Only comments and tag sets change. All names, prototypes, locals, types, saved stack metadata, 6,586 body bytes and 1,973 instructions are unchanged; 8,289 non-target function rows remain exact. All 16,761 previous comment bytes remain verbatim as qualified fallible leads. The authored comments total 102,111 bytes. No complete cleanup or runtime behavior is claimed.
+
+The cleanup-bodies extension to re_name_evidence.py passes 152 tests and independently reviewed negative controls. It checks fresh RTTI, first literal primary-vptr store through unchanged-this, own-table slot1 backlink to a byte-recognized deletion wrapper, every matching wrapper byte shape, full fresh decoding and recursive normal-return teardown to reviewed CMonitor at 004bac40. Cached names never enter evidence admission. The mechanism inspected 154 full bodies and admitted 44 cleanup identities; 43 already-correct spellings form this cohort, while CPostEventData at 005386d0 remains a separate name correction. CUnit is included through a mechanically admitted wrapper whose earlier output spelling collided; 113 wrapper names, not 114, had been promoted. The 69 rejected owner-prefix cases remain unresolved. CUnitAI at 00415080 and MechAI context at 004a03b0 are not conflated. Root reproduced first-store encoding and overlapping-ownership bugs before fixing them; segment changes and indexed/overlapping stores are refused. SDK/source-exact spelling, prototype typing, exceptions, arbitrary indirect callers and full callee behavior remain outside this normal-flow proof.
+
+Independent review checked every target/pin/old note and the bounded shared
+comment template. The private public-comment review initially listed only
+cohort-specific added tags; its corrected accounting records the full delta
+without changing the sealed payload. Fresh PRE restore, rehearsal,
+separate/sealed readbacks, five byte-stable refusal controls, exact payload/POST
+review with root reproduction, live readback and independently restored Archive A
+POST passed. All nine live exports match rehearsal; program scope changes only
+the comment digest. The name projection remains exact for all 8,332 entries.
+
+Working identity: `db.18695`, 18 files / 124,652,404 bytes,
+inventory SHA-256 `7488b9377a3b2cc6460f1a798fe4b08527bb50719ecff3d7ff139197f4f0de7d`; main database 74,350,592 bytes,
+SHA-256 `a95e4355b32be6cbc3d52e56ba0bc1a95306a3d629810d55033885079e86d59b`. Restored WndProc POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-cleanup-body-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cleanup-body-verified/`; proof, tests and logs use `cleanup-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
 
 ## RE-audit window callback identity and interface — September 27
 
