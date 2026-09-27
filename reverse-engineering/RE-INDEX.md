@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (shared-music records promoted; broader audit remains)
+Last updated: 2026-09-27 (GenericSPtrSet identities and career-list evidence; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -86,6 +86,18 @@ are now live with exact comment/tag readback and independently restored recovery
 All names, interfaces, variables and code remain unchanged. Deferred selection
 writes, exact stop branches, rounding limits and unproved override-guard meanings
 are bounded in the shared policy note.
+The [GenericSPtrSet forwarding entry](ghidra/README.md#re-audit-genericsptrset-forwarding-entry--september-27)
+now has a separate, byte-proven name with exact live readback and restored
+independent recovery. The [fourteen shared identities](ghidra/README.md#re-audit-genericsptrset-identities--september-27)
+are now live too, preserving all interfaces, code and the forwarding record.
+Their own POST is independently restored and the complete name projection agrees.
+Seven interface corrections plus a thunk dependency remain a separate ABI scope.
+Their [isolated list experiment](../VALIDATION.md#original-pointer-list-operations--september-27)
+passed 42 original-code cases and two altered-copy controls. The
+[child-link](binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md) and
+[parent-link](binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md)
+notes bound how null-item copy termination affects career traversal; complete
+career execution and actual authored graph combinations remain open.
 The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
 now corrects sixty names across shared movement, activation and combat interfaces,
 with independently bound retail callers, complete target bodies and all recognized

@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-27 (Options, resource-dispatch and shell identities; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (GenericSPtrSet pool-initializer identity; earlier evidence keeps its stated limits)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -556,7 +556,7 @@ pinned source. See the [platform contract](../../source-code/core/platform-syste
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004E59F0` | `CSPtrSet__Initialise` | 131 | 0 | 137 | `CDebugLog__Printf` x1; `CDXMemoryManager__Alloc` x1 |
+| `0x004E59F0` | `GenericSPtrSet__Init` | 131 | 0 | 137 | `CDebugLog__Printf` x1; `CDXMemoryManager__Alloc` x1 |
 
 ### `SquadNormal.cpp` (1)
 

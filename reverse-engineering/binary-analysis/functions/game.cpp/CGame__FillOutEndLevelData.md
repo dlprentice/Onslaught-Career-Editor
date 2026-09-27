@@ -1,7 +1,7 @@
 # CGame__FillOutEndLevelData
 
 Status: active static function note
-Last updated: 2026-09-27 (class-name getter call rechecked; earlier findings keep their stated limits)
+Last updated: 2026-09-27 (GenericSPtrSet callee identity refreshed; caller behavior not newly certified)
 Summary: FillOut's score-time arm is live on L100: last LoadWorld
 stores RLWD `300.0f` / `500.0f` so `(pct − full)=200>0`. Base-things
 `Size` is 35 (At() membership, including two type-37 `CSafeSide`).
@@ -38,7 +38,7 @@ indexed loads;
 
 `[0x0085515c]` is the list `Size`. `cmp eax, 0x120` (288). `jg` logs
 `0x0062c048` and skips the walk. Else `ebx=0`; while `ebx < Size` call
-`CSPtrSet__At` (`0x004e5c90`, `ecx=0x00855150`, arg=`ebx`). Store at
+`GenericSPtrSet__At` (`0x004e5c90`, `ecx=0x00855150`, arg=`ebx`). Store at
 `0x006728f8 + ebx*4`: `1` if `[thing] != 0` and `([thing+0x2c] & 4) == 0`,
 else `0`. `operand_scan` of `0x0085515c` is those two FillOut reads only —
 `Size` is not an image immediate.

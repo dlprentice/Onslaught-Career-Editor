@@ -71,6 +71,64 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### GenericSPtrSet identities and dependent forwarder — September 27
+
+The one-row forwarding cohort and fourteen-row identity cohort passed the
+preservation/rehearsal/readback/recovery gate separately. The first fourteen-row
+rehearsal caught an automatic fifteenth rename and never reached the live
+project. Its failed seal and disposable project remain in the existing private
+owner. A separately proven five-byte forwarding name resolved that dependency;
+the second fourteen-row rehearsal leaves its entire record unchanged.
+
+For both cohorts: fresh PRE restore/open, exact rehearsal delta, five byte-stable
+refusal controls, independent read-only review reproduced by root, live readback
+matching all nine rehearsal exports, and independently restored Archive A POST
+passed. The target bodies remain 1,065 bytes / 363 instructions; all signatures,
+variables, frames and non-target records are preserved. No runtime behavior is
+established by those metadata checks.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed** after
+each scoped allowlist registration. Production projection checks match **all
+8,332 live names**; running unique counts are 2,139 names corrected, 377 kept,
+0 newly neutralized and 5,816 outside that accounted set. Existing consumer
+notes distinguish current labels from retained historical packet rows. The
+separate 42-case list experiment below is the executed behavior evidence.
+
+Private gate owners:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-forwarder/`
+and `sptrset-identities/`; command logs, exact projection receipts and complete
+body/caller evidence: `local-data/test-runs/re-audit-20260926/sptrset/`.
+
+### Original pointer-list operations — September 27
+
+`python local-data/test-runs/re-audit-20260926/sptrset/original_list_operations.py`:
+**42 original-code cases and two altered-copy controls passed.** The five complete
+pristine bodies (`004e5850`, `004e58a0`, `004e5b20`, `004e5c30`, `004e5c60`)
+retain all 424 bytes in a syscall-confined native i386 executable. Specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Authored lists cover empty, ordinary, duplicate, null-first, null-middle and
+null-final items. Copy and assignment stop before the first null item; Contains
+cannot find an item behind it and does not find null. Self-assignment clears
+the list. RemoveAll returns nodes without clearing the iterator. Cases check
+stack/nonvolatile registers, return-pointer/predicate transport, complete object
+snapshots, guard words, pool globals and the disjoint partition of active/free
+nodes. Overflow/log hooks fail the run; allocator behavior is not exercised.
+
+In disposable ELF controls, removing only the copy's null-item stop changes
+`[P,null,Q]` from a one-item result to three items; removing the search stop
+changes Contains(Q) from false to true. Neither control changes the specimen.
+The complete career callers were inspected statically; they were not executed.
+No real save, campaign topology, Windows exception handling or retail gameplay
+acceptance is claimed. The two career function notes now bound their composition
+and withdraw the older blanket source/signature assertions.
+
+Run owner: `local-data/test-runs/re-audit-20260926/sptrset/list-brtq9fka/`;
+`receipt.json` SHA-256
+`cb6682584c4602d76ec76184013d1224f97c68752fbc420cb240b6b514d672f1`.
+It retains the driver, assembler/link commands, exact body hashes, input/output
+files and both counterfactual executables. No Ghidra mutation is part of this run.
+
 ### Source definition and constructor indexing — September 27
 
 `python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:

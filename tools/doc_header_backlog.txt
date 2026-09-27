@@ -64,8 +64,6 @@ reverse-engineering/binary-analysis/functions/Bomber.cpp.md
 reverse-engineering/binary-analysis/functions/CPhysicsScript.cpp.md
 reverse-engineering/binary-analysis/functions/CPhysicsScriptStatements.cpp.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__Blank.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__SetBaseThingExistTo.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__CheckSRankUnlock.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__CountGoodies.md
@@ -86,7 +84,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsEpisodeAvail
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsWorldLater.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Later.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__NodeArrayAt.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__ReCalcLinks.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F4.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetKillCounterTopByte_23F8.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlot.md

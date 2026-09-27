@@ -1,7 +1,7 @@
 # W4 memory, container, and archive rebuild delta
 
 Status: review candidate — implementation routing only; no rebuild code changed
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (container compatibility limits; earlier proposals retained)
 Summary: the read-side chunk cursor is already carried in deterministic Core; writer framing and ordered-set semantics are bounded future slices, while the retail allocator remains platform infrastructure that must not enter Core.
 Evidence: SOURCE — pinned chunk/container/memory implementations; MEASURED — tracked pristine-PC chunk and pointer-set/allocator static contracts; INFERRED — ranked future implementation slices, explicitly separated from carried behavior.
 Specimen: pristine PC `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, 2,506,752 bytes.
@@ -75,12 +75,21 @@ Proposed owner: the first concrete Core system whose observable behavior needs
 head/tail insertion, first-match removal, stable traversal order, or external
 iterator state.
 
+The September 27 [retail recheck](SOURCE-CONTRACT.md#september-27-retail-recheck)
+refines the observable contract: duplicates and nulls are admitted; copy and
+assignment terminate at the first null item; Contains stops there too.
+Nonempty self-assignment clears the list. First/Next mutate a shared iterator;
+copy and assignment do not initialize it, and RemoveAll leaves it unchanged.
+Next on an already-null iterator and out-of-range At are unchecked cases, not
+safe end-of-list queries. These rules matter at the career child/parent return
+boundary; no complete career execution or actual malformed graph is claimed.
+
 Use a managed ordered collection with stable logical identities. Pin `Add`
 (head), `Append` (tail), first-match `Remove`, ordered copy/assignment, and
 iteration behavior. Do not reproduce the global node pool, overflow allocation,
-raw pointer deletion, or accidental use-after-free surface. The tracked
-`0x004e5840`/`0x004e5850`/`0x004e58a0` analogs make the basic shape
-adjudication-ready, but no utility should be introduced without a concrete
+raw pointer deletion, or accidental use-after-free surface. The now-rechecked
+`0x004e5840`/`0x004e5850`/`0x004e58a0` identities and bounded original-code
+cases support that refined contract, but no utility should be introduced without a concrete
 consumer and focused parity test.
 
 ## Explicit deferrals

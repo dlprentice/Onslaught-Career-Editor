@@ -1,7 +1,7 @@
 # W4 memory, container, and archive source contract
 
 Status: review candidate — source-first receipt, not canonical crosswalk authority
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (container recheck added; earlier partition/receipts retained)
 Summary: Stuart's pinned source defines the architecture and algorithms for the 94 omitted W4 definitions; retail evidence is used only to classify released-PC agreement, divergence, target exclusion, or remaining uncertainty.
 Evidence: SOURCE — pinned Stuart definitions and target conditionals; MEASURED — tracked pristine-PC name/closure, promoted memory semantics, and full-pass body/ABI reviews; INFERRED — bounded rebuild routing and compiler-emission possibilities are labelled as such.
 Specimen: pristine PC `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, 2,506,752 bytes.
@@ -137,6 +137,36 @@ must not be copied into `OnslaughtRebuild.Core`.
 
 ## Small pointer sets
 
+### September 27 retail recheck
+
+The [GenericSPtrSet identity cohort](../../../ghidra/README.md#re-audit-genericsptrset-identities--september-27)
+now verifies the shared source owner and fourteen method identities from complete
+pristine bodies, source allocation anchors and eleven complete callers. Concrete
+`SPtrSet<T>` wrappers remain separate attribution questions; saved ABI annotations
+are not certified by the name correction. The older five-row analogy account
+below records the earlier, narrower review.
+
+A pointer set here accepts duplicate and null item values. Copy construction,
+assignment and Contains stop at the first null **item**, not merely a null node.
+Assignment clears its destination before reading the source; ordinary nonempty
+self-assignment therefore empties it. Constructor, copy and assignment leave
+the per-set iterator field untouched. First can return null on an empty list;
+Next dereferences its current cursor before checking its successor, so calling
+Next with an already-null cursor is not the same case. Remove removes the first
+matching pointer and does not repair the iterator. RemoveAll returns nodes to
+the free chain and leaves the iterator unchanged.
+
+The [42-case original-code experiment](../../../../VALIDATION.md#original-pointer-list-operations--september-27)
+executes five unchanged container bodies on authored valid lists and a fixed
+free pool; two altered-code controls isolate copy/search null termination.
+It does not execute every method, allocator failure, invalid traversal or a
+complete career. The [career return path](../../../binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md)
+shows why filtering nulls would change the observed algorithm: a null lower link
+truncates the returned list before a non-null higher link. Actual shipped graph
+combinations and complete runtime/save behavior remain open.
+
+### Retained August 22 source review
+
 `GenericSPtrSet` is a singly linked insertion-ordered pointer set with
 `mFirst`, `mLast`, an iterator cursor, and `mSize` (`SPtrSet.h:24-59`). A static
 node block and free list back all instances. Source construction clears the
@@ -162,7 +192,8 @@ source rows: three-field initialization at `0x004e5840`, copy-and-append at
 reset at `0x00406d20`, and cursor advance through node `+4` at `0x00406d30`.
 The W001 primary and adversarial reads independently confirm the exact
 source-visible `First`/`Next` field shapes (`this+8 = *this`, then
-`this+8 = *(node+4)`) and null-return behavior. Retail type spelling,
+`this+8 = *(node+4)`) and bounded null-return behavior. Next still requires a live current cursor.
+At that review cut, retail type spelling,
 source-coordinate ownership, and runtime pool behavior remain unproved, so the
 receipt classifies all five as analogs rather than exact bodies.
 

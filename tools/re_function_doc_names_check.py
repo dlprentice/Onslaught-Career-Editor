@@ -176,6 +176,10 @@ CURRENT_MUSIC_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/music-identit
 CURRENT_MUSIC_IDENTITIES_OVERLAY_SHA256 = "cca35b9b460735c991414dc4f1725a77bf6c8be2335455c2f0bda8a6ad8df559"
 CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/thing-gameplay-identities-20260927.manifest.tsv"
 CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY_SHA256 = "43ea56ebd707ad49e5da1383de8bcf6ce65c82f3b24742973db7a8c6d31ee058"
+CURRENT_SPTRSET_FORWARDER_OVERLAY = REPO_ROOT / "tools/cohort-specs/sptrset-forwarder-20260927.manifest.tsv"
+CURRENT_SPTRSET_FORWARDER_OVERLAY_SHA256 = "c908006dda77b5af235ee112124212708f9d91813b7d5465cabcb05c6e843e55"
+CURRENT_SPTRSET_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/sptrset-identities-20260927.manifest.tsv"
+CURRENT_SPTRSET_IDENTITIES_OVERLAY_SHA256 = "9ce5e7d3871208383f3d85397bbf7ca40bb3f315e756dc33484d4ac7908f22ed"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -1009,6 +1013,16 @@ def run(
                 table, CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY,
                 expected_sha256=CURRENT_THING_GAMEPLAY_IDENTITIES_OVERLAY_SHA256,
                 expected_rows=60, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SPTRSET_FORWARDER_OVERLAY,
+                expected_sha256=CURRENT_SPTRSET_FORWARDER_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_SPTRSET_IDENTITIES_OVERLAY,
+                expected_sha256=CURRENT_SPTRSET_IDENTITIES_OVERLAY_SHA256,
+                expected_rows=14, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

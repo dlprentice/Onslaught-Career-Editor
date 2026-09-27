@@ -3,7 +3,7 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (GenericSPtrSet current identities refreshed; dated snapshots and earlier behavioral limits retained)
 Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
@@ -1076,8 +1076,8 @@ Important base operations:
 | --- | --- | --- |
 | `0x00401000` | `CGenericActiveReader__SetReader` | 52 bytes; monitored-reader assignment |
 | `0x00401040` | `CMonitor__AddDeletionEvent` | 126 bytes; deletion-event linkage |
-| `0x00406d20` | `CSPtrSet__First` | Set `+0` head, node `+0` element, node `+4` next, cursor `+8` |
-| `0x004e5a80` | `CSPtrSet__AddToHead` | Global object registration helper |
+| `0x00406d20` | `GenericSPtrSet__First` | Set `+0` head, node `+0` element, node `+4` next, cursor `+8` |
+| `0x004e5a80` | `GenericSPtrSet__Add` | General head insertion, also used by registration |
 | `0x004f34a0` | `CThing__Init` | Base initialization; 301 bytes / 106 instructions |
 | `0x004f3fd0` | `CComplexThing__Init` | Two orientation branches into `CThing__Init` |
 | `0x004f4120` | `CComplexThing__SetName` | Registers named things |

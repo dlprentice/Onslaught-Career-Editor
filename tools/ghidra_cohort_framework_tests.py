@@ -298,6 +298,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Thing gameplay: sixty names/comments/tag sets; one stale slot tag corrected; all interfaces/code preserved.
 # Thing gameplay ABI: thirty-two prototypes/comments/tags; all names/code/locals preserved.
 # Music verified: eight kept names; only comments and tag sets change.
+# GenericSPtrSet forwarder: one name/comment/tag set; target, interfaces and code preserved.
+# GenericSPtrSet identities: fourteen names/comments/tag sets; interfaces, code and explicit thunk unchanged.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -379,6 +381,8 @@ LIVE_GRANTED_COHORTS = [
     "thing-gameplay-identities-20260927",
     "thing-gameplay-abi-20260927",
     "music-verified-20260927",
+    "sptrset-forwarder-20260927",
+    "sptrset-identities-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -866,6 +870,8 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "thing-gameplay-identities-20260927",\n'
         '        "thing-gameplay-abi-20260927",\n'
         '        "music-verified-20260927",\n'
+        '        "sptrset-forwarder-20260927",\n'
+        '        "sptrset-identities-20260927",\n'
         "    };\n",
     ),
     (

@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the pinned Stuart Gillam source corpus and
 its current reverse-engineering/rebuild use; the source files remain the
 line-level primary evidence
-Last updated: 2026-09-26 (current startup identities corrected; earlier synthesis retains its evidence limits)
+Last updated: 2026-09-27 (GenericSPtrSet current identity refreshed; earlier synthesis retains its limits)
 Verdict: **The pinned `references/Onslaught` drop is an exceptionally valuable
 but incomplete architecture corpus: 106 C/C++ files (52 `.cpp`, 54 headers),
 50,266 physical source lines, 1,354,693 source bytes, 254 distinct quoted
@@ -745,7 +745,7 @@ Retail-static join points:
 | --- | --- | --- |
 | `0x00401000` | `CGenericActiveReader__SetReader` | monitored reader assignment |
 | `0x00401040` | `CMonitor__AddDeletionEvent` | deletion notification linkage |
-| `0x004E5A80` | `CSPtrSet__AddToHead` | global/set insertion |
+| `0x004E5A80` | `GenericSPtrSet__Add` | general head insertion used by registration |
 | `0x004F34A0` | `CThing__Init` | base object initialization |
 | `0x004F3FD0` | `CComplexThing__Init` | orientation and base-init paths |
 | `0x004F4120` | `CComplexThing__SetName` | named-object registration |
