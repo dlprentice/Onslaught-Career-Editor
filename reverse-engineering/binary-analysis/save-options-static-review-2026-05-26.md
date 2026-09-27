@@ -1,10 +1,32 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-23
+Last updated: 2026-09-27
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## September 27 slot-save failure boundary
+
+The [slot-writer recheck](cpcmemorycard-pc-save-backend-semantics-2026-08-11.md#september-27-slot-write-result-recheck)
+adds five executions of the complete original PC adapter at `0x00514f80`,
+plus one clearly separated counterfactual control. With intercepted CRT calls,
+a complete item write followed by close result `-1` still returns success
+(`0`). A non-one write count returns failure (`1`) without a close call.
+The unchanged real fixture is only passed as read-only data; this is not a
+serialization or real-file publication test.
+
+Fresh static composition with the explicit Save Game caller shows that its
+zero-result success branch cannot detect the close error. Main-menu and pause
+callers ignore the slot result and continue to the default-options writer.
+Those caller paths were not executed by this new experiment. Existing
+September 19 default-options failure controls below were not duplicated.
+
+The retail serializers write to caller memory; these persistence paths use
+CRT streams. Do not infer their behavior from the source's older PC
+`CMEMBUFFER` career writer or from the separate retail CDXMemBuffer experiment.
+Actual filesystem faults, complete dialog behavior and durable compatibility
+remain open.
 
 ## September 19 independent recheck
 

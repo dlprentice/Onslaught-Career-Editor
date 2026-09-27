@@ -1,8 +1,9 @@
 # `CPCMemoryCard` released PC save-backend semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-19
-Evidence: MEASURED — September 19 selected PC read/name/card-info bodies executed with
+Last updated: 2026-09-27
+Evidence: MEASURED — September 27 complete slot writer executed with intercepted CRT/name boundaries;
+September 19 selected PC read/name/card-info bodies executed with
 intercepted file/UI services; inherited August evidence — complete retail
 bodies, retained interfaces and eleven normalized-identical PC demo twins; UNKNOWN —
 fault-injected filesystem runtime behavior, upstream filename constraints,
@@ -24,6 +25,55 @@ and `references/Onslaught/PCMemoryCard.h` (2,039 bytes, SHA-256
 The retained `PCMemoryCard.cpp` is only a resource-builder hook (669 bytes,
 SHA-256
 `c5558395e79d6121d83e148f1ddb9f8e7723372b5ffc3d6bcd67e158d937efc9`).
+
+## September 27 slot-write result recheck
+
+The complete pristine body `[0x00514f80,0x00515073)`, 243 bytes, SHA-256
+`a98c74c83c7549d419e03b0b47680a10e4b082e13fdfc0632e16e5bf127e12eb`,
+was executed unchanged in an isolated ELF32. Its payload is the unchanged real
+10,004-byte gold fixture in read-only pages. Name conversion and CRT entry
+points are intercepted; no save or game file is written.
+
+| Supplied boundary results | Original adapter result | Observed calls |
+| --- | --- | --- |
+| Open succeeds; `fwrite=1`, `fclose=0` | `0` | Open, write, close. |
+| Open succeeds; `fwrite=1`, `fclose=-1` | `0` | Open, write, close; close error discarded. |
+| Open succeeds; `fwrite=0` | `1` | Open, write; no close. |
+| Open succeeds; adversarial `fwrite=2` | `1` | Open, write; no close. |
+| Open returns NULL | `1` | Open only. |
+
+The equality check is at `0x00515046`. After the close call at `0x0051504c`,
+`0x00515054` clears EAX unconditionally. A separate derivative of the private
+ELF replaces only that two-byte clear with NOPs: the close-error case then
+returns `0xffffffff`. The pristine file and all five primary executions stay
+unchanged. The result of two is an adverse equality control, not an expected
+CRT return for a one-item request.
+
+All cases check the constructed path, exact data pointer/size/count, event
+sequence, RET 20 and callee-saved registers. The syscall filter refuses the
+tested forbidden call. Independent review reconstructs every retained output.
+Driver and receipt: `local-data/test-runs/save-startup-20260919/slot_write_control.py`
+and `slot-write-run-j8gvjdkw/slot.json` (SHA-256
+`9e0be7ee9452416dff323feb215e46c9c65a6d70a13915b9dd97ded750ac9cb8`).
+This verifies the adapter's transport and result handling, not serialization,
+actual CRT stream lifetime, Windows faults or durable persistence.
+
+Fresh static caller inspection distinguishes three consequences:
+
+- Explicit save at `0x0046505d` checks this result. Zero takes the success
+  branch at `0x00465062..0x00465070`, constructs the source-correlated saved
+  message and sets the autosave/keyboard state. A supplied close error is
+  therefore invisible to that branch. The full dialog/caller was not executed.
+- Main-menu call `0x004628d8` ignores the result and proceeds to the default-
+  options writer at `0x004628df`.
+- Pause-menu call `0x004d07af` also ignores it and proceeds to default-options
+  publication at `0x004d07b6`. These last two are unchecked continuations, not
+  newly demonstrated save-success dialogs.
+
+These retail consumers use CRT streams. The pinned source's older PC career
+writer uses `CMEMBUFFER`; that source path must not be substituted for the
+retail serializers and their callers. The separately reviewed CDXMemBuffer
+Write/Close failure behavior is not evidence for this slot adapter.
 
 ## September 19 independent recheck
 
