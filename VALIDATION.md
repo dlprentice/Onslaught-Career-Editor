@@ -8046,3 +8046,111 @@ Evidence and execution logs use `cleanup-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed. `git diff --check` passed.
+
+
+## RE CPostEventData cleanup identity — September 27
+
+`postevent-cleanup-20260927` replaces the neutral label at 005386d0 with
+`CPostEventData__dtor_body`. Fresh raw RTTI, the unique matching deletion wrapper,
+primary-vptr store and normal CMonitor teardown support class-associated cleanup
+identity; neither source-exact spelling nor complete cleanup/runtime behavior is
+certified. All 105 body bytes / 29 instructions, ABI/storage, locals, types and
+8,331 non-target records remain unchanged. The old 1,955-byte note remains an
+explicitly fallible lead, including its short analytic opcode witness. Legacy
+subsystem/wave tags are qualified in the living function map. Historical July
+records retain their narrower withdrawal scope and original table spellings.
+
+Fresh PRE restoration, rehearsal/separate/sealed readback, five byte-stable
+refusal controls, independent exact review, root reproduction, live readback and
+independent Archive A POST restoration passed. All nine live exports equal the
+rehearsal; only the program comment digest changes. The saved signature text
+changes only its function name. `python -m unittest tools.ghidra_cohort_framework_tests`:
+94 passed. Current projection matches 8,332 entries: 2,042 corrected, 360
+additional kept, zero newly neutralized and 5,930 outside the accounted sets;
+52 prototype corrections and 2,415 unique updated comments are separate dimensions.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/postevent-cleanup/`.
+Execution logs use `postevent-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,166 candidate files. `git diff --check` passed.
+
+## RE console-menu interface evidence — September 27
+
+`tools/re_name_evidence.py` can bind a reviewed derived override to an inherited
+primary-interface prefix without inventing a missing header. Admission requires
+table-specific raw RTTI ancestry/PMDs, the complete raw family, unchanged concrete
+suffix slots, two distinct same-object construction witnesses, pinned complete
+bodies and source definitions, physical return cleanup and all-holder agreement.
+The literal-name-copy witness checks the entire instruction template and literal.
+Source/body correspondence remains a review obligation; this does not certify
+complete prototypes, implementation ownership or runtime effects.
+
+Independent read-only review exposed inline conditional definitions, source-name
+macros, duplicate construction addresses with different spellings, partial-register
+clobbers and class-aggregated RTTI losing table-specific ancestry. Root reproduced
+the failures before fixing them, including a raw descendant omitted by aggregated
+family discovery. Stack/segment writes and malformed ancestry have adverse cases.
+`python -m unittest tools.re_name_evidence_tests`: **164 passed** after the fixes.
+
+The actual CLI with the revised witnesses admits 21 identities: 12 proposed name
+corrections and nine existing names; three folded/conflicting targets remain
+withheld. All 21 bodies were freshly decoded (1,492 bytes / 533 instructions).
+The seven raw tables have the required direct ancestry. This is static evidence,
+not a retail or Godot run; the known incomplete vertex-menu GetEntry signature is
+explicitly outside the name cohort.
+
+Private evidence/logs: `local-data/test-runs/re-audit-20260926/console-menu/`:
+`review-negatives-before.log`, `override-suite-v4.log`, `override-anchors-v3.json`,
+`override-admission-v4.json` and `root-fresh-bodies.json`. The first CLI attempt
+refused a missing source-content pin; the admitted packet includes that pin.
+No Ghidra mutation is part of this tooling change.
+
+## RE console-menu identity promotion — September 27
+
+`console-menu-identities-20260927` promotes twelve inherited interface names.
+All 734 code bytes / 276 instructions, saved interfaces, locals, types and 8,320
+other function records are unchanged. Seven previous notes (6,842 bytes) remain
+explicitly fallible leads; five functions gain their first plate comments.
+The first seal was rejected for abstract-prefix and destination-buffer wording;
+its artifacts remain in `console-menu-identities/rejected-v1/`. No live writes
+used that seal. The revised packet is `override-admission-v5.json` with
+`override-anchors-v5.json`; the reviewed tool and 164-test result are unchanged.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal. The first registration helper stopped on an ambiguous text match,
+leaving a partial allowlist update; its framework run correctly failed. After
+completing the exact four registrations, **all 94 framework tests passed before
+any live application**. Both logs are retained.
+
+The current projection matches all 8,332 live entries: 2,054 unique corrected
+names, 360 additional kept names, zero newly neutralized and 5,918 outside the
+accounted sets. Prototype corrections remain 52; updated comments total 2,427.
+These are audit dispositions, not semantic or gameplay-completion percentages.
+
+Separately, `original_vertex_entry.py` ran 23 cases with the unchanged 146-byte
+GetEntry and 47-byte stack-probe bodies. They verify two stack arguments, original
+ECX preservation through the probe, both GetEntry exits' RET8, nonvolatile
+registers and the detailed/ordinary formatter paths. Seven standalone probe cases
+span allocations from zero through 12,288 bytes. Wrong RET4 and receiver-member
+offset controls alter only disposable ELF copies and change the required causal
+fields. Full EAX carries the formatter hook marker; it does not prove an integer
+result API. The pending parameter correction must preserve the unresolved return.
+
+This uses authored objects/list nodes and explicit formatting/shader-text hooks
+inside the existing seccomp-limited i386 runner. No game, Godot, Windows service,
+GPU, desktop, actual formatting, invalid-pointer behavior or real menu was tested.
+The latest receipt is `vertex-t4bw7ii_/receipt.json`; the second run tightens the
+control comparison to specific fields rather than address-containing output.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-identities/`.
+Proof, failed/passing logs and original-code experiments:
+`local-data/test-runs/re-audit-20260926/console-menu/`.

@@ -728,6 +728,7 @@ class HeaderMethod:
     head: str
     body: str | None
     implicit: bool = False
+    definition_span: tuple[int, int] | None = None  # comment-stripped source offsets, including inline body
 
     @property
     def identity(self):
@@ -895,7 +896,8 @@ def header_classes(root: Path, undefined: set[str]) -> dict[str, HeaderClass]:
                         name_site = re.search(re.escape(method_name)+r'\s*\(', masked[cursor:declaration_end])
                         methods.append(HeaderMethod(name, method_name, params,
                             ' '.join(method.group('cv').split()), 'virtual' in head.split(),
-                            path.name, text.count('\n', 0, cursor+name_site.start())+1, head, body))
+                            path.name, text.count('\n', 0, cursor+name_site.start())+1, head, body,
+                            definition_span=(cursor, after)))
                 elif 'virtual' in declaration.split() or '(' in declaration:
                     issues.append('unparsed method declaration: '+declaration[:100])
                 elif re.match(r'(class|struct|enum)\b', declaration) and body is not None:
@@ -1517,6 +1519,205 @@ def aggregate_interface_witness(prog: Program, cls: HeaderClass, method: HeaderM
     return base, 4
 
 
+def override_prefix_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
+                            seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
+    """Transfer a reviewed derived override's role through a proved base prefix.
+
+    No missing declaration or source caller is synthesized. Complete source/
+    retail body correspondence remains an independent review obligation; pins
+    preserve that reviewed correspondence, not prove it. This narrow form uses
+    a fixed direct primary base, repeated abstract prefix and inherited concrete
+    suffix. Two construction witnesses bind base and derived installations to
+    the same object. It does not infer source-exact implementation ownership,
+    complete prototypes, runtime effects or exception behavior.
+    """
+    import re_source_graph as G
+    w = anchor['interfaceDispatch']
+    if (source_root is None or not w.get('evidence') or not w.get('sourceDivergences')
+            or not w.get('inheritancePremise')):
+        raise ValueError('override prefix lacks reviewed source/inheritance premises')
+    fresh = scan_rtti(prog.img)
+    if fresh != prog.model.rtti:
+        raise ValueError('override prefix cached RTTI differs from specimen')
+    tables = {t.va: t for t in fresh.vtables}
+    from re_rtti_vtables import parse_rtti
+    census = parse_rtti(prog.img.data)
+    base = tables.get(int(w['table'], 16))
+    count, prefix = w['slotCount'], w['abstractPrefix']
+    if (base is None or base.klass != w['class'] or base.offset != 0
+            or type(count) is not int or type(prefix) is not int
+            or not 0 <= anchor['slot'] < prefix < count <= 256
+            or fresh.class_bases.get(base.klass) != [(base.klass, 0)]
+            or fresh.fixed_bases.get(base.klass) != [(base.klass, 0)]
+            or len(base.slots) != count or len(set(base.slots[:prefix])) != 1
+            or base.slots[prefix:] != [int(v, 16) for v in w['concreteSuffix']]
+            or base.slots[0] in base.slots[prefix:]):
+        raise ValueError('override is not inside the witnessed primary base prefix')
+    # Discover members from each table's selected CHD, not the class-aggregated
+    # cache: two CHDs for one class can differ in both extent and ancestry.
+    family_addresses = {va for va, t in census.vtables.items()
+                        if any(demangle_type('.?AV'+r.descriptor.class_name+'@@') == base.klass
+                               for r in census.hierarchies[census.cols[t.col_va].hierarchy_va].rows)}
+    if not family_addresses <= tables.keys():
+        raise ValueError('override raw family contains a table absent from the model')
+    family = [tables[va] for va in sorted(family_addresses)]
+    expected_tables = [int(v, 16) for v in w['familyTables']]
+    if (len(expected_tables) != len(set(expected_tables))
+            or {t.va for t in family} != set(expected_tables)):
+        raise ValueError('override family omits or invents a known RTTI table')
+    for t in family:
+        ancestry = [(base.klass, 0)] if t.klass == base.klass else [(t.klass, 0), (base.klass, 0)]
+        col = prog.img.u32(t.va-4)
+        raw_table = census.vtables.get(t.va)
+        raw_col = census.cols.get(col)
+        hierarchy = census.hierarchies.get(raw_col.hierarchy_va) if raw_col else None
+        if (raw_table is None or raw_table.col_va != col or raw_col is None or hierarchy is None
+                or raw_col.offset != 0 or raw_col.cd_offset != 0
+                or [(demangle_type('.?AV'+r.descriptor.class_name+'@@'), r.descriptor.mdisp)
+                    for r in hierarchy.rows] != ancestry
+                or any(r.descriptor.pdisp != -1 or r.descriptor.vdisp != 0
+                       or r.parent_index != (None if n == 0 else 0)
+                       for n, r in enumerate(hierarchy.rows))):
+            raise ValueError('override table-specific RTTI hierarchy is not the exact direct primary chain')
+        if (t.offset != 0 or fresh.class_bases.get(t.klass) != ancestry
+                or fresh.fixed_bases.get(t.klass) != ancestry
+                or any(prog.img.u32(col+n) != 0 for n in (0, 4, 8))
+                or len(t.slots) != count or t.slots[prefix:] != base.slots[prefix:]
+                or any(prog.img.u32(t.va+4*n) != target for n, target in enumerate(t.slots))):
+            raise ValueError('override family has adjusted, stale or incompatible primary inheritance')
+
+    def body(record):
+        va, size = int(record['address'], 16), record['bytes']
+        fn = prog.by_va.get(va)
+        if (type(size) is not int or fn is None or size != fn.hi+1-va
+                or hashlib.sha256(prog.img.read(va, size)).hexdigest() != record['sha256']
+                or any(f.va != va and f.lo <= fn.hi and (f.declared_hi or f.hi) >= fn.lo
+                       for f in prog.funcs)):
+            raise ValueError('override prefix needs a complete, unambiguous pinned body')
+        decoded = decode_entry_body(prog.img, fn)
+        if prog.body(fn) != decoded:
+            raise ValueError('override prefix cached body differs from fresh decoding')
+        return fn, decoded
+
+    # Every family entry used by propagation is bound to fresh instructions,
+    # including bodies whose saved names/signatures are wrong or generic.
+    for target in {target for t in family for target in t.slots}:
+        fn = prog.by_va.get(target)
+        if fn is None:
+            raise ValueError('override prefix has an unbounded family function')
+        body(dict(address=hex(target), bytes=fn.hi+1-target,
+                  sha256=hashlib.sha256(prog.img.read(target, fn.hi+1-target)).hexdigest()))
+    base_fn, base_body = body(w['baseConstruction'])
+    if (cleanup_primary_store(base_body)[1] != base.va
+            or any(i.mnem not in ('mov', 'xor', 'ret') for i in base_body)
+            or any(i.ops.split(',')[0] in ('esp', 'sp', 'cs', 'ds', 'es', 'fs', 'gs', 'ss')
+                   for i in base_body if i.mnem != 'ret')
+            or base_body[-1].mnem != 'ret' or base_body[-1].ops
+            or any(i.mnem == 'ret' for i in base_body[:-1])):
+        raise ValueError('override base installation is not the reviewed simple leaf')
+
+    constructions = w['constructions']
+    construction_tables = {int(r['table'], 16) for r in constructions}
+    if (len(constructions) < 2 or len(construction_tables) != len(constructions)
+            or seed.va not in construction_tables):
+        raise ValueError('override prefix needs distinct seed and peer constructions')
+    for record in constructions:
+        table = tables.get(int(record['table'], 16))
+        if table is None or table not in family or table == base or not record.get('evidence'):
+            raise ValueError('override construction is not a reviewed family member')
+        _, instructions = body(record['body'])
+        index = next((n for n, i in enumerate(instructions)
+                      if i.va == int(record['windowStart'], 16)), -1)
+        if index < 0 or index+3 > len(instructions):
+            raise ValueError('override construction window is incomplete')
+        load, call, store = instructions[index:index+3]
+        receiver = record['receiver']
+        if receiver in ('ebx', 'esi', 'edi', 'ebp'):
+            destination = f'DWORD PTR [{receiver}]'
+            aliases = {'ebx': {'ebx', 'bx', 'bl', 'bh'}, 'esi': {'esi', 'si'},
+                       'edi': {'edi', 'di'}, 'ebp': {'ebp', 'bp'}}[receiver]
+            if any(i.ops.split(',')[0] in aliases and i.mnem != 'ret'
+                   for i in base_body):
+                raise ValueError('override base leaf clobbers the saved object receiver')
+        elif re.fullmatch(r'0x[0-9a-f]+', receiver):
+            destination = f'DWORD PTR ds:{receiver}'
+        else:
+            raise ValueError('override construction receiver is not preserved or literal')
+        if ((load.mnem, load.ops) != ('mov', 'ecx,'+receiver)
+                or (call.mnem, call.ops) != ('call', hex(base_fn.va))
+                or (store.mnem, store.ops) != ('mov', destination+','+hex(table.va))):
+            raise ValueError('override construction does not reinstall on the same object')
+
+    source_classes = header_classes(source_root, set(w.get('undefined', [])))
+    actual_cls = source_classes.get(cls.name)
+    if actual_cls != cls or cls.issues or cls.bases != [base.klass] or seed not in family:
+        raise ValueError('override declaration is ambiguous or not the direct primary source base')
+    if (not method.virtual or method.name.startswith('~') or method.name == cls.name
+            or (anchor.get('sourceFile'), anchor.get('sourceLine')) != (method.file, method.line)):
+        raise ValueError('override source declaration location or virtualness mismatch')
+    return_spelling = re.sub(r'\bvirtual\b', '', method.head).strip()
+    sf = SourceFunc(cls.name+'::'+method.name, method.file, method.line, '', [], [],
+                    args=', '.join(method.parameters), head=method.head)
+    expected = G.expected_pop(G.Source({}, set(), set()), sf)
+    if expected is None or any(G.param_bytes(p) is None for p in method.parameters):
+        raise ValueError('override source signature needs an independent ABI witness')
+    source = w['definition']
+    filename = source['file']
+    if (Path(filename).name != filename or filename in ('.', '..')
+            or source['function'] != sf.key):
+        raise ValueError('override source definition path is not bounded')
+    path = source_root/filename
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('override source definition file hash mismatch')
+    text = strip_comments(path.read_text(errors='replace'))
+    macros = set(re.findall(r'^\s*#\s*(?:define|undef)\s+(\w+)', text, re.M))
+    if macros & {cls.name, method.name, base.klass}:
+        raise ValueError('override source identity is affected by an unexpanded macro')
+    active, conditions = _header_conditions(text, set(w.get('undefined', [])))
+    if source.get('inline') is True:
+        if (filename != method.file or source['line'] != method.line or method.body is None
+                or source['function'] != sf.key or method.definition_span is None):
+            raise ValueError('override inline definition does not match declaration')
+        definition = method.body
+        lo, hi = method.definition_span
+    else:
+        matches = [f for f in index_source(source_root, (filename,)) if f.key == sf.key]
+        if (len(matches) != 1 or matches[0].line != source['line']
+                or tuple(_header_type(p) for p in G.params(matches[0].args)) != method.parameters
+                or matches[0].head.strip() != return_spelling or method.qualifiers):
+            raise ValueError('override definition signature/order/occurrence mismatch')
+        f = matches[0]
+        lo = sum(len(s) for s in text.splitlines(keepends=True)[:f.line-1])
+        hi = sum(len(s) for s in text.splitlines(keepends=True)[:f.end_line])
+        definition = f.body
+    if active[lo:hi] != text[lo:hi] or any(a < hi and b > lo for a, b in conditions):
+        raise ValueError('override source definition has unresolved conditions')
+    if (hashlib.sha256(definition.encode()).hexdigest() != source['bodySha256']
+            or not source.get('correspondence')):
+        raise ValueError('override source/body correspondence is not pinned and reviewed')
+    fn, instructions = body(anchor['body'])
+    if fn.va != seed.slots[anchor['slot']]:
+        raise ValueError('override body does not occupy the witnessed seed slot')
+    literal_copy = re.fullmatch(r'\s*strcpy\s*\(\s*\w+\s*,\s*"((?:\\.|[^"\\])*)"\s*\)\s*;\s*',
+                               definition)
+    if literal_copy:
+        # VC6's complete unrolled string-copy leaf. Bind the literal, receiver-
+        # independent destination argument and terminator transport, not merely
+        # its RET4 (which an unrelated action method can share).
+        raw = prog.img.read(fn.va, fn.hi+1-fn.va)
+        template = bytes.fromhex('5657bf0000000083c9ff33c0f2ae f7d1 2bf9 8bc1 8bf7 '
+                                 '8b7c240c c1e902 f3a5 8bc8 83e103 f3a4 5f5e c20400')
+        if (method.parameters != ('char*',) or return_spelling != 'void' or len(raw) != len(template)
+                or raw[:3]+b'\0'*4+raw[7:] != template):
+            raise ValueError('override source literal copy differs from the complete retail leaf')
+        literal = c_unescape(literal_copy[1]).encode('latin1')+b'\0'
+        if prog.img.read(struct.unpack_from('<I', raw, 3)[0], len(literal)) != literal:
+            raise ValueError('override source literal differs from retail bytes')
+    if {int(i.ops, 16) if i.ops else 0 for i in instructions if i.mnem == 'ret'} != {expected}:
+        raise ValueError('override body return cleanup contradicts its source declaration')
+    return base, expected
+
+
 def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
                              seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
     """Bind a reviewed common-interface call to a surviving derived declaration.
@@ -1529,6 +1730,8 @@ def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMeth
     """
     import re_source_graph as G
     witness = anchor['interfaceDispatch']
+    if witness.get('kind') == 'reviewed-override-primary-prefix':
+        return override_prefix_witness(prog, cls, method, seed, anchor, source_root)
     if witness.get('kind') == 'member-result-buffer':
         return aggregate_interface_witness(prog, cls, method, seed, anchor, source_root)
     if witness.get('kind') == 'guarded-event-primary-prefix':

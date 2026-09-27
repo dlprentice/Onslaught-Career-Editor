@@ -3,7 +3,7 @@
 Source File: retained MissionScript/ScriptEventNB.cpp mapping | Binary: BEA.exe (superseded byte claims; current owners linked below)
 
 Status: retired evidence; current byte owners are linked below
-Last updated: 2026-09-27 (current listener identities linked; historical rows preserved)
+Last updated: 2026-09-27 (current listener/cleanup identities linked; historical rows preserved)
 Summary: preserved script-event mapping history, superseded for current byte contracts.
 
 The retained `CConsole__Printf` label at `0x00441740` now resolves to
@@ -44,6 +44,19 @@ Historical table spellings below remain unchanged; the identities above supersed
 > this does not revalidate the retained Wave586 behavior or signatures.
 <!-- ghidra-name-drift-accepted: 0x005385e0 IScript__HandleEvent (2026-09-27) -->
 <!-- ghidra-name-drift-accepted: 0x00538c70 CScriptEventNB__HandleEvent (2026-09-27) -->
+
+> **September 27 cleanup identity:** `0x005386d0 CPostEventData__dtor_body`
+> supersedes the neutral `DestructorBody_005386d0` label. The [cleanup audit](../../ghidra/README.md#re-audit-cposteventdata-cleanup-identity--september-27)
+> binds the complete 105-byte body to pristine `BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, through
+> fresh RTTI, the sole matching deletion wrapper, own primary-vptr and normal
+> CMonitor teardown. The old July extent included padding; 29 instructions end
+> at exclusive `0x00538739`. Names do not certify saved types or full cleanup
+> behavior. The retained `scripteventnb`/`scripteventnb-wave586` tags are historical
+> subsystem/wave groupings, also present on IScript and the CPostEventData wrapper;
+> they do not assert exclusive CScriptEventNB ownership.
+
+<!-- ghidra-name-drift-accepted: 0x005386d0 CPostEventData__dtor_body (2026-09-27) -->
 
 ## Name corrections — 2026-07-28
 
