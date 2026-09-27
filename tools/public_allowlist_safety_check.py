@@ -283,7 +283,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # GenericSPtrSet identities: fourteen old/authored notes (4,707/26,635 bytes); old notes retained as leads.
 # GenericSPtrSet ABI: eight old/authored notes (14,732/24,562 bytes); old notes remain leads.
 # Sound verified: 41 old/authored notes (23,740/86,153 bytes); old notes remain leads.
+# Sound ABI: ten old/authored notes (21,154/35,742 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/sound-abi-20260927.manifest.tsv":
+        "ecac955001c06643e3392b2e7fe94627c31326f3e9c6930894bb6e56dcbf8b2e",
     "tools/cohort-specs/sound-verified-20260927.manifest.tsv":
         "f614617973c1c4153486fbe5b787327732ffd69ddfba8880edd3dafcd111bcac",
     "tools/cohort-specs/sptrset-abi-20260927.manifest.tsv":

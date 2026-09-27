@@ -2,7 +2,7 @@
 
 Status: active — static identity and bounded processing order rechecked
 Last updated: 2026-09-27
-Summary: sound updates continue selectively while paused or frozen; saved ABI and device behavior remain open.
+Summary: sound updates continue selectively while paused or frozen; the member receiver is rechecked and device behavior remains open.
 
 > Address: `0x004e1b20` | Source: `references/Onslaught/SoundManager.cpp:1224–1411`
 
@@ -35,8 +35,11 @@ Complete-body evidence and review are in
 owns the related source differences. The earlier note's caller attribution to
 `CGame__MainLoop` at `0046eee0` was not rechecked in this pass.
 
-The saved calling convention and return/receiver presentation are not certified
-by this identity review. Exact numerical edge cases, callback-safe traversal,
+The later [sound-interface cohort](../../../ghidra/README.md#re-audit-sound-interfaces--september-27)
+normalizes its saved explicit-ECX fastcall receiver to automatic thiscall.
+The body uses incoming ECX as its manager; the complete FrontEnd caller supplies
+SOUND at `00466c14` before call `00466c19`, without stack arguments. Void and
+purge zero are preserved. Exact numerical edge cases, callback-safe traversal,
 actual device results and audible pause behavior remain open. A controlled
 copied-instance update with paused/frozen combinations and intercepted backend
 calls is the next inexpensive falsifier; it would still not prove audible parity.

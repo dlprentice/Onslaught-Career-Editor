@@ -1,7 +1,7 @@
 # `CPCSoundManager` DirectSound backend semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-27 (backend identities and stale sample-route/volume wording rechecked; older measurements retain their dates)
+Last updated: 2026-09-27 (backend identities, six member interfaces and sample-route/volume wording rechecked; older measurements retain their dates)
 Evidence: SOURCE — pinned `pcsoundmanager.cpp`/`.h` and the first-party GDC
 shared/platform architecture; MEASURED — complete pristine retail bodies,
 DirectSound calls, formats, tables, constants, and twenty normalized-identical
@@ -105,6 +105,17 @@ Device opening, real HRESULT behavior, mixer output and audible parity remain
 open. Use owned COM objects to falsify call ordering/arguments before any live
 device experiment; preserve the distinction between those tests and hearing
 the complete game.
+
+The subsequent [sound-interface cohort](../ghidra/README.md#re-audit-sound-interfaces--september-27)
+normalizes CPCSample's nondeleting destructor and DeviceShutdown, DeviceReset,
+UpdateGlobals, UpdatesDone and FindFreeChannel from explicit ECX fastcall to
+automatic ECX thiscall. Complete bodies, source member identities and real
+caller transport support the annotations. Their physical arguments and returns
+are unchanged; the old annotations did not demonstrate incompatible transport.
+The destructor remains void; its separate deleting wrapper owns the returned
+receiver. FindFreeChannel retains signed int/EAX. GetSampleLength's unresolved
+return type remains excluded, and incidental COM results do not become void
+methods' declared return values. Exact live readback and restored recovery passed.
 
 ## Dated August 11 comparison
 

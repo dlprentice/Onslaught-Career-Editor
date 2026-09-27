@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (camera and device lifecycle promotions recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (sound interfaces and sample-lookup probes recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -8652,3 +8652,53 @@ against the final registered spec. `npm run test:docs` passed with zero drifted
 assertions; `npm run test:safety` passed across 4,188 candidate files.
 `git diff --check` passed. The refreshed UpdateStatus function note now meets the
 current provenance-header rule and has been removed from the legacy backlog.
+
+## Sound interfaces and sample lookup — September 27
+
+The ten-row `sound-abi-20260927` cohort corrects nine member-receiver
+annotations and IsEffectPlaying's bool/AL return to int/EAX. Complete targets
+cover 4,014 pristine bytes / 1,264 instructions. Specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Manifest: 86,322 bytes, SHA-256
+`ecac955001c06643e3392b2e7fe94627c31326f3e9c6930894bb6e56dcbf8b2e`.
+
+Executed through the existing gate scripts in
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-abi/`:
+
+- `prepare_preservation.py` restored and opened PRE read-only. Its census
+  refused missing prototype-column bindings; `complete_pre_census.py` supplied
+  them and passed against the unchanged PRE. Failed inputs/logs remain.
+- `prepare.py`, `rehearse.py`, `compare_exports.py rehearsal-post` and
+  `negative_controls.py`: PASS. The untested first seal was retained after
+  two source-line citation corrections. The final seal passes seven byte-stable
+  refusals for stale/wrong signatures, comments, tags and specimen identity.
+- Independent exact-payload review: GO, with root reproduction. All ten PRE
+  records, complete targets, four source pins, eleven complete caller bodies
+  and 77 selected caller instructions were checked. Earlier notes remain leads.
+- `apply_live.py`, `compare_exports.py live-post`, `finish.py` and
+  `verify_projection.py`: PASS. All nine live exports equal rehearsal; all
+  8,322 non-target function rows, names, code, locals, frames and other frozen
+  metadata are unchanged. Independently restored Archive A POST equals live;
+  the tracked checkpoint is unchanged. All 8,332 name entries match the current
+  projection. The two successful exact scratch twins were retired after all
+  gates, preserving original receipts/manifests and cold recovery.
+- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 PASS against the
+  final registered spec. Logs: the existing private sound owner's `abi-*` files.
+
+Separate original-code experiments `original_sample_lookup.py` and
+`original_sample_lookup_v2.py` each passed 76 cases and two altered-copy controls.
+Their saved input/output pairs, exact original body and compiled filter were
+independently reviewed; no second execution by the reviewer is claimed.
+[The shared note](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sample-lookup-correction)
+owns the branch/argument findings and exact private output paths. Creation and
+ASCII comparison were intercepted. Memory equality covers the authored 4 KiB
+arena and two gates, not all process memory. No full loading, CRT collation,
+allocator/lifetime, device or audible acceptance is claimed. GetSampleLength's
+float/double source type remains open; the two source-name corrections and
+argument-label changes remain pending.
+
+`git diff --check` and `npm run test:docs` passed; the latter resolved 2,035
+gated assertions with zero drift or unresolved assertions. `npm run test:safety`
+passed across 4,190 candidate files. Exact logs remain in the sound owner's
+`abi-docs.log` and `abi-safety.log`.

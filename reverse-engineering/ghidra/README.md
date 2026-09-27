@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified sound records](#re-audit-verified-sound-records--september-27);
+[sound interfaces](#re-audit-sound-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,38 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit sound interfaces — September 27
+
+The [ten-row manifest](../../tools/cohort-specs/sound-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sound-abi-20260927.spec.tsv) correct saved member/return
+metadata in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Ten shared/PC sound interfaces corrected with comments/tags. Seven explicit-ECX receivers and two saved stack-only member annotations normalize to automatic thiscall. IsEffectPlaying changes bool/AL:1 to int/EAX:4. All names, 4,014 code bytes / 1,264 instructions, physical input locations, locals, frames and 8,322 non-target functions remain unchanged.
+
+Complete pristine targets, saved interfaces and complete retail callers are checked against pinned SoundManager.cpp/.h and pcsoundmanager.cpp/.h. The full EAX result and its consuming caller establish DWORD Boolean width. Incoming ECX is unused by StopSoundEvent and UpdateSoundPosition; source identity and explicit receiver delivery establish member annotations, not new manager access. The seven zero-stack fastcall receivers were physically compatible; normalization does not claim runtime breakage. CPCSample cleanup retains void; the separate deleting wrapper owns its EAX receiver result. Existing field meanings, malformed inputs, indirect callers, device success and audible parity remain separately bounded. GetSampleLength float/double remains unresolved. Old notes remain fallible leads.
+
+Fresh PRE restoration, rehearsal with separate and sealed readbacks, seven
+byte-stable refusals, independent exact-row review with root reproduction,
+live readback and independently restored Archive A POST passed. All nine
+live exports equal rehearsal. Parameter and return records are compared against
+explicit expected storage; all locals, frames, types, bookmarks and code hold.
+The current name projection is checked against the entire live table.
+
+An initial read-only census refused missing prototype-column bindings; the
+corrected census passed on the unchanged PRE. An untested first manifest was
+retained under `rejected-seal-v1/` after root corrected two source-line citations.
+Neither rejected input reached a writable invocation. Original GetSample runs
+are separately recorded in the shared sound note; they do not certify these
+interfaces' complete semantics or actual devices.
+
+Working identity: `db.18708`, 18 files / 125,815,668 bytes,
+inventory SHA-256 `1cc53674d1a95aadbafe3bdd9ec55e6373d9349a7cfcea78c922996460f52964`; main database 75,513,856 bytes,
+SHA-256 `d87619e540ad8c17b345a899a8cf0bf236af1602d672a03ea248c69184e554a7`. Restored verified-sound POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sound-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-abi/`; logs:
+`local-data/test-runs/re-audit-20260926/sound/abi-*`.
 
 ## RE-audit verified sound records — September 27
 
