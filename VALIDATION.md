@@ -8154,3 +8154,32 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-identities/`.
 Proof, failed/passing logs and original-code experiments:
 `local-data/test-runs/re-audit-20260926/console-menu/`.
+
+
+## RE verified console-menu names — September 27
+
+`console-menu-verified-20260927` records bounded interface-identity proof for nine
+existing names. Only comments/tags change: all 758 body bytes / 257 instructions,
+names, interfaces, locals, types and 8,323 other functions remain unchanged. All
+5,027 bytes of inherited notes remain explicitly fallible leads. Historical
+signature/wave tags do not certify complete ABI or behavior.
+
+Fresh PRE restoration, rehearsal/separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. All nine live exports equal
+rehearsal; the program comment digest is the only changed program metric.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+The projection matches all 8,332 live entries: 2,054 unique corrected names,
+369 additional kept, zero newly neutralized and 5,909 outside those sets.
+Prototype corrections remain 52; corrected comments total 2,436 unique functions.
+These are audit dispositions, not semantic or gameplay-completion percentages.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-verified/`.
+Execution logs use `kept-` under
+`local-data/test-runs/re-audit-20260926/console-menu/`.
+
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` and `git diff --check` passed.

@@ -273,7 +273,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Cleanup bodies:43 old/new authored comments (16,761/102,111 bytes); retained notes are leads.
 # CPostEventData: 1,955 old / 3,950 authored comment bytes; short inherited opcode witness retained as a lead.
 # Console menu: seven old notes/12 authored comments (6,842/31,807 bytes); old notes remain leads.
+# Console kept names: nine old/new notes (5,027/24,150 bytes); only bounded role evidence is verified.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/console-menu-verified-20260927.manifest.tsv":
+        "08720aacef957006395d1217896e2eec5a162b62d5d162d4964fbf4cbeb32062",
     "tools/cohort-specs/console-menu-identities-20260927.manifest.tsv":
         "ab9cf380e888890a2c8e10deb447c6f19fe380126e89903458d06c89866ea64e",
     "tools/cohort-specs/postevent-cleanup-20260927.manifest.tsv":

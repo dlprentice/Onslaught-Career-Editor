@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the console-menu identity cohort (September 27).**
+**Running coverage after the verified console-menu cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 2,054 unique functions; 2,055 rename rows include one repeated correction. The latest cohort identifies twelve inherited console-menu callbacks. |
-| Names verified and kept | 360 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method and 43 cleanup-body identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 369 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body and nine console-menu identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,918 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,909 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 52 interfaces: the prior 29, 22 frontend argument layouts and WndProc. Three unresolved frontend returns remain unassigned; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,427 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,436 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,9 +512,9 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
@@ -702,7 +702,10 @@ seven table-specific RTTI chains and two same-object base/derived constructions.
 All 734 body bytes / 276 instructions and saved interfaces remain unchanged;
 exact live readback and independent POST restoration passed. The first comment
 seal was rejected for two misleading phrases and preserved before live writes.
-Nine existing-name comment dispositions are next; shared/conflicting stubs remain
+The [nine existing-name comment dispositions](reverse-engineering/ghidra/README.md#re-audit-verified-console-menu-names--september-27) are now live after the same preservation,
+rehearsal, refusal, review, readback and independently restored recovery gates.
+Their 758 body bytes / 257 instructions, all names and interfaces are unchanged;
+5,027 historical comment bytes remain fallible leads. Shared/conflicting stubs remain
 withheld. The evidence tool passes 164 tests, including reproduced review failures.
 Separately, 23 isolated original-code cases and two altered-copy controls establish
 VertexShader GetEntry argument/stack transport through the real stack probe. Its

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[console-menu identities](#re-audit-console-menu-identities--september-27);
+[verified console-menu names](#re-audit-verified-console-menu-names--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,33 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified console-menu names — September 27
+
+The [nine-row comment manifest](../../tools/cohort-specs/console-menu-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/console-menu-verified-20260927.spec.tsv) record bounded verification of existing interface names
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Nine existing console-menu callback names are verified within inherited-interface identity limits; only comments and tags change. All names, 758 body bytes, 257 instructions, saved interfaces, locals, types and 8,323 other function rows are unchanged. All 5,027 old comment bytes are retained as explicitly fallible historical leads. Old recovery/signature tags are historical provenance, not certification of complete current types or behavior.
+
+Complete source overrides and fresh retail bodies establish GetName, GetNumEntries, GetEntry and OnClick roles. Seven table-specific raw RTTI chains, inherited abstract-prefix/concrete-suffix continuity, two same-object base/derived constructions, exact physical cleanup and all-holder agreement support propagation. Saved labels are not proof inputs; the missing CConsoleMenu header is not invented. The ordinary VC6 slot-continuity premise is explicit. The real click consumer confirms slot1 count then signed-upper-bound selection to slot3, without a nonnegative guard. Folded stubs and unanchored slots remain withheld. The GetShowSubmenus declaration order differs from its retail slot4. Source-exact implementation ownership, complete ABI, correct behavior and runtime acceptance remain open. In particular VertexShader GetEntry at00503ef0 retains an incomplete zero-argument stdcall signature; its consumed ECX and two stack arguments are a separately recorded physical-interface correction.
+
+Independent review and root reproduction checked the exact payload. Tool review
+first reproduced conditional-source, macro, numeric-address, partial-register and
+aggregated-RTTI counterexamples; the corrected evidence suite passes 164 tests.
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only the program comment digest
+changes. Together with the prior twelve renames, all 21 admitted interface identities
+have current bounded evidence; shared/conflicting targets remain withheld.
+
+Working identity: `db.18698`, 18 files / 124,734,324 bytes,
+inventory SHA-256 `0a53d52e240e63a1350aa6738191328a292706bf40bcc8815dbfe10012a8a97a`; main database 74,432,512 bytes,
+SHA-256 `9261cc8eb95fd5a2505fa63fa46bb03f1e9adc649888d977e3c79187c8a7125e`. Restored console-menu identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-console-menu-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/console-menu-verified/`; proof, tests and execution logs:
+`local-data/test-runs/re-audit-20260926/console-menu/`.
 
 ## RE-audit console-menu identities — September 27
 
