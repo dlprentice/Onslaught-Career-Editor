@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[camera position identities](#re-audit-camera-position-identities--september-27);
+[camera copy-return interfaces](#re-audit-camera-copy-return-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,30 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit camera copy-return interfaces — September 27
+
+The [six-row manifest](../../tools/cohort-specs/camera-copy-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/camera-copy-abi-20260927.spec.tsv) correct physical result returns
+without changing names or code. Specimen: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Six camera copy-leaf physical returns corrected to the existing four-byte generic pointer in EAX. Five saved undefined/unassigned returns and one void return omitted that value. The calling convention remains thiscall with automatic ECX receiver and one unchanged stack result pointer. All parameter names, types, source flags and storage, every name, local, stack/type definition and non-target variable stay exact. 193 body bytes / 76 instructions and 8,325 non-target function rows are unchanged. Six comments are updated (one previously absent), all older notes/tags retained as fallible leads; three audit tags added. Only the program comment count/digest change.
+
+Root freshly decoded every pristine byte and reproduced the six destination-in-EAX paths and RET4 cleanup. The existing 30 isolated original-code cases and two separate mutants independently support normal-result transport, copy order and cleanup with surrogate buffers. The physical signature does not claim a source-level pointer return, complete aggregate layout, exclusive body owner or orientation identity. The REP bodies assume clear DF. Valid result/object storage and result storage outside saved stack are required; overlapping source/result memory follows ordered copying. No original caller, full camera path or retail presentation was run. The first dry seal refused an empty-string encoding for one absent comment before writes; the null sentinel correction and rejected receipt are retained. Independent read-only review and root reproduction checked all six return types, EAX storage, preserved default-named argument sources and automatic receiver flags. No saved thunk depends on these targets.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, seven actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. Parameter source flags and auto status are preserved, including DEFAULT-named
+`param_1` values; return and signature sources become USER_DEFINED. The [camera note](../binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md#september-27-position-identities-and-result-transport)
+separates static findings, isolated original code and runtime unknowns.
+
+Working identity: `db.18688`, 18 files / 123,898,740 bytes,
+inventory SHA-256 `5c85495c72f1930f2a64ae09fe0ca314f89ac74d7fb1c1fc38530f976b3c179f`; main database 73,596,928 bytes,
+SHA-256 `a41f19d2e8d797ef1dc2c8b91d2614eb9c1b671fbc7c56d422bdb4e5b1ed4835`. Restored camera position POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-camera-copy-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-copy-abi/`.
 
 ## RE-audit camera position identities — September 27
 

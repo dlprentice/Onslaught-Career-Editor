@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (camera position promotion and original-code copy controls recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (camera position/copy-return promotions and original-code controls recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7697,3 +7697,38 @@ missing evidence/specimen header and removing its old backlog exemption;
 `npm run test:safety` passed (4,148 candidate files). The initial header failure
 is preserved in `docs.log`; final results are in `docs-final.log` and
 `safety.log` within the private cohort owner. `git diff --check` passed.
+
+## RE camera copy-return interfaces — September 27
+
+Six physical return annotations now record the existing generic pointer in
+EAX:4: five were undefined/unassigned, one was void. Names, every parameter row
+(including default names and automatic receiver source/flags), stack/type
+exports, 193 code bytes / 76 instructions and 8,325 non-target rows are exact.
+The current name projection matches all 8,331 live functions. Running counts
+remain 2,000 corrected names / 317 additional kept / zero newly neutralized /
+6,014 outside the accounted set; prototype corrections are now 28 and unique
+updated comments are 2,330. This is not full ABI or semantic coverage.
+
+The declared `camera-copy-abi-20260927` gate passed fresh PRE restoration,
+rehearsal, separate/sealed readbacks, exact export/parameter comparisons, seven
+byte-stable refusal controls, independent payload/PRE review with root
+reproduction, live readback and independently restored Archive A recovery.
+All nine live exports equal rehearsal. The first dry seal correctly refused
+empty base64 for an absent comment; no writes were attempted. Root proved the
+replica and live owner still equal cold PRE, preserved that seal/log under
+`rejected-v1/`, changed only the field to the null sentinel and reran the gate.
+No checkpoint refresh occurred. The earlier 30 original-code cases and two
+mutants were reused, not rerun; root freshly decoded all 193 pristine bytes.
+
+Commands/results are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-copy-abi/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py`, `verify_projection.py`. The framework suite passed 94 cases.
+No Godot, game, original caller, physical desktop or rendering test was run.
+
+Publication checks: `npm run test:docs` and `npm run test:safety` passed; the
+safety gate inspected 4,150 candidate files. `git diff --check` passed.
+Logs: `docs.log`, `safety.log`, `framework-tests.log` and `projection.log`
+within the private cohort owner. Device-lifecycle tool work is separate and
+its candidate names are not counted as promoted.
