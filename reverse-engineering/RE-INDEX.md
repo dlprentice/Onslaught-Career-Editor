@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-26 (205 virtual identities corrected; 65 kept-name comments reviewed; broader audit unfinished)
+Last updated: 2026-09-26 (initializer/engine identities and original copy/load contracts added; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -48,7 +48,12 @@ now preserves those names and corrects their evidence comments/tags, including
 five stale or overstated claims. It changes no prototype or body; exact live
 readback and independent POST restoration passed. Twenty-eight unresolved
 targets remain withheld for conflicting aliases, uncertain owners or unsupported
-body/stack cases. Historical TTD counts were not revalidated.
+body/stack cases. The [header-interface correction](ghidra/README.md#re-audit-header-interface-identities--september-26)
+adds 16 initializer/engine names with exact live readback and independently
+restored POST. Its [initializer contract](game-mechanics/world-initializer-copy-load.md)
+separates 64 original Copy cases, 1,288 original-loader cases with intercepted
+reads, static Spawner findings and untested full-game loading. Historical TTD
+counts were not revalidated.
 [PROGRAM.md](../PROGRAM.md#re-record-audit--requested-september-25) separates
 unique name dispositions from ABI/comment coverage and the unmeasured document
 remainder. Extend the mechanized evidence across further interfaces; identity

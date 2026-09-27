@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (RE virtual-method and kept-name promotions recorded; each dated section keeps its own date).
+Last updated: 2026-09-26 (RE initializer/engine promotion and original copy/load checks recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -6982,3 +6982,41 @@ and the complete docs gate rerun. `npm run test:safety`: passed for 4,109 public
 candidate files, including submodules. `git diff --check`: passed. Logs remain
 in the same private owner (`docs.log`, `docs-final.log`, `safety-final.log` and
 `diff-final.log`).
+
+## RE initializer/engine identities and original loading — September 26
+
+The exact 16-row `header-interface-identities-20260926` cohort passed fresh
+PRE restoration, dry/apply/separate and sealed rehearsal readback, five
+byte-stable refusal controls, independent review, live readback and independently
+restored Archive A POST. All nine live exports equal rehearsal; 8,315 other
+function rows, prototypes, variables, types, instructions and bodies remain
+unchanged. The first seal is retained under `rejected-v1/` after four authored
+comment errors were caught before live application. The current name projection
+matches all 8,331 live rows. Receipts and exact commands:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/header-interface-identities/`.
+
+`python -m unittest tools.ghidra_cohort_framework_tests tools.re_name_evidence_tests tools.re_source_graph_tests`:
+150 passed (93 framework, 57 evidence tools). New tests reject inferred cleanup
+from aggregate-return stubs and unclassified deleting destructors. The current
+cohort changes no prototypes. `verify_projection.py` passed against the live
+export and reproduced the deduplicated audit counts.
+
+`python local-data/test-runs/re-audit-20260926/initializer-copy/original_copy.py`:
+64 cases passed across eight unchanged original bodies. The accepted
+`run-owwz73wg/` corrects an input-pattern blind spot found in the retained earlier
+run. `python local-data/test-runs/re-audit-20260926/initializer-load/original_load.py`:
+1,288 cases passed across seven unchanged original loader bodies, with 1,072
+distinct input payloads, in `run-5iwdk7m0/`. PE/ELF identity, version boundaries,
+request order, complete object snapshots and ABI guards passed. Independent
+review checked the loader harness and 126 retained pairs; root executed all
+cases. The [contract](reverse-engineering/game-mechanics/world-initializer-copy-load.md)
+pins both frozen drivers/results and states the limits. The reader is intercepted;
+Spawner loading, short/zero reads, full-game construction and runtime acceptance
+are not established. No Godot or desktop run occurred.
+
+`npm run test:docs` passed with zero drifted or unresolved name assertions;
+the initial attempt exposed three missing provenance/header fields, which were
+corrected. `npm run test:safety` passed for 4,116 public candidate files,
+including submodules. `git diff --check` passed. Gate logs are in the cohort
+owner above (`focused-tests.log`, `docs.log`, `docs-final.log`, `safety.log`,
+`projection.log`).

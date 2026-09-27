@@ -1,7 +1,24 @@
 # DXPatchManager.cpp
 
+Status: active — historical subsystem notes with scoped corrections below
+Last updated: 2026-09-26
+Summary: retained patch-manager analysis; the Engine shutdown receiver is re-derived from pristine bytes, while other historical claims remain to audit.
+Source File: retail `DXPatchManager.cpp` label (implementation absent from pinned source); caller `references/Onslaught/DXEngine.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+
 > DirectX terrain patch manager for LOD (Level of Detail) rendering
 > Debug path: `[maintainer-local-source-export-root]\DXPatchManager.cpp` (0x0065211c)
+
+## Engine receiver correction — September 26
+
+In pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+`CDXEngine::ShutDown` sets ECX to the global `0x009c64d8` at `0x0053d462`,
+then calls `0x005506e0` at `0x0053d467`. The Wave613 row below incorrectly
+describes that receiver as Engine fields. The caller is the case-distinct
+`ShutDown` method in slot 3, not base `Shutdown` in slot 0; see the
+[interface correction](../../ghidra/README.md#re-audit-header-interface-identities--september-26).
+This verifies the call and receiver, not every historical assertion about the
+callee's body, object lifetime or complete subsystem behavior.
 
 ## Name corrections — 2026-07-28
 

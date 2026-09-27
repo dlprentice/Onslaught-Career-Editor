@@ -110,7 +110,6 @@ reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md
 reverse-engineering/binary-analysis/functions/DXKempyCube.cpp.md
 reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md
 reverse-engineering/binary-analysis/functions/DXPalletizer.cpp.md
-reverse-engineering/binary-analysis/functions/DXPatchManager.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
@@ -251,7 +250,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunOutroFMV.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCamera.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCurrentCamera.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetupRespawnReaderAndEffect.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__Shutdown.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__StartPlayingState.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadBackward.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadForward.md

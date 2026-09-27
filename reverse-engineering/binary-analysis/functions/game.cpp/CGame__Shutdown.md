@@ -3,9 +3,8 @@
 > Address: `0x0046c990`
 
 Status: active static function note
-Last updated: 2026-08-22
-Source File: `references/Onslaught/game.cpp:414` (`CGame::Shutdown`) |
-Binary: BEA.exe pristine specimen
+Last updated: 2026-09-26 (Engine callee identity; earlier behavioral evidence retains its date)
+Source File: `references/Onslaught/game.cpp:414` (`CGame::Shutdown`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: One-off level-system shutdown — the inverse of the
@@ -29,6 +28,12 @@ SHA-256
 
 ## Contract (byte-exact)
 
+September 26 identity correction: the callee at `0x0053d3e0` is
+`CDXEngine::ShutDown`, case-distinct from base `CEngine::Shutdown`.
+The [reviewed header/RTTI alignment](../../../ghidra/README.md#re-audit-header-interface-identities--september-26)
+places it in derived slot 3. The remainder of this note's August 22 behavior
+record was not re-executed by that identity audit.
+
 Body `0x0046c990`–`0x0046ca6b` inclusive through the final `c3`,
 **220 bytes**, SHA-256
 `a2e3b4e7b380794d87ae4602c347d3ef2fe5be229549a3e634ee56abb6d02858`.
@@ -48,7 +53,7 @@ Released order:
    `CStaticShadows__ClearAllShadowEntries` (`0x004ebd10`);
    `CDXImposter__ShutdownAll` (`0x00542990`);
    `CEngine__SetRenderStateCached` (`0x00513a50`).
-5. Engine/map: `CDXEngine__Shutdown` (`0x0053d3e0`);
+5. Engine/map: `CDXEngine__ShutDown` (`0x0053d3e0`);
    `CHeightField__ShutdownAndDestroyMixerMap` on `0x006fadc8`
    (`0x00490f40`).
 6. Memory: `CMemoryHeap__SetMerge(0)` then `SetMerge(1)` around
