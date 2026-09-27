@@ -1,8 +1,8 @@
 # Platform System
 
 Status: mixed — source architecture with bounded retail corrections
-Last updated: 2026-09-27 (device lifecycle rederived; earlier sections retain their evidence limits)
-Summary: platform source reference with bounded retail font and two-list device-lifecycle corrections.
+Last updated: 2026-09-27 (device lifecycle and startup shell rederived; earlier sections retain their evidence limits)
+Summary: platform source reference with bounded retail font, device lifecycle, window-message and shell-helper corrections.
 Evidence: MEASURED — static pristine font/device-lifecycle bodies, strings, callers and RTTI; SOURCE — the pinned platform implementation elsewhere below.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -522,6 +522,74 @@ Private byte pins, disassembly, source witnesses and refusal tests:
 `local-data/test-runs/re-audit-20260926/device-lifecycle/`. The exact Ghidra
 cohort and readbacks belong to
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`.
+
+## Retail startup shell — September 27 correction
+
+The pristine specimen and source pin above establish partial interface
+correspondences, not a complete port of the D3D8 source framework. Both source
+classes have 13 virtual methods under the explicit six-undefine analysis profile
+(`EDITORBUILD`, `EDITORBUILD2`, `RESBUILDER`, `_DEBUG`, `OPTIMISED_DEBUG`,
+`LT_DEBUG`). Retail has 14 slots and a different lifecycle order. The profile
+selects source declarations; it does not recover the historical compiler flags.
+RTTI independently binds `PCLTShell` to a fixed zero-offset `CD3DApplication` base.
+
+The four lifecycle wrapper identities in the preceding table are now part of
+the [eight-name shell correction](../../ghidra/README.md#re-audit-startup-shell-identities--september-27),
+along with `FinalCleanup` at `0x00512c30`, `MsgProc` at `0x00512e40`,
+`AdjustWindowForChange` at `0x0052bb40` and `AddDeviceObject` at `0x00512ca0`.
+Existing prototypes were preserved, not certified by those name corrections.
+FinalCleanup clears the byte at shell `+0x330c8` and returns zero; cleanup
+caller `0x0052c430` invokes its slot 7 after optional device/interface release.
+AdjustWindowForChange selects the stored window style or `0x90080000`, passing
+it to `SetWindowLongA` with index −16, then returns zero.
+
+The existing `Create` identity at `0x005290a0` was also rechecked, but is not
+counted as a new promoted name disposition. Its 596-byte body registers the
+window class via `RegisterClassA` at `0x005291a4` and calls `CreateWindowExA` at
+`0x00529230`, using style `0x90ce0000`, which includes visibility. Neither
+`ShowWindow` nor `UpdateWindow` is imported or directly called. The source's
+release-profile `ToggleFullscreen` branch is absent from this body. These
+findings must not become claims that the entire game never changes window mode.
+
+The class registration supplies callback `0x00529070`. That 34-byte original
+body dispatches through application slot 12, forwarding four arguments with
+16-byte callee cleanup. Its missing saved function boundary remains a separate
+structural correction. The existing [controller contract](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-window-message-producer-experiment)
+records 68 original-code message cases, five separate helper cases and two
+counterfactual controls. It distinguishes scan-code indexing, console virtual-key
+arguments, trap behavior, release production, suppression and base forwarding.
+No Windows dispatch, actual device or desktop acceptance is implied.
+
+`AddDeviceObject` prepends its stack node to head `0x00889074` through member
+`+4`; ten direct callers supply the shell singleton in ECX. The initializer at
+`0x00512010` and constructor chain `0x00512670` → `0x00528f80` bind that
+singleton at `0x00855bb0`. See its [corrected note](../../binary-analysis/functions/CShaderBase.cpp/CShaderBase__Init.md).
+
+### Constant BPP helper: identity and ABI correction pending
+
+The complete eight-byte body at `0x00513640` sets EAX to 32 and uses `RET 4`.
+Its saved no-argument cdecl signature is contradicted by the bytes and eight
+direct callers; all supply one DWORD format argument plus the shell singleton
+in ECX. The body itself reads neither argument nor receiver. Call pairs at
+`0x005571db` / `0x005571fb`, `0x005582cc` / `0x005582f0`,
+`0x005583e7` / `0x00558407` and `0x00559f60` / `0x00559f81`
+use the result in texture diagnostics and dimension products divided by eight.
+This identifies the BPP helper role; it does not measure actual GPU allocation.
+
+Pinned `ltshell.h:330` and `ltshell.cpp:1723–1737` name `PCLTShell::GetBPP`.
+The first source condition includes an un-compared `D3DFMT_Q8W8V8U8` term.
+That enum is 63, so the expression always takes the 32 result under the
+[documented Direct3D definition](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dformat).
+This explains the observed constant body without inventing a sensible format
+conversion. The historical header/compiler inputs are unavailable, and no
+GetBPP caller survives in the pinned source; retail callers supply the independent
+use evidence. The five original-code helper cases confirm 32 for several format
+values, including zero and an unknown value. The source/int identity is supported;
+a physical signature correction must preserve the unresolved enum typedef and
+unused argument's signedness rather than pretending those were recovered.
+
+Exact fresh decodes, source/RTTI witnesses, revised excluded-Create evidence and
+original-code artifacts remain in `local-data/test-runs/re-audit-20260926/startup-shell/`.
 
 ## D3D Application Framework (source d3dapp.cpp/h)
 

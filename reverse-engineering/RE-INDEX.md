@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (camera and device-lifecycle corrections promoted; startup shell interfaces and broader audit remain)
+Last updated: 2026-09-27 (startup shell identities promoted and input routes exercised in isolation; helper ABI/window-callback boundary and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -43,8 +43,13 @@ corrects 31 names through typed-list/RTTI evidence, exact live readback and
 independently restored recovery. Its [platform note](source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
 records the retail two-list initialization/restore order and source differences;
 resource algorithms, complete callback lifetime and graphics behavior remain
-unverified. Startup shell interfaces and the missing window-message callback
-boundary are the next bounded leads.
+unverified. The [startup shell cohort](ghidra/README.md#re-audit-startup-shell-identities--september-27)
+corrects eight names with exact readback and restored recovery, leaving their
+prototypes unchanged. The [input contract](binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-window-message-producer-experiment)
+records 73 isolated original-code cases and two altered-code controls. It
+separates trap/console arguments, input-state write order and mouse-coordinate
+storage from untested real Windows/device behavior. GetBPP's physical interface
+and the absent WndProc function boundary are the next bounded corrections.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

@@ -263,7 +263,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # physical EAX result corrections only; original notes/types retained with limits.
 # Device lifecycle:25 old/31 authored comments (14,378/74,759 bytes);
 # exact typed-list interface roles; old notes retained as fallible leads.
+# Startup shell: five old/eight authored comments (4,373/13,298 bytes);
+# partial virtual-slot witnesses and exact registration body; earlier notes retained.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/startup-shell-20260927.manifest.tsv":
+        "0b866f3285c25906cb39855caaa8e22dff7b1c543050bad29202e3b017c3f9c8",
     "tools/cohort-specs/device-lifecycle-20260927.manifest.tsv":
         "29f00b2042d7a788e7885a508c989c1152c02c399fd459c1349b42feda5eed65",
     "tools/cohort-specs/camera-copy-abi-20260927.manifest.tsv":

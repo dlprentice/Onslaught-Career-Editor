@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position/copy-return and device lifecycle corrections promoted; startup shell interfaces next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: startup shell identities promoted and input routes exercised in isolation; helper ABI/window-callback boundary next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the device lifecycle cohort (September 27).**
+**Running coverage after the startup shell cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,031 unique functions; 2,032 rename rows include one repeated correction. The latest 31 establish device-resource lifecycle methods. |
+| Names corrected | 2,039 unique functions; 2,040 rename rows include one repeated correction. The latest eight establish startup-shell methods and device-object registration. |
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,983 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,975 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 28 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces and six camera copy-return annotations. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,361 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,369 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,7 +511,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -613,15 +613,33 @@ in eight comments; it was preserved, corrected and rehearsed afresh before live.
 Private inputs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`;
 completed gate: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`.
 
-Next startup leads: nine shell virtual-method correspondences need final
-independent evidence review; the 34-byte window-message callback at `0x00529070`
-has no saved function boundary in the fresh export. Check its decoded range,
-window-class registration and data/instruction ownership before creating one.
-The eight-byte constant-32 helper at `0x00513640` uses `RET 4`, contradicting its
-saved no-argument cdecl signature; its possible source GetBPP identity remains
-a lead until caller/source evidence is reproduced. Device registration at
-`0x00512ca0` also needs a separate shell-owner disposition. No prototype or new
-function was silently added with the lifecycle names.
+The [startup shell cohort](reverse-engineering/ghidra/README.md#re-audit-startup-shell-identities--september-27)
+corrects seven virtual-method identities and AddDeviceObject. Independent
+source/caller/body witnesses establish each correspondence despite different
+source/retail slot counts and order. All prototypes, 1,538 body bytes and 8,323
+other function rows are unchanged; exact readback and independently restored
+recovery passed. Review corrected an excluded Create witness that had claimed
+ShowWindow/UpdateWindow calls; its actual visible-window creation uses
+CreateWindowExA. The sealed eight-row payload was unaffected.
+
+The [input contract](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-window-message-producer-experiment)
+now records 73 isolated original-code cases and two discriminating mutants:
+68 synthetic messages exercise direct and WndProc dispatch, and five exercise
+the constant texture-depth helper. The experiment confirms distinct trapped
+keydown/keyup writes, console versus trap key arguments, full-DWORD suppression,
+temporary character state and unsigned mouse-coordinate halves. Callees are
+authored normal-return hooks; no Windows dispatch, real device or player
+acceptance is claimed. Private evidence:
+`local-data/test-runs/re-audit-20260926/startup-shell/`; completed cohort:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-shell/`.
+
+Next: correct the GetBPP helper at `0x00513640`, whose `RET 4` contradicts its
+saved no-argument cdecl signature. Eight fresh caller transports, the singleton
+chain and source establish the bounded identity; the unused receiver and
+generic format width must remain explicit. The 34-byte WndProc callback at
+`0x00529070` has no saved function boundary in the fresh export. Inspect decoded
+range, registration and data/instruction ownership before a scoped creation.
+Neither interface nor boundary was silently changed with the shell names.
 The five kept position names' comments and remaining camera slots remain open. Orientation constructor
 witnesses remain withheld on raw pointer-like words, not proven incoming edges;
 the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.

@@ -98,7 +98,8 @@ modulo 256 for its extended-key bit. Source `ltshell.cpp:1015` instead indexes
 with `wParam`. Global `0x00662df4 != 0` suppresses the inspected keyboard-update
 branches. With suppression clear, an installed key sink bypasses keydown's
 array writes; keyup still performs its array writes. These producer branches
-were inspected statically, not executed with real Windows events.
+were inspected statically in the September 26 review. The September 27
+experiment below executes them with synthetic messages, not real Windows events.
 
 ### Executed evidence and limits
 
@@ -128,6 +129,56 @@ Remaining falsifier: on an admitted copied retail runtime, trace these tables,
 cursor and dispatches across real keydown/repeat/keyup, focus changes and menu
 transitions. The static/isolated result predicts the internal transitions;
 physical device and operating-system ordering remains unmeasured.
+
+## September 27 window-message producer experiment
+
+The complete retail shell message handler `[0x00512e40,0x00512fc0)` is 384
+bytes, SHA-256 `ba29aa83f5dc1abb7d1ed05574615e1f0f304a5261e2833294064097dfaaa680`.
+The 34-byte window callback `[0x00529070,0x00529092)` has SHA-256
+`fe23ff39252312877da4bd3ccb8811f40ced20a1c233a73b9e08fb3d4d37e2c0`.
+The first has the source identity `PCLTShell::MsgProc`; the second forwards four
+stack arguments through slot 12 of the application at `0x0089c0f4` and returns
+with `RET 16`. Its missing saved function boundary is a separate structural
+correction, not evidence of absent retail code.
+
+An isolated i386 ELF executes those unchanged bytes using a surrogate shell,
+vtable and globals. **68 message cases** run both direct and callback routes;
+**five separate GetBPP cases** share the harness but do not count as input
+coverage. The 98 recorded dependency calls agree with the inspected argument
+and state ordering. Console, key-trap, mouse and base-window handlers are hooks,
+which deliberately clobber volatile registers and preserve normal nonvolatiles.
+
+| Condition | Observed result within these cases |
+| --- | --- |
+| Keydown, no trap, suppression zero | Sets the press-observed global, calls the console binding with original `wParam`, then sets held/press bytes at the derived scan index. |
+| Keydown, trap installed | Sets the press-observed global and calls the trap with scan-code low byte/event 0; leaves held/press arrays unchanged. |
+| Keyup | Calls trap with scan code or console with `wParam`, event 1; afterward clears held and sets release even when a trap is installed. |
+| Keyboard suppression DWORD nonzero | Skips the key/character path and forwards the original message to the base handler. Nonzero `0x100` also suppresses; this is not a low-byte test. |
+| Character message with trap | Calls with original `wParam`/event 2 while `0x00855420` exposes the derived scan byte, then clears that temporary word. No trap leaves the word untouched. |
+| Mouse message values `0x200` through `0x20a` | Calls the mouse hook first, then stores full `wParam` and zero-extended low/high 16-bit coordinates. Tested endpoints, an interior double-click value and the adjacent excluded values. Suppression does not block this mouse path. |
+| Command `0x111`, low `wParam` word `0x9c41` | Returns zero before dependencies or base forwarding; differing high `wParam` bits do not change this comparison. |
+
+The scan index is `(byte(lParam >> 16) + (extended ? 0x80 : 0)) mod 256`.
+The trap's physical DWORD argument may retain ECX's high 16 bits because the
+code zero-extends CL into CX; the source key callback consumes a byte. The
+handler uses the low byte of its incoming `wParam` stack slot as scratch, but
+preserves the original value in EDI for console/base forwarding. These tests
+prove final ESP balance, nonvolatile register values and the observed arguments;
+they do **not** prove the input stack memory is preserved.
+
+Two separate altered-ELF controls change only the extended-key addition and
+window callback slot. Each produces the predicted different result, distinguishing
+scan-index arithmetic and actual virtual forwarding from a vacuous harness.
+Real Windows dispatch, key-repeat timing, focus, callback reentrancy, original
+dependency behavior and the complete message-value space remain untested.
+The rebuild should preserve these separate key identities and mutation order;
+its own input mapping still needs comparison with actual retail device events.
+
+Command: `python local-data/test-runs/re-audit-20260926/startup-shell/original_messages.py`.
+Retained inputs, outputs, ELF, exact build commands and driver:
+`local-data/test-runs/re-audit-20260926/startup-shell/messages-0b8k1s_a/`.
+The syscall filter admits only read/write/exit after setup; a `getpid` control
+returns EPERM. No desktop, real input or game process was used.
 
 ## September 27 joystick and recording recheck
 
