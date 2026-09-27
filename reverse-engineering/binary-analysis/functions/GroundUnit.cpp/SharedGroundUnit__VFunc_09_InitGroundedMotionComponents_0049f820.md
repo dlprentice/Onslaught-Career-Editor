@@ -1,6 +1,19 @@
-# CMech__VFunc_09_InitGroundedMotionComponents_0049f820
+# CMech__Init
+
+Status: active function identity reference; earlier behavior claims retain their limits
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Source File: unavailable in the pinned partial source; identity is from retail RTTI/byte evidence | Binary: pristine BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Summary: current method identities with preserved historical evidence and superseded labels.
 
 > Address: 0x0049f820 | Source: retail `BEA.exe` static Ghidra evidence
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Status
 

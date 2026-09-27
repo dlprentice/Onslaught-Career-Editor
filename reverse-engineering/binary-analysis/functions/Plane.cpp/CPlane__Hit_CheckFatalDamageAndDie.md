@@ -1,12 +1,20 @@
 # CPlane Hit And Animation Helpers
 
 Status: active static function note; reviewed contact role names
-Last updated: 2026-09-12 (caller-boundary reconciliation; contact findings unchanged)
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
 Summary: contact-triggered Plane shutdown and retained animation helpers; the
 hit body does not inspect life or require fatal damage.
 
 > Source File: Plane.cpp absent from the pinned partial source | Binary: BEA.exe
 > Wave: 485 | Evidence: saved Ghidra metadata, decompile, xrefs, vtable/RTTI rows, instruction rows, raw-caller rows, tags, and focused probe
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Functions
 
@@ -16,7 +24,7 @@ hit body does not inspect life or require fatal damage.
 | `0x00403ba0` | `AirContact__Hit_RequestShutdownOnDyingContact` | `void __thiscall AirContact__Hit_RequestShutdownOnDyingContact(void * this, void * otherThing, void * collisionReport)` |
 | `0x004d1f90` | `CPlane__PlayWingOpenAnimationOnce` | `void __fastcall CPlane__PlayWingOpenAnimationOnce(void * this)` |
 | `0x004d1fd0` | `CPlane__PlayWingCloseAnimationOnce` | `void __fastcall CPlane__PlayWingCloseAnimationOnce(void * this)` |
-| `0x004d2010` | `CPlane__UpdateAttackLaunchAnimationState` | `int __fastcall CPlane__UpdateAttackLaunchAnimationState(void * this)` |
+| `0x004d2010` | `CPlane__FinishedPlayingCurrentAnimation` | `int __fastcall CPlane__FinishedPlayingCurrentAnimation(void * this)` |
 
 ## Evidence
 

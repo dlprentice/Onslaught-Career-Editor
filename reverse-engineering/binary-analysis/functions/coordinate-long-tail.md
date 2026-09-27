@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-26 (font/device initializer identities; earlier measurement limits retained)
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -23,6 +23,14 @@ function in the pinned source. Match operations and callers before transferring 
 
 Argument counts are callee-popped stack arguments; `this` travels in ECX and is
 not counted. A comma-separated count means the body has several `ret imm` forms.
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Measurement notes
 
@@ -73,7 +81,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00417190` | `CBuilding__VFunc_9_00417190` | 439 | ? | 50–51 | `CDXMemoryManager__Alloc` x2; `CMesh__FindAnimationIndexByName` x2 |
+| `0x00417190` | `CBuilding__Init` | 439 | ? | 50–51 | `CDXMemoryManager__Alloc` x2; `CMesh__FindAnimationIndexByName` x2 |
 | `0x00417390` | `CBuilding__CreateRepairPadAI` | 231 | 1 | 100–104 | `CDXMemoryManager__Alloc` x2; `CUnitAI__Init` x2 |
 
 ### `bytesprite.cpp` (1)
@@ -130,7 +138,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0043F510` | `CCutscene__InitAnimations` | 360 | 1 | 501 | `CDXMemoryManager__Alloc` x2; `stricmp` x1 |
+| `0x0043F510` | `CCutscene__InitRenderThing` | 360 | 1 | 501 | `CDXMemoryManager__Alloc` x2; `stricmp` x1 |
 | `0x0043F690` | `CCutscene__Update` | 988 | 0 | 549 | `CCutscene__PrepareAnimations` x1; `CDXMemoryManager__Alloc` x1 |
 
 ### `damage.cpp` (3)
@@ -158,7 +166,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00445250` | `CDiveBomber__VFunc_9_00445250` | 302 | 1 | 18–19 | `CDXMemoryManager__Alloc` x2; `CAirUnit__Init` x1 |
+| `0x00445250` | `CDiveBomber__Init` | 302 | 1 | 18–19 | `CDXMemoryManager__Alloc` x2; `CAirUnit__Init` x1 |
 
 ### `Dropship.cpp` (1)
 
@@ -298,7 +306,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0047C730` | `CGroundUnit__Init` | 379 | 1 | 35 | `CUnit__Init` x1; `CDXMemoryManager__Alloc` x1 |
-| `0x0047C8E0` | `CGroundUnit__CreateCollisionSphere` | 132 | 1 | 67 | `CThing__InitCollisionSeekingThing` x2; `CDXMemoryManager__Alloc` x1 |
+| `0x0047C8E0` | `CGroundUnit__InitCollisionSeekingThing` | 132 | 1 | 67 | `CThing__InitCollisionSeekingThing` x2; `CDXMemoryManager__Alloc` x1 |
 
 ### `GroundVehicle.cpp` (1)
 
@@ -371,7 +379,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0049FB00` | `CMech__VFunc_35_0049fb00` | 153 | 1 | 87 | `CDXMemoryManager__Alloc` x1; `CCylinder__ctor` x1 |
+| `0x0049FB00` | `CMech__InitCollisionSeekingThing` | 153 | 1 | 87 | `CDXMemoryManager__Alloc` x1; `CCylinder__ctor` x1 |
 
 ### `MemoryManager.cpp` (2)
 
@@ -404,7 +412,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x004BA150` | `CMine__Init` | 821 | 1 | 31 | `Vec3__SetXYZ` x3; `CMCMine__Constructor` x2 |
-| `0x004BA4D0` | `CMine__VFunc_66_004ba4d0` | 799 | 0 | 88 | `CMapWho__GetFirstEntryWithinRadius` x1; `CMapWhoEntry__GetOwner` x1 |
+| `0x004BA4D0` | `CMine__Move` | 799 | 0 | 88 | `CMapWho__GetFirstEntryWithinRadius` x1; `CMapWhoEntry__GetOwner` x1 |
 
 ### `Missile.cpp` (1)
 
@@ -591,7 +599,7 @@ not counted. A comma-separated count means the body has several `ret imm` forms.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004F6480` | `CTree__VFunc_35_004f6480` | 180 | 1 | 143 | `CDXMemoryManager__Alloc` x1; `CThing__InitCollisionSeekingThing` x1 |
+| `0x004F6480` | `CTree__InitCollisionSeekingThing` | 180 | 1 | 143 | `CDXMemoryManager__Alloc` x1; `CThing__InitCollisionSeekingThing` x1 |
 
 ### `vbuftexture.cpp` (3)
 

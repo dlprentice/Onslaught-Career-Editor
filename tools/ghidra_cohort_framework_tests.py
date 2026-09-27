@@ -253,6 +253,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # cockpit-shake-abi-20260926: one float parameter plus comment/tags; unchanged
 # storage/auto receiver/return/locals. Pristine caller/body, 41 bounded original-code
 # cases, fresh PRE, exact rehearsal, seven no-write refusals and independent review.
+# Thing virtual identities: 205 names/comments/tags, reviewed fixed RTTI slot anchors;
+# prototypes, bodies, storage and all non-target rows remain frozen.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -299,6 +301,7 @@ LIVE_GRANTED_COHORTS = [
     "startup-identities-20260926",
     "damage-shake-comments-20260926",
     "cockpit-shake-abi-20260926",
+    "thing-virtual-identities-20260926",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -751,6 +754,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "startup-identities-20260926",\n'
         '        "damage-shake-comments-20260926",\n'
         '        "cockpit-shake-abi-20260926",\n'
+        '        "thing-virtual-identities-20260926",\n'
         "    };\n",
     ),
     (

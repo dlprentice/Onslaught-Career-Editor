@@ -1,7 +1,20 @@
 # Sentinel.cpp - Function Mappings
 
+Status: active function identity reference; earlier behavior claims retain their limits
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Source File: unavailable in the pinned partial source; identity is from retail RTTI/byte evidence | Binary: pristine BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Summary: current method identities with preserved historical evidence and superseded labels.
+
 > CSentinel class - AI-controlled defensive turret/sentinel unit
 > Debug path: `[maintainer-local-source-export-root]\Sentinel.cpp` (0x0063221c)
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Name corrections — 2026-07-28
 
@@ -40,38 +53,44 @@ CThing
 
 | Address | Saved name | Signature | Static evidence |
 | --- | --- | --- | --- |
-| `0x004dea50` | `CSentinel__Init` | `void __thiscall CSentinel__Init(void * this, void * init_data)` | Primary table `0x005e0904` slot 0 points here. `RET 0x4` confirms one `init_data` stack argument after `this`. The body edits init data, delegates to `CGroundUnit__Init`, optionally selects the `inactive` animation, allocates Sentinel.cpp line-backed helpers, attaches `CMCSentinel` at `this+0x70`, stores helpers at `this+0x208` and `this+0x13c`, clears a `this+0x12c` record, and registers through `DAT_00855090`. |
-| `0x004dec00` | `CSentinelAI__ScalarDeletingDestructor` | `void * __thiscall CSentinelAI__ScalarDeletingDestructor(void * this, byte flags)` | Secondary table `0x005deca0` slot 0 points here. Wrapper calls `CSentinel__Destructor(this)`, frees through `CDXMemoryManager__Free(&DAT_009c3df0, this)` when `flags & 1`, returns `this`, and ends with `RET 0x4`. |
+| `0x004dea50` | `CSentinel__Init` | `void __thiscall CSentinel__Init(void * this, void * init_data)` | Primary table `0x005e08e0` slot 9 points here. `RET 0x4` confirms one `init_data` stack argument after `this`. The body edits init data, delegates to `CGroundUnit__Init`, optionally selects the `inactive` animation, allocates Sentinel.cpp line-backed helpers, attaches `CMCSentinel` at `this+0x70`, stores helpers at `this+0x208` and `this+0x13c`, clears a `this+0x12c` record, and registers through `DAT_00855090`. |
+| `0x004dec00` | `CSentinelAI__ScalarDeletingDestructor` | `void * __thiscall CSentinelAI__ScalarDeletingDestructor(void * this, byte flags)` | Separate `CSentinelAI` primary table `0x005dec9c` slot 1 points here. Wrapper calls `CSentinel__Destructor(this)`, frees through `CDXMemoryManager__Free(&DAT_009c3df0, this)` when `flags & 1`, returns `this`, and ends with `RET 0x4`. |
 | `0x004dec20` | `CSentinel__Destructor` | `void __fastcall CSentinel__Destructor(void * this)` | Restores base CMonitor-style vtable `0x005d8d1c`, removes `CSPtrSet`-linked cells at `this+0x28`, `this+0x24`, and `this+0x0c` when populated, then calls `CMonitor__Shutdown`. |
-| `0x004decc0` | `CSentinel__UpdateFlamethrowers` | `void __fastcall CSentinel__UpdateFlamethrowers(void * this)` | Primary table slot 57 points here. Updates linked ground-unit effects, walks the `this+0x17c` linked list, filters entries named `Sentinel Flamethrower`, checks distance/range eligibility, calls `CSentinel__CheckWeaponSlot(this, weapon_context)`, and spawns a projectile burst only when all gates pass. |
-| `0x004ded30` | `CSentinel__Activate` | `void __fastcall CSentinel__Activate(void * this)` | Primary table slot 13 points here. Resolves the `activate` animation through the render/model object at `this+0x30`, finds its animation index, and dispatches through vtable slot `+0xf0`. |
-| `0x004ded60` | `CSentinel__Deactivate` | `int __fastcall CSentinel__Deactivate(void * this)` | Primary table slot 50 points here. Reads current animation state, compares it to the `activate` animation index, switches to looping `inactive` animation when appropriate, calls the slot-22 state-change helper, and returns `0`. |
-| `0x004dee00` | `CSentinel__CheckWeaponSlot` | `int __thiscall CSentinel__CheckWeaponSlot(void * this, void * weapon_context)` | Called by `CSentinel__UpdateFlamethrowers`. Maps `weapon_context+0xac` values `2..9` to slot ids `9..16`, walks `this+0x19c`, returns `0` when an occupied entry has `+0x270` matching the slot id, and returns `1` otherwise. |
+| `0x004decc0` | `CSentinel__Move` | `void __fastcall CSentinel__Move(void * this)` | Primary table `0x005e08e0` slot 66 points here. Updates linked ground-unit effects, walks the `this+0x17c` linked list, filters entries named `Sentinel Flamethrower`, checks distance/range eligibility, calls `CSentinel__CheckWeaponSlot(this, weapon_context)`, and spawns a projectile burst only when all gates pass. |
+| `0x004ded30` | `CSentinel__Activate` | `void __fastcall CSentinel__Activate(void * this)` | Primary table `0x005e08e0` slot 22 points here. Resolves the `activate` animation through the render/model object at `this+0x30`, finds its animation index, and dispatches through vtable slot `+0xf0`. |
+| `0x004ded60` | `CSentinel__FinishedPlayingCurrentAnimation` | `int __fastcall CSentinel__FinishedPlayingCurrentAnimation(void * this)` | Primary table `0x005e08e0` slot 59 points here. Reads current animation state, compares it to the `activate` animation index, switches to looping `inactive` animation when appropriate, calls the slot-22 state-change helper, and returns `0`. |
+| `0x004dee00` | `CSentinel__CheckWeaponSlot` | `int __thiscall CSentinel__CheckWeaponSlot(void * this, void * weapon_context)` | Called by `CSentinel__Move` (formerly `CSentinel__UpdateFlamethrowers`). Maps `weapon_context+0xac` values `2..9` to slot ids `9..16`, walks `this+0x19c`, returns `0` when an occupied entry has `+0x270` matching the slot id, and returns `1` otherwise. |
 
 ## CSafeSide follow-up
 
 | Address | Saved name | Signature | Static evidence |
 | --- | --- | --- | --- |
-| `0x004de1d0` | `CSafeSide__ShutdownAndUnlinkFactionAnchor` | `void __fastcall CSafeSide__ShutdownAndUnlinkFactionAnchor(void * this)` | Vtable slot data at `0x005dcce4` points here for tables `0x005dccc0`, `0x005dccc4`, and `0x005dccd0`. The body removes `this` from `DAT_00855160` through `CSPtrSet__Remove`, then forwards to `CComplexThing__Shutdown`. `CUnit__FindNearestFactionAnchor` also scans `DAT_00855160`, bounding the list role as faction-anchor context. |
+| `0x004de1d0` | `CSafeSide__Shutdown` | `void __fastcall CSafeSide__Shutdown(void * this)` | RTTI establishes primary table `0x005dccdc`, slot 2 (word at `0x005dcce4`). The earlier listed table starts were misidentified interior addresses. The body removes `this` from `DAT_00855160` through `CSPtrSet__Remove`, then forwards to `CComplexThing__Shutdown`. `CUnit__FindNearestFactionAnchor` also scans `DAT_00855160`, bounding the list role as faction-anchor context. |
 
 This is not runtime faction-anchor proof, exact `CSafeSide` source-body proof, concrete layout recovery, BEA launch behavior, game patching, or rebuild parity.
 
 ## VTables
 
+September 26 fresh pristine RTTI establishes the starts below. The former
+`0x005e0904` start was nine words inside the primary table, shifting every
+quoted ordinal. `CSentinelAI` is a separate RTTI class; it is not a secondary
+Sentinel subobject. The actual Sentinel secondary table is `0x005e0868` at
+subobject offset 8 (29 slots). These are structural corrections.
+
 ### CSentinel Primary Table
 
 | Table | Slot | Pointer | Saved function |
 | --- | ---: | --- | --- |
-| `0x005e0904` | 0 | `0x004dea50` | `CSentinel__Init` |
-| `0x005e0904` | 13 | `0x004ded30` | `CSentinel__Activate` |
-| `0x005e0904` | 50 | `0x004ded60` | `CSentinel__Deactivate` |
-| `0x005e0904` | 57 | `0x004decc0` | `CSentinel__UpdateFlamethrowers` |
+| `0x005e08e0` | 9 | `0x004dea50` | `CSentinel__Init` |
+| `0x005e08e0` | 22 | `0x004ded30` | `CSentinel__Activate` |
+| `0x005e08e0` | 59 | `0x004ded60` | `CSentinel__FinishedPlayingCurrentAnimation` |
+| `0x005e08e0` | 66 | `0x004decc0` | `CSentinel__Move` |
 
-### CSentinel Secondary Table
+### Separate CSentinelAI primary table
 
 | Table | Slot | Pointer | Saved function |
 | --- | ---: | --- | --- |
-| `0x005deca0` | 0 | `0x004dec00` | `CSentinel__ScalarDeletingDestructor` |
+| `0x005dec9c` | 1 | `0x004dec00` | `CSentinelAI__ScalarDeletingDestructor` |
 
 ## Related Strings
 

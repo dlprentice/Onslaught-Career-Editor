@@ -1,13 +1,25 @@
 # CPOD Motion Scalar Vtable Override
 
+Status: active function identity reference; earlier behavior claims retain their limits
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Summary: current method identities with preserved historical evidence and superseded labels.
+
 > Source File: Pod.cpp | Binary: BEA.exe
 > Wave: 486 | Evidence: saved Ghidra metadata, decompile, xrefs, CPOD RTTI/vtable rows, instruction rows, tags, and focused probe
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Function
 
 | Address | Name | Saved signature |
 | --- | --- | --- |
-| `0x004d3630` | `CPod__VFunc_66_UpdateMotionAndAccumulateScalar` | `void __fastcall CPod__VFunc_66_UpdateMotionAndAccumulateScalar(void * this)` |
+| `0x004d3630` | `CPod__Move` | `void __fastcall CPod__Move(void * this)` |
 
 ## Evidence
 

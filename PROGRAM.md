@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: damage/shake comments and cockpit ABI corrected; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: 205 virtual-method identities promoted from mechanized evidence; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -312,9 +312,8 @@ comparisons, shake replacement and the distinct game/CRT RNG streams. Death and
 thread-data provision remain explicit substitutes; no full-game acceptance is
 claimed. The cockpit's integer parameter is now corrected to a float through a
 separate one-function ABI cohort, with its original storage and locals preserved.
-Next prioritize mechanized name evidence over
-serial isolated investigations; retain the grade-return finding below for a
-consumer-focused ABI cohort.
+The mechanized virtual-method batch below now advances the name audit;
+retain the grade-return finding below for a consumer-focused ABI cohort.
 
 Step 3 uses `re_source_graph.py map-names` to build an explicit spelling-only
 candidate map, then `check` and `re_name_evidence.py audit`. The fresh pass
@@ -341,10 +340,48 @@ AX/receiver metadata error is independently established below.
 The accepted tool pass and stale-producer refusal are retained in
 `local-data/test-runs/re-audit-20260926/step3-shake-post/` (`*-v4` outputs).
 
-Next strengthen header/call-site alignment. The pinned source lacks the class
-macro definitions and CThing's interface headers; whole layouts cannot be
-numbered from the visible virtual declarations alone. Keep those gaps explicit
-and neutralize nothing from missing tool support. Remaining name leads include
+The [Thing-family virtual-identity cohort](reverse-engineering/ghidra/README.md#re-audit-thing-family-virtual-identities--september-26)
+now promotes **205 names, comments and tag sets** through the preservation gate.
+Twenty-nine independently reviewed anchors from source declarations, pristine
+instructions and script/virtual call sites propagate across 1,677 RTTI table
+uses and 298 distinct function targets. Saved names are not alignment inputs.
+The promotion changes no prototypes, storage, locals, types, instructions or
+bodies; all 8,126 non-target function rows remain equal. All nine live exports
+equal the separately reopened rehearsal, and independent Archive A POST
+restoration passed. The tracked checkpoint is unchanged.
+
+The admission rules are executable, not a request for 205 separate manual
+investigations: a reviewed anchor pins the source interface and retail slot;
+every mapped use must agree with fixed RTTI inheritance and subobject offsets;
+all aliases and naming owners must be accounted for; and the complete saved
+body must pass decoding, branch, return-cleanup and supported tail-stack checks.
+Contradictory slots, unmapped aliases, ambiguous owners or unresolved stack
+behavior are withheld. Independent review checked the method, every flagged
+case, all anchors and representative overrides; root reproduced the witnesses
+and all mapped table words. These checks prove the admitted interface identity
+within their limits, not full ABI or behavioral correctness.
+
+The same report has 65 existing-name proposals awaiting comment/tag disposition
+and 28 unresolved targets. Neither set is added to the completed counts below.
+The separate complete-header route requires exact slot counts and unambiguous
+single inheritance. It currently aligns 26 classes / 64 distinct targets but
+has not promoted them. Missing macro/base definitions, conditional declarations
+and overload ordering remain exclusions; CThing's missing interface headers
+are bridged only by individually established slot anchors. Controller layouts
+with 15 source slots versus 18 retail slots remain unresolved.
+
+The tools have 55 passing focused tests, including adverse decoding, backward
+tail-branch and argument-width cases; the cohort framework has 93 passing tests.
+The accepted report is `local-data/test-runs/re-audit-20260926/step3-shake-post/vtables-v6.json`;
+the full gate is under `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-identities/`.
+Twenty-one existing notes had current identity assertions refreshed; their
+remaining semantics and saved prototypes are not thereby audited. This refresh
+also corrected Sentinel's misidentified table starts and shifted slot numbers.
+
+Next extend the same evidence across further interface families and finish the
+kept-name dispositions, rather than returning to serial one-function analysis.
+Re-derive unresolved cases where the evidence can support a whole family, and
+neutralize nothing merely for missing tool support. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
 and sound identities are resolved above. Damage's name and corrected behavioral
 annotations are recorded above. The `CPCController` key-query
@@ -378,18 +415,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the cockpit-shake ABI promotion (September 26).**
+**Running coverage after the Thing-family virtual-identity promotion (September 26).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,620 unique functions; 1,621 rename rows include one repeated correction. |
+| Names corrected | 1,825 unique functions; 1,826 rename rows include one repeated correction. |
 | Names verified and kept | 63 additional functions: 62 library/import identities and Damage. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,648 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,443 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 1,687 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 1,892 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted `tools/cohort-specs/*-20260926.manifest.tsv`, the final

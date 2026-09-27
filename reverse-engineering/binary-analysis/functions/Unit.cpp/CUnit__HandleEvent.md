@@ -3,7 +3,7 @@
 > Address: `0x004F9820`
 
 Status: active static function note
-Last updated: 2026-09-07
+Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
 Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -21,6 +21,14 @@ Evidence: MEASURED — pristine identity, complete-body decode/hash, jump-table
 readback, whole-`.text` rel32 census, image-wide operand census, strict relevant
 vtable reads, current 8,329-row name table, and existing manager/thing owners.
 No Ghidra or rebuild owner changed.
+
+## September 26 virtual-method identity correction
+
+The [reviewed virtual-identity cohort](../../../ghidra/README.md#re-audit-thing-family-virtual-identities--september-26) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
 
 ## Contract (byte-exact)
 
@@ -170,9 +178,9 @@ The whole-`.text` rel32 census finds four direct callers:
 | Site | Current name-table owner |
 | --- | --- |
 | `0x0040c29b` | `CBattleEngine__HandleEvent` default |
-| `0x0041512d` | `CBoat__VFunc_0_00415120` |
+| `0x0041512d` | `CBoat__HandleEvent` |
 | `0x00417e27` | `SharedUnitVFunc__HandleType1388Field74Resource_00417df0` |
-| `0x0044e250` | `CFenrir__VFunc_0_0044e240` |
+| `0x0044e250` | `CFenrir__HandleEvent` |
 
 Scheduled events normally arrive virtually, not through those calls. The
 image-wide operand census finds **28** `.rdata` dwords equal to `0x004f9820`,

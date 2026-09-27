@@ -140,6 +140,8 @@ CURRENT_LIBRARY_NVTRISTRIP_OVERLAY = REPO_ROOT / "tools/cohort-specs/library-nvt
 CURRENT_LIBRARY_NVTRISTRIP_OVERLAY_SHA256 = "183c67901469967fe26220a1d3701925911e05d71aef55d23482de39bb96540d"
 CURRENT_STARTUP_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/startup-identities-20260926.manifest.tsv"
 CURRENT_STARTUP_IDENTITIES_OVERLAY_SHA256 = "12fc2b6c96e0dee69e8c10d3e3039abe30f797675e5ad458f727e5f5acd82936"
+CURRENT_THING_VIRTUAL_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/thing-virtual-identities-20260926.manifest.tsv"
+CURRENT_THING_VIRTUAL_IDENTITIES_OVERLAY_SHA256 = "a493b499e16ed804cd5ca4209c5e31b9f7654c090598820a2bdc26972a29b3df"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -870,6 +872,11 @@ def run(
                 table, CURRENT_STARTUP_IDENTITIES_OVERLAY,
                 expected_sha256=CURRENT_STARTUP_IDENTITIES_OVERLAY_SHA256,
                 expected_rows=4, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_THING_VIRTUAL_IDENTITIES_OVERLAY,
+                expected_sha256=CURRENT_THING_VIRTUAL_IDENTITIES_OVERLAY_SHA256,
+                expected_rows=205, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
