@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: switch-backed method identities corrected and original options behavior measured; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: switch-backed identities verified; camera result-buffer witnesses next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the switch-backed identity cohort (September 27).**
+**Running coverage after the verified switch-method cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 1,991 unique functions; 1,992 rename rows include one repeated correction. The latest six establish multiplayer lifecycle, options processing and three listener identities. |
-| Names verified and kept | 300 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend and six reader identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,040 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,023 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 22 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces and six reader interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,301 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,318 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,9 +511,9 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
@@ -543,7 +543,10 @@ after the five-name promotion: all twelve results and limits stayed identical.
 The existing ABI admission tool now handles bounded switch tables in frontend
 and listener methods. Its [six-name correction](reverse-engineering/ghidra/README.md#re-audit-switch-backed-method-identities--september-27)
 is live, with exact rehearsal/readback and independently restored recovery.
-Seventeen additional kept-name candidates remain for the next comment/tag cohort.
+The separate [17 kept-name cohort](reverse-engineering/ghidra/README.md#re-audit-verified-switch-backed-methods--september-27)
+is also live, with exact readback and independent recovery. All 27,072 body bytes
+and 7,455 instruction rows remain unchanged; the new comments preserve old notes
+and expose three second-argument ABI questions rather than endorsing their types.
 The tool pins each table and byte-remap span, checks unsigned guards and possible
 bypassing entries, and retains cleanup/owner exclusions. Two additional names
 remain withheld because raw instruction/string bytes resemble guard-interior
@@ -564,6 +567,19 @@ The Unit AI contract's stale scalar event argument is corrected to match its
 already saved event-record pointer; its provisional return meaning stays open.
 Consumer comments and concrete owner types remain open; do not infer an owner
 solely from a factory's result.
+
+Next mechanized family: Camera.h layouts aligned to retail RTTI, with an explicit
+result-buffer witness before aggregate-return methods are admitted. Fresh checks
+find seven complete-header classes, 71 slot uses and 39 distinct targets. These
+are candidates, not name dispositions. The pristine interpolating constructor
+at `0x0041ad30` supplies the slot sequence for Prepare, current/old position,
+current/old orientation and current/old zoom. Leaf bodies expose 16-byte vector
+and 48-byte matrix result transport. Shared Generic/Interpolated getters cannot
+receive an exclusive owner; purecall, ubiquitous stubs, unproved indirect tails
+and uncovered aliases stay withheld. Existing aggregate-refusal tests must
+remain effective. Private source/byte leads: `local-data/test-runs/re-audit-20260926/camera-interface/`.
+Remaining memory-buffer/listener kept comments and demonstrated ABI issues stay
+in scope; this camera family does not claim full interpolation or runtime parity.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header

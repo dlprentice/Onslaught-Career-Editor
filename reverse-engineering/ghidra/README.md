@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[switch-backed method identities](#re-audit-switch-backed-method-identities--september-27);
+[verified switch-backed methods](#re-audit-verified-switch-backed-methods--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified switch-backed methods — September 27
+
+The [17-row manifest](../../tools/cohort-specs/switch-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/switch-verified-20260927.spec.tsv) preserve every method name and
+attach its interface evidence. Pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Seventeen existing frontend/listener method names verified with comments and tags only. All names, interfaces, locals, 27,072 body bytes / 7,455 instructions and 8,314 non-target function rows remain unchanged. All 17 earlier notes and every prior tag are retained, explicitly outside this semantic certification.
+
+Fresh evidence reports against the preceding complete live export preserve every selected body, RTTI, admission and switch proof. Independently bound page-array and event-recipient callers establish method slots; all 46 known holder occurrences agree. Complete bodies, 22 tables / 135 words and 11 zero-extended remaps passed bounded normal-flow admission. Main/DemoMain, Game/DXGame and the 28 Unit holders are nonexclusive naming contexts. BEConfig ButtonPressed has an unproved saved int player_index where the interface has a float; two other second arguments are undefined. These and inherited confidence tags need separate ABI review. No full behavior, exclusive source-body ownership, exceptions, stack balance or runtime table immutability is certified.
+
+Fresh PRE restoration, exact rehearsal, separate/sealed readbacks, five
+byte-stable refusal controls, independent payload/PRE review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal. Only the program comment digest changes.
+The two raw guard-interior pointer questions stay withheld; they are not
+established incoming control-flow edges. Saved prototype corrections remain
+separate, including the pointer argument of MessageBox from the preceding cohort.
+
+Working identity: `db.18686`, 18 files / 123,865,972 bytes,
+inventory SHA-256 `0f93cb947333e459ee54471ed3d5cf75cec5cd9f6597b1d27c2271c90e852684`; main database 73,564,160 bytes,
+SHA-256 `a17bd3a23ad4ae72979cd1cb2ea36b767a3ea8eb15952da588a95fa4e0bf3b6f`. Restored six-name switch POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-switch-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private gate receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/switch-verified/`; exact identity reports and retained controls:
+`local-data/test-runs/re-audit-20260926/switch-admission/`.
 
 ## RE-audit switch-backed method identities — September 27
 

@@ -329,6 +329,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "resource-reader-identities-20260927",
         "reader-abi-20260927",
         "switch-identities-20260927",
+        "switch-verified-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
