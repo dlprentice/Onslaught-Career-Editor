@@ -1,13 +1,19 @@
 # Platform System
 
 Status: mixed — source architecture with bounded retail corrections
-Last updated: 2026-09-26 (font initialization rechecked; other sections retain their dates)
-Summary: platform source reference, with the retail font initializer separated from source-only Xbox behavior.
-Evidence: MEASURED — pristine font body, strings, caller and RTTI; SOURCE — the pinned platform implementation elsewhere below.
+Last updated: 2026-09-27 (device lifecycle rederived; earlier sections retain their evidence limits)
+Summary: platform source reference with bounded retail font and two-list device-lifecycle corrections.
+Evidence: MEASURED — static pristine font/device-lifecycle bodies, strings, callers and RTTI; SOURCE — the pinned platform implementation elsewhere below.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 > Analysis from Platform.cpp/h, PCPlatform.cpp/h, and d3dapp.cpp/h - December 2025
+
+Outside the explicitly dated retail corrections, this page remains inherited
+source commentary, not a completed retail audit. In particular, its DirectX 8,
+GeForce 3 and fixed-resolution discussion describes the partial source snapshot;
+it does not establish retail requirements. Its broader input, registry and save
+statements also need their own byte/caller and controlled-execution evidence.
 
 ## Overview
 
@@ -457,7 +463,67 @@ This explains why directly applying source code logic to Steam saves requires ca
 
 ---
 
-## D3D Application Framework (d3dapp.cpp/h)
+## Retail device lifecycle — September 27 correction
+
+This section is a static re-derivation from the pristine specimen above and
+source pin `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`. The surviving
+`ltshell.cpp` has SHA-256
+`a83952e2a6822d9d74f26f07116308f28b1f623a34e24008d81fa02232c93513`.
+Its `DeviceObject` class declaration is missing; no header layout was invented.
+
+The complete `0x00512d50` body installs the RTTI-bound `DeviceObject` table
+`0x005e48c8` at the receiver, then walks and unlinks that receiver from the two
+lists headed at `0x00889074` and `0x00889078`, following node member `+4`.
+The complete `0x00512ca0` body inserts its stack-supplied node at the first head;
+`0x00513d20` moves a found node from that list to the second. Those byte operations
+bind the receivers; the saved helper labels are not used as evidence of a shader
+owner or a free-list role.
+
+| Retail wrapper | DeviceObject slot | Independently distinguished source identity |
+| --- | --- | --- |
+| `0x005126f0` | 1 | `PCLTShell::InitDeviceObjects`, `ltshell.cpp:807–841`; literal at `0x0063dde8`, matching input-buffer allocation and active-flag writes |
+| `0x00512990` | 2 | `PCLTShell::RestoreDeviceObjects`, `ltshell.cpp:850–864`; shell slot 9 is called after device reset by `0x0052b760` |
+| `0x005129f0` | 3 | `PCLTShell::InvalidateDeviceObjects`, `ltshell.cpp:869–879`; shell slot 5 is called before reset by the same caller |
+| `0x00512b30` | 4 | `PCLTShell::DeleteDeviceObjects`, `ltshell.cpp:885–909`; clears/frees the same input-buffer fields, releases input objects and clears the active flag |
+
+Each inspected list dispatch supplies `ECX=node`, loads its vtable from `[node]`,
+pushes no explicit argument and advances through `[node+4]`. Ordinary callee
+register/stack preservation and the node remaining readable after its callback
+are premises, not lifetime guarantees proved by this pattern.
+
+**Retail differs from the source.** The source walks one list. Retail
+initialization walks `0x00889078` for slot 1 and then slot 2, walks
+`0x00889074` for slot 1, calls `0x0054fde0`, then walks that second list for
+slot 2. In `0x0052af00`, the successful call through shell slot 8 returns
+without the source's separate restore call. Source D3D8 declarations must not
+be applied wholesale to retail's D3D9 interfaces.
+
+The ancillary `0x0042c810` calls take constant arguments. These wrappers do not
+pass the lifecycle result to that call; invalidation and deletion even overwrite
+`AL` with the byte at `0x0063dc20` before testing it. Calling it a lifecycle
+result handler would therefore be unsupported.
+
+The existing name-evidence tool checks these reviewed correspondences, both
+list transports, unique fixed primary ancestry, every known RTTI holder,
+aligned non-code pointer cells, complete-body return cleanup and naming
+collisions. The current packet admits 31 resource-method identities across
+40 holder occurrences. Shared bodies `0x00405930` and `0x005019c0` span several
+methods and remain excluded. `0x00557a90` remains excluded by the automated
+switch grammar; that refusal is not proof of a retail defect.
+
+These identities locate the initialization, reset and teardown methods the
+rebuild must consult. They do not establish each resource algorithm, exact
+return type, device-loss behavior, callback lifetime or visible results.
+The cheapest runtime falsifier is a controlled copy with traced lifecycle
+calls around initial creation and one device reset, comparing list order and
+resource changes. No retail or Godot launch was made for this audit.
+
+Private byte pins, disassembly, source witnesses and refusal tests:
+`local-data/test-runs/re-audit-20260926/device-lifecycle/`. The exact Ghidra
+cohort and readbacks belong to
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`.
+
+## D3D Application Framework (source d3dapp.cpp/h)
 
 The D3D Application Framework provides the DirectX 8 initialization, device management, and window handling for the PC build. This is based on the Microsoft DirectX 8 SDK sample framework (copyright 1998-2000) with Lost Toys modifications.
 

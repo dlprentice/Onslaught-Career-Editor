@@ -110,7 +110,6 @@ reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md
 reverse-engineering/binary-analysis/functions/DXKempyCube.cpp.md
 reverse-engineering/binary-analysis/functions/DXPalletizer.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
-reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
 reverse-engineering/binary-analysis/functions/DataType.cpp.md
 reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md

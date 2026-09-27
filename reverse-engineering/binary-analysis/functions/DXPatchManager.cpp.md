@@ -1,7 +1,7 @@
 # DXPatchManager.cpp
 
 Status: active — historical subsystem notes with scoped corrections below
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 Summary: retained patch-manager analysis; the Engine shutdown receiver is re-derived from pristine bytes, while other historical claims remain to audit.
 Source File: retail `DXPatchManager.cpp` label (implementation absent from pinned source); caller `references/Onslaught/DXEngine.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -20,6 +20,18 @@ describes that receiver as Engine fields. The caller is the case-distinct
 This verifies the call and receiver, not every historical assertion about the
 callee's body, object lifetime or complete subsystem behavior.
 
+## Device lifecycle identity — September 27
+
+`0x0048f320` is `CLandscapeVB__InitDeviceObjects`, formerly
+`CLandscapeVB__RestoreAndRebuildIfDirty`. Fresh complete-body and caller/RTTI
+checks place it in the initialization interface, not the restoration phase.
+The [platform note](../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
+records the source/retail list and ordering differences. Its body calls
+`0x00500120`, now `CVBuffer__InitDeviceObjects`; it retains that return while
+conditionally invoking `0x0048f210` based on receiver member `+0x40`.
+No full terrain/resource algorithm or historical field-name claim is certified.
+Dated Wave records below retain their original labels as history.
+
 ## Name corrections — 2026-07-28
 
 Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
@@ -31,7 +43,7 @@ withdrawn label can tell it was corrected and not lost.
 
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
-| `0x0048f320` | `CDXPatch__RestoreAndRebuildIfDirty` | `CLandscapeVB__RestoreAndRebuildIfDirty` | class prefix moved; suffix unchanged |
+| `0x0048f320` | `CDXPatch__RestoreAndRebuildIfDirty` | `CLandscapeVB__InitDeviceObjects` | class corrected historically; lifecycle method rederived September 27 |
 | `0x0048f620` | `CDXEngine__RenderPostMissionOverlayAndMenu` | `CLevelBriefingLog__Render` | class prefix and suffix both moved |
 | `0x00550380` | `CDXPatch__Constructor` | `CLandscapeVB__ctor` | class prefix and suffix both moved |
 
@@ -108,7 +120,7 @@ struct CDXPatchPool {
 | 0x0048f1e0 | CDXPatch__CreateGridVertexBuffer | 0x30 | Wave422 owner/signature correction; creates a grid vertex buffer from one `grid_step` argument |
 | 0x0048f210 | CDXPatch__RebuildHeightGridVertexBuffer | 0x110 | Wave422 owner/signature correction; rebuilds height-sampled grid vertices |
 | 0x0048f2f0 | CDXPatch__SetGridOriginStepAndRebuild | 0x30 | Wave807 owner/signature correction; sets patch grid origin/step fields and rebuilds vertices from `CDXLandscape__UpdateLOD` callsite `0x00546fe6` |
-| 0x0048f320 | CLandscapeVB__RestoreAndRebuildIfDirty | 0x30 | Wave422 owner/signature correction; vtable slot restore/rebuild wrapper |
+| 0x0048f320 | CLandscapeVB__InitDeviceObjects | 0x1e | September 27: DeviceObject initialization interface; earlier field/rebuild semantics remain separately bounded |
 | 0x00550380 | CLandscapeVB__ctor | 0x20 | Sets vtable to 0x005e5114 |
 | 0x005503a0 | CDXPatch_T3_005503a0 | 0x10 | Thunk to CVBuffer destructor. The `CDXPatch__Destructor_thunk` spelling was demoted to a neutral Tier-3 placeholder on 2026-08-17: the anchor audit found no `CDXPatch` type descriptor in the image and no vtable owning this VA. The body reading — a ten-byte thunk into the CVBuffer destructor — is unaffected, and the sibling `CDXPatch__*` rows above were not part of that cohort. |
 | 0x005503b0 | CDXPatchManager__ReleasePatches | 0x20 | Releases patch pool via vtable call |

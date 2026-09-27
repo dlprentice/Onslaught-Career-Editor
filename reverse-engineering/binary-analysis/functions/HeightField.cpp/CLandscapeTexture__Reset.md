@@ -1,17 +1,29 @@
-# CLandscapeTexture__Reset
+# CLandscapeTexture__RestoreDeviceObjects
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (interface identity rederived; earlier body notes retain their stated limits)
+Summary: retail device-lifecycle identity with retained, separately bounded August body analysis.
 Source File: HeightField.cpp / LandscapeTexture.cpp (absent from the
 pinned GPL `references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
 `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches. The Ghidra database was not opened. Table name is a research
-label. Callee `0x004f7b60` is **not** this proof.
+matches. The Ghidra database was not opened for that August review. At that date,
+the table name was a research label. Callee `0x004f7b60` is **not** this proof.
 
 > Address: `0x0048e610`
+
+## September 27 interface correction
+
+The former label `CLandscapeTexture__Reset` is retained by this filename for stable links.
+Fresh complete-body decoding, both typed list callers and all known RTTI holder
+occurrences establish `CLandscapeTexture__RestoreDeviceObjects`; see the
+[platform evidence](../../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction).
+The new name identifies its lifecycle interface. It does not establish the full
+resource algorithm, source return type, callback lifetime or retail graphics
+behavior. The August evidence statements below describe that earlier review;
+its separate specimen twin was not reverified for this correction.
 
 ## Contract
 
@@ -40,4 +52,4 @@ is not `6a 3f 6a 3f 6a 00 6a 00 8b ce e8 9d 08 00 00`.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0048e610` | `CLandscapeTexture__Reset` | `5356 8bf1 e847950600 … c7462c01000000 … 6a3f6a3f6a006a00 8bce e89d080000 … c3` | thiscall; bare ret ×3; 89 B; 2 E8 / 0 E9; 0 inbound; writes `[+0x2c]=1`. HIGH on ABI, inbound-empty, those slots, the Range plant. **Not** on `0x004f7b60` or authored names. |
+| `0x0048e610` | `CLandscapeTexture__RestoreDeviceObjects` | `5356 8bf1 e847950600 … c7462c01000000 … 6a3f6a3f6a006a00 8bce e89d080000 … c3` | thiscall; bare ret ×3; 89 B; 2 E8 / 0 E9; 0 inbound; writes `[+0x2c]=1`. HIGH on ABI, inbound-empty, those slots, the Range plant. **Not** on `0x004f7b60` or authored names. |

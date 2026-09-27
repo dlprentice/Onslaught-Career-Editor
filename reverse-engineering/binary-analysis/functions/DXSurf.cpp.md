@@ -1,10 +1,16 @@
 # DXSurf.cpp Functions
 
+Status: mixed — historical surface notes with bounded retail lifecycle corrections
+Last updated: 2026-09-27
+Summary: retained surface analysis with corrected CDXTexture lifecycle identities and explicit historical limits.
+Evidence: MEASURED — static pristine specimen and source/list/RTTI correspondence in the September 27 platform note.
+Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x0053a140` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
-> Source file: `[maintainer-local-source-export-root]\DXSurf.cpp`
+> Source file: `[maintainer-local-source-export-root]\DXSurf.cpp` | Binary: `BEA.exe.original.backup` (pristine SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`)
 > Debug path address: `0x006525a0`
 > Last updated: 2026-05-20
 
@@ -23,8 +29,8 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00556d70` | `CDXSurf__ScalarDeletingDestructor` | `CDXTexture__ScalarDeletingDestructor` | class prefix moved; suffix unchanged |
 | `0x00556d90` | `CDXSurf__dtor` | `CDXTexture__Destructor` | class prefix and suffix both moved |
 | `0x00556fc0` | `CDXSurf__SetupSurface` | `CDXTexture__SetupSurface` | class prefix moved; suffix unchanged |
-| `0x00557060` | `CTextureSequence__EnsureLoaded` | `CDXTexture__EnsureLoaded` | class prefix moved; suffix unchanged |
-| `0x005572c0` | `CTextureSequence__ReleaseIfLoaded` | `CDXTexture__ReleaseIfLoaded` | class prefix moved; suffix unchanged |
+| `0x00557060` | `CTextureSequence__EnsureLoaded` | `CDXTexture__RestoreDeviceObjects` | Prefix corrected July 28; lifecycle suffix rederived September 27 |
+| `0x005572c0` | `CTextureSequence__ReleaseIfLoaded` | `CDXTexture__InvalidateDeviceObjects` | Prefix corrected July 28; lifecycle suffix rederived September 27 |
 
 Where a row's **suffix** moved rather than only its class prefix, the behavioural
 text beside it in this note was written for the old name. This sweep corrected
@@ -49,20 +55,25 @@ Queue telemetry after Wave616 is `6093` total functions, `3172` commented, `2921
 
 Controlled copied-Steam observation on 2026-07-21 now bounds the active main-water path: both `CDXSurf__Render` calls execute, the optional advanced-water flag remains zero, and uninterrupted sampling establishes the consumed phase and scroll rates. Exact lower-level `CDXSurf`, `CVBuffer`, `CVBufTexture`, `CDXTexture`, and render-state layouts beyond the fields used by that active path remain deferred.
 
-## Class: CDXSurf
+## Retail table context: CDXTexture
+
+The historical CDXSurf attribution of this table was incorrect. Fresh RTTI
+identifies CDXTexture; the lifecycle slots below follow the
+[September 27 platform proof](../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction).
+This does not certify the remaining historical surface implementation claims.
 
 Vtable start: `0x005e59a0`.
 
-Wave616 bounds only the slots below through static saved-Ghidra evidence. Slots after `0x1c` quickly run into non-CDXSurf-looking data and other tables; do not treat the 32-row peek as a complete CDXSurf vtable.
+The old Wave616 peek was not a whole-table proof. The following retained slot list now distinguishes current lifecycle identities and saved boundaries; it does not establish every method meaning.
 
 | Slot | Address | Pointer | Status |
 | ---: | --- | --- | --- |
 | `0x00` | `0x005e59a0` | `0x00556d70 CDXTexture__ScalarDeletingDestructor` | Bounded |
 | `0x04` | `0x005e59a4` | `0x00557a90 CDXTexture__LoadTextureFromFile_Core` | Existing context row |
-| `0x08` | `0x005e59a8` | `0x00557060 CDXTexture__EnsureLoaded` | Existing context row |
-| `0x0c` | `0x005e59ac` | `0x005572c0 CDXTexture__ReleaseIfLoaded` | Existing context row |
-| `0x10` | `0x005e59b0` | `0x00558600` | No Ghidra function boundary yet |
-| `0x14` | `0x005e59b4` | `0x00556e90` | No Ghidra function boundary yet |
+| `0x08` | `0x005e59a8` | `0x00557060 CDXTexture__RestoreDeviceObjects` | Existing context row |
+| `0x0c` | `0x005e59ac` | `0x005572c0 CDXTexture__InvalidateDeviceObjects` | Existing context row |
+| `0x10` | `0x005e59b0` | `0x00558600 CDXTexture__DeleteDeviceObjects` | Existing 136-byte boundary; lifecycle identity rederived |
+| `0x14` | `0x005e59b4` | `0x00556e90 CDXTexture__VFunc_5_00556e90` | Saved 180-byte boundary; method meaning not established here |
 | `0x18` | `0x005e59b8` | `0x00556fc0 CDXTexture__SetupSurface` | Bounded |
 | `0x1c` | `0x005e59bc` | `0x00405930 SharedVFunc__ReturnZero_00405930` | Shared inherited helper |
 
@@ -96,7 +107,7 @@ Wave616 bounds only the slots below through static saved-Ghidra evidence. Slots 
 
 ## Deferred Work
 
-- Recover or intentionally defer function boundaries for vtable pointer targets `0x00558600` and `0x00556e90`.
+- The September 27 export has saved bodies at `0x00558600` (136 bytes) and `0x00556e90` (180 bytes). The first has a reviewed lifecycle identity; the second body and both full resource behaviors still require semantic review.
 - Prove or reject exact source-body identity for the CDXSurf methods against retail behavior rather than debug-path proximity.
 - Recover concrete `CDXSurf`, strip-entry, `CVBuffer`, `CVBufTexture`, `CDXTexture`, and render-state layouts.
 - Keep Goodies render-target behavior and inactive advanced-water reflection/refraction outside the bounded active-path claim until separately observed.
