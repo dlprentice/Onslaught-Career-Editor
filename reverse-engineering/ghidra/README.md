@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[frontend argument interfaces](#re-audit-frontend-argument-interfaces--september-27);
+[window callback identity and interface](#re-audit-window-callback-identity-and-interface--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit window callback identity and interface — September 27
+
+The [one-row manifest](../../tools/cohort-specs/window-callback-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/window-callback-abi-20260927.spec.tsv) describe the source-correlated
+Windows message callback in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One default function FUN_00529070 is named WndProc and given a physical stdcall interface: four undefined4 stack parameters hWnd/uMsg/wParam/lParam and undefined4 EAX return, with no incoming receiver. One authored comment and tag set added; the old default name remains in the note. All 34 code bytes, 12 instructions, 8,331 other functions, locals, types and other variables remain unchanged. Stack purge stays the saved unknown value2147483647; the physical RET16 is established from instructions, not a changed purge annotation. The declared symbol source moves DEFAULT to USER_DEFINED; one comment is added.
+
+Source-correlated callback in pinned d3dapp.cpp79-81/114, with identical source body in EditorD3DApp.cpp73, so no unique translation-unit attribution. RegisterClassA setup stores the callback at00529151 and registers at005291a4. Constructor00528fb3 assigns the global receiver0089c0f4. The callback overwrites ECX from that global, forwards four entry stack DWORDs in order to virtual slot12 and returns the complete EAX unchanged. Retained original-code evidence has34 callback cases but set incoming ECX to the surrogate receiver; static overwrite, not a poison-ECX experiment, establishes lack of an incoming receiver requirement. SDK typedefs/signedness, Windows dispatch, receiver lifetime, reentrancy and device/player acceptance stay open. No runtime experiment was rerun.
+
+Fresh PRE restore, dry/apply rehearsal, separate/sealed readbacks, nine actual
+byte-stable refusal controls, independent exact-payload review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal. The comparison initially omitted the
+expected DEFAULT-to-USER_DEFINED symbol count and added-comment count; it now
+requires exactly +1/-1 symbol sources and +1 comment as well as the comment
+digest. No unexplained change was accepted. No saved stack-purge value was changed.
+
+Working identity: `db.18694`, 18 files / 124,439,412 bytes,
+inventory SHA-256 `75c76af4d2b65f0bc4ec2e0bdf26799fbc843db5407f528f8e76f28bfde88ead`; main database 74,137,600 bytes,
+SHA-256 `4f9db6700c6bdec9524a5b5be05053f7326225738feea8617f1461e22245eb07`. Restored frontend-argument POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-window-callback-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-abi/`; logs use `abi-` under
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
 
 ## RE-audit frontend argument interfaces — September 27
 

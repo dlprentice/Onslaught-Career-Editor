@@ -7982,3 +7982,35 @@ Evidence/logs: `local-data/test-runs/re-audit-20260926/frontend-options/`:
 `cleanup-admission-v2.log` and `cleanup-admission-v2.json`. Independent read-only
 review approved the bounded mechanism; root reproduced the counterexamples and
 checked the real packet. Exact cohort payload review remains a separate gate.
+
+## RE window callback identity and interface — September 27
+
+`window-callback-abi-20260927` names the previously recovered 34-byte callback
+WndProc and assigns four opaque stack DWORDs, `__stdcall` and full EAX return.
+No incoming receiver is declared: the body overwrites ECX from the application
+global. Source SDK typedefs and unique translation-unit provenance remain open.
+Retained original-code outputs were inspected, not rerun; Windows/device
+acceptance was not performed.
+
+Fresh PRE restore, rehearsal, separate/sealed readback, nine byte-stable refusal
+controls, independent exact-payload review with root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports match rehearsal. All 8,331 other function records, locals, types and
+code are preserved. Saved stack purge remains unknown, while RET16 proves
+physical cleanup. Exactly one comment and one DEFAULT-to-USER_DEFINED symbol
+change accompany the declared metadata correction.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed. The current
+projection matches all 8,332 live names: 2,041 corrected, 317 additional kept,
+zero newly neutralized and 5,974 outside those sets. Prototype corrections are
+52; unique corrected comments are 2,371. These are audit dispositions, not
+complete semantic or runtime coverage.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-abi/`.
+Logs use prefix `abi-` under
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,162 candidate files. `git diff --check` passed.
