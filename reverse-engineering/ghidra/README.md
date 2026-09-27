@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[class-name getter identities](#re-audit-class-name-getter-identities--september-27);
+[memory-buffer identities](#re-audit-memory-buffer-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,37 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit memory-buffer identities — September 27
+
+The [five-row manifest](../../tools/cohort-specs/membuffer-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/membuffer-identities-20260927.spec.tsv) replace descriptive aliases
+with supported `CDXMemBuffer` source-method identities: SetNextReadBufferSize,
+InitFromMem, ReadString, Write and EndOfFile. Specimen: pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Pristine complete bodies, the pinned nonvirtual header/definitions, source-named allocation anchors and shared field/consumer flows support SetNextReadBufferSize, InitFromMem, ReadString, Write and EndOfFile. Retail/source block-size, buffering and sidecar/compression differences are explicit. The 67 ReadString and 71 raw Write/Close original-code cases establish bounded consumption/failure behavior with authored buffers and checked API substitutes, not Windows/file acceptance. ReadString CR/non-LF and stale-byte behavior and Write/Close failure continuation are also present in partial-source control flow. Independent review confirmed every row and old-note suffix; a one-line source citation and hexadecimal-offset notation were corrected before resealing, with the first successful rehearsal preserved.
+
+The [memory-buffer contract](../binary-analysis/functions/DXMemBuffer.cpp.md)
+corrects the check-byte cursor/sidecar-slot layout and distinguishes static
+compression findings from the two native experiments. Close returning one
+after failed/short writes is not proof of persistence. No original file was
+written and no game or Godot instance ran. All earlier plate notes are retained
+exactly as fallible leads; old confidence tags do not certify unchanged types.
+
+Fresh PRE restoration, revised rehearsal, separate/sealed readbacks, five
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored POST passed. All nine live exports equal
+rehearsal. Exactly five CDXMemBuffer names/comments/tags corrected to source-supported method identities. The complete 1,262 code bytes / 423 instruction rows, saved prototype types/storage, locals and 8,326 non-target function rows remain unchanged. Earlier notes remain fallible leads; saved destructor/size/return-width ABI findings and seven retained-name comments are separate follow-up work. Only the program comment digest changes. The full
+8,331-name projection is checked against live; frozen historical tables remain.
+
+Working identity: `db.18680`, 18 files / 123,587,444 bytes,
+inventory SHA-256 `cf87fbf3376ad7ee71e35e4fb401000f1e1ef17626df127d2558be0b2b340dfd`; main database 73,285,632 bytes,
+SHA-256 `ff1050c9dfa44d7870887557b2016e0ab03055d6459820d2c223d0dd8abab267`. Restored class-name POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-membuffer-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/membuffer-identities/`. Full persistence behavior, Windows I/O and
+runtime decoder/CRC acceptance remain separate.
 
 ## RE-audit class-name getter identities — September 27
 

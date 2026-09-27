@@ -243,7 +243,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # bounded receiver/stack transport and source divergences, preserving old notes as leads.
 # Class-name getters:35 old/62 proposed authored comments (25,637/128,998 decoded bytes);
 # bounded source-call/RTTI/literal identity, with prior notes and ABI tags historical.
+# Memory-buffer identities:5 old/5 authored comments (3,387/10,512 decoded bytes);
+# source/retail differences, bounded native runs and preserved fallible older notes.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/membuffer-identities-20260927.manifest.tsv":
+        "9a8ae4e68f37841be77ba4c8bb770a8baae901e3df2a52087e5188dcfe915366",
     "tools/cohort-specs/class-name-identities-20260927.manifest.tsv":
         "3b4cb6df7686b0b1261a1dcfed796ae51cdba72ae469d4e3bbbe211d174533bb",
     "tools/cohort-specs/frontend-callback-abi-20260927.manifest.tsv":

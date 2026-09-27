@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (62 class-name getter identities recorded; broader audit unfinished)
+Last updated: 2026-09-27 (memory-buffer identities and bounded original-code findings recorded; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -97,6 +97,12 @@ interface `_GetClassName`. Independent recovery and the complete current name
 projection pass. The strings are initially known but writable; missing source
 qualifiers, possible forwarding and saved prototypes remain unproved. Identity
 coverage does not imply semantic coverage of the game's own code.
+The [memory-buffer contract](binary-analysis/functions/DXMemBuffer.cpp.md)
+now rechecks twelve methods and records 67 ReadString plus 71 Write/Close
+original-code cases. Five name corrections have live readback and independently
+restored recovery. Buffer failure returns do not prove persistence; source and
+retail sizes, file flags and compression/sidecar paths differ. Saved prototypes
+and real Windows I/O remain separate, explicitly bounded work.
 
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or

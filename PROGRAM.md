@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 62 class-name getter identities recorded; frontend ABI and original timer findings preserved; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: memory-buffer identities and bounded original-code findings recorded; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,24 +491,25 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the class-name getter cohort (September 27).**
+**Running coverage after the memory-buffer identity cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,959 unique functions; 1,960 rename rows include one repeated correction. The latest 62 establish the observed class-name getter interface. |
+| Names corrected | 1,964 unique functions; 1,965 rename rows include one repeated correction. The latest five establish CDXMemBuffer method identities. |
 | Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,078 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,073 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 8 interfaces: four keyboard queries, cockpit shake and three frontend callbacks. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,258 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,263 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
 `compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`,
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
-`frontend-callback-abi-20260927` and `class-name-identities-20260927`, the final
+`frontend-callback-abi-20260927`, `class-name-identities-20260927` and
+`membuffer-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -598,10 +599,31 @@ live exports equal rehearsal, five actual refusals preserve project bytes, and
 the current 8,331-name projection equals live. Receipts:
 `re-audit-20260926/class-name-identities/` under the private owner above.
 
-Next audit the CDXMemBuffer family used by loading and controller recording,
-while continuing consumer-priority ABI findings without extending types beyond
-evidence. The complete original text-reader body has executed in isolation;
-its bounded refill and line-ending results are being checked before publication.
+The [CDXMemBuffer contract](reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md)
+now rechecks all twelve bodies and separates source identities from retail
+buffer-size, file-flag, compressed-data and sidecar differences. Five corrected
+names/comments/tags are live with independently restored POST recovery. All
+1,262 code bytes / 423 instruction rows and 8,326 non-target functions remain
+unchanged; all nine live exports match rehearsal and the full current name
+projection matches live. Five actual refusal controls preserved project bytes.
+A source-line citation and hexadecimal-offset notation were corrected before
+resealing; the first rehearsal remains preserved.
+
+The complete original ReadString body ran in 67 bounded authored-buffer cases,
+and Write/Close ran in 71. These reproduce CR/non-LF truncation, stale-byte
+consumption after an empty refill, and failed/short-write continuation. Close's
+success result alone does not establish persistence. Neither experiment used
+real Windows file APIs, compressed decoding or original saves. The seven
+retained-name comments and six demonstrated ABI corrections (a destructor
+receiver, signed size and four DWORD return transports) remain follow-up, not
+new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
+`local-data/test-runs/re-audit-20260926/membuffer/`.
+
+Next mechanized family: bind IListener's shared HandleEvent slot through both
+retail EventManager queue dispatches and the surviving CThing declaration.
+Missing interface headers stay missing; fixed RTTI ancestry, all holders and
+return cleanup must agree before promotion. The draft recognizer has no live
+name changes yet. Continue consumer-priority ABI findings alongside this family.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (class-name getter corrections promoted; each dated section keeps its own date).
+Last updated: 2026-09-27 (memory-buffer corrections and original-code findings recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,61 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE memory-buffer identity promotion — September 27
+
+Exactly five source-supported names/comments/tags passed fresh PRE restoration,
+rehearsal, separate/sealed readback, five actual byte-stable refusals, independent
+review/root reproduction, live readback and independently restored POST. All
+nine live exports equal rehearsal; 423 instructions / 1,262 code bytes,
+8,326 other functions, prototype transport and locals remain unchanged.
+The current 8,331-name projection equals the full live export. The initial
+source-line/offset-notation draft and rehearsal are preserved as superseded.
+
+Private command/results owner:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/membuffer-identities/`.
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases;
+`python tools/re_function_doc_names_check.py --self-test` passed, and its
+`--strict` current-document check found no drift. The first combined unittest
+command incorrectly named a nonexistent projection-test module; its loader
+error is retained, then the actual built-in self-test was run. No empty selection
+was counted as a pass. Publication docs/public-payload checks are recorded in
+this same owner. No game, Godot or desktop interaction occurred.
+
+### RE memory-buffer original code — September 27
+
+The [CDXMemBuffer contract](reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md)
+now distinguishes twelve complete-body static rechecks from two bounded native
+experiments on pristine `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+No game, Godot, original save or Windows file API was run. Inputs, ELF builds,
+commands, complete per-case outputs and independent read-only reviews remain
+private under `local-data/test-runs/re-audit-20260926/membuffer/`.
+
+Executed commands:
+
+- `python local-data/test-runs/re-audit-20260926/membuffer/original_readstring.py`:
+  67 cases passed; `readstring-072doz1d/probe.json`, SHA-256
+  `d99ea51f050851da529913aa3c5ecdb3a4191cede1cfee7dca526da455c14cd6`.
+  The loaded original 580-byte body reproduces the CR/non-LF rewrite and stale
+  byte after a controlled empty refill. Known-final and maximum-one controls
+  suppress that refill/consumption. The earlier 63-case run remains preserved.
+- `python local-data/test-runs/re-audit-20260926/membuffer/original_write_close.py`:
+  71 cases passed; `write-close-l0acrscz/probe.json`, SHA-256
+  `86056e9fd35e010acd2b47653db822b885d0f539d3513acaa5784421190903ed`.
+  Both complete original bodies (391/303 bytes) reproduce raw buffering and
+  failure continuation. Close returns 1 after FALSE or reported short writes;
+  null data returns 0 without calls. Exactly filling a buffer does not flush
+  until another byte or Close. Event order, full state, guards, source bytes,
+  stack/callee-saved registers and denied getpid were checked.
+
+The independent reviewer reconstructed every full output rather than executing
+the driver oracle. Root reproduced the original instructions, source boundaries
+and paired raw controls. Authored 64-byte buffers and API/allocator substitutes
+limit both runs. Compression, CRC, nonempty read refills, actual file/heap or
+Windows behavior, CloseHandle failure and durability were not tested. The
+failure/line-reader observations are also visible in the partial source and
+are not presented as source-version drift. These experiments do not add Ghidra
+name/prototype dispositions by themselves.
 
 ### RE class-name getter identities — September 27
 
