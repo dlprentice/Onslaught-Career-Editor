@@ -23,7 +23,9 @@ Its first argument is a damage amount, not elapsed time or an engagement metric.
 The subtraction and threshold dispatch below remain the observed operations;
 concrete data-member names, exceptional float inputs and full runtime behavior
 are not certified by the identity correction. The misleading filename is retained
-for existing links. Saved parameter types are handled in a separate interface cohort.
+for existing links. The subsequent [interface cohort](../../../ghidra/README.md#re-audit-thing-gameplay-interfaces--september-27)
+corrects the unread second argument from an integer to an opaque source pointer,
+preserving all four argument words, the float amount, return convention and body.
 
 ## Contract
 

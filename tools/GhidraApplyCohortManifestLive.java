@@ -345,6 +345,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "vertex-menu-abi-20260927",
         "music-identities-20260927",
         "thing-gameplay-identities-20260927",
+        "thing-gameplay-abi-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

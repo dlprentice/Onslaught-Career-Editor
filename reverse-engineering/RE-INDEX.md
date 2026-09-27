@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (Thing gameplay identities promoted; physical interfaces and broader audit remain)
+Last updated: 2026-09-27 (Thing gameplay identities and 32 interfaces promoted; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -87,8 +87,12 @@ with independently bound retail callers, complete target bodies and all recogniz
 RTTI aliases. Eighteen ambiguous cases and eight kept-name comments remain separate.
 Exact live readback and independently restored recovery passed; saved interfaces
 are unchanged. The [tree Damage note](binary-analysis/functions/tree.cpp/CTree__VFunc_28_CreateFallingTreeAfterDelay.md)
-withdraws the inherited elapsed-time/cooldown interpretation. Physical-interface
-corrections are the next cohort; names alone do not establish full semantics.
+withdraws the inherited elapsed-time/cooldown interpretation. The subsequent
+[32 interface corrections](ghidra/README.md#re-audit-thing-gameplay-interfaces--september-27)
+cover scalar, activation and Hit/Damage methods, including Tree's amount parameter.
+All names, code, 29 locals and stack layouts remain unchanged; exact live readback
+and independently restored recovery passed. Ten custom-storage float rows remain
+deferred. These corrections do not establish full derived semantics or runtime parity.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

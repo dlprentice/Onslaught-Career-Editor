@@ -277,7 +277,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Vertex menu: one old/new note (3,310/5,060 bytes); parameter-only ABI evidence.
 # Music: eight old notes/ten authored comments (5,848/21,782 bytes); old notes remain leads.
 # Thing gameplay: 47 old notes/60 authored comments (34,328/154,819 bytes); old notes remain leads.
+# Thing gameplay ABI: 32 old/authored notes (83,744/128,922 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/thing-gameplay-abi-20260927.manifest.tsv":
+        "bc7232579531bb63bfd424661bf26d5fb44cde1277b08c2dffa6b092d3c81c72",
     "tools/cohort-specs/thing-gameplay-identities-20260927.manifest.tsv":
         "43ea56ebd707ad49e5da1383de8bcf6ce65c82f3b24742973db7a8c6d31ee058",
     "tools/cohort-specs/music-identities-20260927.manifest.tsv":
