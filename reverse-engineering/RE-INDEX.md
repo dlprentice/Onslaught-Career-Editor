@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (startup shell, GetBPP and window-callback boundary promoted; callback metadata, menu argument interfaces and broader audit remain)
+Last updated: 2026-09-27 (window-callback boundary and 22 menu argument interfaces promoted; callback metadata and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -55,7 +55,14 @@ preserving the constant-32 body and existing return/cleanup. Exact live readback
 and independent recovery passed. The [window-callback boundary](ghidra/README.md#re-audit-window-callback-boundary--september-27)
 now admits 34 previously unowned decoded bytes, preserving all existing function
 records. Readback and independent recovery passed; its default metadata remains
-unresolved. Callback metadata and remaining frontend argument mappings are next.
+unresolved. The [22-function argument cohort](ghidra/README.md#re-audit-frontend-argument-interfaces--september-27)
+now corrects common page transitions, rendering and button interfaces while
+preserving all return annotations and names. Its ordered-value tool passes
+141 tests and the complete selected holder set; live readback and independent
+recovery match rehearsal. The [SetPage recheck](contracts/frontend/CFrontEnd__SetPage__00466ae0.md#september-27-complete-dispatch-body-recheck)
+distinguishes active-page rereads after callbacks and float duration from the
+old blanket source-parity claim. Callback metadata and larger cleanup families
+remain next; no new runtime or full menu acceptance follows.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

@@ -1,9 +1,9 @@
 # CFrontEnd__SetPage
 
-Status: active static contract (factory draft)
-Last updated: 2026-09-27 (bounded options-caller recheck)
-Summary: specimen-bound static contract for `CFrontEnd__SetPage` at `0x00466ae0`; packet-described behavior is retained with explicit unknowns and no promotion claim.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
+Status: active — caller transport and complete dispatch body rechecked; older factory inventory bounded
+Last updated: 2026-09-27 (complete static body and ordered page-callback recheck)
+Summary: exact receiver/stack transport and immediate/timed notification order; historical packet claims remain bounded and runtime callback effects stay open.
+Evidence: MEASURED — static pristine instructions freshly decoded and source/caller correspondence; older packet, closure and edge claims retain their stated limits. No SetPage runtime execution is claimed.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/FrontEnd.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -17,7 +17,52 @@ page-state argument is zero and the options context selects that action. In the
 21-case isolated experiment this callee was intercepted: its own transitions,
 notifications and interpretation of `30` were not executed or revalidated.
 See the [options recheck](../../binary-analysis/functions/display-settings.md#september-27-options-processing-recheck).
-Other call-site and body claims below retain their historical factory limits.
+Other call-site inventory claims retain their historical factory limits; the complete body is rechecked below.
+
+## September 27 complete dispatch-body recheck
+
+Fresh entry decoding covers all 177 pristine bytes, SHA-256
+`06a8d37bc755e5341ca9156650d7caf2612e2a92978ce70baaa61bc765b6c018`.
+The function copies incoming ECX into ESI. Its two explicit DWORDs are page at
+entry stack+4 and time at+8; both returns use RET 8. The saved `int page`
+is legacy typing, not a recovered EFrontEndPage typedef. The timed branch
+interprets time as signed 32-bit via FILD and stores a float; this does not
+establish its unit or the upstream clock.
+
+The static sequence, correlated against pinned `FrontEnd.cpp:563–592`, is:
+
+1. If active-page field `+0x1f8` is `-1`, replace it with transition-source
+   field `+0x1fc` before choosing the branch.
+2. With time zero, dispatch active page slot 8 at `0x00466b12`
+   (source-correlated `DeActiveNotification`). **After that callback returns**,
+   reload the active-page word at `0x00466b19`, push it, and call destination
+   slot 6 at `0x00466b29` (`TransitionNotification`). Reload the active word
+   again at `0x00466b33` before destination slot 7 at `0x00466b3c`
+   (source-correlated `ActiveNotification`). Only afterward store the requested
+   page into `+0x1f8`. Callback side effects could therefore affect later reads;
+   this is not a snapshot of the original page taken before all callbacks.
+3. With nonzero time, store zero bits at count field `+0x204`, copy current
+   page to `+0x1fc`, store requested page at `+0x200`, set active page to `-1`,
+   and store converted time at `+0x208`. Then dispatch destination slot 6 at
+   `0x00466b8a`, with source-page DWORD pushed from `+0x1fc`.
+
+Both slot-6 calls transport the source-page argument at callee stack+4 and
+receiver in ECX. EDX coincidentally still holds the page in the immediate
+branch; in the timed branch EDX holds the destination's vptr. An EDX page
+formal cannot be justified from the immediate branch alone. The
+[ordered interface evidence](../../binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md#september-27-ordered-page-argument-interfaces)
+checks these local paths and all known holders used in the selected ABI cohort.
+
+The source uses integer transition counters; the retail timed body stores a
+float duration, and the [Process recheck](../../binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md)
+records the retail float update/completion path. The former unqualified
+“source-parity” label is too broad. This section is static instruction evidence,
+not a retail or isolated execution of SetPage itself. The cheapest remaining
+causality check is an original-code probe with callbacks that alter the active
+page, followed by inspection of subsequent callback arguments and final fields.
+Receiver bounds, nullability, callback reentrancy and exception behavior remain
+unvalidated. The following factory inventory is retained as historical input;
+its declarations do not override this recheck.
 
 ## Identity
 - Body `[0x00466ae0,0x00466b90]`, 177 bytes, 45 closure instructions. Raw pristine-body SHA-256 `06a8d37bc755e5341ca9156650d7caf2612e2a92978ce70baaa61bc765b6c018`; closure range SHA-256 `864de6d8a3bfed84486638a71f65baa875227c40dc9f46d2dffb714f2d5878af`; packet range-plus-bytes SHA-256 `4be8cfd351bfaef363659680cd95e49e0ff4ccc55b375ba7ed9ff37e8973b1a8`. All three were independently recomputed over the exact single contiguous inclusive range.
@@ -26,7 +71,7 @@ Other call-site and body claims below retain their historical factory limits.
 - Campaign grade `C1_CANDIDATE_PARTIAL` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `HIGH_STATIC`. Proposed promotion: false.
 
 ## Calling convention
-Packet records `__thiscall` for `void __thiscall CFrontEnd__SetPage(void * this, int page, int time)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
+Packet records `__thiscall` for `void __thiscall CFrontEnd__SetPage(void * this, int page, int time)`. The complete-body recheck above establishes ECX plus entry stack+4/+8 and RET 8. Exact page typedef and complete return semantics remain outside that correction.
 
 ## Prototype and parameter semantics
 ```c
@@ -41,7 +86,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - not_determinable — the displayed decompile names no `DAT_*`/`_DAT_*`/`s_*` symbol; this does not prove the body has no absolute data access.
 
 ## Callees relied on / callers
-- Callees: none in the packet structured array.
+- The old packet structured array lists no callees; the fresh body has four indirect call sites, at `0x00466b12`, `0x00466b29`, `0x00466b3c` and `0x00466b8a`. Their source-correlated roles and order are stated above.
 - Caller `CFrontEnd__HandleModalPanelButton` `0x0044dd60` ×2 site(s) (instruction-flow).
 - Caller `CFEPBEConfig__ButtonPressed` `0x00450090` ×2 site(s) (instruction-flow).
 - Caller `CFEPBriefing__ButtonPressed` `0x00451c20` ×2 site(s) (instruction-flow).

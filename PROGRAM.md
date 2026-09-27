@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: startup shell, GetBPP and window-callback boundary promoted; callback metadata and broader menu-argument cohort next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: window-callback boundary and 22 menu argument interfaces promoted; callback metadata and cleanup-body family next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the window-callback boundary cohort (September 27).**
+**Running coverage after the frontend argument-interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,7 +501,7 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 5,975 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 29 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces, six camera copy-return annotations and GetBPP. Full ABI coverage is not yet counted. |
+| Prototypes corrected | 51 interfaces: the prior 29 plus 22 frontend argument layouts. Three unresolved frontend returns remain unassigned; a corrected parameter list is not complete ABI validation. |
 | Comments corrected | 2,370 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code; its default name is not a newly neutralized disposition. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -653,13 +653,36 @@ restored POST passed. The complete projection matches all 8,332 live names.
 The new default name and interface are intentionally unresolved; the separate
 source-correlated WndProc metadata cohort comes next. Private receipts:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-boundary/`.
-Then examine 22 remaining frontend argument interfaces as one coherent cohort:
-six transition EDX/stack mappings, four render argument mappings, one button
-mapping and eleven omitted member receivers. These are independent-review
-leads to rederive, not counted corrections. Reuse the existing frontend anchors
-and common dispatch witnesses, preserve unrelated return uncertainty, and add
-ordered argument-storage checks to the existing evidence tool. A one-register
-fastcall spelling alone is not a behavioral defect.
+The [frontend argument cohort](reverse-engineering/ghidra/README.md#re-audit-frontend-argument-interfaces--september-27)
+now corrects all 22 selected interfaces: six invented EDX formals, four render
+stack interpretations, one button mapping and eleven omitted member receivers.
+The existing evidence tool checks ordered PUSH values, source/header bindings,
+fresh/cached dispatch agreement and all 32 known holder words. It rejects
+review-reproduced stale-dispatch, assignment-expression and outgoing-stack
+reload counterexamples. The timed SetPage caller puts the page on stack while
+EDX holds a vptr, disproving an inference from the other caller's coincidence.
+All names, return rows, locals, stack purge and 8,059 body bytes remain unchanged;
+8,310 non-target function records are exact. The 141 evidence-tool tests,
+94 framework tests, seven actual refusal controls, independent review, live
+readback and independently restored POST passed. No new runtime run is claimed.
+The [SetPage contract](reverse-engineering/contracts/frontend/CFrontEnd__SetPage__00466ae0.md#september-27-complete-dispatch-body-recheck)
+replaces an unqualified source-parity statement with freshly decoded ordering:
+active-page rereads after callbacks, plus a float duration in the timed path.
+Its duplicate function note now links to that existing evidence owner.
+Receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-argument-abi/`;
+proof/tests: `local-data/test-runs/re-audit-20260926/frontend-options/`.
+
+Next: finish WndProc's separate source-correlated identity/interface. Its
+conservative draft is in `window-callback-abi/abi-plan-draft.json` under the
+existing cohort owner: four opaque stack DWORDs, full EAX result, callee cleanup,
+no incoming receiver. Source SDK typedefs and real Windows dispatch remain open.
+Then re-derive the candidate 43 cleanup bodies whose entry-prefix primary vptr
+store matches the reviewed deleting-wrapper owner. This is a read-only research
+lead, not a promoted or counted set. Exclude the 21 ancestor-table and 48
+no-owner-prefix cases; do not rename their callees from wrapper holders alone.
+The CUnitAI spelling collision must not be resolved by moving an excluded label.
+Use the existing deleting-entry/teardown evidence tools and retain full behavior,
+prototype and source-symbol limits.
 The five kept position names' comments and remaining camera slots remain open. Orientation constructor
 witnesses remain withheld on raw pointer-like words, not proven incoming edges;
 the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.

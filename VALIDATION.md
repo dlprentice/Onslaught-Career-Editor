@@ -7915,3 +7915,40 @@ Evidence and exact logs are under
 `local-data/test-runs/re-audit-20260926/frontend-options/`:
 `ordered-argument-proof.json`, `ordered-stale-model-negative-before.log`,
 `ordered-arguments-suite-v4.log` and `ordered-proof-v4.log`.
+
+## RE frontend argument interfaces — September 27
+
+The `frontend-argument-abi-20260927` cohort corrects 22 argument interfaces,
+comments and tag sets through the ordered local-path checker above. Its
+32 known holder words, selected body pins and source bindings were independently
+reviewed and reproduced. Existing names, every return row (including all three
+undefined/unassigned returns), locals, stack cleanup, 2,234 instructions and
+8,059 body bytes are preserved; 8,310 non-target functions are exact.
+
+Fresh PRE restore, dry/apply rehearsal, separate/sealed readbacks, seven
+byte-stable refusal controls, independent exact-payload/POST review, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. The 8,332-entry name projection matches live; counts
+remain 2,040 corrected names, 317 additional kept, zero newly neutralized and
+5,975 outside those sets. Interface corrections rise to 51; unique corrected
+comments remain 2,370 because these targets were already in earlier cohorts.
+These counts do not certify complete signatures, semantics or runtime parity.
+
+Commands and receipts under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-argument-abi/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. Logs use prefix `argument-abi-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`npm run test:safety`: passed across 4,160 candidate files.
+`npm run test:docs`: passed with zero drifted name assertions after fixing the
+SetPage note's missing source header and the contract's evidence prefix. Both
+the initial failure and final result are retained in `argument-abi-docs.log`
+and `argument-abi-docs-final.log`. `git diff --check` passed.
+
+Fresh static inspection also corrected the existing SetPage contract and
+replaced its duplicate source-parity function note with an owner link. The
+177-byte body reloads active-page state after callbacks and converts signed
+time to stored float; actual callback side effects, duration units and SetPage
+execution remain open. No new original-game runtime experiment was run.
