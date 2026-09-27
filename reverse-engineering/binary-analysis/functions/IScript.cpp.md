@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-26 (RE audit: stop-flag writers, follower gates and arrival rounding; Pause runtime summary restored; waypoint follower owner settled)
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
@@ -15,6 +15,8 @@ COLOC → TypeDescriptor → ClassHierarchyDescriptor walk over the specimen's
 ranges, independently reproduced without Ghidra. Function names retain their dated Ghidra labels; current metadata authority is
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`. The byte
 contracts are independent of those labels.
+
+> **September 27 deleting-entry recheck:** `0x00533430 IScript__scalar_deleting_dtor`; `0x00535330 CVM__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Shape
 
@@ -38,7 +40,7 @@ is at `0x005e4f08` (the dword before it, `0x005e4f04`, is the COLOC pointer):
 | Slot | Address | Name |
 | --- | --- | --- |
 | 0 | `0x005385e0` | `IScript__HandleMessage` — the scheduled-event handler this map covers |
-| 1 | `0x00533430` | `IScript__ScalarDeletingDestructor` |
+| 1 | `0x00533430` | `IScript__scalar_deleting_dtor` |
 | 2 | `0x00533810` | `IScript__VFunc_2_00533810` |
 
 The dword at `0x005e4f14` (just past slot 2) is **not** a slot: it is the
@@ -381,7 +383,7 @@ construction dance. Independently re-read from pristine `74154bfa…`:
 
 6. `[eax] = 0x005e4f1c` (`CVM`). Slots: `+0` `0x004014c0`
    (`SharedVFunc__NoOpOneArg_004014c0`, `ret 4`), `+4` `0x00535330`
-   (`CVM__ScalarDeletingDestructor`), `+8` `0x004bacb0`
+   (`CVM__scalar_deleting_dtor`), `+8` `0x004bacb0`
    (`CMonitor__Shutdown_Core`). COLOC at `vtable-4` is `0x006195d8`.
 
 Then `CSPtrSet__AddToTail` (`0x004e5b20`) on `IScript+0x28`, and

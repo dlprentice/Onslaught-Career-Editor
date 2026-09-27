@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Controller/Engine identities and contracts re-grounded; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: compiler deleting-entry proof promoted; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -429,21 +429,28 @@ call-site evidence: `0x004f450b` through `0x004f4511` forwards three DWORDs;
 slot 61. The stricter automated route awaits pinned parameter-width witnesses
 for those unknown source types. It does not establish a new prototype audit.
 
-Next implement the compiler-destructor recognizer in the existing evidence
-tool. Read-only research and root byte checks identify 120 exact unadjusted
-wrappers in the fixed CMonitor slot-1 family: six ambiguous folded owners and
-one occupied-name collision leave 113 candidates (80 exact spelling keeps,
-33 normalizations). These are leads, not completed dispositions. Bind the
-independently re-derived CThing-to-CMonitor destruction chain, Free receiver
-and entry, complete boundaries, unadjusted-this return paths and every RTTI
-holder; validate adverse controls before a cohort. CMonitor's missing header
-must not be fabricated or used to relax generic source-ABI admission. The
-CMCMech teardown's internal backward block needs CFG reasoning, not the last
-instruction in address order. Exclude adjusted-pointer wrappers and the CUnit
-name collision. Broader same-template matches outside this family still need
-family evidence. Camera candidates need aggregate-return and folded-alias
-handling. Follow up the loader contract with original-reader short/zero reads
-and the inlined Spawner.
+The compiler-destructor recognizer is implemented and its first 33-row cohort
+is promoted with independently restored recovery. These are predominantly
+spelling normalizations of previously plausible deleting-destructor labels,
+now backed by exact byte/RTTI/normal-flow proofs; they are not 33 new gameplay
+bugs. The method admitted 113 of 120 fixed CMonitor-family entries. Root
+freshly checked 724 recognized RTTI tables, 165 slot uses and 5,590 instructions
+across 227 admitted wrapper/cleanup bodies. A review found an implicit-register
+provenance defect; the tool now refuses unsupported instructions and 69 focused
+tests pass. The initial cohort seal's stale added date tags were corrected
+before live application; the rejected rehearsal remains preserved.
+
+Next promote the 80 already correctly spelled names as comments/tags only,
+using the current export and preserving the seven exclusions. Six entries
+have multiple incomparable RTTI holders; the seventh is CUnit's separate
+entry, whose desired spelling is occupied by one shared wrapper. Re-derive
+those shared entries without treating a common base as an exclusive owner.
+The CUnit table selects `0x004f84c0`, while the shared derived-class entry at
+`0x0050ee90` reaches the same teardown through a separate tail. Source-symbol
+ownership remains unresolved. Keep the extra same-template families outside
+CMonitor open until their family evidence is bound. Camera candidates still
+need aggregate-return and folded-alias handling. Follow the loader contract
+with original-reader short/zero reads and the inlined Spawner.
 Re-derive unresolved cases where the evidence can support a whole family, and
 neutralize nothing merely for missing tool support. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
@@ -479,21 +486,22 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the Controller/Engine correction (September 27).**
+**Running coverage after the compiler deleting-entry correction (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,841 unique functions; 1,842 rename rows include one repeated correction. |
+| Names corrected | 1,874 unique functions; 1,875 rename rows include one repeated correction. The latest 33 are compiler-entry spelling normalizations with fresh identity proof. |
 | Names verified and kept | 140 additional functions: 62 library/import identities, Damage, 63 Thing-family and 14 Controller/Engine identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,350 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,317 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 1,985 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,018 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
-Count sources: promoted September 26 manifests and `controller-engine-verified-20260927`, the final
+Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
+`compiler-destructor-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing

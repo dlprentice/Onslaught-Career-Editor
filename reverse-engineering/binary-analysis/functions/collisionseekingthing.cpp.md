@@ -1,7 +1,7 @@
 # collisionseekingthing.cpp Functions
 
 Status: active bounded static and isolated-code contracts
-Last updated: 2026-09-19 (selected initialization, speed providers and readiness queue)
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 Summary: collision-component ownership, initial-scan readiness, selected masks
 and callback ordering; real world scanning and full projectile behavior remain open.
 
@@ -21,6 +21,8 @@ and callback ordering; real world scanning and full projectile behavior remain o
 
 > Source File: collisionseekingthing.cpp | Binary: BEA.exe
 > Debug Path: 0x006246d8 (`[maintainer-local-source-export-root]\collisionseekingthing.cpp`)
+
+> **September 27 deleting-entry recheck:** `0x00426460 CCollisionSeekingThing__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Name corrections — 2026-07-28
 
@@ -72,7 +74,7 @@ bounded lifecycle:
 | --- | --- | --- |
 | `0x00426370` | `CCollisionSeekingThing__ReplacePrimarySeekerAndRefreshOffset` | Deletes the previous primary helper, installs the replacement, and stores its owner-relative centre offset. |
 | `0x004263f0` | `CCollisionSeekingThing__dtor_base` | Resets the base vtable, deletes helper pointers at `+0x14/+0x18`, then shuts down the inherited monitor. |
-| `0x00426460` | `CCollisionSeekingThing__ScalarDeletingDestructor` | Calls the base destructor, conditionally frees `this` when delete bit 0 is set, and returns `this`. |
+| `0x00426460` | `CCollisionSeekingThing__scalar_deleting_dtor` | Calls the base destructor, conditionally frees `this` when delete bit 0 is set, and returns `this`. |
 | `0x00426920` | `CCollisionSeekingThing__ComputeScaledMapCellChebyshevDistance` | Scales unequal MapWho depths to a common level and returns `max(abs(dx), abs(dy))`. |
 | `0x004269b0` | `CCSPersistentThing__Init` | Copies the `CInitCSThing` state, optionally arms event 3000, then performs the initial neighbor scan. |
 | `0x00426a00` | `CCSPersistentThing__ProcessMapWhoCollisionSweep` | Slot 5 forwards the previous/current sector pair to the embedded detector at `this+0x24`. |

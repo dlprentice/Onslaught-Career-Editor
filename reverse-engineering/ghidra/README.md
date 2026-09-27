@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified Controller and Engine identities](#re-audit-verified-controller-and-engine-identities--september-27);
+[compiler deleting-entry identities](#re-audit-compiler-deleting-entry-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,60 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit compiler deleting-entry identities — September 27
+
+The [manifest](../../tools/cohort-specs/compiler-destructor-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/compiler-destructor-identities-20260927.spec.tsv) normalize 33 names and update
+their comments/tags. These were mostly already called deleting destructors;
+the new work independently verifies their identity and standardizes spelling.
+CSentinelAI's contradictory slot-0 tag is corrected to slot 1.
+
+The pristine specimen is `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+`CThing` source at pinned `5352a81c` and the complete retail chain
+`004f3480 → 004f3640 → 004bac40` identify the CMonitor slot-1 entry
+`00419a20` at table `005d92d4`. Free at `00549220` on manager `009c3df0`
+matches the pinned allocator's null/tiny-pool/type-selected release structure.
+Each admitted wrapper calls its cleanup with original this, tests bit 0 of
+the low byte in its four-byte stack argument, conditionally frees unchanged
+this, returns this in EAX and executes RET 4. This does not select a source
+integer type for the flag or certify the saved prototype.
+
+The existing evidence tool checks the exact compiler pattern, complete
+boundaries, fixed zero-offset ancestry, every known raw RTTI holder and a
+normal-flow base-teardown proof. Explicit returns need a dominating call with
+original this; direct tails require unchanged this and a stack-neutral prefix.
+The CMCMech backward block is included through CFG analysis. A closed set of
+supported opcodes avoids false register provenance from XADD or implicit writes.
+An independent review found that false-admission case before promotion; the
+corrected checker and adverse cases passed 69 focused evidence-tool tests.
+
+The family report contains 120 wrappers, 165 mapped slot uses and 113 admitted
+identities: these 33 renames and 80 pending kept-name comments. Six ambiguous
+folded owners and the CUnit occupied-name collision are withheld. Broader
+compiler matches outside this family need independent family evidence.
+Root freshly recovered all 724 recognized RTTI tables and read every mapped
+slot; fresh PE disassembly matches all 5,590 instructions in the 227 admitted
+entry/cleanup proof bodies. Independent research separately checked raw RTTI,
+seed/source/allocator evidence and sampled teardown paths. These results do
+not establish exhaustive RTTI discovery, complete cleanup, exception behavior,
+callee ABI compliance or retail runtime acceptance.
+
+The first seal had stale September 26 audit tags and is retained in
+`rejected-v1/`; it never reached live. The corrected exact cohort passed fresh
+PRE restoration, rehearsal and separate/sealed readbacks, five byte-stable
+refusal controls, independent review with root reproduction, live readback and
+an independent Archive A POST restore. All nine live exports equal rehearsal.
+Exactly 33 proven compiler deleting-entry labels normalized to the project scalar_deleting_dtor spelling; comments/tags updated and CSentinelAI slot tag corrected from 0 to 1. Every displaced label and plate note remains an explicitly fallible lead. No prototype, type, convention, storage, body, instruction, bookmark or non-target row changed; 8,298 other function rows remain exact. These are identity dispositions, predominantly spelling normalizations, not 33 newly discovered behavioral defects. All 363 target instruction rows are unchanged. Program-scope
+change is only `commentsSha256`.
+
+Working identity: `db.18673`, 18 files / 122,506,100 bytes,
+inventory SHA-256 `099b1a8f38ba3c90be5cc8f324eb548d530b470a25c77d54e7375e93e6a977c9`; main database 72,204,288 bytes,
+SHA-256 `067649503a478f0f8d463d6e416ea18eae42bd51bac21e055b8d75167fdd0dc9`. Restored Controller/Engine POST served as PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-compiler-destructor-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/compiler-destructor-identities/`; compiler evidence is in its sibling
+`compiler-destructors/`.
 
 ## RE-audit verified Controller and Engine identities — September 27
 

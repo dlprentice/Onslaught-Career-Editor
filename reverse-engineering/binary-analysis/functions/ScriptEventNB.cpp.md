@@ -3,7 +3,7 @@
 Source File: retained MissionScript/ScriptEventNB.cpp mapping | Binary: BEA.exe (superseded byte claims; current owners linked below)
 
 Status: retired evidence; current byte owners are linked below
-Last updated: 2026-09-19 (historical logger label identified)
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 Summary: preserved script-event mapping history, superseded for current byte contracts.
 
 The retained `CConsole__Printf` label at `0x00441740` now resolves to
@@ -29,6 +29,12 @@ Its older table and pseudocode below remain historical evidence.
 > Source file: `MissionScript/ScriptEventNB.cpp`
 > Debug path: `[maintainer-local-source-export-root]\MissionScript\ScriptEventNB.cpp` (0x0064fe98)
 > Last updated: 2026-05-19
+
+> **September 27 deleting-entry recheck:** `0x005386b0 CPostEventData__scalar_deleting_dtor`; `0x00538780 CScriptEventNB__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
+
+Historical table spellings below remain unchanged; the identities above supersede them.
+<!-- ghidra-name-drift-accepted: 0x005386b0 CPostEventData__scalar_deleting_dtor (2026-09-27) -->
+<!-- ghidra-name-drift-accepted: 0x00538780 CScriptEventNB__scalar_deleting_dtor (2026-09-27) -->
 
 ## Name corrections — 2026-07-28
 

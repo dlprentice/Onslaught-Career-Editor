@@ -115,7 +115,6 @@ reverse-engineering/binary-analysis/functions/DXSurf.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp/CDXSurf__UnlinkNodeFromGlobalList.md
 reverse-engineering/binary-analysis/functions/DataType.cpp.md
 reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md
-reverse-engineering/binary-analysis/functions/EventFunction.cpp.md
 reverse-engineering/binary-analysis/functions/FEPDebriefing.cpp/CFEPDebriefing__Initialize.md
 reverse-engineering/binary-analysis/functions/FEPDemoMain.cpp.md
 reverse-engineering/binary-analysis/functions/FEPDevelopment.cpp.md
@@ -178,8 +177,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/Frontend__XorWideText
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginFlyToWalkTransition.md
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__BeginWalkToFlyTransition.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
-reverse-engineering/binary-analysis/functions/MCMech.cpp.md
-reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitCockpit.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitLegMotion.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitTargeting.md
@@ -203,7 +200,6 @@ reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ViewHelpers.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md
 reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
 reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
-reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md
 reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md
 reverse-engineering/binary-analysis/functions/Symtab.cpp.md
 reverse-engineering/binary-analysis/functions/ThunderHead.cpp/CThunderHead__CreateGuide.md

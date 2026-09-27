@@ -1,11 +1,16 @@
 # MCMech.cpp Functions
 
+Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
+Status: active bounded static identity reference
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x00499bc0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 > Source File: MCMech.cpp | Binary: BEA.exe
 > Debug Path: `[maintainer-local-source-export-root]\MCMech.cpp` at 0x0062df60
+
+> **September 27 deleting-entry recheck:** `0x00498510 CMCMech__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Overview
 
@@ -33,7 +38,7 @@ Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verif
 | 0x00498080 | CMeshPart__NameIsNotAnyMechCylinderBone | ~496 bytes | Mesh-part token predicate for the 24 observed hydraulic cylinder bone names |
 | 0x00498270 | CMeshPart__AnyChildNameIsNmidoutcyl | ~320 bytes | Mesh-part child scan for `Nmidoutcyl` |
 | 0x004983b0 | CMCMech__Constructor | ~352 bytes | Initialize CMCMech object, set default parameters |
-| 0x00498510 | CMCMech__ScalarDeletingDestructor | ~32 bytes | MSVC scalar deleting destructor wrapper |
+| 0x00498510 | CMCMech__scalar_deleting_dtor | ~32 bytes | MSVC scalar deleting destructor wrapper |
 | 0x00498530 | CMCMech__Destructor | ~560 bytes | Clean up allocated arrays and unlink from global list |
 | 0x00498870 | CMCMech__VFunc_00_OnTimedResetEvent_00498870 | created slot | Vtable slot-0 timed reset/event requeue boundary |
 | 0x004988b0 | CMCMech__Reset | ~736 bytes | Reset mech state with identity matrices |

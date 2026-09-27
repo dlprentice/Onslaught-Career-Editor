@@ -481,5 +481,190 @@ class HeaderVtableTests(unittest.TestCase):
         self.assertEqual(report[2]['flags'],['bad RET'])
 
 
+class CompilerDestructorTests(unittest.TestCase):
+    """Authored compiler-entry bytes and synthetic decoded CFGs, no retail input."""
+
+    @staticmethod
+    def wrapper(address, cleanup, free=0x405000, manager=0x680000):
+        return (bytes.fromhex('56 8b f1 e8') + struct.pack('<i', cleanup-address-8)
+                + bytes.fromhex('f6 44 24 08 01 74 0b 56 b9') + struct.pack('<I', manager)
+                + b'\xe8' + struct.pack('<i', free-address-26) + bytes.fromhex('8b c6 5e c2 04 00'))
+
+    def fixture(self, cleanup=None):
+        raw, decoded = {}, {}
+        def add(address, name, body, payload=None):
+            cursor, insns = address, []
+            for size, op, arg in body:
+                insns.append(E.Insn(cursor, size, op, arg)); cursor += size
+            data = payload if payload is not None else bytes([0x90]) * (cursor-address)
+            raw[address] = data; decoded[address] = insns
+            return E.Func(address, name, 'USER_DEFINED', address, address+len(data)-1,
+                          '', '', True, '', False, 1, len(data), address+len(data)-1)
+        funcs = [add(0x401000, 'Base__scalar_deleting_dtor', [], self.wrapper(0x401000, 0x403000)),
+                 add(0x401100, 'Misleading__OldName', [], self.wrapper(0x401100, 0x402000)),
+                 add(0x402000, 'UntrustedCleanupName', cleanup or [
+                     (1,'push','esi'), (2,'mov','esi,ecx'), (5,'call','0x403000'),
+                     (1,'pop','esi'), (1,'ret','')]),
+                 add(0x403000, 'UntrustedBaseName', [(1,'ret','')]),
+                 add(0x405000, 'UntrustedFreeName', [(3,'ret','0x4')])]
+        words = {0x600004:0x401000, 0x600104:0x401100}
+        def read(address, size):
+            for start, data in raw.items():
+                if start <= address < start+len(data):
+                    return data[address-start:address-start+size]
+            return b''
+        img = SimpleNamespace(sha256='a'*64, read=read, u32=lambda a: words.get(a))
+        bases = {'Base':[('Base',0)], 'Child':[('Child',0),('Base',0)]}
+        tables = [E.Vtable(0x600000,'Base',0,[0,0x401000]), E.Vtable(0x600100,'Child',0,[0,0x401100])]
+        model = SimpleNamespace(insns=[i for a in sorted(decoded) for i in decoded[a]],
+                                rtti=E.RttiModel({},bases,tables,{k:v.copy() for k,v in bases.items()}))
+        prog = E.Program(img,model,funcs)
+        prog.body = lambda fn: decoded[fn.va]
+        pin = lambda a: dict(address=hex(a),bytes=len(raw[a]),sha256=hashlib.sha256(raw[a]).hexdigest())
+        doc = {'specimenSha256':img.sha256, 'evidence':'Synthetic reviewed base-slot and allocator witness.',
+               'seed':{'class':'Base','table':'0x600000','slot':1,'target':'0x401000','body':pin(0x401000)},
+               'teardown':pin(0x403000),'deallocator':pin(0x405000),'manager':'0x680000'}
+        return prog,doc,raw,decoded,words
+
+    def test_exact_wrapper_checks_every_fixed_byte_and_both_calls(self):
+        raw = self.wrapper(0x401000,0x403000)
+        self.assertEqual(E.scalar_delete_entry(raw,0x401000,0x680000,0x405000),0x403000)
+        masked = set(range(4,8)) | set(range(22,26))
+        for i in set(range(32))-masked:
+            with self.subTest(byte=i):
+                changed=bytearray(raw); changed[i]^=1
+                self.assertIsNone(E.scalar_delete_entry(bytes(changed),0x401000,0x680000,0x405000))
+        for wrong in [raw[:-1],raw+b'\x90',self.wrapper(0x401000,0x403000,free=0x405001)]:
+            self.assertIsNone(E.scalar_delete_entry(wrong,0x401000,0x680000,0x405000))
+        # The decoder extracts the first target; family admission must prove it.
+        self.assertEqual(E.scalar_delete_entry(self.wrapper(0x401000,0x404000),0x401000,0x680000,0x405000),0x404000)
+
+    def test_names_are_outputs_and_unchanged_byte_proofs_admit_a_family(self):
+        prog,doc,*_=self.fixture()
+        report=E.compiler_destructors(prog,doc)
+        self.assertEqual([r['status'] for r in report['proposals']['rows']],['keep','rename'])
+        self.assertEqual(report['proposals']['rows'][1]['proposedName'],'Child__scalar_deleting_dtor')
+        prog.by_va[0x401100].name='AnEntirelyDifferentGuess'
+        self.assertEqual(E.compiler_destructors(prog,doc)['rows'],report['rows'])
+
+    def test_specimen_seed_allocator_and_raw_table_pins_are_required(self):
+        import copy
+        for label in ['specimen','seed-hash','base-hash','free-hash','class','slot','target','table-word','descendant-word']:
+            with self.subTest(label=label):
+                prog,doc,raw,_,words=self.fixture(); doc=copy.deepcopy(doc)
+                if label=='specimen':doc['specimenSha256']='0'*64
+                elif label=='seed-hash':doc['seed']['body']['sha256']='0'*64
+                elif label=='base-hash':doc['teardown']['sha256']='0'*64
+                elif label=='free-hash':doc['deallocator']['sha256']='0'*64
+                elif label=='class':doc['seed']['class']='Other'
+                elif label=='slot':doc['seed']['slot']=True
+                elif label=='target':doc['seed']['target']='0x401100'
+                elif label=='table-word':words[0x600004]=0x401100
+                else:words[0x600104]=0x401000
+                with self.assertRaises(ValueError):E.compiler_destructors(prog,doc)
+
+    def test_unknown_first_target_or_argument_popping_cleanup_is_withheld(self):
+        for mode in ['unknown-target','ret4','plain-ret','wrong-this']:
+            with self.subTest(mode=mode):
+                body = [(3,'ret','0x4')] if mode=='ret4' else [(1,'ret','')] if mode=='plain-ret' else [
+                    (2,'xor','ecx,ecx'),(5,'call','0x403000'),(1,'ret','')]
+                prog,doc,raw,*_=self.fixture(body)
+                if mode=='unknown-target':raw[0x401100]=self.wrapper(0x401100,0x404000)
+                report=E.compiler_destructors(prog,doc)
+                self.assertEqual(report['proposals']['rows'][1]['status'],'withheld')
+
+    def test_backward_block_after_ret_is_not_a_tail_and_early_return_fails(self):
+        body=[(1,'push','esi'),(2,'mov','esi,ecx'),(2,'test','eax,eax'),(2,'je','0x402010'),
+              (2,'mov','ecx,esi'),(5,'call','0x403000'),(1,'pop','esi'),(1,'ret',''),
+              (2,'xor','eax,eax'),(5,'jmp','0x402007')]
+        prog,doc,*_=self.fixture(body)
+        result=E.compiler_destructors(prog,doc)
+        self.assertEqual(result['proposals']['rows'][1]['status'],'rename')
+        early=body[:8]+[(1,'ret','')]
+        prog,doc,*_=self.fixture(early)
+        self.assertEqual(E.compiler_destructors(prog,doc)['proposals']['rows'][1]['status'],'withheld')
+
+    def test_tails_require_unchanged_this_stack_and_resolved_acyclic_target(self):
+        for body,passes in [([(5,'jmp','0x403000')],True),
+                            ([(6,'mov','DWORD PTR [ecx],0x680000'),(5,'jmp','0x403000')],True),
+                            ([(3,'sub','ecx,0x4'),(5,'jmp','0x403000')],False),
+                            ([(1,'push','esi'),(5,'jmp','0x403000')],False),
+                            ([(5,'jmp','0x402000')],False),
+                            ([(2,'jmp','eax')],False)]:
+            with self.subTest(body=body):
+                prog,doc,*_=self.fixture(body)
+                status=E.compiler_destructors(prog,doc)['proposals']['rows'][1]['status']
+                self.assertEqual(status!='withheld',passes)
+
+    def test_primary_unique_ancestry_and_every_alias_are_required(self):
+        for mode in ['secondary','repeated','uncovered','ambiguous']:
+            with self.subTest(mode=mode):
+                prog,doc,*_=self.fixture()
+                if mode=='secondary':prog.model.rtti.vtables[1].offset=4
+                elif mode=='repeated':prog.bases['Child'].append(('Base',4))
+                else:
+                    prog.slots[0x401100].append(('Other',0,1,0x600200))
+                    if mode=='ambiguous':
+                        prog.bases['Other']=[('Other',0),('Base',0)]
+                        prog.fixed_bases['Other']=[('Other',0),('Base',0)]
+                        prog.model.rtti.vtables.append(E.Vtable(0x600200,'Other',0,[0,0x401100]))
+                        old=prog.img.u32;prog.img.u32=lambda a:0x401100 if a==0x600204 else old(a)
+                rows=E.compiler_destructors(prog,doc)['proposals']['rows']
+                self.assertFalse(any(r['target']=='0x00401100' and r['status']!='withheld' for r in rows))
+
+    def test_boundary_overlap_and_occupied_name_are_not_silently_fixed(self):
+        for field,value in [('body_ranges',2),('body_bytes',31),('declared_hi',0x401120),('hi',0x401110)]:
+            with self.subTest(field=field):
+                prog,doc,*_=self.fixture();setattr(prog.by_va[0x401100],field,value)
+                self.assertEqual(E.compiler_destructors(prog,doc)['proposals']['rows'][1]['status'],'withheld')
+        prog,doc,*_=self.fixture();prog.by_va[0x405000].name='Child__scalar_deleting_dtor'
+        row=E.compiler_destructors(prog,doc)['proposals']['rows'][1]
+        self.assertEqual(row['status'],'withheld')
+        self.assertIn('already belongs',row['flags'][0])
+
+    def test_partial_and_implicit_register_writes_lose_this_proof(self):
+        state=frozenset({'ecx','esi','edi','eax'})
+        for op,args,reg in [('mov','cl,0x0','ecx'),('xchg','esi,eax','esi'),
+                            ('rep','movs DWORD PTR es:[edi],DWORD PTR ds:[esi]','esi'),
+                            ('pop','ecx','ecx'),('mul','ebx','eax'),('imul','esi','eax'),
+                            ('div','esi','eax'),('cpuid','','ecx'),('lahf','','eax'),
+                            ('cmpxchg','DWORD PTR [ebx],ecx','eax'),('popad','','esi')]:
+            with self.subTest(op=op,args=args):
+                self.assertNotIn(reg,E._this_after(E.Insn(0,1,op,args),state))
+
+    def test_clipped_seed_and_opaque_control_transfer_do_not_admit(self):
+        prog,doc,*_=self.fixture();prog.by_va[0x401000].declared_hi+=1
+        with self.assertRaisesRegex(ValueError,'seed function boundary'):
+            E.compiler_destructors(prog,doc)
+        for op in ['int','sysenter','ud2','lcall','retf']:
+            with self.subTest(op=op):
+                prog,doc,*_=self.fixture([(2,op,'0x80'),(5,'call','0x403000'),(1,'ret','')])
+                self.assertEqual(E.compiler_destructors(prog,doc)['proposals']['rows'][1]['status'],'withheld')
+
+    def test_unsupported_implicit_or_second_operand_writes_refuse_the_whole_proof(self):
+        for op,args in [('xadd','eax,esi'),('xadd','DWORD PTR [ebx],esi'),
+                        ('rdtscp',''),('ins','DWORD PTR es:[edi],dx'),('outs','dx,DWORD PTR ds:[esi]'),
+                        ('aaa',''),('aas',''),('aad','0xa'),('aam','0xa'),('daa',''),('das',''),
+                        ('salc',''),('unknown_opcode','')]:
+            with self.subTest(op=op,args=args):
+                # XADD's second operand changes ESI; the old permissive handler
+                # falsely carried original-this through this sequence.
+                body=[(2,'mov','esi,ecx'),(2,'xor','eax,eax'),(3,op,args),
+                      (2,'mov','ecx,esi'),(5,'call','0x403000'),(1,'ret','')]
+                prog,doc,*_=self.fixture(body)
+                report=E.compiler_destructors(prog,doc)
+                self.assertEqual(report['proposals']['rows'][1]['status'],'withheld')
+                self.assertIn('unsupported instruction',report['admission']['rows'][1]['flags'][0])
+                self.assertFalse(E._this_after(E.Insn(0,3,op,args),frozenset({'ecx','esi','edi','eax'})))
+
+    def test_opaque_stack_pointer_writes_refuse_even_with_a_later_base_call(self):
+        for op,args in [('mov','esp,eax'),('mov','sp,ax'),('lea','esp,[eax+0x4]'),('pop','esp')]:
+            with self.subTest(op=op,args=args):
+                prog,doc,*_=self.fixture([(2,op,args),(5,'call','0x403000'),(1,'ret','')])
+                report=E.compiler_destructors(prog,doc)
+                self.assertEqual(report['proposals']['rows'][1]['status'],'withheld')
+                self.assertIn('opaque cleanup stack-pointer',report['admission']['rows'][1]['flags'][0])
+
+
 if __name__ == "__main__":
     unittest.main()

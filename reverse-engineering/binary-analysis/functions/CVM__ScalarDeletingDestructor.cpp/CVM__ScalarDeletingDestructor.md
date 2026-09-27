@@ -1,7 +1,8 @@
-# CVM__ScalarDeletingDestructor
+# CVM__scalar_deleting_dtor
 
+Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 Source File: MissionScript / CVM (first gates only; do not
 read this as a pin of `CScriptObjectCode.cpp.md` /
 `ScriptObjectCode.cpp.md` / `CMonitor.cpp.md` /
@@ -22,6 +23,8 @@ not opened. Table name is a research label. Already-pinned
 sibling `0x00539ca0`.
 
 > Address: `0x00535330`
+
+> **September 27 deleting-entry recheck:** `0x00535330 CVM__scalar_deleting_dtor`. The [compiler-entry audit](../../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Contract
 
@@ -64,4 +67,4 @@ is not `d3ca227b…c566`, **or** `tools/call_xref_scan.py` on
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00535330` | `CVM__ScalarDeletingDestructor` | `56 8bf1 e818000000 f644240801 740b 56 b9f03d9c00 e8d63e0100 8bc6 5e c20400` | thiscall; ret 4 ×1; 32 B; 2 E8 / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm slot at `0x005e4f20`, already-pinned dtor then bit0 `0x00549220`. **Not** on `0x00549220` or the destructor body. |
+| `0x00535330` | `CVM__scalar_deleting_dtor` | `56 8bf1 e818000000 f644240801 740b 56 b9f03d9c00 e8d63e0100 8bc6 5e c20400` | thiscall; ret 4 ×1; 32 B; 2 E8 / 0 E9; 0 inbound E8/E9. HIGH on ABI, unique imm slot at `0x005e4f20`, already-pinned dtor then bit0 `0x00549220`. **Not** on `0x00549220` or the destructor body. |

@@ -3,7 +3,7 @@
 Summary: existing function analysis with current CDebugLog callee naming.
 
 Status: active static function map
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
 world script-event loader byte-mapped; message-0x7d0 fire path closed)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptEventNB.cpp` (SEH
 `__FILE__` pointer `0x0064fe98` read out of `RegisterEventListener`) | Binary:
@@ -13,6 +13,8 @@ Evidence: MEASURED — bytes re-read from the pristine specimen at file offset
 VA − 0x400000 with `tools/disasm_va.py`; call sites by the whole-image `E8/E9`
 scan `tools/call_xref_scan.py`. Names are the live Ghidra name table
 (db.18627 lineage); the byte contracts below are independent of the names.
+
+> **September 27 deleting-entry recheck:** `0x005386b0 CPostEventData__scalar_deleting_dtor`; `0x00538780 CScriptEventNB__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 ## Shape
 
@@ -36,7 +38,7 @@ the fired-event dispatch (see "Message 0x7d0 fire path" below).
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x00538760` | `CScriptEventNB__Init` | `8bc1 33c9 894804 894808 c700 444f5e00 c3` | Zeroes `[this+4]` and `[this+8]`, installs vtable `0x005e4f44`; `ret`. HIGH. |
-| `0x00538780` | `CScriptEventNB__ScalarDeletingDestructor2` | `56 8bf1 e8c8010000 f644240801 740b 56 b9f03d9c00 e8860a0100 8bc6 5e c20400` | `BaseDestructor(this)` (`0x00538950`), then if `flags & 1` frees `this` via `CDXMemoryManager__Free` (manager `0x009c3df0`); `ret 4`. HIGH. |
+| `0x00538780` | `CScriptEventNB__scalar_deleting_dtor` | `56 8bf1 e8c8010000 f644240801 740b 56 b9f03d9c00 e8860a0100 8bc6 5e c20400` | `BaseDestructor(this)` (`0x00538950`), then if `flags & 1` frees `this` via `CDXMemoryManager__Free` (manager `0x009c3df0`); `ret 4`. HIGH. |
 | `0x005387a0` | *(unnamed global-destructor thunk)* | `b990c58900 e9a6010000` | `mov ecx,0x0089c590; jmp 0x00538950` — the exit-time destructor of the singleton. Not a named entry in live Ghidra. HIGH on the bytes. |
 | `0x005387b0` | `CScriptEventNB__ClearListenerEntry` | `6aff 681b745d00 64a100000000 50 64892500000000 51 56 8bf1 57 … 8b0e … ff10 … 8d7e04 c70600000000 …` | SEH. Deletes the element's name object via `call [nameObj->vtable][0](nameObj, 1)`; then walks the `[element+4]` set: for each node, `CMonitor__DeleteDeletionEvent(node->[0], node)` (`0x0042d9b0` — removes the node from the listener's own `+4` set) and `CDXMemoryManager__Free(node)`; closes with two `CSPtrSet__Clear` calls on `[element+4]`. HIGH on the delete pair; the doubled Clear's purpose stays open. |
 | `0x00538860` | `CScriptEventNB__CreateListenerSet` | `6aff 6846745d00 … 6a42 8bf9 6898fe6400 6a76 6a10 b9f03d9c00 e8… 8bf0 … 8bce e8… 897708` | SEH. Allocates **0x42** bytes (`ScriptEventNB.cpp:118`), runs `CSPtrSet__Init` on it, stores it at `[this+8]`. HIGH on alloc + store. Measured field use: `+0` head node, `+8` walk cursor, `+0xc` count; the exact head/tail identities are MEDIUM. |
@@ -101,7 +103,7 @@ the fire callback). `HandleEventMessage` then reads `word[event+4]==0x7d0`
 cloned name object), `call [nameObj->vtable+0x38]` (the name string), and
 runs the same named-listener scan / `CEventFunction__Execute` dispatch as
 `PostEvent`. The `CPostEventData` destructor body (`0x005386d0`, entered from
-`CPostEventData__ScalarDeletingDestructor` `0x005386b0`) closes the
+`CPostEventData__scalar_deleting_dtor` `0x005386b0`) closes the
 lifecycle: delete the name object via `call [nameObj->vtable][0](nameObj,1)`,
 then `CSPtrSet__Remove(0x00855190,this)` (`0x004e5bd0`), then
 `CMonitor__Shutdown` (`0x004bac40`).
@@ -138,7 +140,7 @@ posted `CPostEventData` never re-enters the dispatch when used as `data`.
 `CScriptEventNB__UpdateWaypointFollowing` (`0x00538470`).
 
 `IScript__PostEvent` (`0x005383c0`) and
-`CPostEventData__ScalarDeletingDestructor` (`0x005386b0`, body `0x005386d0`)
+`CPostEventData__scalar_deleting_dtor` (`0x005386b0`, body `0x005386d0`)
 are now byte-mapped in the fire-path section above.
 
 `CScriptEventNB__UpdateWaypointFollowing` is name-suspect: its body is
