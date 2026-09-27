@@ -3,7 +3,7 @@
 Summary: existing function analysis with current CDebugLog callee naming.
 
 Status: active static function note
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -17,6 +17,8 @@ and `CScriptObjectCode.cpp.md` / the IScript wrapper folders
 landed this wake were **not** written.
 
 > Address: `0x00539990`
+
+> **September 27 listener identity recheck:** `0x005385e0 IScript__HandleEvent` (formerly `IScript__HandleMessage`). The [guarded-dispatch and RTTI audit](../../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Contract
 
@@ -64,7 +66,7 @@ Eight inbound `.text` `E8`, zero `E9`:
 | `0x005337bd` | already-pinned `IScript__CreateThingRefWithSquad` |
 | `0x00533805` | already-pinned `IScript__CallEventId3_OrReset` |
 | `0x00533835` | already-pinned `IScript__VFunc_2_00533810` |
-| `0x00538638` | table `IScript__HandleMessage` |
+| `0x00538638` | table `IScript__HandleEvent` |
 
 Zero image encodings of imm `90 99 53 00`. The HandleMessage
 host is **not** claimed.

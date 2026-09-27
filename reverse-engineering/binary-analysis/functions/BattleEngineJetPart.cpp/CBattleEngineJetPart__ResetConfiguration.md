@@ -2,8 +2,9 @@
 
 > Address: `0x00412650`
 
+Summary: current listener identities; prior behavior claims retain their dated limits.
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Source File: `references/Onslaught/BattleEngineJetPart.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -17,6 +18,8 @@ new this wake. Did not mill any `FUN_*`. Did not invent field names beyond the
 pinned-source members they mirror. Did not invent a Core owner.
 
 > Address: `0x00412650`
+
+> **September 27 listener identity recheck:** `0x00506930 CWeapon__HandleEvent` (formerly `CWeapon__HandleFireBurstEvent`). The [guarded-dispatch and RTTI audit](../../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Contract (byte-exact)
 
@@ -125,7 +128,7 @@ Callees: `CSPtrSet__Remove` `0x004e5bd0`;
 `CSPtrSet__AddToTail` `0x004e5b20`; plus the per-weapon virtual
 deleting destructor and virtual slot-3 `Init` dispatches. The spawn's own
 ctor chain installs vptr `0x005dfc94` after a transient `0x005d8824`
-(`[0x005dfc94] = 0x00506930` = `CWeapon__HandleFireBurstEvent`,
+(`[0x005dfc94] = 0x00506930` = `CWeapon__HandleEvent`,
 re-read from the image this wake; corroborated by W008 plate
 `ghidra-fullpass-findings/W008/adversarial/B08.md:231`) — i.e. the spawned
 object is the `CWeapon` family.

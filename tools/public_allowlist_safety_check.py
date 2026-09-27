@@ -245,7 +245,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # bounded source-call/RTTI/literal identity, with prior notes and ABI tags historical.
 # Memory-buffer identities:5 old/5 authored comments (3,387/10,512 decoded bytes);
 # source/retail differences, bounded native runs and preserved fallible older notes.
+# Event listeners:9 old/16 authored comments (4,457/32,127 decoded bytes);
+# guarded dispatch and RTTI identity only; old notes/types remain fallible leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/listener-identities-20260927.manifest.tsv":
+        "b55491e7c0deb84bdf7eb9bf0b82b8f99e69744915be8679626443652b5a783d",
     "tools/cohort-specs/membuffer-identities-20260927.manifest.tsv":
         "9a8ae4e68f37841be77ba4c8bb770a8baae901e3df2a52087e5188dcfe915366",
     "tools/cohort-specs/class-name-identities-20260927.manifest.tsv":

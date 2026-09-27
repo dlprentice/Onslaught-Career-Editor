@@ -984,6 +984,156 @@ def align_header_vtables(prog: Program, classes: dict[str, HeaderClass]) -> dict
                       'Matching counts do not prove source version or semantics; rederive byte witnesses before promotion.'}
 
 
+def guarded_event_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
+                                    seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
+    """One reviewed event-interface witness, without inventing the absent headers.
+
+    The two queue callers transport the event pointer to a recipient's slot 0.
+    Exact guarded transport is checked independently of supplied hashes. RTTI
+    establishes a unique fixed primary path, allowing unrelated secondary bases.
+    This proves an interface identity/stack footprint, not handler behavior or
+    saved prototype types. EBP preservation across callbacks uses the x86 ABI.
+    """
+    witness = anchor['interfaceDispatch']
+    if (source_root is None or method.name != 'HandleEvent' or method.parameters != ('CEvent*',)
+            or not method.virtual or method.qualifiers or method.head.split() != ['virtual', 'void']
+            or (anchor.get('sourceFile'), anchor.get('sourceLine')) != (method.file, method.line)
+            or anchor['slot'] != 0 or seed.offset != 0
+            or not witness.get('evidence') or not witness.get('receiverEvidence')):
+        raise ValueError('guarded-event declaration or reviewed evidence mismatch')
+    tables = prog.model.rtti.vtables
+    chain = witness['primaryChain']
+    if (len(chain) < 2 or len(set(chain)) != len(chain) or chain[0] != cls.name
+            or chain[-1] != 'IListener' or not cls.bases or cls.bases[0] != chain[1]):
+        raise ValueError('guarded-event primary source/RTTI path mismatch')
+    selected, previous_length = [], None
+    for index, name in enumerate(chain):
+        raw, fixed = prog.bases.get(name, []), prog.fixed_bases.get(name, [])
+        primary = [t for t in tables if t.klass == name and t.offset == 0]
+        # Repeated ancestors, virtual PMDs and a different zero-offset path
+        # cannot silently borrow a slot from this interface.
+        if (raw != fixed or len({c for c, _ in raw}) != len(raw)
+                or [c for c, offset in raw if offset == 0] != chain[index:]
+                or any(offset < 0 for _, offset in raw) or len(primary) != 1
+                or not primary[0].slots
+                or previous_length is not None and len(primary[0].slots) > previous_length):
+            raise ValueError('guarded-event primary ancestry is not unique and fixed')
+        selected.append(primary[0]); previous_length = len(primary[0].slots)
+    if (selected[0] != seed or len(selected[-1].slots) != 1
+            or int(witness['table'], 16) != selected[-1].va or witness['class'] != 'IListener'):
+        raise ValueError('guarded-event selected table mismatch')
+    for base in cls.bases[1:]:
+        matches = [offset for name, offset in prog.fixed_bases[cls.name] if name == base]
+        if len(matches) != 1 or matches[0] <= 0:
+            raise ValueError('guarded-event secondary source base is not separate')
+
+    source = witness['source']
+    if Path(source['file']).name != source['file']:
+        raise ValueError('guarded-event source path is not bounded')
+    path = source_root / source['file']
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('guarded-event source hash mismatch')
+    functions = [f for f in index_source(source_root, (source['file'],)) if f.key == source['function']]
+    if len(functions) != 1:
+        raise ValueError('guarded-event source caller is absent or ambiguous')
+    lines = strip_comments(path.read_text(errors='replace')).splitlines()
+    calls = source['calls']
+    if len(calls) != 2 or len({r['line'] for r in calls}) != 2:
+        raise ValueError('guarded-event needs two distinct source dispatches')
+    for record in calls:
+        line, receiver = record['line'], record['receiverLine']
+        if (type(line) is not int or type(receiver) is not int
+                or not functions[0].line <= receiver < line <= functions[0].end_line
+                or re.sub(r'\s+', '', lines[line-1]) != 'to_call->HandleEvent(next_event);'
+                or re.sub(r'\s+', '', lines[receiver-1]) != 'IListener*to_call=next_event->GetToCall();'):
+            raise ValueError('guarded-event source call/receiver mismatch')
+    if not witness.get('receiverSources'):
+        raise ValueError('guarded-event receiver source witnesses missing')
+    for record in witness['receiverSources']:
+        if Path(record['file']).name != record['file'] or not record.get('evidence'):
+            raise ValueError('guarded-event receiver source path/evidence missing')
+        if hashlib.sha256((source_root/record['file']).read_bytes()).hexdigest() != record['sha256']:
+            raise ValueError('guarded-event receiver source hash mismatch')
+
+    def span(record):
+        start, size = int(record['address'], 16), record['bytes']
+        if type(size) is not int or size <= 0:
+            raise ValueError('guarded-event invalid byte span')
+        raw = prog.img.read(start, size)
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != record['sha256']:
+            raise ValueError('guarded-event span hash mismatch')
+        return start, start+size, raw
+
+    start, end, _ = span(witness['caller'])
+    fn = prog.by_va.get(start)
+    if (fn is None or fn.lo != start or fn.hi+1 != end
+            or getattr(fn, 'body_ranges', 1) != 1
+            or getattr(fn, 'declared_hi', fn.hi) not in (None, fn.hi)
+            or getattr(fn, 'body_bytes', end-start) not in (None, end-start)):
+        raise ValueError('guarded-event caller boundary mismatch')
+    body = prog.body(fn); cursor = start
+    for ins in body:
+        if ins.va != cursor or ins.size <= 0 or ins.mnem in ('(bad)', '.byte', '.word', '.long'):
+            raise ValueError('guarded-event incomplete caller decoding')
+        cursor += ins.size
+    if cursor != end:
+        raise ValueError('guarded-event caller decoding extent mismatch')
+    windows = witness['windows']
+    # Each shape includes the receiver load, reuse write, comparison and exact
+    # skip-to-after-call branch, as well as the vptr load and event push.
+    shapes = (bytes.fromhex('8b08 66896808 3bcd 7405 8b11 50 ff12'),
+              bytes.fromhex('8b0a 66896a08 8b4624 40 3bcd 894624 7405 8b01 52 ff10'))
+    if len(windows) != len(shapes):
+        raise ValueError('guarded-event needs both queue transports')
+    ranges = []
+    starts = {i.va for i in body}
+    for ins in body:
+        if ins.mnem.startswith(('j', 'loop')):
+            if not _DIRECT.fullmatch(ins.ops) or int(ins.ops,16) not in starts:
+                raise ValueError('guarded-event unresolved or nonlocal branch target')
+    for record, expected in zip(windows, shapes):
+        lo, hi, raw = span(record)
+        if raw != expected or not start <= lo < hi < end or lo not in starts or hi not in starts:
+            raise ValueError('guarded-event transport shape mismatch')
+        if ranges and lo < ranges[-1][1]:
+            raise ValueError('guarded-event transports overlap or are out of order')
+        ranges.append((lo, hi))
+        for ins in body:
+            if ins.mnem.startswith(('j', 'loop')) and _DIRECT.fullmatch(ins.ops):
+                if lo < int(ins.ops, 16) < hi:
+                    raise ValueError('guarded-event branch bypasses receiver transport')
+    zero = int(witness['zeroRegisterAt'], 16)
+    prefix = [i for i in body if i.va <= zero]
+    if (not prefix or prefix[-1].va != zero or prefix[-1].mnem != 'xor'
+            or prefix[-1].ops != 'ebp,ebp' or prog.img.read(zero, 2) != b'\x33\xed'
+            or zero+2 > ranges[0][0]
+            or any(i.mnem.startswith(('j', 'loop')) or i.mnem in ('call','ret') for i in prefix)):
+        raise ValueError('guarded-event null-register initialization is not dominant')
+    for ins in body:
+        if not zero < ins.va < ranges[-1][1]:
+            continue
+        # A closed vocabulary avoids implicit/two-destination register writes
+        # such as XADD's second operand or POPA's restored EBP. Calls preserve
+        # EBP under the stated x86 ABI; this says nothing about exceptions.
+        if ins.mnem not in {'mov','lea','shl','cmp','test','add','sub','inc','dec','xor',
+                            'push','call','fld','fcomp','fnstsw','nop','je','jne','jmp','jle'}:
+            raise ValueError('guarded-event unsupported null-register transport')
+        if ((ins.ops.split(',')[0] in ('ebp','bp') and ins.mnem not in ('cmp','test','push'))
+                or ins.mnem in ('enter','leave','popa','popad')):
+            raise ValueError('guarded-event null-register clobber')
+    literal = witness['callerLiteral']
+    text = literal['text'].encode('ascii')+b'\0'; va = int(literal['address'],16)
+    site = int(literal['site'],16)
+    literal_ins = next((ins for ins in body if ins.va == site), None)
+    if (prog.img.read(va,len(text)) != text or prog.img.data.count(text) != 1
+            or literal['text'] not in functions[0].literals or not start <= site < site+5 <= end
+            or literal_ins is None or literal_ins.size != 5 or literal_ins.mnem != 'push'
+            or literal_ins.ops != hex(va)
+            or prog.img.read(site,5) != b'\x68'+struct.pack('<I',va)):
+        raise ValueError('guarded-event unique caller literal mismatch')
+    return selected[-1], 4
+
+
 def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
                              seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
     """Bind a reviewed common-interface call to a surviving derived declaration.
@@ -996,6 +1146,10 @@ def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMeth
     """
     import re_source_graph as G
     witness = anchor['interfaceDispatch']
+    if witness.get('kind') == 'guarded-event-primary-prefix':
+        return guarded_event_interface_witness(prog, cls, method, seed, anchor, source_root)
+    if witness.get('kind') not in (None, 'straight-line'):
+        raise ValueError('unknown common-interface witness kind')
     tables = {t.va: t for t in prog.model.rtti.vtables}
     base = tables.get(int(witness['table'], 16))
     if (base is None or base.klass != witness['class'] or base.offset != 0 or seed.offset != 0

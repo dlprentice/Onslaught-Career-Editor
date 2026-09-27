@@ -1,7 +1,7 @@
 # ProjectileBurst__SpawnFromCurrentPreset
 
 Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
-Last updated: 2026-09-26 (RE audit: AddShockShake's source range, the Euler control's scope and the fourth words)
+Last updated: 2026-09-27 (caller interface identity; prior body evidence retains its date)
 Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
 Evidence: MEASURED — objdump of the pristine body with every callee, slot and constant read at its address on 2026-09-25; field meanings from the physics value maps; no runtime replay of this body.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -9,9 +9,14 @@ Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees
 
 > Address: `0x005069f0`
 
+The caller `0x00506930` is now `CWeapon__HandleEvent` (formerly
+`CWeapon__HandleFireBurstEvent`), established by the
+[listener identity audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27).
+This name correction does not revalidate the burst-body or runtime claims below.
+
 ## Identity
 - Body `[0x005069f0,0x005078ab]`, 3,772 bytes ending in `ret` (`c3`); raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`, recomputed 2026-09-25.
-- Callers: `CWeapon__HandleFireBurstEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
+- Callers: `CWeapon__HandleEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
 - Three Battle Engine callees had saved names that described them poorly; the RE record audit renamed them in the working project on 2026-09-26: `CBattleEngine__WeaponFired` (was `CanSpawnBurstForResolvedEntry`), `CBattleEngine__RecoilWeapon` (was `RandomizeBurstOffsetsAndAccumulateRange`) and `CBattleEngine__AddShockShake` (was `RandomizeOffsets4B8_4C0`). The tracked 2026-08-31 table still has the old names. `CBattleEngine__DisplayLock` is the source name (`BattleEngine.cpp:980-993`): it tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is `CRT__AsinDispatch_ST0` in the working project.
 
 ## Calling convention

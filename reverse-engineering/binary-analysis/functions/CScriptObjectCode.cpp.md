@@ -3,7 +3,7 @@
 Summary: existing function analysis with current CDebugLog callee naming.
 
 Status: active static function map
-Last updated: 2026-09-19 (logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -13,6 +13,8 @@ Evidence: MEASURED — every byte below was re-read from the pristine specimen a
 file offset VA − 0x400000 with `tools/disasm_va.py`; embedded strings read
 from the same image. Function names are the live Ghidra name table
 (db.18627 lineage); the byte contracts below are independent of the names.
+
+> **September 27 listener identity recheck:** `0x005385e0 IScript__HandleEvent` (formerly `IScript__HandleMessage`); `0x00538c70 CScriptEventNB__HandleEvent` (formerly `CScriptEventNB__HandleEventMessage`). The [guarded-dispatch and RTTI audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Shape
 
@@ -212,7 +214,7 @@ and Reset()s instead of calling. `0x0089c528` is a `.data` BSS scratch pointer (
 | --- | --- | --- | --- | --- |
 | 0 | `init` | 0 | `IScript__CallEvent0AndRegisterNestedListeners` | `0x0053352a` |
 | 1 | `arrived` | 1 | `IScript__CreateThingRef` | `0x0053364e` |
-| 2 | `timer` | 0 | `IScript__HandleMessage` 2002 arm | `0x00538638` |
+| 2 | `timer` | 0 | `IScript__HandleEvent` 2002 arm | `0x00538638` |
 | 3 | `died` | 0 | `IScript__CallEventId3_OrReset` | `0x00533805` |
 | 4 | `hit` | 1 | `IScript__CreateThingRefWithSquad` | `0x005337bd` |
 | 5 | `started_dying` | 0 | `IScript__CallEventId5_OrReset` | `0x00533685` |
@@ -308,7 +310,7 @@ id-table writer. Independently re-read 2026-08-18 from file offset
 `CallEventDirect(owner=this+0x1c, entryPC=this+8, args=local[], count)`.
 `Execute` itself has exactly two `E8` sites, both already mapped:
 `CScriptEventNB__PostEvent` `0x00538c3b` and
-`CScriptEventNB__HandleEventMessage` `0x00538d68`. Named handlers
+`CScriptEventNB__HandleEvent` `0x00538d68`. Named handlers
 therefore never consult the 13-slot table.
 
 Registration is `IScript__CallEvent0AndRegisterNestedListeners`

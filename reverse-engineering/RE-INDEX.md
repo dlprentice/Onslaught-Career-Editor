@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (memory-buffer identities and bounded original-code findings recorded; broader audit unfinished)
+Last updated: 2026-09-27 (event-listener identities corrected; memory-buffer ABI follow-up prepared; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -103,6 +103,13 @@ original-code cases. Five name corrections have live readback and independently
 restored recovery. Buffer failure returns do not prove persistence; source and
 retail sizes, file flags and compression/sidecar paths differ. Saved prototypes
 and real Windows I/O remain separate, explicitly bounded work.
+
+The [event-listener identity correction](ghidra/README.md#re-audit-event-listener-identities--september-27)
+establishes sixteen `HandleEvent` names through both guarded queue transports,
+surviving source and raw RTTI. All names match the full live projection, and
+independent POST restoration passed. Saved types and complete per-handler
+behavior remain outside that proof; five kept-name candidates and eleven
+withheld entries remain explicit follow-ups.
 
 The campaign projection is an oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or

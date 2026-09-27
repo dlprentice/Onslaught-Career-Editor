@@ -152,6 +152,8 @@ CURRENT_CLASS_NAME_OVERLAY = REPO_ROOT / "tools/cohort-specs/class-name-identiti
 CURRENT_CLASS_NAME_OVERLAY_SHA256 = "3b4cb6df7686b0b1261a1dcfed796ae51cdba72ae469d4e3bbbe211d174533bb"
 CURRENT_MEMBUFFER_OVERLAY = REPO_ROOT / "tools/cohort-specs/membuffer-identities-20260927.manifest.tsv"
 CURRENT_MEMBUFFER_OVERLAY_SHA256 = "9a8ae4e68f37841be77ba4c8bb770a8baae901e3df2a52087e5188dcfe915366"
+CURRENT_LISTENER_OVERLAY = REPO_ROOT / "tools/cohort-specs/listener-identities-20260927.manifest.tsv"
+CURRENT_LISTENER_OVERLAY_SHA256 = "b55491e7c0deb84bdf7eb9bf0b82b8f99e69744915be8679626443652b5a783d"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -912,6 +914,11 @@ def run(
                 table, CURRENT_MEMBUFFER_OVERLAY,
                 expected_sha256=CURRENT_MEMBUFFER_OVERLAY_SHA256,
                 expected_rows=5, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_LISTENER_OVERLAY,
+                expected_sha256=CURRENT_LISTENER_OVERLAY_SHA256,
+                expected_rows=16, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

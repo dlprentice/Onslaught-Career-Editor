@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (memory-buffer corrections and original-code findings recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (event-listener identity promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,50 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE event-listener identity promotion — September 27
+
+Sixteen exact name/comment/tag rows passed fresh PRE restoration, rehearsal,
+separate/sealed readback, five actual byte-stable refusals, independent review
+with root reproduction, live readback and independently restored POST. All nine
+live exports equal rehearsal; 708 instructions / 2,037 code bytes, all saved
+prototypes/locals and 8,315 non-target function rows are unchanged. The program
+comment count grows by seven. The full 8,331-name projection equals live.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+Current-name documentation checks first found eight old assertions, then three
+historical acceptance markers using the wrong side of the mapping. Those were
+corrected without rewriting the historical rows; final strict projection passes.
+Private exact commands, outputs and preservation receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/listener-identities/`.
+Final documentation/public-payload checks accompany publication there.
+No game, Godot, desktop or complete handler-runtime acceptance occurred.
+
+### RE guarded event-interface evidence — September 27
+
+`python -m unittest tools.re_name_evidence_tests` passed 75 cases after adding
+the guarded-event witness. The first tool commit incorrectly called this 90;
+the retained command log records 75, which is the count used here. The existing frontend straight-line witness keeps
+its stricter separate rules. Fresh pristine RTTI equals the cached model; all
+169 listener uses have the receiver's unique fixed interface occurrence. Both
+reviewed EventManager queue calls agree with the surviving CThing declaration.
+The existing `vtables` command, with `EDITORBUILD`, `RESBUILDER` and `_DEBUG`
+undefined, emits 16 rename, 17 keep and 11 withheld proposals; previously counted
+names are not new coverage. This tool result is not a live promotion.
+
+Independent review caught reversed branch wording in the first anchor draft
+and three matcher gaps: EBP writes through a second operand, an embedded
+literal falsely acting as an instruction, and indirect/nonlocal branches.
+The corrected packet says event 2000 takes slot 2 and event 2002 takes slot 50.
+Focused tests cover these refusals; root additionally re-pinned actual caller
+counterexamples entirely in memory and reproduced rejection. Full handler
+semantics, saved prototype types and runtime ordering are not certified.
+
+Private evidence: `local-data/test-runs/re-audit-20260926/listener/`:
+`anchors-v2.json`, `alignment-v3.json`, `tool-tests-v3.log` and
+`root-review-controls.json`; earlier drafts remain preserved. The current
+names are compared with the complete memory-buffer POST export. No Ghidra,
+retail game, Godot or desktop execution is part of this tool check.
 
 ### RE memory-buffer identity promotion — September 27
 

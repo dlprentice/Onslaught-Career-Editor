@@ -1,7 +1,8 @@
 # CScriptObjectCode__CopyState
 
+Summary: current listener identities; prior behavior claims retain their dated limits.
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Source File: MissionScript / CScriptObjectCode (first gates
 only; do not read this as a pin of `CScriptObjectCode.cpp.md`)
 | Binary: BEA.exe, SHA-256
@@ -14,6 +15,8 @@ name is a research label. Already-pinned `RestoreStack` /
 `CScriptObjectCode.cpp.md` / the inbound hosts were **not** written.
 
 > Address: `0x00539910`
+
+> **September 27 listener identity recheck:** `0x005385e0 IScript__HandleEvent` (formerly `IScript__HandleMessage`). The [guarded-dispatch and RTTI audit](../../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Contract
 
@@ -43,7 +46,7 @@ are research labels here.
 Three inbound `.text` `E8`, zero `E9`: `0x00533850`
 already-pinned `IScript__RestoreSavedStateAndGotoInstruction`,
 `0x0053852a` (table `CScriptEventNB__UpdateWaypointFollowing`,
-not claimed), `0x0053864f` (table `IScript__HandleMessage`,
+not claimed), `0x0053864f` (table `IScript__HandleEvent`,
 not claimed). All three plant `ecx = 0x0089c5e0` then
 push the source. Zero image encodings of imm
 `10 99 53 00`.

@@ -2,7 +2,7 @@
 
 Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
 Status: active bounded static identity reference
-Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
+Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
 Source File: retail-derived MissionScript/EventFunction map; full source-body identity unverified | Binary: pristine BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Source file/debug path: `[maintainer-local-source-export-root]\MissionScript\EventFunction.cpp` (0x0064cce0)
@@ -10,6 +10,8 @@ Source File: retail-derived MissionScript/EventFunction map; full source-body id
 > named-event occupancy) — RTTI 2026-08-17; prior text 2026-05-19
 
 > **September 27 deleting-entry recheck:** `0x0052fa50 CEventFunction__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
+
+> **September 27 listener identity recheck:** `0x00538c70 CScriptEventNB__HandleEvent` (formerly `CScriptEventNB__HandleEventMessage`). The [guarded-dispatch and RTTI audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
 
 ## Overview
 
@@ -108,7 +110,7 @@ dword at `0x005e4f04` (`vtable+0xc`) is the adjacent `IScript` vtable's COLOC
 | `CEventFunction__scalar_deleting_dtor` | Data ref from vtable slot `0x005e4efc`. |
 | `CEventFunction__CEventFunction` | Called by `CScriptObjectCode__CScriptObjectCode`. |
 | `CEventFunction__Clone` | Called by `CScriptObjectCode__Clone`. |
-| `CEventFunction__Execute` | Called by `CScriptEventNB__PostEvent` and `CScriptEventNB__HandleEventMessage`. |
+| `CEventFunction__Execute` | Called by `CScriptEventNB__PostEvent` and `CScriptEventNB__HandleEvent`. |
 
 ## Proof Boundary
 

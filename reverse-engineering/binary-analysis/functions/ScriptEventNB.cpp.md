@@ -3,7 +3,7 @@
 Source File: retained MissionScript/ScriptEventNB.cpp mapping | Binary: BEA.exe (superseded byte claims; current owners linked below)
 
 Status: retired evidence; current byte owners are linked below
-Last updated: 2026-09-27 (compiler deleting-entry identity recheck; older behavioral limits retained)
+Last updated: 2026-09-27 (current listener identities linked; historical rows preserved)
 Summary: preserved script-event mapping history, superseded for current byte contracts.
 
 The retained `CConsole__Printf` label at `0x00441740` now resolves to
@@ -35,6 +35,15 @@ Its older table and pseudocode below remain historical evidence.
 Historical table spellings below remain unchanged; the identities above supersede them.
 <!-- ghidra-name-drift-accepted: 0x005386b0 CPostEventData__scalar_deleting_dtor (2026-09-27) -->
 <!-- ghidra-name-drift-accepted: 0x00538780 CScriptEventNB__scalar_deleting_dtor (2026-09-27) -->
+
+> **September 27 current identities:** `0x005385e0 IScript__HandleEvent` and
+> `0x00538c70 CScriptEventNB__HandleEvent` supersede the older spellings below.
+> The [listener audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27)
+> proves the interface identity from pristine `BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+> this does not revalidate the retained Wave586 behavior or signatures.
+<!-- ghidra-name-drift-accepted: 0x005385e0 IScript__HandleEvent (2026-09-27) -->
+<!-- ghidra-name-drift-accepted: 0x00538c70 CScriptEventNB__HandleEvent (2026-09-27) -->
 
 ## Name corrections — 2026-07-28
 
