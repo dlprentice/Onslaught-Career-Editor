@@ -26,7 +26,7 @@ import subprocess
 import sys
 import tempfile
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -327,6 +327,9 @@ class Func:
     comment: bool
     tags: str
     thunk: bool
+    body_ranges: int = 1
+    body_bytes: int | None = None
+    declared_hi: int | None = None
 
 
 def load_functions(path: Path) -> list[Func]:
@@ -336,7 +339,8 @@ def load_functions(path: Path) -> list[Func]:
             va = int(r["address"], 16)
             out.append(Func(va, r["name"], r["nameSource"], int(r["bodyMin"], 16), int(r["bodyMax"], 16),
                             r["signature"], r["callingConv"], r["commentPresent"] == "true", r["tags"],
-                            r["isThunk"] == "true"))
+                            r["isThunk"] == "true", int(r['bodyRanges']), int(r['bodyBytes']),
+                            int(r['bodyMax'], 16)))
     out.sort(key=lambda x: x.va)
     # clip multi-range bounding boxes at the next function start
     for i, fn in enumerate(out):
@@ -657,6 +661,589 @@ def source_key_to_name(key: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Conservative header layouts; saved function names are never layout inputs
+# ---------------------------------------------------------------------------
+
+@dataclass
+class HeaderMethod:
+    owner: str
+    name: str
+    parameters: tuple[str, ...]
+    qualifiers: str
+    virtual: bool
+    file: str
+    line: int
+    head: str
+    body: str | None
+    implicit: bool = False
+
+    @property
+    def identity(self):
+        return ('~dtor' if self.name.startswith('~') else self.name,
+                self.parameters, self.qualifiers)
+
+
+@dataclass
+class HeaderClass:
+    name: str
+    bases: list[str]
+    methods: list[HeaderMethod]
+    issues: list[str]
+    file: str
+    line: int
+
+
+def _header_conditions(text: str, undefined: set[str]) -> tuple[str, list[tuple[int, int]]]:
+    """Exclude explicit off branches; mark unknown branches instead of choosing one.
+
+    This is not a preprocessor. Includes/macros are not expanded. A conventional
+    outer include guard is admitted; other unresolved directives stay visible.
+    Unknown data-only conditionals do not change the virtual method list.
+    """
+    guard = re.match(r'\s*#\s*ifndef\s+(\w+)\s*\n\s*#\s*define\s+\1\b', text)
+    guard_name = guard.group(1) if guard else None
+    known = {name: False for name in undefined}
+    if guard_name:
+        known[guard_name] = False
+    stack, active, out, uncertain, pos = [], True, [], [], 0
+    both = lambda a, b: False if a is False or b is False else None if a is None or b is None else True
+    for line in text.splitlines(keepends=True):
+        directive = re.match(r'\s*#\s*(\w+)\b(.*)', line)
+        if directive:
+            op, arg = directive.group(1), directive.group(2).strip()
+            if op in ('if', 'ifdef', 'ifndef'):
+                cond = None
+                if op in ('ifdef', 'ifndef') and arg in known:
+                    cond = known[arg] if op == 'ifdef' else not known[arg]
+                elif op == 'if' and arg in ('0', '1'):
+                    cond = arg == '1'
+                stack.append((active, cond))
+                active = both(active, cond)
+            elif op in ('else', 'elif') and stack:
+                parent, previous = stack[-1]
+                cond = not previous if op == 'else' and previous is not None else None
+                # After an elif we cannot select later alternatives confidently.
+                stack[-1] = (parent, None if op == 'elif' else previous)
+                active = both(parent, cond)
+            elif op == 'endif' and stack:
+                active, _ = stack.pop()
+            elif op in ('define', 'undef') and active is not False:
+                macro = re.match(r'\w+', arg)
+                if macro:
+                    if active is True:
+                        known[macro.group()] = op == 'define'
+                    else:
+                        known.pop(macro.group(), None)
+            out.append(''.join('\n' if c == '\n' else ' ' for c in line))
+        elif active is False:
+            out.append(''.join('\n' if c == '\n' else ' ' for c in line))
+        else:
+            out.append(line)
+            if active is None:
+                uncertain.append((pos, pos + len(line)))
+        pos += len(line)
+    return ''.join(out), uncertain
+
+
+def _header_type(parameter: str) -> str | None:
+    """Conservative type spelling; unsupported declarators remain unresolved."""
+    parameter = parameter.split('=', 1)[0].strip()
+    if any(c in parameter for c in '()[]') or '...' in parameter:
+        return None
+    m = re.search(r'\b[A-Za-z_]\w*$', parameter)
+    if m:
+        prefix = parameter[:m.start()].strip()
+        qualifiers = {'const', 'volatile', 'signed', 'unsigned', 'long', 'short', 'struct', 'class', 'enum'}
+        integer_words = {'signed', 'unsigned', 'long', 'short'}
+        if prefix and not prefix.endswith('::') and (('*' in prefix or '&' in prefix)
+                or any(word not in qualifiers for word in prefix.split())
+                or (set(prefix.split()) <= integer_words and m.group() not in integer_words | {'int', 'char', '__int64'})):
+            parameter = prefix
+    parameter = re.sub(r'\b(class|struct|enum)\s+', '', parameter)
+    if '*' not in parameter and '&' not in parameter:
+        parameter = re.sub(r'\b(const|volatile)\b', '', parameter)
+    return re.sub(r'\s+', '', parameter)
+
+
+def header_classes(root: Path, undefined: set[str]) -> dict[str, HeaderClass]:
+    """Partial declarations sufficient for unambiguous single-inheritance layouts.
+
+    Missing bases/macros, unknown conditional methods, operators, templates and
+    complex declarators withhold the affected layout. No saved name supplies a
+    missing declaration. Method bodies are retained only as private witnesses.
+    """
+    import re_source_graph as G
+    classes = {}
+    headers = sorted(root.glob('*.h'))
+    texts = {path: strip_comments(path.read_text(errors='replace')) for path in headers}
+    macro_names = {name for text in texts.values()
+                   for name in re.findall(r'^\s*#\s*define\s+(\w+)', text, re.M)}
+    start_re = re.compile(r'\b(?:class|struct)\s+(?P<name>\w+)(?:\s+final)?\s*'
+                          r'(?::(?P<bases>[^;{}()]*))?\{'
+                          r'|\b(?P<macro>DECLARE_\w+)\s*\((?P<macroargs>[^()]+)\)')
+    literal_re = re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.S)
+    for path in headers:
+        text, uncertain = _header_conditions(texts[path], undefined)
+        masked = literal_re.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m.group()), text)
+        for cm in start_re.finditer(masked):
+            macro = cm.group('macro')
+            parts = [p.strip() for p in cm.group('macroargs').split(',')] if macro else []
+            name = parts[0] if macro else cm.group('name')
+            raw_bases = parts[1:] if macro else (cm.group('bases') or '').split(',')
+            bases = [re.sub(r'\b(public|protected|private|virtual)\b', '', b).strip() for b in raw_bases if b.strip()]
+            issues = [f'unexpanded class macro {macro}'] if macro else []
+            if 'virtual' in (cm.group('bases') or '').split():
+                issues.append('virtual inheritance')
+            if len(bases) > 1:
+                issues.append('multiple inheritance')
+            if any('<' in b for b in bases) or '<' in masked[max(0, cm.start()-30):cm.start()].split(';')[-1]:
+                issues.append('template context')
+            if any(lo < cm.end() and hi > cm.start() for lo, hi in uncertain):
+                issues.append('conditional class declaration')
+            depth, end = 1, cm.end()
+            while end < len(masked) and depth:
+                depth += (masked[end] == '{') - (masked[end] == '}')
+                end += 1
+            if depth:
+                issues.append('unterminated class')
+            methods, cursor, i = [], cm.end(), cm.end()
+            while i < end - 1:
+                if masked[i] not in ';{':
+                    i += 1
+                    continue
+                declaration_end = i
+                declaration = masked[cursor:i].strip()
+                declaration = re.sub(r'\b(public|protected|private)\s*:', '', declaration).strip()
+                if re.search(r'\btemplate\s*<', declaration):
+                    issues.append('member template declaration')
+                body, after = None, i + 1
+                if masked[i] == '{':
+                    n = 1
+                    while after < end and n:
+                        n += (masked[after] == '{') - (masked[after] == '}')
+                        after += 1
+                    body = text[i+1:after-1]
+                if re.match(re.escape(name)+r'\s*\(', declaration):
+                    declaration = re.sub(r'\)\s*:(?!:).*$', ')', declaration, flags=re.S)
+                method = re.fullmatch(r'(?P<head>[\w:\s*&<>]*?)(?<!\w)(?P<name>~?\w+)\s*'
+                                      r'\((?P<args>[^()]*)\)\s*(?P<cv>(?:(?:const|volatile)\s*)*)'
+                                      r'(?:override\s*|final\s*)*(?:=\s*0\s*)?', declaration)
+                if method:
+                    head, method_name = method.group('head').strip(), method.group('name')
+                    params = tuple(_header_type(p) for p in G.params(method.group('args')))
+                    if None in params:
+                        issues.append(f'unsupported parameters for {method_name}')
+                    elif not head and method_name not in (name, '~'+name):
+                        issues.append(f'possible member macro {method_name}')
+                    else:
+                        if method_name in macro_names:
+                            issues.append(f'unexpanded method-name macro {method_name}')
+                        if any(lo < declaration_end and hi > cursor for lo, hi in uncertain):
+                            issues.append(f'conditional method {method_name}')
+                        name_site = re.search(re.escape(method_name)+r'\s*\(', masked[cursor:declaration_end])
+                        methods.append(HeaderMethod(name, method_name, params,
+                            ' '.join(method.group('cv').split()), 'virtual' in head.split(),
+                            path.name, text.count('\n', 0, cursor+name_site.start())+1, head, body))
+                elif 'virtual' in declaration.split() or '(' in declaration:
+                    issues.append('unparsed method declaration: '+declaration[:100])
+                elif re.match(r'(class|struct|enum)\b', declaration) and body is not None:
+                    issues.append('nested type declaration')
+                cursor, i = after, after
+            item = HeaderClass(name, bases, methods, issues, path.name, text.count('\n', 0, cm.start())+1)
+            if name in classes:
+                classes[name].issues.append('multiple class definitions')
+            else:
+                classes[name] = item
+    return classes
+
+
+def header_layouts(classes: dict[str, HeaderClass]) -> tuple[dict[str, list[HeaderMethod]], dict[str, list[str]]]:
+    layouts, issues, visiting = {}, {}, set()
+
+    def build(name):
+        if name in layouts or name in issues:
+            return
+        if name not in classes or name in visiting:
+            issues[name] = ['missing base declaration' if name not in classes else 'inheritance cycle']
+            return
+        visiting.add(name)
+        cls = classes[name]
+        why = list(cls.issues)
+        slots = []
+        for base in cls.bases:
+            build(base)
+            if base in issues:
+                why.append(f'unresolved base {base}')
+            else:
+                slots.extend(layouts[base])
+        new, declared = [], set()
+        for method in cls.methods:
+            if method.name == cls.name:
+                continue  # constructors cannot override a same-named base method
+            if method.identity in declared:
+                why.append(f'duplicate method {method.name}')
+            declared.add(method.identity)
+            match = next((i for i, old in enumerate(slots) if old.identity == method.identity), None)
+            if match is not None:
+                slots[match] = method
+            elif method.virtual:
+                new.append(method)
+        # Do not assume a compiler-family overload permutation proves VC6's
+        # exact order. The initial admitted families have no such new groups.
+        if len({m.name for m in new}) != len(new):
+            why.append('new virtual overload ordering requires byte witnesses')
+        first_declaration = {}
+        for position, method in enumerate(cls.methods):
+            first_declaration.setdefault(method.name, position)
+        if new != sorted(new, key=lambda m: first_declaration[m.name]):
+            why.append('earlier nonvirtual/override declaration changes new virtual group order')
+        slots.extend(new)
+        if not any(m.name.startswith('~') for m in cls.methods):
+            slots = [replace(m, owner=name, name='~'+name, implicit=True, file=cls.file, line=cls.line, body=None)
+                     if m.name.startswith('~') else m for m in slots]
+        if why:
+            issues[name] = sorted(set(why))
+        else:
+            layouts[name] = slots
+        visiting.remove(name)
+
+    for name in classes:
+        build(name)
+    return layouts, issues
+
+
+def align_header_vtables(prog: Program, classes: dict[str, HeaderClass]) -> dict:
+    """Produce review candidates, never promotions or verified method identities."""
+    layouts, unresolved = header_layouts(classes)
+    primary = defaultdict(list)
+    for table in prog.model.rtti.vtables:
+        if table.offset == 0:
+            primary[table.klass].append(table)
+    rows, withheld, admission = [], [], {}
+
+    def admit(name):
+        if name in admission:
+            return admission[name]
+        if name not in layouts:
+            admission[name] = unresolved.get(name, ['no parsed header'])
+            return admission[name]
+        tables = primary.get(name, [])
+        layout = layouts[name]
+        why = []
+        if len(tables) != 1:
+            why.append('missing or multiple primary tables')
+        if any(len(t.slots) != len(layout) for t in tables):
+            why.append(f'source has {len(layout)} slots; retail has {[len(t.slots) for t in tables]}')
+        source_ancestors, todo = set(), list(classes[name].bases)
+        while todo:
+            base = todo.pop()
+            if base not in source_ancestors:
+                source_ancestors.add(base)
+                todo.extend(classes[base].bases)
+        retail_ancestors = {base for base, _ in prog.bases.get(name, []) if base != name}
+        if source_ancestors != retail_ancestors:
+            why.append('source and retail ancestor sets differ')
+        retail_rows = prog.bases.get(name, [])
+        expected_rows = {(name, 0)} | {(base, 0) for base in source_ancestors}
+        if set(retail_rows) != expected_rows or len(retail_rows) != len(expected_rows):
+            why.append('retail subobject offsets/multiplicity exceed the single primary chain')
+        for base in classes[name].bases:
+            if (base, 0) not in prog.fixed_bases.get(name, []):
+                why.append(f'RTTI does not establish fixed primary base {base}')
+            if admit(base):
+                why.append(f'base layout not admitted: {base}')
+        admission[name] = why
+        return why
+
+    for name, tables in sorted(primary.items()):
+        why = admit(name)
+        if why:
+            withheld.append({'class': name, 'reasons': why})
+            continue
+        table = tables[0]
+        for slot, (method, target) in enumerate(zip(layouts[name], table.slots)):
+            row = {'class': name, 'table': f'0x{table.va:08x}', 'slot': slot,
+                   'target': f'0x{target:08x}', 'source': method.owner+'::'+method.name,
+                   'parameters': list(method.parameters), 'qualifiers': method.qualifiers,
+                   'file': method.file, 'line': method.line, 'implicit': method.implicit,
+                   'status': 'header-slot-candidate'}
+            # Exact inheritance must preserve the address in this simple ABI
+            # case. A mismatch is source drift or incomplete analysis, not a rename.
+            if method.owner != name and len(primary.get(method.owner, [])) == 1:
+                owner_table = primary[method.owner][0]
+                if slot >= len(owner_table.slots) or owner_table.slots[slot] != target:
+                    row['status'] = 'inherited-target-discrepancy'
+            if target not in prog.by_va:
+                row['status'] = 'missing-function-boundary'
+            rows.append(row)
+    return {'rows': rows, 'withheld': withheld,
+            'limits': 'Header-slot candidates only. No saved name is an input. Partial parser, '
+                      'single fixed primary inheritance, unresolved macros/conditionals/overload order withheld. '
+                      'Matching counts do not prove source version or semantics; rederive byte witnesses before promotion.'}
+
+
+def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], document: dict) -> dict:
+    """Propagate explicitly supplied source/byte witnesses through fixed RTTI ancestry.
+
+    Anchors are research inputs requiring independent semantic review, not
+    verified just because their hashes match. Every holder of a target is
+    considered before calling it an unambiguous method candidate.
+    """
+    if document.get('specimenSha256') != prog.img.sha256:
+        raise ValueError('anchor specimen identity mismatch')
+    tables = {t.va: t for t in prog.model.rtti.vtables}
+    layouts, _ = header_layouts(classes)
+    anchors, seen = [], set()
+    for anchor in document['anchors']:
+        table = tables.get(int(anchor['table'], 16))
+        slot = anchor['slot']
+        if table is None or table.klass != anchor['class'] or table.offset != anchor['offset'] \
+                or not isinstance(slot, int) or isinstance(slot, bool) or not 0 <= slot < len(table.slots):
+            raise ValueError('anchor table/slot identity mismatch')
+        if (table.va, slot) in seen:
+            raise ValueError('duplicate anchor slot')
+        seen.add((table.va, slot))
+        target = int(anchor['target'], 16)
+        if table.slots[slot] != target or prog.img.u32(table.va+4*slot) != target:
+            raise ValueError('anchor target does not match specimen table word')
+        body = anchor['body']
+        if int(body['address'], 16) != target or not isinstance(body['bytes'], int) \
+                or isinstance(body['bytes'], bool) or body['bytes'] <= 0:
+            raise ValueError('anchor body range mismatch')
+        raw = prog.img.read(target, body['bytes'])
+        if len(raw) != body['bytes'] or hashlib.sha256(raw).hexdigest() != body['sha256']:
+            raise ValueError('anchor body hash mismatch')
+        cls = classes.get(anchor['class'])
+        methods = [m for m in cls.methods if m.name == anchor['method']
+                   and m.parameters == tuple(anchor['parameters'])
+                   and m.qualifiers == anchor.get('qualifiers', '')] if cls else []
+        if len(methods) != 1:
+            raise ValueError('anchor source declaration is absent or ambiguous')
+        method = methods[0]
+        if method.name == cls.name or re.search(r'\btemplate\s*<', method.head):
+            raise ValueError('constructor/template cannot establish a virtual anchor')
+        if any(issue in ('multiple class definitions', 'conditional class declaration',
+                         f'conditional method {method.name}', f'unexpanded method-name macro {method.name}')
+               for issue in cls.issues):
+            raise ValueError('anchor source declaration is conditional or multiply defined')
+        if not method.virtual and method not in layouts.get(cls.name, []):
+            raise ValueError('anchor method is not established virtual')
+        if not method.virtual:
+            todo, checked = list(cls.bases), set()
+            while todo:
+                base = todo.pop()
+                if base in checked:
+                    continue
+                checked.add(base)
+                if (base, 0) not in prog.fixed_bases.get(cls.name, []):
+                    raise ValueError('inherited virtualness disagrees with retail RTTI ancestry')
+                todo.extend(classes[base].bases)
+        if not anchor.get('evidence'):
+            raise ValueError('anchor needs an explicit semantic evidence explanation')
+        anchors.append((anchor, table, methods[0]))
+    mapped, gaps = defaultdict(list), []
+    for anchor, seed, method in anchors:
+        for table in tables.values():
+            offsets = {0} if table.klass == seed.klass else {
+                d for base, d in prog.fixed_bases.get(table.klass, []) if base == seed.klass and d >= 0}
+            if not any(d+seed.offset == table.offset for d in offsets):
+                continue
+            slot = anchor['slot']
+            if slot >= len(table.slots):
+                gaps.append({'table': f'0x{table.va:08x}', 'class': table.klass, 'missingSlot': slot})
+                continue
+            target = table.slots[slot]
+            if prog.img.u32(table.va+slot*4) != target:
+                raise ValueError('descendant table word differs from specimen')
+            mapped[target].append({'class': table.klass, 'offset': table.offset,
+                'table': f'0x{table.va:08x}', 'slot': slot, 'method': method.name,
+                'parameters': list(method.parameters), 'qualifiers': method.qualifiers,
+                'anchorTable': anchor['table'], 'anchorSlot': anchor['slot']})
+    rows = []
+    for target, uses in sorted(mapped.items()):
+        identities = {(u['method'], tuple(u['parameters']), u['qualifiers']) for u in uses}
+        covered = {(u['class'], u['offset'], u['slot'], int(u['table'], 16)) for u in uses}
+        uncovered = sorted(set(prog.slots.get(target, [])) - covered)
+        status = ('missing-function-boundary' if target not in prog.by_va else
+                  'conflicting-method-identities' if len(identities) != 1 else
+                  'unmapped-vtable-aliases' if uncovered else 'anchored-method-candidate')
+        rows.append({'target': f'0x{target:08x}', 'status': status, 'uses': uses,
+                     'uncoveredHolders': uncovered,
+                     'leastDerivedHolders': sorted(prog.defining_classes(prog.by_va[target]))
+                        if target in prog.by_va else []})
+    return {'rows': rows, 'gaps': gaps, 'anchorCount': len(anchors),
+            'limits': 'Supplied anchors need semantic review. Fixed RTTI inheritance preserves slots, '
+                      'not exclusive ownership of linker-folded bodies. All known holders are checked; '
+                      'unmapped/conflicting aliases remain unresolved. No prototype or behavior is inferred.'}
+
+
+def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], document: dict, propagated: dict) -> dict:
+    """Apply the same return/alias/boundary checks to every proposed method identity.
+
+    This is the mechanical part of cohort admission. An independent review must
+    establish the anchors' semantics once, and examine all flagged rows. A pass
+    supports a method identity under those anchors, not full behavior or ABI types.
+    """
+    import re_source_graph as G
+    anchor_by_slot = {(int(a['table'],16), a['slot']): a for a in document['anchors']}
+
+    def pops(va, seen=frozenset()):
+        if va in seen or len(seen) >= 8 or va not in prog.by_va:
+            return set(), {'unresolved tail target or cycle'}
+        fn=prog.by_va[va]
+        found, issues=set(), set()
+        if (getattr(fn, 'body_ranges', 1) != 1
+                or getattr(fn, 'declared_hi', fn.hi) not in (None, fn.hi)
+                or getattr(fn, 'body_bytes', None) not in (None, fn.hi-fn.lo+1)
+                or fn.lo != fn.va):
+            return set(), {'noncontiguous or clipped function boundary'}
+        body = prog.body(fn)
+        cursor = fn.va
+        for ins in body:
+            if ins.va != cursor:
+                issues.add('instruction decoding does not cover the exact function range')
+            cursor = ins.va + ins.size
+        if cursor != fn.hi+1:
+            issues.add('instruction decoding does not cover the exact function range')
+        if not body or body[-1].mnem not in ('ret', 'jmp'):
+            issues.add('unresolved fallthrough beyond function range')
+        starts = {ins.va for ins in body}
+        for ins in body:
+            if ins.mnem in ('(bad)', '.byte', '.word', '.long'):
+                issues.add('invalid or data instruction decoding')
+            if ins.mnem == 'xchg' and re.search(r'\b(?:esp|sp)\b', ins.ops):
+                issues.add('opaque stack-pointer write')
+            if ins.ops.split(',')[0] in ('esp', 'sp') and ins.mnem not in ('cmp', 'test', 'push'):
+                if not (ins.mnem in ('add', 'sub') and re.fullmatch(r'esp,0x[0-9a-f]+', ins.ops)) \
+                        and not (ins.mnem == 'mov' and ins.ops == 'esp,ebp'):
+                    issues.add('opaque stack-pointer write')
+            if ins.mnem == 'ret':
+                found.add(int(ins.ops,16) if ins.ops else 0)
+            elif ins.mnem.startswith(('j', 'loop')):
+                if _DIRECT.fullmatch(ins.ops):
+                    target=int(ins.ops,16)
+                    if fn.lo <= target <= fn.hi:
+                        if target not in starts:
+                            issues.add('branch target is not a decoded instruction boundary')
+                    else:
+                        if ins.mnem == 'jmp':
+                            # A backward branch can reach this tail after
+                            # instructions later in address order. Inspect
+                            # the whole source body, not a linear prefix.
+                            if any(i.mnem in ('push', 'pop', 'pushf', 'popf', 'pusha', 'popa',
+                                              'call', 'enter', 'leave')
+                                   or re.search(r'\b(?:[er]?(?:sp|bp)|ss)\b', i.ops)
+                                   for i in body):
+                                issues.add('external tail prefix lacks a stack-neutral proof')
+                            more, unknown=pops(target, seen|{va})
+                            found.update(more); issues.update(unknown)
+                        else:
+                            issues.add('conditional branch outside current function range')
+                else:
+                    issues.add('indirect tail target not proven')
+        if not found:
+            issues.add('no return cleanup established')
+        return found, issues
+
+    rows=[]
+    for row in propagated['rows']:
+        target=int(row['target'],16)
+        issues=[] if row['status']=='anchored-method-candidate' else [row['status']]
+        expected=set()
+        for use in row['uses']:
+            a=anchor_by_slot[(int(use['anchorTable'],16),use['anchorSlot'])]
+            method=next(m for m in classes[a['class']].methods if m.name==a['method']
+                        and m.parameters==tuple(a['parameters']) and m.qualifiers==a.get('qualifiers',''))
+            sf=SourceFunc(method.owner+'::'+method.name,method.file,method.line,'',[],[],
+                          args=', '.join(method.parameters),head=method.head)
+            n=G.expected_pop(G.Source({},set(),set()),sf)
+            if n is None:
+                measured, unknown=pops(int(a['target'],16))
+                if unknown or len(measured)!=1:
+                    issues.append('seed cleanup is unresolved')
+                expected.update(measured)
+            else:
+                expected.add(n)
+        actual, unknown=pops(target)
+        issues.extend(unknown)
+        if len(expected)!=1 or actual!=expected:
+            issues.append('return cleanup disagrees with anchor interface')
+        fn=prog.by_va.get(target)
+        tiny=tiny_semantics(prog,fn) if fn else None
+        # Only compare constant bodies for classes that actually declare this
+        # implementation; never impose a base default on a derived override.
+        for use in row['uses']:
+            cls=classes.get(use['class'])
+            if not cls: continue
+            methods=[m for m in cls.methods if m.name==use['method']
+                     and m.parameters==tuple(use['parameters']) and m.qualifiers==use['qualifiers']]
+            if len(methods)!=1 or methods[0].body is None: continue
+            match=re.fullmatch(r'\s*return\s+(TRUE|FALSE|true|false|NULL|0|1)\s*;\s*',methods[0].body)
+            if match and tiny and tiny.startswith('const:'):
+                want=1 if match.group(1) in ('TRUE','true','1') else 0
+                if tiny.split(':')[1]!=str(want): issues.append('tiny constant contradicts source implementation')
+        rows.append({'target':row['target'],'status':'mechanical-checks-pass' if not issues else 'withheld',
+                     'expectedReturnPop':sorted(expected),'observedReturnPop':sorted(actual),
+                     'flags':sorted(set(issues))})
+    return {'rows':rows,'limits':'Conditional on independently rederived seed identities. '
+            'Current function ranges and direct tail paths are checked; indirect tails and other unresolved '
+            'paths are withheld. No return/parameter type or runtime-behavior certification. '
+            'Promotion additionally requires reviewed owners/names and the existing Ghidra gate.'}
+
+
+def vtable_name_proposals(prog: Program, propagated: dict, admission: dict) -> dict:
+    """Deterministic dispositions for one mechanically checked identity batch.
+
+    Existing labels only decide whether a supported spelling can be retained;
+    they never decide a method or an owner. A unique least-derived RTTI holder
+    is a usable naming context, not proof against linker folding. Ambiguous
+    owners and collisions stay outside the batch, including order-dependent
+    collisions with another candidate's old name.
+    """
+    checked = {r['target']: r for r in admission['rows']}
+    occupied = defaultdict(set)
+    for fn in prog.funcs:
+        occupied[fn.name].add(fn.va)
+    rows = []
+    for row in propagated['rows']:
+        target = int(row['target'], 16)
+        fn = prog.by_va.get(target)
+        result = {'target': row['target'], 'currentName': fn.name if fn else None,
+                  'proposedName': None, 'status': 'withheld', 'flags': []}
+        check = checked.get(row['target'])
+        if not check or check['status'] != 'mechanical-checks-pass':
+            result['flags'] = check['flags'] if check else ['no mechanical admission']
+        else:
+            identities = {(u['method'], tuple(u['parameters']), u['qualifiers']) for u in row['uses']}
+            if len(identities) != 1 or not fn:
+                result['flags'] = ['identity or function is unresolved']
+            else:
+                method = next(iter(identities))[0]
+                holders = {u['class'] for u in row['uses']}
+                names = {c+'__'+method for c in holders}
+                if fn.name in names:
+                    result.update(proposedName=fn.name, status='keep')
+                elif len(row['leastDerivedHolders']) == 1:
+                    result.update(proposedName=row['leastDerivedHolders'][0]+'__'+method, status='rename')
+                else:
+                    result['flags'] = ['no unique RTTI naming owner']
+        proposed = result['proposedName']
+        if proposed and occupied[proposed] - {target}:
+            result.update(status='withheld', flags=['proposed name already belongs to another function'])
+        rows.append(result)
+    proposed_targets = defaultdict(set)
+    for row in rows:
+        if row['status'] != 'withheld':
+            proposed_targets[row['proposedName']].add(row['target'])
+    for row in rows:
+        if row['proposedName'] and len(proposed_targets[row['proposedName']]) > 1:
+            row.update(status='withheld', flags=['multiple targets propose the same name'])
+    return {'rows': rows, 'limits': 'Exact source method identity under reviewed anchors; RTTI holder '
+            'names do not prove exclusive source ownership. No behavior or prototype changes. '
+            'Keep and rename rows need the declared cohort preservation/review gate before publication.'}
+
+
+# ---------------------------------------------------------------------------
 # Anchors from strings
 # ---------------------------------------------------------------------------
 
@@ -880,7 +1467,47 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("facts")
     c.add_argument("--functions", type=Path, required=True)
     c.add_argument("--out", type=Path, required=True)
+    v = sub.add_parser('vtables', help='header layouts and optional reviewed-anchor propagation; candidates only')
+    v.add_argument('--functions', type=Path, required=True)
+    v.add_argument('--source', type=Path, default=SOURCE)
+    v.add_argument('--model', type=Path, required=True)
+    v.add_argument('--undefine', action='append', default=[])
+    v.add_argument('--anchors', type=Path)
+    v.add_argument('--out', type=Path, required=True, help='new private JSON report')
     args = ap.parse_args(argv)
+    if args.cmd == 'vtables':
+        if args.out.exists():
+            ap.error('vtable report must be a new path')
+        img, model = load_or_build(args.model)
+        prog = Program(img, model, load_functions(args.functions))
+        classes = header_classes(args.source, set(args.undefine))
+        report = align_header_vtables(prog, classes)
+        import re_source_graph as G
+        report['inputs'] = G.input_pins(args.functions, args.source, ('*.cpp', '*.h'))
+        report['inputs']['specimenSha256'] = img.sha256
+        report['inputs']['undefinedMacros'] = sorted(set(args.undefine))
+        if args.anchors:
+            report['inputs']['anchorsSha256'] = hashlib.sha256(args.anchors.read_bytes()).hexdigest()
+            try:
+                anchors = json.loads(args.anchors.read_text())
+                if anchors.get('sourceSha256') != report['inputs']['sourceSha256']:
+                    raise ValueError('anchor source content pin mismatch')
+                report['anchored'] = propagate_vtable_anchors(prog, classes, anchors)
+                report['admission'] = vtable_abi_admission(prog, classes, anchors, report['anchored'])
+                report['proposals'] = vtable_name_proposals(prog, report['anchored'], report['admission'])
+            except (KeyError, TypeError, ValueError) as e:
+                ap.error(str(e))
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=1)+'\n')
+        print(f"{len({r['class'] for r in report['rows']})} complete header/table candidate classes; "
+              f"{len(report['rows'])} slots; {len({r['target'] for r in report['rows']})} distinct targets; "
+              f"{len(report['withheld'])} classes withheld")
+        if 'anchored' in report:
+            from collections import Counter
+            print(json.dumps(Counter(r['status'] for r in report['anchored']['rows']), sort_keys=True))
+            print('ABI admission:', json.dumps(Counter(r['status'] for r in report['admission']['rows']), sort_keys=True))
+            print('Name proposals:', json.dumps(Counter(r['status'] for r in report['proposals']['rows']), sort_keys=True))
+        return 0
     if args.cmd == "audit":
         img, model = load_or_build(args.out / "model.pickle")
         prog = Program(img, model, load_functions(args.functions))

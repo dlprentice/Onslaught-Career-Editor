@@ -46,6 +46,10 @@ class SourceGraphTests(unittest.TestCase):
         self.assertEqual(G.param_bytes("const unsigned short v0"), 4)
         self.assertEqual(G.param_bytes("NvEdgeInfoVec &edgeInfos"), 4)
         self.assertEqual(G.param_bytes("double d"), 8)
+        self.assertEqual(G.param_bytes("unsigned__int64"), 8)
+        self.assertEqual(G.param_bytes("unsignedlonglong"), 8)
+        self.assertEqual(G.param_bytes("unsignedint"), 4)
+        self.assertIsNone(G.param_bytes("unsignedMystery"))
         self.assertIsNone(G.param_bytes("FVector v"))
 
     def test_name_candidates_withhold_overloads_duplicates_and_analytic_suffixes(self):
