@@ -25,9 +25,12 @@ of equivalent code. `DXMemBuffer.cpp` SHA-256 is
 The [five-name correction](../../ghidra/README.md#re-audit-memory-buffer-identities--september-27)
 replaces descriptive aliases with supported source method identities. Retail
 implementation differences remain explicit. All displaced plate notes are
-retained as fallible leads; unchanged saved prototypes are not certified.
-The seven already matching names below have been statically rechecked here;
-their live comments and the family's ABI findings remain follow-up work.
+retained as fallible leads. The separate
+[eight-interface correction](../../ghidra/README.md#re-audit-memory-buffer-abi--september-27)
+now fixes six member prototypes and two direct thunk dependents. It preserves
+all names, code and locals. The seven already matching method names below have
+been statically rechecked here; a complete kept-name comment disposition and
+the remaining prototypes are separate work.
 
 Private evidence: `local-data/test-runs/re-audit-20260926/membuffer/` holds
 complete body/consumer packets, import/export witnesses, original-code drivers
@@ -50,14 +53,24 @@ remain outside Git. Native experiment commands and limits are also recorded in
 | `0x00548820` | `CDXMemBuffer__ReadString` | ECX, destination and maximum, `RET 8`; line/limit loop with the edge cases below. |
 | `0x00548a70` | `CDXMemBuffer__Write` | ECX, source and signed-positive size, `RET 8`; buffers and flushes without propagating write failure. |
 | `0x00548c00` | `CDXMemBuffer__Close` | ECX, no stack arguments; returns EAX 0 for null data, otherwise reaches EAX 1 after its cleanup paths. This is not a durable-write result. |
-| `0x00548d30` | `CDXMemBuffer__EndOfFile` | Loads the full DWORD at `[ECX+24]` and returns; it does not query the file or recompute EOF. |
+| `0x00548d30` | `CDXMemBuffer__EndOfFile` | Loads the full DWORD at `[ECX+0x24]` and returns; it does not query the file or recompute EOF. |
 
-These transports do not justify every retained Ghidra typedef or calling-
-convention spelling. In particular, the live destructor omits its receiver,
-Write's saved `uint` conflicts with the signed guards/source `SINT`, and saved
-`bool` return widths require a caller/ABI correction pass. The adjacent
-`0x0048ddd0` wrapper and `0x0048ddf0` / `0x004cdb90` thunks were not part of
-this twelve-body recheck; their old notes below remain historical leads.
+The promoted ABI correction adds the destructor's implicit ECX receiver,
+changes Write's size from `uint` to `int` at the same stack location, and
+changes InitFromMem, InitFromFile, Close and EndOfFile from `bool`/AL to
+four-byte `int`/EAX results. Their full bodies and caller-side EAX tests support
+that width; exact source typedef spelling is not established. Close and
+EndOfFile normalize their explicit-ECX fastcall metadata to automatic-ECX
+thiscall without moving the physical receiver.
+
+The complete five-byte jumps at `0x0048ddf0` and `0x004cdb90` forward directly
+to Close and the destructor respectively, without argument or result changes.
+They are explicitly included because Ghidra also propagates target interfaces
+into these saved thunks. The first isolated rehearsal caught this undeclared
+dependency before any live application. The revised gate requires both rows,
+checks the jump bytes and matching interfaces, writes only the target, and
+reads back both. The adjacent `0x0048ddd0` wrapper remains outside this recheck.
+Generic pointers and other saved types remain bounded, not newly certified.
 
 ## Receiver fields and initialization
 
@@ -79,6 +92,10 @@ accesses, not a newly installed Ghidra structure.
 The constructor initializes four pointer/slot words only. Do not infer zeroed
 EOF, position, filename or handle from construction alone. The destructor frees
 buffers; callers needing handle closure must use the close path separately.
+The constructor's current plate comment still overstates this as clearing file
+and buffered-reader state; its precise replacement is prepared for a later
+comment cohort. GetFileSize, Skip and Read comments were also rechecked against
+their complete bodies; their refined descriptions have not yet been promoted.
 
 Read-size global `0x00650f6c` initially contains `0x100000`. The setter stores
 `0x100000` for zero; otherwise it uses 32-bit `(size + 0xfffff) & 0xfff00000`.
@@ -98,6 +115,9 @@ merely reaching its end exactly does not execute that over-read branch. The
 returned consumed count advances `+12c`. A refill compares its valid count
 against cached capacity `+18`, while the requested amount comes from the shared
 global. Changing that global while buffers are open has not been proved safe.
+The unsigned pointer/end clamp precedes the signed-positive count test; this
+does not justify saying every negative count is ignored. These Read/Skip
+findings are static, distinct from the ReadString and Write/Close runs below.
 
 Filename-suffix comparison with the initial `.aya` string at `0x006318a0`
 selects compressed paths. Plain start-skip seeks whole configured buffer units,

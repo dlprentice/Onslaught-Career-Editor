@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (event-listener identity promotion recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (memory-buffer ABI promotion recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,49 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE memory-buffer ABI — September 27
+
+The [eight-interface cohort](reverse-engineering/ghidra/README.md#re-audit-memory-buffer-abi--september-27)
+passed fresh PRE restoration, dry/apply rehearsal, separate/sealed readbacks,
+exact export comparison, eleven actual byte-stable refusals, independent
+read-only review/root reproduction, live dry/apply/readback and independently
+restored Archive A POST. All nine live exports equal rehearsal; all names,
+locals, 2,002 code bytes / 678 instructions and 8,323 non-target function rows
+remain unchanged. The complete 8,331-name projection matches live.
+
+Six member interfaces and two direct jump dependents change: five AL-to-EAX
+returns, two added receivers, three receiver-metadata normalizations, and one
+signed size. These categories overlap. Exact typedefs, full class layouts,
+real Windows file/device behavior and complete save compatibility remain open.
+
+The rejected six-row rehearsal exposed undeclared Ghidra thunk propagation.
+The revised framework refuses any omitted dependent before writing, checks the
+entire direct jump and matching interface, and writes only non-thunk targets.
+The original blanket refusal and a later stale receiver-count sentence are
+also preserved. Final replacement comments repeated PRE, rehearsal and all
+controls. No rejected scope reached live.
+
+Private commands/receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/membuffer-abi/`.
+Executed with `python`: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py`, `verify_projection.py`.
+`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+Deduplicated counts: 1,980 corrected names, 294 additional kept names, 6,057
+outside that name set; **16 corrected prototypes and 2,284 updated comments**.
+No new name disposition is claimed for this ABI-only cohort.
+
+A fresh Thing-family run with the corrected entry decoder retained 263 already
+accounted names and withheld 35; it offered no new rename or kept-name
+coverage. No prior promotion was repeated. Report and exact command:
+`local-data/test-runs/re-audit-20260926/step3-shake-post/vtables-entry-v7.json`
+and `vtables-entry-v7-command.json`.
+
+Publication gates: `npm run test:docs` passed with zero drifted/unresolved
+name assertions; `npm run test:safety` passed over 4,138 public candidates.
+`git diff --check` passed. Logs: `docs.log`, `safety.log` and
+`framework-registered.log` in the cohort owner above.
 
 ### RE selected-body decoder — September 27
 
