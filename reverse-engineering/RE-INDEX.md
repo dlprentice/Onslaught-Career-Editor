@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (camera position identities promoted; result-return metadata and broader audit remain)
+Last updated: 2026-09-27 (camera position/copy-return corrections promoted; device-lifecycle witnesses and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -34,8 +34,12 @@ review. Two raw-pointer questions stay withheld. The
 corrects nine names; its explicit source/caller/leaf witnesses preserve shared
 RTTI contexts and prototype uncertainty. The [camera note](binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md#september-27-position-identities-and-result-transport)
 records 30 isolated original-code cases plus two controls, and a static
-current/previous-position cache dependency. Orientation caller leads and result
-return metadata remain open; these results establish no retail camera parity.
+current/previous-position cache dependency. The
+[six copy-return corrections](ghidra/README.md#re-audit-camera-copy-return-interfaces--september-27)
+now retain the physical EAX pointer results, preserving every argument annotation
+and all names. Orientation caller leads remain open; no retail camera parity is
+established. DeviceObject lifecycle identities are the next mechanized family,
+with missing declarations and retail/source ordering differences explicit.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

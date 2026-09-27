@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position identities promoted; aggregate-return ABI and broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position identities promoted; camera copy-return ABI corrected; device lifecycle family under review; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the camera position cohort (September 27).**
+**Running coverage after the camera position/copy-return cohorts (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,8 +501,8 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 6,014 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 22 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces and six reader interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,327 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Prototypes corrected | 28 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces and six camera copy-return annotations. Full ABI coverage is not yet counted. |
+| Comments corrected | 2,330 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,7 +511,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -590,9 +590,23 @@ guarantee. The original callers, complete frame lifetimes, camera geometry and
 retail presentation were not executed. The viewpoint position getter can update
 its previous-position cache; the rebuild must preserve sampling order.
 
-Next: correct demonstrated result-return metadata without inventing aggregate
-layouts, verify the five kept position names' comments, and pursue the remaining
-camera slots or a larger independently supported family. Orientation constructor
+The [six camera copy-return corrections](reverse-engineering/ghidra/README.md#re-audit-camera-copy-return-interfaces--september-27)
+now retain the destination pointer in EAX in the saved physical signatures.
+Every parameter annotation, automatic receiver, stack/type definition and name
+is preserved; no source aggregate layout or orientation identity is invented.
+All preservation/rehearsal/readback/refusal/review/recovery gates passed.
+
+Next mechanized family: DeviceObject lifecycle. Fresh source/caller/RTTI checks
+find 32 nontrivial targets across 16 primary tables. Initial checks admit 31
+candidates and withhold a texture method with an unresolved switch; two shared
+stubs are also withheld. These are research results, not promoted dispositions.
+A missing DeviceObject header requires an explicit typed-list witness, with
+independent caller identity and layout review; a synthetic declaration would
+be unsound. Retail traverses two lists and includes restoration inside Init,
+unlike the source's separate initialization/restore sequence. The draft tool
+and synthetic controls remain under review in the existing evidence tools.
+Private inputs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`.
+The five kept position names' comments and remaining camera slots remain open. Orientation constructor
 witnesses remain withheld on raw pointer-like words, not proven incoming edges;
 the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.
 Shared Generic/Interpolated getters cannot receive an exclusive owner. Purecall,

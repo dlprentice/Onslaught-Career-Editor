@@ -259,7 +259,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # static interface identities only; every older note remains a fallible lead.
 # Camera position identities:5 old/9 authored comments (4,900/18,515 bytes);
 # result-pointer/local-interface proof; old notes and nonexclusive contexts preserved.
+# Camera copy returns:5 old/6 authored comments (7,752/16,421 bytes);
+# physical EAX result corrections only; original notes/types retained with limits.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/camera-copy-abi-20260927.manifest.tsv":
+        "5010dcb91729ed39dcb7f9c02f6b61a0ddd86e7b9c41af4e8ca365c1d7a5e597",
     "tools/cohort-specs/camera-position-20260927.manifest.tsv":
         "0736cd5bb2eaa88a3e8e41e1a70286cb0ef59c90cbcd108902e31806d00be9d4",
     "tools/cohort-specs/switch-verified-20260927.manifest.tsv":

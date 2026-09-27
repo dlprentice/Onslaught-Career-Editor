@@ -366,6 +366,14 @@ Six complete original copy leaves were executed without launching the game:
 | `0x0041a7f0` | 16 | `0x3c` |
 | `0x0041a840` | 16 | `0x4c` |
 
+The [six-return correction](../ghidra/README.md#re-audit-camera-copy-return-interfaces--september-27)
+now records `/pointer` in EAX for these six physical interfaces. The five
+undefined returns previously had unassigned storage; the Generic position
+getter was saved as void. Every argument type/name/source/storage and automatic
+receiver is unchanged. This is a machine-level result annotation, not a claim
+that the C++ source returns a pointer; orientation names and aggregate layouts
+remain outside this correction.
+
 Their 193 unchanged bytes copy **through the destination pointer supplied at
 entry `[ESP+0x4]`**, leave that pointer in EAX and return with four-byte cleanup.
 Thirty cases cover separate, unaligned, identical and forward/backward
