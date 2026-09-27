@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: startup shell identities promoted and input routes exercised in isolation; helper ABI/window-callback boundary next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: startup shell and GetBPP interface promoted; window-callback boundary and broader menu-argument cohort next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the startup shell cohort (September 27).**
+**Running coverage after the GetBPP interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,039 unique functions; 2,040 rename rows include one repeated correction. The latest eight establish startup-shell methods and device-object registration. |
+| Names corrected | 2,040 unique functions; 2,041 rename rows include one repeated correction. The latest correction establishes PCLTShell's GetBPP helper. |
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,975 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 28 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces and six camera copy-return annotations. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,369 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Names still outside that accounted set | 5,974 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Prototypes corrected | 29 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces, six camera copy-return annotations and GetBPP. Full ABI coverage is not yet counted. |
+| Comments corrected | 2,370 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,7 +511,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -633,13 +633,29 @@ acceptance is claimed. Private evidence:
 `local-data/test-runs/re-audit-20260926/startup-shell/`; completed cohort:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-shell/`.
 
-Next: correct the GetBPP helper at `0x00513640`, whose `RET 4` contradicts its
-saved no-argument cdecl signature. Eight fresh caller transports, the singleton
-chain and source establish the bounded identity; the unused receiver and
-generic format width must remain explicit. The 34-byte WndProc callback at
-`0x00529070` has no saved function boundary in the fresh export. Inspect decoded
-range, registration and data/instruction ownership before a scoped creation.
-Neither interface nor boundary was silently changed with the shell names.
+The [GetBPP correction](reverse-engineering/ghidra/README.md#re-audit-getbpp-identity-and-interface--september-27)
+replaces the wrong engine owner and no-argument cdecl declaration with a
+source/caller-correlated shell member and one four-byte format argument.
+The unused ECX receiver and unresolved enum type remain explicit. Int/EAX
+return storage, stack purge, eight code bytes and 8,330 non-target rows are
+unchanged. All preservation, rehearsal, nine refusal, independent review,
+live readback and independent POST restoration checks passed. The prior five
+original-code helper cases were reused, not rerun. Private receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/getbpp-abi/`.
+
+Next: create the absent WndProc boundary at `0x00529070` through its own gate,
+then correct its identity/interface. Read-only inspection of a disposable POST
+confirms twelve decoded instructions over 34 bytes, no function ownership and
+the sole recorded incoming reference from window-class registration. That is
+not yet a promoted boundary; stored symbols and all creation invariants still
+need the fresh gate. Evidence: `local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
+Then examine 22 remaining frontend argument interfaces as one coherent cohort:
+six transition EDX/stack mappings, four render argument mappings, one button
+mapping and eleven omitted member receivers. These are independent-review
+leads to rederive, not counted corrections. Reuse the existing frontend anchors
+and common dispatch witnesses, preserve unrelated return uncertainty, and add
+ordered argument-storage checks to the existing evidence tool. A one-register
+fastcall spelling alone is not a behavioral defect.
 The five kept position names' comments and remaining camera slots remain open. Orientation constructor
 witnesses remain withheld on raw pointer-like words, not proven incoming edges;
 the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.

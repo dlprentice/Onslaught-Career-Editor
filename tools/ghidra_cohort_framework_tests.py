@@ -281,6 +281,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # all prior notes/tags, prototypes, code and non-target records preserved.
 # Startup shell: eight source/caller/RTTI-grounded names, comments and tags;
 # all ABI/body/previous-note data remains unchanged.
+# GetBPP: one source/caller-grounded name and physical member interface;
+# exact return/purge/body preservation and nine byte-stable refusal controls.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -349,6 +351,7 @@ LIVE_GRANTED_COHORTS = [
     "camera-copy-abi-20260927",
     "device-lifecycle-20260927",
     "startup-shell-20260927",
+    "getbpp-abi-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -823,6 +826,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "camera-copy-abi-20260927",\n'
         '        "device-lifecycle-20260927",\n'
         '        "startup-shell-20260927",\n'
+        '        "getbpp-abi-20260927",\n'
         "    };\n",
     ),
     (

@@ -565,10 +565,10 @@ No Windows dispatch, actual device or desktop acceptance is implied.
 `0x00512010` and constructor chain `0x00512670` → `0x00528f80` bind that
 singleton at `0x00855bb0`. See its [corrected note](../../binary-analysis/functions/CShaderBase.cpp/CShaderBase__Init.md).
 
-### Constant BPP helper: identity and ABI correction pending
+### Constant BPP helper: identity and physical interface
 
 The complete eight-byte body at `0x00513640` sets EAX to 32 and uses `RET 4`.
-Its saved no-argument cdecl signature is contradicted by the bytes and eight
+Its former no-argument cdecl signature was contradicted by the bytes and eight
 direct callers; all supply one DWORD format argument plus the shell singleton
 in ECX. The body itself reads neither argument nor receiver. Call pairs at
 `0x005571db` / `0x005571fb`, `0x005582cc` / `0x005582f0`,
@@ -584,9 +584,18 @@ This explains the observed constant body without inventing a sensible format
 conversion. The historical header/compiler inputs are unavailable, and no
 GetBPP caller survives in the pinned source; retail callers supply the independent
 use evidence. The five original-code helper cases confirm 32 for several format
-values, including zero and an unknown value. The source/int identity is supported;
-a physical signature correction must preserve the unresolved enum typedef and
-unused argument's signedness rather than pretending those were recovered.
+values, including zero and an unknown value. The
+[GetBPP correction](../../ghidra/README.md#re-audit-getbpp-identity-and-interface--september-27)
+records `int __thiscall PCLTShell__GetBPP(void * this, undefined4 format)`.
+The automatic ECX receiver expresses the source-correlated, caller-supplied
+member interface; this body does not require a meaningful receiver. The
+generic four-byte format retains uncertainty about enum typing and signedness.
+The existing source-supported `int` return and EAX:4 storage are preserved;
+constant 32 by itself cannot discriminate signed from unsigned result types.
+The existing four-byte stack purge, all locals and code bytes are unchanged.
+The misleading engine-owner and signature-hardened tags are removed, with the
+old note retained as an explicitly fallible lead. These are analysis metadata
+changes, not an executable patch or a repair of the retail constant behavior.
 
 Exact fresh decodes, source/RTTI witnesses, revised excluded-Create evidence and
 original-code artifacts remain in `local-data/test-runs/re-audit-20260926/startup-shell/`.

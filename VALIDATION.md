@@ -7820,3 +7820,40 @@ Logs are under `local-data/test-runs/re-audit-20260926/startup-shell/`:
 Publication checks: `npm run test:docs` passed with zero name drift, and
 `npm run test:safety` passed over 4,154 candidate files. `git diff --check`
 passed. Logs: `docs-final.log` and `safety-final.log` in that same evidence owner.
+
+## RE GetBPP identity and physical interface — September 27
+
+The `getbpp-abi-20260927` cohort changes one saved name/prototype/comment/tag
+set. The former no-argument cdecl declaration becomes a source/caller-correlated
+shell member with automatic ECX `this` and one undefined4 stack format argument.
+The body reads neither; existing int/EAX return, stack purge 4, local size,
+eight code bytes / two instructions and all 8,330 other functions are unchanged.
+Nine full live exports equal rehearsal; independently restored Archive A POST
+matches live and the tracked checkpoint remains unchanged. The full projection
+matches 8,331 entries: 2,040 corrected names, 317 additional kept, zero newly
+neutralized and 5,974 outside the accounted set. Prototype corrections total
+29 and unique updated comments total 2,370; these are not parity percentages.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, nine byte-stable
+refusal controls, independent exact-payload/POST review and root reproduction,
+live readback and POST restoration passed. Commands and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/getbpp-abi/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. The framework suite passed 94 cases.
+The initial comparator incorrectly expected the body export's name column to
+remain unchanged; it now checks exactly the two declared name-cell changes
+while retaining exact byte/operand/address/flow checks. The failure is preserved
+and required no manifest or rehearsal change. No framework gate was weakened.
+
+The five previously retained original-code helper cases were reused, not rerun.
+The documented nonzero enum operand explains the available source's constant
+result; historical compiler/header inputs and GPU allocation remain unproved.
+No Godot, game process, physical desktop or new device acceptance was exercised.
+Evidence/logs: `local-data/test-runs/re-audit-20260926/getbpp-abi/`, including
+`comparison.log`, `comparison-final.log`, `framework-tests.log`, `live.log`,
+`finish.log` and `projection.log`.
+
+Publication checks: `npm run test:docs` passed with zero name drift, and
+`npm run test:safety` passed over 4,156 candidate files. `git diff --check`
+passed. Logs: `docs-final.log` and `safety-final.log` in the same evidence owner.
