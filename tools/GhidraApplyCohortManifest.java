@@ -38,6 +38,8 @@
 //   SET_BODY               Function.setBody
 //   DISASSEMBLE_BOUNDED    Disassembler.disassemble(seeds, admitted, true)
 //   CLEAR_BOUNDED          Listing.clearCodeUnits inside the admitted ranges
+//   REPAIR_INSTRUCTION_GAP One pinned x86 instruction inside an existing body;
+//                          standalone, no function metadata or data changes
 //   REMOVE_STALE_BOOKMARK  BookmarkManager.removeBookmark for a pinned set
 //
 // ---------------------------------------------------------------------------
@@ -191,6 +193,7 @@ import ghidra.program.model.listing.VariableStorage;
 import ghidra.program.model.lang.Register;
 import ghidra.program.model.mem.MemoryBlock;
 import ghidra.program.model.symbol.Reference;
+import ghidra.program.model.symbol.ReferenceIterator;
 import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
@@ -255,9 +258,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
     static final String V_SET_DATA_POINTER = "SET_DATA_POINTER";
     static final String V_DISASSEMBLE = "DISASSEMBLE_BOUNDED";
     static final String V_CLEAR = "CLEAR_BOUNDED";
+    static final String V_REPAIR_GAP = "REPAIR_INSTRUCTION_GAP";
     static final String V_BOOKMARK = "REMOVE_STALE_BOOKMARK";
     static final List<String> KNOWN_VERBS = Arrays.asList(
-        V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_CREATE_FUNCTION, V_SET_NAME,
+        V_DISASSEMBLE, V_CLEAR, V_REPAIR_GAP, V_BOOKMARK, V_SET_BODY, V_CREATE_FUNCTION, V_SET_NAME,
         V_SET_PROTOTYPE, V_SET_DATA_POINTER, V_SET_TAGS, V_SET_COMMENT, V_SET_REPEATABLE_COMMENT);
 
     /** The frozen per-function collateral column list.  Compiled in, never
@@ -438,6 +442,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.currentRanges", "col.proposedRanges", "col.subtype",
         "col.terminatorVa", "col.terminatorBytes", "col.deltaBytes",
         "col.byteProof", "col.creationRanges", "col.creationBodySha256",
+        "col.repairRange", "col.repairBytesSha256", "col.currentInstructionLayout", "col.proposedInstruction",
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.currentCallingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
@@ -1948,6 +1953,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             row.liveKind = row.cells.containsKey("liveKind")
                     ? row.get("liveKind") : "FUNCTION";
 
+            if (verbs.contains(V_REPAIR_GAP)) {
+                gateInstructionGap(row, readback, admitted);
+                continue;
+            }
             if (verbs.contains(V_CREATE_FUNCTION)) {
                 gateCreationRow(row, readback, allProposed);
                 continue;
@@ -2178,6 +2187,8 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         String preMemory = memoryDigest();
         String preCreationCode = verbs.contains(V_CREATE_FUNCTION)
             ? creationCodeDigest() : null;
+        String preOutsideRepair = verbs.contains(V_REPAIR_GAP)
+            ? codeDigestOutside(admitted) : null;
         List<String> preRefsInAdmitted = referencesFromWithin(admitted);
         List<String> preInstrStarts = instructionStartsIn(admitted);
         println("COHORT_PRE frozenDigest=" + digestOfMap(preFrozen)
@@ -2287,6 +2298,16 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         int tx = currentProgram.startTransaction(FRAMEWORK + ":" + cohortId + ":" + mode);
         boolean commit = false;
         try {
+            if (verbs.contains(V_REPAIR_GAP)) {
+                for (Row row : rows) {
+                    Address start = row.added.getMinAddress();
+                    listing.clearCodeUnits(start, row.added.getMaxAddress(), false);
+                    Disassembler.getDisassembler(currentProgram, monitor, null)
+                        .disassemble(new AddressSet(start, start), row.added, false);
+                    gateInstructionGap(row, true, null);
+                    row.verdict = row.gateFailures.isEmpty() ? "APPLIED" : "APPLY_MISMATCH";
+                }
+            }
             // -- PHASE A: bounded classification (disassemble + clear) -------
             if (verbs.contains(V_DISASSEMBLE) || verbs.contains(V_CLEAR)) {
                 for (Row row : rows) {
@@ -2449,6 +2470,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                     && !preCreationCode.equals(creationCodeDigest())) {
                 fail("CREATE_FUNCTION changed instruction/reference census");
             }
+            if (verbs.contains(V_REPAIR_GAP)
+                    && !preOutsideRepair.equals(codeDigestOutside(admitted))) {
+                fail("REPAIR_INSTRUCTION_GAP changed outside instruction/reference census");
+            }
             gatePostRows(rows, spec, verbs, fm, readback);
             if (verbs.contains(V_SET_NAME)) {
                 gateNamePost(rows, preOtherHolders);
@@ -2502,6 +2527,13 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         // non-declared verb owns is a refusal: it is the only way a cohort
         // could ask for a mutation it did not declare.
         Map<String, String> owner = new LinkedHashMap<>();
+        for (String field : Arrays.asList("repairRange", "repairBytesSha256", "currentInstructionLayout", "proposedInstruction")) {
+            owner.put("col." + field, V_REPAIR_GAP);
+            if (verbs.contains(V_REPAIR_GAP)) requireBinding(spec, "col." + field, V_REPAIR_GAP);
+        }
+        if (verbs.contains(V_REPAIR_GAP) && verbs.size() != 1) {
+            fail("REPAIR_INSTRUCTION_GAP must be the only verb");
+        }
         owner.put("col.creationRanges", V_CREATE_FUNCTION);
         owner.put("col.creationBodySha256", V_CREATE_FUNCTION);
         if (verbs.contains(V_CREATE_FUNCTION)) {
@@ -3473,12 +3505,128 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         }
     }
 
+    /** Repair only one instruction, without expanding or rewriting its owner. */
+    private void gateInstructionGap(Row row, boolean post, AddressSet admitted) throws Exception {
+        try {
+            if (!"FUNCTION".equals(row.liveKind)) {
+                fail(row, "REPAIR_INSTRUCTION_GAP requires FUNCTION");
+                return;
+            }
+            if (!currentProgram.getLanguageID().toString().equals("x86:LE:32:default")) {
+                fail(row, "REPAIR_INSTRUCTION_GAP requires x86:LE:32:default");
+                return;
+            }
+            AddressSet range = parseRanges(row.get("repairRange"));
+            Function fn = currentProgram.getFunctionManager().getFunctionAt(row.entry);
+            if (range == null || range.getNumAddressRanges() != 1
+                    || range.getNumAddresses() < 1 || range.getNumAddresses() > 15
+                    || fn == null || !fn.getBody().contains(range) || range.contains(row.entry)) {
+                fail(row, "REPAIR_INSTRUCTION_GAP invalid range or owner");
+                return;
+            }
+            Address lo = range.getMinAddress(), hi = range.getMaxAddress();
+            MemoryBlock block = currentProgram.getMemory().getBlock(lo);
+            if (block == null || !block.getName().equals(".text") || !block.isExecute()
+                    || block.getEnd().compareTo(hi) < 0) {
+                fail(row, "REPAIR_INSTRUCTION_GAP outside executable .text");
+                return;
+            }
+            row.added = range;
+            if (admitted != null) {
+                if (admitted.intersects(range)) fail(row, "REPAIR_INSTRUCTION_GAP target overlap");
+                admitted.add(range);
+            }
+            byte[] bytes = new byte[(int)range.getNumAddresses()];
+            currentProgram.getMemory().getBytes(lo, bytes);
+            if (!row.get("repairBytesSha256").equals(sha256(bytes))) {
+                fail(row, "REPAIR_INSTRUCTION_GAP byte hash mismatch");
+            }
+            Listing listing = currentProgram.getListing();
+            List<String> layout = new ArrayList<>();
+            long instructions = 0, undefined = 0;
+            for (Address p = lo; p != null && p.compareTo(hi) <= 0;) {
+                CodeUnit unit = listing.getCodeUnitContaining(p);
+                Address end = unit == null ? p : unit.getMaxAddress();
+                if (unit != null && (!unit.getMinAddress().equals(p) || end.compareTo(hi) > 0)) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP clips a code unit");
+                    return;
+                }
+                if (unit instanceof Instruction) {
+                    Instruction i = (Instruction)unit;
+                    if (!"NONE".equals(i.getFlowOverride().toString()) || i.isLengthOverridden()
+                            || i.isFallThroughOverridden() || i.isInDelaySlot() || i.getDelaySlotDepth() != 0) {
+                        fail(row, "REPAIR_INSTRUCTION_GAP instruction override");
+                    }
+                    layout.add("I:" + p + "-" + end);
+                    instructions++;
+                } else if (unit instanceof Data && ((Data)unit).isDefined()) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP defined data");
+                } else {
+                    if (unit instanceof Data && !((Data)unit).isEmpty()) {
+                        fail(row, "REPAIR_INSTRUCTION_GAP undefined-data settings");
+                    }
+                    layout.add("U:" + p + "-" + end);
+                    undefined += end.subtract(p) + 1;
+                }
+                p = end.equals(hi) ? null : end.add(1);
+            }
+            for (Address p = lo; p != null && p.compareTo(hi) <= 0; p = p.equals(hi) ? null : p.add(1)) {
+                for (int kind = 0; kind <= 4; kind++) {
+                    if (listing.getComment(kind, p) != null) fail(row, "REPAIR_INSTRUCTION_GAP saved comment");
+                }
+                for (Symbol s : currentProgram.getSymbolTable().getSymbols(p)) {
+                    if (!s.isDynamic()) fail(row, "REPAIR_INSTRUCTION_GAP saved symbol");
+                }
+                if (!currentProgram.getEquateTable().getEquates(p).isEmpty()) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP saved equate");
+                }
+                if (!post && currentProgram.getReferenceManager().getReferencesFrom(p).length != 0) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP existing outgoing reference");
+                }
+                ReferenceIterator refs = currentProgram.getReferenceManager().getReferencesTo(p);
+                while (refs.hasNext()) {
+                    Reference r = refs.next();
+                    if (!p.equals(lo) || !r.getReferenceType().isJump()
+                            || !fn.getBody().contains(r.getFromAddress())) {
+                        fail(row, "REPAIR_INSTRUCTION_GAP ambiguous incoming reference");
+                    }
+                }
+            }
+            if (!post) {
+                if (undefined == 0 || instructions == 0 || listing.getInstructionAt(lo) != null) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP requires an undefined start and interior instruction");
+                }
+                if (!String.join(";", layout).equals(row.get("currentInstructionLayout"))) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP current layout mismatch");
+                }
+            } else {
+                Instruction i = listing.getInstructionAt(lo);
+                if (instructions != 1 || undefined != 0 || i == null || !i.getMaxAddress().equals(hi)
+                        || i.getFlows().length != 0 || !i.getFlowType().isFallthrough()
+                        || !hi.add(1).equals(i.getFallThrough())) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP post is not one fallthrough instruction");
+                }
+                if (i == null || !i.toString().equals(row.get("proposedInstruction"))) {
+                    fail(row, "REPAIR_INSTRUCTION_GAP proposed instruction mismatch");
+                }
+            }
+        } catch (Exception exc) {
+            fail(row, "REPAIR_INSTRUCTION_GAP gate threw " + exc);
+        }
+    }
+
     /** No classification is authorized by creation, even outside its target. */
     private String creationCodeDigest() throws Exception {
+        return codeDigestOutside(new AddressSet());
+    }
+
+    /** Full instruction/reference identity outside a declared instruction repair. */
+    private String codeDigestOutside(AddressSetView excluded) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         InstructionIterator instructions = currentProgram.getListing().getInstructions(true);
         while (instructions.hasNext()) {
             Instruction i = instructions.next();
+            if (excluded.intersects(i.getMinAddress(), i.getMaxAddress())) continue;
             digest.update((i.getMinAddress() + ":" + i.getMaxAddress() + ":"
                 + i.toString() + ":" + i.getFlowType() + ":" + i.getFallThrough()
                 + ":" + i.getFlowOverride() + ":" + i.isLengthOverridden() + ":" + i.getParsedLength()
@@ -3489,6 +3637,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         AddressIterator sources = manager.getReferenceSourceIterator(currentProgram.getMemory(), true);
         while (sources.hasNext()) {
             for (Reference ref : manager.getReferencesFrom(sources.next())) {
+                if (excluded.contains(ref.getFromAddress())) continue;
                 references.add(ref.getFromAddress() + ":" + ref.getToAddress() + ":"
                     + ref.getReferenceType() + ":" + ref.getOperandIndex() + ":"
                     + ref.getSource() + ":" + ref.isPrimary() + ":" + ref.getSymbolID());

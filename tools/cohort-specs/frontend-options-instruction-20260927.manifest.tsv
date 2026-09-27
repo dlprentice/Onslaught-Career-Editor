@@ -1,0 +1,2 @@
+addr	repairRange	repairBytesSha256	currentInstructionLayout	proposedInstruction
+0x0051f700	0051f7be-0051f7c5	25725d401eefab6ee1b43edfcf8209285b9daa48b1b17e3994e00e960b17e625	U:0051f7be-0051f7be;U:0051f7bf-0051f7bf;I:0051f7c0-0051f7c1;I:0051f7c2-0051f7c3;U:0051f7c4-0051f7c4;U:0051f7c5-0051f7c5	MOV dword ptr [ESP + 0x10],0x3f800000
