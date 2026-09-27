@@ -6813,3 +6813,104 @@ is claimed. Damage investigation is a subsequent, separate milestone.
 `npm run test:safety` and `git diff --check`: passed. The first docs gate required
 removing a newly conforming CLI reference from the header backlog; that entry
 was removed and the full gate rerun. Both outcomes are retained in private logs.
+
+## RE damage and cockpit shake — September 26
+
+Two separately preserved cohorts correct the existing analysis:
+
+- `damage-shake-comments-20260926`: two comments/tag sets, no names or
+  prototypes changed; all 302 selected instructions and 8,329 non-target
+  function rows preserved. Five refusal controls passed.
+- `cockpit-shake-abi-20260926`: one explicit parameter changes from
+  `int randomRange` to `float amount`; the same four-byte stack slot, automatic
+  ECX receiver, void return, two locals and function name remain. Only that
+  parameter's name/type change among 32,701 variable rows; all 100 instructions
+  and 8,330 non-target function rows remain. Seven refusal controls passed.
+
+Each cohort passed fresh PRE restore/open, isolated dry/apply and separate/sealed
+readback, exact export comparison, independent review with root reproduction,
+live dry/apply/readback and independent Archive A POST restore/open. All nine
+live exports equal each cohort's rehearsal. Tracked checkpoint inventory remains
+`745c00ad15a0fc1c3098533143caded4b1b825583322669df22699b5e99585a5`.
+Commands and outputs remain under the two corresponding directories in
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`
+and `finish.py`. The first Damage/shake seal is retained in `rejected-v1/`;
+review corrected threshold-equivalence wording, the monitored block radix and
+unordered shield comparison before any live application.
+
+`python local-data/test-runs/re-audit-20260926/battleengine-damage/original_damage.py`
+passed 41 cases. The accepted receipt is
+`local-data/test-runs/re-audit-20260926/battleengine-damage/run-iekrvvq7/damage.json`,
+SHA-256 `f6a2aab65ef85d1558332a3a3605845cd786a7c1c8949149dac52e9b2a6c130d`.
+Six complete unchanged original bodies execute at original addresses, with
+an authored object block, null attacker, a recording death callback and a
+substituted CRT thread-data provider. Stack/GPR/adjacent guards, x87 state and
+the explicit object write mask pass. Separate game/CRT seeds and the unclamped
+fourth cockpit component are observed. Game draw counts are inferred from
+final seed and static paths; CRT-provider entries are counted. The threshold
+uses a binary64 operand, but rounding it to binary32 does not change admission
+of binary32 inputs. Repair and masked-NaN controls reject the old early-return
+and ordinary-comparison descriptions. Full death/flash, Windows TLS, rendering,
+physical rumble and complete player acceptance remain untested.
+
+Both retained Level 521 write extracts and their frozen observation already
+use the correct Damage offsets. The historical applier/plate copied three
+incorrect offsets; frozen receipts and that hash-pinned applier were preserved.
+Deleted TTD sessions were not replayed or queried.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after each
+cohort registration. `python tools/public_allowlist_safety_check.py --self-test`
+passed. Final documentation/public-payload gates are recorded below after the
+shared audit-tool changes.
+
+## RE name-evidence tools and career grade — September 26
+
+`python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:
+27 tests passed. Regression cases cover fixed-offset RTTI inheritance, folded
+new slots and derived overrides, overload ambiguity, graph/source identity
+agreement, scalar and enum return handling, exact-name candidates and input
+pins. Independent read-only review found three additional false-classification
+cases; the root agent reproduced and corrected each, then reran the tests.
+The follow-up review found no blocker within the stated partial-parser limits.
+
+The specimen-bound run uses the cockpit ABI cohort's `live-post/functions.tsv`
+and the pinned `references/Onslaught` source. Commands were
+`re_source_graph.py map-names`, `re_source_graph.py check` with
+`--implicit Alloc --implicit Free --implicit SetReader`, then
+`re_name_evidence.py audit`. Exact arguments and output names are bounded by
+the existing tools and private owner
+`local-data/test-runs/re-audit-20260926/step3-shake-post/`:
+`names-v4.tsv`, `name-candidates-v4.json`, `graph-v4.json`, `name-audit.tsv` and
+the corresponding `map-v4.log`, `graph-v4.log` and `audit-v4.log`.
+
+There are 472 spelling candidates and 650 checked call edges; the graph's exit
+1 records 18 discrepancy leads, not a passing identity audit. The heuristic
+name output has 78 support leads, 53 contradicted leads, 931 existing structural
+placeholders and 3,556 unsupported names. These are not completed dispositions.
+Changing a producer-tool pin makes the audit exit 2 before rewriting its output;
+the successful table remains SHA-256
+`ef576ac9f7f095bf24d72de9f0cf4041fcd1807484e51d9cffd4141b6c8a05e9`.
+This refusal is recorded in `stale-producer-v4.log`. Source conditionals, missing
+macros and interface headers remain limitations; nothing was neutralized from
+these outputs.
+
+`python local-data/test-runs/re-audit-20260926/career-grade/original_grade.py`
+passed 19 isolated cases with five unchanged original bodies. The accepted
+receipt is `local-data/test-runs/re-audit-20260926/career-grade/run-gmqyky4j/grade.json`,
+SHA-256 `e45f2da048070e70eaf7d0a8341ae1aa9a584869760de32f361bd6455d7ae419`.
+All 19 raw input/output pairs are retained separately. The earlier run's output
+filename collision is preserved as a rejected evidence set. Checks cover the
+AX/full-EAX distinction, complete authored scratch-ring effects, stack/register
+preservation, four x87 rounding modes and a denied system call. CRT exception
+branches are fail-closed substitutes and were not entered. Full game, Windows,
+UI and save-publication acceptance are not established. The grade ABI correction
+is documented but has not been promoted to Ghidra.
+
+`npm run test:docs`: passed with zero drifted or unresolved name assertions.
+The first attempt found the grade note's missing binary trailer; it was fixed
+and the complete docs gate rerun. `npm run test:safety`: passed for 4,109 public
+candidate files, including submodules. `git diff --check`: passed. Logs remain
+in the same private owner (`docs.log`, `docs-final.log`, `safety-final.log` and
+`diff-final.log`).

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: keyboard ABI and startup identities corrected; damage contract under review; broader audit unfinished; companion paused with its goal met; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: damage/shake comments and cockpit ABI corrected; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -302,24 +302,52 @@ Fresh PRE, rehearsal, five no-write controls, independent review, exact live
 readback and independent POST recovery passed. No new retail startup, rendering,
 physical-device or audible acceptance is claimed.
 
-Next: re-derive Damage's common tail and reconcile its historical field-offset
-summary. Its source-line overlap with HandleEngines is another false identity
-lead: the complete body and virtual caller support the existing Damage name.
-The old zero/negative early-out description and three plate offsets conflict
-with pristine instructions; isolated original-code checks are in progress.
+The [Damage/shake comment correction](reverse-engineering/ghidra/README.md#re-audit-damage-and-shake-comments--september-26)
+is live and independently restore-proven. Damage's name is correct; its old
+augmentation/life/time offsets were transcription errors, while the retained
+Level 521 observations already contained the correct map. Zero/negative input
+skips the positive block, not the common tail. Forty-one isolated original-code
+cases now bound damage/repair, late invulnerability restoration, ordered shield
+comparisons, shake replacement and the distinct game/CRT RNG streams. Death and
+thread-data provision remain explicit substitutes; no full-game acceptance is
+claimed. The cockpit's integer parameter is now corrected to a float through a
+separate one-function ABI cohort, with its original storage and locals preserved.
+Next prioritize mechanized name evidence over
+serial isolated investigations; retain the grade-return finding below for a
+consumer-focused ABI cohort.
 
-Step 3, the game's own names, has its instruments: `re_name_evidence.py audit` gives every user-defined
-game name a verdict from file/line anchors (per-file line drift estimated; `game.cpp` drifts by about 100
-lines), string anchors, vtable ownership, tiny-body semantics and `tools/re_source_graph.py` (call graph and
-return sizes against the pinned source, allowing inlining within a translation unit, implicit calls and
-folded bodies). First run on the live export: 148 verified, 65 contradicted, 931 structural placeholders,
-3,474 unsupported; for the 619 functions the rebuild cites, 50 verified and 17 contradicted. "Unsupported"
-is inflated until vtable layouts from the headers and call-site alignment exist; neutralize nothing until
-they do. Remaining leads include `BattleEngineConfigurations__Load` (the source class is
-`UBattleEngineConfigurations`) and source return-size disagreements for
-`CCareer__GetGradeFromRanking` and `CGame__RunLevel`. Constructor, parser, font
-and sound identities are resolved above. Damage's name survives inspection;
-its behavioral annotations need correction. The `CPCController` key-query
+Step 3 uses `re_source_graph.py map-names` to build an explicit spelling-only
+candidate map, then `check` and `re_name_evidence.py audit`. The fresh pass
+maps 472 unambiguous candidates, checks 650 call edges and retains 18 graph
+contradiction leads. It withholds ambiguous overloads and saved names; a
+compatible graph alone no longer verifies an identity. The whole game-name
+heuristic output is 78 support leads labelled `verified`, 53 contradicted,
+931 existing structural placeholders and 3,556 unsupported. These are
+instrument outputs, **not promoted audit dispositions** or completion counts.
+The earlier 148/65/931/3,474 result used weaker logic and is historical.
+
+The corrected model matches each RTTI holder's slot and composed fixed
+subobject offset. A folded no-op can belong to new derived slots as well as
+inherited ones; virtual-base offsets are withheld. Source candidates retain
+same-arity overload ambiguity rather than selecting the last definition.
+Identical const/nonconst bodies remain ambiguous, and inherited-slot pruning
+cannot contradict a derived holder whose override may have folded. Graph
+inputs pin source files, live export and producer tools; rows for a different
+source identity or an unselected overload cannot contradict the saved name. Scalar
+`WCHAR` and declared enums do not acquire invented result pointers; unknown
+aggregate return ABIs remain unresolved. Consequently the previous grade and
+`CGame__RunLevel` stack-pop objections were tool errors. The grade's separate
+AX/receiver metadata error is independently established below.
+The accepted tool pass and stale-producer refusal are retained in
+`local-data/test-runs/re-audit-20260926/step3-shake-post/` (`*-v4` outputs).
+
+Next strengthen header/call-site alignment. The pinned source lacks the class
+macro definitions and CThing's interface headers; whole layouts cannot be
+numbered from the visible virtual declarations alone. Keep those gaps explicit
+and neutralize nothing from missing tool support. Remaining name leads include
+`BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
+and sound identities are resolved above. Damage's name and corrected behavioral
+annotations are recorded above. The `CPCController` key-query
 argument/result discrepancy is also resolved. These resolutions demonstrate why
 numeric allocation coordinates alone must not decide an identity.
 
@@ -338,8 +366,8 @@ Follow-ups:
 
 ### RE record audit — requested September 25
 
-David asked for a quality once-over of the existing RE record. Most of it was
-produced by earlier, less capable agents, and parts are known to be wrong. The
+David requested a comprehensive correction pass over the existing RE record;
+earlier analyses and this audit's own drafts are fallible. The
 current readback has 8,331 internal functions; the earlier document inventory
 counted about 1,980 RE documents
 (354 contracts, 807 function notes). Items found while answering lane questions
@@ -349,6 +377,48 @@ on September 25 include:
 - a save-field name and the kill-counter reset rule;
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
+
+**Running coverage after the cockpit-shake ABI promotion (September 26).**
+These are conservative dispositions supported by this date's sealed cohorts
+and final library-match proofs, not a percentage of game understanding:
+
+| Audit dimension | Current count and limit |
+| --- | --- |
+| Names corrected | 1,620 unique functions; 1,621 rename rows include one repeated correction. |
+| Names verified and kept | 63 additional functions: 62 library/import identities and Damage. This excludes functions already counted as corrected. |
+| Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
+| Names still outside that accounted set | 6,648 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
+| Comments corrected | 1,687 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
+
+Count sources: promoted `tools/cohort-specs/*-20260926.manifest.tsv`, the final
+`library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
+cohort, and the Damage identity recheck. Private paths are under the existing
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
+are deduplicated by entry address and checked against the current live export;
+the old 1,196 already-matching library rows overlap previous rename cohorts and
+must not be added to the corrected total. Prototype/comment counts are separate
+dimensions. No newly completed whole-game runtime acceptance is claimed.
+
+David's renewed scope keeps all saved names, prototypes, comments and living
+documents in the audit. Prefer validated library/template matches, header
+vtable/RTTI alignment, allocation anchors with measured line drift, and
+call-site/graph/file-order alignment in the existing evidence tools. No tool
+match is not proof of a bad name. Strengthen those instruments before assigning
+neutral names; preserve displaced names as explicitly fallible comment leads.
+Use reviewable cohorts and the existing preservation gate. Update these counts
+after each promotion, keeping unique functions and repeat corrections distinct.
+The prepared three-cohort queue is complete; it must not be restarted.
+
+Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
+returns AX, not a full integer, and all 14 direct callers supply the career
+receiver in ECX.
+Nineteen private original-code cases execute the complete grade/conversion
+bodies and finite-floor path: negative ranking returns E, masked NaN returns S,
+values above one are not clamped, and EAX retains the scratch pointer's high
+bits. The scratch ring is modified; this is not globally pure. This finding is
+not yet promoted. Private evidence: `local-data/test-runs/re-audit-20260926/career-grade/run-gmqyky4j/grade.json`.
 
 Order: answer the rebuild and companion lanes' blocking questions first, then
 audit by consumer:

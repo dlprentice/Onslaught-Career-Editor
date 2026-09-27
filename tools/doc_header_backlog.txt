@@ -76,7 +76,6 @@ reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetAndResetFir
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetAndResetGoodieNewCount.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGoodiePtr.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeForWorld.md
-reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetKillCounterTopByte_23F4.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetKillCounterTopByte_23F8.md
 reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetLevelStructure.md

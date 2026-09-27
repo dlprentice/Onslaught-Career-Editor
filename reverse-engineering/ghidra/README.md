@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[startup identities](#re-audit-startup-identities--september-26);
+[cockpit shake ABI](#re-audit-cockpit-shake-abi--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,61 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit cockpit shake ABI — September 26
+
+The [manifest](../../tools/cohort-specs/cockpit-shake-abi-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/cockpit-shake-abi-20260926.spec.tsv) correct
+`CCockpit__AddShockShake`'s argument from `int randomRange` to `float amount`.
+FDIV reads the stack slot as binary32; its caller passes already-capped float
+bits. The [function contract](../binary-analysis/functions/Cockpit.cpp/CCockpit__AddShockShake.md)
+records the independent CRT RNG stream, four replacement writes and three-component
+clamp. Forty-one bounded original-code cases include the engine/cockpit chain;
+at amount 0.25 the unclamped fourth component is -0.1171875.
+
+Exactly one explicit parameter is corrected from int randomRange to float amount in CCockpit__AddShockShake, with a corrected comment and tag set. The four-byte stack slot, automatic ECX receiver, void return, names, locals, types, bookmarks, instructions and all 8,330 non-target function rows remain unchanged. The exact variable comparison preserves every storage and local;
+only this explicit parameter's name and type change. Five protected exports are
+byte-identical. All nine live exports equal separately reopened rehearsal.
+Fresh PRE, rehearsal, separate/sealed readback, seven byte-stable refusal
+controls, independent review with root reproduction, live readback and
+independently restored POST recovery passed. Authored objects and substituted
+CRT thread-data provision do not establish Windows TLS, rendered movement,
+physical rumble or complete-game acceptance.
+
+Working identity: `db.18668`, 18 files / 121,408,372 bytes,
+inventory SHA-256 `239157fd1d6ad443e1ba5a0e8bc8db666889d23f900312b3ddd37173e2b4c1cc`; main database 71,106,560 bytes,
+SHA-256 `ef45ff511dc864ca1c4b81ff338177ddc9cf6ad764c1085823aa7279bb4445b2`. PRE is the restored Damage/shake-comment POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-cockpit-shake-abi/post-working`. Tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cockpit-shake-abi/`.
+
+## RE-audit damage and shake comments — September 26
+
+The [manifest](../../tools/cohort-specs/damage-shake-comments-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/damage-shake-comments-20260926.spec.tsv) correct the Damage and
+Battle Engine shake comments/tag sets. Exactly two nonrepeatable comments and tag sets corrected: CBattleEngine__Damage and CBattleEngine__AddShockShake. Every name, signature, storage, variable, type, bookmark, instruction, body and all 8,329 non-target function rows are preserved.
+
+Damage's old plate miscopied three offsets; the retained Level 521 observations
+already had the correct map. Frozen receipts and the historical applier remain
+unchanged. Complete pristine bodies, callers and 41 isolated original-code cases
+now distinguish positive damage from the common repair/tail path, late
+invulnerability restoration, floating conversion, shake thresholds and separate
+game/CRT RNG streams. See the [Damage contract](../binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Damage.md).
+The cockpit's demonstrated float parameter is a separate ABI cohort.
+
+Fresh PRE, rehearsal, separate/sealed readback, five byte-stable refusal
+controls, independent review with root reproduction, live readback and
+independently restored POST recovery passed. The first seal and rehearsal
+remain in `rejected-v1/`: review corrected an overstated threshold distinction,
+the monitored block radix and the NaN-shield wording before any live write.
+All nine live exports equal rehearsal; only the program comment digest changes. Explicit death/thread-data
+substitutes and a null attacker bound the experiment; full-game death/flash,
+Windows, rendering, devices and player acceptance remain open.
+
+Working identity: `db.18667`, 18 files / 121,408,372 bytes,
+inventory SHA-256 `6e63e7af99a81bf68839f3cd5a35a6a66ebcff9ed4e06860535bfe6b28e82185`; main database 71,106,560 bytes,
+SHA-256 `5ce637a154a82672a1af2f55d7c188bdd0099674ae8768f31b020728859fecda`. PRE is the restored startup-identity POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-damage-shake-comments/post-working`. Tracked checkpoint remains `745c00ad…`;
+no checkpoint refresh. Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/damage-shake-comments/`.
 
 ## RE-audit startup identities — September 26
 

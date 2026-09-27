@@ -219,7 +219,15 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (1,754/8,036 decoded bytes); authored findings and marked historical leads only.
 # Startup identities: four current/four proposed analytic comments
 # (2,296/8,381 decoded bytes); authored findings and marked historical leads only.
+# Damage/shake comments: two current/two proposed analytic comments
+# (1,530/7,102 decoded bytes); authored findings and superseded historical leads.
+# Cockpit float ABI: one current/one proposed analytic comment
+# (848/3,262 decoded bytes); authored argument/arithmetic evidence and limits.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/cockpit-shake-abi-20260926.manifest.tsv":
+        "fb211b8eb5f13776511572f4b2aa7e724b55a4f3e8c9d34427ca1aa38e5acf5e",
+    "tools/cohort-specs/damage-shake-comments-20260926.manifest.tsv":
+        "c04f79f0d66c800bfd8fdeb2dbea74eb849c5dd3e86969e14dfe71dee18fa9e3",
     "tools/cohort-specs/startup-identities-20260926.manifest.tsv":
         "12fc2b6c96e0dee69e8c10d3e3039abe30f797675e5ad458f727e5f5acd82936",
     "tools/cohort-specs/input-key-abi-20260926.manifest.tsv":
