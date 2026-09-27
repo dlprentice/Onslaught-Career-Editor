@@ -553,8 +553,12 @@ findings must not become claims that the entire game never changes window mode.
 
 The class registration supplies callback `0x00529070`. That 34-byte original
 body dispatches through application slot 12, forwarding four arguments with
-16-byte callee cleanup. Its boundary is now promoted as default `FUN_00529070`;
-its identity/interface remains a separate metadata correction. The existing [controller contract](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-window-message-producer-experiment)
+16-byte callee cleanup. Its boundary and separate metadata correction are now
+promoted as `WndProc`: four opaque stack DWORDs, `__stdcall`, full EAX return,
+no incoming receiver. The callback loads its receiver from `0x0089c0f4`;
+source SDK typedefs and unique translation-unit provenance remain unproved
+because pinned `EditorD3DApp.cpp` repeats the same source body. The saved
+stack-purge annotation stays unknown; RET `0x10` establishes physical cleanup. The existing [controller contract](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-window-message-producer-experiment)
 records 68 original-code message cases, five separate helper cases and two
 counterfactual controls. It distinguishes scan-code indexing, console virtual-key
 arguments, trap behavior, release production, suppression and base forwarding.

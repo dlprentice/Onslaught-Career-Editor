@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[frontend argument interfaces](#re-audit-frontend-argument-interfaces--september-27);
+[verified cleanup bodies](#re-audit-verified-cleanup-bodies--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,59 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified cleanup bodies — September 27
+
+The [43-row manifest](../../tools/cohort-specs/cleanup-body-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/cleanup-body-verified-20260927.spec.tsv) verify existing cleanup names
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Exactly 43 existing cleanup names verified within bounded class-associated nondeleting identity limits. Only comments and tag sets change. All names, prototypes, locals, types, saved stack metadata, 6,586 body bytes and 1,973 instructions are unchanged; 8,289 non-target function rows remain exact. All 16,761 previous comment bytes remain verbatim as qualified fallible leads. The authored comments total 102,111 bytes. No complete cleanup or runtime behavior is claimed.
+
+The cleanup-bodies extension to re_name_evidence.py passes 152 tests and independently reviewed negative controls. It checks fresh RTTI, first literal primary-vptr store through unchanged-this, own-table slot1 backlink to a byte-recognized deletion wrapper, every matching wrapper byte shape, full fresh decoding and recursive normal-return teardown to reviewed CMonitor at 004bac40. Cached names never enter evidence admission. The mechanism inspected 154 full bodies and admitted 44 cleanup identities; 43 already-correct spellings form this cohort, while CPostEventData at 005386d0 remains a separate name correction. CUnit is included through a mechanically admitted wrapper whose earlier output spelling collided; 113 wrapper names, not 114, had been promoted. The 69 rejected owner-prefix cases remain unresolved. CUnitAI at 00415080 and MechAI context at 004a03b0 are not conflated. Root reproduced first-store encoding and overlapping-ownership bugs before fixing them; segment changes and indexed/overlapping stores are refused. SDK/source-exact spelling, prototype typing, exceptions, arbitrary indirect callers and full callee behavior remain outside this normal-flow proof.
+
+Independent review checked every target/pin/old note and the bounded shared
+comment template. The private public-comment review initially listed only
+cohort-specific added tags; its corrected accounting records the full delta
+without changing the sealed payload. Fresh PRE restore, rehearsal,
+separate/sealed readbacks, five byte-stable refusal controls, exact payload/POST
+review with root reproduction, live readback and independently restored Archive A
+POST passed. All nine live exports match rehearsal; program scope changes only
+the comment digest. The name projection remains exact for all 8,332 entries.
+
+Working identity: `db.18695`, 18 files / 124,652,404 bytes,
+inventory SHA-256 `7488b9377a3b2cc6460f1a798fe4b08527bb50719ecff3d7ff139197f4f0de7d`; main database 74,350,592 bytes,
+SHA-256 `a95e4355b32be6cbc3d52e56ba0bc1a95306a3d629810d55033885079e86d59b`. Restored WndProc POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-cleanup-body-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cleanup-body-verified/`; proof, tests and logs use `cleanup-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+
+## RE-audit window callback identity and interface — September 27
+
+The [one-row manifest](../../tools/cohort-specs/window-callback-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/window-callback-abi-20260927.spec.tsv) describe the source-correlated
+Windows message callback in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One default function FUN_00529070 is named WndProc and given a physical stdcall interface: four undefined4 stack parameters hWnd/uMsg/wParam/lParam and undefined4 EAX return, with no incoming receiver. One authored comment and tag set added; the old default name remains in the note. All 34 code bytes, 12 instructions, 8,331 other functions, locals, types and other variables remain unchanged. Stack purge stays the saved unknown value2147483647; the physical RET16 is established from instructions, not a changed purge annotation. The declared symbol source moves DEFAULT to USER_DEFINED; one comment is added.
+
+Source-correlated callback in pinned d3dapp.cpp79-81/114, with identical source body in EditorD3DApp.cpp73, so no unique translation-unit attribution. RegisterClassA setup stores the callback at00529151 and registers at005291a4. Constructor00528fb3 assigns the global receiver0089c0f4. The callback overwrites ECX from that global, forwards four entry stack DWORDs in order to virtual slot12 and returns the complete EAX unchanged. Retained original-code evidence has34 callback cases but set incoming ECX to the surrogate receiver; static overwrite, not a poison-ECX experiment, establishes lack of an incoming receiver requirement. SDK typedefs/signedness, Windows dispatch, receiver lifetime, reentrancy and device/player acceptance stay open. No runtime experiment was rerun.
+
+Fresh PRE restore, dry/apply rehearsal, separate/sealed readbacks, nine actual
+byte-stable refusal controls, independent exact-payload review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal. The comparison initially omitted the
+expected DEFAULT-to-USER_DEFINED symbol count and added-comment count; it now
+requires exactly +1/-1 symbol sources and +1 comment as well as the comment
+digest. No unexplained change was accepted. No saved stack-purge value was changed.
+
+Working identity: `db.18694`, 18 files / 124,439,412 bytes,
+inventory SHA-256 `75c76af4d2b65f0bc4ec2e0bdf26799fbc843db5407f528f8e76f28bfde88ead`; main database 74,137,600 bytes,
+SHA-256 `4f9db6700c6bdec9524a5b5be05053f7326225738feea8617f1461e22245eb07`. Restored frontend-argument POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-window-callback-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-abi/`; logs use `abi-` under
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
 
 ## RE-audit frontend argument interfaces — September 27
 

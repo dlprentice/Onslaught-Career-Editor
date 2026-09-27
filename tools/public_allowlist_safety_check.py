@@ -269,7 +269,13 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # and bounded physical interface; old note retained as a fallible lead.
 # Frontend argument interfaces: 22 old/22 authored comments (69,297/101,160 bytes);
 # ordered local transport with return uncertainty and fallible old notes retained.
+# WndProc: one new authored 2,084-byte comment; no prior plate note; opaque SDK types.
+# Cleanup bodies:43 old/new authored comments (16,761/102,111 bytes); retained notes are leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/cleanup-body-verified-20260927.manifest.tsv":
+        "e28925f18b6a2c2c85e8f7c7ab7726127fca13d3a1180938923096fdc2204a6d",
+    "tools/cohort-specs/window-callback-abi-20260927.manifest.tsv":
+        "55a506c425543cbbfc41ef95f7e948f25bbede5400cdb1b45fd2ed36d33b501c",
     "tools/cohort-specs/frontend-argument-abi-20260927.manifest.tsv":
         "7956c0b2795768913f74dd6848b64415bdb4685bd7a0d3ff412083c2e25d3ddd",
     "tools/cohort-specs/getbpp-abi-20260927.manifest.tsv":

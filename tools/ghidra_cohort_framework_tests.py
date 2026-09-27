@@ -287,6 +287,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # unchanged instructions and existing metadata, five byte-stable refusal controls.
 # Frontend argument interfaces: 22 reviewed ECX/stack parameter corrections;
 # names, returns, code and locals preserved; seven byte-stable refusal controls.
+# WndProc: one source-correlated name and four-stack-DWORD stdcall interface;
+# full EAX annotation, existing code/purge preserved, nine byte-stable refusals.
+# Cleanup bodies:43 existing names retained; comments/tags only, exact code/ABI preservation.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -358,6 +361,8 @@ LIVE_GRANTED_COHORTS = [
     "getbpp-abi-20260927",
     "window-callback-boundary-20260927",
     "frontend-argument-abi-20260927",
+    "window-callback-abi-20260927",
+    "cleanup-body-verified-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -835,6 +840,8 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "getbpp-abi-20260927",\n'
         '        "window-callback-boundary-20260927",\n'
         '        "frontend-argument-abi-20260927",\n'
+        '        "window-callback-abi-20260927",\n'
+        '        "cleanup-body-verified-20260927",\n'
         "    };\n",
     ),
     (

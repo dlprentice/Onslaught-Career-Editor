@@ -2800,6 +2800,9 @@ def _function_cfg(prog: Program, address: int):
             raise ValueError('incomplete or invalid instruction decoding')
         if ins.mnem not in _CLEANUP_OPS:
             raise ValueError('unsupported instruction in cleanup: ' + ins.mnem)
+        if ins.ops.split(',')[0] in ('cs', 'ds', 'es', 'ss', 'fs', 'gs') \
+                and ins.mnem not in ('cmp', 'test', 'push'):
+            raise ValueError('cleanup changes a segment register')
         if ins.ops.split(',')[0] in ('esp', 'sp') and ins.mnem not in ('cmp', 'test', 'push') \
                 and not (ins.mnem in ('add', 'sub') and re.fullmatch(r'esp,0x[0-9a-f]+', ins.ops)) \
                 and not (ins.mnem == 'mov' and ins.ops == 'esp,ebp'):
@@ -3024,6 +3027,186 @@ def compiler_destructors(prog: Program, document: dict) -> dict:
                       'No exception, callee internals, full ABI or runtime certification. '
                       'Only the reviewed cleanup instruction set is supported. Other wrapper shapes, '
                       'secondary/repeated bases, aliases and collisions are withheld.'}
+
+
+def cleanup_primary_store(body: list[Insn]) -> tuple[int, int]:
+    """First literal primary-vptr store through original this, before dispatch.
+
+    This is an entry-prefix witness, not proof of all destructor side effects.
+    A store through an adjusted/member/reloaded pointer cannot establish it.
+    The first primary DWORD store decides; a later table cannot replace it.
+    """
+    state = frozenset({'ecx'})
+    for ins in body:
+        if ins.mnem in ('call', 'ret') or ins.mnem.startswith(('j', 'loop')):
+            break
+        if ins.mnem not in _CLEANUP_OPS:
+            raise ValueError('unsupported cleanup prefix instruction')
+        if ins.ops.split(',')[0] in ('cs', 'ds', 'es', 'ss', 'fs', 'gs') \
+                and ins.mnem not in ('cmp', 'test', 'push'):
+            raise ValueError('cleanup prefix changes a segment register')
+        store = re.fullmatch(r'DWORD PTR (?:ds:)?\[(eax|ecx|edx|ebx|esi|edi|ebp)(?:\+0x0)?\],(.+)', ins.ops)
+        if ins.mnem == 'mov' and store and store[1] in state:
+            if not re.fullmatch(r'0x[0-9a-f]+', store[2]):
+                raise ValueError('first primary store is not a literal table')
+            return ins.va, int(store[2], 16)
+        dest = ins.ops.split(',')[0]
+        if ('[' in dest and ins.mnem not in ('cmp', 'test', 'push', 'lea')
+                and any(re.search(r'\b'+reg+r'\b', dest) for reg in state)):
+            # Do not build an arithmetic engine just to ignore an earlier
+            # write. Only a simple fixed, disjoint member range may precede
+            # the primary store; indexed, overlapping and partial forms refuse.
+            member = re.fullmatch(r'(BYTE|WORD|DWORD) PTR (?:ds:)?\[(\w+)([+-])0x([0-9a-f]+)\]', dest)
+            if member and member[2] in state:
+                width = {'BYTE': 1, 'WORD': 2, 'DWORD': 4}[member[1]]
+                offset = int(member[4], 16) * (1 if member[3] == '+' else -1)
+                if offset >= 4 or offset + width <= 0:
+                    state = _this_after(ins, state)
+                    continue
+            raise ValueError('earlier memory write may overlap the primary table')
+        state = _this_after(ins, state)
+    raise ValueError('no original-this primary table store before control transfer')
+
+
+def compiler_cleanup_bodies(prog: Program, document: dict) -> dict:
+    """Bind nondeleting cleanup ownership to an admitted wrapper AND own vptr.
+
+    Fresh RTTI and full fresh decoding must agree with the cached evidence.
+    Every matching unadjusted wrapper byte shape in executable sections is
+    considered, including shapes outside saved functions. Unadmitted or
+    conflicting wrappers with the same callee withhold that cleanup. Other
+    compiler patterns, indirect callers and exception paths remain unproved.
+    Names participate only in output spelling/occupied-name decisions.
+    """
+    if scan_rtti(prog.img) != prog.model.rtti:
+        raise ValueError('cleanup cached RTTI differs from fresh specimen')
+    family = compiler_destructors(prog, document)
+    passes = {r['target'] for r in family['admission']['rows']
+              if r['status'] == 'mechanical-checks-pass'}
+    wrappers = {int(r['target'], 16): r for r in family['rows'] if r['target'] in passes}
+    base = int(document['teardown']['address'], 16)
+    slot = document['seed']['slot']
+    seed_class = document['seed']['class']
+    manager, free = int(document['manager'], 16), int(document['deallocator']['address'], 16)
+    raw_callers = defaultdict(set)
+    for sec in prog.img.sections:
+        if not sec.characteristics & 0x20000000:
+            continue
+        pos = sec.raw.find(bytes.fromhex('56 8b f1 e8'))
+        while pos >= 0:
+            address = sec.start + pos
+            callee = scalar_delete_entry(sec.raw[pos:pos+32], address, manager, free)
+            if callee is not None:
+                raw_callers[callee].add(address)
+            pos = sec.raw.find(bytes.fromhex('56 8b f1 e8'), pos+1)
+
+    tables = {t.va: t for t in prog.model.rtti.vtables}
+    fresh_bodies, fresh_errors = {}, {}
+
+    def fresh(address):
+        if address in fresh_errors:
+            raise ValueError(fresh_errors[address])
+        if address not in fresh_bodies:
+            fn = prog.by_va.get(address)
+            try:
+                if fn is None or fn.thunk:
+                    raise ValueError('cleanup witness lacks a non-thunk function')
+                if any(other.va != fn.va and other.lo <= fn.hi
+                       and (other.declared_hi if other.declared_hi is not None else other.hi) >= fn.lo
+                       for other in prog.funcs):
+                    raise ValueError('cleanup witness has overlapping exported function ownership')
+                body = decode_entry_body(prog.img, fn)
+                if body != prog.body(fn):
+                    raise ValueError('fresh cleanup/wrapper decoding differs from cached model')
+                fresh_bodies[address] = body
+            except ValueError as error:
+                fresh_errors[address] = str(error)
+                raise
+        return fresh_bodies[address]
+
+    def validate_chain(chain):
+        address = int(chain['address'], 16)
+        fresh(address)
+        fn = prog.by_va[address]
+        if (chain['bytes'] != fn.body_bytes or chain['sha256'] !=
+                hashlib.sha256(prog.img.read(address, fn.body_bytes)).hexdigest()):
+            raise ValueError('cleanup chain body pin differs from fresh bytes')
+        for exit_ in chain['exits']:
+            if 'chain' in exit_:
+                validate_chain(exit_['chain'])
+
+    groups = defaultdict(list)
+    for address, wrapper in wrappers.items():
+        groups[int(wrapper['cleanupTarget'], 16)].append((address, wrapper))
+    rows = []
+    for address, group in sorted(groups.items()):
+        if address == base:
+            continue  # the independently reviewed seed is not a new disposition
+        row = {'target': f'0x{address:08x}', 'wrapperEntries': [f'0x{a:08x}' for a, _ in group],
+               'status': 'withheld', 'flags': []}
+        try:
+            if raw_callers[address] != {a for a, _ in group}:
+                raise ValueError('extra or unadmitted matching wrapper caller')
+            owners = {owner for _, w in group for owner in w['leastDerivedHolders']}
+            if len(owners) != 1:
+                raise ValueError('cleanup wrappers have conflicting naming owners')
+            owner = next(iter(owners))
+            if prog.slots.get(address):
+                raise ValueError('cleanup itself has a virtual-table alias')
+            body = fresh(address)
+            site, table_va = cleanup_primary_store(body)
+            table = tables.get(table_va)
+            if table is None or table.klass != owner or table.offset != 0:
+                raise ValueError('first primary table does not match wrapper naming owner')
+            col = prog.img.u32(table_va-4)
+            if (col is None or prog.img.u32(col) != 0 or prog.img.u32(col+4) != 0
+                    or prog.img.u32(col+8) != 0
+                    or [d for k, d in prog.bases.get(owner, []) if k == seed_class] != [0]
+                    or [d for k, d in prog.fixed_bases.get(owner, []) if k == seed_class] != [0]):
+                raise ValueError('cleanup owner lacks unique fixed primary ancestry/COL')
+            if (slot >= len(table.slots) or table.slots[slot] not in {a for a, _ in group}
+                    or prog.img.u32(table_va+slot*4) != table.slots[slot]):
+                raise ValueError('own table destructor slot does not return to admitted wrapper')
+            for wrapper, witness in group:
+                fresh(wrapper)
+                validate_chain(witness['teardownProof'])
+            fn = prog.by_va[address]
+            row.update(status='mechanical-checks-pass', owner=owner,
+                       primaryStore=f'0x{site:08x}', table=f'0x{table_va:08x}',
+                       bodyBytes=fn.body_bytes,
+                       bodySha256=hashlib.sha256(prog.img.read(address, fn.body_bytes)).hexdigest(),
+                       teardownProofs=[w['teardownProof'] for _, w in group])
+        except ValueError as error:
+            row['flags'].append(str(error))
+        rows.append(row)
+
+    proposals = []
+    for row in rows:
+        fn = prog.by_va.get(int(row['target'], 16))
+        proposal = {'target': row['target'], 'currentName': fn.name if fn else None,
+                    'status': 'withheld', 'flags': row['flags'].copy()}
+        if row['status'] == 'mechanical-checks-pass':
+            owner = row['owner']
+            # These are explicit conventional cleanup spellings, not substring
+            # matches. Accepting one does not verify any old semantic comment.
+            suffixes = ('dtor', 'dtor_base', 'dtor_body', 'destructor', 'Destructor',
+                        'Dtor', 'BaseDestructor', 'dtor_body_'+row['target'][2:])
+            admitted_names = {owner+'__'+suffix for suffix in suffixes}
+            proposed = fn.name if fn.name in admitted_names else owner+'__dtor_body'
+            proposal['proposedName'] = proposed
+            if any(other.va != fn.va and other.name == proposed for other in prog.funcs):
+                proposal['flags'].append('proposed cleanup name already belongs to another function')
+            else:
+                proposal['status'] = 'keep' if proposed == fn.name else 'rename'
+        proposals.append(proposal)
+    return {'rows': rows, 'proposals': {'rows': proposals},
+            'freshBodiesChecked': len(fresh_bodies),
+            'limits': 'Class-associated nondeleting cleanup at the saved entry, not unique source '
+                      'provenance or complete destructor behavior/ABI. Explicit normal paths and '
+                      'x86 nonvolatile preservation only; exceptions, callee internals, indirect '
+                      'callers and other compiler patterns remain outside the proof. '
+                      'Old spellings are compared only after byte-based admission. '
+                      'Independent evidence review and the full promotion gate remain required.'}
 
 
 # ---------------------------------------------------------------------------
@@ -3525,12 +3708,14 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument('--undefine', action='append', default=[])
     v.add_argument('--anchors', type=Path)
     v.add_argument('--out', type=Path, required=True, help='new private JSON report')
-    d = sub.add_parser('destructors', help='reviewed compiler-entry family with pinned teardown evidence')
-    d.add_argument('--functions', type=Path, required=True)
-    d.add_argument('--source', type=Path, default=SOURCE)
-    d.add_argument('--model', type=Path, required=True)
-    d.add_argument('--evidence', type=Path, required=True)
-    d.add_argument('--out', type=Path, required=True, help='new private JSON report')
+    for command, help_ in [('destructors', 'reviewed compiler-entry family with pinned teardown evidence'),
+                           ('cleanup-bodies', 'fresh owner-prefix and complete normal teardown evidence')]:
+        d = sub.add_parser(command, help=help_)
+        d.add_argument('--functions', type=Path, required=True)
+        d.add_argument('--source', type=Path, default=SOURCE)
+        d.add_argument('--model', type=Path, required=True)
+        d.add_argument('--evidence', type=Path, required=True)
+        d.add_argument('--out', type=Path, required=True, help='new private JSON report')
     n = sub.add_parser('class-names', help='reviewed caller and exact class-literal getter family')
     n.add_argument('--functions', type=Path, required=True)
     n.add_argument('--source', type=Path, default=SOURCE)
@@ -3613,7 +3798,7 @@ def main(argv: list[str] | None = None) -> int:
         from collections import Counter
         print('Class-name proposals:', json.dumps(Counter(r['status'] for r in report['proposals']['rows']), sort_keys=True))
         return 0
-    if args.cmd == 'destructors':
+    if args.cmd in ('destructors', 'cleanup-bodies'):
         if args.out.exists():
             ap.error('compiler-entry report must be a new path')
         img, model = load_or_build(args.model)
@@ -3624,7 +3809,7 @@ def main(argv: list[str] | None = None) -> int:
             document = json.loads(args.evidence.read_text())
             if document.get('sourceSha256') != pins['sourceSha256']:
                 raise ValueError('compiler-entry source content pin mismatch')
-            report = compiler_destructors(prog, document)
+            report = (compiler_destructors if args.cmd == 'destructors' else compiler_cleanup_bodies)(prog, document)
         except (KeyError, TypeError, ValueError) as error:
             ap.error(str(error))
         report['inputs'] = dict(pins, specimenSha256=img.sha256,

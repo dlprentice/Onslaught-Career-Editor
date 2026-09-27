@@ -7952,3 +7952,97 @@ replaced its duplicate source-parity function note with an owner link. The
 177-byte body reloads active-page state after callbacks and converts signed
 time to stored float; actual callback side effects, duration units and SetPage
 execution remain open. No new original-game runtime experiment was run.
+
+## RE cleanup-body admission tool — September 27
+
+`tools/re_name_evidence.py cleanup-bodies` combines the existing compiler
+deleting-entry proof with the cleanup's own first primary-vptr store. It checks
+fresh RTTI, every matching wrapper byte shape, exact complete fresh decoding
+of wrappers and recursive teardown bodies, original-this flow, every explicit
+normal return and conflicting ownership. Names are output comparisons only.
+Known cleanup spellings can remain; prototype and old-comment claims are excluded.
+
+`python -m unittest tools.re_name_evidence_tests`: 152 passed. Review exposed
+two bypasses, reproduced as five failing subcases before correction: explicit
+zero displacement could hide an earlier table store, and a clipped earlier
+function could hide overlapping declared ownership. Controls also cover DS
+forms, indexed/partial/overlapping writes, segment-register mutations, stale
+instruction caches, extra wrappers, virtual aliases and occupied names.
+
+The private `cleanup-admission-v2.json` covers 44 accepted cleanup identities
+(43 retained spellings, one proposed rename) and 69 withheld cases. It checks
+154 complete fresh bodies. This includes CUnit's cleanup through a mechanically
+admitted wrapper whose earlier name proposal collided; only 113 wrapper names
+were previously promoted. The 44 cleanup dispositions are not yet promoted.
+No runtime experiment was run. Complete destruction behavior, exception paths,
+callee compliance and arbitrary indirect callers remain unproved.
+
+Evidence/logs: `local-data/test-runs/re-audit-20260926/frontend-options/`:
+`cleanup-review-negatives-before.log`, `cleanup-suite-v2.log`,
+`cleanup-admission-v2.log` and `cleanup-admission-v2.json`. Independent read-only
+review approved the bounded mechanism; root reproduced the counterexamples and
+checked the real packet. Exact cohort payload review remains a separate gate.
+
+## RE window callback identity and interface — September 27
+
+`window-callback-abi-20260927` names the previously recovered 34-byte callback
+WndProc and assigns four opaque stack DWORDs, `__stdcall` and full EAX return.
+No incoming receiver is declared: the body overwrites ECX from the application
+global. Source SDK typedefs and unique translation-unit provenance remain open.
+Retained original-code outputs were inspected, not rerun; Windows/device
+acceptance was not performed.
+
+Fresh PRE restore, rehearsal, separate/sealed readback, nine byte-stable refusal
+controls, independent exact-payload review with root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports match rehearsal. All 8,331 other function records, locals, types and
+code are preserved. Saved stack purge remains unknown, while RET16 proves
+physical cleanup. Exactly one comment and one DEFAULT-to-USER_DEFINED symbol
+change accompany the declared metadata correction.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed. The current
+projection matches all 8,332 live names: 2,041 corrected, 317 additional kept,
+zero newly neutralized and 5,974 outside those sets. Prototype corrections are
+52; unique corrected comments are 2,371. These are audit dispositions, not
+complete semantic or runtime coverage.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-abi/`.
+Logs use prefix `abi-` under
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,162 candidate files. `git diff --check` passed.
+
+
+## RE verified cleanup-body identities — September 27
+
+`cleanup-body-verified-20260927` verifies 43 existing names within bounded
+class-associated nondeleting-cleanup identity limits. Only comments and tags
+change. All names, interfaces, locals, types, saved stack metadata, 6,586 body
+bytes, 1,973 instructions and 8,289 non-target function records remain exact.
+All 16,761 previous comment bytes remain verbatim as explicitly fallible leads.
+This adds no complete cleanup, exception-path or retail runtime acceptance.
+
+The already-tested admission tool's 152 cases and revised fresh-input packet
+support this scope. Exact independent payload/POST review, root reproduction,
+restored PRE, rehearsal, separate/sealed readbacks, five byte-stable refusal
+controls, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only the program comment digest changes.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+
+`verify_projection.py` matches all 8,332 live names: 2,041 corrected, 360
+additional verified/kept, zero newly neutralized and 5,931 outside those sets.
+Prototype corrections remain 52; unique corrected comments total 2,414.
+These are audit dispositions, not semantic-completion percentages. CPostEventData's
+single proposed name correction and 69 withheld cleanup cases remain separate.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cleanup-body-verified/`.
+Evidence and execution logs use `cleanup-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed. `git diff --check` passed.
