@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (Thing gameplay identities and 32 interfaces promoted; broader audit remains)
+Last updated: 2026-09-27 (shared-music records promoted; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -80,7 +80,12 @@ unchanged interfaces and thunk links, exact live readback and independent recove
 The [shared policy](binary-analysis/cmusic-shared-semantics-2026-08-11.md) and
 [device crosswalk](binary-analysis/cpcmusic-vtable-semantics-2026-08-11.md) separate
 fresh retail inspection from retained demo/runtime findings and remaining ABI,
-filesystem and audible acceptance. Eight kept shared names await comment disposition.
+filesystem and audible acceptance. The subsequent
+[eight kept-name records](ghidra/README.md#re-audit-verified-music-records--september-27)
+are now live with exact comment/tag readback and independently restored recovery.
+All names, interfaces, variables and code remain unchanged. Deferred selection
+writes, exact stop branches, rounding limits and unproved override-guard meanings
+are bounded in the shared policy note.
 The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
 now corrects sixty names across shared movement, activation and combat interfaces,
 with independently bound retail callers, complete target bodies and all recognized

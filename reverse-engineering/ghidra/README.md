@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[Thing gameplay interfaces](#re-audit-thing-gameplay-interfaces--september-27);
+[verified music records](#re-audit-verified-music-records--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,38 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified music records — September 27
+
+The [eight-row manifest](../../tools/cohort-specs/music-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/music-verified-20260927.spec.tsv) retain eight shared music names,
+correct their plate notes and qualify tags. Specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Eight existing shared-music names verified within complete static-body/source correspondence; only comments and tag sets change. Earlier notes remain qualified leads. All names, prototypes, variables, locals, frames, 1,432 code bytes / 542 instructions and 8,324 other function records stay unchanged.
+
+All eight complete pristine bodies were freshly decoded and read against pinned Music.cpp/Music.h. The allocation file/line anchor, source-correlated device calls,selection switch table and concrete coefficient/string bytes support the stated identities and bounded behavior. This is not full ABI, device, filesystem, audible or runtime acceptance. The null-song assignment is source agreement, not divergence; SetVolume uses linear 127.0f then x87 FISTP with ambient rounding, not the non-PS2 tangent formula. Retail filename overrides remain distinct from unproved high-level meanings of their guard globals. Source-parity tags are removed; exact historical notes stay as fallible leads.
+
+The notes distinguish strict fade thresholds, deferred target updates, actual
+null-pointer stop branches, selection-state writes only on the immediate path,
+playlist node ordering and unchecked filename copies. SetVolume has no local
+clamp or device submission; Shutdown directly clears only the list head among
+the three list/current/queued pointers. These are instruction/source findings,
+not new executions of the older audio experiments.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports equal
+rehearsal; every variable/stack/type/body record is preserved. All 8,332 names
+match the unchanged production projection. Draft review caught ambiguous hex
+notation and an overbroad empty-playlist claim before the manifest was sealed.
+
+Working identity: `db.18703`, 18 files / 125,471,604 bytes,
+inventory SHA-256 `93a4a060bbc46507e297e75cf0a4c9bbe251af88e80b873af7b69ef05cec4a43`; main database 75,169,792 bytes,
+SHA-256 `b27f0a098edd9eb14fcf811e9fd4de92e04c80d8884e9bab3946607595e9d004`. Restored Thing gameplay interface POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-music-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/music-verified/`; execution logs:
+`local-data/test-runs/re-audit-20260926/music/verified-*`.
 
 ## RE-audit Thing gameplay interfaces — September 27
 
