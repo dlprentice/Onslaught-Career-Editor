@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[compiler deleting-entry identities](#re-audit-compiler-deleting-entry-identities--september-27);
+[verified compiler deleting entries](#re-audit-verified-compiler-deleting-entries--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,53 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified compiler deleting entries — September 27
+
+The [manifest](../../tools/cohort-specs/compiler-destructor-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/compiler-destructor-verified-20260927.spec.tsv) verify 80 existing names
+within the preceding compiler-entry proof's limits, changing comments and tags
+only. The 33 already normalized entries and seven withheld entries are excluded.
+All names and prototypes remain unchanged; this is an identity disposition,
+not full destructor, ABI or runtime validation.
+
+Pristine specimen: `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The exact 32-byte compiler body calls cleanup with original this, tests bit 0
+of the low byte in its first four-byte stack argument, conditionally frees
+unchanged this through `00549220` on manager `009c3df0`, returns this in EAX
+and executes RET 4. Nonexclusive naming context comes from all known fixed
+zero-offset CMonitor slot-1 RTTI holders, never the saved name itself.
+Normal-return teardown is bounded to the reviewed CMonitor base, a dominating
+original-this call or a stack-neutral direct tail. Full member cleanup,
+exception paths, callee ABI compliance and saved prototype types remain open.
+
+The fresh PRE function export and source/specimen pins bind admission v4.
+Root and the independent reviewer compared every body/RTTI/admission structure
+with v3: they are identical; only the export pin and 33 already promoted
+name/status outputs differ. The preceding fresh 5,590-instruction proof is
+therefore reused, while all 80 current wrappers, 880 instruction rows and
+2,560 bytes are checked against pristine again. CMonitor itself correctly uses
+the reviewed-base case. Older plate text remains explicitly fallible; for
+example, CRound's old RET 8 note is retained as a lead below the corrected
+RET 4 entry evidence, not endorsed as current behavior.
+
+Independent review confirmed the exact 80-row scope and authored payload,
+and found a copied 14-row assertion in the private comparison helper. It was
+corrected to 80 before the root comparison ran; no payload or seal changed.
+Fresh PRE restoration, rehearsal and separate/sealed readbacks, five byte-stable
+refusal controls, root reproduction, live readback and independently restored
+Archive A POST passed. All nine live exports equal rehearsal.
+Exactly 80 existing compiler scalar-deleting-entry names verified within bounded static identity limits; comments/tags updated without renames or prototype changes. Earlier plate notes remain explicitly fallible leads. All names, prototypes, types, conventions, storage, bodies, instructions and bookmarks remain unchanged; 8,251 non-target function rows remain exact. No new gameplay or runtime acceptance is claimed. All 880 target instructions remain exact. Program-scope change
+is only `commentsSha256`.
+
+Working identity: `db.18674`, 18 files / 122,801,012 bytes,
+inventory SHA-256 `c4c94e00cae487891d3814e604f3396bfac7cb5daf8b6278460d8e46e931ce5c`; main database 72,499,200 bytes,
+SHA-256 `40d1410afd7805ee48158e294635fce2d14fd64325cfaf3c2d427b55b0081106`. The preceding compiler identities POST served as PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-compiler-destructor-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/compiler-destructor-verified/`; shared proof evidence is in sibling
+`compiler-destructors/`. The six shared-context entries and CUnit collision
+remain excluded pending their own evidence-backed disposition.
 
 ## RE-audit compiler deleting-entry identities — September 27
 

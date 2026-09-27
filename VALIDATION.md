@@ -7081,3 +7081,34 @@ corrected. `npm run test:safety` passed for 4,116 public candidate files,
 including submodules. `git diff --check` passed. Gate logs are in the cohort
 owner above (`focused-tests.log`, `docs.log`, `docs-final.log`, `safety.log`,
 `projection.log`).
+
+## RE verified compiler deleting entries — September 27
+
+The exact 80-row `compiler-destructor-verified-20260927` cohort passed fresh
+PRE restoration, rehearsal with separate/sealed readbacks, five byte-stable
+refusal controls, independent payload/proof review with root reproduction,
+live readback and an independently restored Archive A POST. All nine live
+exports equal rehearsal. Every name, prototype, body and instruction remains
+unchanged; 8,251 other function rows remain exact. Only comments and tags change.
+The preceding 33 normalized entries and seven withheld entries are excluded.
+
+Root and the independent reviewer checked all 880 wrapper instructions against
+2,560 pristine bytes and compared v3/v4 body/RTTI/admission proof structures.
+They are identical; the prior fresh family proof remains applicable. The private
+comparison helper's copied 14-row assertion was corrected to 80 before use.
+A retained CRound RET 8 note is explicitly an unverified historical lead; the
+new authored entry evidence states the measured RET 4. No name-driven reseal,
+prototype change or runtime acceptance is claimed.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`verify_projection.py` matches all 8,331 live function names and independently
+deduplicates the running counts: 1,874 unique corrected names (1,875 rename
+rows), 220 additional kept names, 2,098 updated comments and 6,237 names outside
+the accounted set. These are identity dispositions with stated limits.
+Commands and private receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/compiler-destructor-verified/`.
+
+`npm run test:docs` passed with zero drifted or unresolved name assertions.
+`npm run test:safety` passed for 4,122 public candidate files, including
+submodules. `git diff --check` passed. The same private owner contains
+`framework-tests.log`, `projection.log`, `docs.log` and `safety.log`.

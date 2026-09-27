@@ -314,6 +314,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "header-interface-identities-20260926",
         "controller-engine-verified-20260927",
         "compiler-destructor-identities-20260927",
+        "compiler-destructor-verified-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

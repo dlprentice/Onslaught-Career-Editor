@@ -262,6 +262,9 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Controller/Engine verified identities: 14 retained names, comments/tags only;
 # nine explicit Controller slots, five Engine bodies, corrected slot tags,
 # exact byte/source/RTTI evidence and independent public-payload review.
+# Verified compiler deleting entries: 80 existing names retained, comments/tags only;
+# fixed compiler bodies, all known RTTI holders and bounded normal-flow proof;
+# exact rehearsal, five byte-stable refusals and independent payload review.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -313,6 +316,7 @@ LIVE_GRANTED_COHORTS = [
     "header-interface-identities-20260926",
     "controller-engine-verified-20260927",
     "compiler-destructor-identities-20260927",
+    "compiler-destructor-verified-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -770,6 +774,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "header-interface-identities-20260926",\n'
         '        "controller-engine-verified-20260927",\n'
         '        "compiler-destructor-identities-20260927",\n'
+        '        "compiler-destructor-verified-20260927",\n'
         "    };\n",
     ),
     (

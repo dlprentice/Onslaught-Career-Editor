@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: compiler deleting-entry proof promoted; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 113 compiler deleting-entry identities dispositioned; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -429,9 +429,10 @@ call-site evidence: `0x004f450b` through `0x004f4511` forwards three DWORDs;
 slot 61. The stricter automated route awaits pinned parameter-width witnesses
 for those unknown source types. It does not establish a new prototype audit.
 
-The compiler-destructor recognizer is implemented and its first 33-row cohort
-is promoted with independently restored recovery. These are predominantly
-spelling normalizations of previously plausible deleting-destructor labels,
+The compiler-destructor recognizer is implemented; its 33 name normalizations
+and the separate [80 kept-name comments](reverse-engineering/ghidra/README.md#re-audit-verified-compiler-deleting-entries--september-27)
+are promoted with independently restored recovery. The 33 name changes are
+predominantly spelling normalizations of plausible deleting-destructor labels,
 now backed by exact byte/RTTI/normal-flow proofs; they are not 33 new gameplay
 bugs. The method admitted 113 of 120 fixed CMonitor-family entries. Root
 freshly checked 724 recognized RTTI tables, 165 slot uses and 5,590 instructions
@@ -440,8 +441,9 @@ provenance defect; the tool now refuses unsupported instructions and 69 focused
 tests pass. The initial cohort seal's stale added date tags were corrected
 before live application; the rejected rehearsal remains preserved.
 
-Next promote the 80 already correctly spelled names as comments/tags only,
-using the current export and preserving the seven exclusions. Six entries
+The 80-name cohort changed only comments/tags, preserved every name and
+prototype, and excluded the preceding 33 entries. All nine live exports equal
+rehearsal; 8,251 other function rows remain exact. Six excluded entries
 have multiple incomparable RTTI holders; the seventh is CUnit's separate
 entry, whose desired spelling is occupied by one shared wrapper. Re-derive
 those shared entries without treating a common base as an exclusive owner.
@@ -452,7 +454,10 @@ CMonitor open until their family evidence is bound. Camera candidates still
 need aggregate-return and folded-alias handling. Follow the loader contract
 with original-reader short/zero reads and the inlined Spawner.
 Re-derive unresolved cases where the evidence can support a whole family, and
-neutralize nothing merely for missing tool support. Remaining name leads include
+neutralize nothing merely for missing tool support. Next examine the frontend
+page family: the surviving Goodies declarations and common-page calls may
+establish menu/loading/saving interface slots despite the missing base header.
+This is a research lead, not yet a promoted disposition. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
 and sound identities are resolved above. Damage's name and corrected behavioral
 annotations are recorded above. The `CPCController` key-query
@@ -486,24 +491,24 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the compiler deleting-entry correction (September 27).**
+**Running coverage after the compiler deleting-entry family (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 1,874 unique functions; 1,875 rename rows include one repeated correction. The latest 33 are compiler-entry spelling normalizations with fresh identity proof. |
-| Names verified and kept | 140 additional functions: 62 library/import identities, Damage, 63 Thing-family and 14 Controller/Engine identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 220 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine and 80 compiler deleting-entry identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,317 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,237 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,018 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,098 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
-`compiler-destructor-identities-20260927`, the final
+`compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
