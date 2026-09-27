@@ -530,6 +530,21 @@ Use reviewable cohorts and the existing preservation gate. Update these counts
 after each promotion, keeping unique functions and repeat corrections distinct.
 The prepared three-cohort queue is complete; it must not be restarted.
 
+**Slot-save result boundary (September 27).** Five original-code adapter cases
+and one separate counterfactual show that a complete CRT item write followed
+by close error still returns zero; non-one item results return one without
+closing. The read-only real fixture, exact calls/transport and all outputs
+were independently checked. Static explicit-save composition takes the zero
+success branch; main/pause callers ignore the slot result. None establishes
+actual Windows persistence or a complete menu/dialog run. This retail path
+uses CRT streams, distinct from CDXMemBuffer and the source's older PC writer.
+Evidence remains in `local-data/test-runs/save-startup-20260919/`; the existing
+[save contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-27-slot-save-failure-boundary)
+and backend/function notes own the correction. No Ghidra disposition count
+changes. The next resource/chunk-reader family has 13 direct source-identity
+leads and nine further tag/owner leads, with retail/source divergences already
+flagged; root byte reproduction and admission remain pending.
+
 **Memory-buffer ABI (September 27).** Eight interfaces are corrected live with
 independently restored POST recovery: six members and two byte-proven direct
 thunks. Five returns now use full EAX instead of AL; the destructor and its

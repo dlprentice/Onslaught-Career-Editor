@@ -133,7 +133,6 @@ reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Rend
 reverse-engineering/binary-analysis/functions/FEPMain.cpp.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__AskIfYouWantToDelete.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__ButtonPressed.md
-reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__CreateSave.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Init.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Process.md
 reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__RemovedMUWhinge.md

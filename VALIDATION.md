@@ -71,6 +71,36 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### RE original slot-writer result handling — September 27
+
+`python local-data/test-runs/save-startup-20260919/slot_write_control.py`
+passed five original-code cases and one separate counterfactual case. Accepted
+receipt: `slot-write-run-j8gvjdkw/slot.json`, SHA-256
+`9e0be7ee9452416dff323feb215e46c9c65a6d70a13915b9dd97ded750ac9cb8`.
+The complete 243-byte pristine adapter and original constants are unchanged;
+the real 10,004-byte fixture is loaded into read-only pages. Intercepted
+name/CRT calls check path, exact pointer/size/count, ordering and return values.
+RET 20, callee-saved registers, syscall refusal and every raw output passed.
+
+Complete item plus close error returns zero. A short item or adversarial count
+two returns one without close. Open failure returns one without write/close.
+The derivative ELF changes exactly the two-byte EAX clear after close to NOPs;
+its close-error case then returns `0xffffffff`. Independent read-only review
+reconstructed all six outputs and checked the loaded bytes and syscall filter.
+The first directory-literal length precondition failed before ELF creation;
+its log is retained, and the corrected 11-byte NUL-terminated literal is pinned.
+
+Static caller checks reproduce the explicit save's zero-result success branch
+and main/pause's unchecked continuation. Full caller/dialog execution, actual
+CRT stream effects, real files and Windows acceptance remain open. Existing
+default-options cases were not rerun. New receipts, caller/body packets and
+`slot-write-review.json` stay in the existing private save/startup owner;
+public contracts link the precise [backend result](reverse-engineering/binary-analysis/cpcmemorycard-pc-save-backend-semantics-2026-08-11.md#september-27-slot-write-result-recheck).
+No Ghidra metadata or production implementation changed.
+`git diff --check` and `npm run test:docs` passed; all 2,041 current name
+assertions resolved with zero drift or unresolved entries. No game/build suite
+was needed for these contract-only changes.
+
 ### RE memory-buffer ABI — September 27
 
 The [eight-interface cohort](reverse-engineering/ghidra/README.md#re-audit-memory-buffer-abi--september-27)
