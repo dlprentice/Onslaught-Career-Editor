@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified frontend page identities](#re-audit-verified-frontend-page-identities--september-27);
+[frontend callback ABI](#re-audit-frontend-callback-abi--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,41 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit frontend callback ABI — September 27
+
+The [manifest](../../tools/cohort-specs/frontend-callback-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/frontend-callback-abi-20260927.spec.tsv) correct three saved interfaces
+without changing their names or the executable. Specimen: pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+- `00468200` CFrontEnd Render: implicit ECX receiver, one stack DWORD,
+  full-width int result; both direct callers push zero and test EAX. The source
+  calls the unused argument forcerender. Retail omits the source's local 60 Hz
+  elapsed-time gate; this does not establish global frame pacing.
+- `0051be70` Intro TransitionNotification: implicit ECX receiver and one unused
+  source-page DWORD. The old signature omitted the stack argument consumed by RET 4.
+- `0051f700` Options Render: implicit interface receiver, float transition then
+  other endpoint page at stack offsets 4/8, RET 8. The old stdcall prototype
+  interpreted the float as a pointer and the page as a float. No class layout
+  or missing enum definition is synthesized.
+
+Complete three-body pristine comparison covers990bytes and278instructions, with raw interface tables, receiver installations and direct/common callers. Source force_render names an unused retail DWORD; its signedness/exact typedef is unproved, and retail lacks the source function-local60Hz throttle. Options and Intro identities were already promoted; this cohort changes only their ABI/comment/tag records. The first read-only dry refused empty-tag encoding without writes; it was preserved and replaced after confirming the replica still byte-equaled cold. Review made offset radices and Options unordered-to-zero behavior explicit. The first comparator omitted two derived frameSize changes; installed Ghidra source confirms their exact declared parameter-size dependency, and every unchanged local remains checked.
+
+Fresh PRE restoration, rehearsal, independent/sealed readbacks, seven
+byte-stable refusal controls, independent review/root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports equal
+rehearsal. Exactly three frontend interfaces corrected to dynamic thiscall: CFrontEnd Render and Intro TransitionNotification gain their missing four-byte stack argument; Options Render gains the implicit ECX interface receiver and reinterprets stack4 as float transition and stack8 as int other_page. Every name, return type/storage, local, body, instruction, reference, bookmark and non-target variable stays unchanged; 8,328 other function rows remain exact. Stack cleanup remains4/4/8. Render and Intro frameSize increase by4 solely because Ghidra computes localSize+parameterSize. Historical notes remain fallible leads. Only `commentsSha256` changes at program scope.
+These are bounded ABI corrections; the complete page helpers and runtime remain
+unvalidated. The existing [render note](../binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+records the source divergence and separate original-tail experiments.
+
+Working identity: `db.18678`, 18 files / 123,407,220 bytes,
+inventory SHA-256 `a572eba6a688f2774eb1c463c7a739caf1d926182bc3fdc4d37f5ec552096353`; main database 73,105,408 bytes,
+SHA-256 `6033df536766f83d2545be99ed66b05e2a4aa602a37ec7ee247b9272e59e6184`. The restored 74-name frontend POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-frontend-callback-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-callback-abi/`.
 
 ## RE-audit verified frontend page identities — September 27
 

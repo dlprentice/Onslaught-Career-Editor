@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (frontend page identities promoted; each dated section keeps its own date).
+Last updated: 2026-09-27 (frontend ABI corrections promoted; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,28 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE frontend callback ABI — September 27
+
+The [three-row cohort](reverse-engineering/ghidra/README.md#re-audit-frontend-callback-abi--september-27)
+passed fresh PRE restoration, rehearsal, separate/sealed readbacks, seven actual
+byte-stable refusals, independent review/root reproduction, live readback and
+independently restored Archive A POST. The complete three bodies (990 bytes,
+278 instructions), all names, return types/storage, locals and 8,328 non-target
+function rows remain unchanged. All nine live exports equal rehearsal. Two
+frame-size increases follow solely from Ghidra's local-size plus parameter-size
+calculation; no local or stack-cleanup change is allowed. The initial empty-tag
+refusal and earlier comparator remain preserved.
+
+Private commands/results:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-callback-abi/`.
+Executed with `python`: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py`, `verify_projection.py`. The last check reproduces all 8,331 names
+and deduplicated counts: 1,897 corrected, 294 kept, 6,140 outside the name set;
+8 corrected prototypes and 2,196 updated comments are separate dimensions.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+No game, Godot, drawing, player input or full runtime acceptance ran.
 
 ### RE compiler deleting-entry identities — September 27
 

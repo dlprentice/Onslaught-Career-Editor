@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: all 97 frontend identities recorded; original timer divergence measured; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: frontend identities and three ABI corrections recorded; original timer divergence measured; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the frontend identity cohorts (September 27).**
+**Running coverage after the frontend ABI cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,13 +501,14 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 6,140 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,195 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Prototypes corrected | 8 interfaces: four keyboard queries, cockpit shake and three frontend callbacks. Full ABI coverage is not yet counted. |
+| Comments corrected | 2,196 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
 `compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`,
-`frontend-page-identities-20260927` / `frontend-page-verified-20260927`, the final
+`frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
+`frontend-callback-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -547,9 +548,9 @@ repaired through the promotion gate, with independently restored POST recovery.
 The subsequent 23-name cohort also passed fresh PRE, rehearsal, five byte-stable
 refusals, independent review/root reproduction, live readback and independently
 restored POST. All 8,331 projected names match live; 2,573 target instruction rows
-and 8,308 non-target functions remain exact. Two saved frontend
-prototype defects and the retail/source transition-timer difference remain
-separate findings, not certified by name matching. Evidence and the rejected
+and 8,308 non-target functions remain exact. The saved frontend
+prototype defects and retail/source transition-timer difference were separate
+findings, not certified by name matching; their follow-up is recorded below. Evidence and the rejected
 pre-seal attempt are in `re-audit-20260926/frontend-page-identities/` under the
 private owner above. The [render note](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
 now records the opposite-endpoint argument and retail Credits/Screen Position
@@ -570,9 +571,20 @@ round to the duration while the higher-precision comparison still skips
 completion. Every case has retained input/output bytes; the earlier run with
 colliding display labels is preserved and superseded. This proves the isolated
 arithmetic/branch boundary, not the real clock, page callbacks or visual timing.
-Next reconcile the independently re-derived Options and Intro ABI defects,
-check the frontend Render stack parameter, and continue broader consumer families
-without extending saved types beyond the evidence.
+The separate [three-interface ABI correction](reverse-engineering/ghidra/README.md#re-audit-frontend-callback-abi--september-27)
+now records the implicit receiver and missing stack argument for frontend Render
+and Intro TransitionNotification, and the correct float/page argument order for
+Options Render. Complete pristine bodies, direct/common callers and receiver
+tables agree; all 990 bytes / 278 instruction rows remain unchanged. All nine
+live exports equal rehearsal, seven refusal controls left project bytes unchanged,
+and independently restored POST recovery passed. Names are unchanged. The initial
+empty-tag draft and the comparator's omitted derived frame-size changes are
+preserved with their corrections. Retail Render accepts but ignores the source's
+forcerender argument and lacks its function-local 60 Hz throttle; global frame
+pacing remains unproved. Private receipts: `re-audit-20260926/frontend-callback-abi/`.
+
+Next promote the mechanically checked class-name getter family, then continue
+consumer-priority names and ABI findings without extending types beyond evidence.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career
