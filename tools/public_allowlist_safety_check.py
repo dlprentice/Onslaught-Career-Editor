@@ -265,7 +265,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # exact typed-list interface roles; old notes retained as fallible leads.
 # Startup shell: five old/eight authored comments (4,373/13,298 bytes);
 # partial virtual-slot witnesses and exact registration body; earlier notes retained.
+# GetBPP: one old/authored comment (433/2,253 bytes); caller/source identity
+# and bounded physical interface; old note retained as a fallible lead.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/getbpp-abi-20260927.manifest.tsv":
+        "168042f8d46217c420461ac7322d4142bc503781d3ed9a86f3e93441117af315",
     "tools/cohort-specs/startup-shell-20260927.manifest.tsv":
         "0b866f3285c25906cb39855caaa8e22dff7b1c543050bad29202e3b017c3f9c8",
     "tools/cohort-specs/device-lifecycle-20260927.manifest.tsv":

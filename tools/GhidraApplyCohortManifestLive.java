@@ -334,6 +334,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "camera-copy-abi-20260927",
         "device-lifecycle-20260927",
         "startup-shell-20260927",
+        "getbpp-abi-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
