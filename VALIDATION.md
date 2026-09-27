@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (memory-buffer ABI promotion recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (resource-reader identities and original-code controls recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,54 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### Resource-reader identities and controls — September 27
+
+The [five-row cohort](reverse-engineering/ghidra/README.md#re-audit-resource-reader-identities--september-27)
+passed restored PRE, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent exact-payload review/root reproduction, live
+readback and independently restored Archive A POST. All nine live exports
+equal rehearsal. The 3,504 code bytes / 1,084 instructions, saved interfaces
+and 8,326 other function rows are unchanged. The current 8,331-name projection
+matches live exactly. First-seal citation/mapping defects were corrected and
+rehearsed afresh; the rejected inputs/receipts remain preserved.
+
+Private gate owner:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/resource-reader-identities/`.
+Its `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` retain exact commands and outcomes.
+Deduplicated totals: 1,985 corrected names, 294 additional kept names,
+6,052 outside that name set, 16 corrected prototypes and 2,289 updated comments.
+
+`python -m unittest tools.re_name_evidence_tests`: **89 passed**. The new
+`tag-calls` evidence command reproduces twelve direct consumer transports and
+nine unconditional source clauses; three conditional clauses are withheld.
+The accepted `tag-calls-v5.json` is SHA-256
+`f29708aa114262cfdf72e3b3819c6de1238d9c205d76834f6d662a9df41feba2`.
+Root reproduced the enclosing-source-condition and internal-call-bypass
+refusals identified by review. Visible RETs are not certified complete cleanup;
+computed exits, exceptions, stack balance and missing concrete owner types
+remain separate. No saved names serve as proof inputs.
+
+`python local-data/test-runs/re-audit-20260926/resource-dispatch/original_reader.py`:
+**49 original-code cases and two counterfactual controls passed**. Four complete
+retail bodies total 150 unchanged bytes in the native baseline. Input/output,
+loaded bytes, syscall refusal, stack/register checks and both controls were
+independently reviewed and reproduced by root. Accepted private receipt:
+`local-data/test-runs/re-audit-20260926/resource-dispatch/reader-sahv5bik/results.json`,
+SHA-256 `ce8341e2098a383895fd741051a4f7ead7a19c17265834f93f6805ce79410bf9`.
+All fourteen Read cases copy zero destination bytes. Underlying buffer calls
+are intercepted and high return counts are authored controls; this is not
+file I/O, ownership, decoder, full dispatcher or retail acceptance.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+`npm run test:docs` passed with 2,041 assertions, zero drift and zero unresolved
+entries; its first run caught a missing provenance header in the updated
+Goodies note, corrected before the successful rerun. `npm run test:safety`
+passed, including the exact reviewed comment payloads. `git diff --check`
+passed. Gate logs remain in the private resource-dispatch owner.
+No Godot, desktop or implementation-lane checks were run.
 
 ### RE original slot-writer result handling — September 27
 

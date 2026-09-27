@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: shared event-listener identities and memory-buffer ABI corrected; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: resource-reader identities corrected and isolated reader behavior measured; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the memory-buffer ABI cohort (September 27).**
+**Running coverage after the resource-reader identity cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,980 unique functions; 1,981 rename rows include one repeated correction. The latest sixteen establish the common event-listener method identity. |
+| Names corrected | 1,985 unique functions; 1,986 rename rows include one repeated correction. The latest five establish resource-accumulator, reader-overload and platform-deserializer identities. |
 | Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,057 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,052 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 16 interfaces: four keyboard queries, cockpit shake, three frontend callbacks and eight memory-buffer member/thunk interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,284 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,289 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -510,7 +510,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
-`membuffer-abi-20260927`, the final
+`membuffer-abi-20260927` and `resource-reader-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -519,6 +519,22 @@ are deduplicated by entry address and checked against the current live export;
 the old 1,196 already-matching library rows overlap previous rename cohorts and
 must not be added to the corrected total. Prototype/comment counts are separate
 dimensions. No newly completed whole-game runtime acceptance is claimed.
+
+The [resource-reader correction](reverse-engineering/ghidra/README.md#re-audit-resource-reader-identities--september-27)
+re-derives five identities and keeps the exact live/rehearsal/recovery chain.
+The existing name-evidence tool now checks literal-selected calls without
+reusing saved names: twelve consumer transports, nine unconditional source
+clauses, three conditional clauses withheld. Review added refusal coverage for
+enclosing source conditions and internal calls bypassing the tag producer.
+The [reader/dispatcher contract](reverse-engineering/source-code/io/chunker-system.md)
+corrects invented validation/API claims and tag expansions. Forty-nine isolated
+original-code reader cases plus two counterfactual controls distinguish partial
+header updates, wrapped requested counts, pre-call consumed-count updates and
+Close result translation. Buffer calls are intercepted; no real asset or game
+was loaded. Goodies image loading uses one texture and derived height, unlike
+the source image loop. Next: six bounded reader-interface discrepancies, kept
+reader/consumer comment evidence and unresolved concrete owner types. Do not
+infer an owner solely from the class of an object a factory creates.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header

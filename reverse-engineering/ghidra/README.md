@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[memory-buffer ABI](#re-audit-memory-buffer-abi--september-27);
+[resource-reader identities](#re-audit-resource-reader-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,31 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit resource-reader identities — September 27
+
+The [five-row manifest](../../tools/cohort-specs/resource-reader-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/resource-reader-identities-20260927.spec.tsv) correct resource-loader
+and reader identities against pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Five names/comments/tags corrected: resource GetFileName and ReadResources, the two CChunkReader Open overloads, and CPCPlatform Deserialize. All 3,504 code bytes / 1,084 instruction rows, saved interfaces/storage/locals and 8,326 non-target function rows remain unchanged. Only the program comment digest changes. Earlier notes remain fallible leads, with the old platform numbering explicitly disproved.
+
+Complete caller/source correspondence includes twelve literal-selected consumer calls, nine unconditional source clauses and three withheld conditional clauses. The checker rejects enclosing source conditions and internal calls bypassing the producer, and distinguishes visible RETs from complete cleanup. Current saved names are not identity evidence. Both Open overloads have one argument; parameter-spelling suffixes disambiguate them. Retail platform values are 1 PC, 3 PS2, 2 XBOX. The dispatcher has a third argument gating later payloads after metadata/MESH, a real level-minus-three early return and a VSDS call absent from the pinned PC source route. The PLAT normal path has four font allocations/deserializations, with a debug-font vtable distinct from the uniform class spelling in source. Independent review rejected the first sealed rehearsal for incorrect Open header citations and an insufficiently qualified retained platform mapping; it remains in rejected-v1. The corrected exact payload passed fresh PRE, rehearsal, separate/sealed readbacks and five no-write refusal controls. These names do not certify saved prototypes, missing concrete type aliases, full resource schemas or runtime loading.
+
+Independent read-only exact-payload review, root reproduction, live readback
+and independently restored Archive A POST passed. All nine live exports
+equal rehearsal. The [reader/dispatch contract](../source-code/io/chunker-system.md)
+separates these identities, source differences, bounded original-code reader
+experiments and remaining payload/runtime questions. No other name or ABI
+correction is implied by this cohort.
+
+Working identity: `db.18683`, 18 files / 123,718,516 bytes,
+inventory SHA-256 `b542325d1b1ba25ba0fbec7d9b608d37c3e3e2c6c44ee0695a3487172493c766`; main database 73,416,704 bytes,
+SHA-256 `2e54b9c671e07af6885123d73b94dd3b3599ab70bbe34494bb92d810b7e37e96`. Restored memory-buffer ABI POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-resource-reader-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private gate receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/resource-reader-identities/`; byte/call/source evidence:
+`local-data/test-runs/re-audit-20260926/resource-dispatch/`.
 
 ## RE-audit memory-buffer ABI — September 27
 

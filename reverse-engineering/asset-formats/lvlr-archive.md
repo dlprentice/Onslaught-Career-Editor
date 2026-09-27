@@ -3,6 +3,7 @@
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
 Date: 2026-08-28
+Last updated: 2026-09-27 (resource-dispatch names and evidence limits; corpus receipts retain their original dates)
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join and released PS2 texture-page runtime
 boundary are bounded, while most other payload schemas and world dependencies
@@ -136,7 +137,7 @@ dispatcher, not an order-validating decoder. Its exact 2,071 bytes have SHA-256
 in the named `74154bfa…7750` executable. The current specimen-bound signature is:
 
 ```text
-void __cdecl CResourceAccumulator__ReadResourceFile(
+void __cdecl CResourceAccumulator__ReadResources(
     int resource_id, void *existing_buffer, int skip_optional_chunks)
 ```
 
@@ -166,9 +167,17 @@ The complete comparison-chain vocabulary is
 `LVLR,TARG,AYAD,MESH,TEXT,ERES,WRES,IMPS,LNDS,VSDS,PLAT,SURF,SSHD,PMIB,DMKR,GDIE`.
 That comparison order is implementation structure, not required stream order.
 The five non-numeric delegates are `VSDS -> CVertexShader__DeserializeAll`,
-`PLAT -> PCPlatform__DeserializeFontsAndAssets`,
+`PLAT -> CPCPlatform__Deserialize`,
 `PMIB -> CDXPatch__LoadFromFile`, `DMKR -> CDamage__CreateTextureBuffer`, and
 `GDIE -> CFEPGoodies__Deserialise`; unknown tags are traced and skipped.
+
+The September 27 [reader/dispatcher recheck](../source-code/io/chunker-system.md)
+re-derives this caller and all twelve consumer transports from pristine bytes.
+Other consumer labels above remain identifiers for locating the saved analysis;
+their concrete class spellings and complete payload semantics are not all
+established by dispatch. In particular, PMIB targets the source PATCHMANAGER
+object route, and DMKR targets damage-resource bulk loading. A patch-instance
+label or texture-buffer label must not substitute for those caller contracts.
 
 When `skip_optional_chunks` is nonzero, the prefix and every `MESH` still run,
 while all other payloads are skipped. All four enumerated direct callers pass
@@ -477,8 +486,8 @@ that consume the same tagged-resource family are:
 
 | VA | Identity | Demonstrated boundary |
 | --- | --- | --- |
-| `0x004D6F70` | `CResourceAccumulator__GetResourceFilename` | Builds the resource filename selected by the accumulator path. |
-| `0x004D7200` | `CResourceAccumulator__ReadResourceFile` | Encounter-order outer dispatcher for 16 FourCCs; routes each occurrence to its inline/subsystem owner and does not enforce the canonical writer order. |
+| `0x004D6F70` | `CResourceAccumulator__GetFileName` | Builds the resource filename selected by the accumulator path. |
+| `0x004D7200` | `CResourceAccumulator__ReadResources` | Encounter-order outer dispatcher for 16 FourCCs; routes each occurrence to its inline/subsystem owner and does not enforce the canonical writer order. |
 | `0x0050B780` | `CWorld__DeserializeWorld` | Reads four tags with `CChunkReader__GetNext` and updates world load state. |
 | `0x0040F980` | `CBattleEngineData__LoadFromMemBuffer` | Forty-two buffered reads for one embedded Battle Engine data owner. |
 | `0x00423910` / `0x00423960` | `CChunkReader__GetNext` / `Read` | Shared inner tag/field primitives. |

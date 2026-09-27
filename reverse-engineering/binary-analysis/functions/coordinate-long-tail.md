@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-27 (Options interface identity; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (Options and resource-dispatch identities; earlier behavioral evidence keeps its stated limits)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -521,7 +521,7 @@ coordinate/callee evidence, not new behavioral validation.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004D7200` | `CResourceAccumulator__ReadResourceFile` | 2071 | 0 | 768–816 | `CChunkReader__Read` x7; `sprintf` x7 |
+| `0x004D7200` | `CResourceAccumulator__ReadResources` | 2071 | 0 | 768–816 | `CChunkReader__Read` x7; `sprintf` x7 |
 
 ### `RTCutscene.cpp` (1)
 

@@ -249,7 +249,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # guarded dispatch and RTTI identity only; old notes/types remain fallible leads.
 # Memory-buffer ABI:8 old/8 authored comments (9,110/15,708 decoded bytes);
 # source/transport witnesses and explicitly retained fallible earlier notes.
+# Resource-reader identities:5 old/5 authored comments (2,574/7,497 decoded bytes);
+# bounded source/caller identities, divergences and preserved fallible older notes.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/resource-reader-identities-20260927.manifest.tsv":
+        "63760c8e48b9d0611ca942d4273c32fb69801ec31552a92568d6849e662c449a",
     "tools/cohort-specs/membuffer-abi-20260927.manifest.tsv":
         "1b0de953ff8b525d9d406f1c8547c2e3b6df9410ff3c924b7fc07311a110fbd5",
     "tools/cohort-specs/listener-identities-20260927.manifest.tsv":

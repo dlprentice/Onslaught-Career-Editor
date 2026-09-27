@@ -2045,6 +2045,274 @@ def compiler_destructors(prog: Program, document: dict) -> dict:
 # Anchors from strings
 # ---------------------------------------------------------------------------
 
+def mkid_discriminator(raw: bytes) -> int | None:
+    """Closed x86 construction of a four-byte initial-image tag, compared to EAX.
+
+    The four signed-byte loads must address literal+3,+2,+1,+0. This proves
+    the comparison, not that writable literals remain unchanged at runtime.
+    """
+    if len(raw) != 45:
+        return None
+    literal = struct.unpack_from('<I', raw, 34)[0]
+    if literal > 0xfffffffc:
+        return None
+    expected = (b'\x0f\xbe\x0d' + struct.pack('<I', literal + 3)
+                + b'\x0f\xbe\x15' + struct.pack('<I', literal + 2)
+                + b'\xc1\xe1\x08\x03\xca\x0f\xbe\x15' + struct.pack('<I', literal + 1)
+                + b'\xc1\xe1\x08\x03\xca\x0f\xbe\x15' + struct.pack('<I', literal)
+                + b'\xc1\xe1\x08\x03\xca\x3b\xc1')
+    return literal if raw == expected else None
+
+
+def _tag_flow(body: list[Insn], producers: set[int]) -> tuple[dict, dict]:
+    """Normal-flow facts: EAX is the tag, ESI is its reader, EBP is zero.
+
+    Calls use the reviewed x86 nonvolatile-register convention. Unknown
+    opcodes destroy all facts. Exception paths and indirect branches are not
+    admitted. Each producer is separately checked for its receiver and body.
+    """
+    insns = {i.va: i for i in body}
+    edges, parents = {}, defaultdict(set)
+    for ins in body:
+        after = ins.va + ins.size
+        if ins.mnem == 'call' and (not _DIRECT.fullmatch(ins.ops)
+                or body[0].va <= int(ins.ops, 16) < body[-1].va + body[-1].size):
+            raise ValueError('tag caller has an indirect or intra-caller call')
+        if ins.mnem == 'ret':
+            dests = []
+        elif ins.mnem.startswith(('j', 'loop')):
+            if not _DIRECT.fullmatch(ins.ops):
+                raise ValueError('tag caller has an indirect control-flow edge')
+            dests = [int(ins.ops, 16)] + ([] if ins.mnem == 'jmp' else [after])
+        else:
+            dests = [after]
+        if any(d not in insns for d in dests):
+            raise ValueError('tag caller has an exterior or interior-instruction edge')
+        edges[ins.va] = dests
+        for dest in dests:
+            parents[dest].add(ins.va)
+    states = defaultdict(set)
+    states[body[0].va].add((False, False, False))
+    todo = [body[0].va]
+    harmless = {'cmp', 'test', 'push', 'nop', 'ret'}
+    written = {'mov', 'movsx', 'movzx', 'lea', 'pop', 'add', 'sub', 'and', 'or',
+               'xor', 'shl', 'shr', 'sar', 'inc', 'dec', 'neg', 'not', 'imul'}
+    aliases = ({x: 0 for x in ('eax', 'ax', 'al', 'ah')}
+               | {x: 1 for x in ('esi', 'si')} | {x: 2 for x in ('ebp', 'bp')})
+    while todo:
+        address = todo.pop()
+        ins = insns[address]
+        ops = ins.ops.split(',')
+        for state in list(states[address]):
+            result = list(state)
+            if ins.mnem == 'call':
+                result[0] = address in producers
+                if address in producers:
+                    result[1] = True
+            elif ins.mnem in written and not (ins.mnem == 'imul' and len(ops) == 1):
+                if ops[0] in aliases:
+                    result[aliases[ops[0]]] = False
+                if ((ins.mnem == 'xor' and ops == ['ebp', 'ebp'])
+                        or (ins.mnem == 'mov' and ops == ['ebp', '0x0'])):
+                    result[2] = True
+            elif ins.mnem not in harmless and not ins.mnem.startswith('j') and not ins.mnem.startswith('set'):
+                result = [False, False, False]
+            elif ins.mnem.startswith('set') and ops[0] in aliases:
+                result[aliases[ops[0]]] = False
+            for dest in edges[address]:
+                branch = result.copy()
+                previous = next(iter(parents[address])) if len(parents[address]) == 1 else None
+                if (ins.mnem in ('je', 'jne') and previous is not None
+                        and insns[previous].mnem == 'test' and insns[previous].ops == 'ebp,ebp'
+                        and previous + insns[previous].size == address):
+                    equal = dest == int(ins.ops, 16) if ins.mnem == 'je' else dest == address + ins.size
+                    if equal:
+                        branch[2] = True
+                value = tuple(branch)
+                if value not in states[dest]:
+                    states[dest].add(value)
+                    todo.append(dest)
+    return states, edges
+
+
+def tagged_call_witnesses(prog: Program, document: dict, source_root: Path) -> dict:
+    """Check a reviewed caller's literal-selected calls without using saved names.
+
+    Results bind initial-image tags, reader transport and direct targets. A
+    source clause containing preprocessor directives is withheld instead of
+    selecting a convenient platform branch. Class identity, complete callee
+    semantics and exceptions require separate evidence; this tool never edits
+    Ghidra or invents owners from call expressions.
+    """
+    if document.get('specimenSha256') != prog.img.sha256:
+        raise ValueError('tag witness specimen pin mismatch')
+
+    def function(pin):
+        address = int(pin['address'], 16)
+        fn = prog.by_va.get(address)
+        if fn is None or fn.thunk:
+            raise ValueError('tag witness requires a non-thunk function entry')
+        body = decode_entry_body(prog.img, fn)
+        raw = prog.img.read(address, fn.body_bytes)
+        if len(raw) != pin['bytes'] or hashlib.sha256(raw).hexdigest() != pin['sha256']:
+            raise ValueError('tag witness complete-body pin mismatch')
+        return fn, body
+
+    caller, body = function(document['caller'])
+    for dest, references in prog.model.refs_to.items():
+        if caller.va < dest <= caller.hi and any(
+                kind in ('call', 'jmp', 'jcc') and not caller.va <= site <= caller.hi
+                for kind, site in references):
+            raise ValueError('saved instruction model enters the caller past its entry')
+    source = document['source']
+    path = source_root / source['file']
+    if Path(source['file']).name != source['file'] or hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('tag witness source path/hash mismatch')
+    defs = [f for f in index_source(source_root) if f.file == source['file'] and f.key == source['function']]
+    if len(defs) != 1 or not document.get('identityEvidence'):
+        raise ValueError('tag caller source identity is ambiguous or unreviewed')
+    src = defs[0]
+    source_text = strip_comments(path.read_text(errors='replace'))
+    if source_text.count(src.body) != 1:
+        raise ValueError('tag caller source body position is ambiguous')
+    source_offset = source_text.index(src.body)
+    active_text, conditional_ranges = _header_conditions(source_text, set())
+    if not re.search(r'CChunkReader\s*&\s*c\s*=\s*\*reader\s*;', src.body):
+        raise ValueError('source reader alias is not explicit')
+    insns = {i.va: i for i in body}
+    diagnostics = document['diagnostics']
+    if not diagnostics:
+        raise ValueError('tag caller has no independent diagnostic anchor')
+    for row in diagnostics:
+        literal, site = int(row['address'], 16), int(row['site'], 16)
+        if (prog.img.cstring(literal) != row['text'] or row['text'] not in src.literals
+                or site not in insns or (insns[site].mnem, insns[site].ops) != ('push', hex(literal))):
+            raise ValueError('tag caller diagnostic anchor differs')
+    producer, _ = function(document['producer'])
+    sites = {int(v, 16) for v in document['producer']['calls']}
+    actual = {i.va for i in body if i.mnem == 'call' and i.ops == hex(producer.va)}
+    if not sites or sites != actual:
+        raise ValueError('tag producer call census differs')
+    for site in sites:
+        before = insns.get(site - 2)
+        if before is None or (before.mnem, before.ops, before.size) != ('mov', 'ecx,esi', 2):
+            raise ValueError('tag producer receiver is not the selected reader')
+    states, edges = _tag_flow(body, sites)
+    for site in sites:
+        if any(src != site - 2 and site in dests for src, dests in edges.items()):
+            raise ValueError('tag producer call bypasses its receiver transport')
+    rows, seen = [], set()
+    for claim in document['calls']:
+        tag = claim['tag']
+        if tag in seen or not re.fullmatch('[A-Z0-9]{4}', tag):
+            raise ValueError('duplicate or unsupported tag')
+        seen.add(tag)
+        start = int(claim['start'], 16)
+        literal = mkid_discriminator(prog.img.read(start, 45))
+        if (literal is None or prog.img.read(literal, 4) != tag.encode('ascii')
+                or start not in insns or not states[start]
+                or not all(t and r for t, r, _ in states[start])):
+            raise ValueError('tag comparison or producer/reader provenance differs')
+        branch = insns.get(start + 45)
+        if branch is None or branch.mnem != 'jne' or not _DIRECT.fullmatch(branch.ops):
+            raise ValueError('tag action is not guarded by equality')
+        end = int(branch.ops, 16)
+        block = [i for i in body if branch.va + branch.size <= i.va < end]
+        target, target_body = function(claim['target'])
+        if len(block) < 3 or block[-1].mnem != 'jmp' or not _DIRECT.fullmatch(block[-1].ops):
+            raise ValueError('tag action lacks a direct common continuation')
+        join = int(block[-1].ops, 16)
+        if join not in insns or start <= join < end:
+            raise ValueError('tag action rejoins inside its witness')
+        calls = [i for i in block if i.mnem == 'call']
+        if len(calls) != 1 or calls[0].ops != hex(target.va) or calls[0].va != int(claim['call'], 16):
+            raise ValueError('tag action direct callee differs')
+        call = calls[0]
+        pushes, receiver = [], None
+        for ins in block:
+            if ins.va >= call.va:
+                break
+            if ins.mnem == 'push' and ins.ops in ('esi', '0x0', 'ebp'):
+                if ins.ops == 'ebp' and not all(z for _, _, z in states[start]):
+                    raise ValueError('tag argument register is not proven zero')
+                pushes.append('reader' if ins.ops == 'esi' else 'zero')
+            elif ins.mnem == 'mov' and re.fullmatch(r'ecx,0x[0-9a-f]+', ins.ops) and receiver is None:
+                receiver = int(ins.ops.split(',')[1], 16)
+            else:
+                raise ValueError('unsupported or clobbering tag transport')
+        arguments = list(reversed(pushes))
+        if arguments.count('reader') != 1 or len(arguments) not in (1, 2):
+            raise ValueError('tag consumer must receive the selected reader exactly once')
+        if arguments != claim['arguments'] or receiver != (int(claim['receiver'], 16) if claim.get('receiver') else None):
+            raise ValueError('tag reader/receiver/argument transport differs')
+        after = [i for i in block if call.va < i.va < block[-1].va]
+        cleanup = 0
+        if after:
+            if len(after) != 1 or (after[0].mnem, after[0].ops) != ('add', f'esp,0x{4*len(pushes):x}'):
+                raise ValueError('unsupported post-call tag action')
+            cleanup = 4 * len(pushes)
+        # Observed RET instructions are not by themselves normal-path proof:
+        # an unreachable RET may follow a tail jump or computed dispatch.
+        returns = {int(i.ops, 16) if i.ops else 0 for i in target_body if i.mnem == 'ret'}
+        if not returns or returns != {4 * len(pushes) - cleanup}:
+            raise ValueError('tag callee observed RET immediates contradict transport')
+        target_insns = {i.va: i for i in target_body}
+        reached, pending, exterior, reached_returns = set(), [target.va], set(), set()
+        indirect = False
+        while pending:
+            address = pending.pop()
+            if address in reached:
+                continue
+            reached.add(address)
+            ins = target_insns[address]
+            if ins.mnem == 'ret':
+                reached_returns.add(int(ins.ops, 16) if ins.ops else 0)
+                continue
+            if ins.mnem.startswith(('j', 'loop')):
+                if not _DIRECT.fullmatch(ins.ops):
+                    indirect = True
+                    continue
+                destinations = [int(ins.ops, 16)] + ([] if ins.mnem == 'jmp' else [address+ins.size])
+            else:
+                destinations = [address+ins.size]
+            for dest in destinations:
+                if dest in target_insns:
+                    pending.append(dest)
+                else:
+                    exterior.add(dest)
+        for origin, destinations in edges.items():
+            if not start <= origin < end and any(start < dest < end for dest in destinations):
+                raise ValueError('tag witness has an interior entry')
+        for dest, references in prog.model.refs_to.items():
+            if start < dest < end and any(kind in ('call', 'jmp', 'jcc') and not start <= site < end
+                                          for kind, site in references):
+                raise ValueError('saved instruction model has an exterior entry into tag witness')
+        clauses = list(re.finditer(r'\bif\s*\(\s*tag\s*==\s*MKID\(\s*"'+tag+r'"\s*\)\s*\)\s*\{', src.body))
+        expression, status = None, 'source-clause-withheld'
+        if len(clauses) == 1:
+            clause_start = source_offset + clauses[0].start()
+            prefix_end = source_offset + clauses[0].end()
+            outer_conditional = (active_text[clause_start:prefix_end] != source_text[clause_start:prefix_end]
+                                 or any(lo < prefix_end and hi > clause_start for lo, hi in conditional_ranges))
+            tail = src.body[clauses[0].end():]
+            finish = tail.find('}')
+            clause = tail[:finish].strip() if finish >= 0 else ''
+            if (clause and not outer_conditional and '#' not in clause and '{' not in clause
+                    and re.fullmatch(r'[\w:]+(?:(?:\.|->)\w+(?:\(\))?)*\(\s*&c\s*\)\s*;', clause)):
+                expression = re.sub(r'\s+', '', clause)
+                status = 'tag-call-and-source-clause'
+        if claim.get('sourceCall') and expression != re.sub(r'\s+', '', claim['sourceCall']):
+            raise ValueError('source call is absent, conditional or mismatched')
+        rows.append(dict(tag=tag, literal=f'{literal:08x}', start=f'{start:08x}',
+                         call=f'{call.va:08x}', target=f'{target.va:08x}',
+                         arguments=arguments, receiver=receiver, observedReturnPop=sorted(returns),
+                         reachableExplicitReturnPop=(sorted(reached_returns) if not indirect and not exterior else None),
+                         indirectCalleeFlow=indirect, unresolvedCalleeTargets=[f'{a:08x}' for a in sorted(exterior)],
+                         sourceCall=expression, status=status,
+                         bodySha256=claim['target']['sha256']))
+    return dict(rows=rows, limits='Initial image and explicit normal caller flow only; reviewed producer identity and nonvolatile-register ABI are premises. No owner/type inference, callee ESP-balance/exception/computed-flow proof, real asset loading or runtime immutability.')
+
+
 def string_users(prog: "Program") -> dict[int, set[int]]:
     """Retail string VA -> functions whose bodies reference it."""
     users: dict[int, set[int]] = defaultdict(set)
@@ -2284,7 +2552,34 @@ def main(argv: list[str] | None = None) -> int:
     n.add_argument('--model', type=Path, required=True)
     n.add_argument('--evidence', type=Path, required=True)
     n.add_argument('--out', type=Path, required=True, help='new private JSON report')
+    t = sub.add_parser('tag-calls', help='reviewed literal-selected calls; no inferred class owners')
+    t.add_argument('--functions', type=Path, required=True)
+    t.add_argument('--source', type=Path, default=SOURCE)
+    t.add_argument('--model', type=Path, required=True)
+    t.add_argument('--evidence', type=Path, required=True)
+    t.add_argument('--out', type=Path, required=True, help='new private JSON report')
     args = ap.parse_args(argv)
+    if args.cmd == 'tag-calls':
+        if args.out.exists():
+            ap.error('tag-call report must be a new path')
+        img, model = load_or_build(args.model)
+        prog = Program(img, model, load_functions(args.functions))
+        import re_source_graph as G
+        pins = G.input_pins(args.functions, args.source, ('*.cpp', '*.h'))
+        try:
+            document = json.loads(args.evidence.read_text())
+            if document.get('sourceSha256') != pins['sourceSha256']:
+                raise ValueError('tag-call source content pin mismatch')
+            report = tagged_call_witnesses(prog, document, args.source)
+        except (KeyError, TypeError, ValueError) as error:
+            ap.error(str(error))
+        report['inputs'] = dict(pins, specimenSha256=img.sha256,
+                               evidenceSha256=hashlib.sha256(args.evidence.read_bytes()).hexdigest())
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=1)+'\n')
+        from collections import Counter
+        print('Tag-call witnesses:', json.dumps(Counter(r['status'] for r in report['rows']), sort_keys=True))
+        return 0
     if args.cmd == 'class-names':
         if args.out.exists():
             ap.error('class-name report must be a new path')

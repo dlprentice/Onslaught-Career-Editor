@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (event-listener identities and memory-buffer ABI corrected; broader audit unfinished)
+Last updated: 2026-09-27 (resource-reader identities and bounded original-code controls recorded; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -11,6 +11,12 @@ Ghidra checkpoint and sole mutable Linux owner through
 [`ghidra/README.md`](ghidra/README.md). The mutable PC project is
 `local-lab/ghidra-projects/BEA/`; its latest measured state and correction are in
 `developer_state.json` → `current_re_authority.latestLiveGhidraState`.
+The [resource-reader identity correction](ghidra/README.md#re-audit-resource-reader-identities--september-27)
+resolves five names with exact live readback and restored recovery. Its
+[reader/dispatcher contract](source-code/io/chunker-system.md) separates twelve
+retail consumer transports, source differences and 49 original-code reader
+cases plus two counterfactual controls. Tag-family and reader validation claims
+were corrected; complete payload schemas and real loading remain open.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

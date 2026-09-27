@@ -1,7 +1,8 @@
 # CChunkReader__GetNext
 
-Status: active static function note
-Last updated: 2026-08-27
+Status: active, bounded static and original-code function note
+Last updated: 2026-09-27
+Summary: complete PC body returns the first tag word, with either short read collapsed to zero; console receipts below remain historical.
 Source File: `references/Onslaught/chunker.cpp`, SHA-256
 `3eb76bf2628c4c4aeaa8ce32a33a06ecc5dc3c8cb47d5528acea641f530c6135`
 | Binary: BEA.exe, SHA-256
@@ -13,6 +14,19 @@ matches. The Ghidra database was not opened. Table name is a research
 label. `0x00548570` body is **not** this proof.
 
 > Address: `0x00423910`
+
+## September 27 PC recheck
+
+Fresh complete-body decoding reproduces the 65-byte body and hash below,
+including both signed short-read tests and the local tag return. The resource
+dispatcher consumes it at `0x004d7381` and `0x004d795d`; a zero result exits
+the loop. Eighteen isolated original-code cases now reproduce signed count
+admission, zero/high-bit tags and partial Size writes; an altered unsigned
+branch changes the supplied negative-count case. Buffer calls are intercepted.
+The [reader contract](../../../source-code/io/chunker-system.md#isolated-original-code-controls--september-27)
+owns the exact inputs, controls and limits. The saved calling-convention label
+remains a separate correction. No console specimen was rechecked; the older
+inbound-call census remains an inherited result.
 
 ## Contract
 
@@ -31,8 +45,8 @@ listed.
 
 `[this+8] = 0`. Then `ECX = [this+4]`, read 4 bytes into a scratch
 dword. If that call returns `< 4`: `EAX = 0`. Else a second 4-byte
-read onto `this` itself; `EAX` is that dword, forced to 0 when the
-second call returns `< 4`. Pinned source independently supplies the authored
+read puts Size at `this+0`; `EAX` returns the **first**, local tag word, forced
+to 0 when the second call returns signed `< 4`. Pinned source independently supplies the authored
 `CChunkReader::GetNext`, `ReadSinceChunk`, and `Size` identities.
 
 ## PS2 correspondence
