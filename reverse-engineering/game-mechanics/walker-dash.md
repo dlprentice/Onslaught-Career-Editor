@@ -1,16 +1,17 @@
 # Walker dash: the retail timing window
 
 Status: active static contract for the rebuild's walker movement
-Last updated: 2026-09-26
+Last updated: 2026-09-27 (complete directional bodies rechecked; slow-movement asymmetry added; earlier frame calculations retain their assumptions)
 Summary: a walker dash needs the opposite hard press to have started more than half of
 `mDashTime` and less than `mDashTime` before (0.1 to 0.2 s). The pinned source has only the
-0.2 s bound. The test runs on float32 event times at the x87's single precision. At 20 event
+0.2 s bound. The frame calculation assumes float32 event times and x87 single precision. At 20 event
 frames per second it always admits an opposite press 3 frames earlier and never one 1 frame
 earlier; one 2 or 4 frames earlier passes only on some frames, decided by rounding.
 Evidence: MEASURED — instruction reads of the pristine specimen; SOURCE —
 `BattleEngineWalkerPart.cpp`; COMPUTED — the frame table below, from the byte-level predicate.
 The audit's research pass found the extra bound; the RE lane re-derived it from the bytes.
-There is no runtime capture of a dash, and the precision mode is static evidence only.
+There is no runtime capture of a dash, and this pass has not measured the runtime
+x87 control word.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -78,7 +79,9 @@ So a dash needs:
 The source has only the left inequality (`if (mLastStartHard…Time > (EVENT_MANAGER.GetTime() -
 mDashTime))`, lines 140, 186, 236 and 290). The right inequality is retail-only.
 
-**Precision.** The two differences are rounded to float32 before the comparison. Direct3D sets
+**Precision assumption.** With x87 single precision, the two differences are rounded to
+float32 before the comparison. The retail control word at input dispatch has not been
+captured; the expected precision below is an inference from device setup. Direct3D sets
 the x87 to single precision on `CreateDevice` unless `D3DCREATE_FPU_PRESERVE` (`0x2`) is passed.
 Retail never passes it:
 
@@ -140,7 +143,69 @@ The two strafe dashes are asymmetric, as in the source:
 - `StrafeRight` subtracts: `fld [eax+0x27c]; fsub [0x005d8ccc] (0.08f); fstp [eax+0x27c]` at
   `0x004134ae-0x004134ba` (line 300).
 
-The rebuild already carries this (`Simulation.cs:2349-2359`).
+The September 26 review reported this in the rebuild (`Simulation.cs:2349-2359`);
+that implementation was not rerun by the September 27 RE pass.
+
+## September 27 complete-body recheck
+
+All four complete bodies and the Player caller were freshly decoded from the
+pristine specimen above. They retain the two-sided timing window and asymmetric
+roll writes. Constructor `00412bc0` binds the six `g_dash_*` registrations, while
+the main initializer calls it at `00404faa` and stores its result at main `+0x578`.
+This establishes the walker receiver independently of the saved names.
+
+The three bodies Forward, Backward and StrafeLeft test main `+0x588` and multiply
+all final movement-vector components by float `0.25` when nonzero. Their scaling
+blocks start at `00412f22`, `00413112` and `0041331b`. The complete StrafeRight body
+has **no corresponding flag read or scaling**; it reaches AddVelocity at
+`004135b8` directly after forming the vector. This agrees with pinned source
+lines 310–313: that branch changes the earlier scalar after constructing `move`,
+then submits the unchanged vector. Preserve the asymmetry in a faithful rebuild.
+
+Body SHA-256 values, in table order above:
+`a1700e98ef7cac1fb13a7a2542e144dc2a0f2016d6a9f2670a91ca56c38312d2`,
+`09f9c5709ff76e8956626a77c120dd906efb4e22aef93934b4efcbaabd75296e`,
+`f73bf900aff3f6b19d141656b8432f72a385d3fc58b2e7c3cd2305058deaf206`,
+`9872c30a8763e6aef8c5975c0055e934fe7ec4afeaab61e94da468ad9e1d918e`.
+Private bodies/constants and complete caller witnesses are in
+`local-data/test-runs/re-audit-20260926/walker/identity-leads-v2.json` and
+`callers-v1.json`. The packet's candidate labels alone are not identity proof.
+These are static findings, not a new dash/input experiment. The earlier frame
+percentages were not recomputed by this pass.
+
+## Rotation and pitch use the yaw-right binding
+
+Fresh complete-body inspection also identifies `00413660` and `004136e0` as
+the source's Rotate and Pitch (`BattleEngineWalkerPart.cpp:347–355`), called
+through the walker receiver at `004d337b` and `004d3390`. Their stack arguments
+are consumed as floating-point operands, not converted from integers.
+
+Both read the category at `0x008892f8 + 0x0c + 0x0c * (playerNumber - 1)`.
+This is the selected player's slot in the **yaw-right action binding**, not
+a weapon class. Initializer `00514233` supplies action 27 and default category
+13 to receiver `008892f8`; `0042d271` stores the category at `+0x0c`.
+The separate binding writer `004565f7` confirms the 12-byte slot stride.
+Player construction stores its incoming number at `004d27b6`; assignment
+publishes the player through the engine's `+0x574` monitored reference.
+
+Categories 11 and 12 select float bits `3fd9999a` (approximately 1.7); every
+other category selects `3f800000` (1.0). The input mapper's table at `0042e340`
+sends categories 11/12 to `0042e04b`, which consumes mouse coordinates written
+by the `0x200` message handler at `00523548/0052355c`. Categories 13/14 reach
+that coordinate path through an extra gate, but **do not** select the 1.7
+multiplier. Exact retail enum symbols are absent from the pinned header.
+Pitch also reads this same yaw-right record; substituting its own pitch binding
+would change the retail rule. The partial source lacks the multiplier.
+The resulting writes are yaw velocity at main `+0x278` and pitch velocity at
+main `+0x280`, rather than direct orientation-angle changes. The action and
+category numbers in this section are decimal.
+
+Root independently decoded and checked all nine bodies in the private
+`local-data/test-runs/re-audit-20260926/walker/control-binding-bodies-v1.json`
+packet, SHA-256
+`43f43da67b4e7073634c3de610a4b1aa61ec2c475451607c1d52c929fc43e9f5`.
+This establishes static ownership and selection, not the category chosen by
+current user settings or actual input sensitivity in a running game.
 
 ## Open questions
 
@@ -149,3 +214,5 @@ The rebuild already carries this (`Simulation.cs:2349-2359`).
 | Whether the game thread runs at single precision during play | In a copied runtime, break at `0x00413235` and read the x87 control word: precision bits 8-9 should be `00` |
 | Whether one input sample reaches the walker per event frame | Count `CPlayer::ReceiveButtonAction` calls per `CEventManager::AdvanceTime` in a copied runtime, holding the stick steady; more than one per frame adds a `k = 0` case, which retail rejects |
 | Whether a dash two frames after the opposite press follows the frame table | A two-frame left-right flick ending on a frame the table admits (for example frame 21) and on one it rejects (frame 20), with the walker's `+0x44` dash count logged |
+| Effect of slow movement on all four directions | Run the original directional bodies on copies with identical finite inputs, yaw and velocity, toggling main `+0x588`; intercept AddVelocity and compare submitted vectors |
+| Effect of the yaw-right binding category on rotation and pitch | Execute both original bodies on copied valid receivers with identical finite input, varying that binding between categories 11, 12, 13 and 14; compare the yaw/pitch velocity writes while preserving x87 state |

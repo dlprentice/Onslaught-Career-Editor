@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the sound source-name cohort (September 27).**
+**Running coverage after the verified walker cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,141 unique functions; 2,142 rename rows include one repeated correction. The latest cohort corrects GetSample and GetSoundEvent. |
-| Names verified and kept | 418 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music and 41 shared/PC-sound identities. This excludes functions already counted as corrected. |
+| Names corrected | 2,141 unique functions; 2,142 rename rows include one repeated correction. The most recent name changes correct GetSample and GetSoundEvent; the walker cohort retains its 25 names. |
+| Names verified and kept | 443 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music, 41 shared/PC-sound and 25 walker identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,773 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,748 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototype records corrected | 105 functions: the prior 103 plus two argument-label corrections with no physical interface changes. Receiver normalization does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,572 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,597 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,15 +512,37 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 plus 25 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
 the old 1,196 already-matching library rows overlap previous rename cohorts and
 must not be added to the corrected total. Prototype/comment counts are separate
 dimensions. No newly completed whole-game runtime acceptance is claimed.
+
+The [25-row walker verification](reverse-engineering/ghidra/README.md#re-audit-verified-walker-records--september-27)
+retains the proven identities and corrects their notes/tags after complete
+pristine body, caller and source review. It preserves every name, interface and
+code byte. The reviewed replacement passed fresh PRE, rehearsal/readbacks,
+five byte-stable refusals, live readback and independently restored Archive A
+POST; the first imprecise seal/rehearsal remains retained. All 8,332 projected
+names equal the full live table. Exact successful control/POST-open twins were
+retired by fresh hash comparison after recovery, with queue records.
+
+The [movement contract](reverse-engineering/game-mechanics/walker-dash.md#september-27-complete-body-recheck)
+now preserves the asymmetric slow-movement scaling and distinguishes runtime
+precision assumptions from static instructions. Rotate and Pitch both use the
+selected player's yaw-right mouse-binding category for their extra multiplier;
+this is not a weapon classification. The
+[weapon-store recheck](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#september-27-walker-recheck)
+and two refreshed function notes explain mutable selection, separate firing
+readiness and the heat gate's unordered-comparison distinction. No new player,
+Godot or retail runtime acceptance follows. Next is the independently reviewed
+11-row helper correction plan, including false icon-pointer labels and integer
+rotation inputs; two actual icon names follow after the occupied labels move.
+Private prepared evidence: `local-data/test-runs/re-audit-20260926/walker/`.
 
 The [resource-reader correction](reverse-engineering/ghidra/README.md#re-audit-resource-reader-identities--september-27)
 re-derives five identities and keeps the exact live/rehearsal/recovery chain.

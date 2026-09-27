@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-26 (ReadyToFire)
+Last updated: 2026-09-27 (walker selection, charge-clear and store getters rechecked; older weapon-helper findings retain their dates)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -87,7 +87,8 @@ at 0.
   - with no mode yet, true when a charge level from trunc(round(`+0x60`)/100)
     down to 0 names a mode that exists in the mode list `0x008553ec`
     (`0x00509fa2-0x0050a066`), with no time test.
-- The charge resets to 0 at `0x0041203b` (jet fire), `0x00414019` (walker fire),
+- The charge resets to 0 at `0x0041203b` (the earlier jet-side finding),
+  `0x00414019` (**walker LoseWeaponCharge**, not FireWeapon),
   `0x00411f96` (the newly selected weapon in `ChangeWeapon`) and `0x0050602a`
   (`CWeapon::Fire`).
 
@@ -139,9 +140,103 @@ salvo. Burst-size-1 weapons (both Vulcans) never count. `HandleLocks` asks the j
 part in state 3 and the walker part otherwise, so a pod burst during a transform to
 walker is not seen.
 
+## September 27 walker recheck
+
+The September 27 recheck freshly decoded the walker bodies from the pristine
+specimen above, against source commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+It confirms these implementation boundaries:
+
+- GetCurrentWeapon (`00414030`) can repair the selected index and mutates the
+  list cursor. ChangeWeapon clears the **newly selected** weapon's charge, then
+  may auto-zoom out. Its initial selected weapon is dereferenced without a null
+  guard; no general empty-configuration safety is established.
+- `00414019` is the store inside the 17-byte body `[00414010,00414021)`, SHA-256
+  `338009a0afe409a13acfbba66d573a8981e8905526707547eec79b1f7884de34`.
+  It selects a weapon, guards null and clears `+0x60`, matching source
+  LoseWeaponCharge at lines 602–606. Its saved Monitor label is a correction
+  candidate, not a reason to treat this as firing.
+- The ammo-count getter uses `FISTP QWORD` at `0041449d`, then returns the low
+  DWORD. It does not change the x87 rounding control locally. A truncating cast
+  is therefore not an established equivalent. The ammo-percentage getter caps
+  only above one; it has no lower clamp or zero-capacity guard.
+- IsEnergyWeapon and IsWeaponOverheated return the full stored DWORD from
+  `+0x55c` and `+0x544`, respectively. WeaponFired does not check active state;
+  successful augmented handling clears value `+0x2f8`, not active flag `+0x2fc`.
+- HandleLocks calls walker CanWeaponFire at `004065db`, then separately calls
+  weapon ReadyToFire at `00406817`. The store gate alone is not complete firing
+  readiness. For finite values, heat needs store below capacity and zero
+  overheat. Its `TEST AH,1` at `00414673` also admits a masked unordered
+  comparison through that first test; the ammo path's `TEST AH,41h` rejects
+  unordered. Do not replace both instruction predicates with one generic
+  floating-point comparison without bounding the inputs.
+
+Private complete-body/caller evidence is under
+`local-data/test-runs/re-audit-20260926/walker/`. `Weapon.cpp` and `Weapon.h` are
+absent from the pinned source drop. This pass does not revalidate every earlier
+weapon-helper claim, all unordered floating comparisons, burst timing or a
+retail gameplay run.
+
+## Default held/release bindings — September 27
+
+Fresh pristine initializer and controller-body reads resolve the default
+mapping: **action 19 charges while held; action 18 fires on release**, subject
+to the mapping and recipient admission gates. These are initialized table
+values, not a read of the user's current settings. All action, category and
+button numbers in this table are decimal; scan codes and addresses are hex.
+
+| Initialized table | Charge, action 19 | Fire, action 18 | Initializer calls |
+| --- | --- | --- | --- |
+| Runtime defaults | category 15, mouse button 0; record `00889418` | category 17, mouse button 0; record `00889438` | `005142e7`, `005142fb` |
+| Dual preset | category 15/button 0, plus category 9/key scan `003a`; record `00677c30` | category 17/button 0, plus category 10/key scan `003a`; record `00677c50` | `00453585`, `0045359f` |
+| Joystick fallback | category 0/button 7; record `00677a10` | category 2/button 7; record `00677a30` | `00453707`, `0045371b` |
+
+The actual CPC receiver is bound by constructor `005145f0`, vtable `005e48e0`
+and RTTI descriptor `0063df60` (`CPCController`). DoMappings at `0042db40`
+dispatches those categories through table `0042e340`:
+
+- Mouse held reads byte `0089bdf5`; release reads latch `0089bdfc`.
+  Admitted message `0201` sets held; message `0202` clears held and sets release at
+  `0052378a–00523792`. Polling also ORs previous held into the release latch
+  on an unpressed sample at `0042d5a6–0042d5c3`. Mapping does not consume
+  that latch; `00523db0` clears it.
+- Keyboard held uses slot `+0x1c → 00514890 → 00515970` and requires the
+  byte result to equal one. Release uses `+0x20 → 00514870 → 00513a80`,
+  zero-extends the release byte and accepts nonzero. These read distinct
+  arrays at `00888c94` and `00888e94`; the queries do not clear release.
+  Key-message handling updates them, and `00512470` clears release state.
+- Joystick held uses `+0x10 → 005147f0`, normalizing the current button byte
+  to zero/one. Release uses `+0x14 → 00514810`, accepting previous nonzero
+  and current zero. Sampler `00513370` establishes the two buffer roles;
+  actual device sampling success is a separate question.
+
+Admitted digital mapping supplies **1.0f**. `SendButtonAction` at `0042e4d0`
+sets the action's suppression bit before recipient/pause admission; even a
+rejected delivery therefore suppresses another normal attempt through a
+second binding until those masks are cleared. `Flush` at `0042d9d0` copies
+current masks into the previous-state fields, clears current masks, then
+dispatches DoMappings. The
+Player recipient routes action 18 at `004d32d4` to FireWeapon `00409f20`
+and action 19 at `004d32cd` to ChargeWeapon `00409ef0`.
+
+This supports repeated held-charge dispatch across eligible mapping passes,
+not a claim of one call per rendered frame. A release predicate can also
+remain true across passes until sampling or latch clearing advances. The
+older partial source's zero digital value and keyboard argument counts must
+not replace the retail transport.
+
+Root independently decoded the complete bodies and checked the dispatch
+tables, initializer arguments and predicate/routing paths. Private evidence:
+`local-data/test-runs/re-audit-20260926/walker/fire-binding-bodies-v1.json`,
+SHA-256 `68ce70188a87fb5448ae9ee668d1778d3895218d49a679ac350368d955b31923`,
+plus `control-binding-bodies-v1.json` and the Player caller packet in that
+owner. This pass did not launch the game, inspect current settings or measure
+input cadence. Source comparisons use `Controller.cpp:148,258–315,443–486`,
+`PCController.h:21`, `PCController.cpp:80` and `Player.cpp:390` at the pinned
+commit above; raw retail dispatch decides where they differ.
+
 ## Open questions
 
 | Question | Cheapest falsifier |
 | --- | --- |
-| How often the PC build calls `ChargeWeapon` while fire is held (buttons 18/19 reach `0x00409f20`/`0x00409ef0` through `0x004d32cd`/`0x004d32d4`; the hold/release mapping was not found) | Disassemble the controller code calling `CPlayer` vtable `0x005de770` slot 3, or count `0x00409ef0` calls per frame in a runtime trace |
+| How sampling, release-latch clearing and Flush interleave during actual gameplay, including held-charge/released-fire call frequency | In a copied runtime, trace the sampler, clear routines and `0042d9d0`, alongside `00409ef0`/`00409f20`; compare mapping passes with event and rendered frames |
 | Whether Level 100's Health Pad fires `Repair Pad` rounds at the player (reload 30 s, range 7) | Read the repair-pad AI update's firing conditions |
