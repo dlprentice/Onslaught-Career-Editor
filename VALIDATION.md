@@ -7777,3 +7777,46 @@ failures exposed a missing Binary trailer and an unsupported evidence-grade
 word; those were corrected without adding a backlog exemption. Logs:
 `docs-final.log`, `docs-final-v2.log`, `docs-final-v3.log` and `safety-final.log`.
 `git diff --check` passed after removing one extra trailing blank line.
+
+## RE startup shell and input dispatch — September 27
+
+The `startup-shell-20260927` cohort corrects eight names, comments and tag sets.
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent review/root reproduction, live readback and
+independently restored Archive A POST passed. All nine live exports equal
+rehearsal; every prototype, 1,538 body bytes / 492 instructions and 8,323
+non-target function rows are unchanged. The tracked checkpoint is unchanged.
+The current projection exactly matches all 8,331 live entries: 2,039 unique
+corrected names, 317 additional kept, zero newly neutralized and 5,975 outside
+the accounted set. Prototype corrections remain 28; 2,369 unique comments
+have been updated. No full semantic or runtime parity percentage follows.
+
+Commands and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-shell/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. The framework suite passed 94 cases.
+Review corrected an excluded Create witness that overclaimed ShowWindow and
+UpdateWindow imports; the eight sealed rows and all nine anchor dispositions
+were unchanged. Prior evidence and the correction record are retained.
+
+`python local-data/test-runs/re-audit-20260926/startup-shell/original_messages.py`
+passed 73 original-code cases and two one-byte counterfactual controls. The
+426 original bytes cover shell MsgProc, the window callback and GetBPP; the
+68 message cases exercise both direct and callback dispatch, while five cases
+exercise GetBPP. Independent review reconstructed all outputs and 98 callback
+records from the instructions, and checked the actual ELF/filter/byte pins.
+Receipt: `local-data/test-runs/re-audit-20260926/startup-shell/messages-0b8k1s_a/receipt.json`.
+Dependencies are authored normal-return hooks. This establishes bounded input
+state and forwarding behavior, not Windows dispatch, original dependency
+behavior, real devices, focus, timing, reentrancy or graphics. No Godot or
+physical desktop was used. The helper ABI and missing callback boundary remain
+separate corrections; this cohort changes neither.
+
+Logs are under `local-data/test-runs/re-audit-20260926/startup-shell/`:
+`framework-tests.log`, `messages-run.log`, `live.log`, `finish.log` and
+`projection.log`.
+
+Publication checks: `npm run test:docs` passed with zero name drift, and
+`npm run test:safety` passed over 4,154 candidate files. `git diff --check`
+passed. Logs: `docs-final.log` and `safety-final.log` in that same evidence owner.

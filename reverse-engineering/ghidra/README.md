@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[device lifecycle identities](#re-audit-device-lifecycle-identities--september-27);
+[startup shell identities](#re-audit-startup-shell-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,35 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit startup shell identities — September 27
+
+The [eight-row manifest](../../tools/cohort-specs/startup-shell-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/startup-shell-20260927.spec.tsv) correct startup-shell
+identities from pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Eight startup-shell names/comments/tag sets corrected: seven independently witnessed virtual methods and DeviceObject registration. All prototypes, locals, 1,538 body bytes / 492 instructions and 8,323 non-target rows remain unchanged. All five earlier comments and every prior tag are retained; three comments were newly added. Only the program comment count/digest change.
+
+Fresh source/retail callers, literals, imports, complete bodies and RTTI establish the shell methods and its singleton registration context. The seven virtual corrections use partial reviewed slot anchors, not positional equivalence: retail has14 slots versus13 source declarations and reorders lifecycle entries. The six-undefine source-selection profile is explicit and does not prove historical compiler flags. Ten direct registration calls, the singleton/base constructor chain and exact prepend body match AddDeviceObject. Independent review and root reproduction corrected a non-target Create anchor that overclaimed ShowWindow/UpdateWindow calls; revised evidence has identical dispositions and the sealed eight-row payload is unchanged. Existing Create/base MsgProc names are not counted as promoted kept names here. The GetBPP physical interface and absent WndProc function boundary remain separate scoped corrections. No game, Windows dispatch, real device, callback lifetime or complete source equivalence is certified.
+
+The [platform note](../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
+records wrapper addresses, list order, source divergences and open runtime
+questions. This family determines method roles, not complete implementation
+semantics. Existing semantic names are retained as leads in every changed
+plate comment.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; the complete name projection matches all 8,331 entries.
+
+Working identity: `db.18690`, 18 files / 124,029,812 bytes,
+inventory SHA-256 `77de16820005410f23efcc0b4b7b02ab7cbf43fd243aabdfa4f243e105e53787`; main database 73,728,000 bytes,
+SHA-256 `de31f4e35c5f7d04c794a89b130bf2d24660b2e0ba785da3ab1d3d1be7b0bb58`. Restored device-lifecycle POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-startup-shell/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-shell/`; evidence and focused-test logs:
+`local-data/test-runs/re-audit-20260926/startup-shell/`.
 
 ## RE-audit device lifecycle identities — September 27
 

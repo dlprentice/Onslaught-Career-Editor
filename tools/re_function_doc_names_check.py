@@ -162,6 +162,8 @@ CURRENT_CAMERA_POSITION_OVERLAY = REPO_ROOT / "tools/cohort-specs/camera-positio
 CURRENT_CAMERA_POSITION_OVERLAY_SHA256 = "0736cd5bb2eaa88a3e8e41e1a70286cb0ef59c90cbcd108902e31806d00be9d4"
 CURRENT_DEVICE_LIFECYCLE_OVERLAY = REPO_ROOT / "tools/cohort-specs/device-lifecycle-20260927.manifest.tsv"
 CURRENT_DEVICE_LIFECYCLE_OVERLAY_SHA256 = "29f00b2042d7a788e7885a508c989c1152c02c399fd459c1349b42feda5eed65"
+CURRENT_STARTUP_SHELL_OVERLAY = REPO_ROOT / "tools/cohort-specs/startup-shell-20260927.manifest.tsv"
+CURRENT_STARTUP_SHELL_OVERLAY_SHA256 = "0b866f3285c25906cb39855caaa8e22dff7b1c543050bad29202e3b017c3f9c8"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -947,6 +949,11 @@ def run(
                 table, CURRENT_DEVICE_LIFECYCLE_OVERLAY,
                 expected_sha256=CURRENT_DEVICE_LIFECYCLE_OVERLAY_SHA256,
                 expected_rows=31, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_STARTUP_SHELL_OVERLAY,
+                expected_sha256=CURRENT_STARTUP_SHELL_OVERLAY_SHA256,
+                expected_rows=8, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

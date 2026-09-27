@@ -1,7 +1,7 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-09-27 (Options and resource-dispatch identities; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-09-27 (Options, resource-dispatch and shell identities; earlier behavioral evidence keeps its stated limits)
 Summary: the retained source-coordinate long-tail map with current saved function names.
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -358,9 +358,14 @@ coordinate/callee evidence, not new behavioral validation.
 
 ### `ltshell.cpp` (1)
 
+The September 27 shell audit rederives this method identity from the actual
+allocation/list sequence. The retained callee labels below are references,
+not proof of their implied behavior; retail source coordinates differ from the
+pinned source. See the [platform contract](../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction).
+
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x005126F0` | `PCLTShell__VFunc_8_005126f0` | 630 | 0 | 1152–1153 | `CEngine__InvokeCallbackIfStateMinusOne` x5; `CConsole__RenderLoadingScreen` x4 |
+| `0x005126F0` | `PCLTShell__InitDeviceObjects` | 630 | 0 | 1152–1153 | `CEngine__InvokeCallbackIfStateMinusOne` x5; `CConsole__RenderLoadingScreen` x4 |
 
 ### `maptex.cpp` (1)
 
