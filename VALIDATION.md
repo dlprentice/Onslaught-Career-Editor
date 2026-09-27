@@ -71,6 +71,31 @@ Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
 
+### RE guarded event-interface evidence — September 27
+
+`python -m unittest tools.re_name_evidence_tests` passed 90 cases after adding
+the guarded-event witness. The existing frontend straight-line witness keeps
+its stricter separate rules. Fresh pristine RTTI equals the cached model; all
+169 listener uses have the receiver's unique fixed interface occurrence. Both
+reviewed EventManager queue calls agree with the surviving CThing declaration.
+The existing `vtables` command, with `EDITORBUILD`, `RESBUILDER` and `_DEBUG`
+undefined, emits 16 rename, 17 keep and 11 withheld proposals; previously counted
+names are not new coverage. This tool result is not a live promotion.
+
+Independent review caught reversed branch wording in the first anchor draft
+and three matcher gaps: EBP writes through a second operand, an embedded
+literal falsely acting as an instruction, and indirect/nonlocal branches.
+The corrected packet says event 2000 takes slot 2 and event 2002 takes slot 50.
+Focused tests cover these refusals; root additionally re-pinned actual caller
+counterexamples entirely in memory and reproduced rejection. Full handler
+semantics, saved prototype types and runtime ordering are not certified.
+
+Private evidence: `local-data/test-runs/re-audit-20260926/listener/`:
+`anchors-v2.json`, `alignment-v3.json`, `tool-tests-v3.log` and
+`root-review-controls.json`; earlier drafts remain preserved. The current
+names are compared with the complete memory-buffer POST export. No Ghidra,
+retail game, Godot or desktop execution is part of this tool check.
+
 ### RE memory-buffer identity promotion — September 27
 
 Exactly five source-supported names/comments/tags passed fresh PRE restoration,

@@ -622,8 +622,12 @@ new completed counts. Receipts: `re-audit-20260926/membuffer-identities/` and
 Next mechanized family: bind IListener's shared HandleEvent slot through both
 retail EventManager queue dispatches and the surviving CThing declaration.
 Missing interface headers stay missing; fixed RTTI ancestry, all holders and
-return cleanup must agree before promotion. The draft recognizer has no live
-name changes yet. Continue consumer-priority ABI findings alongside this family.
+return cleanup must agree before promotion. The recognizer now checks both guarded caller transports and a unique fixed
+primary RTTI path. It proposes 16 new renames and five newly reviewed kept names;
+none are counted live yet. Two whole-image decoder gaps, five switch bodies and
+ambiguous/shared entries stay withheld. Review corrected reversed event-branch
+wording and closed three adverse-admission gaps before sealing. Continue
+consumer-priority ABI findings alongside this family.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

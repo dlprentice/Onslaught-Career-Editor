@@ -154,6 +154,137 @@ class CommonInterfaceTests(unittest.TestCase):
                          ['mechanical-checks-pass','withheld','withheld'])
 
 
+class GuardedEventInterfaceTests(unittest.TestCase):
+    def fixture(self):
+        tmp = tempfile.TemporaryDirectory(); self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root/'types.h').write_text('class Child : public Mid, public Renderable { public: '
+                                  'virtual void HandleEvent(CEvent* event); };\n')
+        source = root/'Caller.cpp'
+        source.write_text('void Host::Tick()\n{\n {\n IListener* to_call = next_event->GetToCall();\n'
+                          ' to_call->HandleEvent(next_event);\n }\n {\n'
+                          ' IListener* to_call = next_event->GetToCall();\n'
+                          ' to_call->HandleEvent(next_event);\n }\n'
+                          ' Log("listener dispatch diagnostic");\n}\n')
+        receiver = root/'event.h'; receiver.write_text('/* reviewed synthetic receiver layout */\n')
+        classes = E.header_classes(root,set()); method=classes['Child'].methods[0]
+        tables = [SimpleNamespace(va=0x600000,klass='IListener',offset=0,slots=[0x401000]),
+                  SimpleNamespace(va=0x600100,klass='Mid',offset=0,slots=[0x401200,0x401300]),
+                  SimpleNamespace(va=0x600200,klass='Child',offset=0,slots=[0x401100,0x401300,0x401300]),
+                  SimpleNamespace(va=0x600300,klass='Child',offset=8,slots=[0x401300])]
+        blocks = {t.va:struct.pack('<'+'I'*len(t.slots),*t.slots) for t in tables}
+        blocks.update({a:b'\xc2\x04\x00' for a in (0x401000,0x401100,0x401200,0x401300)})
+        patterns = (bytes.fromhex('8b08 66896808 3bcd 7405 8b11 50 ff12'),
+                    bytes.fromhex('8b0a 66896a08 8b4624 40 3bcd 894624 7405 8b01 52 ff10'))
+        caller = b'\x55\x33\xed'+patterns[0]+b'\x90'+patterns[1]+b'\x68'+struct.pack('<I',0x610000)+b'\xc3'
+        blocks[0x402000]=caller; blocks[0x610000]=b'listener dispatch diagnostic\0'
+        memory={a+i:v for a,b in blocks.items() for i,v in enumerate(b)}
+        read=lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        img=SimpleNamespace(sha256='f'*64,read=read,u32=lambda a:struct.unpack('<I',read(a,4))[0],
+                            data=b''.join(blocks.values()))
+        insns=[E.Insn(a,3,'ret','0x4') for a in (0x401000,0x401100,0x401200,0x401300)]
+        code=[(1,'push','ebp'),(2,'xor','ebp,ebp'),(2,'mov','ecx,DWORD PTR [eax]'),
+              (4,'mov','WORD PTR [eax+0x8],bp'),(2,'cmp','ecx,ebp'),
+              (2,'je','0x402012'),(2,'mov','edx,DWORD PTR [ecx]'),(1,'push','eax'),
+              (2,'call','DWORD PTR [edx]'),(1,'nop',''),(2,'mov','ecx,DWORD PTR [edx]'),
+              (4,'mov','WORD PTR [edx+0x8],bp'),(3,'mov','eax,DWORD PTR [esi+0x24]'),
+              (1,'inc','eax'),(2,'cmp','ecx,ebp'),(3,'mov','DWORD PTR [esi+0x24],eax'),
+              (2,'je','0x402029'),(2,'mov','eax,DWORD PTR [ecx]'),(1,'push','edx'),
+              (2,'call','DWORD PTR [eax]'),(5,'push','0x610000'),(1,'ret','')]
+        cursor=0x402000
+        for size,mnem,ops in code:
+            insns.append(E.Insn(cursor,size,mnem,ops)); cursor+=size
+        self.assertEqual(cursor,0x402000+len(caller))
+        bases={'IListener':[('IListener',0)],'Mid':[('Mid',0),('IListener',0)],
+               'Child':[('Child',0),('Mid',0),('IListener',0),('Renderable',8)]}
+        model=SimpleNamespace(rtti=SimpleNamespace(vtables=tables,class_bases=bases,
+                                                   fixed_bases={k:list(v) for k,v in bases.items()}),insns=insns)
+        funcs=[SimpleNamespace(va=a,lo=a,hi=a+len(b)-1) for a,b in blocks.items() if a<0x600000]
+        prog=E.Program(img,model,funcs)
+        span=lambda a,n:dict(address=hex(a),bytes=n,sha256=hashlib.sha256(read(a,n)).hexdigest())
+        witness=dict(kind='guarded-event-primary-prefix',primaryChain=['Child','Mid','IListener'],
+                     table='0x600000',evidence='Reviewed synthetic event transport',receiverEvidence='Reviewed receiver layout',
+                     caller=span(0x402000,len(caller)),windows=[span(0x402003,15),span(0x402013,22)],
+                     zeroRegisterAt='0x402001',callerLiteral=dict(address='0x610000',site='0x402029',text='listener dispatch diagnostic'),
+                     source=dict(file='Caller.cpp',sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                                 function='Host::Tick',calls=[dict(line=5,receiverLine=4),dict(line=9,receiverLine=8)]),
+                     receiverSources=[dict(file='event.h',sha256=hashlib.sha256(receiver.read_bytes()).hexdigest(),evidence='Reviewed getter layout')])
+        witness['class']='IListener'
+        anchor=dict(table='0x600200',offset=0,slot=0,target='0x00401100',method='HandleEvent',parameters=['CEvent*'],
+                    qualifiers='',sourceFile=method.file,sourceLine=method.line,body=span(0x401100,3),
+                    evidence='Reviewed method body',interfaceDispatch=witness)
+        anchor['class']='Child'
+        return root,classes,prog,dict(specimenSha256=img.sha256,anchors=[anchor]),memory,span
+
+    def test_two_guarded_calls_bind_only_the_fixed_primary_interface(self):
+        root,classes,prog,doc,_,_=self.fixture()
+        report=E.propagate_vtable_anchors(prog,classes,doc,root)
+        self.assertEqual([r['target'] for r in report['rows']],['0x00401000','0x00401100','0x00401200'])
+        checked=E.vtable_abi_admission(prog,classes,doc,report,root)
+        self.assertTrue(all(r['status']=='mechanical-checks-pass' for r in checked['rows']))
+        self.assertNotIn('IListener',classes)  # no declaration order invented
+
+    def test_repinned_byte_mutations_cannot_change_the_transport(self):
+        # field/receiver, reuse store, branch condition/target, vptr, pushed event,
+        # slot and flag-changing counter bookkeeping all affect actual evidence.
+        for offset,value in ((4,0x48),(7,0x09),(11,0x75),(12,0x04),(14,0x10),(15,0x51),
+                             (17,0x13),(34,0x40),(39,0x51)):
+            with self.subTest(offset=offset):
+                root,classes,prog,doc,memory,span=self.fixture();w=doc['anchors'][0]['interfaceDispatch']
+                memory[0x402000+offset]=value
+                w['caller']=span(0x402000,w['caller']['bytes'])
+                w['windows']=[span(0x402003,15),span(0x402013,22)]
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_wrong_or_repeated_primary_path_and_secondary_overlap_refuse(self):
+        for change in ('repeated','nonfixed','offset','short-path','secondary','table','long-base'):
+            with self.subTest(change=change):
+                root,classes,prog,doc,_,_=self.fixture();w=doc['anchors'][0]['interfaceDispatch']
+                if change=='repeated':prog.bases['Child'].append(('IListener',8))
+                if change=='nonfixed':prog.fixed_bases['Mid'].pop()
+                if change=='offset':prog.bases['Mid'][1]=('IListener',4)
+                if change=='short-path':w['primaryChain']=['Child','IListener']
+                if change=='secondary':classes['Child'].bases[1]='Mid'
+                if change=='table':w['table']='0x600100'
+                if change=='long-base':prog.model.rtti.vtables[0].slots.append(0x401000)
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_repinned_source_receiver_and_independent_calls_are_required(self):
+        for change in ('receiver','method','same-call','receiver-hash','receiver-absent','unknown-return'):
+            with self.subTest(change=change):
+                root,classes,prog,doc,_,_=self.fixture();w=doc['anchors'][0]['interfaceDispatch']
+                p=root/'Caller.cpp'
+                if change=='receiver':p.write_text(p.read_text().replace('IListener*','Unrelated*'))
+                if change=='method':p.write_text(p.read_text().replace('->HandleEvent','->Other'))
+                w['source']['sha256']=hashlib.sha256(p.read_bytes()).hexdigest()
+                if change=='same-call':w['source']['calls'][1]=dict(w['source']['calls'][0])
+                if change=='receiver-hash':w['receiverSources'][0]['sha256']='0'*64
+                if change=='receiver-absent':w['receiverSources']=[]
+                if change=='unknown-return':classes['Child'].methods[0].head='virtual Unknown'
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+    def test_null_initialization_and_branch_bypass_are_checked(self):
+        for change in ('zero','clobber','xadd-second','popaw','interior','prefix-branch',
+                       'indirect-jump','external-jump','nonboundary-jump',
+                       'duplicate-literal','literal-instruction','clipped'):
+            with self.subTest(change=change):
+                root,classes,prog,doc,_,_=self.fixture();w=doc['anchors'][0]['interfaceDispatch']
+                caller=prog.body(prog.by_va[0x402000])
+                if change=='zero':w['zeroRegisterAt']='0x402003'
+                if change=='clobber':caller[9].mnem,caller[9].ops='inc','ebp'
+                if change=='xadd-second':caller[9].mnem,caller[9].ops='xadd','eax,ebp'
+                if change=='popaw':caller[9].mnem,caller[9].ops='popaw',''
+                if change=='interior':caller[9].mnem,caller[9].ops='jmp','0x402020'
+                if change=='indirect-jump':caller[9].mnem,caller[9].ops='jmp','edx'
+                if change=='external-jump':caller[9].mnem,caller[9].ops='jmp','0x403000'
+                if change=='nonboundary-jump':caller[9].mnem,caller[9].ops='jmp','0x402002'
+                if change=='prefix-branch':caller[0].mnem,caller[0].ops='jmp','0x402013'
+                if change=='duplicate-literal':prog.img.data+=b'listener dispatch diagnostic\0'
+                if change=='literal-instruction':caller[-2].mnem='mov'
+                if change=='clipped':prog.by_va[0x402000].declared_hi=0x403000
+                with self.assertRaises(ValueError):E.propagate_vtable_anchors(prog,classes,doc,root)
+
+
 class HelperTests(unittest.TestCase):
     def test_folded_body_new_derived_slot_is_not_erased_by_inherited_slots(self):
         # Retail RET4 at 004014c0: CThing has 59 slots, while the same body
