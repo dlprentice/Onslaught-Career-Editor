@@ -1,4 +1,234 @@
-# DXMemBuffer.cpp Function Mappings
+# CDXMemBuffer: retail file buffering and text I/O
+
+Status: active specimen-bound contract; dated historical records retained below
+Last updated: 2026-09-27
+Summary: source method identities, measured receiver fields, retail/source differences,
+and bounded original-code evidence for line reading and failed writes. File/device
+acceptance and complete save compatibility remain separate.
+Source File: `references/Onslaught/DXMemBuffer.cpp` | Binary: `BEA.exe.original.backup`
+
+## Evidence and scope
+
+All retail addresses below refer to
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752 bytes,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The September 27 pass independently decoded the complete twelve bodies below.
+Pinned source `references/Onslaught` at
+`5352a81cdb838b145a57f7febc5d9fc4b0129ebb` is an identity witness, not a claim
+of equivalent code. `DXMemBuffer.cpp` SHA-256 is
+`c12a95cdf2f423239d2d298846f89d14554f550cb5ec68619b1be9e418ad505a`;
+`DXMemBuffer.h` is
+`6f28f9cffa0217bf48d18c6845620ea687d69c6227b34f6eb8416b5176e874ee`.
+`membuffer.h` selects `CMEMBUFFER = CDXMemBuffer` for `_DIRECTX`; its
+`IMemBuffer` base is nonvirtual. No guessed vtable is used for these identities.
+
+The [five-name correction](../../ghidra/README.md#re-audit-memory-buffer-identities--september-27)
+replaces descriptive aliases with supported source method identities. Retail
+implementation differences remain explicit. All displaced plate notes are
+retained as fallible leads; unchanged saved prototypes are not certified.
+The seven already matching names below have been statically rechecked here;
+their live comments and the family's ABI findings remain follow-up work.
+
+Private evidence: `local-data/test-runs/re-audit-20260926/membuffer/` holds
+complete body/consumer packets, import/export witnesses, original-code drivers
+and retained input/output pairs. These files contain private retail evidence and
+remain outside Git. Native experiment commands and limits are also recorded in
+[VALIDATION.md](../../../VALIDATION.md#re-memory-buffer-original-code--september-27).
+
+## Method identities and transport
+
+| Address | Current name | Observed interface and role |
+| --- | --- | --- |
+| `0x00547d40` | `CDXMemBuffer__SetNextReadBufferSize` | One caller-popped DWORD; writes the shared read-size global. |
+| `0x00547d70` | `CDXMemBuffer__ctor` | ECX receiver; zeros only `+04/+0c/+10/+14`, returns that receiver in EAX. |
+| `0x00547d90` | `CDXMemBuffer__dtor_base` | ECX receiver; frees `+04/+0c`, without closing a file handle or nulling the fields. |
+| `0x00547dc0` | `CDXMemBuffer__InitFromMem` | ECX, filename and memory-type stack words, `RET 8`; opens a file-backed writer, not an input-memory view. |
+| `0x00547ec0` | `CDXMemBuffer__InitFromFile` | ECX and four stack words, `RET 16`; initializes a reader, fills it and applies start-skip. The PC body does not consume the source's `mungepath` argument. |
+| `0x005482c0` | `CDXMemBuffer__GetFileSize` | Calls PE import `GetFileSize([ECX], NULL)` and returns its full EAX value. |
+| `0x005482d0` | `CDXMemBuffer__Skip` | ECX, signed-size stack word, `RET 4`; advances through buffered/refilled data and returns the consumed count. |
+| `0x00548570` | `CDXMemBuffer__Read` | ECX, destination and signed size, `RET 8`; copies through refills and returns the copied count. |
+| `0x00548820` | `CDXMemBuffer__ReadString` | ECX, destination and maximum, `RET 8`; line/limit loop with the edge cases below. |
+| `0x00548a70` | `CDXMemBuffer__Write` | ECX, source and signed-positive size, `RET 8`; buffers and flushes without propagating write failure. |
+| `0x00548c00` | `CDXMemBuffer__Close` | ECX, no stack arguments; returns EAX 0 for null data, otherwise reaches EAX 1 after its cleanup paths. This is not a durable-write result. |
+| `0x00548d30` | `CDXMemBuffer__EndOfFile` | Loads the full DWORD at `[ECX+24]` and returns; it does not query the file or recompute EOF. |
+
+These transports do not justify every retained Ghidra typedef or calling-
+convention spelling. In particular, the live destructor omits its receiver,
+Write's saved `uint` conflicts with the signed guards/source `SINT`, and saved
+`bool` return widths require a caller/ABI correction pass. The adjacent
+`0x0048ddd0` wrapper and `0x0048ddf0` / `0x004cdb90` thunks were not part of
+this twelve-body recheck; their old notes below remain historical leads.
+
+## Receiver fields and initialization
+
+Offsets in this table are hexadecimal. The names in parentheses are source
+correspondences; these are measured
+accesses, not a newly installed Ghidra structure.
+
+| Offset | Retail access and source correspondence |
+| --- | --- |
+| `+00` | File handle (`mFile`). |
+| `+04/+08` | Allocated buffer and current pointer (`mData/mPtr`). |
+| `+0c/+10` | Optional check-byte buffer and current check-byte pointer (`mCRCData/mCRCDataUpTo`); `+10` is not an integer index. |
+| `+14` | Source `mCRCFile` slot; constructor and writer initialization set it to zero. The rechecked retail writer does not open/write/close the source sidecar. It is not a flush counter. |
+| `+18/+1c` | Cached capacity and valid/buffered byte count (`mSize/mDataSize`). |
+| `+20/+24/+28` | Reading, EOF and last-block DWORDs. |
+| `+2c..+12b` | 256-byte cached filename; copying 256 bytes does not guarantee NUL termination for overlong names. |
+| `+12c/+130` | Logical position and allocation memory-type word. |
+
+The constructor initializes four pointer/slot words only. Do not infer zeroed
+EOF, position, filename or handle from construction alone. The destructor frees
+buffers; callers needing handle closure must use the close path separately.
+
+Read-size global `0x00650f6c` initially contains `0x100000`. The setter stores
+`0x100000` for zero; otherwise it uses 32-bit `(size + 0xfffff) & 0xfff00000`.
+Addition can wrap. The source defaults to 64 KiB and retains nonzero sizes
+unchanged. Writer initialization allocates 1 MiB, versus the source PC 2 MiB.
+It opens with `GENERIC_WRITE`, share 0, `CREATE_ALWAYS`, attributes `0x80`.
+Reader initialization opens with `GENERIC_READ`, share-read, `OPEN_EXISTING`,
+attributes `0x80`; source `MB_BUFFERING=0` would add `FILE_FLAG_NO_BUFFERING`.
+Both retail initializers format a `.crc` name but do not open that sidecar.
+The compiled allocation anchors name `DXMemBuffer.cpp` at `0x00650fd0`;
+the method/field/API correspondence establishes owner identity despite line drift.
+
+## Read, skip and compression boundaries — static findings
+
+Read and Skip clamp a request extending beyond a known final block and set EOF;
+merely reaching its end exactly does not execute that over-read branch. The
+returned consumed count advances `+12c`. A refill compares its valid count
+against cached capacity `+18`, while the requested amount comes from the shared
+global. Changing that global while buffers are open has not been proved safe.
+
+Filename-suffix comparison with the initial `.aya` string at `0x006318a0`
+selects compressed paths. Plain start-skip seeks whole configured buffer units,
+then uses Skip for the remainder. The `.aya` path goes through decoded-byte
+skipping rather than treating the requested logical offset as a raw file offset.
+
+The inlined compressed refill reads a four-byte encoded length, then that many
+bytes into shared scratch `0x008c029c`, and invokes the decompressor. Decoded
+counts advance the output pointer and accumulated valid count. The wrapper
+passes capacity `0x102927` to each decode, including after the destination has
+advanced; this pass found no wrapper check against remaining allocated space
+or an incoming encoded length exceeding scratch capacity. This is a bounded
+static observation, not an executed malformed-input or exploitation test.
+
+PE thunks `0x0055d5f2` and `0x0055d5f8` jump to imports `zlib.dll` ordinal 63
+and 9. The selected retained `local-lab/safe-copy-bea-pristine/zlib.dll`
+(63,827 bytes, SHA-256
+`9929233274cd1c33395036717dda8da45d5a3a3c880a4aeff6deabac3407ecc2`)
+exports `uncompress` and `compress` at those ordinals. This verifies the selected
+DLL mapping, not which DLL a running installation loaded. The partial source's
+simple ReadFile/WriteFile paths omit these `.aya` branches.
+
+When `+0c` is nonzero, refill compares the output-byte sum modulo 256 to the
+byte at `+10`; it is not CRC32. `+10` increments even when checking is disabled.
+The rechecked constructor/initializers do not populate a check-byte stream, so
+this conditional branch is not evidence of active sidecar validation in a
+normal initialized reader. Compressed decoding, check streams and real Windows
+I/O remain unexecuted by the experiments below.
+
+## Text-reader edge cases — 67 original-code cases
+
+The complete 580 bytes `[0x00548820,0x00548a64)` were loaded unchanged at their
+original addresses in an isolated ELF32; SHA-256
+`30942e4e145f0204c60c2aad1a05dc85f038791e6ef4d00c020d36e8843a9232`.
+The harness supplies an authored receiver, guarded destination and 64-byte
+buffer, and intercepts only controlled zero-byte ReadFile/GetLastError paths.
+
+- With input CR followed by `X` and maximum 3, the output is `0a 00 00` and
+  logical position advances two. At `0x00548a32`, only the penultimate CR is
+  tested; there is no requirement for a final LF.
+- With an exhausted full buffer beginning `S`, a refill returning TRUE/count 0
+  still causes the old `S` to be consumed. FALSE with `ERROR_HANDLE_EOF` has
+  the same result. Position advances one and EOF becomes set on the next loop
+  check. An already-known final block or maximum 1 suppresses the refill and
+  stale-byte consumption.
+- Sampled maxima 0 and 1 still write a destination NUL. The harness owns that
+  byte; this is not proof that a zero-capacity caller is safe. Negative coverage
+  is the single value `-1`, not every signed input.
+
+The unconditional post-refill byte load is at `0x005489f4`. These two edge
+conditions are also visible in source `ReadString`; they are not claimed as
+retail/source divergences. Complete body loading is not complete branch
+coverage. Nonempty refills, compression, CRC and real files remain outside this
+run. All 308 authored receiver bytes, source bytes, destination guards, stack cleanup and
+callee-saved registers were checked for each case.
+
+Receipt: `readstring-072doz1d/probe.json` under the private owner, SHA-256
+`d99ea51f050851da529913aa3c5ecdb3a4191cede1cfee7dca526da455c14cd6`.
+The earlier 63-case run is retained; its cases are byte-identical to the first
+63 in this expanded run. Independent review reconstructed all 67 results;
+root re-read the paired raw controls.
+
+## Write/close failure behavior — 71 original-code cases
+
+The complete Write body `[0x00548a70,0x00548bf7)`, 391 bytes, SHA-256
+`aba736cadb2e1e654a32e27a5d8692b207ecee0405e9e4c2b5dbca146dd0aeb9`, and
+Close `[0x00548c00,0x00548d2f)`, 303 bytes, SHA-256
+`899c986095597e7ec5880c70449a58e3b6735486b1f28ca819db9829ea3e5c84`,
+ran unchanged with an authored 64-byte buffer and empty filename, selecting
+raw I/O. API/allocator substitutes record checked arguments and event order;
+they do not perform file or heap operations.
+
+Exactly filling the buffer does not flush it; an additional byte does. On
+WriteFile FALSE, Write logs, queries GetLastError, resets the buffer and
+continues advancing logical position. A 129-byte request with 17 initial bytes
+and two failed full-buffer flushes still advances position by 129 and leaves
+18 bytes buffered. Reported short counts are not inspected.
+
+Close of a writer with 17 buffered bytes returns EAX 1 after WriteFile FALSE,
+following trace → CloseHandle → free and nulling `+04`. It also returns 1
+for TRUE reporting 0/17 or 16/17 bytes, without the trace. Null `+04` returns 0
+with no API calls; reader Close makes no write call. Source Write/Close have
+similar failure continuation, so these observations confirm retail behavior
+rather than a source-version difference. Retail omits the source sidecar work;
+its compressed writer additionally ignores the compressor return code, a
+static finding not exercised by this raw-path experiment.
+
+Receipt: `write-close-l0acrscz/probe.json`, SHA-256
+`86056e9fd35e010acd2b47653db822b885d0f539d3513acaa5784421190903ed`.
+All 71 complete outputs were independently reconstructed; they include 61
+Write calls, 41 Close calls and 114 intercepted WriteFile events. In Write-only
+cases, the report's `closeReturn: 0` is an untouched harness field, not a called
+return. Event payload hashes describe full 64-byte buffer snapshots, including
+unused tails, not bytes persisted. CloseHandle failure, compression, real
+allocation/files, Windows behavior and crash durability were not tested.
+
+Both native harnesses restrict syscalls to i386 read/write/exit and verify a
+denied getpid for every case. This is not a claim that inherited descriptors
+are inaccessible, nor a full-process sandbox certification.
+
+## Consumer implications and open work
+
+The retail controller recorder `0x00514720` calls Write three times on its
+`this+2c` buffer, with four-byte requests at `0x0051472f/0x0051473c/0x00514749`.
+The source records seven words; that difference is also bounded in the
+[controller contract](../cpccontroller-vtable-semantics-2026-08-11.md#september-27-joystick-and-recording-recheck).
+The menu loader `0x0044fa90` constructs the same stack receiver, initializes it
+from a file, reads through it and closes/destroys it. These consumers bind the
+family to real code paths. They do not establish that every career/settings
+serialization helper uses it or prove a full startup/save round trip.
+
+The rebuild can use the measured byte consumption, buffering and source
+variations for compatibility. Companion publication must retain its existing
+verified-copy/write/reopen protection: retail Close returning true is not
+proof of a successful write.
+
+Remaining work: correct the explicit receiver/signed-size/return-width ABI
+findings through caller checks and a separate exact cohort; update the seven
+kept live evidence comments; test nonempty and compressed refill boundaries
+with controlled payloads; then verify selected real-file integrations on copies.
+The cheapest falsifiers are exact caller transport for ABI, intercepted bounded
+refills for decoder/count logic, and an owned-copy write/reopen comparison for
+actual persistence. No original save or pristine input was written.
+
+## Historical records — not current verification
+
+The entries below preserve earlier metadata changes and receipts. Their field
+names, signatures, behavior claims and coverage counts were not certified merely
+by exporting Ghidra. The current contract above supersedes conflicting active
+claims, including the old preference for descriptive names and the old
+`mCRCIndex`/`mFlushCount` layout. Historical aliases are retained here.
 
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x004cf050` → `CMenuItem__Destructor_Thunk` (was `CMenuItem__Destructor`). Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
@@ -16,7 +246,7 @@ stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
 Old cell text is quoted below rather than deleted, so a reader who remembers the
 withdrawn label can tell it was corrected and not lost.
 
-| Address | Superseded label | Current name | Correction |
+| Address | Superseded label | Historical replacement | Correction |
 | --- | --- | --- | --- |
 | `0x0048f2f0` | `CDXLandscape__SetUpdateBoundsAndRebuildVB` | `CDXPatch__SetGridOriginStepAndRebuild` | class prefix and suffix both moved |
 | `0x004cf050` | `CMenuItem__Destructor` | `CMenuItem__Destructor_Thunk` | same class; suffix re-read |
@@ -29,99 +259,9 @@ unverified against the new name until it is re-measured.
 
 ---
 
-## Overview
-
-`CDXMemBuffer` is the PC buffered file I/O implementation used through the source `CMEMBUFFER` abstraction. It supports buffered reads and writes, optional compressed/CRC side data paths, and OID-backed allocation.
-
-Wave 319 corrects several stale labels in this family:
-
-- `0x00547d70` and `0x00547d90` are `CDXMemBuffer` constructor/destructor-base bodies, not `CChunker` methods.
-- `0x00547ec0` is `CDXMemBuffer__InitFromFile`, the source-parity read-buffer initializer previously labeled `DXMemBuffer__OpenRead`.
-- The read/skip/close helpers now carry `CDXMemBuffer__*` names and member-style signatures.
-
-Wave606 completes the adjacent static read/write/EOF tranche:
-
-- `0x00547d40`, `0x00547dc0`, `0x005482c0`, `0x00548820`, `0x00548a70`, and `0x00548d30` now carry `CDXMemBuffer__*` owner labels.
-- The pass preserves conservative behavior labels for retail (`SetBufferSize`, `OpenWrite`, `ReadLine`, `WriteBytes`, `IsEOF`) instead of forcing every Stuart-source method name onto bodies where the retail implementation differs or the usage label is clearer.
-- Read-back evidence verifies the buffer-size global setter, write-open path, file-size query, text line read, byte write/flush path, and EOF flag query.
-
-Wave806 adds the raw-head close thunk:
-
-- `0x0048ddf0 CDXMemBuffer__Close_Thunk` is a single-instruction thunk to `0x00548c00 CDXMemBuffer__Close`.
-- The observed xref is `CParticleSet__LoadParticleSetFile`.
-- The pass used `raw-commentless-head-wave806` and `wave806-readback-verified`; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`.
-
-Wave823 adds the ParticleSet cleanup destructor thunk:
-
-- `0x004cdb90 CDXMemBuffer__dtor_base_Thunk` is a single-instruction jump thunk to `0x00547d90 CDXMemBuffer__dtor_base`.
-- The observed xref is `0x005d4230 Unwind@005d4230` in the ParticleSet.cpp cleanup continuation, where the stack-local buffer at `EBP-0x140` is destroyed.
-- The pass used `particle-archive-buffer-cleanup-wave823` and `wave823-readback-verified`; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-183746_post_wave823_particle_archive_buffer_cleanup_verified`.
-
-Wave1028 static re-audit (`cdx-render-resource-lifecycle-review-wave1028`) re-read `0x00547d70 CDXMemBuffer__ctor` with context `0x00548570 CDXMemBuffer__Read` and no mutation. Fresh exports keep the constructor owner-corrected away from stale CChunker wording and tied to resource/chunk/file-buffer callers while preserving the exact-layout and runtime I/O proof boundary. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified`.
-
-Runtime file I/O behavior, exact field names, tags, locals, structure typing, and rebuild parity remain unproven.
-
-**Debug Path:** `[maintainer-local-source-export-root]\DXMemBuffer.cpp` at `0x00650fd0`
-
-## Estimated Class Structure
-
-The layout below is still an estimate from static read-back and source comparison. Do not treat it as a finalized Ghidra structure.
-
-```cpp
-class CDXMemBuffer {
-    /* 0x00 */ HANDLE  mFileHandle;
-    /* 0x04 */ void*   mData;
-    /* 0x08 */ void*   mCurrentPos;
-    /* 0x0C */ void*   mCRCData;
-    /* 0x10 */ int     mCRCIndex;
-    /* 0x14 */ int     mFlushCount;
-    /* 0x18 */ int     mBufferSize;
-    /* 0x1C */ int     mBytesInBuffer;
-    /* 0x20 */ int     mIsReadMode;
-    /* 0x24 */ int     mIsEOF;
-    /* 0x28 */ int     mIsLastChunk;
-    /* 0x2C */ char    mFilename[256];
-    /* ... */          // additional counters/state still under review
-};
-```
-
-## Global Variables
-
-| Address | Name | Type | Purpose |
-|---------|------|------|---------|
-| `0x00650f6c` | `g_DXMemBufferSize` | DWORD | Default buffer size. |
-| `0x008c029c` | `g_CompressionBuffer` | byte buffer | Shared compression/decompression buffer context. |
-| `0x006318a0` | `g_CompressedExtension` | char* | Extension check context for compressed files. |
-
-## Function Mappings
-
-### Static / Setup
-
-| Address | Current name | Purpose |
-|---------|--------------|---------|
-| `0x00547d40` | `CDXMemBuffer__SetBufferSize` | Sets the global default buffer size, rounded to a 1 MiB boundary. |
-
-### Instance Methods
-
-| Address | Current name | Current signature | Purpose |
-|---------|--------------|-------------------|---------|
-| `0x0048ddf0` | `CDXMemBuffer__Close_Thunk` | `bool __fastcall CDXMemBuffer__Close_Thunk(void * this)` | Five-byte close thunk used from particle file-loading cleanup context; jumps to `0x00548c00 CDXMemBuffer__Close`. |
-| `0x004cdb90` | `CDXMemBuffer__dtor_base_Thunk` | `void __fastcall CDXMemBuffer__dtor_base_Thunk(void)` | Five-byte destructor-base thunk used from ParticleSet.cpp cleanup; jumps to `0x00547d90 CDXMemBuffer__dtor_base`. |
-| `0x00547d70` | `CDXMemBuffer__ctor` | `void * __fastcall CDXMemBuffer__ctor(void * this)` | Constructor/init path that zeros data, CRC pointer, and state fields used by readers. |
-| `0x00547d90` | `CDXMemBuffer__dtor_base` | `void __fastcall CDXMemBuffer__dtor_base(void * this)` | Destructor-base cleanup for owned data/CRC buffers. |
-| `0x00547dc0` | `CDXMemBuffer__OpenWrite` | `bool __thiscall CDXMemBuffer__OpenWrite(void * this, char * filename, int mem_type)` | Write-buffer open path; allocates the 0x100000 write buffer, opens with `CreateFileA`, and prepares `.crc` sidecar state. |
-| `0x00547ec0` | `CDXMemBuffer__InitFromFile` | `bool __thiscall CDXMemBuffer__InitFromFile(void * this, char * filename, int memType, int mungePath, uint startSkip)` | Read-buffer initializer used by `CChunkReader__OpenFile`. |
-| `0x005482c0` | `CDXMemBuffer__GetFileSize` | `uint __fastcall CDXMemBuffer__GetFileSize(void * this)` | Gets the underlying file size through Win32 `GetFileSize(this[0], NULL)`. |
-| `0x005482d0` | `CDXMemBuffer__Skip` | `int __thiscall CDXMemBuffer__Skip(void * this, int size)` | Skips bytes forward through the active read buffer. |
-| `0x00548570` | `CDXMemBuffer__Read` | `int __thiscall CDXMemBuffer__Read(void * this, void * data, int size)` | Reads bytes from the buffered file into caller storage. |
-| `0x00548820` | `CDXMemBuffer__ReadLine` | `void __thiscall CDXMemBuffer__ReadLine(void * this, char * output, int max_chars)` | Reads a CR/LF-normalized text line and refills through the compressed read path when needed. |
-| `0x00548a70` | `CDXMemBuffer__WriteBytes` | `void __thiscall CDXMemBuffer__WriteBytes(void * this, void * data, uint size)` | Writes bytes from caller storage into the buffered file and flushes through raw or compressed write paths. |
-| `0x00548c00` | `CDXMemBuffer__Close` | `bool __fastcall CDXMemBuffer__Close(void * this)` | Closes read mode or flushes write mode, then frees active buffers. |
-| `0x00548d30` | `CDXMemBuffer__IsEOF` | `bool __fastcall CDXMemBuffer__IsEOF(void * this)` | Returns the EOF flag at `this+0x24`. |
-
 ## Superseded Labels
 
-| Address | Superseded label | Current label |
+| Address | Superseded label | Historical replacement |
 |---------|------------------|---------------|
 | `0x00547d70` | `CChunker__CChunker` | `CDXMemBuffer__ctor` |
 | `0x00547d90` | `CChunker__Destructor` | `CDXMemBuffer__dtor_base` |
@@ -137,27 +277,6 @@ class CDXMemBuffer {
 | `0x0048ddf0` | `thunk_DXMemBuffer__Close` | `CDXMemBuffer__Close_Thunk` |
 | `0x004cdb90` | `CDXMemBuffer__dtor_base` | `CDXMemBuffer__dtor_base_Thunk` |
 | `0x00548d30` | `DXMemBuffer__IsEOF` | `CDXMemBuffer__IsEOF` |
-
-## Read Path Summary
-
-`CChunkReader__OpenFile` calls `CDXMemBuffer__InitFromFile` with a filename, memory type, path-munging flag, and start-skip value. The read buffer then supports:
-
-- `CDXMemBuffer__Read` for byte reads across buffer refills.
-- `CDXMemBuffer__Skip` for cursor movement.
-- `CDXMemBuffer__Close` for read/write close and cleanup.
-
-These are static Ghidra/source-alignment notes. They do not prove runtime archive behavior, compression edge cases, or exact source identity for every adjacent method.
-
-## Write / Line I/O Summary
-
-Wave606 verifies the neighboring write and text-line helpers:
-
-- `CDXMemBuffer__SetBufferSize` is a static/global helper with one caller-popped `requested_size` argument. Retail stores `DAT_00650f6c = 0x100000` for zero and otherwise rounds up to the next 1 MiB boundary; this differs from the related source `SetNextReadBufferSize` default/rounding behavior.
-- `CDXMemBuffer__OpenWrite` is the write-open path. It takes `filename` and `mem_type`, allocates a 0x100000 buffer through `OID__AllocObject` at the retail `DXMemBuffer.cpp` line `0xe3` site, opens the file with `CreateFileA`, and prepares a `.crc` sidecar name.
-- `CDXMemBuffer__GetFileSize` wraps `GetFileSize(this[0], NULL)` and returns the Win32 result directly; `CText__Init` uses the returned `EAX` value as an allocation size.
-- `CDXMemBuffer__ReadLine` reads text into `output` until newline, EOF, or `max_chars - 1`, normalizes CR/LF, updates `this+0x12c` and `this+0x24`, and uses `DAT_006318a0`, `DAT_008c029c`, and `uncompress` for compressed reads.
-- `CDXMemBuffer__WriteBytes` buffers caller data and flushes through raw `WriteFile` or the compressed `compress`/`DAT_008c029c` path.
-- `CDXMemBuffer__IsEOF` returns the EOF flag at `this+0x24`; xrefs include `CEffect__LoadSFXFile`, `CConsole__ExecScript`, and `CPCController__ReadControllerState`.
 
 ## Wave606 Queue Note
 

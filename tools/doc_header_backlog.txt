@@ -108,7 +108,6 @@ reverse-engineering/binary-analysis/functions/DXBattleLine.cpp.md
 reverse-engineering/binary-analysis/functions/DXClouds.cpp.md
 reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md
 reverse-engineering/binary-analysis/functions/DXKempyCube.cpp.md
-reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md
 reverse-engineering/binary-analysis/functions/DXPalletizer.cpp.md
 reverse-engineering/binary-analysis/functions/DXSnow.cpp.md
 reverse-engineering/binary-analysis/functions/DXSurf.cpp.md

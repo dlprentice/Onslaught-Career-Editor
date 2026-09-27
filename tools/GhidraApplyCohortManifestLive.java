@@ -323,6 +323,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "frontend-page-verified-20260927",
         "frontend-callback-abi-20260927",
         "class-name-identities-20260927",
+        "membuffer-identities-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
