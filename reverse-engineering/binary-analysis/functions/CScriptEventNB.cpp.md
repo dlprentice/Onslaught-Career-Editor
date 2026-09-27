@@ -3,7 +3,7 @@
 Summary: existing function analysis with current CDebugLog callee naming.
 
 Status: active static function map
-Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
+Last updated: 2026-09-27 (CPostEventData cleanup identity; earlier behavior limits retained)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptEventNB.cpp` (SEH
 `__FILE__` pointer `0x0064fe98` read out of `RegisterEventListener`) | Binary:
 BEA.exe, SHA-256
@@ -16,6 +16,17 @@ are identified below. The byte contracts retain their original evidence limits.
 > **September 27 deleting-entry recheck:** `0x005386b0 CPostEventData__scalar_deleting_dtor`; `0x00538780 CScriptEventNB__scalar_deleting_dtor`. The [compiler-entry audit](../../ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
 
 > **September 27 listener identity recheck:** `0x00538c70 CScriptEventNB__HandleEvent` (formerly `CScriptEventNB__HandleEventMessage`). The [guarded-dispatch and RTTI audit](../../ghidra/README.md#re-audit-event-listener-identities--september-27) binds these method names to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Saved prototypes and older per-handler behavior claims are not revalidated by this identity correction.
+
+> **September 27 cleanup identity:** `0x005386d0 CPostEventData__dtor_body`
+> supersedes the neutral `DestructorBody_005386d0` label. The [cleanup audit](../../ghidra/README.md#re-audit-cposteventdata-cleanup-identity--september-27)
+> binds the complete 105-byte body to pristine `BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, through
+> fresh RTTI, the sole matching deletion wrapper, own primary-vptr and normal
+> CMonitor teardown. The old July extent included padding; 29 instructions end
+> at exclusive `0x00538739`. Names do not certify saved types or full cleanup
+> behavior. The retained `scripteventnb`/`scripteventnb-wave586` tags are historical
+> subsystem/wave groupings, also present on IScript and the CPostEventData wrapper;
+> they do not assert exclusive CScriptEventNB ownership.
 
 ## Shape
 

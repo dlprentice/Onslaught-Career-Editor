@@ -339,6 +339,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "frontend-argument-abi-20260927",
         "window-callback-abi-20260927",
         "cleanup-body-verified-20260927",
+        "postevent-cleanup-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

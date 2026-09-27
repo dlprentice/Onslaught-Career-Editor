@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 43 cleanup identities verified after window/menu interfaces; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 43 cleanup identities verified and CPostEventData corrected after window/menu interfaces; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the verified cleanup-body cohort (September 27).**
+**Running coverage after the CPostEventData cleanup cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,041 unique functions; 2,042 rename rows include one repeated correction. The latest correction identifies the registered WndProc callback. |
+| Names corrected | 2,042 unique functions; 2,043 rename rows include one repeated correction. The latest correction identifies the CPostEventData cleanup body. |
 | Names verified and kept | 360 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method and 43 cleanup-body identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,931 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,930 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 52 interfaces: the prior 29, 22 frontend argument layouts and WndProc. Three unresolved frontend returns remain unassigned; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,414 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,415 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -691,10 +691,13 @@ Review-reproduced first-store and overlapping-ownership defects are fixed;
 and one proposed CPostEventData name, with 69 cases withheld. This includes
 CUnit through a mechanically admitted wrapper whose prior name proposal had
 collided; it does not imply 114 previously promoted wrapper names. The 43
-retained identities are now live kept-name dispositions; the single rename is not yet promoted. Five
+retained identities are now live kept-name dispositions. The separate [CPostEventData cleanup cohort](reverse-engineering/ghidra/README.md#re-audit-cposteventdata-cleanup-identity--september-27)
+now replaces the old neutral label, preserving all 105 body bytes, 29 instructions
+and its existing interface. Legacy subsystem/wave tags are historical groupings,
+not class proof. Both cohorts have five
 refusal controls, exact independent review, live readback and independently
-restored POST passed. Next: the CPostEventData cleanup identity, then the
-console-menu interface family with explicit source/body/caller witnesses.
+restored POST. Next: the console-menu interface family with explicit
+source/body/inheritance witnesses and bounded retail consumer corroboration.
 Keep the CUnitAI/CMechAI collision separate; never
 move an excluded label simply to free a spelling. Evidence and failed/passing
 controls: `local-data/test-runs/re-audit-20260926/frontend-options/cleanup-*`.

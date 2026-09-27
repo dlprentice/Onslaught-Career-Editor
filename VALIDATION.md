@@ -8046,3 +8046,34 @@ Evidence and execution logs use `cleanup-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed. `git diff --check` passed.
+
+
+## RE CPostEventData cleanup identity — September 27
+
+`postevent-cleanup-20260927` replaces the neutral label at 005386d0 with
+`CPostEventData__dtor_body`. Fresh raw RTTI, the unique matching deletion wrapper,
+primary-vptr store and normal CMonitor teardown support class-associated cleanup
+identity; neither source-exact spelling nor complete cleanup/runtime behavior is
+certified. All 105 body bytes / 29 instructions, ABI/storage, locals, types and
+8,331 non-target records remain unchanged. The old 1,955-byte note remains an
+explicitly fallible lead, including its short analytic opcode witness. Legacy
+subsystem/wave tags are qualified in the living function map. Historical July
+records retain their narrower withdrawal scope and original table spellings.
+
+Fresh PRE restoration, rehearsal/separate/sealed readback, five byte-stable
+refusal controls, independent exact review, root reproduction, live readback and
+independent Archive A POST restoration passed. All nine live exports equal the
+rehearsal; only the program comment digest changes. The saved signature text
+changes only its function name. `python -m unittest tools.ghidra_cohort_framework_tests`:
+94 passed. Current projection matches 8,332 entries: 2,042 corrected, 360
+additional kept, zero newly neutralized and 5,930 outside the accounted sets;
+52 prototype corrections and 2,415 unique updated comments are separate dimensions.
+
+Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py` under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/postevent-cleanup/`.
+Execution logs use `postevent-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,166 candidate files. `git diff --check` passed.

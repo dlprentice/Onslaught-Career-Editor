@@ -168,6 +168,8 @@ CURRENT_GETBPP_OVERLAY = REPO_ROOT / "tools/cohort-specs/getbpp-abi-20260927.man
 CURRENT_GETBPP_OVERLAY_SHA256 = "168042f8d46217c420461ac7322d4142bc503781d3ed9a86f3e93441117af315"
 CURRENT_WINDOW_CALLBACK_ABI_OVERLAY = REPO_ROOT / "tools/cohort-specs/window-callback-abi-20260927.manifest.tsv"
 CURRENT_WINDOW_CALLBACK_ABI_OVERLAY_SHA256 = "55a506c425543cbbfc41ef95f7e948f25bbede5400cdb1b45fd2ed36d33b501c"
+CURRENT_POSTEVENT_CLEANUP_OVERLAY = REPO_ROOT / "tools/cohort-specs/postevent-cleanup-20260927.manifest.tsv"
+CURRENT_POSTEVENT_CLEANUP_OVERLAY_SHA256 = "999d6e415a432c3e7f5a0858f5e297f5472e57d43936041b0712eaf01141383a"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -981,6 +983,11 @@ def run(
                 table, CURRENT_WINDOW_CALLBACK_ABI_OVERLAY,
                 expected_sha256=CURRENT_WINDOW_CALLBACK_ABI_OVERLAY_SHA256,
                 expected_rows=1, expected_columns=CURRENT_GETBPP_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_POSTEVENT_CLEANUP_OVERLAY,
+                expected_sha256=CURRENT_POSTEVENT_CLEANUP_OVERLAY_SHA256,
+                expected_rows=1, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

@@ -271,7 +271,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # ordered local transport with return uncertainty and fallible old notes retained.
 # WndProc: one new authored 2,084-byte comment; no prior plate note; opaque SDK types.
 # Cleanup bodies:43 old/new authored comments (16,761/102,111 bytes); retained notes are leads.
+# CPostEventData: 1,955 old / 3,950 authored comment bytes; short inherited opcode witness retained as a lead.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/postevent-cleanup-20260927.manifest.tsv":
+        "999d6e415a432c3e7f5a0858f5e297f5472e57d43936041b0712eaf01141383a",
     "tools/cohort-specs/cleanup-body-verified-20260927.manifest.tsv":
         "e28925f18b6a2c2c85e8f7c7ab7726127fca13d3a1180938923096fdc2204a6d",
     "tools/cohort-specs/window-callback-abi-20260927.manifest.tsv":

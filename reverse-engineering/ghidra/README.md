@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified cleanup bodies](#re-audit-verified-cleanup-bodies--september-27);
+[CPostEventData cleanup identity](#re-audit-cposteventdata-cleanup-identity--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit CPostEventData cleanup identity — September 27
+
+The [one-row manifest](../../tools/cohort-specs/postevent-cleanup-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/postevent-cleanup-20260927.spec.tsv) record the corrected cleanup identity
+in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One class-associated nondeleting cleanup at 005386d0 is named CPostEventData__dtor_body instead of DestructorBody_005386d0. Only the name, comment and tags change; all 105 body bytes, 29 instructions, physical ABI/storage, variables, types and 8,331 non-target rows are unchanged. All 1,955 old comment bytes remain as fallible history, including a short analytic opcode witness. Saved signature text changes only its function name.
+
+Fresh RTTI binds table 005e4f34 to CPostEventData; its sole matching deleting wrapper 005386b0 calls this cleanup. The cleanup installs that table at 005386ed and its normal return is dominated by the original-this call 00538724 to CMonitor at 004bac40. The existing cleanup admission tool reproduces those facts from fresh complete bodies. July history already recognized this positive owner but deliberately stopped at removing the false CScriptEventNB label; this promotion closes that disposition without calling the old constrained correction wrong. The retained scripteventnb and wave586 tags denote legacy subsystem/wave grouping, not exclusive class identity; they also label IScript and the corrected CPostEventData wrapper. Source-exact spelling, exceptions, callee internals, prototype types and complete cleanup/runtime behavior remain open.
+
+Independent review re-derived the raw RTTI, unique wrapper, primary-vptr and
+normal teardown, and compared the exact payload and POST. Root reproduced it;
+a message's instruction-count typo was corrected to 29. Fresh PRE restoration,
+rehearsal, separate/sealed readbacks, five byte-stable refusal controls, live
+readback and independently restored Archive A POST passed. All nine live exports
+match rehearsal; only the program comment digest changes. The full current name
+projection remains exact for 8,332 entries.
+
+Working identity: `db.18696`, 18 files / 124,652,404 bytes,
+inventory SHA-256 `5618b157f1f63879518fd74408de473be758bf190d6ea5d3932cd78e15088d7e`; main database 74,350,592 bytes,
+SHA-256 `159aae7eaf6a971f6b437a968a942d1405c0c15c5d5834dbe6a0f90c26bce4c4`. Restored verified-cleanup POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-postevent-cleanup/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/postevent-cleanup/`; proof, tests and logs use `postevent-` under
+`local-data/test-runs/re-audit-20260926/frontend-options/`.
 
 ## RE-audit verified cleanup bodies — September 27
 
