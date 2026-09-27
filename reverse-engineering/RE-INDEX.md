@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (compiler deleting-entry identity proof promoted; broader audit unfinished)
+Last updated: 2026-09-27 (113 compiler deleting-entry identities dispositioned; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -64,9 +64,11 @@ independent POST restoration passed; no prototype or runtime acceptance follows.
 The [compiler deleting-entry audit](ghidra/README.md#re-audit-compiler-deleting-entry-identities--september-27)
 now normalizes 33 proven entry labels and corrects their evidence comments/tags.
 A closed instruction recognizer, exact wrapper bytes, raw RTTI holders and
-normal-return cleanup chains admit 113 candidates; 80 kept-name comment
-updates and seven shared-owner/collision questions remain next. Live readback
-and independent recovery passed for the 33 only. Full cleanup, exceptions,
+normal-return cleanup chains admit 113 identities. The separate
+[80 kept-name update](ghidra/README.md#re-audit-verified-compiler-deleting-entries--september-27)
+is also live with exact readback and independently restored recovery; it changes
+comments/tags only. Seven shared-owner/collision questions remain withheld.
+Full cleanup, exceptions,
 prototype types and runtime behavior remain outside this identity proof.
 [PROGRAM.md](../PROGRAM.md#re-record-audit--requested-september-25) separates
 unique name dispositions from ABI/comment coverage and the unmeasured document

@@ -233,7 +233,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (6,132/30,168 decoded bytes); source/RTTI/body evidence and marked older leads.
 # Compiler deleting-entry identities: 33 old/33 proposed authored comments
 # (12,430/94,572 decoded bytes); bounded identity/normal-flow proofs and historical leads.
+# Verified compiler deleting entries: 80 old/80 proposed authored comments
+# (29,285/234,452 decoded bytes); static identity proofs and marked historical leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/compiler-destructor-verified-20260927.manifest.tsv":
+        "eba36e6b528be7fa11cfc6996c8f162263628d8591ec9634c0295c39080af12f",
     "tools/cohort-specs/compiler-destructor-identities-20260927.manifest.tsv":
         "5586a02c772122a4eb2003bc189b03566feb8d7c53eff8334033b6816fc294bf",
     "tools/cohort-specs/controller-engine-verified-20260927.manifest.tsv":
