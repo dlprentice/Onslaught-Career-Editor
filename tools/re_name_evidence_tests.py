@@ -15,6 +15,314 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import re_name_evidence as E  # noqa: E402
 
 
+class TypedListSourceTests(unittest.TestCase):
+    def source(self, declaration='DeviceObject* item = list;', call='item->Restore();', extra='',
+               advance='item=item->mNext;', between=''):
+        text = 'void Owner::Restore() {\n'+declaration+'\n'+between+'while(item) {\n'+call+'\n'+extra+advance+'\n}\n}'
+        return text, call, text.index(call)
+
+    def check(self, fixture):
+        text,call,offset=fixture
+        E.typed_list_source_receiver(text,'DeviceObject','item',call,offset)
+
+    def test_plain_and_result_diagnostic_shapes(self):
+        self.check(self.source())
+        for extra in ('', 'if (result!=S_OK) item=item;\n', 'ASSERT(result==S_OK);\n'):
+            with self.subTest(extra=extra):
+                self.check(self.source(call='HRESULT result=item->Restore();',extra=extra))
+
+    def test_qualified_types_literals_and_intervening_statements_are_refused(self):
+        for declaration in ('NotDeviceObject* item=list;', 'Other::DeviceObject* item=list;',
+                            'Other:: DeviceObject* item=list;', 'Other::\nDeviceObject* item=list;',
+                            'Wrap<DeviceObject>* item=list;',
+                            'const char* text="DeviceObject* item=list;";'):
+            with self.subTest(declaration=declaration):
+                with self.assertRaises(ValueError): self.check(self.source(declaration=declaration))
+        with self.assertRaises(ValueError): self.check(self.source(between='item=other;\n'))
+
+    def test_false_advance_shadowing_and_conditional_call_are_refused(self):
+        for advance in ('otheritem=item->mNext;', '"item=item->mNext;";',
+                        'item=item->mNext; item=item->mNext;',
+                        'Other* item=other; item=item->mNext;',
+                        'item->Other(); item=item->mNext;', 'item=other; item=item->mNext;'):
+            with self.subTest(advance=advance):
+                with self.assertRaises(ValueError): self.check(self.source(advance=advance))
+        text,call,offset=self.source()
+        changed=text.replace(call,'if (allow) '+call)
+        with self.assertRaises(ValueError): self.check((changed,call,changed.index(call)))
+        with self.assertRaisesRegex(ValueError,'shadows receiver'):
+            self.check(self.source(call='Other item=item->Restore();'))
+
+    def test_call_must_be_inside_the_selected_loop(self):
+        text,call,offset=self.source()
+        with self.assertRaises(ValueError): self.check((text,call,offset+len(text)))
+        with self.assertRaises(ValueError): self.check((text+text,call,offset))
+
+
+class TypedListLoopTests(unittest.TestCase):
+    """Authored intrusive-list loops, independent of retail code or addresses."""
+
+    def fixture(self, *, conditional=False, zero=False, bad_receiver=False,
+                wrong_slot=False, extra_argument=False, advance_first=False,
+                extra=b'', zero_gap=b'', pre_zero=b''):
+        start, head, flag, auxiliary = 0x411000, 0x710100, 0x710200, 0x411700
+        code = bytearray(b'\x57')  # save the authored EDI iterator
+        zero_site = None
+        if zero:
+            code += b'\x53'+pre_zero
+            zero_site = start+len(code)
+            code += b'\x31\xdb'+zero_gap
+        loop = len(code)
+        code += b'\x8b\x3d'+struct.pack('<I', head)
+        test = b'\x39\xdf' if zero else b'\x85\xff'
+        code += test
+        empty = len(code); code += b'\x74\x00'
+        entry = len(code)
+        advance = b'\x8b\x7f\x0c'
+        if advance_first:
+            code += advance
+        code += b'\x8b\x17'+(b'\x8b\xcb' if bad_receiver else b'\x8b\xcf')
+        if extra_argument:
+            code += b'\x6a\x01'
+        call = len(code); code += b'\xff\x52'+bytes([28 if wrong_slot else 24])
+        if conditional:
+            code += b'\xa0'+struct.pack('<I',flag)
+        if not advance_first:
+            code += advance
+        code += extra
+        skip = None
+        if conditional:
+            code += b'\x38\xd8' if zero else b'\x84\xc0'
+            skip = len(code); code += b'\x74\x00'
+        code += b'\x6a\x07'+(b'\x53' if zero else b'\x6a\x00')
+        code += b'\xb9'+struct.pack('<I',0x710300)
+        site = start+len(code)
+        code += b'\xe8'+struct.pack('<i',auxiliary-site-5)
+        test_site = len(code); code += test
+        back = len(code); code += b'\x75'+bytes([(entry-back-2)&255])
+        end = len(code); code[empty+1] = end-empty-2
+        if skip is not None:
+            code[skip+1] = test_site-skip-2
+        if zero:
+            code += b'\x5b'
+        code += b'\x5f\xc3'
+        section = E.Section('.text',start,len(code),bytes(code),0x60000020)
+        img = SimpleNamespace(sections=[section],
+            read=lambda a,n: section.raw[a-start:a-start+n],
+            section_of=lambda a: section if section.contains(a) else None)
+        fn = E.Func(start,'Untrusted__Label','USER_DEFINED',start,start+len(code)-1,
+                    '', '', False, '', False, 1, len(code),start+len(code)-1)
+        model = SimpleNamespace(refs_to={},data_ptrs_to={})
+        prog = SimpleNamespace(img=img,model=model,funcs=[fn])
+        witness = dict(address=hex(start+loop),bytes=end-loop,
+            sha256=hashlib.sha256(bytes(code[loop:end])).hexdigest(),head=hex(head),slot=6,
+            nextOffset=12,callAddress=hex(start+call))
+        if zero:
+            witness.update(zeroRegister='ebx',zeroAddress=hex(zero_site))
+        return prog,fn,witness,dict(entry=start+entry,call=start+call,loop=start+loop)
+
+    def test_both_guard_forms_and_optional_ancillary_condition(self):
+        for conditional in (False,True):
+            for zero in (False,True):
+                with self.subTest(conditional=conditional,zero=zero):
+                    p,f,w,_ = self.fixture(conditional=conditional,zero=zero)
+                    r=E.typed_list_loop(p,f,w)
+                    self.assertEqual((r['slot'],r['nextOffset'],r['parameterStackBytes']),(6,12,0))
+                    self.assertEqual(r['conditionalAncillary'],conditional)
+
+    def test_wrong_receiver_slot_arguments_and_advancement_are_refused(self):
+        for kwargs in ({'bad_receiver':True},{'wrong_slot':True},{'extra_argument':True},
+                       {'advance_first':True},{'extra':b'\x66\x47'},
+                       {'extra':b'\x87\xf8'},{'extra':b'\x61'}):
+            with self.subTest(kwargs=kwargs):
+                p,f,w,_=self.fixture(**kwargs)
+                with self.assertRaises(ValueError): E.typed_list_loop(p,f,w)
+
+    def test_wrong_head_next_slot_and_missing_or_stale_pins_are_refused(self):
+        for key,value in [('head','0x710104'),('nextOffset',8),('nextOffset',True),
+                          ('slot',5),('slot',True),('sha256','0'*64),('bytes',2)]:
+            with self.subTest(key=key,value=value):
+                p,f,w,_=self.fixture();w[key]=value
+                with self.assertRaises(ValueError): E.typed_list_loop(p,f,w)
+
+    def test_external_entries_and_raw_interior_pointers_are_refused(self):
+        for kind in ('branch','pointer','raw'):
+            with self.subTest(kind=kind):
+                p,f,w,l=self.fixture()
+                if kind=='branch':p.model.refs_to[l['entry']]=[('jmp',0x420000)]
+                elif kind=='pointer':p.model.data_ptrs_to[l['call']]=[0x700000]
+                else:p.img.sections.append(E.Section('.data',0x700000,4,
+                    struct.pack('<I',l['call']),0xc0000040))
+                with self.assertRaisesRegex(ValueError,'bypassing entry'):
+                    E.typed_list_loop(p,f,w)
+
+    def test_zero_register_partial_implicit_and_second_operand_clobbers_are_refused(self):
+        for gap in (b'\xb3\x01',b'\x66\xbb\x01\x00',b'\x93',b'\x61',b'\x5b',
+                    b'\xff\xe0',b'\xe9\x00\x10\x00\x00'):
+            with self.subTest(gap=gap.hex()):
+                p,f,w,_=self.fixture(zero=True,zero_gap=gap)
+                with self.assertRaisesRegex(ValueError,'zero register|unresolved indirect entry'):
+                    E.typed_list_loop(p,f,w)
+
+    def test_later_reentry_cannot_bypass_the_zero_assignment(self):
+        for kind in ('jump','call','indirect'):
+            for cached in (False,True):
+                with self.subTest(kind=kind,cached=cached):
+                    p,f,w,loc=self.fixture(zero=True)
+                    section=p.img.sections[0]
+                    end=int(w['address'],16)+w['bytes'];offset=end-f.va
+                    tail=(b'\x43\xff\xe0' if kind=='indirect' else
+                          b'\x43'+(b'\xe9' if kind=='jump' else b'\xe8')+
+                          struct.pack('<i',loc['loop']-end-6))
+                    section.raw=section.raw[:offset]+tail+section.raw[offset:]
+                    section.size=len(section.raw)
+                    f.hi=f.declared_hi=f.va+section.size-1;f.body_bytes=section.size
+                    if cached:p.model.refs_to[loc['loop']]=[('jmp',end+1)]
+                    with self.assertRaisesRegex(ValueError,'zero register|unresolved indirect entry'):
+                        E.typed_list_loop(p,f,w)
+
+    def test_pre_zero_entry_rejects_other_control_transfers(self):
+        for prefix in (b'\xcb',b'\xcf',b'\xcd\x80',b'\xf4',b'\x0f\x34',
+                       b'\xea\x00\x00\x42\x00\x08\x00',
+                       b'\x9a\x00\x00\x42\x00\x08\x00'):
+            with self.subTest(prefix=prefix.hex()):
+                p,f,w,_=self.fixture(zero=True,pre_zero=prefix)
+                with self.assertRaisesRegex(ValueError,'zero register|unresolved indirect entry'):
+                    E.typed_list_loop(p,f,w)
+
+    def test_fresh_relative_bypass_is_refused_without_cached_reference(self):
+        for opcode in (b'\xe9',b'\xe8',b'\x0f\x85'):
+            for interior in (0,1):
+                with self.subTest(opcode=opcode.hex(),interior=interior):
+                    p,f,w,loc=self.fixture()
+                    section=p.img.sections[0]
+                    end=int(w['address'],16)+w['bytes'];offset=end-f.va
+                    tail=opcode+struct.pack('<i',loc['call']+interior-end-len(opcode)-4)
+                    section.raw=section.raw[:offset]+tail+section.raw[offset:]
+                    section.size=len(section.raw);f.body_bytes=section.size
+                    f.hi=f.declared_hi=f.va+section.size-1
+                    with self.assertRaisesRegex(ValueError,'bypassing entry'):
+                        E.typed_list_loop(p,f,w)
+
+
+class TypedListWitnessTests(unittest.TestCase):
+    def fixture(self):
+        tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup);root=Path(tmp.name)
+        source=root/'Owner.cpp'
+        source.write_text('void Host::Run()\n{\n DeviceObject* item = list;\n while(item)\n {\n'
+                          '  item->Run();\n  item=item->mNext;\n }\n}\n')
+        p,f,w,_=TypedListLoopTests().fixture()
+        first=p.img.sections[0].raw[:-2]
+        second=p.img.sections[0].raw[1:].replace(struct.pack('<I',0x710100),struct.pack('<I',0x710104))
+        delta=len(first)-1
+        w2=copy.deepcopy(w)
+        for key in ('address','callAddress'):w2[key]=hex(int(w2[key],16)+delta)
+        w2['head']='0x710104'
+        caller=first+second
+        lo=int(w2['address'],16)-f.va
+        w2['sha256']=hashlib.sha256(caller[lo:lo+w2['bytes']]).hexdigest()
+        bodies={f.va:caller,0x411900:b'\xc3',0x411910:b'\xc3',0x412100:b'\xc3',
+            0x412000:(b'\xc7\x01'+struct.pack('<I',0x610100)+b'\xa1'+struct.pack('<I',0x710100)+
+                      b'\x8b\x40\x0c\xa1'+struct.pack('<I',0x710104)+b'\x8b\x40\x0c\xc3')}
+        code=bytearray(0x1200)
+        for va,raw in bodies.items():code[va-0x411000:va-0x411000+len(raw)]=raw
+        data=bytearray(0x500)
+        def word(va,value):struct.pack_into('<I',data,va-0x610000,value)
+        tables=[SimpleNamespace(va=0x610100,klass='DeviceObject',offset=0,slots=[0x411920]*6+[0x411900]),
+                SimpleNamespace(va=0x610200,klass='Child',offset=0,slots=[0x411920]*6+[0x411910])]
+        for t,col in zip(tables,(0x610300,0x610400)):
+            word(t.va-4,col)
+            for slot,target in enumerate(t.slots):word(t.va+4*slot,target)
+        sections=[E.Section('.text',0x411000,len(code),bytes(code),0x60000020),
+                  E.Section('.rdata',0x610000,len(data),bytes(data),0x40000040)]
+        def read(a,n):
+            sec=next((s for s in sections if s.start<=a and a+n<=s.start+len(s.raw)),None)
+            return sec.raw[a-sec.start:a-sec.start+n] if sec else b''
+        pe=bytearray(0x100);pe[:2]=b'MZ';struct.pack_into('<I',pe,0x3c,0x80)
+        pe[0x80:0x84]=b'PE\0\0';struct.pack_into('<H',pe,0x84,0x14c);struct.pack_into('<H',pe,0x98,0x10b)
+        img=SimpleNamespace(sha256='a'*64,read=read,sections=sections,data=bytes(pe),
+            u32=lambda a:struct.unpack('<I',read(a,4))[0],
+            section_of=lambda a:next((s for s in sections if s.contains(a)),None))
+        funcs=[E.Func(a,'Fallible_'+hex(a),'USER_DEFINED',a,a+len(raw)-1,'','',False,'',False,
+                      1,len(raw),a+len(raw)-1) for a,raw in sorted(bodies.items())]
+        bases={'DeviceObject':[('DeviceObject',0)],'Child':[('Child',0),('DeviceObject',0)]}
+        rtti=SimpleNamespace(vtables=tables,class_bases=bases,fixed_bases=copy.deepcopy(bases))
+        model=SimpleNamespace(rtti=rtti,insns=[i for fn in funcs for i in E.decode_entry_body(img,fn)],
+                              refs_to={},data_ptrs_to={})
+        prog=E.Program(img,model,funcs)
+        pin=lambda a:dict(address=hex(a),bytes=len(bodies[a]),sha256=hashlib.sha256(bodies[a]).hexdigest())
+        anchor=dict(table='0x610100',slot=6,method='Run',callerIdentityEvidence='Reviewed synthetic caller',
+                    caller=pin(f.va),loops=[w,w2],identityBodies=[pin(0x412100)|{'evidence':'Synthetic distinction'}],
+                    source=dict(file=source.name,sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                                function='Host::Run',line=6,call='item->Run();'))
+        doc=dict(kind='typed-list-interface-v1',specimenSha256=img.sha256,baseClass='DeviceObject',
+                 baseTable='0x610100',receiverEvidence='Synthetic RTTI binding',sourceDivergences='Authored fixture',
+                 layout=dict(body=pin(0x412000),heads=['0x710100','0x710104'],nextOffset=12,
+                             evidence='Reviewed synthetic layout',supportBodies=[pin(0x412100)|{'evidence':'Synthetic support'}]),
+                 anchors=[anchor])
+        return root,prog,doc
+
+    def check(self,root,prog,doc,family=False):
+        with patch.object(E,'scan_rtti',return_value=prog.model.rtti):
+            return (E.typed_list_virtuals if family else E.typed_list_witnesses)(prog,doc,root)
+
+    def test_complete_authored_witness_and_family(self):
+        root,p,d=self.fixture()
+        self.assertEqual(self.check(root,p,d)[(0x610100,6)]['pop'],0)
+        result=self.check(root,p,d,True)
+        self.assertEqual([r['status'] for r in result['admission']['rows']],['mechanical-checks-pass']*2)
+        self.assertEqual([r['status'] for r in result['proposals']['rows']],['rename']*2)
+
+    def test_missing_review_and_stale_pins_cannot_be_replaced_by_saved_names(self):
+        for change in ('specimen','source','body','overlap','receiver','identity','support','layout','call','duplicate','heads'):
+            with self.subTest(change=change):
+                root,p,d=self.fixture();a=d['anchors'][0]
+                if change=='specimen':d['specimenSha256']='0'*64
+                if change=='source':a['source']['sha256']='0'*64
+                if change=='body':a['caller']['sha256']='0'*64
+                if change=='overlap':p.funcs.append(E.Func(0x411001,'Overlap','USER_DEFINED',0x411001,0x411002,'','',False,'',False))
+                if change=='receiver':d['receiverEvidence']=''
+                if change=='identity':a['identityBodies']=[]
+                if change=='support':d['layout']['supportBodies'][0]['evidence']=''
+                if change=='layout':d['layout']['nextOffset']=8
+                if change=='call':a['source']['call']='other->Run();'
+                if change=='duplicate':d['anchors'].append(copy.deepcopy(a))
+                if change=='heads':a['loops'][1]=copy.deepcopy(a['loops'][0])
+                with self.assertRaises(ValueError):self.check(root,p,d)
+
+    def test_source_condition_requires_matching_explicit_pc_specimen(self):
+        for condition,platform,valid in [('TARGET == PC','PC',True),('UNKNOWN','PC',False),
+                                         ('TARGET == PC',None,False),('TARGET == PC','other',False)]:
+            with self.subTest(condition=condition,platform=platform):
+                root,p,d=self.fixture();src=root/'Owner.cpp'
+                src.write_text('#if '+condition+'\n'+src.read_text()+'#endif\n')
+                a=d['anchors'][0]['source'];a.update(line=7,sha256=hashlib.sha256(src.read_bytes()).hexdigest())
+                if platform:a['platform']=platform
+                if valid:
+                    self.check(root,p,d)
+                    p.img.data=b'not PE'
+                with self.assertRaises(ValueError):self.check(root,p,d)
+
+    def test_family_refuses_ambiguous_or_uncovered_ownership(self):
+        for change,status in [('fixed','unmapped-vtable-aliases'),('repeated','unmapped-vtable-aliases'),
+                              ('secondary','unmapped-vtable-aliases'),('extra','extra-noncode-pointer-cells'),
+                              ('holder','unmapped-vtable-aliases')]:
+            with self.subTest(change=change):
+                root,p,d=self.fixture()
+                # Share one target so an excluded holder cannot silently vanish.
+                t=p.model.rtti.vtables[1];t.slots[6]=0x411900
+                sec=p.img.sections[1];raw=bytearray(sec.raw);struct.pack_into('<I',raw,t.va+24-sec.start,0x411900)
+                if change=='extra':struct.pack_into('<I',raw,0x20,0x411900)
+                sec.raw=bytes(raw);p=E.Program(p.img,p.model,p.funcs)
+                if change=='fixed':p.fixed_bases['Child']=[('Child',0)]
+                if change=='repeated':p.bases['Child'].append(('DeviceObject',4))
+                if change=='secondary':t.offset=4;p=E.Program(p.img,p.model,p.funcs)
+                if change=='holder':p.slots[0x411900].append(('Other',0,1,0x610480))
+                result=self.check(root,p,d,True)
+                self.assertEqual(result['rows'][0]['status'],status)
+                self.assertEqual(result['admission']['rows'][0]['status'],'withheld')
+
+
 class AggregateCopyTests(unittest.TestCase):
     def fixture(self, *, matrix=False, words=4, argument=4, eax_clobber=False,
                 restore=True, receiver=True, extra=b'', interior=False):

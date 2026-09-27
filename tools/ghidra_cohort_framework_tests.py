@@ -277,6 +277,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # all prototypes, bodies and non-target records remain frozen.
 # Verified switch methods: seventeen kept names with comments/tags only;
 # complete body/holder/table evidence and preserved prior notes/uncertainty tags.
+# Device lifecycle:31 source/list/RTTI-grounded names/comments/tags;
+# all prior notes/tags, prototypes, code and non-target records preserved.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -343,6 +345,7 @@ LIVE_GRANTED_COHORTS = [
     "switch-verified-20260927",
     "camera-position-20260927",
     "camera-copy-abi-20260927",
+    "device-lifecycle-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -815,6 +818,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "switch-verified-20260927",\n'
         '        "camera-position-20260927",\n'
         '        "camera-copy-abi-20260927",\n'
+        '        "device-lifecycle-20260927",\n'
         "    };\n",
     ),
     (

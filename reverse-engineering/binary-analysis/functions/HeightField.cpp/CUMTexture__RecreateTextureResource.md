@@ -1,17 +1,29 @@
-# CUMTexture__RecreateTextureResource
+# CUMTexture__RestoreDeviceObjects
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (interface identity rederived; earlier body notes retain their stated limits)
+Summary: retail device-lifecycle identity with retained, separately bounded August body analysis.
 Source File: UMTexture.cpp / LandscapeTexture.cpp (absent from the
 pinned GPL `references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
 `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches. The Ghidra database was not opened. Table name is a research
-label. Device recreate algebra is **not** this proof.
+matches. The Ghidra database was not opened for that August review. At that date,
+the table name was a research label. Device recreate algebra is **not** this proof.
 
 > Address: `0x004f7b60`
+
+## September 27 interface correction
+
+The former label `CUMTexture__RecreateTextureResource` is retained by this filename for stable links.
+Fresh complete-body decoding, both typed list callers and all known RTTI holder
+occurrences establish `CUMTexture__RestoreDeviceObjects`; see the
+[platform evidence](../../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction).
+The new name identifies its lifecycle interface. It does not establish the full
+resource algorithm, source return type, callback lifetime or retail graphics
+behavior. The August evidence statements below describe that earlier review;
+its separate specimen twin was not reverified for this correction.
 
 ## Contract
 
@@ -40,4 +52,4 @@ body SHA-256 is not `4d8ea055…fae4`, **or**
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x004f7b60` | `CUMTexture__RecreateTextureResource` | `568bf1 8b460c 894624 … b9b05b8500 … 0f9dc2 4a 23c2 c3` | thiscall; bare ret; 103 B; 3 E8 / 0 E9; 1 inbound Reset; writes `[+0x24]`/`[+8]`. HIGH on ABI, inbound, those slots. **Not** on callee bodies or authored names. |
+| `0x004f7b60` | `CUMTexture__RestoreDeviceObjects` | `568bf1 8b460c 894624 … b9b05b8500 … 0f9dc2 4a 23c2 c3` | thiscall; bare ret; 103 B; 3 E8 / 0 E9; 1 inbound Reset; writes `[+0x24]`/`[+8]`. HIGH on ABI, inbound, those slots. **Not** on callee bodies or authored names. |

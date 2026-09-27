@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (camera position/copy-return corrections promoted; device-lifecycle witnesses and broader audit remain)
+Last updated: 2026-09-27 (camera and device-lifecycle corrections promoted; startup shell interfaces and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -38,8 +38,13 @@ current/previous-position cache dependency. The
 [six copy-return corrections](ghidra/README.md#re-audit-camera-copy-return-interfaces--september-27)
 now retain the physical EAX pointer results, preserving every argument annotation
 and all names. Orientation caller leads remain open; no retail camera parity is
-established. DeviceObject lifecycle identities are the next mechanized family,
-with missing declarations and retail/source ordering differences explicit.
+established. The [device-lifecycle cohort](ghidra/README.md#re-audit-device-lifecycle-identities--september-27)
+corrects 31 names through typed-list/RTTI evidence, exact live readback and
+independently restored recovery. Its [platform note](source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
+records the retail two-list initialization/restore order and source differences;
+resource algorithms, complete callback lifetime and graphics behavior remain
+unverified. Startup shell interfaces and the missing window-message callback
+boundary are the next bounded leads.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

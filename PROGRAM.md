@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position identities promoted; camera copy-return ABI corrected; device lifecycle family under review; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position/copy-return and device lifecycle corrections promoted; startup shell interfaces next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the camera position/copy-return cohorts (September 27).**
+**Running coverage after the device lifecycle cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,000 unique functions; 2,001 rename rows include one repeated correction. The latest nine establish current/previous camera position methods. |
+| Names corrected | 2,031 unique functions; 2,032 rename rows include one repeated correction. The latest 31 establish device-resource lifecycle methods. |
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,014 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,983 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 28 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces, six reader interfaces and six camera copy-return annotations. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,330 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,361 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,7 +511,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -596,16 +596,32 @@ Every parameter annotation, automatic receiver, stack/type definition and name
 is preserved; no source aggregate layout or orientation identity is invented.
 All preservation/rehearsal/readback/refusal/review/recovery gates passed.
 
-Next mechanized family: DeviceObject lifecycle. Fresh source/caller/RTTI checks
-find 32 nontrivial targets across 16 primary tables. Initial checks admit 31
-candidates and withhold a texture method with an unresolved switch; two shared
-stubs are also withheld. These are research results, not promoted dispositions.
-A missing DeviceObject header requires an explicit typed-list witness, with
-independent caller identity and layout review; a synthetic declaration would
-be unsound. Retail traverses two lists and includes restoration inside Init,
-unlike the source's separate initialization/restore sequence. The draft tool
-and synthetic controls remain under review in the existing evidence tools.
-Private inputs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`.
+The [device lifecycle cohort](reverse-engineering/ghidra/README.md#re-audit-device-lifecycle-identities--september-27)
+promotes 31 names/comments across 40 RTTI holder uses, preserving every prototype,
+body and prior note/tag. Exact live/rehearsal equality, independently restored
+Archive A recovery and all 8,331 projected names passed. The typed-list checker
+binds real source declarations and calls to retail ECX/vptr/slot transport;
+144 evidence/source-graph tests cover the admitted grammar and refusal cases.
+No missing DeviceObject header was invented. Retail has two lists and restores
+during initialization, unlike the source route. The existing
+[platform note](reverse-engineering/source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
+and seven affected function notes now distinguish these identities from older
+unverified semantics. Two shared stubs remain excluded; a texture initializer
+is withheld by the checker's conservative WORD-store switch grammar, not a
+proved retail defect. The rejected first seal had an off-by-one source citation
+in eight comments; it was preserved, corrected and rehearsed afresh before live.
+Private inputs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`;
+completed gate: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`.
+
+Next startup leads: nine shell virtual-method correspondences need final
+independent evidence review; the 34-byte window-message callback at `0x00529070`
+has no saved function boundary in the fresh export. Check its decoded range,
+window-class registration and data/instruction ownership before creating one.
+The eight-byte constant-32 helper at `0x00513640` uses `RET 4`, contradicting its
+saved no-argument cdecl signature; its possible source GetBPP identity remains
+a lead until caller/source evidence is reproduced. Device registration at
+`0x00512ca0` also needs a separate shell-owner disposition. No prototype or new
+function was silently added with the lifecycle names.
 The five kept position names' comments and remaining camera slots remain open. Orientation constructor
 witnesses remain withheld on raw pointer-like words, not proven incoming edges;
 the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.

@@ -1,17 +1,29 @@
-# CLandscapeTexture__VFunc_1_0048e670
+# CLandscapeTexture__InitDeviceObjects
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (interface identity rederived; earlier body notes retain their stated limits)
+Summary: retail device-lifecycle identity with retained, separately bounded August body analysis.
 Source File: HeightField.cpp / LandscapeTexture.cpp (absent from the
 pinned GPL `references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
 `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches. The Ghidra database was not opened. Table name is a research
-label. Device-create algebra is **not** this proof.
+matches. The Ghidra database was not opened for that August review. At that date,
+the table name was a research label. Device-create algebra is **not** this proof.
 
 > Address: `0x0048e670`
+
+## September 27 interface correction
+
+The former label `CLandscapeTexture__VFunc_1_0048e670` is retained by this filename for stable links.
+Fresh complete-body decoding, both typed list callers and all known RTTI holder
+occurrences establish `CLandscapeTexture__InitDeviceObjects`; see the
+[platform evidence](../../../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction).
+The new name identifies its lifecycle interface. It does not establish the full
+resource algorithm, source return type, callback lifetime or retail graphics
+behavior. The August evidence statements below describe that earlier review;
+its separate specimen twin was not reverified for this correction.
 
 ## Contract
 
@@ -42,4 +54,4 @@ Cheapest falsifier: file `0x0008e670` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0048e670` | `CLandscapeTexture__VFunc_1_0048e670` | `a1f4ab6f00 83ec08 85c0 5356 8bd9 … 8bcb e82f930600 … c3` | thiscall; bare ret; 279 B; 3 E8 / 0 E9; 0 inbound; vtable slot 1 at `0x005dc1f4`; plants ConfigureByMode. HIGH on ABI, inbound-empty, that slot, that plant. **Not** on device-create algebra or authored names. |
+| `0x0048e670` | `CLandscapeTexture__InitDeviceObjects` | `a1f4ab6f00 83ec08 85c0 5356 8bd9 … 8bcb e82f930600 … c3` | thiscall; bare ret; 279 B; 3 E8 / 0 E9; 0 inbound; vtable slot 1 at `0x005dc1f4`; plants ConfigureByMode. HIGH on ABI, inbound-empty, that slot, that plant. **Not** on device-create algebra or authored names. |

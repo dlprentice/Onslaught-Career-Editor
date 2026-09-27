@@ -1890,6 +1890,323 @@ def bounded_switch_targets(prog: Program, fn: Func, body: list[Insn]) -> dict:
             'bodySha256': hashlib.sha256(prog.img.read(fn.va, fn.hi-fn.va+1)).hexdigest()}
 
 
+def typed_list_loop(prog: Program, fn: Func, witness: dict) -> dict:
+    """Check one bounded intrusive-list dispatch, conditional on normal callee ABI.
+
+    This recognizes the transport, not the source identity or callback effects.
+    An explicit reviewer must bind the source method and the list's RTTI layout.
+    The receiver is a nonvolatile register; callbacks must preserve it and must
+    leave its node readable through the subsequent next-member load.
+    """
+    start, size = int(witness['address'], 16), witness['bytes']
+    if type(size) is not int or not 0 < size <= 256 or not fn.va <= start < start+size <= fn.hi+1:
+        raise ValueError('typed-list loop extent is invalid')
+    raw = prog.img.read(start, size)
+    if len(raw) != size or hashlib.sha256(raw).hexdigest() != witness['sha256']:
+        raise ValueError('typed-list loop pin mismatch')
+    full = decode_entry_body(prog.img, fn)
+    body = [i for i in full if start <= i.va < start+size]
+    if len(body) < 13 or body[0].va != start or body[-1].va+body[-1].size != start+size:
+        raise ValueError('typed-list loop cuts an instruction')
+    if possible_interior_entry(prog, start, start+size):
+        raise ValueError('typed-list loop has a possible bypassing entry')
+    outside = [i for i in full if not start <= i.va < start+size]
+    if any((i.mnem.startswith(('j','loop')) or i.mnem == 'call')
+           and _DIRECT.fullmatch(i.ops) and start < int(i.ops,16) < start+size for i in outside):
+        raise ValueError('typed-list loop has a freshly decoded bypassing entry')
+    indirect = [i for i in outside if i.mnem.startswith(('j','loop')) and not _DIRECT.fullmatch(i.ops)]
+    if indirect:
+        proven = bounded_switch_targets(prog, fn, full)
+        covered = {int(t['jump'],16):t for t in proven['tables']}
+        if any(i.va not in covered or any(start < int(t,16) < start+size
+               for t in covered[i.va]['targets']) for i in indirect):
+            raise ValueError('typed-list caller has an unresolved indirect entry')
+    head = re.fullmatch(r'(ebx|esi|edi|ebp),DWORD PTR ds:0x([0-9a-f]+)', body[0].ops)
+    if body[0].mnem != 'mov' or not head or int(head[2], 16) != int(witness['head'], 16):
+        raise ValueError('typed-list head is not the selected global pointer')
+    node = head[1]
+    zero = witness.get('zeroRegister')
+    if zero is not None:
+        site = int(witness['zeroAddress'], 16)
+        prefix = [i for i in full if i.va <= site]
+        if (zero not in ('ebx', 'esi', 'edi', 'ebp') or zero == node or not prefix
+                or prefix[-1].va != site or prefix[-1].mnem != 'xor'
+                or prefix[-1].ops != zero+','+zero or site >= start
+                or any(i.mnem not in ('push', 'mov', 'lea', 'nop') for i in prefix[:-1])
+                or possible_interior_entry(prog, fn.va, start+1)):
+            raise ValueError('typed-list zero register has no straight-entry witness')
+        aliases = {'ebx': ('ebx', 'bx', 'bl', 'bh'), 'esi': ('esi', 'si'),
+                   'edi': ('edi', 'di'), 'ebp': ('ebp', 'bp')}[zero]
+        between = [i for i in full if site < i.va < start]
+        if any((i.mnem not in ('mov', 'lea', 'add', 'sub', 'inc', 'dec', 'cmp', 'test', 'push', 'call')
+                and not i.mnem.startswith('j'))
+               or (i.ops.split(',')[0] in aliases and i.mnem not in ('cmp', 'test', 'push'))
+               for i in between):
+            raise ValueError('typed-list zero register was clobbered')
+        starts = {i.va for i in full}
+        if any(not _DIRECT.fullmatch(i.ops) or not site < int(i.ops,16) <= start
+               or int(i.ops,16) not in starts for i in between if i.mnem.startswith('j')):
+            raise ValueError('typed-list zero register prefix has an unresolved detour')
+        for ins in full:
+            if not (ins.mnem.startswith(('j','loop')) or ins.mnem == 'call'):
+                continue
+            if ins.mnem != 'call' and not _DIRECT.fullmatch(ins.ops):
+                raise ValueError('typed-list zero register has an unresolved later entry')
+            if (_DIRECT.fullmatch(ins.ops) and ins.va >= start+size
+                    and fn.va < int(ins.ops,16) < start+size):
+                raise ValueError('typed-list zero register has a later bypassing entry')
+    def null_test(ins):
+        return ((ins.mnem == 'test' and ins.ops == node+','+node)
+                or (zero is not None and ins.mnem == 'cmp' and ins.ops == node+','+zero))
+    j = 1
+    if body[j].mnem == 'pop' and body[j].ops in ('ebx', 'esi', 'edi', 'ebp'):
+        if body[j].ops in (node, zero):
+            raise ValueError('typed-list head or zero register overwritten by pop')
+        j += 1
+    if (len(body) < j+9 or not null_test(body[j]) or body[j+1].mnem != 'je'
+            or body[j+1].ops != hex(start+size)):
+        raise ValueError('typed-list null guard mismatch')
+    entry = body[j+2].va
+    vptr = re.fullmatch(r'(eax|edx),DWORD PTR \['+node+r'\]', body[j+2].ops)
+    call = body[j+4]
+    slot = witness['slot']
+    if (type(slot) is not int or not 1 <= slot <= 31 or body[j+2].mnem != 'mov' or not vptr
+            or body[j+3].mnem != 'mov' or body[j+3].ops != 'ecx,'+node
+            or call.mnem != 'call' or call.ops != f'DWORD PTR [{vptr[1]}+0x{slot*4:x}]'
+            or call.va != int(witness['callAddress'], 16)):
+        raise ValueError('typed-list receiver/vptr/slot transport mismatch')
+    tail = body[j+5:]
+    conditional = tail[0].mnem == 'mov' and re.fullmatch(r'al,ds:0x[0-9a-f]+', tail[0].ops)
+    if conditional:
+        tail = tail[1:]
+    next_offset = witness['nextOffset']
+    if (type(next_offset) is not int or not 4 <= next_offset <= 0x7c or next_offset % 4
+            or tail[0].mnem != 'mov' or tail[0].ops != f'{node},DWORD PTR [{node}+0x{next_offset:x}]'):
+        raise ValueError('typed-list next-member transport mismatch')
+    tail = tail[1:]
+    if conditional:
+        low_zero = {'ebx': 'bl'}.get(zero)
+        if (len(tail) != 8 or not ((tail[0].mnem == 'test' and tail[0].ops == 'al,al')
+                or (low_zero and tail[0].mnem == 'cmp' and tail[0].ops == 'al,'+low_zero))
+                or tail[1].mnem != 'je' or tail[1].ops != hex(tail[-2].va)):
+            raise ValueError('typed-list ancillary-call guard mismatch')
+        tail = tail[2:]
+    if (len(tail) != 6 or tail[0].mnem != 'push' or not _DIRECT.fullmatch(tail[0].ops)
+            or tail[1].mnem != 'push' or tail[1].ops not in ('0x0', zero)
+            or tail[2].mnem != 'mov' or not re.fullmatch(r'ecx,0x[0-9a-f]+', tail[2].ops)
+            or tail[3].mnem != 'call' or not _DIRECT.fullmatch(tail[3].ops)
+            or not null_test(tail[4]) or tail[5].mnem != 'jne' or tail[5].ops != hex(entry)):
+        raise ValueError('typed-list ancillary transport or backedge mismatch')
+    return dict(head=witness['head'], slot=slot, nextOffset=next_offset,
+                callAddress=witness['callAddress'], parameterStackBytes=0,
+                ancillaryCall=tail[3].ops, conditionalAncillary=bool(conditional))
+
+
+def typed_list_source_receiver(text: str, base: str, node: str, call: str, call_offset: int) -> None:
+    """Admit the surviving standalone typed-list source shape, not arbitrary C++.
+
+    Declaration, call and advancement must belong to the same simple loop.
+    Qualified/template types, shadowed receivers, literals and conditional calls
+    cannot lend an unrelated declaration or assignment to this witness.
+    """
+    if re.search(r'\b(?:u8|u|U|L)?R"', text):
+        raise ValueError('typed-list source raw literals are unsupported')
+    masked = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'',
+                    lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
+    name = re.escape(node)
+    declaration = (r'(?:^|[;{}])\s*'+re.escape(base)+r'\s*\*\s*'+name+
+                   r'\s*=\s*[A-Za-z_]\w*\s*;\s*while\s*\(\s*'+name+
+                   r'\s*\)\s*\{(?P<loop>[^{}]*)\}')
+    loops = list(re.finditer(declaration, masked))
+    if len(loops) != 1 or not loops[0].start('loop') <= call_offset < loops[0].end('loop'):
+        raise ValueError('typed-list source receiver declaration and call are not one bound loop')
+    assignment = re.match(r'[A-Za-z_]\w*\s+([A-Za-z_]\w*)\s*=', call)
+    if assignment and assignment[1] == node:
+        raise ValueError('typed-list source result declaration shadows receiver')
+    diagnostic = ''
+    if assignment:
+        result = re.escape(assignment[1])
+        diagnostic = (r'(?:(?:if\s*\(\s*'+result+r'\s*!=\s*[A-Za-z_]\w*\s*\)\s*'+
+                      name+r'\s*=\s*'+name+r'\s*;)|(?:ASSERT\s*\(\s*'+result+
+                      r'\s*==\s*[A-Za-z_]\w*\s*\)\s*;))?')
+    body = r'\s*'+re.escape(call)+r'\s*'+diagnostic+r'\s*'+name+r'\s*=\s*'+name+r'->mNext\s*;\s*'
+    if not re.fullmatch(body, loops[0]['loop']):
+        raise ValueError('typed-list source call and standalone next assignment shape mismatch')
+
+
+def typed_list_witnesses(prog: Program, document: dict, source_root: Path | None) -> dict:
+    """Validate reviewed typed-list seeds without manufacturing missing headers.
+
+    The source/retail caller correspondence and receiver-layout evidence remain
+    explicit review obligations. Complete-body and span pins preserve that
+    reviewed evidence; hashes alone do not establish their semantic meaning.
+    """
+    if (source_root is None or document.get('kind') != 'typed-list-interface-v1'
+            or document.get('specimenSha256') != prog.img.sha256
+            or not document.get('receiverEvidence') or not document.get('sourceDivergences')):
+        raise ValueError('typed-list identity or reviewed layout evidence absent')
+    fresh = scan_rtti(prog.img)
+    if fresh != prog.model.rtti:
+        raise ValueError('typed-list cached RTTI differs from specimen')
+    base, table_va = document['baseClass'], int(document['baseTable'], 16)
+    tables = [t for t in fresh.vtables if t.va == table_va]
+    if len(tables) != 1 or tables[0].klass != base or tables[0].offset != 0:
+        raise ValueError('typed-list primary base table mismatch')
+    def pinned_body(record):
+        va, size = int(record['address'], 16), record['bytes']
+        fn = prog.by_va.get(va)
+        if (type(size) is not int or fn is None or fn.hi+1-va != size
+                or hashlib.sha256(prog.img.read(va, size)).hexdigest() != record['sha256']):
+            raise ValueError('typed-list complete body pin mismatch')
+        if any(other.va != va and other.lo <= fn.hi
+               and (other.declared_hi or other.hi) >= fn.lo for other in prog.funcs):
+            raise ValueError('typed-list witness has overlapping function ownership')
+        return fn, decode_entry_body(prog.img, fn)
+    layout = document['layout']
+    _, body = pinned_body(layout['body'])
+    if (not layout.get('evidence') or body[0].mnem != 'mov'
+            or body[0].ops != f'DWORD PTR [ecx],0x{table_va:x}'):
+        raise ValueError('typed-list RTTI receiver binding mismatch')
+    heads = {int(h, 16) for h in layout['heads']}
+    if len(heads) != 2 or any(not any(i.mnem == 'mov' and i.ops == f'eax,ds:0x{h:x}' for i in body)
+                             for h in heads):
+        raise ValueError('typed-list layout does not reference both selected heads')
+    offset = layout['nextOffset']
+    if (type(offset) is not int or not 4 <= offset <= 0x7c or offset % 4
+            or sum(i.mnem == 'mov' and i.ops == f'eax,DWORD PTR [eax+0x{offset:x}]' for i in body) != 2):
+        raise ValueError('typed-list next-member layout binding mismatch')
+    if not layout.get('supportBodies'):
+        raise ValueError('typed-list independent registration/migration evidence absent')
+    for record in layout['supportBodies']:
+        if not record.get('evidence'):
+            raise ValueError('typed-list supporting body needs a semantic explanation')
+        pinned_body(record)
+    result = {}
+    for anchor in document['anchors']:
+        slot = anchor['slot']
+        key = (int(anchor['table'], 16), slot)
+        if (key in result or key[0] != table_va or type(slot) is not int
+                or not 0 < slot < len(tables[0].slots) or not anchor.get('callerIdentityEvidence')
+                or not re.fullmatch(r'[A-Za-z_]\w*', anchor['method'])):
+            raise ValueError('typed-list anchor or independent caller identity missing')
+        source = anchor['source']
+        if Path(source['file']).name != source['file']:
+            raise ValueError('typed-list source filename is not bounded')
+        path = source_root/source['file']
+        if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+            raise ValueError('typed-list source pin mismatch')
+        fs = [f for f in index_source(source_root, (source['file'],)) if f.key == source['function']]
+        if (len(fs) != 1 or fs[0].key.split('::')[-1] != anchor['method']
+                or type(source['line']) is not int or not fs[0].line <= source['line'] <= fs[0].end_line):
+            raise ValueError('typed-list source caller is absent or ambiguous')
+        text = strip_comments(path.read_text(errors='replace'))
+        conditioned = text
+        if source.get('platform') == 'PC':
+            # The surviving PC implementation is enclosed by TARGET == PC.
+            # Admit that one expression only for an actual i386 PE32 image;
+            # this is not permission to choose arbitrary unknown branches.
+            data = prog.img.data
+            pe_offset = struct.unpack_from('<I', data, 0x3c)[0] if len(data) >= 0x40 else -1
+            if (pe_offset < 0 or pe_offset+26 > len(data) or data[:2] != b'MZ'
+                    or data[pe_offset:pe_offset+4] != b'PE\0\0'
+                    or struct.unpack_from('<H', data, pe_offset+4)[0] != 0x14c
+                    or struct.unpack_from('<H', data, pe_offset+24)[0] != 0x10b):
+                raise ValueError('typed-list PC source selection needs an i386 PE32 image')
+            conditioned = re.sub(r'(?m)^([ \t]*#[ \t]*if[ \t]+)TARGET[ \t]*==[ \t]*PC[ \t]*$',
+                                 lambda m: (m[1]+'1').ljust(len(m[0])), text)
+        elif source.get('platform') is not None:
+            raise ValueError('typed-list source platform selection is unsupported')
+        active, conditions = _header_conditions(conditioned, set())
+        lo = sum(len(s) for s in text.splitlines(keepends=True)[:fs[0].line-1])
+        hi = sum(len(s) for s in text.splitlines(keepends=True)[:fs[0].end_line])
+        if active[lo:hi] != text[lo:hi] or any(a < hi and b > lo for a,b in conditions):
+            raise ValueError('typed-list source caller contains unresolved conditions')
+        actual = text.splitlines()[source['line']-1].strip()
+        call = re.fullmatch(r'(?:[A-Za-z_]\w*\s+[A-Za-z_]\w*\s*=\s*)?([A-Za-z_]\w*)->'
+                            + re.escape(anchor['method'])+r'\(\);', actual)
+        if not call or actual != source['call']:
+            raise ValueError('typed-list source call mismatch')
+        node = call[1]
+        line_text = text.splitlines()[source['line']-1]
+        call_offset = (sum(len(s) for s in text.splitlines(keepends=True)[:source['line']-1])-lo
+                       +len(line_text)-len(line_text.lstrip()))
+        typed_list_source_receiver(text[lo:hi], base, node, actual, call_offset)
+        fn, _ = pinned_body(anchor['caller'])
+        if not anchor.get('identityBodies'):
+            raise ValueError('typed-list independent caller distinctions absent')
+        for record in anchor['identityBodies']:
+            if not record.get('evidence'):
+                raise ValueError('typed-list caller distinction needs reviewed evidence')
+            pinned_body(record)
+        loops = [typed_list_loop(prog, fn, w) for w in anchor['loops']]
+        if (len(loops) != 2 or {int(w['head'],16) for w in loops} != heads
+                or any(w['slot'] != slot or w['nextOffset'] != offset for w in loops)):
+            raise ValueError('typed-list dispatches disagree with reviewed interface')
+        result[key] = dict(pop=0, loops=loops)
+    if not result:
+        raise ValueError('typed-list witness has no anchors')
+    return result
+
+
+def typed_list_virtuals(prog: Program, document: dict, source_root: Path) -> dict:
+    """Project reviewed list-dispatch identities through exact primary RTTI holders."""
+    witnesses = typed_list_witnesses(prog, document, source_root)
+    base, table_va = document['baseClass'], int(document['baseTable'], 16)
+    mapped, gaps = defaultdict(list), []
+    for table in prog.model.rtti.vtables:
+        occurrences = [offset for name,offset in prog.bases.get(table.klass, []) if name == base]
+        fixed = [offset for name,offset in prog.fixed_bases.get(table.klass, []) if name == base]
+        if not occurrences:
+            continue
+        col = prog.img.u32(table.va-4)
+        if (table.offset != 0 or occurrences != [0] or fixed != [0] or col is None
+                or prog.img.u32(col) != 0 or prog.img.u32(col+4) != 0 or prog.img.u32(col+8) != 0):
+            gaps.append(dict(table=hex(table.va), reason='not a unique fixed primary base'))
+            continue
+        for anchor in document['anchors']:
+            slot = anchor['slot']
+            if slot >= len(table.slots):
+                gaps.append(dict(table=hex(table.va), missingSlot=slot))
+                continue
+            target = table.slots[slot]
+            if prog.img.u32(table.va+4*slot) != target:
+                raise ValueError('typed-list raw table word mismatch')
+            mapped[target].append(dict(**{'class': table.klass}, offset=0, table=f'0x{table.va:08x}',
+                slot=slot, method=anchor['method'], parameters=[], qualifiers='',
+                anchorTable=f'0x{table_va:08x}', anchorSlot=slot))
+    pointers = defaultdict(set)
+    for section in prog.img.sections:
+        if section.characteristics & 0x20000000:
+            continue
+        for offset in range(0, len(section.raw)-3, 4):
+            word = struct.unpack_from('<I', section.raw, offset)[0]
+            if word in mapped:
+                pointers[word].add(section.start+offset)
+    rows = []
+    for target,uses in sorted(mapped.items()):
+        covered = {(u['class'],u['offset'],u['slot'],int(u['table'],16)) for u in uses}
+        uncovered = sorted(set(prog.slots.get(target, []))-covered)
+        identities = {u['method'] for u in uses}
+        cells = {int(u['table'],16)+4*u['slot'] for u in uses}
+        status = ('conflicting-method-identities' if len(identities) != 1 else
+                  'unmapped-vtable-aliases' if uncovered else
+                  'extra-noncode-pointer-cells' if pointers[target] != cells else
+                  'missing-function-boundary' if target not in prog.by_va else 'anchored-method-candidate')
+        rows.append(dict(target=f'0x{target:08x}',status=status,uses=uses,uncoveredHolders=uncovered,
+                         dataPointerCells=[f'0x{x:08x}' for x in sorted(pointers[target])],
+                         leastDerivedHolders=sorted(prog.defining_classes(prog.by_va[target]))
+                             if target in prog.by_va else []))
+    propagated = dict(rows=rows,gaps=gaps)
+    admission = vtable_abi_admission(prog, {}, document, propagated, source_root)
+    return dict(propagated, admission=admission, proposals=vtable_name_proposals(prog,propagated,admission),
+                witnesses={f'{table:08x}:{slot}':value for (table,slot),value in witnesses.items()},
+                limits='Conditional on independently reviewed source/retail caller and list-layout correspondences. '
+                       'Pins and loop transport checks do not by themselves prove those correspondences. '
+                       'Aligned non-code pointers and all known RTTI holders are checked, not all computed pointers. '
+                       'No source declaration, qualifiers, result type, callback lifetime or device-runtime acceptance. '
+                       'Normal callee ABI and readable post-callback nodes are premises. Existing cohort gates still apply.')
+
+
 def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], document: dict, propagated: dict,
                          source_root: Path | None = None) -> dict:
     """Apply the same return/alias/boundary checks to every proposed method identity.
@@ -1902,6 +2219,10 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
     anchor_by_slot = {(int(a['table'],16), a['slot']): a for a in document['anchors']}
     witnessed_pops = {}
     tables = {t.va:t for t in prog.model.rtti.vtables}
+    typed = (typed_list_witnesses(prog, document, source_root)
+             if document.get('kind') == 'typed-list-interface-v1' else None)
+    if typed is not None:
+        witnessed_pops.update({key: value['pop'] for key,value in typed.items()})
     for key, a in anchor_by_slot.items():
         if 'interfaceDispatch' in a:
             cls = classes[a['class']]
@@ -2009,6 +2330,9 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
         expected=set()
         for use in row['uses']:
             a=anchor_by_slot[(int(use['anchorTable'],16),use['anchorSlot'])]
+            if typed is not None:
+                expected.add(witnessed_pops[(int(a['table'],16),a['slot'])])
+                continue
             method=next(m for m in classes[a['class']].methods if m.name==a['method']
                         and m.parameters==tuple(a['parameters']) and m.qualifiers==a.get('qualifiers',''))
             sf=SourceFunc(method.owner+'::'+method.name,method.file,method.line,'',[],[],
@@ -3049,7 +3373,34 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument('--model', type=Path, required=True)
     t.add_argument('--evidence', type=Path, required=True)
     t.add_argument('--out', type=Path, required=True, help='new private JSON report')
+    l = sub.add_parser('typed-lists', help='reviewed intrusive-list interface and fixed-primary RTTI family')
+    l.add_argument('--functions', type=Path, required=True)
+    l.add_argument('--source', type=Path, default=SOURCE)
+    l.add_argument('--model', type=Path, required=True)
+    l.add_argument('--evidence', type=Path, required=True)
+    l.add_argument('--out', type=Path, required=True, help='new private JSON report')
     args = ap.parse_args(argv)
+    if args.cmd == 'typed-lists':
+        if args.out.exists():
+            ap.error('typed-list report must be a new path')
+        img, model = load_or_build(args.model)
+        prog = Program(img, model, load_functions(args.functions))
+        import re_source_graph as G
+        pins = G.input_pins(args.functions, args.source, ('*.cpp', '*.h'))
+        try:
+            document = json.loads(args.evidence.read_text())
+            if document.get('sourceSha256') != pins['sourceSha256']:
+                raise ValueError('typed-list source content pin mismatch')
+            report = typed_list_virtuals(prog, document, args.source)
+        except (KeyError, TypeError, ValueError) as error:
+            ap.error(str(error))
+        report['inputs'] = dict(pins, specimenSha256=img.sha256,
+                               evidenceSha256=hashlib.sha256(args.evidence.read_bytes()).hexdigest())
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=1)+'\n')
+        from collections import Counter
+        print('Typed-list proposals:', json.dumps(Counter(r['status'] for r in report['proposals']['rows']), sort_keys=True))
+        return 0
     if args.cmd == 'tag-calls':
         if args.out.exists():
             ap.error('tag-call report must be a new path')

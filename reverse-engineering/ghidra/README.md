@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[camera copy-return interfaces](#re-audit-camera-copy-return-interfaces--september-27);
+[device lifecycle identities](#re-audit-device-lifecycle-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,35 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit device lifecycle identities — September 27
+
+The [31-row manifest](../../tools/cohort-specs/device-lifecycle-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/device-lifecycle-20260927.spec.tsv) correct resource lifecycle
+identities from pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Thirty-one DeviceObject lifecycle names corrected across forty known RTTI holder occurrences. All prototypes, locals, bodies, 3,716 code bytes / 1,282 instructions and 8,300 non-target function rows remain unchanged. Thirty-one comments updated, including six previously absent comments; all 25 older notes and every prior tag retained as fallible leads. Only the program comment count/digest change.
+
+Four source/retail wrapper correspondences and the two-list receiver layout were independently rederived from complete pristine bodies, RTTI, literals and reset/teardown ordering. The validated typed-list checker binds the source declaration/call/advancement to exact ECX/vptr/slot transports and propagates only through unique fixed primary ancestry, complete known holder coverage and aligned non-code pointer-cell agreement. All fresh target body decodes and return cleanup gates pass; three bounded texture switches and a stack/receiver-neutral direct tail were independently reproduced. Review exposed source type/identifier lookalikes, result-variable shadowing and control-flow bypasses; the root reproduced and fixed these, with 144 evidence/source-graph tests passing. The first seal and its successful rehearsal were rejected before live for an off-by-one source citation in eight Restore comments. Root reproduced line1074 as the call and1075 as its result test, retained that seal in device-lifecycle/rejected-v1, and repeated fresh PRE/rehearsal/review/refusal gates for the exact eight-digit correction. Two shared stubs remain excluded for conflicting method identities; a texture initializer remains withheld for a conservative WORD-store switch grammar, not a proved retail defect. Retail has two lists and restores during initialization, unlike the source route. No DeviceObject header was fabricated. No prototype, callback lifetime, resource algorithm, exclusive source-body ownership or retail graphics behavior is certified. Normal callee ABI and readable post-callback nodes remain premises. No runtime launch.
+
+The [platform note](../source-code/core/platform-system.md#retail-device-lifecycle--september-27-correction)
+records wrapper addresses, list order, source divergences and open runtime
+questions. This family determines method roles, not complete implementation
+semantics. Existing semantic names are retained as leads in every changed
+plate comment.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; the complete name projection matches all 8,331 entries.
+
+Working identity: `db.18689`, 18 files / 123,997,044 bytes,
+inventory SHA-256 `3c078eeefd21c803da4dc997b78e9d1c54eaea980b52a335dee8dcf88bfda161`; main database 73,695,232 bytes,
+SHA-256 `24cf8d2555f786ce76e68c941670b22af176ae450814d14944fb7126271b34cd`. Restored camera copy-return POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-device-lifecycle-v2/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`; evidence and focused-test logs:
+`local-data/test-runs/re-audit-20260926/device-lifecycle/`.
 
 ## RE-audit camera copy-return interfaces — September 27
 

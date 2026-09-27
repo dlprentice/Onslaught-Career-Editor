@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (camera position/copy-return promotions and original-code controls recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (camera and device lifecycle promotions recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7732,3 +7732,48 @@ safety gate inspected 4,150 candidate files. `git diff --check` passed.
 Logs: `docs.log`, `safety.log`, `framework-tests.log` and `projection.log`
 within the private cohort owner. Device-lifecycle tool work is separate and
 its candidate names are not counted as promoted.
+
+## RE device lifecycle interfaces — September 27
+
+The `device-lifecycle-20260927` cohort corrects 31 method names, comments and
+tags across 40 known RTTI holder uses. Exact fresh PRE restoration, revised
+rehearsal, separate/sealed readbacks, five byte-stable refusal controls,
+independent review with root reproduction, live readback and independently
+restored Archive A POST passed. All nine live exports equal rehearsal; 3,716
+body bytes / 1,282 instructions, every prototype and 8,300 non-target rows are
+unchanged. The tracked checkpoint is unchanged. The projection matches all
+8,331 live names: 2,031 unique corrected, 317 additional kept, zero newly
+neutralized, 5,983 outside the accounted set. Prototype corrections remain 28;
+2,361 unique comments have been updated. These are audit dispositions, not
+semantic or runtime parity percentages.
+
+The first seal was rejected before live: eight Restore comments cited a result
+test one source line after the actual call. Root reproduced the difference,
+retained the rejected seal and successful first rehearsal, changed exactly the
+eight citation digits, then reran fresh preservation/rehearsal/review/refusals.
+Final receipts and exact commands are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/device-lifecycle-v2/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. The independent POST and measured
+identities are recorded in the Ghidra README and current authority object.
+
+`python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`
+passed 144 cases; `python -m unittest tools.ghidra_cohort_framework_tests`
+passed 94. Review/root counterexamples exposed source type/identifier lookalikes,
+receiver shadowing and branch/guard bypasses, which the checker now refuses.
+The proof preserves normal callee ABI/readable post-callback node premises and
+retail/source ordering differences. Two shared stubs and a texture initializer
+outside the current switch grammar remain withheld. No original game, Godot,
+physical desktop, GPU or complete resource-lifetime run occurred.
+
+Evidence and logs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`.
+Tool/framework logs are `tool-tests-v3.log` and `framework-v2-tests.log`;
+recovery and projection logs are `finish-v2-run.log` and `projection-v2-run.log`.
+
+Publication checks: `npm run test:docs` passed with zero name drift and
+`npm run test:safety` passed over 4,152 candidate files. Initial header-check
+failures exposed a missing Binary trailer and an unsupported evidence-grade
+word; those were corrected without adding a backlog exemption. Logs:
+`docs-final.log`, `docs-final-v2.log`, `docs-final-v3.log` and `safety-final.log`.
+`git diff --check` passed after removing one extra trailing blank line.
