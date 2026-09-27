@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[frontend page identities](#re-audit-frontend-page-identities--september-27);
+[verified frontend page identities](#re-audit-verified-frontend-page-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,39 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified frontend page identities — September 27
+
+The [manifest](../../tools/cohort-specs/frontend-page-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/frontend-page-verified-20260927.spec.tsv) retain 74 already supported
+names and attach their authored interface evidence and audit tags. The preceding
+23 corrected entries and 35 withheld candidates are excluded.
+
+Pristine specimen: `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The seven reviewed surviving declarations, common retail callers and receiver installations from the preceding frontend cohort apply unchanged. Alignment v5 differs from v4 only in the full-export pin and the 23 already-promoted name/status outputs. All body, RTTI and admission structures remain identical. This cohort includes exactly the original 74 keep outputs, excluding those 23 renamed entries and all 35 withheld targets. All 74 complete bodies, 8,184 instructions and 29,477 bytes match pristine. The first seal was rejected before live for stale Intro Process category tags; the corrected rehearsal uses an independently restored, byte-identical PRE. The initial copied unique-owner preparation refused before sealing on shared entry 0051ae50; the revised retention check admits only an independently derived holder/method alias and explicitly records all nine uses, without selecting an exclusive defining class.
+
+At `0051ae50`, nine page tables dispatch the same 28-byte slot-4 entry:
+Level Select, Language Test, Directory, Virtual Keyboard, Multiplayer, Save Game,
+Load Game, Dev Select and Goodies. The surviving Goodies declaration and common
+pre-render caller independently establish RenderPreCommon. The retained
+CFEPLanguageTest prefix is one valid RTTI holder alias, not proof of exclusive
+source ownership or of which object file contributed the shared code. Complete
+holder coverage and equal method identity are required before retaining it.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusal controls, independent review with root reproduction, live readback and
+independently restored Archive A POST passed. All nine live exports equal
+rehearsal. Exactly 74 existing frontend page-method names verified within bounded static interface identity limits, with authored comments and audit tags only, including correction of Intro Process category tags. Every saved name, prototype, variable, body, instruction, reference and bookmark stays unchanged; 8,257 other function rows remain exact. Older plate notes remain fallible leads. The shared RenderPreCommon entry lists all nine known page holders; its retained Language Test prefix is nonexclusive. All 8,184 instruction rows remain exact. Only
+`commentsSha256` changes at program scope. Full page behavior, saved ABI types,
+rendered appearance and runtime acceptance remain outside this identity batch.
+
+Working identity: `db.18677`, 18 files / 123,374,452 bytes,
+inventory SHA-256 `696da4a81bceb424c044147452806cd94e36e10b1c598e7d114d247f45d67d1f`; main database 73,072,640 bytes,
+SHA-256 `6ee2f883e1eb0ec6cc09c7f45580e7c4f833d369d57e2f8fc7283a4caac0af17`. The restored 23-name frontend POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-frontend-page-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-page-verified/`; raw method/RTTI proof remains in sibling
+`frontend-page-identities/`.
 
 ## RE-audit frontend page identities — September 27
 

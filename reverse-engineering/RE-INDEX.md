@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (23 frontend interface identities promoted; broader audit unfinished)
+Last updated: 2026-09-27 (97 frontend interface identities recorded; timer divergence measured; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -17,8 +17,13 @@ metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFro
 records the page-dispatch argument contract and 85 isolated original-tail cases;
 full visual acceptance and ABI promotion remain separate. The subsequent
 [frontend identity cohort](ghidra/README.md#re-audit-frontend-page-identities--september-27)
-corrects 23 page-method names; 74 kept names await their separate evidence comments
-and 35 ambiguous or unsupported candidates remain withheld.
+corrects 23 page-method names. The [kept-name cohort](ghidra/README.md#re-audit-verified-frontend-page-identities--september-27)
+adds evidence to 74 existing names; 35 ambiguous or unsupported candidates remain
+withheld. Both have exact live readback and independently restored POST recovery.
+The [Process timer note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md)
+records 166 original-code cases for the retail filter and completion comparison,
+including a stored counter rounded to the duration while completion still skips.
+Upstream clock, callback effects and whole-menu runtime acceptance remain open.
 The [third game-label audit](ghidra/README.md#re-audit-label-corrections-third-cohort--september-26)
 corrects startup object identities, buffer cleanup, base destruction, type bits
 and actor contact predicates. Its BattleEngine consumer contracts resolve

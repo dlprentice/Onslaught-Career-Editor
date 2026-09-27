@@ -158,7 +158,6 @@ reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetShadowO
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__HasStandardSlidingTextBordersAndMask.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__NumControllersPresent.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__PlaySound.md
-reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__ProcessMouseReadyOrDispatchVBufTexture.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__ReceiveButtonAction.md
 reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__ReleaseParticleHudWaypointResources.md

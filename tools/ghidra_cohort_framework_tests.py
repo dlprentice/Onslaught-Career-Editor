@@ -322,6 +322,7 @@ LIVE_GRANTED_COHORTS = [
     "compiler-destructor-verified-20260927",
     "frontend-options-instruction-20260927",
     "frontend-page-identities-20260927",
+    "frontend-page-verified-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -782,6 +783,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "compiler-destructor-verified-20260927",\n'
         '        "frontend-options-instruction-20260927",\n'
         '        "frontend-page-identities-20260927",\n'
+        '        "frontend-page-verified-20260927",\n'
         "    };\n",
     ),
     (

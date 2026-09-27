@@ -7197,3 +7197,44 @@ refusals remain in `docs.log`, `docs-final.log` and `docs-complete.log`, with th
 passing run in `docs-verified.log`. `npm run test:safety` passed for 4,126 public
 candidate files including submodules. `git diff --check` passed. Two now-compliant
 notes were removed from the header backlog.
+
+## RE frontend kept identities and timer — September 27
+
+The `frontend-page-verified-20260927` cohort retains 74 names and adds bounded
+interface evidence/comments/tags. The preceding 23 renames and 35 withheld
+candidates are excluded. Fresh PRE, dry/apply rehearsal, independent reopened
+and sealed readbacks, exact export comparison, five byte-stable refusal controls,
+independent read-only review/root reproduction, live dry/apply/readback and
+independently restored Archive A POST passed. All nine live exports equal the
+rehearsal; all names/prototypes, 8,184 instruction rows and 8,257 non-target
+functions are preserved. Current projection equals all 8,331 live names.
+
+Private commands and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-page-verified/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post-v2`, `negative_controls_v2.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. The first copied preparation refused the
+shared-entry unique-owner assumption before sealing; the revised retention rule
+admits a supported nonexclusive alias with every holder checked. Initial sealed
+payload retained wrong Intro category tags; it was preserved and replaced before
+live. A later private path assertion refused before opening Ghidra; the exact
+restored disposable project was then admitted. Final rehearsal and controls were
+repeated. Rejected receipts remain in the owner. No checkpoint refresh occurred.
+
+`python local-data/test-runs/re-audit-20260926/frontend-options/original_clock.py`
+passed 166 unchanged original-span cases. Final report:
+`local-data/test-runs/re-audit-20260926/frontend-options/clock-run-723chelg/clock.json`.
+Independent review and root reproduction checked all 332 retained input/output
+files. The earlier `clock-run-q2b1ts4_` is preserved: rounded case labels caused
+20 earlier file pairs to be overwritten, so it was superseded by unique IDs and
+exclusive artifact creation, followed by a complete rerun. The finding survives:
+retail uses a filtered float clock and compares the extended counter before its
+stored binary32 rounding. No Godot, game window, physical input or full retail
+acceptance occurred. Bounds are in the existing Process/Render notes.
+
+Publication checks: `npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed over 4,128 candidates; `git diff --check` passed.
+The cohort registration/framework check
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases; final payload-only resealing did not change those framework sources.
+Logs: `docs.log`, `safety.log`, `framework-tests.log`, `projection.log` in the
+private cohort owner. These checks do not certify full page behavior or ABI.
