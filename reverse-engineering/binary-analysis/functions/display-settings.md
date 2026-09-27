@@ -1,8 +1,8 @@
 # Display Settings & Screen Mode Analysis
 
-Status: mixed — retained display evidence with a scoped parser correction
-Last updated: 2026-09-26 (windowed guard scope; other sections keep their dated evidence)
-Summary: display/settings reference; the pristine parser route is distinct from device/runtime acceptance.
+Status: mixed — retained display evidence with scoped parser and options-callback corrections
+Last updated: 2026-09-27 (options callback; other sections keep their dated evidence)
+Summary: display/settings reference; original options-callback controls remain distinct from device and full-menu acceptance.
 Source File: pinned `references/Onslaught/d3dapp.cpp` and `CLIParams.cpp`; Binary: pristine
 `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -213,7 +213,7 @@ Widescreen modes are gated by the `ALLOW_WIDESCREEN_MODES` configuration option,
 `0x00524830` is **not** the Video Options handler in this build; it is `Localization__GetStringById` (string lookup by id and `g_LanguageIndex`).
 
 The retail Video Options surface is now mapped through
-`CFEPOptions__ProcessInput`, `CFEPOptions__Update`,
+the page-processing callback at `0x0051f600`, `CFEPOptions__Update`,
 `CFEPOptions__SaveDefaultOptions`,
 `CFEPOptions__WriteDefaultOptionsFile`, and
 `CFEPOptions__TransitionNotification @ 0x0051F7E0`.
@@ -224,6 +224,47 @@ options context, and reset its session; this matches Stuart's timed
 `CFrontEnd::SetPage -> TransitionNotification(mTransitionFrom)` call. The
 missing producer receipt leaves the capture-time executable hash unbound.
 Individual sub-item behavior below those mapped handlers remains open.
+
+## September 27 options-processing recheck
+
+The complete callback `[0x0051f600,0x0051f666)` is 102 bytes, SHA-256
+`fecdbd8d9e28c4f63d197af85582e19191bc7267d12e2202580b12b81c15febc`.
+The common frontend caller at `0x00466dc4` dispatches slot 2 with one DWORD
+state argument: active 0, inactive 3, transitioning-from 2, transitioning-to 1.
+The surviving `FEPGoodies.h:56` and `FrontEnd.cpp:677–694` bind this interface
+to `Process`, replacing the earlier `ProcessInput` interpretation. The pinned
+source lacks the Options implementation and base-page header; this does not
+recover an original field name or its complete implementation.
+
+Before testing that argument, the callback normalizes DWORD `this+4`:
+
+| Initial word | Final word with the pristine helper |
+| --- | --- |
+| 0 or 1 | 1 |
+| 2, 3 or 4 | 4 |
+| 5 | 6 |
+| Unsigned values above 5, including negative bit patterns | Unchanged |
+
+The helper at `0x00466990` returns constant 2. The retail callback does not
+perform the pinned source's controller count. Normalization runs on inactive
+pages too. A nonzero full-DWORD page-state argument then returns; only zero
+reads the pointer at `0x0089bc30`, without a null check. Context `+0x10`
+nonzero returns. Otherwise `+0x0c == 1` calls the frontend transition entry
+at `0x00466ae0`, ECX=`0x0089d758`, with arguments `(0x12,30)`; other values
+call the larger persistence helper at `0x0051f500` with argument 1. The callback
+does not check either result or itself clear the context words. Residual EAX
+varies by exit and is not an integer result contract; both exits use `RET 4`.
+
+Twenty-one isolated cases execute the unchanged callback, its 24-byte table
+and the six-byte constant helper. Both authored 24-byte surrogate buffers,
+their guards, the global pointer, final ESP, nonvolatile registers and
+intercepted call arguments match. Complete retail objects, all registers,
+flags and stack contents were not compared; writer ECX is observational only.
+Two separate counterfactuals distinguish helper result 1 from 2 and low-byte
+from full-DWORD state testing. Transition/persistence callees are intercepted;
+this proves neither device detection nor actual settings publication or menu
+acceptance. Exact records and limitations are in
+[VALIDATION.md](../../../VALIDATION.md#original-options-callback--september-27).
 
 ## Known Issues
 

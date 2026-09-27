@@ -6,6 +6,21 @@ Summary: independently rechecked startup/serialization behavior and explicit rem
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
+## September 27 options-callback entry to persistence
+
+Twenty-one original-code [options-callback cases](functions/display-settings.md#september-27-options-processing-recheck)
+now bound the route at `0x0051f600`. Local state normalization precedes the
+page-state test, including on inactive pages. Only full-DWORD argument zero
+reads the options context; a zero context busy word and a route word other
+than exactly 1 call `0x0051f500(1)`. Route 1 instead requests frontend page
+`0x12` with second argument 30. Neither call result is checked here.
+
+The two callees are intercepted in this experiment. In particular,
+`0x0051f500` is the larger persistence helper, distinct from the small writer
+at `0x0051f680` executed in the September 19 controls below. These new calls
+do not establish serialization output, actual file writes, durable success
+or a complete options-dialog route. Original saves were not opened or changed.
+
 ## September 27 slot-save failure boundary
 
 The [slot-writer recheck](cpcmemorycard-pc-save-backend-semantics-2026-08-11.md#september-27-slot-write-result-recheck)

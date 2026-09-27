@@ -1,7 +1,7 @@
 # CEventManager / CScheduledEvent function map
 
 Status: active static, isolated-code and historical runtime contracts
-Last updated: 2026-09-26 (RE audit: TimeFromNow operand, what runs between advance and flush, call-site and string corrections)
+Last updated: 2026-09-27 (MessageBox interface name; earlier behavior limits retained)
 Summary: event insertion, monitored ownership, dispatch timing and failure limits;
 isolated original-code results remain separate from retained runtime extracts.
 Source File: `C:\dev\ONSLAUGHT2\eventmanager.cpp` (allocator source pointer `0x00628d3c`; `0x005d250c` is the SEH handler) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -302,7 +302,7 @@ This is not complete scheduler or player-experience parity.
 | `CMessageBox__TryAdvanceQueuedMessage` | `0x004b7c90` | reveal pacing |
 | `CMessageBox__StartVoiceOrFallbackTextReveal` | `0x004b7eec` | reveal pacing |
 | `CMessageBox__AdvanceRevealAndScheduleNextTick` | `0x004b8096` `0x004b80c4` `0x004b8141` `0x004b8184` `0x004b81b9` | the self-reschedule: five arms re-post the next reveal tick at a time-from-now offset |
-| `CMessageBox__VFunc_0_004b81d0` | `0x004b8263` | reveal pacing |
+| `CMessageBox__HandleEvent` | `0x004b8263` | reveal pacing |
 | `CCSPersistentThing__Init` | `0x004269e3` | component readiness event 3000 |
 | `CFenrir__VFunc_50_0044e1c0` | `0x0044e1e9` | Fenrir virtual arm |
 | `CPlayer__GotoPanView` | `0x004d2fbe` | pan-view transition |

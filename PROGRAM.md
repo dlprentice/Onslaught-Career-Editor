@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: reader identities and interfaces corrected with bounded original-code evidence; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: switch-backed method identities corrected and original options behavior measured; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the reader-interface cohort (September 27).**
+**Running coverage after the switch-backed identity cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,985 unique functions; 1,986 rename rows include one repeated correction. The latest five establish resource-accumulator, reader-overload and platform-deserializer identities. |
+| Names corrected | 1,991 unique functions; 1,992 rename rows include one repeated correction. The latest six establish multiplayer lifecycle, options processing and three listener identities. |
 | Names verified and kept | 300 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend and six reader identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,046 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,040 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 22 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces and six reader interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,295 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,301 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -510,7 +510,8 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
-`membuffer-abi-20260927`, `resource-reader-identities-20260927` and `reader-abi-20260927`, the final
+`membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
+`switch-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -539,9 +540,30 @@ retained; size/count signedness remains open. All nine exports match rehearsal
 and independently restored recovery. Six names are verified and kept; no
 instruction, local or other function changed. The tag-call proof was rerun
 after the five-name promotion: all twelve results and limits stayed identical.
-Next mechanized lead: bounded switch tables in frontend and listener methods,
-currently withheld by the ABI admission tool. Consumer comments and concrete
-owner types remain open; do not infer an owner solely from a factory's result.
+The existing ABI admission tool now handles bounded switch tables in frontend
+and listener methods. Its [six-name correction](reverse-engineering/ghidra/README.md#re-audit-switch-backed-method-identities--september-27)
+is live, with exact rehearsal/readback and independently restored recovery.
+Seventeen additional kept-name candidates remain for the next comment/tag cohort.
+The tool pins each table and byte-remap span, checks unsigned guards and possible
+bypassing entries, and retains cleanup/owner exclusions. Two additional names
+remain withheld because raw instruction/string bytes resemble guard-interior
+pointers; those occurrences do not prove actual incoming branches. Independent
+review caught guard-interior and incomplete pointer-census defects in the tool,
+and an overconfident removal of CRound's source-ownership uncertainty tag in the
+first cohort seal. Root reproduced and corrected each before promotion. The 98
+focused tool tests pass. Proofs and rejected drafts remain under
+`local-data/test-runs/re-audit-20260926/switch-admission/`.
+
+The [options callback recheck](reverse-engineering/binary-analysis/functions/display-settings.md#september-27-options-processing-recheck)
+adds 21 original-code cases and two counterfactual controls. Local normalization
+precedes the page-state test even on inactive pages; only a full-DWORD zero state
+reaches the context-directed transition or persistence call. The helper returns
+constant 2, unlike the source's controller enumeration. The two callees are
+intercepted: this establishes no actual transition, save write or device behavior.
+The Unit AI contract's stale scalar event argument is corrected to match its
+already saved event-record pointer; its provisional return meaning stays open.
+Consumer comments and concrete owner types remain open; do not infer an owner
+solely from a factory's result.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header

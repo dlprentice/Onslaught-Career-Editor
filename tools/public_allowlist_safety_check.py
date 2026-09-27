@@ -253,7 +253,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # bounded source/caller identities, divergences and preserved fallible older notes.
 # Chunk-reader ABI:6 old/6 authored comments (2,109/9,691 decoded bytes);
 # source/body/member transport and bounded original-code evidence, with old leads.
+# Bounded-switch identities:5 old/6 authored comments (5,294/14,848 bytes);
+# inherited interface proof, preserved uncertainty tags and older fallible leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/switch-identities-20260927.manifest.tsv":
+        "c4eb0001c3d166da84ea6cf0c74fe710d3e3dce8e309bc7fa6d9794afda2cac5",
     "tools/cohort-specs/reader-abi-20260927.manifest.tsv":
         "d6f4df28fd21be4faa9a0c47912b05669e8898037ba924cd90060104f52e9d4f",
     "tools/cohort-specs/resource-reader-identities-20260927.manifest.tsv":

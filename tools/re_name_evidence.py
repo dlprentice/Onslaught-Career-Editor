@@ -1412,6 +1412,149 @@ def propagate_vtable_anchors(prog: Program, classes: dict[str, HeaderClass], doc
                       'unmapped/conflicting aliases remain unresolved. No prototype or behavior is inferred.'}
 
 
+def bounded_switch_targets(prog: Program, fn: Func, body: list[Insn]) -> dict:
+    """Resolve only unsigned-guarded absolute x86 switch tables from pinned bytes.
+
+    A short, contiguous CMP/JA sequence bounds the unchanged selector. An
+    optional zeroed-register byte remap has a separately bounded footprint.
+    No known entry may bypass the guard, including another table's entries.
+    Tables must be file-backed, non-writable and outside saved code extents.
+    This is static normal-flow evidence under the PE mapping and normal call
+    contract, not proof against runtime patching, exception re-entry or a
+    callee corrupting its return address. It supplies no method identity.
+    """
+    indirect = [(n, i) for n, i in enumerate(body)
+                if i.mnem == 'jmp' and not _DIRECT.fullmatch(i.ops)]
+    if not indirect:
+        return {'tables': [], 'refusals': []}
+    # Do not let a stale or differently seeded instruction cache invent a guard.
+    if decode_entry_body(prog.img, fn) != body:
+        raise ValueError('switch proof disagrees with fresh entry decoding')
+    registers = ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp')
+    low = {'eax': 'al', 'ebx': 'bl', 'ecx': 'cl', 'edx': 'dl'}
+    aliases = {r: {r, r[1:]} | ({low[r], low[r][0]+'h'} if r in low else set())
+               for r in registers}
+    starts = {i.va for i in body}
+    candidates, refusals = [], []
+
+    def pin_data(address, count):
+        if not 0 <= address < 2**32 or count <= 0 or address+count > 2**32:
+            raise ValueError('switch table address span wraps the x86 address space')
+        section = prog.img.section_of(address)
+        raw = prog.img.read(address, count)
+        if (section is None or section.characteristics & 0x80000000
+                or not section.contains(address+count-1) or len(raw) != count):
+            raise ValueError('switch table is truncated, unmapped or writable')
+        if any(f.lo < address+count and (getattr(f, 'declared_hi', None) or f.hi) >= address
+               for f in prog.funcs):
+            raise ValueError('switch data overlaps an exported code extent')
+        return raw, {'address': f'0x{address:08x}', 'bytes': count,
+                     'sha256': hashlib.sha256(raw).hexdigest()}
+
+    def preserves_guard(ins, selector):
+        # These exact MOV/PUSH forms preserve flags and the selector. No
+        # instructions are skipped between the JA and the optional remap.
+        if ins.mnem == 'push':
+            return ins.ops in registers or bool(_DIRECT.fullmatch(ins.ops))
+        if ins.mnem != 'mov' or ',' not in ins.ops:
+            return False
+        dest, _ = ins.ops.split(',', 1)
+        return (dest in registers and dest not in aliases[selector]
+                or bool(re.fullmatch(r'DWORD PTR (?:\[[^\]]+\]|ds:0x[0-9a-f]+)', dest)))
+
+    for n, jump in indirect:
+        try:
+            match = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp))\*4\+(0x[0-9a-f]+)\]', jump.ops)
+            if not match:
+                raise ValueError('unsupported switch jump operand')
+            index, table_address = match[1], int(match[2], 16)
+            selector, guard_index, remap_address = index, n-1, None
+            if n >= 2 and body[n-1].mnem == 'mov':
+                remap = re.fullmatch(r'([abcd]l),BYTE PTR \[(e(?:ax|bx|cx|dx|si|di|bp))\+(0x[0-9a-f]+)\]', body[n-1].ops)
+                if remap:
+                    selector, remap_address, guard_index = remap[2], int(remap[3], 16), n-3
+                    if (low.get(index) != remap[1] or index == selector
+                            or body[n-2].mnem != 'xor' or body[n-2].ops != f'{index},{index}'):
+                        raise ValueError('switch byte index is not independently zero-extended')
+            if guard_index < 1 or body[guard_index].mnem != 'ja' or not _DIRECT.fullmatch(body[guard_index].ops):
+                raise ValueError('switch lacks an adjacent unsigned upper-bound branch')
+            guard = body[guard_index]
+            cmp_index = guard_index-1
+            while (cmp_index >= 0 and guard_index-cmp_index <= 3
+                   and preserves_guard(body[cmp_index], selector)):
+                cmp_index -= 1
+            compare = body[cmp_index] if cmp_index >= 0 else None
+            if compare is None or guard_index-cmp_index > 3 or compare.mnem != 'cmp':
+                raise ValueError('switch bound comparison or intervening instructions are unproved')
+            bound = re.fullmatch(re.escape(selector)+r',(0x[0-9a-f]+)', compare.ops)
+            if not bound or not 0 <= int(bound[1], 16) < (256 if remap_address is not None else 4096):
+                raise ValueError('switch selector or bound is unsupported')
+            count = int(bound[1], 16)+1
+            selector_pin = None
+            if remap_address is not None:
+                remapped, selector_pin = pin_data(remap_address, count)
+                table_count = max(remapped)+1
+                selected = list(remapped)
+            else:
+                table_count = count
+                selected = list(range(count))
+            raw, table_pin = pin_data(table_address, table_count*4)
+            words = list(struct.unpack('<'+'I'*table_count, raw))
+            targets = [words[s] for s in selected]
+            default = int(guard.ops, 16)
+            if default not in starts or any(t not in starts for t in targets):
+                raise ValueError('switch target is outside the body or inside an instruction')
+            candidates.append({'jump': f'0x{jump.va:08x}', 'compare': f'0x{compare.va:08x}',
+                               'guard': f'0x{guard.va:08x}', 'default': f'0x{default:08x}',
+                               'selector': selector, 'selectorCount': count,
+                               'table': table_pin, 'remap': selector_pin,
+                               'targets': [f'0x{t:08x}' for t in targets],
+                               'protectedStart': compare.va+1,
+                               'protectedEnd': jump.va+jump.size})
+        except (ValueError, IndexError) as error:
+            refusals.append({'jump': f'0x{jump.va:08x}', 'reason': str(error)})
+
+    # A local straight-line guard is sufficient only if no direct or table
+    # edge enters after the CMP's exact entry, including an entry into that
+    # instruction's interior bytes. Include every decoded local call and the
+    # whole-image reference census, even sources outside this function.
+    direct_targets = {int(i.ops, 16) for i in body
+                      if (i.mnem.startswith(('j', 'loop')) or i.mnem == 'call')
+                      and _DIRECT.fullmatch(i.ops)}
+    table_targets = {int(t, 16) for row in candidates for t in row['targets']}
+    admitted = []
+    sections = getattr(prog.img, 'sections', None)
+    if sections is None:
+        raise ValueError('switch bypass check needs the complete pinned PE sections')
+    for row in candidates:
+        lo, hi = row.pop('protectedStart'), row.pop('protectedEnd')
+        bypass = any(lo <= target < hi for target in direct_targets | table_targets)
+        raw_entries = []
+        for target in range(lo, hi):
+            bypass |= any(kind in ('call', 'jmp', 'jcc', 'imm', 'mem')
+                          for kind, _ in prog.model.refs_to.get(target, []))
+            bypass |= bool(getattr(prog.model, 'data_ptrs_to', {}).get(target))
+            # The generic model omits .text pointers, unaligned words and a
+            # section's final word. Search the pinned bytes directly for this
+            # small protected interval instead of trusting that incomplete
+            # census. Any occurrence is conservative evidence to withhold;
+            # it need not have been classified as data or executable code.
+            word = struct.pack('<I', target)
+            for section in sections:
+                offset = section.raw.find(word)
+                if offset >= 0:
+                    raw_entries.append({'section': section.name, 'address': f'0x{section.start+offset:08x}',
+                                        'value': f'0x{target:08x}'})
+            bypass |= bool(raw_entries)
+        if bypass:
+            refusals.append({'jump': row['jump'], 'reason': 'possible entry bypasses the switch guard',
+                             'rawWordCandidates': raw_entries})
+        else:
+            admitted.append(row)
+    return {'tables': admitted, 'refusals': refusals,
+            'bodySha256': hashlib.sha256(prog.img.read(fn.va, fn.hi-fn.va+1)).hexdigest()}
+
+
 def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], document: dict, propagated: dict,
                          source_root: Path | None = None) -> dict:
     """Apply the same return/alias/boundary checks to every proposed method identity.
@@ -1436,6 +1579,7 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
     # Invocation-local only: reference caches must remain consistent with the
     # original whole-image instruction model, and later calls may use new bytes.
     entry_decodes = {}
+    switch_proofs = {}
 
     def pops(va, seen=frozenset()):
         if va in seen or len(seen) >= 8 or va not in prog.by_va:
@@ -1478,6 +1622,12 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
                                'entry decoding refused: ' + evidence['reason']}
         if not body or body[-1].mnem not in ('ret', 'jmp'):
             issues.add('unresolved fallthrough beyond function range')
+        if va not in switch_proofs:
+            try:
+                switch_proofs[va] = bounded_switch_targets(prog, fn, body)
+            except (ValueError, OSError, subprocess.SubprocessError) as error:
+                switch_proofs[va] = {'tables': [], 'refusals': [{'reason': str(error)}]}
+        switches = {int(r['jump'], 16): r for r in switch_proofs[va]['tables']}
         starts = {ins.va for ins in body}
         for ins in body:
             if ins.mnem in ('(bad)', '.byte', '.word', '.long'):
@@ -1511,7 +1661,8 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
                         else:
                             issues.add('conditional branch outside current function range')
                 else:
-                    issues.add('indirect tail target not proven')
+                    if ins.va not in switches:
+                        issues.add('indirect tail target not proven')
         if not found:
             issues.add('no return cleanup established')
         return found, issues
@@ -1567,9 +1718,14 @@ def vtable_abi_admission(prog: Program, classes: dict[str, HeaderClass], documen
         rows.append({'target':row['target'],'status':'mechanical-checks-pass' if not issues else 'withheld',
                      'expectedReturnPop':sorted(expected),'observedReturnPop':sorted(actual),
                      'flags':sorted(set(issues))})
-    return {'rows':rows,'entryDecodings':[entry_decodes[k][1] for k in sorted(entry_decodes)],'limits':'Conditional on independently rederived seed identities. '
-            'Current function ranges and direct tail paths are checked; indirect tails and other unresolved '
-            'paths are withheld. No return/parameter type or runtime-behavior certification. '
+    return {'rows':rows,'entryDecodings':[entry_decodes[k][1] for k in sorted(entry_decodes)],
+            'switchProofs':[dict(target=f'0x{k:08x}', **switch_proofs[k]) for k in sorted(switch_proofs)
+                            if switch_proofs[k]['tables'] or switch_proofs[k]['refusals']],
+            'limits':'Conditional on independently rederived seed identities. '
+            'Current function ranges, direct tails and admitted bounded switch tables are checked; other indirect '
+            'tails and unresolved paths are withheld. Tables are separately pinned non-writable PE data; '
+            'runtime patching and exception re-entry are not certified. No return/parameter type, stack-balance, '
+            'callee behavior or runtime-behavior certification. '
             'Promotion additionally requires reviewed owners/names and the existing Ghidra gate.'}
 
 

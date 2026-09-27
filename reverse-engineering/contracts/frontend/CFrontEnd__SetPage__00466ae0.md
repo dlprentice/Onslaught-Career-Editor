@@ -1,13 +1,23 @@
 # CFrontEnd__SetPage
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (bounded options-caller recheck)
 Summary: specimen-bound static contract for `CFrontEnd__SetPage` at `0x00466ae0`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: references/Onslaught/FrontEnd.cpp | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00466ae0`
+
+## September 27 bounded caller recheck
+
+The pristine options callback, now identified as `CFEPOptions__Process`, passes
+`ECX=0x0089d758`, page `0x12` and the second argument `30` to this address when its
+page-state argument is zero and the options context selects that action. In the
+21-case isolated experiment this callee was intercepted: its own transitions,
+notifications and interpretation of `30` were not executed or revalidated.
+See the [options recheck](../../binary-analysis/functions/display-settings.md#september-27-options-processing-recheck).
+Other call-site and body claims below retain their historical factory limits.
 
 ## Identity
 - Body `[0x00466ae0,0x00466b90]`, 177 bytes, 45 closure instructions. Raw pristine-body SHA-256 `06a8d37bc755e5341ca9156650d7caf2612e2a92978ce70baaa61bc765b6c018`; closure range SHA-256 `864de6d8a3bfed84486638a71f65baa875227c40dc9f46d2dffb714f2d5878af`; packet range-plus-bytes SHA-256 `4be8cfd351bfaef363659680cd95e49e0ff4ccc55b375ba7ed9ff37e8973b1a8`. All three were independently recomputed over the exact single contiguous inclusive range.
@@ -61,7 +71,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Caller `CFEPMultiplayer__VFunc_2_0051d020` `0x0051d020` ×1 site(s) (instruction-flow).
 - Caller `CFEPMultiplayerStart__ButtonPressed` `0x0051de60` ×1 site(s) (instruction-flow).
 - Caller `CFEPOptions__SaveDefaultOptions` `0x0051f500` ×2 site(s) (instruction-flow).
-- Caller `CFEPOptions__ProcessInput` `0x0051f600` ×1 site(s) (instruction-flow).
+- Caller `CFEPOptions__Process` `0x0051f600` ×1 site(s) (instruction-flow).
 - Caller `CFEPScreenPos__ButtonPressed` `0x0051fa00` ×2 site(s) (instruction-flow).
 - Caller `CFEPVirtualKeyboard__ButtonPressed` `0x00520370` ×1 site(s) (instruction-flow).
 - Caller `CFEPVirtualKeyboard__HandleKeyToken` `0x00520cc0` ×1 site(s) (instruction-flow).
