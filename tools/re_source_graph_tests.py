@@ -1,6 +1,9 @@
 """Focused tests for tools/re_source_graph.py on a synthetic source tree (no retail data)."""
 from __future__ import annotations
 
+import copy
+import hashlib
+import struct
 import sys
 import tempfile
 import unittest
@@ -80,7 +83,219 @@ class ProgramFactsTests(unittest.TestCase):
 
     def test_truncated_instruction_does_not_become_empty_evidence(self):
         with self.assertRaisesRegex(ValueError, 'invalid or data instruction'):
-            self.facts(b'\xe8')
+                self.facts(b'\xe8')
+
+
+class DirectCallWitnessTests(unittest.TestCase):
+    def fixture(self, *, setup=bytes.fromhex('6a0753b900600000'), target_raw=bytes.fromhex('8b442404c20800'),
+                caller_source='void Caller::Run(int x) { device.Play(x,7); }',
+                target_source='void Device::Play(int x, int y) {}', header=''):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        path = root/'sample.cpp'
+        path.write_text(caller_source+'\n'+target_source+'\n')
+        (root/'sample.h').write_text(header)
+        prefix = bytes.fromhex('538b5c2408')
+        call = 0x1000+len(prefix)+len(setup)
+        raw = prefix+setup+b'\xe8'+struct.pack('<i',0x2000-call-5)+bytes.fromhex('5bc20400')
+        blocks = {0x1000:raw,0x2000:target_raw}
+        def read(address,count):
+            for start,data in blocks.items():
+                if start<=address and address+count<=start+len(data):
+                    return data[address-start:address-start+count]
+            return b''
+        def section(address):
+            return next((SimpleNamespace(start=start,size=len(data),raw=data,characteristics=0x20000000)
+                         for start,data in blocks.items() if start<=address<start+len(data)),None)
+        functions = [SimpleNamespace(va=start,lo=start,hi=start+len(data)-1,
+                         declared_hi=start+len(data)-1,body_ranges=1,body_bytes=len(data),thunk=False)
+                     for start,data in blocks.items()]
+        image = SimpleNamespace(sha256=hashlib.sha256(raw+target_raw).hexdigest(),read=read,section_of=section)
+        prog = SimpleNamespace(img=image,model=SimpleNamespace(refs_to={}),funcs=functions,
+                               by_va={f.va:f for f in functions})
+        def pin(address,count):
+            return {'address':hex(address),'bytes':count,'sha256':hashlib.sha256(read(address,count)).hexdigest()}
+        src = G.index(root,('*.cpp','*.h'),set())
+        def source(key):
+            f = G.resolve(src,key)
+            # Ambiguity tests deliberately preserve the initial key/line pin;
+            # the checker must resolve it afresh and refuse it.
+            line = f.line if f else (1 if key=='Caller::Run' else caller_source.count('\n')+2)
+            return {'file':'sample.cpp','sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                    'function':key,'line':line}
+        witness = {'caller':pin(0x1000,len(raw))|{'source':source('Caller::Run')},
+                   'target':pin(0x2000,len(target_raw))|{'source':source('Device::Play')},
+                   'callAddress':hex(call),'window':pin(0x1005,len(setup)+5),
+                   'sourceCall':'device.Play(x,7);',
+                   'sourceLine':next((i for i,line in enumerate(path.read_text().splitlines(),1)
+                                      if 'device.Play(x,7);' in line),1),
+                   'receiver':'constant32:0x00006000',
+                   'arguments':[{'sourceParameter':'int x','sourceArgument':'x','stackOffset':4,
+                                 'pushAddress':'0x1007','value':'window.ebx'},
+                                {'sourceParameter':'int y','sourceArgument':'7','stackOffset':8,
+                                 'pushAddress':'0x1005','value':'constant32:0x00000007'}],
+                   'externalBindings':[{'register':'ebx','meaning':'selected source x',
+                                        'evidence':'reviewed load of caller stack argument',
+                                        'spans':[pin(0x1001,4)]}],
+                   'identityEvidence':'reviewed caller and object identities; synthetic fixture',
+                   'sourceArgumentEvidence':'reviewed x transport and literal 7; synthetic fixture'}
+        return prog,root,{'specimenSha256':image.sha256,'calls':[witness]}
+
+    def check(self, fixture):
+        return G.direct_call_witnesses(*fixture)
+
+    def test_exact_direct_transport_uses_no_saved_names(self):
+        fixture = self.fixture()
+        report = self.check(fixture)
+        self.assertEqual(report['checkedCalls'],1)
+        row = report['rows'][0]
+        self.assertEqual(row['target'],'0x00002000')
+        self.assertEqual(row['returnPop'],8)
+        self.assertEqual([p['value'] for p in row['arguments']],['window.ebx','constant32:0x00000007'])
+        self.assertIn('independently reviewed',report['limits'])
+
+    def test_pushed_value_survives_later_register_reassignment(self):
+        fixture = self.fixture(setup=bytes.fromhex('6a0753bb55000000b900600000'))
+        report = self.check(fixture)
+        self.assertEqual(report['rows'][0]['arguments'][0]['value'],'window.ebx')
+
+    def test_zero_argument_member_transport_is_checked(self):
+        fixture = self.fixture(setup=bytes.fromhex('b900600000'),target_raw=b'\xc3',
+            caller_source='void Caller::Run(int x) { device.Play(); }',target_source='void Device::Play() {}')
+        witness=fixture[2]['calls'][0]
+        witness.update(sourceCall='device.Play();',arguments=[],externalBindings=[])
+        self.assertEqual(self.check(fixture)['rows'][0]['returnPop'],0)
+
+    def test_member_expression_is_an_explicit_reviewed_binding_not_a_template(self):
+        fixture=self.fixture(caller_source='void Caller::Run(int x) { device.Play(event->value,7); }')
+        witness=fixture[2]['calls'][0]
+        witness['sourceCall']='device.Play(event->value,7);'
+        witness['arguments'][0]['sourceArgument']='event->value'
+        witness['externalBindings'][0]['meaning']='reviewed field value (synthetic premise)'
+        self.assertEqual(self.check(fixture)['checkedCalls'],1)
+
+    def test_expression_operators_are_not_silently_treated_as_parameters(self):
+        fixture=self.fixture(caller_source='void Caller::Run(int x) { device.Play(x+1,7); }')
+        fixture[2]['calls'][0]['sourceCall']='device.Play(x+1,7);'
+        with self.assertRaisesRegex(ValueError,'expression is unsupported'):
+            self.check(fixture)
+
+    def test_source_statement_cannot_be_reached_only_transitively_or_inside_a_literal(self):
+        for caller in ['void Caller::Run(int x) { Inline(x); }\nvoid Inline(int x) { device.Play(x,7); }',
+                       'void Caller::Run(int x) { const char *text="device.Play(x,7);"; }',
+                       'void Caller::Run(int x) { otherdevice.Play(x,7); }',
+                       'void Caller::Run(int x) { outer.device.Play(x,7); }',
+                       'void Caller::Run(int x) { outer . device.Play(x,7); }',
+                       'void Caller::Run(int x) { outer -> device.Play(x,7); }',
+                       'void Caller::Run(int x) { outer :: device.Play(x,7); }',
+                       'void Caller::Run(int x) { device.Play(x,7); device.Play(x,7); }']:
+            with self.subTest(caller=caller),self.assertRaisesRegex(ValueError,'absent, repeated or a literal'):
+                self.check(self.fixture(caller_source=caller))
+
+    def test_unresolved_and_disabled_source_preprocessing_is_not_selected(self):
+        for directive in ['#if TARGET == PC','#if 0']:
+            caller=directive+'\nvoid Caller::Run(int x) { device.Play(x,7); }\n#endif'
+            with self.subTest(directive=directive),self.assertRaisesRegex(ValueError,'preprocessing'):
+                self.check(self.fixture(caller_source=caller))
+
+    def test_inactive_or_unresolved_target_definition_is_not_a_verified_interface(self):
+        for directive in ['#if TARGET == PC','#if 0']:
+            target=directive+'\nvoid Device::Play(int x,int y) {}\n#endif'
+            with self.subTest(directive=directive),self.assertRaisesRegex(ValueError,'preprocessing'):
+                self.check(self.fixture(target_source=target))
+
+    def conditional_fixture(self):
+        fixture=self.fixture(target_source='#if TARGET == PC\nvoid Device::Play(int x, int y) {}\n#endif')
+        witness=fixture[2]['calls'][0]
+        fixture[2]['sourceConditions']=[{'file':'sample.cpp','line':2,'directive':'#if TARGET == PC',
+            'sha256':witness['target']['source']['sha256'],'value':True,
+            'evidence':'independently reviewed reference branch selection, not a recovered compiler define',
+            'spans':[{k:v for k,v in witness['target'].items() if k!='source'}]}]
+        return fixture
+
+    def test_explicit_condition_is_a_reported_reviewed_premise_not_an_implicit_flag(self):
+        fixture=self.conditional_fixture()
+        self.assertEqual(self.check(fixture)['sourceConditionPremises'],fixture[2]['sourceConditions'])
+        fixture[2]['sourceConditions'][0]['value']=False
+        with self.assertRaisesRegex(ValueError,'preprocessing'):
+            self.check(fixture)
+
+    def test_source_selection_pin_failures_cannot_override_preprocessing(self):
+        for change in ('line','hash','directive','type','evidence','span','duplicate','unused'):
+            with self.subTest(change=change):
+                fixture=self.conditional_fixture();conditions=fixture[2]['sourceConditions'];c=conditions[0]
+                if change=='line':c['line']=1
+                if change=='hash':c['sha256']='0'*64
+                if change=='directive':c['directive']='#if OTHER == PC'
+                if change=='type':c['value']=1
+                if change=='evidence':c['evidence']=''
+                if change=='span':c['spans'][0]['sha256']='0'*64
+                if change=='duplicate':conditions.append(copy.deepcopy(c))
+                if change=='unused':conditions.append(dict(c,file='unused.cpp'))
+                with self.assertRaises(ValueError):self.check(fixture)
+
+    def test_known_macro_method_receiver_or_argument_rewrite_is_withheld(self):
+        for definition in ('Play(x,y) Other(x,y)','device other','x other'):
+            caller='#define '+definition+'\nvoid Caller::Run(int x) { device.Play(x,7); }\n#undef '+definition.split('(')[0].split()[0]
+            with self.subTest(definition=definition),self.assertRaisesRegex(ValueError,'known macro'):
+                self.check(self.fixture(caller_source=caller))
+        with self.assertRaisesRegex(ValueError,'known macro'):
+            self.check(self.fixture(header='#define Play(x,y) Other(x,y)'))
+
+    def test_source_cleanup_divergence_static_and_unknown_abis_are_refused(self):
+        cases=[({'target_raw':bytes.fromhex('8b442404c20400')},'cleanup differs'),
+               ({'target_source':'Unknown Device::Play(int x, int y) {}'},'ABI is unresolved'),
+               ({'header':'class Device { static void Play(int x, int y); };'},'non-static'),
+               ({'target_source':'void Device::Play(int x, int y) {}\nvoid Device::Play(int x,int y) const {}'},'ambiguous')]
+        for options,message in cases:
+            with self.subTest(options=options),self.assertRaisesRegex(ValueError,message):
+                self.check(self.fixture(**options))
+
+    def test_interior_entry_can_bypass_setup_even_when_the_window_hash_matches(self):
+        for offset in (0x1007,0x1008,0x100d):
+            fixture=self.fixture();fixture[0].model.refs_to={offset:[('jcc',0x3000)]}
+            with self.subTest(offset=offset),self.assertRaisesRegex(ValueError,'interior entry'):
+                self.check(fixture)
+
+    def test_byte_source_argument_and_review_pins_fail_closed(self):
+        changes=['specimen','caller-bytes','target-bytes','source-hash','source-key','source-line',
+                 'call-line','wrong-method','wrong-target','window-hash','window-interior',
+                 'receiver','source-argument','argument-order','push-site','stack-offset','value',
+                 'binding-missing','binding-unused','binding-hash','identity-premise','argument-premise',
+                 'callee-thunk','duplicate-functions','overlapping-functions','duplicate-site','empty']
+        for change in changes:
+            with self.subTest(change=change):
+                fixture=self.fixture();prog,_,document=fixture;w=document['calls'][0]
+                if change=='specimen':document['specimenSha256']='0'*64
+                if change=='caller-bytes':w['caller']['sha256']='0'*64
+                if change=='target-bytes':w['target']['bytes']-=1
+                if change=='source-hash':w['caller']['source']['sha256']='0'*64
+                if change=='source-key':w['caller']['source']['function']='Caller::Other'
+                if change=='source-line':w['target']['source']['line']+=1
+                if change=='call-line':w['sourceLine']+=1
+                if change=='wrong-method':w['sourceCall']='device.Other(x,7);'
+                if change=='wrong-target':w['callAddress']='0x1008'
+                if change=='window-hash':w['window']['sha256']='0'*64
+                if change=='window-interior':w['window']['address']='0x1006';w['window']['bytes']-=1
+                if change=='receiver':w['receiver']='window.ecx'
+                if change=='source-argument':w['arguments'][0]['sourceArgument']='7'
+                if change=='argument-order':w['arguments'].reverse()
+                if change=='push-site':w['arguments'][0]['pushAddress']='0x1005'
+                if change=='stack-offset':w['arguments'][0]['stackOffset']=8
+                if change=='value':w['arguments'][0]['value']='constant32:0x00000055'
+                if change=='binding-missing':w['externalBindings']=[]
+                if change=='binding-unused':w['externalBindings'][0]['register']='eax'
+                if change=='binding-hash':w['externalBindings'][0]['spans'][0]['sha256']='0'*64
+                if change=='identity-premise':w['identityEvidence']=''
+                if change=='argument-premise':w['sourceArgumentEvidence']=''
+                if change=='callee-thunk':prog.by_va[0x2000].thunk=True
+                if change=='duplicate-functions':prog.funcs.append(copy.copy(prog.funcs[0]))
+                if change=='overlapping-functions':
+                    other=copy.copy(prog.funcs[0]);other.va-=1;other.lo-=1;prog.funcs.append(other)
+                if change=='duplicate-site':document['calls'].append(copy.deepcopy(w))
+                if change=='empty':document['calls']=[]
+                with self.assertRaises(ValueError):self.check(fixture)
 
 
 class SourceGraphTests(unittest.TestCase):

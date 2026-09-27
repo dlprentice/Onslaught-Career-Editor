@@ -8530,3 +8530,74 @@ evidence remain; Archive A recovery and the differing rehearsal remain intact.
 `npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
 passed across 4,186 candidate files; `git diff --check` passed. Logs are
 `abi-docs.log` and `abi-safety.log` in the execution owner above.
+
+## Original sound event queue — September 27
+
+`python local-data/test-runs/re-audit-20260926/sound/original_event_queue.py`
+passed **60 original-code cases and two altered-copy controls**. The native i386
+ELF embeds the exact 134-byte body at `004e0fb0` and original one-byte trace RET
+at `0040c640`, checked against pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The existing seccomp/no-new-privileges harness blocks unrelated system calls;
+the run verifies that refusal and disables core dumps.
+
+Cases distinguish empty/nonempty active lists, one/three/no free nodes, zero
+and positive/negative insertion flags, first/middle/last negative channels and
+signed extremes. Every successful acquisition repairs both link directions,
+pops the free head and increments the count. Nonzero flag inserts after the
+head; zero inserts after the first negative-channel node or tail. Exhaustion
+returns zero and preserves all authored memory. Two deliberately inconsistent
+count fields show wrapping, not valid large-list population.
+
+The driver checks the complete 2,048-byte authored area, EAX result, stack balance
+and EBX/ESI/EDI/EBP. Independent review decoded the saved chains, checked node
+conservation/disjointness and inspected all 62 input/output pairs. Each control
+changes exactly one branch byte in a disposable ELF, uses identical baseline
+input and changes the actual insertion position. The report's predicted order
+was also compared to independently decoded saved memory.
+
+Receipt: `local-data/test-runs/re-audit-20260926/sound/event-queue-8opgni07/receipt.json`,
+SHA-256 `c26e7184c9c692a50d08142bdfb2e8421bb9fd3229bd703413d16f36448ec678`.
+Command output: `sound/original-event-queue.log` in the same test-run owner.
+No allocator, invalid-list, concurrency, complete process-write, timing, mixer,
+device, audible or player acceptance is established. The source and all original
+game inputs remain unchanged; no Ghidra metadata changes belong to this experiment.
+
+## Direct source-call evidence — September 27
+
+`tools/re_source_graph.py check-calls` now shares the existing MOV/PUSH value
+evaluator with virtual-interface evidence. It requires complete byte-checked
+caller/target bodies, exact source file/definition/statement pins, an aligned
+direct CALL, no known interior entry, ordered DWORD arguments, ECX receiver and
+matching target RET cleanup. Saved names, transitive calls and file order do not
+supply identity. External register meanings and selected source conditions remain
+explicit independently reviewed premises, bound to retail byte spans.
+
+`PYTHONPATH=tools python -m unittest tools.re_source_graph_tests tools.re_name_evidence_tests`
+passed **211 tests**. Review found and the tests now cover receiver-substring and
+qualified-receiver confusion, known macros, and unresolved/inactive source
+definitions. The PC `#if TARGET == PC` selection is explicit; it is not evidence
+of recovered compiler flags. Missing include/macro environments, possible object
+aliasing with outgoing stack writes, complete ABI/return types, whole-function
+semantics and runtime behavior remain outside this check.
+
+The final command used `check-calls --witnesses
+local-data/test-runs/re-audit-20260926/sound/direct-calls-v2.json --source
+references/Onslaught --functions
+local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-abi/live-post/functions.tsv
+--out local-data/test-runs/re-audit-20260926/sound/direct-calls-result-v2.json`.
+It passed **eight sound call transports** from the pristine specimen pinned above.
+Seven in-memory altered witnesses were refused: absent/false PC selection, a
+different pinned target, wrong receiver, reversed arguments, absent external
+binding and wrong window hash. No original inputs or Ghidra records changed.
+
+Private logs/results: `direct-call-tests-v3.log`, `direct-calls-v2.log`,
+`direct-calls-result-v2.json` and `direct-call-refusals-v2.json`, all in
+`local-data/test-runs/re-audit-20260926/sound/`. The earlier v1 report predates the
+preprocessor/macro repairs and is not the final admission result. Independent
+read-only review accepted the final tool and eight witnesses; those results do
+not promote the pending sound identities or establish audible acceptance.
+
+`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+passed across 4,186 candidate files; `git diff --check` passed. Logs are
+`direct-call-docs.log` and `direct-call-safety.log` in the same private owner.
