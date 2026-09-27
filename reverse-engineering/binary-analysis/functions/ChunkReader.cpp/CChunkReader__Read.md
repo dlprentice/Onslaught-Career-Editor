@@ -1,7 +1,8 @@
 # CChunkReader__Read
 
-Status: active static function note
-Last updated: 2026-08-27
+Status: active, bounded static and original-code function note
+Last updated: 2026-09-27
+Summary: complete PC body advances the requested count before reading, uses wrapping multiplication and returns full EAX equality; historical console receipts retain their limits.
 Source File: `references/Onslaught/chunker.cpp`, SHA-256
 `3eb76bf2628c4c4aeaa8ce32a33a06ecc5dc3c8cb47d5528acea641f530c6135`
 | Binary: BEA.exe, SHA-256
@@ -13,6 +14,20 @@ matches. The Ghidra database was not opened. Table name is a research
 label. `0x00548570` body is **not** this proof.
 
 > Address: `0x00423960`
+
+## September 27 PC recheck
+
+Fresh complete-body decoding reproduces the 45-byte body and hash below.
+The multiplication and count addition wrap to 32 bits; the requested count
+is added before the underlying Read result is known. No instruction checks
+Size or reproduces the source ASSERT. The result is full EAX 0/1; this pass
+does not certify the saved one-byte bool return prototype. Fourteen isolated
+original-code cases reproduce request transport, wrapping and pre-call counter
+updates. They copy zero destination bytes; buffer copying is not tested.
+An altered probe omitting the counter store changes the callee-entry and final
+state. The [reader contract](../../../source-code/io/chunker-system.md#isolated-original-code-controls--september-27)
+owns the exact inputs and limits. No console recheck was performed; inbound
+totals below are inherited.
 
 ## Contract
 
@@ -32,7 +47,7 @@ One `E8` (`0x00548570`, table label `CDXMemBuffer__Read`), zero
 `ESI = A * B`. Then `[this+8] += ESI`, `ECX = [this+4]`,
 `push ESI` / `push dest` / `call 0x00548570`. `EAX` is 1 iff that
 call's `EAX` equals `ESI`, else 0. The Stuart source independently
-identifies the class, method, fields (`ReadSinceChunk` and `pFile`),
+identifies the class, method, fields (`ReadSinceChunk` and `File`),
 and exact-length Boolean return contract.
 
 Cheapest falsifier: file `0x00023960` is not

@@ -6,12 +6,165 @@ import hashlib
 import struct
 import tempfile
 import unittest
+import copy
 from types import SimpleNamespace
 from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import re_name_evidence as E  # noqa: E402
+
+
+class TaggedCallTests(unittest.TestCase):
+    def fixture(self, transport='member', clause='ENGINE.Deserialize(&c);'):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        source = root/'Loader.cpp'
+        source.write_text('void Host::Load() {\n CChunkReader &c = *reader;\n'
+                          ' Log("loader witness");\n if (tag==MKID("ERES")) {\n'
+                          +clause+'\n }\n}\n')
+        start, producer, target, literal = 0x401000, 0x402000, 0x403000, 0x600000
+        raw = bytearray()
+        def emit(b):
+            va = start+len(raw); raw.extend(b); return va
+        def call(address):
+            va=start+len(raw); return emit(b'\xe8'+struct.pack('<i',address-va-5))
+        diagnostic=emit(b'\x68'+struct.pack('<I',literal+16))
+        emit(b'\x83\xc4\x04\xbe\x00\x00\x70\x00\x8b\xce')
+        produced=call(producer)
+        guard=emit(b'\x85\xed\x75\x00')
+        block=start+len(raw)
+        pattern=(b'\x0f\xbe\x0d'+struct.pack('<I',literal+3)
+                 +b'\x0f\xbe\x15'+struct.pack('<I',literal+2)
+                 +b'\xc1\xe1\x08\x03\xca\x0f\xbe\x15'+struct.pack('<I',literal+1)
+                 +b'\xc1\xe1\x08\x03\xca\x0f\xbe\x15'+struct.pack('<I',literal)
+                 +b'\xc1\xe1\x08\x03\xca\x3b\xc1')
+        emit(pattern); branch=emit(b'\x75\x00')
+        if transport=='member':emit(b'\x56\xb9'+struct.pack('<I',0x700000))
+        else:emit(b'\x56\x55')
+        site=call(target)
+        if transport!='member':emit(b'\x83\xc4\x08')
+        jump=emit(b'\xeb\x00'); end=emit(b'\xc3')
+        raw[guard-start+3]=end-guard-4
+        raw[branch-start+1]=end-branch-2
+        raw[jump-start+1]=end-jump-2
+        memory={}
+        for a,b in [(start,bytes(raw)),(producer,b'\x8b\x01\xc3'),
+                    (target,b'\xc2\x04\x00' if transport=='member' else b'\xc3'),
+                    (literal,b'ERES\0'),(literal+16,b'loader witness\0')]:
+            memory.update({a+i:v for i,v in enumerate(b)})
+        read=lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        def section(a):
+            return E.Section('.text',a,4096,read(a,4096),0x60000020)
+        img=SimpleNamespace(sha256='a'*64,read=read,section_of=section,
+                            cstring=lambda a:read(a,64).split(b'\0')[0].decode('ascii'))
+        fns=[E.Func(a,'fallible','USER_DEFINED',a,a+n-1,'','',False,'',False,1,n,a+n-1)
+             for a,n in [(start,len(raw)),(producer,3),(target,3 if transport=='member' else 1)]]
+        insns=[i for f in fns for i in E.decode_entry_body(img,f)]
+        model=SimpleNamespace(insns=insns,refs_to={},rtti=SimpleNamespace(vtables=[],class_bases={},fixed_bases={}))
+        prog=E.Program(img,model,fns)
+        def pin(a):
+            f=prog.by_va[a];return dict(address=hex(a),bytes=f.body_bytes,sha256=hashlib.sha256(read(a,f.body_bytes)).hexdigest())
+        claim=dict(tag='ERES',start=hex(block),call=hex(site),target=pin(target),
+                   arguments=['reader'] if transport=='member' else ['zero','reader'])
+        if transport=='member':claim['receiver']='0x700000'
+        doc=dict(specimenSha256=img.sha256,caller=pin(start),
+                 source=dict(file=source.name,sha256=hashlib.sha256(source.read_bytes()).hexdigest(),function='Host::Load'),
+                 identityEvidence='Synthetic independently rooted caller',
+                 diagnostics=[dict(address=hex(literal+16),site=hex(diagnostic),text='loader witness')],
+                 producer=dict(pin(producer),calls=[hex(produced)]),calls=[claim])
+        return root,prog,doc,memory,dict(block=block,branch=branch,guard=guard,call=site,end=end,producer=produced)
+
+    def test_member_and_guarded_zero_transport(self):
+        for transport in ('member','cdecl'):
+            with self.subTest(transport=transport):
+                root,prog,doc,_,_=self.fixture(transport)
+                report=E.tagged_call_witnesses(prog,doc,root)
+                self.assertEqual(report['rows'][0]['status'],'tag-call-and-source-clause')
+                self.assertEqual(report['rows'][0]['sourceCall'],'ENGINE.Deserialize(&c);')
+                self.assertFalse(report['rows'][0]['indirectCalleeFlow'])
+
+    def test_conditional_source_does_not_choose_convenient_branch(self):
+        clause='#if TARGET==XBOX\n SHADER.Deserialize(&c);\n#else\n c.Skip();\n#endif'
+        root,prog,doc,_,_=self.fixture(clause=clause)
+        self.assertEqual(E.tagged_call_witnesses(prog,doc,root)['rows'][0]['status'],'source-clause-withheld')
+        doc['calls'][0]['sourceCall']='SHADER.Deserialize(&c);'
+        with self.assertRaisesRegex(ValueError,'conditional'):E.tagged_call_witnesses(prog,doc,root)
+
+    def test_outer_source_conditionals_are_withheld(self):
+        for placement in ('clause','function','inactive'):
+            with self.subTest(placement=placement):
+                root,prog,doc,_,_=self.fixture()
+                source=root/'Loader.cpp';text=source.read_text()
+                if placement=='function':text='#if TARGET==XBOX\n'+text+'\n#endif\n'
+                else:
+                    text=text.replace(' if (tag',('#if 0\n' if placement=='inactive' else '#if TARGET==XBOX\n')+' if (tag')
+                    text=text.replace(' }\n}', ' }\n#endif\n}')
+                source.write_text(text);doc['source']['sha256']=hashlib.sha256(source.read_bytes()).hexdigest()
+                report=E.tagged_call_witnesses(prog,doc,root)
+                self.assertEqual(report['rows'][0]['status'],'source-clause-withheld')
+
+    def test_unreachable_return_after_exterior_tail_does_not_prove_cleanup(self):
+        root,prog,doc,m,_=self.fixture()
+        target=0x403000;raw=b'\xe9'+struct.pack('<i',0x404000-target-5)+b'\xc2\x04\x00'
+        m.update({target+i:v for i,v in enumerate(raw)})
+        f=prog.by_va[target];f.hi=f.declared_hi=target+len(raw)-1;f.body_bytes=len(raw)
+        doc['calls'][0]['target'].update(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())
+        row=E.tagged_call_witnesses(prog,doc,root)['rows'][0]
+        self.assertEqual(row['observedReturnPop'],[4])
+        self.assertIsNone(row['reachableExplicitReturnPop'])
+        self.assertEqual(row['unresolvedCalleeTargets'],['00404000'])
+
+    def test_intra_caller_call_cannot_bypass_producer(self):
+        root,prog,doc,m,sites=self.fixture()
+        # Replace an unrelated five-byte pre-producer instruction by a CALL
+        # to the discriminator start; all pins deliberately match the mutant.
+        address=0x401008
+        raw=b'\xe8'+struct.pack('<i',sites['block']-address-5)
+        m.update({address+i:v for i,v in enumerate(raw)})
+        doc['caller']['sha256']=hashlib.sha256(prog.img.read(0x401000,doc['caller']['bytes'])).hexdigest()
+        prog.model.refs_to[sites['block']]=[('call',address)]
+        with self.assertRaisesRegex(ValueError,'intra-caller'):E.tagged_call_witnesses(prog,doc,root)
+
+    def test_byte_and_transport_adversaries(self):
+        for change in ('tag','byte-order','equality','eax-clobber','reader-clobber','receiver',
+                       'callee-interior','ret-pop','zero-not-guarded','producer-receiver','reader-omitted'):
+            with self.subTest(change=change):
+                root,prog,doc,m,sites=self.fixture('cdecl' if change=='zero-not-guarded' else 'member')
+                b=sites['block'];p=sites['producer']
+                if change=='tag':m[0x600000]=ord('T')
+                if change=='byte-order':m[b+10]+=1
+                if change=='equality':m[sites['branch']]=0x74
+                if change=='eax-clobber':m[sites['guard']]=0x31;m[sites['guard']+1]=0xc0
+                if change=='reader-clobber':m[sites['guard']]=0x31;m[sites['guard']+1]=0xf6
+                if change=='receiver':m[sites['branch']+4]+=1
+                if change=='reader-omitted':
+                    m[sites['branch']+2]=0x55
+                    doc['calls'][0]['arguments']=['zero']
+                if change=='callee-interior':doc['calls'][0]['target']['address']='0x403001'
+                if change=='ret-pop':m[0x403001]=8
+                if change=='zero-not-guarded':m[sites['guard']+1]=0xdb
+                if change=='producer-receiver':m[p-1]=0xcb
+                # Deliberately refresh hashes: semantic gates must reject even
+                # a freshly sealed but false assertion, not just stale bytes.
+                for pin in (doc['caller'],doc['producer'],doc['calls'][0]['target']):
+                    pin['sha256']=hashlib.sha256(prog.img.read(int(pin['address'],16),pin['bytes'])).hexdigest()
+                with self.assertRaises(ValueError):E.tagged_call_witnesses(prog,doc,root)
+
+    def test_interior_entry_and_source_identity_are_not_inferred_from_names(self):
+        for change in ('interior-entry','producer-bypass','source-call','source-owner','source-hash','specimen','diagnostic','duplicate'):
+            with self.subTest(change=change):
+                root,prog,doc,_,sites=self.fixture()
+                if change=='interior-entry':prog.model.refs_to[sites['call']]=[('jmp',0x404000)]
+                if change=='producer-bypass':prog.model.refs_to[sites['producer']]=[('jmp',0x404000)]
+                if change=='source-call':doc['calls'][0]['sourceCall']='OTHER.Deserialize(&c);'
+                if change=='source-owner':doc['source']['function']='Wrong::Load'
+                if change=='source-hash':doc['source']['sha256']='0'*64
+                if change=='specimen':doc['specimenSha256']='0'*64
+                if change=='diagnostic':doc['diagnostics'][0]['text']='absent'
+                if change=='duplicate':doc['calls'].append(copy.deepcopy(doc['calls'][0]))
+                with self.assertRaises(ValueError):E.tagged_call_witnesses(prog,doc,root)
 
 
 class FakeImage:

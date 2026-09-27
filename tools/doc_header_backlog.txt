@@ -117,7 +117,6 @@ reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__Is
 reverse-engineering/binary-analysis/functions/FEPDemoMain.cpp.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__BuildStaticGoodieDataTable.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__ButtonPressed.md
-reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Deserialise.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__FreeUpGoodyResources.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Initialize.md
 reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__LoadingGoodyPoll.md
@@ -324,7 +323,6 @@ reverse-engineering/binary-analysis/windbg-cdb-runbook.md
 reverse-engineering/game-assets/README.md
 reverse-engineering/game-assets/_index.md
 reverse-engineering/game-assets/aya-asset-format.md
-reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md
 reverse-engineering/game-assets/extraction-pipeline.md
 reverse-engineering/game-assets/game-folder-analysis.md
 reverse-engineering/game-assets/modding-reference.md
@@ -379,7 +377,6 @@ reverse-engineering/source-code/gameplay/battle-system.md
 reverse-engineering/source-code/gameplay/career-system.md
 reverse-engineering/source-code/gameplay/game-system.md
 reverse-engineering/source-code/io/_index.md
-reverse-engineering/source-code/io/chunker-system.md
 reverse-engineering/source-code/io/storage-system.md
 reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md
 reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md
