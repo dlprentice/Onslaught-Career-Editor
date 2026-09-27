@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (frontend ABI corrections promoted; each dated section keeps its own date).
+Last updated: 2026-09-27 (class-name getter corrections promoted; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,32 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE class-name getter identities — September 27
+
+The [62-row cohort](reverse-engineering/ghidra/README.md#re-audit-class-name-getter-identities--september-27)
+passed fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusals, independent review/root reproduction, live readback and
+independently restored Archive A POST. All nine live exports equal rehearsal.
+All 372 target code bytes / 124 instructions, saved prototypes, locals and
+8,269 non-target function rows remain unchanged. Twenty-seven previously empty
+plate comments were added; all earlier notes remain fallible leads.
+
+Private commands/results:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/class-name-identities/`.
+Executed with `python`: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py`, `verify_projection.py`. The current projection equals all 8,331
+live names. Deduplicated counts: 1,959 corrected, 294 kept, 6,078 outside the
+name set; 8 corrected prototypes and 2,258 updated comments are separate.
+
+`python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`:
+85 passed. The two fixed draft gaps have adversarial controls: repinning a
+mutated dispatch-copy tail still refuses admission, as does a repeated base at
+another offset. `python -m unittest tools.ghidra_cohort_framework_tests
+tools.re_function_doc_names_check_tests`: 98 passed. The bounded interface
+identity does not prove source qualifiers, runtime string immutability or the
+saved prototypes. No game, Godot or device acceptance ran.
 
 ### RE frontend callback ABI — September 27
 

@@ -241,7 +241,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (34,497/228,505 decoded bytes); bounded interface identities and marked older leads.
 # Frontend callback ABI:3 old/3 proposed authored comments (8,037/12,358 decoded bytes);
 # bounded receiver/stack transport and source divergences, preserving old notes as leads.
+# Class-name getters:35 old/62 proposed authored comments (25,637/128,998 decoded bytes);
+# bounded source-call/RTTI/literal identity, with prior notes and ABI tags historical.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/class-name-identities-20260927.manifest.tsv":
+        "3b4cb6df7686b0b1261a1dcfed796ae51cdba72ae469d4e3bbbe211d174533bb",
     "tools/cohort-specs/frontend-callback-abi-20260927.manifest.tsv":
         "5b46095bcba7ae7883cbfee2a010750a031b1e84bf43b3833e3d85bf3ed2bc1d",
     "tools/cohort-specs/frontend-page-verified-20260927.manifest.tsv":

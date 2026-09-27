@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: frontend identities and three ABI corrections recorded; original timer divergence measured; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: 62 class-name getter identities recorded; frontend ABI and original timer findings preserved; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,24 +491,24 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the frontend ABI cohort (September 27).**
+**Running coverage after the class-name getter cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,897 unique functions; 1,898 rename rows include one repeated correction. The latest 23 establish frontend common-interface identities. |
+| Names corrected | 1,959 unique functions; 1,960 rename rows include one repeated correction. The latest 62 establish the observed class-name getter interface. |
 | Names verified and kept | 294 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry and 74 frontend identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,140 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,078 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 8 interfaces: four keyboard queries, cockpit shake and three frontend callbacks. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,196 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,258 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
 `compiler-destructor-identities-20260927` / `compiler-destructor-verified-20260927`,
 `frontend-page-identities-20260927` / `frontend-page-verified-20260927`,
-`frontend-callback-abi-20260927`, the final
+`frontend-callback-abi-20260927` and `class-name-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -583,8 +583,25 @@ preserved with their corrections. Retail Render accepts but ignores the source's
 forcerender argument and lacks its function-local 60 Hz throttle; global frame
 pacing remains unproved. Private receipts: `re-audit-20260926/frontend-callback-abi/`.
 
-Next promote the mechanically checked class-name getter family, then continue
-consumer-priority names and ABI findings without extending types beyond evidence.
+The [62 class-name getters](reverse-engineering/ghidra/README.md#re-audit-class-name-getter-identities--september-27)
+are now corrected live with independent POST recovery. A source-call anchor in
+`CGame::FillOutEndLevelData`, its complete retail dispatch/copy window and raw
+RTTI slot 7 bind each exact six-byte getter to `_GetClassName`. The tool never
+uses saved names as identity evidence. It replaces 47 structural placeholders
+and 15 descriptive aliases; all prior notes remain fallible leads. Each initial
+class string lies in writable `.data`; missing declaration qualifiers, possible
+inlined forwarding and runtime immutability remain unproved. No prototype is
+certified by this cohort. Two draft matcher gaps were reproduced and fixed:
+incomplete copy-tail verification and an ambiguous repeated-base check. All
+85 focused tool cases passed, including adversarial re-pinned inputs. All nine
+live exports equal rehearsal, five actual refusals preserve project bytes, and
+the current 8,331-name projection equals live. Receipts:
+`re-audit-20260926/class-name-identities/` under the private owner above.
+
+Next audit the CDXMemBuffer family used by loading and controller recording,
+while continuing consumer-priority ABI findings without extending types beyond
+evidence. The complete original text-reader body has executed in isolation;
+its bounded refill and line-ending results are being checked before publication.
 
 Next bounded ABI evidence: [CCareer__GetGradeFromRanking](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md)
 returns AX, not a full integer, and all 14 direct callers supply the career

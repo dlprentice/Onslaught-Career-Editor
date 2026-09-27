@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (97 frontend interface identities recorded; timer divergence measured; broader audit unfinished)
+Last updated: 2026-09-27 (62 class-name getter identities recorded; broader audit unfinished)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -90,7 +90,12 @@ now bind Render's and Intro notification's implicit receiver/stack argument,
 and Options Render's float/page argument order. Complete bodies and all other
 function records remain unchanged; live readback and independent recovery passed.
 The [render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
-records retail's omission of the surviving source's local throttle. Extend the mechanized evidence across further interfaces; identity
+records retail's omission of the surviving source's local throttle.
+The [62 class-name getter corrections](ghidra/README.md#re-audit-class-name-getter-identities--september-27)
+bind exact literal-return bodies and RTTI slot 7 to the retail/source call
+interface `_GetClassName`. Independent recovery and the complete current name
+projection pass. The strings are initially known but writable; missing source
+qualifiers, possible forwarding and saved prototypes remain unproved. Identity
 coverage does not imply semantic coverage of the game's own code.
 
 The campaign projection is an oracle only, and dated generation or
