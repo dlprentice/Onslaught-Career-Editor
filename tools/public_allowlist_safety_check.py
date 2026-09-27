@@ -257,7 +257,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # inherited interface proof, preserved uncertainty tags and older fallible leads.
 # Verified switch methods:17 old/17 authored comments (8,345/37,760 bytes);
 # static interface identities only; every older note remains a fallible lead.
+# Camera position identities:5 old/9 authored comments (4,900/18,515 bytes);
+# result-pointer/local-interface proof; old notes and nonexclusive contexts preserved.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/camera-position-20260927.manifest.tsv":
+        "0736cd5bb2eaa88a3e8e41e1a70286cb0ef59c90cbcd108902e31806d00be9d4",
     "tools/cohort-specs/switch-verified-20260927.manifest.tsv":
         "529ac81fb09106db0b9a69c099f7d87b9cd425b161fd058b7bbf9428625453e7",
     "tools/cohort-specs/switch-identities-20260927.manifest.tsv":

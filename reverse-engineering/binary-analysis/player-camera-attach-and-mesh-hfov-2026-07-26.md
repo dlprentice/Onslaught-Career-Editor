@@ -1,5 +1,17 @@
 # The player camera, the cockpit attach, and what `HFOV` means
 
+Status: active — partial September 27 recheck; earlier sections remain inherited evidence
+Last updated: 2026-09-27
+Summary: original camera/projection findings, with a bounded recheck of position
+identities and aggregate result transport appended below. Other earlier claims
+were not reverified by that recheck.
+Evidence: MEASURED — September 27 retail byte/declaration alignment and 30
+isolated original-code copy cases with two modified-copy controls, detailed below.
+Earlier sections retain their dated evidence; this recheck does not establish
+whole-camera runtime behavior, rendering or player acceptance.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752 bytes,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 Date: 2026-07-26. Every address below is in the pristine Steam specimen
 (`SHA-256 74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`),
 read read-only from the live maintainer Ghidra database and from the image bytes
@@ -314,4 +326,73 @@ that the second is the one measured against retail pixels.
 The shake law in `0x00424ca0` / `0x004250f0`, the fade computation in
 `0x0053bb50`, the cockpit lighting model, and any runtime value of `mZoom`
 during a specific captured frame are static reads only. No process was launched
-for this note.
+for the original July 26 note.
+
+## September 27 position identities and result transport
+
+This recheck used `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+and source pin `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+`Camera.h` SHA-256 is `4db54ca64ebb1b635a474a46a6dbe75175f0a713eb7f1191e463b087546cbdb4`;
+`Camera.cpp` SHA-256 is `5ee6f4c7bfa509f9cf528bbf09fc7396851d7dcf9232b798ab3e82f0db09d994`.
+The earlier sections above were not comprehensively rerun.
+
+The [nine-name promotion](../ghidra/README.md#re-audit-camera-position-identities--september-27)
+distinguishes `GetPos` from `GetOldPos` in the Thing, third-person, viewpoint,
+controllable and base-camera records. Eleven known RTTI holder occurrences
+agree. The base default at `0x004190b0` forwards its supplied destination to
+slot 0 and returns that destination; Generic and Interpolated share this
+implementation. Shared table membership does not prove exclusive source-body
+ownership. Saved prototypes were preserved and are not certified by the names.
+
+The constructor at `0x0041ad30` matches the adjacent source calls at
+`Camera.cpp:819–839`: Prepare first, then current position at `0x0041ad80`,
+then old position at `0x0041ad8b`. Those calls use slots 0 and 2 and pass
+ESP-relative result addresses. The mechanized witness establishes local
+receiver/argument transport under normal ABI and valid-storage premises; it
+does not prove the whole frame's lifetime or intervening callee behavior.
+The later orientation witnesses remain withheld on conservative raw-word
+entry candidates. One is instruction bytes inside a different function;
+another straddles constants. Neither is a proven incoming camera branch.
+
+Six complete original copy leaves were executed without launching the game:
+
+| Entry | Copied bytes | Source member offset |
+| --- | ---: | --- |
+| `0x00466140` | 16 | `0x34` |
+| `0x0041b040` | 48 | `0x04` |
+| `0x0041a1c0` | 16 | `0xa0` |
+| `0x0041a1a0` | 48 | `0x70` |
+| `0x0041a7f0` | 16 | `0x3c` |
+| `0x0041a840` | 16 | `0x4c` |
+
+Their 193 unchanged bytes copy **through the destination pointer supplied at
+entry `[ESP+0x4]`**, leave that pointer in EAX and return with four-byte cleanup.
+Thirty cases cover separate, unaligned, identical and forward/backward
+overlapping result storage. Forward overlap propagates sequentially; this is
+not a before-image copy guarantee. The experiment captured EAX, ESP delta,
+EBX/ESI/EDI/EBP and the complete 256-byte surrogate object and 80-byte result
+area, not every register, flags, transient write or stack byte. DF was clear.
+Two explicit one-byte mutants—source offset `0x34→0x38` and cleanup `4→8`—
+produced the predicted distinguishable contents and stack delta. The ELF
+permits only i386 read/write/exit after confinement; denied `getpid` is observed
+in every case. Independent review rechecked all retained observations and
+PE-to-ELF equality without rerunning them.
+
+Private driver: `local-data/test-runs/re-audit-20260926/camera-interface/original_copies.py`.
+Receipt: `copy-8uy536n3/receipt.json` within that owner, 66,980 bytes,
+SHA-256 `be5189fdb84ae0fe51581eff7d6df2617cb419171077bdbe4d63471d7e12ed99`.
+This exercises synthetic buffers and original leaves, not original callers,
+game objects, camera geometry, device behavior or retail presentation.
+`fcoords.h` is absent from the pinned source; byte extent alone does not prove
+component meaning, padding or the complete aggregate type layout.
+
+A separate **static** dependency matters when consuming these identities:
+`CViewPointCamera::GetPos` at `0x00419ec0` has a cached return path. On its
+recomputation path it first copies the previous cached value at `this+0x2c`
+to `this+0xa0`; `GetOldPos` at `0x0041a1c0` reads that latter value. The copies
+at `0x00419f0d–0x00419f20` match `Camera.cpp:472–500`. Calling current and
+old getters in a different order can therefore sample different cache states.
+The constructor's call order must not be replaced by an assumption that every
+getter is pure. Complete cache/time behavior still needs a focused original-code
+experiment; the six-leaf experiment above does not execute the recomputation.

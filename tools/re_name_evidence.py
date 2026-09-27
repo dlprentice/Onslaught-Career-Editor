@@ -1184,6 +1184,339 @@ def guarded_event_interface_witness(prog: Program, cls: HeaderClass, method: Hea
     return selected[-1], 4
 
 
+def possible_interior_entry(prog: Program, start: int, end: int) -> bool:
+    """Conservatively include raw pointers omitted by the instruction cache."""
+    if not getattr(prog.img, 'sections', None):
+        raise ValueError('interior-entry check needs the complete image sections')
+    for target, refs in prog.model.refs_to.items():
+        if start < target < end and any(kind in ('call', 'jmp', 'jcc', 'imm', 'mem')
+                and not start <= site < end for kind, site in refs):
+            return True
+    if any(start < target < end for target in getattr(prog.model, 'data_ptrs_to', {})):
+        return True
+    return any(struct.pack('<I', target) in section.raw
+               for target in range(start+1, end)
+               for section in prog.img.sections)
+
+
+def aggregate_copy_leaf(prog: Program, fn: Func, result_bytes: int) -> dict:
+    """Recognize an entire straight-line member copy into a hidden result pointer.
+
+    This proves a narrow normal-entry transport, not a source method identity or
+    a global aggregate ABI. REP MOVSD assumes the normal clear direction flag.
+    Valid result storage must not overlap the callee's saved stack/return words.
+    Source and result spans must be valid, nonwrapping storage. Before-image
+    semantics additionally require them not to overlap. Code must be unchanged.
+    A separate source/caller witness
+    must establish why this buffer is a return.
+    Nothing here admits a RET-only stub, forwarder, arbitrary call or branch.
+    """
+    if type(result_bytes) is not int or not 4 <= result_bytes <= 256 or result_bytes % 4:
+        raise ValueError('aggregate copy extent is not bounded DWORD storage')
+    if (fn.lo != fn.va or fn.body_ranges != 1 or fn.declared_hi not in (None, fn.hi)
+            or fn.body_bytes not in (None, fn.hi-fn.va+1)):
+        raise ValueError('aggregate copy boundary is incomplete')
+    if any(other.va != fn.va and other.lo <= fn.hi
+           and (other.declared_hi or other.hi) >= fn.lo for other in prog.funcs):
+        raise ValueError('aggregate copy has overlapping function ownership')
+    if possible_interior_entry(prog, fn.va, fn.hi+1):
+        raise ValueError('aggregate copy has a possible interior entry')
+    body = decode_entry_body(prog.img, fn)
+    pointer = lambda region, offset=0: ('pointer', region, offset)
+    initial = {r: ('entry-register', r) for r in ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp')}
+    regs = dict(initial, ecx=pointer('this'), esp=pointer('stack'))
+    stack = {0: ('return-address',), 4: pointer('result')}
+    owned_stack, writes, reads, pops, used_rep = set(), {}, set(), 0, False
+
+    def member(offset):
+        if not 0 <= offset <= 0x7ffffffc:
+            raise ValueError('aggregate copy reads outside a forward member extent')
+        reads.add(offset)
+        return ('member-word', offset)
+
+    def address(operand):
+        match = re.fullmatch(r'\[(e(?:ax|bx|cx|dx|si|di|bp|sp))(?:([+-])0x([0-9a-f]+))?\]', operand)
+        if not match or regs[match[1]][0] != 'pointer':
+            raise ValueError('aggregate copy has an unproved address')
+        value = regs[match[1]]
+        offset = int(match[3] or '0', 16) * (-1 if match[2] == '-' else 1)
+        return pointer(value[1], value[2] + offset)
+
+    def read(operand):
+        if operand in regs:
+            return regs[operand]
+        if re.fullmatch(r'0x[0-9a-f]+', operand):
+            return ('constant', int(operand, 16))
+        if operand.startswith('DWORD PTR '):
+            _, region, offset = address(operand[10:])
+            if region == 'stack' and offset in stack:
+                return stack[offset]
+            if region == 'this':
+                return member(offset)
+        raise ValueError('aggregate copy reads an unproved value')
+
+    def store(destination, value):
+        _, region, offset = destination
+        if (region != 'result' or offset < 0 or offset % 4
+                or offset >= result_bytes or offset in writes or value[0] != 'member-word'):
+            raise ValueError('aggregate copy writes outside its exact result')
+        writes[offset] = value[1]
+
+    for index, ins in enumerate(body):
+        if ins.mnem == 'ret':
+            if index != len(body)-1 or ins.ops != '0x4':
+                raise ValueError('aggregate copy has wrong return cleanup')
+            pops += 1
+        elif ins.mnem == 'mov':
+            dest, sep, value = ins.ops.partition(',')
+            if not sep:
+                raise ValueError('aggregate copy has an invalid move')
+            if dest in regs and dest != 'esp':
+                regs[dest] = read(value)
+            elif dest.startswith('DWORD PTR '):
+                store(address(dest[10:]), read(value))
+            else:
+                raise ValueError('aggregate copy has an unsupported move')
+        elif ins.mnem == 'lea':
+            dest, sep, value = ins.ops.partition(',')
+            if not sep or dest not in regs or dest == 'esp':
+                raise ValueError('aggregate copy has an unsupported address load')
+            regs[dest] = address(value)
+        elif ins.mnem == 'add':
+            dest, sep, value = ins.ops.partition(',')
+            if (not sep or dest not in regs or dest == 'esp' or regs[dest][0] != 'pointer'
+                    or not re.fullmatch(r'0x[0-9a-f]+', value)
+                    or int(value, 16) > 0x7fffffff):
+                raise ValueError('aggregate copy has unsupported pointer arithmetic')
+            prior = regs[dest]
+            regs[dest] = pointer(prior[1], prior[2]+int(value, 16))
+        elif ins.mnem == 'push' and ins.ops in ('ebx', 'esi', 'edi', 'ebp'):
+            offset = regs['esp'][2]-4
+            stack[offset] = regs[ins.ops]
+            owned_stack.add(offset)
+            regs['esp'] = pointer('stack', offset)
+        elif ins.mnem == 'pop' and ins.ops in ('ebx', 'esi', 'edi', 'ebp'):
+            offset = regs['esp'][2]
+            if offset not in owned_stack:
+                raise ValueError('aggregate copy has unmatched register restoration')
+            regs[ins.ops] = stack.pop(offset)
+            owned_stack.remove(offset)
+            regs['esp'] = pointer('stack', offset+4)
+        elif ins.mnem == 'rep' and ins.ops == 'movs DWORD PTR es:[edi],DWORD PTR ds:[esi]':
+            count, source, dest = regs['ecx'], regs['esi'], regs['edi']
+            if (count[0] != 'constant' or not 1 <= count[1] <= 64
+                    or source[:2] != ('pointer', 'this') or dest[:2] != ('pointer', 'result')):
+                raise ValueError('aggregate copy has an unproved string transfer')
+            for n in range(count[1]):
+                store(pointer('result', dest[2]+4*n), member(source[2]+4*n))
+            regs['esi'], regs['edi'] = pointer('this', source[2]+4*count[1]), pointer('result', dest[2]+4*count[1])
+            regs['ecx'], used_rep = ('constant', 0), True
+        else:
+            raise ValueError('aggregate copy is not a supported complete leaf')
+    if (pops != 1 or owned_stack or regs['esp'] != pointer('stack')
+            or regs['eax'] != pointer('result')
+            or any(regs[r] != initial[r] for r in ('ebx', 'esi', 'edi', 'ebp'))
+            or set(writes) != set(range(0, result_bytes, 4))):
+        raise ValueError('aggregate copy does not preserve its exact result/stack contract')
+    first = writes[0]
+    if (any(writes[n] != first+n for n in writes)
+            or reads != set(range(first, first+result_bytes, 4))
+            or not 0 <= first <= 0x80000000-result_bytes):
+        raise ValueError('aggregate copy is not a contiguous member result')
+    return {'address': f'0x{fn.va:08x}', 'bytes': fn.hi-fn.va+1,
+            'bodySha256': hashlib.sha256(prog.img.read(fn.va, fn.hi-fn.va+1)).hexdigest(),
+            'resultBytes': result_bytes, 'memberOffset': first, 'returnPop': 4,
+            'eax': 'result destination', 'directionFlagClearRequired': used_rep}
+
+
+def aggregate_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
+                                seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
+    """Bind one reviewed source aggregate call to a concrete result-copy leaf.
+
+    The receiver is a nonvolatile register loaded from the first stack argument.
+    The call pushes an ESP-relative address, preserves that receiver in ECX and
+    dispatches the selected slot. The reviewed caller must supply a valid result
+    span. Its full frame lifetime and intervening callees' cleanup are not proved
+    here. Valid objects must not alias the local stack; callees must obey the
+    nonvolatile-register convention. These premises do not certify full caller/
+    callee behavior or exception paths. This is a local interface witness only.
+    """
+    witness = anchor['interfaceDispatch']
+    tables = {t.va: t for t in prog.model.rtti.vtables}
+    base = tables.get(int(witness['table'], 16))
+    if (base is None or base.klass != witness['class'] or base.offset != 0 or seed.offset != 0
+            or cls.bases != [base.klass] or not method.virtual
+            or prog.fixed_bases.get(cls.name) != [(cls.name, 0), (base.klass, 0)]
+            or prog.bases.get(cls.name) != [(cls.name, 0), (base.klass, 0)]
+            or len(seed.slots) != len(base.slots)):
+        raise ValueError('aggregate interface is not a fixed direct primary base')
+    if ((anchor.get('sourceFile'), anchor.get('sourceLine')) != (method.file, method.line)
+            or method.parameters or not witness.get('evidence') or not witness.get('receiverEvidence')):
+        raise ValueError('aggregate declaration/evidence does not match the zero-parameter interface')
+    result_type = witness['resultType']
+    if (not re.fullmatch(r'[A-Za-z_]\w*', result_type)
+            or re.sub(r'\bvirtual\b', '', method.head).strip() != result_type):
+        raise ValueError('aggregate return spelling disagrees with the declaration')
+    import re_source_graph as G
+    sf = SourceFunc(method.owner+'::'+method.name, method.file, method.line, '', [], [],
+                    args='', head=method.head)
+    if G.expected_pop(G.Source({}, set(), set()), sf) is not None or not witness.get('resultTypeEvidence'):
+        raise ValueError('aggregate witness contradicts a scalar return or lacks reviewed type evidence')
+    source = witness['source']
+    if source_root is None or Path(source['file']).name != source['file']:
+        raise ValueError('aggregate caller source is not a bounded file')
+    path = source_root/source['file']
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('aggregate caller source hash mismatch')
+    functions = [f for f in index_source(source_root, (source['file'],)) if f.key == source['function']]
+    line = source['line']
+    if (len(functions) != 1 or type(line) is not int
+            or not functions[0].line <= line <= functions[0].end_line):
+        raise ValueError('aggregate source caller is absent or ambiguous')
+    source_text = strip_comments(path.read_text(errors='replace'))
+    active, conditional = _header_conditions(source_text, set())
+    start_offset = sum(len(s) for s in source_text.splitlines(keepends=True)[:functions[0].line-1])
+    end_offset = sum(len(s) for s in source_text.splitlines(keepends=True)[:functions[0].end_line])
+    if (active[start_offset:end_offset] != source_text[start_offset:end_offset]
+            or any(lo < end_offset and hi > start_offset for lo,hi in conditional)):
+        raise ValueError('aggregate caller source contains unresolved conditions')
+    actual = source_text.splitlines()[line-1].strip()
+    pattern = re.escape(result_type) + r'\s+[A-Za-z_]\w*\s*=\s*([A-Za-z_]\w*)->' + re.escape(method.name) + r'\(\);'
+    match = re.fullmatch(pattern, actual)
+    if not match or actual != source['call']:
+        raise ValueError('aggregate source call does not match its declaration')
+    # This reviewed caller shape uses precisely one pointer argument. It is not
+    # a rule permitting arbitrary expressions or inferred receiver ownership.
+    if not re.fullmatch(re.escape(base.klass)+r'\s*\*\s*'+re.escape(match[1]), functions[0].args.strip()):
+        raise ValueError('aggregate source receiver is not the unique interface pointer argument')
+
+    def body(record):
+        address, size = int(record['address'], 16), record['bytes']
+        fn = prog.by_va.get(address)
+        if (type(size) is not int or fn is None or size != fn.hi+1-address
+                or fn.lo != address or fn.body_ranges != 1
+                or fn.declared_hi not in (None, fn.hi) or fn.body_bytes not in (None, size)
+                or any(other.va != fn.va and other.lo <= fn.hi
+                       and (other.declared_hi or other.hi) >= fn.lo for other in prog.funcs)
+                or hashlib.sha256(prog.img.read(address, size)).hexdigest() != record['sha256']):
+            raise ValueError('aggregate witness body identity mismatch')
+        return fn, decode_entry_body(prog.img, fn)
+
+    caller, instructions = body(witness['caller'])
+    receiver = witness['receiverRegister']
+    if receiver not in ('ebx', 'esi', 'edi', 'ebp'):
+        raise ValueError('aggregate receiver must survive intervening normal calls')
+    load_va, start, call_va = (int(witness[k], 16) for k in ('receiverLoad', 'windowStart', 'callAddress'))
+    by_va = {i.va: i for i in instructions}
+    if not caller.va <= load_va < start <= call_va <= caller.hi or any(a not in by_va for a in (load_va, start, call_va)):
+        raise ValueError('aggregate caller witness boundaries mismatch')
+    protected_end = call_va+by_va[call_va].size
+    # Only entry through this call establishes the witness. Later entries do
+    # not bypass it unless a local transfer can return to the protected prefix.
+    if (possible_interior_entry(prog, caller.va, protected_end)
+            or any((i.mnem.startswith(('j','loop')) or i.mnem=='call')
+                   and _DIRECT.fullmatch(i.ops) and caller.va < int(i.ops,16) < protected_end
+                   or i.mnem.startswith(('j','loop')) and not _DIRECT.fullmatch(i.ops)
+                   for i in instructions)):
+        raise ValueError('aggregate caller has a possible interior entry')
+    stack_offset = 0
+    object_regs = {'ecx'}
+    aliases = {part: full for full, parts in {
+        'eax': ('eax','ax','ah','al'), 'ebx': ('ebx','bx','bh','bl'),
+        'ecx': ('ecx','cx','ch','cl'), 'edx': ('edx','dx','dh','dl'),
+        'esi': ('esi','si'), 'edi': ('edi','di'), 'ebp': ('ebp','bp'),
+        'esp': ('esp','sp')}.items() for part in parts}
+    for ins in instructions:
+        if ins.va >= load_va:
+            break
+        dest, _, value = ins.ops.partition(',')
+        if ins.mnem == 'mov' and dest in ('eax','ebx','ecx','edx','esi','edi','ebp'):
+            if value in object_regs:
+                object_regs.add(dest)
+            else:
+                object_regs.discard(dest)
+        elif aliases.get(dest) in object_regs and ins.mnem not in ('push','cmp','test'):
+            object_regs.discard(aliases[dest])
+        if ins.mnem == 'push':
+            if (prog.img.read(ins.va,1) == b'\x66'
+                    or not (dest in ('eax','ebx','ecx','edx','esi','edi','ebp')
+                            or re.fullmatch(r'0x[0-9a-f]+', dest))):
+                raise ValueError('aggregate receiver prefix has an unsupported push width')
+            stack_offset -= 4
+        elif ins.mnem in ('add', 'sub') and re.fullmatch(r'esp,0x[0-9a-f]+', ins.ops):
+            value = int(ins.ops.split(',')[1], 16)
+            if value > 0x10000:
+                raise ValueError('aggregate receiver prefix has unbounded stack adjustment')
+            stack_offset += value if ins.mnem == 'add' else -value
+        elif (ins.mnem in ('call', 'ret', 'pop') or ins.mnem.startswith(('j', 'loop'))
+              or ins.mnem not in ('mov','lea','nop')
+              or aliases.get(dest) == 'esp'):
+            raise ValueError('aggregate receiver prefix has opaque stack/control flow')
+        if ins.mnem == 'mov' and dest.startswith('DWORD PTR '):
+            stored = re.fullmatch(r'DWORD PTR \[esp(?:\+0x([0-9a-f]+))?\]', dest)
+            if stored:
+                if not stack_offset <= stack_offset+int(stored[1] or '0',16) <= -4:
+                    raise ValueError('aggregate receiver prefix overwrites entry stack data')
+            elif dest != 'DWORD PTR fs:0x0':
+                raise ValueError('aggregate receiver prefix has an unproved memory store')
+        elif ins.mnem == 'mov' and dest not in aliases:
+            raise ValueError('aggregate receiver prefix has an unsupported store width')
+    loaded = re.fullmatch(re.escape(receiver)+r',DWORD PTR \[esp\+0x([0-9a-f]+)\]', by_va[load_va].ops)
+    if by_va[load_va].mnem != 'mov' or not loaded or stack_offset+int(loaded[1],16) != 4:
+        raise ValueError('aggregate receiver is not loaded from entry stack+4')
+    object_regs.discard(receiver)
+    for ins in instructions:
+        if not load_va < ins.va < start:
+            continue
+        dest, _, value = ins.ops.partition(',')
+        if (ins.mnem not in {'mov','lea','call','push','add','sub','cmp','test','nop',
+                             'fld','fstp','fsub','fadd','fmul'}
+                or aliases.get(dest) == receiver and ins.mnem not in ('cmp', 'test', 'push')):
+            raise ValueError('aggregate receiver provenance is interrupted')
+        if ins.mnem == 'call':
+            object_regs.difference_update(('eax','ecx','edx'))
+        elif aliases.get(dest) in object_regs and ins.mnem not in ('push','cmp','test'):
+            if not (dest in object_regs and ins.mnem == 'add' and re.fullmatch(r'0x[0-9a-f]+', value)
+                    and int(value, 16) < 0x10000):
+                object_regs.discard(aliases[dest])
+    facts = {receiver: 'receiver'}
+    facts.update({r:'caller-object' for r in object_regs})
+    registers = {'eax','ebx','ecx','edx','esi','edi','ebp'}
+    pushed = []
+    for ins in instructions:
+        if not start <= ins.va < call_va:
+            continue
+        dest, _, value = ins.ops.partition(',')
+        if ins.mnem == 'lea' and dest in registers and re.fullmatch(r'\[esp\+0x[0-9a-f]+\]', value):
+            if not 0 < int(value[7:-1], 16) <= 0x10000-witness['resultBytes']:
+                raise ValueError('aggregate result address is not a bounded positive stack displacement')
+            facts[dest] = 'stack-relative-result-address'
+        elif ins.mnem == 'mov' and dest in registers:
+            load = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp))\]', value)
+            facts[dest] = (facts.get(value) if value in registers else
+                           'vptr' if load and facts.get(load[1]) == 'receiver' else None)
+        elif ins.mnem == 'mov' and (store := re.fullmatch(r'DWORD PTR \[(e(?:bx|si|di|bp))\+0x([0-9a-f]+)\]', dest)) and value in registers:
+            # Pinned constructor object stores do not change register/stack
+            # transport under the stated valid-object/nonaliasing premise.
+            if facts.get(store[1]) != 'caller-object' or int(store[2],16) >= 0x10000:
+                raise ValueError('aggregate side store does not use the proven caller object')
+        elif ins.mnem == 'push' and ins.ops in registers:
+            pushed.append(facts.get(ins.ops))
+        else:
+            raise ValueError('aggregate argument window has unsupported transport')
+    call = by_va[call_va]
+    dispatch = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp))(?:\+0x([0-9a-f]+))?\]', call.ops)
+    if (call.mnem != 'call' or not dispatch or facts.get(dispatch[1]) != 'vptr'
+            or facts.get('ecx') != 'receiver' or int(dispatch[2] or '0',16) != anchor['slot']*4
+            or pushed != ['stack-relative-result-address']):
+        raise ValueError('aggregate call does not pass the witnessed destination/receiver/slot')
+    leaf, _ = body(anchor['body'])
+    proof = aggregate_copy_leaf(prog, leaf, witness['resultBytes'])
+    if proof['memberOffset'] != witness['memberOffset']:
+        raise ValueError('aggregate source member copy offset mismatch')
+    return base, 4
+
+
 def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMethod,
                              seed: Vtable, anchor: dict, source_root: Path | None) -> tuple[Vtable, int]:
     """Bind a reviewed common-interface call to a surviving derived declaration.
@@ -1196,6 +1529,8 @@ def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMeth
     """
     import re_source_graph as G
     witness = anchor['interfaceDispatch']
+    if witness.get('kind') == 'member-result-buffer':
+        return aggregate_interface_witness(prog, cls, method, seed, anchor, source_root)
     if witness.get('kind') == 'guarded-event-primary-prefix':
         return guarded_event_interface_witness(prog, cls, method, seed, anchor, source_root)
     if witness.get('kind') not in (None, 'straight-line'):

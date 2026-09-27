@@ -15,6 +15,280 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import re_name_evidence as E  # noqa: E402
 
 
+class AggregateCopyTests(unittest.TestCase):
+    def fixture(self, *, matrix=False, words=4, argument=4, eax_clobber=False,
+                restore=True, receiver=True, extra=b'', interior=False):
+        # Authored machine-code fixtures use an arbitrary member offset and
+        # register allocation; no retail body or address is embedded here.
+        raw = bytearray(b'\x8b\x44\x24' + bytes([argument]))
+        if matrix:
+            raw += b'\x56\x57\x8d\x71\x20\x8b\xf8\xb9' + struct.pack('<I', words)
+            raw += b'\xf3\xa5'
+            if restore:
+                raw += b'\x5f\x5e'
+        else:
+            for n in range(words):
+                raw += bytes([0x8b, 0x51 if receiver else 0x53, 0x20+4*n])
+                raw += bytes([0x89, 0x50, 4*n])
+        if eax_clobber:
+            raw += b'\xb8\x00\x00\x00\x00'
+        raw += extra + b'\xc2\x04\x00'
+        start = 0x401000
+        img = SimpleNamespace(sections=[E.Section('.text', start, len(raw), bytes(raw), 0x60000020)],
+                              read=lambda a, n: bytes(raw[a-start:a-start+n]),
+                              section_of=lambda a: E.Section('.text', start, len(raw), bytes(raw), 0x60000020))
+        fn = E.Func(start, 'fallible', 'USER_DEFINED', start, start+len(raw)-1,
+                    '', '', False, '', False, 1, len(raw), start+len(raw)-1)
+        refs = {start+4: [('jmp', 0x402000)]} if interior else {}
+        return SimpleNamespace(img=img, funcs=[fn], model=SimpleNamespace(refs_to=refs)), fn
+
+    def test_exact_vector_copy_and_direction_clear_matrix_copy(self):
+        for matrix, words in [(False, 4), (True, 12)]:
+            with self.subTest(matrix=matrix):
+                prog, fn = self.fixture(matrix=matrix, words=words)
+                proof = E.aggregate_copy_leaf(prog, fn, words*4)
+                self.assertEqual(proof['resultBytes'], words*4)
+                self.assertEqual(proof['memberOffset'], 0x20)
+                self.assertEqual(proof['eax'], 'result destination')
+                self.assertEqual(proof['returnPop'], 4)
+                self.assertEqual(proof['directionFlagClearRequired'], matrix)
+
+    def test_refuses_missing_extra_or_misdirected_words_and_return_pointer_loss(self):
+        for kwargs in ({'words': 3}, {'words': 5}, {'argument': 8}, {'receiver': False},
+                       {'eax_clobber': True}, {'interior': True},
+                       {'matrix': True, 'words': 4, 'restore': False},
+                       {'matrix': True, 'words': 3}, {'extra': b'\xfd'},
+                       {'extra': b'\x83\xc4\x04'}, {'extra': b'\xff\xd2'},
+                       {'extra': b'\x8b\x91\x00\x10\x00\x00'},
+                       {'extra': b'\x83\xc1\xf0'},
+                       {'extra': b'\x89\xcb'}):
+            with self.subTest(kwargs=kwargs):
+                prog, fn = self.fixture(**kwargs)
+                with self.assertRaises(ValueError):
+                    E.aggregate_copy_leaf(prog, fn, 16)
+
+    def test_refuses_stub_forwarder_and_opaque_boundary(self):
+        prog, fn = self.fixture()
+        for raw in (b'\xc2\x04\x00', b'\x8b\x01\xff\x20'):
+            with self.subTest(raw=raw.hex()):
+                fn.hi = fn.declared_hi = fn.va+len(raw)-1
+                fn.body_bytes = len(raw)
+                prog.img.read = lambda a, n: raw[a-fn.va:a-fn.va+n]
+                with self.assertRaises(ValueError):
+                    E.aggregate_copy_leaf(prog, fn, 16)
+        prog, fn = self.fixture()
+        fn.body_ranges = 2
+        with self.assertRaisesRegex(ValueError, 'boundary'):
+            E.aggregate_copy_leaf(prog, fn, 16)
+
+    def test_only_bounded_word_extents(self):
+        for count in (True, None, 0, 3, 18, 260):
+            with self.subTest(count=count), self.assertRaises(ValueError):
+                E.aggregate_copy_leaf(None, None, count)
+
+    def test_cached_and_uncached_interior_pointer_words_are_refused(self):
+        for cached in (False, True):
+            with self.subTest(cached=cached):
+                prog, fn = self.fixture()
+                if cached:
+                    prog.model.data_ptrs_to = {fn.va+7: [0x600000]}
+                else:
+                    # Unaligned final word in executable data, missing from
+                    # both instruction and data-pointer model references.
+                    raw = b'\x90' + struct.pack('<I', fn.va+7)
+                    prog.img.sections = [E.Section('.text', 0x402000, len(raw), raw, 0x60000020)]
+                with self.assertRaisesRegex(ValueError, 'interior entry'):
+                    E.aggregate_copy_leaf(prog, fn, 16)
+
+    def test_missing_complete_section_evidence_is_not_a_clean_census(self):
+        prog, fn = self.fixture()
+        del prog.img.sections
+        with self.assertRaisesRegex(ValueError, 'complete image sections'):
+            E.aggregate_copy_leaf(prog, fn, 16)
+
+    def test_duplicate_permuted_and_wrapping_source_words_are_refused(self):
+        for mode in ('duplicate-source', 'permuted-source', 'duplicate-destination',
+                     'negative-add', 'negative-lea', 'overflowing-rep'):
+            with self.subTest(mode=mode):
+                prog, fn = self.fixture(matrix=mode=='overflowing-rep')
+                raw = bytearray(prog.img.read(fn.va, fn.body_bytes))
+                if mode == 'duplicate-source': raw[12] = 0x20
+                if mode == 'permuted-source': raw[6], raw[12] = raw[12], raw[6]
+                if mode == 'duplicate-destination': raw[15] = 0
+                if mode == 'negative-add': raw[4:4] = b'\x83\xc1\xc0'
+                if mode == 'negative-lea': raw[4:4] = b'\x8d\x49\xc0'
+                if mode == 'overflowing-rep': raw[6:9] = b'\x8d\xb1\xfc\xff\xff\x7f'
+                fn.hi = fn.declared_hi = fn.va+len(raw)-1
+                fn.body_bytes = len(raw)
+                prog.img.read = lambda a, n: bytes(raw[a-fn.va:a-fn.va+n])
+                prog.img.sections = [E.Section('.text', fn.va, len(raw), bytes(raw), 0x60000020)]
+                with self.assertRaises(ValueError):
+                    E.aggregate_copy_leaf(prog, fn, 16)
+
+
+class AggregateInterfaceTests(unittest.TestCase):
+    def fixture(self, *, side_store=False, extra=b'', prefix_extra=b'', displacement=0x10):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root/'types.h').write_text('class Child : public Base { public: virtual Vector Get(); };\n')
+        source = root/'Caller.cpp'
+        source.write_text('Host::Host(Base *cam)\n{\n Vector value = cam->Get();\n}\n')
+        classes = E.header_classes(root, set())
+        method = classes['Child'].methods[0]
+        leaf_prog, leaf = AggregateCopyTests().fixture()
+        caller = 0x402000
+        raw = bytearray(b'\x53\x56\x83\xec\x40\x8b\xf1')
+        raw += prefix_extra
+        load = caller+len(raw)
+        raw += b'\x8b\x5c\x24\x4c'  # entry+4, after 0x48-byte stack use
+        raw += extra
+        window = caller+len(raw)
+        raw += b'\x8d\x44\x24' + bytes([displacement]) + b'\x50'
+        if side_store:
+            raw += b'\x89\x4e\x0c'
+        raw += b'\x8b\x13\x8b\xcb'
+        call = caller+len(raw)
+        raw += b'\xff\x12\x83\xc4\x40\x5e\x5b\xc2\x04\x00'
+        memory = {leaf.va+i:v for i,v in enumerate(leaf_prog.img.read(leaf.va,leaf.body_bytes))}
+        memory.update({caller+i:v for i,v in enumerate(raw)})
+        tables = [SimpleNamespace(va=0x600000,klass='Base',offset=0,slots=[leaf.va]),
+                  SimpleNamespace(va=0x600100,klass='Child',offset=0,slots=[leaf.va])]
+        for table in tables:
+            memory.update({table.va+i:v for i,v in enumerate(struct.pack('<I',leaf.va))})
+        read=lambda a,n:bytes(memory.get(a+i,0) for i in range(n))
+        img=SimpleNamespace(sha256='a'*64,read=read,u32=lambda a:struct.unpack('<I',read(a,4))[0],
+                            sections=[E.Section('.text',leaf.va,0x2000,read(leaf.va,0x2000),0x60000020)],
+                            section_of=lambda a:E.Section('.text',a,0x1000,read(a,0x1000),0x60000020))
+        f=E.Func(caller,'untrusted','USER_DEFINED',caller,caller+len(raw)-1,'','',False,'',False,
+                 1,len(raw),caller+len(raw)-1)
+        bases={'Base':[('Base',0)],'Child':[('Child',0),('Base',0)]}
+        model=SimpleNamespace(insns=[],refs_to={},rtti=SimpleNamespace(vtables=tables,class_bases=bases,fixed_bases=bases))
+        prog=E.Program(img,model,[leaf,f])
+        model.insns=[i for fn in prog.funcs for i in E.decode_entry_body(img,fn)]
+        pin=lambda fn:dict(address=hex(fn.va),bytes=fn.body_bytes,sha256=hashlib.sha256(read(fn.va,fn.body_bytes)).hexdigest())
+        witness=dict(kind='member-result-buffer',table=hex(tables[0].va),evidence='Synthetic interface call',
+            resultTypeEvidence='Authored Vector object transported as sixteen bytes by a complete copy leaf.',
+            receiverEvidence='Synthetic argument transport',caller=pin(f),receiverRegister='ebx',
+            receiverLoad=hex(load),windowStart=hex(window),callAddress=hex(call),resultType='Vector',
+            resultBytes=16,memberOffset=0x20,
+            source=dict(file='Caller.cpp',sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                        function='Host::Host',line=3,call='Vector value = cam->Get();'))
+        witness['class']='Base'
+        anchor=dict(table=hex(tables[1].va),offset=0,slot=0,target=hex(leaf.va),method='Get',parameters=[],
+                    qualifiers='',sourceFile=method.file,sourceLine=method.line,body=pin(leaf),
+                    evidence='Synthetic exact member copy',interfaceDispatch=witness)
+        anchor['class']='Child'
+        return root,classes,prog,anchor,memory
+
+    def invoke(self, root, classes, prog, anchor):
+        return E.common_interface_witness(prog,classes['Child'],classes['Child'].methods[0],
+                                         prog.model.rtti.vtables[1],anchor,root)
+
+    def test_explicit_result_witness_with_and_without_caller_object_store(self):
+        for side_store in (False,True):
+            with self.subTest(side_store=side_store):
+                root,classes,prog,a,_=self.fixture(side_store=side_store)
+                table,pop=self.invoke(root,classes,prog,a)
+                self.assertEqual((table.klass,pop),('Base',4))
+
+    def test_mutant_transport_still_refuses_when_hashes_are_refreshed(self):
+        for mode in ('argument','receiver','vptr','slot','result','side-store','prefix-esp'):
+            with self.subTest(mode=mode):
+                root,classes,prog,a,m=self.fixture(side_store=True)
+                w=a['interfaceDispatch']; load=int(w['receiverLoad'],16)
+                start=int(w['windowStart'],16);call=int(w['callAddress'],16)
+                if mode=='argument':m[load+3]+=4
+                if mode=='receiver':m[call-1]=0xca
+                if mode=='vptr':m[call-3]=0x10
+                if mode=='slot':m[call+1]=0x52  # truncated/bad next byte also refuses
+                if mode=='result':m[start+4]=0x51
+                if mode=='side-store':m[start+6]=0x4b
+                if mode=='prefix-esp':m[0x402004]=0xf0
+                for pin in (w['caller'],a['body']):
+                    pin['sha256']=hashlib.sha256(prog.img.read(int(pin['address'],16),pin['bytes'])).hexdigest()
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+
+    def test_receiver_clobbers_and_unbounded_result_displacements_refuse(self):
+        for extra in (b'\x31\xdb',b'\x93',b'\x5b',b'\x66\x89\xcb',b'\x88\xcb',b'\x61',b'\xeb\x00'):
+            with self.subTest(extra=extra.hex()):
+                root,classes,prog,a,_=self.fixture(extra=extra)
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+        root,classes,prog,a,_=self.fixture(displacement=0xf0)
+        with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+
+    def test_prefix_stack_mutation_and_partial_object_clobbers_are_refused(self):
+        for prefix in (b'\x66\x53', b'\x66\x68\x01\x00',
+                       b'\xc7\x44\x24\x4c\x78\x56\x34\x12',
+                       b'\x66\x89\x44\x24\x4c', b'\x89\x45\x04',
+                       b'\x66\x89\xc4'):
+            with self.subTest(prefix=prefix.hex()):
+                root,classes,prog,a,_=self.fixture(prefix_extra=prefix)
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+        for extra in (b'\x66\x89\xc6',b'\x89\xc6'):
+            with self.subTest(extra=extra.hex()):
+                root,classes,prog,a,_=self.fixture(extra=extra,side_store=True)
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+
+    def test_later_entry_is_irrelevant_unless_it_can_branch_back(self):
+        root,classes,prog,a,m=self.fixture();w=a['interfaceDispatch']
+        end=int(w['callAddress'],16)+2
+        prog.model.refs_to[end]=[('jmp',0x403000)]
+        self.assertEqual(self.invoke(root,classes,prog,a)[1],4)
+        # A later local branch back could let that outside entry bypass the
+        # receiver definition. Keep the full caller pin and decode, even though
+        # raw-pointer protection stops immediately after the selected CALL.
+        raw=b'\xe9'+struct.pack('<i',int(w['windowStart'],16)-end-5)
+        m.update({end+i:v for i,v in enumerate(raw)})
+        w['caller']['sha256']=hashlib.sha256(prog.img.read(0x402000,w['caller']['bytes'])).hexdigest()
+        with self.assertRaisesRegex(ValueError,'interior entry'):self.invoke(root,classes,prog,a)
+
+    def test_scalar_return_and_unresolved_source_conditions_are_refused(self):
+        for result in ('int','float','bool','DWORD'):
+            with self.subTest(result=result):
+                root,classes,prog,a,_=self.fixture()
+                p=root/'Caller.cpp';p.write_text(p.read_text().replace('Vector',result))
+                a['interfaceDispatch']['source'].update(sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
+                    call=f'{result} value = cam->Get();')
+                a['interfaceDispatch']['resultType']=result
+                classes['Child'].methods[0].head='virtual '+result
+                with self.assertRaisesRegex(ValueError,'scalar return'):self.invoke(root,classes,prog,a)
+        for condition in ('#if 0','#if TARGET == CONSOLE'):
+            with self.subTest(condition=condition):
+                root,classes,prog,a,_=self.fixture();p=root/'Caller.cpp'
+                p.write_text(condition+'\n'+p.read_text()+'#endif\n')
+                a['interfaceDispatch']['source'].update(sha256=hashlib.sha256(p.read_bytes()).hexdigest(),line=4)
+                with self.assertRaisesRegex(ValueError,'conditions'):self.invoke(root,classes,prog,a)
+
+    def test_later_indirect_tail_cannot_silently_reenter_protected_prefix(self):
+        root,classes,prog,a,m=self.fixture();w=a['interfaceDispatch']
+        end=int(w['callAddress'],16)+2
+        m.update({end:0xff,end+1:0xe0,end+2:0x90})
+        w['caller']['sha256']=hashlib.sha256(prog.img.read(0x402000,w['caller']['bytes'])).hexdigest()
+        with self.assertRaisesRegex(ValueError,'interior entry'):self.invoke(root,classes,prog,a)
+
+    def test_source_pins_extent_and_complete_boundary_are_required(self):
+        for mode in ('source-hash','source-call','source-owner','source-type','decl-line',
+                     'body-hash','result-extent','member-offset','ranges','overlap','interior','no-sections'):
+            with self.subTest(mode=mode):
+                root,classes,prog,a,_=self.fixture();w=a['interfaceDispatch']
+                if mode=='source-hash':w['source']['sha256']='0'*64
+                if mode=='source-call':w['source']['call']='Vector value = cam->Wrong();'
+                if mode=='source-owner':w['source']['function']='Other::Other'
+                if mode=='source-type':w['resultType']='Matrix'
+                if mode=='decl-line':a['sourceLine']+=1
+                if mode=='body-hash':w['caller']['sha256']='0'*64
+                if mode=='result-extent':w['resultBytes']=12
+                if mode=='member-offset':w['memberOffset']=0x24
+                if mode=='ranges':prog.by_va[0x402000].body_ranges=2
+                if mode=='overlap':
+                    prog.funcs.append(E.Func(0x402005,'fallible','USER_DEFINED',0x402005,
+                                            0x402006,'','',False,'',False,1,2,0x402006))
+                if mode=='interior':prog.model.refs_to[0x402004]=[('jmp',0x403000)]
+                if mode=='no-sections':del prog.img.sections
+                with self.assertRaises(ValueError):self.invoke(root,classes,prog,a)
+
+
 class TaggedCallTests(unittest.TestCase):
     def fixture(self, transport='member', clause='ENGINE.Deserialize(&c);'):
         tmp = tempfile.TemporaryDirectory()
