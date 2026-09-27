@@ -614,6 +614,178 @@ class HeaderVtableTests(unittest.TestCase):
         self.assertEqual(report[2]['flags'],['bad RET'])
 
 
+class ClassNameGetterTests(unittest.TestCase):
+    """Authored source/PE-like sections; no retail payload in these cases."""
+
+    def fixture(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        source = root/'game.cpp'
+        source.write_text('void CGame::Fill()\n{\n CActiveReader<Base>* item = list.At(0);\n'
+                          ' log("Unique synthetic anchor");\n'
+                          ' strcpy(name, item->ToRead()->_GetClassName());\n}\n')
+        text = E.Section('.text',0x401000,0x400,bytes(0x400),0x60000020)
+        tables = E.Section('.rdata',0x600000,0x300,bytes(0x300),0x40000040)
+        data = E.Section('.data',0x620000,0x100,bytes(0x100),0xc0000040)
+        sections = [text,tables,data]
+        def read(address,size):
+            for section in sections:
+                if section.start <= address < section.start+len(section.raw):
+                    offset=address-section.start
+                    return section.raw[offset:offset+size]
+            return b''
+        def put(address,value):
+            for section in sections:
+                if section.contains(address):
+                    offset=address-section.start;raw=bytearray(section.raw)
+                    raw[offset:offset+len(value)]=value;section.raw=bytes(raw)
+                    return
+            raise AssertionError(hex(address))
+        put(0x401005,b'\x68'+struct.pack('<I',0x620040))
+        put(0x401010,bytes.fromhex('8b0a85c974288b11ff521c8bf883c9ff33c0 '
+                                 '8d542420f2aef7d12bf98bc18bf78bfac1e902f3a58bc883e103f3a4'))
+        for table,col,target,string,name in [(0x600020,0x600200,0x401200,0x620000,'Base'),
+                                            (0x600120,0x600218,0x401300,0x620010,'Child')]:
+            put(table-4,struct.pack('<I',col));put(table+28,struct.pack('<I',target))
+            put(target,b'\xb8'+struct.pack('<I',string)+b'\xc3');put(string,name.encode()+b'\0')
+        put(0x620040,b'Unique synthetic anchor\0')
+        img=SimpleNamespace(sha256='a'*64,sections=sections,read=read,
+                            section_of=lambda a:next((s for s in sections if s.contains(a)),None),
+                            u32=lambda a:struct.unpack('<I',read(a,4))[0] if len(read(a,4))==4 else None)
+        img.data=b''.join(s.raw for s in sections)
+        bases={'Base':[('Base',0)],'Child':[('Child',0),('Base',0)]}
+        rtti=E.RttiModel({},bases,[E.Vtable(0x600020,'Base',0,[0]*7+[0x401200]),
+                                  E.Vtable(0x600120,'Child',0,[0]*7+[0x401300])],
+                         {k:v.copy() for k,v in bases.items()})
+        model=SimpleNamespace(insns=[],rtti=rtti)
+        fn=lambda a,n,size:E.Func(a,n,'USER_DEFINED',a,a+size-1,'','',True,'',False,1,size,a+size-1)
+        prog=E.Program(img,model,[fn(0x401000,'UntrustedCaller',128),
+                                  fn(0x401200,'UntrustedBase',6),fn(0x401300,'UntrustedChild',6)])
+        pin=lambda a,n:dict(address=hex(a),bytes=n,sha256=hashlib.sha256(read(a,n)).hexdigest())
+        doc={'kind':'class-name-getter-v1','specimenSha256':img.sha256,'baseClass':'Base','slot':7,
+             'evidence':'Synthetic caller/string-result correspondence.','receiverEvidence':'Reviewed synthetic active reader.',
+             'source':{'file':'game.cpp','sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+                       'function':'CGame::Fill','line':5,'call':'strcpy(name, item->ToRead()->_GetClassName());'},
+             'caller':pin(0x401000,128),'window':pin(0x401010,46),'callAddress':'0x401018',
+             'callerLiteral':{'address':'0x620040','pushAddress':'0x401005','text':'Unique synthetic anchor'},
+             'seed':{'table':'0x600020','target':'0x401200'}}
+        return prog,doc,root,put
+
+    def report(self,prog,doc,root):
+        with patch.object(E,'scan_rtti',return_value=prog.model.rtti):
+            return E.class_name_getters(prog,doc,root)
+
+    def test_names_are_outputs_and_writable_literals_are_explicit(self):
+        p,d,r,_=self.fixture();a=self.report(p,d,r)
+        self.assertEqual([x['proposedName'] for x in a['proposals']['rows']],
+                         ['Base___GetClassName','Child___GetClassName'])
+        self.assertTrue(all(x['stringWritable'] for x in a['rows']))
+        p.by_va[0x401300].name='AnEntirelyDifferentInheritedGuess'
+        self.assertEqual(a['rows'],self.report(p,d,r)['rows'])
+        self.assertIn('No prototype promotion',a['limits'])
+        self.assertEqual(a['limits'],a['proposals']['limits'])
+        self.assertIn('possible inlined forwarding',a['proposals']['limits'])
+
+    def test_repinned_result_consumption_mutations_are_rejected(self):
+        # Re-pin both spans so the instruction contract, not the hash guard,
+        # rejects every changed byte of the inlined scan/copy tail.
+        for offset in range(18,46):
+            with self.subTest(offset=offset):
+                p,d,r,put=self.fixture()
+                address=0x401010+offset
+                put(address,bytes([p.img.read(address,1)[0]^1]))
+                for key,a,n in [('caller',0x401000,128),('window',0x401010,46)]:
+                    d[key]['sha256']=hashlib.sha256(p.img.read(a,n)).hexdigest()
+                with self.assertRaisesRegex(ValueError,'string-result window'):
+                    self.report(p,d,r)
+
+    def test_anchor_specimen_source_caller_receiver_and_slot_are_bound(self):
+        for kind in ['specimen','source','caller','slot','call-address','receiver','source-receiver','literal','seed']:
+            with self.subTest(kind=kind):
+                p,d,r,put=self.fixture()
+                if kind=='specimen':d['specimenSha256']='0'*64
+                elif kind=='source':d['source']['sha256']='0'*64
+                elif kind=='caller':d['caller']['sha256']='0'*64
+                elif kind=='slot':d['slot']=8
+                elif kind=='call-address':d['callAddress']='0x401019'
+                elif kind=='receiver':
+                    put(0x401010,b'\x8b\x09')
+                    for key,a,n in [('caller',0x401000,128),('window',0x401010,46)]:
+                        d[key]['sha256']=hashlib.sha256(p.img.read(a,n)).hexdigest()
+                elif kind=='source-receiver':
+                    f=r/'game.cpp';f.write_text(f.read_text().replace('CActiveReader<Base>','CActiveReader<Other>'))
+                    d['source']['sha256']=hashlib.sha256(f.read_bytes()).hexdigest()
+                elif kind=='literal':d['callerLiteral']['text']='A different string'
+                else:d['seed']['target']='0x401300'
+                with self.assertRaises(ValueError):self.report(p,d,r)
+
+    def test_boolean_slot_and_ambiguous_caller_are_rejected(self):
+        for kind in ['bool-slot','multi-range','clipped-body','duplicate-source','missing-proof']:
+            with self.subTest(kind=kind):
+                p,d,r,_=self.fixture()
+                if kind=='bool-slot':d['slot']=True
+                elif kind=='multi-range':p.by_va[0x401000].body_ranges=2
+                elif kind=='clipped-body':p.by_va[0x401000].declared_hi+=1
+                elif kind=='duplicate-source':
+                    f=r/'game.cpp';f.write_text(f.read_text()+f.read_text())
+                    d['source']['sha256']=hashlib.sha256(f.read_bytes()).hexdigest()
+                else:d['receiverEvidence']=''
+                with self.assertRaises(ValueError):self.report(p,d,r)
+
+    def test_extra_bytes_ret_pop_thunk_or_wrong_string_are_withheld(self):
+        for kind in ['extent','thunk','ret-pop','jump','wrong-string','unterminated','unmapped','executable','uninitialized']:
+            with self.subTest(kind=kind):
+                p,d,r,put=self.fixture()
+                if kind=='extent':p.by_va[0x401300].body_bytes=7
+                elif kind=='thunk':p.by_va[0x401300].thunk=True
+                elif kind=='ret-pop':put(0x401305,b'\xc2\x04\x00')
+                elif kind=='jump':put(0x401300,b'\xe9')
+                elif kind=='wrong-string':put(0x620010,b'Other\0')
+                elif kind=='unterminated':put(0x620015,b'!')
+                elif kind=='unmapped':put(0x401301,struct.pack('<I',0x700000))
+                else:
+                    # Put only the child literal into the affected section.
+                    p.img.sections.append(E.Section('.extra',0x630000,6,b'Child\0',
+                        0x60000020 if kind=='executable' else 0xc0000080))
+                    put(0x401301,struct.pack('<I',0x630000))
+                report=self.report(p,d,r)
+                row=next(x for x in report['proposals']['rows'] if x['target']=='0x00401300')
+                self.assertEqual(row['status'],'withheld')
+
+    def test_secondary_dynamic_repeated_or_constructor_adjusted_base_is_withheld(self):
+        for kind in ['dynamic','repeated','mixed-offset','mixed-dynamic','fixed-extra',
+                     'constructor-displacement','col-offset']:
+            with self.subTest(kind=kind):
+                p,d,r,put=self.fixture()
+                if kind=='dynamic':p.model.rtti.fixed_bases['Child']=[('Child',0)]
+                elif kind=='repeated':p.model.rtti.class_bases['Child'].append(('Base',0))
+                elif kind=='mixed-offset':
+                    p.model.rtti.class_bases['Child'].append(('Base',4))
+                    p.model.rtti.fixed_bases['Child'].append(('Base',4))
+                elif kind=='mixed-dynamic':p.model.rtti.class_bases['Child'].append(('Base',4))
+                elif kind=='fixed-extra':p.model.rtti.fixed_bases['Child'].append(('Base',4))
+                elif kind=='constructor-displacement':put(0x600220,struct.pack('<I',4))
+                else:put(0x60021c,struct.pack('<I',4))
+                row=self.report(p,d,r)['proposals']['rows'][1]
+                self.assertEqual(row['status'],'withheld')
+
+    def test_extra_pointer_alias_and_occupied_spelling_remain_withheld(self):
+        for kind in ['pointer','holder','occupied']:
+            with self.subTest(kind=kind):
+                p,d,r,put=self.fixture()
+                if kind=='pointer':put(0x6002fc,struct.pack('<I',0x401300))
+                elif kind=='holder':p.slots[0x401300].append(('Unrelated',0,3,0x610000))
+                else:p.funcs[0].name='Child___GetClassName'
+                self.assertEqual(self.report(p,d,r)['proposals']['rows'][1]['status'],'withheld')
+
+    def test_cached_rtti_cannot_override_fresh_specimen(self):
+        p,d,r,_=self.fixture()
+        with patch.object(E,'scan_rtti',return_value=E.RttiModel({}, {}, [])):
+            with self.assertRaisesRegex(ValueError,'fresh specimen'):
+                E.class_name_getters(p,d,r)
+
+
 class CompilerDestructorTests(unittest.TestCase):
     """Authored compiler-entry bytes and synthetic decoded CFGs, no retail input."""
 

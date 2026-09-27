@@ -47,6 +47,7 @@ class Section:
     start: int          # virtual address
     size: int           # virtual size
     raw: bytes          # raw data (may be shorter than size)
+    characteristics: int = 0
 
     def contains(self, va: int) -> bool:
         return self.start <= va < self.start + self.size
@@ -70,7 +71,8 @@ class Image:
         for s in pe.sections:
             name = s.Name.rstrip(b"\0").decode("ascii", "replace")
             raw = self.data[s.PointerToRawData:s.PointerToRawData + s.SizeOfRawData]
-            self.sections.append(Section(name, self.base + s.VirtualAddress, max(s.Misc_VirtualSize, len(raw)), raw))
+            self.sections.append(Section(name, self.base + s.VirtualAddress,
+                                         max(s.Misc_VirtualSize, len(raw)), raw, s.Characteristics))
         self.imports = {}  # IAT slot VA -> "DLL!name"
         for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", []):
             dll = entry.dll.decode("ascii", "replace")
@@ -1391,6 +1393,155 @@ def vtable_name_proposals(prog: Program, propagated: dict, admission: dict) -> d
 
 
 # ---------------------------------------------------------------------------
+# Caller-bound class-name getters
+# ---------------------------------------------------------------------------
+
+def class_name_getters(prog: Program, document: dict, source_root: Path) -> dict:
+    """A reviewed source caller plus exact literal getters; no invented macro declaration.
+
+    The absent DECLARE_* definitions cannot establish a header layout. This
+    separate witness binds only _GetClassName at the observed primary slot.
+    Initial literal contents may be writable; no runtime constness is inferred.
+    Saved names are outputs/collision checks, never identity inputs.
+    """
+    if (document.get('specimenSha256') != prog.img.sha256
+            or document.get('kind') != 'class-name-getter-v1'
+            or not document.get('evidence') or not document.get('receiverEvidence')):
+        raise ValueError('class-name witness identity or reviewed evidence missing')
+    source = document['source']
+    if Path(source['file']).name != source['file']:
+        raise ValueError('class-name source path is not a bounded filename')
+    path = source_root / source['file']
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
+        raise ValueError('class-name source hash mismatch')
+    functions = [f for f in index_source(source_root, (source['file'],))
+                 if f.key == source['function']]
+    line = source['line']
+    if (len(functions) != 1 or type(line) is not int
+            or not functions[0].line <= line <= functions[0].end_line):
+        raise ValueError('class-name source caller is absent or ambiguous')
+    actual = strip_comments(path.read_text()).splitlines()[line-1].strip()
+    match = re.fullmatch(r'strcpy\s*\(\s*\w+\s*,\s*(\w+)->ToRead\(\)->_GetClassName\(\)\s*\)\s*;', actual)
+    if actual != source['call'] or not match:
+        raise ValueError('class-name source string-copy call mismatch')
+    base = document['baseClass']
+    if not re.search(r'CActiveReader\s*<\s*'+re.escape(base)+r'\s*>\s*\*\s*'
+                     +re.escape(match[1])+r'\s*=', functions[0].body):
+        raise ValueError('class-name source receiver type is not established')
+
+    def span(pin):
+        start, size = int(pin['address'], 16), pin['bytes']
+        if type(size) is not int or size <= 0:
+            raise ValueError('class-name invalid span')
+        raw = prog.img.read(start, size)
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != pin['sha256']:
+            raise ValueError('class-name span hash mismatch')
+        return start, start+size, raw
+
+    start, end, _ = span(document['caller'])
+    fn = prog.by_va.get(start)
+    if (fn is None or fn.lo != start or fn.hi+1 != end or fn.body_ranges != 1
+            or fn.declared_hi != end-1 or fn.body_bytes != end-start):
+        raise ValueError('class-name caller boundary mismatch')
+    ws, we, raw = span(document['window'])
+    slot = document['slot']
+    if (type(slot) is not int or not 0 <= slot <= 31 or not start <= ws < we <= end
+            or int(document['callAddress'], 16) != ws+8 or len(raw) < 18
+            or raw[:8] != bytes.fromhex('8b 0a 85 c9 74 28 8b 11')
+            or raw[8:11] != bytes([0xff, 0x52, slot*4])
+            or raw[11:18] != bytes.fromhex('8b f8 83 c9 ff 33 c0')
+            or raw[18:] != bytes.fromhex('8d542420 f2ae f7d1 2bf9 8bc1 8bf7 8bfa '
+                                         'c1e902 f3a5 8bc8 83e103 f3a4')
+            or we != ws+46):
+        raise ValueError('class-name receiver/slot/string-result window mismatch')
+    literal = document['callerLiteral']
+    text = literal['text'].encode('ascii')+b'\0'
+    va, site = int(literal['address'], 16), int(literal['pushAddress'], 16)
+    if (prog.img.read(va, len(text)) != text or prog.img.data.count(text) != 1
+            or literal['text'] not in functions[0].literals
+            or not start <= site < site+5 <= end
+            or prog.img.read(site, 5) != b'\x68'+struct.pack('<I', va)):
+        raise ValueError('class-name unique caller literal witness mismatch')
+
+    # Re-run the existing strict RTTI parser against the specimen, not a cached
+    # model's claim about class ownership. No new RTTI recovery implementation.
+    fresh = scan_rtti(prog.img)
+    if fresh != prog.model.rtti:
+        raise ValueError('class-name cached RTTI differs from fresh specimen')
+    seed = document['seed']
+    seed_tables = [t for t in fresh.vtables if t.va == int(seed['table'],16)]
+    if (len(seed_tables) != 1 or seed_tables[0].klass != base or seed_tables[0].offset != 0
+            or len(seed_tables[0].slots) <= slot
+            or seed_tables[0].slots[slot] != int(seed['target'],16)):
+        raise ValueError('class-name seed table/slot mismatch')
+    family = [t for t in fresh.vtables if t.offset == 0
+              and (base, 0) in fresh.class_bases.get(t.klass, [])]
+    pointers = defaultdict(list)
+    for section in prog.img.sections:
+        if section.characteristics & 0x20000000:
+            continue
+        for offset in range(0, len(section.raw)-3, 4):
+            pointers[struct.unpack_from('<I', section.raw, offset)[0]].append(section.start+offset)
+    rows, admission = [], []
+    for table in sorted(family, key=lambda t: t.va):
+        if len(table.slots) <= slot:
+            continue
+        target = table.slots[slot]
+        flags, code = [], prog.img.read(target, 6)
+        fn = prog.by_va.get(target)
+        col = prog.img.u32(table.va-4)
+        if (table.offset != 0 or col is None or prog.img.u32(col) != 0
+                or prog.img.u32(col+4) != 0 or prog.img.u32(col+8) != 0
+                or [offset for name, offset in fresh.class_bases[table.klass] if name == base] != [0]
+                or [offset for name, offset in fresh.fixed_bases.get(table.klass, []) if name == base] != [0]):
+            flags.append('not a unique fixed primary base with zero constructor displacement')
+        if prog.img.u32(table.va+4*slot) != target:
+            flags.append('raw vtable word differs')
+        if (prog.slots.get(target) != [(table.klass,table.offset,slot,table.va)]
+                or pointers.get(target) != [table.va+4*slot]):
+            flags.append('shared target or extra non-code pointer requires separate proof')
+        if (fn is None or fn.lo != target or fn.hi != target+5 or fn.declared_hi != target+5
+                or fn.body_ranges != 1 or fn.body_bytes != 6 or fn.thunk):
+            flags.append('not an exact six-byte non-thunk function')
+        value = int.from_bytes(code[1:5], 'little') if len(code) == 6 else 0
+        if len(code) != 6 or code[0] != 0xb8 or code[5] != 0xc3:
+            flags.append('not an immediate-EAX/plain-RET getter')
+        section = prog.img.section_of(value)
+        expected = table.klass.encode('ascii')+b'\0'
+        if (section is None or not section.characteristics & 0x40
+                or not section.characteristics & 0x40000000 or section.characteristics & 0x20000000
+                or value+len(expected) > section.start+len(section.raw)
+                or prog.img.read(value,len(expected)) != expected):
+            flags.append('class literal is not matching initialized non-executable data')
+        use = {'class':table.klass,'offset':table.offset,'table':f'0x{table.va:08x}',
+               'slot':slot,'method':'_GetClassName','parameters':[],'qualifiers':''}
+        rows.append({'target':f'0x{target:08x}', 'status':'withheld' if flags else 'caller-method-candidate',
+                     'uses':[use], 'uncoveredHolders':[u for u in prog.slots.get(target, [])
+                         if u != (table.klass,table.offset,slot,table.va)],
+                     'leastDerivedHolders':[table.klass],
+                     'bodySha256':hashlib.sha256(code).hexdigest(), 'stringAddress':f'0x{value:08x}',
+                     'stringSha256':hashlib.sha256(expected).hexdigest(),
+                     'stringSection':section.name if section else None,
+                     'stringCharacteristics':section.characteristics if section else None,
+                     'stringWritable':bool(section and section.characteristics & 0x80000000),
+                     'dataPointerCells':[f'0x{a:08x}' for a in pointers.get(target, [])]})
+        admission.append({'target':f'0x{target:08x}',
+                          'status':'withheld' if flags else 'mechanical-checks-pass', 'flags':flags,
+                          'observedReturnPop':[0] if not flags else []})
+    if not any(int(r['target'],16) == int(seed['target'],16)
+               and r['status'] == 'caller-method-candidate' for r in rows):
+        raise ValueError('class-name seed getter did not pass admission')
+    propagated, admitted = {'rows':rows}, {'rows':admission}
+    limits = ('Reviewed source-call identity only; missing macro/declaration/qualifiers and possible '
+              'inlined forwarding are not resolved. Writable initial class literals do not establish '
+              'runtime immutability. No prototype promotion. Only exact primary unshared getters '
+              'are admitted; semantic witness review and cohort gates remain required.')
+    proposals = vtable_name_proposals(prog,propagated,admitted)
+    proposals['limits'] = limits
+    return dict(propagated, admission=admitted, proposals=proposals, limits=limits)
+
+
+# ---------------------------------------------------------------------------
 # Compiler deleting entries
 # ---------------------------------------------------------------------------
 
@@ -1894,7 +2045,34 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument('--model', type=Path, required=True)
     d.add_argument('--evidence', type=Path, required=True)
     d.add_argument('--out', type=Path, required=True, help='new private JSON report')
+    n = sub.add_parser('class-names', help='reviewed caller and exact class-literal getter family')
+    n.add_argument('--functions', type=Path, required=True)
+    n.add_argument('--source', type=Path, default=SOURCE)
+    n.add_argument('--model', type=Path, required=True)
+    n.add_argument('--evidence', type=Path, required=True)
+    n.add_argument('--out', type=Path, required=True, help='new private JSON report')
     args = ap.parse_args(argv)
+    if args.cmd == 'class-names':
+        if args.out.exists():
+            ap.error('class-name report must be a new path')
+        img, model = load_or_build(args.model)
+        prog = Program(img, model, load_functions(args.functions))
+        import re_source_graph as G
+        pins = G.input_pins(args.functions, args.source, ('*.cpp', '*.h'))
+        try:
+            document = json.loads(args.evidence.read_text())
+            if document.get('sourceSha256') != pins['sourceSha256']:
+                raise ValueError('class-name source content pin mismatch')
+            report = class_name_getters(prog, document, args.source)
+        except (KeyError, TypeError, ValueError) as error:
+            ap.error(str(error))
+        report['inputs'] = dict(pins, specimenSha256=img.sha256,
+                               evidenceSha256=hashlib.sha256(args.evidence.read_bytes()).hexdigest())
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=1)+'\n')
+        from collections import Counter
+        print('Class-name proposals:', json.dumps(Counter(r['status'] for r in report['proposals']['rows']), sort_keys=True))
+        return 0
     if args.cmd == 'destructors':
         if args.out.exists():
             ap.error('compiler-entry report must be a new path')
