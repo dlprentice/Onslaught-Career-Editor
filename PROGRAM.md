@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: 205 virtual-method identities promoted from mechanized evidence; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: 205 virtual identities corrected and 65 kept-name comments reviewed; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -361,8 +361,16 @@ case, all anchors and representative overrides; root reproduced the witnesses
 and all mapped table words. These checks prove the admitted interface identity
 within their limits, not full ABI or behavioral correctness.
 
-The same report has 65 existing-name proposals awaiting comment/tag disposition
-and 28 unresolved targets. Neither set is added to the completed counts below.
+The [65 kept-name dispositions](reverse-engineering/ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+are now promoted as comments/tags only. Fresh alignment and independent review
+cover 727 table uses and all 7,962 target instruction rows. Five stale claims
+are corrected or qualified: Carver's already recovered Init boundary, two
+misidentified table starts, ComplexThing's nonzero-mode branch, and an unproven
+inference about repeated Thing initialization. All names and prototypes remain
+unchanged. Live/rehearsal equality, five no-write refusals and independently
+restored Archive A POST passed. The 65 targets add 63 unique kept-name
+dispositions; two were already counted as corrected by the third label cohort.
+The 28 unresolved targets remain outside the completed counts.
 The separate complete-header route requires exact slot counts and unambiguous
 single inheritance. It currently aligns 26 classes / 64 distinct targets but
 has not promoted them. Missing macro/base definitions, conditional declarations
@@ -378,8 +386,11 @@ Twenty-one existing notes had current identity assertions refreshed; their
 remaining semantics and saved prototypes are not thereby audited. This refresh
 also corrected Sentinel's misidentified table starts and shifted slot numbers.
 
-Next extend the same evidence across further interface families and finish the
-kept-name dispositions, rather than returning to serial one-function analysis.
+Next extend the same evidence across further interface families. The read-only
+complete-header review identifies InitThing Copy/Load and Engine methods as
+the next coherent candidates, with concrete field/version/string witnesses;
+root reproduction and exact cohort admission remain required. Camera candidates
+need explicit aggregate-return, deleting-destructor and folded-alias handling.
 Re-derive unresolved cases where the evidence can support a whole family, and
 neutralize nothing merely for missing tool support. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
@@ -415,23 +426,24 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the Thing-family virtual-identity promotion (September 26).**
+**Running coverage after the Thing-family kept-name review (September 26).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 1,825 unique functions; 1,826 rename rows include one repeated correction. |
-| Names verified and kept | 63 additional functions: 62 library/import identities and Damage. This excludes functions already counted as corrected. |
+| Names verified and kept | 126 additional functions: 62 library/import identities, Damage and 63 newly verified virtual identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,443 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,380 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 1,892 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 1,955 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted `tools/cohort-specs/*-20260926.manifest.tsv`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, and the Damage identity recheck. Private paths are under the existing
+cohort, the Damage identity recheck and the 65 kept-name targets, deduplicated
+against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
 the old 1,196 already-matching library rows overlap previous rename cohorts and

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[Thing-family virtual identities](#re-audit-thing-family-virtual-identities--september-26);
+[verified Thing-family identities](#re-audit-verified-thing-family-identities--september-26);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,51 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified Thing-family identities — September 26
+
+The [manifest](../../tools/cohort-specs/thing-virtual-verified-20260926.manifest.tsv) and
+[spec](../../tools/cohort-specs/thing-virtual-verified-20260926.spec.tsv) retain 65 existing names and
+refresh their identity evidence, nonrepeatable comments and tags. They are the
+original kept-name proposals from the preceding Thing-family alignment, excluding
+its 205 promoted renames. Fresh source/RTTI alignment and independent review cover
+727 table uses, 62 tables and all 7,962 target instruction rows. Root rechecked the
+pristine table words and reproduced the consequential comment corrections.
+
+Five older claims needed attention:
+
+- Carver Init's saved body is already recovered through `RET 4` at `0x00422555`;
+  its old truncated-prologue claim is stale. This cohort changes no boundary.
+- GroundAttackAircraft Init occupies slot 9 of primary table `0x005e2bcc`;
+  `0x005e2bf0` is its slot cell, not a table start.
+- Sentinel Init likewise occupies slot 9 of `0x005e08e0`, not slot 0 of
+  `0x005e0904`. Its incorrect slot tag is replaced.
+- ComplexThing's call at `0x004f4102` is reached for every nonzero initialization
+  mode, although only mode 1 copies the authored matrix. Calling the entire arm
+  the authored-matrix path was too narrow.
+- Static list insertion and direct-caller counts do not prove unique Thing
+  receiver lifetimes. The old repeated-initialization impossibility inference is
+  withheld pending a trace of receiver identity, repeated Init and intervening
+  removals. Historical TTD counts are retained, not revalidated; retired recordings
+  cannot be queried again.
+
+All older notes remain explicitly unverified leads. Source-identity uncertainty
+tags are retained: proving a virtual method's identity does not establish every
+body claim or its exact correspondence with the partial source. The static
+specimen is the pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Exactly 65 existing virtual-method identities verified and their nonrepeatable comments and tags updated. Five stale comment claims are corrected or explicitly qualified; the Sentinel Init slot tag changes from 0 to 9. Every name, prototype, calling convention, storage, parameter, local, type, bookmark, instruction and body and all 8,266 non-target function rows are preserved. Earlier notes remain explicitly fallible leads. Only `commentsSha256` changes at program scope. All nine live
+exports equal the separately reopened rehearsal. Fresh PRE restoration,
+dry/apply/separate and sealed readback, five byte-stable refusal controls,
+independent read-only reviews, live readback and independently restored POST
+passed. No checkpoint refresh or runtime launch occurred.
+
+Working identity: `db.18670`, 18 files / 122,194,804 bytes,
+inventory SHA-256 `ea7742b0070f2d13a6f8be860b588d0ad53660ee8ee7e586b5b0ddfb60d26824`; main database 71,892,992 bytes,
+SHA-256 `6df6f0d82c340572c07244f256360217ae2b9239b8031812dc68ba0c9fcd6cbb`. PRE is the restored Thing virtual-identity POST.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-26-thing-virtual-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-verified/`.
 
 ## RE-audit Thing-family virtual identities — September 26
 

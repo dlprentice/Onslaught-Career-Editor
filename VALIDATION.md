@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-26 (RE virtual-method promotion recorded; each dated section keeps its own date).
+Last updated: 2026-09-26 (RE virtual-method and kept-name promotions recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -70,6 +70,35 @@ directory-link refusal. The matching Windows archive/manifest was checked on
 Linux; Windows execution was not run. Evidence belongs to this branch's
 `local-data/engine48/` and task transcript. These checks do not establish visual,
 input, audio, GPU-performance or complete combat acceptance.
+
+### RE verified virtual-method comments — September 26
+
+The [65-row cohort](reverse-engineering/ghidra/README.md#re-audit-verified-thing-family-identities--september-26)
+changes only nonrepeatable comments and tags for already-correct names. Root
+and independent reviewers checked the 727 table uses, complete target bytes
+and the five stale comment claims. Old notes remain marked as fallible leads.
+
+- Fresh PRE restoration, rehearsal dry/apply/separate and sealed readback passed.
+- Exactly 65 comments/tag sets changed; all 8,266 other function rows are equal.
+  All names, prototypes, storage, repeatable comments and bodies are preserved.
+  Six protected exports and all 7,962 target instruction rows are identical;
+  only `commentsSha256` changes at program scope.
+- Stale-comment, stale-tag, wrong-specimen, wrong-post-comment and wrong-post-tag
+  controls all refused without attempted writes or changed project bytes.
+- All nine live exports equal the independently reopened rehearsal. The new
+  Archive A POST was restored elsewhere and opened read-only; working, cold and
+  restored inventories agree. The tracked checkpoint is unchanged.
+- `python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after the
+  exact registration. `npm run test:safety` passed. The evidence-tool code is
+  unchanged from the preceding 55-test run; those tests were not rerun here.
+
+Private commands, comparisons, refusal receipts and recovery are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/thing-virtual-verified/`.
+Its `verify_projection.py` compares the production projection with all 8,331
+live names and deduplicates the recorded dispositions. Publication also runs
+`npm run test:docs` and `git diff --check`, with logs in that owner.
+This is static identity/evidence correction, not full behavior or runtime
+acceptance. No game, Godot or device interaction occurred.
 
 ### RE virtual-method identity promotion — September 26
 
