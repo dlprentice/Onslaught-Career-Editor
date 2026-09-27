@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (GenericSPtrSet identities, interfaces and career-list evidence; broader audit remains)
+Last updated: 2026-09-27 (sound queue correction and direct-call evidence; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -102,6 +102,14 @@ passed 42 original-code cases and two altered-copy controls. The
 [parent-link](binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md)
 notes bound how null-item copy termination affects career traversal; complete
 career execution and actual authored graph combinations remain open.
+The [sound event-queue recheck](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
+corrects inherited insertion-order wording with 60 original-code cases and two
+altered-copy controls. Both nonempty paths preserve the active head; the flag
+selects insertion after the head or after the first negative-channel node/tail.
+Eight direct shared-to-PC call transports also pass the
+[source-call checker](../VALIDATION.md#direct-source-call-evidence--september-27),
+with seven invalid witness refusals. Sound-family Ghidra promotions and actual
+device/audible behavior remain separate work.
 The [Thing gameplay cohort](ghidra/README.md#re-audit-thing-gameplay-identities--september-27)
 now corrects sixty names across shared movement, activation and combat interfaces,
 with independently bound retail callers, complete target bodies and all recognized

@@ -799,6 +799,28 @@ Remaining memory-buffer/listener comments and ABI questions remain in scope.
 Private proof/experiment owner: `local-data/test-runs/re-audit-20260926/camera-interface/`;
 completed gate: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-position-v2/`.
 
+The next shared sound/backend family has 42 candidate identities beyond the
+already-promoted DeviceInit. Complete pristine entry decoding covers 13,186 bytes
+/ 4,311 instructions including that anchor; this is an inventory, not 42 new
+dispositions. The [event-queue correction](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
+already resolves an inherited head-insertion error with 60 original-code cases
+and two consequential altered-copy controls. Nonempty queues retain their head;
+the flag selects insertion after the head or after the first negative-channel
+node/tail. Device and audible behavior remain untested by this experiment.
+Continue through complete body/source/caller review and the existing promotion
+gate; the prepared sound research has not yet changed any Ghidra record.
+Private owner: `local-data/test-runs/re-audit-20260926/sound/`.
+
+The existing source-graph tool now checks selected direct-call witnesses against
+complete caller/target byte pins, an exact active source statement, ECX receiver,
+ordered DWORD arguments and target stack cleanup. Eight shared-to-PC sound calls
+pass; seven altered witness inputs are refused. Caller identity, register meaning
+and explicit source-branch selection remain independently reviewed premises.
+This reusable check reduces repeated transport analysis without certifying whole
+functions or silently accepting missing macro/include context. Its affected
+suites pass 211 tests; [validation and limits](VALIDATION.md#direct-source-call-evidence--september-27)
+are recorded separately from the original-code queue experiment.
+
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header
 vtable/RTTI alignment, allocation anchors with measured line drift, and

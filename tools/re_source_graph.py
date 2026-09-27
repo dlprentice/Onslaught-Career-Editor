@@ -25,6 +25,8 @@ Usage:
       --report CANDIDATES.json
   python tools/re_source_graph.py check --mapping MAP.tsv --source DIR [--functions functions.tsv]
       [--pattern '*.cpp' --pattern '*.h'] [--inline NAME ...] [--out report.json]
+  python tools/re_source_graph.py check-calls --witnesses CALLS.json --source DIR
+      --functions FUNCTIONS.tsv --out REPORT.json
 
 MAP.tsv has the columns `address` and `source`: `Class::Method` or `Function`. An overload is `Class::Method/N`,
 N being its parameter count.
@@ -374,6 +376,222 @@ def source_digest(root: Path, patterns: tuple[str, ...]) -> str:
     return hashlib.sha256(json.dumps(records, separators=(',', ':')).encode()).hexdigest()
 
 
+def direct_call_witnesses(prog: E.Program, source_root: Path, document: dict) -> dict:
+    """Check exact direct source-call transports against independently reviewed premises.
+
+    Unlike the broad graph, this admits no transitive/inlining substitute for
+    the selected source statement or CALL. Complete caller/callee byte pins,
+    source pins, ordered arguments and receiver must agree. Saved names are not
+    read. Caller identity and meanings of external registers remain explicitly
+    reviewed premises, not facts inferred from those strings. Results establish
+    a selected local path, not full behavior, provenance of every call or ABI.
+    """
+    if document.get('specimenSha256') != prog.img.sha256:
+        raise ValueError('direct-call specimen pin mismatch')
+    if len({f.va for f in prog.funcs}) != len(prog.funcs):
+        raise ValueError('direct-call duplicate function entries')
+    src = index(source_root, ('*.cpp', '*.h'), set())
+    decoded = {}
+    conditions = document.get('sourceConditions', [])
+    condition_keys = [(c['file'], c['line']) for c in conditions]
+    if len(set(condition_keys)) != len(condition_keys):
+        raise ValueError('direct-call source conditions are duplicated')
+    used_conditions, selected_text = set(), {}
+    headers = [E.strip_comments(p.read_text(errors='replace')) for p in source_root.glob('*.h')]
+
+    def span_matches(span):
+        count = span['bytes']
+        if type(count) is not int or count <= 0:
+            return False
+        raw = prog.img.read(int(span['address'],16),count)
+        return len(raw)==count and hashlib.sha256(raw).hexdigest()==span['sha256']
+
+    def activity(name, text):
+        if name not in selected_text:
+            lines = text.splitlines(keepends=True)
+            for condition in conditions:
+                if condition['file'] != name:
+                    continue
+                line = condition['line']
+                if (type(line) is not int or not 1<=line<=len(lines)
+                        or type(condition['value']) is not bool
+                        or lines[line-1].strip() != condition['directive']
+                        or re.fullmatch(r'#\s*if\s+[A-Za-z_]\w*\s*==\s*[A-Za-z_]\w*',
+                                        condition['directive']) is None
+                        or hashlib.sha256((source_root/name).read_bytes()).hexdigest()!=condition['sha256']
+                        or not condition.get('evidence') or not condition.get('spans')
+                        or not all(span_matches(span) for span in condition['spans'])):
+                    raise ValueError('direct-call source condition premise or pins differ')
+                # Preserve every character offset. Only this exact named
+                # comparison is selected, under the recorded review premise;
+                # never override a literal #if 0 or expand arbitrary macros.
+                old = lines[line-1]
+                replacement = '#if '+str(int(condition['value']))
+                lines[line-1] = replacement + ''.join('\n' if c=='\n' else ' ' for c in old[len(replacement):])
+                used_conditions.add((name,line))
+            selected_text[name] = E._header_conditions(''.join(lines), set())
+        return selected_text[name]
+
+    def function(pin):
+        address = int(pin['address'], 16)
+        fn = prog.by_va.get(address)
+        if fn is None or fn.thunk:
+            raise ValueError('direct-call requires a non-thunk function entry')
+        if any(other.va != address and other.lo <= fn.hi
+               and (other.declared_hi or other.hi) >= fn.lo for other in prog.funcs):
+            raise ValueError('direct-call overlapping function ownership')
+        if address not in decoded:
+            decoded[address] = E.decode_entry_body(prog.img, fn)
+        raw = prog.img.read(address, fn.body_bytes)
+        if len(raw) != pin['bytes'] or hashlib.sha256(raw).hexdigest() != pin['sha256']:
+            raise ValueError('direct-call complete-body pin mismatch')
+        return fn, decoded[address]
+
+    def source(pin):
+        name = pin['file']
+        if Path(name).name != name:
+            raise ValueError('direct-call source must be one pinned file')
+        path = source_root / name
+        if hashlib.sha256(path.read_bytes()).hexdigest() != pin['sha256']:
+            raise ValueError('direct-call source hash mismatch')
+        definition = resolve(src, pin['function'])
+        if definition is None or definition.file != name or definition.line != pin['line']:
+            raise ValueError('direct-call source identity is absent or ambiguous')
+        text = E.strip_comments(path.read_text(errors='replace'))
+        masked = E.mask_source_literals(text)
+        if masked is None:
+            raise ValueError('direct-call source literals are incomplete')
+        headers_ = []
+        for match in E._FUNC_DEF.finditer(masked):
+            key = (match.group('qual') or '')+re.sub(r'\s+','',match.group('name'))
+            if key != definition.key or text.count('\n',0,match.start())+1 != definition.line:
+                continue
+            parts = E.source_definition_parts(masked,match.end()-1,False)
+            if parts:
+                headers_.append((match.start(),parts[3]+1))
+        if len(headers_) != 1:
+            raise ValueError('direct-call source declaration span is ambiguous or unsupported')
+        begin,end = headers_[0]
+        active,uncertain = activity(name,text)
+        if active[begin:end]!=text[begin:end] or any(a<end and b>begin for a,b in uncertain):
+            raise ValueError('direct-call source definition has unresolved or inactive preprocessing')
+        return definition, text
+
+    rows, seen = [], set()
+    for witness in document['calls']:
+        caller, body = function(witness['caller'])
+        target, target_body = function(witness['target'])
+        caller_source, caller_text = source(witness['caller']['source'])
+        target_source, target_text = source(witness['target']['source'])
+        if not witness.get('identityEvidence') or not witness.get('sourceArgumentEvidence'):
+            raise ValueError('direct-call identity/argument premises require independent review')
+        call_address = int(witness['callAddress'], 16)
+        if call_address in seen:
+            raise ValueError('direct-call duplicate call site')
+        seen.add(call_address)
+        expression = witness['sourceCall']
+        call = re.fullmatch(r'([A-Za-z_]\w*)(\.|->)([A-Za-z_]\w*)\(([^()]*)\);', expression)
+        if not call or call[3] != short(target_source.key) or '=' in call[4]:
+            raise ValueError('direct-call source statement does not select its target')
+        masked_body = E.mask_source_literals(caller_source.body)
+        occurrences = list(re.finditer(r'(?<![\w.:>])'+re.escape(expression), masked_body or ''))
+        occurrences = [match for match in occurrences
+                       if not (masked_body or '')[:match.start()].rstrip().endswith(('.', '->', '::'))]
+        if masked_body is None or len(occurrences) != 1 or caller_text.count(caller_source.body) != 1:
+            raise ValueError('direct-call source statement is absent, repeated or a literal')
+        source_offset = caller_text.index(caller_source.body) + occurrences[0].start()
+        active, uncertain = activity(caller_source.file,caller_text)
+        if (active[source_offset:source_offset+len(expression)] != expression
+                or any(a < source_offset+len(expression) and b > source_offset for a,b in uncertain)):
+            raise ValueError('direct-call source statement has unresolved preprocessing')
+        if caller_text.count('\n', 0, source_offset)+1 != witness['sourceLine']:
+            raise ValueError('direct-call source statement line mismatch')
+        macros = {match.group(1) for text in [caller_text,target_text,*headers]
+                  for match in re.finditer(r'^\s*#\s*define\s+(\w+)\b',text,re.M)}
+        identifiers = set(re.findall(r'\b[A-Za-z_]\w*\b',
+            expression+' '+caller_source.key+' '+target_source.key+' '+target_source.head+' '+target_source.args))
+        if macros & identifiers:
+            raise ValueError('direct-call source uses a known macro without a bound expansion')
+        declared = params(target_source.args)
+        # These are expressions, not C++ parameter declarations: a member
+        # arrow's '>' must not be parsed as a template delimiter. Keep this
+        # route deliberately narrow; calls, casts, operators and comma groups
+        # need a separately supported transport rather than token guessing.
+        expressions = [part.strip() for part in call[4].split(',')] if call[4].strip() else []
+        if any(not re.fullmatch(r'(?:[A-Za-z_]\w*(?:(?:->|\.)[A-Za-z_]\w*)*|-?(?:0x[0-9a-fA-F]+|[0-9]+))',
+                                expression) for expression in expressions):
+            raise ValueError('direct-call source argument expression is unsupported')
+        records = witness['arguments']
+        if len(declared) != len(expressions) or len(records) != len(declared):
+            raise ValueError('direct-call source argument arity mismatch')
+        parts = target_source.key.split('::')
+        if (len(parts) < 2 or (parts[-2], parts[-1]) in src.statics
+                or re.search(r'\bstatic\b', target_source.head)):
+            raise ValueError('direct-call route requires a proven non-static source member')
+        want = expected_pop(src, target_source)
+        if want is None or want != 4*len(records):
+            raise ValueError('direct-call source ABI is unresolved or not DWORD arguments')
+        rets = {int(i.ops,16) if i.ops else 0 for i in target_body if i.mnem=='ret'}
+        if rets != {want}:
+            raise ValueError('direct-call callee return cleanup differs from source')
+        start = int(witness['window']['address'],16)
+        end = start + witness['window']['bytes']
+        window = [i for i in body if start <= i.va < end]
+        if (not window or window[0].va != start or window[-1].va+window[-1].size != end
+                or window[-1].va != call_address
+                or (window[-1].mnem,window[-1].ops) != ('call',hex(target.va))):
+            raise ValueError('direct-call window or direct target is not instruction-aligned')
+        raw = prog.img.read(start,end-start)
+        if hashlib.sha256(raw).hexdigest() != witness['window']['sha256']:
+            raise ValueError('direct-call window hash mismatch')
+        entries = [(int(i.ops,16),i.va) for i in body
+                   if (i.mnem.startswith(('j','loop')) or i.mnem=='call') and E._DIRECT.fullmatch(i.ops)]
+        entries += [(dest,site) for dest,refs in getattr(prog.model,'refs_to',{}).items()
+                    for kind,site in refs if kind in ('call','jmp','jcc')]
+        if any(start < dest < end for dest,_ in entries):
+            raise ValueError('direct-call setup has a possible interior entry')
+        facts, pushes = E.local_dword_transport(prog.img, window[:-1])
+        if len(pushes) != len(records) or witness['receiver'] != facts['ecx']:
+            raise ValueError('direct-call receiver or push count mismatch')
+        for index_,(record,observed,declaration,argument) in enumerate(zip(records,reversed(pushes),declared,expressions)):
+            if (record['sourceParameter'] != declaration or record['sourceArgument'] != argument
+                    or record['stackOffset'] != 4+4*index_
+                    or record['value'] != observed['value']
+                    or int(record['pushAddress'],16) != int(observed['pushAddress'],16)):
+                raise ValueError('direct-call argument order, value or source binding mismatch')
+        needed = set(re.findall(r'window\.(e(?:ax|bx|cx|dx|si|di|bp|sp))',
+                               ' '.join([facts['ecx'], *(p['value'] for p in pushes)])))
+        bindings = witness.get('externalBindings',[])
+        if len({b['register'] for b in bindings}) != len(bindings) or {b['register'] for b in bindings} != needed:
+            raise ValueError('direct-call external bindings are absent, duplicate or unused')
+        for binding in bindings:
+            if not binding.get('meaning') or not binding.get('evidence') or not binding.get('spans'):
+                raise ValueError('direct-call external binding lacks a reviewed byte premise')
+            for span in binding['spans']:
+                if not span_matches(span):
+                    raise ValueError('direct-call external span hash mismatch')
+        rows.append({'caller':f'0x{caller.va:08x}','callAddress':f'0x{call_address:08x}',
+                     'target':f'0x{target.va:08x}','sourceCaller':caller_source.key,
+                     'sourceTarget':target_source.key,'sourceCall':expression,
+                     'receiver':facts['ecx'],'arguments':records,'returnPop':want,
+                     'identityEvidence':witness['identityEvidence'],
+                     'sourceArgumentEvidence':witness['sourceArgumentEvidence'],
+                     'externalBindings':bindings})
+    if not rows:
+        raise ValueError('direct-call witness set is empty')
+    if used_conditions != set(condition_keys):
+        raise ValueError('direct-call source condition premise is unused')
+    return {'result':'PASS','checkedCalls':len(rows),'rows':rows,'sourceConditionPremises':conditions,
+            'limits':'Selected local direct-CALL/receiver/ordered-argument agreement under the recorded '
+                     'independently reviewed caller-identity and source-meaning premises. No saved-name, '
+                     'transitive-call or file-order inference; no whole-caller domination, return-type/storage, '
+                     'complete ABI, runtime, device or semantic-parity certification. Object-memory bindings '
+                     'presume no alias with outgoing stack writes. Known macro uses in selected files/pinned '
+                     'headers are withheld; unavailable include/macro environments are not reconstructed. '
+                     'Explicit source-condition selections are reviewed premises, not recovered build flags. '
+                     'Target source bodies can differ from retail; only selected interface/cleanup is compared here.'}
+
+
 def input_pins(functions: Path, source: Path, patterns: tuple[str, ...]) -> dict:
     return {'functionsSha256': hashlib.sha256(functions.read_bytes()).hexdigest(),
             'sourceSha256': source_digest(source, patterns), 'sourcePatterns': list(patterns),
@@ -445,8 +663,29 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--small", type=int, default=16, help="bodies of at most this many bytes may be folded")
     c.add_argument("--implicit", action="append", default=[], help="a name source code reaches without writing a call")
     c.add_argument("--out", type=Path)
+    w = sub.add_parser('check-calls', help='exact direct-call transport under independently reviewed premises')
+    w.add_argument('--witnesses', type=Path, required=True)
+    w.add_argument('--source', type=Path, required=True)
+    w.add_argument('--functions', type=Path, required=True)
+    w.add_argument('--model', type=Path, default=DEFAULT_MODEL)
+    w.add_argument('--out', type=Path, required=True)
     args = ap.parse_args(argv)
-    patterns = tuple(args.pattern or ('*.cpp', '*.h'))
+    patterns = tuple(getattr(args, 'pattern', None) or ('*.cpp', '*.h'))
+    if args.cmd == 'check-calls':
+        if args.out.exists():
+            ap.error('call report must be a new path')
+        img, model = E.load_or_build(args.model)
+        prog = E.Program(img, model, E.load_functions(args.functions))
+        document = json.loads(args.witnesses.read_text())
+        if document.get('functionsSha256') != hashlib.sha256(args.functions.read_bytes()).hexdigest():
+            ap.error('call witness function export pin mismatch')
+        report = direct_call_witnesses(prog, args.source, document)
+        report['inputs'] = input_pins(args.functions, args.source, patterns) | {
+            'witnessesSha256': hashlib.sha256(args.witnesses.read_bytes()).hexdigest()}
+        with args.out.open('x') as stream:
+            stream.write(json.dumps(report, indent=2)+'\n')
+        print(f"{report['checkedCalls']} exact direct-call transports checked; semantic premises remain explicit")
+        return 0
     src = index(args.source, patterns, set(getattr(args, 'inline', [])))
     inputs = input_pins(args.functions, args.source, patterns)
     if args.cmd == 'map-names':

@@ -1,14 +1,48 @@
 # `CSoundManager` shared audio-policy semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-20
-Evidence: MEASURED — September 20 original volume/event/backend execution and fresh selected pristine instructions; earlier source/demo/deck analysis below is retained evidence, not rerun here.
-Verdict: saved master-volume application and bounded active-event updates are independently rechecked; reset, banks and audible behavior retain explicit limits.
+Last updated: 2026-09-27
+Evidence: MEASURED — September 27 original event-queue execution; September 20 volume/event/backend execution retains its date. Earlier source/demo/deck analysis below remains bounded evidence.
+Verdict: event acquisition preserves the existing active head and inserts after a selected node; earlier head-insertion wording is corrected. Device, mixer and audible behavior retain explicit limits.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
+
+## September 27 event-queue correction
+
+The original acquisition body at `004e0fb0`, 134 bytes ending at `004e1036`,
+matches pinned `SoundManager.cpp:598–643` (`GetSoundEvent`). Its complete body
+SHA-256 is `06b229d0953eeb7e50593f775d7f60efe4ab40a8b59732bbf6e06fad6562258b`.
+The source's parameter name `insertattop` must not be taken literally:
+
+- Empty active list: the acquired node becomes the head, with null links.
+- Nonempty list and **nonzero 32-bit flag**: insert after its current head.
+- Nonempty list and **zero flag**: walk while a successor exists and the current
+  node's channel is signed nonnegative; insert after the first negative-channel
+  node encountered, or after the tail. It does not insert before that node.
+
+For active channels `[0, -1, 2]`, zero yields `[old0, old1, new, old2]`;
+nonzero yields `[old0, new, old1, old2]`. Both preserve the existing head.
+This is agreement between source and retail, correcting the inherited report's
+description rather than exposing a source-version difference.
+
+Success pops manager `+0x34`, clears the remaining free head's previous link,
+repairs next/previous links at event `+0x74/+0x78`, increments manager `+0x08`
+and returns the acquired pointer in EAX with `RET4`. Exhaustion returns zero
+without changing the authored manager/events. Its warning-string call reaches
+the pristine one-byte RET at `0040c640`; the string does **not** prove a warning
+was emitted by this executable.
+
+The [native controls](../../VALIDATION.md#original-sound-event-queue--september-27)
+passed 60 cases and two altered-copy branch controls, recording the complete
+2,048-byte authored area, stack balance and nonvolatile registers. Two deliberately
+inconsistent count fields isolate 32-bit wraparound; they do not model valid
+queues containing billions of events. Independent read-only review decoded the
+actual output chains and both control differences. These checks cover authored
+valid links and final state, not all process writes, malformed lists, concurrent
+use, channel arbitration, playback, devices or audible behavior.
 
 ## September 20 independent volume/event recheck
 
@@ -128,9 +162,9 @@ registers debug controls, then calls the PC device initializer. Active events
 are rooted at manager `+0x0C`, free events at `+0x34`, and active count at
 `+0x08`; event next/previous links are `+0x74/+0x78`.
 
-`GetSoundEvent` is more accurately described as event allocation: pop the free
-head, insert at the active head or after channel-assigned events, increment the
-count, and emit `Warning : out of sound events!` on exhaustion. Shutdown
+`GetSoundEvent` acquires a free node and inserts it according to the corrected
+September 27 rules above. It replaces the active head only for an empty list;
+the exhaustion trace call is a no-op in this specimen. Shutdown
 returns active events, frees the pool, destroys samples, releases backend voice
 buffers and debug state, frees effects, and clears initialization.
 

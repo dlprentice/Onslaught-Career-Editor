@@ -1943,6 +1943,70 @@ def common_interface_witness(prog: Program, cls: HeaderClass, method: HeaderMeth
 
 
 
+def local_dword_transport(img: Image, setup: list[Insn]) -> tuple[dict[str, str], list[dict]]:
+    """Evaluate a caller-validated MOV/PUSH setup, freezing values at PUSH.
+
+    The caller must establish instruction/byte alignment, entry exclusions and
+    the terminal CALL. This helper proves neither reachability nor source meaning.
+    Memory expressions presume no alias with outgoing stack writes; explicit
+    ESP overlap is refused. Keep this one evaluator shared by virtual and direct
+    source-call evidence.
+    """
+    registers = {'eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp'}
+    facts = {reg: 'window.' + reg for reg in registers}
+    stack_delta, pushes = 0, []
+
+    def value(operand):
+        if operand in facts:
+            return facts[operand]
+        if _DIRECT.fullmatch(operand):
+            n = int(operand, 16)
+            if n > 0xffffffff:
+                raise ValueError('ordered argument constant exceeds DWORD')
+            return f'constant32:0x{n:08x}'
+        memory = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp|sp))'
+                              r'(?:\+(e(?:ax|bx|cx|dx|si|di|bp))\*([1248]))?'
+                              r'(?:\+(0x[0-9a-f]+))?\]', operand)
+        if not memory:
+            raise ValueError('ordered argument transport uses an unsupported operand')
+        base, index, scale, offset = memory.groups()
+        displacement = int(offset or '0', 16)
+        if base == 'esp':
+            if index:
+                raise ValueError('ordered argument uses indexed stack addressing')
+            relative = stack_delta + displacement
+            if stack_delta < 0 and relative < 0 and relative + 4 > stack_delta:
+                raise ValueError('ordered argument reloads memory overwritten by an outgoing push')
+            return f'load32(window.esp{relative:+d})'
+        address = facts[base]
+        if index:
+            address += f'+({facts[index]})*{scale}'
+        if displacement:
+            address += f'+0x{displacement:x}'
+        return 'load32(' + address + ')'
+
+    for ins in setup:
+        raw = img.read(ins.va, ins.size)
+        if not raw or raw[0] in (0x66, 0x67):
+            raise ValueError('ordered argument transport has an unsupported width prefix')
+        if ins.mnem == 'mov':
+            dest, sep, operand = ins.ops.partition(',')
+            if not sep or dest not in registers:
+                raise ValueError('ordered argument move is not a full register write')
+            facts[dest] = value(operand)
+        elif ins.mnem == 'push':
+            captured = value(ins.ops)  # evaluate memory relative to pre-push ESP
+            if raw[0] == 0x6a:
+                signed = struct.unpack('b', raw[1:2])[0] & 0xffffffff
+                if captured != f'constant32:0x{signed:08x}':
+                    raise ValueError('ordered argument imm8 sign extension disagrees with bytes')
+            pushes.append({'pushAddress': f'0x{ins.va:08x}', 'value': captured})
+            stack_delta -= 4
+        else:
+            raise ValueError('ordered argument setup is not supported MOV/PUSH transport')
+    return facts, pushes
+
+
 def ordered_interface_arguments(prog: Program, method: HeaderMethod, anchor: dict,
                                 source_root: Path) -> dict:
     """Check ordered DWORD transport on one independently reviewed local path.
@@ -2003,58 +2067,7 @@ def ordered_interface_arguments(prog: Program, method: HeaderMethod, anchor: dic
             else:
                 raise ValueError('ordered argument setup has a possible interior entry')
 
-    registers = {'eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp'}
-    facts = {reg: 'window.' + reg for reg in registers}
-    stack_delta, pushes = 0, []
-
-    def value(operand):
-        if operand in facts:
-            return facts[operand]
-        if _DIRECT.fullmatch(operand):
-            n = int(operand, 16)
-            if n > 0xffffffff:
-                raise ValueError('ordered argument constant exceeds DWORD')
-            return f'constant32:0x{n:08x}'
-        memory = re.fullmatch(r'DWORD PTR \[(e(?:ax|bx|cx|dx|si|di|bp|sp))'
-                              r'(?:\+(e(?:ax|bx|cx|dx|si|di|bp))\*([1248]))?'
-                              r'(?:\+(0x[0-9a-f]+))?\]', operand)
-        if not memory:
-            raise ValueError('ordered argument transport uses an unsupported operand')
-        base, index, scale, offset = memory.groups()
-        displacement = int(offset or '0', 16)
-        if base == 'esp':
-            if index:
-                raise ValueError('ordered argument uses indexed stack addressing')
-            relative = stack_delta + displacement
-            if stack_delta < 0 and relative < 0 and relative + 4 > stack_delta:
-                raise ValueError('ordered argument reloads memory overwritten by an outgoing push')
-            return f'load32(window.esp{relative:+d})'
-        address = facts[base]
-        if index:
-            address += f'+({facts[index]})*{scale}'
-        if displacement:
-            address += f'+0x{displacement:x}'
-        return 'load32(' + address + ')'
-
-    for ins in body[:-1]:
-        raw = prog.img.read(ins.va, ins.size)
-        if not raw or raw[0] in (0x66, 0x67):
-            raise ValueError('ordered argument transport has an unsupported width prefix')
-        if ins.mnem == 'mov':
-            dest, sep, operand = ins.ops.partition(',')
-            if not sep or dest not in registers:
-                raise ValueError('ordered argument move is not a full register write')
-            facts[dest] = value(operand)
-        elif ins.mnem == 'push':
-            captured = value(ins.ops)  # evaluate memory relative to pre-push ESP
-            if raw[0] == 0x6a:
-                signed = struct.unpack('b', raw[1:2])[0] & 0xffffffff
-                if captured != f'constant32:0x{signed:08x}':
-                    raise ValueError('ordered argument imm8 sign extension disagrees with bytes')
-            pushes.append({'pushAddress': f'0x{ins.va:08x}', 'value': captured})
-            stack_delta -= 4
-        else:
-            raise ValueError('ordered argument setup is not supported MOV/PUSH transport')
+    facts, pushes = local_dword_transport(prog.img, body[:-1])
     if len(pushes) != len(records):
         raise ValueError('ordered argument push count mismatch')
     result = []
