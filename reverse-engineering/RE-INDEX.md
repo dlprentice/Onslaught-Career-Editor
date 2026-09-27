@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (startup shell and GetBPP interface promoted; window-callback boundary, menu argument interfaces and broader audit remain)
+Last updated: 2026-09-27 (startup shell, GetBPP and window-callback boundary promoted; callback metadata, menu argument interfaces and broader audit remain)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -52,8 +52,10 @@ storage from untested real Windows/device behavior. The
 [GetBPP correction](ghidra/README.md#re-audit-getbpp-identity-and-interface--september-27)
 now records its caller/source-correlated member interface and one stack argument,
 preserving the constant-32 body and existing return/cleanup. Exact live readback
-and independent recovery passed. The absent WndProc boundary and remaining
-frontend argument mappings are the next bounded corrections.
+and independent recovery passed. The [window-callback boundary](ghidra/README.md#re-audit-window-callback-boundary--september-27)
+now admits 34 previously unowned decoded bytes, preserving all existing function
+records. Readback and independent recovery passed; its default metadata remains
+unresolved. Callback metadata and remaining frontend argument mappings are next.
 The [Options instruction repair](ghidra/README.md#re-audit-options-instruction-repair--september-27)
 corrects one saved instruction boundary without changing retail bytes or function
 metadata. The [frontend render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)

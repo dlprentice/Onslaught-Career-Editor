@@ -335,6 +335,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "device-lifecycle-20260927",
         "startup-shell-20260927",
         "getbpp-abi-20260927",
+        "window-callback-boundary-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

@@ -283,6 +283,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # all ABI/body/previous-note data remains unchanged.
 # GetBPP: one source/caller-grounded name and physical member interface;
 # exact return/purge/body preservation and nine byte-stable refusal controls.
+# Window callback boundary: one default function over 34 existing decoded bytes;
+# unchanged instructions and existing metadata, five byte-stable refusal controls.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -352,6 +354,7 @@ LIVE_GRANTED_COHORTS = [
     "device-lifecycle-20260927",
     "startup-shell-20260927",
     "getbpp-abi-20260927",
+    "window-callback-boundary-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -827,6 +830,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "device-lifecycle-20260927",\n'
         '        "startup-shell-20260927",\n'
         '        "getbpp-abi-20260927",\n'
+        '        "window-callback-boundary-20260927",\n'
         "    };\n",
     ),
     (

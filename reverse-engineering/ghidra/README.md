@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[GetBPP identity and interface](#re-audit-getbpp-identity-and-interface--september-27);
+[window callback boundary](#re-audit-window-callback-boundary--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,34 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit window callback boundary — September 27
+
+The [one-row manifest](../../tools/cohort-specs/window-callback-boundary-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/window-callback-boundary-20260927.spec.tsv) add a default boundary from
+pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One default FUN_00529070 function added over the existing 34-byte / 12-instruction window callback. All 8,331 existing function rows, code, references, data, variables, comments, types and bookmarks are preserved. New metadata remains default: undefined return, unknown convention, no parameters, tags or comments. Only the program function count rises to 8,332; this is a boundary correction, not a completed semantic or ABI disposition.
+
+Fresh pristine instructions, RegisterClassA callback-field assignment at 00529151, source d3dapp.cpp lines 79–81 and a read-only disposable-project ownership inspection establish the separate extent 00529070–00529091. The source-correlated WndProc name and four-argument callee-clean interface require a separate metadata cohort. Previously retained isolated message experiments are reused, not rerun. Dynamic Windows dispatch, all indirect entries and full runtime behavior remain outside this correction. Existing CREATE_FUNCTION gates require fully decoded instructions and refuse conflicting code/data/function/symbol ownership; no disassembly or framework weakening was needed.
+
+The [platform note](../source-code/core/platform-system.md#retail-startup-shell--september-27-correction)
+records callback registration and forwarding. The complete body loads the
+application global, forwards four stack arguments through slot 12 and returns
+with RET 16; surrounding padding stays outside the new function.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; the complete name projection matches all 8,332 entries.
+
+Working identity: `db.18692`, 18 files / 124,029,812 bytes,
+inventory SHA-256 `d673c565915343f5955fffef0250e390550de5e47e63788c67d28af69d8b5b0f`; main database 73,728,000 bytes,
+SHA-256 `9c41d793cc8f5d635ca41c7d0ebb41b360e2f1031b02c47e44df044693e9190c`. Restored GetBPP POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-window-callback-boundary/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private cohort receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-boundary/`; evidence and focused-test logs:
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
 
 ## RE-audit GetBPP identity and interface — September 27
 

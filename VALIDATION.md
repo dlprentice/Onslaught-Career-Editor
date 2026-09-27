@@ -7857,3 +7857,30 @@ Evidence/logs: `local-data/test-runs/re-audit-20260926/getbpp-abi/`, including
 Publication checks: `npm run test:docs` passed with zero name drift, and
 `npm run test:safety` passed over 4,156 candidate files. `git diff --check`
 passed. Logs: `docs-final.log` and `safety-final.log` in the same evidence owner.
+
+## RE window callback boundary — September 27
+
+The `window-callback-boundary-20260927` cohort adds one default function over
+34 existing bytes / 12 instructions at `0x00529070`; no instructions are changed.
+All 8,331 prior function rows, 32,708 variables and existing stack rows are exact.
+The new function has an undefined return, unknown convention, no parameters,
+comments or tags. Its source-correlated identity/interface requires another cohort.
+
+Pristine specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Fresh PRE restore, rehearsal, separate/sealed readback, five byte-stable refusal
+controls, independent review/root reproduction, live readback and independently
+restored Archive A POST passed. All nine live exports equal rehearsal. The
+complete name projection matches 8,332 entries: 2,040 corrected, 317 additionally
+kept and 5,975 outside those sets; zero newly neutralized. Existing prototype
+and comment counts are unchanged. No Windows/device acceptance was performed.
+
+Commands and receipts under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-boundary/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
+`finish.py` and `verify_projection.py`. Logs are in the corresponding
+`local-data/test-runs/re-audit-20260926/window-callback-boundary/` directory.
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed across 4,158 candidate files. `git diff --check` passed.
