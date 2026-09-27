@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (reader-interface promotion and original-code controls recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (camera position promotion and original-code copy controls recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7649,3 +7649,51 @@ The cohort registration/framework check
 `python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases; final payload-only resealing did not change those framework sources.
 Logs: `docs.log`, `safety.log`, `framework-tests.log`, `projection.log` in the
 private cohort owner. These checks do not certify full page behavior or ABI.
+
+## RE camera position identities and result transport — September 27
+
+The `camera-position-20260927` cohort corrects nine current/previous position
+method names, comments and tags. Fresh independent PRE restoration, revised
+rehearsal, separate/sealed readbacks, exact export comparison, five byte-stable
+refusal controls, independent read-only review with root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; 1,660 code bytes / 519 instructions, every prototype
+and 8,322 non-target functions are unchanged. Four comments were added where
+none existed; only the program comment count/digest change. The tracked
+checkpoint was not write-opened or refreshed.
+
+The first seal's wording confused a pointer argument with its destination and
+claimed an exclusive owner from shared RTTI context. It was rejected and kept
+under `camera-position/rejected-v1/`; no live writes used it. Fresh revised
+PRE/rehearsal/readback/refusals ran under the completed owner:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-position-v2/`.
+Commands and exact outputs are retained there in `prepare_preservation.py`,
+`prepare.py`, `rehearse.py`, `compare_exports.py rehearsal-post`,
+`negative_controls.py`, `apply_live.py`, `finish.py` and `verify_projection.py`.
+The final projection matches all 8,331 live names. Deduplicated counts:
+2,000 corrected names, 317 additional kept, zero newly neutralized, 6,014 still
+outside the accounted set; 22 prototypes and 2,327 comments are separate counts.
+
+`python -m unittest tools.re_name_evidence_tests` passed 113 cases;
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94. Independent
+review findings about extra reads, wrapped offsets, partial-register clobbers,
+entry argument overwrite, scalar-return contradictions and interior re-entry
+were reproduced and added as refusal controls. Source/receiver/result witness
+review is still required; passing hashes alone cannot establish an identity.
+The final evidence log is `camera-interface/tool-tests-v5.log` under the
+existing `local-data/test-runs/re-audit-20260926/` owner.
+
+`python local-data/test-runs/re-audit-20260926/camera-interface/original_copies.py`
+passed 30 original-code cases and two separate modified-copy controls. Six
+complete leaves, 193 bytes, were verified identical inside the ELF. Receipt:
+`local-data/test-runs/re-audit-20260926/camera-interface/copy-8uy536n3/receipt.json`.
+Independent review reconstructed all observations and checked confinement
+without rerunning the experiment. The existing camera evidence note records
+the register/memory limits and ordered-overlap behavior. No game, Godot,
+physical desktop, original caller or rendering acceptance was exercised.
+
+Publication checks: `npm run test:docs` passed after adding the camera note's
+missing evidence/specimen header and removing its old backlog exemption;
+`npm run test:safety` passed (4,148 candidate files). The initial header failure
+is preserved in `docs.log`; final results are in `docs-final.log` and
+`safety.log` within the private cohort owner. `git diff --check` passed.

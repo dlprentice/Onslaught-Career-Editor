@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: switch-backed identities verified; camera result-buffer witnesses next; broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: camera position identities promoted; aggregate-return ABI and broader audit unfinished; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the verified switch-method cohort (September 27).**
+**Running coverage after the camera position cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 1,991 unique functions; 1,992 rename rows include one repeated correction. The latest six establish multiplayer lifecycle, options processing and three listener identities. |
+| Names corrected | 2,000 unique functions; 2,001 rename rows include one repeated correction. The latest nine establish current/previous camera position methods. |
 | Names verified and kept | 317 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader and seventeen switch-method identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,023 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,014 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 22 interfaces: four keyboard queries, cockpit shake, three frontend callbacks, eight memory-buffer member/thunk interfaces and six reader interfaces. Full ABI coverage is not yet counted. |
-| Comments corrected | 2,318 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,327 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
 Count sources: promoted September 26 manifests, `controller-engine-verified-20260927` and
@@ -511,7 +511,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -568,18 +568,38 @@ already saved event-record pointer; its provisional return meaning stays open.
 Consumer comments and concrete owner types remain open; do not infer an owner
 solely from a factory's result.
 
-Next mechanized family: Camera.h layouts aligned to retail RTTI, with an explicit
-result-buffer witness before aggregate-return methods are admitted. Fresh checks
-find seven complete-header classes, 71 slot uses and 39 distinct targets. These
-are candidates, not name dispositions. The pristine interpolating constructor
-at `0x0041ad30` supplies the slot sequence for Prepare, current/old position,
-current/old orientation and current/old zoom. Leaf bodies expose 16-byte vector
-and 48-byte matrix result transport. Shared Generic/Interpolated getters cannot
-receive an exclusive owner; purecall, ubiquitous stubs, unproved indirect tails
-and uncovered aliases stay withheld. Existing aggregate-refusal tests must
-remain effective. Private source/byte leads: `local-data/test-runs/re-audit-20260926/camera-interface/`.
-Remaining memory-buffer/listener kept comments and demonstrated ABI issues stay
-in scope; this camera family does not claim full interpolation or runtime parity.
+The [camera position cohort](reverse-engineering/ghidra/README.md#re-audit-camera-position-identities--september-27)
+promotes nine names through exact revised rehearsal/readback and independently
+restored recovery. The tracked projection equals all 8,331 live names. Its
+explicit aggregate result-buffer witness supports position slots 0/2 without
+assuming a global aggregate ABI. All eleven selected RTTI holder uses agree;
+five other existing position names are candidates for comment verification.
+Full header alignment's seven classes / 71 slots / 39 targets remain candidate
+counts, not completed semantic dispositions. The checker passed 113 focused
+tests after root reproduced review findings about extra reads, wrapped offsets,
+partial register writes, argument overwrite and bypassing entries. The first
+cohort seal's imprecise destination/ownership wording was rejected and retained;
+the replacement preserves all earlier notes and uncertainty tags.
+
+The [camera evidence note](reverse-engineering/binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md#september-27-position-identities-and-result-transport)
+records six unchanged original copy leaves, 193 bytes, 30 isolated cases and two
+discriminating mutants. Sixteen-byte position and 48-byte orientation results
+travel through a pointer supplied at entry `[ESP+0x4]`; the routines preserve
+that destination in EAX. Overlap follows forward-copy order, not a before-image
+guarantee. The original callers, complete frame lifetimes, camera geometry and
+retail presentation were not executed. The viewpoint position getter can update
+its previous-position cache; the rebuild must preserve sampling order.
+
+Next: correct demonstrated result-return metadata without inventing aggregate
+layouts, verify the five kept position names' comments, and pursue the remaining
+camera slots or a larger independently supported family. Orientation constructor
+witnesses remain withheld on raw pointer-like words, not proven incoming edges;
+the first-call engine view-matrix consumer at `0x00449ef0` is an independent lead.
+Shared Generic/Interpolated getters cannot receive an exclusive owner. Purecall,
+ubiquitous stubs, unproved indirect tails and uncovered aliases stay withheld.
+Remaining memory-buffer/listener comments and ABI questions remain in scope.
+Private proof/experiment owner: `local-data/test-runs/re-audit-20260926/camera-interface/`;
+completed gate: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-position-v2/`.
 
 David's renewed scope keeps all saved names, prototypes, comments and living
 documents in the audit. Prefer validated library/template matches, header

@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified switch-backed methods](#re-audit-verified-switch-backed-methods--september-27);
+[camera position identities](#re-audit-camera-position-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit camera position identities — September 27
+
+The [nine-row manifest](../../tools/cohort-specs/camera-position-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/camera-position-20260927.spec.tsv) correct current/previous position
+method names against pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Nine current/previous camera-position method names corrected, with comments and tag additions only. All interfaces, locals, 1,660 body bytes / 519 instructions and 8,322 non-target function rows remain unchanged. All five earlier notes and every prior tag are retained as fallible leads. Four previously empty comments are added.
+
+Pinned Camera.h declarations, complete result-copy leaves and the source-matched constructor call sequence establish position/old-position interface slots. All 11 known RTTI holder occurrences agree; naming contexts remain nonexclusive. The caller witness proves local receiver/ESP-relative result-pointer transport under normal ABI and valid nonaliasing storage premises, not full frame lifetime or intervening callee behavior. Full-body return-cleanup checks preserve unknown prototype and aggregate component types. Review defects in the checker were reproduced and fixed; 113 focused tests pass. The first seal was rejected for imprecise pointer/owner wording and retained privately. Fresh PRE, revised exact rehearsal/readbacks and five byte-stable refusals passed. Separately, six unchanged copy leaves passed 30 syscall-confined original-code cases plus two discriminating mutant controls; these exercise surrogate buffers and register/stack transport, not original callers, camera geometry, timing or retail presentation.
+
+All nine live exports equal the separately reopened revised rehearsal. Independent
+read-only payload/PRE review with root reproduction, live readback and restored
+Archive A POST passed. The checkpoint was never write-opened. Five existing
+position names remain comment-audit candidates. Orientation callers with raw
+interior-pointer candidates remain withheld; those words are not proven incoming
+branches. The copy getters' saved return metadata still needs a separate ABI
+correction; this names-only cohort does not certify it.
+
+Working identity: `db.18687`, 18 files / 123,882,356 bytes,
+inventory SHA-256 `1bbdd130acb8a019fd749e65826a6af948c9f2ab674b9702d0538d310fe691d3`; main database 73,580,544 bytes,
+SHA-256 `9163d76228eb91c7d3616f134f0caef3649cdc1807b1fdedb869e13757fcc10e`. Restored verified-switch POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-camera-position-v2/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private gate receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-position-v2/`; source/caller/leaf proofs and original-code
+controls: `local-data/test-runs/re-audit-20260926/camera-interface/`.
 
 ## RE-audit verified switch-backed methods — September 27
 

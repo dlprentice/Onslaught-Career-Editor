@@ -158,6 +158,8 @@ CURRENT_RESOURCE_READER_OVERLAY = REPO_ROOT / "tools/cohort-specs/resource-reade
 CURRENT_RESOURCE_READER_OVERLAY_SHA256 = "63760c8e48b9d0611ca942d4273c32fb69801ec31552a92568d6849e662c449a"
 CURRENT_SWITCH_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/switch-identities-20260927.manifest.tsv"
 CURRENT_SWITCH_IDENTITIES_OVERLAY_SHA256 = "c4eb0001c3d166da84ea6cf0c74fe710d3e3dce8e309bc7fa6d9794afda2cac5"
+CURRENT_CAMERA_POSITION_OVERLAY = REPO_ROOT / "tools/cohort-specs/camera-position-20260927.manifest.tsv"
+CURRENT_CAMERA_POSITION_OVERLAY_SHA256 = "0736cd5bb2eaa88a3e8e41e1a70286cb0ef59c90cbcd108902e31806d00be9d4"
 CURRENT_CREATION_OVERLAY = REPO_ROOT / "tools/cohort-specs/first-training-keyboard-boundary.manifest.tsv"
 CURRENT_CREATION_OVERLAY_SHA256 = "8565f4c8952bb0c2a238e6bde0926f342a1bc78cd039229fed0c2f39c51da30a"
 CURRENT_EVENT_CONSTRUCTOR_OVERLAY = REPO_ROOT / "tools/cohort-specs/scheduled-event-constructor-boundary.manifest.tsv"
@@ -933,6 +935,11 @@ def run(
                 table, CURRENT_SWITCH_IDENTITIES_OVERLAY,
                 expected_sha256=CURRENT_SWITCH_IDENTITIES_OVERLAY_SHA256,
                 expected_rows=6, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_CAMERA_POSITION_OVERLAY,
+                expected_sha256=CURRENT_CAMERA_POSITION_OVERLAY_SHA256,
+                expected_rows=9, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
