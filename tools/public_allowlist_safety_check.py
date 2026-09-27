@@ -237,7 +237,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (29,285/234,452 decoded bytes); static identity proofs and marked historical leads.
 # Frontend page identities: 19 old/23 proposed authored comments
 # (11,493/71,741 decoded bytes); common-interface evidence and marked historical leads.
+# Verified frontend pages: 74 old/74 proposed authored comments
+# (34,497/228,505 decoded bytes); bounded interface identities and marked older leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/frontend-page-verified-20260927.manifest.tsv":
+        "7f632659a7037581523e8223b47628e15cede7bd29a8c9e8b9005a07916cbbfb",
     "tools/cohort-specs/frontend-page-identities-20260927.manifest.tsv":
         "3f2c77b5f7bd530395bee5fb46c48ea7877f569e23ee9331ec8311e329491310",
     "tools/cohort-specs/compiler-destructor-verified-20260927.manifest.tsv":

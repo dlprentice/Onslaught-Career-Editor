@@ -94,9 +94,10 @@ remains separate; the saved stack-parameter interpretation is not endorsed.
 ## Remaining limits
 
 The native cases establish this tail's argument transformation, not rendered
-appearance, sound, whole-menu state or real frame pacing. The timer's upstream
-clock/filter, exceptional x87 modes and every drawing helper still need their
-own bounded evidence. Cheapest visual falsifier: a controlled copied-retail
+appearance, sound, whole-menu state or real frame pacing. The
+[Process timer note](CFrontEnd__Process.md) separately records 166 original-code
+cases for the clock filter and completion comparison. The upstream clock,
+exceptional x87 modes and every drawing helper still need their own evidence. Cheapest visual falsifier: a controlled copied-retail
 transition involving Options and each of Credits, Screen Position and an
 ordinary page, compared at matched transition ratios.
 
