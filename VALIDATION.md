@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (sound interfaces and sample-lookup probes recorded; each dated section keeps its own date).
+Last updated: 2026-09-27 (sound source-name promotion and sample-length caller recheck recorded; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -8702,3 +8702,50 @@ argument-label changes remain pending.
 gated assertions with zero drift or unresolved assertions. `npm run test:safety`
 passed across 4,190 candidate files. Exact logs remain in the sound owner's
 `abi-docs.log` and `abi-safety.log`.
+
+## Sound source names and arguments — September 27
+
+The two-row `sound-source-identities-20260927` cohort corrects GetSample and
+GetSoundEvent, plus their music and insert_after_head argument labels. All
+physical parameter/return types, storage and calling conventions are unchanged.
+Complete targets cover 276 bytes / 122 instructions from pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Manifest: 10,681 bytes, SHA-256
+`d8ea10c9e14801f33c0d56261b124154dee2f15096b97010895c92a709f76543`.
+
+Executed through existing scripts under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-source-identities/`:
+
+- `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+  `compare_exports.py rehearsal-post` and `negative_controls.py`: PASS.
+  Nine stale/wrong-input refusals leave project bytes unchanged.
+- Independent exact-payload review: GO, with root reproduction. Both complete
+  target bodies, six complete caller/callee witnesses, source pins and the
+  1,155 preserved historical comment bytes were checked. Prior experiment
+  records were inspected, not rerun or expanded into device acceptance.
+- `apply_live.py`, `compare_exports.py live-post`, `finish.py` and
+  `verify_projection.py`: PASS. All nine live exports equal the independently
+  reopened rehearsal. All 8,330 other function rows, physical interfaces,
+  code, locals and frames are unchanged. Archive A POST restored and reopened
+  read-only; the checkpoint remains unchanged. The full 8,332-name projection
+  equals live. Counts: 2,141 unique corrected names, 418 verified/kept,
+  5,773 outside that set, 2,572 corrected comments and 105 prototype records;
+  the latest two prototype changes are argument spellings only.
+- Two successful, freshly hash-matched scratch project twins were retired
+  after all preservation gates, retaining manifests, receipts and cold recovery.
+  The deletion queue records exact paths and 251,647,720 logical bytes.
+
+Fresh static GetSampleLength/caller decoding is recorded in
+`local-data/test-runs/re-audit-20260926/sound/sample-length-evidence-v1.json`.
+Five direct call sites support a member receiver but do not prove float versus
+double return width; no type correction or original-code run is claimed for
+that recheck. The [backend note](reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#getsamplelength-caller-and-precision-boundary--september-27)
+records the cutscene consumer and a proposed rounding discriminator. Exact
+gate logs remain in the same sound test-run owner as `source-*`.
+
+`python -m unittest tools.ghidra_cohort_framework_tests` passed all 94 cases
+against the final registered spec. `npm run test:docs` passed with zero drifted
+or unresolved assertions; `npm run test:safety` passed across 4,192 candidate
+files. `git diff --check` passed. These gates do not establish audio acceptance.

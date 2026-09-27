@@ -1,7 +1,7 @@
 # `CPCSoundManager` DirectSound backend semantic recovery
 
 Status: active, bounded semantic recovery
-Last updated: 2026-09-27 (backend identities, six member interfaces and sample-route/volume wording rechecked; older measurements retain their dates)
+Last updated: 2026-09-27 (backend identities, six member interfaces, sample-route/volume wording and sample-length callers rechecked; older measurements retain their dates)
 Evidence: SOURCE — pinned `pcsoundmanager.cpp`/`.h` and the first-party GDC
 shared/platform architecture; MEASURED — complete pristine retail bodies,
 DirectSound calls, formats, tables, constants, and twenty normalized-identical
@@ -98,8 +98,8 @@ premises. These are static findings, not new device runs.
   receiver, but reads active-event head from fixed `00896994`. A hypothetical
   second manager instance therefore cannot be modeled with only its own list.
 - GetSampleLength `00517c60` returns through ST0/RET4. Source float-member
-  versus saved double-stdcall remains unresolved: an unused incoming ECX and
-  x87 result alone cannot settle either source type or calling convention.
+  versus saved double remains unresolved. The caller recheck below separately
+  supports member-call annotation; the live annotation has not yet changed.
 
 Device opening, real HRESULT behavior, mixer output and audible parity remain
 open. Use owned COM objects to falsify call ordering/arguments before any live
@@ -116,6 +116,44 @@ The destructor remains void; its separate deleting wrapper owns the returned
 receiver. FindFreeChannel retains signed int/EAX. GetSampleLength's unresolved
 return type remains excluded, and incidental COM results do not become void
 methods' declared return values. Exact live readback and restored recovery passed.
+
+### GetSampleLength caller and precision boundary — September 27
+
+Fresh decoding of pristine SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+binds the complete `[00517c60,00517ca4)` body: 68 bytes, SHA-256
+`e20bf5f390c0ef59e6ed887bda7888b1b6f2afb018fd06dfc15f3c4be85d902a`.
+It signed-loads sample `+0x7c`, divides by twice the selected rate, and returns
+the x87 result without a binary32 or binary64 store/reload. Global `00663080`
+selects 44100 for zero, 22050 for one, and 11025 otherwise. Pinned
+`pcsoundmanager.cpp:468–471` uses fixed 44100 and declares a float member;
+that source difference prevents assuming an exact source build.
+
+Five direct calls were found and validated against complete caller bodies.
+The four in UpdateStatus (`004e2240`, `004e229f`, `004e22b7`, `004e22cb`)
+and the additional cutscene call at `0043fc66` all explicitly supply
+ECX=`00896988` and one sample pointer. Together with the source member
+declaration, these support automatic-this annotation while retaining the
+provisional return type and all physical storage. They do not prove that no
+unresolved indirect caller exists.
+
+The cutscene caller `[0043fa70,0043fcaa)` is 570 bytes, SHA-256
+`2c1eb096309139d28ee05cf6c1a5a94c5cc8d64e281184e7a82558126b6b0718`.
+It multiplies the returned ST0 by float 20.0 at `0043fc6b`, converts to a
+QWORD integer at `0043fc71`, then stores the low DWORD at record `+0x238`.
+The four UpdateStatus consumers also use the unspilled result for comparisons
+or subtraction; a float store of the resulting time is not a float return
+conversion. The cutscene source is absent from the pinned drop.
+
+The cheapest numerical falsifier is an original-code comparison experiment
+under controlled x87 PC24/PC53 with and without forced binary32 return rounding.
+For an authored 12-byte sample at selector zero, the mathematical quotient is
+`1/7350`; float time bits `390ea9d5` are slightly larger. This is a proposed
+rounding discriminator, not a runtime finding or a way to recover the erased
+C++ declaration. Preserve operation order and state the precision boundary.
+Private complete-body/caller evidence:
+`local-data/test-runs/re-audit-20260926/sound/sample-length-evidence-v1.json`.
+No original-code, device or audio run was made for this recheck.
 
 ## Dated August 11 comparison
 

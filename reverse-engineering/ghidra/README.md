@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[sound interfaces](#re-audit-sound-interfaces--september-27);
+[sound source names and arguments](#re-audit-sound-source-names-and-arguments--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,31 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit sound source names and arguments — September 27
+
+The [two-row manifest](../../tools/cohort-specs/sound-source-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sound-source-identities-20260927.spec.tsv) correct source names and
+argument labels in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Two sound source names corrected: GetOrCreateSample to GetSample and AllocateSoundEvent to GetSoundEvent. Their misleading argument labels become music at Stack+8 and insert_after_head at Stack+4. Comments/tags correct the claims while preserving old labels/notes as fallible leads. All physical parameter/return types, storage, conventions, 276 code bytes / 122 instructions, locals, frames and 8,330 non-target functions remain unchanged.
+
+Complete pristine targets and source-correlated caller/callee witnesses support both identities. GetSample forwards a full DWORD music flag, tests only the low reload byte and normalizes only CL for reuse. Null-reader fallback reaches the zero-return file-loader stub; no successful loading is inferred. GetSoundEvent pops a pooled event; nonzero flag inserts after an existing head, while zero selects the first negative-channel node/tail. Earlier original-code experiments retain their intercepted-boundary and valid-list limits. No fresh runtime, device or audible evidence is claimed. The source-parity tag is removed; other legacy tags and old notes remain leads.
+
+Fresh PRE restoration, rehearsal with separate and sealed readbacks, nine
+byte-stable refusal controls, independent exact-row review with root reproduction,
+live readback and independently restored Archive A POST passed. All nine
+live exports equal rehearsal. Exact external comparison permits only the two
+function names and argument spellings plus comments/tags; physical types,
+storage and all other variable records remain byte-identical.
+
+Working identity: `db.18709`, 18 files / 125,832,052 bytes,
+inventory SHA-256 `f9953a5c0f63b167633b116cd936db4294cfe15bce12b185711043dec6c6b44a`; main database 75,530,240 bytes,
+SHA-256 `ff0b542e7971a3d3409ea5b142076a9496b6b598b4eb4a94dcff628a7ba9a3a9`. Restored sound-interface POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sound-source-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sound-source-identities/`; logs:
+`local-data/test-runs/re-audit-20260926/sound/source-*`.
 
 ## RE-audit sound interfaces — September 27
 

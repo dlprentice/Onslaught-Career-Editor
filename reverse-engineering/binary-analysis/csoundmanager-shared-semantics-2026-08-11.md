@@ -52,7 +52,9 @@ prepared identity record is `local-data/test-runs/re-audit-20260926/sound/identi
 It is bound to the current export, source hashes and freshly decoded original
 bytes. The [41 kept-name comment/tag records](../ghidra/README.md#re-audit-verified-sound-records--september-27)
 have now been promoted and counted, with exact live readback and independently
-restored recovery. The GetSoundEvent source-name correction remains pending.
+restored recovery. The subsequent [source-name cohort](../ghidra/README.md#re-audit-sound-source-names-and-arguments--september-27)
+corrects GetSoundEvent and GetSample, and labels their relevant arguments
+insert_after_head and music. The physical interfaces are unchanged.
 Saved interfaces and old plate notes remain fallible; identity is a narrower
 claim than complete behavior. Source references below use the pinned commit
 `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
@@ -105,10 +107,11 @@ The complete pristine body at `[004e0a00,004e0a8e)` is 142 bytes, SHA-256
 from `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 It corresponds to `CSoundManager::GetSample` in pinned SoundManager.cpp
-lines 300–333, with retail additions. Its saved GetOrCreateSample name and
-`channel_type` argument label remain pending correction; the second argument
-is music, as shown by the complete CreateSample body and the backend reload
-caller at `00517f81–00517f90`.
+lines 300–333, with retail additions. Its former GetOrCreateSample name is now
+GetSample and its former `channel_type` argument label is now `music`, as shown
+by the complete CreateSample body and the backend reload caller at
+`00517f81–00517f90`. Exact live/rehearsal equality and independently restored
+recovery passed; argument types and storage are unchanged.
 
 Original-code execution in an isolated native i386 harness passed **76 cases
 and two consequential altered-copy controls**. ASCII name comparison and
