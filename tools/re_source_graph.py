@@ -294,12 +294,28 @@ def check(mapping: dict[int, str], calls: dict[int, list[int]], rets: dict[int, 
 
 
 def program_facts(functions: Path, model: Path, addresses: set[int]):
+    """Read complete entry-seeded bodies, not the whole-image linear decode.
+
+    A preceding switch table can make that cache start inside a real function
+    and silently omit its first call or corrupt its measured size. Exported
+    boundaries remain claims: require exact, unambiguous ownership and let the
+    byte-checked decoder reject inconsistent extents and undecodable/truncated
+    bytes. This establishes
+    local instruction facts, not whole-CFG reachability or source identity.
+    """
     img, mdl = E.load_or_build(model)
     prog = E.Program(img, mdl, E.load_functions(functions))
+    if len({f.va for f in prog.funcs}) != len(prog.funcs):
+        raise ValueError('duplicate exported function entries')
     calls, rets, sizes = {}, {}, {}
-    for a in addresses:
-        f = prog.func_at(a)
-        body = prog.body(f) if f else []
+    for a in sorted(addresses):
+        f = prog.by_va.get(a)
+        if f is None:
+            raise ValueError(f'mapped address is not an exported function entry: {a:#x}')
+        if any(other.va != a and other.lo <= f.hi
+               and (other.declared_hi or other.hi) >= f.lo for other in prog.funcs):
+            raise ValueError(f'mapped function has overlapping exported ownership: {a:#x}')
+        body = E.decode_entry_body(img, f)
         calls[a] = [t for i in body for kind, t in E.insn_refs(i, img) if kind == "call"]
         rets[a] = {int(i.ops, 16) if i.ops else 0 for i in body if i.mnem == "ret"}
         sizes[a] = sum(i.size for i in body)

@@ -8218,3 +8218,29 @@ Execution logs use `vertex-abi-` under
 
 `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,172 candidate files. `git diff --check` passed.
+
+
+## RE source-graph entry decoding — September 27
+
+`tools/re_source_graph.py` now extracts local calls, return cleanup and byte
+counts from complete entry-seeded decoding of selected pristine bodies. The
+whole-image linear cache began at 004bba12 after preceding switch data, omitting
+SetVolume's actual 004bba10 entry. Fresh decoding gives 65 bytes / 17 instructions,
+CALL 004bba3d to 00441740 and RET4. The body SHA-256 is
+`0f88e91799dc179cfaecd7e5327a66d447f37968eb335324c342b3ab89cf6303`.
+
+Exact entries, unique exported rows and nonoverlapping complete extents are
+required. Inconsistent extents or undecodable/truncated bytes are rejected.
+A valid linear decode still does not prove CFG reachability or distinguish
+plausibly decodable embedded data. Source identity and reviewed semantic
+correspondence remain separate; three matching direct edges are not a complete
+music audit. No Ghidra or game mutation is part of this tooling correction.
+
+`python -m unittest tools.re_source_graph_tests`: 21 tests passed, including
+missing cached calls, interior/missing entries, duplicate/overlapping exports,
+inconsistent extents and truncated instructions. Independent read-only review
+checked the updated diff and freshly reproduced the selected retail body.
+The actual CLI `check` against the eleven-entry music map and current live export
+reports three checked direct edges and zero contradictions. Evidence and command
+results are `local-data/test-runs/re-audit-20260926/music/source-map.tsv`,
+`source-graph-v2.json`, `source-graph-v2.log` and `entry-decode-tests-v2.log`.

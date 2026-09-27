@@ -5,6 +5,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import re_source_graph as G  # noqa: E402
@@ -28,6 +30,57 @@ void Free(const unsigned short a, float * b) { Thing t; t.Leaf(1); }
 """
 MAPPING = {0x1000: "Thing::Run", 0x2000: "Thing::Helper", 0x3000: "Thing::Leaf", 0x4000: "Thing::Over/1",
            0x5000: "Thing::Over/2", 0x6000: "Free"}
+
+
+class ProgramFactsTests(unittest.TestCase):
+    def facts(self, raw, *, address=0x1000, extra=(), **changes):
+        section = SimpleNamespace(start=0x1000, size=len(raw), raw=raw,
+                                  characteristics=0x20000000)
+        image = SimpleNamespace(base=0x1000,
+            read=lambda a, n: raw[a-0x1000:a-0x1000+n],
+            section_of=lambda a: section if 0x1000 <= a < 0x1000+len(raw) else None)
+        fields = dict(va=0x1000, lo=0x1000, hi=0x1000+len(raw)-1,
+                      declared_hi=0x1000+len(raw)-1, body_ranges=1, body_bytes=len(raw))
+        fields.update(changes)
+        fn = SimpleNamespace(**fields)
+        # Deliberately wrong/empty cached instructions must never hide the CALL.
+        prog = SimpleNamespace(by_va={fn.va: fn}, funcs=[fn, *extra], body=lambda f: [])
+        with patch.object(G.E, 'load_or_build', return_value=(image, None)), \
+                patch.object(G.E, 'load_functions', return_value=[]), \
+                patch.object(G.E, 'Program', return_value=prog):
+            return G.program_facts(Path('unused'), Path('unused'), {address})
+
+    def test_entry_decode_recovers_call_and_complete_size_without_cached_instructions(self):
+        # CALL 0x1100; RET 8. This first call is absent from the synthetic cache.
+        calls, rets, sizes = self.facts(bytes.fromhex('e8fb000000c20800'))
+        self.assertEqual(calls, {0x1000: [0x1100]})
+        self.assertEqual(rets, {0x1000: {8}})
+        self.assertEqual(sizes, {0x1000: 8})
+
+    def test_missing_and_interior_mapping_addresses_are_not_containing_functions(self):
+        for address in (0x1001, 0x2000):
+            with self.subTest(address=address), self.assertRaisesRegex(ValueError, 'function entry'):
+                self.facts(bytes.fromhex('90c3'), address=address)
+
+    def test_overlapping_export_ownership_is_rejected(self):
+        other = SimpleNamespace(va=0xfff, lo=0xfff, hi=0x1000, declared_hi=0x1000)
+        with self.assertRaisesRegex(ValueError, 'overlapping exported ownership'):
+            self.facts(bytes.fromhex('90c3'), extra=(other,))
+
+    def test_duplicate_entries_cannot_be_hidden_by_the_address_index(self):
+        other = SimpleNamespace(va=0x1000, lo=0x1000, hi=0x1001, declared_hi=0x1001)
+        with self.assertRaisesRegex(ValueError, 'duplicate exported function entries'):
+            self.facts(bytes.fromhex('90c3'), extra=(other,))
+
+    def test_incomplete_or_noncontiguous_export_extents_are_rejected(self):
+        for changes in (dict(body_ranges=2), dict(body_bytes=1),
+                        dict(declared_hi=0x1002), dict(lo=0xfff)):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'exported extent'):
+                self.facts(bytes.fromhex('90c3'), **changes)
+
+    def test_truncated_instruction_does_not_become_empty_evidence(self):
+        with self.assertRaisesRegex(ValueError, 'invalid or data instruction'):
+            self.facts(b'\xe8')
 
 
 class SourceGraphTests(unittest.TestCase):
