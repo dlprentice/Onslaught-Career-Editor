@@ -445,7 +445,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.repairRange", "col.repairBytesSha256", "col.currentInstructionLayout", "col.proposedInstruction",
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.currentCallingConvention", "col.returnType",
-        "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
+        "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs", "col.prototypeTarget",
         "col.currentCustomStorage", "col.customStorage", "col.returnStorage",
         "col.currentAbiSha256", "col.proposedAbiSha256", "protectedAbiStateSha256",
         "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
@@ -554,6 +554,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         String subtype = "";
 
         // prototype
+        Row prototypeTarget; // declared direct thunk follower; never written directly
         final List<String[]> params = new ArrayList<>();
         int arity;
         int arityBytes;
@@ -2122,6 +2123,10 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             }
         }
 
+        if (verbs.contains(V_SET_PROTOTYPE)) {
+            gatePrototypeDependencies(rows, fm);
+        }
+
         // ---- GATE 6: full data-type resolution before any write -------------
         if (verbs.contains(V_SET_PROTOTYPE) && !readback) {
             int resolved = 0;
@@ -2428,6 +2433,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             // -- PHASE E: setPrototype ---------------------------------------
             if (verbs.contains(V_SET_PROTOTYPE) && failures.isEmpty()) {
                 for (Row row : rows) {
+                    if (row.prototypeTarget != null) continue;
                     try {
                         row.rendered = applyPrototype(row);
                         row.verdict = row.rendered.equals(row.get("proposedSignature"))
@@ -2440,6 +2446,18 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                         fail(row, "rendered prototype expected ["
                             + row.get("proposedSignature") + "] actual ["
                             + row.rendered + "]");
+                    }
+                }
+            }
+
+            if (verbs.contains(V_SET_PROTOTYPE) && failures.isEmpty()) {
+                for (Row row : rows) {
+                    if (row.prototypeTarget == null) continue;
+                    row.rendered = fm.getFunctionAt(row.entry).getSignature().getPrototypeString(true);
+                    row.verdict = row.rendered.equals(row.get("proposedSignature"))
+                        ? "APPLIED" : "APPLY_MISMATCH";
+                    if (!"APPLIED".equals(row.verdict)) {
+                        fail(row, "THUNK FOLLOWER rendered signature mismatch");
                     }
                 }
             }
@@ -2567,6 +2585,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         owner.put("col.currentCallingConvention", V_SET_PROTOTYPE);
         owner.put("col.returnType", V_SET_PROTOTYPE);
         owner.put("col.paramSpec", V_SET_PROTOTYPE);
+        owner.put("col.prototypeTarget", V_SET_PROTOTYPE);
         owner.put("col.arity", V_SET_PROTOTYPE);
         owner.put("col.arityBytes", V_SET_PROTOTYPE);
         owner.put("col.varArgs", V_SET_PROTOTYPE);
@@ -2783,6 +2802,78 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         }
     }
 
+    /** A follower is an explicit, byte-proven direct thunk, never another
+     * prototype writer. All dependent thunks must be declared before any write.
+     * Target/follower shapes must agree; custom storage and chains stay refused. */
+    private void gatePrototypeDependencies(List<Row> rows, FunctionManager fm) throws Exception {
+        Map<Address, Row> declared = new HashMap<>();
+        for (Row row : rows) if (row.entry != null) declared.put(row.entry, row);
+        for (Row row : rows) {
+            row.prototypeTarget = null;
+            String text = row.get("prototypeTarget");
+            if (text.isEmpty() || text.equals("-")) continue;
+            if (!text.matches("0x[0-9a-f]{8}")) {
+                fail(row, "THUNK FOLLOWER invalid prototypeTarget");
+                continue;
+            }
+            Address targetAddress = toAddr(Long.parseLong(text.substring(2), 16));
+            Row target = declared.get(targetAddress);
+            Function f = row.entry == null ? null : fm.getFunctionAt(row.entry);
+            Function tf = fm.getFunctionAt(targetAddress);
+            if (target == null || target == row || f == null || !f.isThunk()
+                    || tf == null || tf.isThunk() || tf.isExternal()
+                    || f.getThunkedFunction(false) == null
+                    || !f.getThunkedFunction(false).getEntryPoint().equals(targetAddress)) {
+                fail(row, "THUNK FOLLOWER requires a declared direct non-thunk target");
+                continue;
+            }
+            if (row.customStorage || target.customStorage || f.hasCustomVariableStorage()
+                    || tf.hasCustomVariableStorage()) {
+                fail(row, "THUNK FOLLOWER custom storage unsupported");
+            }
+            byte[] code = new byte[5];
+            Instruction ins = currentProgram.getListing().getInstructionAt(row.entry);
+            if (f.getBody().getNumAddressRanges() != 1 || f.getBody().getNumAddresses() != 5
+                    || !f.getBody().getMinAddress().equals(row.entry)
+                    || !f.getBody().getMaxAddress().equals(row.entry.add(4))
+                    || ins == null || ins.getLength() != 5
+                    || currentProgram.getMemory().getBytes(row.entry, code) != 5
+                    || (code[0] & 255) != 0xe9
+                    || row.entry.getOffset() + 5 + java.nio.ByteBuffer.wrap(code, 1, 4)
+                        .order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt() != targetAddress.getOffset()) {
+                fail(row, "THUNK FOLLOWER requires an exact five-byte direct JMP");
+            }
+            for (String field : Arrays.asList("currentCallingConvention", "callingConvention",
+                    "returnType", "paramSpec", "arity", "arityBytes", "varArgs")) {
+                if (!row.get(field).equals(target.get(field))) {
+                    fail(row, "THUNK FOLLOWER interface differs from target: " + field);
+                }
+            }
+            for (String field : Arrays.asList("currentSignature", "proposedSignature")) {
+                String ownShape = row.get(field).replace(f.getName(), "NAME");
+                String targetShape = target.get(field).replace(tf.getName(), "NAME");
+                if (!ownShape.equals(targetShape)) {
+                    fail(row, "THUNK FOLLOWER signature differs from target: " + field);
+                }
+            }
+            row.prototypeTarget = target;
+        }
+        // Fail before mutation instead of discovering forwarded ABI changes in
+        // the POST census. The existing exact collateral gate remains intact.
+        FunctionIterator it = fm.getFunctions(true);
+        while (it.hasNext()) {
+            Function f = it.next();
+            if (!f.isThunk()) continue;
+            Function target = f.getThunkedFunction(true);
+            if (target == null || !declared.containsKey(target.getEntryPoint())) continue;
+            Row follower = declared.get(f.getEntryPoint());
+            if (follower == null || follower.prototypeTarget == null) {
+                fail("THUNK FOLLOWER undeclared dependency " + f.getEntryPoint()
+                    + " -> " + target.getEntryPoint());
+            }
+        }
+    }
+
     private void gatePrototypeRow(Row row, Function f, boolean readback)
             throws Exception {
         String live = f.getSignature().getPrototypeString(true);
@@ -2841,8 +2932,9 @@ public class GhidraApplyCohortManifest extends GhidraScript {
             fail(row, "uses custom variable storage; this framework only "
                 + "installs dynamic storage");
         }
-        if (f.isThunk()) {
-            fail(row, "is a thunk; a thunk's prototype follows its target");
+        if (f.isThunk() && (row.get("prototypeTarget").isEmpty()
+                || row.get("prototypeTarget").equals("-"))) {
+            fail(row, "is a thunk; a thunk's prototype follows its target; declare prototypeTarget");
         }
         if (f.isExternal()) {
             fail(row, "is external");

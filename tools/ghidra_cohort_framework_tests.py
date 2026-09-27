@@ -268,6 +268,8 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Options instruction repair: exact eight-byte interior gap, no function-metadata
 # authority. Reviewed fresh rehearsal, six byte-stable DB refusals, Java adverse
 # controls and independent byte/method review; original program bytes preserved.
+# Memory-buffer ABI: eight interfaces including two explicit direct-JMP followers;
+# unchanged code/names/locals; exact rehearsal and eleven byte-stable refusals.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -327,6 +329,7 @@ LIVE_GRANTED_COHORTS = [
     "class-name-identities-20260927",
     "membuffer-identities-20260927",
     "listener-identities-20260927",
+    "membuffer-abi-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -792,6 +795,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "class-name-identities-20260927",\n'
         '        "membuffer-identities-20260927",\n'
         '        "listener-identities-20260927",\n'
+        '        "membuffer-abi-20260927",\n'
         "    };\n",
     ),
     (

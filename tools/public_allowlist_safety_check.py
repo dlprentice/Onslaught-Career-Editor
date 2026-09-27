@@ -247,7 +247,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # source/retail differences, bounded native runs and preserved fallible older notes.
 # Event listeners:9 old/16 authored comments (4,457/32,127 decoded bytes);
 # guarded dispatch and RTTI identity only; old notes/types remain fallible leads.
+# Memory-buffer ABI:8 old/8 authored comments (9,110/15,708 decoded bytes);
+# source/transport witnesses and explicitly retained fallible earlier notes.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/membuffer-abi-20260927.manifest.tsv":
+        "1b0de953ff8b525d9d406f1c8547c2e3b6df9410ff3c924b7fc07311a110fbd5",
     "tools/cohort-specs/listener-identities-20260927.manifest.tsv":
         "b55491e7c0deb84bdf7eb9bf0b82b8f99e69744915be8679626443652b5a783d",
     "tools/cohort-specs/membuffer-identities-20260927.manifest.tsv":

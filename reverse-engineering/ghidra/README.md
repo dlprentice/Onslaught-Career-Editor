@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[event-listener identities](#re-audit-event-listener-identities--september-27);
+[memory-buffer ABI](#re-audit-memory-buffer-abi--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,31 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit memory-buffer ABI — September 27
+
+The [eight-row manifest](../../tools/cohort-specs/membuffer-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/membuffer-abi-20260927.spec.tsv) correct six member interfaces
+and their two direct thunk dependents, without changing names or code.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Eight saved interfaces corrected across six CDXMemBuffer bodies and two direct thunks. The destructor and its thunk gain implicit ECX receivers. InitFromMem, InitFromFile, Close, the Close thunk and EndOfFile change bool/AL:1 to int/EAX:4. Close, its thunk and EndOfFile keep the same physical ECX but normalize explicit fastcall to automatic thiscall receivers. Write size becomes signed int at unchanged Stack[8]:4. Every name, local, code byte, instruction, reference, bookmark and non-target variable stays unchanged; 8,323 non-target function rows remain exact. Argument cleanup and frame sizes stay unchanged. Prior notes remain fallible leads.
+
+Complete pristine coverage is 2,002 bytes and 678 instructions. Pinned member declarations, full EAX exits/callers and the signed Write guard establish the declared transports. Exact typedef spelling and class layouts remain unproved; generic pointers are retained. The first six-row isolated rehearsal was rejected because saved thunks inherited two undeclared signature changes. That failed replica and its sealed inputs remain in rejected-v1; neither reached live. The root and independent reviewer then read both entire five-byte direct JMP bodies, declared their matching interfaces and repeated preservation/rehearsal on fresh PRE. A second read-only dry refused thunk rows under the original blanket rule; the replica was rechecked byte-equal to live/cold before reuse. The existing framework now requires each direct follower and its target to be declared, byte-checks the forwarding jump, compares their interface shapes and refuses any undeclared dependent before writes. Only the target receives a prototype write; followers are read back after all targets. Review also made the hexadecimal receiver offsets and JLE location/target explicit before sealing. The successful third rehearsal was withheld when independent review caught a stale two-receiver count in all eight proposed comments; its inputs/receipts remain in rejected-v3. The corrected comments name all three normalization entries, and fresh PRE rehearsal, readbacks and eleven controls were repeated before live. The retained 67 ReadString and 71 Write/Close original-code cases use authored buffers and intercepted APIs; no real Windows persistence or runtime handler acceptance follows.
+
+Fresh PRE restoration, rehearsal, independent/sealed readbacks, eleven actual
+byte-stable refusal controls, independent review/root reproduction, live
+readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal. Only `commentsSha256` changes at program scope.
+The [memory-buffer contract](../binary-analysis/functions/DXMemBuffer.cpp.md)
+separates these interfaces from isolated experiments and real I/O unknowns.
+
+Working identity: `db.18682`, 18 files / 123,702,132 bytes,
+inventory SHA-256 `fa1a50d9db128ced79095e102be468343007c7900f8d2739a3395d046bac3cd0`; main database 73,400,320 bytes,
+SHA-256 `f4e975ce235e6166b78c47d1fc847f65b0a2390233d61b0f6db9c0be4bca8029`. The restored event-listener POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-membuffer-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/membuffer-abi/`.
 
 ## RE-audit event-listener identities — September 27
 
